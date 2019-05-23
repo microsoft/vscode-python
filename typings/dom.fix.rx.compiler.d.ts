@@ -7,11 +7,11 @@
  * We don't need dom, as the extension does nothing with the dom (dom = HTML entities and the like).
  */
 // tslint:disable: interface-name
-interface EventTarget { }
-interface NodeList { }
-interface HTMLCollection { }
-interface XMLHttpRequest { }
-interface Event { }
-interface MessageEvent { }
-interface CloseEvent { }
-interface WebSocket { }
+interface EventTarget {}
+interface NodeList {}
+interface HTMLCollection {}
+interface XMLHttpRequest {}
+interface Event {}
+interface MessageEvent {}
+interface CloseEvent {}
+interface WebSocket {}

@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { injectable } from 'inversify';
-import { Extension, extensions } from 'vscode';
-import { IExtensions } from '../types';
+import { injectable } from "inversify";
+import { Extension, extensions } from "vscode";
+import { IExtensions } from "../types";
 
 @injectable()
 export class Extensions implements IExtensions {

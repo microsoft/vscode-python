@@ -1,17 +1,22 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
-import { Observable } from 'rxjs/Observable';
-import { CancellationToken } from 'vscode-jsonrpc';
-import * as vsls from 'vsls/vscode';
+"use strict";
+import { Observable } from "rxjs/Observable";
+import { CancellationToken } from "vscode-jsonrpc";
+import * as vsls from "vsls/vscode";
 
-import { ILiveShareApi } from '../../../common/application/types';
-import { CancellationError } from '../../../common/cancellation';
-import { traceInfo } from '../../../common/logger';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
-import { createDeferred, Deferred } from '../../../common/utils/async';
-import * as localize from '../../../common/utils/localize';
-import { LiveShare, LiveShareCommands } from '../../constants';
+import { ILiveShareApi } from "../../../common/application/types";
+import { CancellationError } from "../../../common/cancellation";
+import { traceInfo } from "../../../common/logger";
+import {
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry,
+    ILogger
+} from "../../../common/types";
+import { createDeferred, Deferred } from "../../../common/utils/async";
+import * as localize from "../../../common/utils/localize";
+import { LiveShare, LiveShareCommands } from "../../constants";
 import {
     ICell,
     IConnection,
@@ -21,17 +26,29 @@ import {
     INotebookServer,
     INotebookServerLaunchInfo,
     InterruptResult
-} from '../../types';
-import { LiveShareParticipantDefault, LiveShareParticipantGuest } from './liveShareParticipantMixin';
-import { ResponseQueue } from './responseQueue';
-import { IExecuteObservableResponse, ILiveShareParticipant, IServerResponse } from './types';
+} from "../../types";
+import {
+    LiveShareParticipantDefault,
+    LiveShareParticipantGuest
+} from "./liveShareParticipantMixin";
+import { ResponseQueue } from "./responseQueue";
+import {
+    IExecuteObservableResponse,
+    ILiveShareParticipant,
+    IServerResponse
+} from "./types";
 
 export class GuestJupyterServer
-    extends LiveShareParticipantGuest(LiveShareParticipantDefault, LiveShare.JupyterServerSharedService)
+    extends LiveShareParticipantGuest(
+        LiveShareParticipantDefault,
+        LiveShare.JupyterServerSharedService
+    )
     implements INotebookServer, ILiveShareParticipant {
-    private launchInfo : INotebookServerLaunchInfo | undefined;
-    private responseQueue : ResponseQueue = new ResponseQueue();
-    private connectPromise: Deferred<INotebookServerLaunchInfo> = createDeferred<INotebookServerLaunchInfo>();
+    private launchInfo: INotebookServerLaunchInfo | undefined;
+    private responseQueue: ResponseQueue = new ResponseQueue();
+    private connectPromise: Deferred<
+        INotebookServerLaunchInfo
+    > = createDeferred<INotebookServerLaunchInfo>();
 
     constructor(
         liveShare: ILiveShareApi,
@@ -45,7 +62,10 @@ export class GuestJupyterServer
         super(liveShare);
     }
 
-    public async connect(launchInfo: INotebookServerLaunchInfo, _cancelToken?: CancellationToken): Promise<void> {
+    public async connect(
+        launchInfo: INotebookServerLaunchInfo,
+        _cancelToken?: CancellationToken
+    ): Promise<void> {
         this.launchInfo = launchInfo;
         this.connectPromise.resolve(launchInfo);
         return Promise.resolve();
@@ -67,7 +87,13 @@ export class GuestJupyterServer
         return Promise.resolve();
     }
 
-    public async execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken): Promise<ICell[]> {
+    public async execute(
+        code: string,
+        file: string,
+        line: number,
+        id: string,
+        cancelToken?: CancellationToken
+    ): Promise<ICell[]> {
         // Create a deferred that we'll fire when we're done
         const deferred = createDeferred<ICell[]>();
 
@@ -79,15 +105,20 @@ export class GuestJupyterServer
             (cells: ICell[]) => {
                 output = cells;
             },
-            (error) => {
+            error => {
                 deferred.reject(error);
             },
             () => {
                 deferred.resolve(output);
-            });
+            }
+        );
 
         if (cancelToken) {
-            this.disposableRegistry.push(cancelToken.onCancellationRequested(() => deferred.reject(new CancellationError())));
+            this.disposableRegistry.push(
+                cancelToken.onCancellationRequested(() =>
+                    deferred.reject(new CancellationError())
+                )
+            );
         }
 
         // Wait for the execution to finish
@@ -103,13 +134,25 @@ export class GuestJupyterServer
         // Guest can't change the style. Maybe output a warning here?
     }
 
-    public executeObservable(code: string, file: string, line: number, id: string): Observable<ICell[]> {
+    public executeObservable(
+        code: string,
+        file: string,
+        line: number,
+        id: string
+    ): Observable<ICell[]> {
         // Mimic this to the other side and then wait for a response
-        this.waitForService().then(s => {
-            if (s) {
-                s.notify(LiveShareCommands.executeObservable, { code, file, line, id });
-            }
-        }).ignoreErrors();
+        this.waitForService()
+            .then(s => {
+                if (s) {
+                    s.notify(LiveShareCommands.executeObservable, {
+                        code,
+                        file,
+                        line,
+                        id
+                    });
+                }
+            })
+            .ignoreErrors();
         return this.responseQueue.waitForObservable(code, id);
     }
 
@@ -122,8 +165,10 @@ export class GuestJupyterServer
         const settings = this.configService.getSettings();
         const interruptTimeout = settings.datascience.jupyterInterruptTimeout;
 
-        const response = await this.sendRequest(LiveShareCommands.interrupt, [interruptTimeout]);
-        return (response as InterruptResult);
+        const response = await this.sendRequest(LiveShareCommands.interrupt, [
+            interruptTimeout
+        ]);
+        return response as InterruptResult;
     }
 
     // Return a copy of the connection information that this server used to connect with
@@ -139,7 +184,7 @@ export class GuestJupyterServer
         return this.connectPromise.promise;
     }
 
-    public async waitForServiceName() : Promise<string> {
+    public async waitForServiceName(): Promise<string> {
         // First wait for connect to occur
         const launchInfo = await this.waitForConnect();
 
@@ -152,16 +197,23 @@ export class GuestJupyterServer
         return `${LiveShare.JupyterServerSharedService}${launchInfo.purpose}`;
     }
 
-    public async getSysInfo() : Promise<ICell | undefined> {
+    public async getSysInfo(): Promise<ICell | undefined> {
         // This is a special case. Ask the shared server
         const service = await this.waitForService();
         if (service) {
-            const result = await service.request(LiveShareCommands.getSysInfo, []);
-            return (result as ICell);
+            const result = await service.request(
+                LiveShareCommands.getSysInfo,
+                []
+            );
+            return result as ICell;
         }
     }
 
-    public async getCompletion(_cellCode: string, _offsetInCode: number, _cancelToken?: CancellationToken) : Promise<INotebookCompletion> {
+    public async getCompletion(
+        _cellCode: string,
+        _offsetInCode: number,
+        _cancelToken?: CancellationToken
+    ): Promise<INotebookCompletion> {
         return Promise.resolve({
             matches: [],
             cursor: {
@@ -172,24 +224,31 @@ export class GuestJupyterServer
         });
     }
 
-    public async onAttach(api: vsls.LiveShare | null) : Promise<void> {
+    public async onAttach(api: vsls.LiveShare | null): Promise<void> {
         await super.onAttach(api);
 
         if (api) {
             const service = await this.waitForService();
 
             // Wait for sync up
-            const synced = service ? await service.request(LiveShareCommands.syncRequest, []) : undefined;
+            const synced = service
+                ? await service.request(LiveShareCommands.syncRequest, [])
+                : undefined;
             if (!synced && api.session && api.session.role !== vsls.Role.None) {
                 throw new Error(localize.DataScience.liveShareSyncFailure());
             }
 
             if (service) {
                 // Listen to responses
-                service.onNotify(LiveShareCommands.serverResponse, this.onServerResponse);
+                service.onNotify(
+                    LiveShareCommands.serverResponse,
+                    this.onServerResponse
+                );
 
                 // Request all of the responses since this guest was started. We likely missed a bunch
-                service.notify(LiveShareCommands.catchupRequest, { since: this.dataScience.activationStartTime });
+                service.notify(LiveShareCommands.catchupRequest, {
+                    since: this.dataScience.activationStartTime
+                });
             }
         }
     }
@@ -198,17 +257,16 @@ export class GuestJupyterServer
         const er = args as IExecuteObservableResponse;
         traceInfo(`Guest serverResponse ${er.pos} ${er.id}`);
         // Args should be of type ServerResponse. Stick in our queue if so.
-        if (args.hasOwnProperty('type')) {
+        if (args.hasOwnProperty("type")) {
             this.responseQueue.push(args as IServerResponse);
         }
-    }
+    };
 
     // tslint:disable-next-line:no-any
-    private async sendRequest(command: string, args: any[]) : Promise<any> {
+    private async sendRequest(command: string, args: any[]): Promise<any> {
         const service = await this.waitForService();
         if (service) {
             return service.request(command, args);
         }
     }
-
 }

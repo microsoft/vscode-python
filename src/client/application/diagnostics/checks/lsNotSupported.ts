@@ -1,19 +1,26 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { inject, named } from 'inversify';
-import { DiagnosticSeverity } from 'vscode';
-import { ILanguageServerCompatibilityService } from '../../../activation/types';
-import { IDisposableRegistry, Resource } from '../../../common/types';
-import { Diagnostics } from '../../../common/utils/localize';
-import { IServiceContainer } from '../../../ioc/types';
-import { BaseDiagnostic, BaseDiagnosticsService } from '../base';
-import { IDiagnosticsCommandFactory } from '../commands/types';
-import { DiagnosticCodes } from '../constants';
-import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '../promptHandler';
-import { DiagnosticScope, IDiagnostic, IDiagnosticHandlerService } from '../types';
+import { inject, named } from "inversify";
+import { DiagnosticSeverity } from "vscode";
+import { ILanguageServerCompatibilityService } from "../../../activation/types";
+import { IDisposableRegistry, Resource } from "../../../common/types";
+import { Diagnostics } from "../../../common/utils/localize";
+import { IServiceContainer } from "../../../ioc/types";
+import { BaseDiagnostic, BaseDiagnosticsService } from "../base";
+import { IDiagnosticsCommandFactory } from "../commands/types";
+import { DiagnosticCodes } from "../constants";
+import {
+    DiagnosticCommandPromptHandlerServiceId,
+    MessageCommandPrompt
+} from "../promptHandler";
+import {
+    DiagnosticScope,
+    IDiagnostic,
+    IDiagnosticHandlerService
+} from "../types";
 
 export class LSNotSupportedDiagnostic extends BaseDiagnostic {
     constructor(message: string, resource: Resource) {
@@ -27,7 +34,8 @@ export class LSNotSupportedDiagnostic extends BaseDiagnostic {
     }
 }
 
-export const LSNotSupportedDiagnosticServiceId = 'LSNotSupportedDiagnosticServiceId';
+export const LSNotSupportedDiagnosticServiceId =
+    "LSNotSupportedDiagnosticServiceId";
 
 export class LSNotSupportedDiagnosticService extends BaseDiagnosticsService {
     constructor(
@@ -36,16 +44,28 @@ export class LSNotSupportedDiagnosticService extends BaseDiagnosticsService {
         private readonly lsCompatibility: ILanguageServerCompatibilityService,
         @inject(IDiagnosticHandlerService)
         @named(DiagnosticCommandPromptHandlerServiceId)
-        protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>,
+        protected readonly messageService: IDiagnosticHandlerService<
+            MessageCommandPrompt
+        >,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
     ) {
-        super([DiagnosticCodes.LSNotSupportedDiagnostic], serviceContainer, disposableRegistry, false);
+        super(
+            [DiagnosticCodes.LSNotSupportedDiagnostic],
+            serviceContainer,
+            disposableRegistry,
+            false
+        );
     }
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
         if (await this.lsCompatibility.isSupported()) {
             return [];
         } else {
-            return [new LSNotSupportedDiagnostic(Diagnostics.lsNotSupported(), resource)];
+            return [
+                new LSNotSupportedDiagnostic(
+                    Diagnostics.lsNotSupported(),
+                    resource
+                )
+            ];
         }
     }
     protected async onHandle(diagnostics: IDiagnostic[]): Promise<void> {
@@ -56,18 +76,28 @@ export class LSNotSupportedDiagnosticService extends BaseDiagnosticsService {
         if (await this.filterService.shouldIgnoreDiagnostic(diagnostic.code)) {
             return;
         }
-        const commandFactory = this.serviceContainer.get<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory);
+        const commandFactory = this.serviceContainer.get<
+            IDiagnosticsCommandFactory
+        >(IDiagnosticsCommandFactory);
         const options = [
             {
-                prompt: 'More Info',
-                command: commandFactory.createCommand(diagnostic, { type: 'launch', options: 'https://aka.ms/AA3qqka' })
+                prompt: "More Info",
+                command: commandFactory.createCommand(diagnostic, {
+                    type: "launch",
+                    options: "https://aka.ms/AA3qqka"
+                })
             },
             {
-                prompt: 'Do not show again',
-                command: commandFactory.createCommand(diagnostic, { type: 'ignore', options: DiagnosticScope.Global })
+                prompt: "Do not show again",
+                command: commandFactory.createCommand(diagnostic, {
+                    type: "ignore",
+                    options: DiagnosticScope.Global
+                })
             }
         ];
 
-        await this.messageService.handle(diagnostic, { commandPrompts: options });
+        await this.messageService.handle(diagnostic, {
+            commandPrompts: options
+        });
     }
 }

@@ -1,10 +1,12 @@
-import { DebugSession } from 'vscode-debugadapter';
-import { AttachRequestArguments, LaunchRequestArguments } from '../../types';
-import { BaseDebugServer } from '../DebugServers/BaseDebugServer';
-import { RemoteDebugServerV2 } from '../DebugServers/RemoteDebugServerv2';
-import { DebugClient, DebugType } from './DebugClient';
+import { DebugSession } from "vscode-debugadapter";
+import { AttachRequestArguments, LaunchRequestArguments } from "../../types";
+import { BaseDebugServer } from "../DebugServers/BaseDebugServer";
+import { RemoteDebugServerV2 } from "../DebugServers/RemoteDebugServerv2";
+import { DebugClient, DebugType } from "./DebugClient";
 
-export class RemoteDebugClient<T extends AttachRequestArguments | LaunchRequestArguments> extends DebugClient<T> {
+export class RemoteDebugClient<
+    T extends AttachRequestArguments | LaunchRequestArguments
+> extends DebugClient<T> {
     private debugServer?: BaseDebugServer;
     // tslint:disable-next-line:no-any
     constructor(args: T, debugSession: DebugSession) {
@@ -12,7 +14,10 @@ export class RemoteDebugClient<T extends AttachRequestArguments | LaunchRequestA
     }
 
     public CreateDebugServer(): BaseDebugServer {
-        this.debugServer = new RemoteDebugServerV2(this.debugSession, this.args);
+        this.debugServer = new RemoteDebugServerV2(
+            this.debugSession,
+            this.args
+        );
         return this.debugServer;
     }
     public get DebugType(): DebugType {
@@ -25,5 +30,4 @@ export class RemoteDebugClient<T extends AttachRequestArguments | LaunchRequestA
             this.debugServer = undefined;
         }
     }
-
 }

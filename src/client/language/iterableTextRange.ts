@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { ITextRange, ITextRangeCollection } from './types';
+import { ITextRange, ITextRangeCollection } from "./types";
 
-export class IterableTextRange<T extends ITextRange> implements Iterable<T>{
-    constructor(private textRangeCollection: ITextRangeCollection<T>) {
-    }
+export class IterableTextRange<T extends ITextRange> implements Iterable<T> {
+    constructor(private textRangeCollection: ITextRangeCollection<T>) {}
     public [Symbol.iterator](): Iterator<T> {
         let index = -1;
 
@@ -16,7 +15,7 @@ export class IterableTextRange<T extends ITextRange> implements Iterable<T>{
                 if (index < this.textRangeCollection.count - 1) {
                     return {
                         done: false,
-                        value: this.textRangeCollection.getItemAt(index += 1)
+                        value: this.textRangeCollection.getItemAt((index += 1))
                     };
                 } else {
                     return {

@@ -1,37 +1,81 @@
-import { inject, injectable } from 'inversify';
-import * as path from 'path';
-import { QuickPickItem, Uri } from 'vscode';
-import { IApplicationShell, ICommandManager } from '../../common/application/types';
-import * as constants from '../../common/constants';
-import { IServiceContainer } from '../../ioc/types';
-import { CommandSource } from '../common/constants';
-import { FlattenedTestFunction, ITestCollectionStorageService, TestFile, TestFunction, Tests, TestStatus, TestsToRun } from '../common/types';
-import { ITestDisplay } from '../types';
+import { inject, injectable } from "inversify";
+import * as path from "path";
+import { QuickPickItem, Uri } from "vscode";
+import {
+    IApplicationShell,
+    ICommandManager
+} from "../../common/application/types";
+import * as constants from "../../common/constants";
+import { IServiceContainer } from "../../ioc/types";
+import { CommandSource } from "../common/constants";
+import {
+    FlattenedTestFunction,
+    ITestCollectionStorageService,
+    TestFile,
+    TestFunction,
+    Tests,
+    TestStatus,
+    TestsToRun
+} from "../common/types";
+import { ITestDisplay } from "../types";
 
 @injectable()
 export class TestDisplay implements ITestDisplay {
     private readonly testCollectionStorage: ITestCollectionStorageService;
     private readonly appShell: IApplicationShell;
-    constructor(@inject(IServiceContainer) serviceRegistry: IServiceContainer,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager) {
-        this.testCollectionStorage = serviceRegistry.get<ITestCollectionStorageService>(ITestCollectionStorageService);
-        this.appShell = serviceRegistry.get<IApplicationShell>(IApplicationShell);
+    constructor(
+        @inject(IServiceContainer) serviceRegistry: IServiceContainer,
+        @inject(ICommandManager)
+        private readonly commandManager: ICommandManager
+    ) {
+        this.testCollectionStorage = serviceRegistry.get<
+            ITestCollectionStorageService
+        >(ITestCollectionStorageService);
+        this.appShell = serviceRegistry.get<IApplicationShell>(
+            IApplicationShell
+        );
     }
     public displayStopTestUI(workspace: Uri, message: string) {
         this.appShell.showQuickPick([message]).then(item => {
             if (item === message) {
-                this.commandManager.executeCommand(constants.Commands.Tests_Stop, undefined, workspace);
+                this.commandManager.executeCommand(
+                    constants.Commands.Tests_Stop,
+                    undefined,
+                    workspace
+                );
             }
         });
     }
     public displayTestUI(cmdSource: CommandSource, wkspace: Uri) {
         const tests = this.testCollectionStorage.getTests(wkspace);
-        this.appShell.showQuickPick(buildItems(tests), { matchOnDescription: true, matchOnDetail: true })
-            .then(item => item ? onItemSelected(this.commandManager, cmdSource, wkspace, item, false) : Promise.resolve());
+        this.appShell
+            .showQuickPick(buildItems(tests), {
+                matchOnDescription: true,
+                matchOnDetail: true
+            })
+            .then(
+                item =>
+                    item
+                        ? onItemSelected(
+                              this.commandManager,
+                              cmdSource,
+                              wkspace,
+                              item,
+                              false
+                          )
+                        : Promise.resolve()
+            );
     }
-    public selectTestFunction(rootDirectory: string, tests: Tests): Promise<FlattenedTestFunction> {
+    public selectTestFunction(
+        rootDirectory: string,
+        tests: Tests
+    ): Promise<FlattenedTestFunction> {
         return new Promise<FlattenedTestFunction>((resolve, reject) => {
-            this.appShell.showQuickPick(buildItemsForFunctions(rootDirectory, tests.testFunctions), { matchOnDescription: true, matchOnDetail: true })
+            this.appShell
+                .showQuickPick(
+                    buildItemsForFunctions(rootDirectory, tests.testFunctions),
+                    { matchOnDescription: true, matchOnDetail: true }
+                )
                 .then(item => {
                     if (item && item.fn) {
                         return resolve(item.fn);
@@ -40,9 +84,16 @@ export class TestDisplay implements ITestDisplay {
                 }, reject);
         });
     }
-    public selectTestFile(rootDirectory: string, tests: Tests): Promise<TestFile> {
+    public selectTestFile(
+        rootDirectory: string,
+        tests: Tests
+    ): Promise<TestFile> {
         return new Promise<TestFile>((resolve, reject) => {
-            this.appShell.showQuickPick(buildItemsForTestFiles(rootDirectory, tests.testFiles), { matchOnDescription: true, matchOnDetail: true })
+            this.appShell
+                .showQuickPick(
+                    buildItemsForTestFiles(rootDirectory, tests.testFiles),
+                    { matchOnDescription: true, matchOnDetail: true }
+                )
                 .then(item => {
                     if (item && item.testFile) {
                         return resolve(item.testFile);
@@ -51,24 +102,57 @@ export class TestDisplay implements ITestDisplay {
                 }, reject);
         });
     }
-    public displayFunctionTestPickerUI(cmdSource: CommandSource, wkspace: Uri, rootDirectory: string, file: Uri, testFunctions: TestFunction[], debug?: boolean) {
+    public displayFunctionTestPickerUI(
+        cmdSource: CommandSource,
+        wkspace: Uri,
+        rootDirectory: string,
+        file: Uri,
+        testFunctions: TestFunction[],
+        debug?: boolean
+    ) {
         const tests = this.testCollectionStorage.getTests(wkspace);
         if (!tests) {
             return;
         }
         const fileName = file.fsPath;
-        const testFile = tests.testFiles.find(item => item.name === fileName || item.fullPath === fileName);
+        const testFile = tests.testFiles.find(
+            item => item.name === fileName || item.fullPath === fileName
+        );
         if (!testFile) {
             return;
         }
         const flattenedFunctions = tests.testFunctions.filter(fn => {
-            return fn.parentTestFile.name === testFile.name &&
-                testFunctions.some(testFunc => testFunc.nameToRun === fn.testFunction.nameToRun);
+            return (
+                fn.parentTestFile.name === testFile.name &&
+                testFunctions.some(
+                    testFunc => testFunc.nameToRun === fn.testFunction.nameToRun
+                )
+            );
         });
 
-        this.appShell.showQuickPick(buildItemsForFunctions(rootDirectory, flattenedFunctions, undefined, undefined, debug),
-            { matchOnDescription: true, matchOnDetail: true })
-            .then(testItem => testItem ? onItemSelected(this.commandManager, cmdSource, wkspace, testItem, debug) : Promise.resolve());
+        this.appShell
+            .showQuickPick(
+                buildItemsForFunctions(
+                    rootDirectory,
+                    flattenedFunctions,
+                    undefined,
+                    undefined,
+                    debug
+                ),
+                { matchOnDescription: true, matchOnDetail: true }
+            )
+            .then(
+                testItem =>
+                    testItem
+                        ? onItemSelected(
+                              this.commandManager,
+                              cmdSource,
+                              wkspace,
+                              testItem,
+                              debug
+                          )
+                        : Promise.resolve()
+            );
     }
 }
 
@@ -104,62 +188,110 @@ type TestFileItem = QuickPickItem & {
 
 function getSummary(tests?: Tests) {
     if (!tests || !tests.summary) {
-        return '';
+        return "";
     }
     const statusText: string[] = [];
     if (tests.summary.passed > 0) {
-        statusText.push(`${constants.Octicons.Test_Pass} ${tests.summary.passed} Passed`);
+        statusText.push(
+            `${constants.Octicons.Test_Pass} ${tests.summary.passed} Passed`
+        );
     }
     if (tests.summary.failures > 0) {
-        statusText.push(`${constants.Octicons.Test_Fail} ${tests.summary.failures} Failed`);
+        statusText.push(
+            `${constants.Octicons.Test_Fail} ${tests.summary.failures} Failed`
+        );
     }
     if (tests.summary.errors > 0) {
-        const plural = tests.summary.errors === 1 ? '' : 's';
-        statusText.push(`${constants.Octicons.Test_Error} ${tests.summary.errors} Error${plural}`);
+        const plural = tests.summary.errors === 1 ? "" : "s";
+        statusText.push(
+            `${constants.Octicons.Test_Error} ${
+                tests.summary.errors
+            } Error${plural}`
+        );
     }
     if (tests.summary.skipped > 0) {
-        statusText.push(`${constants.Octicons.Test_Skip} ${tests.summary.skipped} Skipped`);
+        statusText.push(
+            `${constants.Octicons.Test_Skip} ${tests.summary.skipped} Skipped`
+        );
     }
-    return statusText.join(', ').trim();
+    return statusText.join(", ").trim();
 }
 function buildItems(tests?: Tests): TestItem[] {
     const items: TestItem[] = [];
-    items.push({ description: '', label: 'Run All Unit Tests', type: Type.RunAll });
-    items.push({ description: '', label: 'Discover Unit Tests', type: Type.ReDiscover });
-    items.push({ description: '', label: 'Run Unit Test Method ...', type: Type.SelectAndRunMethod });
-    items.push({ description: '', label: 'Configure Unit Tests', type: Type.Configure });
+    items.push({
+        description: "",
+        label: "Run All Unit Tests",
+        type: Type.RunAll
+    });
+    items.push({
+        description: "",
+        label: "Discover Unit Tests",
+        type: Type.ReDiscover
+    });
+    items.push({
+        description: "",
+        label: "Run Unit Test Method ...",
+        type: Type.SelectAndRunMethod
+    });
+    items.push({
+        description: "",
+        label: "Configure Unit Tests",
+        type: Type.Configure
+    });
 
     const summary = getSummary(tests);
-    items.push({ description: '', label: 'View Unit Test Output', type: Type.ViewTestOutput, detail: summary });
+    items.push({
+        description: "",
+        label: "View Unit Test Output",
+        type: Type.ViewTestOutput,
+        detail: summary
+    });
 
     if (tests && tests.summary.failures > 0) {
-        items.push({ description: '', label: 'Run Failed Tests', type: Type.RunFailed, detail: `${constants.Octicons.Test_Fail} ${tests.summary.failures} Failed` });
+        items.push({
+            description: "",
+            label: "Run Failed Tests",
+            type: Type.RunFailed,
+            detail: `${constants.Octicons.Test_Fail} ${
+                tests.summary.failures
+            } Failed`
+        });
     }
 
     return items;
 }
 
 const statusSortPrefix = {
-    [TestStatus.Error]: '1',
-    [TestStatus.Fail]: '2',
-    [TestStatus.Skipped]: '3',
-    [TestStatus.Pass]: '4',
+    [TestStatus.Error]: "1",
+    [TestStatus.Fail]: "2",
+    [TestStatus.Skipped]: "3",
+    [TestStatus.Pass]: "4",
     [TestStatus.Discovering]: undefined,
     [TestStatus.Idle]: undefined,
     [TestStatus.Running]: undefined,
     [TestStatus.Unknown]: undefined
 };
 
-function buildItemsForFunctions(rootDirectory: string, tests: FlattenedTestFunction[], sortBasedOnResults: boolean = false, displayStatusIcons: boolean = false, debug: boolean = false): TestItem[] {
+function buildItemsForFunctions(
+    rootDirectory: string,
+    tests: FlattenedTestFunction[],
+    sortBasedOnResults: boolean = false,
+    displayStatusIcons: boolean = false,
+    debug: boolean = false
+): TestItem[] {
     const functionItems: TestItem[] = [];
     tests.forEach(fn => {
-        let icon = '';
-        if (displayStatusIcons && fn.testFunction.status && statusIconMapping.has(fn.testFunction.status)) {
+        let icon = "";
+        if (
+            displayStatusIcons &&
+            fn.testFunction.status &&
+            statusIconMapping.has(fn.testFunction.status)
+        ) {
             icon = `${statusIconMapping.get(fn.testFunction.status)} `;
         }
 
         functionItems.push({
-            description: '',
+            description: "",
             detail: path.relative(rootDirectory, fn.parentTestFile.fullPath),
             label: icon + fn.testFunction.name,
             type: debug === true ? Type.DebugMethod : Type.RunMethod,
@@ -167,26 +299,45 @@ function buildItemsForFunctions(rootDirectory: string, tests: FlattenedTestFunct
         });
     });
     functionItems.sort((a, b) => {
-        let sortAPrefix = '5-';
-        let sortBPrefix = '5-';
-        if (sortBasedOnResults && a.fn && a.fn.testFunction.status && b.fn && b.fn.testFunction.status) {
-            sortAPrefix = statusSortPrefix[a.fn.testFunction.status] ? statusSortPrefix[a.fn.testFunction.status]! : sortAPrefix;
-            sortBPrefix = statusSortPrefix[b.fn.testFunction.status] ? statusSortPrefix[b.fn.testFunction.status]! : sortBPrefix;
+        let sortAPrefix = "5-";
+        let sortBPrefix = "5-";
+        if (
+            sortBasedOnResults &&
+            a.fn &&
+            a.fn.testFunction.status &&
+            b.fn &&
+            b.fn.testFunction.status
+        ) {
+            sortAPrefix = statusSortPrefix[a.fn.testFunction.status]
+                ? statusSortPrefix[a.fn.testFunction.status]!
+                : sortAPrefix;
+            sortBPrefix = statusSortPrefix[b.fn.testFunction.status]
+                ? statusSortPrefix[b.fn.testFunction.status]!
+                : sortBPrefix;
         }
-        if (`${sortAPrefix}${a.detail}${a.label}` < `${sortBPrefix}${b.detail}${b.label}`) {
+        if (
+            `${sortAPrefix}${a.detail}${a.label}` <
+            `${sortBPrefix}${b.detail}${b.label}`
+        ) {
             return -1;
         }
-        if (`${sortAPrefix}${a.detail}${a.label}` > `${sortBPrefix}${b.detail}${b.label}`) {
+        if (
+            `${sortAPrefix}${a.detail}${a.label}` >
+            `${sortBPrefix}${b.detail}${b.label}`
+        ) {
             return 1;
         }
         return 0;
     });
     return functionItems;
 }
-function buildItemsForTestFiles(rootDirectory: string, testFiles: TestFile[]): TestFileItem[] {
+function buildItemsForTestFiles(
+    rootDirectory: string,
+    testFiles: TestFile[]
+): TestFileItem[] {
     const fileItems: TestFileItem[] = testFiles.map(testFile => {
         return {
-            description: '',
+            description: "",
             detail: path.relative(rootDirectory, testFile.fullPath),
             type: Type.RunFile,
             label: path.basename(testFile.fullPath),
@@ -207,8 +358,14 @@ function buildItemsForTestFiles(rootDirectory: string, testFiles: TestFile[]): T
     });
     return fileItems;
 }
-export function onItemSelected(commandManager: ICommandManager, cmdSource: CommandSource, wkspace: Uri, selection: TestItem, debug?: boolean) {
-    if (!selection || typeof selection.type !== 'number') {
+export function onItemSelected(
+    commandManager: ICommandManager,
+    cmdSource: CommandSource,
+    wkspace: Uri,
+    selection: TestItem,
+    debug?: boolean
+) {
+    if (!selection || typeof selection.type !== "number") {
         return;
     }
     switch (selection.type) {
@@ -216,31 +373,79 @@ export function onItemSelected(commandManager: ICommandManager, cmdSource: Comma
             return;
         }
         case Type.RunAll: {
-            return commandManager.executeCommand(constants.Commands.Tests_Run, undefined, cmdSource, wkspace, undefined);
+            return commandManager.executeCommand(
+                constants.Commands.Tests_Run,
+                undefined,
+                cmdSource,
+                wkspace,
+                undefined
+            );
         }
         case Type.ReDiscover: {
-            return commandManager.executeCommand(constants.Commands.Tests_Discover, undefined, cmdSource, wkspace);
+            return commandManager.executeCommand(
+                constants.Commands.Tests_Discover,
+                undefined,
+                cmdSource,
+                wkspace
+            );
         }
         case Type.ViewTestOutput: {
-            return commandManager.executeCommand(constants.Commands.Tests_ViewOutput, undefined, cmdSource);
+            return commandManager.executeCommand(
+                constants.Commands.Tests_ViewOutput,
+                undefined,
+                cmdSource
+            );
         }
         case Type.RunFailed: {
-            return commandManager.executeCommand(constants.Commands.Tests_Run_Failed, undefined, cmdSource, wkspace);
+            return commandManager.executeCommand(
+                constants.Commands.Tests_Run_Failed,
+                undefined,
+                cmdSource,
+                wkspace
+            );
         }
         case Type.SelectAndRunMethod: {
-            const cmd = debug ? constants.Commands.Tests_Select_And_Debug_Method : constants.Commands.Tests_Select_And_Run_Method;
-            return commandManager.executeCommand(cmd, undefined, cmdSource, wkspace);
+            const cmd = debug
+                ? constants.Commands.Tests_Select_And_Debug_Method
+                : constants.Commands.Tests_Select_And_Run_Method;
+            return commandManager.executeCommand(
+                cmd,
+                undefined,
+                cmdSource,
+                wkspace
+            );
         }
         case Type.RunMethod: {
-            const testsToRun: TestsToRun = { testFunction: [selection.fn!.testFunction] };
-            return commandManager.executeCommand(constants.Commands.Tests_Run, undefined, cmdSource, wkspace, testsToRun);
+            const testsToRun: TestsToRun = {
+                testFunction: [selection.fn!.testFunction]
+            };
+            return commandManager.executeCommand(
+                constants.Commands.Tests_Run,
+                undefined,
+                cmdSource,
+                wkspace,
+                testsToRun
+            );
         }
         case Type.DebugMethod: {
-            const testsToRun: TestsToRun = { testFunction: [selection.fn!.testFunction] };
-            return commandManager.executeCommand(constants.Commands.Tests_Debug, undefined, cmdSource, wkspace, testsToRun);
+            const testsToRun: TestsToRun = {
+                testFunction: [selection.fn!.testFunction]
+            };
+            return commandManager.executeCommand(
+                constants.Commands.Tests_Debug,
+                undefined,
+                cmdSource,
+                wkspace,
+                testsToRun
+            );
         }
         case Type.Configure: {
-            return commandManager.executeCommand(constants.Commands.Tests_Configure, undefined, cmdSource, wkspace);
+            return commandManager.executeCommand(
+                constants.Commands.Tests_Configure,
+                undefined,
+                cmdSource,
+                wkspace
+            );
         }
         default: {
             return;

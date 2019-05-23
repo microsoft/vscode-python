@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-'use strict';
+"use strict";
 
-import { vscMockArrays } from './arrays';
+import { vscMockArrays } from "./arrays";
 // tslint:disable:all
 
 export namespace vscMockHtmlContent {
@@ -15,17 +15,16 @@ export namespace vscMockHtmlContent {
     }
 
     export class MarkdownString implements IMarkdownString {
-
         value: string;
         isTrusted?: boolean;
 
-        constructor(value: string = '') {
+        constructor(value: string = "") {
             this.value = value;
         }
 
         appendText(value: string): MarkdownString {
             // escape markdown syntax tokens: http://daringfireball.net/projects/markdown/syntax#backslash
-            this.value += value.replace(/[\\`*_{}[\]()#+\-.!]/g, '\\$&');
+            this.value += value.replace(/[\\`*_{}[\]()#+\-.!]/g, "\\$&");
             return this;
         }
 
@@ -35,16 +34,18 @@ export namespace vscMockHtmlContent {
         }
 
         appendCodeblock(langId: string, code: string): MarkdownString {
-            this.value += '\n```';
+            this.value += "\n```";
             this.value += langId;
-            this.value += '\n';
+            this.value += "\n";
             this.value += code;
-            this.value += '\n```\n';
+            this.value += "\n```\n";
             return this;
         }
     }
 
-    export function isEmptyMarkdownString(oneOrMany: IMarkdownString | IMarkdownString[]): boolean {
+    export function isEmptyMarkdownString(
+        oneOrMany: IMarkdownString | IMarkdownString[]
+    ): boolean {
         if (isMarkdownString(oneOrMany)) {
             return !oneOrMany.value;
         } else if (Array.isArray(oneOrMany)) {
@@ -57,14 +58,20 @@ export namespace vscMockHtmlContent {
     export function isMarkdownString(thing: any): thing is IMarkdownString {
         if (thing instanceof MarkdownString) {
             return true;
-        } else if (thing && typeof thing === 'object') {
-            return typeof (<IMarkdownString>thing).value === 'string'
-                && (typeof (<IMarkdownString>thing).isTrusted === 'boolean' || (<IMarkdownString>thing).isTrusted === void 0);
+        } else if (thing && typeof thing === "object") {
+            return (
+                typeof (<IMarkdownString>thing).value === "string" &&
+                (typeof (<IMarkdownString>thing).isTrusted === "boolean" ||
+                    (<IMarkdownString>thing).isTrusted === void 0)
+            );
         }
         return false;
     }
 
-    export function markedStringsEquals(a: IMarkdownString | IMarkdownString[], b: IMarkdownString | IMarkdownString[]): boolean {
+    export function markedStringsEquals(
+        a: IMarkdownString | IMarkdownString[],
+        b: IMarkdownString | IMarkdownString[]
+    ): boolean {
         if (!a && !b) {
             return true;
         } else if (!a || !b) {
@@ -78,7 +85,10 @@ export namespace vscMockHtmlContent {
         }
     }
 
-    function markdownStringEqual(a: IMarkdownString, b: IMarkdownString): boolean {
+    function markdownStringEqual(
+        a: IMarkdownString,
+        b: IMarkdownString
+    ): boolean {
         if (a === b) {
             return true;
         } else if (!a || !b) {
@@ -92,6 +102,6 @@ export namespace vscMockHtmlContent {
         if (!text) {
             return text;
         }
-        return text.replace(/\\([\\`*_{}[\]()#+\-.!])/g, '$1');
+        return text.replace(/\\([\\`*_{}[\]()#+\-.!])/g, "$1");
     }
 }

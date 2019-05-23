@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
+"use strict";
 
 export interface ITextRange {
     readonly start: number;
@@ -17,10 +17,10 @@ export class TextRange implements ITextRange {
 
     constructor(start: number, length: number) {
         if (start < 0) {
-            throw new Error('start must be non-negative');
+            throw new Error("start must be non-negative");
         }
         if (length < 0) {
-            throw new Error('length must be non-negative');
+            throw new Error("length must be non-negative");
         }
         this.start = start;
         this.length = length;
@@ -101,5 +101,10 @@ export enum TokenizerMode {
 
 export interface ITokenizer {
     tokenize(text: string): ITextRangeCollection<IToken>;
-    tokenize(text: string, start: number, length: number, mode: TokenizerMode): ITextRangeCollection<IToken>;
+    tokenize(
+        text: string,
+        start: number,
+        length: number,
+        mode: TokenizerMode
+    ): ITextRangeCollection<IToken>;
 }

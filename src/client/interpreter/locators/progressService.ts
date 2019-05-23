@@ -1,26 +1,35 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { inject, injectable } from 'inversify';
-import { Disposable, Event, EventEmitter } from 'vscode';
-import { traceDecorators } from '../../common/logger';
-import { IDisposableRegistry } from '../../common/types';
-import { createDeferredFrom, Deferred } from '../../common/utils/async';
-import { noop } from '../../common/utils/misc';
-import { IServiceContainer } from '../../ioc/types';
-import { IInterpreterLocatorProgressService, IInterpreterLocatorService, PythonInterpreter } from '../contracts';
+import { inject, injectable } from "inversify";
+import { Disposable, Event, EventEmitter } from "vscode";
+import { traceDecorators } from "../../common/logger";
+import { IDisposableRegistry } from "../../common/types";
+import { createDeferredFrom, Deferred } from "../../common/utils/async";
+import { noop } from "../../common/utils/misc";
+import { IServiceContainer } from "../../ioc/types";
+import {
+    IInterpreterLocatorProgressService,
+    IInterpreterLocatorService,
+    PythonInterpreter
+} from "../contracts";
 
 @injectable()
-export class InterpreterLocatorProgressService implements IInterpreterLocatorProgressService {
+export class InterpreterLocatorProgressService
+    implements IInterpreterLocatorProgressService {
     private deferreds: Deferred<PythonInterpreter[]>[] = [];
     private readonly refreshing = new EventEmitter<void>();
     private readonly refreshed = new EventEmitter<void>();
     private readonly locators: IInterpreterLocatorService[] = [];
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(IDisposableRegistry) private readonly disposables: Disposable[]) {
-        this.locators = serviceContainer.getAll<IInterpreterLocatorService>(IInterpreterLocatorService);
+    constructor(
+        @inject(IServiceContainer) serviceContainer: IServiceContainer,
+        @inject(IDisposableRegistry) private readonly disposables: Disposable[]
+    ) {
+        this.locators = serviceContainer.getAll<IInterpreterLocatorService>(
+            IInterpreterLocatorService
+        );
     }
 
     public get onRefreshing(): Event<void> {
@@ -34,17 +43,17 @@ export class InterpreterLocatorProgressService implements IInterpreterLocatorPro
             locator.onLocating(this.handleProgress, this, this.disposables);
         });
     }
-    @traceDecorators.verbose('Detected refreshing of Interpreters')
+    @traceDecorators.verbose("Detected refreshing of Interpreters")
     private handleProgress(promise: Promise<PythonInterpreter[]>) {
         this.deferreds.push(createDeferredFrom(promise));
         this.notifyRefreshing();
         this.checkProgress();
     }
-    @traceDecorators.verbose('All locators have completed locating')
+    @traceDecorators.verbose("All locators have completed locating")
     private notifyCompleted() {
         this.refreshed.fire();
     }
-    @traceDecorators.verbose('Notify locators are locating')
+    @traceDecorators.verbose("Notify locators are locating")
     private notifyRefreshing() {
         this.refreshing.fire();
     }
@@ -60,7 +69,9 @@ export class InterpreterLocatorProgressService implements IInterpreterLocatorPro
             .then(() => this.checkProgress())
             .ignoreErrors();
     }
-    @traceDecorators.verbose('Checking whether locactors have completed locating')
+    @traceDecorators.verbose(
+        "Checking whether locactors have completed locating"
+    )
     private areAllItemsComplete() {
         this.deferreds = this.deferreds.filter(item => !item.completed);
         return this.deferreds.length === 0;

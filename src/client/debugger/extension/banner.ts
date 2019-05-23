@@ -1,25 +1,33 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { inject, injectable } from 'inversify';
-import { Disposable } from 'vscode';
-import { IApplicationShell, IDebugService } from '../../common/application/types';
-import '../../common/extensions';
-import { IBrowserService, IDisposableRegistry,
-    ILogger, IPersistentStateFactory, IRandom } from '../../common/types';
-import { IServiceContainer } from '../../ioc/types';
-import { DebuggerTypeName } from '../constants';
-import { IDebuggerBanner } from './types';
+import { inject, injectable } from "inversify";
+import { Disposable } from "vscode";
+import {
+    IApplicationShell,
+    IDebugService
+} from "../../common/application/types";
+import "../../common/extensions";
+import {
+    IBrowserService,
+    IDisposableRegistry,
+    ILogger,
+    IPersistentStateFactory,
+    IRandom
+} from "../../common/types";
+import { IServiceContainer } from "../../ioc/types";
+import { DebuggerTypeName } from "../constants";
+import { IDebuggerBanner } from "./types";
 
 const SAMPLE_SIZE_PER_HUNDRED = 10;
 
 export enum PersistentStateKeys {
-    ShowBanner = 'ShowBanner',
-    DebuggerLaunchCounter = 'DebuggerLaunchCounter',
-    DebuggerLaunchThresholdCounter = 'DebuggerLaunchThresholdCounter',
-    UserSelected = 'DebuggerUserSelected'
+    ShowBanner = "ShowBanner",
+    DebuggerLaunchCounter = "DebuggerLaunchCounter",
+    DebuggerLaunchThresholdCounter = "DebuggerLaunchThresholdCounter",
+    UserSelected = "DebuggerUserSelected"
 }
 
 @injectable()
@@ -30,7 +38,7 @@ export class DebuggerBanner implements IDebuggerBanner {
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer
-    ) { }
+    ) {}
 
     public initialize() {
         if (this.initialized) {
@@ -49,14 +57,18 @@ export class DebuggerBanner implements IDebuggerBanner {
     // "enabled" state
 
     public isEnabled(): boolean {
-        const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
+        const factory = this.serviceContainer.get<IPersistentStateFactory>(
+            IPersistentStateFactory
+        );
         const key = PersistentStateKeys.ShowBanner;
         const state = factory.createGlobalPersistentState<boolean>(key, true);
         return state.value;
     }
 
     public async disable(): Promise<void> {
-        const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
+        const factory = this.serviceContainer.get<IPersistentStateFactory>(
+            IPersistentStateFactory
+        );
         const key = PersistentStateKeys.ShowBanner;
         const state = factory.createGlobalPersistentState<boolean>(key, false);
         await state.updateValue(false);
@@ -68,26 +80,33 @@ export class DebuggerBanner implements IDebuggerBanner {
         if (!this.isEnabled() || this.disabledInCurrentSession) {
             return false;
         }
-        if (! await this.passedThreshold()) {
+        if (!(await this.passedThreshold())) {
             return false;
         }
         return this.isUserSelected();
     }
 
     public async show(): Promise<void> {
-        const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-        const msg = 'Can you please take 2 minutes to tell us how the debugger is working for you?';
-        const yes = 'Yes, take survey now';
-        const no = 'No thanks';
-        const later = 'Remind me later';
-        const response = await appShell.showInformationMessage(msg, yes, no, later);
+        const appShell = this.serviceContainer.get<IApplicationShell>(
+            IApplicationShell
+        );
+        const msg =
+            "Can you please take 2 minutes to tell us how the debugger is working for you?";
+        const yes = "Yes, take survey now";
+        const no = "No thanks";
+        const later = "Remind me later";
+        const response = await appShell.showInformationMessage(
+            msg,
+            yes,
+            no,
+            later
+        );
         switch (response) {
-            case yes:
-                {
-                    await this.action();
-                    await this.disable();
-                    break;
-                }
+            case yes: {
+                await this.action();
+                await this.disable();
+                break;
+            }
             case no: {
                 await this.disable();
                 break;
@@ -101,8 +120,12 @@ export class DebuggerBanner implements IDebuggerBanner {
 
     private async action(): Promise<void> {
         const debuggerLaunchCounter = await this.getGetDebuggerLaunchCounter();
-        const browser = this.serviceContainer.get<IBrowserService>(IBrowserService);
-        browser.launch(`https://www.research.net/r/N7B25RV?n=${debuggerLaunchCounter}`);
+        const browser = this.serviceContainer.get<IBrowserService>(
+            IBrowserService
+        );
+        browser.launch(
+            `https://www.research.net/r/N7B25RV?n=${debuggerLaunchCounter}`
+        );
     }
 
     // user selection
@@ -112,9 +135,14 @@ export class DebuggerBanner implements IDebuggerBanner {
             return this.userSelected;
         }
 
-        const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
+        const factory = this.serviceContainer.get<IPersistentStateFactory>(
+            IPersistentStateFactory
+        );
         const key = PersistentStateKeys.UserSelected;
-        const state = factory.createGlobalPersistentState<boolean|undefined>(key, undefined);
+        const state = factory.createGlobalPersistentState<boolean | undefined>(
+            key,
+            undefined
+        );
         let selected = state.value;
         if (selected === undefined) {
             const runtime = this.serviceContainer.get<IRandom>(IRandom);
@@ -137,23 +165,32 @@ export class DebuggerBanner implements IDebuggerBanner {
     }
 
     private async incrementDebuggerLaunchCounter(): Promise<void> {
-        const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
+        const factory = this.serviceContainer.get<IPersistentStateFactory>(
+            IPersistentStateFactory
+        );
         const key = PersistentStateKeys.DebuggerLaunchCounter;
         const state = factory.createGlobalPersistentState<number>(key, 0);
         await state.updateValue(state.value + 1);
     }
 
     private async getGetDebuggerLaunchCounter(): Promise<number> {
-        const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
+        const factory = this.serviceContainer.get<IPersistentStateFactory>(
+            IPersistentStateFactory
+        );
         const key = PersistentStateKeys.DebuggerLaunchCounter;
         const state = factory.createGlobalPersistentState<number>(key, 0);
         return state.value;
     }
 
     private async getDebuggerLaunchThresholdCounter(): Promise<number> {
-        const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
+        const factory = this.serviceContainer.get<IPersistentStateFactory>(
+            IPersistentStateFactory
+        );
         const key = PersistentStateKeys.DebuggerLaunchThresholdCounter;
-        const state = factory.createGlobalPersistentState<number | undefined>(key, undefined);
+        const state = factory.createGlobalPersistentState<number | undefined>(
+            key,
+            undefined
+        );
         if (state.value === undefined) {
             const runtime = this.serviceContainer.get<IRandom>(IRandom);
             const randomNumber = runtime.getRandomInt(1, 11);
@@ -165,15 +202,22 @@ export class DebuggerBanner implements IDebuggerBanner {
     // debugger-specific functionality
 
     private addCallback() {
-        const debuggerService = this.serviceContainer.get<IDebugService>(IDebugService);
-        const disposable = debuggerService.onDidTerminateDebugSession(async e => {
-            if (e.type === DebuggerTypeName) {
-                const logger = this.serviceContainer.get<ILogger>(ILogger);
-                await this.onDidTerminateDebugSession()
-                    .catch(ex => logger.logError('Error in debugger Banner', ex));
+        const debuggerService = this.serviceContainer.get<IDebugService>(
+            IDebugService
+        );
+        const disposable = debuggerService.onDidTerminateDebugSession(
+            async e => {
+                if (e.type === DebuggerTypeName) {
+                    const logger = this.serviceContainer.get<ILogger>(ILogger);
+                    await this.onDidTerminateDebugSession().catch(ex =>
+                        logger.logError("Error in debugger Banner", ex)
+                    );
+                }
             }
-        });
-        this.serviceContainer.get<Disposable[]>(IDisposableRegistry).push(disposable);
+        );
+        this.serviceContainer
+            .get<Disposable[]>(IDisposableRegistry)
+            .push(disposable);
     }
 
     private async onDidTerminateDebugSession(): Promise<void> {

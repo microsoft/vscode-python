@@ -19,13 +19,16 @@
 }
 
 .remove-style {
-    background-color:transparent;
-    border:transparent;
-    font:inherit;
+    background-color: transparent;
+    border: transparent;
+    font: inherit;
 }
 
 .collapseInputLabel {
-    background-color: var(--override-background, var(--vscode-editor-background));
+    background-color: var(
+        --override-background,
+        var(--vscode-editor-background)
+    );
     color: var(--override-foreground, var(--vscode-editor-foreground));
     font-family: var(--vscode-editor-font-family);
     font-weight: var(--vscode-editor-font-weight);

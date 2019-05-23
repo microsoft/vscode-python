@@ -1,50 +1,74 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { inject, injectable } from 'inversify';
-import { CancellationToken, Uri, WorkspaceFolder } from 'vscode';
-import { IDocumentManager, IWorkspaceService } from '../../../../common/application/types';
-import { IPlatformService } from '../../../../common/platform/types';
-import { IConfigurationService } from '../../../../common/types';
-import { AttachRequestArguments, DebugOptions } from '../../../types';
-import { BaseConfigurationResolver } from './base';
+import { inject, injectable } from "inversify";
+import { CancellationToken, Uri, WorkspaceFolder } from "vscode";
+import {
+    IDocumentManager,
+    IWorkspaceService
+} from "../../../../common/application/types";
+import { IPlatformService } from "../../../../common/platform/types";
+import { IConfigurationService } from "../../../../common/types";
+import { AttachRequestArguments, DebugOptions } from "../../../types";
+import { BaseConfigurationResolver } from "./base";
 
 @injectable()
-export class AttachConfigurationResolver extends BaseConfigurationResolver<AttachRequestArguments> {
-    constructor(@inject(IWorkspaceService) workspaceService: IWorkspaceService,
+export class AttachConfigurationResolver extends BaseConfigurationResolver<
+    AttachRequestArguments
+> {
+    constructor(
+        @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IDocumentManager) documentManager: IDocumentManager,
-        @inject(IPlatformService) private readonly platformService: IPlatformService,
-        @inject(IConfigurationService) configurationService: IConfigurationService) {
+        @inject(IPlatformService)
+        private readonly platformService: IPlatformService,
+        @inject(IConfigurationService)
+        configurationService: IConfigurationService
+    ) {
         super(workspaceService, documentManager, configurationService);
     }
-    public async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: AttachRequestArguments, _token?: CancellationToken): Promise<AttachRequestArguments | undefined> {
+    public async resolveDebugConfiguration(
+        folder: WorkspaceFolder | undefined,
+        debugConfiguration: AttachRequestArguments,
+        _token?: CancellationToken
+    ): Promise<AttachRequestArguments | undefined> {
         const workspaceFolder = this.getWorkspaceFolder(folder);
 
-        await this.provideAttachDefaults(workspaceFolder, debugConfiguration as AttachRequestArguments);
+        await this.provideAttachDefaults(
+            workspaceFolder,
+            debugConfiguration as AttachRequestArguments
+        );
 
         const dbgConfig = debugConfiguration;
         if (Array.isArray(dbgConfig.debugOptions)) {
-            dbgConfig.debugOptions = dbgConfig.debugOptions!.filter((item, pos) => dbgConfig.debugOptions!.indexOf(item) === pos);
+            dbgConfig.debugOptions = dbgConfig.debugOptions!.filter(
+                (item, pos) => dbgConfig.debugOptions!.indexOf(item) === pos
+            );
         }
         return debugConfiguration;
     }
     // tslint:disable-next-line:cyclomatic-complexity
-    protected async provideAttachDefaults(workspaceFolder: Uri | undefined, debugConfiguration: AttachRequestArguments): Promise<void> {
+    protected async provideAttachDefaults(
+        workspaceFolder: Uri | undefined,
+        debugConfiguration: AttachRequestArguments
+    ): Promise<void> {
         if (!Array.isArray(debugConfiguration.debugOptions)) {
             debugConfiguration.debugOptions = [];
         }
         if (!debugConfiguration.host) {
-            debugConfiguration.host = 'localhost';
+            debugConfiguration.host = "localhost";
         }
         if (debugConfiguration.justMyCode === undefined) {
             // Populate justMyCode using debugStdLib
             debugConfiguration.justMyCode = !debugConfiguration.debugStdLib;
         }
-        debugConfiguration.showReturnValue = debugConfiguration.showReturnValue !== false;
+        debugConfiguration.showReturnValue =
+            debugConfiguration.showReturnValue !== false;
         // Pass workspace folder so we can get this when we get debug events firing.
-        debugConfiguration.workspaceFolder = workspaceFolder ? workspaceFolder.fsPath : undefined;
+        debugConfiguration.workspaceFolder = workspaceFolder
+            ? workspaceFolder.fsPath
+            : undefined;
         const debugOptions = debugConfiguration.debugOptions!;
         if (!debugConfiguration.justMyCode) {
             this.debugOption(debugOptions, DebugOptions.DebugStdLib);
@@ -58,12 +82,17 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
         if (debugConfiguration.subProcess === true) {
             this.debugOption(debugOptions, DebugOptions.SubProcess);
         }
-        if (debugConfiguration.pyramid
-            && debugOptions.indexOf(DebugOptions.Jinja) === -1
-            && debugConfiguration.jinja !== false) {
+        if (
+            debugConfiguration.pyramid &&
+            debugOptions.indexOf(DebugOptions.Jinja) === -1 &&
+            debugConfiguration.jinja !== false
+        ) {
             this.debugOption(debugOptions, DebugOptions.Jinja);
         }
-        if (debugConfiguration.redirectOutput || debugConfiguration.redirectOutput === undefined) {
+        if (
+            debugConfiguration.redirectOutput ||
+            debugConfiguration.redirectOutput === undefined
+        ) {
             this.debugOption(debugOptions, DebugOptions.RedirectOutput);
         }
 
@@ -93,14 +122,19 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
             });
         }
         // If attaching to local host, then always map local root and remote roots.
-        if (workspaceFolder && debugConfiguration.host &&
+        if (
+            workspaceFolder &&
+            debugConfiguration.host &&
             debugConfiguration.pathMappings!.length === 0 &&
-            ['LOCALHOST', '127.0.0.1', '::1'].indexOf(debugConfiguration.host.toUpperCase()) >= 0) {
+            ["LOCALHOST", "127.0.0.1", "::1"].indexOf(
+                debugConfiguration.host.toUpperCase()
+            ) >= 0
+        ) {
             debugConfiguration.pathMappings!.push({
                 localRoot: workspaceFolder.fsPath,
                 remoteRoot: workspaceFolder.fsPath
             });
         }
-        this.sendTelemetry('attach', debugConfiguration);
+        this.sendTelemetry("attach", debugConfiguration);
     }
 }

@@ -1,13 +1,20 @@
-import { injectable } from 'inversify';
-import { ITestVisitor, TestFile, TestFolder, TestFunction, TestStatus, TestSuite } from '../types';
+import { injectable } from "inversify";
+import {
+    ITestVisitor,
+    TestFile,
+    TestFolder,
+    TestFunction,
+    TestStatus,
+    TestSuite
+} from "../types";
 
 @injectable()
 export class TestResultResetVisitor implements ITestVisitor {
     public visitTestFunction(testFunction: TestFunction): void {
         testFunction.passed = undefined;
         testFunction.time = 0;
-        testFunction.message = '';
-        testFunction.traceback = '';
+        testFunction.message = "";
+        testFunction.traceback = "";
         testFunction.status = TestStatus.Unknown;
         testFunction.functionsFailed = 0;
         testFunction.functionsPassed = 0;

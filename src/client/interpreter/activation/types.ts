@@ -1,12 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { Resource } from '../../common/types';
-import { PythonInterpreter } from '../contracts';
+import { Resource } from "../../common/types";
+import { PythonInterpreter } from "../contracts";
 
-export const IEnvironmentActivationService = Symbol('IEnvironmentActivationService');
+export const IEnvironmentActivationService = Symbol(
+    "IEnvironmentActivationService"
+);
 export interface IEnvironmentActivationService {
-    getActivatedEnvironmentVariables(resource: Resource, interpreter?: PythonInterpreter, allowExceptions?: boolean): Promise<NodeJS.ProcessEnv | undefined>;
+    getActivatedEnvironmentVariables(
+        resource: Resource,
+        interpreter?: PythonInterpreter,
+        allowExceptions?: boolean
+    ): Promise<NodeJS.ProcessEnv | undefined>;
 }

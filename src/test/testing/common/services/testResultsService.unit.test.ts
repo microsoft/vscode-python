@@ -1,22 +1,46 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { expect } from 'chai';
-import * as typemoq from 'typemoq';
-import { TestResultsService } from '../../../../client/testing/common/services/testResultsService';
-import { FlattenedTestFunction, FlattenedTestSuite, ITestVisitor, TestFile, TestFolder, TestFunction, Tests, TestStatus, TestSuite, TestType } from '../../../../client/testing/common/types';
-import { createMockTestDataItem } from '../testUtils.unit.test';
+import { expect } from "chai";
+import * as typemoq from "typemoq";
+import { TestResultsService } from "../../../../client/testing/common/services/testResultsService";
+import {
+    FlattenedTestFunction,
+    FlattenedTestSuite,
+    ITestVisitor,
+    TestFile,
+    TestFolder,
+    TestFunction,
+    Tests,
+    TestStatus,
+    TestSuite,
+    TestType
+} from "../../../../client/testing/common/types";
+import { createMockTestDataItem } from "../testUtils.unit.test";
 
 // tslint:disable:no-any max-func-body-length
-suite('Unit Tests - Tests Results Service', () => {
+suite("Unit Tests - Tests Results Service", () => {
     let testResultsService: TestResultsService;
     let resultResetVisitor: typemoq.IMock<ITestVisitor>;
     let tests!: Tests;
     // tslint:disable:one-variable-per-declaration
-    let folder1: TestFolder, folder2: TestFolder, folder3: TestFolder, folder4: TestFolder, folder5: TestFolder, suite1: TestSuite, suite2: TestSuite, suite3: TestSuite, suite4: TestSuite, suite5: TestSuite;
-    let file1: TestFile, file2: TestFile, file3: TestFile, file4: TestFile, file5: TestFile;
+    let folder1: TestFolder,
+        folder2: TestFolder,
+        folder3: TestFolder,
+        folder4: TestFolder,
+        folder5: TestFolder,
+        suite1: TestSuite,
+        suite2: TestSuite,
+        suite3: TestSuite,
+        suite4: TestSuite,
+        suite5: TestSuite;
+    let file1: TestFile,
+        file2: TestFile,
+        file3: TestFile,
+        file4: TestFile,
+        file5: TestFile;
     setup(() => {
         resultResetVisitor = typemoq.Mock.ofType<ITestVisitor>();
         folder1 = createMockTestDataItem<TestFolder>(TestType.testFolder);
@@ -63,9 +87,13 @@ suite('Unit Tests - Tests Results Service', () => {
         fn8.passed = false;
         const fn9 = createMockTestDataItem<TestFunction>(TestType.testFunction);
         fn9.passed = true;
-        const fn10 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        const fn10 = createMockTestDataItem<TestFunction>(
+            TestType.testFunction
+        );
         fn10.passed = true;
-        const fn11 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        const fn11 = createMockTestDataItem<TestFunction>(
+            TestType.testFunction
+        );
         fn11.passed = true;
         file1.suites.push(suite1);
         file1.suites.push(suite2);
@@ -152,13 +180,31 @@ suite('Unit Tests - Tests Results Service', () => {
             summary: { errors: 0, skipped: 0, passed: 0, failures: 0 },
             testFiles: [file1, file2, file3, file4, file5],
             testFolders: [folder1, folder2, folder3, folder4, folder5],
-            testFunctions: [flattendFn1, flattendFn2, flattendFn3, flattendFn4, flattendFn5, flattendFn6, flattendFn7, flattendFn8, flattendFn9, flattendFn10, flattendFn11],
-            testSuites: [flattendSuite1, flattendSuite2, flattendSuite3, flattendSuite4, flattendSuite5]
+            testFunctions: [
+                flattendFn1,
+                flattendFn2,
+                flattendFn3,
+                flattendFn4,
+                flattendFn5,
+                flattendFn6,
+                flattendFn7,
+                flattendFn8,
+                flattendFn9,
+                flattendFn10,
+                flattendFn11
+            ],
+            testSuites: [
+                flattendSuite1,
+                flattendSuite2,
+                flattendSuite3,
+                flattendSuite4,
+                flattendSuite5
+            ]
         };
         testResultsService = new TestResultsService(resultResetVisitor.object);
     });
 
-    test('If any test fails, parent fails', () => {
+    test("If any test fails, parent fails", () => {
         testResultsService.updateResults(tests);
         expect(suite1.status).to.equal(TestStatus.Fail);
         expect(file1.status).to.equal(TestStatus.Fail);
@@ -167,14 +213,14 @@ suite('Unit Tests - Tests Results Service', () => {
         expect(folder3.status).to.equal(TestStatus.Fail);
     });
 
-    test('If all tests pass, parent passes', () => {
+    test("If all tests pass, parent passes", () => {
         testResultsService.updateResults(tests);
         expect(file4.status).to.equal(TestStatus.Pass);
         expect(folder5.status).to.equal(TestStatus.Pass);
         expect(folder2.status).to.equal(TestStatus.Pass);
     });
 
-    test('If no tests run, parent status is not run', () => {
+    test("If no tests run, parent status is not run", () => {
         testResultsService.updateResults(tests);
         expect(suite3.status).to.equal(TestStatus.Unknown);
         expect(suite4.status).to.equal(TestStatus.Unknown);
@@ -182,7 +228,7 @@ suite('Unit Tests - Tests Results Service', () => {
         expect(file3.status).to.equal(TestStatus.Unknown);
     });
 
-    test('Number of functions passed, not run and failed are correctly calculated', () => {
+    test("Number of functions passed, not run and failed are correctly calculated", () => {
         testResultsService.updateResults(tests);
 
         expect(file1.functionsPassed).to.equal(3);

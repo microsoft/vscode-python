@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
-import './progressBar.css';
+"use strict";
+import "./progressBar.css";
 
-import * as React from 'react';
-import { getLocString } from '../react-common/locReactSide';
+import * as React from "react";
+import { getLocString } from "../react-common/locReactSide";
 
 export interface IEmptyRowsProps {
     total: number;
@@ -12,17 +12,22 @@ export interface IEmptyRowsProps {
 }
 
 export const ProgressBar = (props: IEmptyRowsProps) => {
-    const percent = props.current / props.total * 100;
+    const percent = (props.current / props.total) * 100;
     const percentText = `${Math.round(percent)}%`;
     const style: React.CSSProperties = {
         width: percentText
     };
-    const message = getLocString('DataScience.fetchingDataViewer', 'Fetching data ...');
+    const message = getLocString(
+        "DataScience.fetchingDataViewer",
+        "Fetching data ..."
+    );
 
     return (
-        <div className='progress-container'>
+        <div className="progress-container">
             {message}
-            <div className='progress-bar' style={style}>{percentText}</div>
+            <div className="progress-bar" style={style}>
+                {percentText}
+            </div>
         </div>
     );
 };

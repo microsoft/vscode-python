@@ -1,10 +1,10 @@
-import { inject, injectable } from 'inversify';
-import { Disposable, Event, EventEmitter, Uri } from 'vscode';
-import { IPlatformService } from '../../common/platform/types';
-import { IDisposableRegistry } from '../../common/types';
-import { createDeferred, Deferred } from '../../common/utils/async';
-import { OSType } from '../../common/utils/platform';
-import { IServiceContainer } from '../../ioc/types';
+import { inject, injectable } from "inversify";
+import { Disposable, Event, EventEmitter, Uri } from "vscode";
+import { IPlatformService } from "../../common/platform/types";
+import { IDisposableRegistry } from "../../common/types";
+import { createDeferred, Deferred } from "../../common/utils/async";
+import { OSType } from "../../common/utils/platform";
+import { IServiceContainer } from "../../ioc/types";
 import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
@@ -17,15 +17,16 @@ import {
     PythonInterpreter,
     WINDOWS_REGISTRY_SERVICE,
     WORKSPACE_VIRTUAL_ENV_SERVICE
-} from '../contracts';
+} from "../contracts";
 // tslint:disable-next-line:no-require-imports no-var-requires
-const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
+const flatten = require("lodash/flatten") as typeof import("lodash/flatten");
 
 /**
  * Facilitates locating Python interpreters.
  */
 @injectable()
-export class PythonInterpreterLocatorService implements IInterpreterLocatorService {
+export class PythonInterpreterLocatorService
+    implements IInterpreterLocatorService {
     private readonly disposables: Disposable[] = [];
     private readonly platform: IPlatformService;
     private readonly interpreterLocatorHelper: IInterpreterLocatorHelper;
@@ -35,8 +36,12 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
     ) {
         this._hasInterpreters = createDeferred<boolean>();
         serviceContainer.get<Disposable[]>(IDisposableRegistry).push(this);
-        this.platform = serviceContainer.get<IPlatformService>(IPlatformService);
-        this.interpreterLocatorHelper = serviceContainer.get<IInterpreterLocatorHelper>(IInterpreterLocatorHelper);
+        this.platform = serviceContainer.get<IPlatformService>(
+            IPlatformService
+        );
+        this.interpreterLocatorHelper = serviceContainer.get<
+            IInterpreterLocatorHelper
+        >(IInterpreterLocatorHelper);
     }
     /**
      * This class should never emit events when we're locating.
@@ -70,13 +75,17 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
      */
     public async getInterpreters(resource?: Uri): Promise<PythonInterpreter[]> {
         const locators = this.getLocators();
-        const promises = locators.map(async provider => provider.getInterpreters(resource));
+        const promises = locators.map(async provider =>
+            provider.getInterpreters(resource)
+        );
         locators.forEach(locator => {
-            locator.hasInterpreters.then(found => {
-                if (found) {
-                    this._hasInterpreters.resolve(true);
-                }
-            }).ignoreErrors();
+            locator.hasInterpreters
+                .then(found => {
+                    if (found) {
+                        this._hasInterpreters.resolve(true);
+                    }
+                })
+                .ignoreErrors();
         });
         const listOfInterpreters = await Promise.all(promises);
 
@@ -108,7 +117,15 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
             [CURRENT_PATH_SERVICE, undefined]
         ];
         return keys
-            .filter(item => item[1] === undefined || item[1] === this.platform.osType)
-            .map(item => this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, item[0]));
+            .filter(
+                item =>
+                    item[1] === undefined || item[1] === this.platform.osType
+            )
+            .map(item =>
+                this.serviceContainer.get<IInterpreterLocatorService>(
+                    IInterpreterLocatorService,
+                    item[0]
+                )
+            );
     }
 }

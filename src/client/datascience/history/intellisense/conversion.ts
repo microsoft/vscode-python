@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
-import '../../../common/extensions';
+"use strict";
+import "../../../common/extensions";
 
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
-import * as vscode from 'vscode';
-import * as vscodeLanguageClient from 'vscode-languageclient';
+import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api";
+import * as vscode from "vscode";
+import * as vscodeLanguageClient from "vscode-languageclient";
 
 // See the comment on convertCompletionItemKind below
 // Here's the monaco enum:
@@ -65,16 +65,16 @@ import * as vscodeLanguageClient from 'vscode-languageclient';
 
 // Left side is the vscode value.
 const mapCompletionItemKind: Map<number, number> = new Map<number, number>([
-    [0, 9],  // No value for zero in vscode
+    [0, 9], // No value for zero in vscode
     [1, 18], // Text
-    [2, 0],  // Method
-    [3, 1],  // Function
-    [4, 2],  // Constructor
-    [5, 3],  // Field
-    [6, 4],  // Variable
-    [7, 5],  // Class
-    [8, 7],  // Interface
-    [9, 8],  // Module
+    [2, 0], // Method
+    [3, 1], // Function
+    [4, 2], // Constructor
+    [5, 3], // Field
+    [6, 4], // Variable
+    [7, 5], // Class
+    [8, 7], // Interface
+    [9, 8], // Module
     [10, 9], // Property
     [11, 12], // Unit
     [12, 13], // Value
@@ -90,40 +90,42 @@ const mapCompletionItemKind: Map<number, number> = new Map<number, number>([
     [22, 6], // Struct
     [23, 10], // Event
     [24, 11], // Operator
-    [25, 24]  // TypeParameter
+    [25, 24] // TypeParameter
 ]);
 
 const mapJupyterKind: Map<string, number> = new Map<string, number>([
-    ['method', 0],
-    ['function', 1],
-    ['constructor', 2],
-    ['field', 3],
-    ['variable', 4],
-    ['class', 5],
-    ['struct', 6],
-    ['interface', 7],
-    ['module', 8],
-    ['property', 9],
-    ['event', 10],
-    ['operator', 11],
-    ['unit', 12],
-    ['value', 13],
-    ['constant', 14],
-    ['enum', 15],
-    ['enumMember', 16],
-    ['keyword', 17],
-    ['text', 18],
-    ['color', 19],
-    ['file', 20],
-    ['reference', 21],
-    ['customcolor', 22],
-    ['folder', 23],
-    ['typeParameter', 24],
-    ['snippet', 25],
-    ['<unknown>', 25]
+    ["method", 0],
+    ["function", 1],
+    ["constructor", 2],
+    ["field", 3],
+    ["variable", 4],
+    ["class", 5],
+    ["struct", 6],
+    ["interface", 7],
+    ["module", 8],
+    ["property", 9],
+    ["event", 10],
+    ["operator", 11],
+    ["unit", 12],
+    ["value", 13],
+    ["constant", 14],
+    ["enum", 15],
+    ["enumMember", 16],
+    ["keyword", 17],
+    ["text", 18],
+    ["color", 19],
+    ["file", 20],
+    ["reference", 21],
+    ["customcolor", 22],
+    ["folder", 23],
+    ["typeParameter", 24],
+    ["snippet", 25],
+    ["<unknown>", 25]
 ]);
 
-function convertToMonacoRange(range: vscodeLanguageClient.Range | undefined) : monacoEditor.IRange | undefined {
+function convertToMonacoRange(
+    range: vscodeLanguageClient.Range | undefined
+): monacoEditor.IRange | undefined {
     if (range) {
         return {
             startLineNumber: range.start.line + 1,
@@ -148,10 +150,13 @@ function convertToMonacoCompletionItemKind(kind?: number): number {
     return 9; // Property
 }
 
-function convertToMonacoCompletionItem(item: vscodeLanguageClient.CompletionItem, requiresKindConversion: boolean) : monacoEditor.languages.CompletionItem {
+function convertToMonacoCompletionItem(
+    item: vscodeLanguageClient.CompletionItem,
+    requiresKindConversion: boolean
+): monacoEditor.languages.CompletionItem {
     // They should be pretty much identical? Except for ranges.
     // tslint:disable-next-line: no-object-literal-type-assertion
-    const result = {...item} as monacoEditor.languages.CompletionItem;
+    const result = { ...item } as monacoEditor.languages.CompletionItem;
     if (requiresKindConversion) {
         result.kind = convertToMonacoCompletionItemKind(item.kind);
     }
@@ -165,20 +170,30 @@ function convertToMonacoCompletionItem(item: vscodeLanguageClient.CompletionItem
 }
 
 export function convertToMonacoCompletionList(
-    result: vscodeLanguageClient.CompletionList | vscodeLanguageClient.CompletionItem[] | vscode.CompletionItem[] | vscode.CompletionList | null,
-    requiresKindConversion: boolean) : monacoEditor.languages.CompletionList {
+    result:
+        | vscodeLanguageClient.CompletionList
+        | vscodeLanguageClient.CompletionItem[]
+        | vscode.CompletionItem[]
+        | vscode.CompletionList
+        | null,
+    requiresKindConversion: boolean
+): monacoEditor.languages.CompletionList {
     if (result) {
-        if (result.hasOwnProperty('items')) {
+        if (result.hasOwnProperty("items")) {
             const list = result as vscodeLanguageClient.CompletionList;
             return {
-                suggestions: list.items.map(l => convertToMonacoCompletionItem(l, requiresKindConversion)),
+                suggestions: list.items.map(l =>
+                    convertToMonacoCompletionItem(l, requiresKindConversion)
+                ),
                 incomplete: list.isIncomplete
             };
         } else {
             // Must be one of the two array types since there's no items property.
             const array = result as vscodeLanguageClient.CompletionItem[];
             return {
-                suggestions: array.map(l => convertToMonacoCompletionItem(l, requiresKindConversion)),
+                suggestions: array.map(l =>
+                    convertToMonacoCompletionItem(l, requiresKindConversion)
+                ),
                 incomplete: false
             };
         }
@@ -190,15 +205,22 @@ export function convertToMonacoCompletionList(
     };
 }
 
-function convertToMonacoMarkdown(strings: vscodeLanguageClient.MarkupContent | vscodeLanguageClient.MarkedString | vscodeLanguageClient.MarkedString[] | vscode.MarkedString | vscode.MarkedString[]) : monacoEditor.IMarkdownString[] {
-    if (strings.hasOwnProperty('kind')) {
+function convertToMonacoMarkdown(
+    strings:
+        | vscodeLanguageClient.MarkupContent
+        | vscodeLanguageClient.MarkedString
+        | vscodeLanguageClient.MarkedString[]
+        | vscode.MarkedString
+        | vscode.MarkedString[]
+): monacoEditor.IMarkdownString[] {
+    if (strings.hasOwnProperty("kind")) {
         const content = strings as vscodeLanguageClient.MarkupContent;
         return [
             {
                 value: content.value
             }
         ];
-    } else if (strings.hasOwnProperty('value')) {
+    } else if (strings.hasOwnProperty("value")) {
         // tslint:disable-next-line: no-any
         const content = strings as any;
         return [
@@ -206,7 +228,7 @@ function convertToMonacoMarkdown(strings: vscodeLanguageClient.MarkupContent | v
                 value: content.value
             }
         ];
-    } else if (typeof strings === 'string') {
+    } else if (typeof strings === "string") {
         return [
             {
                 value: strings.toString()
@@ -220,7 +242,9 @@ function convertToMonacoMarkdown(strings: vscodeLanguageClient.MarkupContent | v
     return [];
 }
 
-export function convertToMonacoHover(result: vscodeLanguageClient.Hover | vscode.Hover | null | undefined) : monacoEditor.languages.Hover {
+export function convertToMonacoHover(
+    result: vscodeLanguageClient.Hover | vscode.Hover | null | undefined
+): monacoEditor.languages.Hover {
     if (result) {
         return {
             contents: convertToMonacoMarkdown(result.contents),
@@ -234,7 +258,11 @@ export function convertToMonacoHover(result: vscodeLanguageClient.Hover | vscode
 }
 
 // tslint:disable-next-line: no-any
-export function convertStringsToSuggestions(strings: ReadonlyArray<string>, range: monacoEditor.IRange, metadata: any) : monacoEditor.languages.CompletionItem [] {
+export function convertStringsToSuggestions(
+    strings: ReadonlyArray<string>,
+    range: monacoEditor.IRange,
+    metadata: any
+): monacoEditor.languages.CompletionItem[] {
     // Try to compute kind from the metadata.
     let kinds: number[];
     if (metadata && metadata._jupyter_types_experimental) {
@@ -257,7 +285,8 @@ export function convertStringsToSuggestions(strings: ReadonlyArray<string>, rang
 }
 
 export function convertToMonacoSignatureHelp(
-    result: vscodeLanguageClient.SignatureHelp | vscode.SignatureHelp | null) : monacoEditor.languages.SignatureHelp {
+    result: vscodeLanguageClient.SignatureHelp | vscode.SignatureHelp | null
+): monacoEditor.languages.SignatureHelp {
     if (result) {
         return result as monacoEditor.languages.SignatureHelp;
     }

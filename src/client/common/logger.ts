@@ -1,16 +1,16 @@
 // tslint:disable:no-console no-any
-import { injectable } from 'inversify';
-import * as path from 'path';
-import * as util from 'util';
-import { createLogger, format, transports } from 'winston';
-import { EXTENSION_ROOT_DIR } from '../constants';
-import { sendTelemetryEvent } from '../telemetry';
-import { isTestExecution } from './constants';
-import { ILogger, LogLevel } from './types';
-import { StopWatch } from './utils/stopWatch';
+import { injectable } from "inversify";
+import * as path from "path";
+import * as util from "util";
+import { createLogger, format, transports } from "winston";
+import { EXTENSION_ROOT_DIR } from "../constants";
+import { sendTelemetryEvent } from "../telemetry";
+import { isTestExecution } from "./constants";
+import { ILogger, LogLevel } from "./types";
+import { StopWatch } from "./utils/stopWatch";
 
 // tslint:disable-next-line: no-var-requires no-require-imports
-const TransportStream = require('winston-transport');
+const TransportStream = require("winston-transport");
 
 // Initialize the loggers as soon as this module is imported.
 const consoleLogger = createLogger();
@@ -19,23 +19,25 @@ initializeConsoleLogger();
 initializeFileLogger();
 
 const logLevelMap = {
-    [LogLevel.Error]: 'error',
-    [LogLevel.Information]: 'info',
-    [LogLevel.Warning]: 'warn'
+    [LogLevel.Error]: "error",
+    [LogLevel.Information]: "info",
+    [LogLevel.Warning]: "warn"
 };
 
 function log(logLevel: LogLevel, ...args: any[]) {
-    if (consoleLogger.transports.length > 0){
-        const message = args.length === 0 ? '' : util.format(args[0], ...args.slice(1));
+    if (consoleLogger.transports.length > 0) {
+        const message =
+            args.length === 0 ? "" : util.format(args[0], ...args.slice(1));
         consoleLogger.log(logLevelMap[logLevel], message);
     }
     logToFile(logLevel, ...args);
 }
 function logToFile(logLevel: LogLevel, ...args: any[]) {
-    if (fileLogger.transports.length === 0){
+    if (fileLogger.transports.length === 0) {
         return;
     }
-    const message = args.length === 0 ? '' : util.format(args[0], ...args.slice(1));
+    const message =
+        args.length === 0 ? "" : util.format(args[0], ...args.slice(1));
     fileLogger.log(logLevelMap[logLevel], message);
 }
 
@@ -56,19 +58,25 @@ function logToFile(logLevel: LogLevel, ...args: any[]) {
  */
 function initializeConsoleLogger() {
     const logMethods = {
-        log: Symbol.for('log'),
-        info: Symbol.for('info'),
-        error: Symbol.for('error'),
-        debug: Symbol.for('debug'),
-        warn: Symbol.for('warn')
+        log: Symbol.for("log"),
+        info: Symbol.for("info"),
+        error: Symbol.for("error"),
+        debug: Symbol.for("debug"),
+        warn: Symbol.for("warn")
     };
 
-    function logToConsole(stream: 'info' | 'error' | 'warn' | 'log' | 'debug', ...args: any[]) {
-        if (['info', 'error', 'warn', 'log', 'debug'].indexOf(stream) === -1) {
-            stream = 'log';
+    function logToConsole(
+        stream: "info" | "error" | "warn" | "log" | "debug",
+        ...args: any[]
+    ) {
+        if (["info", "error", "warn", "log", "debug"].indexOf(stream) === -1) {
+            stream = "log";
         }
         // Further below we monkeypatch the console.log, etc methods.
-        const fn = (console as any)[logMethods[stream]] || console[stream] || console.log;
+        const fn =
+            (console as any)[logMethods[stream]] ||
+            console[stream] ||
+            console.log;
         fn(...args);
     }
 
@@ -88,67 +96,83 @@ function initializeConsoleLogger() {
         (console as any)[logMethods.warn] = console.warn;
 
         // tslint:disable-next-line: no-function-expression
-        console.log = function () {
+        console.log = function() {
             const args = Array.prototype.slice.call(arguments);
-            logToConsole('log', ...args);
+            logToConsole("log", ...args);
             logToFile(LogLevel.Information, ...args);
         };
         // tslint:disable-next-line: no-function-expression
-        console.info = function () {
+        console.info = function() {
             const args = Array.prototype.slice.call(arguments);
-            logToConsole('info', ...args);
+            logToConsole("info", ...args);
             logToFile(LogLevel.Information, ...args);
         };
         // tslint:disable-next-line: no-function-expression
-        console.warn = function () {
+        console.warn = function() {
             const args = Array.prototype.slice.call(arguments);
-            logToConsole('warn', ...args);
+            logToConsole("warn", ...args);
             logToFile(LogLevel.Warning, ...args);
         };
         // tslint:disable-next-line: no-function-expression
-        console.error = function () {
+        console.error = function() {
             const args = Array.prototype.slice.call(arguments);
-            logToConsole('error', ...args);
+            logToConsole("error", ...args);
             logToFile(LogLevel.Error, ...args);
         };
         // tslint:disable-next-line: no-function-expression
-        console.debug = function () {
+        console.debug = function() {
             const args = Array.prototype.slice.call(arguments);
-            logToConsole('debug', ...args);
+            logToConsole("debug", ...args);
             logToFile(LogLevel.Information, ...args);
         };
     }
 
-    if (isTestExecution() && !process.env.VSC_PYTHON_FORCE_LOGGING){
+    if (isTestExecution() && !process.env.VSC_PYTHON_FORCE_LOGGING) {
         // Do not log to console if running tests on CI and we're not asked to do so.
         return;
     }
 
     // Rest of this stuff is just to instantiate the console logger.
     // I.e. when we use our logger, ensure we also log to the console (for end users).
-    const formattedMessage = Symbol.for('message');
+    const formattedMessage = Symbol.for("message");
     class ConsoleTransport extends TransportStream {
         constructor(options?: any) {
             super(options);
         }
-        public log?(info: { level: string; message: string;[formattedMessage]: string }, next: () => void): any {
-            setImmediate(() => this.emit('logged', info));
-            logToConsole(info.level as any, info[formattedMessage] || info.message);
+        public log?(
+            info: {
+                level: string;
+                message: string;
+                [formattedMessage]: string;
+            },
+            next: () => void
+        ): any {
+            setImmediate(() => this.emit("logged", info));
+            logToConsole(
+                info.level as any,
+                info[formattedMessage] || info.message
+            );
             if (next) {
                 next();
             }
         }
     }
-    const consoleFormatter = format.printf(({ level, message, label, timestamp }) => {
-        // If we're on CI server, no need for the label (prefix)
-        // Pascal casing og log level, so log files get highlighted when viewing in VSC and other editors.
-        const prefix = `${level.substring(0, 1).toUpperCase()}${level.substring(1)} ${process.env.TF_BUILD ? '' : label}`;
-        return `${prefix.trim()} ${timestamp}: ${message}`;
-    });
+    const consoleFormatter = format.printf(
+        ({ level, message, label, timestamp }) => {
+            // If we're on CI server, no need for the label (prefix)
+            // Pascal casing og log level, so log files get highlighted when viewing in VSC and other editors.
+            const prefix = `${level
+                .substring(0, 1)
+                .toUpperCase()}${level.substring(1)} ${
+                process.env.TF_BUILD ? "" : label
+            }`;
+            return `${prefix.trim()} ${timestamp}: ${message}`;
+        }
+    );
     const consoleFormat = format.combine(
-        format.label({ label: 'Python Extension:' }),
+        format.label({ label: "Python Extension:" }),
         format.timestamp({
-            format: 'YYYY-MM-DD HH:mm:ss'
+            format: "YYYY-MM-DD HH:mm:ss"
         }),
         consoleFormatter
     );
@@ -166,16 +190,19 @@ function initializeFileLogger() {
     }
     const fileFormatter = format.printf(({ level, message, timestamp }) => {
         // Pascal casing og log level, so log files get highlighted when viewing in VSC and other editors.
-        return `${level.substring(0, 1).toUpperCase()}${level.substring(1)} ${timestamp}: ${message}`;
+        return `${level.substring(0, 1).toUpperCase()}${level.substring(
+            1
+        )} ${timestamp}: ${message}`;
     });
     const fileFormat = format.combine(
         format.timestamp({
-            format: 'YYYY-MM-DD HH:mm:ss'
+            format: "YYYY-MM-DD HH:mm:ss"
         }),
         fileFormatter
     );
-    const logFilePath = path.isAbsolute(process.env.VSC_PYTHON_LOG_FILE) ? process.env.VSC_PYTHON_LOG_FILE :
-        path.join(EXTENSION_ROOT_DIR, process.env.VSC_PYTHON_LOG_FILE);
+    const logFilePath = path.isAbsolute(process.env.VSC_PYTHON_LOG_FILE)
+        ? process.env.VSC_PYTHON_LOG_FILE
+        : path.join(EXTENSION_ROOT_DIR, process.env.VSC_PYTHON_LOG_FILE);
     const logFileSink = new transports.File({
         format: fileFormat,
         filename: logFilePath,
@@ -184,7 +211,10 @@ function initializeFileLogger() {
     fileLogger.add(logFileSink);
 }
 
-const enableLogging = !isTestExecution() || process.env.VSC_PYTHON_FORCE_LOGGING || process.env.VSC_PYTHON_LOG_FILE;
+const enableLogging =
+    !isTestExecution() ||
+    process.env.VSC_PYTHON_FORCE_LOGGING ||
+    process.env.VSC_PYTHON_LOG_FILE;
 
 @injectable()
 export class Logger implements ILogger {
@@ -245,18 +275,19 @@ function argsToLogString(args: any[]): string {
                     }
                     return `Arg ${index + 1}: ${JSON.stringify(item)}`;
                 } catch {
-                    return `Arg ${index + 1}: <argument cannot be serialized for logging>`;
+                    return `Arg ${index +
+                        1}: <argument cannot be serialized for logging>`;
                 }
             })
-            .join(', ');
+            .join(", ");
     } catch {
-        return '';
+        return "";
     }
 }
 
 // tslint:disable-next-line:no-any
 function returnValueToLogString(returnValue: any): string {
-    const returnValueMessage = 'Return Value: ';
+    const returnValueMessage = "Return Value: ";
     if (returnValue === undefined) {
         return `${returnValueMessage}undefined`;
     }
@@ -287,26 +318,45 @@ export function traceWarning(...args: any[]) {
 }
 
 export namespace traceDecorators {
-    export function verbose(message: string, options: LogOptions = LogOptions.Arguments | LogOptions.ReturnValue) {
+    export function verbose(
+        message: string,
+        options: LogOptions = LogOptions.Arguments | LogOptions.ReturnValue
+    ) {
         return trace(message, options);
     }
     export function error(message: string) {
-        return trace(message, LogOptions.Arguments | LogOptions.ReturnValue, LogLevel.Error);
+        return trace(
+            message,
+            LogOptions.Arguments | LogOptions.ReturnValue,
+            LogLevel.Error
+        );
     }
     export function info(message: string) {
         return trace(message);
     }
     export function warn(message: string) {
-        return trace(message, LogOptions.Arguments | LogOptions.ReturnValue, LogLevel.Warning);
+        return trace(
+            message,
+            LogOptions.Arguments | LogOptions.ReturnValue,
+            LogLevel.Warning
+        );
     }
 }
-function trace(message: string, options: LogOptions = LogOptions.None, logLevel?: LogLevel) {
+function trace(
+    message: string,
+    options: LogOptions = LogOptions.None,
+    logLevel?: LogLevel
+) {
     // tslint:disable-next-line:no-function-expression no-any
-    return function (_: Object, __: string, descriptor: TypedPropertyDescriptor<any>) {
+    return function(
+        _: Object,
+        __: string,
+        descriptor: TypedPropertyDescriptor<any>
+    ) {
         const originalMethod = descriptor.value;
         // tslint:disable-next-line:no-function-expression no-any
-        descriptor.value = function (...args: any[]) {
-            const className = _ && _.constructor ? _.constructor.name : '';
+        descriptor.value = function(...args: any[]) {
+            const className = _ && _.constructor ? _.constructor.name : "";
             // tslint:disable-next-line:no-any
             function writeSuccess(elapsedTime: number, returnValue: any) {
                 if (logLevel === LogLevel.Error) {
@@ -318,20 +368,36 @@ function trace(message: string, options: LogOptions = LogOptions.None, logLevel?
                 writeToLog(elapsedTime, undefined, ex);
             }
             // tslint:disable-next-line:no-any
-            function writeToLog(elapsedTime: number, returnValue?: any, ex?: Error) {
+            function writeToLog(
+                elapsedTime: number,
+                returnValue?: any,
+                ex?: Error
+            ) {
                 const messagesToLog = [message];
-                messagesToLog.push(`Class name = ${className}, completed in ${elapsedTime}ms`);
-                if ((options && LogOptions.Arguments) === LogOptions.Arguments) {
+                messagesToLog.push(
+                    `Class name = ${className}, completed in ${elapsedTime}ms`
+                );
+                if (
+                    (options && LogOptions.Arguments) === LogOptions.Arguments
+                ) {
                     messagesToLog.push(argsToLogString(args));
                 }
-                if ((options & LogOptions.ReturnValue) === LogOptions.ReturnValue) {
+                if (
+                    (options & LogOptions.ReturnValue) ===
+                    LogOptions.ReturnValue
+                ) {
                     messagesToLog.push(returnValueToLogString(returnValue));
                 }
                 if (ex) {
-                    log(LogLevel.Error, messagesToLog.join(', '), ex);
-                    sendTelemetryEvent('ERROR' as any, undefined, undefined, ex);
+                    log(LogLevel.Error, messagesToLog.join(", "), ex);
+                    sendTelemetryEvent(
+                        "ERROR" as any,
+                        undefined,
+                        undefined,
+                        ex
+                    );
                 } else {
-                    log(LogLevel.Information, messagesToLog.join(', '));
+                    log(LogLevel.Information, messagesToLog.join(", "));
                 }
             }
             const timer = new StopWatch();
@@ -340,7 +406,11 @@ function trace(message: string, options: LogOptions = LogOptions.None, logLevel?
                 const result = originalMethod.apply(this, args);
                 // If method being wrapped returns a promise then wait for it.
                 // tslint:disable-next-line:no-unsafe-any
-                if (result && typeof result.then === 'function' && typeof result.catch === 'function') {
+                if (
+                    result &&
+                    typeof result.then === "function" &&
+                    typeof result.catch === "function"
+                ) {
                     // tslint:disable-next-line:prefer-type-cast
                     (result as Promise<void>)
                         .then(data => {

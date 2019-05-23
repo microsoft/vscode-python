@@ -1,16 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
-import '../../extensions';
+"use strict";
+import "../../extensions";
 
-import { inject, injectable } from 'inversify';
-import * as path from 'path';
-import { Uri } from 'vscode';
+import { inject, injectable } from "inversify";
+import * as path from "path";
+import { Uri } from "vscode";
 
-import { ICondaService } from '../../../interpreter/contracts';
-import { IPlatformService } from '../../platform/types';
-import { IConfigurationService } from '../../types';
-import { ITerminalActivationCommandProvider, TerminalShellType } from '../types';
+import { ICondaService } from "../../../interpreter/contracts";
+import { IPlatformService } from "../../platform/types";
+import { IConfigurationService } from "../../types";
+import {
+    ITerminalActivationCommandProvider,
+    TerminalShellType
+} from "../types";
 
 // Version number of conda that requires we call activate with 'conda activate' instead of just 'activate'
 const CondaRequiredMajor = 4;
@@ -20,12 +23,14 @@ const CondaRequiredMinor = 4;
  * Support conda env activation (in the terminal).
  */
 @injectable()
-export class CondaActivationCommandProvider implements ITerminalActivationCommandProvider {
+export class CondaActivationCommandProvider
+    implements ITerminalActivationCommandProvider {
     constructor(
         @inject(ICondaService) private readonly condaService: ICondaService,
         @inject(IPlatformService) private platform: IPlatformService,
-        @inject(IConfigurationService) private configService: IConfigurationService
-    ) { }
+        @inject(IConfigurationService)
+        private configService: IConfigurationService
+    ) {}
 
     /**
      * Is the given shell supported for activating a conda env?
@@ -37,16 +42,25 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
     /**
      * Return the command needed to activate the conda env.
      */
-    public getActivationCommands(resource: Uri | undefined, targetShell: TerminalShellType): Promise<string[] | undefined> {
+    public getActivationCommands(
+        resource: Uri | undefined,
+        targetShell: TerminalShellType
+    ): Promise<string[] | undefined> {
         const pythonPath = this.configService.getSettings(resource).pythonPath;
-        return this.getActivationCommandsForInterpreter(pythonPath, targetShell);
+        return this.getActivationCommandsForInterpreter(
+            pythonPath,
+            targetShell
+        );
     }
 
     /**
      * Return the command needed to activate the conda env.
      *
      */
-    public async getActivationCommandsForInterpreter(pythonPath: string, targetShell: TerminalShellType): Promise<string[] | undefined> {
+    public async getActivationCommandsForInterpreter(
+        pythonPath: string,
+        targetShell: TerminalShellType
+    ): Promise<string[] | undefined> {
         const envInfo = await this.condaService.getCondaEnvironment(pythonPath);
         if (!envInfo) {
             return;
@@ -57,14 +71,24 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         // New version, call activate from the same path as our python path, then call it again to activate our environment.
         // -- note that the 'default' conda location won't allow activate to work for the environment sometimes.
         const versionInfo = await this.condaService.getCondaVersion();
-        if (versionInfo && (versionInfo.major > CondaRequiredMajor || (versionInfo.major === CondaRequiredMajor && versionInfo.minor >= CondaRequiredMinor))) {
+        if (
+            versionInfo &&
+            (versionInfo.major > CondaRequiredMajor ||
+                (versionInfo.major === CondaRequiredMajor &&
+                    versionInfo.minor >= CondaRequiredMinor))
+        ) {
             // New version.
-            const interpreterPath = await this.condaService.getCondaFileFromInterpreter(pythonPath, envInfo.name);
+            const interpreterPath = await this.condaService.getCondaFileFromInterpreter(
+                pythonPath,
+                envInfo.name
+            );
             if (interpreterPath) {
-                const activatePath = path.join(path.dirname(interpreterPath), 'activate').fileToCommandArgument();
-                const firstActivate = this.platform.isWindows ?
-                    activatePath :
-                    `source ${activatePath}`;
+                const activatePath = path
+                    .join(path.dirname(interpreterPath), "activate")
+                    .fileToCommandArgument();
+                const firstActivate = this.platform.isWindows
+                    ? activatePath
+                    : `source ${activatePath}`;
                 return [
                     firstActivate,
                     `conda activate ${envInfo.name.toCommandArgument()}`
@@ -78,12 +102,18 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
             switch (targetShell) {
                 case TerminalShellType.powershell:
                 case TerminalShellType.powershellCore:
-                    return this.getPowershellCommands(envInfo.name, targetShell);
+                    return this.getPowershellCommands(
+                        envInfo.name,
+                        targetShell
+                    );
 
                 // tslint:disable-next-line:no-suspicious-comment
                 // TODO: Do we really special-case fish on Windows?
                 case TerminalShellType.fish:
-                    return this.getFishCommands(envInfo.name, await this.condaService.getCondaFile());
+                    return this.getFishCommands(
+                        envInfo.name,
+                        await this.condaService.getCondaFile()
+                    );
 
                 default:
                     return this.getWindowsCommands(envInfo.name);
@@ -97,7 +127,10 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
                 // tslint:disable-next-line:no-suspicious-comment
                 // TODO: What about pre-4.4.0?
                 case TerminalShellType.fish:
-                    return this.getFishCommands(envInfo.name, await this.condaService.getCondaFile());
+                    return this.getFishCommands(
+                        envInfo.name,
+                        await this.condaService.getCondaFile()
+                    );
 
                 default:
                     return this.getUnixCommands(
@@ -109,7 +142,7 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
     }
 
     public async getWindowsActivateCommand(): Promise<string> {
-        let activateCmd: string = 'activate';
+        let activateCmd: string = "activate";
 
         const condaExePath = await this.condaService.getCondaFile();
 
@@ -126,11 +159,8 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
     public async getWindowsCommands(
         envName: string
     ): Promise<string[] | undefined> {
-
         const activate = await this.getWindowsActivateCommand();
-        return [
-            `${activate} ${envName.toCommandArgument()}`
-        ];
+        return [`${activate} ${envName.toCommandArgument()}`];
     }
 
     public async getPowershellCommands(
@@ -155,7 +185,7 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         conda: string
     ): Promise<string[] | undefined> {
         const condaDir = path.dirname(conda);
-        const activateFile = path.join(condaDir, 'activate');
+        const activateFile = path.join(condaDir, "activate");
         return [
             `source ${activateFile.fileToCommandArgument()} ${envName.toCommandArgument()}`
         ];

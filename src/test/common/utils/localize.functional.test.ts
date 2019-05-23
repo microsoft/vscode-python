@@ -1,20 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
 // tslint:disable:max-func-body-length
 
-import * as assert from 'assert';
-import * as fs from 'fs';
-import * as path from 'path';
-import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
-import * as localize from '../../../client/common/utils/localize';
+import * as assert from "assert";
+import * as fs from "fs";
+import * as path from "path";
+import { EXTENSION_ROOT_DIR } from "../../../client/common/constants";
+import * as localize from "../../../client/common/utils/localize";
 
-const defaultNLSFile = path.join(EXTENSION_ROOT_DIR, 'package.nls.json');
+const defaultNLSFile = path.join(EXTENSION_ROOT_DIR, "package.nls.json");
 
 // Defines a Mocha test suite to group tests of similar kind together
-suite('Localization', () => {
+suite("Localization", () => {
     // Note: We use package.nls.json by default for tests.  Use the
     // setLocale() helper to switch to a different locale.
 
@@ -25,7 +25,7 @@ suite('Localization', () => {
         localeFiles = [];
 
         nls_orig = process.env.VSCODE_NLS_CONFIG;
-        setLocale('en-us');
+        setLocale("en-us");
 
         // Ensure each test starts fresh.
         localize._resetCollections();
@@ -50,49 +50,57 @@ suite('Localization', () => {
         localeFiles.push(filename);
     }
 
-    test('keys', done => {
+    test("keys", done => {
         const val = localize.LanguageService.bannerMessage();
-        assert.equal(val, 'Can you please take 2 minutes to tell us how the Python Language Server is working for you?', 'LanguageService string doesnt match');
+        assert.equal(
+            val,
+            "Can you please take 2 minutes to tell us how the Python Language Server is working for you?",
+            "LanguageService string doesnt match"
+        );
         done();
     });
 
-    test('keys italian', done => {
+    test("keys italian", done => {
         // Force a config change
-        setLocale('it');
+        setLocale("it");
 
         const val = localize.LanguageService.bannerLabelYes();
-        assert.equal(val, 'Sì, prenderò il sondaggio ora', 'bannerLabelYes is not being translated');
+        assert.equal(
+            val,
+            "Sì, prenderò il sondaggio ora",
+            "bannerLabelYes is not being translated"
+        );
         done();
     });
 
-    test('key found for locale', done => {
-        addLocale('spam', {
-            'debug.selectConfigurationTitle': '???',
-            'Common.gotIt': '!!!'
+    test("key found for locale", done => {
+        addLocale("spam", {
+            "debug.selectConfigurationTitle": "???",
+            "Common.gotIt": "!!!"
         });
-        setLocale('spam');
+        setLocale("spam");
 
         const title = localize.DebugConfigStrings.selectConfiguration.title();
         const gotIt = localize.Common.gotIt();
 
-        assert.equal(title, '???', 'not used');
-        assert.equal(gotIt, '!!!', 'not used');
+        assert.equal(title, "???", "not used");
+        assert.equal(gotIt, "!!!", "not used");
         done();
     });
 
-    test('key not found for locale (default used)', done => {
-        addLocale('spam', {
-            'debug.selectConfigurationTitle': '???'
+    test("key not found for locale (default used)", done => {
+        addLocale("spam", {
+            "debug.selectConfigurationTitle": "???"
         });
-        setLocale('spam');
+        setLocale("spam");
 
         const gotIt = localize.Common.gotIt();
 
-        assert.equal(gotIt, 'Got it!', `default not used (got ${gotIt})`);
+        assert.equal(gotIt, "Got it!", `default not used (got ${gotIt})`);
         done();
     });
 
-    test('keys exist', done => {
+    test("keys exist", done => {
         // Read in the JSON object for the package.nls.json
         const nlsCollection = getDefaultCollection();
 
@@ -112,7 +120,8 @@ suite('Localization', () => {
         // If any missing keys, output an error
         const missingKeys = Object.keys(missing);
         if (missingKeys && missingKeys.length > 0) {
-            let message = 'Missing keys. Add the following to package.nls.json:\n';
+            let message =
+                "Missing keys. Add the following to package.nls.json:\n";
             missingKeys.forEach((k: string) => {
                 message = message.concat(`\t"${k}" : "${missing[k]}",\n`);
             });
@@ -122,12 +131,12 @@ suite('Localization', () => {
         done();
     });
 
-    test('all keys used', function(done) {
+    test("all keys used", function(done) {
         // tslint:disable-next-line:no-suspicious-comment
         // TODO: Unused keys need to be cleaned up.
         // tslint:disable-next-line:no-invalid-this
         this.skip();
-    //test('all keys used', done => {
+        //test('all keys used', done => {
         const nlsCollection = getDefaultCollection();
         useEveryLocalization(localize);
 
@@ -139,7 +148,7 @@ suite('Localization', () => {
             if (askedFor[key]) {
                 return;
             }
-            if (key.toLowerCase().indexOf('datascience') >= 0) {
+            if (key.toLowerCase().indexOf("datascience") >= 0) {
                 return;
             }
             extra[key] = nlsCollection[key];
@@ -148,7 +157,8 @@ suite('Localization', () => {
         // If any missing keys, output an error
         const extraKeys = Object.keys(extra);
         if (extraKeys && extraKeys.length > 0) {
-            let message = 'Unused keys. Remove the following from package.nls.json:\n';
+            let message =
+                "Unused keys. Remove the following from package.nls.json:\n";
             extraKeys.forEach((k: string) => {
                 message = message.concat(`\t"${k}" : "${extra[k]}",\n`);
             });
@@ -160,9 +170,12 @@ suite('Localization', () => {
 });
 
 function addLocaleFile(locale: string, nls: Record<string, string>) {
-    const filename = path.join(EXTENSION_ROOT_DIR, `package.nls.${locale}.json`);
+    const filename = path.join(
+        EXTENSION_ROOT_DIR,
+        `package.nls.${locale}.json`
+    );
     if (fs.existsSync(filename)) {
-        throw Error('NLS file already exists');
+        throw Error("NLS file already exists");
     }
     const contents = JSON.stringify(nls);
     fs.writeFileSync(filename, contents);
@@ -182,9 +195,9 @@ function setLocale(locale: string) {
 
 function getDefaultCollection() {
     if (!fs.existsSync(defaultNLSFile)) {
-        throw Error('package.nls.json is missing');
+        throw Error("package.nls.json is missing");
     }
-    const contents = fs.readFileSync(defaultNLSFile, 'utf8');
+    const contents = fs.readFileSync(defaultNLSFile, "utf8");
     return JSON.parse(contents);
 }
 
@@ -196,7 +209,7 @@ function useEveryLocalization(topns: any) {
     // Now match all of our namespace entries to our nls entries.
     entries.forEach((e: string) => {
         // @ts-ignore
-        if (typeof topns[e] === 'function') {
+        if (typeof topns[e] === "function") {
             return;
         }
         // It must be a namespace.
@@ -213,7 +226,7 @@ function useEveryLocalizationInNS(ns: any) {
     // Run every function and cover every sub-namespace.
     // This should fill up our "asked-for keys" collection.
     props.forEach((key: string) => {
-        if (typeof ns[key] === 'function') {
+        if (typeof ns[key] === "function") {
             const func = ns[key];
             func();
         } else {

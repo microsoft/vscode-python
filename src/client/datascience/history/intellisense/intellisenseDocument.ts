@@ -1,26 +1,48 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
-import '../../../common/extensions';
+"use strict";
+import "../../../common/extensions";
 
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
-import { EndOfLine, Position, Range, TextDocument, TextDocumentContentChangeEvent, TextLine, Uri } from 'vscode';
-import * as vscodeLanguageClient from 'vscode-languageclient';
+import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api";
+import {
+    EndOfLine,
+    Position,
+    Range,
+    TextDocument,
+    TextDocumentContentChangeEvent,
+    TextLine,
+    Uri
+} from "vscode";
+import * as vscodeLanguageClient from "vscode-languageclient";
 
-import { PYTHON_LANGUAGE } from '../../../common/constants';
-import { Identifiers } from '../../constants';
-import { DefaultWordPattern, ensureValidWordDefinition, getWordAtText, regExpLeadsToEndlessLoop } from './wordHelper';
+import { PYTHON_LANGUAGE } from "../../../common/constants";
+import { Identifiers } from "../../constants";
+import {
+    DefaultWordPattern,
+    ensureValidWordDefinition,
+    getWordAtText,
+    regExpLeadsToEndlessLoop
+} from "./wordHelper";
 
 class IntellisenseLine implements TextLine {
-
     private _range: Range;
     private _rangeWithLineBreak: Range;
     private _firstNonWhitespaceIndex: number | undefined;
     private _isEmpty: boolean | undefined;
 
-    constructor(private _contents: string, private _line: number, private _offset: number) {
-        this._range = new Range(new Position(_line, 0), new Position(_line, _contents.length));
-        this._rangeWithLineBreak = new Range(this.range.start, new Position(_line, _contents.length + 1));
+    constructor(
+        private _contents: string,
+        private _line: number,
+        private _offset: number
+    ) {
+        this._range = new Range(
+            new Position(_line, 0),
+            new Position(_line, _contents.length)
+        );
+        this._rangeWithLineBreak = new Range(
+            this.range.start,
+            new Position(_line, _contents.length + 1)
+        );
     }
 
     public get offset(): number {
@@ -40,13 +62,16 @@ class IntellisenseLine implements TextLine {
     }
     public get firstNonWhitespaceCharacterIndex(): number {
         if (this._firstNonWhitespaceIndex === undefined) {
-            this._firstNonWhitespaceIndex = this._contents.trimLeft().length - this._contents.length;
+            this._firstNonWhitespaceIndex =
+                this._contents.trimLeft().length - this._contents.length;
         }
         return this._firstNonWhitespaceIndex;
     }
     public get isEmptyOrWhitespace(): boolean {
         if (this._isEmpty === undefined) {
-            this._isEmpty = this._contents.length === 0 || this._contents.trim().length === 0;
+            this._isEmpty =
+                this._contents.length === 0 ||
+                this._contents.trim().length === 0;
         }
         return this._isEmpty;
     }
@@ -60,11 +85,10 @@ interface ICellRange {
 }
 
 export class IntellisenseDocument implements TextDocument {
-
     private _uri: Uri;
     private _version: number = 0;
     private _lines: IntellisenseLine[] = [];
-    private _contents: string = '';
+    private _contents: string = "";
     private _cellRanges: ICellRange[] = [];
 
     constructor(fileName: string) {
@@ -75,7 +99,12 @@ export class IntellisenseDocument implements TextDocument {
         this._uri = Uri.file(fileName);
 
         // We should start our edit offset at 0. Each cell should end with a '/n'
-        this._cellRanges.push({ id: Identifiers.EditCellId, start: 0, fullEnd: 0, currentEnd: 0 });
+        this._cellRanges.push({
+            id: Identifiers.EditCellId,
+            start: 0,
+            fullEnd: 0,
+            currentEnd: 0
+        });
     }
 
     public get uri(): Uri {
@@ -110,7 +139,7 @@ export class IntellisenseDocument implements TextDocument {
         return this._lines.length;
     }
     public lineAt(position: Position | number): TextLine {
-        if (typeof position === 'number') {
+        if (typeof position === "number") {
             return this._lines[position as number];
         } else {
             return this._lines[position.line];
@@ -122,7 +151,10 @@ export class IntellisenseDocument implements TextDocument {
     public positionAt(offset: number): Position {
         let line = 0;
         let ch = 0;
-        while (line + 1 < this._lines.length && this._lines[line + 1].offset <= offset) {
+        while (
+            line + 1 < this._lines.length &&
+            this._lines[line + 1].offset <= offset
+        ) {
             line += 1;
         }
         if (line < this._lines.length) {
@@ -139,14 +171,20 @@ export class IntellisenseDocument implements TextDocument {
             return this._contents.substr(startOffset, endOffset - startOffset);
         }
     }
-    public getWordRangeAtPosition(position: Position, regexp?: RegExp | undefined): Range | undefined {
+    public getWordRangeAtPosition(
+        position: Position,
+        regexp?: RegExp | undefined
+    ): Range | undefined {
         if (!regexp) {
             // use default when custom-regexp isn't provided
             regexp = DefaultWordPattern;
-
         } else if (regExpLeadsToEndlessLoop(regexp)) {
             // use default when custom-regexp is bad
-            console.warn(`[getWordRangeAtPosition]: ignoring custom regexp '${regexp.source}' because it matches the empty string.`);
+            console.warn(
+                `[getWordRangeAtPosition]: ignoring custom regexp '${
+                    regexp.source
+                }' because it matches the empty string.`
+            );
             regexp = DefaultWordPattern;
         }
 
@@ -158,7 +196,12 @@ export class IntellisenseDocument implements TextDocument {
         );
 
         if (wordAtText) {
-            return new Range(position.line, wordAtText.startColumn - 1, position.line, wordAtText.endColumn - 1);
+            return new Range(
+                position.line,
+                wordAtText.startColumn - 1,
+                position.line,
+                wordAtText.endColumn - 1
+            );
         }
         return undefined;
     }
@@ -184,13 +227,17 @@ export class IntellisenseDocument implements TextDocument {
             version: this.version
         };
     }
-    public addCell(fullCode: string, currentCode: string, id: string): TextDocumentContentChangeEvent[] {
+    public addCell(
+        fullCode: string,
+        currentCode: string,
+        id: string
+    ): TextDocumentContentChangeEvent[] {
         // This should only happen once for each cell.
         this._version += 1;
 
         // Get rid of windows line endings. We're normalizing on linux
-        const normalized = fullCode.replace(/\r/g, '');
-        const normalizedCurrent = currentCode.replace(/\r/g, '');
+        const normalized = fullCode.replace(/\r/g, "");
+        const normalizedCurrent = currentCode.replace(/\r/g, "");
 
         // This item should go just before the edit cell
 
@@ -207,15 +254,20 @@ export class IntellisenseDocument implements TextDocument {
         const fromPosition = this.positionAt(fromOffset);
 
         // Save the range for this cell ()
-        this._cellRanges.splice(this._cellRanges.length - 1, 0,
-            { id, start: fromOffset, fullEnd: fromOffset + newCode.length, currentEnd: fromOffset + newCurrentCode.length });
+        this._cellRanges.splice(this._cellRanges.length - 1, 0, {
+            id,
+            start: fromOffset,
+            fullEnd: fromOffset + newCode.length,
+            currentEnd: fromOffset + newCurrentCode.length
+        });
 
         // Update our entire contents and recompute our lines
         this._contents = `${before}${newCode}${after}`;
         this._lines = this.createLines();
         this._cellRanges[this._cellRanges.length - 1].start += newCode.length;
         this._cellRanges[this._cellRanges.length - 1].fullEnd += newCode.length;
-        this._cellRanges[this._cellRanges.length - 1].currentEnd += newCode.length;
+        this._cellRanges[this._cellRanges.length - 1].currentEnd +=
+            newCode.length;
 
         return [
             {
@@ -233,20 +285,27 @@ export class IntellisenseDocument implements TextDocument {
             this._version += 1;
 
             // Compute the offset for the edit cell
-            const toOffset = this._cellRanges[this._cellRanges.length - 1].start;
+            const toOffset = this._cellRanges[this._cellRanges.length - 1]
+                .start;
             const from = this.positionAt(0);
             const to = this.positionAt(toOffset);
 
             // Remove the entire range.
-            const result = this.removeRange('', from, to, 0);
+            const result = this.removeRange("", from, to, 0);
 
             // Update our cell range
-            this._cellRanges = [ {
-                id: Identifiers.EditCellId,
-                start: 0,
-                fullEnd: this._cellRanges[this._cellRanges.length - 1].fullEnd - toOffset,
-                currentEnd: this._cellRanges[this._cellRanges.length - 1].fullEnd - toOffset
-            }];
+            this._cellRanges = [
+                {
+                    id: Identifiers.EditCellId,
+                    start: 0,
+                    fullEnd:
+                        this._cellRanges[this._cellRanges.length - 1].fullEnd -
+                        toOffset,
+                    currentEnd:
+                        this._cellRanges[this._cellRanges.length - 1].fullEnd -
+                        toOffset
+                }
+            ];
 
             return result;
         }
@@ -254,35 +313,51 @@ export class IntellisenseDocument implements TextDocument {
         return [];
     }
 
-    public edit(editorChanges: monacoEditor.editor.IModelContentChange[], id: string): TextDocumentContentChangeEvent[] {
+    public edit(
+        editorChanges: monacoEditor.editor.IModelContentChange[],
+        id: string
+    ): TextDocumentContentChangeEvent[] {
         this._version += 1;
 
         // Convert the range to local (and remove 1 based)
         if (editorChanges && editorChanges.length) {
-            const normalized = editorChanges[0].text.replace(/\r/g, '');
+            const normalized = editorChanges[0].text.replace(/\r/g, "");
 
             // Figure out which cell we're editing.
             const cellIndex = this._cellRanges.findIndex(c => c.id === id);
             if (id === Identifiers.EditCellId && cellIndex >= 0) {
                 // This is an actual edit.
                 // Line/column are within this cell. Use its offset to compute the real position
-                const editPos = this.positionAt(this._cellRanges[cellIndex].start);
-                const from = new Position(editPos.line + editorChanges[0].range.startLineNumber - 1, editorChanges[0].range.startColumn - 1);
-                const to = new Position(editPos.line + editorChanges[0].range.endLineNumber - 1, editorChanges[0].range.endColumn - 1);
+                const editPos = this.positionAt(
+                    this._cellRanges[cellIndex].start
+                );
+                const from = new Position(
+                    editPos.line + editorChanges[0].range.startLineNumber - 1,
+                    editorChanges[0].range.startColumn - 1
+                );
+                const to = new Position(
+                    editPos.line + editorChanges[0].range.endLineNumber - 1,
+                    editorChanges[0].range.endColumn - 1
+                );
 
                 // Remove this range from the contents and return the change.
                 return this.removeRange(normalized, from, to, cellIndex);
             } else if (cellIndex >= 0) {
                 // This is an edit of a read only cell. Just replace our currentEnd position
                 const newCode = `${normalized}\n`;
-                this._cellRanges[cellIndex].currentEnd = this._cellRanges[cellIndex].start + newCode.length;
+                this._cellRanges[cellIndex].currentEnd =
+                    this._cellRanges[cellIndex].start + newCode.length;
             }
         }
 
         return [];
     }
 
-    public convertToDocumentPosition(id: string, line: number, ch: number): Position {
+    public convertToDocumentPosition(
+        id: string,
+        line: number,
+        ch: number
+    ): Position {
         // Monaco is 1 based, and we need to add in our cell offset.
         const cellIndex = this._cellRanges.findIndex(c => c.id === id);
         if (cellIndex >= 0) {
@@ -305,7 +380,12 @@ export class IntellisenseDocument implements TextDocument {
         return this._cellRanges[this._cellRanges.length - 1].start;
     }
 
-    private removeRange(newText: string, from: Position, to: Position, cellIndex: number) : TextDocumentContentChangeEvent[] {
+    private removeRange(
+        newText: string,
+        from: Position,
+        to: Position,
+        cellIndex: number
+    ): TextDocumentContentChangeEvent[] {
         const fromOffset = this.convertToOffset(from);
         const toOffset = this.convertToOffset(to);
 
@@ -337,7 +417,10 @@ export class IntellisenseDocument implements TextDocument {
     }
 
     private createLines(): IntellisenseLine[] {
-        const split = this._contents.splitLines({ trim: false, removeEmptyEntries: false });
+        const split = this._contents.splitLines({
+            trim: false,
+            removeEmptyEntries: false
+        });
         let prevLine: IntellisenseLine | undefined;
         return split.map((s, i) => {
             const nextLine = this.createTextLine(s, i, prevLine);
@@ -346,8 +429,19 @@ export class IntellisenseDocument implements TextDocument {
         });
     }
 
-    private createTextLine(line: string, index: number, prevLine: IntellisenseLine | undefined): IntellisenseLine {
-        return new IntellisenseLine(line, index, prevLine ? prevLine.offset + prevLine.rangeIncludingLineBreak.end.character : 0);
+    private createTextLine(
+        line: string,
+        index: number,
+        prevLine: IntellisenseLine | undefined
+    ): IntellisenseLine {
+        return new IntellisenseLine(
+            line,
+            index,
+            prevLine
+                ? prevLine.offset +
+                  prevLine.rangeIncludingLineBreak.end.character
+                : 0
+        );
     }
 
     private convertToOffset(pos: Position): number {

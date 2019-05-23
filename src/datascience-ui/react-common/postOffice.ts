@@ -1,22 +1,22 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
+"use strict";
 
-import { WebPanelMessage } from '../../client/common/application/types';
-import { IDisposable } from '../../client/common/types';
+import { WebPanelMessage } from "../../client/common/application/types";
+import { IDisposable } from "../../client/common/types";
 
 export interface IVsCodeApi {
     // tslint:disable-next-line:no-any
-    postMessage(msg: any) : void;
+    postMessage(msg: any): void;
     // tslint:disable-next-line:no-any
-    setState(state: any) : void;
+    setState(state: any): void;
     // tslint:disable-next-line:no-any
-    getState() : any;
+    getState(): any;
 }
 
 export interface IMessageHandler {
     // tslint:disable-next-line:no-any
-    handleMessage(type: string, payload?: any) : boolean;
+    handleMessage(type: string, payload?: any): boolean;
 }
 
 // This special function talks to vscode from a web panel
@@ -24,16 +24,15 @@ export declare function acquireVsCodeApi(): IVsCodeApi;
 
 // tslint:disable-next-line: no-unnecessary-class
 export class PostOffice implements IDisposable {
-
     private registered: boolean = false;
-    private vscodeApi : IVsCodeApi | undefined;
+    private vscodeApi: IVsCodeApi | undefined;
     private handlers: IMessageHandler[] = [];
     private baseHandler = this.handleMessages.bind(this);
 
     public dispose() {
         if (this.registered) {
             this.registered = false;
-            window.removeEventListener('message', this.baseHandler);
+            window.removeEventListener("message", this.baseHandler);
         }
     }
 
@@ -62,15 +61,15 @@ export class PostOffice implements IDisposable {
         this.handlers = this.handlers.filter(f => f !== handler);
     }
 
-    private acquireApi() : IVsCodeApi | undefined {
+    private acquireApi(): IVsCodeApi | undefined {
         // Only do this once as it crashes if we ask more than once
         // tslint:disable-next-line:no-typeof-undefined
-        if (!this.vscodeApi && typeof acquireVsCodeApi !== 'undefined') {
+        if (!this.vscodeApi && typeof acquireVsCodeApi !== "undefined") {
             this.vscodeApi = acquireVsCodeApi();
         }
         if (!this.registered) {
             this.registered = true;
-            window.addEventListener('message', this.baseHandler);
+            window.addEventListener("message", this.baseHandler);
         }
 
         return this.vscodeApi;
@@ -80,7 +79,7 @@ export class PostOffice implements IDisposable {
         if (this.handlers) {
             const msg = ev.data as WebPanelMessage;
             if (msg) {
-                this.handlers.forEach((h : IMessageHandler | null) => {
+                this.handlers.forEach((h: IMessageHandler | null) => {
                     if (h) {
                         h.handleMessage(msg.type, msg.payload);
                     }

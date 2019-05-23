@@ -18,10 +18,10 @@
     "python.command.python.execSelectionInTerminal.title": "Python ターミナルで選択範囲/行を実行",
     "python.command.python.execSelectionInDjangoShell.title": "Django シェルで選択範囲/行を実行",
     "python.command.python.goToPythonObject.title": "Python オブジェクトに移動",
-	"python.snippet.launch.standard.label": "Python: Current File",
-	"python.snippet.launch.module.label": "Python: モジュール",
-	"python.snippet.launch.django.label": "Python: Django",
-	"python.snippet.launch.flask.label": "Python: Flask",
-	"python.snippet.launch.pyramid.label": "Python: Pyramid アプリケーション",
-	"python.snippet.launch.attach.label": "Python: アタッチ"
+    "python.snippet.launch.standard.label": "Python: Current File",
+    "python.snippet.launch.module.label": "Python: モジュール",
+    "python.snippet.launch.django.label": "Python: Django",
+    "python.snippet.launch.flask.label": "Python: Flask",
+    "python.snippet.launch.pyramid.label": "Python: Pyramid アプリケーション",
+    "python.snippet.launch.attach.label": "Python: アタッチ"
 }

@@ -1,35 +1,43 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
-import * as vscode from 'vscode';
-import * as vsls from 'vsls/vscode';
+"use strict";
+import * as vscode from "vscode";
+import * as vsls from "vsls/vscode";
 
-import { ILiveShareApi } from '../../../common/application/types';
-import { IAsyncDisposable } from '../../../common/types';
-import { ClassType } from '../../../ioc/types';
-import { ILiveShareParticipant } from './types';
+import { ILiveShareApi } from "../../../common/application/types";
+import { IAsyncDisposable } from "../../../common/types";
+import { ClassType } from "../../../ioc/types";
+import { ILiveShareParticipant } from "./types";
 
-export interface IRoleBasedObject extends IAsyncDisposable, ILiveShareParticipant {
-
-}
+export interface IRoleBasedObject
+    extends IAsyncDisposable,
+        ILiveShareParticipant {}
 
 // tslint:disable:no-any
-export class RoleBasedFactory<T extends IRoleBasedObject, CtorType extends ClassType<T>> {
-    private ctorArgs : any[];
-    private firstTime : boolean = true;
-    private createPromise : Promise<T> | undefined;
+export class RoleBasedFactory<
+    T extends IRoleBasedObject,
+    CtorType extends ClassType<T>
+> {
+    private ctorArgs: any[];
+    private firstTime: boolean = true;
+    private createPromise: Promise<T> | undefined;
     private sessionChangedEmitter = new vscode.EventEmitter<void>();
 
-    constructor(private liveShare: ILiveShareApi, private hostCtor: CtorType, private guestCtor: CtorType, ...args: any[]) {
+    constructor(
+        private liveShare: ILiveShareApi,
+        private hostCtor: CtorType,
+        private guestCtor: CtorType,
+        ...args: any[]
+    ) {
         this.ctorArgs = args;
         this.createPromise = this.createBasedOnRole(); // We need to start creation immediately or one side may call before we init.
     }
 
-    public get sessionChanged() : vscode.Event<void> {
+    public get sessionChanged(): vscode.Event<void> {
         return this.sessionChangedEmitter.event;
     }
 
-    public get() : Promise<T> {
+    public get(): Promise<T> {
         // Make sure only one create happens at a time
         if (this.createPromise) {
             return this.createPromise;
@@ -38,14 +46,13 @@ export class RoleBasedFactory<T extends IRoleBasedObject, CtorType extends Class
         return this.createPromise;
     }
 
-    private async createBasedOnRole() : Promise<T> {
-
+    private async createBasedOnRole(): Promise<T> {
         // Figure out our role to compute the object to create. Default is host. This
         // allows for the host object to keep existing if we suddenly start a new session.
         // For a guest, starting a new session resets the entire workspace.
         const api = await this.liveShare.getApi();
-        let ctor : CtorType = this.hostCtor;
-        let role : vsls.Role = vsls.Role.Host;
+        let ctor: CtorType = this.hostCtor;
+        let role: vsls.Role = vsls.Role.Host;
 
         if (api) {
             // Create based on role.
@@ -72,10 +79,14 @@ export class RoleBasedFactory<T extends IRoleBasedObject, CtorType extends Class
         // If the session changes, tell the listener
         if (api && this.firstTime) {
             this.firstTime = false;
-            api.onDidChangeSession((_a) => {
+            api.onDidChangeSession(_a => {
                 // Dispose the object if the role changes
-                const newRole = api !== null && api.session && api.session.role === vsls.Role.Guest ?
-                    vsls.Role.Guest : vsls.Role.Host;
+                const newRole =
+                    api !== null &&
+                    api.session &&
+                    api.session.role === vsls.Role.Guest
+                        ? vsls.Role.Guest
+                        : vsls.Role.Host;
                 if (newRole !== role) {
                     obj.dispose().ignoreErrors();
                 }
@@ -90,7 +101,7 @@ export class RoleBasedFactory<T extends IRoleBasedObject, CtorType extends Class
                     this.sessionChangedEmitter.fire();
                 }
             });
-            api.onDidChangePeers((e) => {
+            api.onDidChangePeers(e => {
                 if (!objDisposed) {
                     obj.onPeerChange(e).ignoreErrors();
                 }

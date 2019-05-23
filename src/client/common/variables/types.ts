@@ -1,16 +1,27 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Event, Uri } from 'vscode';
+import { Event, Uri } from "vscode";
 
 export type EnvironmentVariables = Object & Record<string, string | undefined>;
 
-export const IEnvironmentVariablesService = Symbol('IEnvironmentVariablesService');
+export const IEnvironmentVariablesService = Symbol(
+    "IEnvironmentVariablesService"
+);
 
 export interface IEnvironmentVariablesService {
-    parseFile(filePath?: string, baseVars?: EnvironmentVariables): Promise<EnvironmentVariables | undefined>;
-    mergeVariables(source: EnvironmentVariables, target: EnvironmentVariables): void;
-    appendPythonPath(vars: EnvironmentVariables, ...pythonPaths: string[]): void;
+    parseFile(
+        filePath?: string,
+        baseVars?: EnvironmentVariables
+    ): Promise<EnvironmentVariables | undefined>;
+    mergeVariables(
+        source: EnvironmentVariables,
+        target: EnvironmentVariables
+    ): void;
+    appendPythonPath(
+        vars: EnvironmentVariables,
+        ...pythonPaths: string[]
+    ): void;
     appendPath(vars: EnvironmentVariables, ...paths: string[]): void;
 }
 
@@ -27,13 +38,17 @@ export interface ISystemVariables {
     resolve(value: string[]): string[];
     resolve(value: IStringDictionary<string>): IStringDictionary<string>;
     resolve(value: IStringDictionary<string[]>): IStringDictionary<string[]>;
-    resolve(value: IStringDictionary<IStringDictionary<string>>): IStringDictionary<IStringDictionary<string>>;
+    resolve(
+        value: IStringDictionary<IStringDictionary<string>>
+    ): IStringDictionary<IStringDictionary<string>>;
     resolveAny<T>(value: T): T;
     // tslint:disable-next-line:no-any
     [key: string]: any;
 }
 
-export const IEnvironmentVariablesProvider = Symbol('IEnvironmentVariablesProvider');
+export const IEnvironmentVariablesProvider = Symbol(
+    "IEnvironmentVariablesProvider"
+);
 
 export interface IEnvironmentVariablesProvider {
     onDidEnvironmentVariablesChange: Event<Uri | undefined>;

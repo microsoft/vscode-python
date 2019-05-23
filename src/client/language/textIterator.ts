@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
+"use strict";
 
-import { Position, Range, TextDocument } from 'vscode';
-import { ITextIterator } from './types';
+import { Position, Range, TextDocument } from "vscode";
+import { ITextIterator } from "./types";
 
 export class TextIterator implements ITextIterator {
     private text: string;

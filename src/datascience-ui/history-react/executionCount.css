@@ -1,19 +1,19 @@
 .execution-count {
     grid-column: 1;
     font-weight: bold;
-    display:flex;
+    display: flex;
     color: var(--code-comment-color);
- }
+}
 
- .execution-count-busy-outer {
+.execution-count-busy-outer {
     grid-column: 1;
     font-weight: bold;
     color: var(--code-comment-color);
-    display:flex;
+    display: flex;
     width: 16px;
     height: 16px;
 }
- .execution-count-busy-svg {
+.execution-count-busy-svg {
     animation-name: spin;
     animation-duration: 4000ms;
     animation-iteration-count: infinite;
@@ -29,12 +29,11 @@
     stroke-width: 5;
 }
 
- @keyframes spin {
+@keyframes spin {
     from {
-        transform:rotate(0deg);
+        transform: rotate(0deg);
     }
     to {
-        transform:rotate(360deg);
+        transform: rotate(360deg);
     }
 }
-

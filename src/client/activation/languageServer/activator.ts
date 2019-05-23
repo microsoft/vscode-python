@@ -1,21 +1,21 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { inject, injectable } from 'inversify';
-import * as path from 'path';
-import { IWorkspaceService } from '../../common/application/types';
-import { traceDecorators } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, Resource } from '../../common/types';
-import { EXTENSION_ROOT_DIR } from '../../constants';
+import { inject, injectable } from "inversify";
+import * as path from "path";
+import { IWorkspaceService } from "../../common/application/types";
+import { traceDecorators } from "../../common/logger";
+import { IFileSystem } from "../../common/platform/types";
+import { IConfigurationService, Resource } from "../../common/types";
+import { EXTENSION_ROOT_DIR } from "../../constants";
 import {
     ILanguageServerActivator,
     ILanguageServerDownloader,
     ILanguageServerFolderService,
     ILanguageServerManager
-} from '../types';
+} from "../types";
 
 /**
  * Starts the language server managers per workspaces (currently one for first workspace).
@@ -25,17 +25,23 @@ import {
  * @implements {ILanguageServerActivator}
  */
 @injectable()
-export class LanguageServerExtensionActivator implements ILanguageServerActivator {
+export class LanguageServerExtensionActivator
+    implements ILanguageServerActivator {
     private resource?: Resource;
     constructor(
-        @inject(ILanguageServerManager) private readonly manager: ILanguageServerManager,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
+        @inject(ILanguageServerManager)
+        private readonly manager: ILanguageServerManager,
+        @inject(IWorkspaceService)
+        private readonly workspace: IWorkspaceService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(ILanguageServerDownloader) private readonly lsDownloader: ILanguageServerDownloader,
-        @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService,
-        @inject(IConfigurationService) private readonly configurationService: IConfigurationService
-    ) { }
-    @traceDecorators.error('Failed to activate language server')
+        @inject(ILanguageServerDownloader)
+        private readonly lsDownloader: ILanguageServerDownloader,
+        @inject(ILanguageServerFolderService)
+        private readonly languageServerFolderService: ILanguageServerFolderService,
+        @inject(IConfigurationService)
+        private readonly configurationService: IConfigurationService
+    ) {}
+    @traceDecorators.error("Failed to activate language server")
     public async activate(resource: Resource): Promise<void> {
         if (!resource) {
             resource = this.workspace.hasWorkspaceFolders
@@ -49,29 +55,47 @@ export class LanguageServerExtensionActivator implements ILanguageServerActivato
     public dispose(): void {
         this.manager.dispose();
     }
-    @traceDecorators.error('Failed to ensure language server is available')
+    @traceDecorators.error("Failed to ensure language server is available")
     public async ensureLanguageServerIsAvailable(resource: Resource) {
         const settings = this.configurationService.getSettings(resource);
         if (!settings.downloadLanguageServer) {
             return;
         }
-        const languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName(resource);
-        const languageServerFolderPath = path.join(EXTENSION_ROOT_DIR, languageServerFolder);
-        const mscorlib = path.join(languageServerFolderPath, 'mscorlib.dll');
+        const languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName(
+            resource
+        );
+        const languageServerFolderPath = path.join(
+            EXTENSION_ROOT_DIR,
+            languageServerFolder
+        );
+        const mscorlib = path.join(languageServerFolderPath, "mscorlib.dll");
         if (!(await this.fs.fileExists(mscorlib))) {
-            await this.lsDownloader.downloadLanguageServer(languageServerFolderPath, this.resource);
+            await this.lsDownloader.downloadLanguageServer(
+                languageServerFolderPath,
+                this.resource
+            );
             await this.prepareLanguageServerForNoICU(languageServerFolderPath);
         }
     }
-    public async prepareLanguageServerForNoICU(languageServerFolderPath: string): Promise<void> {
-        const targetJsonFile = path.join(languageServerFolderPath, 'Microsoft.Python.LanguageServer.runtimeconfig.json');
+    public async prepareLanguageServerForNoICU(
+        languageServerFolderPath: string
+    ): Promise<void> {
+        const targetJsonFile = path.join(
+            languageServerFolderPath,
+            "Microsoft.Python.LanguageServer.runtimeconfig.json"
+        );
         // tslint:disable-next-line:no-any
         let content: any = {};
         if (await this.fs.fileExists(targetJsonFile)) {
             try {
                 content = JSON.parse(await this.fs.readFile(targetJsonFile));
-                if (content.runtimeOptions && content.runtimeOptions.configProperties &&
-                    content.runtimeOptions.configProperties['System.Globalization.Invariant'] === true) {
+                if (
+                    content.runtimeOptions &&
+                    content.runtimeOptions.configProperties &&
+                    content.runtimeOptions.configProperties[
+                        "System.Globalization.Invariant"
+                    ] === true
+                ) {
                     return;
                 }
             } catch {
@@ -79,8 +103,11 @@ export class LanguageServerExtensionActivator implements ILanguageServerActivato
             }
         }
         content.runtimeOptions = content.runtimeOptions || {};
-        content.runtimeOptions.configProperties = content.runtimeOptions.configProperties || {};
-        content.runtimeOptions.configProperties['System.Globalization.Invariant'] = true;
+        content.runtimeOptions.configProperties =
+            content.runtimeOptions.configProperties || {};
+        content.runtimeOptions.configProperties[
+            "System.Globalization.Invariant"
+        ] = true;
         await this.fs.writeFile(targetJsonFile, JSON.stringify(content));
     }
 }

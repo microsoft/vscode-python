@@ -1,23 +1,45 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { inject, injectable } from 'inversify';
-import { Event, EventEmitter, TreeItem, TreeItemCollapsibleState, Uri } from 'vscode';
-import { ICommandManager, IWorkspaceService } from '../../common/application/types';
-import { Commands } from '../../common/constants';
-import { IDisposable, IDisposableRegistry } from '../../common/types';
-import { sendTelemetryEvent } from '../../telemetry';
-import { EventName } from '../../telemetry/constants';
-import { CommandSource } from '../common/constants';
-import { getChildren, getParent, getTestType } from '../common/testUtils';
-import { ITestCollectionStorageService, Tests, TestStatus, TestType } from '../common/types';
-import { ITestDataItemResource, ITestManagementService, ITestTreeViewProvider, TestDataItem, TestWorkspaceFolder, WorkspaceTestStatus } from '../types';
-import { TestTreeItem } from './testTreeViewItem';
+import { inject, injectable } from "inversify";
+import {
+    Event,
+    EventEmitter,
+    TreeItem,
+    TreeItemCollapsibleState,
+    Uri
+} from "vscode";
+import {
+    ICommandManager,
+    IWorkspaceService
+} from "../../common/application/types";
+import { Commands } from "../../common/constants";
+import { IDisposable, IDisposableRegistry } from "../../common/types";
+import { sendTelemetryEvent } from "../../telemetry";
+import { EventName } from "../../telemetry/constants";
+import { CommandSource } from "../common/constants";
+import { getChildren, getParent, getTestType } from "../common/testUtils";
+import {
+    ITestCollectionStorageService,
+    Tests,
+    TestStatus,
+    TestType
+} from "../common/types";
+import {
+    ITestDataItemResource,
+    ITestManagementService,
+    ITestTreeViewProvider,
+    TestDataItem,
+    TestWorkspaceFolder,
+    WorkspaceTestStatus
+} from "../types";
+import { TestTreeItem } from "./testTreeViewItem";
 
 @injectable()
-export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataItemResource, IDisposable {
+export class TestTreeViewProvider
+    implements ITestTreeViewProvider, ITestDataItemResource, IDisposable {
     public readonly onDidChangeTreeData: Event<TestDataItem | undefined>;
     public readonly discovered = new Set<string>();
     public readonly testsAreBeingDiscovered: Map<string, boolean>;
@@ -26,21 +48,38 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
     private disposables: IDisposable[] = [];
 
     constructor(
-        @inject(ITestCollectionStorageService) private testStore: ITestCollectionStorageService,
-        @inject(ITestManagementService) private testService: ITestManagementService,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(ITestCollectionStorageService)
+        private testStore: ITestCollectionStorageService,
+        @inject(ITestManagementService)
+        private testService: ITestManagementService,
+        @inject(IWorkspaceService)
+        private readonly workspace: IWorkspaceService,
+        @inject(ICommandManager)
+        private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
     ) {
         this.onDidChangeTreeData = this._onDidChangeTreeData.event;
 
         disposableRegistry.push(this);
         this.testsAreBeingDiscovered = new Map<string, boolean>();
-        this.disposables.push(this.testService.onDidStatusChange(this.onTestStatusChanged, this));
-        this.testStore.onDidChange(e => this._onDidChangeTreeData.fire(e.data), this, this.disposables);
-        this.workspace.onDidChangeWorkspaceFolders(() => this._onDidChangeTreeData.fire(), this, this.disposables);
+        this.disposables.push(
+            this.testService.onDidStatusChange(this.onTestStatusChanged, this)
+        );
+        this.testStore.onDidChange(
+            e => this._onDidChangeTreeData.fire(e.data),
+            this,
+            this.disposables
+        );
+        this.workspace.onDidChangeWorkspaceFolders(
+            () => this._onDidChangeTreeData.fire(),
+            this,
+            this.disposables
+        );
 
-        if (Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 0) {
+        if (
+            Array.isArray(workspace.workspaceFolders) &&
+            workspace.workspaceFolders.length > 0
+        ) {
             this.refresh(workspace.workspaceFolders[0].uri);
         }
     }
@@ -73,8 +112,16 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
      * @return [TreeItem](#TreeItem) representation of the element
      */
     public async getTreeItem(element: TestDataItem): Promise<TreeItem> {
-        const defaultCollapsibleState = await this.shouldElementBeExpandedByDefault(element) ? TreeItemCollapsibleState.Expanded : undefined;
-        return new TestTreeItem(element.resource, element, defaultCollapsibleState);
+        const defaultCollapsibleState = (await this.shouldElementBeExpandedByDefault(
+            element
+        ))
+            ? TreeItemCollapsibleState.Expanded
+            : undefined;
+        return new TestTreeItem(
+            element.resource,
+            element,
+            defaultCollapsibleState
+        );
     }
 
     /**
@@ -86,33 +133,55 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
     public async getChildren(element?: TestDataItem): Promise<TestDataItem[]> {
         if (element) {
             if (element instanceof TestWorkspaceFolder) {
-                let tests = this.testStore.getTests(element.workspaceFolder.uri);
-                if (!tests && !this.discovered.has(element.workspaceFolder.uri.fsPath)) {
+                let tests = this.testStore.getTests(
+                    element.workspaceFolder.uri
+                );
+                if (
+                    !tests &&
+                    !this.discovered.has(element.workspaceFolder.uri.fsPath)
+                ) {
                     this.discovered.add(element.workspaceFolder.uri.fsPath);
-                    await this.commandManager.executeCommand(Commands.Tests_Discover, element, CommandSource.testExplorer, undefined);
-                    tests = this.testStore.getTests(element.workspaceFolder.uri);
+                    await this.commandManager.executeCommand(
+                        Commands.Tests_Discover,
+                        element,
+                        CommandSource.testExplorer,
+                        undefined
+                    );
+                    tests = this.testStore.getTests(
+                        element.workspaceFolder.uri
+                    );
                 }
                 return this.getRootNodes(tests);
             }
             return getChildren(element!);
         }
 
-        if (!Array.isArray(this.workspace.workspaceFolders) || this.workspace.workspaceFolders.length === 0) {
+        if (
+            !Array.isArray(this.workspace.workspaceFolders) ||
+            this.workspace.workspaceFolders.length === 0
+        ) {
             return [];
         }
 
-        sendTelemetryEvent(EventName.UNITTEST_EXPLORER_WORK_SPACE_COUNT, undefined, { count: this.workspace.workspaceFolders.length });
+        sendTelemetryEvent(
+            EventName.UNITTEST_EXPLORER_WORK_SPACE_COUNT,
+            undefined,
+            { count: this.workspace.workspaceFolders.length }
+        );
 
         // If we are in a single workspace
         if (this.workspace.workspaceFolders.length === 1) {
-            const tests = this.testStore.getTests(this.workspace.workspaceFolders[0].uri);
+            const tests = this.testStore.getTests(
+                this.workspace.workspaceFolders[0].uri
+            );
             return this.getRootNodes(tests);
         }
 
         // If we are in a mult-root workspace, then nest the test data within a
         // virtual node, represending the workspace folder.
-        return this.workspace.workspaceFolders
-            .map(workspaceFolder => new TestWorkspaceFolder(workspaceFolder));
+        return this.workspace.workspaceFolders.map(
+            workspaceFolder => new TestWorkspaceFolder(workspaceFolder)
+        );
     }
 
     /**
@@ -124,7 +193,9 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
      * @param element The element for which the parent has to be returned.
      * @return Parent of `element`.
      */
-    public async getParent(element: TestDataItem): Promise<TestDataItem | undefined> {
+    public async getParent(
+        element: TestDataItem
+    ): Promise<TestDataItem | undefined> {
         if (element instanceof TestWorkspaceFolder) {
             return;
         }
@@ -141,8 +212,15 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
      * @memberof TestTreeViewProvider
      */
     public getRootNodes(tests?: Tests) {
-        if (tests && tests.rootTestFolders && tests.rootTestFolders.length === 1) {
-            return [...tests.rootTestFolders[0].testFiles, ...tests.rootTestFolders[0].folders];
+        if (
+            tests &&
+            tests.rootTestFolders &&
+            tests.rootTestFolders.length === 1
+        ) {
+            return [
+                ...tests.rootTestFolders[0].testFiles,
+                ...tests.rootTestFolders[0].folders
+            ];
         }
         return tests ? tests.rootTestFolders : [];
     }
@@ -158,7 +236,9 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
         }
         const tests = this.testStore.getTests(resource);
         if (tests && tests.testFolders) {
-            this._onDidChangeTreeData.fire(new TestWorkspaceFolder(workspaceFolder));
+            this._onDidChangeTreeData.fire(
+                new TestWorkspaceFolder(workspaceFolder)
+            );
         }
     }
 

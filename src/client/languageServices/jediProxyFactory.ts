@@ -1,25 +1,44 @@
-import { Disposable, Uri, workspace } from 'vscode';
-import { IServiceContainer } from '../ioc/types';
-import { ICommandResult, JediProxy, JediProxyHandler } from '../providers/jediProxy';
+import { Disposable, Uri, workspace } from "vscode";
+import { IServiceContainer } from "../ioc/types";
+import {
+    ICommandResult,
+    JediProxy,
+    JediProxyHandler
+} from "../providers/jediProxy";
 
 export class JediFactory implements Disposable {
     private disposables: Disposable[];
     private jediProxyHandlers: Map<string, JediProxyHandler<ICommandResult>>;
 
-    constructor(private extensionRootPath: string, private serviceContainer: IServiceContainer) {
+    constructor(
+        private extensionRootPath: string,
+        private serviceContainer: IServiceContainer
+    ) {
         this.disposables = [];
-        this.jediProxyHandlers = new Map<string, JediProxyHandler<ICommandResult>>();
+        this.jediProxyHandlers = new Map<
+            string,
+            JediProxyHandler<ICommandResult>
+        >();
     }
 
     public dispose() {
         this.disposables.forEach(disposable => disposable.dispose());
         this.disposables = [];
     }
-    public getJediProxyHandler<T extends ICommandResult>(resource?: Uri): JediProxyHandler<T> {
-        const workspaceFolder = resource ? workspace.getWorkspaceFolder(resource) : undefined;
-        let workspacePath = workspaceFolder ? workspaceFolder.uri.fsPath : undefined;
+    public getJediProxyHandler<T extends ICommandResult>(
+        resource?: Uri
+    ): JediProxyHandler<T> {
+        const workspaceFolder = resource
+            ? workspace.getWorkspaceFolder(resource)
+            : undefined;
+        let workspacePath = workspaceFolder
+            ? workspaceFolder.uri.fsPath
+            : undefined;
         if (!workspacePath) {
-            if (Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 0) {
+            if (
+                Array.isArray(workspace.workspaceFolders) &&
+                workspace.workspaceFolders.length > 0
+            ) {
                 workspacePath = workspace.workspaceFolders[0].uri.fsPath;
             } else {
                 workspacePath = __dirname;
@@ -27,12 +46,18 @@ export class JediFactory implements Disposable {
         }
 
         if (!this.jediProxyHandlers.has(workspacePath)) {
-            const jediProxy = new JediProxy(this.extensionRootPath, workspacePath, this.serviceContainer);
+            const jediProxy = new JediProxy(
+                this.extensionRootPath,
+                workspacePath,
+                this.serviceContainer
+            );
             const jediProxyHandler = new JediProxyHandler(jediProxy);
             this.disposables.push(jediProxy, jediProxyHandler);
             this.jediProxyHandlers.set(workspacePath, jediProxyHandler);
         }
         // tslint:disable-next-line:no-non-null-assertion
-        return this.jediProxyHandlers.get(workspacePath)! as JediProxyHandler<T>;
+        return this.jediProxyHandlers.get(workspacePath)! as JediProxyHandler<
+            T
+        >;
     }
 }

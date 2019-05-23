@@ -1,18 +1,21 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { anything, instance, mock, verify, when } from 'ts-mockito';
-import { ApplicationShell } from '../../../client/common/application/applicationShell';
-import { IApplicationShell } from '../../../client/common/application/types';
-import { PersistentState, PersistentStateFactory } from '../../../client/common/persistentState';
-import { IPersistentState } from '../../../client/common/types';
-import { Common, Interpreters } from '../../../client/common/utils/localize';
-import { InterpreterSelectionTip } from '../../../client/interpreter/display/interpreterSelectionTip';
+import { anything, instance, mock, verify, when } from "ts-mockito";
+import { ApplicationShell } from "../../../client/common/application/applicationShell";
+import { IApplicationShell } from "../../../client/common/application/types";
+import {
+    PersistentState,
+    PersistentStateFactory
+} from "../../../client/common/persistentState";
+import { IPersistentState } from "../../../client/common/types";
+import { Common, Interpreters } from "../../../client/common/utils/localize";
+import { InterpreterSelectionTip } from "../../../client/interpreter/display/interpreterSelectionTip";
 
 // tslint:disable:no-any
-suite('Interpreters - Interpreter Selection Tip', () => {
+suite("Interpreters - Interpreter Selection Tip", () => {
     let selectionTip: InterpreterSelectionTip;
     let appShell: IApplicationShell;
     let storage: IPersistentState<boolean>;
@@ -21,29 +24,52 @@ suite('Interpreters - Interpreter Selection Tip', () => {
         storage = mock(PersistentState);
         appShell = mock(ApplicationShell);
 
-        when(factory.createGlobalPersistentState('InterpreterSelectionTip', false)).thenReturn(instance(storage));
+        when(
+            factory.createGlobalPersistentState(
+                "InterpreterSelectionTip",
+                false
+            )
+        ).thenReturn(instance(storage));
 
-        selectionTip = new InterpreterSelectionTip(instance(appShell), instance(factory));
+        selectionTip = new InterpreterSelectionTip(
+            instance(appShell),
+            instance(factory)
+        );
     });
-    test('Do not show tip', async () => {
+    test("Do not show tip", async () => {
         when(storage.value).thenReturn(true);
 
         await selectionTip.activate(undefined);
 
         verify(appShell.showInformationMessage(anything(), anything())).never();
     });
-    test('Show tip and do not track it', async () => {
+    test("Show tip and do not track it", async () => {
         when(storage.value).thenReturn(false);
-        when(appShell.showInformationMessage(Interpreters.selectInterpreterTip(), Common.gotIt())).thenResolve();
+        when(
+            appShell.showInformationMessage(
+                Interpreters.selectInterpreterTip(),
+                Common.gotIt()
+            )
+        ).thenResolve();
 
         await selectionTip.activate(undefined);
 
-        verify(appShell.showInformationMessage(Interpreters.selectInterpreterTip(), Common.gotIt())).once();
+        verify(
+            appShell.showInformationMessage(
+                Interpreters.selectInterpreterTip(),
+                Common.gotIt()
+            )
+        ).once();
         verify(storage.updateValue(true)).never();
     });
-    test('Show tip once per session', async () => {
+    test("Show tip once per session", async () => {
         when(storage.value).thenReturn(false);
-        when(appShell.showInformationMessage(Interpreters.selectInterpreterTip(), Common.gotIt())).thenResolve();
+        when(
+            appShell.showInformationMessage(
+                Interpreters.selectInterpreterTip(),
+                Common.gotIt()
+            )
+        ).thenResolve();
 
         await Promise.all([
             selectionTip.activate(undefined),
@@ -51,16 +77,31 @@ suite('Interpreters - Interpreter Selection Tip', () => {
             selectionTip.activate(undefined)
         ]);
 
-        verify(appShell.showInformationMessage(Interpreters.selectInterpreterTip(), Common.gotIt())).once();
+        verify(
+            appShell.showInformationMessage(
+                Interpreters.selectInterpreterTip(),
+                Common.gotIt()
+            )
+        ).once();
         verify(storage.updateValue(true)).never();
     });
-    test('Show tip and track it', async () => {
+    test("Show tip and track it", async () => {
         when(storage.value).thenReturn(false);
-        when(appShell.showInformationMessage(Interpreters.selectInterpreterTip(), Common.gotIt())).thenResolve(Common.gotIt() as any);
+        when(
+            appShell.showInformationMessage(
+                Interpreters.selectInterpreterTip(),
+                Common.gotIt()
+            )
+        ).thenResolve(Common.gotIt() as any);
 
         await selectionTip.activate(undefined);
 
-        verify(appShell.showInformationMessage(Interpreters.selectInterpreterTip(), Common.gotIt())).once();
+        verify(
+            appShell.showInformationMessage(
+                Interpreters.selectInterpreterTip(),
+                Common.gotIt()
+            )
+        ).once();
         verify(storage.updateValue(true)).once();
     });
 });

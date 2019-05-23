@@ -1,38 +1,53 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { expect } from 'chai';
-import * as TypeMoq from 'typemoq';
-import { Uri, WorkspaceFolder } from 'vscode';
-import { BaseDiagnosticsService } from '../../../../client/application/diagnostics/base';
-import { InvalidLaunchJsonDebuggerDiagnostic, InvalidLaunchJsonDebuggerService } from '../../../../client/application/diagnostics/checks/invalidLaunchJsonDebugger';
-import { IDiagnosticsCommandFactory } from '../../../../client/application/diagnostics/commands/types';
-import { DiagnosticCodes } from '../../../../client/application/diagnostics/constants';
-import { MessageCommandPrompt } from '../../../../client/application/diagnostics/promptHandler';
-import { IDiagnostic, IDiagnosticHandlerService, IDiagnosticsService } from '../../../../client/application/diagnostics/types';
-import { IWorkspaceService } from '../../../../client/common/application/types';
-import { IFileSystem } from '../../../../client/common/platform/types';
-import { Diagnostics } from '../../../../client/common/utils/localize';
-import { IServiceContainer } from '../../../../client/ioc/types';
+import { expect } from "chai";
+import * as TypeMoq from "typemoq";
+import { Uri, WorkspaceFolder } from "vscode";
+import { BaseDiagnosticsService } from "../../../../client/application/diagnostics/base";
+import {
+    InvalidLaunchJsonDebuggerDiagnostic,
+    InvalidLaunchJsonDebuggerService
+} from "../../../../client/application/diagnostics/checks/invalidLaunchJsonDebugger";
+import { IDiagnosticsCommandFactory } from "../../../../client/application/diagnostics/commands/types";
+import { DiagnosticCodes } from "../../../../client/application/diagnostics/constants";
+import { MessageCommandPrompt } from "../../../../client/application/diagnostics/promptHandler";
+import {
+    IDiagnostic,
+    IDiagnosticHandlerService,
+    IDiagnosticsService
+} from "../../../../client/application/diagnostics/types";
+import { IWorkspaceService } from "../../../../client/common/application/types";
+import { IFileSystem } from "../../../../client/common/platform/types";
+import { Diagnostics } from "../../../../client/common/utils/localize";
+import { IServiceContainer } from "../../../../client/ioc/types";
 
 // tslint:disable:max-func-body-length no-any
-suite('Application Diagnostics - Checks if launch.json is invalid', () => {
+suite("Application Diagnostics - Checks if launch.json is invalid", () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let diagnosticService: IDiagnosticsService;
     let commandFactory: TypeMoq.IMock<IDiagnosticsCommandFactory>;
     let fs: TypeMoq.IMock<IFileSystem>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let baseWorkspaceService: TypeMoq.IMock<IWorkspaceService>;
-    let messageHandler: TypeMoq.IMock<IDiagnosticHandlerService<MessageCommandPrompt>>;
+    let messageHandler: TypeMoq.IMock<
+        IDiagnosticHandlerService<MessageCommandPrompt>
+    >;
     let workspaceFolder: WorkspaceFolder;
     setup(() => {
-        workspaceFolder = { uri: Uri.parse('full/path/to/workspace'), name: '', index: 0 };
+        workspaceFolder = {
+            uri: Uri.parse("full/path/to/workspace"),
+            name: "",
+            index: 0
+        };
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         commandFactory = TypeMoq.Mock.ofType<IDiagnosticsCommandFactory>();
         fs = TypeMoq.Mock.ofType<IFileSystem>();
-        messageHandler = TypeMoq.Mock.ofType<IDiagnosticHandlerService<MessageCommandPrompt>>();
+        messageHandler = TypeMoq.Mock.ofType<
+            IDiagnosticHandlerService<MessageCommandPrompt>
+        >();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         baseWorkspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         serviceContainer
@@ -41,18 +56,26 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
 
         diagnosticService = new class extends InvalidLaunchJsonDebuggerService {
             public _clear() {
-                while (BaseDiagnosticsService.handledDiagnosticCodeKeys.length > 0) {
+                while (
+                    BaseDiagnosticsService.handledDiagnosticCodeKeys.length > 0
+                ) {
                     BaseDiagnosticsService.handledDiagnosticCodeKeys.shift();
                 }
             }
             public async fixLaunchJson(code: DiagnosticCodes) {
                 await super.fixLaunchJson(code);
             }
-        }(serviceContainer.object, fs.object, [], workspaceService.object, messageHandler.object);
+        }(
+            serviceContainer.object,
+            fs.object,
+            [],
+            workspaceService.object,
+            messageHandler.object
+        );
         (diagnosticService as any)._clear();
     });
 
-    test('Can handle all InvalidLaunchJsonDebugger diagnostics', async () => {
+    test("Can handle all InvalidLaunchJsonDebugger diagnostics", async () => {
         for (const code of [
             DiagnosticCodes.InvalidDebuggerTypeDiagnostic,
             DiagnosticCodes.JustMyCodeDiagnostic,
@@ -64,26 +87,32 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
                 .returns(() => code)
                 .verifiable(TypeMoq.Times.atLeastOnce());
 
-            const canHandle = await diagnosticService.canHandle(diagnostic.object);
-            expect(canHandle).to.be.equal(true, `Should be able to handle ${code}`);
+            const canHandle = await diagnosticService.canHandle(
+                diagnostic.object
+            );
+            expect(canHandle).to.be.equal(
+                true,
+                `Should be able to handle ${code}`
+            );
             diagnostic.verifyAll();
         }
     });
 
-    test('Can not handle non-InvalidLaunchJsonDebugger diagnostics', async () => {
+    test("Can not handle non-InvalidLaunchJsonDebugger diagnostics", async () => {
         const diagnostic = TypeMoq.Mock.ofType<IDiagnostic>();
         diagnostic
             .setup(d => d.code)
-            .returns(() => 'Something Else' as any)
+            .returns(() => "Something Else" as any)
             .verifiable(TypeMoq.Times.atLeastOnce());
 
         const canHandle = await diagnosticService.canHandle(diagnostic.object);
-        expect(canHandle).to.be.equal(false, 'Invalid value');
+        expect(canHandle).to.be.equal(false, "Invalid value");
         diagnostic.verifyAll();
     });
 
-    test('Should return empty diagnostics if there are no workspace folders', async () => {
-        workspaceService.setup(w => w.hasWorkspaceFolders)
+    test("Should return empty diagnostics if there are no workspace folders", async () => {
+        workspaceService
+            .setup(w => w.hasWorkspaceFolders)
             .returns(() => false)
             .verifiable(TypeMoq.Times.once());
         const diagnostics = await diagnosticService.diagnose(undefined);
@@ -91,14 +120,17 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
         workspaceService.verifyAll();
     });
 
-    test('Should return empty diagnostics if file launch.json does not exist', async () => {
-        workspaceService.setup(w => w.hasWorkspaceFolders)
+    test("Should return empty diagnostics if file launch.json does not exist", async () => {
+        workspaceService
+            .setup(w => w.hasWorkspaceFolders)
             .returns(() => true)
             .verifiable(TypeMoq.Times.once());
-        workspaceService.setup(w => w.workspaceFolders)
+        workspaceService
+            .setup(w => w.workspaceFolders)
             .returns(() => [workspaceFolder])
             .verifiable(TypeMoq.Times.once());
-        workspaceService.setup(w => w.getWorkspaceFolder(undefined))
+        workspaceService
+            .setup(w => w.getWorkspaceFolder(undefined))
             .returns(() => undefined)
             .verifiable(TypeMoq.Times.never());
         fs.setup(w => w.fileExists(TypeMoq.It.isAny()))
@@ -111,11 +143,14 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
     });
 
     test('Should return empty diagnostics if file launch.json does not contain strings "pythonExperimental" and "debugStdLib" ', async () => {
-        const fileContents = 'Hello I am launch.json, although I am not very jsony';
-        workspaceService.setup(w => w.hasWorkspaceFolders)
+        const fileContents =
+            "Hello I am launch.json, although I am not very jsony";
+        workspaceService
+            .setup(w => w.hasWorkspaceFolders)
             .returns(() => true)
             .verifiable(TypeMoq.Times.once());
-        workspaceService.setup(w => w.workspaceFolders)
+        workspaceService
+            .setup(w => w.workspaceFolders)
             .returns(() => [workspaceFolder])
             .verifiable(TypeMoq.Times.once());
         fs.setup(w => w.fileExists(TypeMoq.It.isAny()))
@@ -131,11 +166,14 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
     });
 
     test('Should return InvalidDebuggerTypeDiagnostic if file launch.json contains string "pythonExperimental"', async () => {
-        const fileContents = 'Hello I am launch.json, I contain string "pythonExperimental"';
-        workspaceService.setup(w => w.hasWorkspaceFolders)
+        const fileContents =
+            'Hello I am launch.json, I contain string "pythonExperimental"';
+        workspaceService
+            .setup(w => w.hasWorkspaceFolders)
             .returns(() => true)
             .verifiable(TypeMoq.Times.once());
-        workspaceService.setup(w => w.workspaceFolders)
+        workspaceService
+            .setup(w => w.workspaceFolders)
             .returns(() => [workspaceFolder])
             .verifiable(TypeMoq.Times.once());
         fs.setup(w => w.fileExists(TypeMoq.It.isAny()))
@@ -145,19 +183,28 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
             .returns(() => Promise.resolve(fileContents))
             .verifiable(TypeMoq.Times.once());
         const diagnostics = await diagnosticService.diagnose(undefined);
-        expect(diagnostics).to.be.deep.equal([
-            new InvalidLaunchJsonDebuggerDiagnostic(DiagnosticCodes.InvalidDebuggerTypeDiagnostic, undefined)
-        ], 'not the same');
+        expect(diagnostics).to.be.deep.equal(
+            [
+                new InvalidLaunchJsonDebuggerDiagnostic(
+                    DiagnosticCodes.InvalidDebuggerTypeDiagnostic,
+                    undefined
+                )
+            ],
+            "not the same"
+        );
         workspaceService.verifyAll();
         fs.verifyAll();
     });
 
     test('Should return JustMyCodeDiagnostic if file launch.json contains string "debugStdLib"', async () => {
-        const fileContents = 'Hello I am launch.json, I contain string "debugStdLib"';
-        workspaceService.setup(w => w.hasWorkspaceFolders)
+        const fileContents =
+            'Hello I am launch.json, I contain string "debugStdLib"';
+        workspaceService
+            .setup(w => w.hasWorkspaceFolders)
             .returns(() => true)
             .verifiable(TypeMoq.Times.once());
-        workspaceService.setup(w => w.workspaceFolders)
+        workspaceService
+            .setup(w => w.workspaceFolders)
             .returns(() => [workspaceFolder])
             .verifiable(TypeMoq.Times.once());
         fs.setup(w => w.fileExists(TypeMoq.It.isAny()))
@@ -167,19 +214,28 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
             .returns(() => Promise.resolve(fileContents))
             .verifiable(TypeMoq.Times.once());
         const diagnostics = await diagnosticService.diagnose(undefined);
-        expect(diagnostics).to.be.deep.equal([
-            new InvalidLaunchJsonDebuggerDiagnostic(DiagnosticCodes.JustMyCodeDiagnostic, undefined)
-        ], 'not the same');
+        expect(diagnostics).to.be.deep.equal(
+            [
+                new InvalidLaunchJsonDebuggerDiagnostic(
+                    DiagnosticCodes.JustMyCodeDiagnostic,
+                    undefined
+                )
+            ],
+            "not the same"
+        );
         workspaceService.verifyAll();
         fs.verifyAll();
     });
 
     test('Should return both diagnostics if file launch.json contains string "debugStdLib" and  "pythonExperimental"', async () => {
-        const fileContents = 'Hello I am launch.json, I contain both "debugStdLib" and "pythonExperimental"';
-        workspaceService.setup(w => w.hasWorkspaceFolders)
+        const fileContents =
+            'Hello I am launch.json, I contain both "debugStdLib" and "pythonExperimental"';
+        workspaceService
+            .setup(w => w.hasWorkspaceFolders)
             .returns(() => true)
             .verifiable(TypeMoq.Times.once());
-        workspaceService.setup(w => w.workspaceFolders)
+        workspaceService
+            .setup(w => w.workspaceFolders)
             .returns(() => [workspaceFolder])
             .verifiable(TypeMoq.Times.once());
         fs.setup(w => w.fileExists(TypeMoq.It.isAny()))
@@ -189,15 +245,24 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
             .returns(() => Promise.resolve(fileContents))
             .verifiable(TypeMoq.Times.once());
         const diagnostics = await diagnosticService.diagnose(undefined);
-        expect(diagnostics).to.be.deep.equal([
-            new InvalidLaunchJsonDebuggerDiagnostic(DiagnosticCodes.InvalidDebuggerTypeDiagnostic, undefined),
-            new InvalidLaunchJsonDebuggerDiagnostic(DiagnosticCodes.JustMyCodeDiagnostic, undefined)
-        ], 'not the same');
+        expect(diagnostics).to.be.deep.equal(
+            [
+                new InvalidLaunchJsonDebuggerDiagnostic(
+                    DiagnosticCodes.InvalidDebuggerTypeDiagnostic,
+                    undefined
+                ),
+                new InvalidLaunchJsonDebuggerDiagnostic(
+                    DiagnosticCodes.JustMyCodeDiagnostic,
+                    undefined
+                )
+            ],
+            "not the same"
+        );
         workspaceService.verifyAll();
         fs.verifyAll();
     });
 
-    test('All InvalidLaunchJsonDebugger diagnostics should display 2 options to with one command', async () => {
+    test("All InvalidLaunchJsonDebugger diagnostics should display 2 options to with one command", async () => {
         for (const code of [
             DiagnosticCodes.InvalidDebuggerTypeDiagnostic,
             DiagnosticCodes.JustMyCodeDiagnostic,
@@ -225,12 +290,17 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
             messageHandler.verifyAll();
             baseWorkspaceService.verifyAll();
             expect(options!.commandPrompts).to.be.lengthOf(2);
-            expect(options!.commandPrompts[0].prompt).to.be.equal(Diagnostics.yesUpdateLaunch());
-            expect(options!.commandPrompts[0].command).not.to.be.equal(undefined, 'Command not set');
+            expect(options!.commandPrompts[0].prompt).to.be.equal(
+                Diagnostics.yesUpdateLaunch()
+            );
+            expect(options!.commandPrompts[0].command).not.to.be.equal(
+                undefined,
+                "Command not set"
+            );
         }
     });
 
-    test('All InvalidLaunchJsonDebugger diagnostics should display message twice if invoked twice', async () => {
+    test("All InvalidLaunchJsonDebugger diagnostics should display message twice if invoked twice", async () => {
         for (const code of [
             DiagnosticCodes.InvalidDebuggerTypeDiagnostic,
             DiagnosticCodes.JustMyCodeDiagnostic,
@@ -243,7 +313,7 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
                 .verifiable(TypeMoq.Times.atLeastOnce());
             diagnostic
                 .setup(d => d.invokeHandler)
-                .returns(() => 'always')
+                .returns(() => "always")
                 .verifiable(TypeMoq.Times.atLeastOnce());
             messageHandler.reset();
             messageHandler
@@ -264,16 +334,18 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
         }
     });
 
-    test('Function fixLaunchJson() returns if there are no workspace folders', async () => {
+    test("Function fixLaunchJson() returns if there are no workspace folders", async () => {
         for (const code of [
             DiagnosticCodes.InvalidDebuggerTypeDiagnostic,
             DiagnosticCodes.JustMyCodeDiagnostic,
             DiagnosticCodes.ConsoleTypeDiagnostic
         ]) {
-            workspaceService.setup(w => w.hasWorkspaceFolders)
+            workspaceService
+                .setup(w => w.hasWorkspaceFolders)
                 .returns(() => false)
                 .verifiable(TypeMoq.Times.atLeastOnce());
-            workspaceService.setup(w => w.workspaceFolders)
+            workspaceService
+                .setup(w => w.workspaceFolders)
                 .returns(() => [workspaceFolder])
                 .verifiable(TypeMoq.Times.never());
             await (diagnosticService as any).fixLaunchJson(code);
@@ -281,23 +353,25 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
         }
     });
 
-    test('Function fixLaunchJson() returns if file launch.json does not exist', async () => {
+    test("Function fixLaunchJson() returns if file launch.json does not exist", async () => {
         for (const code of [
             DiagnosticCodes.InvalidDebuggerTypeDiagnostic,
             DiagnosticCodes.JustMyCodeDiagnostic,
             DiagnosticCodes.ConsoleTypeDiagnostic
         ]) {
-            workspaceService.setup(w => w.hasWorkspaceFolders)
+            workspaceService
+                .setup(w => w.hasWorkspaceFolders)
                 .returns(() => true)
                 .verifiable(TypeMoq.Times.atLeastOnce());
-            workspaceService.setup(w => w.workspaceFolders)
+            workspaceService
+                .setup(w => w.workspaceFolders)
                 .returns(() => [workspaceFolder])
                 .verifiable(TypeMoq.Times.atLeastOnce());
             fs.setup(w => w.fileExists(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve(false))
                 .verifiable(TypeMoq.Times.atLeastOnce());
             fs.setup(w => w.readFile(TypeMoq.It.isAny()))
-                .returns(() => Promise.resolve(''))
+                .returns(() => Promise.resolve(""))
                 .verifiable(TypeMoq.Times.never());
             await (diagnosticService as any).fixLaunchJson(code);
             workspaceService.verifyAll();
@@ -305,13 +379,15 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
         }
     });
 
-    test('File launch.json is fixed correctly when code equals JustMyCodeDiagnostic ', async () => {
+    test("File launch.json is fixed correctly when code equals JustMyCodeDiagnostic ", async () => {
         const launchJson = '{"debugStdLib": true, "debugStdLib": false}';
         const correctedlaunchJson = '{"justMyCode": false, "justMyCode": true}';
-        workspaceService.setup(w => w.hasWorkspaceFolders)
+        workspaceService
+            .setup(w => w.hasWorkspaceFolders)
             .returns(() => true)
             .verifiable(TypeMoq.Times.once());
-        workspaceService.setup(w => w.workspaceFolders)
+        workspaceService
+            .setup(w => w.workspaceFolders)
             .returns(() => [workspaceFolder])
             .verifiable(TypeMoq.Times.once());
         fs.setup(w => w.fileExists(TypeMoq.It.isAny()))
@@ -320,21 +396,27 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
         fs.setup(w => w.readFile(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(launchJson))
             .verifiable(TypeMoq.Times.atLeastOnce());
-        fs.setup(w => w.writeFile(TypeMoq.It.isAnyString(), correctedlaunchJson))
+        fs.setup(w =>
+            w.writeFile(TypeMoq.It.isAnyString(), correctedlaunchJson)
+        )
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());
-        await (diagnosticService as any).fixLaunchJson(DiagnosticCodes.JustMyCodeDiagnostic);
+        await (diagnosticService as any).fixLaunchJson(
+            DiagnosticCodes.JustMyCodeDiagnostic
+        );
         workspaceService.verifyAll();
         fs.verifyAll();
     });
 
-    test('File launch.json is fixed correctly when code equals InvalidDebuggerTypeDiagnostic ', async () => {
+    test("File launch.json is fixed correctly when code equals InvalidDebuggerTypeDiagnostic ", async () => {
         const launchJson = '{"Python Experimental: task" "pythonExperimental"}';
         const correctedlaunchJson = '{"Python: task" "python"}';
-        workspaceService.setup(w => w.hasWorkspaceFolders)
+        workspaceService
+            .setup(w => w.hasWorkspaceFolders)
             .returns(() => true)
             .verifiable(TypeMoq.Times.once());
-        workspaceService.setup(w => w.workspaceFolders)
+        workspaceService
+            .setup(w => w.workspaceFolders)
             .returns(() => [workspaceFolder])
             .verifiable(TypeMoq.Times.once());
         fs.setup(w => w.fileExists(TypeMoq.It.isAny()))
@@ -343,21 +425,27 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
         fs.setup(w => w.readFile(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(launchJson))
             .verifiable(TypeMoq.Times.atLeastOnce());
-        fs.setup(w => w.writeFile(TypeMoq.It.isAnyString(), correctedlaunchJson))
+        fs.setup(w =>
+            w.writeFile(TypeMoq.It.isAnyString(), correctedlaunchJson)
+        )
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());
-        await (diagnosticService as any).fixLaunchJson(DiagnosticCodes.InvalidDebuggerTypeDiagnostic);
+        await (diagnosticService as any).fixLaunchJson(
+            DiagnosticCodes.InvalidDebuggerTypeDiagnostic
+        );
         workspaceService.verifyAll();
         fs.verifyAll();
     });
 
-    test('File launch.json is fixed correctly when code equals ConsoleTypeDiagnostic ', async () => {
+    test("File launch.json is fixed correctly when code equals ConsoleTypeDiagnostic ", async () => {
         const launchJson = '{"console": "none"}';
         const correctedlaunchJson = '{"console": "internalConsole"}';
-        workspaceService.setup(w => w.hasWorkspaceFolders)
+        workspaceService
+            .setup(w => w.hasWorkspaceFolders)
             .returns(() => true)
             .verifiable(TypeMoq.Times.once());
-        workspaceService.setup(w => w.workspaceFolders)
+        workspaceService
+            .setup(w => w.workspaceFolders)
             .returns(() => [workspaceFolder])
             .verifiable(TypeMoq.Times.once());
         fs.setup(w => w.fileExists(TypeMoq.It.isAny()))
@@ -366,10 +454,14 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
         fs.setup(w => w.readFile(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(launchJson))
             .verifiable(TypeMoq.Times.atLeastOnce());
-        fs.setup(w => w.writeFile(TypeMoq.It.isAnyString(), correctedlaunchJson))
+        fs.setup(w =>
+            w.writeFile(TypeMoq.It.isAnyString(), correctedlaunchJson)
+        )
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());
-        await (diagnosticService as any).fixLaunchJson(DiagnosticCodes.ConsoleTypeDiagnostic);
+        await (diagnosticService as any).fixLaunchJson(
+            DiagnosticCodes.ConsoleTypeDiagnostic
+        );
         workspaceService.verifyAll();
         fs.verifyAll();
     });

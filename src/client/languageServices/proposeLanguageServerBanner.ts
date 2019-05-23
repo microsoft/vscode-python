@@ -1,19 +1,22 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { inject, injectable } from 'inversify';
-import { ConfigurationTarget } from 'vscode';
-import { IApplicationShell } from '../common/application/types';
-import '../common/extensions';
-import { IConfigurationService, IPersistentStateFactory,
-    IPythonExtensionBanner } from '../common/types';
-import { getRandomBetween } from '../common/utils/random';
+import { inject, injectable } from "inversify";
+import { ConfigurationTarget } from "vscode";
+import { IApplicationShell } from "../common/application/types";
+import "../common/extensions";
+import {
+    IConfigurationService,
+    IPersistentStateFactory,
+    IPythonExtensionBanner
+} from "../common/types";
+import { getRandomBetween } from "../common/utils/random";
 
 // persistent state names, exported to make use of in testing
 export enum ProposeLSStateKeys {
-    ShowBanner = 'ProposeLSBanner'
+    ShowBanner = "ProposeLSBanner"
 }
 
 enum ProposeLSLabelIndex {
@@ -34,15 +37,22 @@ export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
     private initialized?: boolean;
     private disabledInCurrentSession: boolean = false;
     private sampleSizePerHundred: number;
-    private bannerMessage: string = 'Try out Preview of our new Python Language Server to get richer and faster IntelliSense completions, and syntax errors as you type.';
-    private bannerLabels: string[] = [ 'Try it now', 'No thanks', 'Remind me Later' ];
+    private bannerMessage: string =
+        "Try out Preview of our new Python Language Server to get richer and faster IntelliSense completions, and syntax errors as you type.";
+    private bannerLabels: string[] = [
+        "Try it now",
+        "No thanks",
+        "Remind me Later"
+    ];
 
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
-        @inject(IConfigurationService) private configuration: IConfigurationService,
-        sampleSizePerOneHundredUsers: number = 10)
-    {
+        @inject(IPersistentStateFactory)
+        private persistentState: IPersistentStateFactory,
+        @inject(IConfigurationService)
+        private configuration: IConfigurationService,
+        sampleSizePerOneHundredUsers: number = 10
+    ) {
         this.sampleSizePerHundred = sampleSizePerOneHundredUsers;
         this.initialize();
     }
@@ -66,7 +76,10 @@ export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
         }
     }
     public get enabled(): boolean {
-        return this.persistentState.createGlobalPersistentState<boolean>(ProposeLSStateKeys.ShowBanner, true).value;
+        return this.persistentState.createGlobalPersistentState<boolean>(
+            ProposeLSStateKeys.ShowBanner,
+            true
+        ).value;
     }
 
     public async showBanner(): Promise<void> {
@@ -79,7 +92,10 @@ export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
             return;
         }
 
-        const response = await this.appShell.showInformationMessage(this.bannerMessage, ...this.bannerLabels);
+        const response = await this.appShell.showInformationMessage(
+            this.bannerMessage,
+            ...this.bannerLabels
+        );
         switch (response) {
             case this.bannerLabels[ProposeLSLabelIndex.Yes]: {
                 await this.enableNewLanguageServer();
@@ -106,10 +122,20 @@ export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
     }
 
     public async disable(): Promise<void> {
-        await this.persistentState.createGlobalPersistentState<boolean>(ProposeLSStateKeys.ShowBanner, false).updateValue(false);
+        await this.persistentState
+            .createGlobalPersistentState<boolean>(
+                ProposeLSStateKeys.ShowBanner,
+                false
+            )
+            .updateValue(false);
     }
 
     public async enableNewLanguageServer(): Promise<void> {
-        await this.configuration.updateSetting('jediEnabled', false, undefined, ConfigurationTarget.Global);
+        await this.configuration.updateSetting(
+            "jediEnabled",
+            false,
+            undefined,
+            ConfigurationTarget.Global
+        );
     }
 }

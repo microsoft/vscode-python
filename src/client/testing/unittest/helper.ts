@@ -1,30 +1,36 @@
-
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { inject, injectable } from 'inversify';
-import { IServiceContainer } from '../../ioc/types';
-import { Tests, TestsToRun } from '../common/types';
-import { IArgumentsHelper, IUnitTestHelper } from '../types';
+import { inject, injectable } from "inversify";
+import { IServiceContainer } from "../../ioc/types";
+import { Tests, TestsToRun } from "../common/types";
+import { IArgumentsHelper, IUnitTestHelper } from "../types";
 
 @injectable()
 export class UnitTestHelper implements IUnitTestHelper {
     private readonly argsHelper: IArgumentsHelper;
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        this.argsHelper = serviceContainer.get<IArgumentsHelper>(IArgumentsHelper);
+    constructor(
+        @inject(IServiceContainer) serviceContainer: IServiceContainer
+    ) {
+        this.argsHelper = serviceContainer.get<IArgumentsHelper>(
+            IArgumentsHelper
+        );
     }
     public getStartDirectory(args: string[]): string {
-        const shortValue = this.argsHelper.getOptionValues(args, '-s');
-        if (typeof shortValue === 'string') {
+        const shortValue = this.argsHelper.getOptionValues(args, "-s");
+        if (typeof shortValue === "string") {
             return shortValue;
         }
-        const longValue = this.argsHelper.getOptionValues(args, '--start-directory');
-        if (typeof longValue === 'string') {
+        const longValue = this.argsHelper.getOptionValues(
+            args,
+            "--start-directory"
+        );
+        if (typeof longValue === "string") {
             return longValue;
         }
-        return '.';
+        return ".";
     }
     public getIdsOfTestsToRun(tests: Tests, testsToRun: TestsToRun): string[] {
         const testIds: string[] = [];

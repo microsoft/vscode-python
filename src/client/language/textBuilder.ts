@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { isWhiteSpace } from './characters';
+import { isWhiteSpace } from "./characters";
 
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
@@ -13,7 +13,7 @@ export class TextBuilder {
         if (this.isLastWhiteSpace()) {
             this.segments.pop();
         }
-        return this.segments.join('');
+        return this.segments.join("");
     }
 
     public softAppendSpace(count: number = 1): void {
@@ -24,7 +24,7 @@ export class TextBuilder {
             count = count - 1;
         }
         for (let i = 0; i < count; i += 1) {
-            this.segments.push(' ');
+            this.segments.push(" ");
         }
     }
 
@@ -33,7 +33,10 @@ export class TextBuilder {
     }
 
     private isLastWhiteSpace(): boolean {
-        return this.segments.length > 0 && this.isWhitespace(this.segments[this.segments.length - 1]);
+        return (
+            this.segments.length > 0 &&
+            this.isWhitespace(this.segments[this.segments.length - 1])
+        );
     }
 
     private isWhitespace(s: string): boolean {

@@ -1,4 +1,4 @@
-declare module 'svg-inline-react' {
+declare module "svg-inline-react" {
     export class InlineSVG {
         constructor(...args: any[]);
         componentDidMount(): void;

@@ -1,15 +1,25 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import * as assert from 'assert';
-import { copyDesiredTestResults } from '../../../../client/testing/common/testUtils';
-import { FlattenedTestFunction, FlattenedTestSuite, TestFile, TestFolder, TestFunction, Tests, TestStatus, TestSuite, TestType } from '../../../../client/testing/common/types';
-import { createMockTestDataItem } from '../testUtils.unit.test';
+import * as assert from "assert";
+import { copyDesiredTestResults } from "../../../../client/testing/common/testUtils";
+import {
+    FlattenedTestFunction,
+    FlattenedTestSuite,
+    TestFile,
+    TestFolder,
+    TestFunction,
+    Tests,
+    TestStatus,
+    TestSuite,
+    TestType
+} from "../../../../client/testing/common/types";
+import { createMockTestDataItem } from "../testUtils.unit.test";
 
 // tslint:disable:no-any max-func-body-length
-suite('Unit Tests - Storage Service', () => {
+suite("Unit Tests - Storage Service", () => {
     let testData1: Tests;
     let testData2: Tests;
     setup(() => {
@@ -18,14 +28,32 @@ suite('Unit Tests - Storage Service', () => {
     });
 
     function setupTestData1() {
-        const folder1 = createMockTestDataItem<TestFolder>(TestType.testFolder, '1');
-        const file1 = createMockTestDataItem<TestFile>(TestType.testFile, '1');
+        const folder1 = createMockTestDataItem<TestFolder>(
+            TestType.testFolder,
+            "1"
+        );
+        const file1 = createMockTestDataItem<TestFile>(TestType.testFile, "1");
         folder1.testFiles.push(file1);
-        const suite1 = createMockTestDataItem<TestSuite>(TestType.testSuite, '1');
-        const suite2 = createMockTestDataItem<TestSuite>(TestType.testSuite, '2');
-        const fn1 = createMockTestDataItem<TestFunction>(TestType.testFunction, '1');
-        const fn2 = createMockTestDataItem<TestFunction>(TestType.testFunction, '2');
-        const fn3 = createMockTestDataItem<TestFunction>(TestType.testFunction, '3');
+        const suite1 = createMockTestDataItem<TestSuite>(
+            TestType.testSuite,
+            "1"
+        );
+        const suite2 = createMockTestDataItem<TestSuite>(
+            TestType.testSuite,
+            "2"
+        );
+        const fn1 = createMockTestDataItem<TestFunction>(
+            TestType.testFunction,
+            "1"
+        );
+        const fn2 = createMockTestDataItem<TestFunction>(
+            TestType.testFunction,
+            "2"
+        );
+        const fn3 = createMockTestDataItem<TestFunction>(
+            TestType.testFunction,
+            "3"
+        );
         file1.suites.push(suite1);
         file1.suites.push(suite2);
         file1.functions.push(fn1);
@@ -62,14 +90,32 @@ suite('Unit Tests - Storage Service', () => {
     }
 
     function setupTestData2() {
-        const folder1 = createMockTestDataItem<TestFolder>(TestType.testFolder, '1');
-        const file1 = createMockTestDataItem<TestFile>(TestType.testFile, '1');
+        const folder1 = createMockTestDataItem<TestFolder>(
+            TestType.testFolder,
+            "1"
+        );
+        const file1 = createMockTestDataItem<TestFile>(TestType.testFile, "1");
         folder1.testFiles.push(file1);
-        const suite1 = createMockTestDataItem<TestSuite>(TestType.testSuite, '1');
-        const suite2 = createMockTestDataItem<TestSuite>(TestType.testSuite, '2');
-        const fn1 = createMockTestDataItem<TestFunction>(TestType.testFunction, '1');
-        const fn2 = createMockTestDataItem<TestFunction>(TestType.testFunction, '2');
-        const fn3 = createMockTestDataItem<TestFunction>(TestType.testFunction, '3');
+        const suite1 = createMockTestDataItem<TestSuite>(
+            TestType.testSuite,
+            "1"
+        );
+        const suite2 = createMockTestDataItem<TestSuite>(
+            TestType.testSuite,
+            "2"
+        );
+        const fn1 = createMockTestDataItem<TestFunction>(
+            TestType.testFunction,
+            "1"
+        );
+        const fn2 = createMockTestDataItem<TestFunction>(
+            TestType.testFunction,
+            "2"
+        );
+        const fn3 = createMockTestDataItem<TestFunction>(
+            TestType.testFunction,
+            "3"
+        );
         file1.suites.push(suite1);
         file1.suites.push(suite2);
         suite1.functions.push(fn1);
@@ -105,20 +151,38 @@ suite('Unit Tests - Storage Service', () => {
         };
     }
 
-    test('Merge Status from existing tests', () => {
+    test("Merge Status from existing tests", () => {
         testData1.testFunctions[0].testFunction.passed = true;
         testData1.testFunctions[1].testFunction.status = TestStatus.Fail;
         testData1.testFunctions[2].testFunction.time = 1234;
 
-        assert.notDeepEqual(testData1.testFunctions[0].testFunction, testData2.testFunctions[0].testFunction);
-        assert.notDeepEqual(testData1.testFunctions[1].testFunction, testData2.testFunctions[1].testFunction);
-        assert.notDeepEqual(testData1.testFunctions[2].testFunction, testData2.testFunctions[2].testFunction);
+        assert.notDeepEqual(
+            testData1.testFunctions[0].testFunction,
+            testData2.testFunctions[0].testFunction
+        );
+        assert.notDeepEqual(
+            testData1.testFunctions[1].testFunction,
+            testData2.testFunctions[1].testFunction
+        );
+        assert.notDeepEqual(
+            testData1.testFunctions[2].testFunction,
+            testData2.testFunctions[2].testFunction
+        );
 
         copyDesiredTestResults(testData1, testData2);
 
         // Function 1 is in a different suite now, hence should not get updated.
-        assert.notDeepEqual(testData1.testFunctions[0].testFunction, testData2.testFunctions[0].testFunction);
-        assert.deepEqual(testData1.testFunctions[1].testFunction, testData2.testFunctions[1].testFunction);
-        assert.deepEqual(testData1.testFunctions[2].testFunction, testData2.testFunctions[2].testFunction);
+        assert.notDeepEqual(
+            testData1.testFunctions[0].testFunction,
+            testData2.testFunctions[0].testFunction
+        );
+        assert.deepEqual(
+            testData1.testFunctions[1].testFunction,
+            testData2.testFunctions[1].testFunction
+        );
+        assert.deepEqual(
+            testData1.testFunctions[2].testFunction,
+            testData2.testFunctions[2].testFunction
+        );
     });
 });

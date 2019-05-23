@@ -1,36 +1,36 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
 /**
  * Test utilities for testing the TestViewTreeProvider class.
  */
 
-import { join, parse as path_parse } from 'path';
-import * as tsmockito from 'ts-mockito';
-import * as typemoq from 'typemoq';
-import { Uri, WorkspaceFolder } from 'vscode';
-import { CommandManager } from '../../../client/common/application/commandManager';
+import { join, parse as path_parse } from "path";
+import * as tsmockito from "ts-mockito";
+import * as typemoq from "typemoq";
+import { Uri, WorkspaceFolder } from "vscode";
+import { CommandManager } from "../../../client/common/application/commandManager";
 import {
-    IApplicationShell, ICommandManager, IWorkspaceService
-} from '../../../client/common/application/types';
+    IApplicationShell,
+    ICommandManager,
+    IWorkspaceService
+} from "../../../client/common/application/types";
+import { IDisposable, IDisposableRegistry } from "../../../client/common/types";
+import { IServiceContainer } from "../../../client/ioc/types";
+import { TestsHelper } from "../../../client/testing/common/testUtils";
+import { TestFlatteningVisitor } from "../../../client/testing/common/testVisitors/flatteningVisitor";
 import {
-    IDisposable, IDisposableRegistry
-} from '../../../client/common/types';
-import { IServiceContainer } from '../../../client/ioc/types';
-import { TestsHelper } from '../../../client/testing/common/testUtils';
-import {
-    TestFlatteningVisitor
-} from '../../../client/testing/common/testVisitors/flatteningVisitor';
-import {
-    ITestCollectionStorageService, TestFile,
-    TestFolder, TestFunction, Tests, TestSuite
-} from '../../../client/testing/common/types';
-import {
-    TestTreeViewProvider
-} from '../../../client/testing/explorer/testTreeViewProvider';
-import { ITestManagementService } from '../../../client/testing/types';
+    ITestCollectionStorageService,
+    TestFile,
+    TestFolder,
+    TestFunction,
+    Tests,
+    TestSuite
+} from "../../../client/testing/common/types";
+import { TestTreeViewProvider } from "../../../client/testing/explorer/testTreeViewProvider";
+import { ITestManagementService } from "../../../client/testing/types";
 
 /**
  * Disposable class that doesn't do anything, help for event-registration against
@@ -38,11 +38,13 @@ import { ITestManagementService } from '../../../client/testing/types';
  */
 export class ExplorerTestsDisposable implements IDisposable {
     // tslint:disable-next-line:no-empty
-    public dispose() { }
+    public dispose() {}
 }
 
-export function getMockTestFolder(folderPath: string, testFiles: TestFile[] = []): TestFolder {
-
+export function getMockTestFolder(
+    folderPath: string,
+    testFiles: TestFile[] = []
+): TestFolder {
     // tslint:disable-next-line:no-unnecessary-local-variable
     const folder: TestFolder = {
         resource: Uri.file(__filename),
@@ -56,18 +58,21 @@ export function getMockTestFolder(folderPath: string, testFiles: TestFile[] = []
     return folder;
 }
 
-export function getMockTestFile(filePath: string, testSuites: TestSuite[] = [], testFunctions: TestFunction[] = []): TestFile {
-
+export function getMockTestFile(
+    filePath: string,
+    testSuites: TestSuite[] = [],
+    testFunctions: TestFunction[] = []
+): TestFile {
     // tslint:disable-next-line:no-unnecessary-local-variable
     const testFile: TestFile = {
         resource: Uri.file(__filename),
-        name: (path_parse(filePath)).base,
+        name: path_parse(filePath).base,
         nameToRun: filePath,
         time: 0,
         fullPath: join(__dirname, filePath),
         functions: testFunctions,
         suites: testSuites,
-        xmlName: filePath.replace(/\//g, '.')
+        xmlName: filePath.replace(/\//g, ".")
     };
 
     return testFile;
@@ -80,7 +85,7 @@ export function getMockTestSuite(
     instance: boolean = true,
     unitTest: boolean = true
 ): TestSuite {
-    const suiteNameChunks = suiteNameToRun.split('::');
+    const suiteNameChunks = suiteNameToRun.split("::");
     const suiteName = suiteNameChunks[suiteNameChunks.length - 1];
 
     // tslint:disable-next-line:no-unnecessary-local-variable
@@ -93,14 +98,13 @@ export function getMockTestSuite(
         nameToRun: suiteNameToRun,
         suites: subSuites,
         time: 0,
-        xmlName: suiteNameToRun.replace(/\//g, '.').replace(/\:\:/g, ':')
+        xmlName: suiteNameToRun.replace(/\//g, ".").replace(/\:\:/g, ":")
     };
     return testSuite;
 }
 
 export function getMockTestFunction(fnNameToRun: string): TestFunction {
-
-    const fnNameChunks = fnNameToRun.split('::');
+    const fnNameChunks = fnNameToRun.split("::");
     const fnName = fnNameChunks[fnNameChunks.length - 1];
 
     // tslint:disable-next-line:no-unnecessary-local-variable
@@ -119,19 +123,35 @@ export function getMockTestFunction(fnNameToRun: string): TestFunction {
  *
  * @returns Array containing the items broken out from the hierarchy (all items are linked to one another)
  */
-export function getTestExplorerViewItemData(): [TestFolder, TestFile, TestFunction, TestSuite, TestFunction] {
-
+export function getTestExplorerViewItemData(): [
+    TestFolder,
+    TestFile,
+    TestFunction,
+    TestSuite,
+    TestFunction
+] {
     let testFolder: TestFolder;
     let testFile: TestFile;
     let testSuite: TestSuite;
     let testFunction: TestFunction;
     let testSuiteFunction: TestFunction;
 
-    testSuiteFunction = getMockTestFunction('workspace/test_folder/test_file.py::test_suite::test_suite_function');
-    testSuite = getMockTestSuite('workspace/test_folder/test_file.py::test_suite', [testSuiteFunction]);
-    testFunction = getMockTestFunction('workspace/test_folder/test_file.py::test_function');
-    testFile = getMockTestFile('workspace/test_folder/test_file.py', [testSuite], [testFunction]);
-    testFolder = getMockTestFolder('workspace/test_folder', [testFile]);
+    testSuiteFunction = getMockTestFunction(
+        "workspace/test_folder/test_file.py::test_suite::test_suite_function"
+    );
+    testSuite = getMockTestSuite(
+        "workspace/test_folder/test_file.py::test_suite",
+        [testSuiteFunction]
+    );
+    testFunction = getMockTestFunction(
+        "workspace/test_folder/test_file.py::test_function"
+    );
+    testFile = getMockTestFile(
+        "workspace/test_folder/test_file.py",
+        [testSuite],
+        [testFunction]
+    );
+    testFolder = getMockTestFolder("workspace/test_folder", [testFile]);
 
     return [testFolder, testFile, testFunction, testSuite, testSuiteFunction];
 }
@@ -142,17 +162,25 @@ export function getTestExplorerViewItemData(): [TestFolder, TestFile, TestFuncti
  * @returns An instance of `TestsHelper` class with mocked AppShell & ICommandManager members.
  */
 export function getTestHelperInstance(): TestsHelper {
-
     const appShellMoq = typemoq.Mock.ofType<IApplicationShell>();
     const commMgrMoq = typemoq.Mock.ofType<ICommandManager>();
     const serviceContainerMoq = typemoq.Mock.ofType<IServiceContainer>();
 
-    serviceContainerMoq.setup(a => a.get(typemoq.It.isValue(IApplicationShell), typemoq.It.isAny()))
+    serviceContainerMoq
+        .setup(a =>
+            a.get(typemoq.It.isValue(IApplicationShell), typemoq.It.isAny())
+        )
         .returns(() => appShellMoq.object);
-    serviceContainerMoq.setup(a => a.get(typemoq.It.isValue(ICommandManager), typemoq.It.isAny()))
+    serviceContainerMoq
+        .setup(a =>
+            a.get(typemoq.It.isValue(ICommandManager), typemoq.It.isAny())
+        )
         .returns(() => commMgrMoq.object);
 
-    return new TestsHelper(new TestFlatteningVisitor(), serviceContainerMoq.object);
+    return new TestsHelper(
+        new TestFlatteningVisitor(),
+        serviceContainerMoq.object
+    );
 }
 
 /**
@@ -171,14 +199,18 @@ export function createMockTestsData(testData?: TestFile[]): Tests {
     return testHelper.flattenTestFiles(testData, __dirname);
 }
 
-export function createMockTestStorageService(testData?: Tests): typemoq.IMock<ITestCollectionStorageService> {
+export function createMockTestStorageService(
+    testData?: Tests
+): typemoq.IMock<ITestCollectionStorageService> {
     const testStoreMoq = typemoq.Mock.ofType<ITestCollectionStorageService>();
 
     if (!testData) {
         testData = createMockTestsData();
     }
 
-    testStoreMoq.setup(t => t.getTests(typemoq.It.isAny())).returns(() => testData);
+    testStoreMoq
+        .setup(t => t.getTests(typemoq.It.isAny()))
+        .returns(() => testData);
 
     return testStoreMoq;
 }
@@ -188,9 +220,12 @@ export function createMockTestStorageService(testData?: Tests): typemoq.IMock<IT
  *
  * Provider an 'onDidStatusChange' hook that can be called, but that does nothing.
  */
-export function createMockUnitTestMgmtService(): typemoq.IMock<ITestManagementService> {
+export function createMockUnitTestMgmtService(): typemoq.IMock<
+    ITestManagementService
+> {
     const unitTestMgmtSrvMoq = typemoq.Mock.ofType<ITestManagementService>();
-    unitTestMgmtSrvMoq.setup(u => u.onDidStatusChange(typemoq.It.isAny()))
+    unitTestMgmtSrvMoq
+        .setup(u => u.onDidStatusChange(typemoq.It.isAny()))
         .returns(() => new ExplorerTestsDisposable());
     return unitTestMgmtSrvMoq;
 }
@@ -205,16 +240,17 @@ export function createMockWorkspaceService(): typemoq.IMock<IWorkspaceService> {
     const workspcSrvMoq = typemoq.Mock.ofType<IWorkspaceService>();
     class ExplorerTestsWorkspaceFolder implements WorkspaceFolder {
         public get uri(): Uri {
-            return Uri.parse('');
+            return Uri.parse("");
         }
         public get name(): string {
-            return (path_parse(this.uri.fsPath)).base;
+            return path_parse(this.uri.fsPath).base;
         }
         public get index(): number {
             return 0;
         }
     }
-    workspcSrvMoq.setup(w => w.workspaceFolders)
+    workspcSrvMoq
+        .setup(w => w.workspaceFolders)
         .returns(() => [new ExplorerTestsWorkspaceFolder()]);
     return workspcSrvMoq;
 }
@@ -235,7 +271,6 @@ export function createMockTestExplorer(
     workspaceService?: IWorkspaceService,
     commandManager?: ICommandManager
 ): TestTreeViewProvider {
-
     if (!testStore) {
         testStore = createMockTestStorageService(testsData).object;
     }
@@ -255,7 +290,10 @@ export function createMockTestExplorer(
     dispRegMoq.setup(d => d.push(typemoq.It.isAny()));
 
     return new TestTreeViewProvider(
-        testStore, unitTestMgmtService, workspaceService, commandManager,
+        testStore,
+        unitTestMgmtService,
+        workspaceService,
+        commandManager,
         dispRegMoq.object
     );
 }

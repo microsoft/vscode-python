@@ -1,18 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
-import '../common/extensions';
+"use strict";
+import "../common/extensions";
 
-import { inject, injectable } from 'inversify';
-import * as path from 'path';
-import { TextDocument } from 'vscode';
+import { inject, injectable } from "inversify";
+import * as path from "path";
+import { TextDocument } from "vscode";
 
-import { sendTelemetryEvent } from '.';
-import { noop } from '../../test/core';
-import { IDocumentManager } from '../common/application/types';
-import { isTestExecution } from '../common/constants';
-import { EventName } from './constants';
-import { IImportTracker } from './types';
+import { sendTelemetryEvent } from ".";
+import { noop } from "../../test/core";
+import { IDocumentManager } from "../common/application/types";
+import { isTestExecution } from "../common/constants";
+import { EventName } from "./constants";
+import { IImportTracker } from "./types";
 
 /*
 Python has a fairly rich import statement, but luckily we only care about top-level (public) packages.
@@ -40,38 +40,47 @@ const testExecution = isTestExecution();
 
 @injectable()
 export class ImportTracker implements IImportTracker {
-
     private pendingDocs = new Map<string, NodeJS.Timer>();
     private sentMatches: Set<string> = new Set<string>();
     // tslint:disable-next-line:no-require-imports
-    private hashFn = require('hash.js').sha256;
+    private hashFn = require("hash.js").sha256;
 
     constructor(
         @inject(IDocumentManager) private documentManager: IDocumentManager
     ) {
-        this.documentManager.onDidOpenTextDocument((t) => this.onOpenedOrSavedDocument(t));
-        this.documentManager.onDidSaveTextDocument((t) => this.onOpenedOrSavedDocument(t));
+        this.documentManager.onDidOpenTextDocument(t =>
+            this.onOpenedOrSavedDocument(t)
+        );
+        this.documentManager.onDidSaveTextDocument(t =>
+            this.onOpenedOrSavedDocument(t)
+        );
     }
 
     public async activate(): Promise<void> {
         // Act like all of our open documents just opened; our timeout will make sure this is delayed.
-        this.documentManager.textDocuments.forEach(d => this.onOpenedOrSavedDocument(d));
+        this.documentManager.textDocuments.forEach(d =>
+            this.onOpenedOrSavedDocument(d)
+        );
     }
 
-    private getDocumentLines(document: TextDocument) : (string | undefined)[] {
-        const array = Array<string>(Math.min(document.lineCount, MAX_DOCUMENT_LINES)).fill('');
-        return array.map((_a: string, i: number) => {
-            const line = document.lineAt(i);
-            if (line && !line.isEmptyOrWhitespace) {
-                return line.text;
-            }
-            return undefined;
-        }).filter((f: string | undefined) => f);
+    private getDocumentLines(document: TextDocument): (string | undefined)[] {
+        const array = Array<string>(
+            Math.min(document.lineCount, MAX_DOCUMENT_LINES)
+        ).fill("");
+        return array
+            .map((_a: string, i: number) => {
+                const line = document.lineAt(i);
+                if (line && !line.isEmptyOrWhitespace) {
+                    return line.text;
+                }
+                return undefined;
+            })
+            .filter((f: string | undefined) => f);
     }
 
     private onOpenedOrSavedDocument(document: TextDocument) {
         // Make sure this is a Python file.
-        if (path.extname(document.fileName) === '.py') {
+        if (path.extname(document.fileName) === ".py") {
             this.scheduleDocument(document);
         }
     }
@@ -90,7 +99,10 @@ export class ImportTracker implements IImportTracker {
             this.checkDocument(document);
         } else {
             // Wait five seconds to make sure we don't already have this document pending.
-            this.pendingDocs.set(document.fileName, setTimeout(() => this.checkDocument(document), 5000));
+            this.pendingDocs.set(
+                document.fileName,
+                setTimeout(() => this.checkDocument(document), 5000)
+            );
         }
     }
 
@@ -108,8 +120,12 @@ export class ImportTracker implements IImportTracker {
         this.sentMatches.add(packageName);
         // Hash the package name so that we will never accidentally see a
         // user's private package name.
-        const hash = this.hashFn().update(packageName).digest('hex');
-        sendTelemetryEvent(EventName.HASHED_PACKAGE_NAME, undefined, {hashedName: hash});
+        const hash = this.hashFn()
+            .update(packageName)
+            .digest("hex");
+        sendTelemetryEvent(EventName.HASHED_PACKAGE_NAME, undefined, {
+            hashedName: hash
+        });
     }
 
     private lookForImports(lines: (string | undefined)[]) {
@@ -122,7 +138,9 @@ export class ImportTracker implements IImportTracker {
                         this.sendTelemetry(match.groups.fromImport);
                     } else if (match.groups.importImport !== undefined) {
                         // `import pkg1, pkg2, ...`
-                        const packageNames = match.groups.importImport.split(',').map(rawPackageName => rawPackageName.trim());
+                        const packageNames = match.groups.importImport
+                            .split(",")
+                            .map(rawPackageName => rawPackageName.trim());
                         // Can't pass in `this.sendTelemetry` directly as that rebinds `this`.
                         packageNames.forEach(p => this.sendTelemetry(p));
                     }

@@ -1,32 +1,49 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { inject, injectable } from 'inversify';
-import * as path from 'path';
-import { Disposable, Event, EventEmitter, FileSystemWatcher, RelativePattern, Uri } from 'vscode';
-import { IWorkspaceService } from '../../../common/application/types';
-import '../../../common/extensions';
-import { Logger, traceDecorators } from '../../../common/logger';
-import { IPlatformService } from '../../../common/platform/types';
-import { IPythonExecutionFactory } from '../../../common/process/types';
-import { IDisposableRegistry, Resource } from '../../../common/types';
-import { IInterpreterWatcher } from '../../contracts';
+import { inject, injectable } from "inversify";
+import * as path from "path";
+import {
+    Disposable,
+    Event,
+    EventEmitter,
+    FileSystemWatcher,
+    RelativePattern,
+    Uri
+} from "vscode";
+import { IWorkspaceService } from "../../../common/application/types";
+import "../../../common/extensions";
+import { Logger, traceDecorators } from "../../../common/logger";
+import { IPlatformService } from "../../../common/platform/types";
+import { IPythonExecutionFactory } from "../../../common/process/types";
+import { IDisposableRegistry, Resource } from "../../../common/types";
+import { IInterpreterWatcher } from "../../contracts";
 
 const maxTimeToWaitForEnvCreation = 60_000;
 const timeToPollForEnvCreation = 2_000;
 
 @injectable()
-export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, Disposable {
+export class WorkspaceVirtualEnvWatcherService
+    implements IInterpreterWatcher, Disposable {
     private readonly didCreate: EventEmitter<Resource>;
-    private timers = new Map<string, { timer: NodeJS.Timer; counter: number }>();
+    private timers = new Map<
+        string,
+        { timer: NodeJS.Timer; counter: number }
+    >();
     private fsWatchers: FileSystemWatcher[] = [];
     private resource: Resource;
-    constructor(@inject(IDisposableRegistry) private readonly disposableRegistry: Disposable[],
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IPlatformService) private readonly platformService: IPlatformService,
-        @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory) {
+    constructor(
+        @inject(IDisposableRegistry)
+        private readonly disposableRegistry: Disposable[],
+        @inject(IWorkspaceService)
+        private readonly workspaceService: IWorkspaceService,
+        @inject(IPlatformService)
+        private readonly platformService: IPlatformService,
+        @inject(IPythonExecutionFactory)
+        private readonly pythonExecFactory: IPythonExecutionFactory
+    ) {
         this.didCreate = new EventEmitter<Resource>();
         disposableRegistry.push(this);
     }
@@ -36,28 +53,43 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, D
     public dispose() {
         this.clearTimers();
     }
-    @traceDecorators.verbose('Register Intepreter Watcher')
+    @traceDecorators.verbose("Register Intepreter Watcher")
     public async register(resource: Resource): Promise<void> {
         if (this.fsWatchers.length > 0) {
             return;
         }
         this.resource = resource;
-        const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
-        const executable = this.platformService.isWindows ? 'python.exe' : 'python';
-        const patterns = [path.join('*', executable), path.join('*', '*', executable)];
+        const workspaceFolder = resource
+            ? this.workspaceService.getWorkspaceFolder(resource)
+            : undefined;
+        const executable = this.platformService.isWindows
+            ? "python.exe"
+            : "python";
+        const patterns = [
+            path.join("*", executable),
+            path.join("*", "*", executable)
+        ];
 
         for (const pattern of patterns) {
-            const globPatern = workspaceFolder ? new RelativePattern(workspaceFolder.uri.fsPath, pattern) : pattern;
+            const globPatern = workspaceFolder
+                ? new RelativePattern(workspaceFolder.uri.fsPath, pattern)
+                : pattern;
             Logger.verbose(`Create file systemwatcher with pattern ${pattern}`);
 
-            const fsWatcher = this.workspaceService.createFileSystemWatcher(globPatern);
-            fsWatcher.onDidCreate(e => this.createHandler(e), this, this.disposableRegistry);
+            const fsWatcher = this.workspaceService.createFileSystemWatcher(
+                globPatern
+            );
+            fsWatcher.onDidCreate(
+                e => this.createHandler(e),
+                this,
+                this.disposableRegistry
+            );
 
             this.disposableRegistry.push(fsWatcher);
             this.fsWatchers.push(fsWatcher);
         }
     }
-    @traceDecorators.verbose('Intepreter Watcher change handler')
+    @traceDecorators.verbose("Intepreter Watcher change handler")
     public async createHandler(e: Uri) {
         this.didCreate.fire(this.resource);
         // On Windows, creation of environments are very slow, hence lets notify again after
@@ -65,7 +97,9 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, D
         this.notifyCreationWhenReady(e.fsPath).ignoreErrors();
     }
     protected async notifyCreationWhenReady(pythonPath: string) {
-        const counter = this.timers.has(pythonPath) ? this.timers.get(pythonPath)!.counter + 1 : 0;
+        const counter = this.timers.has(pythonPath)
+            ? this.timers.get(pythonPath)!.counter + 1
+            : 0;
         const isValid = await this.isValidExecutable(pythonPath);
         if (isValid) {
             if (counter > 0) {
@@ -73,14 +107,17 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, D
             }
             return this.timers.delete(pythonPath);
         }
-        if (counter > (maxTimeToWaitForEnvCreation / timeToPollForEnvCreation)) {
+        if (counter > maxTimeToWaitForEnvCreation / timeToPollForEnvCreation) {
             // Send notification before we give up trying.
             this.didCreate.fire(this.resource);
             this.timers.delete(pythonPath);
             return;
         }
 
-        const timer = setTimeout(() => this.notifyCreationWhenReady(pythonPath).ignoreErrors(), timeToPollForEnvCreation);
+        const timer = setTimeout(
+            () => this.notifyCreationWhenReady(pythonPath).ignoreErrors(),
+            timeToPollForEnvCreation
+        );
         this.timers.set(pythonPath, { timer, counter });
     }
     private clearTimers() {
@@ -89,7 +126,9 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, D
     }
     private async isValidExecutable(pythonPath: string): Promise<boolean> {
         const execService = await this.pythonExecFactory.create({ pythonPath });
-        const info = await execService.getInterpreterInformation().catch(() => undefined);
+        const info = await execService
+            .getInterpreterInformation()
+            .catch(() => undefined);
         return info !== undefined;
     }
 }

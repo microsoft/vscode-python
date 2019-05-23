@@ -59,7 +59,7 @@
         {
             "explanation": "environment markers",
             "match": ";\\s*(python_version|python_full_version|os_name|sys_platform|platform_release|platform_system|platform_version|platform_machine|platform_python_implementation|implementation_name|implementation_version|extra)\\s*(<|<=|!=|==|>=|>|~=|===)",
-            "captures":{
+            "captures": {
                 "1": {
                     "name": "entity.name.selector"
                 },

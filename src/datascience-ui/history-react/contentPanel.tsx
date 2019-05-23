@@ -1,16 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
-import './contentPanel.css';
+"use strict";
+import "./contentPanel.css";
 
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
-import * as React from 'react';
+import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api";
+import * as React from "react";
 
-import { noop } from '../../test/core';
-import { ErrorBoundary } from '../react-common/errorBoundary';
-import { getSettings } from '../react-common/settingsReactSide';
-import { Cell, ICellViewModel } from './cell';
-import { InputHistory } from './inputHistory';
+import { noop } from "../../test/core";
+import { ErrorBoundary } from "../react-common/errorBoundary";
+import { getSettings } from "../react-common/settingsReactSide";
+import { Cell, ICellViewModel } from "./cell";
+import { InputHistory } from "./inputHistory";
 
 export interface IContentPanelProps {
     baseTheme: string;
@@ -25,8 +25,17 @@ export interface IContentPanelProps {
     editorOptions: monacoEditor.editor.IEditorOptions;
     gotoCellCode(index: number): void;
     deleteCell(index: number): void;
-    onCodeChange(changes: monacoEditor.editor.IModelContentChange[], cellId: string, modelId: string): void;
-    onCodeCreated(code: string, file: string, cellId: string, modelId: string): void;
+    onCodeChange(
+        changes: monacoEditor.editor.IModelContentChange[],
+        cellId: string,
+        modelId: string
+    ): void;
+    onCodeCreated(
+        code: string,
+        file: string,
+        cellId: string,
+        modelId: string
+    ): void;
 }
 
 export class ContentPanel extends React.Component<IContentPanelProps> {
@@ -44,14 +53,12 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
     }
 
     public render() {
-        return(
-            <div id='content-panel-div'>
-                <div id='cell-table'>
-                    <div id='cell-table-body'>
-                        {this.renderCells()}
-                    </div>
+        return (
+            <div id="content-panel-div">
+                <div id="cell-table">
+                    <div id="cell-table-body">{this.renderCells()}</div>
                 </div>
-                <div ref={this.updateBottom}/>
+                <div ref={this.updateBottom} />
             </div>
         );
     }
@@ -59,49 +66,66 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
     private renderCells = () => {
         const maxOutputSize = getSettings().maxOutputSize;
         const errorBackgroundColor = getSettings().errorBackgroundColor;
-        const actualErrorBackgroundColor = errorBackgroundColor ? errorBackgroundColor : '#FFFFFF';
-        const maxTextSize = maxOutputSize && maxOutputSize < 10000 && maxOutputSize > 0 ? maxOutputSize : undefined;
-        const baseTheme = getSettings().ignoreVscodeTheme ? 'vscode-light' : this.props.baseTheme;
-        return this.props.cellVMs.map((cellVM: ICellViewModel, index: number) =>
-            <ErrorBoundary key={index}>
-                <Cell
-                    editorOptions={this.props.editorOptions}
-                    history={undefined}
-                    maxTextSize={maxTextSize}
-                    autoFocus={false}
-                    testMode={this.props.testMode}
-                    cellVM={cellVM}
-                    submitNewCode={noop}
-                    baseTheme={baseTheme}
-                    codeTheme={this.props.codeTheme}
-                    showWatermark={false}
-                    errorBackgroundColor={actualErrorBackgroundColor}
-                    gotoCode={() => this.props.gotoCellCode(index)}
-                    delete={() => this.props.deleteCell(index)}
-                    onCodeChange={this.props.onCodeChange}
-                    onCodeCreated={this.props.onCodeCreated}
-                    monacoTheme={this.props.monacoTheme}
+        const actualErrorBackgroundColor = errorBackgroundColor
+            ? errorBackgroundColor
+            : "#FFFFFF";
+        const maxTextSize =
+            maxOutputSize && maxOutputSize < 10000 && maxOutputSize > 0
+                ? maxOutputSize
+                : undefined;
+        const baseTheme = getSettings().ignoreVscodeTheme
+            ? "vscode-light"
+            : this.props.baseTheme;
+        return this.props.cellVMs.map(
+            (cellVM: ICellViewModel, index: number) => (
+                <ErrorBoundary key={index}>
+                    <Cell
+                        editorOptions={this.props.editorOptions}
+                        history={undefined}
+                        maxTextSize={maxTextSize}
+                        autoFocus={false}
+                        testMode={this.props.testMode}
+                        cellVM={cellVM}
+                        submitNewCode={noop}
+                        baseTheme={baseTheme}
+                        codeTheme={this.props.codeTheme}
+                        showWatermark={false}
+                        errorBackgroundColor={actualErrorBackgroundColor}
+                        gotoCode={() => this.props.gotoCellCode(index)}
+                        delete={() => this.props.deleteCell(index)}
+                        onCodeChange={this.props.onCodeChange}
+                        onCodeCreated={this.props.onCodeCreated}
+                        monacoTheme={this.props.monacoTheme}
                     />
-            </ErrorBoundary>
+                </ErrorBoundary>
+            )
         );
-    }
+    };
 
     private scrollToBottom = () => {
-        if (this.bottom && this.bottom.scrollIntoView && !this.props.skipNextScroll && !this.props.testMode) {
+        if (
+            this.bottom &&
+            this.bottom.scrollIntoView &&
+            !this.props.skipNextScroll &&
+            !this.props.testMode
+        ) {
             // Delay this until we are about to render. React hasn't setup the size of the bottom element
             // yet so we need to delay. 10ms looks good from a user point of view
             setTimeout(() => {
                 if (this.bottom) {
-                    this.bottom.scrollIntoView({behavior: 'smooth', block : 'end', inline: 'end'});
+                    this.bottom.scrollIntoView({
+                        behavior: "smooth",
+                        block: "end",
+                        inline: "end"
+                    });
                 }
             }, 100);
         }
-    }
+    };
 
     private updateBottom = (newBottom: HTMLDivElement) => {
         if (newBottom !== this.bottom) {
             this.bottom = newBottom;
         }
-    }
-
+    };
 }

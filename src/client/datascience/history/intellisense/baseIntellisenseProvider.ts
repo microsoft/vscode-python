@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
-import '../../../common/extensions';
+"use strict";
+import "../../../common/extensions";
 
-import { injectable, unmanaged } from 'inversify';
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
-import * as path from 'path';
-import * as uuid from 'uuid/v4';
+import { injectable, unmanaged } from "inversify";
+import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api";
+import * as path from "path";
+import * as uuid from "uuid/v4";
 import {
     CancellationToken,
     CancellationTokenSource,
@@ -14,15 +14,19 @@ import {
     EventEmitter,
     TextDocumentContentChangeEvent,
     Uri
-} from 'vscode';
+} from "vscode";
 
-import { IWorkspaceService } from '../../../common/application/types';
-import { CancellationError } from '../../../common/cancellation';
-import { traceWarning } from '../../../common/logger';
-import { IFileSystem, TemporaryFile } from '../../../common/platform/types';
-import { createDeferred, Deferred, sleep } from '../../../common/utils/async';
-import { Identifiers, Settings } from '../../constants';
-import { IHistoryListener, IHistoryProvider, IJupyterExecution } from '../../types';
+import { IWorkspaceService } from "../../../common/application/types";
+import { CancellationError } from "../../../common/cancellation";
+import { traceWarning } from "../../../common/logger";
+import { IFileSystem, TemporaryFile } from "../../../common/platform/types";
+import { createDeferred, Deferred, sleep } from "../../../common/utils/async";
+import { Identifiers, Settings } from "../../constants";
+import {
+    IHistoryListener,
+    IHistoryProvider,
+    IJupyterExecution
+} from "../../types";
 import {
     HistoryMessages,
     IAddCell,
@@ -33,26 +37,30 @@ import {
     IProvideHoverRequest,
     IProvideSignatureHelpRequest,
     IRemoveCell
-} from '.././historyTypes';
-import { convertStringsToSuggestions } from './conversion';
-import { IntellisenseDocument } from './intellisenseDocument';
+} from ".././historyTypes";
+import { convertStringsToSuggestions } from "./conversion";
+import { IntellisenseDocument } from "./intellisenseDocument";
 
 // tslint:disable:no-any
 @injectable()
 export abstract class BaseIntellisenseProvider implements IHistoryListener {
-
     private documentPromise: Deferred<IntellisenseDocument> | undefined;
     private temporaryFile: TemporaryFile | undefined;
-    private postEmitter: EventEmitter<{message: string; payload: any}> = new EventEmitter<{message: string; payload: any}>();
-    private cancellationSources : Map<string, CancellationTokenSource> = new Map<string, CancellationTokenSource>();
+    private postEmitter: EventEmitter<{
+        message: string;
+        payload: any;
+    }> = new EventEmitter<{ message: string; payload: any }>();
+    private cancellationSources: Map<string, CancellationTokenSource> = new Map<
+        string,
+        CancellationTokenSource
+    >();
 
     constructor(
         @unmanaged() private workspaceService: IWorkspaceService,
         @unmanaged() private fileSystem: IFileSystem,
         @unmanaged() private jupyterExecution: IJupyterExecution,
         @unmanaged() private historyProvider: IHistoryProvider
-    ) {
-    }
+    ) {}
 
     public dispose() {
         if (this.temporaryFile) {
@@ -60,7 +68,7 @@ export abstract class BaseIntellisenseProvider implements IHistoryListener {
         }
     }
 
-    public get postMessage(): Event<{message: string; payload: any}> {
+    public get postMessage(): Event<{ message: string; payload: any }> {
         return this.postEmitter.event;
     }
 
@@ -75,19 +83,31 @@ export abstract class BaseIntellisenseProvider implements IHistoryListener {
 
             case HistoryMessages.ProvideCompletionItemsRequest:
                 if (this.isActive) {
-                    this.dispatchMessage(message, payload, this.handleCompletionItemsRequest);
+                    this.dispatchMessage(
+                        message,
+                        payload,
+                        this.handleCompletionItemsRequest
+                    );
                 }
                 break;
 
             case HistoryMessages.ProvideHoverRequest:
                 if (this.isActive) {
-                    this.dispatchMessage(message, payload, this.handleHoverRequest);
+                    this.dispatchMessage(
+                        message,
+                        payload,
+                        this.handleHoverRequest
+                    );
                 }
                 break;
 
             case HistoryMessages.ProvideSignatureHelpRequest:
                 if (this.isActive) {
-                    this.dispatchMessage(message, payload, this.handleSignatureHelpRequest);
+                    this.dispatchMessage(
+                        message,
+                        payload,
+                        this.handleSignatureHelpRequest
+                    );
                 }
                 break;
 
@@ -116,21 +136,31 @@ export abstract class BaseIntellisenseProvider implements IHistoryListener {
         }
     }
 
-    protected getDocument(resource?: Uri) : Promise<IntellisenseDocument> {
+    protected getDocument(resource?: Uri): Promise<IntellisenseDocument> {
         if (!this.documentPromise) {
             this.documentPromise = createDeferred<IntellisenseDocument>();
 
             // Create our dummy document. Compute a file path for it.
             if (this.workspaceService.rootPath || resource) {
-                const dir = resource ? path.dirname(resource.fsPath) : this.workspaceService.rootPath!;
-                const dummyFilePath = path.join(dir, `History_${uuid().replace(/-/g, '')}.py`);
-                this.documentPromise.resolve(new IntellisenseDocument(dummyFilePath));
+                const dir = resource
+                    ? path.dirname(resource.fsPath)
+                    : this.workspaceService.rootPath!;
+                const dummyFilePath = path.join(
+                    dir,
+                    `History_${uuid().replace(/-/g, "")}.py`
+                );
+                this.documentPromise.resolve(
+                    new IntellisenseDocument(dummyFilePath)
+                );
             } else {
-                this.fileSystem.createTemporaryFile('.py')
+                this.fileSystem
+                    .createTemporaryFile(".py")
                     .then(t => {
                         this.temporaryFile = t;
                         const dummyFilePath = this.temporaryFile.filePath;
-                        this.documentPromise!.resolve(new IntellisenseDocument(dummyFilePath));
+                        this.documentPromise!.resolve(
+                            new IntellisenseDocument(dummyFilePath)
+                        );
                     })
                     .catch(e => {
                         this.documentPromise!.reject(e);
@@ -142,17 +172,42 @@ export abstract class BaseIntellisenseProvider implements IHistoryListener {
     }
 
     protected abstract get isActive(): boolean;
-    protected abstract provideCompletionItems(position: monacoEditor.Position, context: monacoEditor.languages.CompletionContext, cellId: string, token: CancellationToken) : Promise<monacoEditor.languages.CompletionList>;
-    protected abstract provideHover(position: monacoEditor.Position, cellId: string, token: CancellationToken) : Promise<monacoEditor.languages.Hover>;
-    protected abstract provideSignatureHelp(position: monacoEditor.Position, context: monacoEditor.languages.SignatureHelpContext, cellId: string, token: CancellationToken) : Promise<monacoEditor.languages.SignatureHelp>;
-    protected abstract handleChanges(originalFile: string | undefined, document: IntellisenseDocument, changes: TextDocumentContentChangeEvent[]) : Promise<void>;
+    protected abstract provideCompletionItems(
+        position: monacoEditor.Position,
+        context: monacoEditor.languages.CompletionContext,
+        cellId: string,
+        token: CancellationToken
+    ): Promise<monacoEditor.languages.CompletionList>;
+    protected abstract provideHover(
+        position: monacoEditor.Position,
+        cellId: string,
+        token: CancellationToken
+    ): Promise<monacoEditor.languages.Hover>;
+    protected abstract provideSignatureHelp(
+        position: monacoEditor.Position,
+        context: monacoEditor.languages.SignatureHelpContext,
+        cellId: string,
+        token: CancellationToken
+    ): Promise<monacoEditor.languages.SignatureHelp>;
+    protected abstract handleChanges(
+        originalFile: string | undefined,
+        document: IntellisenseDocument,
+        changes: TextDocumentContentChangeEvent[]
+    ): Promise<void>;
 
-    private dispatchMessage<M extends IHistoryMapping, T extends keyof M>(_message: T, payload: any, handler: (args : M[T]) => void) {
+    private dispatchMessage<M extends IHistoryMapping, T extends keyof M>(
+        _message: T,
+        payload: any,
+        handler: (args: M[T]) => void
+    ) {
         const args = payload as M[T];
         handler.bind(this)(args);
     }
 
-    private postResponse<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) : void {
+    private postResponse<M extends IHistoryMapping, T extends keyof M>(
+        type: T,
+        payload?: M[T]
+    ): void {
         const response = payload as any;
         if (response && response.id) {
             const cancelSource = this.cancellationSources.get(response.id);
@@ -161,7 +216,7 @@ export abstract class BaseIntellisenseProvider implements IHistoryListener {
                 this.cancellationSources.delete(response.id);
             }
         }
-        this.postEmitter.fire({message: type.toString(), payload});
+        this.postEmitter.fire({ message: type.toString(), payload });
     }
 
     private handleCancel(request: ICancelIntellisenseRequest) {
@@ -173,19 +228,32 @@ export abstract class BaseIntellisenseProvider implements IHistoryListener {
         }
     }
 
-    private handleCompletionItemsRequest(request: IProvideCompletionItemsRequest) {
+    private handleCompletionItemsRequest(
+        request: IProvideCompletionItemsRequest
+    ) {
         // Create a cancellation source. We'll use this for our sub class request and a jupyter one
         const cancelSource = new CancellationTokenSource();
         this.cancellationSources.set(request.requestId, cancelSource);
 
         // Combine all of the results together.
         this.postTimedResponse(
-            [this.provideCompletionItems(request.position, request.context, request.cellId, cancelSource.token),
-             this.provideJupyterCompletionItems(request.position, request.context, cancelSource.token)],
+            [
+                this.provideCompletionItems(
+                    request.position,
+                    request.context,
+                    request.cellId,
+                    cancelSource.token
+                ),
+                this.provideJupyterCompletionItems(
+                    request.position,
+                    request.context,
+                    cancelSource.token
+                )
+            ],
             HistoryMessages.ProvideCompletionItemsResponse,
-            (c) => {
+            c => {
                 const list = this.combineCompletions(c);
-                return {list, requestId: request.requestId};
+                return { list, requestId: request.requestId };
             }
         );
     }
@@ -194,47 +262,82 @@ export abstract class BaseIntellisenseProvider implements IHistoryListener {
         const cancelSource = new CancellationTokenSource();
         this.cancellationSources.set(request.requestId, cancelSource);
         this.postTimedResponse(
-            [this.provideHover(request.position, request.cellId, cancelSource.token)],
+            [
+                this.provideHover(
+                    request.position,
+                    request.cellId,
+                    cancelSource.token
+                )
+            ],
             HistoryMessages.ProvideHoverResponse,
-            (h) => {
+            h => {
                 if (h && h[0]) {
-                    return { hover: h[0]!, requestId: request.requestId};
+                    return { hover: h[0]!, requestId: request.requestId };
                 } else {
-                    return { hover: { contents: [] }, requestId: request.requestId };
+                    return {
+                        hover: { contents: [] },
+                        requestId: request.requestId
+                    };
                 }
-            });
+            }
+        );
     }
 
-    private async provideJupyterCompletionItems(position: monacoEditor.Position, _context: monacoEditor.languages.CompletionContext, cancelToken: CancellationToken) : Promise<monacoEditor.languages.CompletionList> {
+    private async provideJupyterCompletionItems(
+        position: monacoEditor.Position,
+        _context: monacoEditor.languages.CompletionContext,
+        cancelToken: CancellationToken
+    ): Promise<monacoEditor.languages.CompletionList> {
         try {
-            const activeServer = await this.jupyterExecution.getServer(await this.historyProvider.getNotebookOptions());
+            const activeServer = await this.jupyterExecution.getServer(
+                await this.historyProvider.getNotebookOptions()
+            );
             const document = await this.getDocument();
             if (activeServer && document) {
                 const code = document.getEditCellContent();
-                const lines = code.splitLines({trim: false, removeEmptyEntries: false});
-                const offsetInCode = lines.reduce((a: number, c: string, i: number) => {
-                    if (i < position.lineNumber - 1) {
-                        return a + c.length + 1;
-                    } else if (i === position.lineNumber - 1) {
-                        return a + position.column - 1;
-                    } else {
-                        return a;
-                    }
-                }, 0);
-                const jupyterResults = await activeServer.getCompletion(code, offsetInCode, cancelToken);
+                const lines = code.splitLines({
+                    trim: false,
+                    removeEmptyEntries: false
+                });
+                const offsetInCode = lines.reduce(
+                    (a: number, c: string, i: number) => {
+                        if (i < position.lineNumber - 1) {
+                            return a + c.length + 1;
+                        } else if (i === position.lineNumber - 1) {
+                            return a + position.column - 1;
+                        } else {
+                            return a;
+                        }
+                    },
+                    0
+                );
+                const jupyterResults = await activeServer.getCompletion(
+                    code,
+                    offsetInCode,
+                    cancelToken
+                );
                 if (jupyterResults && jupyterResults.matches) {
                     const baseOffset = document.getEditCellOffset();
                     const basePosition = document.positionAt(baseOffset);
-                    const startPosition = document.positionAt(jupyterResults.cursor.start + baseOffset);
-                    const endPosition = document.positionAt(jupyterResults.cursor.end  + baseOffset);
+                    const startPosition = document.positionAt(
+                        jupyterResults.cursor.start + baseOffset
+                    );
+                    const endPosition = document.positionAt(
+                        jupyterResults.cursor.end + baseOffset
+                    );
                     const range: monacoEditor.IRange = {
-                        startLineNumber: startPosition.line + 1 - basePosition.line, // monaco is 1 based
+                        startLineNumber:
+                            startPosition.line + 1 - basePosition.line, // monaco is 1 based
                         startColumn: startPosition.character + 1,
                         endLineNumber: endPosition.line + 1 - basePosition.line,
                         endColumn: endPosition.character + 1
                     };
                     return {
-                        suggestions: convertStringsToSuggestions(jupyterResults.matches, range, jupyterResults.metadata),
+                        suggestions: convertStringsToSuggestions(
+                            jupyterResults.matches,
+                            range,
+                            jupyterResults.metadata
+                        ),
                         incomplete: false
                     };
                 }
@@ -249,17 +352,21 @@ export abstract class BaseIntellisenseProvider implements IHistoryListener {
             suggestions: [],
             incomplete: false
         };
-
     }
 
-    private postTimedResponse<R, M extends IHistoryMapping, T extends keyof M>(promises: Promise<R>[], message: T, formatResponse: (val: (R | null)[]) => M[T]) {
+    private postTimedResponse<R, M extends IHistoryMapping, T extends keyof M>(
+        promises: Promise<R>[],
+        message: T,
+        formatResponse: (val: (R | null)[]) => M[T]
+    ) {
         // Time all of the promises to make sure they don't take too long
-        const timed = promises.map(p => Promise.race([p, sleep(Settings.IntellisenseTimeout)]));
+        const timed = promises.map(p =>
+            Promise.race([p, sleep(Settings.IntellisenseTimeout)])
+        );
 
         // Wait for all of of the timings.
         const all = Promise.all(timed);
         all.then(r => {
-
             // Check all of the results. If they timed out, turn into
             // a null so formatResponse can post the empty result.
             const nulled = r.map(v => {
@@ -274,11 +381,16 @@ export abstract class BaseIntellisenseProvider implements IHistoryListener {
         });
     }
 
-    private combineCompletions(list: (monacoEditor.languages.CompletionList | null)[]) : monacoEditor.languages.CompletionList {
+    private combineCompletions(
+        list: (monacoEditor.languages.CompletionList | null)[]
+    ): monacoEditor.languages.CompletionList {
         // Note to self. We're eliminating duplicates ourselves. The alternative would be to
         // have more than one intellisense provider at the monaco editor level and return jupyter
         // results independently. Maybe we switch to this when jupyter resides on the react side.
-        const uniqueSuggestions: Map<string, monacoEditor.languages.CompletionItem> = new Map<string, monacoEditor.languages.CompletionItem>();
+        const uniqueSuggestions: Map<
+            string,
+            monacoEditor.languages.CompletionItem
+        > = new Map<string, monacoEditor.languages.CompletionItem>();
         list.forEach(c => {
             if (c) {
                 c.suggestions.forEach(s => {
@@ -299,22 +411,48 @@ export abstract class BaseIntellisenseProvider implements IHistoryListener {
         const cancelSource = new CancellationTokenSource();
         this.cancellationSources.set(request.requestId, cancelSource);
         this.postTimedResponse(
-            [this.provideSignatureHelp(request.position, request.context, request.cellId, cancelSource.token)],
+            [
+                this.provideSignatureHelp(
+                    request.position,
+                    request.context,
+                    request.cellId,
+                    cancelSource.token
+                )
+            ],
             HistoryMessages.ProvideSignatureHelpResponse,
-            (s) => {
+            s => {
                 if (s && s[0]) {
-                    return { signatureHelp: s[0]!, requestId: request.requestId};
+                    return {
+                        signatureHelp: s[0]!,
+                        requestId: request.requestId
+                    };
                 } else {
-                    return {signatureHelp: { signatures: [], activeParameter: 0, activeSignature: 0 }, requestId: request.requestId};
+                    return {
+                        signatureHelp: {
+                            signatures: [],
+                            activeParameter: 0,
+                            activeSignature: 0
+                        },
+                        requestId: request.requestId
+                    };
                 }
-            });
+            }
+        );
     }
 
     private async addCell(request: IAddCell): Promise<void> {
         // Get the document and then pass onto the sub class
-        const document = await this.getDocument(request.file === Identifiers.EmptyFileName ? undefined : Uri.file(request.file));
+        const document = await this.getDocument(
+            request.file === Identifiers.EmptyFileName
+                ? undefined
+                : Uri.file(request.file)
+        );
         if (document) {
-            const changes = document.addCell(request.fullText, request.currentText, request.id);
+            const changes = document.addCell(
+                request.fullText,
+                request.currentText,
+                request.id
+            );
             return this.handleChanges(request.file, document, changes);
         }
     }

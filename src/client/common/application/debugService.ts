@@ -1,11 +1,22 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { injectable } from 'inversify';
-import { Breakpoint, BreakpointsChangeEvent, debug, DebugConfiguration, DebugConsole, DebugSession, DebugSessionCustomEvent, Disposable, Event, WorkspaceFolder } from 'vscode';
-import { IDebugService } from './types';
+import { injectable } from "inversify";
+import {
+    Breakpoint,
+    BreakpointsChangeEvent,
+    debug,
+    DebugConfiguration,
+    DebugConsole,
+    DebugSession,
+    DebugSessionCustomEvent,
+    Disposable,
+    Event,
+    WorkspaceFolder
+} from "vscode";
+import { IDebugService } from "./types";
 
 @injectable()
 export class DebugService implements IDebugService {
@@ -19,13 +30,17 @@ export class DebugService implements IDebugService {
     public get breakpoints(): Breakpoint[] {
         return debug.breakpoints;
     }
-    public get onDidChangeActiveDebugSession(): Event<DebugSession | undefined> {
+    public get onDidChangeActiveDebugSession(): Event<
+        DebugSession | undefined
+    > {
         return debug.onDidChangeActiveDebugSession;
     }
     public get onDidStartDebugSession(): Event<DebugSession> {
         return debug.onDidStartDebugSession;
     }
-    public get onDidReceiveDebugSessionCustomEvent(): Event<DebugSessionCustomEvent> {
+    public get onDidReceiveDebugSessionCustomEvent(): Event<
+        DebugSessionCustomEvent
+    > {
         return debug.onDidReceiveDebugSessionCustomEvent;
     }
     public get onDidTerminateDebugSession(): Event<DebugSession> {
@@ -35,10 +50,17 @@ export class DebugService implements IDebugService {
         return debug.onDidChangeBreakpoints;
     }
     // tslint:disable-next-line:no-any
-    public registerDebugConfigurationProvider(debugType: string, provider: any): Disposable {
+    public registerDebugConfigurationProvider(
+        debugType: string,
+        provider: any
+    ): Disposable {
         return debug.registerDebugConfigurationProvider(debugType, provider);
     }
-    public startDebugging(folder: WorkspaceFolder | undefined, nameOrConfiguration: string | DebugConfiguration, parentSession?: DebugSession): Thenable<boolean> {
+    public startDebugging(
+        folder: WorkspaceFolder | undefined,
+        nameOrConfiguration: string | DebugConfiguration,
+        parentSession?: DebugSession
+    ): Thenable<boolean> {
         return debug.startDebugging(folder, nameOrConfiguration, parentSession);
     }
     public addBreakpoints(breakpoints: Breakpoint[]): void {

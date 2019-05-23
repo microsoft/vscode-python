@@ -10,22 +10,43 @@ import {
     languages,
     OutputChannel,
     Uri
-} from 'vscode';
-import { ICommandManager, IWorkspaceService } from '../../../common/application/types';
-import '../../../common/extensions';
-import { isNotInstalledError } from '../../../common/helpers';
-import { traceError } from '../../../common/logger';
-import { IFileSystem } from '../../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry, IInstaller, IOutputChannel, IPythonSettings, Product } from '../../../common/types';
-import { getNamesAndValues } from '../../../common/utils/enum';
-import { noop } from '../../../common/utils/misc';
-import { IServiceContainer } from '../../../ioc/types';
-import { EventName } from '../../../telemetry/constants';
-import { sendTelemetryEvent } from '../../../telemetry/index';
-import { TestDiscoverytTelemetry, TestRunTelemetry } from '../../../telemetry/types';
-import { IPythonTestMessage, ITestDiagnosticService, WorkspaceTestStatus } from '../../types';
-import { copyDesiredTestResults } from '../testUtils';
-import { CANCELLATION_REASON, CommandSource, TEST_OUTPUT_CHANNEL } from './../constants';
+} from "vscode";
+import {
+    ICommandManager,
+    IWorkspaceService
+} from "../../../common/application/types";
+import "../../../common/extensions";
+import { isNotInstalledError } from "../../../common/helpers";
+import { traceError } from "../../../common/logger";
+import { IFileSystem } from "../../../common/platform/types";
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    IInstaller,
+    IOutputChannel,
+    IPythonSettings,
+    Product
+} from "../../../common/types";
+import { getNamesAndValues } from "../../../common/utils/enum";
+import { noop } from "../../../common/utils/misc";
+import { IServiceContainer } from "../../../ioc/types";
+import { EventName } from "../../../telemetry/constants";
+import { sendTelemetryEvent } from "../../../telemetry/index";
+import {
+    TestDiscoverytTelemetry,
+    TestRunTelemetry
+} from "../../../telemetry/types";
+import {
+    IPythonTestMessage,
+    ITestDiagnosticService,
+    WorkspaceTestStatus
+} from "../../types";
+import { copyDesiredTestResults } from "../testUtils";
+import {
+    CANCELLATION_REASON,
+    CommandSource,
+    TEST_OUTPUT_CHANNEL
+} from "./../constants";
 import {
     ITestCollectionStorageService,
     ITestDiscoveryService,
@@ -38,7 +59,7 @@ import {
     Tests,
     TestStatus,
     TestsToRun
-} from './../types';
+} from "./../types";
 
 enum CancellationTokenType {
     testDiscovery,
@@ -70,7 +91,9 @@ export abstract class BaseTestManager implements ITestManager {
     private _installer!: IInstaller;
     private readonly testsStatusUpdaterService: ITestsStatusUpdaterService;
     private discoverTestsPromise?: Promise<Tests>;
-    private readonly _onDidStatusChange = new EventEmitter<WorkspaceTestStatus>();
+    private readonly _onDidStatusChange = new EventEmitter<
+        WorkspaceTestStatus
+    >();
     private get installer(): IInstaller {
         if (!this._installer) {
             this._installer = this.serviceContainer.get<IInstaller>(IInstaller);
@@ -85,24 +108,53 @@ export abstract class BaseTestManager implements ITestManager {
         protected serviceContainer: IServiceContainer
     ) {
         this.updateStatus(TestStatus.Unknown);
-        const configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
-        this.settings = configService.getSettings(this.rootDirectory ? Uri.file(this.rootDirectory) : undefined);
-        const disposables = serviceContainer.get<Disposable[]>(IDisposableRegistry);
-        this._outputChannel = this.serviceContainer.get<OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL);
-        this.testCollectionStorage = this.serviceContainer.get<ITestCollectionStorageService>(ITestCollectionStorageService);
-        this._testResultsService = this.serviceContainer.get<ITestResultsService>(ITestResultsService);
-        this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-        this.diagnosticCollection = languages.createDiagnosticCollection(this.testProvider);
-        this.unitTestDiagnosticService = serviceContainer.get<ITestDiagnosticService>(ITestDiagnosticService);
-        this.testsStatusUpdaterService = serviceContainer.get<ITestsStatusUpdaterService>(ITestsStatusUpdaterService);
-        this.commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
+        const configService = serviceContainer.get<IConfigurationService>(
+            IConfigurationService
+        );
+        this.settings = configService.getSettings(
+            this.rootDirectory ? Uri.file(this.rootDirectory) : undefined
+        );
+        const disposables = serviceContainer.get<Disposable[]>(
+            IDisposableRegistry
+        );
+        this._outputChannel = this.serviceContainer.get<OutputChannel>(
+            IOutputChannel,
+            TEST_OUTPUT_CHANNEL
+        );
+        this.testCollectionStorage = this.serviceContainer.get<
+            ITestCollectionStorageService
+        >(ITestCollectionStorageService);
+        this._testResultsService = this.serviceContainer.get<
+            ITestResultsService
+        >(ITestResultsService);
+        this.workspaceService = this.serviceContainer.get<IWorkspaceService>(
+            IWorkspaceService
+        );
+        this.diagnosticCollection = languages.createDiagnosticCollection(
+            this.testProvider
+        );
+        this.unitTestDiagnosticService = serviceContainer.get<
+            ITestDiagnosticService
+        >(ITestDiagnosticService);
+        this.testsStatusUpdaterService = serviceContainer.get<
+            ITestsStatusUpdaterService
+        >(ITestsStatusUpdaterService);
+        this.commandManager = serviceContainer.get<ICommandManager>(
+            ICommandManager
+        );
         disposables.push(this);
     }
-    protected get testDiscoveryCancellationToken(): CancellationToken | undefined {
-        return this.testDiscoveryCancellationTokenSource ? this.testDiscoveryCancellationTokenSource.token : undefined;
+    protected get testDiscoveryCancellationToken():
+        | CancellationToken
+        | undefined {
+        return this.testDiscoveryCancellationTokenSource
+            ? this.testDiscoveryCancellationTokenSource.token
+            : undefined;
     }
     protected get testRunnerCancellationToken(): CancellationToken | undefined {
-        return this.testRunnerCancellationTokenSource ? this.testRunnerCancellationTokenSource.token : undefined;
+        return this.testRunnerCancellationTokenSource
+            ? this.testRunnerCancellationTokenSource.token
+            : undefined;
     }
     public dispose() {
         this.stop();
@@ -114,7 +166,9 @@ export abstract class BaseTestManager implements ITestManager {
         return this._onDidStatusChange.event;
     }
     public get workingDirectory(): string {
-        return this.settings.testing.cwd && this.settings.testing.cwd.length > 0 ? this.settings.testing.cwd : this.rootDirectory;
+        return this.settings.testing.cwd && this.settings.testing.cwd.length > 0
+            ? this.settings.testing.cwd
+            : this.rootDirectory;
     }
     public stop() {
         if (this.testDiscoveryCancellationTokenSource) {
@@ -135,21 +189,49 @@ export abstract class BaseTestManager implements ITestManager {
 
         this.testResultsService.resetResults(this.tests!);
     }
-    public async discoverTests(cmdSource: CommandSource, ignoreCache: boolean = false, quietMode: boolean = false, userInitiated: boolean = false, clearTestStatus: boolean = false): Promise<Tests> {
+    public async discoverTests(
+        cmdSource: CommandSource,
+        ignoreCache: boolean = false,
+        quietMode: boolean = false,
+        userInitiated: boolean = false,
+        clearTestStatus: boolean = false
+    ): Promise<Tests> {
         if (this.discoverTestsPromise) {
             return this.discoverTestsPromise;
         }
-        this.discoverTestsPromise = this._discoverTests(cmdSource, ignoreCache, quietMode, userInitiated, clearTestStatus);
-        this.discoverTestsPromise.catch(noop).then(() => this.discoverTestsPromise = undefined).ignoreErrors();
+        this.discoverTestsPromise = this._discoverTests(
+            cmdSource,
+            ignoreCache,
+            quietMode,
+            userInitiated,
+            clearTestStatus
+        );
+        this.discoverTestsPromise
+            .catch(noop)
+            .then(() => (this.discoverTestsPromise = undefined))
+            .ignoreErrors();
         return this.discoverTestsPromise;
     }
-    private async _discoverTests(cmdSource: CommandSource, ignoreCache: boolean = false, quietMode: boolean = false, userInitiated: boolean = false, clearTestStatus: boolean = false): Promise<Tests> {
-        if (!ignoreCache && this.tests! && this.tests!.testFunctions.length > 0) {
+    private async _discoverTests(
+        cmdSource: CommandSource,
+        ignoreCache: boolean = false,
+        quietMode: boolean = false,
+        userInitiated: boolean = false,
+        clearTestStatus: boolean = false
+    ): Promise<Tests> {
+        if (
+            !ignoreCache &&
+            this.tests! &&
+            this.tests!.testFunctions.length > 0
+        ) {
             this.updateStatus(TestStatus.Idle);
             return Promise.resolve(this.tests!);
         }
         if (userInitiated) {
-            this.testsStatusUpdaterService.updateStatusAsDiscovering(this.workspaceFolder, this.tests);
+            this.testsStatusUpdaterService.updateStatusAsDiscovering(
+                this.workspaceFolder,
+                this.tests
+            );
         }
         this.updateStatus(TestStatus.Discovering);
         // If ignoreCache is true, its an indication of the fact that its a user invoked operation.
@@ -163,15 +245,23 @@ export abstract class BaseTestManager implements ITestManager {
             trigger: cmdSource as any,
             failed: false
         };
-        this.commandManager.executeCommand('setContext', 'testsDiscovered', true).then(noop, noop);
+        this.commandManager
+            .executeCommand("setContext", "testsDiscovered", true)
+            .then(noop, noop);
         this.createCancellationToken(CancellationTokenType.testDiscovery);
         const discoveryOptions = this.getDiscoveryOptions(ignoreCache);
-        const discoveryService = this.serviceContainer.get<ITestDiscoveryService>(ITestDiscoveryService, this.testProvider);
+        const discoveryService = this.serviceContainer.get<
+            ITestDiscoveryService
+        >(ITestDiscoveryService, this.testProvider);
         return discoveryService
             .discoverTests(discoveryOptions)
             .then(tests => {
-                const wkspace = this.workspaceService.getWorkspaceFolder(Uri.file(this.rootDirectory))!.uri;
-                const existingTests = this.testCollectionStorage.getTests(wkspace)!;
+                const wkspace = this.workspaceService.getWorkspaceFolder(
+                    Uri.file(this.rootDirectory)
+                )!.uri;
+                const existingTests = this.testCollectionStorage.getTests(
+                    wkspace
+                )!;
                 if (clearTestStatus) {
                     this.resetTestResults();
                 } else if (existingTests) {
@@ -186,69 +276,116 @@ export abstract class BaseTestManager implements ITestManager {
                 // have errors in Discovering
                 let haveErrorsInDiscovering = false;
                 tests.testFiles.forEach(file => {
-                    if (file.errorsWhenDiscovering && file.errorsWhenDiscovering.length > 0) {
+                    if (
+                        file.errorsWhenDiscovering &&
+                        file.errorsWhenDiscovering.length > 0
+                    ) {
                         haveErrorsInDiscovering = true;
-                        this.outputChannel.append('_'.repeat(10));
-                        this.outputChannel.append(`There was an error in identifying unit tests in ${file.nameToRun}`);
-                        this.outputChannel.appendLine('_'.repeat(10));
-                        this.outputChannel.appendLine(file.errorsWhenDiscovering);
+                        this.outputChannel.append("_".repeat(10));
+                        this.outputChannel.append(
+                            `There was an error in identifying unit tests in ${
+                                file.nameToRun
+                            }`
+                        );
+                        this.outputChannel.appendLine("_".repeat(10));
+                        this.outputChannel.appendLine(
+                            file.errorsWhenDiscovering
+                        );
                     }
                 });
                 if (haveErrorsInDiscovering && !quietMode) {
-                    const testsHelper = this.serviceContainer.get<ITestsHelper>(ITestsHelper);
-                    testsHelper.displayTestErrorMessage('There were some errors in discovering unit tests');
+                    const testsHelper = this.serviceContainer.get<ITestsHelper>(
+                        ITestsHelper
+                    );
+                    testsHelper.displayTestErrorMessage(
+                        "There were some errors in discovering unit tests"
+                    );
                 }
-                this.disposeCancellationToken(CancellationTokenType.testDiscovery);
-                sendTelemetryEvent(EventName.UNITTEST_DISCOVER, undefined, telementryProperties);
+                this.disposeCancellationToken(
+                    CancellationTokenType.testDiscovery
+                );
+                sendTelemetryEvent(
+                    EventName.UNITTEST_DISCOVER,
+                    undefined,
+                    telementryProperties
+                );
                 return tests;
             })
             .catch((reason: {}) => {
                 if (userInitiated) {
-                    this.testsStatusUpdaterService.updateStatusAsUnknown(this.workspaceFolder, this.tests);
+                    this.testsStatusUpdaterService.updateStatusAsUnknown(
+                        this.workspaceFolder,
+                        this.tests
+                    );
                 }
                 if (isNotInstalledError(reason as Error) && !quietMode) {
-                    this.installer.promptToInstall(this.product, this.workspaceFolder)
-                        .catch(ex => traceError('isNotInstalledError', ex));
+                    this.installer
+                        .promptToInstall(this.product, this.workspaceFolder)
+                        .catch(ex => traceError("isNotInstalledError", ex));
                 }
 
                 this.tests = undefined;
                 this.discoverTestsPromise = undefined;
-                if (this.testDiscoveryCancellationToken && this.testDiscoveryCancellationToken.isCancellationRequested) {
+                if (
+                    this.testDiscoveryCancellationToken &&
+                    this.testDiscoveryCancellationToken.isCancellationRequested
+                ) {
                     reason = CANCELLATION_REASON;
                     this.updateStatus(TestStatus.Idle);
                 } else {
                     telementryProperties.failed = true;
-                    sendTelemetryEvent(EventName.UNITTEST_DISCOVER, undefined, telementryProperties);
+                    sendTelemetryEvent(
+                        EventName.UNITTEST_DISCOVER,
+                        undefined,
+                        telementryProperties
+                    );
                     this.updateStatus(TestStatus.Error);
-                    this.outputChannel.appendLine('Test Discovery failed: ');
+                    this.outputChannel.appendLine("Test Discovery failed: ");
                     this.outputChannel.appendLine(reason.toString());
                 }
-                const wkspace = this.workspaceService.getWorkspaceFolder(Uri.file(this.rootDirectory))!.uri;
+                const wkspace = this.workspaceService.getWorkspaceFolder(
+                    Uri.file(this.rootDirectory)
+                )!.uri;
                 this.testCollectionStorage.storeTests(wkspace, undefined);
-                this.disposeCancellationToken(CancellationTokenType.testDiscovery);
+                this.disposeCancellationToken(
+                    CancellationTokenType.testDiscovery
+                );
                 return Promise.reject(reason);
             });
     }
-    public async runTest(cmdSource: CommandSource, testsToRun?: TestsToRun, runFailedTests?: boolean, debug?: boolean): Promise<Tests> {
+    public async runTest(
+        cmdSource: CommandSource,
+        testsToRun?: TestsToRun,
+        runFailedTests?: boolean,
+        debug?: boolean
+    ): Promise<Tests> {
         const moreInfo = {
             Test_Provider: this.testProvider,
-            Run_Failed_Tests: 'false',
-            Run_Specific_File: 'false',
-            Run_Specific_Class: 'false',
-            Run_Specific_Function: 'false'
+            Run_Failed_Tests: "false",
+            Run_Specific_File: "false",
+            Run_Specific_Class: "false",
+            Run_Specific_Function: "false"
         };
         //Ensure valid values are sent.
-        const validCmdSourceValues = getNamesAndValues<CommandSource>(CommandSource).map(item => item.value);
+        const validCmdSourceValues = getNamesAndValues<CommandSource>(
+            CommandSource
+        ).map(item => item.value);
         const telementryProperties: TestRunTelemetry = {
             tool: this.testProvider,
-            scope: 'all',
+            scope: "all",
             debugging: debug === true,
-            triggerSource: validCmdSourceValues.indexOf(cmdSource) === -1 ? 'commandpalette' : cmdSource,
+            triggerSource:
+                validCmdSourceValues.indexOf(cmdSource) === -1
+                    ? "commandpalette"
+                    : cmdSource,
             failed: false
         };
 
         if (!runFailedTests && !testsToRun) {
-            this.testsStatusUpdaterService.updateStatusAsRunning(this.workspaceFolder, this.tests);
+            this.testsStatusUpdaterService.updateStatusAsRunning(
+                this.workspaceFolder,
+                this.tests
+            );
         }
 
         this.updateStatus(TestStatus.Running);
@@ -258,37 +395,74 @@ export abstract class BaseTestManager implements ITestManager {
 
         if (runFailedTests === true) {
             moreInfo.Run_Failed_Tests = runFailedTests.toString();
-            telementryProperties.scope = 'failed';
-            this.testsStatusUpdaterService.updateStatusAsRunningFailedTests(this.workspaceFolder, this.tests);
+            telementryProperties.scope = "failed";
+            this.testsStatusUpdaterService.updateStatusAsRunningFailedTests(
+                this.workspaceFolder,
+                this.tests
+            );
         }
-        if (testsToRun && typeof testsToRun === 'object') {
-            if (Array.isArray(testsToRun.testFile) && testsToRun.testFile.length > 0) {
-                telementryProperties.scope = 'file';
-                moreInfo.Run_Specific_File = 'true';
+        if (testsToRun && typeof testsToRun === "object") {
+            if (
+                Array.isArray(testsToRun.testFile) &&
+                testsToRun.testFile.length > 0
+            ) {
+                telementryProperties.scope = "file";
+                moreInfo.Run_Specific_File = "true";
             }
-            if (Array.isArray(testsToRun.testSuite) && testsToRun.testSuite.length > 0) {
-                telementryProperties.scope = 'class';
-                moreInfo.Run_Specific_Class = 'true';
+            if (
+                Array.isArray(testsToRun.testSuite) &&
+                testsToRun.testSuite.length > 0
+            ) {
+                telementryProperties.scope = "class";
+                moreInfo.Run_Specific_Class = "true";
             }
-            if (Array.isArray(testsToRun.testFunction) && testsToRun.testFunction.length > 0) {
-                telementryProperties.scope = 'function';
-                moreInfo.Run_Specific_Function = 'true';
+            if (
+                Array.isArray(testsToRun.testFunction) &&
+                testsToRun.testFunction.length > 0
+            ) {
+                telementryProperties.scope = "function";
+                moreInfo.Run_Specific_Function = "true";
             }
-            this.testsStatusUpdaterService.updateStatusAsRunningSpecificTests(this.workspaceFolder, testsToRun, this.tests);
+            this.testsStatusUpdaterService.updateStatusAsRunningSpecificTests(
+                this.workspaceFolder,
+                testsToRun,
+                this.tests
+            );
         }
 
-        this.testsStatusUpdaterService.triggerUpdatesToTests(this.workspaceFolder, this.tests);
+        this.testsStatusUpdaterService.triggerUpdatesToTests(
+            this.workspaceFolder,
+            this.tests
+        );
         // If running failed tests, then don't clear the previously build UnitTests
         // If we do so, then we end up re-discovering the unit tests and clearing previously cached list of failed tests
         // Similarly, if running a specific test or test file, don't clear the cache (possible tests have some state information retained)
-        const clearDiscoveredTestCache = runFailedTests || moreInfo.Run_Specific_File || moreInfo.Run_Specific_Class || moreInfo.Run_Specific_Function ? false : true;
-        return this.discoverTests(cmdSource, clearDiscoveredTestCache, true, true)
+        const clearDiscoveredTestCache =
+            runFailedTests ||
+            moreInfo.Run_Specific_File ||
+            moreInfo.Run_Specific_Class ||
+            moreInfo.Run_Specific_Function
+                ? false
+                : true;
+        return this.discoverTests(
+            cmdSource,
+            clearDiscoveredTestCache,
+            true,
+            true
+        )
             .catch(reason => {
-                if (this.testDiscoveryCancellationToken && this.testDiscoveryCancellationToken.isCancellationRequested) {
+                if (
+                    this.testDiscoveryCancellationToken &&
+                    this.testDiscoveryCancellationToken.isCancellationRequested
+                ) {
                     return Promise.reject<Tests>(reason);
                 }
-                const testsHelper = this.serviceContainer.get<ITestsHelper>(ITestsHelper);
-                testsHelper.displayTestErrorMessage('Errors in discovering tests, continuing with tests');
+                const testsHelper = this.serviceContainer.get<ITestsHelper>(
+                    ITestsHelper
+                );
+                testsHelper.displayTestErrorMessage(
+                    "Errors in discovering tests, continuing with tests"
+                );
                 return {
                     rootTestFolders: [],
                     testFiles: [],
@@ -301,37 +475,71 @@ export abstract class BaseTestManager implements ITestManager {
             .then(tests => {
                 this.updateStatus(TestStatus.Running);
                 this.createCancellationToken(CancellationTokenType.testRunner);
-                return this.runTestImpl(tests, testsToRun, runFailedTests, debug);
+                return this.runTestImpl(
+                    tests,
+                    testsToRun,
+                    runFailedTests,
+                    debug
+                );
             })
             .then(() => {
                 this.updateStatus(TestStatus.Idle);
                 this.disposeCancellationToken(CancellationTokenType.testRunner);
-                sendTelemetryEvent(EventName.UNITTEST_RUN, undefined, telementryProperties);
-                this.testsStatusUpdaterService.updateStatusOfRunningTestsAsIdle(this.workspaceFolder, this.tests);
-                this.testsStatusUpdaterService.triggerUpdatesToTests(this.workspaceFolder, this.tests);
+                sendTelemetryEvent(
+                    EventName.UNITTEST_RUN,
+                    undefined,
+                    telementryProperties
+                );
+                this.testsStatusUpdaterService.updateStatusOfRunningTestsAsIdle(
+                    this.workspaceFolder,
+                    this.tests
+                );
+                this.testsStatusUpdaterService.triggerUpdatesToTests(
+                    this.workspaceFolder,
+                    this.tests
+                );
                 return this.tests!;
             })
             .catch(reason => {
-                this.testsStatusUpdaterService.updateStatusOfRunningTestsAsIdle(this.workspaceFolder, this.tests);
-                this.testsStatusUpdaterService.triggerUpdatesToTests(this.workspaceFolder, this.tests);
-                if (this.testRunnerCancellationToken && this.testRunnerCancellationToken.isCancellationRequested) {
+                this.testsStatusUpdaterService.updateStatusOfRunningTestsAsIdle(
+                    this.workspaceFolder,
+                    this.tests
+                );
+                this.testsStatusUpdaterService.triggerUpdatesToTests(
+                    this.workspaceFolder,
+                    this.tests
+                );
+                if (
+                    this.testRunnerCancellationToken &&
+                    this.testRunnerCancellationToken.isCancellationRequested
+                ) {
                     reason = CANCELLATION_REASON;
                     this.updateStatus(TestStatus.Idle);
                 } else {
                     this.updateStatus(TestStatus.Error);
                     telementryProperties.failed = true;
-                    sendTelemetryEvent(EventName.UNITTEST_RUN, undefined, telementryProperties);
+                    sendTelemetryEvent(
+                        EventName.UNITTEST_RUN,
+                        undefined,
+                        telementryProperties
+                    );
                 }
                 this.disposeCancellationToken(CancellationTokenType.testRunner);
                 return Promise.reject<Tests>(reason);
             });
     }
-    public async updateDiagnostics(tests: Tests, messages: IPythonTestMessage[]): Promise<void> {
+    public async updateDiagnostics(
+        tests: Tests,
+        messages: IPythonTestMessage[]
+    ): Promise<void> {
         await this.stripStaleDiagnostics(tests, messages);
 
         // Update relevant file diagnostics for tests that have problems.
         const uniqueMsgFiles = messages.reduce<string[]>((filtered, msg) => {
-            if (filtered.indexOf(msg.testFilePath) === -1 && msg.testFilePath !== undefined) {
+            if (
+                filtered.indexOf(msg.testFilePath) === -1 &&
+                msg.testFilePath !== undefined
+            ) {
                 filtered.push(msg.testFilePath);
             }
             return filtered;
@@ -352,7 +560,13 @@ export abstract class BaseTestManager implements ITestManager {
                 newDiagnostics.push(diagnostic);
             }
             for (const msg of messages) {
-                if (fs.arePathsSame(fileUri.fsPath, Uri.file(msg.testFilePath).fsPath) && msg.status !== TestStatus.Pass) {
+                if (
+                    fs.arePathsSame(
+                        fileUri.fsPath,
+                        Uri.file(msg.testFilePath).fsPath
+                    ) &&
+                    msg.status !== TestStatus.Pass
+                ) {
                     const diagnostic = this.createDiagnostics(msg);
                     newDiagnostics.push(diagnostic);
                 }
@@ -362,13 +576,27 @@ export abstract class BaseTestManager implements ITestManager {
             this.diagnosticCollection.set(fileUri, newDiagnostics);
         }
     }
-    protected abstract runTestImpl(tests: Tests, testsToRun?: TestsToRun, runFailedTests?: boolean, debug?: boolean): Promise<Tests>;
-    protected abstract getDiscoveryOptions(ignoreCache: boolean): TestDiscoveryOptions;
+    protected abstract runTestImpl(
+        tests: Tests,
+        testsToRun?: TestsToRun,
+        runFailedTests?: boolean,
+        debug?: boolean
+    ): Promise<Tests>;
+    protected abstract getDiscoveryOptions(
+        ignoreCache: boolean
+    ): TestDiscoveryOptions;
     private updateStatus(status: TestStatus): void {
         this._status = status;
         // Fire after 1ms, let existing code run to completion,
         // We need to allow for code to get into a consistent state.
-        setTimeout(() => this._onDidStatusChange.fire({ workspace: this.workspaceFolder, status }), 1);
+        setTimeout(
+            () =>
+                this._onDidStatusChange.fire({
+                    workspace: this.workspaceFolder,
+                    status
+                }),
+            1
+        );
     }
     private createCancellationToken(tokenType: CancellationTokenType) {
         this.disposeCancellationToken(tokenType);
@@ -403,36 +631,56 @@ export abstract class BaseTestManager implements ITestManager {
      *
      * @param messages Details about the tests that were just run.
      */
-    private async stripStaleDiagnostics(tests: Tests, messages: IPythonTestMessage[]): Promise<void> {
-        this.diagnosticCollection.forEach((diagnosticUri, oldDiagnostics, collection) => {
-            const newDiagnostics: Diagnostic[] = [];
-            for (const diagnostic of oldDiagnostics) {
-                const matchingMsg = messages.find(msg => msg.code === diagnostic.code);
-                if (matchingMsg === undefined) {
-                    // No matching message was found, so this test was not included in the test run.
-                    const matchingTest = tests.testFunctions.find(tf => tf.testFunction.nameToRun === diagnostic.code);
-                    if (matchingTest !== undefined) {
-                        // Matching test was found, so the diagnostic is still relevant.
-                        newDiagnostics.push(diagnostic);
+    private async stripStaleDiagnostics(
+        tests: Tests,
+        messages: IPythonTestMessage[]
+    ): Promise<void> {
+        this.diagnosticCollection.forEach(
+            (diagnosticUri, oldDiagnostics, collection) => {
+                const newDiagnostics: Diagnostic[] = [];
+                for (const diagnostic of oldDiagnostics) {
+                    const matchingMsg = messages.find(
+                        msg => msg.code === diagnostic.code
+                    );
+                    if (matchingMsg === undefined) {
+                        // No matching message was found, so this test was not included in the test run.
+                        const matchingTest = tests.testFunctions.find(
+                            tf => tf.testFunction.nameToRun === diagnostic.code
+                        );
+                        if (matchingTest !== undefined) {
+                            // Matching test was found, so the diagnostic is still relevant.
+                            newDiagnostics.push(diagnostic);
+                        }
                     }
                 }
+                // Set the diagnostics for the file.
+                collection.set(diagnosticUri, newDiagnostics);
             }
-            // Set the diagnostics for the file.
-            collection.set(diagnosticUri, newDiagnostics);
-        });
+        );
     }
 
     private createDiagnostics(message: IPythonTestMessage): Diagnostic {
         const stackStart = message.locationStack![0];
-        const diagPrefix = this.unitTestDiagnosticService.getMessagePrefix(message.status!);
-        const severity = this.unitTestDiagnosticService.getSeverity(message.severity)!;
-        const diagMsg = message.message ? message.message.split('\n')[0] : '';
-        const diagnostic = new Diagnostic(stackStart.location.range, `${diagPrefix ? `${diagPrefix}: ` : ''}${diagMsg}`, severity);
+        const diagPrefix = this.unitTestDiagnosticService.getMessagePrefix(
+            message.status!
+        );
+        const severity = this.unitTestDiagnosticService.getSeverity(
+            message.severity
+        )!;
+        const diagMsg = message.message ? message.message.split("\n")[0] : "";
+        const diagnostic = new Diagnostic(
+            stackStart.location.range,
+            `${diagPrefix ? `${diagPrefix}: ` : ""}${diagMsg}`,
+            severity
+        );
         diagnostic.code = message.code;
         diagnostic.source = message.provider;
         const relatedInfoArr: DiagnosticRelatedInformation[] = [];
         for (const frameDetails of message.locationStack!) {
-            const relatedInfo = new DiagnosticRelatedInformation(frameDetails.location, frameDetails.lineText);
+            const relatedInfo = new DiagnosticRelatedInformation(
+                frameDetails.location,
+                frameDetails.lineText
+            );
             relatedInfoArr.push(relatedInfo);
         }
         diagnostic.relatedInformation = relatedInfoArr;

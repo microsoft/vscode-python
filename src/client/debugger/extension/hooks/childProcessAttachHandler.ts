@@ -1,13 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { inject, injectable } from 'inversify';
-import { DebugSessionCustomEvent } from 'vscode';
-import { swallowExceptions } from '../../../common/utils/decorators';
-import { PTVSDEvents } from './constants';
-import { ChildProcessLaunchData, IChildProcessAttachService, IDebugSessionEventHandlers } from './types';
+import { inject, injectable } from "inversify";
+import { DebugSessionCustomEvent } from "vscode";
+import { swallowExceptions } from "../../../common/utils/decorators";
+import { PTVSDEvents } from "./constants";
+import {
+    ChildProcessLaunchData,
+    IChildProcessAttachService,
+    IDebugSessionEventHandlers
+} from "./types";
 
 /**
  * This class is responsible for automatically attaching the debugger to any
@@ -17,11 +21,17 @@ import { ChildProcessLaunchData, IChildProcessAttachService, IDebugSessionEventH
  * @implements {IDebugSessionEventHandlers}
  */
 @injectable()
-export class ChildProcessAttachEventHandler implements IDebugSessionEventHandlers {
-    constructor(@inject(IChildProcessAttachService) private readonly childProcessAttachService: IChildProcessAttachService) { }
+export class ChildProcessAttachEventHandler
+    implements IDebugSessionEventHandlers {
+    constructor(
+        @inject(IChildProcessAttachService)
+        private readonly childProcessAttachService: IChildProcessAttachService
+    ) {}
 
-    @swallowExceptions('Handle child process launch')
-    public async handleCustomEvent(event: DebugSessionCustomEvent): Promise<void> {
+    @swallowExceptions("Handle child process launch")
+    public async handleCustomEvent(
+        event: DebugSessionCustomEvent
+    ): Promise<void> {
         if (!event || event.event !== PTVSDEvents.ChildProcessLaunched) {
             return;
         }

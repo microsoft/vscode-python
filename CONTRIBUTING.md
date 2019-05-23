@@ -1,13 +1,10 @@
 # Contributing to the Python extension for Visual Studio Code
 
-
-
-
 ---
 
-| `release` branch | `master` branch | Nightly CI | 
-|-|-|-|
-| [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/CI?branchName=release)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=88&branchName=release) | [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/CI?branchName=master)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=88&branchName=master) | [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/Nightly%20Build?branchName=master)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=85&branchName=master) | 
+| `release` branch                                                                                                                                                                            | `master` branch                                                                                                                                                                           | Nightly CI                                                                                                                                                                                             |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/CI?branchName=release)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=88&branchName=release) | [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/CI?branchName=master)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=88&branchName=master) | [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/Nightly%20Build?branchName=master)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=85&branchName=master) |
 
 [[Development build](https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix)]
 
@@ -24,8 +21,8 @@
 1. Windows, macOS, or Linux
 1. [Visual Studio Code](https://code.visualstudio.com/)
 1. The following VS Code extensions:
-    * [TSLint](https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-typescript-tslint-plugin)
-    * [EditorConfig for VS Code](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig)
+    - [TSLint](https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-typescript-tslint-plugin)
+    - [EditorConfig for VS Code](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig)
 1. Have an issue which has been accepted with a "needs PR" label (feel free to indicate you would be happy to provide a PR for the issue)
 
 ### Setup
@@ -39,13 +36,15 @@ python3 -m venv .venv
 python3 -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
 # Optionally Update `launch.json` to set a value for the environment variable `CI_PYTHON_PATH` pointing to the fully qualified path of the above interpreter.
 ```
-You may see warnings that ```The engine "vscode" appears to be invalid.```, you can ignore these.
+
+You may see warnings that `The engine "vscode" appears to be invalid.`, you can ignore these.
 
 ### Incremental Build
 
 Run the `Compile` and `Hygiene` build Tasks from the [Run Build Task...](https://code.visualstudio.com/docs/editor/tasks) command picker (short cut `CTRL+SHIFT+B` or `⇧⌘B`). This will leave build and hygiene tasks running in the background and which will re-run as files are edited and saved. You can see the output from either task in the Terminal panel (use the selector to choose which output to look at).
 
 You can also compile from the command-line. For a full compile you can use `npx gulp prePublishNonBundle`. For incremental builds you can use the following commands depending on your needs:
+
 ```shell
 npm run compile
 npm run compile-webviews-watch # For data science (React Code)
@@ -67,7 +66,7 @@ Use the `Launch Extension` launch option.
 
 1. Ensure you have disabled breaking into 'Uncaught Exceptions' when running the Unit Tests
 1. For the linters and formatters tests to pass successfully, you will need to have those corresponding Python libraries installed locally
-1. Run the Tests via the `Unit Tests`  launch option.
+1. Run the Tests via the `Unit Tests` launch option.
 
 You can also run them from the command-line (after compiling):
 
@@ -76,7 +75,7 @@ npm run test:unittests  # runs all unit tests
 npm run test:unittests -- --grep='<NAME-OF-SUITE>'
 ```
 
-*To run only a specific test suite for unit tests:*
+_To run only a specific test suite for unit tests:_
 Alter the `launch.json` file in the `"Debug Unit Tests"` section by setting the `grep` field:
 
 ```js
@@ -85,18 +84,19 @@ Alter the `launch.json` file in the `"Debug Unit Tests"` section by setting the 
         "--grep", "<suite name>"
     ],
 ```
+
 ...this will only run the suite with the tests you care about during a test run (be sure to set the debugger to run the `Debug Unit Tests` launcher).
 
 ### Debugging System Tests
 
 1. Ensure you have disabled breaking into 'Uncaught Exceptions' when running the Unit Tests
 1. For the linters and formatters tests to pass successfully, you will need to have those corresponding Python libraries installed locally
-1. Run the Tests via the `Launch Test` and `Launch Multiroot Tests`  launch options.
+1. Run the Tests via the `Launch Test` and `Launch Multiroot Tests` launch options.
 1. **Note** you will be running tests under the default Python interpreter for the system.
 
-*Change the version of python the tests are executed with by setting the `CI_PYTHON_PATH`.*
+_Change the version of python the tests are executed with by setting the `CI_PYTHON_PATH`._
 
-Tests will be executed using the system default interpreter (whatever that is for your local machine), unless you explicitly set the `CI_PYTHON_PATH` environment variable. To test against different versions of Python you *must* use this.
+Tests will be executed using the system default interpreter (whatever that is for your local machine), unless you explicitly set the `CI_PYTHON_PATH` environment variable. To test against different versions of Python you _must_ use this.
 
 In the launch.json file, you can add the following to the `Launch Tests` setting to easily change the interpreter used during testing:
 
@@ -112,32 +112,34 @@ You can also run them from the command-line (after compiling):
 npm run testSingleWorkspace  # will launch the VSC UI
 npm run testMultiWorkspace  # will launch the VSC UI
 ```
+
 ...note this will use the Python interpreter that your current shell is making use of, no need to set `CI_PYTHON_PATH` here.
 
-*To limit system tests to a specific suite*
+_To limit system tests to a specific suite_
 
-If you are running system tests (we call them *system* tests, others call them *integration* or otherwise) and you wish to run a specific test suite, edit the `src/test/index.ts` file here:
+If you are running system tests (we call them _system_ tests, others call them _integration_ or otherwise) and you wish to run a specific test suite, edit the `src/test/index.ts` file here:
 
 https://github.com/Microsoft/vscode-python/blob/b328ba12331ed34a267e32e77e3e4b1eff235c13/src/test/index.ts#L21
 
 ...and identify the test suite you want to run/debug like this:
 
 ```ts
-const grep = '[The suite name of your *test.ts file]'; // IS_CI_SERVER &&...
+const grep = "[The suite name of your *test.ts file]"; // IS_CI_SERVER &&...
 ```
+
 ...and then use the `Launch Tests` debugger launcher. This will run only the suite you name in the grep.
 
 And be sure to escape any grep-sensitive characters in your suite name (and to remove the change from src/test/index.ts before you submit).
 
 ### Testing Python Scripts
 
-The extension has a number of scripts in ./pythonFiles.  Tests for these
-scripts are found in ./pythonFiles/tests.  To run those tests:
+The extension has a number of scripts in ./pythonFiles. Tests for these
+scripts are found in ./pythonFiles/tests. To run those tests:
 
-* `python2.7 pythonFiles/tests/run_all.py`
-* `python3 -m pythonFiles.tests`
+-   `python2.7 pythonFiles/tests/run_all.py`
+-   `python3 -m pythonFiles.tests`
 
-By default, functional tests are included.  To exclude them:
+By default, functional tests are included. To exclude them:
 
 `python3 -m pythonFiles.tests --no-functional`
 
@@ -152,12 +154,12 @@ Clone the repo into any directory, open that directory in VSCode, and use the `L
 ### Debugging the Python Extension Debugger
 
 The easiest way to debug the Python Debugger (in our opinion) is to clone this git repo directory into [your](https://code.visualstudio.com/docs/extensions/install-extension#_your-extensions-folder) extensions directory.
-From there use the ```Extension + Debugger``` launch option.
+From there use the `Extension + Debugger` launch option.
 
 ### Coding Standards
 
 Information on our coding standards can be found [here](https://github.com/Microsoft/vscode-python/blob/master/CODING_STANDARDS.md).
-We have CI tests to ensure the code committed will adhere to the above coding standards. *You can run this locally by executing the command `npx gulp precommit` or use the `precommit` Task.
+We have CI tests to ensure the code committed will adhere to the above coding standards. \*You can run this locally by executing the command `npx gulp precommit` or use the `precommit` Task.
 
 Messages displayed to the user must ve localized using/created constants from/in the [localize.ts](https://github.com/Microsoft/vscode-python/blob/master/src/client/common/utils/localize.ts) file.
 
@@ -258,7 +260,6 @@ Overall steps for releasing are covered in the
 [release plan](https://github.com/Microsoft/vscode-python/labels/release%20plan)
 ([template](https://github.com/Microsoft/vscode-python/blob/master/.github/release_plan.md)).
 
-
 ### Building a release
 
 To create a release _build_, follow the steps outlined in the [release plan](https://github.com/Microsoft/vscode-python/labels/release%20plan) (which has a [template](https://github.com/Microsoft/vscode-python/blob/master/.github/release_plan.md)).
@@ -279,9 +280,9 @@ to install the extension.
 
 The development build of the extension:
 
-* Will be replaced with new releases published onto the
-  [VS Code Marketplace](https://marketplace.visualstudio.com/VSCode).
-* Does not get updated with new development builds of the extension (if you want to
-  test a newer development build, uninstall the old version of the
-  extension and then install the new version)
-* Is built everytime a PR is commited into the [`master` branch](https://github.com/Microsoft/vscode-python).
+-   Will be replaced with new releases published onto the
+    [VS Code Marketplace](https://marketplace.visualstudio.com/VSCode).
+-   Does not get updated with new development builds of the extension (if you want to
+    test a newer development build, uninstall the old version of the
+    extension and then install the new version)
+-   Is built everytime a PR is commited into the [`master` branch](https://github.com/Microsoft/vscode-python).

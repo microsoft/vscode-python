@@ -1,14 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
-import '../../common/extensions';
+"use strict";
+import "../../common/extensions";
 
-import { inject, injectable } from 'inversify';
-import { Observable } from 'rxjs/Observable';
-import { CancellationToken } from 'vscode-jsonrpc';
+import { inject, injectable } from "inversify";
+import { Observable } from "rxjs/Observable";
+import { CancellationToken } from "vscode-jsonrpc";
 
-import { ILiveShareApi } from '../../common/application/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
+import { ILiveShareApi } from "../../common/application/types";
+import {
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry,
+    ILogger
+} from "../../common/types";
 import {
     ICell,
     IConnection,
@@ -18,18 +23,20 @@ import {
     INotebookServer,
     INotebookServerLaunchInfo,
     InterruptResult
-} from '../types';
-import { GuestJupyterServer } from './liveshare/guestJupyterServer';
-import { HostJupyterServer } from './liveshare/hostJupyterServer';
-import { IRoleBasedObject, RoleBasedFactory } from './liveshare/roleBasedFactory';
+} from "../types";
+import { GuestJupyterServer } from "./liveshare/guestJupyterServer";
+import { HostJupyterServer } from "./liveshare/hostJupyterServer";
+import {
+    IRoleBasedObject,
+    RoleBasedFactory
+} from "./liveshare/roleBasedFactory";
 
-interface IJupyterServerInterface extends IRoleBasedObject, INotebookServer {
-
-}
+interface IJupyterServerInterface extends IRoleBasedObject, INotebookServer {}
 
 // tslint:disable:callable-types
 type JupyterServerClassType = {
-    new(liveShare: ILiveShareApi,
+    new (
+        liveShare: ILiveShareApi,
         dataScience: IDataScience,
         logger: ILogger,
         disposableRegistry: IDisposableRegistry,
@@ -42,7 +49,10 @@ type JupyterServerClassType = {
 
 @injectable()
 export class JupyterServerFactory implements INotebookServer {
-    private serverFactory: RoleBasedFactory<IJupyterServerInterface, JupyterServerClassType>;
+    private serverFactory: RoleBasedFactory<
+        IJupyterServerInterface,
+        JupyterServerClassType
+    >;
 
     private launchInfo: INotebookServerLaunchInfo | undefined;
 
@@ -51,10 +61,15 @@ export class JupyterServerFactory implements INotebookServer {
         @inject(IDataScience) dataScience: IDataScience,
         @inject(ILogger) logger: ILogger,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
-        @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
+        @inject(IAsyncDisposableRegistry)
+        asyncRegistry: IAsyncDisposableRegistry,
         @inject(IConfigurationService) configService: IConfigurationService,
-        @inject(IJupyterSessionManager) sessionManager: IJupyterSessionManager) {
-        this.serverFactory = new RoleBasedFactory<IJupyterServerInterface, JupyterServerClassType>(
+        @inject(IJupyterSessionManager) sessionManager: IJupyterSessionManager
+    ) {
+        this.serverFactory = new RoleBasedFactory<
+            IJupyterServerInterface,
+            JupyterServerClassType
+        >(
             liveShare,
             HostJupyterServer,
             GuestJupyterServer,
@@ -68,10 +83,16 @@ export class JupyterServerFactory implements INotebookServer {
         );
     }
 
-    public async connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void> {
+    public async connect(
+        launchInfo: INotebookServerLaunchInfo,
+        cancelToken?: CancellationToken
+    ): Promise<void> {
         this.launchInfo = launchInfo;
         const server = await this.serverFactory.get();
-        return server.connect(launchInfo, cancelToken);
+        return server.connect(
+            launchInfo,
+            cancelToken
+        );
     }
 
     public async shutdown(): Promise<void> {
@@ -89,7 +110,14 @@ export class JupyterServerFactory implements INotebookServer {
         return server.waitForIdle(timeoutMs);
     }
 
-    public async execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken, silent?: boolean): Promise<ICell[]> {
+    public async execute(
+        code: string,
+        file: string,
+        line: number,
+        id: string,
+        cancelToken?: CancellationToken,
+        silent?: boolean
+    ): Promise<ICell[]> {
         const server = await this.serverFactory.get();
         return server.execute(code, file, line, id, cancelToken, silent);
     }
@@ -104,23 +132,31 @@ export class JupyterServerFactory implements INotebookServer {
         return server.setMatplotLibStyle(useDark);
     }
 
-    public executeObservable(code: string, file: string, line: number, id: string, silent: boolean = false): Observable<ICell[]> {
+    public executeObservable(
+        code: string,
+        file: string,
+        line: number,
+        id: string,
+        silent: boolean = false
+    ): Observable<ICell[]> {
         // Create a wrapper observable around the actual server (because we have to wait for a promise)
         return new Observable<ICell[]>(subscriber => {
-            this.serverFactory.get().then(s => {
-                s.executeObservable(code, file, line, id, silent)
-                    .forEach(n => {
-                        subscriber.next(n); // Separate lines so can break on this call.
-                    }, Promise)
-                    .then(_f => {
-                        subscriber.complete();
-                    })
-                    .catch(e => subscriber.error(e));
-            },
-            r => {
-                subscriber.error(r);
-                subscriber.complete();
-            });
+            this.serverFactory.get().then(
+                s => {
+                    s.executeObservable(code, file, line, id, silent)
+                        .forEach(n => {
+                            subscriber.next(n); // Separate lines so can break on this call.
+                        }, Promise)
+                        .then(_f => {
+                            subscriber.complete();
+                        })
+                        .catch(e => subscriber.error(e));
+                },
+                r => {
+                    subscriber.error(r);
+                    subscriber.complete();
+                }
+            );
         });
     }
 
@@ -143,17 +179,23 @@ export class JupyterServerFactory implements INotebookServer {
         return undefined;
     }
 
-    public async waitForConnect(): Promise<INotebookServerLaunchInfo | undefined> {
+    public async waitForConnect(): Promise<
+        INotebookServerLaunchInfo | undefined
+    > {
         const server = await this.serverFactory.get();
         return server.waitForConnect();
     }
 
-    public async getSysInfo() : Promise<ICell | undefined> {
+    public async getSysInfo(): Promise<ICell | undefined> {
         const server = await this.serverFactory.get();
         return server.getSysInfo();
     }
 
-    public async getCompletion(cellCode: string, offsetInCode: number, cancelToken?: CancellationToken) : Promise<INotebookCompletion> {
+    public async getCompletion(
+        cellCode: string,
+        offsetInCode: number,
+        cancelToken?: CancellationToken
+    ): Promise<INotebookCompletion> {
         const server = await this.serverFactory.get();
         return server.getCompletion(cellCode, offsetInCode, cancelToken);
     }

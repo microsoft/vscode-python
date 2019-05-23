@@ -1,18 +1,27 @@
-import { inject, injectable, named } from 'inversify';
-import { parse } from 'jsonc-parser';
-import * as path from 'path';
-import { DebugConfiguration, Uri, WorkspaceFolder } from 'vscode';
-import { IApplicationShell, IDebugService, IWorkspaceService } from '../../common/application/types';
-import { EXTENSION_ROOT_DIR } from '../../common/constants';
-import { traceError } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IPythonSettings } from '../../common/types';
-import { noop } from '../../common/utils/misc';
-import { DebuggerTypeName } from '../../debugger/constants';
-import { IDebugConfigurationResolver } from '../../debugger/extension/configuration/types';
-import { LaunchRequestArguments } from '../../debugger/types';
-import { IServiceContainer } from '../../ioc/types';
-import { ITestDebugConfig, ITestDebugLauncher, LaunchOptions, TestProvider } from './types';
+import { inject, injectable, named } from "inversify";
+import { parse } from "jsonc-parser";
+import * as path from "path";
+import { DebugConfiguration, Uri, WorkspaceFolder } from "vscode";
+import {
+    IApplicationShell,
+    IDebugService,
+    IWorkspaceService
+} from "../../common/application/types";
+import { EXTENSION_ROOT_DIR } from "../../common/constants";
+import { traceError } from "../../common/logger";
+import { IFileSystem } from "../../common/platform/types";
+import { IConfigurationService, IPythonSettings } from "../../common/types";
+import { noop } from "../../common/utils/misc";
+import { DebuggerTypeName } from "../../debugger/constants";
+import { IDebugConfigurationResolver } from "../../debugger/extension/configuration/types";
+import { LaunchRequestArguments } from "../../debugger/types";
+import { IServiceContainer } from "../../ioc/types";
+import {
+    ITestDebugConfig,
+    ITestDebugLauncher,
+    LaunchOptions,
+    TestProvider
+} from "./types";
 
 @injectable()
 export class DebugLauncher implements ITestDebugLauncher {
@@ -21,10 +30,18 @@ export class DebugLauncher implements ITestDebugLauncher {
     private readonly fs: IFileSystem;
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(IDebugConfigurationResolver) @named('launch') private readonly launchResolver: IDebugConfigurationResolver<LaunchRequestArguments>
+        @inject(IDebugConfigurationResolver)
+        @named("launch")
+        private readonly launchResolver: IDebugConfigurationResolver<
+            LaunchRequestArguments
+        >
     ) {
-        this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        this.configService = this.serviceContainer.get<IConfigurationService>(
+            IConfigurationService
+        );
+        this.workspaceService = this.serviceContainer.get<IWorkspaceService>(
+            IWorkspaceService
+        );
         this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
     }
 
@@ -39,33 +56,55 @@ export class DebugLauncher implements ITestDebugLauncher {
             workspaceFolder,
             this.configService.getSettings(workspaceFolder.uri)
         );
-        const debugManager = this.serviceContainer.get<IDebugService>(IDebugService);
-        return debugManager.startDebugging(workspaceFolder, launchArgs)
-            .then(noop, ex => traceError('Failed to start debugging tests', ex));
+        const debugManager = this.serviceContainer.get<IDebugService>(
+            IDebugService
+        );
+        return debugManager
+            .startDebugging(workspaceFolder, launchArgs)
+            .then(noop, ex =>
+                traceError("Failed to start debugging tests", ex)
+            );
     }
-    public async readAllDebugConfigs(workspaceFolder: WorkspaceFolder): Promise<DebugConfiguration[]> {
-        const filename = path.join(workspaceFolder.uri.fsPath, '.vscode', 'launch.json');
+    public async readAllDebugConfigs(
+        workspaceFolder: WorkspaceFolder
+    ): Promise<DebugConfiguration[]> {
+        const filename = path.join(
+            workspaceFolder.uri.fsPath,
+            ".vscode",
+            "launch.json"
+        );
         if (!(await this.fs.fileExists(filename))) {
             return [];
         }
         try {
             const text = await this.fs.readFile(filename);
-            const parsed = parse(text, [], { allowTrailingComma: true, disallowComments: false });
-            if (!parsed.version || !parsed.configurations || !Array.isArray(parsed.configurations)) {
-                throw Error('malformed launch.json');
+            const parsed = parse(text, [], {
+                allowTrailingComma: true,
+                disallowComments: false
+            });
+            if (
+                !parsed.version ||
+                !parsed.configurations ||
+                !Array.isArray(parsed.configurations)
+            ) {
+                throw Error("malformed launch.json");
             }
             // We do not bother ensuring each item is a DebugConfiguration...
             return parsed.configurations;
         } catch (exc) {
-            traceError('could not get debug config', exc);
-            const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-            await appShell.showErrorMessage('Could not load unit test config from launch.json');
+            traceError("could not get debug config", exc);
+            const appShell = this.serviceContainer.get<IApplicationShell>(
+                IApplicationShell
+            );
+            await appShell.showErrorMessage(
+                "Could not load unit test config from launch.json"
+            );
             return [];
         }
     }
     private resolveWorkspaceFolder(cwd: string): WorkspaceFolder {
         if (!this.workspaceService.hasWorkspaceFolders) {
-            throw new Error('Please open a workspace');
+            throw new Error("Please open a workspace");
         }
 
         const cwdUri = cwd ? Uri.file(cwd) : undefined;
@@ -84,16 +123,16 @@ export class DebugLauncher implements ITestDebugLauncher {
         let debugConfig = await this.readDebugConfig(workspaceFolder);
         if (!debugConfig) {
             debugConfig = {
-                name: 'Debug Unit Test',
-                type: 'python',
-                request: 'test'
+                name: "Debug Unit Test",
+                type: "python",
+                request: "test"
             };
         }
         if (!debugConfig.rules) {
             debugConfig.rules = [];
         }
         debugConfig.rules.push({
-            path: path.join(EXTENSION_ROOT_DIR, 'pythonFiles'),
+            path: path.join(EXTENSION_ROOT_DIR, "pythonFiles"),
             include: false
         });
         this.applyDefaults(debugConfig!, workspaceFolder, configSettings);
@@ -101,10 +140,16 @@ export class DebugLauncher implements ITestDebugLauncher {
         return this.convertConfigToArgs(debugConfig!, workspaceFolder, options);
     }
 
-    private async readDebugConfig(workspaceFolder: WorkspaceFolder): Promise<ITestDebugConfig | undefined> {
+    private async readDebugConfig(
+        workspaceFolder: WorkspaceFolder
+    ): Promise<ITestDebugConfig | undefined> {
         const configs = await this.readAllDebugConfigs(workspaceFolder);
         for (const cfg of configs) {
-            if (!cfg.name || cfg.type !== DebuggerTypeName || cfg.request !== 'test') {
+            if (
+                !cfg.name ||
+                cfg.type !== DebuggerTypeName ||
+                cfg.request !== "test"
+            ) {
                 continue;
             }
             // Return the first one.
@@ -122,7 +167,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         // Default value of justMyCode is not provided intentionally, for now we derive its value required for launchArgs using debugStdLib
         // Have to provide it if and when we remove complete support for debugStdLib
         if (!cfg.console) {
-            cfg.console = 'internalConsole';
+            cfg.console = "internalConsole";
         }
         if (!cfg.cwd) {
             cfg.cwd = workspaceFolder.uri.fsPath;
@@ -165,14 +210,14 @@ export class DebugLauncher implements ITestDebugLauncher {
         if (!launchArgs) {
             throw Error(`Invalid debug config "${debugConfig.name}"`);
         }
-        launchArgs.request = 'launch';
+        launchArgs.request = "launch";
 
         return launchArgs!;
     }
 
     private fixArgs(args: string[], testProvider: TestProvider): string[] {
-        if (testProvider === 'unittest') {
-            return args.filter(item => item !== '--debug');
+        if (testProvider === "unittest") {
+            return args.filter(item => item !== "--debug");
         } else {
             return args;
         }
@@ -180,12 +225,20 @@ export class DebugLauncher implements ITestDebugLauncher {
 
     private getTestLauncherScript(testProvider: TestProvider) {
         switch (testProvider) {
-            case 'unittest': {
-                return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'visualstudio_py_testlauncher.py');
+            case "unittest": {
+                return path.join(
+                    EXTENSION_ROOT_DIR,
+                    "pythonFiles",
+                    "visualstudio_py_testlauncher.py"
+                );
             }
-            case 'pytest':
-            case 'nosetest': {
-                return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'testlauncher.py');
+            case "pytest":
+            case "nosetest": {
+                return path.join(
+                    EXTENSION_ROOT_DIR,
+                    "pythonFiles",
+                    "testlauncher.py"
+                );
             }
             default: {
                 throw new Error(`Unknown test provider '${testProvider}'`);

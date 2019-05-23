@@ -1,25 +1,31 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { expect } from 'chai';
-import * as TypeMoq from 'typemoq';
-import { Terminal } from 'vscode';
-import { BaseTerminalActivator } from '../../../../client/common/terminal/activator/base';
-import { ITerminalActivator, ITerminalHelper } from '../../../../client/common/terminal/types';
-import { noop } from '../../../../client/common/utils/misc';
+import { expect } from "chai";
+import * as TypeMoq from "typemoq";
+import { Terminal } from "vscode";
+import { BaseTerminalActivator } from "../../../../client/common/terminal/activator/base";
+import {
+    ITerminalActivator,
+    ITerminalHelper
+} from "../../../../client/common/terminal/types";
+import { noop } from "../../../../client/common/utils/misc";
 
 // tslint:disable:max-func-body-length no-any
-suite('Terminal Base Activator', () => {
+suite("Terminal Base Activator", () => {
     let activator: ITerminalActivator;
     let helper: TypeMoq.IMock<ITerminalHelper>;
 
     setup(() => {
         helper = TypeMoq.Mock.ofType<ITerminalHelper>();
-        activator = new class extends BaseTerminalActivator {
-            public waitForCommandToProcess() { noop(); return Promise.resolve(); }
-        }(helper.object) as any as ITerminalActivator;
+        activator = (new class extends BaseTerminalActivator {
+            public waitForCommandToProcess() {
+                noop();
+                return Promise.resolve();
+            }
+        }(helper.object) as any) as ITerminalActivator;
     });
     [
         { commandCount: 1, preserveFocus: false },
@@ -27,11 +33,23 @@ suite('Terminal Base Activator', () => {
         { commandCount: 1, preserveFocus: true },
         { commandCount: 1, preserveFocus: true }
     ].forEach(item => {
-        const titleSuffix = `(${item.commandCount} activation command, and preserve focus in terminal is ${item.preserveFocus})`;
-        const activationCommands = item.commandCount === 1 ? ['CMD1'] : ['CMD1', 'CMD2'];
+        const titleSuffix = `(${
+            item.commandCount
+        } activation command, and preserve focus in terminal is ${
+            item.preserveFocus
+        })`;
+        const activationCommands =
+            item.commandCount === 1 ? ["CMD1"] : ["CMD1", "CMD2"];
         test(`Terminal is activated ${titleSuffix}`, async () => {
-            helper.setup(h => h.getTerminalShellPath()).returns(() => '');
-            helper.setup(h => h.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(activationCommands));
+            helper.setup(h => h.getTerminalShellPath()).returns(() => "");
+            helper
+                .setup(h =>
+                    h.getEnvironmentActivationCommands(
+                        TypeMoq.It.isAny(),
+                        TypeMoq.It.isAny()
+                    )
+                )
+                .returns(() => Promise.resolve(activationCommands));
             const terminal = TypeMoq.Mock.ofType<Terminal>();
 
             terminal
@@ -45,13 +63,24 @@ suite('Terminal Base Activator', () => {
                     .verifiable(TypeMoq.Times.exactly(1));
             });
 
-            await activator.activateEnvironmentInTerminal(terminal.object, undefined, item.preserveFocus);
+            await activator.activateEnvironmentInTerminal(
+                terminal.object,
+                undefined,
+                item.preserveFocus
+            );
 
             terminal.verifyAll();
         });
         test(`Terminal is activated only once ${titleSuffix}`, async () => {
-            helper.setup(h => h.getTerminalShellPath()).returns(() => '');
-            helper.setup(h => h.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(activationCommands));
+            helper.setup(h => h.getTerminalShellPath()).returns(() => "");
+            helper
+                .setup(h =>
+                    h.getEnvironmentActivationCommands(
+                        TypeMoq.It.isAny(),
+                        TypeMoq.It.isAny()
+                    )
+                )
+                .returns(() => Promise.resolve(activationCommands));
             const terminal = TypeMoq.Mock.ofType<Terminal>();
 
             terminal
@@ -65,15 +94,34 @@ suite('Terminal Base Activator', () => {
                     .verifiable(TypeMoq.Times.exactly(1));
             });
 
-            await activator.activateEnvironmentInTerminal(terminal.object, undefined, item.preserveFocus);
-            await activator.activateEnvironmentInTerminal(terminal.object, undefined, item.preserveFocus);
-            await activator.activateEnvironmentInTerminal(terminal.object, undefined, item.preserveFocus);
+            await activator.activateEnvironmentInTerminal(
+                terminal.object,
+                undefined,
+                item.preserveFocus
+            );
+            await activator.activateEnvironmentInTerminal(
+                terminal.object,
+                undefined,
+                item.preserveFocus
+            );
+            await activator.activateEnvironmentInTerminal(
+                terminal.object,
+                undefined,
+                item.preserveFocus
+            );
 
             terminal.verifyAll();
         });
         test(`Terminal is activated only once ${titleSuffix} (even when not waiting)`, async () => {
-            helper.setup(h => h.getTerminalShellPath()).returns(() => '');
-            helper.setup(h => h.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(activationCommands));
+            helper.setup(h => h.getTerminalShellPath()).returns(() => "");
+            helper
+                .setup(h =>
+                    h.getEnvironmentActivationCommands(
+                        TypeMoq.It.isAny(),
+                        TypeMoq.It.isAny()
+                    )
+                )
+                .returns(() => Promise.resolve(activationCommands));
             const terminal = TypeMoq.Mock.ofType<Terminal>();
 
             terminal
@@ -88,13 +136,28 @@ suite('Terminal Base Activator', () => {
             });
 
             const activated = await Promise.all([
-                activator.activateEnvironmentInTerminal(terminal.object, undefined, item.preserveFocus),
-                activator.activateEnvironmentInTerminal(terminal.object, undefined, item.preserveFocus),
-                activator.activateEnvironmentInTerminal(terminal.object, undefined, item.preserveFocus)
+                activator.activateEnvironmentInTerminal(
+                    terminal.object,
+                    undefined,
+                    item.preserveFocus
+                ),
+                activator.activateEnvironmentInTerminal(
+                    terminal.object,
+                    undefined,
+                    item.preserveFocus
+                ),
+                activator.activateEnvironmentInTerminal(
+                    terminal.object,
+                    undefined,
+                    item.preserveFocus
+                )
             ]);
 
             terminal.verifyAll();
-            expect(activated).to.deep.equal([true, true, true], 'Invalid values');
+            expect(activated).to.deep.equal(
+                [true, true, true],
+                "Invalid values"
+            );
         });
     });
 });

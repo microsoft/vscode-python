@@ -12,13 +12,14 @@ them astroid ;) by visiting an existent ast tree or by inspecting living
 object. Methods are added by monkey patching ast classes.
 
 Main modules are:
+
 ```html
-* nodes and scoped_nodes for more information about methods and  
-  attributes added to different node classes  
-  
-* the manager contains a high level object to get astroid trees from  
-  source files and living objects. It maintains a cache of previously  
-  constructed tree for quick access  
-  
-* builder contains the class responsible to build astroid trees  
+* nodes and scoped_nodes for more information about methods and
+  attributes added to different node classes
+
+* the manager contains a high level object to get astroid trees from
+  source files and living objects. It maintains a cache of previously
+  constructed tree for quick access
+
+* builder contains the class responsible to build astroid trees
 ```

@@ -1,25 +1,42 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { Terminal, Uri } from 'vscode';
-import { createDeferred, sleep } from '../../utils/async';
-import { ITerminalActivator, ITerminalHelper, TerminalShellType } from '../types';
+import { Terminal, Uri } from "vscode";
+import { createDeferred, sleep } from "../../utils/async";
+import {
+    ITerminalActivator,
+    ITerminalHelper,
+    TerminalShellType
+} from "../types";
 
 export class BaseTerminalActivator implements ITerminalActivator {
-    private readonly activatedTerminals: Map<Terminal, Promise<boolean>> = new Map<Terminal, Promise<boolean>>();
-    constructor(private readonly helper: ITerminalHelper) { }
-    public async activateEnvironmentInTerminal(terminal: Terminal, resource: Uri | undefined, preserveFocus: boolean = true) {
+    private readonly activatedTerminals: Map<
+        Terminal,
+        Promise<boolean>
+    > = new Map<Terminal, Promise<boolean>>();
+    constructor(private readonly helper: ITerminalHelper) {}
+    public async activateEnvironmentInTerminal(
+        terminal: Terminal,
+        resource: Uri | undefined,
+        preserveFocus: boolean = true
+    ) {
         if (this.activatedTerminals.has(terminal)) {
             return this.activatedTerminals.get(terminal)!;
         }
         const deferred = createDeferred<boolean>();
         this.activatedTerminals.set(terminal, deferred.promise);
         const shellPath = this.helper.getTerminalShellPath();
-        const terminalShellType = !shellPath || shellPath.length === 0 ? TerminalShellType.other : this.helper.identifyTerminalShell(shellPath);
+        const terminalShellType =
+            !shellPath || shellPath.length === 0
+                ? TerminalShellType.other
+                : this.helper.identifyTerminalShell(shellPath);
 
-        const activationCommamnds = await this.helper.getEnvironmentActivationCommands(terminalShellType, resource);
+        const activationCommamnds = await this.helper.getEnvironmentActivationCommands(
+            terminalShellType,
+            resource
+        );
         let activated = false;
         if (activationCommamnds) {
             for (const command of activationCommamnds!) {

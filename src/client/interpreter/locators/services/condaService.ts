@@ -1,13 +1,18 @@
-import { inject, injectable, named, optional } from 'inversify';
-import * as path from 'path';
-import { compare, parse, SemVer } from 'semver';
-import { ConfigurationChangeEvent, Uri } from 'vscode';
+import { inject, injectable, named, optional } from "inversify";
+import * as path from "path";
+import { compare, parse, SemVer } from "semver";
+import { ConfigurationChangeEvent, Uri } from "vscode";
 
-import { IWorkspaceService } from '../../../common/application/types';
-import { Logger } from '../../../common/logger';
-import { IFileSystem, IPlatformService } from '../../../common/platform/types';
-import { IProcessServiceFactory } from '../../../common/process/types';
-import { IConfigurationService, IDisposableRegistry, ILogger, IPersistentStateFactory } from '../../../common/types';
+import { IWorkspaceService } from "../../../common/application/types";
+import { Logger } from "../../../common/logger";
+import { IFileSystem, IPlatformService } from "../../../common/platform/types";
+import { IProcessServiceFactory } from "../../../common/process/types";
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    ILogger,
+    IPersistentStateFactory
+} from "../../../common/types";
 import {
     CondaInfo,
     ICondaService,
@@ -15,36 +20,38 @@ import {
     InterpreterType,
     PythonInterpreter,
     WINDOWS_REGISTRY_SERVICE
-} from '../../contracts';
-import { CondaHelper } from './condaHelper';
+} from "../../contracts";
+import { CondaHelper } from "./condaHelper";
 
 // tslint:disable-next-line:no-require-imports no-var-requires
-const untildify: (value: string) => string = require('untildify');
+const untildify: (value: string) => string = require("untildify");
 
 // This glob pattern will match all of the following:
 // ~/anaconda/bin/conda, ~/anaconda3/bin/conda, ~/miniconda/bin/conda, ~/miniconda3/bin/conda
 // /usr/share/anaconda/bin/conda, /usr/share/anaconda3/bin/conda, /usr/share/miniconda/bin/conda, /usr/share/miniconda3/bin/conda
 
 const condaGlobPathsForLinuxMac = [
-    '/opt/*conda*/bin/conda',
-    '/usr/share/*conda*/bin/conda',
-    untildify('~/*conda*/bin/conda')];
+    "/opt/*conda*/bin/conda",
+    "/usr/share/*conda*/bin/conda",
+    untildify("~/*conda*/bin/conda")
+];
 
-export const CondaLocationsGlob = `{${condaGlobPathsForLinuxMac.join(',')}}`;
+export const CondaLocationsGlob = `{${condaGlobPathsForLinuxMac.join(",")}}`;
 
 // ...and for windows, the known default install locations:
 const condaGlobPathsForWindows = [
-    '/ProgramData/[Mm]iniconda*/Scripts/conda.exe',
-    '/ProgramData/[Aa]naconda*/Scripts/conda.exe',
-    untildify('~/[Mm]iniconda*/Scripts/conda.exe'),
-    untildify('~/[Aa]naconda*/Scripts/conda.exe'),
-    untildify('~/AppData/Local/Continuum/[Mm]iniconda*/Scripts/conda.exe'),
-    untildify('~/AppData/Local/Continuum/[Aa]naconda*/Scripts/conda.exe')];
+    "/ProgramData/[Mm]iniconda*/Scripts/conda.exe",
+    "/ProgramData/[Aa]naconda*/Scripts/conda.exe",
+    untildify("~/[Mm]iniconda*/Scripts/conda.exe"),
+    untildify("~/[Aa]naconda*/Scripts/conda.exe"),
+    untildify("~/AppData/Local/Continuum/[Mm]iniconda*/Scripts/conda.exe"),
+    untildify("~/AppData/Local/Continuum/[Aa]naconda*/Scripts/conda.exe")
+];
 
 // format for glob processing:
-export const CondaLocationsGlobWin = `{${condaGlobPathsForWindows.join(',')}}`;
+export const CondaLocationsGlobWin = `{${condaGlobPathsForWindows.join(",")}}`;
 
-export const CondaGetEnvironmentPrefix = 'Outputting Environment Now...';
+export const CondaGetEnvironmentPrefix = "Outputting Environment Now...";
 
 /**
  * A wrapper around a conda installation.
@@ -56,22 +63,34 @@ export class CondaService implements ICondaService {
     private readonly condaHelper = new CondaHelper();
 
     constructor(
-        @inject(IProcessServiceFactory) private processServiceFactory: IProcessServiceFactory,
+        @inject(IProcessServiceFactory)
+        private processServiceFactory: IProcessServiceFactory,
         @inject(IPlatformService) private platform: IPlatformService,
         @inject(IFileSystem) private fileSystem: IFileSystem,
-        @inject(IPersistentStateFactory) private persistentStateFactory: IPersistentStateFactory,
-        @inject(IConfigurationService) private configService: IConfigurationService,
+        @inject(IPersistentStateFactory)
+        private persistentStateFactory: IPersistentStateFactory,
+        @inject(IConfigurationService)
+        private configService: IConfigurationService,
         @inject(ILogger) private logger: ILogger,
-        @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IInterpreterLocatorService) @named(WINDOWS_REGISTRY_SERVICE) @optional() private registryLookupForConda?: IInterpreterLocatorService
+        @inject(IDisposableRegistry)
+        private disposableRegistry: IDisposableRegistry,
+        @inject(IWorkspaceService)
+        private readonly workspaceService: IWorkspaceService,
+        @inject(IInterpreterLocatorService)
+        @named(WINDOWS_REGISTRY_SERVICE)
+        @optional()
+        private registryLookupForConda?: IInterpreterLocatorService
     ) {
         this.addCondaPathChangedHandler();
     }
 
     public get condaEnvironmentsFile(): string | undefined {
-        const homeDir = this.platform.isWindows ? process.env.USERPROFILE : (process.env.HOME || process.env.HOMEPATH);
-        return homeDir ? path.join(homeDir, '.conda', 'environments.txt') : undefined;
+        const homeDir = this.platform.isWindows
+            ? process.env.USERPROFILE
+            : process.env.HOME || process.env.HOMEPATH;
+        return homeDir
+            ? path.join(homeDir, ".conda", "environments.txt")
+            : undefined;
     }
 
     /**
@@ -80,7 +99,7 @@ export class CondaService implements ICondaService {
      * Called by VS Code to indicate it is done with the resource.
      */
     // tslint:disable-next-line:no-empty
-    public dispose() { }
+    public dispose() {}
 
     /**
      * Return the path to the "conda file".
@@ -98,12 +117,12 @@ export class CondaService implements ICondaService {
      * Is there a conda install to use?
      */
     public async isCondaAvailable(): Promise<boolean> {
-        if (typeof this.isAvailable === 'boolean') {
+        if (typeof this.isAvailable === "boolean") {
             return this.isAvailable;
         }
         return this.getCondaVersion()
-            .then(version => this.isAvailable = version !== undefined)
-            .catch(() => this.isAvailable = false);
+            .then(version => (this.isAvailable = version !== undefined))
+            .catch(() => (this.isAvailable = false));
     }
 
     /**
@@ -111,17 +130,24 @@ export class CondaService implements ICondaService {
      */
     public async getCondaVersion(): Promise<SemVer | undefined> {
         const processService = await this.processServiceFactory.create();
-        const info = await this.getCondaInfo().catch<CondaInfo | undefined>(() => undefined);
+        const info = await this.getCondaInfo().catch<CondaInfo | undefined>(
+            () => undefined
+        );
         let versionString: string | undefined;
         if (info && info.conda_version) {
             versionString = info.conda_version;
         } else {
             const stdOut = await this.getCondaFile()
-                .then(condaFile => processService.exec(condaFile, ['--version'], {}))
+                .then(condaFile =>
+                    processService.exec(condaFile, ["--version"], {})
+                )
                 .then(result => result.stdout.trim())
                 .catch<string | undefined>(() => undefined);
 
-            versionString = (stdOut && stdOut.startsWith('conda ')) ? stdOut.substring('conda '.length).trim() : stdOut;
+            versionString =
+                stdOut && stdOut.startsWith("conda ")
+                    ? stdOut.substring("conda ".length).trim()
+                    : stdOut;
         }
         if (!versionString) {
             return;
@@ -132,7 +158,7 @@ export class CondaService implements ICondaService {
         }
         // Use a bogus version, at least to indicate the fact that a version was returned.
         Logger.warn(`Unable to parse Version of Conda, ${versionString}`);
-        return new SemVer('0.0.1');
+        return new SemVer("0.0.1");
     }
 
     /**
@@ -140,7 +166,8 @@ export class CondaService implements ICondaService {
      */
     public async isCondaInCurrentPath() {
         const processService = await this.processServiceFactory.create();
-        return processService.exec('conda', ['--version'])
+        return processService
+            .exec("conda", ["--version"])
             .then(output => output.stdout.length > 0)
             .catch(() => false);
     }
@@ -152,7 +179,9 @@ export class CondaService implements ICondaService {
         try {
             const condaFile = await this.getCondaFile();
             const processService = await this.processServiceFactory.create();
-            const condaInfo = await processService.exec(condaFile, ['info', '--json']).then(output => output.stdout);
+            const condaInfo = await processService
+                .exec(condaFile, ["info", "--json"])
+                .then(output => output.stdout);
 
             return JSON.parse(condaInfo) as CondaInfo;
         } catch (ex) {
@@ -172,14 +201,18 @@ export class CondaService implements ICondaService {
     public async isCondaEnvironment(interpreterPath: string): Promise<boolean> {
         const dir = path.dirname(interpreterPath);
         const isWindows = this.platform.isWindows;
-        const condaMetaDirectory = isWindows ? path.join(dir, 'conda-meta') : path.join(dir, '..', 'conda-meta');
+        const condaMetaDirectory = isWindows
+            ? path.join(dir, "conda-meta")
+            : path.join(dir, "..", "conda-meta");
         return this.fileSystem.directoryExists(condaMetaDirectory);
     }
 
     /**
      * Return (env name, interpreter filename) for the interpreter.
      */
-    public async getCondaEnvironment(interpreterPath: string): Promise<{ name: string; path: string } | undefined> {
+    public async getCondaEnvironment(
+        interpreterPath: string
+    ): Promise<{ name: string; path: string } | undefined> {
         const isCondaEnv = await this.isCondaEnvironment(interpreterPath);
         if (!isCondaEnv) {
             return;
@@ -189,14 +222,29 @@ export class CondaService implements ICondaService {
 
         // If interpreter is in bin or Scripts, then go up one level
         const subDirName = path.basename(dir);
-        const goUpOnLevel = ['BIN', 'SCRIPTS'].indexOf(subDirName.toUpperCase()) !== -1;
-        const interpreterPathToMatch = goUpOnLevel ? path.join(dir, '..') : dir;
+        const goUpOnLevel =
+            ["BIN", "SCRIPTS"].indexOf(subDirName.toUpperCase()) !== -1;
+        const interpreterPathToMatch = goUpOnLevel ? path.join(dir, "..") : dir;
 
         // From the list of conda environments find this dir.
-        let matchingEnvs = Array.isArray(environments) ? environments.filter(item => this.fileSystem.arePathsSame(item.path, interpreterPathToMatch)) : [];
+        let matchingEnvs = Array.isArray(environments)
+            ? environments.filter(item =>
+                  this.fileSystem.arePathsSame(
+                      item.path,
+                      interpreterPathToMatch
+                  )
+              )
+            : [];
         if (matchingEnvs.length === 0) {
             environments = await this.getCondaEnvironments(true);
-            matchingEnvs = Array.isArray(environments) ? environments.filter(item => this.fileSystem.arePathsSame(item.path, interpreterPathToMatch)) : [];
+            matchingEnvs = Array.isArray(environments)
+                ? environments.filter(item =>
+                      this.fileSystem.arePathsSame(
+                          item.path,
+                          interpreterPathToMatch
+                      )
+                  )
+                : [];
         }
 
         if (matchingEnvs.length > 0) {
@@ -210,10 +258,14 @@ export class CondaService implements ICondaService {
     /**
      * Return the list of conda envs (by name, interpreter filename).
      */
-    public async getCondaEnvironments(ignoreCache: boolean): Promise<({ name: string; path: string }[]) | undefined> {
+    public async getCondaEnvironments(
+        ignoreCache: boolean
+    ): Promise<({ name: string; path: string }[]) | undefined> {
         // Global cache.
         // tslint:disable-next-line:no-any
-        const globalPersistence = this.persistentStateFactory.createGlobalPersistentState<{ data: { name: string; path: string }[] | undefined }>('CONDA_ENVIRONMENTS', undefined as any);
+        const globalPersistence = this.persistentStateFactory.createGlobalPersistentState<{
+            data: { name: string; path: string }[] | undefined;
+        }>("CONDA_ENVIRONMENTS", undefined as any);
         if (!ignoreCache && globalPersistence.value) {
             return globalPersistence.value.data;
         }
@@ -221,8 +273,12 @@ export class CondaService implements ICondaService {
         try {
             const condaFile = await this.getCondaFile();
             const processService = await this.processServiceFactory.create();
-            const envInfo = await processService.exec(condaFile, ['env', 'list']).then(output => output.stdout);
-            const environments = this.condaHelper.parseCondaEnvironmentNames(envInfo);
+            const envInfo = await processService
+                .exec(condaFile, ["env", "list"])
+                .then(output => output.stdout);
+            const environments = this.condaHelper.parseCondaEnvironmentNames(
+                envInfo
+            );
             await globalPersistence.updateValue({ data: environments });
             return environments;
         } catch (ex) {
@@ -230,7 +286,10 @@ export class CondaService implements ICondaService {
             // Failed because either:
             //   1. conda is not installed.
             //   2. `conda env list has changed signature.
-            this.logger.logInformation('Failed to get conda environment list from conda', ex);
+            this.logger.logInformation(
+                "Failed to get conda environment list from conda",
+                ex
+            );
         }
     }
 
@@ -239,21 +298,30 @@ export class CondaService implements ICondaService {
      */
     public getInterpreterPath(condaEnvironmentPath: string): string {
         // where to find the Python binary within a conda env.
-        const relativePath = this.platform.isWindows ? 'python.exe' : path.join('bin', 'python');
+        const relativePath = this.platform.isWindows
+            ? "python.exe"
+            : path.join("bin", "python");
         return path.join(condaEnvironmentPath, relativePath);
     }
 
     /**
      * Get the conda exe from the path to an interpreter's python. This might be different than the globally registered conda.exe
      */
-    public async getCondaFileFromInterpreter(interpreterPath?: string, envName?: string): Promise<string | undefined> {
-        const condaExe = this.platform.isWindows ? 'conda.exe' : 'conda';
-        const scriptsDir = this.platform.isWindows ? 'Scripts' : 'bin';
-        const interpreterDir = interpreterPath ? path.dirname(interpreterPath) : '';
+    public async getCondaFileFromInterpreter(
+        interpreterPath?: string,
+        envName?: string
+    ): Promise<string | undefined> {
+        const condaExe = this.platform.isWindows ? "conda.exe" : "conda";
+        const scriptsDir = this.platform.isWindows ? "Scripts" : "bin";
+        const interpreterDir = interpreterPath
+            ? path.dirname(interpreterPath)
+            : "";
 
         // Might be in a situation where this is not the default python env, but rather one running
         // from a virtualenv
-        const envsPos = envName ? interpreterDir.indexOf(path.join('envs', envName)) : -1;
+        const envsPos = envName
+            ? interpreterDir.indexOf(path.join("envs", envName))
+            : -1;
         if (envsPos > 0) {
             // This should be where the original python was run from when the environment was created.
             const originalPath = interpreterDir.slice(0, envsPos);
@@ -286,10 +354,24 @@ export class CondaService implements ICondaService {
      * Is the given interpreter from conda?
      */
     private detectCondaEnvironment(interpreter: PythonInterpreter) {
-        return interpreter.type === InterpreterType.Conda ||
-            (interpreter.displayName ? interpreter.displayName : '').toUpperCase().indexOf('ANACONDA') >= 0 ||
-            (interpreter.companyDisplayName ? interpreter.companyDisplayName : '').toUpperCase().indexOf('ANACONDA') >= 0 ||
-            (interpreter.companyDisplayName ? interpreter.companyDisplayName : '').toUpperCase().indexOf('CONTINUUM') >= 0;
+        return (
+            interpreter.type === InterpreterType.Conda ||
+            (interpreter.displayName ? interpreter.displayName : "")
+                .toUpperCase()
+                .indexOf("ANACONDA") >= 0 ||
+            (interpreter.companyDisplayName
+                ? interpreter.companyDisplayName
+                : ""
+            )
+                .toUpperCase()
+                .indexOf("ANACONDA") >= 0 ||
+            (interpreter.companyDisplayName
+                ? interpreter.companyDisplayName
+                : ""
+            )
+                .toUpperCase()
+                .indexOf("CONTINUUM") >= 0
+        );
     }
 
     /**
@@ -298,19 +380,35 @@ export class CondaService implements ICondaService {
     private getLatestVersion(interpreters: PythonInterpreter[]) {
         const sortedInterpreters = interpreters.slice();
         // tslint:disable-next-line:no-non-null-assertion
-        sortedInterpreters.sort((a, b) => (a.version && b.version) ? compare(a.version.raw, b.version.raw) : 0);
+        sortedInterpreters.sort(
+            (a, b) =>
+                a.version && b.version
+                    ? compare(a.version.raw, b.version.raw)
+                    : 0
+        );
         if (sortedInterpreters.length > 0) {
             return sortedInterpreters[sortedInterpreters.length - 1];
         }
     }
 
     private addCondaPathChangedHandler() {
-        const disposable = this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this));
+        const disposable = this.workspaceService.onDidChangeConfiguration(
+            this.onDidChangeConfiguration.bind(this)
+        );
         this.disposableRegistry.push(disposable);
     }
     private async onDidChangeConfiguration(event: ConfigurationChangeEvent) {
-        const workspacesUris: (Uri | undefined)[] = this.workspaceService.hasWorkspaceFolders ? this.workspaceService.workspaceFolders!.map(workspace => workspace.uri) : [undefined];
-        if (workspacesUris.findIndex(uri => event.affectsConfiguration('python.condaPath', uri)) === -1) {
+        const workspacesUris: (Uri | undefined)[] = this.workspaceService
+            .hasWorkspaceFolders
+            ? this.workspaceService.workspaceFolders!.map(
+                  workspace => workspace.uri
+              )
+            : [undefined];
+        if (
+            workspacesUris.findIndex(uri =>
+                event.affectsConfiguration("python.condaPath", uri)
+            ) === -1
+        ) {
             return;
         }
         this.condaFile = undefined;
@@ -323,20 +421,25 @@ export class CondaService implements ICondaService {
         const settings = this.configService.getSettings();
 
         const setting = settings.condaPath;
-        if (setting && setting !== '') {
+        if (setting && setting !== "") {
             return setting;
         }
 
         const isAvailable = await this.isCondaInCurrentPath();
         if (isAvailable) {
-            return 'conda';
+            return "conda";
         }
         if (this.platform.isWindows && this.registryLookupForConda) {
             const interpreters = await this.registryLookupForConda.getInterpreters();
-            const condaInterpreters = interpreters.filter(this.detectCondaEnvironment);
+            const condaInterpreters = interpreters.filter(
+                this.detectCondaEnvironment
+            );
             const condaInterpreter = this.getLatestVersion(condaInterpreters);
             if (condaInterpreter) {
-                const interpreterPath = await this.getCondaFileFromInterpreter(condaInterpreter.path, condaInterpreter.envName);
+                const interpreterPath = await this.getCondaFileFromInterpreter(
+                    condaInterpreter.path,
+                    condaInterpreter.envName
+                );
                 if (interpreterPath) {
                     return interpreterPath;
                 }
@@ -350,16 +453,21 @@ export class CondaService implements ICondaService {
      * Note: For now we simply return the first one found.
      */
     private async getCondaFileFromKnownLocations(): Promise<string> {
-        const globPattern = this.platform.isWindows ? CondaLocationsGlobWin : CondaLocationsGlob;
-        const condaFiles = await this.fileSystem.search(globPattern)
-            .catch<string[]>((failReason) => {
+        const globPattern = this.platform.isWindows
+            ? CondaLocationsGlobWin
+            : CondaLocationsGlob;
+        const condaFiles = await this.fileSystem
+            .search(globPattern)
+            .catch<string[]>(failReason => {
                 Logger.warn(
-                    'Default conda location search failed.',
+                    "Default conda location search failed.",
                     `Searching for default install locations for conda results in error: ${failReason}`
                 );
                 return [];
             });
-        const validCondaFiles = condaFiles.filter(condaPath => condaPath.length > 0);
-        return validCondaFiles.length === 0 ? 'conda' : validCondaFiles[0];
+        const validCondaFiles = condaFiles.filter(
+            condaPath => condaPath.length > 0
+        );
+        return validCondaFiles.length === 0 ? "conda" : validCondaFiles[0];
     }
 }

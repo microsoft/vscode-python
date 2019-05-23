@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { Uri } from 'vscode';
-import { Tests } from '../types';
+import { Uri } from "vscode";
+import { Tests } from "../types";
 
 export type TestContainer = {
     id: string;
-    kind: 'file' | 'folder' | 'suite' | 'function';
+    kind: "file" | "folder" | "suite" | "function";
     name: string;
     parentid: string;
 };
@@ -25,7 +25,7 @@ export type DiscoveredTests = {
     tests: TestItem[];
 };
 
-export const ITestDiscoveredTestParser = Symbol('ITestDiscoveredTestParser');
+export const ITestDiscoveredTestParser = Symbol("ITestDiscoveredTestParser");
 export interface ITestDiscoveredTestParser {
     parse(resource: Uri, discoveredTests: DiscoveredTests[]): Tests;
 }

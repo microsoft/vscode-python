@@ -1,8 +1,8 @@
-'use strict';
+"use strict";
 
-import * as net from 'net';
+import * as net from "net";
 // tslint:disable:no-var-requires no-require-imports member-ordering no-any
-const uint64be = require('uint64be');
+const uint64be = require("uint64be");
 
 enum DataType {
     string,
@@ -26,7 +26,7 @@ export class SocketStream {
         this.socket.write(buffer);
     }
     public WriteString(value: string) {
-        const stringBuffer = new Buffer(value, 'utf-8');
+        const stringBuffer = new Buffer(value, "utf-8");
         this.WriteInt32(stringBuffer.length);
         if (stringBuffer.length > 0) {
             this.socket.write(stringBuffer);
@@ -81,14 +81,16 @@ export class SocketStream {
             this.buffer = additionalData;
             return;
         }
-        const newBuffer = new Buffer(this.buffer.length + additionalData.length);
+        const newBuffer = new Buffer(
+            this.buffer.length + additionalData.length
+        );
         this.buffer.copy(newBuffer);
         additionalData.copy(newBuffer, this.buffer.length);
         this.buffer = newBuffer;
     }
 
     private isSufficientDataAvailable(length: number): boolean {
-        if (this.buffer.length < (this.bytesRead + length)) {
+        if (this.buffer.length < this.bytesRead + length) {
             this.hasInsufficientDataForReading = true;
         }
 
@@ -116,23 +118,27 @@ export class SocketStream {
         }
 
         if (byteRead < 0) {
-            throw new Error('IOException() - Socket.ReadString failed to read string type;');
+            throw new Error(
+                "IOException() - Socket.ReadString failed to read string type;"
+            );
         }
 
         const type = new Buffer([byteRead]).toString();
         let isUnicode = false;
         switch (type) {
-            case 'N': // null string
+            case "N": // null string
                 return null as any;
-            case 'U':
+            case "U":
                 isUnicode = true;
                 break;
-            case 'A': {
+            case "A": {
                 isUnicode = false;
                 break;
             }
             default: {
-                throw new Error(`IOException(); Socket.ReadString failed to parse unknown string type ${type}`);
+                throw new Error(
+                    `IOException(); Socket.ReadString failed to parse unknown string type ${type}`
+                );
             }
         }
 
@@ -145,14 +151,19 @@ export class SocketStream {
             return null as any;
         }
 
-        const stringBuffer = this.buffer.slice(this.bytesRead, this.bytesRead + len);
+        const stringBuffer = this.buffer.slice(
+            this.bytesRead,
+            this.bytesRead + len
+        );
         if (this.isInTransaction) {
             this.bytesRead = this.bytesRead + len;
         } else {
             this.buffer = this.buffer.slice(len);
         }
 
-        return isUnicode ? stringBuffer.toString('utf-8') : stringBuffer.toString();
+        return isUnicode
+            ? stringBuffer.toString("utf-8")
+            : stringBuffer.toString();
     }
 
     public ReadInt32(): number {
@@ -180,13 +191,16 @@ export class SocketStream {
             return null as any;
         }
 
-        const stringBuffer = this.buffer.slice(this.bytesRead, this.bytesRead + length);
+        const stringBuffer = this.buffer.slice(
+            this.bytesRead,
+            this.bytesRead + length
+        );
         if (this.isInTransaction) {
             this.bytesRead = this.bytesRead + length;
-        }        else {
+        } else {
             this.buffer = this.buffer.slice(length);
         }
-        return stringBuffer.toString('ascii');
+        return stringBuffer.toString("ascii");
     }
 
     private readValueInTransaction<T>(dataType: DataType): T {

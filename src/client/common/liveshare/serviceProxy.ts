@@ -1,17 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
-import { Event } from 'vscode';
-import * as vsls from 'vsls/vscode';
+"use strict";
+import { Event } from "vscode";
+import * as vsls from "vsls/vscode";
 
 // tslint:disable:no-any unified-signatures
 export class ServiceProxy implements vsls.SharedService {
     constructor(
-        private realService : vsls.SharedService,
+        private realService: vsls.SharedService,
         private guestsResponding: () => Promise<boolean>,
         private forceShutdown: () => void
-        ) {
-    }
+    ) {}
     public get isServiceAvailable(): boolean {
         return this.realService.isServiceAvailable;
     }

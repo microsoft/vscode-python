@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
+"use strict";
 
-import * as AdazzleReactDataGrid from 'react-data-grid';
+import * as AdazzleReactDataGrid from "react-data-grid";
 
 export class DataGridRowRenderer extends AdazzleReactDataGrid.Row {
-
     // tslint:disable:no-any
     constructor(props: any) {
         super(props);
@@ -19,5 +18,5 @@ export class DataGridRowRenderer extends AdazzleReactDataGrid.Row {
         //     };
         //     return <div id='wrapper' style={style}>{parent}</div>;
         // }
-    }
+    };
 }

@@ -1,15 +1,18 @@
-import { inject, injectable } from 'inversify';
-import * as path from 'path';
-import { IPathUtils, IsWindows } from '../types';
-import { NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from './constants';
+import { inject, injectable } from "inversify";
+import * as path from "path";
+import { IPathUtils, IsWindows } from "../types";
+import {
+    NON_WINDOWS_PATH_VARIABLE_NAME,
+    WINDOWS_PATH_VARIABLE_NAME
+} from "./constants";
 // tslint:disable-next-line:no-var-requires no-require-imports
-const untildify = require('untildify');
+const untildify = require("untildify");
 
 @injectable()
 export class PathUtils implements IPathUtils {
-    public readonly home = '';
+    public readonly home = "";
     constructor(@inject(IsWindows) private isWindows: boolean) {
-        this.home = untildify('~');
+        this.home = untildify("~");
     }
     public get delimiter(): string {
         return path.delimiter;
@@ -19,7 +22,9 @@ export class PathUtils implements IPathUtils {
     }
     // TO DO: Deprecate in favor of IPlatformService
     public getPathVariableName() {
-        return this.isWindows ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
+        return this.isWindows
+            ? WINDOWS_PATH_VARIABLE_NAME
+            : NON_WINDOWS_PATH_VARIABLE_NAME;
     }
     public basename(pathValue: string, ext?: string): string {
         return path.basename(pathValue, ext);

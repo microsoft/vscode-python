@@ -3,20 +3,23 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-'use strict';
+"use strict";
 
-import * as Path from 'path';
-import * as Types from '../utils/sysTypes';
-import { IStringDictionary, ISystemVariables } from './types';
+import * as Path from "path";
+import * as Types from "../utils/sysTypes";
+import { IStringDictionary, ISystemVariables } from "./types";
 /* tslint:disable:rule1 no-any no-unnecessary-callback-wrapper jsdoc-format no-for-in prefer-const no-increment-decrement */
 
 export abstract class AbstractSystemVariables implements ISystemVariables {
-
     public resolve(value: string): string;
     public resolve(value: string[]): string[];
     public resolve(value: IStringDictionary<string>): IStringDictionary<string>;
-    public resolve(value: IStringDictionary<string[]>): IStringDictionary<string[]>;
-    public resolve(value: IStringDictionary<IStringDictionary<string>>): IStringDictionary<IStringDictionary<string>>;
+    public resolve(
+        value: IStringDictionary<string[]>
+    ): IStringDictionary<string[]>;
+    public resolve(
+        value: IStringDictionary<IStringDictionary<string>>
+    ): IStringDictionary<IStringDictionary<string>>;
     // tslint:disable-next-line:no-any
     public resolve(value: any): any {
         if (Types.isString(value)) {
@@ -52,13 +55,20 @@ export abstract class AbstractSystemVariables implements ISystemVariables {
             if (Types.isString(newValue)) {
                 return newValue;
             } else {
-                return match && (match.indexOf('env.') > 0 || match.indexOf('env:') > 0) ? '' : match;
+                return match &&
+                    (match.indexOf("env.") > 0 || match.indexOf("env:") > 0)
+                    ? ""
+                    : match;
             }
         });
     }
 
-    private __resolveLiteral(values: IStringDictionary<string | IStringDictionary<string> | string[]>): IStringDictionary<string | IStringDictionary<string> | string[]> {
-        const result: IStringDictionary<string | IStringDictionary<string> | string[]> = Object.create(null);
+    private __resolveLiteral(
+        values: IStringDictionary<string | IStringDictionary<string> | string[]>
+    ): IStringDictionary<string | IStringDictionary<string> | string[]> {
+        const result: IStringDictionary<
+            string | IStringDictionary<string> | string[]
+        > = Object.create(null);
         Object.keys(values).forEach(key => {
             const value = values[key];
             // tslint:disable-next-line:no-any
@@ -70,7 +80,9 @@ export abstract class AbstractSystemVariables implements ISystemVariables {
     private __resolveAnyLiteral<T>(values: T): T;
     // tslint:disable-next-line:no-any
     private __resolveAnyLiteral(values: any): any {
-        const result: IStringDictionary<string | IStringDictionary<string> | string[]> = Object.create(null);
+        const result: IStringDictionary<
+            string | IStringDictionary<string> | string[]
+        > = Object.create(null);
         Object.keys(values).forEach(key => {
             const value = values[key];
             // tslint:disable-next-line:no-any
@@ -96,10 +108,15 @@ export class SystemVariables extends AbstractSystemVariables {
 
     constructor(workspaceFolder?: string) {
         super();
-        this._workspaceFolder = typeof workspaceFolder === 'string' ? workspaceFolder : __dirname;
+        this._workspaceFolder =
+            typeof workspaceFolder === "string" ? workspaceFolder : __dirname;
         this._workspaceFolderName = Path.basename(this._workspaceFolder);
         Object.keys(process.env).forEach(key => {
-            (this as any as Record<string, string | undefined>)[`env:${key}`] = (this as any as Record<string, string | undefined>)[`env.${key}`] = process.env[key];
+            ((this as any) as Record<string, string | undefined>)[
+                `env:${key}`
+            ] = ((this as any) as Record<string, string | undefined>)[
+                `env.${key}`
+            ] = process.env[key];
         });
     }
 

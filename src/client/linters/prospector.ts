@@ -1,10 +1,10 @@
-import * as path from 'path';
-import { CancellationToken, OutputChannel, TextDocument } from 'vscode';
-import '../common/extensions';
-import { Product } from '../common/types';
-import { IServiceContainer } from '../ioc/types';
-import { BaseLinter } from './baseLinter';
-import { ILintMessage } from './types';
+import * as path from "path";
+import { CancellationToken, OutputChannel, TextDocument } from "vscode";
+import "../common/extensions";
+import { Product } from "../common/types";
+import { IServiceContainer } from "../ioc/types";
+import { BaseLinter } from "./baseLinter";
+import { ILintMessage } from "./types";
 
 interface IProspectorResponse {
     messages: IProspectorMessage[];
@@ -20,34 +20,58 @@ interface IProspectorLocation {
     path: string;
     line: number;
     character: number;
-    module: 'beforeFormat';
+    module: "beforeFormat";
 }
 
 export class Prospector extends BaseLinter {
-    constructor(outputChannel: OutputChannel, serviceContainer: IServiceContainer) {
+    constructor(
+        outputChannel: OutputChannel,
+        serviceContainer: IServiceContainer
+    ) {
         super(Product.prospector, outputChannel, serviceContainer);
     }
 
-    protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {
+    protected async runLinter(
+        document: TextDocument,
+        cancellation: CancellationToken
+    ): Promise<ILintMessage[]> {
         const cwd = this.getWorkspaceRootPath(document);
         const relativePath = path.relative(cwd, document.uri.fsPath);
-        return this.run(['--absolute-paths', '--output-format=json', relativePath], document, cancellation);
+        return this.run(
+            ["--absolute-paths", "--output-format=json", relativePath],
+            document,
+            cancellation
+        );
     }
-    protected async parseMessages(output: string, _document: TextDocument, _token: CancellationToken, _regEx: string) {
+    protected async parseMessages(
+        output: string,
+        _document: TextDocument,
+        _token: CancellationToken,
+        _regEx: string
+    ) {
         let parsedData: IProspectorResponse;
         try {
             parsedData = JSON.parse(output);
         } catch (ex) {
-            this.outputChannel.appendLine(`${'#'.repeat(10)}Linting Output - ${this.info.id}${'#'.repeat(10)}`);
+            this.outputChannel.appendLine(
+                `${"#".repeat(10)}Linting Output - ${this.info.id}${"#".repeat(
+                    10
+                )}`
+            );
             this.outputChannel.append(output);
-            this.logger.logError('Failed to parse Prospector output', ex);
+            this.logger.logError("Failed to parse Prospector output", ex);
             return [];
         }
         return parsedData.messages
-            .filter((_value, index) => index <= this.pythonSettings.linting.maxNumberOfProblems)
+            .filter(
+                (_value, index) =>
+                    index <= this.pythonSettings.linting.maxNumberOfProblems
+            )
             .map(msg => {
-
-                const lineNumber = msg.location.line === null || isNaN(msg.location.line) ? 1 : msg.location.line;
+                const lineNumber =
+                    msg.location.line === null || isNaN(msg.location.line)
+                        ? 1
+                        : msg.location.line;
 
                 return {
                     code: msg.code,

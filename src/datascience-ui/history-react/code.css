@@ -1,8 +1,7 @@
-
 .code-area {
     position: relative;
-    width:100%;
-    margin-bottom:16px;
+    width: 100%;
+    margin-bottom: 16px;
 }
 
 .code-area-editable {
@@ -17,4 +16,3 @@
     font-style: italic;
     color: var(--override-watermark-color, var(--vscode-pickerGroup-border));
 }
-

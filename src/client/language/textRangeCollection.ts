@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
+"use strict";
 
-import { ITextRange, ITextRangeCollection } from './types';
+import { ITextRange, ITextRangeCollection } from "./types";
 
-export class TextRangeCollection<T extends ITextRange> implements ITextRangeCollection<T> {
+export class TextRangeCollection<T extends ITextRange>
+    implements ITextRangeCollection<T> {
     private items: T[];
 
     constructor(items: T[]) {
@@ -16,7 +17,9 @@ export class TextRangeCollection<T extends ITextRange> implements ITextRangeColl
     }
 
     public get end(): number {
-        return this.items.length > 0 ? this.items[this.items.length - 1].end : 0;
+        return this.items.length > 0
+            ? this.items[this.items.length - 1].end
+            : 0;
     }
 
     public get length(): number {
@@ -33,7 +36,7 @@ export class TextRangeCollection<T extends ITextRange> implements ITextRangeColl
 
     public getItemAt(index: number): T {
         if (index < 0 || index >= this.items.length) {
-            throw new Error('index is out of range');
+            throw new Error("index is out of range");
         }
         return this.items[index] as T;
     }
@@ -90,7 +93,11 @@ export class TextRangeCollection<T extends ITextRange> implements ITextRangeColl
             if (item.contains(position)) {
                 return mid;
             }
-            if (mid < this.count - 1 && item.end <= position && position < this.items[mid + 1].start) {
+            if (
+                mid < this.count - 1 &&
+                item.end <= position &&
+                position < this.items[mid + 1].start
+            ) {
                 return -1;
             }
 

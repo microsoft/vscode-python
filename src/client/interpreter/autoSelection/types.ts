@@ -1,13 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { Event, Uri } from 'vscode';
-import { Resource } from '../../common/types';
-import { PythonInterpreter } from '../contracts';
+import { Event, Uri } from "vscode";
+import { Resource } from "../../common/types";
+import { PythonInterpreter } from "../contracts";
 
-export const IInterpreterAutoSeletionProxyService = Symbol('IInterpreterAutoSeletionProxyService');
+export const IInterpreterAutoSeletionProxyService = Symbol(
+    "IInterpreterAutoSeletionProxyService"
+);
 /**
  * Interface similar to IInterpreterAutoSelectionService, to avoid chickn n egg situation.
  * Do we get python path from config first or get auto selected interpreter first!?
@@ -20,31 +22,48 @@ export const IInterpreterAutoSeletionProxyService = Symbol('IInterpreterAutoSele
  */
 export interface IInterpreterAutoSeletionProxyService {
     readonly onDidChangeAutoSelectedInterpreter: Event<void>;
-    getAutoSelectedInterpreter(resource: Resource): PythonInterpreter | undefined;
+    getAutoSelectedInterpreter(
+        resource: Resource
+    ): PythonInterpreter | undefined;
     registerInstance?(instance: IInterpreterAutoSeletionProxyService): void;
-    setWorkspaceInterpreter(resource: Uri, interpreter: PythonInterpreter | undefined): Promise<void>;
+    setWorkspaceInterpreter(
+        resource: Uri,
+        interpreter: PythonInterpreter | undefined
+    ): Promise<void>;
 }
 
-export const IInterpreterAutoSelectionService = Symbol('IInterpreterAutoSelectionService');
-export interface IInterpreterAutoSelectionService extends IInterpreterAutoSeletionProxyService {
+export const IInterpreterAutoSelectionService = Symbol(
+    "IInterpreterAutoSelectionService"
+);
+export interface IInterpreterAutoSelectionService
+    extends IInterpreterAutoSeletionProxyService {
     readonly onDidChangeAutoSelectedInterpreter: Event<void>;
     autoSelectInterpreter(resource: Resource): Promise<void>;
-    setGlobalInterpreter(interpreter: PythonInterpreter | undefined): Promise<void>;
+    setGlobalInterpreter(
+        interpreter: PythonInterpreter | undefined
+    ): Promise<void>;
 }
 
 export enum AutoSelectionRule {
-    all = 'all',
-    currentPath = 'currentPath',
-    workspaceVirtualEnvs = 'workspaceEnvs',
-    settings = 'settings',
-    cachedInterpreters = 'cachedInterpreters',
-    systemWide = 'system',
-    windowsRegistry = 'windowsRegistry'
+    all = "all",
+    currentPath = "currentPath",
+    workspaceVirtualEnvs = "workspaceEnvs",
+    settings = "settings",
+    cachedInterpreters = "cachedInterpreters",
+    systemWide = "system",
+    windowsRegistry = "windowsRegistry"
 }
 
-export const IInterpreterAutoSelectionRule = Symbol('IInterpreterAutoSelectionRule');
+export const IInterpreterAutoSelectionRule = Symbol(
+    "IInterpreterAutoSelectionRule"
+);
 export interface IInterpreterAutoSelectionRule {
     setNextRule(rule: IInterpreterAutoSelectionRule): void;
-    autoSelectInterpreter(resource: Resource, manager?: IInterpreterAutoSelectionService): Promise<void>;
-    getPreviouslyAutoSelectedInterpreter(resource: Resource): PythonInterpreter | undefined;
+    autoSelectInterpreter(
+        resource: Resource,
+        manager?: IInterpreterAutoSelectionService
+    ): Promise<void>;
+    getPreviouslyAutoSelectedInterpreter(
+        resource: Resource
+    ): PythonInterpreter | undefined;
 }

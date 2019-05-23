@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 /**
  * Represents a UUID as defined by rfc4122.
  */
 // tslint:disable-next-line: interface-name
 export interface UUID {
-
     /**
      * @returns the canonical representation in sets of hexadecimal numbers separated by dashes.
      */
@@ -15,7 +14,6 @@ export interface UUID {
 }
 
 class ValueUUID implements UUID {
-
     constructor(public _value: string) {
         // empty
     }
@@ -26,10 +24,26 @@ class ValueUUID implements UUID {
 }
 
 class V4UUID extends ValueUUID {
+    private static readonly _chars = [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "f"
+    ];
 
-    private static readonly _chars = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'];
-
-    private static readonly _timeHighBits = ['8', '9', 'a', 'b'];
+    private static readonly _timeHighBits = ["8", "9", "a", "b"];
 
     private static _oneOf(array: string[]): string {
         // tslint:disable:insecure-random
@@ -40,46 +54,48 @@ class V4UUID extends ValueUUID {
         return V4UUID._oneOf(V4UUID._chars);
     }
 
-// tslint:disable-next-line: member-ordering
+    // tslint:disable-next-line: member-ordering
     constructor() {
-        super([
-            V4UUID._randomHex(),
-            V4UUID._randomHex(),
-            V4UUID._randomHex(),
-            V4UUID._randomHex(),
-            V4UUID._randomHex(),
-            V4UUID._randomHex(),
-            V4UUID._randomHex(),
-            V4UUID._randomHex(),
-            '-',
-            V4UUID._randomHex(),
-            V4UUID._randomHex(),
-            V4UUID._randomHex(),
-            V4UUID._randomHex(),
-            '-',
-            '4',
-            V4UUID._randomHex(),
-            V4UUID._randomHex(),
-            V4UUID._randomHex(),
-            '-',
-            V4UUID._oneOf(V4UUID._timeHighBits),
-            V4UUID._randomHex(),
-            V4UUID._randomHex(),
-            V4UUID._randomHex(),
-            '-',
-            V4UUID._randomHex(),
-            V4UUID._randomHex(),
-            V4UUID._randomHex(),
-            V4UUID._randomHex(),
-            V4UUID._randomHex(),
-            V4UUID._randomHex(),
-            V4UUID._randomHex(),
-            V4UUID._randomHex(),
-            V4UUID._randomHex(),
-            V4UUID._randomHex(),
-            V4UUID._randomHex(),
-            V4UUID._randomHex()
-        ].join(''));
+        super(
+            [
+                V4UUID._randomHex(),
+                V4UUID._randomHex(),
+                V4UUID._randomHex(),
+                V4UUID._randomHex(),
+                V4UUID._randomHex(),
+                V4UUID._randomHex(),
+                V4UUID._randomHex(),
+                V4UUID._randomHex(),
+                "-",
+                V4UUID._randomHex(),
+                V4UUID._randomHex(),
+                V4UUID._randomHex(),
+                V4UUID._randomHex(),
+                "-",
+                "4",
+                V4UUID._randomHex(),
+                V4UUID._randomHex(),
+                V4UUID._randomHex(),
+                "-",
+                V4UUID._oneOf(V4UUID._timeHighBits),
+                V4UUID._randomHex(),
+                V4UUID._randomHex(),
+                V4UUID._randomHex(),
+                "-",
+                V4UUID._randomHex(),
+                V4UUID._randomHex(),
+                V4UUID._randomHex(),
+                V4UUID._randomHex(),
+                V4UUID._randomHex(),
+                V4UUID._randomHex(),
+                V4UUID._randomHex(),
+                V4UUID._randomHex(),
+                V4UUID._randomHex(),
+                V4UUID._randomHex(),
+                V4UUID._randomHex(),
+                V4UUID._randomHex()
+            ].join("")
+        );
     }
 }
 
@@ -99,7 +115,7 @@ export function isUUID(value: string): boolean {
  */
 export function parse(value: string): UUID {
     if (!isUUID(value)) {
-        throw new Error('invalid uuid');
+        throw new Error("invalid uuid");
     }
 
     return new ValueUUID(value);

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
 /*
 Comparing performance metrics is not easy (the metrics can and always get skewed).
@@ -15,30 +15,38 @@ and spawning the tests (mimic user starting tests from command line), this way w
 // tslint:disable:no-console no-require-imports no-var-requires
 
 // Must always be on top to setup expected env.
-process.env.VSC_PYTHON_PERF_TEST = '1';
+process.env.VSC_PYTHON_PERF_TEST = "1";
 
-import { spawn } from 'child_process';
-import * as download from 'download';
-import * as fs from 'fs-extra';
-import * as path from 'path';
-import * as request from 'request';
-import { EXTENSION_ROOT_DIR, PVSC_EXTENSION_ID } from '../client/common/constants';
-import { unzip } from './common';
+import { spawn } from "child_process";
+import * as download from "download";
+import * as fs from "fs-extra";
+import * as path from "path";
+import * as request from "request";
+import {
+    EXTENSION_ROOT_DIR,
+    PVSC_EXTENSION_ID
+} from "../client/common/constants";
+import { unzip } from "./common";
 
-const NamedRegexp = require('named-js-regexp');
-const del = require('del');
+const NamedRegexp = require("named-js-regexp");
+const del = require("del");
 
-const tmpFolder = path.join(EXTENSION_ROOT_DIR, 'tmp');
-const publishedExtensionPath = path.join(tmpFolder, 'ext', 'testReleaseExtensionsFolder');
-const logFilesPath = path.join(tmpFolder, 'test', 'logs');
+const tmpFolder = path.join(EXTENSION_ROOT_DIR, "tmp");
+const publishedExtensionPath = path.join(
+    tmpFolder,
+    "ext",
+    "testReleaseExtensionsFolder"
+);
+const logFilesPath = path.join(tmpFolder, "test", "logs");
 
 enum Version {
-    Dev, Release
+    Dev,
+    Release
 }
 
 class TestRunner {
     public async start() {
-        await del([path.join(tmpFolder, '**')]);
+        await del([path.join(tmpFolder, "**")]);
         await this.extractLatestExtension(publishedExtensionPath);
 
         const timesToLoadEachVersion = 2;
@@ -50,67 +58,113 @@ class TestRunner {
             await this.enableLanguageServer(false);
 
             const devLogFile = path.join(logFilesPath, `dev_loadtimes${i}.txt`);
-            console.log(`Start Performance Tests: Counter ${i}, for Dev version with Jedi`);
+            console.log(
+                `Start Performance Tests: Counter ${i}, for Dev version with Jedi`
+            );
             await this.capturePerfTimes(Version.Dev, devLogFile);
             devLogFiles.push(devLogFile);
 
-            const releaseLogFile = path.join(logFilesPath, `release_loadtimes${i}.txt`);
-            console.log(`Start Performance Tests: Counter ${i}, for Release version with Jedi`);
+            const releaseLogFile = path.join(
+                logFilesPath,
+                `release_loadtimes${i}.txt`
+            );
+            console.log(
+                `Start Performance Tests: Counter ${i}, for Release version with Jedi`
+            );
             await this.capturePerfTimes(Version.Release, releaseLogFile);
             releaseLogFiles.push(releaseLogFile);
 
             // Language server.
             await this.enableLanguageServer(true);
-            const languageServerLogFile = path.join(logFilesPath, `languageServer_loadtimes${i}.txt`);
-            console.log(`Start Performance Tests: Counter ${i}, for Release version with Language Server`);
+            const languageServerLogFile = path.join(
+                logFilesPath,
+                `languageServer_loadtimes${i}.txt`
+            );
+            console.log(
+                `Start Performance Tests: Counter ${i}, for Release version with Language Server`
+            );
             await this.capturePerfTimes(Version.Release, languageServerLogFile);
             languageServerLogFiles.push(languageServerLogFile);
         }
 
-        console.log('Compare Performance Results');
-        await this.runPerfTest(devLogFiles, releaseLogFiles, languageServerLogFiles);
+        console.log("Compare Performance Results");
+        await this.runPerfTest(
+            devLogFiles,
+            releaseLogFiles,
+            languageServerLogFiles
+        );
     }
     private async enableLanguageServer(enable: boolean) {
         const settings = `{ "python.jediEnabled": ${!enable} }`;
-        await fs.writeFile(path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'performance', 'settings.json'), settings);
+        await fs.writeFile(
+            path.join(
+                EXTENSION_ROOT_DIR,
+                "src",
+                "test",
+                "performance",
+                "settings.json"
+            ),
+            settings
+        );
     }
 
-    private async  capturePerfTimes(version: Version, logFile: string) {
+    private async capturePerfTimes(version: Version, logFile: string) {
         const releaseVersion = await this.getReleaseVersion();
         const devVersion = await this.getDevVersion();
         await fs.ensureDir(path.dirname(logFile));
         const env: Record<string, {}> = {
             ACTIVATION_TIMES_LOG_FILE_PATH: logFile,
-            ACTIVATION_TIMES_EXT_VERSION: version === Version.Release ? releaseVersion : devVersion,
-            CODE_EXTENSIONS_PATH: version === Version.Release ? publishedExtensionPath : EXTENSION_ROOT_DIR
+            ACTIVATION_TIMES_EXT_VERSION:
+                version === Version.Release ? releaseVersion : devVersion,
+            CODE_EXTENSIONS_PATH:
+                version === Version.Release
+                    ? publishedExtensionPath
+                    : EXTENSION_ROOT_DIR
         };
 
         await this.launchTest(env);
     }
-    private async  runPerfTest(devLogFiles: string[], releaseLogFiles: string[], languageServerLogFiles: string[]) {
+    private async runPerfTest(
+        devLogFiles: string[],
+        releaseLogFiles: string[],
+        languageServerLogFiles: string[]
+    ) {
         const env: Record<string, {}> = {
             ACTIVATION_TIMES_DEV_LOG_FILE_PATHS: JSON.stringify(devLogFiles),
-            ACTIVATION_TIMES_RELEASE_LOG_FILE_PATHS: JSON.stringify(releaseLogFiles),
-            ACTIVATION_TIMES_DEV_LANGUAGE_SERVER_LOG_FILE_PATHS: JSON.stringify(languageServerLogFiles)
+            ACTIVATION_TIMES_RELEASE_LOG_FILE_PATHS: JSON.stringify(
+                releaseLogFiles
+            ),
+            ACTIVATION_TIMES_DEV_LANGUAGE_SERVER_LOG_FILE_PATHS: JSON.stringify(
+                languageServerLogFiles
+            )
         };
 
         await this.launchTest(env);
     }
 
-    private async  launchTest(customEnvVars: Record<string, {}>) {
+    private async launchTest(customEnvVars: Record<string, {}>) {
         await new Promise((resolve, reject) => {
             const env: Record<string, {}> = {
-                TEST_FILES_SUFFIX: 'perf.test',
-                CODE_TESTS_WORKSPACE: path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'performance'),
+                TEST_FILES_SUFFIX: "perf.test",
+                CODE_TESTS_WORKSPACE: path.join(
+                    EXTENSION_ROOT_DIR,
+                    "src",
+                    "test",
+                    "performance"
+                ),
                 ...process.env,
                 ...customEnvVars
             };
 
-            const proc = spawn('node', [path.join(__dirname, 'standardTest.js')], { cwd: EXTENSION_ROOT_DIR, env });
+            const proc = spawn(
+                "node",
+                [path.join(__dirname, "standardTest.js")],
+                { cwd: EXTENSION_ROOT_DIR, env }
+            );
             proc.stdout.pipe(process.stdout);
             proc.stderr.pipe(process.stderr);
-            proc.on('error', reject);
-            proc.on('close', code => {
+            proc.on("error", reject);
+            proc.on("close", code => {
                 if (code === 0) {
                     resolve();
                 } else {
@@ -125,7 +179,7 @@ class TestRunner {
         await unzip(extensionFile, targetDir);
     }
 
-    private async  getReleaseVersion(): Promise<string> {
+    private async getReleaseVersion(): Promise<string> {
         const url = `https://marketplace.visualstudio.com/items?itemName=${PVSC_EXTENSION_ID}`;
         const content = await new Promise<string>((resolve, reject) => {
             request(url, (error, response, body) => {
@@ -138,14 +192,17 @@ class TestRunner {
                 reject(`Status code of ${response.statusCode} received.`);
             });
         });
-        const re = NamedRegexp('"version"\S?:\S?"(:<version>\\d{4}\\.\\d{1,2}\\.\\d{1,2})"', 'g');
+        const re = NamedRegexp(
+            '"version"S?:S?"(:<version>\\d{4}\\.\\d{1,2}\\.\\d{1,2})"',
+            "g"
+        );
         const matches = re.exec(content);
         return matches.groups().version;
     }
 
-    private async  getDevVersion(): Promise<string> {
+    private async getDevVersion(): Promise<string> {
         // tslint:disable-next-line:non-literal-require
-        return require(path.join(EXTENSION_ROOT_DIR, 'package.json')).version;
+        return require(path.join(EXTENSION_ROOT_DIR, "package.json")).version;
     }
 
     private async downloadExtension(): Promise<string> {
@@ -156,9 +213,13 @@ class TestRunner {
             return destination;
         }
 
-        await download(url, path.dirname(destination), { filename: path.basename(destination) });
+        await download(url, path.dirname(destination), {
+            filename: path.basename(destination)
+        });
         return destination;
     }
 }
 
-new TestRunner().start().catch(ex => console.error('Error in running Performance Tests', ex));
+new TestRunner()
+    .start()
+    .catch(ex => console.error("Error in running Performance Tests", ex));

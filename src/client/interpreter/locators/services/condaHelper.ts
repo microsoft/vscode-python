@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as path from 'path';
-import '../../../common/extensions';
-import { CondaInfo } from '../../contracts';
-import { AnacondaDisplayName, AnacondaIdentfiers } from './conda';
+import * as path from "path";
+import "../../../common/extensions";
+import { CondaInfo } from "../../contracts";
+import { AnacondaDisplayName, AnacondaIdentfiers } from "./conda";
 
 export type EnvironmentPath = string;
 export type EnvironmentName = string;
@@ -13,7 +13,6 @@ export type EnvironmentName = string;
  * Helpers for conda.
  */
 export class CondaHelper {
-
     /**
      * Return the string to display for the conda interpreter.
      */
@@ -21,13 +20,13 @@ export class CondaHelper {
         // Samples.
         // "3.6.1 |Anaconda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]".
         // "3.6.2 |Anaconda, Inc.| (default, Sep 21 2017, 18:29:43) \n[GCC 4.2.1 Compatible Clang 4.0.1 (tags/RELEASE_401/final)]".
-        const sysVersion = condaInfo['sys.version'];
+        const sysVersion = condaInfo["sys.version"];
         if (!sysVersion) {
             return AnacondaDisplayName;
         }
 
         // Take the second part of the sys.version.
-        const sysVersionParts = sysVersion.split('|', 2);
+        const sysVersionParts = sysVersion.split("|", 2);
         if (sysVersionParts.length === 2) {
             const displayName = sysVersionParts[1].trim();
             if (this.isIdentifiableAsAnaconda(displayName)) {
@@ -56,20 +55,26 @@ export class CondaHelper {
      * @returns {{ name: string, path: string }[] | undefined}
      * @memberof CondaHelper
      */
-    public parseCondaEnvironmentNames(condaEnvironmentList: string): { name: string; path: string }[] | undefined {
+    public parseCondaEnvironmentNames(
+        condaEnvironmentList: string
+    ): { name: string; path: string }[] | undefined {
         const environments = condaEnvironmentList.splitLines({ trim: false });
-        const baseEnvironmentLine = environments.filter(line => line.indexOf('*') > 0);
+        const baseEnvironmentLine = environments.filter(
+            line => line.indexOf("*") > 0
+        );
         if (baseEnvironmentLine.length === 0) {
             return;
         }
-        const pathStartIndex = baseEnvironmentLine[0].indexOf(baseEnvironmentLine[0].split('*')[1].trim());
+        const pathStartIndex = baseEnvironmentLine[0].indexOf(
+            baseEnvironmentLine[0].split("*")[1].trim()
+        );
         const envs: { name: string; path: string }[] = [];
         environments.forEach(line => {
             if (line.length <= pathStartIndex) {
                 return;
             }
             let name = line.substring(0, pathStartIndex).trim();
-            if (name.endsWith('*')) {
+            if (name.endsWith("*")) {
                 name = name.substring(0, name.length - 1).trim();
             }
             const envPath = line.substring(pathStartIndex).trim();
@@ -87,6 +92,8 @@ export class CondaHelper {
      */
     private isIdentifiableAsAnaconda(value: string) {
         const valueToSearch = value.toLowerCase();
-        return AnacondaIdentfiers.some(item => valueToSearch.indexOf(item.toLowerCase()) !== -1);
+        return AnacondaIdentfiers.some(
+            item => valueToSearch.indexOf(item.toLowerCase()) !== -1
+        );
     }
 }

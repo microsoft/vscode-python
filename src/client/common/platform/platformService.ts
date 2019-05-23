@@ -1,26 +1,31 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
+"use strict";
 
-import { injectable } from 'inversify';
-import * as os from 'os';
-import { coerce, SemVer } from 'semver';
-import { sendTelemetryEvent } from '../../telemetry';
-import { EventName, PlatformErrors } from '../../telemetry/constants';
-import { OSType } from '../utils/platform';
-import { parseVersion } from '../utils/version';
-import { NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from './constants';
-import { IPlatformService } from './types';
+import { injectable } from "inversify";
+import * as os from "os";
+import { coerce, SemVer } from "semver";
+import { sendTelemetryEvent } from "../../telemetry";
+import { EventName, PlatformErrors } from "../../telemetry/constants";
+import { OSType } from "../utils/platform";
+import { parseVersion } from "../utils/version";
+import {
+    NON_WINDOWS_PATH_VARIABLE_NAME,
+    WINDOWS_PATH_VARIABLE_NAME
+} from "./constants";
+import { IPlatformService } from "./types";
 
 @injectable()
 export class PlatformService implements IPlatformService {
     public readonly osType: OSType = getOSType();
     public version?: SemVer;
     public get pathVariableName() {
-        return this.isWindows ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
+        return this.isWindows
+            ? WINDOWS_PATH_VARIABLE_NAME
+            : NON_WINDOWS_PATH_VARIABLE_NAME;
     }
     public get virtualEnvBinName() {
-        return this.isWindows ? 'Scripts' : 'bin';
+        return this.isWindows ? "Scripts" : "bin";
     }
     public async getVersion(): Promise<SemVer> {
         if (this.version) {
@@ -35,16 +40,20 @@ export class PlatformService implements IPlatformService {
                 try {
                     const ver = coerce(os.release());
                     if (ver) {
-                        sendTelemetryEvent(EventName.PLATFORM_INFO, undefined, { osVersion: `${ver.major}.${ver.minor}.${ver.patch}` });
-                        return this.version = ver;
+                        sendTelemetryEvent(EventName.PLATFORM_INFO, undefined, {
+                            osVersion: `${ver.major}.${ver.minor}.${ver.patch}`
+                        });
+                        return (this.version = ver);
                     }
-                    throw new Error('Unable to parse version');
+                    throw new Error("Unable to parse version");
                 } catch (ex) {
-                    sendTelemetryEvent(EventName.PLATFORM_INFO, undefined, { failureType: PlatformErrors.FailedToParseVersion });
+                    sendTelemetryEvent(EventName.PLATFORM_INFO, undefined, {
+                        failureType: PlatformErrors.FailedToParseVersion
+                    });
                     return parseVersion(os.release());
                 }
             default:
-                throw new Error('Not Supported');
+                throw new Error("Not Supported");
         }
     }
 
@@ -59,8 +68,8 @@ export class PlatformService implements IPlatformService {
     }
     public get is64bit(): boolean {
         // tslint:disable-next-line:no-require-imports
-        const arch = require('arch');
-        return arch() === 'x64';
+        const arch = require("arch");
+        return arch() === "x64";
     }
 }
 
@@ -72,7 +81,9 @@ function getOSType(platform: string = process.platform): OSType {
     } else if (/^linux/.test(platform)) {
         return OSType.Linux;
     } else {
-        sendTelemetryEvent(EventName.PLATFORM_INFO, undefined, { failureType: PlatformErrors.FailedToDetermineOS });
+        sendTelemetryEvent(EventName.PLATFORM_INFO, undefined, {
+            failureType: PlatformErrors.FailedToDetermineOS
+        });
         return OSType.Unknown;
     }
 }

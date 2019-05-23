@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
+"use strict";
 
-import * as assert from 'assert';
-import { TextRangeCollection } from '../../client/language/textRangeCollection';
-import { TextRange } from '../../client/language/types';
+import * as assert from "assert";
+import { TextRangeCollection } from "../../client/language/textRangeCollection";
+import { TextRange } from "../../client/language/types";
 
 // tslint:disable-next-line:max-func-body-length
-suite('Language.TextRangeCollection', () => {
-    test('Empty', async () => {
+suite("Language.TextRangeCollection", () => {
+    test("Empty", async () => {
         const items: TextRange[] = [];
         const c = new TextRangeCollection(items);
         assert.equal(c.start, 0);
@@ -16,7 +16,7 @@ suite('Language.TextRangeCollection', () => {
         assert.equal(c.length, 0);
         assert.equal(c.count, 0);
     });
-    test('Basic', async () => {
+    test("Basic", async () => {
         const items: TextRange[] = [];
         items.push(new TextRange(2, 1));
         items.push(new TextRange(4, 2));
@@ -32,7 +32,7 @@ suite('Language.TextRangeCollection', () => {
         assert.equal(c.getItemAt(1).start, 4);
         assert.equal(c.getItemAt(1).length, 2);
     });
-    test('Contains position (simple)', async () => {
+    test("Contains position (simple)", async () => {
         const items: TextRange[] = [];
         items.push(new TextRange(2, 1));
         items.push(new TextRange(4, 2));
@@ -43,7 +43,7 @@ suite('Language.TextRangeCollection', () => {
             assert.equal(index, results[i]);
         }
     });
-    test('Contains position (adjoint)', async () => {
+    test("Contains position (adjoint)", async () => {
         const items: TextRange[] = [];
         items.push(new TextRange(2, 1));
         items.push(new TextRange(3, 2));
@@ -54,7 +54,7 @@ suite('Language.TextRangeCollection', () => {
             assert.equal(index, results[i]);
         }
     });
-    test('Contains position (out of range)', async () => {
+    test("Contains position (out of range)", async () => {
         const items: TextRange[] = [];
         items.push(new TextRange(2, 1));
         items.push(new TextRange(4, 2));
@@ -65,7 +65,7 @@ suite('Language.TextRangeCollection', () => {
             assert.equal(index, -1);
         }
     });
-    test('Contains position (empty)', async () => {
+    test("Contains position (empty)", async () => {
         const items: TextRange[] = [];
         const c = new TextRangeCollection(items);
         const positions = [-2, -1, 0, 1, 2, 3];
@@ -74,7 +74,7 @@ suite('Language.TextRangeCollection', () => {
             assert.equal(index, -1);
         }
     });
-    test('Item at position', async () => {
+    test("Item at position", async () => {
         const items: TextRange[] = [];
         items.push(new TextRange(2, 1));
         items.push(new TextRange(4, 2));

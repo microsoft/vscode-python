@@ -1,31 +1,42 @@
-import * as fs from 'fs-extra';
-import { IS_WINDOWS } from './platform/constants';
-import { PathUtils } from './platform/pathUtils';
-import { EnvironmentVariablesService } from './variables/environment';
-import { EnvironmentVariables } from './variables/types';
-function parseEnvironmentVariables(contents: string): EnvironmentVariables | undefined {
-    if (typeof contents !== 'string' || contents.length === 0) {
+import * as fs from "fs-extra";
+import { IS_WINDOWS } from "./platform/constants";
+import { PathUtils } from "./platform/pathUtils";
+import { EnvironmentVariablesService } from "./variables/environment";
+import { EnvironmentVariables } from "./variables/types";
+function parseEnvironmentVariables(
+    contents: string
+): EnvironmentVariables | undefined {
+    if (typeof contents !== "string" || contents.length === 0) {
         return undefined;
     }
 
     const env: EnvironmentVariables = {};
-    contents.split('\n').forEach(line => {
+    contents.split("\n").forEach(line => {
         const match = line.match(/^\s*([\w\.\-]+)\s*=\s*(.*)?\s*$/);
         if (match !== null) {
-            let value = typeof match[2] === 'string' ? match[2] : '';
-            if (value.length > 0 && value.charAt(0) === '"' && value.charAt(value.length - 1) === '"') {
-                value = value.replace(/\\n/gm, '\n');
+            let value = typeof match[2] === "string" ? match[2] : "";
+            if (
+                value.length > 0 &&
+                value.charAt(0) === '"' &&
+                value.charAt(value.length - 1) === '"'
+            ) {
+                value = value.replace(/\\n/gm, "\n");
             }
-            env[match[1]] = value.replace(/(^['"]|['"]$)/g, '');
+            env[match[1]] = value.replace(/(^['"]|['"]$)/g, "");
         }
     });
     return env;
 }
 
-export function parseEnvFile(envFile: string, mergeWithProcessEnvVars: boolean = true): EnvironmentVariables {
-    const buffer = fs.readFileSync(envFile, 'utf8');
+export function parseEnvFile(
+    envFile: string,
+    mergeWithProcessEnvVars: boolean = true
+): EnvironmentVariables {
+    const buffer = fs.readFileSync(envFile, "utf8");
     const env = parseEnvironmentVariables(buffer)!;
-    return mergeWithProcessEnvVars ? mergeEnvVariables(env, process.env) : mergePythonPath(env, process.env.PYTHONPATH as string);
+    return mergeWithProcessEnvVars
+        ? mergeEnvVariables(env, process.env)
+        : mergePythonPath(env, process.env.PYTHONPATH as string);
 }
 
 /**
@@ -36,7 +47,10 @@ export function parseEnvFile(envFile: string, mergeWithProcessEnvVars: boolean =
  * @param {EnvironmentVariables} [sourceEnvVars=process.env] source environment variables (defaults to current process variables).
  * @returns {EnvironmentVariables}
  */
-export function mergeEnvVariables(targetEnvVars: EnvironmentVariables, sourceEnvVars: EnvironmentVariables = process.env): EnvironmentVariables {
+export function mergeEnvVariables(
+    targetEnvVars: EnvironmentVariables,
+    sourceEnvVars: EnvironmentVariables = process.env
+): EnvironmentVariables {
     const service = new EnvironmentVariablesService(new PathUtils(IS_WINDOWS));
     service.mergeVariables(sourceEnvVars, targetEnvVars);
     if (sourceEnvVars.PYTHONPATH) {
@@ -53,8 +67,14 @@ export function mergeEnvVariables(targetEnvVars: EnvironmentVariables, sourceEnv
  * @param {string | undefined} [currentPythonPath] PYTHONPATH value.
  * @returns {EnvironmentVariables}
  */
-export function mergePythonPath(env: EnvironmentVariables, currentPythonPath: string | undefined): EnvironmentVariables {
-    if (typeof currentPythonPath !== 'string' || currentPythonPath.length === 0) {
+export function mergePythonPath(
+    env: EnvironmentVariables,
+    currentPythonPath: string | undefined
+): EnvironmentVariables {
+    if (
+        typeof currentPythonPath !== "string" ||
+        currentPythonPath.length === 0
+    ) {
         return env;
     }
     const service = new EnvironmentVariablesService(new PathUtils(IS_WINDOWS));

@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { DebugSession, DebugSessionCustomEvent } from 'vscode';
-import { AttachRequestArguments, LaunchRequestArguments } from '../../types';
+import { DebugSession, DebugSessionCustomEvent } from "vscode";
+import { AttachRequestArguments, LaunchRequestArguments } from "../../types";
 
-export const IDebugSessionEventHandlers = Symbol('IDebugSessionEventHandlers');
+export const IDebugSessionEventHandlers = Symbol("IDebugSessionEventHandlers");
 export interface IDebugSessionEventHandlers {
     handleCustomEvent?(e: DebugSessionCustomEvent): Promise<void>;
     handleTerminateEvent?(e: DebugSession): Promise<void>;
@@ -49,13 +49,16 @@ export type ChildProcessLaunchData = {
     rootStartRequest: {
         // tslint:disable-next-line:no-banned-terms
         arguments: LaunchRequestArguments | AttachRequestArguments;
-        command: 'attach' | 'request';
+        command: "attach" | "request";
         seq: number;
         type: string;
     };
 };
 
-export const IChildProcessAttachService = Symbol('IChildProcessAttachService');
+export const IChildProcessAttachService = Symbol("IChildProcessAttachService");
 export interface IChildProcessAttachService {
-    attach(data: ChildProcessLaunchData, parentSession: DebugSession): Promise<void>;
+    attach(
+        data: ChildProcessLaunchData,
+        parentSession: DebugSession
+    ): Promise<void>;
 }

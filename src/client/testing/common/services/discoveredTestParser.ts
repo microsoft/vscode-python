@@ -1,21 +1,39 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { inject, injectable } from 'inversify';
-import * as path from 'path';
-import { Uri } from 'vscode';
-import { IWorkspaceService } from '../../../common/application/types';
-import { traceError } from '../../../common/logger';
-import { TestDataItem } from '../../types';
-import { getParentFile, getParentSuite, getTestType } from '../testUtils';
-import { FlattenedTestFunction, FlattenedTestSuite, SubtestParent, TestFile, TestFolder, TestFunction, Tests, TestSuite, TestType } from '../types';
-import { DiscoveredTests, ITestDiscoveredTestParser, TestContainer, TestItem } from './types';
+import { inject, injectable } from "inversify";
+import * as path from "path";
+import { Uri } from "vscode";
+import { IWorkspaceService } from "../../../common/application/types";
+import { traceError } from "../../../common/logger";
+import { TestDataItem } from "../../types";
+import { getParentFile, getParentSuite, getTestType } from "../testUtils";
+import {
+    FlattenedTestFunction,
+    FlattenedTestSuite,
+    SubtestParent,
+    TestFile,
+    TestFolder,
+    TestFunction,
+    Tests,
+    TestSuite,
+    TestType
+} from "../types";
+import {
+    DiscoveredTests,
+    ITestDiscoveredTestParser,
+    TestContainer,
+    TestItem
+} from "./types";
 
 @injectable()
 export class TestDiscoveredTestParser implements ITestDiscoveredTestParser {
-    constructor(@inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService) { }
+    constructor(
+        @inject(IWorkspaceService)
+        private readonly workspaceService: IWorkspaceService
+    ) {}
     public parse(resource: Uri, discoveredTests: DiscoveredTests[]): Tests {
         const tests: Tests = {
             rootTestFolders: [],
@@ -28,15 +46,19 @@ export class TestDiscoveredTestParser implements ITestDiscoveredTestParser {
 
         const workspace = this.workspaceService.getWorkspaceFolder(resource);
         if (!workspace) {
-            traceError('Resource does not belong to any workspace folder');
+            traceError("Resource does not belong to any workspace folder");
             return tests;
         }
 
         // If the root is the workspace folder, then ignore that.
         for (const data of discoveredTests) {
             const rootFolder = {
-                name: data.root, folders: [], time: 0,
-                testFiles: [], resource: resource, nameToRun: data.rootid
+                name: data.root,
+                folders: [],
+                time: 0,
+                testFiles: [],
+                resource: resource,
+                nameToRun: data.rootid
             };
             tests.rootTestFolders.push(rootFolder);
             tests.testFolders.push(rootFolder);
@@ -58,19 +80,39 @@ export class TestDiscoveredTestParser implements ITestDiscoveredTestParser {
      * @param {Tests} tests
      * @memberof TestsDiscovery
      */
-    protected buildChildren(rootFolder: TestFolder, parent: TestDataItem, discoveredTests: DiscoveredTests, tests: Tests) {
+    protected buildChildren(
+        rootFolder: TestFolder,
+        parent: TestDataItem,
+        discoveredTests: DiscoveredTests,
+        tests: Tests
+    ) {
         const parentType = getTestType(parent);
         switch (parentType) {
             case TestType.testFolder: {
-                this.processFolder(rootFolder, parent as TestFolder, discoveredTests, tests);
+                this.processFolder(
+                    rootFolder,
+                    parent as TestFolder,
+                    discoveredTests,
+                    tests
+                );
                 break;
             }
             case TestType.testFile: {
-                this.processFile(rootFolder, parent as TestFile, discoveredTests, tests);
+                this.processFile(
+                    rootFolder,
+                    parent as TestFile,
+                    discoveredTests,
+                    tests
+                );
                 break;
             }
             case TestType.testSuite: {
-                this.processSuite(rootFolder, parent as TestSuite, discoveredTests, tests);
+                this.processSuite(
+                    rootFolder,
+                    parent as TestSuite,
+                    discoveredTests,
+                    tests
+                );
                 break;
             }
             default:
@@ -89,20 +131,35 @@ export class TestDiscoveredTestParser implements ITestDiscoveredTestParser {
      * @param {Tests} tests
      * @memberof TestDiscoveredTestParser
      */
-    protected processFolder(rootFolder: TestFolder, parentFolder: TestFolder, discoveredTests: DiscoveredTests, tests: Tests) {
+    protected processFolder(
+        rootFolder: TestFolder,
+        parentFolder: TestFolder,
+        discoveredTests: DiscoveredTests,
+        tests: Tests
+    ) {
         const folders = discoveredTests.parents
-            .filter(child => child.kind === 'folder' && child.parentid === parentFolder.nameToRun)
+            .filter(
+                child =>
+                    child.kind === "folder" &&
+                    child.parentid === parentFolder.nameToRun
+            )
             .map(folder => createTestFolder(rootFolder, folder));
 
         const files = discoveredTests.parents
-            .filter(child => child.kind === 'file' && child.parentid === parentFolder.nameToRun)
+            .filter(
+                child =>
+                    child.kind === "file" &&
+                    child.parentid === parentFolder.nameToRun
+            )
             .map(file => createTestFile(rootFolder, file));
 
         parentFolder.folders.push(...folders);
         parentFolder.testFiles.push(...files);
         tests.testFolders.push(...folders);
         tests.testFiles.push(...files);
-        [...folders, ...files].forEach(item => this.buildChildren(rootFolder, item, discoveredTests, tests));
+        [...folders, ...files].forEach(item =>
+            this.buildChildren(rootFolder, item, discoveredTests, tests)
+        );
     }
     /**
      * Process the children of a file.
@@ -116,10 +173,21 @@ export class TestDiscoveredTestParser implements ITestDiscoveredTestParser {
      * @param {Tests} tests
      * @memberof TestDiscoveredTestParser
      */
-    protected processFile(rootFolder: TestFolder, parentFile: TestFile, discoveredTests: DiscoveredTests, tests: Tests) {
+    protected processFile(
+        rootFolder: TestFolder,
+        parentFile: TestFile,
+        discoveredTests: DiscoveredTests,
+        tests: Tests
+    ) {
         const suites = discoveredTests.parents
-            .filter(child => child.kind === 'suite' && child.parentid === parentFile.nameToRun)
-            .map(suite => createTestSuite(parentFile, rootFolder.resource, suite));
+            .filter(
+                child =>
+                    child.kind === "suite" &&
+                    child.parentid === parentFile.nameToRun
+            )
+            .map(suite =>
+                createTestSuite(parentFile, rootFolder.resource, suite)
+            );
 
         const functions = discoveredTests.tests
             .filter(func => func.parentid === parentFile.nameToRun)
@@ -127,14 +195,32 @@ export class TestDiscoveredTestParser implements ITestDiscoveredTestParser {
 
         parentFile.suites.push(...suites);
         parentFile.functions.push(...functions);
-        tests.testSuites.push(...suites.map(suite => createFlattenedSuite(tests, suite)));
-        tests.testFunctions.push(...functions.map(func => createFlattenedFunction(tests, func)));
-        suites.forEach(item => this.buildChildren(rootFolder, item, discoveredTests, tests));
+        tests.testSuites.push(
+            ...suites.map(suite => createFlattenedSuite(tests, suite))
+        );
+        tests.testFunctions.push(
+            ...functions.map(func => createFlattenedFunction(tests, func))
+        );
+        suites.forEach(item =>
+            this.buildChildren(rootFolder, item, discoveredTests, tests)
+        );
 
         const parameterizedFunctions = discoveredTests.parents
-            .filter(child => child.kind === 'function' && child.parentid === parentFile.nameToRun)
+            .filter(
+                child =>
+                    child.kind === "function" &&
+                    child.parentid === parentFile.nameToRun
+            )
             .map(func => createParameterizedTestFunction(rootFolder, func));
-        parameterizedFunctions.forEach(func => this.processParameterizedFunction(rootFolder, parentFile, func, discoveredTests, tests));
+        parameterizedFunctions.forEach(func =>
+            this.processParameterizedFunction(
+                rootFolder,
+                parentFile,
+                func,
+                discoveredTests,
+                tests
+            )
+        );
     }
     /**
      * Process the children of a suite.
@@ -148,10 +234,21 @@ export class TestDiscoveredTestParser implements ITestDiscoveredTestParser {
      * @param {Tests} tests
      * @memberof TestDiscoveredTestParser
      */
-    protected processSuite(rootFolder: TestFolder, parentSuite: TestSuite, discoveredTests: DiscoveredTests, tests: Tests) {
+    protected processSuite(
+        rootFolder: TestFolder,
+        parentSuite: TestSuite,
+        discoveredTests: DiscoveredTests,
+        tests: Tests
+    ) {
         const suites = discoveredTests.parents
-            .filter(child => child.kind === 'suite' && child.parentid === parentSuite.nameToRun)
-            .map(suite => createTestSuite(parentSuite, rootFolder.resource, suite));
+            .filter(
+                child =>
+                    child.kind === "suite" &&
+                    child.parentid === parentSuite.nameToRun
+            )
+            .map(suite =>
+                createTestSuite(parentSuite, rootFolder.resource, suite)
+            );
 
         const functions = discoveredTests.tests
             .filter(func => func.parentid === parentSuite.nameToRun)
@@ -159,14 +256,32 @@ export class TestDiscoveredTestParser implements ITestDiscoveredTestParser {
 
         parentSuite.suites.push(...suites);
         parentSuite.functions.push(...functions);
-        tests.testSuites.push(...suites.map(suite => createFlattenedSuite(tests, suite)));
-        tests.testFunctions.push(...functions.map(func => createFlattenedFunction(tests, func)));
-        suites.forEach(item => this.buildChildren(rootFolder, item, discoveredTests, tests));
+        tests.testSuites.push(
+            ...suites.map(suite => createFlattenedSuite(tests, suite))
+        );
+        tests.testFunctions.push(
+            ...functions.map(func => createFlattenedFunction(tests, func))
+        );
+        suites.forEach(item =>
+            this.buildChildren(rootFolder, item, discoveredTests, tests)
+        );
 
         const parameterizedFunctions = discoveredTests.parents
-            .filter(child => child.kind === 'function' && child.parentid === parentSuite.nameToRun)
+            .filter(
+                child =>
+                    child.kind === "function" &&
+                    child.parentid === parentSuite.nameToRun
+            )
             .map(func => createParameterizedTestFunction(rootFolder, func));
-        parameterizedFunctions.forEach(func => this.processParameterizedFunction(rootFolder, parentSuite, func, discoveredTests, tests));
+        parameterizedFunctions.forEach(func =>
+            this.processParameterizedFunction(
+                rootFolder,
+                parentSuite,
+                func,
+                discoveredTests,
+                tests
+            )
+        );
     }
     /**
      * Process the children of a parameterized function.
@@ -181,79 +296,151 @@ export class TestDiscoveredTestParser implements ITestDiscoveredTestParser {
      * @returns
      * @memberof TestDiscoveredTestParser
      */
-    protected processParameterizedFunction(rootFolder: TestFolder, parent: TestFile | TestSuite, parentFunction: SubtestParent, discoveredTests: DiscoveredTests, tests: Tests) {
+    protected processParameterizedFunction(
+        rootFolder: TestFolder,
+        parent: TestFile | TestSuite,
+        parentFunction: SubtestParent,
+        discoveredTests: DiscoveredTests,
+        tests: Tests
+    ) {
         if (!parentFunction.asSuite) {
             return;
         }
         const functions = discoveredTests.tests
             .filter(func => func.parentid === parentFunction.nameToRun)
             .map(func => createTestFunction(rootFolder, func));
-        functions.map(func => func.subtestParent = parentFunction);
+        functions.map(func => (func.subtestParent = parentFunction));
         parentFunction.asSuite.functions.push(...functions);
         parent.functions.push(...functions);
-        tests.testFunctions.push(...functions.map(func => createFlattenedParameterizedFunction(tests, func, parent)));
+        tests.testFunctions.push(
+            ...functions.map(func =>
+                createFlattenedParameterizedFunction(tests, func, parent)
+            )
+        );
     }
 }
 
 function createTestFolder(root: TestFolder, item: TestContainer): TestFolder {
     return {
-        name: item.name, nameToRun: item.id, resource: root.resource, time: 0, folders: [], testFiles: []
+        name: item.name,
+        nameToRun: item.id,
+        resource: root.resource,
+        time: 0,
+        folders: [],
+        testFiles: []
     };
 }
 function createTestFile(root: TestFolder, item: TestContainer): TestFile {
-    const fullyQualifiedName = path.isAbsolute(item.id) ? item.id : path.resolve(root.name, item.id);
+    const fullyQualifiedName = path.isAbsolute(item.id)
+        ? item.id
+        : path.resolve(root.name, item.id);
     return {
-        fullPath: fullyQualifiedName, functions: [], name: item.name,
-        nameToRun: item.id, resource: root.resource, suites: [], time: 0, xmlName: createXmlName(item.id)
+        fullPath: fullyQualifiedName,
+        functions: [],
+        name: item.name,
+        nameToRun: item.id,
+        resource: root.resource,
+        suites: [],
+        time: 0,
+        xmlName: createXmlName(item.id)
     };
 }
-function createTestSuite(parentSuiteFile: TestFile | TestSuite, resource: Uri, item: TestContainer): TestSuite {
+function createTestSuite(
+    parentSuiteFile: TestFile | TestSuite,
+    resource: Uri,
+    item: TestContainer
+): TestSuite {
     const suite = {
-        functions: [], name: item.name, nameToRun: item.id, resource: resource,
-        suites: [], time: 0, xmlName: '', isInstance: false, isUnitTest: false
+        functions: [],
+        name: item.name,
+        nameToRun: item.id,
+        resource: resource,
+        suites: [],
+        time: 0,
+        xmlName: "",
+        isInstance: false,
+        isUnitTest: false
     };
     suite.xmlName = `${parentSuiteFile.xmlName}.${item.name}`;
     return suite;
 }
-function createFlattenedSuite(tests: Tests, suite: TestSuite): FlattenedTestSuite {
+function createFlattenedSuite(
+    tests: Tests,
+    suite: TestSuite
+): FlattenedTestSuite {
     const parentFile = getParentFile(tests, suite);
     return {
-        parentTestFile: parentFile, testSuite: suite, xmlClassName: parentFile.xmlName
+        parentTestFile: parentFile,
+        testSuite: suite,
+        xmlClassName: parentFile.xmlName
     };
 }
-function createFlattenedParameterizedFunction(tests: Tests, func: TestFunction, parent: TestFile | TestSuite): FlattenedTestFunction {
+function createFlattenedParameterizedFunction(
+    tests: Tests,
+    func: TestFunction,
+    parent: TestFile | TestSuite
+): FlattenedTestFunction {
     const type = getTestType(parent);
-    const parentFile = (type && type === TestType.testSuite) ? getParentFile(tests, func) : parent as TestFile;
-    const parentSuite = (type && type === TestType.testSuite) ? parent as TestSuite : undefined;
+    const parentFile =
+        type && type === TestType.testSuite
+            ? getParentFile(tests, func)
+            : (parent as TestFile);
+    const parentSuite =
+        type && type === TestType.testSuite ? (parent as TestSuite) : undefined;
     return {
-        parentTestFile: parentFile, parentTestSuite: parentSuite,
-        xmlClassName: parentSuite ? parentSuite.xmlName : parentFile.xmlName, testFunction: func
+        parentTestFile: parentFile,
+        parentTestSuite: parentSuite,
+        xmlClassName: parentSuite ? parentSuite.xmlName : parentFile.xmlName,
+        testFunction: func
     };
 }
-function createFlattenedFunction(tests: Tests, func: TestFunction): FlattenedTestFunction {
+function createFlattenedFunction(
+    tests: Tests,
+    func: TestFunction
+): FlattenedTestFunction {
     const parent = getParentFile(tests, func);
     const type = parent ? getTestType(parent) : undefined;
-    const parentFile = (type && type === TestType.testSuite) ? getParentFile(tests, func) : parent as TestFile;
+    const parentFile =
+        type && type === TestType.testSuite
+            ? getParentFile(tests, func)
+            : (parent as TestFile);
     const parentSuite = getParentSuite(tests, func);
     return {
-        parentTestFile: parentFile, parentTestSuite: parentSuite,
-        xmlClassName: parentSuite ? parentSuite.xmlName : parentFile.xmlName, testFunction: func
+        parentTestFile: parentFile,
+        parentTestSuite: parentSuite,
+        xmlClassName: parentSuite ? parentSuite.xmlName : parentFile.xmlName,
+        testFunction: func
     };
 }
-function createParameterizedTestFunction(root: TestFolder, item: TestContainer): SubtestParent {
+function createParameterizedTestFunction(
+    root: TestFolder,
+    item: TestContainer
+): SubtestParent {
     const suite: TestSuite = {
-        functions: [], isInstance: false, isUnitTest: false,
-        name: item.name, nameToRun: item.id, resource: root.resource,
-        time: 0, suites: [], xmlName: ''
+        functions: [],
+        isInstance: false,
+        isUnitTest: false,
+        name: item.name,
+        nameToRun: item.id,
+        resource: root.resource,
+        time: 0,
+        suites: [],
+        xmlName: ""
     };
     return {
-        asSuite: suite, name: item.name, nameToRun: item.id, time: 0
+        asSuite: suite,
+        name: item.name,
+        nameToRun: item.id,
+        time: 0
     };
 }
 function createTestFunction(root: TestFolder, item: TestItem): TestFunction {
     return {
-        name: item.name, nameToRun: item.id, resource: root.resource,
-        time: 0, file: item.source.substr(0, item.source.lastIndexOf(':'))
+        name: item.name,
+        nameToRun: item.id,
+        resource: root.resource,
+        time: 0,
+        file: item.source.substr(0, item.source.lastIndexOf(":"))
     };
 }
 /**
@@ -264,10 +451,17 @@ function createTestFunction(root: TestFolder, item: TestItem): TestFunction {
  * @returns
  */
 function createXmlName(fileId: string) {
-    let name = path.join(path.dirname(fileId), path.basename(fileId, path.extname(fileId)));
-    name = name.replace(/\\/g, '.').replace(/\//g, '.');
+    let name = path.join(
+        path.dirname(fileId),
+        path.basename(fileId, path.extname(fileId))
+    );
+    name = name.replace(/\\/g, ".").replace(/\//g, ".");
     // Remove leading . & / & \
-    while (name.startsWith('.') || name.startsWith('/') || name.startsWith('\\')) {
+    while (
+        name.startsWith(".") ||
+        name.startsWith("/") ||
+        name.startsWith("\\")
+    ) {
         name = name.substring(1);
     }
     return name;

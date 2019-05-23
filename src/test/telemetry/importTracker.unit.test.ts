@@ -1,41 +1,72 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
+"use strict";
 //tslint:disable:max-func-body-length match-default-export-name no-any no-multiline-string no-trailing-whitespace
-import { expect } from 'chai';
-import rewiremock from 'rewiremock';
-import * as TypeMoq from 'typemoq';
-import { EventEmitter, TextDocument } from 'vscode';
+import { expect } from "chai";
+import rewiremock from "rewiremock";
+import * as TypeMoq from "typemoq";
+import { EventEmitter, TextDocument } from "vscode";
 
-import { IDocumentManager } from '../../client/common/application/types';
-import { EventName } from '../../client/telemetry/constants';
-import { ImportTracker } from '../../client/telemetry/importTracker';
-import { createDocument } from '../datascience/editor-integration/helpers';
+import { IDocumentManager } from "../../client/common/application/types";
+import { EventName } from "../../client/telemetry/constants";
+import { ImportTracker } from "../../client/telemetry/importTracker";
+import { createDocument } from "../datascience/editor-integration/helpers";
 
-suite('Import Tracker', () => {
+suite("Import Tracker", () => {
     const oldValueOfVSC_PYTHON_UNIT_TEST = process.env.VSC_PYTHON_UNIT_TEST;
     const oldValueOfVSC_PYTHON_CI_TEST = process.env.VSC_PYTHON_CI_TEST;
     // tslint:disable-next-line:no-require-imports
-    const hashJs = require('hash.js');
+    const hashJs = require("hash.js");
     let importTracker: ImportTracker;
     let documentManager: TypeMoq.IMock<IDocumentManager>;
     let openedEventEmitter: EventEmitter<TextDocument>;
     let savedEventEmitter: EventEmitter<TextDocument>;
-    const pandasHash = hashJs.sha256().update('pandas').digest('hex');
-    const elephasHash = hashJs.sha256().update('elephas').digest('hex');
-    const kerasHash = hashJs.sha256().update('keras').digest('hex');
-    const pysparkHash = hashJs.sha256().update('pyspark').digest('hex');
-    const sparkdlHash = hashJs.sha256().update('sparkdl').digest('hex');
-    const numpyHash = hashJs.sha256().update('numpy').digest('hex');
-    const scipyHash = hashJs.sha256().update('scipy').digest('hex');
-    const sklearnHash = hashJs.sha256().update('sklearn').digest('hex');
-    const randomHash = hashJs.sha256().update('random').digest('hex');
+    const pandasHash = hashJs
+        .sha256()
+        .update("pandas")
+        .digest("hex");
+    const elephasHash = hashJs
+        .sha256()
+        .update("elephas")
+        .digest("hex");
+    const kerasHash = hashJs
+        .sha256()
+        .update("keras")
+        .digest("hex");
+    const pysparkHash = hashJs
+        .sha256()
+        .update("pyspark")
+        .digest("hex");
+    const sparkdlHash = hashJs
+        .sha256()
+        .update("sparkdl")
+        .digest("hex");
+    const numpyHash = hashJs
+        .sha256()
+        .update("numpy")
+        .digest("hex");
+    const scipyHash = hashJs
+        .sha256()
+        .update("scipy")
+        .digest("hex");
+    const sklearnHash = hashJs
+        .sha256()
+        .update("sklearn")
+        .digest("hex");
+    const randomHash = hashJs
+        .sha256()
+        .update("random")
+        .digest("hex");
 
     class Reporter {
         public static eventNames: string[] = [];
         public static properties: Record<string, string>[] = [];
         public static measures: {}[] = [];
-        public sendTelemetryEvent(eventName: string, properties?: {}, measures?: {}) {
+        public sendTelemetryEvent(
+            eventName: string,
+            properties?: {},
+            measures?: {}
+        ) {
             Reporter.eventNames.push(eventName);
             Reporter.properties.push(properties!);
             Reporter.measures.push(measures!);
@@ -50,11 +81,15 @@ suite('Import Tracker', () => {
         savedEventEmitter = new EventEmitter<TextDocument>();
 
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
-        documentManager.setup(a => a.onDidOpenTextDocument).returns(() => openedEventEmitter.event);
-        documentManager.setup(a => a.onDidSaveTextDocument).returns(() => savedEventEmitter.event);
+        documentManager
+            .setup(a => a.onDidOpenTextDocument)
+            .returns(() => openedEventEmitter.event);
+        documentManager
+            .setup(a => a.onDidSaveTextDocument)
+            .returns(() => savedEventEmitter.event);
 
         rewiremock.enable();
-        rewiremock('vscode-extension-telemetry').with({ default: Reporter });
+        rewiremock("vscode-extension-telemetry").with({ default: Reporter });
 
         importTracker = new ImportTracker(documentManager.object);
     });
@@ -65,38 +100,55 @@ suite('Import Tracker', () => {
         Reporter.eventNames = [];
         Reporter.measures = [];
         rewiremock.disable();
-
     });
 
     function emitDocEvent(code: string, ev: EventEmitter<TextDocument>) {
-        const textDoc = createDocument(code, 'foo.py', 1, TypeMoq.Times.atMost(100), true);
+        const textDoc = createDocument(
+            code,
+            "foo.py",
+            1,
+            TypeMoq.Times.atMost(100),
+            true
+        );
         ev.fire(textDoc.object);
     }
 
-    test('Open document', () => {
-        emitDocEvent('import pandas\r\n', openedEventEmitter);
+    test("Open document", () => {
+        emitDocEvent("import pandas\r\n", openedEventEmitter);
 
-        expect(Reporter.eventNames).to.deep.equal([EventName.HASHED_PACKAGE_NAME]);
-        expect(Reporter.properties).to.deep.equal([{hashedName: pandasHash}]);
+        expect(Reporter.eventNames).to.deep.equal([
+            EventName.HASHED_PACKAGE_NAME
+        ]);
+        expect(Reporter.properties).to.deep.equal([{ hashedName: pandasHash }]);
     });
 
-    test('Already opened documents', async () => {
-        const doc = createDocument('import pandas\r\n', 'foo.py', 1, TypeMoq.Times.atMost(100), true);
+    test("Already opened documents", async () => {
+        const doc = createDocument(
+            "import pandas\r\n",
+            "foo.py",
+            1,
+            TypeMoq.Times.atMost(100),
+            true
+        );
         documentManager.setup(d => d.textDocuments).returns(() => [doc.object]);
         await importTracker.activate();
 
-        expect(Reporter.eventNames).to.deep.equal([EventName.HASHED_PACKAGE_NAME]);
-        expect(Reporter.properties).to.deep.equal([{hashedName: pandasHash}]);
+        expect(Reporter.eventNames).to.deep.equal([
+            EventName.HASHED_PACKAGE_NAME
+        ]);
+        expect(Reporter.properties).to.deep.equal([{ hashedName: pandasHash }]);
     });
 
-    test('Save document', () => {
-        emitDocEvent('import pandas\r\n', savedEventEmitter);
+    test("Save document", () => {
+        emitDocEvent("import pandas\r\n", savedEventEmitter);
 
-        expect(Reporter.eventNames).to.deep.equal([EventName.HASHED_PACKAGE_NAME]);
-        expect(Reporter.properties).to.deep.equal([{hashedName: pandasHash}]);
+        expect(Reporter.eventNames).to.deep.equal([
+            EventName.HASHED_PACKAGE_NAME
+        ]);
+        expect(Reporter.properties).to.deep.equal([{ hashedName: pandasHash }]);
     });
 
-    test('from <pkg>._ import _, _', () => {
+    test("from <pkg>._ import _, _", () => {
         const elephas = `
         from elephas.java import java_classes, adapter
         from keras.models import Sequential
@@ -120,10 +172,13 @@ suite('Import Tracker', () => {
         model.set_weights(weights)`;
 
         emitDocEvent(elephas, savedEventEmitter);
-        expect(Reporter.properties).to.deep.equal([{hashedName: elephasHash}, {hashedName: kerasHash}]);
+        expect(Reporter.properties).to.deep.equal([
+            { hashedName: elephasHash },
+            { hashedName: kerasHash }
+        ]);
     });
 
-    test('from <pkg>._ import _', () => {
+    test("from <pkg>._ import _", () => {
         const pyspark = `from pyspark.ml.classification import LogisticRegression
         from pyspark.ml.evaluation import MulticlassClassificationEvaluator
         from pyspark.ml import Pipeline
@@ -142,10 +197,13 @@ suite('Import Tracker', () => {
         print("Training set accuracy = " + str(evaluator.evaluate(predictionAndLabels)))`;
 
         emitDocEvent(pyspark, savedEventEmitter);
-        expect(Reporter.properties).to.deep.equal([{hashedName: pysparkHash}, {hashedName: sparkdlHash}]);
+        expect(Reporter.properties).to.deep.equal([
+            { hashedName: pysparkHash },
+            { hashedName: sparkdlHash }
+        ]);
     });
 
-    test('import <pkg> as _', () => {
+    test("import <pkg> as _", () => {
         const code = `import pandas as pd
 import numpy as np
 import random as rnd
@@ -158,10 +216,14 @@ def simplify_ages(df):
     df.Age = categories
     return df`;
         emitDocEvent(code, savedEventEmitter);
-        expect(Reporter.properties).to.deep.equal([{hashedName: pandasHash}, {hashedName: numpyHash}, {hashedName: randomHash}]);
+        expect(Reporter.properties).to.deep.equal([
+            { hashedName: pandasHash },
+            { hashedName: numpyHash },
+            { hashedName: randomHash }
+        ]);
     });
 
-    test('from <pkg> import _', () => {
+    test("from <pkg> import _", () => {
         const code = `from scipy import special
 def drumhead_height(n, k, distance, angle, t):
    kth_zero = special.jn_zeros(n, k)[-1]
@@ -172,10 +234,10 @@ x = np.array([r * np.cos(theta) for r in radius])
 y = np.array([r * np.sin(theta) for r in radius])
 z = np.array([drumhead_height(1, 1, r, theta, 0.5) for r in radius])`;
         emitDocEvent(code, savedEventEmitter);
-        expect(Reporter.properties).to.deep.equal([{hashedName: scipyHash}]);
+        expect(Reporter.properties).to.deep.equal([{ hashedName: scipyHash }]);
     });
 
-    test('Import from within a function', () => {
+    test("Import from within a function", () => {
         const code = `
 def drumhead_height(n, k, distance, angle, t):
    import sklearn as sk
@@ -186,10 +248,12 @@ x = np.array([r * np.cos(theta) for r in radius])
 y = np.array([r * np.sin(theta) for r in radius])
 z = np.array([drumhead_height(1, 1, r, theta, 0.5) for r in radius])`;
         emitDocEvent(code, savedEventEmitter);
-        expect(Reporter.properties).to.deep.equal([{hashedName: sklearnHash}]);
+        expect(Reporter.properties).to.deep.equal([
+            { hashedName: sklearnHash }
+        ]);
     });
 
-    test('import <pkg1>, <pkg2>', () => {
+    test("import <pkg1>, <pkg2>", () => {
         const code = `
 def drumhead_height(n, k, distance, angle, t):
    import sklearn, pandas
@@ -200,19 +264,22 @@ x = np.array([r * np.cos(theta) for r in radius])
 y = np.array([r * np.sin(theta) for r in radius])
 z = np.array([drumhead_height(1, 1, r, theta, 0.5) for r in radius])`;
         emitDocEvent(code, savedEventEmitter);
-        expect(Reporter.properties).to.deep.equal([{hashedName: sklearnHash}, {hashedName: pandasHash}]);
+        expect(Reporter.properties).to.deep.equal([
+            { hashedName: sklearnHash },
+            { hashedName: pandasHash }
+        ]);
     });
 
-    test('Do not send the same package twice', () => {
+    test("Do not send the same package twice", () => {
         const code = `
 import pandas
 import pandas`;
         emitDocEvent(code, savedEventEmitter);
-        expect(Reporter.properties).to.deep.equal([{hashedName: pandasHash}]);
+        expect(Reporter.properties).to.deep.equal([{ hashedName: pandasHash }]);
     });
 
-    test('Ignore relative imports', () => {
-        const code = 'from .pandas import not_real';
+    test("Ignore relative imports", () => {
+        const code = "from .pandas import not_real";
         emitDocEvent(code, savedEventEmitter);
         expect(Reporter.properties).to.deep.equal([]);
     });

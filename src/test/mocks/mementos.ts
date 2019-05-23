@@ -1,5 +1,5 @@
-import { injectable } from 'inversify';
-import { Memento } from 'vscode';
+import { injectable } from "inversify";
+import { Memento } from "vscode";
 
 @injectable()
 export class MockMemento implements Memento {
@@ -10,7 +10,7 @@ export class MockMemento implements Memento {
     public get<T>(key: string, defaultValue?: T): T {
         const exists = this.map.has(key);
         // tslint:disable-next-line:no-any
-        return exists ? this.map.get(key) : defaultValue! as any;
+        return exists ? this.map.get(key) : (defaultValue! as any);
     }
     // tslint:disable-next-line:no-any
     public update(key: string, value: any): Thenable<void> {

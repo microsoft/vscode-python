@@ -1,25 +1,25 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { DebugConfiguration } from 'vscode';
-import { DebugProtocol } from 'vscode-debugprotocol/lib/debugProtocol';
-import { DebuggerTypeName } from './constants';
+import { DebugConfiguration } from "vscode";
+import { DebugProtocol } from "vscode-debugprotocol/lib/debugProtocol";
+import { DebuggerTypeName } from "./constants";
 
 export enum DebugOptions {
-    RedirectOutput = 'RedirectOutput',
-    Django = 'Django',
-    Jinja = 'Jinja',
-    DebugStdLib = 'DebugStdLib',
-    Sudo = 'Sudo',
-    Pyramid = 'Pyramid',
-    FixFilePathCase = 'FixFilePathCase',
-    WindowsClient = 'WindowsClient',
-    UnixClient = 'UnixClient',
-    StopOnEntry = 'StopOnEntry',
-    ShowReturnValue = 'ShowReturnValue',
-    SubProcess = 'Multiprocess'
+    RedirectOutput = "RedirectOutput",
+    Django = "Django",
+    Jinja = "Jinja",
+    DebugStdLib = "DebugStdLib",
+    Sudo = "Sudo",
+    Pyramid = "Pyramid",
+    FixFilePathCase = "FixFilePathCase",
+    WindowsClient = "WindowsClient",
+    UnixClient = "UnixClient",
+    StopOnEntry = "StopOnEntry",
+    ShowReturnValue = "ShowReturnValue",
+    SubProcess = "Multiprocess"
 }
 
 interface ICommonDebugArguments {
@@ -64,16 +64,27 @@ export interface IKnownLaunchRequestArguments extends ICommonDebugArguments {
     console?: ConsoleType;
 }
 // tslint:disable-next-line:interface-name
-export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments, IKnownLaunchRequestArguments, DebugConfiguration {
+export interface LaunchRequestArguments
+    extends DebugProtocol.LaunchRequestArguments,
+        IKnownLaunchRequestArguments,
+        DebugConfiguration {
     type: typeof DebuggerTypeName;
 }
 
 // tslint:disable-next-line:interface-name
-export interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments, IKnownAttachDebugArguments, DebugConfiguration {
+export interface AttachRequestArguments
+    extends DebugProtocol.AttachRequestArguments,
+        IKnownAttachDebugArguments,
+        DebugConfiguration {
     type: typeof DebuggerTypeName;
 }
 
 // tslint:disable-next-line:interface-name
-export interface DebugConfigurationArguments extends LaunchRequestArguments, AttachRequestArguments { }
+export interface DebugConfigurationArguments
+    extends LaunchRequestArguments,
+        AttachRequestArguments {}
 
-export type ConsoleType = 'internalConsole' | 'integratedTerminal' | 'externalTerminal';
+export type ConsoleType =
+    | "internalConsole"
+    | "integratedTerminal"
+    | "externalTerminal";

@@ -1,17 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { expect } from 'chai';
-import * as path from 'path';
-import * as TypeMoq from 'typemoq';
+import { expect } from "chai";
+import * as path from "path";
+import * as TypeMoq from "typemoq";
 // tslint:disable-next-line:no-require-imports
-import untildify = require('untildify');
-import { WorkspaceConfiguration } from 'vscode';
-import {
-    PythonSettings
-} from '../../../client/common/configSettings';
+import untildify = require("untildify");
+import { WorkspaceConfiguration } from "vscode";
+import { PythonSettings } from "../../../client/common/configSettings";
 import {
     IAnalysisSettings,
     IAutoCompleteSettings,
@@ -22,94 +20,136 @@ import {
     ITerminalSettings,
     ITestingSettings,
     IWorkspaceSymbolSettings
-} from '../../../client/common/types';
-import { noop } from '../../../client/common/utils/misc';
-import { MockAutoSelectionService } from '../../mocks/autoSelector';
+} from "../../../client/common/types";
+import { noop } from "../../../client/common/utils/misc";
+import { MockAutoSelectionService } from "../../mocks/autoSelector";
 
 // tslint:disable-next-line:max-func-body-length
-suite('Python Settings', () => {
+suite("Python Settings", () => {
     class CustomPythonSettings extends PythonSettings {
         // tslint:disable-next-line:no-unnecessary-override
         public update(pythonSettings: WorkspaceConfiguration) {
             return super.update(pythonSettings);
         }
-        protected initialize() { noop(); }
+        protected initialize() {
+            noop();
+        }
     }
     let config: TypeMoq.IMock<WorkspaceConfiguration>;
     let expected: CustomPythonSettings;
     let settings: CustomPythonSettings;
     setup(() => {
-        config = TypeMoq.Mock.ofType<WorkspaceConfiguration>(undefined, TypeMoq.MockBehavior.Strict);
-        expected = new CustomPythonSettings(undefined, new MockAutoSelectionService());
-        settings = new CustomPythonSettings(undefined, new MockAutoSelectionService());
+        config = TypeMoq.Mock.ofType<WorkspaceConfiguration>(
+            undefined,
+            TypeMoq.MockBehavior.Strict
+        );
+        expected = new CustomPythonSettings(
+            undefined,
+            new MockAutoSelectionService()
+        );
+        settings = new CustomPythonSettings(
+            undefined,
+            new MockAutoSelectionService()
+        );
     });
 
     function initializeConfig(sourceSettings: PythonSettings) {
         // string settings
-        for (const name of ['pythonPath', 'venvPath', 'condaPath', 'pipenvPath', 'envFile', 'poetryPath']) {
-            config.setup(c => c.get<string>(name))
+        for (const name of [
+            "pythonPath",
+            "venvPath",
+            "condaPath",
+            "pipenvPath",
+            "envFile",
+            "poetryPath"
+        ]) {
+            config
+                .setup(c => c.get<string>(name))
                 // tslint:disable-next-line:no-any
                 .returns(() => (sourceSettings as any)[name]);
         }
         if (sourceSettings.jediEnabled) {
-            config.setup(c => c.get<string>('jediPath'))
+            config
+                .setup(c => c.get<string>("jediPath"))
                 .returns(() => sourceSettings.jediPath);
         }
-        for (const name of ['venvFolders']) {
-            config.setup(c => c.get<string[]>(name))
+        for (const name of ["venvFolders"]) {
+            config
+                .setup(c => c.get<string[]>(name))
                 // tslint:disable-next-line:no-any
                 .returns(() => (sourceSettings as any)[name]);
         }
 
         // boolean settings
-        for (const name of ['downloadLanguageServer', 'jediEnabled', 'autoUpdateLanguageServer']) {
-            config.setup(c => c.get<boolean>(name, true))
+        for (const name of [
+            "downloadLanguageServer",
+            "jediEnabled",
+            "autoUpdateLanguageServer"
+        ]) {
+            config
+                .setup(c => c.get<boolean>(name, true))
                 // tslint:disable-next-line:no-any
                 .returns(() => (sourceSettings as any)[name]);
         }
-        for (const name of ['disableInstallationCheck', 'globalModuleInstallation']) {
-            config.setup(c => c.get<boolean>(name))
+        for (const name of [
+            "disableInstallationCheck",
+            "globalModuleInstallation"
+        ]) {
+            config
+                .setup(c => c.get<boolean>(name))
                 // tslint:disable-next-line:no-any
                 .returns(() => (sourceSettings as any)[name]);
         }
 
         // number settings
         if (sourceSettings.jediEnabled) {
-            config.setup(c => c.get<number>('jediMemoryLimit'))
+            config
+                .setup(c => c.get<number>("jediMemoryLimit"))
                 .returns(() => sourceSettings.jediMemoryLimit);
         }
 
         // "any" settings
         // tslint:disable-next-line:no-any
-        config.setup(c => c.get<any[]>('devOptions'))
+        config
+            .setup(c => c.get<any[]>("devOptions"))
             .returns(() => sourceSettings.devOptions);
 
         // complex settings
-        config.setup(c => c.get<ILintingSettings>('linting'))
+        config
+            .setup(c => c.get<ILintingSettings>("linting"))
             .returns(() => sourceSettings.linting);
-        config.setup(c => c.get<IAnalysisSettings>('analysis'))
+        config
+            .setup(c => c.get<IAnalysisSettings>("analysis"))
             .returns(() => sourceSettings.analysis);
-        config.setup(c => c.get<ISortImportSettings>('sortImports'))
+        config
+            .setup(c => c.get<ISortImportSettings>("sortImports"))
             .returns(() => sourceSettings.sortImports);
-        config.setup(c => c.get<IFormattingSettings>('formatting'))
+        config
+            .setup(c => c.get<IFormattingSettings>("formatting"))
             .returns(() => sourceSettings.formatting);
-        config.setup(c => c.get<IAutoCompleteSettings>('autoComplete'))
+        config
+            .setup(c => c.get<IAutoCompleteSettings>("autoComplete"))
             .returns(() => sourceSettings.autoComplete);
-        config.setup(c => c.get<IWorkspaceSymbolSettings>('workspaceSymbols'))
+        config
+            .setup(c => c.get<IWorkspaceSymbolSettings>("workspaceSymbols"))
             .returns(() => sourceSettings.workspaceSymbols);
-        config.setup(c => c.get<ITestingSettings>('testing'))
+        config
+            .setup(c => c.get<ITestingSettings>("testing"))
             .returns(() => sourceSettings.testing);
-        config.setup(c => c.get<ITerminalSettings>('terminal'))
+        config
+            .setup(c => c.get<ITerminalSettings>("terminal"))
             .returns(() => sourceSettings.terminal);
-        config.setup(c => c.get<IDataScienceSettings>('dataScience'))
+        config
+            .setup(c => c.get<IDataScienceSettings>("dataScience"))
             .returns(() => sourceSettings.datascience);
     }
 
-    test('condaPath updated', () => {
-        expected.pythonPath = 'python3';
-        expected.condaPath = 'spam';
+    test("condaPath updated", () => {
+        expected.pythonPath = "python3";
+        expected.condaPath = "spam";
         initializeConfig(expected);
-        config.setup(c => c.get<string>('condaPath'))
+        config
+            .setup(c => c.get<string>("condaPath"))
             .returns(() => expected.condaPath)
             .verifiable(TypeMoq.Times.once());
 
@@ -119,11 +159,12 @@ suite('Python Settings', () => {
         config.verifyAll();
     });
 
-    test('condaPath (relative to home) updated', () => {
-        expected.pythonPath = 'python3';
-        expected.condaPath = path.join('~', 'anaconda3', 'bin', 'conda');
+    test("condaPath (relative to home) updated", () => {
+        expected.pythonPath = "python3";
+        expected.condaPath = path.join("~", "anaconda3", "bin", "conda");
         initializeConfig(expected);
-        config.setup(c => c.get<string>('condaPath'))
+        config
+            .setup(c => c.get<string>("condaPath"))
             .returns(() => expected.condaPath)
             .verifiable(TypeMoq.Times.once());
 
@@ -133,18 +174,22 @@ suite('Python Settings', () => {
         config.verifyAll();
     });
 
-    test('Formatter Paths and args', () => {
-        expected.pythonPath = 'python3';
+    test("Formatter Paths and args", () => {
+        expected.pythonPath = "python3";
         // tslint:disable-next-line:no-any
         expected.formatting = {
-            autopep8Args: ['1', '2'], autopep8Path: 'one',
-            blackArgs: ['3', '4'], blackPath: 'two',
-            yapfArgs: ['5', '6'], yapfPath: 'three',
-            provider: ''
+            autopep8Args: ["1", "2"],
+            autopep8Path: "one",
+            blackArgs: ["3", "4"],
+            blackPath: "two",
+            yapfArgs: ["5", "6"],
+            yapfPath: "three",
+            provider: ""
         };
-        expected.formatting.blackPath = 'spam';
+        expected.formatting.blackPath = "spam";
         initializeConfig(expected);
-        config.setup(c => c.get<IFormattingSettings>('formatting'))
+        config
+            .setup(c => c.get<IFormattingSettings>("formatting"))
             .returns(() => expected.formatting)
             .verifiable(TypeMoq.Times.once());
 
@@ -152,29 +197,35 @@ suite('Python Settings', () => {
 
         for (const key of Object.keys(expected.formatting)) {
             // tslint:disable-next-line:no-any
-            expect((settings.formatting as any)[key]).to.be.deep.equal((expected.formatting as any)[key]);
+            expect((settings.formatting as any)[key]).to.be.deep.equal(
+                (expected.formatting as any)[key]
+            );
         }
         config.verifyAll();
     });
-    test('Formatter Paths (paths relative to home)', () => {
-        expected.pythonPath = 'python3';
+    test("Formatter Paths (paths relative to home)", () => {
+        expected.pythonPath = "python3";
         // tslint:disable-next-line:no-any
         expected.formatting = {
-            autopep8Args: [], autopep8Path: path.join('~', 'one'),
-            blackArgs: [], blackPath: path.join('~', 'two'),
-            yapfArgs: [], yapfPath: path.join('~', 'three'),
-            provider: ''
+            autopep8Args: [],
+            autopep8Path: path.join("~", "one"),
+            blackArgs: [],
+            blackPath: path.join("~", "two"),
+            yapfArgs: [],
+            yapfPath: path.join("~", "three"),
+            provider: ""
         };
-        expected.formatting.blackPath = 'spam';
+        expected.formatting.blackPath = "spam";
         initializeConfig(expected);
-        config.setup(c => c.get<IFormattingSettings>('formatting'))
+        config
+            .setup(c => c.get<IFormattingSettings>("formatting"))
             .returns(() => expected.formatting)
             .verifiable(TypeMoq.Times.once());
 
         settings.update(config.object);
 
         for (const key of Object.keys(expected.formatting)) {
-            if (!key.endsWith('path')) {
+            if (!key.endsWith("path")) {
                 continue;
             }
             // tslint:disable-next-line:no-any

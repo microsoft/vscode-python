@@ -3,13 +3,15 @@
 This document is intended to help troubleshoot problems in the Python Interactive Window.
 
 ---
+
 ## Jupyter Not Installed
-This error can happen when you 
 
-* Don't have Jupyter installed
-* Have picked the wrong Python environment (one that doesn't have Jupyter installed).
+This error can happen when you
 
-### The first step is to verify you are running the Python environment you want. 
+-   Don't have Jupyter installed
+-   Have picked the wrong Python environment (one that doesn't have Jupyter installed).
+
+### The first step is to verify you are running the Python environment you want.
 
 The python you're using is picked with the selection dropdown on the bottom left of the VS Code window:
 
@@ -24,6 +26,7 @@ import notebook
 jupyter_core.version_info
 notebook.version_info
 ```
+
 If any of these commands fail, the python you have selected doesn't support launching jupyter notebooks.
 
 Failures would look something like:
@@ -46,9 +49,10 @@ You can do this in a number of different ways:
 
 #### Anaconda
 
-Anaconda is a popular Python distribution. It makes it super easy to get Jupyter up and running. 
+Anaconda is a popular Python distribution. It makes it super easy to get Jupyter up and running.
 
 If you're already using Anaconda, follow these steps to get Jupyter
+
 1. Start anaconda environment
 1. Run 'conda install jupyter'
 1. Restart VS Code
@@ -57,10 +61,9 @@ If you're already using Anaconda, follow these steps to get Jupyter
 Otherwise you can install Anaconda and pick the default options
 https://www.anaconda.com/download
 
-
 #### Pip
 
-You can also install Jupyter using pip. 
+You can also install Jupyter using pip.
 
 1. python -m pip install --upgrade pip
 1. python -m pip install jupyter

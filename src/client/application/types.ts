@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { Resource } from '../common/types';
+import { Resource } from "../common/types";
 
-export const IApplicationDiagnostics = Symbol('IApplicationDiagnostics');
+export const IApplicationDiagnostics = Symbol("IApplicationDiagnostics");
 
 export interface IApplicationDiagnostics {
     /**

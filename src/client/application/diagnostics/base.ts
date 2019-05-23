@@ -1,28 +1,38 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { injectable, unmanaged } from 'inversify';
-import { DiagnosticSeverity } from 'vscode';
-import { IWorkspaceService } from '../../common/application/types';
-import { IDisposable, IDisposableRegistry, Resource } from '../../common/types';
-import { IServiceContainer } from '../../ioc/types';
-import { sendTelemetryEvent } from '../../telemetry';
-import { EventName } from '../../telemetry/constants';
-import { DiagnosticCodes } from './constants';
-import { DiagnosticScope, IDiagnostic, IDiagnosticFilterService, IDiagnosticsService } from './types';
+import { injectable, unmanaged } from "inversify";
+import { DiagnosticSeverity } from "vscode";
+import { IWorkspaceService } from "../../common/application/types";
+import { IDisposable, IDisposableRegistry, Resource } from "../../common/types";
+import { IServiceContainer } from "../../ioc/types";
+import { sendTelemetryEvent } from "../../telemetry";
+import { EventName } from "../../telemetry/constants";
+import { DiagnosticCodes } from "./constants";
+import {
+    DiagnosticScope,
+    IDiagnostic,
+    IDiagnosticFilterService,
+    IDiagnosticsService
+} from "./types";
 
 @injectable()
 export abstract class BaseDiagnostic implements IDiagnostic {
-    constructor(public readonly code: DiagnosticCodes, public readonly message: string,
-        public readonly severity: DiagnosticSeverity, public readonly scope: DiagnosticScope,
+    constructor(
+        public readonly code: DiagnosticCodes,
+        public readonly message: string,
+        public readonly severity: DiagnosticSeverity,
+        public readonly scope: DiagnosticScope,
         public readonly resource: Resource,
-        public readonly invokeHandler: 'always' | 'default' = 'default') { }
+        public readonly invokeHandler: "always" | "default" = "default"
+    ) {}
 }
 
 @injectable()
-export abstract class BaseDiagnosticsService implements IDiagnosticsService, IDisposable {
+export abstract class BaseDiagnosticsService
+    implements IDiagnosticsService, IDisposable {
     protected static handledDiagnosticCodeKeys: string[] = [];
     protected readonly filterService: IDiagnosticFilterService;
     constructor(
@@ -31,7 +41,9 @@ export abstract class BaseDiagnosticsService implements IDiagnosticsService, IDi
         @unmanaged() disposableRegistry: IDisposableRegistry,
         @unmanaged() public readonly runInBackground: Boolean = false
     ) {
-        this.filterService = serviceContainer.get<IDiagnosticFilterService>(IDiagnosticFilterService);
+        this.filterService = serviceContainer.get<IDiagnosticFilterService>(
+            IDiagnosticFilterService
+        );
         disposableRegistry.push(this);
     }
     public abstract diagnose(resource: Resource): Promise<IDiagnostic[]>;
@@ -43,11 +55,15 @@ export abstract class BaseDiagnosticsService implements IDiagnosticsService, IDi
             return;
         }
         const diagnosticsToHandle = diagnostics.filter(item => {
-            if (item.invokeHandler && item.invokeHandler === 'always') {
+            if (item.invokeHandler && item.invokeHandler === "always") {
                 return true;
             }
             const key = this.getDiagnosticsKey(item);
-            if (BaseDiagnosticsService.handledDiagnosticCodeKeys.indexOf(key) !== -1) {
+            if (
+                BaseDiagnosticsService.handledDiagnosticCodeKeys.indexOf(
+                    key
+                ) !== -1
+            ) {
                 return false;
             }
             BaseDiagnosticsService.handledDiagnosticCodeKeys.push(key);
@@ -56,8 +72,14 @@ export abstract class BaseDiagnosticsService implements IDiagnosticsService, IDi
         await this.onHandle(diagnosticsToHandle);
     }
     public async canHandle(diagnostic: IDiagnostic): Promise<boolean> {
-        sendTelemetryEvent(EventName.DIAGNOSTICS_MESSAGE, undefined, { code: diagnostic.code });
-        return this.supportedDiagnosticCodes.filter(item => item === diagnostic.code).length > 0;
+        sendTelemetryEvent(EventName.DIAGNOSTICS_MESSAGE, undefined, {
+            code: diagnostic.code
+        });
+        return (
+            this.supportedDiagnosticCodes.filter(
+                item => item === diagnostic.code
+            ).length > 0
+        );
     }
     protected abstract onHandle(diagnostics: IDiagnostic[]): Promise<void>;
     /**
@@ -73,8 +95,14 @@ export abstract class BaseDiagnosticsService implements IDiagnosticsService, IDi
         if (diagnostic.scope === DiagnosticScope.Global) {
             return diagnostic.code;
         }
-        const workspace = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-        const workspaceFolder = diagnostic.resource ? workspace.getWorkspaceFolder(diagnostic.resource) : undefined;
-        return `${diagnostic.code}dbe75733-0407-4124-a1b2-ca769dc30523${workspaceFolder ? workspaceFolder.uri.fsPath : ''}`;
+        const workspace = this.serviceContainer.get<IWorkspaceService>(
+            IWorkspaceService
+        );
+        const workspaceFolder = diagnostic.resource
+            ? workspace.getWorkspaceFolder(diagnostic.resource)
+            : undefined;
+        return `${diagnostic.code}dbe75733-0407-4124-a1b2-ca769dc30523${
+            workspaceFolder ? workspaceFolder.uri.fsPath : ""
+        }`;
     }
 }

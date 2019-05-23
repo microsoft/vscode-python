@@ -1,21 +1,21 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { DiagnosticSeverity, Uri } from 'vscode';
-import { Resource } from '../../common/types';
-import { PythonPathSource } from '../../debugger/extension/types';
-import { DiagnosticCodes } from './constants';
+import { DiagnosticSeverity, Uri } from "vscode";
+import { Resource } from "../../common/types";
+import { PythonPathSource } from "../../debugger/extension/types";
+import { DiagnosticCodes } from "./constants";
 
 export enum DiagnosticScope {
-    Global = 'Global',
-    WorkspaceFolder = 'WorkspaceFolder'
+    Global = "Global",
+    WorkspaceFolder = "WorkspaceFolder"
 }
 
 export enum DiagnosticIgnoreScope {
-    always = 'always',
-    session = 'session'
+    always = "always",
+    session = "session"
 }
 
 export interface IDiagnostic {
@@ -24,10 +24,10 @@ export interface IDiagnostic {
     readonly severity: DiagnosticSeverity;
     readonly scope: DiagnosticScope;
     readonly resource: Resource;
-    readonly invokeHandler: 'always' | 'default';
+    readonly invokeHandler: "always" | "default";
 }
 
-export const IDiagnosticsService = Symbol('IDiagnosticsService');
+export const IDiagnosticsService = Symbol("IDiagnosticsService");
 
 export interface IDiagnosticsService {
     readonly runInBackground: Boolean;
@@ -36,14 +36,14 @@ export interface IDiagnosticsService {
     handle(diagnostics: IDiagnostic[]): Promise<void>;
 }
 
-export const IDiagnosticFilterService = Symbol('IDiagnosticFilterService');
+export const IDiagnosticFilterService = Symbol("IDiagnosticFilterService");
 
 export interface IDiagnosticFilterService {
     shouldIgnoreDiagnostic(code: string): Promise<boolean>;
     ignoreDiagnostic(code: string, scope: DiagnosticScope): Promise<void>;
 }
 
-export const IDiagnosticHandlerService = Symbol('IDiagnosticHandlerService');
+export const IDiagnosticHandlerService = Symbol("IDiagnosticHandlerService");
 
 export interface IDiagnosticHandlerService<T> {
     handle(diagnostic: IDiagnostic, options?: T): Promise<void>;
@@ -54,12 +54,19 @@ export interface IDiagnosticCommand {
     invoke(): Promise<void>;
 }
 
-export const IInvalidPythonPathInDebuggerService = Symbol('IInvalidPythonPathInDebuggerService');
+export const IInvalidPythonPathInDebuggerService = Symbol(
+    "IInvalidPythonPathInDebuggerService"
+);
 
-export interface IInvalidPythonPathInDebuggerService extends IDiagnosticsService {
-    validatePythonPath(pythonPath?: string, pythonPathSource?: PythonPathSource, resource?: Uri): Promise<boolean>;
+export interface IInvalidPythonPathInDebuggerService
+    extends IDiagnosticsService {
+    validatePythonPath(
+        pythonPath?: string,
+        pythonPathSource?: PythonPathSource,
+        resource?: Uri
+    ): Promise<boolean>;
 }
-export const ISourceMapSupportService = Symbol('ISourceMapSupportService');
+export const ISourceMapSupportService = Symbol("ISourceMapSupportService");
 export interface ISourceMapSupportService {
     register(): void;
     enable(): Promise<void>;

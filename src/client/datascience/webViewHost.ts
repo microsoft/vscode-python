@@ -1,21 +1,43 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
-import '../common/extensions';
+"use strict";
+import "../common/extensions";
 
-import { injectable, unmanaged } from 'inversify';
-import { ConfigurationChangeEvent, ViewColumn, WorkspaceConfiguration } from 'vscode';
+import { injectable, unmanaged } from "inversify";
+import {
+    ConfigurationChangeEvent,
+    ViewColumn,
+    WorkspaceConfiguration
+} from "vscode";
 
-import { IWebPanel, IWebPanelMessageListener, IWebPanelProvider, IWorkspaceService } from '../common/application/types';
-import { traceInfo } from '../common/logger';
-import { IConfigurationService, IDisposable } from '../common/types';
-import { createDeferred, Deferred } from '../common/utils/async';
-import { CssMessages, DefaultTheme, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from './constants';
-import { ICodeCssGenerator, IDataScienceExtraSettings, IThemeFinder } from './types';
+import {
+    IWebPanel,
+    IWebPanelMessageListener,
+    IWebPanelProvider,
+    IWorkspaceService
+} from "../common/application/types";
+import { traceInfo } from "../common/logger";
+import { IConfigurationService, IDisposable } from "../common/types";
+import { createDeferred, Deferred } from "../common/utils/async";
+import {
+    CssMessages,
+    DefaultTheme,
+    IGetCssRequest,
+    IGetMonacoThemeRequest,
+    SharedMessages
+} from "./constants";
+import {
+    ICodeCssGenerator,
+    IDataScienceExtraSettings,
+    IThemeFinder
+} from "./types";
 
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
 export class WebViewHost<IMapping> implements IDisposable {
-    protected viewState : { visible: boolean; active: boolean } = { visible: false, active: false };
+    protected viewState: { visible: boolean; active: boolean } = {
+        visible: false,
+        active: false
+    };
     private isDisposed: boolean = false;
     private webPanel: IWebPanel | undefined;
     private webPanelInit: Deferred<void>;
@@ -32,21 +54,37 @@ export class WebViewHost<IMapping> implements IDisposable {
         @unmanaged() protected themeFinder: IThemeFinder,
         @unmanaged() private workspaceService: IWorkspaceService,
         // tslint:disable-next-line:no-any
-        @unmanaged() messageListenerCtor: (callback: (message: string, payload: any) => void, viewChanged: (panel: IWebPanel) => void, disposed: () => void) => IWebPanelMessageListener,
+        @unmanaged()
+        messageListenerCtor: (
+            callback: (message: string, payload: any) => void,
+            viewChanged: (panel: IWebPanel) => void,
+            disposed: () => void
+        ) => IWebPanelMessageListener,
         @unmanaged() private mainScriptPath: string,
         @unmanaged() private title: string,
         @unmanaged() private viewColumn: ViewColumn
-        ) {
+    ) {
         // Create our message listener for our web panel.
-        this.messageListener = messageListenerCtor(this.onMessage.bind(this), this.onViewStateChanged.bind(this), this.dispose.bind(this));
+        this.messageListener = messageListenerCtor(
+            this.onMessage.bind(this),
+            this.onViewStateChanged.bind(this),
+            this.dispose.bind(this)
+        );
 
         // Listen for theme changes.
-        const workbench = this.workspaceService.getConfiguration('workbench');
-        this.currentTheme = workbench ? workbench.get<string>('colorTheme', DefaultTheme) : DefaultTheme;
-        this.themeChangeHandler = this.workspaceService.onDidChangeConfiguration(this.onPossibleThemeChange, this);
+        const workbench = this.workspaceService.getConfiguration("workbench");
+        this.currentTheme = workbench
+            ? workbench.get<string>("colorTheme", DefaultTheme)
+            : DefaultTheme;
+        this.themeChangeHandler = this.workspaceService.onDidChangeConfiguration(
+            this.onPossibleThemeChange,
+            this
+        );
 
         // Listen for settings changes
-        this.settingsChangeHandler = this.configService.getSettings().onDidChange(this.onDataScienceSettingsChanged.bind(this));
+        this.settingsChangeHandler = this.configService
+            .getSettings()
+            .onDidChange(this.onDataScienceSettingsChanged.bind(this));
 
         // Setup our init promise for the web panel. We use this to make sure we're in sync with our
         // react control.
@@ -105,7 +143,9 @@ export class WebViewHost<IMapping> implements IDisposable {
                 break;
 
             case CssMessages.GetMonacoThemeRequest:
-                this.handleMonacoThemeRequest(payload as IGetMonacoThemeRequest).ignoreErrors();
+                this.handleMonacoThemeRequest(
+                    payload as IGetMonacoThemeRequest
+                ).ignoreErrors();
                 break;
 
             default:
@@ -113,37 +153,53 @@ export class WebViewHost<IMapping> implements IDisposable {
         }
     }
 
-    protected postMessage<M extends IMapping, T extends keyof M>(type: T, payload?: M[T]) : Promise<void> {
+    protected postMessage<M extends IMapping, T extends keyof M>(
+        type: T,
+        payload?: M[T]
+    ): Promise<void> {
         // Then send it the message
         return this.postMessageInternal(type.toString(), payload);
     }
 
-    protected shareMessage<M extends IMapping, T extends keyof M>(type: T, payload?: M[T]) {
+    protected shareMessage<M extends IMapping, T extends keyof M>(
+        type: T,
+        payload?: M[T]
+    ) {
         // Send our remote message.
         this.messageListener.onMessage(type.toString(), payload);
     }
 
-    protected activating() : Promise<void> {
+    protected activating(): Promise<void> {
         return Promise.resolve();
     }
 
     // tslint:disable-next-line:no-any
-    protected async postMessageInternal(type: string, payload?: any) : Promise<void> {
+    protected async postMessageInternal(
+        type: string,
+        payload?: any
+    ): Promise<void> {
         if (this.webPanel) {
             // Make sure the webpanel is up before we send it anything.
             await this.webPanelInit.promise;
 
             // Then send it the message
-            this.webPanel.postMessage({ type: type.toString(), payload: payload });
+            this.webPanel.postMessage({
+                type: type.toString(),
+                payload: payload
+            });
         }
     }
 
-    protected generateDataScienceExtraSettings() : IDataScienceExtraSettings {
-        const terminal = this.workspaceService.getConfiguration('terminal');
-        const terminalCursor = terminal ? terminal.get<string>('integrated.cursorStyle', 'block') : 'block';
-        const workbench = this.workspaceService.getConfiguration('workbench');
-        const editor = this.workspaceService.getConfiguration('editor');
-        const theme = !workbench ? DefaultTheme : workbench.get<string>('colorTheme', DefaultTheme);
+    protected generateDataScienceExtraSettings(): IDataScienceExtraSettings {
+        const terminal = this.workspaceService.getConfiguration("terminal");
+        const terminalCursor = terminal
+            ? terminal.get<string>("integrated.cursorStyle", "block")
+            : "block";
+        const workbench = this.workspaceService.getConfiguration("workbench");
+        const editor = this.workspaceService.getConfiguration("editor");
+        const theme = !workbench
+            ? DefaultTheme
+            : workbench.get<string>("colorTheme", DefaultTheme);
         return {
             ...this.configService.getSettings().datascience,
             extraSettings: {
@@ -152,27 +208,71 @@ export class WebViewHost<IMapping> implements IDisposable {
             },
             intellisenseOptions: {
                 quickSuggestions: {
-                    other: this.getValue(editor, 'quickSuggestions.other', true),
-                    comments: this.getValue(editor, 'quickSuggestions.comments', false),
-                    strings: this.getValue(editor, 'quickSuggestions.strings', false)
+                    other: this.getValue(
+                        editor,
+                        "quickSuggestions.other",
+                        true
+                    ),
+                    comments: this.getValue(
+                        editor,
+                        "quickSuggestions.comments",
+                        false
+                    ),
+                    strings: this.getValue(
+                        editor,
+                        "quickSuggestions.strings",
+                        false
+                    )
                 },
-                acceptSuggestionOnEnter: this.getValue(editor, 'acceptSuggestionOnEnter', 'on'),
-                quickSuggestionsDelay: this.getValue(editor, 'quickSuggestionsDelay', 10),
-                suggestOnTriggerCharacters: this.getValue(editor, 'suggestOnTriggerCharacters', true),
-                tabCompletion: this.getValue(editor, 'tabCompletion', 'on'),
-                suggestLocalityBonus: this.getValue(editor, 'suggest.localityBonus', true),
-                suggestSelection: this.getValue(editor, 'suggestSelection', 'recentlyUsed'),
-                wordBasedSuggestions: this.getValue(editor, 'wordBasedSuggestions', true),
-                parameterHintsEnabled: this.getValue(editor, 'parameterHints.enabled', true)
+                acceptSuggestionOnEnter: this.getValue(
+                    editor,
+                    "acceptSuggestionOnEnter",
+                    "on"
+                ),
+                quickSuggestionsDelay: this.getValue(
+                    editor,
+                    "quickSuggestionsDelay",
+                    10
+                ),
+                suggestOnTriggerCharacters: this.getValue(
+                    editor,
+                    "suggestOnTriggerCharacters",
+                    true
+                ),
+                tabCompletion: this.getValue(editor, "tabCompletion", "on"),
+                suggestLocalityBonus: this.getValue(
+                    editor,
+                    "suggest.localityBonus",
+                    true
+                ),
+                suggestSelection: this.getValue(
+                    editor,
+                    "suggestSelection",
+                    "recentlyUsed"
+                ),
+                wordBasedSuggestions: this.getValue(
+                    editor,
+                    "wordBasedSuggestions",
+                    true
+                ),
+                parameterHintsEnabled: this.getValue(
+                    editor,
+                    "parameterHints.enabled",
+                    true
+                )
             }
         };
     }
 
-    protected isDark() : Promise<boolean> {
+    protected isDark(): Promise<boolean> {
         return this.themeIsDarkPromise.promise;
     }
 
-    private getValue<T>(workspaceConfig: WorkspaceConfiguration, section: string, defaultValue: T) : T {
+    private getValue<T>(
+        workspaceConfig: WorkspaceConfiguration,
+        section: string,
+        defaultValue: T
+    ): T {
         if (workspaceConfig) {
             return workspaceConfig.get(section, defaultValue);
         }
@@ -188,9 +288,9 @@ export class WebViewHost<IMapping> implements IDisposable {
         if (!oldActive && this.viewState.active) {
             this.activating().ignoreErrors();
         }
-    }
+    };
 
-    private async handleCssRequest(request: IGetCssRequest) : Promise<void> {
+    private async handleCssRequest(request: IGetCssRequest): Promise<void> {
         if (!this.themeIsDarkPromise.resolved) {
             this.themeIsDarkPromise.resolve(request.isDark);
         } else {
@@ -198,12 +298,23 @@ export class WebViewHost<IMapping> implements IDisposable {
             this.themeIsDarkPromise.resolve(request.isDark);
         }
         const settings = this.generateDataScienceExtraSettings();
-        const isDark = await this.themeFinder.isThemeDark(settings.extraSettings.theme);
-        const css = await this.cssGenerator.generateThemeCss(request.isDark, settings.extraSettings.theme);
-        return this.postMessageInternal(CssMessages.GetCssResponse, { css, theme: settings.extraSettings.theme, knownDark: isDark });
+        const isDark = await this.themeFinder.isThemeDark(
+            settings.extraSettings.theme
+        );
+        const css = await this.cssGenerator.generateThemeCss(
+            request.isDark,
+            settings.extraSettings.theme
+        );
+        return this.postMessageInternal(CssMessages.GetCssResponse, {
+            css,
+            theme: settings.extraSettings.theme,
+            knownDark: isDark
+        });
     }
 
-    private async handleMonacoThemeRequest(request: IGetMonacoThemeRequest) : Promise<void> {
+    private async handleMonacoThemeRequest(
+        request: IGetMonacoThemeRequest
+    ): Promise<void> {
         if (!this.themeIsDarkPromise.resolved) {
             this.themeIsDarkPromise.resolve(request.isDark);
         } else {
@@ -211,8 +322,13 @@ export class WebViewHost<IMapping> implements IDisposable {
             this.themeIsDarkPromise.resolve(request.isDark);
         }
         const settings = this.generateDataScienceExtraSettings();
-        const monacoTheme = await this.cssGenerator.generateMonacoTheme(request.isDark, settings.extraSettings.theme);
-        return this.postMessageInternal(CssMessages.GetMonacoThemeResponse, { theme: monacoTheme });
+        const monacoTheme = await this.cssGenerator.generateMonacoTheme(
+            request.isDark,
+            settings.extraSettings.theme
+        );
+        return this.postMessageInternal(CssMessages.GetMonacoThemeResponse, {
+            theme: monacoTheme
+        });
     }
 
     // tslint:disable-next-line:no-any
@@ -224,39 +340,58 @@ export class WebViewHost<IMapping> implements IDisposable {
 
     // Post a message to our webpanel and update our new datascience settings
     private onPossibleThemeChange = (event: ConfigurationChangeEvent) => {
-        if (event.affectsConfiguration('workbench.colorTheme')) {
+        if (event.affectsConfiguration("workbench.colorTheme")) {
             // See if the theme changed
             const newSettings = this.generateDataScienceExtraSettings();
-            if (newSettings && newSettings.extraSettings.theme !== this.currentTheme) {
+            if (
+                newSettings &&
+                newSettings.extraSettings.theme !== this.currentTheme
+            ) {
                 this.currentTheme = newSettings.extraSettings.theme;
                 const dsSettings = JSON.stringify(newSettings);
-                this.postMessageInternal(SharedMessages.UpdateSettings, dsSettings).ignoreErrors();
+                this.postMessageInternal(
+                    SharedMessages.UpdateSettings,
+                    dsSettings
+                ).ignoreErrors();
             }
         }
-    }
+    };
 
     // Post a message to our webpanel and update our new datascience settings
     private onDataScienceSettingsChanged = () => {
         // Stringify our settings to send over to the panel
-        const dsSettings = JSON.stringify(this.generateDataScienceExtraSettings());
-        this.postMessageInternal(SharedMessages.UpdateSettings, dsSettings).ignoreErrors();
-    }
+        const dsSettings = JSON.stringify(
+            this.generateDataScienceExtraSettings()
+        );
+        this.postMessageInternal(
+            SharedMessages.UpdateSettings,
+            dsSettings
+        ).ignoreErrors();
+    };
 
     private loadWebPanel() {
-        traceInfo(`Loading web panel. Panel is ${this.webPanel ? 'set' : 'notset'}`);
+        traceInfo(
+            `Loading web panel. Panel is ${this.webPanel ? "set" : "notset"}`
+        );
 
         // Create our web panel (it's the UI that shows up for the history)
         if (this.webPanel === undefined) {
-
             // Get our settings to pass along to the react control
             const settings = this.generateDataScienceExtraSettings();
 
-            traceInfo('Loading web view...');
+            traceInfo("Loading web view...");
             // Use this script to create our web view panel. It should contain all of the necessary
             // script to communicate with this class.
-            this.webPanel = this.provider.create(this.viewColumn, this.messageListener, this.title, this.mainScriptPath, '', settings);
+            this.webPanel = this.provider.create(
+                this.viewColumn,
+                this.messageListener,
+                this.title,
+                this.mainScriptPath,
+                "",
+                settings
+            );
 
-            traceInfo('Web view created.');
+            traceInfo("Web view created.");
         }
     }
 }

@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
+"use strict";
 
-import { DiagnosticCodes } from '../application/diagnostics/constants';
-import { TerminalShellType } from '../common/terminal/types';
-import { DebugConfigurationType } from '../debugger/extension/types';
-import { ConsoleType } from '../debugger/types';
-import { AutoSelectionRule } from '../interpreter/autoSelection/types';
-import { InterpreterType } from '../interpreter/contracts';
-import { LinterId } from '../linters/types';
-import { PlatformErrors } from './constants';
+import { DiagnosticCodes } from "../application/diagnostics/constants";
+import { TerminalShellType } from "../common/terminal/types";
+import { DebugConfigurationType } from "../debugger/extension/types";
+import { ConsoleType } from "../debugger/types";
+import { AutoSelectionRule } from "../interpreter/autoSelection/types";
+import { InterpreterType } from "../interpreter/contracts";
+import { LinterId } from "../linters/types";
+import { PlatformErrors } from "./constants";
 
 export type EditorLoadTelemetry = {
     condaVersion: string | undefined;
@@ -23,7 +23,7 @@ export type EditorLoadTelemetry = {
     usingGlobalInterpreter: boolean;
 };
 export type FormatTelemetry = {
-    tool: 'autopep8' | 'black' | 'yapf';
+    tool: "autopep8" | "black" | "yapf";
     hasCustomArgs: boolean;
     formatSelection: boolean;
 };
@@ -40,10 +40,10 @@ export type LanguageServerErrorTelemetry = {
 
 export type LanguageServePlatformSupported = {
     supported: boolean;
-    failureType?: 'UnknownError';
+    failureType?: "UnknownError";
 };
 
-export type LinterTrigger = 'auto' | 'save';
+export type LinterTrigger = "auto" | "save";
 
 export type LintingTelemetry = {
     tool: LinterId;
@@ -54,7 +54,7 @@ export type LintingTelemetry = {
 
 export type LinterInstallPromptTelemetry = {
     tool?: LinterId;
-    action: 'select' | 'disablePrompt' | 'install';
+    action: "select" | "disablePrompt" | "install";
 };
 
 export type LinterSelectionTelemetry = {
@@ -63,16 +63,16 @@ export type LinterSelectionTelemetry = {
 };
 
 export type PythonInterpreterTelemetry = {
-    trigger: 'ui' | 'shebang' | 'load';
+    trigger: "ui" | "shebang" | "load";
     failed: boolean;
     pythonVersion?: string;
     pipVersion?: string;
 };
 export type CodeExecutionTelemetry = {
-    scope: 'file' | 'selection';
+    scope: "file" | "selection";
 };
 export type DebuggerTelemetry = {
-    trigger: 'launch' | 'attach' | 'test';
+    trigger: "launch" | "attach" | "test";
     console?: ConsoleType;
     hasEnvVars: boolean;
     hasArgs: boolean;
@@ -93,35 +93,40 @@ export type DebuggerTelemetry = {
 };
 export type DebuggerPerformanceTelemetry = {
     duration: number;
-    action: 'stepIn' | 'stepOut' | 'continue' | 'next' | 'launch';
+    action: "stepIn" | "stepOut" | "continue" | "next" | "launch";
 };
-export type TestTool = 'nosetest' | 'pytest' | 'unittest';
+export type TestTool = "nosetest" | "pytest" | "unittest";
 export type TestRunTelemetry = {
     tool: TestTool;
-    scope: 'currentFile' | 'all' | 'file' | 'class' | 'function' | 'failed';
+    scope: "currentFile" | "all" | "file" | "class" | "function" | "failed";
     debugging: boolean;
-    triggerSource: 'ui' | 'codelens' | 'commandpalette' | 'auto' | 'testExplorer';
+    triggerSource:
+        | "ui"
+        | "codelens"
+        | "commandpalette"
+        | "auto"
+        | "testExplorer";
     failed: boolean;
 };
 export type TestDiscoverytTelemetry = {
     tool: TestTool;
-    trigger: 'ui' | 'commandpalette';
+    trigger: "ui" | "commandpalette";
     failed: boolean;
 };
 export type TestConfiguringTelemetry = {
     tool?: TestTool;
-    trigger: 'ui' | 'commandpalette';
+    trigger: "ui" | "commandpalette";
     failed: boolean;
 };
 export type FeedbackTelemetry = {
-    action: 'accepted' | 'dismissed' | 'doNotShowAgain';
+    action: "accepted" | "dismissed" | "doNotShowAgain";
 };
 export type SettingsTelemetry = {
     enabled: boolean;
 };
 export type TerminalTelemetry = {
     terminal?: TerminalShellType;
-    triggeredBy?: 'commandpalette';
+    triggeredBy?: "commandpalette";
     pythonVersion?: string;
     interpreterType?: InterpreterType;
 };
@@ -152,7 +157,7 @@ export type DiagnosticsAction = {
      * Custom actions performed.
      * @type {'switchToCommandPrompt'}
      */
-    action?: 'switchToCommandPrompt';
+    action?: "switchToCommandPrompt";
 };
 export type DiagnosticsMessages = {
     /**
@@ -162,7 +167,7 @@ export type DiagnosticsMessages = {
     code: DiagnosticCodes;
 };
 export type ImportNotebook = {
-    scope: 'command';
+    scope: "command";
 };
 
 export type Platform = {
@@ -193,7 +198,7 @@ export type InterpreterActivation = {
     interpreterType: InterpreterType;
 };
 
-export const IImportTracker = Symbol('IImportTracker');
+export const IImportTracker = Symbol("IImportTracker");
 export interface IImportTracker {
     activate(): Promise<void>;
 }

@@ -1,13 +1,16 @@
-import { inject, injectable, named } from 'inversify';
-import * as path from 'path';
-import { Uri, workspace } from 'vscode';
-import { IApplicationShell, ICommandManager } from '../../common/application/types';
-import * as constants from '../../common/constants';
-import { ITestingSettings, Product } from '../../common/types';
-import { IServiceContainer } from '../../ioc/types';
-import { TestDataItem, TestWorkspaceFolder } from '../types';
-import { CommandSource } from './constants';
-import { TestFlatteningVisitor } from './testVisitors/flatteningVisitor';
+import { inject, injectable, named } from "inversify";
+import * as path from "path";
+import { Uri, workspace } from "vscode";
+import {
+    IApplicationShell,
+    ICommandManager
+} from "../../common/application/types";
+import * as constants from "../../common/constants";
+import { ITestingSettings, Product } from "../../common/types";
+import { IServiceContainer } from "../../ioc/types";
+import { TestDataItem, TestWorkspaceFolder } from "../types";
+import { CommandSource } from "./constants";
+import { TestFlatteningVisitor } from "./testVisitors/flatteningVisitor";
 import {
     FlattenedTestFunction,
     FlattenedTestSuite,
@@ -23,30 +26,43 @@ import {
     TestSuite,
     TestType,
     UnitTestProduct
-} from './types';
+} from "./types";
 
-export async function selectTestWorkspace(appShell: IApplicationShell): Promise<Uri | undefined> {
-    if (!Array.isArray(workspace.workspaceFolders) || workspace.workspaceFolders.length === 0) {
+export async function selectTestWorkspace(
+    appShell: IApplicationShell
+): Promise<Uri | undefined> {
+    if (
+        !Array.isArray(workspace.workspaceFolders) ||
+        workspace.workspaceFolders.length === 0
+    ) {
         return undefined;
     } else if (workspace.workspaceFolders.length === 1) {
         return workspace.workspaceFolders[0].uri;
     } else {
-        const workspaceFolder = await appShell.showWorkspaceFolderPick({ placeHolder: 'Select a workspace' });
+        const workspaceFolder = await appShell.showWorkspaceFolderPick({
+            placeHolder: "Select a workspace"
+        });
         return workspaceFolder ? workspaceFolder.uri : undefined;
     }
 }
 
-export function extractBetweenDelimiters(content: string, startDelimiter: string, endDelimiter: string): string {
-    content = content.substring(content.indexOf(startDelimiter) + startDelimiter.length);
+export function extractBetweenDelimiters(
+    content: string,
+    startDelimiter: string,
+    endDelimiter: string
+): string {
+    content = content.substring(
+        content.indexOf(startDelimiter) + startDelimiter.length
+    );
     return content.substring(0, content.lastIndexOf(endDelimiter));
 }
 
 export function convertFileToPackage(filePath: string): string {
-    const lastIndex = filePath.lastIndexOf('.');
+    const lastIndex = filePath.lastIndexOf(".");
     return filePath
         .substring(0, lastIndex)
-        .replace(/\//g, '.')
-        .replace(/\\/g, '.');
+        .replace(/\//g, ".")
+        .replace(/\\/g, ".");
 }
 
 @injectable()
@@ -54,20 +70,26 @@ export class TestsHelper implements ITestsHelper {
     private readonly appShell: IApplicationShell;
     private readonly commandManager: ICommandManager;
     constructor(
-        @inject(ITestVisitor) @named('TestFlatteningVisitor') private readonly flatteningVisitor: TestFlatteningVisitor,
+        @inject(ITestVisitor)
+        @named("TestFlatteningVisitor")
+        private readonly flatteningVisitor: TestFlatteningVisitor,
         @inject(IServiceContainer) serviceContainer: IServiceContainer
     ) {
-        this.appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
-        this.commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
+        this.appShell = serviceContainer.get<IApplicationShell>(
+            IApplicationShell
+        );
+        this.commandManager = serviceContainer.get<ICommandManager>(
+            ICommandManager
+        );
     }
     public parseProviderName(product: UnitTestProduct): TestProvider {
         switch (product) {
             case Product.nosetest:
-                return 'nosetest';
+                return "nosetest";
             case Product.pytest:
-                return 'pytest';
+                return "pytest";
             case Product.unittest:
-                return 'unittest';
+                return "unittest";
             default: {
                 throw new Error(`Unknown Test Product ${product}`);
             }
@@ -75,38 +97,40 @@ export class TestsHelper implements ITestsHelper {
     }
     public parseProduct(provider: TestProvider): UnitTestProduct {
         switch (provider) {
-            case 'nosetest':
+            case "nosetest":
                 return Product.nosetest;
-            case 'pytest':
+            case "pytest":
                 return Product.pytest;
-            case 'unittest':
+            case "unittest":
                 return Product.unittest;
             default: {
                 throw new Error(`Unknown Test Provider ${provider}`);
             }
         }
     }
-    public getSettingsPropertyNames(product: UnitTestProduct): TestSettingsPropertyNames {
+    public getSettingsPropertyNames(
+        product: UnitTestProduct
+    ): TestSettingsPropertyNames {
         const id = this.parseProviderName(product);
         switch (id) {
-            case 'pytest': {
+            case "pytest": {
                 return {
-                    argsName: 'pyTestArgs' as keyof ITestingSettings,
-                    pathName: 'pyTestPath' as keyof ITestingSettings,
-                    enabledName: 'pyTestEnabled' as keyof ITestingSettings
+                    argsName: "pyTestArgs" as keyof ITestingSettings,
+                    pathName: "pyTestPath" as keyof ITestingSettings,
+                    enabledName: "pyTestEnabled" as keyof ITestingSettings
                 };
             }
-            case 'nosetest': {
+            case "nosetest": {
                 return {
-                    argsName: 'nosetestArgs' as keyof ITestingSettings,
-                    pathName: 'nosetestPath' as keyof ITestingSettings,
-                    enabledName: 'nosetestsEnabled' as keyof ITestingSettings
+                    argsName: "nosetestArgs" as keyof ITestingSettings,
+                    pathName: "nosetestPath" as keyof ITestingSettings,
+                    enabledName: "nosetestsEnabled" as keyof ITestingSettings
                 };
             }
-            case 'unittest': {
+            case "unittest": {
                 return {
-                    argsName: 'unittestArgs' as keyof ITestingSettings,
-                    enabledName: 'unittestEnabled' as keyof ITestingSettings
+                    argsName: "unittestArgs" as keyof ITestingSettings,
+                    enabledName: "unittestEnabled" as keyof ITestingSettings
                 };
             }
             default: {
@@ -114,8 +138,13 @@ export class TestsHelper implements ITestsHelper {
             }
         }
     }
-    public flattenTestFiles(testFiles: TestFile[], workspaceFolder: string): Tests {
-        testFiles.forEach(testFile => this.flatteningVisitor.visitTestFile(testFile));
+    public flattenTestFiles(
+        testFiles: TestFile[],
+        workspaceFolder: string
+    ): Tests {
+        testFiles.forEach(testFile =>
+            this.flatteningVisitor.visitTestFile(testFile)
+        );
 
         // tslint:disable-next-line:no-object-literal-type-assertion
         const tests = <Tests>{
@@ -131,7 +160,10 @@ export class TestsHelper implements ITestsHelper {
 
         return tests;
     }
-    public placeTestFilesIntoFolders(tests: Tests, workspaceFolder: string): void {
+    public placeTestFilesIntoFolders(
+        tests: Tests,
+        workspaceFolder: string
+    ): void {
         // First get all the unique folders
         const folders: string[] = [];
         tests.testFiles.forEach(file => {
@@ -147,33 +179,58 @@ export class TestsHelper implements ITestsHelper {
         folders.sort();
         const resource = Uri.file(workspaceFolder);
         folders.forEach(dir => {
-            dir.split(path.sep).reduce((parentPath, currentName, _index, _values) => {
-                let newPath = currentName;
-                let parentFolder: TestFolder | undefined;
-                if (parentPath.length > 0) {
-                    parentFolder = folderMap.get(parentPath);
-                    newPath = path.join(parentPath, currentName);
-                }
-                if (!folderMap.has(newPath)) {
-                    const testFolder: TestFolder = { resource, name: newPath, testFiles: [], folders: [], nameToRun: newPath, time: 0, functionsPassed: 0, functionsFailed: 0, functionsDidNotRun: 0 };
-                    folderMap.set(newPath, testFolder);
-                    if (parentFolder) {
-                        parentFolder!.folders.push(testFolder);
-                    } else {
-                        tests.rootTestFolders.push(testFolder);
+            dir.split(path.sep).reduce(
+                (parentPath, currentName, _index, _values) => {
+                    let newPath = currentName;
+                    let parentFolder: TestFolder | undefined;
+                    if (parentPath.length > 0) {
+                        parentFolder = folderMap.get(parentPath);
+                        newPath = path.join(parentPath, currentName);
                     }
-                    tests.testFiles
-                        .filter(fl => path.dirname(path.relative(workspaceFolder, fl.fullPath)) === newPath)
-                        .forEach(testFile => {
-                            testFolder.testFiles.push(testFile);
-                        });
-                    tests.testFolders.push(testFolder);
-                }
-                return newPath;
-            }, '');
+                    if (!folderMap.has(newPath)) {
+                        const testFolder: TestFolder = {
+                            resource,
+                            name: newPath,
+                            testFiles: [],
+                            folders: [],
+                            nameToRun: newPath,
+                            time: 0,
+                            functionsPassed: 0,
+                            functionsFailed: 0,
+                            functionsDidNotRun: 0
+                        };
+                        folderMap.set(newPath, testFolder);
+                        if (parentFolder) {
+                            parentFolder!.folders.push(testFolder);
+                        } else {
+                            tests.rootTestFolders.push(testFolder);
+                        }
+                        tests.testFiles
+                            .filter(
+                                fl =>
+                                    path.dirname(
+                                        path.relative(
+                                            workspaceFolder,
+                                            fl.fullPath
+                                        )
+                                    ) === newPath
+                            )
+                            .forEach(testFile => {
+                                testFolder.testFiles.push(testFile);
+                            });
+                        tests.testFolders.push(testFolder);
+                    }
+                    return newPath;
+                },
+                ""
+            );
         });
     }
-    public parseTestName(name: string, rootDirectory: string, tests: Tests): TestsToRun | undefined {
+    public parseTestName(
+        name: string,
+        rootDirectory: string,
+        tests: Tests
+    ): TestsToRun | undefined {
         // tslint:disable-next-line:no-suspicious-comment
         // TODO: We need a better way to match (currently we have raw name, name, xmlname, etc = which one do we.
         // Use to identify a file given the full file name, similarly for a folder and function.
@@ -181,31 +238,71 @@ export class TestsHelper implements ITestsHelper {
         if (!tests) {
             return undefined;
         }
-        const absolutePath = path.isAbsolute(name) ? name : path.resolve(rootDirectory, name);
-        const testFolders = tests.testFolders.filter(folder => folder.nameToRun === name || folder.name === name || folder.name === absolutePath);
+        const absolutePath = path.isAbsolute(name)
+            ? name
+            : path.resolve(rootDirectory, name);
+        const testFolders = tests.testFolders.filter(
+            folder =>
+                folder.nameToRun === name ||
+                folder.name === name ||
+                folder.name === absolutePath
+        );
         if (testFolders.length > 0) {
             return { testFolder: testFolders };
         }
 
-        const testFiles = tests.testFiles.filter(file => file.nameToRun === name || file.name === name || file.fullPath === absolutePath);
+        const testFiles = tests.testFiles.filter(
+            file =>
+                file.nameToRun === name ||
+                file.name === name ||
+                file.fullPath === absolutePath
+        );
         if (testFiles.length > 0) {
             return { testFile: testFiles };
         }
 
-        const testFns = tests.testFunctions.filter(fn => fn.testFunction.nameToRun === name || fn.testFunction.name === name).map(fn => fn.testFunction);
+        const testFns = tests.testFunctions
+            .filter(
+                fn =>
+                    fn.testFunction.nameToRun === name ||
+                    fn.testFunction.name === name
+            )
+            .map(fn => fn.testFunction);
         if (testFns.length > 0) {
             return { testFunction: testFns };
         }
 
         // Just return this as a test file.
-        return { testFile: [{ resource: Uri.file(rootDirectory), name: name, nameToRun: name, functions: [], suites: [], xmlName: name, fullPath: '', time: 0, functionsPassed: 0, functionsFailed: 0, functionsDidNotRun: 0 }] };
+        return {
+            testFile: [
+                {
+                    resource: Uri.file(rootDirectory),
+                    name: name,
+                    nameToRun: name,
+                    functions: [],
+                    suites: [],
+                    xmlName: name,
+                    fullPath: "",
+                    time: 0,
+                    functionsPassed: 0,
+                    functionsFailed: 0,
+                    functionsDidNotRun: 0
+                }
+            ]
+        };
     }
     public displayTestErrorMessage(message: string) {
-        this.appShell.showErrorMessage(message, constants.Button_Text_Tests_View_Output).then(action => {
-            if (action === constants.Button_Text_Tests_View_Output) {
-                this.commandManager.executeCommand(constants.Commands.Tests_ViewOutput, undefined, CommandSource.ui);
-            }
-        });
+        this.appShell
+            .showErrorMessage(message, constants.Button_Text_Tests_View_Output)
+            .then(action => {
+                if (action === constants.Button_Text_Tests_View_Output) {
+                    this.commandManager.executeCommand(
+                        constants.Commands.Tests_ViewOutput,
+                        undefined,
+                        CommandSource.ui
+                    );
+                }
+            });
     }
     public mergeTests(items: Tests[]): Tests {
         return items.reduce((tests, otherTests, index) => {
@@ -232,10 +329,14 @@ export class TestsHelper implements ITestsHelper {
             return true;
         }
         if (
-            (Array.isArray(testsToRun.testFile) && testsToRun.testFile.length > 0) ||
-            (Array.isArray(testsToRun.testFolder) && testsToRun.testFolder.length > 0) ||
-            (Array.isArray(testsToRun.testFunction) && testsToRun.testFunction.length > 0) ||
-            (Array.isArray(testsToRun.testSuite) && testsToRun.testSuite.length > 0)
+            (Array.isArray(testsToRun.testFile) &&
+                testsToRun.testFile.length > 0) ||
+            (Array.isArray(testsToRun.testFolder) &&
+                testsToRun.testFolder.length > 0) ||
+            (Array.isArray(testsToRun.testFunction) &&
+                testsToRun.testFunction.length > 0) ||
+            (Array.isArray(testsToRun.testSuite) &&
+                testsToRun.testSuite.length > 0)
         ) {
             return false;
         }
@@ -260,34 +361,45 @@ export function getTestType(test: TestDataItem): TestType {
     if (getTestFunction(test)) {
         return TestType.testFunction;
     }
-    throw new Error('Unknown test type');
+    throw new Error("Unknown test type");
 }
 export function getTestFile(test: TestDataItem): TestFile | undefined {
     if (!test) {
         return;
     }
     // Only TestFile has a `fullPath` property.
-    return typeof (test as TestFile).fullPath === 'string' ? (test as TestFile) : undefined;
+    return typeof (test as TestFile).fullPath === "string"
+        ? (test as TestFile)
+        : undefined;
 }
 export function getTestSuite(test: TestDataItem): TestSuite | undefined {
     if (!test) {
         return;
     }
     // Only TestSuite has a `suites` property.
-    return Array.isArray((test as TestSuite).suites) && !getTestFile(test) ? (test as TestSuite) : undefined;
+    return Array.isArray((test as TestSuite).suites) && !getTestFile(test)
+        ? (test as TestSuite)
+        : undefined;
 }
 export function getTestFolder(test: TestDataItem): TestFolder | undefined {
     if (!test) {
         return;
     }
     // Only TestFolder has a `folders` property.
-    return Array.isArray((test as TestFolder).folders) ? (test as TestFolder) : undefined;
+    return Array.isArray((test as TestFolder).folders)
+        ? (test as TestFolder)
+        : undefined;
 }
 export function getTestFunction(test: TestDataItem): TestFunction | undefined {
     if (!test) {
         return;
     }
-    if (test instanceof TestWorkspaceFolder || getTestFile(test) || getTestFolder(test) || getTestSuite(test)) {
+    if (
+        test instanceof TestWorkspaceFolder ||
+        getTestFile(test) ||
+        getTestFolder(test) ||
+        getTestSuite(test)
+    ) {
         return;
     }
     return test as TestFunction;
@@ -304,7 +416,10 @@ export function getTestFunction(test: TestDataItem): TestFunction | undefined {
  * @param {TestDataItem} data
  * @returns {(TestDataItem | undefined)}
  */
-export function getParent(tests: Tests, data: TestDataItem): TestDataItem | undefined {
+export function getParent(
+    tests: Tests,
+    data: TestDataItem
+): TestDataItem | undefined {
     switch (getTestType(data)) {
         case TestType.testFile: {
             return getParentTestFolderForFile(tests, data as TestFile);
@@ -316,31 +431,43 @@ export function getParent(tests: Tests, data: TestDataItem): TestDataItem | unde
             const suite = data as TestSuite;
             if (isSubtestsParent(suite)) {
                 const fn = suite.functions[0];
-                const parent = tests.testSuites.find(item => item.testSuite.functions.indexOf(fn) >= 0);
+                const parent = tests.testSuites.find(
+                    item => item.testSuite.functions.indexOf(fn) >= 0
+                );
                 if (parent) {
                     return parent.testSuite;
                 }
-                return tests.testFiles.find(item => item.functions.indexOf(fn) >= 0);
+                return tests.testFiles.find(
+                    item => item.functions.indexOf(fn) >= 0
+                );
             }
-            const parentSuite = tests.testSuites.find(item => item.testSuite.suites.indexOf(suite) >= 0);
+            const parentSuite = tests.testSuites.find(
+                item => item.testSuite.suites.indexOf(suite) >= 0
+            );
             if (parentSuite) {
                 return parentSuite.testSuite;
             }
-            return tests.testFiles.find(item => item.suites.indexOf(suite) >= 0);
+            return tests.testFiles.find(
+                item => item.suites.indexOf(suite) >= 0
+            );
         }
         case TestType.testFunction: {
             const fn = data as TestFunction;
             if (fn.subtestParent) {
                 return fn.subtestParent.asSuite;
             }
-            const parentSuite = tests.testSuites.find(item => item.testSuite.functions.indexOf(fn) >= 0);
+            const parentSuite = tests.testSuites.find(
+                item => item.testSuite.functions.indexOf(fn) >= 0
+            );
             if (parentSuite) {
                 return parentSuite.testSuite;
             }
-            return tests.testFiles.find(item => item.functions.indexOf(fn) >= 0);
+            return tests.testFiles.find(
+                item => item.functions.indexOf(fn) >= 0
+            );
         }
         default: {
-            throw new Error('Unknown test type');
+            throw new Error("Unknown test type");
         }
     }
 }
@@ -353,7 +480,10 @@ export function getParent(tests: Tests, data: TestDataItem): TestDataItem | unde
  * @param {(TestFolder | TestFile)} item
  * @returns {(TestFolder | undefined)}
  */
-function getParentTestFolder(tests: Tests, item: TestFolder | TestFile): TestFolder | undefined {
+function getParentTestFolder(
+    tests: Tests,
+    item: TestFolder | TestFile
+): TestFolder | undefined {
     if (getTestType(item) === TestType.testFolder) {
         return getParentTestFolderForFolder(tests, item as TestFolder);
     }
@@ -367,7 +497,10 @@ function getParentTestFolder(tests: Tests, item: TestFolder | TestFile): TestFol
  * @param {(TestSuite | TestFunction)} suite
  * @returns {TestFile}
  */
-export function getParentFile(tests: Tests, suite: TestSuite | TestFunction): TestFile {
+export function getParentFile(
+    tests: Tests,
+    suite: TestSuite | TestFunction
+): TestFile {
     let parent = getParent(tests, suite);
     while (parent) {
         if (getTestType(parent) === TestType.testFile) {
@@ -375,7 +508,7 @@ export function getParentFile(tests: Tests, suite: TestSuite | TestFunction): Te
         }
         parent = getParent(tests, parent);
     }
-    throw new Error('No parent file for provided test item');
+    throw new Error("No parent file for provided test item");
 }
 /**
  * Gets the parent test suite for a suite/function.
@@ -384,7 +517,10 @@ export function getParentFile(tests: Tests, suite: TestSuite | TestFunction): Te
  * @param {(TestSuite | TestFunction)} suite
  * @returns {(TestSuite | undefined)}
  */
-export function getParentSuite(tests: Tests, suite: TestSuite | TestFunction): TestSuite | undefined {
+export function getParentSuite(
+    tests: Tests,
+    suite: TestSuite | TestFunction
+): TestSuite | undefined {
     let parent = getParent(tests, suite);
     while (parent) {
         if (getTestType(parent) === TestType.testSuite) {
@@ -402,8 +538,13 @@ export function getParentSuite(tests: Tests, suite: TestSuite | TestFunction): T
  * @param {TestFile} file
  * @returns {(TestFolder | undefined)}
  */
-function getParentTestFolderForFile(tests: Tests, file: TestFile): TestFolder | undefined {
-    return tests.testFolders.find(folder => folder.testFiles.some(item => item === file));
+function getParentTestFolderForFile(
+    tests: Tests,
+    file: TestFile
+): TestFolder | undefined {
+    return tests.testFolders.find(folder =>
+        folder.testFiles.some(item => item === file)
+    );
 }
 
 /**
@@ -413,11 +554,16 @@ function getParentTestFolderForFile(tests: Tests, file: TestFile): TestFolder | 
  * @param {TestFolder} folder
  * @returns {(TestFolder | undefined)}
  */
-function getParentTestFolderForFolder(tests: Tests, folder: TestFolder): TestFolder | undefined {
+function getParentTestFolderForFolder(
+    tests: Tests,
+    folder: TestFolder
+): TestFolder | undefined {
     if (tests.rootTestFolders.indexOf(folder) >= 0) {
         return;
     }
-    return tests.testFolders.find(item => item.folders.some(child => child === folder));
+    return tests.testFolders.find(item =>
+        item.folders.some(child => child === folder)
+    );
 }
 
 /**
@@ -428,7 +574,10 @@ function getParentTestFolderForFolder(tests: Tests, folder: TestFolder): TestFol
  * @param {TestFunction} func
  * @returns {(FlattenedTestFunction | undefined)}
  */
-export function findFlattendTestFunction(tests: Tests, func: TestFunction): FlattenedTestFunction | undefined {
+export function findFlattendTestFunction(
+    tests: Tests,
+    func: TestFunction
+): FlattenedTestFunction | undefined {
     return tests.testFunctions.find(f => f.testFunction === func);
 }
 
@@ -440,7 +589,10 @@ export function findFlattendTestFunction(tests: Tests, func: TestFunction): Flat
  * @param {TestSuite} suite
  * @returns {(FlattenedTestSuite | undefined)}
  */
-export function findFlattendTestSuite(tests: Tests, suite: TestSuite): FlattenedTestSuite | undefined {
+export function findFlattendTestSuite(
+    tests: Tests,
+    suite: TestSuite
+): FlattenedTestSuite | undefined {
     return tests.testSuites.find(f => f.testSuite === suite);
 }
 
@@ -461,30 +613,26 @@ export function getChildren(item: TestDataItem): TestDataItem[] {
             ];
         }
         case TestType.testFile: {
-            const [subSuites, functions] = divideSubtests((item as TestFile).functions);
-            return [
-                ...functions,
-                ...(item as TestFile).suites,
-                ...subSuites
-            ];
+            const [subSuites, functions] = divideSubtests(
+                (item as TestFile).functions
+            );
+            return [...functions, ...(item as TestFile).suites, ...subSuites];
         }
         case TestType.testSuite: {
             let subSuites: TestSuite[] = [];
             let functions = (item as TestSuite).functions;
-            if (!isSubtestsParent((item as TestSuite))) {
-                [subSuites, functions] = divideSubtests((item as TestSuite).functions);
+            if (!isSubtestsParent(item as TestSuite)) {
+                [subSuites, functions] = divideSubtests(
+                    (item as TestSuite).functions
+                );
             }
-            return [
-                ...functions,
-                ...(item as TestSuite).suites,
-                ...subSuites
-            ];
+            return [...functions, ...(item as TestSuite).suites, ...subSuites];
         }
         case TestType.testFunction: {
             return [];
         }
         default: {
-            throw new Error('Unknown Test Type');
+            throw new Error("Unknown Test Type");
         }
     }
 }
@@ -521,9 +669,16 @@ export function copyDesiredTestResults(source: Tests, target: Tests): void {
     copyResultsForFolders(source.testFolders, target.testFolders);
 }
 
-function copyResultsForFolders(source: TestFolder[], target: TestFolder[]): void {
+function copyResultsForFolders(
+    source: TestFolder[],
+    target: TestFolder[]
+): void {
     source.forEach(sourceFolder => {
-        const targetFolder = target.find(folder => folder.name === sourceFolder.name && folder.nameToRun === sourceFolder.nameToRun);
+        const targetFolder = target.find(
+            folder =>
+                folder.name === sourceFolder.name &&
+                folder.nameToRun === sourceFolder.nameToRun
+        );
         if (!targetFolder) {
             return;
         }
@@ -547,9 +702,15 @@ function copyResultsForFiles(source: TestFile[], target: TestFile[]): void {
     });
 }
 
-function copyResultsForFunctions(source: TestFunction[], target: TestFunction[]): void {
+function copyResultsForFunctions(
+    source: TestFunction[],
+    target: TestFunction[]
+): void {
     source.forEach(sourceFn => {
-        const targetFn = target.find(fn => fn.name === sourceFn.name && fn.nameToRun === sourceFn.nameToRun);
+        const targetFn = target.find(
+            fn =>
+                fn.name === sourceFn.name && fn.nameToRun === sourceFn.nameToRun
+        );
         if (!targetFn) {
             return;
         }
@@ -559,9 +720,12 @@ function copyResultsForFunctions(source: TestFunction[], target: TestFunction[])
 
 function copyResultsForSuites(source: TestSuite[], target: TestSuite[]): void {
     source.forEach(sourceSuite => {
-        const targetSuite = target.find(suite => suite.name === sourceSuite.name &&
-            suite.nameToRun === sourceSuite.nameToRun &&
-            suite.xmlName === sourceSuite.xmlName);
+        const targetSuite = target.find(
+            suite =>
+                suite.name === sourceSuite.name &&
+                suite.nameToRun === sourceSuite.nameToRun &&
+                suite.xmlName === sourceSuite.xmlName
+        );
         if (!targetSuite) {
             return;
         }
@@ -577,7 +741,11 @@ function copyValueTypes<T>(source: T, target: T): void {
     Object.keys(source).forEach(key => {
         // tslint:disable-next-line:no-any
         const value = (source as any)[key];
-        if (['boolean', 'number', 'string', 'undefined'].indexOf(typeof value) >= 0) {
+        if (
+            ["boolean", "number", "string", "undefined"].indexOf(
+                typeof value
+            ) >= 0
+        ) {
             // tslint:disable-next-line:no-any
             (target as any)[key] = value;
         }

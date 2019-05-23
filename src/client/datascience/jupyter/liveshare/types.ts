@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
-import * as vsls from 'vsls/vscode';
+"use strict";
+import * as vsls from "vsls/vscode";
 
-import { IAsyncDisposable } from '../../../common/types';
-import { ICell } from '../../types';
+import { IAsyncDisposable } from "../../../common/types";
+import { ICell } from "../../types";
 
 // tslint:disable:max-classes-per-file
 
@@ -41,9 +41,9 @@ export interface ICatchupRequest {
 
 export interface ILiveShareParticipant extends IAsyncDisposable {
     readonly role: vsls.Role;
-    onSessionChange(api: vsls.LiveShare | null) : Promise<void>;
-    onAttach(api: vsls.LiveShare | null) : Promise<void>;
-    onDetach(api: vsls.LiveShare | null) : Promise<void>;
-    onPeerChange(ev: vsls.PeersChangeEvent) : Promise<void>;
-    waitForServiceName() : Promise<string>;
+    onSessionChange(api: vsls.LiveShare | null): Promise<void>;
+    onAttach(api: vsls.LiveShare | null): Promise<void>;
+    onDetach(api: vsls.LiveShare | null): Promise<void>;
+    onPeerChange(ev: vsls.PeersChangeEvent): Promise<void>;
+    waitForServiceName(): Promise<string>;
 }

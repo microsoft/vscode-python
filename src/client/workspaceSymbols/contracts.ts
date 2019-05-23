@@ -1,4 +1,4 @@
-import { Position, SymbolKind } from 'vscode';
+import { Position, SymbolKind } from "vscode";
 
 export interface ITag {
     fileName: string;

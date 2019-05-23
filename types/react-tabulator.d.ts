@@ -1,4 +1,4 @@
-declare module 'react-tabulator' {
+declare module "react-tabulator" {
     export class React15Tabulator {
         constructor(...args: any[]);
         componentDidMount(): void;

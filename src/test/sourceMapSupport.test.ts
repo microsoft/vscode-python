@@ -1,21 +1,24 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
 // tslint:disable:no-any no-unused-expression chai-vague-errors no-unnecessary-override max-func-body-length max-classes-per-file
 
-import { expect } from 'chai';
-import * as fs from 'fs';
-import { ConfigurationTarget, Disposable } from 'vscode';
-import { FileSystem } from '../client/common/platform/fileSystem';
-import { PlatformService } from '../client/common/platform/platformService';
-import { Diagnostics } from '../client/common/utils/localize';
-import { SourceMapSupport } from '../client/sourceMapSupport';
-import { noop } from './core';
+import { expect } from "chai";
+import * as fs from "fs";
+import { ConfigurationTarget, Disposable } from "vscode";
+import { FileSystem } from "../client/common/platform/fileSystem";
+import { PlatformService } from "../client/common/platform/platformService";
+import { Diagnostics } from "../client/common/utils/localize";
+import { SourceMapSupport } from "../client/sourceMapSupport";
+import { noop } from "./core";
 
-suite('Source Map Support', () => {
-    function createVSCStub(isEnabled: boolean = false, selectDisableButton: boolean = false) {
+suite("Source Map Support", () => {
+    function createVSCStub(
+        isEnabled: boolean = false,
+        selectDisableButton: boolean = false
+    ) {
         const stubInfo = {
             configValueRetrieved: false,
             configValueUpdated: false,
@@ -24,17 +27,22 @@ suite('Source Map Support', () => {
         const vscode = {
             workspace: {
                 getConfiguration: (setting: string, _defaultValue: any) => {
-                    if (setting !== 'python.diagnostics') {
+                    if (setting !== "python.diagnostics") {
                         return;
                     }
                     return {
                         get: (prop: string) => {
-                            stubInfo.configValueRetrieved = prop === 'sourceMapsEnabled';
+                            stubInfo.configValueRetrieved =
+                                prop === "sourceMapsEnabled";
                             return isEnabled;
                         },
-                        update: (prop: string, value: boolean, scope: ConfigurationTarget) => {
+                        update: (
+                            prop: string,
+                            value: boolean,
+                            scope: ConfigurationTarget
+                        ) => {
                             if (
-                                prop === 'sourceMapsEnabled' &&
+                                prop === "sourceMapsEnabled" &&
                                 value === false &&
                                 scope === ConfigurationTarget.Global
                             ) {
@@ -47,7 +55,11 @@ suite('Source Map Support', () => {
             window: {
                 showWarningMessage: () => {
                     stubInfo.messageDisplayed = true;
-                    return Promise.resolve(selectDisableButton ? Diagnostics.disableSourceMaps() : undefined);
+                    return Promise.resolve(
+                        selectDisableButton
+                            ? Diagnostics.disableSourceMaps()
+                            : undefined
+                    );
                 }
             },
             ConfigurationTarget: ConfigurationTarget
@@ -65,15 +77,15 @@ suite('Source Map Support', () => {
             }
         });
     });
-    test('When disabling source maps, the map file is renamed and vice versa', async () => {
+    test("When disabling source maps, the map file is renamed and vice versa", async () => {
         const fileSystem = new FileSystem(new PlatformService());
-        const jsFile = await fileSystem.createTemporaryFile('.js');
+        const jsFile = await fileSystem.createTemporaryFile(".js");
         disposables.push(jsFile);
         const mapFile = `${jsFile.filePath}.map`;
         disposables.push({
             dispose: () => fs.unlinkSync(mapFile)
         });
-        await fileSystem.writeFile(mapFile, 'ABC');
+        await fileSystem.writeFile(mapFile, "ABC");
         expect(await fileSystem.fileExists(mapFile)).to.be.true;
 
         const stub = createVSCStub(true, true);
@@ -85,14 +97,32 @@ suite('Source Map Support', () => {
 
         await instance.enableSourceMap(false, jsFile.filePath);
 
-        expect(await fileSystem.fileExists(jsFile.filePath)).to.be.equal(true, 'Source file does not exist');
-        expect(await fileSystem.fileExists(mapFile)).to.be.equal(false, 'Source map file not renamed');
-        expect(await fileSystem.fileExists(`${mapFile}.disabled`)).to.be.equal(true, 'Expected renamed file not found');
+        expect(await fileSystem.fileExists(jsFile.filePath)).to.be.equal(
+            true,
+            "Source file does not exist"
+        );
+        expect(await fileSystem.fileExists(mapFile)).to.be.equal(
+            false,
+            "Source map file not renamed"
+        );
+        expect(await fileSystem.fileExists(`${mapFile}.disabled`)).to.be.equal(
+            true,
+            "Expected renamed file not found"
+        );
 
         await instance.enableSourceMap(true, jsFile.filePath);
 
-        expect(await fileSystem.fileExists(jsFile.filePath)).to.be.equal(true, 'Source file does not exist');
-        expect(await fileSystem.fileExists(mapFile)).to.be.equal(true, 'Source map file not found');
-        expect(await fileSystem.fileExists(`${mapFile}.disabled`)).to.be.equal(false, 'Source map file not renamed');
+        expect(await fileSystem.fileExists(jsFile.filePath)).to.be.equal(
+            true,
+            "Source file does not exist"
+        );
+        expect(await fileSystem.fileExists(mapFile)).to.be.equal(
+            true,
+            "Source map file not found"
+        );
+        expect(await fileSystem.fileExists(`${mapFile}.disabled`)).to.be.equal(
+            false,
+            "Source map file not renamed"
+        );
     });
 });

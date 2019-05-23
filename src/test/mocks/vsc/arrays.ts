@@ -2,7 +2,7 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-'use strict';
+"use strict";
 
 // tslint:disable:all
 
@@ -16,7 +16,11 @@ export namespace vscMockArrays {
         return array[array.length - (1 + n)];
     }
 
-    export function equals<T>(one: T[], other: T[], itemEquals: (a: T, b: T) => boolean = (a, b) => a === b): boolean {
+    export function equals<T>(
+        one: T[],
+        other: T[],
+        itemEquals: (a: T, b: T) => boolean = (a, b) => a === b
+    ): boolean {
         if (one.length !== other.length) {
             return false;
         }
@@ -30,7 +34,11 @@ export namespace vscMockArrays {
         return true;
     }
 
-    export function binarySearch<T>(array: T[], key: T, comparator: (op1: T, op2: T) => number): number {
+    export function binarySearch<T>(
+        array: T[],
+        key: T,
+        comparator: (op1: T, op2: T) => number
+    ): number {
         let low = 0,
             high = array.length - 1;
 
@@ -54,7 +62,8 @@ export namespace vscMockArrays {
      * @returns the least x for which p(x) is true or array.length if no element fullfills the given function.
      */
     export function findFirst<T>(array: T[], p: (x: T) => boolean): number {
-        let low = 0, high = array.length;
+        let low = 0,
+            high = array.length;
         if (high === 0) {
             return 0; // no children
         }
@@ -73,12 +82,18 @@ export namespace vscMockArrays {
      * Like `Array#sort` but always stable. Usually runs a little slower `than Array#sort`
      * so only use this when actually needing stable sort.
      */
-    export function mergeSort<T>(data: T[], compare: (a: T, b: T) => number): T[] {
+    export function mergeSort<T>(
+        data: T[],
+        compare: (a: T, b: T) => number
+    ): T[] {
         _divideAndMerge(data, compare);
         return data;
     }
 
-    function _divideAndMerge<T>(data: T[], compare: (a: T, b: T) => number): void {
+    function _divideAndMerge<T>(
+        data: T[],
+        compare: (a: T, b: T) => number
+    ): void {
         if (data.length <= 1) {
             // sorted
             return;
@@ -111,7 +126,10 @@ export namespace vscMockArrays {
         }
     }
 
-    export function groupBy<T>(data: T[], compare: (a: T, b: T) => number): T[][] {
+    export function groupBy<T>(
+        data: T[],
+        compare: (a: T, b: T) => number
+    ): T[][] {
         const result: T[][] = [];
         let currentGroup: T[];
         for (const element of mergeSort(data.slice(0), compare)) {
@@ -126,18 +144,27 @@ export namespace vscMockArrays {
         return result;
     }
 
-    type IMutableSplice<T> = Array<T> & any & {
-        deleteCount: number;
-    }
+    type IMutableSplice<T> = Array<T> &
+        any & {
+            deleteCount: number;
+        };
     type ISplice<T> = Array<T> & any;
 
     /**
      * Diffs two *sorted* arrays and computes the splices which apply the diff.
      */
-    export function sortedDiff<T>(before: T[], after: T[], compare: (a: T, b: T) => number): ISplice<T>[] {
+    export function sortedDiff<T>(
+        before: T[],
+        after: T[],
+        compare: (a: T, b: T) => number
+    ): ISplice<T>[] {
         const result: IMutableSplice<T>[] = [];
 
-        function pushSplice(start: number, deleteCount: number, toInsert: T[]): void {
+        function pushSplice(
+            start: number,
+            deleteCount: number,
+            toInsert: T[]
+        ): void {
             if (deleteCount === 0 && toInsert.length === 0) {
                 return;
             }
@@ -193,13 +220,19 @@ export namespace vscMockArrays {
      * @param after
      * @param compare
      */
-    export function delta<T>(before: T[], after: T[], compare: (a: T, b: T) => number): { removed: T[], added: T[] } {
+    export function delta<T>(
+        before: T[],
+        after: T[],
+        compare: (a: T, b: T) => number
+    ): { removed: T[]; added: T[] } {
         const splices = sortedDiff(before, after, compare);
         const removed: T[] = [];
         const added: T[] = [];
 
         for (const splice of splices) {
-            removed.push(...before.slice(splice.start, splice.start + splice.deleteCount));
+            removed.push(
+                ...before.slice(splice.start, splice.start + splice.deleteCount)
+            );
             added.push(...splice.toInsert);
         }
 
@@ -216,7 +249,11 @@ export namespace vscMockArrays {
      * @param n The number of elements to return.
      * @return The first n elemnts from array when sorted with compare.
      */
-    export function top<T>(array: T[], compare: (a: T, b: T) => number, n: number): T[] {
+    export function top<T>(
+        array: T[],
+        compare: (a: T, b: T) => number,
+        n: number
+    ): T[] {
         if (n === 0) {
             return [];
         }
@@ -225,7 +262,13 @@ export namespace vscMockArrays {
         return result;
     }
 
-    function topStep<T>(array: T[], compare: (a: T, b: T) => number, result: T[], i: number, m: number): void {
+    function topStep<T>(
+        array: T[],
+        compare: (a: T, b: T) => number,
+        result: T[],
+        i: number,
+        m: number
+    ): void {
         for (const n = result.length; i < m; i++) {
             const element = array[i];
             if (compare(element, result[n - 1]) < 0) {
@@ -274,7 +317,7 @@ export namespace vscMockArrays {
         }
 
         const seen: Record<string, boolean> = Object.create(null);
-        return array.filter((elem) => {
+        return array.filter(elem => {
             const key = keyFn(elem);
             if (seen[key]) {
                 return false;
@@ -286,7 +329,9 @@ export namespace vscMockArrays {
         });
     }
 
-    export function uniqueFilter<T>(keyFn: (t: T) => string): (t: T) => boolean {
+    export function uniqueFilter<T>(
+        keyFn: (t: T) => string
+    ): (t: T) => boolean {
         const seen: Record<string, boolean> = Object.create(null);
 
         return element => {
@@ -301,7 +346,10 @@ export namespace vscMockArrays {
         };
     }
 
-    export function firstIndex<T>(array: T[], fn: (item: T) => boolean): number {
+    export function firstIndex<T>(
+        array: T[],
+        fn: (item: T) => boolean
+    ): number {
         for (let i = 0; i < array.length; i++) {
             const element = array[i];
 
@@ -313,15 +361,27 @@ export namespace vscMockArrays {
         return -1;
     }
     // @ts-ignore
-    export function first<T>(array: T[], fn: (item: T) => boolean, notFoundValue: T = null): T {
+    export function first<T>(
+        array: T[],
+        fn: (item: T) => boolean,
+        notFoundValue: T = null
+    ): T {
         const index = firstIndex(array, fn);
         return index < 0 ? notFoundValue : array[index];
     }
 
-    export function commonPrefixLength<T>(one: T[], other: T[], equals: (a: T, b: T) => boolean = (a, b) => a === b): number {
+    export function commonPrefixLength<T>(
+        one: T[],
+        other: T[],
+        equals: (a: T, b: T) => boolean = (a, b) => a === b
+    ): number {
         let result = 0;
 
-        for (let i = 0, len = Math.min(one.length, other.length); i < len && equals(one[i], other[i]); i++) {
+        for (
+            let i = 0, len = Math.min(one.length, other.length);
+            i < len && equals(one[i], other[i]);
+            i++
+        ) {
             result++;
         }
 
@@ -336,9 +396,9 @@ export namespace vscMockArrays {
     export function range(to: number): number[];
     export function range(from: number, to: number): number[];
     export function range(arg: number, to?: number): number[] {
-        let from = typeof to === 'number' ? arg : 0;
+        let from = typeof to === "number" ? arg : 0;
 
-        if (typeof to === 'number') {
+        if (typeof to === "number") {
             from = arg;
         } else {
             from = 0;
@@ -368,9 +428,20 @@ export namespace vscMockArrays {
         return arr;
     }
 
-    export function index<T>(array: T[], indexer: (t: T) => string): Record<string, T>;
-    export function index<T, R>(array: T[], indexer: (t: T) => string, merger?: (t: T, r: R) => R): Record<string, R>;
-    export function index<T, R>(array: T[], indexer: (t: T) => string, merger: (t: T, r: R) => R = t => t as any): Record<string, R> {
+    export function index<T>(
+        array: T[],
+        indexer: (t: T) => string
+    ): Record<string, T>;
+    export function index<T, R>(
+        array: T[],
+        indexer: (t: T) => string,
+        merger?: (t: T, r: R) => R
+    ): Record<string, R>;
+    export function index<T, R>(
+        array: T[],
+        indexer: (t: T) => string,
+        merger: (t: T, r: R) => R = t => t as any
+    ): Record<string, R> {
         return array.reduce((r, t) => {
             const key = indexer(t);
             r[key] = merger(t, r[key]);
@@ -397,7 +468,11 @@ export namespace vscMockArrays {
      * Insert `insertArr` inside `target` at `insertIndex`.
      * Please don't touch unless you understand https://jsperf.com/inserting-an-array-within-an-array
      */
-    export function arrayInsert<T>(target: T[], insertIndex: number, insertArr: T[]): T[] {
+    export function arrayInsert<T>(
+        target: T[],
+        insertIndex: number,
+        insertArr: T[]
+    ): T[] {
         const before = target.slice(0, insertIndex);
         const after = target.slice(insertIndex);
         return before.concat(insertArr, after);

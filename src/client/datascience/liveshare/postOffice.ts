@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
-import { JSONArray } from '@phosphor/coreutils';
-import * as vscode from 'vscode';
-import * as vsls from 'vsls/vscode';
+"use strict";
+import { JSONArray } from "@phosphor/coreutils";
+import * as vscode from "vscode";
+import * as vsls from "vsls/vscode";
 
-import { ILiveShareApi } from '../../common/application/types';
-import { IAsyncDisposable } from '../../common/types';
-import { createDeferred, Deferred } from '../../common/utils/async';
-import { LiveShare } from '../constants';
+import { ILiveShareApi } from "../../common/application/types";
+import { IAsyncDisposable } from "../../common/types";
+import { createDeferred, Deferred } from "../../common/utils/async";
+import { LiveShare } from "../constants";
 
 // tslint:disable:no-any
 
@@ -18,20 +18,29 @@ interface IMessageArgs {
 
 // This class is used to register two communication between a host and all of its guests
 export class PostOffice implements IAsyncDisposable {
-
     private name: string;
     private startedPromise: Deferred<vsls.LiveShare | null> | undefined;
     private hostServer: vsls.SharedService | null = null;
     private guestServer: vsls.SharedServiceProxy | null = null;
     private currentRole: vsls.Role = vsls.Role.None;
     private currentPeerCount: number = 0;
-    private peerCountChangedEmitter: vscode.EventEmitter<number> = new vscode.EventEmitter<number>();
-    private commandMap: { [key: string]: { thisArg: any; callback(...args: any[]): void } } = {};
+    private peerCountChangedEmitter: vscode.EventEmitter<
+        number
+    > = new vscode.EventEmitter<number>();
+    private commandMap: {
+        [key: string]: { thisArg: any; callback(...args: any[]): void };
+    } = {};
 
     constructor(
         name: string,
         private liveShareApi: ILiveShareApi,
-        private hostArgsTranslator?: (api: vsls.LiveShare | null, command: string, role: vsls.Role, args: any[]) => void) {
+        private hostArgsTranslator?: (
+            api: vsls.LiveShare | null,
+            command: string,
+            role: vsls.Role,
+            args: any[]
+        ) => void
+    ) {
         this.name = name;
 
         // Note to self, could the callbacks be keeping things alive that we don't want to be alive?
@@ -72,14 +81,20 @@ export class PostOffice implements IAsyncDisposable {
                 case vsls.Role.Guest:
                     // Ask host to broadcast
                     if (this.guestServer) {
-                        this.guestServer.notify(LiveShare.LiveShareBroadcastRequest, this.createBroadcastArgs(command, ...args));
+                        this.guestServer.notify(
+                            LiveShare.LiveShareBroadcastRequest,
+                            this.createBroadcastArgs(command, ...args)
+                        );
                     }
                     skipDefault = true;
                     break;
                 case vsls.Role.Host:
                     // Notify everybody and call our local callback (by falling through)
                     if (this.hostServer) {
-                        this.hostServer.notify(this.escapeCommandName(command), this.translateArgs(api, command, ...args));
+                        this.hostServer.notify(
+                            this.escapeCommandName(command),
+                            this.translateArgs(api, command, ...args)
+                        );
                     }
                     break;
                 default:
@@ -93,12 +108,23 @@ export class PostOffice implements IAsyncDisposable {
         }
     }
 
-    public async registerCallback(command: string, callback: (...args: any[]) => void, thisArg?: any): Promise<void> {
+    public async registerCallback(
+        command: string,
+        callback: (...args: any[]) => void,
+        thisArg?: any
+    ): Promise<void> {
         const api = await this.getApi();
 
         // For a guest, make sure to register the notification
-        if (api && api.session && api.session.role === vsls.Role.Guest && this.guestServer) {
-            this.guestServer.onNotify(this.escapeCommandName(command), a => this.onGuestNotify(command, a as IMessageArgs));
+        if (
+            api &&
+            api.session &&
+            api.session.role === vsls.Role.Guest &&
+            this.guestServer
+        ) {
+            this.guestServer.onNotify(this.escapeCommandName(command), a =>
+                this.onGuestNotify(command, a as IMessageArgs)
+            );
         }
 
         // Always stick in the command map so that if we switch roles, we reregister
@@ -109,7 +135,11 @@ export class PostOffice implements IAsyncDisposable {
         return { args: JSON.stringify([command, ...args]) };
     }
 
-    private translateArgs(api: vsls.LiveShare, command: string, ...args: any[]): IMessageArgs {
+    private translateArgs(
+        api: vsls.LiveShare,
+        command: string,
+        ...args: any[]
+    ): IMessageArgs {
         // Make sure to eliminate all .toJSON functions on our arguments. Otherwise they're stringified incorrectly
         for (let a = 0; a <= args.length; a += 1) {
             // Eliminate this on only object types (https://stackoverflow.com/questions/8511281/check-if-a-value-is-an-object-in-javascript)
@@ -123,7 +153,9 @@ export class PostOffice implements IAsyncDisposable {
 
         // Some file path args need to have their values translated to guest
         // uri format for use on a guest. Try to find any file arguments
-        const callback = this.commandMap.hasOwnProperty(command) ? this.commandMap[command].callback : undefined;
+        const callback = this.commandMap.hasOwnProperty(command)
+            ? this.commandMap[command].callback
+            : undefined;
         if (callback) {
             // Give the passed in args translator a chance to attempt a translation
             if (this.hostArgsTranslator) {
@@ -137,19 +169,19 @@ export class PostOffice implements IAsyncDisposable {
 
     private escapeCommandName(command: string): string {
         // Replace . with $ instead.
-        return command.replace(/\./g, '$');
+        return command.replace(/\./g, "$");
     }
 
     private unescapeCommandName(command: string): string {
         // Turn $ back into .
-        return command.replace(/\$/g, '.');
+        return command.replace(/\$/g, ".");
     }
 
     private onGuestNotify = (command: string, m: IMessageArgs) => {
         const unescaped = this.unescapeCommandName(command);
         const args = JSON.parse(m.args) as JSONArray;
         this.callCallback(unescaped, ...args);
-    }
+    };
 
     private callCallback(command: string, ...args: any[]) {
         const callback = this.getCallback(command);
@@ -158,8 +190,12 @@ export class PostOffice implements IAsyncDisposable {
         }
     }
 
-    private getCallback(command: string): ((...args: any[]) => void) | undefined {
-        let callback = this.commandMap.hasOwnProperty(command) ? this.commandMap[command].callback : undefined;
+    private getCallback(
+        command: string
+    ): ((...args: any[]) => void) | undefined {
+        let callback = this.commandMap.hasOwnProperty(command)
+            ? this.commandMap[command].callback
+            : undefined;
         if (callback) {
             // Bind the this arg if necessary
             const thisArg = this.commandMap[command].thisArg;
@@ -171,8 +207,7 @@ export class PostOffice implements IAsyncDisposable {
         return callback;
     }
 
-    private getApi() : Promise<vsls.LiveShare | null> {
-
+    private getApi(): Promise<vsls.LiveShare | null> {
         if (!this.startedPromise) {
             this.startedPromise = createDeferred<vsls.LiveShare | null>();
             this.startCommandServer()
@@ -186,7 +221,9 @@ export class PostOffice implements IAsyncDisposable {
     private async startCommandServer(): Promise<vsls.LiveShare | null> {
         const api = await this.liveShareApi.getApi();
         if (api !== null) {
-            api.onDidChangeSession(() => this.onChangeSession(api).ignoreErrors());
+            api.onDidChangeSession(() =>
+                this.onChangeSession(api).ignoreErrors()
+            );
             api.onDidChangePeers(() => this.onChangePeers(api).ignoreErrors());
             await this.onChangeSession(api);
             await this.onChangePeers(api);
@@ -215,7 +252,10 @@ export class PostOffice implements IAsyncDisposable {
 
                 // When we start the host, listen for the broadcast message
                 if (this.hostServer !== null) {
-                    this.hostServer.onNotify(LiveShare.LiveShareBroadcastRequest, a => this.onBroadcastRequest(api, a as IMessageArgs));
+                    this.hostServer.onNotify(
+                        LiveShare.LiveShareBroadcastRequest,
+                        a => this.onBroadcastRequest(api, a as IMessageArgs)
+                    );
                 }
             } else if (api.session.role === vsls.Role.Guest) {
                 this.guestServer = await api.getSharedService(this.name);
@@ -244,28 +284,40 @@ export class PostOffice implements IAsyncDisposable {
             const jsonArray = JSON.parse(a.args) as JSONArray;
             if (jsonArray !== null && jsonArray.length >= 2) {
                 const firstArg = jsonArray[0]!; // More stupid hygiene problems.
-                const command = firstArg !== null ? firstArg.toString() : '';
+                const command = firstArg !== null ? firstArg.toString() : "";
 
                 // Args need to be translated from guest to host
                 const rest = jsonArray.slice(1);
                 if (this.hostArgsTranslator) {
-                    this.hostArgsTranslator(api, command, vsls.Role.Guest, rest);
+                    this.hostArgsTranslator(
+                        api,
+                        command,
+                        vsls.Role.Guest,
+                        rest
+                    );
                 }
 
                 this.postCommand(command, ...rest).ignoreErrors();
             }
         }
-    }
+    };
 
     private registerGuestCommands(api: vsls.LiveShare) {
-        if (api && api.session && api.session.role === vsls.Role.Guest && this.guestServer !== null) {
+        if (
+            api &&
+            api.session &&
+            api.session.role === vsls.Role.Guest &&
+            this.guestServer !== null
+        ) {
             const keys = Object.keys(this.commandMap);
             keys.forEach(k => {
-                if (this.guestServer !== null) { // Hygiene is too dumb to recognize the if above
-                    this.guestServer.onNotify(this.escapeCommandName(k), a => this.onGuestNotify(k, a as IMessageArgs));
+                if (this.guestServer !== null) {
+                    // Hygiene is too dumb to recognize the if above
+                    this.guestServer.onNotify(this.escapeCommandName(k), a =>
+                        this.onGuestNotify(k, a as IMessageArgs)
+                    );
                 }
             });
         }
     }
-
 }

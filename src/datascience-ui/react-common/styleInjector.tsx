@@ -1,14 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
-import * as React from 'react';
+"use strict";
+import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api";
+import * as React from "react";
 
-import { CssMessages, IGetCssResponse, IGetMonacoThemeResponse, SharedMessages } from '../../client/datascience/constants';
-import { IDataScienceExtraSettings } from '../../client/datascience/types';
-import { IMessageHandler, PostOffice } from './postOffice';
-import { getSettings } from './settingsReactSide';
-import { detectBaseTheme } from './themeDetector';
+import {
+    CssMessages,
+    IGetCssResponse,
+    IGetMonacoThemeResponse,
+    SharedMessages
+} from "../../client/datascience/constants";
+import { IDataScienceExtraSettings } from "../../client/datascience/types";
+import { IMessageHandler, PostOffice } from "./postOffice";
+import { getSettings } from "./settingsReactSide";
+import { detectBaseTheme } from "./themeDetector";
 
 export interface IStyleInjectorProps {
     expectingDark: boolean;
@@ -23,8 +28,9 @@ interface IStyleInjectorState {
     knownDark?: boolean;
 }
 
-export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleInjectorState> implements IMessageHandler {
-
+export class StyleInjector
+    extends React.Component<IStyleInjectorProps, IStyleInjectorState>
+    implements IMessageHandler {
     constructor(props: IStyleInjectorProps) {
         super(props);
         this.state = { rootCss: undefined, theme: undefined };
@@ -43,25 +49,28 @@ export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleIn
     public componentDidMount() {
         if (!this.state.rootCss) {
             // Set to a temporary value.
-            this.setState({rootCss: ' '});
-            this.props.postOffice.sendUnsafeMessage(CssMessages.GetCssRequest, { isDark: this.props.expectingDark });
-            this.props.postOffice.sendUnsafeMessage(CssMessages.GetMonacoThemeRequest, { isDark: this.props.expectingDark });
+            this.setState({ rootCss: " " });
+            this.props.postOffice.sendUnsafeMessage(CssMessages.GetCssRequest, {
+                isDark: this.props.expectingDark
+            });
+            this.props.postOffice.sendUnsafeMessage(
+                CssMessages.GetMonacoThemeRequest,
+                { isDark: this.props.expectingDark }
+            );
         }
     }
 
     public render() {
         return (
-            <div className='styleSetter'>
-                <style>
-                    {this.state.rootCss}
-                </style>
+            <div className="styleSetter">
+                <style>{this.state.rootCss}</style>
                 {this.props.children}
             </div>
         );
     }
 
     // tslint:disable-next-line:no-any
-    public handleMessage = (msg: string, payload?: any) : boolean => {
+    public handleMessage = (msg: string, payload?: any): boolean => {
         switch (msg) {
             case CssMessages.GetCssResponse:
                 this.handleCssResponse(payload);
@@ -80,13 +89,12 @@ export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleIn
         }
 
         return true;
-    }
+    };
 
     // tslint:disable-next-line:no-any
     private handleCssResponse(payload?: any) {
         const response = payload as IGetCssResponse;
         if (response && response.css) {
-
             // Recompute our known dark value from the class name in the body
             // VS code should update this dynamically when the theme changes
             const computedKnownDark = this.computeKnownDark();
@@ -94,8 +102,10 @@ export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleIn
             // We also get this in our response, but computing is more reliable
             // than searching for it.
 
-            if (this.state.knownDark !== computedKnownDark &&
-                this.props.darkChanged) {
+            if (
+                this.state.knownDark !== computedKnownDark &&
+                this.props.darkChanged
+            ) {
                 this.props.darkChanged(computedKnownDark);
             }
 
@@ -111,13 +121,15 @@ export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleIn
     private handleMonacoThemeResponse(payload?: any) {
         const response = payload as IGetMonacoThemeResponse;
         if (response && response.theme) {
-
             // Tell monaco we have a new theme. THis is like a state update for monaco
-            monacoEditor.editor.defineTheme('interactiveWindow', response.theme);
+            monacoEditor.editor.defineTheme(
+                "interactiveWindow",
+                response.theme
+            );
 
             // Tell the main panel we have a theme now
             if (this.props.monacoThemeChanged) {
-                this.props.monacoThemeChanged('interactiveWindow');
+                this.props.monacoThemeChanged("interactiveWindow");
             }
         }
     }
@@ -127,17 +139,28 @@ export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleIn
         if (payload) {
             const newSettings = JSON.parse(payload as string);
             const dsSettings = newSettings as IDataScienceExtraSettings;
-            if (dsSettings && dsSettings.extraSettings && dsSettings.extraSettings.theme !== this.state.theme) {
+            if (
+                dsSettings &&
+                dsSettings.extraSettings &&
+                dsSettings.extraSettings.theme !== this.state.theme
+            ) {
                 // User changed the current theme. Rerender
-                this.props.postOffice.sendUnsafeMessage(CssMessages.GetCssRequest, { isDark: this.computeKnownDark() });
-                this.props.postOffice.sendUnsafeMessage(CssMessages.GetMonacoThemeRequest, { isDark: this.computeKnownDark() });
+                this.props.postOffice.sendUnsafeMessage(
+                    CssMessages.GetCssRequest,
+                    { isDark: this.computeKnownDark() }
+                );
+                this.props.postOffice.sendUnsafeMessage(
+                    CssMessages.GetMonacoThemeRequest,
+                    { isDark: this.computeKnownDark() }
+                );
             }
         }
     }
 
-    private computeKnownDark() : boolean {
-        const ignore = getSettings && getSettings().ignoreVscodeTheme ? true : false;
-        const baseTheme = ignore ? 'vscode-light' : detectBaseTheme();
-        return baseTheme !== 'vscode-light';
+    private computeKnownDark(): boolean {
+        const ignore =
+            getSettings && getSettings().ignoreVscodeTheme ? true : false;
+        const baseTheme = ignore ? "vscode-light" : detectBaseTheme();
+        return baseTheme !== "vscode-light";
     }
 }

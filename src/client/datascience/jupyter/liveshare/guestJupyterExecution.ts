@@ -1,36 +1,54 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
-import { injectable } from 'inversify';
-import * as uuid from 'uuid/v4';
-import { CancellationToken } from 'vscode';
+"use strict";
+import { injectable } from "inversify";
+import * as uuid from "uuid/v4";
+import { CancellationToken } from "vscode";
 
-import { ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
-import { IFileSystem } from '../../../common/platform/types';
-import { IProcessServiceFactory, IPythonExecutionFactory } from '../../../common/process/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
-import * as localize from '../../../common/utils/localize';
-import { noop } from '../../../common/utils/misc';
-import { IInterpreterService, IKnownSearchPathsForInterpreters, PythonInterpreter } from '../../../interpreter/contracts';
-import { IServiceContainer } from '../../../ioc/types';
-import { LiveShare, LiveShareCommands } from '../../constants';
+import {
+    ILiveShareApi,
+    IWorkspaceService
+} from "../../../common/application/types";
+import { IFileSystem } from "../../../common/platform/types";
+import {
+    IProcessServiceFactory,
+    IPythonExecutionFactory
+} from "../../../common/process/types";
+import {
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry,
+    ILogger
+} from "../../../common/types";
+import * as localize from "../../../common/utils/localize";
+import { noop } from "../../../common/utils/misc";
+import {
+    IInterpreterService,
+    IKnownSearchPathsForInterpreters,
+    PythonInterpreter
+} from "../../../interpreter/contracts";
+import { IServiceContainer } from "../../../ioc/types";
+import { LiveShare, LiveShareCommands } from "../../constants";
 import {
     IConnection,
     IJupyterCommandFactory,
     IJupyterSessionManager,
     INotebookServer,
     INotebookServerOptions
-} from '../../types';
-import { JupyterConnectError } from '../jupyterConnectError';
-import { JupyterExecutionBase } from '../jupyterExecution';
-import { GuestJupyterSessionManager } from './guestJupyterSessionManager';
-import { LiveShareParticipantGuest } from './liveShareParticipantMixin';
-import { ServerCache } from './serverCache';
+} from "../../types";
+import { JupyterConnectError } from "../jupyterConnectError";
+import { JupyterExecutionBase } from "../jupyterExecution";
+import { GuestJupyterSessionManager } from "./guestJupyterSessionManager";
+import { LiveShareParticipantGuest } from "./liveShareParticipantMixin";
+import { ServerCache } from "./serverCache";
 
 // This class is really just a wrapper around a jupyter execution that also provides a shared live share service
 @injectable()
-export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExecutionBase, LiveShare.JupyterExecutionService) {
-    private serverCache : ServerCache;
+export class GuestJupyterExecution extends LiveShareParticipantGuest(
+    JupyterExecutionBase,
+    LiveShare.JupyterExecutionService
+) {
+    private serverCache: ServerCache;
 
     constructor(
         liveShare: ILiveShareApi,
@@ -45,8 +63,9 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
         sessionManager: IJupyterSessionManager,
         workspace: IWorkspaceService,
         configuration: IConfigurationService,
-        commandFactory : IJupyterCommandFactory,
-        serviceContainer: IServiceContainer) {
+        commandFactory: IJupyterCommandFactory,
+        serviceContainer: IServiceContainer
+    ) {
         super(
             liveShare,
             executionFactory,
@@ -61,35 +80,67 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
             workspace,
             configuration,
             commandFactory,
-            serviceContainer);
+            serviceContainer
+        );
         asyncRegistry.push(this);
-        this.serverCache = new ServerCache(configuration, workspace, fileSystem);
+        this.serverCache = new ServerCache(
+            configuration,
+            workspace,
+            fileSystem
+        );
     }
 
-    public async dispose() : Promise<void> {
+    public async dispose(): Promise<void> {
         await super.dispose();
 
         // Dispose of all of our cached servers
         await this.serverCache.dispose();
     }
 
-    public async isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        return this.checkSupported(LiveShareCommands.isNotebookSupported, cancelToken);
+    public async isNotebookSupported(
+        cancelToken?: CancellationToken
+    ): Promise<boolean> {
+        return this.checkSupported(
+            LiveShareCommands.isNotebookSupported,
+            cancelToken
+        );
     }
-    public isImportSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        return this.checkSupported(LiveShareCommands.isImportSupported, cancelToken);
+    public isImportSupported(
+        cancelToken?: CancellationToken
+    ): Promise<boolean> {
+        return this.checkSupported(
+            LiveShareCommands.isImportSupported,
+            cancelToken
+        );
     }
-    public isKernelCreateSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        return this.checkSupported(LiveShareCommands.isKernelCreateSupported, cancelToken);
+    public isKernelCreateSupported(
+        cancelToken?: CancellationToken
+    ): Promise<boolean> {
+        return this.checkSupported(
+            LiveShareCommands.isKernelCreateSupported,
+            cancelToken
+        );
     }
-    public isKernelSpecSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        return this.checkSupported(LiveShareCommands.isKernelSpecSupported, cancelToken);
+    public isKernelSpecSupported(
+        cancelToken?: CancellationToken
+    ): Promise<boolean> {
+        return this.checkSupported(
+            LiveShareCommands.isKernelSpecSupported,
+            cancelToken
+        );
     }
-    public isSpawnSupported(_cancelToken?: CancellationToken): Promise<boolean> {
+    public isSpawnSupported(
+        _cancelToken?: CancellationToken
+    ): Promise<boolean> {
         return Promise.resolve(false);
     }
-    public async connectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer> {
-        let result: INotebookServer | undefined = await this.serverCache.get(options);
+    public async connectToNotebookServer(
+        options?: INotebookServerOptions,
+        cancelToken?: CancellationToken
+    ): Promise<INotebookServer> {
+        let result: INotebookServer | undefined = await this.serverCache.get(
+            options
+        );
 
         // See if we already have this server or not.
         if (result) {
@@ -103,11 +154,14 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
             const connection: IConnection = await service.request(
                 LiveShareCommands.connectToNotebookServer,
                 [options],
-                cancelToken);
+                cancelToken
+            );
 
             // If that works, then treat this as a remote server and connect to it
             if (connection && connection.baseUrl) {
-                const newUri = `${connection.baseUrl}?token=${connection.token}`;
+                const newUri = `${connection.baseUrl}?token=${
+                    connection.token
+                }`;
                 result = await super.connectToNotebookServer(
                     {
                         uri: newUri,
@@ -115,7 +169,8 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
                         workingDir: options ? options.workingDir : undefined,
                         purpose
                     },
-                    cancelToken);
+                    cancelToken
+                );
                 // Save in our cache
                 if (result) {
                     await this.serverCache.set(result, noop, options);
@@ -124,7 +179,9 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
         }
 
         if (!result) {
-            throw new JupyterConnectError(localize.DataScience.liveShareConnectFailure());
+            throw new JupyterConnectError(
+                localize.DataScience.liveShareConnectFailure()
+            );
         }
 
         return result;
@@ -134,18 +191,29 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
         throw new Error(localize.DataScience.liveShareCannotSpawnNotebooks());
     }
 
-    public async getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> {
+    public async getUsableJupyterPython(
+        cancelToken?: CancellationToken
+    ): Promise<PythonInterpreter | undefined> {
         const service = await this.waitForService();
         if (service) {
-            return service.request(LiveShareCommands.getUsableJupyterPython, [], cancelToken);
+            return service.request(
+                LiveShareCommands.getUsableJupyterPython,
+                [],
+                cancelToken
+            );
         }
     }
 
-    public async getServer(options?: INotebookServerOptions) : Promise<INotebookServer | undefined> {
+    public async getServer(
+        options?: INotebookServerOptions
+    ): Promise<INotebookServer | undefined> {
         return this.serverCache.get(options);
     }
 
-    private async checkSupported(command: string, cancelToken?: CancellationToken) : Promise<boolean> {
+    private async checkSupported(
+        command: string,
+        cancelToken?: CancellationToken
+    ): Promise<boolean> {
         const service = await this.waitForService();
 
         // Make a remote call on the proxy

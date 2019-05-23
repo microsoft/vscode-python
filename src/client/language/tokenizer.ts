@@ -1,13 +1,28 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
+"use strict";
 
 // tslint:disable-next-line:import-name
-import Char from 'typescript-char';
-import { isBinary, isDecimal, isHex, isIdentifierChar, isIdentifierStartChar, isOctal } from './characters';
-import { CharacterStream } from './characterStream';
-import { TextRangeCollection } from './textRangeCollection';
-import { ICharacterStream, ITextRangeCollection, IToken, ITokenizer, TextRange, TokenizerMode, TokenType } from './types';
+import Char from "typescript-char";
+import {
+    isBinary,
+    isDecimal,
+    isHex,
+    isIdentifierChar,
+    isIdentifierStartChar,
+    isOctal
+} from "./characters";
+import { CharacterStream } from "./characterStream";
+import { TextRangeCollection } from "./textRangeCollection";
+import {
+    ICharacterStream,
+    ITextRangeCollection,
+    IToken,
+    ITokenizer,
+    TextRange,
+    TokenizerMode,
+    TokenType
+} from "./types";
 
 enum QuoteType {
     None,
@@ -27,24 +42,34 @@ class Token extends TextRange implements IToken {
 }
 
 export class Tokenizer implements ITokenizer {
-    private cs: ICharacterStream = new CharacterStream('');
+    private cs: ICharacterStream = new CharacterStream("");
     private tokens: IToken[] = [];
     private mode = TokenizerMode.Full;
 
     public tokenize(text: string): ITextRangeCollection<IToken>;
-    public tokenize(text: string, start: number, length: number, mode: TokenizerMode): ITextRangeCollection<IToken>;
+    public tokenize(
+        text: string,
+        start: number,
+        length: number,
+        mode: TokenizerMode
+    ): ITextRangeCollection<IToken>;
 
-    public tokenize(text: string, start?: number, length?: number, mode?: TokenizerMode): ITextRangeCollection<IToken> {
+    public tokenize(
+        text: string,
+        start?: number,
+        length?: number,
+        mode?: TokenizerMode
+    ): ITextRangeCollection<IToken> {
         if (start === undefined) {
             start = 0;
         } else if (start < 0 || start >= text.length) {
-            throw new Error('Invalid range start');
+            throw new Error("Invalid range start");
         }
 
         if (length === undefined) {
             length = text.length;
         } else if (length < 0 || start + length > text.length) {
-            throw new Error('Invalid range length');
+            throw new Error("Invalid range length");
         }
 
         this.mode = mode !== undefined ? mode : TokenizerMode.Full;
@@ -97,31 +122,49 @@ export class Tokenizer implements ITokenizer {
 
         switch (this.cs.currentChar) {
             case Char.OpenParenthesis:
-                this.tokens.push(new Token(TokenType.OpenBrace, this.cs.position, 1));
+                this.tokens.push(
+                    new Token(TokenType.OpenBrace, this.cs.position, 1)
+                );
                 break;
             case Char.CloseParenthesis:
-                this.tokens.push(new Token(TokenType.CloseBrace, this.cs.position, 1));
+                this.tokens.push(
+                    new Token(TokenType.CloseBrace, this.cs.position, 1)
+                );
                 break;
             case Char.OpenBracket:
-                this.tokens.push(new Token(TokenType.OpenBracket, this.cs.position, 1));
+                this.tokens.push(
+                    new Token(TokenType.OpenBracket, this.cs.position, 1)
+                );
                 break;
             case Char.CloseBracket:
-                this.tokens.push(new Token(TokenType.CloseBracket, this.cs.position, 1));
+                this.tokens.push(
+                    new Token(TokenType.CloseBracket, this.cs.position, 1)
+                );
                 break;
             case Char.OpenBrace:
-                this.tokens.push(new Token(TokenType.OpenCurly, this.cs.position, 1));
+                this.tokens.push(
+                    new Token(TokenType.OpenCurly, this.cs.position, 1)
+                );
                 break;
             case Char.CloseBrace:
-                this.tokens.push(new Token(TokenType.CloseCurly, this.cs.position, 1));
+                this.tokens.push(
+                    new Token(TokenType.CloseCurly, this.cs.position, 1)
+                );
                 break;
             case Char.Comma:
-                this.tokens.push(new Token(TokenType.Comma, this.cs.position, 1));
+                this.tokens.push(
+                    new Token(TokenType.Comma, this.cs.position, 1)
+                );
                 break;
             case Char.Semicolon:
-                this.tokens.push(new Token(TokenType.Semicolon, this.cs.position, 1));
+                this.tokens.push(
+                    new Token(TokenType.Semicolon, this.cs.position, 1)
+                );
                 break;
             case Char.Colon:
-                this.tokens.push(new Token(TokenType.Colon, this.cs.position, 1));
+                this.tokens.push(
+                    new Token(TokenType.Colon, this.cs.position, 1)
+                );
                 break;
             default:
                 if (this.isPossibleNumber()) {
@@ -130,7 +173,9 @@ export class Tokenizer implements ITokenizer {
                     }
                 }
                 if (this.cs.currentChar === Char.Period) {
-                    this.tokens.push(new Token(TokenType.Operator, this.cs.position, 1));
+                    this.tokens.push(
+                        new Token(TokenType.Operator, this.cs.position, 1)
+                    );
                     break;
                 }
                 if (!this.tryIdentifier()) {
@@ -154,7 +199,9 @@ export class Tokenizer implements ITokenizer {
         if (this.cs.position > start) {
             // const text = this.cs.getText().substr(start, this.cs.position - start);
             // const type = this.keywords.find((value, index) => value === text) ? TokenType.Keyword : TokenType.Identifier;
-            this.tokens.push(new Token(TokenType.Identifier, start, this.cs.position - start));
+            this.tokens.push(
+                new Token(TokenType.Identifier, start, this.cs.position - start)
+            );
             return true;
         }
         return false;
@@ -166,14 +213,24 @@ export class Tokenizer implements ITokenizer {
             return true;
         }
 
-        if (this.cs.currentChar === Char.Period && isDecimal(this.cs.nextChar)) {
+        if (
+            this.cs.currentChar === Char.Period &&
+            isDecimal(this.cs.nextChar)
+        ) {
             return true;
         }
 
-        const next = (this.cs.currentChar === Char.Hyphen || this.cs.currentChar === Char.Plus) ? 1 : 0;
+        const next =
+            this.cs.currentChar === Char.Hyphen ||
+            this.cs.currentChar === Char.Plus
+                ? 1
+                : 0;
         // Next character must be decimal or a dot otherwise
         // it is not a number. No whitespace is allowed.
-        if (isDecimal(this.cs.lookAhead(next)) || this.cs.lookAhead(next) === Char.Period) {
+        if (
+            isDecimal(this.cs.lookAhead(next)) ||
+            this.cs.lookAhead(next) === Char.Period
+        ) {
             // Check what previous token is, if any
             if (this.tokens.length === 0) {
                 // At the start of the file this can only be a number
@@ -181,12 +238,14 @@ export class Tokenizer implements ITokenizer {
             }
 
             const prev = this.tokens[this.tokens.length - 1];
-            if (prev.type === TokenType.OpenBrace
-                || prev.type === TokenType.OpenBracket
-                || prev.type === TokenType.Comma
-                || prev.type === TokenType.Colon
-                || prev.type === TokenType.Semicolon
-                || prev.type === TokenType.Operator) {
+            if (
+                prev.type === TokenType.OpenBrace ||
+                prev.type === TokenType.OpenBracket ||
+                prev.type === TokenType.Comma ||
+                prev.type === TokenType.Colon ||
+                prev.type === TokenType.Semicolon ||
+                prev.type === TokenType.Operator
+            ) {
                 return true;
             }
         }
@@ -212,7 +271,10 @@ export class Tokenizer implements ITokenizer {
         const start = this.cs.position;
         let leadingSign = 0;
 
-        if (this.cs.currentChar === Char.Hyphen || this.cs.currentChar === Char.Plus) {
+        if (
+            this.cs.currentChar === Char.Hyphen ||
+            this.cs.currentChar === Char.Plus
+        ) {
             this.cs.moveNext(); // Skip leading +/-
             leadingSign = 1;
         }
@@ -220,7 +282,10 @@ export class Tokenizer implements ITokenizer {
         if (this.cs.currentChar === Char._0) {
             let radix = 0;
             // Try hex => hexinteger: "0" ("x" | "X") (["_"] hexdigit)+
-            if ((this.cs.nextChar === Char.x || this.cs.nextChar === Char.X) && isHex(this.cs.lookAhead(2))) {
+            if (
+                (this.cs.nextChar === Char.x || this.cs.nextChar === Char.X) &&
+                isHex(this.cs.lookAhead(2))
+            ) {
                 this.cs.advance(2);
                 while (isHex(this.cs.currentChar)) {
                     this.cs.moveNext();
@@ -228,7 +293,10 @@ export class Tokenizer implements ITokenizer {
                 radix = 16;
             }
             // Try binary => bininteger: "0" ("b" | "B") (["_"] bindigit)+
-            if ((this.cs.nextChar === Char.b || this.cs.nextChar === Char.B) && isBinary(this.cs.lookAhead(2))) {
+            if (
+                (this.cs.nextChar === Char.b || this.cs.nextChar === Char.B) &&
+                isBinary(this.cs.lookAhead(2))
+            ) {
                 this.cs.advance(2);
                 while (isBinary(this.cs.currentChar)) {
                     this.cs.moveNext();
@@ -236,7 +304,10 @@ export class Tokenizer implements ITokenizer {
                 radix = 2;
             }
             // Try octal => octinteger: "0" ("o" | "O") (["_"] octdigit)+
-            if ((this.cs.nextChar === Char.o || this.cs.nextChar === Char.O) && isOctal(this.cs.lookAhead(2))) {
+            if (
+                (this.cs.nextChar === Char.o || this.cs.nextChar === Char.O) &&
+                isOctal(this.cs.lookAhead(2))
+            ) {
                 this.cs.advance(2);
                 while (isOctal(this.cs.currentChar)) {
                     this.cs.moveNext();
@@ -244,9 +315,20 @@ export class Tokenizer implements ITokenizer {
                 radix = 8;
             }
             if (radix > 0) {
-                const text = this.cs.getText().substr(start + leadingSign, this.cs.position - start - leadingSign);
+                const text = this.cs
+                    .getText()
+                    .substr(
+                        start + leadingSign,
+                        this.cs.position - start - leadingSign
+                    );
                 if (!isNaN(parseInt(text, radix))) {
-                    this.tokens.push(new Token(TokenType.Number, start, text.length + leadingSign));
+                    this.tokens.push(
+                        new Token(
+                            TokenType.Number,
+                            start,
+                            text.length + leadingSign
+                        )
+                    );
                     return true;
                 }
             }
@@ -261,31 +343,65 @@ export class Tokenizer implements ITokenizer {
             while (isDecimal(this.cs.currentChar)) {
                 this.cs.moveNext();
             }
-            decimal = this.cs.currentChar !== Char.Period && this.cs.currentChar !== Char.e && this.cs.currentChar !== Char.E;
+            decimal =
+                this.cs.currentChar !== Char.Period &&
+                this.cs.currentChar !== Char.e &&
+                this.cs.currentChar !== Char.E;
         }
 
-        if (this.cs.currentChar === Char._0) { // "0" (["_"] "0")*
-            while (this.cs.currentChar === Char._0 || this.cs.currentChar === Char.Underscore) {
+        if (this.cs.currentChar === Char._0) {
+            // "0" (["_"] "0")*
+            while (
+                this.cs.currentChar === Char._0 ||
+                this.cs.currentChar === Char.Underscore
+            ) {
                 this.cs.moveNext();
             }
-            decimal = this.cs.currentChar !== Char.Period && this.cs.currentChar !== Char.e && this.cs.currentChar !== Char.E;
+            decimal =
+                this.cs.currentChar !== Char.Period &&
+                this.cs.currentChar !== Char.e &&
+                this.cs.currentChar !== Char.E;
         }
 
         if (decimal) {
-            const text = this.cs.getText().substr(start + leadingSign, this.cs.position - start - leadingSign);
+            const text = this.cs
+                .getText()
+                .substr(
+                    start + leadingSign,
+                    this.cs.position - start - leadingSign
+                );
             if (!isNaN(parseInt(text, 10))) {
-                this.tokens.push(new Token(TokenType.Number, start, text.length + leadingSign));
+                this.tokens.push(
+                    new Token(
+                        TokenType.Number,
+                        start,
+                        text.length + leadingSign
+                    )
+                );
                 return true;
             }
         }
 
         // Floating point. Sign was already skipped over.
-        if ((this.cs.currentChar >= Char._0 && this.cs.currentChar <= Char._9) ||
-            (this.cs.currentChar === Char.Period && this.cs.nextChar >= Char._0 && this.cs.nextChar <= Char._9)) {
+        if (
+            (this.cs.currentChar >= Char._0 &&
+                this.cs.currentChar <= Char._9) ||
+            (this.cs.currentChar === Char.Period &&
+                this.cs.nextChar >= Char._0 &&
+                this.cs.nextChar <= Char._9)
+        ) {
             if (this.skipFloatingPointCandidate(false)) {
-                const text = this.cs.getText().substr(start, this.cs.position - start);
+                const text = this.cs
+                    .getText()
+                    .substr(start, this.cs.position - start);
                 if (!isNaN(parseFloat(text))) {
-                    this.tokens.push(new Token(TokenType.Number, start, this.cs.position - start));
+                    this.tokens.push(
+                        new Token(
+                            TokenType.Number,
+                            start,
+                            this.cs.position - start
+                        )
+                    );
                     return true;
                 }
             }
@@ -312,7 +428,10 @@ export class Tokenizer implements ITokenizer {
                 break;
 
             case Char.Hyphen:
-                length = nextChar === Char.Equal || nextChar === Char.Greater ? 2 : 1;
+                length =
+                    nextChar === Char.Equal || nextChar === Char.Greater
+                        ? 2
+                        : 1;
                 break;
 
             case Char.Asterisk:
@@ -356,7 +475,9 @@ export class Tokenizer implements ITokenizer {
             default:
                 return false;
         }
-        this.tokens.push(new Token(TokenType.Operator, this.cs.position, length));
+        this.tokens.push(
+            new Token(TokenType.Operator, this.cs.position, length)
+        );
         this.cs.advance(length);
         return length > 0;
     }
@@ -375,16 +496,24 @@ export class Tokenizer implements ITokenizer {
     private handleComment(): void {
         const start = this.cs.position;
         this.cs.skipToEol();
-        this.tokens.push(new Token(TokenType.Comment, start, this.cs.position - start));
+        this.tokens.push(
+            new Token(TokenType.Comment, start, this.cs.position - start)
+        );
     }
 
     // tslint:disable-next-line:cyclomatic-complexity
     private getStringPrefixLength(): number {
-        if (this.cs.currentChar === Char.SingleQuote || this.cs.currentChar === Char.DoubleQuote) {
+        if (
+            this.cs.currentChar === Char.SingleQuote ||
+            this.cs.currentChar === Char.DoubleQuote
+        ) {
             return 0; // Simple string, no prefix
         }
 
-        if (this.cs.nextChar === Char.SingleQuote || this.cs.nextChar === Char.DoubleQuote) {
+        if (
+            this.cs.nextChar === Char.SingleQuote ||
+            this.cs.nextChar === Char.DoubleQuote
+        ) {
             switch (this.cs.currentChar) {
                 case Char.f:
                 case Char.F:
@@ -400,12 +529,18 @@ export class Tokenizer implements ITokenizer {
             }
         }
 
-        if (this.cs.lookAhead(2) === Char.SingleQuote || this.cs.lookAhead(2) === Char.DoubleQuote) {
-            const prefix = this.cs.getText().substr(this.cs.position, 2).toLowerCase();
+        if (
+            this.cs.lookAhead(2) === Char.SingleQuote ||
+            this.cs.lookAhead(2) === Char.DoubleQuote
+        ) {
+            const prefix = this.cs
+                .getText()
+                .substr(this.cs.position, 2)
+                .toLowerCase();
             switch (prefix) {
-                case 'rf':
-                case 'ur':
-                case 'br':
+                case "rf":
+                case "ur":
+                case "br":
                     return 2;
                 default:
                     break;
@@ -416,40 +551,57 @@ export class Tokenizer implements ITokenizer {
 
     private getQuoteType(): QuoteType {
         if (this.cs.currentChar === Char.SingleQuote) {
-            return this.cs.nextChar === Char.SingleQuote && this.cs.lookAhead(2) === Char.SingleQuote
+            return this.cs.nextChar === Char.SingleQuote &&
+                this.cs.lookAhead(2) === Char.SingleQuote
                 ? QuoteType.TripleSingle
                 : QuoteType.Single;
         }
         if (this.cs.currentChar === Char.DoubleQuote) {
-            return this.cs.nextChar === Char.DoubleQuote && this.cs.lookAhead(2) === Char.DoubleQuote
+            return this.cs.nextChar === Char.DoubleQuote &&
+                this.cs.lookAhead(2) === Char.DoubleQuote
                 ? QuoteType.TripleDouble
                 : QuoteType.Double;
         }
         return QuoteType.None;
     }
 
-    private handleString(quoteType: QuoteType, stringPrefixLength: number): void {
+    private handleString(
+        quoteType: QuoteType,
+        stringPrefixLength: number
+    ): void {
         const start = this.cs.position - stringPrefixLength;
         if (quoteType === QuoteType.Single || quoteType === QuoteType.Double) {
             this.cs.moveNext();
-            this.skipToSingleEndQuote(quoteType === QuoteType.Single
-                ? Char.SingleQuote
-                : Char.DoubleQuote);
+            this.skipToSingleEndQuote(
+                quoteType === QuoteType.Single
+                    ? Char.SingleQuote
+                    : Char.DoubleQuote
+            );
         } else {
             this.cs.advance(3);
-            this.skipToTripleEndQuote(quoteType === QuoteType.TripleSingle
-                ? Char.SingleQuote
-                : Char.DoubleQuote);
+            this.skipToTripleEndQuote(
+                quoteType === QuoteType.TripleSingle
+                    ? Char.SingleQuote
+                    : Char.DoubleQuote
+            );
         }
-        this.tokens.push(new Token(TokenType.String, start, this.cs.position - start));
+        this.tokens.push(
+            new Token(TokenType.String, start, this.cs.position - start)
+        );
     }
 
     private skipToSingleEndQuote(quote: number): void {
         while (!this.cs.isEndOfStream()) {
-            if (this.cs.currentChar === Char.LineFeed || this.cs.currentChar === Char.CarriageReturn) {
+            if (
+                this.cs.currentChar === Char.LineFeed ||
+                this.cs.currentChar === Char.CarriageReturn
+            ) {
                 return; // Unterminated single-line string
             }
-            if (this.cs.currentChar === Char.Backslash && this.cs.nextChar === quote) {
+            if (
+                this.cs.currentChar === Char.Backslash &&
+                this.cs.nextChar === quote
+            ) {
                 this.cs.advance(2);
                 continue;
             }
@@ -462,7 +614,12 @@ export class Tokenizer implements ITokenizer {
     }
 
     private skipToTripleEndQuote(quote: number): void {
-        while (!this.cs.isEndOfStream() && (this.cs.currentChar !== quote || this.cs.nextChar !== quote || this.cs.lookAhead(2) !== quote)) {
+        while (
+            !this.cs.isEndOfStream() &&
+            (this.cs.currentChar !== quote ||
+                this.cs.nextChar !== quote ||
+                this.cs.lookAhead(2) !== quote)
+        ) {
             this.cs.moveNext();
         }
         this.cs.advance(3);
@@ -473,7 +630,10 @@ export class Tokenizer implements ITokenizer {
         const start = this.cs.position;
         this.skipFractionalNumber(allowSign);
         if (this.cs.position > start) {
-            if (this.cs.currentChar === Char.e || this.cs.currentChar === Char.E) {
+            if (
+                this.cs.currentChar === Char.e ||
+                this.cs.currentChar === Char.E
+            ) {
                 this.cs.moveNext(); // Optional exponent sign
             }
             this.skipDecimalNumber(true); // skip exponent value
@@ -490,7 +650,11 @@ export class Tokenizer implements ITokenizer {
     }
 
     private skipDecimalNumber(allowSign: boolean): void {
-        if (allowSign && (this.cs.currentChar === Char.Hyphen || this.cs.currentChar === Char.Plus)) {
+        if (
+            allowSign &&
+            (this.cs.currentChar === Char.Hyphen ||
+                this.cs.currentChar === Char.Plus)
+        ) {
             this.cs.moveNext(); // Optional sign
         }
         while (isDecimal(this.cs.currentChar)) {

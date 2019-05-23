@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { IDataScienceExtraSettings } from '../../client/datascience/types';
+import { IDataScienceExtraSettings } from "../../client/datascience/types";
 
 // The WebPanel constructed by the extension should inject a getInitialSettings function into
 // the script. This should return a dictionary of key value pairs for settings
@@ -12,7 +12,7 @@ export declare function getInitialSettings(): any;
 
 let loadedSettings: IDataScienceExtraSettings;
 
-export function getSettings() : IDataScienceExtraSettings {
+export function getSettings(): IDataScienceExtraSettings {
     if (loadedSettings === undefined) {
         load();
     }
@@ -27,7 +27,7 @@ export function updateSettings(jsonSettingsString: string) {
 
 function load() {
     // tslint:disable-next-line:no-typeof-undefined
-    if (typeof getInitialSettings !== 'undefined') {
+    if (typeof getInitialSettings !== "undefined") {
         loadedSettings = <IDataScienceExtraSettings>getInitialSettings();
     } else {
         // Default settings for tests
@@ -36,8 +36,8 @@ function load() {
             jupyterLaunchTimeout: 10,
             jupyterLaunchRetries: 3,
             enabled: true,
-            jupyterServerURI: 'local',
-            notebookFileRoot: 'WORKSPACE',
+            jupyterServerURI: "local",
+            notebookFileRoot: "WORKSPACE",
             changeDirOnImportExport: true,
             useDefaultConfigForJupyter: true,
             jupyterInterruptTimeout: 10000,
@@ -46,15 +46,17 @@ function load() {
             showCellInputCode: true,
             collapseCellInputCodeByDefault: true,
             maxOutputSize: 400,
-            errorBackgroundColor: '#FFFFFF',
+            errorBackgroundColor: "#FFFFFF",
             sendSelectionToInteractiveWindow: false,
-            markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
-            codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
+            markdownRegularExpression:
+                "^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)",
+            codeRegularExpression:
+                "^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])",
             showJupyterVariableExplorer: true,
-            variableExplorerExclude: 'module;builtin_function_or_method',
+            variableExplorerExclude: "module;builtin_function_or_method",
             extraSettings: {
-                terminalCursor: 'block',
-                theme: 'Default Dark+'
+                terminalCursor: "block",
+                theme: "Default Dark+"
             },
             intellisenseOptions: {
                 quickSuggestions: {
@@ -62,12 +64,12 @@ function load() {
                     comments: false,
                     strings: false
                 },
-                acceptSuggestionOnEnter: 'on',
+                acceptSuggestionOnEnter: "on",
                 quickSuggestionsDelay: 10,
                 suggestOnTriggerCharacters: true,
-                tabCompletion: 'on',
+                tabCompletion: "on",
                 suggestLocalityBonus: true,
-                suggestSelection: 'recentlyUsed',
+                suggestSelection: "recentlyUsed",
                 wordBasedSuggestions: true,
                 parameterHintsEnabled: true
             }

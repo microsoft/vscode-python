@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-export async function sleep(timeout: number) : Promise<number> {
-    return new Promise<number>((resolve) => {
+export async function sleep(timeout: number): Promise<number> {
+    return new Promise<number>(resolve => {
         setTimeout(() => resolve(timeout), timeout);
     });
 }

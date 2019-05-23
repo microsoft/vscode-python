@@ -1,20 +1,26 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
-import '../../common/extensions';
+"use strict";
+import "../../common/extensions";
 
-import { IWebPanel, IWebPanelMessageListener } from '../../common/application/types';
+import {
+    IWebPanel,
+    IWebPanelMessageListener
+} from "../../common/application/types";
 
 // tslint:disable:no-any
 
 // This class listens to messages that come from the local Data Explorer window
 export class DataViewerMessageListener implements IWebPanelMessageListener {
-    private disposedCallback : () => void;
-    private callback :  (message: string, payload: any) => void;
+    private disposedCallback: () => void;
+    private callback: (message: string, payload: any) => void;
     private viewChanged: (panel: IWebPanel) => void;
 
-    constructor(callback: (message: string, payload: any) => void, viewChanged: (panel: IWebPanel) => void, disposed: () => void) {
-
+    constructor(
+        callback: (message: string, payload: any) => void,
+        viewChanged: (panel: IWebPanel) => void,
+        disposed: () => void
+    ) {
         // Save our dispose callback so we remove our history window
         this.disposedCallback = disposed;
 

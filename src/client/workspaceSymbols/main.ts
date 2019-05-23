@@ -1,15 +1,28 @@
-import { CancellationToken, Disposable, languages, OutputChannel } from 'vscode';
-import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
-import { Commands, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
-import { isNotInstalledError } from '../common/helpers';
-import { IFileSystem } from '../common/platform/types';
-import { IProcessServiceFactory } from '../common/process/types';
 import {
-    IConfigurationService, IInstaller, InstallerResponse, IOutputChannel, Product
-} from '../common/types';
-import { IServiceContainer } from '../ioc/types';
-import { Generator } from './generator';
-import { WorkspaceSymbolProvider } from './provider';
+    CancellationToken,
+    Disposable,
+    languages,
+    OutputChannel
+} from "vscode";
+import {
+    IApplicationShell,
+    ICommandManager,
+    IWorkspaceService
+} from "../common/application/types";
+import { Commands, STANDARD_OUTPUT_CHANNEL } from "../common/constants";
+import { isNotInstalledError } from "../common/helpers";
+import { IFileSystem } from "../common/platform/types";
+import { IProcessServiceFactory } from "../common/process/types";
+import {
+    IConfigurationService,
+    IInstaller,
+    InstallerResponse,
+    IOutputChannel,
+    Product
+} from "../common/types";
+import { IServiceContainer } from "../ioc/types";
+import { Generator } from "./generator";
+import { WorkspaceSymbolProvider } from "./provider";
 
 const MAX_NUMBER_OF_ATTEMPTS_TO_INSTALL_AND_BUILD = 2;
 
@@ -25,19 +38,42 @@ export class WorkspaceSymbols implements Disposable {
     private configurationService: IConfigurationService;
 
     constructor(private serviceContainer: IServiceContainer) {
-        this.outputChannel = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-        this.commandMgr = this.serviceContainer.get<ICommandManager>(ICommandManager);
+        this.outputChannel = this.serviceContainer.get<OutputChannel>(
+            IOutputChannel,
+            STANDARD_OUTPUT_CHANNEL
+        );
+        this.commandMgr = this.serviceContainer.get<ICommandManager>(
+            ICommandManager
+        );
         this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
-        this.workspace = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-        this.processFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
-        this.appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-        this.configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        this.workspace = this.serviceContainer.get<IWorkspaceService>(
+            IWorkspaceService
+        );
+        this.processFactory = this.serviceContainer.get<IProcessServiceFactory>(
+            IProcessServiceFactory
+        );
+        this.appShell = this.serviceContainer.get<IApplicationShell>(
+            IApplicationShell
+        );
+        this.configurationService = this.serviceContainer.get<
+            IConfigurationService
+        >(IConfigurationService);
         this.disposables = [];
         this.disposables.push(this.outputChannel);
         this.registerCommands();
         this.initializeGenerators();
-        languages.registerWorkspaceSymbolProvider(new WorkspaceSymbolProvider(this.fs, this.commandMgr, this.generators));
-        this.disposables.push(this.workspace.onDidChangeWorkspaceFolders(() => this.initializeGenerators()));
+        languages.registerWorkspaceSymbolProvider(
+            new WorkspaceSymbolProvider(
+                this.fs,
+                this.commandMgr,
+                this.generators
+            )
+        );
+        this.disposables.push(
+            this.workspace.onDidChangeWorkspaceFolders(() =>
+                this.initializeGenerators()
+            )
+        );
     }
     public dispose() {
         this.disposables.forEach(d => d.dispose());
@@ -50,7 +86,16 @@ export class WorkspaceSymbols implements Disposable {
 
         if (Array.isArray(this.workspace.workspaceFolders)) {
             this.workspace.workspaceFolders.forEach(wkSpc => {
-                this.generators.push(new Generator(wkSpc.uri, this.outputChannel, this.appShell, this.fs, this.processFactory, this.configurationService));
+                this.generators.push(
+                    new Generator(
+                        wkSpc.uri,
+                        this.outputChannel,
+                        this.appShell,
+                        this.fs,
+                        this.processFactory,
+                        this.configurationService
+                    )
+                );
             });
         }
     }
@@ -62,11 +107,16 @@ export class WorkspaceSymbols implements Disposable {
                 async (rebuild: boolean = true, token?: CancellationToken) => {
                     const promises = this.buildWorkspaceSymbols(rebuild, token);
                     return Promise.all(promises);
-                }));
+                }
+            )
+        );
     }
 
     // tslint:disable-next-line:no-any
-    private buildWorkspaceSymbols(rebuild: boolean = true, token?: CancellationToken): Promise<any>[] {
+    private buildWorkspaceSymbols(
+        rebuild: boolean = true,
+        token?: CancellationToken
+    ): Promise<any>[] {
         if (token && token.isCancellationRequested) {
             return [];
         }
@@ -86,7 +136,11 @@ export class WorkspaceSymbols implements Disposable {
             if (!rebuild && exists) {
                 return;
             }
-            for (let counter = 0; counter < MAX_NUMBER_OF_ATTEMPTS_TO_INSTALL_AND_BUILD; counter += 1) {
+            for (
+                let counter = 0;
+                counter < MAX_NUMBER_OF_ATTEMPTS_TO_INSTALL_AND_BUILD;
+                counter += 1
+            ) {
                 try {
                     await generator.generateWorkspaceTags();
                     return;
@@ -104,11 +158,19 @@ export class WorkspaceSymbols implements Disposable {
                     promptResponse = await promptPromise;
                     continue;
                 } else {
-                    const installer = this.serviceContainer.get<IInstaller>(IInstaller);
-                    promptPromise = installer.promptToInstall(Product.ctags, this.workspace.workspaceFolders![0]!.uri);
+                    const installer = this.serviceContainer.get<IInstaller>(
+                        IInstaller
+                    );
+                    promptPromise = installer.promptToInstall(
+                        Product.ctags,
+                        this.workspace.workspaceFolders![0]!.uri
+                    );
                     promptResponse = await promptPromise;
                 }
-                if (promptResponse !== InstallerResponse.Installed || (!token || token.isCancellationRequested)) {
+                if (
+                    promptResponse !== InstallerResponse.Installed ||
+                    (!token || token.isCancellationRequested)
+                ) {
                     return;
                 }
             }

@@ -1,20 +1,32 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import * as assert from 'assert';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
-import { Uri } from 'vscode';
-import { TestCollectionStorageService } from '../../../../client/testing/common/services/storageService';
-import { TestsStatusUpdaterService } from '../../../../client/testing/common/services/testsStatusService';
-import { visitRecursive } from '../../../../client/testing/common/testVisitors/visitor';
-import { FlattenedTestFunction, FlattenedTestSuite, ITestCollectionStorageService, ITestsStatusUpdaterService, TestFile, TestFolder, TestFunction, Tests, TestStatus, TestSuite, TestType } from '../../../../client/testing/common/types';
-import { TestDataItem } from '../../../../client/testing/types';
-import { createMockTestDataItem } from '../testUtils.unit.test';
+import * as assert from "assert";
+import { anything, instance, mock, verify, when } from "ts-mockito";
+import { Uri } from "vscode";
+import { TestCollectionStorageService } from "../../../../client/testing/common/services/storageService";
+import { TestsStatusUpdaterService } from "../../../../client/testing/common/services/testsStatusService";
+import { visitRecursive } from "../../../../client/testing/common/testVisitors/visitor";
+import {
+    FlattenedTestFunction,
+    FlattenedTestSuite,
+    ITestCollectionStorageService,
+    ITestsStatusUpdaterService,
+    TestFile,
+    TestFolder,
+    TestFunction,
+    Tests,
+    TestStatus,
+    TestSuite,
+    TestType
+} from "../../../../client/testing/common/types";
+import { TestDataItem } from "../../../../client/testing/types";
+import { createMockTestDataItem } from "../testUtils.unit.test";
 
 // tslint:disable:no-any max-func-body-length
-suite('Unit Tests - Tests Status Updater', () => {
+suite("Unit Tests - Tests Status Updater", () => {
     let storage: ITestCollectionStorageService;
     let updater: ITestsStatusUpdaterService;
     const workspaceUri = Uri.file(__filename);
@@ -106,13 +118,25 @@ suite('Unit Tests - Tests Status Updater', () => {
             summary: { errors: 0, skipped: 0, passed: 0, failures: 0 },
             testFiles: [file1, file2, file3, file4],
             testFolders: [folder1, folder2, folder3, folder4, folder5],
-            testFunctions: [flattendFn1, flattendFn2, flattendFn3, flattendFn4, flattendFn5],
-            testSuites: [flattendSuite1, flattendSuite2, flattendSuite3, flattendSuite4, flattendSuite5]
+            testFunctions: [
+                flattendFn1,
+                flattendFn2,
+                flattendFn3,
+                flattendFn4,
+                flattendFn5
+            ],
+            testSuites: [
+                flattendSuite1,
+                flattendSuite2,
+                flattendSuite3,
+                flattendSuite4,
+                flattendSuite5
+            ]
         };
         when(storage.getTests(workspaceUri)).thenReturn(tests);
     });
 
-    test('Updating discovery status will recursively update all items and triggers an update for each', () => {
+    test("Updating discovery status will recursively update all items and triggers an update for each", () => {
         updater.updateStatusAsDiscovering(workspaceUri, tests);
 
         function validate(item: TestDataItem) {
@@ -124,7 +148,7 @@ suite('Unit Tests - Tests Status Updater', () => {
         tests.testFunctions.forEach(func => validate(func.testFunction));
         tests.testSuites.forEach(suite => validate(suite.testSuite));
     });
-    test('Updating unknown status will recursively update all items and triggers an update for each', () => {
+    test("Updating unknown status will recursively update all items and triggers an update for each", () => {
         updater.updateStatusAsUnknown(workspaceUri, tests);
 
         function validate(item: TestDataItem) {
@@ -136,7 +160,7 @@ suite('Unit Tests - Tests Status Updater', () => {
         tests.testFunctions.forEach(func => validate(func.testFunction));
         tests.testSuites.forEach(suite => validate(suite.testSuite));
     });
-    test('Updating running status will recursively update all items and triggers an update for each', () => {
+    test("Updating running status will recursively update all items and triggers an update for each", () => {
         updater.updateStatusAsRunning(workspaceUri, tests);
 
         function validate(item: TestDataItem) {
@@ -148,7 +172,7 @@ suite('Unit Tests - Tests Status Updater', () => {
         tests.testFunctions.forEach(func => validate(func.testFunction));
         tests.testSuites.forEach(suite => validate(suite.testSuite));
     });
-    test('Updating running status for failed tests will recursively update all items and triggers an update for each', () => {
+    test("Updating running status for failed tests will recursively update all items and triggers an update for each", () => {
         tests.testFolders[1].status = TestStatus.Fail;
         tests.testFolders[2].status = TestStatus.Error;
         tests.testFiles[2].status = TestStatus.Fail;
@@ -180,7 +204,9 @@ suite('Unit Tests - Tests Status Updater', () => {
             tests.testSuites[1].testSuite,
             tests.testSuites[2].testSuite
         ];
-        failedItems.forEach(failedItem => visitRecursive(tests, failedItem, visitor));
+        failedItems.forEach(failedItem =>
+            visitRecursive(tests, failedItem, visitor)
+        );
 
         for (const item of updatedItems) {
             assert.equal(item.status, TestStatus.Running);
@@ -188,12 +214,17 @@ suite('Unit Tests - Tests Status Updater', () => {
         }
 
         // Only items with status Fail & Error should be modified
-        assert.equal(tests.testFunctions[4].testFunction.status, TestStatus.Pass);
+        assert.equal(
+            tests.testFunctions[4].testFunction.status,
+            TestStatus.Pass
+        );
 
         // Should only be called for failed items.
-        verify(storage.update(workspaceUri, anything())).times(updatedItems.length);
+        verify(storage.update(workspaceUri, anything())).times(
+            updatedItems.length
+        );
     });
-    test('Updating idle status for runnings tests will recursively update all items and triggers an update for each', () => {
+    test("Updating idle status for runnings tests will recursively update all items and triggers an update for each", () => {
         tests.testFolders[1].status = TestStatus.Running;
         tests.testFolders[2].status = TestStatus.Running;
         tests.testFiles[2].status = TestStatus.Running;
@@ -221,9 +252,11 @@ suite('Unit Tests - Tests Status Updater', () => {
         }
 
         // Should only be called for failed items.
-        verify(storage.update(workspaceUri, anything())).times(updatedItems.length);
+        verify(storage.update(workspaceUri, anything())).times(
+            updatedItems.length
+        );
     });
-    test('Triggers an update for each', () => {
+    test("Triggers an update for each", () => {
         updater.triggerUpdatesToTests(workspaceUri, tests);
 
         const updatedItems: TestDataItem[] = [
@@ -237,6 +270,8 @@ suite('Unit Tests - Tests Status Updater', () => {
             verify(storage.update(workspaceUri, item)).once();
         }
 
-        verify(storage.update(workspaceUri, anything())).times(updatedItems.length);
+        verify(storage.update(workspaceUri, anything())).times(
+            updatedItems.length
+        );
     });
 });

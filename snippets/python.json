@@ -1,44 +1,27 @@
 {
     "if": {
         "prefix": "if",
-        "body": [
-            "if ${1:expression}:",
-            "\t${2:pass}"
-        ],
+        "body": ["if ${1:expression}:", "\t${2:pass}"],
         "description": "Code snippet for an if statement"
     },
     "if/else": {
         "prefix": "if/else",
-        "body": [
-            "if ${1:condition}:",
-            "\t${2:pass}",
-            "else:",
-            "\t${3:pass}"
-        ],
+        "body": ["if ${1:condition}:", "\t${2:pass}", "else:", "\t${3:pass}"],
         "description": "Code snippet for an if statement with else"
     },
     "elif": {
         "prefix": "elif",
-        "body": [
-            "elif ${1:expression}:",
-            "\t${2:pass}"
-        ],
+        "body": ["elif ${1:expression}:", "\t${2:pass}"],
         "description": "Code snippet for an elif"
     },
     "else": {
         "prefix": "else",
-        "body": [
-            "else:",
-            "\t${1:pass}"
-        ],
+        "body": ["else:", "\t${1:pass}"],
         "description": "Code snippet for an else"
     },
     "while": {
         "prefix": "while",
-        "body": [
-            "while ${1:expression}:",
-            "\t${2:pass}"
-        ],
+        "body": ["while ${1:expression}:", "\t${2:pass}"],
         "description": "Code snippet for a while loop"
     },
     "while/else": {
@@ -81,12 +64,7 @@
     },
     "try/finally": {
         "prefix": "try/finally",
-        "body": [
-            "try:",
-            "\t${1:pass}",
-            "finally:",
-            "\t${2:pass}"
-        ],
+        "body": ["try:", "\t${1:pass}", "finally:", "\t${2:pass}"],
         "description": "Code snippet for a try/finally statement"
     },
     "try/except/else": {
@@ -129,18 +107,12 @@
     },
     "with": {
         "prefix": "with",
-        "body": [
-            "with ${1:expression} as ${2:target}:",
-            "\t${3:pass}"
-        ],
+        "body": ["with ${1:expression} as ${2:target}:", "\t${3:pass}"],
         "description": "Code snippet for a with statement"
     },
     "def": {
         "prefix": "def",
-        "body": [
-            "def ${1:funcname}(${2:parameter_list}):",
-            "\t${3:pass}"
-        ],
+        "body": ["def ${1:funcname}(${2:parameter_list}):", "\t${3:pass}"],
         "description": "Code snippet for a function definition"
     },
     "def(class method)": {
@@ -170,25 +142,17 @@
     },
     "class": {
         "prefix": "class",
-        "body": [
-            "class ${1:classname}(${2:object}):",
-            "\t${3:pass}"
-        ],
+        "body": ["class ${1:classname}(${2:object}):", "\t${3:pass}"],
         "description": "Code snippet for a class definition"
     },
     "lambda": {
         "prefix": "lambda",
-        "body": [
-            "lambda ${1:parameter_list}: ${2:expression}"
-        ],
+        "body": ["lambda ${1:parameter_list}: ${2:expression}"],
         "description": "Code snippet for a lambda statement"
     },
     "if(main)": {
         "prefix": "__main__",
-        "body": [
-            "if __name__ == \"__main__\":",
-            "    ${1:pass}",
-        ],
+        "body": ["if __name__ == \"__main__\":", "    ${1:pass}"],
         "description": "Code snippet for a `if __name__ == \"__main__\": ...` block"
     },
     "async/def": {
@@ -201,10 +165,7 @@
     },
     "async/for": {
         "prefix": "async/for",
-        "body": [
-            "async for ${1:target} in ${2:iter}:",
-            "\t${3:block}"
-        ],
+        "body": ["async for ${1:target} in ${2:iter}:", "\t${3:block}"],
         "description": "Code snippet for an async for statement"
     },
     "async/for/else": {
@@ -219,10 +180,7 @@
     },
     "async/with": {
         "prefix": "async/with",
-        "body": [
-            "async with ${1:expr} as ${2:var}:",
-            "\t${3:block}"
-        ],
+        "body": ["async with ${1:expr} as ${2:var}:", "\t${3:block}"],
         "description": "Code snippet for an async with statement"
     },
     "ipdb": {
@@ -239,5 +197,5 @@
         "prefix": "pudb",
         "body": "import pudb; pudb.set_trace()",
         "description": "Code snippet for pudb debug"
-    },
+    }
 }

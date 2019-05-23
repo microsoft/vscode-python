@@ -1,4 +1,4 @@
-declare module '@nteract/transforms' {
+declare module "@nteract/transforms" {
     export class GIFTransform {
         static MIMETYPE: string;
         constructor(...args: any[]);
@@ -53,13 +53,41 @@ declare module '@nteract/transforms' {
     export namespace LaTeXTransform {
         const MIMETYPE: string;
         namespace contextTypes {
-            function MathJax(p0: any, p1: any, p2: any, p3: any, p4: any, p5: any): any;
+            function MathJax(
+                p0: any,
+                p1: any,
+                p2: any,
+                p3: any,
+                p4: any,
+                p5: any
+            ): any;
             namespace MathJax {
-                function isRequired(p0: any, p1: any, p2: any, p3: any, p4: any, p5: any): any;
+                function isRequired(
+                    p0: any,
+                    p1: any,
+                    p2: any,
+                    p3: any,
+                    p4: any,
+                    p5: any
+                ): any;
             }
-            function MathJaxContext(p0: any, p1: any, p2: any, p3: any, p4: any, p5: any): any;
+            function MathJaxContext(
+                p0: any,
+                p1: any,
+                p2: any,
+                p3: any,
+                p4: any,
+                p5: any
+            ): any;
             namespace MathJaxContext {
-                function isRequired(p0: any, p1: any, p2: any, p3: any, p4: any, p5: any): any;
+                function isRequired(
+                    p0: any,
+                    p1: any,
+                    p2: any,
+                    p3: any,
+                    p4: any,
+                    p5: any
+                ): any;
             }
         }
     }
@@ -110,5 +138,7 @@ declare module '@nteract/transforms' {
     export const standardDisplayOrder: string[];
 
     export let standardTransforms: {};
-    export namespace transforms { }
+    export namespace transforms {
+
+    }
 }

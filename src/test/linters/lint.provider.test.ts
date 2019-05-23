@@ -1,36 +1,50 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
+"use strict";
 
-import { Container } from 'inversify';
-import * as TypeMoq from 'typemoq';
-import * as vscode from 'vscode';
+import { Container } from "inversify";
+import * as TypeMoq from "typemoq";
+import * as vscode from "vscode";
 import {
-    IApplicationShell, IDocumentManager, IWorkspaceService
-} from '../../client/common/application/types';
-import { PersistentStateFactory } from '../../client/common/persistentState';
-import { IFileSystem } from '../../client/common/platform/types';
+    IApplicationShell,
+    IDocumentManager,
+    IWorkspaceService
+} from "../../client/common/application/types";
+import { PersistentStateFactory } from "../../client/common/persistentState";
+import { IFileSystem } from "../../client/common/platform/types";
 import {
-    GLOBAL_MEMENTO, IConfigurationService, IInstaller,
-    ILintingSettings, IMemento, IPersistentStateFactory, IPythonSettings, Product, WORKSPACE_MEMENTO
-} from '../../client/common/types';
-import { createDeferred } from '../../client/common/utils/async';
-import { IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService } from '../../client/interpreter/autoSelection/types';
-import { IInterpreterService } from '../../client/interpreter/contracts';
-import { ServiceContainer } from '../../client/ioc/container';
-import { ServiceManager } from '../../client/ioc/serviceManager';
-import { AvailableLinterActivator } from '../../client/linters/linterAvailability';
-import { LinterManager } from '../../client/linters/linterManager';
+    GLOBAL_MEMENTO,
+    IConfigurationService,
+    IInstaller,
+    ILintingSettings,
+    IMemento,
+    IPersistentStateFactory,
+    IPythonSettings,
+    Product,
+    WORKSPACE_MEMENTO
+} from "../../client/common/types";
+import { createDeferred } from "../../client/common/utils/async";
 import {
-    IAvailableLinterActivator, ILinterManager, ILintingEngine
-} from '../../client/linters/types';
-import { LinterProvider } from '../../client/providers/linterProvider';
-import { initialize } from '../initialize';
-import { MockAutoSelectionService } from '../mocks/autoSelector';
-import { MockMemento } from '../mocks/mementos';
+    IInterpreterAutoSelectionService,
+    IInterpreterAutoSeletionProxyService
+} from "../../client/interpreter/autoSelection/types";
+import { IInterpreterService } from "../../client/interpreter/contracts";
+import { ServiceContainer } from "../../client/ioc/container";
+import { ServiceManager } from "../../client/ioc/serviceManager";
+import { AvailableLinterActivator } from "../../client/linters/linterAvailability";
+import { LinterManager } from "../../client/linters/linterManager";
+import {
+    IAvailableLinterActivator,
+    ILinterManager,
+    ILintingEngine
+} from "../../client/linters/types";
+import { LinterProvider } from "../../client/providers/linterProvider";
+import { initialize } from "../initialize";
+import { MockAutoSelectionService } from "../mocks/autoSelector";
+import { MockMemento } from "../mocks/mementos";
 
 // tslint:disable-next-line:max-func-body-length
-suite('Linting - Provider', () => {
+suite("Linting - Provider", () => {
     let context: TypeMoq.IMock<vscode.ExtensionContext>;
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
     let engine: TypeMoq.IMock<ILintingEngine>;
@@ -55,18 +69,34 @@ suite('Linting - Provider', () => {
         context = TypeMoq.Mock.ofType<vscode.ExtensionContext>();
 
         fs = TypeMoq.Mock.ofType<IFileSystem>();
-        fs.setup(x => x.fileExists(TypeMoq.It.isAny())).returns(() => new Promise<boolean>((resolve, _reject) => resolve(true)));
-        fs.setup(x => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns(() => true);
-        serviceManager.addSingletonInstance<IFileSystem>(IFileSystem, fs.object);
+        fs.setup(x => x.fileExists(TypeMoq.It.isAny())).returns(
+            () => new Promise<boolean>((resolve, _reject) => resolve(true))
+        );
+        fs.setup(x =>
+            x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())
+        ).returns(() => true);
+        serviceManager.addSingletonInstance<IFileSystem>(
+            IFileSystem,
+            fs.object
+        );
 
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
-        serviceManager.addSingletonInstance<IInterpreterService>(IInterpreterService, interpreterService.object);
+        serviceManager.addSingletonInstance<IInterpreterService>(
+            IInterpreterService,
+            interpreterService.object
+        );
 
         engine = TypeMoq.Mock.ofType<ILintingEngine>();
-        serviceManager.addSingletonInstance<ILintingEngine>(ILintingEngine, engine.object);
+        serviceManager.addSingletonInstance<ILintingEngine>(
+            ILintingEngine,
+            engine.object
+        );
 
         docManager = TypeMoq.Mock.ofType<IDocumentManager>();
-        serviceManager.addSingletonInstance<IDocumentManager>(IDocumentManager, docManager.object);
+        serviceManager.addSingletonInstance<IDocumentManager>(
+            IDocumentManager,
+            docManager.object
+        );
 
         const lintSettings = TypeMoq.Mock.ofType<ILintingSettings>();
         lintSettings.setup(x => x.enabled).returns(() => true);
@@ -76,74 +106,127 @@ suite('Linting - Provider', () => {
         settings.setup(x => x.linting).returns(() => lintSettings.object);
 
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
-        configService.setup(x => x.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
-        serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, configService.object);
+        configService
+            .setup(x => x.getSettings(TypeMoq.It.isAny()))
+            .returns(() => settings.object);
+        serviceManager.addSingletonInstance<IConfigurationService>(
+            IConfigurationService,
+            configService.object
+        );
 
         appShell = TypeMoq.Mock.ofType<IApplicationShell>();
         linterInstaller = TypeMoq.Mock.ofType<IInstaller>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
-        serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, appShell.object);
-        serviceManager.addSingletonInstance<IInstaller>(IInstaller, linterInstaller.object);
-        serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspaceService.object);
+        serviceManager.addSingletonInstance<IApplicationShell>(
+            IApplicationShell,
+            appShell.object
+        );
+        serviceManager.addSingletonInstance<IInstaller>(
+            IInstaller,
+            linterInstaller.object
+        );
+        serviceManager.addSingletonInstance<IWorkspaceService>(
+            IWorkspaceService,
+            workspaceService.object
+        );
         serviceManager.add(IAvailableLinterActivator, AvailableLinterActivator);
-        serviceManager.addSingleton<IInterpreterAutoSelectionService>(IInterpreterAutoSelectionService, MockAutoSelectionService);
-        serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(IInterpreterAutoSeletionProxyService, MockAutoSelectionService);
-        serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
-        serviceManager.addSingleton<vscode.Memento>(IMemento, MockMemento, GLOBAL_MEMENTO);
-        serviceManager.addSingleton<vscode.Memento>(IMemento, MockMemento, WORKSPACE_MEMENTO);
+        serviceManager.addSingleton<IInterpreterAutoSelectionService>(
+            IInterpreterAutoSelectionService,
+            MockAutoSelectionService
+        );
+        serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(
+            IInterpreterAutoSeletionProxyService,
+            MockAutoSelectionService
+        );
+        serviceManager.addSingleton<IPersistentStateFactory>(
+            IPersistentStateFactory,
+            PersistentStateFactory
+        );
+        serviceManager.addSingleton<vscode.Memento>(
+            IMemento,
+            MockMemento,
+            GLOBAL_MEMENTO
+        );
+        serviceManager.addSingleton<vscode.Memento>(
+            IMemento,
+            MockMemento,
+            WORKSPACE_MEMENTO
+        );
         lm = new LinterManager(serviceContainer, workspaceService.object);
         serviceManager.addSingletonInstance<ILinterManager>(ILinterManager, lm);
         emitter = new vscode.EventEmitter<vscode.TextDocument>();
         document = TypeMoq.Mock.ofType<vscode.TextDocument>();
     });
 
-    test('Lint on open file', () => {
-        docManager.setup(x => x.onDidOpenTextDocument).returns(() => emitter.event);
-        document.setup(x => x.uri).returns(() => vscode.Uri.file('test.py'));
-        document.setup(x => x.languageId).returns(() => 'python');
+    test("Lint on open file", () => {
+        docManager
+            .setup(x => x.onDidOpenTextDocument)
+            .returns(() => emitter.event);
+        document.setup(x => x.uri).returns(() => vscode.Uri.file("test.py"));
+        document.setup(x => x.languageId).returns(() => "python");
 
         // tslint:disable-next-line:no-unused-expression
         new LinterProvider(context.object, serviceContainer);
         emitter.fire(document.object);
-        engine.verify(x => x.lintDocument(document.object, 'auto'), TypeMoq.Times.once());
+        engine.verify(
+            x => x.lintDocument(document.object, "auto"),
+            TypeMoq.Times.once()
+        );
     });
 
-    test('Lint on save file', async () => {
-        docManager.setup(x => x.onDidSaveTextDocument).returns(() => emitter.event);
-        document.setup(x => x.uri).returns(() => vscode.Uri.file('test.py'));
-        document.setup(x => x.languageId).returns(() => 'python');
+    test("Lint on save file", async () => {
+        docManager
+            .setup(x => x.onDidSaveTextDocument)
+            .returns(() => emitter.event);
+        document.setup(x => x.uri).returns(() => vscode.Uri.file("test.py"));
+        document.setup(x => x.languageId).returns(() => "python");
 
         // tslint:disable-next-line:no-unused-expression
         new LinterProvider(context.object, serviceContainer);
         emitter.fire(document.object);
-        engine.verify(x => x.lintDocument(document.object, 'save'), TypeMoq.Times.once());
+        engine.verify(
+            x => x.lintDocument(document.object, "save"),
+            TypeMoq.Times.once()
+        );
     });
 
-    test('No lint on open other files', () => {
-        docManager.setup(x => x.onDidOpenTextDocument).returns(() => emitter.event);
-        document.setup(x => x.uri).returns(() => vscode.Uri.file('test.cs'));
-        document.setup(x => x.languageId).returns(() => 'csharp');
+    test("No lint on open other files", () => {
+        docManager
+            .setup(x => x.onDidOpenTextDocument)
+            .returns(() => emitter.event);
+        document.setup(x => x.uri).returns(() => vscode.Uri.file("test.cs"));
+        document.setup(x => x.languageId).returns(() => "csharp");
 
         // tslint:disable-next-line:no-unused-expression
         new LinterProvider(context.object, serviceContainer);
         emitter.fire(document.object);
-        engine.verify(x => x.lintDocument(document.object, 'save'), TypeMoq.Times.never());
+        engine.verify(
+            x => x.lintDocument(document.object, "save"),
+            TypeMoq.Times.never()
+        );
     });
 
-    test('No lint on save other files', () => {
-        docManager.setup(x => x.onDidSaveTextDocument).returns(() => emitter.event);
-        document.setup(x => x.uri).returns(() => vscode.Uri.file('test.cs'));
-        document.setup(x => x.languageId).returns(() => 'csharp');
+    test("No lint on save other files", () => {
+        docManager
+            .setup(x => x.onDidSaveTextDocument)
+            .returns(() => emitter.event);
+        document.setup(x => x.uri).returns(() => vscode.Uri.file("test.cs"));
+        document.setup(x => x.languageId).returns(() => "csharp");
 
         // tslint:disable-next-line:no-unused-expression
         new LinterProvider(context.object, serviceContainer);
         emitter.fire(document.object);
-        engine.verify(x => x.lintDocument(document.object, 'save'), TypeMoq.Times.never());
+        engine.verify(
+            x => x.lintDocument(document.object, "save"),
+            TypeMoq.Times.never()
+        );
     });
 
-    test('Lint on change interpreters', () => {
+    test("Lint on change interpreters", () => {
         const e = new vscode.EventEmitter<void>();
-        interpreterService.setup(x => x.onDidChangeInterpreter).returns(() => e.event);
+        interpreterService
+            .setup(x => x.onDidChangeInterpreter)
+            .returns(() => e.event);
 
         // tslint:disable-next-line:no-unused-expression
         new LinterProvider(context.object, serviceContainer);
@@ -151,9 +234,11 @@ suite('Linting - Provider', () => {
         engine.verify(x => x.lintOpenPythonFiles(), TypeMoq.Times.once());
     });
 
-    test('Lint on save pylintrc', async () => {
-        docManager.setup(x => x.onDidSaveTextDocument).returns(() => emitter.event);
-        document.setup(x => x.uri).returns(() => vscode.Uri.file('.pylintrc'));
+    test("Lint on save pylintrc", async () => {
+        docManager
+            .setup(x => x.onDidSaveTextDocument)
+            .returns(() => emitter.event);
+        document.setup(x => x.uri).returns(() => vscode.Uri.file(".pylintrc"));
 
         await lm.setActiveLintersAsync([Product.pylint]);
         // tslint:disable-next-line:no-unused-expression
@@ -166,23 +251,34 @@ suite('Linting - Provider', () => {
         engine.verify(x => x.lintOpenPythonFiles(), TypeMoq.Times.once());
     });
 
-    test('Diagnostic cleared on file close', () => testClearDiagnosticsOnClose(true));
-    test('Diagnostic not cleared on file opened in another tab', () => testClearDiagnosticsOnClose(false));
+    test("Diagnostic cleared on file close", () =>
+        testClearDiagnosticsOnClose(true));
+    test("Diagnostic not cleared on file opened in another tab", () =>
+        testClearDiagnosticsOnClose(false));
 
     function testClearDiagnosticsOnClose(closed: boolean) {
-        docManager.setup(x => x.onDidCloseTextDocument).returns(() => emitter.event);
+        docManager
+            .setup(x => x.onDidCloseTextDocument)
+            .returns(() => emitter.event);
 
-        const uri = vscode.Uri.file('test.py');
+        const uri = vscode.Uri.file("test.py");
         document.setup(x => x.uri).returns(() => uri);
         document.setup(x => x.isClosed).returns(() => closed);
 
-        docManager.setup(x => x.textDocuments).returns(() => closed ? [] : [document.object]);
+        docManager
+            .setup(x => x.textDocuments)
+            .returns(() => (closed ? [] : [document.object]));
         // tslint:disable-next-line:prefer-const no-unused-variable
         // tslint:disable-next-line:no-unused-expression
         new LinterProvider(context.object, serviceContainer);
 
         emitter.fire(document.object);
-        const timesExpected = closed ? TypeMoq.Times.once() : TypeMoq.Times.never();
-        engine.verify(x => x.clearDiagnostics(TypeMoq.It.isAny()), timesExpected);
+        const timesExpected = closed
+            ? TypeMoq.Times.once()
+            : TypeMoq.Times.never();
+        engine.verify(
+            x => x.clearDiagnostics(TypeMoq.It.isAny()),
+            timesExpected
+        );
     }
 });

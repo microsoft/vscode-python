@@ -1,32 +1,41 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
 // tslint:disable:no-unnecessary-override no-any max-func-body-length no-invalid-this
 
-import { expect } from 'chai';
-import { anything, instance, mock, when } from 'ts-mockito';
-import { IWorkspaceService } from '../../../../client/common/application/types';
-import { WorkspaceService } from '../../../../client/common/application/workspace';
-import { PersistentState, PersistentStateFactory } from '../../../../client/common/persistentState';
-import { FileSystem } from '../../../../client/common/platform/fileSystem';
-import { IFileSystem } from '../../../../client/common/platform/types';
-import { IPersistentStateFactory, Resource } from '../../../../client/common/types';
-import { InterpreterAutoSelectionService } from '../../../../client/interpreter/autoSelection';
-import { NextAction } from '../../../../client/interpreter/autoSelection/rules/baseRule';
-import { SettingsInterpretersAutoSelectionRule } from '../../../../client/interpreter/autoSelection/rules/settings';
-import { IInterpreterAutoSelectionService } from '../../../../client/interpreter/autoSelection/types';
-import { PythonInterpreter } from '../../../../client/interpreter/contracts';
+import { expect } from "chai";
+import { anything, instance, mock, when } from "ts-mockito";
+import { IWorkspaceService } from "../../../../client/common/application/types";
+import { WorkspaceService } from "../../../../client/common/application/workspace";
+import {
+    PersistentState,
+    PersistentStateFactory
+} from "../../../../client/common/persistentState";
+import { FileSystem } from "../../../../client/common/platform/fileSystem";
+import { IFileSystem } from "../../../../client/common/platform/types";
+import {
+    IPersistentStateFactory,
+    Resource
+} from "../../../../client/common/types";
+import { InterpreterAutoSelectionService } from "../../../../client/interpreter/autoSelection";
+import { NextAction } from "../../../../client/interpreter/autoSelection/rules/baseRule";
+import { SettingsInterpretersAutoSelectionRule } from "../../../../client/interpreter/autoSelection/rules/settings";
+import { IInterpreterAutoSelectionService } from "../../../../client/interpreter/autoSelection/types";
+import { PythonInterpreter } from "../../../../client/interpreter/contracts";
 
-suite('Interpreters - Auto Selection - Settings Rule', () => {
+suite("Interpreters - Auto Selection - Settings Rule", () => {
     let rule: SettingsInterpretersAutoSelectionRuleTest;
     let stateFactory: IPersistentStateFactory;
     let fs: IFileSystem;
     let state: PersistentState<PythonInterpreter | undefined>;
     let workspaceService: IWorkspaceService;
     class SettingsInterpretersAutoSelectionRuleTest extends SettingsInterpretersAutoSelectionRule {
-        public async onAutoSelectInterpreter(resource: Resource, manager?: IInterpreterAutoSelectionService): Promise<NextAction> {
+        public async onAutoSelectInterpreter(
+            resource: Resource,
+            manager?: IInterpreterAutoSelectionService
+        ): Promise<NextAction> {
             return super.onAutoSelectInterpreter(resource, manager);
         }
     }
@@ -36,41 +45,63 @@ suite('Interpreters - Auto Selection - Settings Rule', () => {
         fs = mock(FileSystem);
         workspaceService = mock(WorkspaceService);
 
-        when(stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(anything(), undefined)).thenReturn(instance(state));
-        rule = new SettingsInterpretersAutoSelectionRuleTest(instance(fs),
-            instance(stateFactory), instance(workspaceService));
+        when(
+            stateFactory.createGlobalPersistentState<
+                PythonInterpreter | undefined
+            >(anything(), undefined)
+        ).thenReturn(instance(state));
+        rule = new SettingsInterpretersAutoSelectionRuleTest(
+            instance(fs),
+            instance(stateFactory),
+            instance(workspaceService)
+        );
     });
 
-    test('Invoke next rule if python Path in user settings is default', async () => {
+    test("Invoke next rule if python Path in user settings is default", async () => {
         const manager = mock(InterpreterAutoSelectionService);
         const pythonPathInConfig = {};
         const pythonPath = { inspect: () => pythonPathInConfig };
 
-        when(workspaceService.getConfiguration('python', null as any)).thenReturn(pythonPath as any);
+        when(
+            workspaceService.getConfiguration("python", null as any)
+        ).thenReturn(pythonPath as any);
 
-        const nextAction = await rule.onAutoSelectInterpreter(undefined, manager);
-
-        expect(nextAction).to.be.equal(NextAction.runNextRule);
-    });
-    test('Invoke next rule if python Path in user settings is not defined', async () => {
-        const manager = mock(InterpreterAutoSelectionService);
-        const pythonPathInConfig = { globalValue: 'python' };
-        const pythonPath = { inspect: () => pythonPathInConfig };
-
-        when(workspaceService.getConfiguration('python', null as any)).thenReturn(pythonPath as any);
-
-        const nextAction = await rule.onAutoSelectInterpreter(undefined, manager);
+        const nextAction = await rule.onAutoSelectInterpreter(
+            undefined,
+            manager
+        );
 
         expect(nextAction).to.be.equal(NextAction.runNextRule);
     });
-    test('Must not Invoke next rule if python Path in user settings is not default', async () => {
+    test("Invoke next rule if python Path in user settings is not defined", async () => {
         const manager = mock(InterpreterAutoSelectionService);
-        const pythonPathInConfig = { globalValue: 'something else' };
+        const pythonPathInConfig = { globalValue: "python" };
         const pythonPath = { inspect: () => pythonPathInConfig };
 
-        when(workspaceService.getConfiguration('python', null as any)).thenReturn(pythonPath as any);
+        when(
+            workspaceService.getConfiguration("python", null as any)
+        ).thenReturn(pythonPath as any);
 
-        const nextAction = await rule.onAutoSelectInterpreter(undefined, manager);
+        const nextAction = await rule.onAutoSelectInterpreter(
+            undefined,
+            manager
+        );
+
+        expect(nextAction).to.be.equal(NextAction.runNextRule);
+    });
+    test("Must not Invoke next rule if python Path in user settings is not default", async () => {
+        const manager = mock(InterpreterAutoSelectionService);
+        const pythonPathInConfig = { globalValue: "something else" };
+        const pythonPath = { inspect: () => pythonPathInConfig };
+
+        when(
+            workspaceService.getConfiguration("python", null as any)
+        ).thenReturn(pythonPath as any);
+
+        const nextAction = await rule.onAutoSelectInterpreter(
+            undefined,
+            manager
+        );
 
         expect(nextAction).to.be.equal(NextAction.exit);
     });

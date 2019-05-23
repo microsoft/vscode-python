@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { traceError } from './common/logger';
-import { RemoteDebuggerLauncherScriptProvider } from './debugger/debugAdapter/DebugClients/launcherProvider';
+import { traceError } from "./common/logger";
+import { RemoteDebuggerLauncherScriptProvider } from "./debugger/debugAdapter/DebugClients/launcherProvider";
 
 /*
  * Do not introduce any breaking changes to this API.
@@ -28,7 +28,11 @@ export interface IExtensionApi {
          * @param {boolean} [waitUntilDebuggerAttaches=true]
          * @returns {Promise<string[]>}
          */
-        getRemoteLauncherCommand(host: string, port: number, waitUntilDebuggerAttaches: boolean): Promise<string[]>;
+        getRemoteLauncherCommand(
+            host: string,
+            port: number,
+            waitUntilDebuggerAttaches: boolean
+        ): Promise<string[]>;
     };
 }
 
@@ -36,13 +40,19 @@ export interface IExtensionApi {
 export function buildApi(ready: Promise<any>) {
     return {
         // 'ready' will propogate the exception, but we must log it here first.
-        ready: ready.catch((ex) => {
-            traceError('Failure during activation.', ex);
+        ready: ready.catch(ex => {
+            traceError("Failure during activation.", ex);
             return Promise.reject(ex);
         }),
         debug: {
-            async getRemoteLauncherCommand(host: string, port: number, waitUntilDebuggerAttaches: boolean = true): Promise<string[]> {
-                return new RemoteDebuggerLauncherScriptProvider().getLauncherArgs({ host, port, waitUntilDebuggerAttaches });
+            async getRemoteLauncherCommand(
+                host: string,
+                port: number,
+                waitUntilDebuggerAttaches: boolean = true
+            ): Promise<string[]> {
+                return new RemoteDebuggerLauncherScriptProvider().getLauncherArgs(
+                    { host, port, waitUntilDebuggerAttaches }
+                );
             }
         }
     };

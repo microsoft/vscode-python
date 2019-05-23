@@ -1,27 +1,32 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
-import '../../../common/extensions';
+"use strict";
+import "../../../common/extensions";
 
-import * as path from 'path';
-import * as uuid from 'uuid/v4';
+import * as path from "path";
+import * as uuid from "uuid/v4";
 
-import { IWorkspaceService } from '../../../common/application/types';
-import { IFileSystem } from '../../../common/platform/types';
-import { IAsyncDisposable, IConfigurationService } from '../../../common/types';
-import { INotebookServer, INotebookServerOptions } from '../../types';
+import { IWorkspaceService } from "../../../common/application/types";
+import { IFileSystem } from "../../../common/platform/types";
+import { IAsyncDisposable, IConfigurationService } from "../../../common/types";
+import { INotebookServer, INotebookServerOptions } from "../../types";
 
 export class ServerCache implements IAsyncDisposable {
-    private cache: Map<string, INotebookServer> = new Map<string, INotebookServer>();
+    private cache: Map<string, INotebookServer> = new Map<
+        string,
+        INotebookServer
+    >();
     private emptyKey = uuid();
 
     constructor(
         private configService: IConfigurationService,
         private workspace: IWorkspaceService,
         private fileSystem: IFileSystem
-    ) { }
+    ) {}
 
-    public async get(options?: INotebookServerOptions): Promise<INotebookServer | undefined> {
+    public async get(
+        options?: INotebookServerOptions
+    ): Promise<INotebookServer | undefined> {
         const fixedOptions = await this.generateDefaultOptions(options);
         const key = this.generateKey(fixedOptions);
         if (this.cache.has(key)) {
@@ -29,7 +34,11 @@ export class ServerCache implements IAsyncDisposable {
         }
     }
 
-    public async set(result: INotebookServer, disposeCallback: () => void, options?: INotebookServerOptions): Promise<void> {
+    public async set(
+        result: INotebookServer,
+        disposeCallback: () => void,
+        options?: INotebookServerOptions
+    ): Promise<void> {
         const fixedOptions = await this.generateDefaultOptions(options);
         const key = this.generateKey(fixedOptions);
 
@@ -59,13 +68,18 @@ export class ServerCache implements IAsyncDisposable {
         this.cache.clear();
     }
 
-    public async generateDefaultOptions(options?: INotebookServerOptions): Promise<INotebookServerOptions> {
+    public async generateDefaultOptions(
+        options?: INotebookServerOptions
+    ): Promise<INotebookServerOptions> {
         return {
             uri: options ? options.uri : undefined,
             useDefaultConfig: options ? options.useDefaultConfig : true, // Default for this is true.
             usingDarkTheme: options ? options.usingDarkTheme : undefined,
             purpose: options ? options.purpose : uuid(),
-            workingDir: options && options.workingDir ? options.workingDir : await this.calculateWorkingDirectory()
+            workingDir:
+                options && options.workingDir
+                    ? options.workingDir
+                    : await this.calculateWorkingDirectory()
         };
     }
 
@@ -74,8 +88,8 @@ export class ServerCache implements IAsyncDisposable {
             return this.emptyKey;
         } else {
             // combine all the values together to make a unique key
-            const uri = options.uri ? options.uri : '';
-            const useFlag = options.useDefaultConfig ? 'true' : 'false';
+            const uri = options.uri ? options.uri : "";
+            const useFlag = options.useDefaultConfig ? "true" : "false";
             // tslint:disable-next-line:no-suspicious-comment
             // TODO: Should there be some separator in the key?
             return `${options.purpose}${uri}${useFlag}${options.workingDir}`;
@@ -91,7 +105,8 @@ export class ServerCache implements IAsyncDisposable {
         // If we don't have a workspace open the notebookFileRoot seems to often have a random location in it (we use ${workspaceRoot} as default)
         // so only do this setting if we actually have a valid workspace open
         if (fileRoot && this.workspace.hasWorkspaceFolders) {
-            const workspaceFolderPath = this.workspace.workspaceFolders![0].uri.fsPath;
+            const workspaceFolderPath = this.workspace.workspaceFolders![0].uri
+                .fsPath;
             if (path.isAbsolute(fileRoot)) {
                 if (await this.fileSystem.directoryExists(fileRoot)) {
                     // User setting is absolute and exists, use it
@@ -114,5 +129,4 @@ export class ServerCache implements IAsyncDisposable {
         }
         return workingDir;
     }
-
 }

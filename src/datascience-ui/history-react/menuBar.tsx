@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
+"use strict";
 
-import './menuBar.css';
+import "./menuBar.css";
 
-import * as React from 'react';
+import * as React from "react";
 
 interface IMenuBarProps {
     baseTheme: string;
@@ -18,10 +18,6 @@ export class MenuBar extends React.Component<IMenuBarProps> {
     }
 
     public render() {
-        return (
-            <div className='menuBar'>
-                {this.props.children}
-            </div>
-        );
+        return <div className="menuBar">{this.props.children}</div>;
     }
 }

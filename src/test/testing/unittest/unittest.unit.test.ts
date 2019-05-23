@@ -1,34 +1,56 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import * as assert from 'assert';
-import { anything, capture, instance, mock, when } from 'ts-mockito';
-import { Uri } from 'vscode';
-import { IWorkspaceService } from '../../../client/common/application/types';
-import { WorkspaceService } from '../../../client/common/application/workspace';
-import { ConfigurationService } from '../../../client/common/configuration/service';
-import { IConfigurationService, IDisposableRegistry, IOutputChannel, IPythonSettings } from '../../../client/common/types';
-import { ServiceContainer } from '../../../client/ioc/container';
-import { IServiceContainer } from '../../../client/ioc/types';
-import { ArgumentsHelper } from '../../../client/testing/common/argumentsHelper';
-import { CommandSource } from '../../../client/testing/common/constants';
-import { TestCollectionStorageService } from '../../../client/testing/common/services/storageService';
-import { TestResultsService } from '../../../client/testing/common/services/testResultsService';
-import { TestsStatusUpdaterService } from '../../../client/testing/common/services/testsStatusService';
-import { TestsHelper } from '../../../client/testing/common/testUtils';
-import { TestResultResetVisitor } from '../../../client/testing/common/testVisitors/resultResetVisitor';
-import { FlattenedTestFunction, FlattenedTestSuite, ITestResultsService, ITestsHelper, ITestsStatusUpdaterService, TestFile, TestFolder, TestFunction, Tests, TestStatus, TestSuite, TestType } from '../../../client/testing/common/types';
-import { IArgumentsHelper, IArgumentsService, ITestManagerRunner } from '../../../client/testing/types';
-import { TestManager } from '../../../client/testing/unittest/main';
-import { TestManagerRunner } from '../../../client/testing/unittest/runner';
-import { ArgumentsService } from '../../../client/testing/unittest/services/argsService';
-import { MockOutputChannel } from '../../mockClasses';
-import { createMockTestDataItem } from '../common/testUtils.unit.test';
+import * as assert from "assert";
+import { anything, capture, instance, mock, when } from "ts-mockito";
+import { Uri } from "vscode";
+import { IWorkspaceService } from "../../../client/common/application/types";
+import { WorkspaceService } from "../../../client/common/application/workspace";
+import { ConfigurationService } from "../../../client/common/configuration/service";
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    IOutputChannel,
+    IPythonSettings
+} from "../../../client/common/types";
+import { ServiceContainer } from "../../../client/ioc/container";
+import { IServiceContainer } from "../../../client/ioc/types";
+import { ArgumentsHelper } from "../../../client/testing/common/argumentsHelper";
+import { CommandSource } from "../../../client/testing/common/constants";
+import { TestCollectionStorageService } from "../../../client/testing/common/services/storageService";
+import { TestResultsService } from "../../../client/testing/common/services/testResultsService";
+import { TestsStatusUpdaterService } from "../../../client/testing/common/services/testsStatusService";
+import { TestsHelper } from "../../../client/testing/common/testUtils";
+import { TestResultResetVisitor } from "../../../client/testing/common/testVisitors/resultResetVisitor";
+import {
+    FlattenedTestFunction,
+    FlattenedTestSuite,
+    ITestResultsService,
+    ITestsHelper,
+    ITestsStatusUpdaterService,
+    TestFile,
+    TestFolder,
+    TestFunction,
+    Tests,
+    TestStatus,
+    TestSuite,
+    TestType
+} from "../../../client/testing/common/types";
+import {
+    IArgumentsHelper,
+    IArgumentsService,
+    ITestManagerRunner
+} from "../../../client/testing/types";
+import { TestManager } from "../../../client/testing/unittest/main";
+import { TestManagerRunner } from "../../../client/testing/unittest/runner";
+import { ArgumentsService } from "../../../client/testing/unittest/services/argsService";
+import { MockOutputChannel } from "../../mockClasses";
+import { createMockTestDataItem } from "../common/testUtils.unit.test";
 
 // tslint:disable:max-func-body-length no-any
-suite('Unit Tests - unittest - run failed tests', () => {
+suite("Unit Tests - unittest - run failed tests", () => {
     let testManager: TestManager;
     const workspaceFolder = Uri.file(__dirname);
     let serviceContainer: IServiceContainer;
@@ -36,7 +58,6 @@ suite('Unit Tests - unittest - run failed tests', () => {
     let testManagerRunner: ITestManagerRunner;
     let tests: Tests;
     function createTestData() {
-
         const folder1 = createMockTestDataItem<TestFolder>(TestType.testFolder);
         const folder2 = createMockTestDataItem<TestFolder>(TestType.testFolder);
         const folder3 = createMockTestDataItem<TestFolder>(TestType.testFolder);
@@ -121,8 +142,20 @@ suite('Unit Tests - unittest - run failed tests', () => {
             summary: { errors: 0, skipped: 0, passed: 0, failures: 0 },
             testFiles: [file1, file2, file3, file4],
             testFolders: [folder1, folder2, folder3, folder4, folder5],
-            testFunctions: [flattendFn1, flattendFn2, flattendFn3, flattendFn4, flattendFn5],
-            testSuites: [flattendSuite1, flattendSuite2, flattendSuite3, flattendSuite4, flattendSuite5]
+            testFunctions: [
+                flattendFn1,
+                flattendFn2,
+                flattendFn3,
+                flattendFn4,
+                flattendFn5
+            ],
+            testSuites: [
+                flattendSuite1,
+                flattendSuite2,
+                flattendSuite3,
+                flattendSuite4,
+                flattendSuite5
+            ]
         };
     }
     setup(() => {
@@ -134,17 +167,49 @@ suite('Unit Tests - unittest - run failed tests', () => {
         const workspaceService = mock(WorkspaceService);
         const svcInstance = instance(serviceContainer);
         when(testStorage.getTests(anything())).thenReturn(tests);
-        when(workspaceService.getWorkspaceFolder(anything())).thenReturn({ name: '', index: 0, uri: workspaceFolder });
-        when(serviceContainer.get<IWorkspaceService>(IWorkspaceService)).thenReturn(instance(workspaceService));
-        when(serviceContainer.get<IArgumentsHelper>(IArgumentsHelper)).thenReturn(new ArgumentsHelper(svcInstance));
-        when(serviceContainer.get<IArgumentsService>(IArgumentsService, anything())).thenReturn(new ArgumentsService(svcInstance));
-        when(serviceContainer.get<ITestsHelper>(ITestsHelper)).thenReturn(instance(testsHelper));
-        when(serviceContainer.get<ITestManagerRunner>(ITestManagerRunner, anything())).thenReturn(instance(testManagerRunner));
-        when(serviceContainer.get<ITestsStatusUpdaterService>(ITestsStatusUpdaterService)).thenReturn(new TestsStatusUpdaterService(instance(testStorage)));
-        when(serviceContainer.get<ITestResultsService>(ITestResultsService)).thenReturn(new TestResultsService(new TestResultResetVisitor()));
-        when(serviceContainer.get<IOutputChannel>(IOutputChannel)).thenReturn(instance(mock(MockOutputChannel)));
-        when(serviceContainer.get<IOutputChannel>(IOutputChannel)).thenReturn(instance(mock(MockOutputChannel)));
-        when(serviceContainer.get<IDisposableRegistry>(IDisposableRegistry)).thenReturn([]);
+        when(workspaceService.getWorkspaceFolder(anything())).thenReturn({
+            name: "",
+            index: 0,
+            uri: workspaceFolder
+        });
+        when(
+            serviceContainer.get<IWorkspaceService>(IWorkspaceService)
+        ).thenReturn(instance(workspaceService));
+        when(
+            serviceContainer.get<IArgumentsHelper>(IArgumentsHelper)
+        ).thenReturn(new ArgumentsHelper(svcInstance));
+        when(
+            serviceContainer.get<IArgumentsService>(
+                IArgumentsService,
+                anything()
+            )
+        ).thenReturn(new ArgumentsService(svcInstance));
+        when(serviceContainer.get<ITestsHelper>(ITestsHelper)).thenReturn(
+            instance(testsHelper)
+        );
+        when(
+            serviceContainer.get<ITestManagerRunner>(
+                ITestManagerRunner,
+                anything()
+            )
+        ).thenReturn(instance(testManagerRunner));
+        when(
+            serviceContainer.get<ITestsStatusUpdaterService>(
+                ITestsStatusUpdaterService
+            )
+        ).thenReturn(new TestsStatusUpdaterService(instance(testStorage)));
+        when(
+            serviceContainer.get<ITestResultsService>(ITestResultsService)
+        ).thenReturn(new TestResultsService(new TestResultResetVisitor()));
+        when(serviceContainer.get<IOutputChannel>(IOutputChannel)).thenReturn(
+            instance(mock(MockOutputChannel))
+        );
+        when(serviceContainer.get<IOutputChannel>(IOutputChannel)).thenReturn(
+            instance(mock(MockOutputChannel))
+        );
+        when(
+            serviceContainer.get<IDisposableRegistry>(IDisposableRegistry)
+        ).thenReturn([]);
         const settingsService = mock(ConfigurationService);
         const settings: IPythonSettings = {
             testing: {
@@ -152,15 +217,23 @@ suite('Unit Tests - unittest - run failed tests', () => {
             }
         } as any;
         when(settingsService.getSettings(anything())).thenReturn(settings);
-        when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(settingsService));
+        when(
+            serviceContainer.get<IConfigurationService>(IConfigurationService)
+        ).thenReturn(instance(settingsService));
 
-        testManager = new TestManager(workspaceFolder, workspaceFolder.fsPath, svcInstance);
+        testManager = new TestManager(
+            workspaceFolder,
+            workspaceFolder.fsPath,
+            svcInstance
+        );
     });
 
-    test('Run Failed tests', async () => {
+    test("Run Failed tests", async () => {
         testManager.discoverTests = () => Promise.resolve(tests);
         when(testsHelper.shouldRunAllTests(anything())).thenReturn(false);
-        when(testManagerRunner.runTest(anything(), anything(), anything())).thenResolve(undefined as any);
+        when(
+            testManagerRunner.runTest(anything(), anything(), anything())
+        ).thenResolve(undefined as any);
         (testManager as any).tests = tests;
         tests.testFunctions[0].testFunction.status = TestStatus.Fail;
         tests.testFunctions[2].testFunction.status = TestStatus.Fail;
@@ -173,13 +246,21 @@ suite('Unit Tests - unittest - run failed tests', () => {
         assert.equal(options.testsToRun!.testFolder!.length, 0);
         assert.equal(options.testsToRun!.testSuite!.length, 0);
         assert.equal(options.testsToRun!.testFunction!.length, 2);
-        assert.deepEqual(options.testsToRun!.testFunction![0], tests.testFunctions[0].testFunction);
-        assert.deepEqual(options.testsToRun!.testFunction![1], tests.testFunctions[2].testFunction);
+        assert.deepEqual(
+            options.testsToRun!.testFunction![0],
+            tests.testFunctions[0].testFunction
+        );
+        assert.deepEqual(
+            options.testsToRun!.testFunction![1],
+            tests.testFunctions[2].testFunction
+        );
     });
-    test('Run All tests', async () => {
+    test("Run All tests", async () => {
         testManager.discoverTests = () => Promise.resolve(tests);
         when(testsHelper.shouldRunAllTests(anything())).thenReturn(false);
-        when(testManagerRunner.runTest(anything(), anything(), anything())).thenResolve(undefined as any);
+        when(
+            testManagerRunner.runTest(anything(), anything(), anything())
+        ).thenResolve(undefined as any);
         (testManager as any).tests = tests;
 
         await testManager.runTest(CommandSource.testExplorer, undefined, true);

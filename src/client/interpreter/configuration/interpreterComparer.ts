@@ -1,17 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { inject, injectable } from 'inversify';
-import { getArchitectureDisplayName } from '../../common/platform/registry';
-import { IInterpreterHelper, PythonInterpreter } from '../contracts';
-import { IInterpreterComparer } from './types';
+import { inject, injectable } from "inversify";
+import { getArchitectureDisplayName } from "../../common/platform/registry";
+import { IInterpreterHelper, PythonInterpreter } from "../contracts";
+import { IInterpreterComparer } from "./types";
 
 @injectable()
 export class InterpreterComparer implements IInterpreterComparer {
-    constructor(@inject(IInterpreterHelper) private readonly interpreterHelper: IInterpreterHelper) {
-    }
+    constructor(
+        @inject(IInterpreterHelper)
+        private readonly interpreterHelper: IInterpreterHelper
+    ) {}
     public compare(a: PythonInterpreter, b: PythonInterpreter): number {
         const nameA = this.getSortName(a);
         const nameB = this.getSortName(b);
@@ -38,11 +40,13 @@ export class InterpreterComparer implements IInterpreterComparer {
         if (info.companyDisplayName && info.companyDisplayName.length > 0) {
             sortNameParts.push(info.companyDisplayName.trim());
         } else {
-            sortNameParts.push('Python');
+            sortNameParts.push("Python");
         }
 
         if (info.type) {
-            const name = this.interpreterHelper.getInterpreterTypeDisplayName(info.type);
+            const name = this.interpreterHelper.getInterpreterTypeDisplayName(
+                info.type
+            );
             if (name) {
                 envSuffixParts.push(name);
             }
@@ -51,8 +55,8 @@ export class InterpreterComparer implements IInterpreterComparer {
             envSuffixParts.push(info.envName);
         }
 
-        const envSuffix = envSuffixParts.length === 0 ? '' :
-            `(${envSuffixParts.join(': ')})`;
-        return `${sortNameParts.join(' ')} ${envSuffix}`.trim();
+        const envSuffix =
+            envSuffixParts.length === 0 ? "" : `(${envSuffixParts.join(": ")})`;
+        return `${sortNameParts.join(" ")} ${envSuffix}`.trim();
     }
 }

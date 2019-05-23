@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
 export function formatErrorForLogging(error: Error | string): string {
-    let message: string = '';
-    if (typeof error === 'string') {
+    let message: string = "";
+    if (typeof error === "string") {
         message = error;
     } else {
         if (error.message) {
@@ -20,7 +20,10 @@ export function formatErrorForLogging(error: Error | string): string {
             if (innerException.message) {
                 message += `, Inner Error Message: ${innerException.message}`;
             }
-            if (innerException.name && innerException.message.indexOf(innerException.name) === -1) {
+            if (
+                innerException.name &&
+                innerException.message.indexOf(innerException.name) === -1
+            ) {
                 message += `, (${innerException.name})`;
             }
         }

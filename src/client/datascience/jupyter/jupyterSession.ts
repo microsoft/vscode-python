@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
+"use strict";
 import {
     Contents,
     ContentsManager,
@@ -9,41 +9,42 @@ import {
     ServerConnection,
     Session,
     SessionManager
-} from '@jupyterlab/services';
-import { JSONObject } from '@phosphor/coreutils';
-import { Slot } from '@phosphor/signaling';
-import { Event, EventEmitter } from 'vscode';
-import { CancellationToken } from 'vscode-jsonrpc';
+} from "@jupyterlab/services";
+import { JSONObject } from "@phosphor/coreutils";
+import { Slot } from "@phosphor/signaling";
+import { Event, EventEmitter } from "vscode";
+import { CancellationToken } from "vscode-jsonrpc";
 
-import { Cancellation } from '../../common/cancellation';
-import { isTestExecution } from '../../common/constants';
-import { traceInfo } from '../../common/logger';
-import { sleep } from '../../common/utils/async';
-import * as localize from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
-import { IConnection, IJupyterKernelSpec, IJupyterSession } from '../types';
-import { JupyterKernelPromiseFailedError } from './jupyterKernelPromiseFailedError';
-import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
+import { Cancellation } from "../../common/cancellation";
+import { isTestExecution } from "../../common/constants";
+import { traceInfo } from "../../common/logger";
+import { sleep } from "../../common/utils/async";
+import * as localize from "../../common/utils/localize";
+import { noop } from "../../common/utils/misc";
+import { IConnection, IJupyterKernelSpec, IJupyterSession } from "../types";
+import { JupyterKernelPromiseFailedError } from "./jupyterKernelPromiseFailedError";
+import { JupyterWaitForIdleError } from "./jupyterWaitForIdleError";
 
 export class JupyterSession implements IJupyterSession {
     private connInfo: IConnection | undefined;
     private kernelSpec: IJupyterKernelSpec | undefined;
-    private sessionManager : SessionManager | undefined;
+    private sessionManager: SessionManager | undefined;
     private session: Session.ISession | undefined;
     private contentsManager: ContentsManager | undefined;
     private notebookFile: Contents.IModel | undefined;
-    private onRestartedEvent : EventEmitter<void> | undefined;
-    private statusHandler : Slot<Session.ISession, Kernel.Status> | undefined;
+    private onRestartedEvent: EventEmitter<void> | undefined;
+    private statusHandler: Slot<Session.ISession, Kernel.Status> | undefined;
     private connected: boolean = false;
 
     constructor(
         connInfo: IConnection,
-        kernelSpec: IJupyterKernelSpec | undefined) {
+        kernelSpec: IJupyterKernelSpec | undefined
+    ) {
         this.connInfo = connInfo;
         this.kernelSpec = kernelSpec;
     }
 
-    public dispose() : Promise<void> {
+    public dispose(): Promise<void> {
         return this.shutdown();
     }
 
@@ -51,11 +52,15 @@ export class JupyterSession implements IJupyterSession {
         await this.destroyKernelSpec();
 
         // Destroy the notebook file if not local. Local is cleaned up when we destroy the kernel spec.
-        if (this.notebookFile && this.contentsManager && this.connInfo && !this.connInfo.localLaunch) {
+        if (
+            this.notebookFile &&
+            this.contentsManager &&
+            this.connInfo &&
+            !this.connInfo.localLaunch
+        ) {
             try {
                 // Make sure we have a session first and it returns something
-                if (this.sessionManager)
-                {
+                if (this.sessionManager) {
                     await this.sessionManager.refreshRunning();
                     await this.contentsManager.delete(this.notebookFile.path);
                 }
@@ -66,84 +71,122 @@ export class JupyterSession implements IJupyterSession {
         return this.shutdownSessionAndConnection();
     }
 
-    public get onRestarted() : Event<void> {
+    public get onRestarted(): Event<void> {
         if (!this.onRestartedEvent) {
             this.onRestartedEvent = new EventEmitter<void>();
         }
         return this.onRestartedEvent.event;
     }
 
-    public async waitForIdle(timeout: number) : Promise<void> {
+    public async waitForIdle(timeout: number): Promise<void> {
         if (this.session && this.session.kernel) {
             // This function seems to cause CI builds to timeout randomly on
             // different tests. Waiting for status to go idle doesn't seem to work and
             // in the past, waiting on the ready promise doesn't work either. Check status with a maximum of 5 seconds
             const startTime = Date.now();
-            while (this.session &&
+            while (
+                this.session &&
                 this.session.kernel &&
-                this.session.kernel.status !== 'idle' &&
-                (Date.now() - startTime < timeout)) {
+                this.session.kernel.status !== "idle" &&
+                Date.now() - startTime < timeout
+            ) {
                 traceInfo(`Waiting for idle: ${this.session.kernel.status}`);
                 await sleep(100);
             }
 
             // If we didn't make it out in ten seconds, indicate an error
-            if (!this.session || !this.session.kernel || this.session.kernel.status !== 'idle') {
-                throw new JupyterWaitForIdleError(localize.DataScience.jupyterLaunchTimedOut());
+            if (
+                !this.session ||
+                !this.session.kernel ||
+                this.session.kernel.status !== "idle"
+            ) {
+                throw new JupyterWaitForIdleError(
+                    localize.DataScience.jupyterLaunchTimedOut()
+                );
             }
         }
     }
 
-    public restart(timeout: number) : Promise<void> {
-        return this.session && this.session.kernel ?
-            this.waitForKernelPromise(this.session.kernel.restart(), timeout, localize.DataScience.restartingKernelFailed()) :
-            Promise.resolve();
+    public restart(timeout: number): Promise<void> {
+        return this.session && this.session.kernel
+            ? this.waitForKernelPromise(
+                  this.session.kernel.restart(),
+                  timeout,
+                  localize.DataScience.restartingKernelFailed()
+              )
+            : Promise.resolve();
     }
 
-    public interrupt(timeout: number) : Promise<void> {
-        return this.session && this.session.kernel ?
-            this.waitForKernelPromise(this.session.kernel.interrupt(), timeout, localize.DataScience.interruptingKernelFailed()) :
-            Promise.resolve();
+    public interrupt(timeout: number): Promise<void> {
+        return this.session && this.session.kernel
+            ? this.waitForKernelPromise(
+                  this.session.kernel.interrupt(),
+                  timeout,
+                  localize.DataScience.interruptingKernelFailed()
+              )
+            : Promise.resolve();
     }
 
-    public requestExecute(content: KernelMessage.IExecuteRequest, disposeOnDone?: boolean, metadata?: JSONObject) : Kernel.IFuture | undefined {
-        return this.session && this.session.kernel ? this.session.kernel.requestExecute(content, disposeOnDone, metadata) : undefined;
+    public requestExecute(
+        content: KernelMessage.IExecuteRequest,
+        disposeOnDone?: boolean,
+        metadata?: JSONObject
+    ): Kernel.IFuture | undefined {
+        return this.session && this.session.kernel
+            ? this.session.kernel.requestExecute(
+                  content,
+                  disposeOnDone,
+                  metadata
+              )
+            : undefined;
     }
 
-    public requestComplete(content: KernelMessage.ICompleteRequest) : Promise<KernelMessage.ICompleteReplyMsg | undefined> {
-        return this.session && this.session.kernel ? this.session.kernel.requestComplete(content) : Promise.resolve(undefined);
+    public requestComplete(
+        content: KernelMessage.ICompleteRequest
+    ): Promise<KernelMessage.ICompleteReplyMsg | undefined> {
+        return this.session && this.session.kernel
+            ? this.session.kernel.requestComplete(content)
+            : Promise.resolve(undefined);
     }
 
-    public async connect(cancelToken?: CancellationToken) : Promise<void> {
+    public async connect(cancelToken?: CancellationToken): Promise<void> {
         if (!this.connInfo) {
             throw new Error(localize.DataScience.sessionDisposed());
         }
 
         // First connect to the sesssion manager
-        const serverSettings = ServerConnection.makeSettings(
-            {
-                baseUrl: this.connInfo.baseUrl,
-                token: this.connInfo.token,
-                pageUrl: '',
-                // A web socket is required to allow token authentication
-                wsUrl: this.connInfo.baseUrl.replace('http', 'ws'),
-                init: { cache: 'no-store', credentials: 'same-origin' }
-            });
-        this.sessionManager = new SessionManager({ serverSettings: serverSettings });
+        const serverSettings = ServerConnection.makeSettings({
+            baseUrl: this.connInfo.baseUrl,
+            token: this.connInfo.token,
+            pageUrl: "",
+            // A web socket is required to allow token authentication
+            wsUrl: this.connInfo.baseUrl.replace("http", "ws"),
+            init: { cache: "no-store", credentials: "same-origin" }
+        });
+        this.sessionManager = new SessionManager({
+            serverSettings: serverSettings
+        });
 
         // Create a temporary .ipynb file to use
-        this.contentsManager = new ContentsManager({ serverSettings: serverSettings });
-        this.notebookFile = await this.contentsManager.newUntitled({type: 'notebook'});
+        this.contentsManager = new ContentsManager({
+            serverSettings: serverSettings
+        });
+        this.notebookFile = await this.contentsManager.newUntitled({
+            type: "notebook"
+        });
 
         // Create our session options using this temporary notebook and our connection info
         const options: Session.IOptions = {
             path: this.notebookFile.path,
-            kernelName: this.kernelSpec ? this.kernelSpec.name : '',
+            kernelName: this.kernelSpec ? this.kernelSpec.name : "",
             serverSettings: serverSettings
         };
 
         // Start a new session
-        this.session = await Cancellation.race(() => this.sessionManager!.startNew(options), cancelToken);
+        this.session = await Cancellation.race(
+            () => this.sessionManager!.startNew(options),
+            cancelToken
+        );
 
         // Listen for session status changes
         this.statusHandler = this.onStatusChanged.bind(this.onStatusChanged);
@@ -153,11 +196,15 @@ export class JupyterSession implements IJupyterSession {
         this.connected = true;
     }
 
-    public get isConnected() : boolean {
+    public get isConnected(): boolean {
         return this.connected;
     }
 
-    private async waitForKernelPromise(kernelPromise: Promise<void>, timeout: number, errorMessage: string) : Promise<void> {
+    private async waitForKernelPromise(
+        kernelPromise: Promise<void>,
+        timeout: number,
+        errorMessage: string
+    ): Promise<void> {
         // Wait for this kernel promise to happen
         const result = await Promise.race([kernelPromise, sleep(timeout)]);
         if (result === timeout) {
@@ -167,7 +214,7 @@ export class JupyterSession implements IJupyterSession {
     }
 
     private onStatusChanged(_s: Session.ISession, a: Kernel.Status) {
-        if (a === 'starting' && this.onRestartedEvent) {
+        if (a === "starting" && this.onRestartedEvent) {
             this.onRestartedEvent.fire();
         }
     }
@@ -203,9 +250,13 @@ export class JupyterSession implements IJupyterSession {
                         // tslint:disable:no-any
                         if (isTestExecution()) {
                             if (this.session && this.session.kernel) {
-                                const defaultKernel = this.session.kernel as any;
+                                const defaultKernel = this.session
+                                    .kernel as any;
                                 if (defaultKernel && defaultKernel._futures) {
-                                    const futures = defaultKernel._futures as Map<any, any>;
+                                    const futures = defaultKernel._futures as Map<
+                                        any,
+                                        any
+                                    >;
                                     if (futures) {
                                         futures.forEach(f => {
                                             if (f._status !== undefined) {
@@ -218,7 +269,10 @@ export class JupyterSession implements IJupyterSession {
                         }
 
                         // Shutdown may fail if the process has been killed
-                        await Promise.race([this.session.shutdown(), sleep(1000)]);
+                        await Promise.race([
+                            this.session.shutdown(),
+                            sleep(1000)
+                        ]);
                     } catch {
                         noop();
                     }
@@ -243,5 +297,4 @@ export class JupyterSession implements IJupyterSession {
             this.connInfo = undefined;
         }
     }
-
 }

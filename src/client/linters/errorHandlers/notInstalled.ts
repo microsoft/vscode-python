@@ -1,27 +1,51 @@
-import { OutputChannel, Uri } from 'vscode';
-import { IPythonExecutionFactory } from '../../common/process/types';
-import { ExecutionInfo, Product } from '../../common/types';
-import { IServiceContainer } from '../../ioc/types';
-import { ILinterManager } from '../types';
-import { BaseErrorHandler } from './baseErrorHandler';
+import { OutputChannel, Uri } from "vscode";
+import { IPythonExecutionFactory } from "../../common/process/types";
+import { ExecutionInfo, Product } from "../../common/types";
+import { IServiceContainer } from "../../ioc/types";
+import { ILinterManager } from "../types";
+import { BaseErrorHandler } from "./baseErrorHandler";
 
 export class NotInstalledErrorHandler extends BaseErrorHandler {
-    constructor(product: Product, outputChannel: OutputChannel, serviceContainer: IServiceContainer) {
+    constructor(
+        product: Product,
+        outputChannel: OutputChannel,
+        serviceContainer: IServiceContainer
+    ) {
         super(product, outputChannel, serviceContainer);
     }
-    public async handleError(error: Error, resource: Uri, execInfo: ExecutionInfo): Promise<boolean> {
-        const pythonExecutionService = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource });
-        const isModuleInstalled = await pythonExecutionService.isModuleInstalled(execInfo.moduleName!);
+    public async handleError(
+        error: Error,
+        resource: Uri,
+        execInfo: ExecutionInfo
+    ): Promise<boolean> {
+        const pythonExecutionService = await this.serviceContainer
+            .get<IPythonExecutionFactory>(IPythonExecutionFactory)
+            .create({ resource });
+        const isModuleInstalled = await pythonExecutionService.isModuleInstalled(
+            execInfo.moduleName!
+        );
         if (isModuleInstalled) {
-            return this.nextHandler ? this.nextHandler.handleError(error, resource, execInfo) : false;
+            return this.nextHandler
+                ? this.nextHandler.handleError(error, resource, execInfo)
+                : false;
         }
 
-        this.installer.promptToInstall(this.product, resource)
-            .catch(this.logger.logError.bind(this, 'NotInstalledErrorHandler.promptToInstall'));
+        this.installer
+            .promptToInstall(this.product, resource)
+            .catch(
+                this.logger.logError.bind(
+                    this,
+                    "NotInstalledErrorHandler.promptToInstall"
+                )
+            );
 
-        const linterManager = this.serviceContainer.get<ILinterManager>(ILinterManager);
+        const linterManager = this.serviceContainer.get<ILinterManager>(
+            ILinterManager
+        );
         const info = linterManager.getLinterInfo(execInfo.product!);
-        const customError = `Linter '${info.id}' is not installed. Please install it or select another linter".`;
+        const customError = `Linter '${
+            info.id
+        }' is not installed. Please install it or select another linter".`;
         this.outputChannel.appendLine(`\n${customError}\n${error}`);
         this.logger.logWarning(customError, error);
         return true;

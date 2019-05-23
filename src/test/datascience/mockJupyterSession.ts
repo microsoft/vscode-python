@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
-import { Kernel, KernelMessage } from '@jupyterlab/services';
-import { JSONObject } from '@phosphor/coreutils/lib/json';
-import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
+"use strict";
+import { Kernel, KernelMessage } from "@jupyterlab/services";
+import { JSONObject } from "@phosphor/coreutils/lib/json";
+import { CancellationTokenSource, Event, EventEmitter } from "vscode";
 
-import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/jupyterKernelPromiseFailedError';
-import { ICell, IJupyterSession } from '../../client/datascience/types';
-import { sleep } from '../core';
-import { MockJupyterRequest } from './mockJupyterRequest';
+import { JupyterKernelPromiseFailedError } from "../../client/datascience/jupyter/jupyterKernelPromiseFailedError";
+import { ICell, IJupyterSession } from "../../client/datascience/types";
+import { sleep } from "../core";
+import { MockJupyterRequest } from "./mockJupyterRequest";
 
 const LineFeedRegEx = /(\r\n|\n)/g;
 
@@ -20,7 +20,7 @@ export class MockJupyterSession implements IJupyterSession {
     private executionCount: number = 0;
     private outstandingRequestTokenSources: CancellationTokenSource[] = [];
     private executes: string[] = [];
-    private forceRestartTimeout : boolean = false;
+    private forceRestartTimeout: boolean = false;
     private completionTimeout: number = 1;
 
     constructor(cellDictionary: Record<string, ICell>, timedelay: number) {
@@ -28,7 +28,7 @@ export class MockJupyterSession implements IJupyterSession {
         this.timedelay = timedelay;
     }
 
-    public get onRestarted() : Event<void> {
+    public get onRestarted(): Event<void> {
         return this.restartedEvent.event;
     }
 
@@ -38,7 +38,9 @@ export class MockJupyterSession implements IJupyterSession {
         requests.forEach(r => r.cancel());
 
         if (this.forceRestartTimeout) {
-            throw new JupyterKernelPromiseFailedError('Forcing restart timeout');
+            throw new JupyterKernelPromiseFailedError(
+                "Forcing restart timeout"
+            );
         }
 
         return sleep(this.timedelay);
@@ -55,7 +57,11 @@ export class MockJupyterSession implements IJupyterSession {
     public prolongRestarts() {
         this.forceRestartTimeout = true;
     }
-    public requestExecute(content: KernelMessage.IExecuteRequest, _disposeOnDone?: boolean, _metadata?: JSONObject): Kernel.IFuture {
+    public requestExecute(
+        content: KernelMessage.IExecuteRequest,
+        _disposeOnDone?: boolean,
+        _metadata?: JSONObject
+    ): Kernel.IFuture {
         // Content should have the code
         const cell = this.findCell(content.code);
         if (cell) {
@@ -65,40 +71,47 @@ export class MockJupyterSession implements IJupyterSession {
         // Create a new dummy request
         this.executionCount += 1;
         const tokenSource = new CancellationTokenSource();
-        const request = new MockJupyterRequest(cell, this.timedelay, this.executionCount, tokenSource.token);
+        const request = new MockJupyterRequest(
+            cell,
+            this.timedelay,
+            this.executionCount,
+            tokenSource.token
+        );
         this.outstandingRequestTokenSources.push(tokenSource);
 
         // When it finishes, it should not be an outstanding request anymore
         const removeHandler = () => {
-            this.outstandingRequestTokenSources = this.outstandingRequestTokenSources.filter(f => f !== tokenSource);
+            this.outstandingRequestTokenSources = this.outstandingRequestTokenSources.filter(
+                f => f !== tokenSource
+            );
         };
         request.done.then(removeHandler).catch(removeHandler);
         return request;
     }
 
-    public async requestComplete(_content: KernelMessage.ICompleteRequest): Promise<KernelMessage.ICompleteReplyMsg | undefined> {
+    public async requestComplete(
+        _content: KernelMessage.ICompleteRequest
+    ): Promise<KernelMessage.ICompleteReplyMsg | undefined> {
         await sleep(this.completionTimeout);
 
         return {
             content: {
-                matches: ['printly'], // This keeps this in the intellisense when the editor pairs down results
+                matches: ["printly"], // This keeps this in the intellisense when the editor pairs down results
                 cursor_start: 0,
                 cursor_end: 7,
-                status: 'ok',
+                status: "ok",
                 metadata: {}
             },
-            channel: 'shell',
+            channel: "shell",
             header: {
-                username: 'foo',
-                version: '1',
-                session: '1',
-                msg_id: '1',
-                msg_type: 'complete'
+                username: "foo",
+                version: "1",
+                session: "1",
+                msg_id: "1",
+                msg_type: "complete"
             },
-            parent_header: {
-            },
-            metadata: {
-            }
+            parent_header: {},
+            metadata: {}
         };
     }
 
@@ -106,7 +119,7 @@ export class MockJupyterSession implements IJupyterSession {
         return sleep(10);
     }
 
-    public getExecutes() : string [] {
+    public getExecutes(): string[] {
         return this.executes;
     }
 
@@ -114,9 +127,9 @@ export class MockJupyterSession implements IJupyterSession {
         this.completionTimeout = timeout;
     }
 
-    private findCell = (code : string) : ICell => {
+    private findCell = (code: string): ICell => {
         // Match skipping line separators
-        const withoutLines = code.replace(LineFeedRegEx, '');
+        const withoutLines = code.replace(LineFeedRegEx, "");
 
         if (this.dict.hasOwnProperty(withoutLines)) {
             return this.dict[withoutLines] as ICell;
@@ -124,5 +137,5 @@ export class MockJupyterSession implements IJupyterSession {
         // tslint:disable-next-line:no-console
         console.log(`Cell ${code.splitLines()[1]} not found in mock`);
         throw new Error(`Cell ${code.splitLines()[1]} not found in mock`);
-    }
+    };
 }

@@ -1,48 +1,127 @@
-import * as assert from 'assert';
-import { expect } from 'chai';
-import * as fs from 'fs';
-import { EOL } from 'os';
-import * as path from 'path';
-import { instance, mock } from 'ts-mockito';
-import { commands, ConfigurationTarget, Position, Range, Uri, window, workspace } from 'vscode';
-import { Commands } from '../../client/common/constants';
-import { ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
-import { InterpreterService } from '../../client/interpreter/interpreterService';
-import { CondaService } from '../../client/interpreter/locators/services/condaService';
-import { SortImportsEditingProvider } from '../../client/providers/importSortProvider';
-import { ISortImportsEditingProvider } from '../../client/providers/types';
-import { updateSetting } from '../common';
-import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
-import { UnitTestIocContainer } from '../testing/serviceRegistry';
+import * as assert from "assert";
+import { expect } from "chai";
+import * as fs from "fs";
+import { EOL } from "os";
+import * as path from "path";
+import { instance, mock } from "ts-mockito";
+import {
+    commands,
+    ConfigurationTarget,
+    Position,
+    Range,
+    Uri,
+    window,
+    workspace
+} from "vscode";
+import { Commands } from "../../client/common/constants";
+import {
+    ICondaService,
+    IInterpreterService
+} from "../../client/interpreter/contracts";
+import { InterpreterService } from "../../client/interpreter/interpreterService";
+import { CondaService } from "../../client/interpreter/locators/services/condaService";
+import { SortImportsEditingProvider } from "../../client/providers/importSortProvider";
+import { ISortImportsEditingProvider } from "../../client/providers/types";
+import { updateSetting } from "../common";
+import {
+    closeActiveWindows,
+    initialize,
+    initializeTest,
+    IS_MULTI_ROOT_TEST
+} from "../initialize";
+import { UnitTestIocContainer } from "../testing/serviceRegistry";
 
-const sortingPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'sorting');
-const fileToFormatWithoutConfig = path.join(sortingPath, 'noconfig', 'before.py');
-const originalFileToFormatWithoutConfig = path.join(sortingPath, 'noconfig', 'original.py');
-const fileToFormatWithConfig = path.join(sortingPath, 'withconfig', 'before.py');
-const originalFileToFormatWithConfig = path.join(sortingPath, 'withconfig', 'original.py');
-const fileToFormatWithConfig1 = path.join(sortingPath, 'withconfig', 'before.1.py');
-const originalFileToFormatWithConfig1 = path.join(sortingPath, 'withconfig', 'original.1.py');
+const sortingPath = path.join(
+    __dirname,
+    "..",
+    "..",
+    "..",
+    "src",
+    "test",
+    "pythonFiles",
+    "sorting"
+);
+const fileToFormatWithoutConfig = path.join(
+    sortingPath,
+    "noconfig",
+    "before.py"
+);
+const originalFileToFormatWithoutConfig = path.join(
+    sortingPath,
+    "noconfig",
+    "original.py"
+);
+const fileToFormatWithConfig = path.join(
+    sortingPath,
+    "withconfig",
+    "before.py"
+);
+const originalFileToFormatWithConfig = path.join(
+    sortingPath,
+    "withconfig",
+    "original.py"
+);
+const fileToFormatWithConfig1 = path.join(
+    sortingPath,
+    "withconfig",
+    "before.1.py"
+);
+const originalFileToFormatWithConfig1 = path.join(
+    sortingPath,
+    "withconfig",
+    "original.1.py"
+);
 
 // tslint:disable-next-line:max-func-body-length
-suite('Sorting', () => {
+suite("Sorting", () => {
     let ioc: UnitTestIocContainer;
     let sorter: ISortImportsEditingProvider;
-    const configTarget = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
+    const configTarget = IS_MULTI_ROOT_TEST
+        ? ConfigurationTarget.WorkspaceFolder
+        : ConfigurationTarget.Workspace;
     suiteSetup(initialize);
     suiteTeardown(async () => {
-        fs.writeFileSync(fileToFormatWithConfig, fs.readFileSync(originalFileToFormatWithConfig));
-        fs.writeFileSync(fileToFormatWithConfig1, fs.readFileSync(originalFileToFormatWithConfig1));
-        fs.writeFileSync(fileToFormatWithoutConfig, fs.readFileSync(originalFileToFormatWithoutConfig));
-        await updateSetting('sortImports.args', [], Uri.file(sortingPath), configTarget);
+        fs.writeFileSync(
+            fileToFormatWithConfig,
+            fs.readFileSync(originalFileToFormatWithConfig)
+        );
+        fs.writeFileSync(
+            fileToFormatWithConfig1,
+            fs.readFileSync(originalFileToFormatWithConfig1)
+        );
+        fs.writeFileSync(
+            fileToFormatWithoutConfig,
+            fs.readFileSync(originalFileToFormatWithoutConfig)
+        );
+        await updateSetting(
+            "sortImports.args",
+            [],
+            Uri.file(sortingPath),
+            configTarget
+        );
         await closeActiveWindows();
     });
     setup(async () => {
         await initializeTest();
         initializeDI();
-        fs.writeFileSync(fileToFormatWithConfig, fs.readFileSync(originalFileToFormatWithConfig));
-        fs.writeFileSync(fileToFormatWithoutConfig, fs.readFileSync(originalFileToFormatWithoutConfig));
-        fs.writeFileSync(fileToFormatWithConfig1, fs.readFileSync(originalFileToFormatWithConfig1));
-        await updateSetting('sortImports.args', [], Uri.file(sortingPath), configTarget);
+        fs.writeFileSync(
+            fileToFormatWithConfig,
+            fs.readFileSync(originalFileToFormatWithConfig)
+        );
+        fs.writeFileSync(
+            fileToFormatWithoutConfig,
+            fs.readFileSync(originalFileToFormatWithoutConfig)
+        );
+        fs.writeFileSync(
+            fileToFormatWithConfig1,
+            fs.readFileSync(originalFileToFormatWithConfig1)
+        );
+        await updateSetting(
+            "sortImports.args",
+            [],
+            Uri.file(sortingPath),
+            configTarget
+        );
         await closeActiveWindows();
         sorter = new SortImportsEditingProvider(ioc.serviceContainer);
     });
@@ -55,68 +134,161 @@ suite('Sorting', () => {
         ioc.registerCommonTypes();
         ioc.registerVariableTypes();
         ioc.registerProcessTypes();
-        ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
-        ioc.serviceManager.addSingletonInstance<IInterpreterService>(IInterpreterService, instance(mock(InterpreterService)));
+        ioc.serviceManager.addSingletonInstance<ICondaService>(
+            ICondaService,
+            instance(mock(CondaService))
+        );
+        ioc.serviceManager.addSingletonInstance<IInterpreterService>(
+            IInterpreterService,
+            instance(mock(InterpreterService))
+        );
     }
-    test('Without Config', async () => {
-        const textDocument = await workspace.openTextDocument(fileToFormatWithoutConfig);
+    test("Without Config", async () => {
+        const textDocument = await workspace.openTextDocument(
+            fileToFormatWithoutConfig
+        );
         await window.showTextDocument(textDocument);
-        const edit = (await sorter.provideDocumentSortImportsEdits(textDocument.uri))!;
+        const edit = (await sorter.provideDocumentSortImportsEdits(
+            textDocument.uri
+        ))!;
         expect(edit.entries()).to.be.lengthOf(1);
         const edits = edit.entries()[0][1];
-        assert.equal(edits.filter(value => value.newText === EOL && value.range.isEqual(new Range(2, 0, 2, 0))).length, 1, 'EOL not found');
-        assert.equal(edits.filter(value => value.newText === '' && value.range.isEqual(new Range(3, 0, 4, 0))).length, 1, '"" not found');
-        assert.equal(edits.filter(value => value.newText === `from rope.base import libutils${EOL}from rope.refactor.extract import ExtractMethod, ExtractVariable${EOL}from rope.refactor.rename import Rename${EOL}` && value.range.isEqual(new Range(6, 0, 6, 0))).length, 1, 'Text not found');
-        assert.equal(edits.filter(value => value.newText === '' && value.range.isEqual(new Range(13, 0, 18, 0))).length, 1, '"" not found');
+        assert.equal(
+            edits.filter(
+                value =>
+                    value.newText === EOL &&
+                    value.range.isEqual(new Range(2, 0, 2, 0))
+            ).length,
+            1,
+            "EOL not found"
+        );
+        assert.equal(
+            edits.filter(
+                value =>
+                    value.newText === "" &&
+                    value.range.isEqual(new Range(3, 0, 4, 0))
+            ).length,
+            1,
+            '"" not found'
+        );
+        assert.equal(
+            edits.filter(
+                value =>
+                    value.newText ===
+                        `from rope.base import libutils${EOL}from rope.refactor.extract import ExtractMethod, ExtractVariable${EOL}from rope.refactor.rename import Rename${EOL}` &&
+                    value.range.isEqual(new Range(6, 0, 6, 0))
+            ).length,
+            1,
+            "Text not found"
+        );
+        assert.equal(
+            edits.filter(
+                value =>
+                    value.newText === "" &&
+                    value.range.isEqual(new Range(13, 0, 18, 0))
+            ).length,
+            1,
+            '"" not found'
+        );
     });
 
-    test('Without Config (via Command)', async () => {
-        const textDocument = await workspace.openTextDocument(fileToFormatWithoutConfig);
+    test("Without Config (via Command)", async () => {
+        const textDocument = await workspace.openTextDocument(
+            fileToFormatWithoutConfig
+        );
         const originalContent = textDocument.getText();
         await window.showTextDocument(textDocument);
         await commands.executeCommand(Commands.Sort_Imports);
-        assert.notEqual(originalContent, textDocument.getText(), 'Contents have not changed');
+        assert.notEqual(
+            originalContent,
+            textDocument.getText(),
+            "Contents have not changed"
+        );
     });
 
-    test('With Config', async () => {
-        const textDocument = await workspace.openTextDocument(fileToFormatWithConfig);
+    test("With Config", async () => {
+        const textDocument = await workspace.openTextDocument(
+            fileToFormatWithConfig
+        );
         await window.showTextDocument(textDocument);
-        const edit = (await sorter.provideDocumentSortImportsEdits(textDocument.uri))!;
+        const edit = (await sorter.provideDocumentSortImportsEdits(
+            textDocument.uri
+        ))!;
         expect(edit.entries()).to.be.lengthOf(1);
         const edits = edit.entries()[0][1];
         const newValue = `from third_party import lib2${EOL}from third_party import lib3${EOL}from third_party import lib4${EOL}from third_party import lib5${EOL}from third_party import lib6${EOL}from third_party import lib7${EOL}from third_party import lib8${EOL}from third_party import lib9${EOL}`;
-        assert.equal(edits.filter(value => value.newText === newValue && value.range.isEqual(new Range(0, 0, 3, 0))).length, 1, 'New Text not found');
+        assert.equal(
+            edits.filter(
+                value =>
+                    value.newText === newValue &&
+                    value.range.isEqual(new Range(0, 0, 3, 0))
+            ).length,
+            1,
+            "New Text not found"
+        );
     });
 
-    test('With Config (via Command)', async () => {
-        const textDocument = await workspace.openTextDocument(fileToFormatWithConfig);
+    test("With Config (via Command)", async () => {
+        const textDocument = await workspace.openTextDocument(
+            fileToFormatWithConfig
+        );
         const originalContent = textDocument.getText();
         await window.showTextDocument(textDocument);
         await commands.executeCommand(Commands.Sort_Imports);
-        assert.notEqual(originalContent, textDocument.getText(), 'Contents have not changed');
+        assert.notEqual(
+            originalContent,
+            textDocument.getText(),
+            "Contents have not changed"
+        );
     });
 
-    test('With Changes and Config in Args', async () => {
-        await updateSetting('sortImports.args', ['-sp', path.join(sortingPath, 'withconfig')], Uri.file(sortingPath), ConfigurationTarget.Workspace);
-        const textDocument = await workspace.openTextDocument(fileToFormatWithConfig);
+    test("With Changes and Config in Args", async () => {
+        await updateSetting(
+            "sortImports.args",
+            ["-sp", path.join(sortingPath, "withconfig")],
+            Uri.file(sortingPath),
+            ConfigurationTarget.Workspace
+        );
+        const textDocument = await workspace.openTextDocument(
+            fileToFormatWithConfig
+        );
         const editor = await window.showTextDocument(textDocument);
         await editor.edit(builder => {
-            builder.insert(new Position(0, 0), `from third_party import lib0${EOL}`);
+            builder.insert(
+                new Position(0, 0),
+                `from third_party import lib0${EOL}`
+            );
         });
-        const edit = (await sorter.provideDocumentSortImportsEdits(textDocument.uri))!;
+        const edit = (await sorter.provideDocumentSortImportsEdits(
+            textDocument.uri
+        ))!;
         expect(edit.entries()).to.be.lengthOf(1);
         const edits = edit.entries()[0][1];
-        assert.notEqual(edits.length, 0, 'No edits');
+        assert.notEqual(edits.length, 0, "No edits");
     });
-    test('With Changes and Config in Args (via Command)', async () => {
-        await updateSetting('sortImports.args', ['-sp', path.join(sortingPath, 'withconfig')], Uri.file(sortingPath), configTarget);
-        const textDocument = await workspace.openTextDocument(fileToFormatWithConfig);
+    test("With Changes and Config in Args (via Command)", async () => {
+        await updateSetting(
+            "sortImports.args",
+            ["-sp", path.join(sortingPath, "withconfig")],
+            Uri.file(sortingPath),
+            configTarget
+        );
+        const textDocument = await workspace.openTextDocument(
+            fileToFormatWithConfig
+        );
         const editor = await window.showTextDocument(textDocument);
         await editor.edit(builder => {
-            builder.insert(new Position(0, 0), `from third_party import lib0${EOL}`);
+            builder.insert(
+                new Position(0, 0),
+                `from third_party import lib0${EOL}`
+            );
         });
         const originalContent = textDocument.getText();
         await commands.executeCommand(Commands.Sort_Imports);
-        assert.notEqual(originalContent, textDocument.getText(), 'Contents have not changed');
+        assert.notEqual(
+            originalContent,
+            textDocument.getText(),
+            "Contents have not changed"
+        );
     });
 });

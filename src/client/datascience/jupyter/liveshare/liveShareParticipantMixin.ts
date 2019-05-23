@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
-import * as vsls from 'vsls/vscode';
+"use strict";
+import * as vsls from "vsls/vscode";
 
-import { ILiveShareApi } from '../../../common/application/types';
-import '../../../common/extensions';
-import { IAsyncDisposable } from '../../../common/types';
-import { noop } from '../../../common/utils/misc';
-import { ClassType } from '../../../ioc/types';
-import { ILiveShareParticipant } from './types';
-import { waitForGuestService, waitForHostService } from './utils';
+import { ILiveShareApi } from "../../../common/application/types";
+import "../../../common/extensions";
+import { IAsyncDisposable } from "../../../common/types";
+import { noop } from "../../../common/utils/misc";
+import { ClassType } from "../../../ioc/types";
+import { ILiveShareParticipant } from "./types";
+import { waitForGuestService, waitForHostService } from "./utils";
 
 // tslint:disable:no-any
 
@@ -18,17 +18,32 @@ export class LiveShareParticipantDefault implements IAsyncDisposable {
         noop();
     }
 
-    public async dispose() : Promise<void> {
+    public async dispose(): Promise<void> {
         noop();
     }
 }
 
-export function LiveShareParticipantGuest<T extends ClassType<IAsyncDisposable>>(SuperClass: T, serviceName: string) {
-    return LiveShareParticipantMixin<T, vsls.SharedServiceProxy | null>(SuperClass, vsls.Role.Guest, serviceName, waitForGuestService);
+export function LiveShareParticipantGuest<
+    T extends ClassType<IAsyncDisposable>
+>(SuperClass: T, serviceName: string) {
+    return LiveShareParticipantMixin<T, vsls.SharedServiceProxy | null>(
+        SuperClass,
+        vsls.Role.Guest,
+        serviceName,
+        waitForGuestService
+    );
 }
 
-export function LiveShareParticipantHost<T extends ClassType<IAsyncDisposable>>(SuperClass: T, serviceName: string) {
-    return LiveShareParticipantMixin<T, vsls.SharedService | null>(SuperClass, vsls.Role.Host, serviceName, waitForHostService);
+export function LiveShareParticipantHost<T extends ClassType<IAsyncDisposable>>(
+    SuperClass: T,
+    serviceName: string
+) {
+    return LiveShareParticipantMixin<T, vsls.SharedService | null>(
+        SuperClass,
+        vsls.Role.Host,
+        serviceName,
+        waitForHostService
+    );
 }
 
 /**
@@ -62,7 +77,8 @@ function LiveShareParticipantMixin<T extends ClassType<IAsyncDisposable>, S>(
     SuperClass: T,
     expectedRole: vsls.Role,
     serviceName: string,
-    serviceWaiter: (api: vsls.LiveShare, name: string) => Promise<S>) {
+    serviceWaiter: (api: vsls.LiveShare, name: string) => Promise<S>
+) {
     return class extends SuperClass implements ILiveShareParticipant {
         protected finishedApi: vsls.LiveShare | null | undefined;
         protected api: Promise<vsls.LiveShare | null>;
@@ -77,10 +93,12 @@ function LiveShareParticipantMixin<T extends ClassType<IAsyncDisposable>, S>(
             if (rest.length > 0) {
                 const liveShare = rest[0] as ILiveShareApi;
                 this.api = liveShare.getApi();
-                this.api.then(a => {
-                    this.finishedApi = a;
-                    this.onSessionChange(a).ignoreErrors();
-                }).ignoreErrors();
+                this.api
+                    .then(a => {
+                        this.finishedApi = a;
+                        this.onSessionChange(a).ignoreErrors();
+                    })
+                    .ignoreErrors();
             } else {
                 this.api = Promise.resolve(null);
             }
@@ -90,30 +108,37 @@ function LiveShareParticipantMixin<T extends ClassType<IAsyncDisposable>, S>(
             return this.actualRole;
         }
 
-        public async onPeerChange(_ev: vsls.PeersChangeEvent) : Promise<void> {
+        public async onPeerChange(_ev: vsls.PeersChangeEvent): Promise<void> {
             noop();
         }
 
-        public async onAttach(_api: vsls.LiveShare | null) : Promise<void> {
+        public async onAttach(_api: vsls.LiveShare | null): Promise<void> {
             noop();
         }
 
-        public waitForServiceName() : Promise<string> {
+        public waitForServiceName(): Promise<string> {
             // Default is just to return the server name
             return Promise.resolve(serviceName);
         }
 
-        public onDetach(api: vsls.LiveShare | null) : Promise<void> {
-            if (api && this.serviceFullName && api.session && api.session.role === vsls.Role.Host) {
+        public onDetach(api: vsls.LiveShare | null): Promise<void> {
+            if (
+                api &&
+                this.serviceFullName &&
+                api.session &&
+                api.session.role === vsls.Role.Host
+            ) {
                 return api.unshareService(this.serviceFullName);
             }
             return Promise.resolve();
         }
 
-        public async onSessionChange(api: vsls.LiveShare | null) : Promise<void> {
+        public async onSessionChange(
+            api: vsls.LiveShare | null
+        ): Promise<void> {
             this.servicePromise = undefined;
-            const newRole = api !== null && api.session ?
-                api.session.role : vsls.Role.None;
+            const newRole =
+                api !== null && api.session ? api.session.role : vsls.Role.None;
             if (newRole !== this.actualRole) {
                 this.actualRole = newRole;
                 if (newRole === this.wantedRole) {
@@ -124,12 +149,12 @@ function LiveShareParticipantMixin<T extends ClassType<IAsyncDisposable>, S>(
             }
         }
 
-        public async waitForService() : Promise<S | undefined> {
+        public async waitForService(): Promise<S | undefined> {
             if (this.servicePromise) {
                 return this.servicePromise;
             }
             const api = await this.api;
-            if (!api || (api.session.role !== this.wantedRole)) {
+            if (!api || api.session.role !== this.wantedRole) {
                 this.servicePromise = Promise.resolve(undefined);
             } else {
                 this.serviceFullName = await this.waitForServiceName();

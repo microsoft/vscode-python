@@ -1,25 +1,36 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
+"use strict";
 
-import * as path from 'path';
-import * as vscode from 'vscode';
-import { IWorkspaceService } from '../common/application/types';
-import { isTestExecution } from '../common/constants';
-import '../common/extensions';
-import { IPythonToolExecutionService } from '../common/process/types';
-import { ExecutionInfo, IConfigurationService, ILogger, IPythonSettings, Product } from '../common/types';
-import { IServiceContainer } from '../ioc/types';
-import { ErrorHandler } from './errorHandlers/errorHandler';
+import * as path from "path";
+import * as vscode from "vscode";
+import { IWorkspaceService } from "../common/application/types";
+import { isTestExecution } from "../common/constants";
+import "../common/extensions";
+import { IPythonToolExecutionService } from "../common/process/types";
 import {
-    ILinter, ILinterInfo, ILinterManager, ILintMessage,
-    LinterId, LintMessageSeverity
-} from './types';
+    ExecutionInfo,
+    IConfigurationService,
+    ILogger,
+    IPythonSettings,
+    Product
+} from "../common/types";
+import { IServiceContainer } from "../ioc/types";
+import { ErrorHandler } from "./errorHandlers/errorHandler";
+import {
+    ILinter,
+    ILinterInfo,
+    ILinterManager,
+    ILintMessage,
+    LinterId,
+    LintMessageSeverity
+} from "./types";
 
 // tslint:disable-next-line:no-require-imports no-var-requires no-any
-const namedRegexp = require('named-js-regexp');
+const namedRegexp = require("named-js-regexp");
 // Allow negative column numbers (https://github.com/PyCQA/pylint/issues/1822)
-const REGEX = '(?<line>\\d+),(?<column>-?\\d+),(?<type>\\w+),(?<code>\\w\\d+):(?<message>.*)\\r?(\\n|$)';
+const REGEX =
+    "(?<line>\\d+),(?<column>-?\\d+),(?<type>\\w+),(?<code>\\w\\d+):(?<message>.*)\\r?(\\n|$)";
 
 export interface IRegexGroup {
     line: number;
@@ -29,8 +40,11 @@ export interface IRegexGroup {
     type: string;
 }
 
-export function matchNamedRegEx(data: string, regex: string): IRegexGroup | undefined {
-    const compiledRegexp = namedRegexp(regex, 'g');
+export function matchNamedRegEx(
+    data: string,
+    regex: string
+): IRegexGroup | undefined {
+    const compiledRegexp = namedRegexp(regex, "g");
     const rawMatch = compiledRegexp.exec(data);
     if (rawMatch !== null) {
         return <IRegexGroup>rawMatch.groups();
@@ -58,7 +72,10 @@ export function parseLine(
     return {
         code: match.code,
         message: match.message,
-        column: isNaN(match.column) || match.column <= 0 ? 0 : match.column - colOffset,
+        column:
+            isNaN(match.column) || match.column <= 0
+                ? 0
+                : match.column - colOffset,
         line: match.line,
         type: match.type,
         provider: linterID
@@ -77,52 +94,80 @@ export abstract class BaseLinter implements ILinter {
         return this._pythonSettings;
     }
 
-    constructor(product: Product,
+    constructor(
+        product: Product,
         protected readonly outputChannel: vscode.OutputChannel,
         protected readonly serviceContainer: IServiceContainer,
-        protected readonly columnOffset = 0) {
-        this._info = serviceContainer.get<ILinterManager>(ILinterManager).getLinterInfo(product);
-        this.errorHandler = new ErrorHandler(this.info.product, outputChannel, serviceContainer);
-        this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
-        this.workspace = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        protected readonly columnOffset = 0
+    ) {
+        this._info = serviceContainer
+            .get<ILinterManager>(ILinterManager)
+            .getLinterInfo(product);
+        this.errorHandler = new ErrorHandler(
+            this.info.product,
+            outputChannel,
+            serviceContainer
+        );
+        this.configService = serviceContainer.get<IConfigurationService>(
+            IConfigurationService
+        );
+        this.workspace = serviceContainer.get<IWorkspaceService>(
+            IWorkspaceService
+        );
     }
 
     public get info(): ILinterInfo {
         return this._info;
     }
 
-    public async lint(document: vscode.TextDocument, cancellation: vscode.CancellationToken): Promise<ILintMessage[]> {
+    public async lint(
+        document: vscode.TextDocument,
+        cancellation: vscode.CancellationToken
+    ): Promise<ILintMessage[]> {
         this._pythonSettings = this.configService.getSettings(document.uri);
         return this.runLinter(document, cancellation);
     }
 
     protected getWorkspaceRootPath(document: vscode.TextDocument): string {
         const workspaceFolder = this.workspace.getWorkspaceFolder(document.uri);
-        const workspaceRootPath = (workspaceFolder && typeof workspaceFolder.uri.fsPath === 'string') ? workspaceFolder.uri.fsPath : undefined;
-        return typeof workspaceRootPath === 'string' ? workspaceRootPath : path.dirname(document.uri.fsPath);
+        const workspaceRootPath =
+            workspaceFolder && typeof workspaceFolder.uri.fsPath === "string"
+                ? workspaceFolder.uri.fsPath
+                : undefined;
+        return typeof workspaceRootPath === "string"
+            ? workspaceRootPath
+            : path.dirname(document.uri.fsPath);
     }
     protected get logger(): ILogger {
         return this.serviceContainer.get<ILogger>(ILogger);
     }
-    protected abstract runLinter(document: vscode.TextDocument, cancellation: vscode.CancellationToken): Promise<ILintMessage[]>;
+    protected abstract runLinter(
+        document: vscode.TextDocument,
+        cancellation: vscode.CancellationToken
+    ): Promise<ILintMessage[]>;
 
     // tslint:disable-next-line:no-any
-    protected parseMessagesSeverity(error: string, categorySeverity: any): LintMessageSeverity {
+    protected parseMessagesSeverity(
+        error: string,
+        categorySeverity: any
+    ): LintMessageSeverity {
         if (categorySeverity[error]) {
             const severityName = categorySeverity[error];
             switch (severityName) {
-                case 'Error':
+                case "Error":
                     return LintMessageSeverity.Error;
-                case 'Hint':
+                case "Hint":
                     return LintMessageSeverity.Hint;
-                case 'Information':
+                case "Information":
                     return LintMessageSeverity.Information;
-                case 'Warning':
+                case "Warning":
                     return LintMessageSeverity.Warning;
                 default: {
                     if (LintMessageSeverity[severityName]) {
                         // tslint:disable-next-line:no-any
-                        return <LintMessageSeverity><any>LintMessageSeverity[severityName];
+                        return <LintMessageSeverity>(
+                            (<any>LintMessageSeverity[severityName])
+                        );
                     }
                 }
             }
@@ -130,35 +175,70 @@ export abstract class BaseLinter implements ILinter {
         return LintMessageSeverity.Information;
     }
 
-    protected async run(args: string[], document: vscode.TextDocument, cancellation: vscode.CancellationToken, regEx: string = REGEX): Promise<ILintMessage[]> {
+    protected async run(
+        args: string[],
+        document: vscode.TextDocument,
+        cancellation: vscode.CancellationToken,
+        regEx: string = REGEX
+    ): Promise<ILintMessage[]> {
         if (!this.info.isEnabled(document.uri)) {
             return [];
         }
         const executionInfo = this.info.getExecutionInfo(args, document.uri);
         const cwd = this.getWorkspaceRootPath(document);
-        const pythonToolsExecutionService = this.serviceContainer.get<IPythonToolExecutionService>(IPythonToolExecutionService);
+        const pythonToolsExecutionService = this.serviceContainer.get<
+            IPythonToolExecutionService
+        >(IPythonToolExecutionService);
         try {
-            const result = await pythonToolsExecutionService.exec(executionInfo, { cwd, token: cancellation, mergeStdOutErr: false }, document.uri);
+            const result = await pythonToolsExecutionService.exec(
+                executionInfo,
+                { cwd, token: cancellation, mergeStdOutErr: false },
+                document.uri
+            );
             this.displayLinterResultHeader(result.stdout);
-            return await this.parseMessages(result.stdout, document, cancellation, regEx);
+            return await this.parseMessages(
+                result.stdout,
+                document,
+                cancellation,
+                regEx
+            );
         } catch (error) {
             await this.handleError(error, document.uri, executionInfo);
             return [];
         }
     }
 
-    protected async parseMessages(output: string, _document: vscode.TextDocument, _token: vscode.CancellationToken, regEx: string) {
-        const outputLines = output.splitLines({ removeEmptyEntries: false, trim: false });
+    protected async parseMessages(
+        output: string,
+        _document: vscode.TextDocument,
+        _token: vscode.CancellationToken,
+        regEx: string
+    ) {
+        const outputLines = output.splitLines({
+            removeEmptyEntries: false,
+            trim: false
+        });
         return this.parseLines(outputLines, regEx);
     }
 
-    protected async handleError(error: Error, resource: vscode.Uri, execInfo: ExecutionInfo) {
+    protected async handleError(
+        error: Error,
+        resource: vscode.Uri,
+        execInfo: ExecutionInfo
+    ) {
         if (isTestExecution()) {
-            this.errorHandler.handleError(error, resource, execInfo)
+            this.errorHandler
+                .handleError(error, resource, execInfo)
                 .ignoreErrors();
         } else {
-            this.errorHandler.handleError(error, resource, execInfo)
-                .catch(this.logger.logError.bind(this, 'Error in errorHandler.handleError'))
+            this.errorHandler
+                .handleError(error, resource, execInfo)
+                .catch(
+                    this.logger.logError.bind(
+                        this,
+                        "Error in errorHandler.handleError"
+                    )
+                )
                 .ignoreErrors();
         }
     }
@@ -174,19 +254,31 @@ export abstract class BaseLinter implements ILinter {
                 const msg = this.parseLine(line, regEx);
                 if (msg) {
                     messages.push(msg);
-                    if (messages.length >= this.pythonSettings.linting.maxNumberOfProblems) {
+                    if (
+                        messages.length >=
+                        this.pythonSettings.linting.maxNumberOfProblems
+                    ) {
                         break;
                     }
                 }
             } catch (ex) {
-                this.logger.logError(`Linter '${this.info.id}' failed to parse the line '${line}.`, ex);
+                this.logger.logError(
+                    `Linter '${
+                        this.info.id
+                    }' failed to parse the line '${line}.`,
+                    ex
+                );
             }
         }
         return messages;
     }
 
     private displayLinterResultHeader(data: string) {
-        this.outputChannel.append(`${'#'.repeat(10)}Linting Output - ${this.info.id}${'#'.repeat(10)}\n`);
+        this.outputChannel.append(
+            `${"#".repeat(10)}Linting Output - ${this.info.id}${"#".repeat(
+                10
+            )}\n`
+        );
         this.outputChannel.append(data);
     }
 }

@@ -41,7 +41,7 @@
                                 }
                             }
                         },
-                        "required": [ "pip" ]
+                        "required": ["pip"]
                     }
                 ]
             }

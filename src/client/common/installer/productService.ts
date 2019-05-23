@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { injectable } from 'inversify';
-import { Product, ProductType } from '../types';
-import { IProductService } from './types';
+import { injectable } from "inversify";
+import { Product, ProductType } from "../types";
+import { IProductService } from "./types";
 
 @injectable()
 export class ProductService implements IProductService {

@@ -1,37 +1,70 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
-import * as uuid from 'uuid/v4';
-import { IDisposable } from '../../client/common/types';
-import { createDeferred, Deferred } from '../../client/common/utils/async';
+"use strict";
+import * as monacoEditor from "monaco-editor/esm/vs/editor/editor.api";
+import * as uuid from "uuid/v4";
+import { IDisposable } from "../../client/common/types";
+import { createDeferred, Deferred } from "../../client/common/utils/async";
 import {
     HistoryMessages,
     IHistoryMapping,
     IProvideCompletionItemsResponse,
     IProvideHoverResponse,
     IProvideSignatureHelpResponse
-} from '../../client/datascience/history/historyTypes';
-import { IMessageHandler, PostOffice } from '../react-common/postOffice';
+} from "../../client/datascience/history/historyTypes";
+import { IMessageHandler, PostOffice } from "../react-common/postOffice";
 
 interface IRequestData<T> {
     promise: Deferred<T>;
     cancelDisposable: monacoEditor.IDisposable;
 }
 
-export class IntellisenseProvider implements monacoEditor.languages.CompletionItemProvider, monacoEditor.languages.HoverProvider, monacoEditor.languages.SignatureHelpProvider, IDisposable, IMessageHandler {
-    public triggerCharacters?: string[] | undefined = ['.'];
-    public readonly signatureHelpTriggerCharacters?: ReadonlyArray<string> = ['(', ',', '<'];
-    public readonly signatureHelpRetriggerCharacters?: ReadonlyArray<string> = [')'];
-    private completionRequests: Map<string, IRequestData<monacoEditor.languages.CompletionList>> = new Map<string, IRequestData<monacoEditor.languages.CompletionList>>();
-    private hoverRequests: Map<string, IRequestData<monacoEditor.languages.Hover>> = new Map<string, IRequestData<monacoEditor.languages.Hover>>();
-    private signatureHelpRequests: Map<string, IRequestData<monacoEditor.languages.SignatureHelp>> = new Map<string, IRequestData<monacoEditor.languages.SignatureHelp>>();
+export class IntellisenseProvider
+    implements
+        monacoEditor.languages.CompletionItemProvider,
+        monacoEditor.languages.HoverProvider,
+        monacoEditor.languages.SignatureHelpProvider,
+        IDisposable,
+        IMessageHandler {
+    public triggerCharacters?: string[] | undefined = ["."];
+    public readonly signatureHelpTriggerCharacters?: ReadonlyArray<string> = [
+        "(",
+        ",",
+        "<"
+    ];
+    public readonly signatureHelpRetriggerCharacters?: ReadonlyArray<string> = [
+        ")"
+    ];
+    private completionRequests: Map<
+        string,
+        IRequestData<monacoEditor.languages.CompletionList>
+    > = new Map<string, IRequestData<monacoEditor.languages.CompletionList>>();
+    private hoverRequests: Map<
+        string,
+        IRequestData<monacoEditor.languages.Hover>
+    > = new Map<string, IRequestData<monacoEditor.languages.Hover>>();
+    private signatureHelpRequests: Map<
+        string,
+        IRequestData<monacoEditor.languages.SignatureHelp>
+    > = new Map<string, IRequestData<monacoEditor.languages.SignatureHelp>>();
     private registerDisposables: monacoEditor.IDisposable[] = [];
-    constructor(private postOffice: PostOffice, private getCellId: (modelId: string) => string) {
+    constructor(
+        private postOffice: PostOffice,
+        private getCellId: (modelId: string) => string
+    ) {
         // Register a completion provider
-        this.registerDisposables.push(monacoEditor.languages.registerCompletionItemProvider('python', this));
-        this.registerDisposables.push(monacoEditor.languages.registerHoverProvider('python', this));
-        this.registerDisposables.push(monacoEditor.languages.registerSignatureHelpProvider('python', this));
+        this.registerDisposables.push(
+            monacoEditor.languages.registerCompletionItemProvider(
+                "python",
+                this
+            )
+        );
+        this.registerDisposables.push(
+            monacoEditor.languages.registerHoverProvider("python", this)
+        );
+        this.registerDisposables.push(
+            monacoEditor.languages.registerSignatureHelpProvider("python", this)
+        );
         this.postOffice.addHandler(this);
     }
 
@@ -39,19 +72,28 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
         model: monacoEditor.editor.ITextModel,
         position: monacoEditor.Position,
         context: monacoEditor.languages.CompletionContext,
-        token: monacoEditor.CancellationToken): monacoEditor.languages.ProviderResult<monacoEditor.languages.CompletionList> {
-
+        token: monacoEditor.CancellationToken
+    ): monacoEditor.languages.ProviderResult<
+        monacoEditor.languages.CompletionList
+    > {
         // Emit a new request
         const requestId = uuid();
         const promise = createDeferred<monacoEditor.languages.CompletionList>();
 
         const cancelDisposable = token.onCancellationRequested(() => {
             promise.resolve();
-            this.sendMessage(HistoryMessages.CancelCompletionItemsRequest, { requestId });
+            this.sendMessage(HistoryMessages.CancelCompletionItemsRequest, {
+                requestId
+            });
         });
 
         this.completionRequests.set(requestId, { promise, cancelDisposable });
-        this.sendMessage(HistoryMessages.ProvideCompletionItemsRequest, { position, context, requestId, cellId: this.getCellId(model.id) });
+        this.sendMessage(HistoryMessages.ProvideCompletionItemsRequest, {
+            position,
+            context,
+            requestId,
+            cellId: this.getCellId(model.id)
+        });
 
         return promise.promise;
     }
@@ -59,18 +101,25 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
     public provideHover(
         model: monacoEditor.editor.ITextModel,
         position: monacoEditor.Position,
-        token: monacoEditor.CancellationToken) : monacoEditor.languages.ProviderResult<monacoEditor.languages.Hover> {
+        token: monacoEditor.CancellationToken
+    ): monacoEditor.languages.ProviderResult<monacoEditor.languages.Hover> {
         // Emit a new request
         const requestId = uuid();
         const promise = createDeferred<monacoEditor.languages.Hover>();
 
         const cancelDisposable = token.onCancellationRequested(() => {
             promise.resolve();
-            this.sendMessage(HistoryMessages.CancelCompletionItemsRequest, { requestId });
+            this.sendMessage(HistoryMessages.CancelCompletionItemsRequest, {
+                requestId
+            });
         });
 
         this.hoverRequests.set(requestId, { promise, cancelDisposable });
-        this.sendMessage(HistoryMessages.ProvideHoverRequest, { position, requestId, cellId: this.getCellId(model.id) });
+        this.sendMessage(HistoryMessages.ProvideHoverRequest, {
+            position,
+            requestId,
+            cellId: this.getCellId(model.id)
+        });
 
         return promise.promise;
     }
@@ -79,18 +128,31 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
         model: monacoEditor.editor.ITextModel,
         position: monacoEditor.Position,
         token: monacoEditor.CancellationToken,
-        context: monacoEditor.languages.SignatureHelpContext): monacoEditor.languages.ProviderResult<monacoEditor.languages.SignatureHelp> {
+        context: monacoEditor.languages.SignatureHelpContext
+    ): monacoEditor.languages.ProviderResult<
+        monacoEditor.languages.SignatureHelp
+    > {
         // Emit a new request
         const requestId = uuid();
         const promise = createDeferred<monacoEditor.languages.SignatureHelp>();
 
         const cancelDisposable = token.onCancellationRequested(() => {
             promise.resolve();
-            this.sendMessage(HistoryMessages.CancelSignatureHelpRequest, { requestId });
+            this.sendMessage(HistoryMessages.CancelSignatureHelpRequest, {
+                requestId
+            });
         });
 
-        this.signatureHelpRequests.set(requestId, { promise, cancelDisposable });
-        this.sendMessage(HistoryMessages.ProvideSignatureHelpRequest, { position, context, requestId, cellId: this.getCellId(model.id) });
+        this.signatureHelpRequests.set(requestId, {
+            promise,
+            cancelDisposable
+        });
+        this.sendMessage(HistoryMessages.ProvideSignatureHelpRequest, {
+            position,
+            context,
+            requestId,
+            cellId: this.getCellId(model.id)
+        });
 
         return promise.promise;
     }
@@ -141,7 +203,7 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
                 waiting.promise.resolve(response.list);
             }
         }
-    }
+    };
     // Handle hover response
     // tslint:disable-next-line:no-any
     private handleHoverResponse = (payload?: any) => {
@@ -154,7 +216,7 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
                 waiting.promise.resolve(response.hover);
             }
         }
-    }
+    };
 
     // Handle hover response
     // tslint:disable-next-line:no-any
@@ -168,9 +230,12 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
                 waiting.promise.resolve(response.signatureHelp);
             }
         }
-    }
+    };
 
-    private sendMessage<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) {
+    private sendMessage<M extends IHistoryMapping, T extends keyof M>(
+        type: T,
+        payload?: M[T]
+    ) {
         this.postOffice.sendMessage<M, T>(type, payload);
     }
 }

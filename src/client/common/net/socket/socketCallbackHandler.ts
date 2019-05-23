@@ -5,7 +5,7 @@
 import * as net from "net";
 import { EventEmitter } from "events";
 import { SocketStream } from "./SocketStream";
-import { SocketServer } from './socketServer';
+import { SocketServer } from "./socketServer";
 
 export abstract class SocketCallbackHandler extends EventEmitter {
     private _stream!: SocketStream;
@@ -15,7 +15,7 @@ export abstract class SocketCallbackHandler extends EventEmitter {
     constructor(socketServer: SocketServer) {
         super();
         this.commandHandlers = new Map<string, Function>();
-        socketServer.on('data', this.onData.bind(this));
+        socketServer.on("data", this.onData.bind(this));
     }
     private disposed!: boolean;
     public dispose() {
@@ -43,11 +43,13 @@ export abstract class SocketCallbackHandler extends EventEmitter {
 
     protected abstract handleHandshake(): boolean;
 
-    private HandleIncomingData(buffer: Buffer, socket: net.Socket): boolean | undefined {
+    private HandleIncomingData(
+        buffer: Buffer,
+        socket: net.Socket
+    ): boolean | undefined {
         if (!this._stream) {
             this._stream = new SocketStream(socket, buffer);
-        }
-        else {
+        } else {
             this._stream.Append(buffer);
         }
 
@@ -76,8 +78,7 @@ export abstract class SocketCallbackHandler extends EventEmitter {
         if (this.commandHandlers.has(cmd)) {
             const handler = this.commandHandlers.get(cmd)!;
             handler();
-        }
-        else {
+        } else {
             this.emit("error", `Unhandled command '${cmd}'`);
         }
 

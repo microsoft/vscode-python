@@ -1,19 +1,29 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
-import { inject, injectable } from 'inversify';
-import * as uuid from 'uuid/v4';
-import { Disposable, Event, EventEmitter } from 'vscode';
-import * as vsls from 'vsls/vscode';
+"use strict";
+import { inject, injectable } from "inversify";
+import * as uuid from "uuid/v4";
+import { Disposable, Event, EventEmitter } from "vscode";
+import * as vsls from "vsls/vscode";
 
-import { ILiveShareApi } from '../../common/application/types';
-import { IAsyncDisposable, IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../common/types';
-import { createDeferred, Deferred } from '../../common/utils/async';
-import * as localize from '../../common/utils/localize';
-import { IServiceContainer } from '../../ioc/types';
-import { Identifiers, LiveShare, LiveShareCommands, Settings } from '../constants';
-import { PostOffice } from '../liveshare/postOffice';
-import { IHistory, IHistoryProvider, INotebookServerOptions } from '../types';
+import { ILiveShareApi } from "../../common/application/types";
+import {
+    IAsyncDisposable,
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry
+} from "../../common/types";
+import { createDeferred, Deferred } from "../../common/utils/async";
+import * as localize from "../../common/utils/localize";
+import { IServiceContainer } from "../../ioc/types";
+import {
+    Identifiers,
+    LiveShare,
+    LiveShareCommands,
+    Settings
+} from "../constants";
+import { PostOffice } from "../liveshare/postOffice";
+import { IHistory, IHistoryProvider, INotebookServerOptions } from "../types";
 
 interface ISyncData {
     count: number;
@@ -22,46 +32,62 @@ interface ISyncData {
 
 @injectable()
 export class HistoryProvider implements IHistoryProvider, IAsyncDisposable {
-
-    private activeHistory : IHistory | undefined;
-    private postOffice : PostOffice;
+    private activeHistory: IHistory | undefined;
+    private postOffice: PostOffice;
     private id: string;
-    private pendingSyncs : Map<string, ISyncData> = new Map<string, ISyncData>();
+    private pendingSyncs: Map<string, ISyncData> = new Map<string, ISyncData>();
     private executedCode: EventEmitter<string> = new EventEmitter<string>();
     private activeHistoryExecuteHandler: Disposable | undefined;
     constructor(
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(IAsyncDisposableRegistry) asyncRegistry : IAsyncDisposableRegistry,
+        @inject(IAsyncDisposableRegistry)
+        asyncRegistry: IAsyncDisposableRegistry,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
-        @inject(IConfigurationService) private configService: IConfigurationService
-        ) {
+        @inject(IConfigurationService)
+        private configService: IConfigurationService
+    ) {
         asyncRegistry.push(this);
 
         // Create a post office so we can make sure history windows are created at the same time
         // on both sides.
-        this.postOffice = new PostOffice(LiveShare.HistoryProviderService, liveShare);
+        this.postOffice = new PostOffice(
+            LiveShare.HistoryProviderService,
+            liveShare
+        );
 
         // Listen for peer changes
-        this.postOffice.peerCountChanged((n) => this.onPeerCountChanged(n));
+        this.postOffice.peerCountChanged(n => this.onPeerCountChanged(n));
 
         // Listen for messages so we force a create on both sides.
-        this.postOffice.registerCallback(LiveShareCommands.historyCreate, this.onRemoteCreate, this).ignoreErrors();
-        this.postOffice.registerCallback(LiveShareCommands.historyCreateSync, this.onRemoteSync, this).ignoreErrors();
+        this.postOffice
+            .registerCallback(
+                LiveShareCommands.historyCreate,
+                this.onRemoteCreate,
+                this
+            )
+            .ignoreErrors();
+        this.postOffice
+            .registerCallback(
+                LiveShareCommands.historyCreateSync,
+                this.onRemoteSync,
+                this
+            )
+            .ignoreErrors();
 
         // Make a unique id so we can tell who sends a message
         this.id = uuid();
     }
 
-    public getActive() : IHistory | undefined {
+    public getActive(): IHistory | undefined {
         return this.activeHistory;
     }
 
-    public get onExecutedCode() : Event<string> {
+    public get onExecutedCode(): Event<string> {
         return this.executedCode.event;
     }
 
-    public async getOrCreateActive() : Promise<IHistory> {
+    public async getOrCreateActive(): Promise<IHistory> {
         if (!this.activeHistory) {
             await this.create();
         }
@@ -77,11 +103,13 @@ export class HistoryProvider implements IHistoryProvider, IAsyncDisposable {
         throw new Error(localize.DataScience.pythonInteractiveCreateFailed());
     }
 
-    public async getNotebookOptions() : Promise<INotebookServerOptions> {
+    public async getNotebookOptions(): Promise<INotebookServerOptions> {
         // Find the settings that we are going to launch our server with
         const settings = this.configService.getSettings();
-        let serverURI: string | undefined = settings.datascience.jupyterServerURI;
-        const useDefaultConfig: boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
+        let serverURI: string | undefined =
+            settings.datascience.jupyterServerURI;
+        const useDefaultConfig: boolean | undefined =
+            settings.datascience.useDefaultConfigForJupyter;
 
         // For the local case pass in our URI as undefined, that way connect doesn't have to check the setting
         if (serverURI === Settings.JupyterServerLocalLaunch) {
@@ -95,18 +123,20 @@ export class HistoryProvider implements IHistoryProvider, IAsyncDisposable {
         };
     }
 
-    public dispose() : Promise<void> {
+    public dispose(): Promise<void> {
         return this.postOffice.dispose();
     }
 
-    private async create() : Promise<void> {
+    private async create(): Promise<void> {
         // Set it as soon as we create it. The .ctor for the history window
         // may cause a subclass to talk to the IHistoryProvider to get the active history.
         this.activeHistory = this.serviceContainer.get<IHistory>(IHistory);
         const handler = this.activeHistory.closed(this.onHistoryClosed);
         this.disposables.push(this.activeHistory);
         this.disposables.push(handler);
-        this.activeHistoryExecuteHandler = this.activeHistory.onExecutedCode(this.onHistoryExecute);
+        this.activeHistoryExecuteHandler = this.activeHistory.onExecutedCode(
+            this.onHistoryExecute
+        );
         this.disposables.push(this.activeHistoryExecuteHandler);
         await this.activeHistory.ready;
     }
@@ -130,7 +160,9 @@ export class HistoryProvider implements IHistoryProvider, IAsyncDisposable {
             }
 
             // Tell the requestor that we got its message (it should be waiting for all peers to sync)
-            this.postOffice.postCommand(LiveShareCommands.historyCreateSync, ...args).ignoreErrors();
+            this.postOffice
+                .postCommand(LiveShareCommands.historyCreateSync, ...args)
+                .ignoreErrors();
         }
     }
 
@@ -159,17 +191,27 @@ export class HistoryProvider implements IHistoryProvider, IAsyncDisposable {
                 this.activeHistoryExecuteHandler = undefined;
             }
         }
-    }
+    };
 
-    private async synchronizeCreate() : Promise<void> {
+    private async synchronizeCreate(): Promise<void> {
         // Create a new pending wait if necessary
-        if (this.postOffice.peerCount > 0 || this.postOffice.role === vsls.Role.Guest) {
+        if (
+            this.postOffice.peerCount > 0 ||
+            this.postOffice.role === vsls.Role.Guest
+        ) {
             const key = uuid();
             const waitable = createDeferred<void>();
-            this.pendingSyncs.set(key, { count: this.postOffice.peerCount, waitable });
+            this.pendingSyncs.set(key, {
+                count: this.postOffice.peerCount,
+                waitable
+            });
 
             // Make sure all providers have an active history
-            await this.postOffice.postCommand(LiveShareCommands.historyCreate, this.id, key);
+            await this.postOffice.postCommand(
+                LiveShareCommands.historyCreate,
+                this.id,
+                key
+            );
 
             // Wait for the waitable to be signaled or the peer count on the post office to change
             await waitable.promise;
@@ -178,6 +220,5 @@ export class HistoryProvider implements IHistoryProvider, IAsyncDisposable {
 
     private onHistoryExecute = (code: string) => {
         this.executedCode.fire(code);
-    }
-
+    };
 }

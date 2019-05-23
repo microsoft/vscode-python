@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { CancellationToken, Position, TextDocument, Uri } from 'vscode';
-import { Commands as DSCommands } from '../../datascience/constants';
-import { CommandSource } from '../../testing/common/constants';
-import { TestFunction, TestsToRun } from '../../testing/common/types';
-import { TestDataItem, TestWorkspaceFolder } from '../../testing/types';
-import { Commands } from '../constants';
+import { CancellationToken, Position, TextDocument, Uri } from "vscode";
+import { Commands as DSCommands } from "../../datascience/constants";
+import { CommandSource } from "../../testing/common/constants";
+import { TestFunction, TestsToRun } from "../../testing/common/types";
+import { TestDataItem, TestWorkspaceFolder } from "../../testing/types";
+import { Commands } from "../constants";
 
 export type CommandsWithoutArgs = keyof ICommandNameWithoutArgumentTypeMapping;
 
@@ -22,9 +22,9 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [Commands.Set_ShebangInterpreter]: [];
     [Commands.Run_Linter]: [];
     [Commands.Enable_Linter]: [];
-    ['workbench.action.reloadWindow']: [];
-    ['editor.action.formatDocument']: [];
-    ['editor.action.rename']: [];
+    ["workbench.action.reloadWindow"]: [];
+    ["editor.action.formatDocument"]: [];
+    ["editor.action.rename"]: [];
     [Commands.ViewOutput]: [];
     [Commands.Set_Linter]: [];
     [Commands.Start_REPL]: [];
@@ -58,11 +58,16 @@ interface ICommandNameWithoutArgumentTypeMapping {
  * @interface ICommandNameArgumentTypeMapping
  * @extends {ICommandNameWithoutArgumentTypeMapping}
  */
-export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgumentTypeMapping {
-    ['setContext']: [string, boolean];
-    ['revealLine']: [{ lineNumber: number; at: 'top' | 'center' | 'bottom' }];
-    ['python._loadLanguageServerExtension']: {}[];
-    ['python.SelectAndInsertDebugConfiguration']: [TextDocument, Position, CancellationToken];
+export interface ICommandNameArgumentTypeMapping
+    extends ICommandNameWithoutArgumentTypeMapping {
+    ["setContext"]: [string, boolean];
+    ["revealLine"]: [{ lineNumber: number; at: "top" | "center" | "bottom" }];
+    ["python._loadLanguageServerExtension"]: {}[];
+    ["python.SelectAndInsertDebugConfiguration"]: [
+        TextDocument,
+        Position,
+        CancellationToken
+    ];
     [Commands.Build_Workspace_Symbols]: [boolean, CancellationToken];
     [Commands.Sort_Imports]: [undefined, Uri];
     [Commands.Exec_In_Terminal]: [undefined, Uri];
@@ -72,17 +77,45 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [Commands.Tests_Stop]: [undefined, Uri];
     [Commands.Test_Reveal_Test_Item]: [TestDataItem];
     // When command is invoked from a tree node, first argument is the node data.
-    [Commands.Tests_Run]: [undefined | TestWorkspaceFolder, undefined | CommandSource, undefined | Uri, undefined | TestsToRun];
+    [Commands.Tests_Run]: [
+        undefined | TestWorkspaceFolder,
+        undefined | CommandSource,
+        undefined | Uri,
+        undefined | TestsToRun
+    ];
     // When command is invoked from a tree node, first argument is the node data.
-    [Commands.Tests_Debug]: [undefined | TestWorkspaceFolder, undefined | CommandSource, undefined | Uri, undefined | TestsToRun];
+    [Commands.Tests_Debug]: [
+        undefined | TestWorkspaceFolder,
+        undefined | CommandSource,
+        undefined | Uri,
+        undefined | TestsToRun
+    ];
     // When command is invoked from a tree node, first argument is the node data.
-    [Commands.Tests_Discover]: [undefined | TestWorkspaceFolder, undefined | CommandSource, undefined | Uri];
+    [Commands.Tests_Discover]: [
+        undefined | TestWorkspaceFolder,
+        undefined | CommandSource,
+        undefined | Uri
+    ];
     [Commands.Tests_Run_Failed]: [undefined, CommandSource, Uri];
     [Commands.Tests_Select_And_Debug_Method]: [undefined, CommandSource, Uri];
     [Commands.Tests_Select_And_Run_Method]: [undefined, CommandSource, Uri];
-    [Commands.Tests_Configure]: [undefined, undefined | CommandSource, undefined | Uri];
-    [Commands.Tests_Picker_UI]: [undefined, undefined | CommandSource, Uri, TestFunction[]];
-    [Commands.Tests_Picker_UI_Debug]: [undefined, undefined | CommandSource, Uri, TestFunction[]];
+    [Commands.Tests_Configure]: [
+        undefined,
+        undefined | CommandSource,
+        undefined | Uri
+    ];
+    [Commands.Tests_Picker_UI]: [
+        undefined,
+        undefined | CommandSource,
+        Uri,
+        TestFunction[]
+    ];
+    [Commands.Tests_Picker_UI_Debug]: [
+        undefined,
+        undefined | CommandSource,
+        Uri,
+        TestFunction[]
+    ];
     // When command is invoked from a tree node, first argument is the node data.
     [Commands.runTestNode]: [TestDataItem];
     // When command is invoked from a tree node, first argument is the node data.
@@ -102,6 +135,9 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.RunToLine]: [string, number, number];
     [DSCommands.RunFromLine]: [string, number, number];
     [DSCommands.ImportNotebook]: [undefined | Uri, undefined | CommandSource];
-    [DSCommands.ExportFileAsNotebook]: [undefined | Uri, undefined | CommandSource];
+    [DSCommands.ExportFileAsNotebook]: [
+        undefined | Uri,
+        undefined | CommandSource
+    ];
     [DSCommands.RunFileInInteractiveWindows]: [string];
 }

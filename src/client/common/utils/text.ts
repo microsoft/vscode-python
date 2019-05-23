@@ -1,12 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { Position, Range, TextDocument } from 'vscode';
-import { isNumber } from './sysTypes';
+import { Position, Range, TextDocument } from "vscode";
+import { isNumber } from "./sysTypes";
 
-export function getWindowsLineEndingCount(document: TextDocument, offset: Number) {
+export function getWindowsLineEndingCount(
+    document: TextDocument,
+    offset: Number
+) {
     //const eolPattern = new RegExp('\r\n', 'g');
     const eolPattern = /\r\n/g;
     const readBlock = 1024;
@@ -54,11 +57,11 @@ export function parseRange(raw: string | number): Range {
     if (isNumber(raw)) {
         return new Range(raw, 0, raw, 0);
     }
-    if (raw === '') {
+    if (raw === "") {
         return new Range(0, 0, 0, 0);
     }
 
-    const parts = raw.split('-');
+    const parts = raw.split("-");
     if (parts.length > 2) {
         throw new Error(`invalid range ${raw}`);
     }
@@ -86,24 +89,24 @@ export function parsePosition(raw: string | number): Position {
     if (isNumber(raw)) {
         return new Position(raw, 0);
     }
-    if (raw === '') {
+    if (raw === "") {
         return new Position(0, 0);
     }
 
-    const parts = raw.split(':');
+    const parts = raw.split(":");
     if (parts.length > 2) {
         throw new Error(`invalid position ${raw}`);
     }
 
     let line = 0;
-    if (parts[0] !== '') {
+    if (parts[0] !== "") {
         if (!/^\d+$/.test(parts[0])) {
             throw new Error(`invalid position ${raw}`);
         }
         line = +parts[0];
     }
     let col = 0;
-    if (parts.length === 2 && parts[1] !== '') {
+    if (parts.length === 2 && parts[1] !== "") {
         if (!/^\d+$/.test(parts[1])) {
             throw new Error(`invalid position ${raw}`);
         }

@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
+"use strict";
 
-import * as React from 'react';
-import './commandPrompt.css';
+import * as React from "react";
+import "./commandPrompt.css";
 
 export class CommandPrompt extends React.Component {
     constructor(props: {}) {
@@ -11,7 +11,6 @@ export class CommandPrompt extends React.Component {
     }
 
     public render() {
-        return <div className='command-prompt'>{'>>>'}</div>;
+        return <div className="command-prompt">{">>>"}</div>;
     }
-
 }

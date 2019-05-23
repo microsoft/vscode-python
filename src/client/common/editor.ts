@@ -1,11 +1,18 @@
-import { Diff, diff_match_patch } from 'diff-match-patch';
-import * as fs from 'fs-extra';
-import { injectable } from 'inversify';
-import * as md5 from 'md5';
-import { EOL } from 'os';
-import * as path from 'path';
-import { Position, Range, TextDocument, TextEdit, Uri, WorkspaceEdit } from 'vscode';
-import { IEditorUtils } from './types';
+import { Diff, diff_match_patch } from "diff-match-patch";
+import * as fs from "fs-extra";
+import { injectable } from "inversify";
+import * as md5 from "md5";
+import { EOL } from "os";
+import * as path from "path";
+import {
+    Position,
+    Range,
+    TextDocument,
+    TextEdit,
+    Uri,
+    WorkspaceEdit
+} from "vscode";
+import { IEditorUtils } from "./types";
 
 // Code borrowed from goFormat.ts (Go Extension for VS Code)
 enum EditAction {
@@ -33,7 +40,7 @@ class Edit {
     constructor(action: number, start: Position) {
         this.action = action;
         this.start = start;
-        this.text = '';
+        this.text = "";
     }
 
     public apply(): TextEdit {
@@ -43,30 +50,39 @@ class Edit {
             case EditAction.Delete:
                 return TextEdit.delete(new Range(this.start, this.end));
             case EditAction.Replace:
-                return TextEdit.replace(new Range(this.start, this.end), this.text);
+                return TextEdit.replace(
+                    new Range(this.start, this.end),
+                    this.text
+                );
             default:
-                return new TextEdit(new Range(new Position(0, 0), new Position(0, 0)), '');
+                return new TextEdit(
+                    new Range(new Position(0, 0), new Position(0, 0)),
+                    ""
+                );
         }
     }
 }
 
-export function getTextEditsFromPatch(before: string, patch: string): TextEdit[] {
-    if (patch.startsWith('---')) {
+export function getTextEditsFromPatch(
+    before: string,
+    patch: string
+): TextEdit[] {
+    if (patch.startsWith("---")) {
         // Strip the first two lines
-        patch = patch.substring(patch.indexOf('@@'));
+        patch = patch.substring(patch.indexOf("@@"));
     }
     if (patch.length === 0) {
         return [];
     }
     // Remove the text added by unified_diff
     // # Work around missing newline (http://bugs.python.org/issue2142).
-    patch = patch.replace(/\\ No newline at end of file[\r\n]/, '');
+    patch = patch.replace(/\\ No newline at end of file[\r\n]/, "");
     // tslint:disable-next-line:no-require-imports
-    const dmp = require('diff-match-patch') as typeof import('diff-match-patch');
+    const dmp = require("diff-match-patch") as typeof import("diff-match-patch");
     const d = new dmp.diff_match_patch();
     const patches = patch_fromText.call(d, patch);
     if (!Array.isArray(patches) || patches.length === 0) {
-        throw new Error('Unable to parse Patch string');
+        throw new Error("Unable to parse Patch string");
     }
     const textEdits: TextEdit[] = [];
 
@@ -75,25 +91,35 @@ export function getTextEditsFromPatch(before: string, patch: string): TextEdit[]
         p.diffs.forEach(diff => {
             diff[1] += EOL;
         });
-        getTextEditsInternal(before, p.diffs, p.start1).forEach(edit => textEdits.push(edit.apply()));
+        getTextEditsInternal(before, p.diffs, p.start1).forEach(edit =>
+            textEdits.push(edit.apply())
+        );
     });
 
     return textEdits;
 }
-export function getWorkspaceEditsFromPatch(filePatches: string[], workspaceRoot?: string): WorkspaceEdit {
+export function getWorkspaceEditsFromPatch(
+    filePatches: string[],
+    workspaceRoot?: string
+): WorkspaceEdit {
     const workspaceEdit = new WorkspaceEdit();
     filePatches.forEach(patch => {
-        const indexOfAtAt = patch.indexOf('@@');
+        const indexOfAtAt = patch.indexOf("@@");
         if (indexOfAtAt === -1) {
             return;
         }
-        const fileNameLines = patch.substring(0, indexOfAtAt).split(/\r?\n/g)
+        const fileNameLines = patch
+            .substring(0, indexOfAtAt)
+            .split(/\r?\n/g)
             .map(line => line.trim())
-            .filter(line => line.length > 0 &&
-                line.toLowerCase().endsWith('.py') &&
-                line.indexOf(' a') > 0);
+            .filter(
+                line =>
+                    line.length > 0 &&
+                    line.toLowerCase().endsWith(".py") &&
+                    line.indexOf(" a") > 0
+            );
 
-        if (patch.startsWith('---')) {
+        if (patch.startsWith("---")) {
             // Strip the first two lines
             patch = patch.substring(indexOfAtAt);
         }
@@ -105,25 +131,30 @@ export function getWorkspaceEditsFromPatch(filePatches: string[], workspaceRoot?
             return;
         }
 
-        let fileName = fileNameLines[0].substring(fileNameLines[0].indexOf(' a') + 3).trim();
-        fileName = workspaceRoot && !path.isAbsolute(fileName) ? path.resolve(workspaceRoot, fileName) : fileName;
+        let fileName = fileNameLines[0]
+            .substring(fileNameLines[0].indexOf(" a") + 3)
+            .trim();
+        fileName =
+            workspaceRoot && !path.isAbsolute(fileName)
+                ? path.resolve(workspaceRoot, fileName)
+                : fileName;
         if (!fs.existsSync(fileName)) {
             return;
         }
 
         // Remove the text added by unified_diff
         // # Work around missing newline (http://bugs.python.org/issue2142).
-        patch = patch.replace(/\\ No newline at end of file[\r\n]/, '');
+        patch = patch.replace(/\\ No newline at end of file[\r\n]/, "");
 
         // tslint:disable-next-line:no-require-imports
-        const dmp = require('diff-match-patch') as typeof import('diff-match-patch');
+        const dmp = require("diff-match-patch") as typeof import("diff-match-patch");
         const d = new dmp.diff_match_patch();
         const patches = patch_fromText.call(d, patch);
         if (!Array.isArray(patches) || patches.length === 0) {
-            throw new Error('Unable to parse Patch string');
+            throw new Error("Unable to parse Patch string");
         }
 
-        const fileSource = fs.readFileSync(fileName).toString('utf8');
+        const fileSource = fs.readFileSync(fileName).toString("utf8");
         const fileUri = Uri.file(fileName);
 
         // Add line feeds and build the text edits
@@ -132,21 +163,34 @@ export function getWorkspaceEditsFromPatch(filePatches: string[], workspaceRoot?
                 diff[1] += EOL;
             });
 
-            getTextEditsInternal(fileSource, p.diffs, p.start1).forEach(edit => {
-                switch (edit.action) {
-                    case EditAction.Delete:
-                        workspaceEdit.delete(fileUri, new Range(edit.start, edit.end));
-                        break;
-                    case EditAction.Insert:
-                        workspaceEdit.insert(fileUri, edit.start, edit.text);
-                        break;
-                    case EditAction.Replace:
-                        workspaceEdit.replace(fileUri, new Range(edit.start, edit.end), edit.text);
-                        break;
-                    default:
-                        break;
+            getTextEditsInternal(fileSource, p.diffs, p.start1).forEach(
+                edit => {
+                    switch (edit.action) {
+                        case EditAction.Delete:
+                            workspaceEdit.delete(
+                                fileUri,
+                                new Range(edit.start, edit.end)
+                            );
+                            break;
+                        case EditAction.Insert:
+                            workspaceEdit.insert(
+                                fileUri,
+                                edit.start,
+                                edit.text
+                            );
+                            break;
+                        case EditAction.Replace:
+                            workspaceEdit.replace(
+                                fileUri,
+                                new Range(edit.start, edit.end),
+                                edit.text
+                            );
+                            break;
+                        default:
+                            break;
+                    }
                 }
-            });
+            );
         });
     });
 
@@ -154,17 +198,23 @@ export function getWorkspaceEditsFromPatch(filePatches: string[], workspaceRoot?
 }
 export function getTextEdits(before: string, after: string): TextEdit[] {
     // tslint:disable-next-line:no-require-imports
-    const dmp = require('diff-match-patch') as typeof import('diff-match-patch');
+    const dmp = require("diff-match-patch") as typeof import("diff-match-patch");
     const d = new dmp.diff_match_patch();
     const diffs = d.diff_main(before, after);
     return getTextEditsInternal(before, diffs).map(edit => edit.apply());
 }
-function getTextEditsInternal(before: string, diffs: [number, string][], startLine: number = 0): Edit[] {
+function getTextEditsInternal(
+    before: string,
+    diffs: [number, string][],
+    startLine: number = 0
+): Edit[] {
     let line = startLine;
     let character = 0;
     if (line > 0) {
         const beforeLines = before.split(/\r?\n/g);
-        beforeLines.filter((_l, i) => i < line).forEach(l => character += l.length + NEW_LINE_LENGTH);
+        beforeLines
+            .filter((_l, i) => i < line)
+            .forEach(l => (character += l.length + NEW_LINE_LENGTH));
     }
     const edits: Edit[] = [];
     let edit: Edit | null = null;
@@ -175,7 +225,7 @@ function getTextEditsInternal(before: string, diffs: [number, string][], startLi
         // Compute the line/character after the diff is applied.
         // tslint:disable-next-line:prefer-for-of
         for (let curr = 0; curr < diffs[i][1].length; curr += 1) {
-            if (diffs[i][1][curr] !== '\n') {
+            if (diffs[i][1][curr] !== "\n") {
                 character += 1;
             } else {
                 character = 0;
@@ -184,14 +234,14 @@ function getTextEditsInternal(before: string, diffs: [number, string][], startLi
         }
 
         // tslint:disable-next-line:no-require-imports
-        const dmp = require('diff-match-patch') as typeof import('diff-match-patch');
+        const dmp = require("diff-match-patch") as typeof import("diff-match-patch");
         // tslint:disable-next-line:switch-default
         switch (diffs[i][0]) {
             case dmp.DIFF_DELETE:
                 if (edit === null) {
                     edit = new Edit(EditAction.Delete, start);
                 } else if (edit.action !== EditAction.Delete) {
-                    throw new Error('cannot format due to an internal error.');
+                    throw new Error("cannot format due to an internal error.");
                 }
                 edit.end = new Position(line, character);
                 break;
@@ -226,7 +276,9 @@ function getTextEditsInternal(before: string, diffs: [number, string][], startLi
     return edits;
 }
 
-export function getTempFileWithDocumentContents(document: TextDocument): Promise<string> {
+export function getTempFileWithDocumentContents(
+    document: TextDocument
+): Promise<string> {
     return new Promise<string>((resolve, reject) => {
         const ext = path.extname(document.uri.fsPath);
         // Don't create file in temp folder since external utilities
@@ -236,7 +288,9 @@ export function getTempFileWithDocumentContents(document: TextDocument): Promise
         // as the original one and then removed.
 
         // tslint:disable-next-line:no-require-imports
-        const fileName = `${document.uri.fsPath}.${md5(document.uri.fsPath)}${ext}`;
+        const fileName = `${document.uri.fsPath}.${md5(
+            document.uri.fsPath
+        )}${ext}`;
         fs.writeFile(fileName, document.getText(), ex => {
             if (ex) {
                 reject(`Failed to create a temporary file, ${ex.message}`);
@@ -271,10 +325,10 @@ function patch_fromText(textline: string): Patch[] {
         const patch = new (<any>diff_match_patch).patch_obj();
         patches.push(patch);
         patch.start1 = parseInt(m[1], 10);
-        if (m[2] === '') {
+        if (m[2] === "") {
             patch.start1 -= 1;
             patch.length1 = 1;
-        } else if (m[2] === '0') {
+        } else if (m[2] === "0") {
             patch.length1 = 0;
         } else {
             patch.start1 -= 1;
@@ -282,10 +336,10 @@ function patch_fromText(textline: string): Patch[] {
         }
 
         patch.start2 = parseInt(m[3], 10);
-        if (m[4] === '') {
+        if (m[4] === "") {
             patch.start2 -= 1;
             patch.length2 = 1;
-        } else if (m[4] === '0') {
+        } else if (m[4] === "0") {
             patch.length2 = 0;
         } else {
             patch.start2 -= 1;
@@ -293,7 +347,7 @@ function patch_fromText(textline: string): Patch[] {
         }
         textPointer += 1;
         // tslint:disable-next-line:no-require-imports
-        const dmp = require('diff-match-patch') as typeof import('diff-match-patch');
+        const dmp = require("diff-match-patch") as typeof import("diff-match-patch");
 
         while (textPointer < text.length) {
             const sign = text[textPointer].charAt(0);
@@ -307,21 +361,21 @@ function patch_fromText(textline: string): Patch[] {
                 line = text[textPointer].substring(1);
             } catch (ex) {
                 // Malformed URI sequence.
-                throw new Error('Illegal escape in patch_fromText');
+                throw new Error("Illegal escape in patch_fromText");
             }
-            if (sign === '-') {
+            if (sign === "-") {
                 // Deletion.
                 patch.diffs.push([dmp.DIFF_DELETE, line]);
-            } else if (sign === '+') {
+            } else if (sign === "+") {
                 // Insertion.
                 patch.diffs.push([dmp.DIFF_INSERT, line]);
-            } else if (sign === ' ') {
+            } else if (sign === " ") {
                 // Minor equality.
                 patch.diffs.push([dmp.DIFF_EQUAL, line]);
-            } else if (sign === '@') {
+            } else if (sign === "@") {
                 // Start of next patch.
                 break;
-            } else if (sign === '') {
+            } else if (sign === "") {
                 // Blank line?  Whatever.
             } else {
                 // WTF?
@@ -335,25 +389,29 @@ function patch_fromText(textline: string): Patch[] {
 
 @injectable()
 export class EditorUtils implements IEditorUtils {
-    public getWorkspaceEditsFromPatch(originalContents: string, patch: string, uri: Uri): WorkspaceEdit {
+    public getWorkspaceEditsFromPatch(
+        originalContents: string,
+        patch: string,
+        uri: Uri
+    ): WorkspaceEdit {
         const workspaceEdit = new WorkspaceEdit();
-        if (patch.startsWith('---')) {
+        if (patch.startsWith("---")) {
             // Strip the first two lines
-            patch = patch.substring(patch.indexOf('@@'));
+            patch = patch.substring(patch.indexOf("@@"));
         }
         if (patch.length === 0) {
             return workspaceEdit;
         }
         // Remove the text added by unified_diff
         // # Work around missing newline (http://bugs.python.org/issue2142).
-        patch = patch.replace(/\\ No newline at end of file[\r\n]/, '');
+        patch = patch.replace(/\\ No newline at end of file[\r\n]/, "");
 
         // tslint:disable-next-line:no-require-imports
-        const dmp = require('diff-match-patch') as typeof import('diff-match-patch');
+        const dmp = require("diff-match-patch") as typeof import("diff-match-patch");
         const d = new dmp.diff_match_patch();
         const patches = patch_fromText.call(d, patch);
         if (!Array.isArray(patches) || patches.length === 0) {
-            throw new Error('Unable to parse Patch string');
+            throw new Error("Unable to parse Patch string");
         }
 
         // Add line feeds and build the text edits
@@ -361,21 +419,30 @@ export class EditorUtils implements IEditorUtils {
             p.diffs.forEach(diff => {
                 diff[1] += EOL;
             });
-            getTextEditsInternal(originalContents, p.diffs, p.start1).forEach(edit => {
-                switch (edit.action) {
-                    case EditAction.Delete:
-                        workspaceEdit.delete(uri, new Range(edit.start, edit.end));
-                        break;
-                    case EditAction.Insert:
-                        workspaceEdit.insert(uri, edit.start, edit.text);
-                        break;
-                    case EditAction.Replace:
-                        workspaceEdit.replace(uri, new Range(edit.start, edit.end), edit.text);
-                        break;
-                    default:
-                        break;
+            getTextEditsInternal(originalContents, p.diffs, p.start1).forEach(
+                edit => {
+                    switch (edit.action) {
+                        case EditAction.Delete:
+                            workspaceEdit.delete(
+                                uri,
+                                new Range(edit.start, edit.end)
+                            );
+                            break;
+                        case EditAction.Insert:
+                            workspaceEdit.insert(uri, edit.start, edit.text);
+                            break;
+                        case EditAction.Replace:
+                            workspaceEdit.replace(
+                                uri,
+                                new Range(edit.start, edit.end),
+                                edit.text
+                            );
+                            break;
+                        default:
+                            break;
+                    }
                 }
-            });
+            );
         });
 
         return workspaceEdit;

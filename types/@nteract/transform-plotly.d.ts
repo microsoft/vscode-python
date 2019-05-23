@@ -1,4 +1,4 @@
-declare module '@nteract/transform-plotly' {
+declare module "@nteract/transform-plotly" {
     export function PlotlyNullTransform(): any;
     export namespace PlotlyNullTransform {
         const MIMETYPE: string;

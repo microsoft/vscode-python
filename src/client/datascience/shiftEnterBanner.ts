@@ -1,21 +1,24 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { inject, injectable } from 'inversify';
-import { ConfigurationTarget } from 'vscode';
-import { IApplicationShell } from '../common/application/types';
-import '../common/extensions';
-import { IConfigurationService, IPersistentStateFactory,
-    IPythonExtensionBanner } from '../common/types';
-import * as localize from '../common/utils/localize';
-import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
-import { Telemetry } from './constants';
-import { IJupyterExecution } from './types';
+import { inject, injectable } from "inversify";
+import { ConfigurationTarget } from "vscode";
+import { IApplicationShell } from "../common/application/types";
+import "../common/extensions";
+import {
+    IConfigurationService,
+    IPersistentStateFactory,
+    IPythonExtensionBanner
+} from "../common/types";
+import * as localize from "../common/utils/localize";
+import { captureTelemetry, sendTelemetryEvent } from "../telemetry";
+import { Telemetry } from "./constants";
+import { IJupyterExecution } from "./types";
 
 export enum InteractiveShiftEnterStateKeys {
-    ShowBanner = 'InteractiveShiftEnterBanner'
+    ShowBanner = "InteractiveShiftEnterBanner"
 }
 
 enum InteractiveShiftEnterLabelIndex {
@@ -29,14 +32,19 @@ export class InteractiveShiftEnterBanner implements IPythonExtensionBanner {
     private initialized?: boolean;
     private disabledInCurrentSession: boolean = false;
     private bannerMessage: string = localize.InteractiveShiftEnterBanner.bannerMessage();
-    private bannerLabels: string[] = [localize.InteractiveShiftEnterBanner.bannerLabelYes(), localize.InteractiveShiftEnterBanner.bannerLabelNo()];
+    private bannerLabels: string[] = [
+        localize.InteractiveShiftEnterBanner.bannerLabelYes(),
+        localize.InteractiveShiftEnterBanner.bannerLabelNo()
+    ];
 
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
+        @inject(IPersistentStateFactory)
+        private persistentState: IPersistentStateFactory,
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
-        @inject(IConfigurationService) private configuration: IConfigurationService)
-    {
+        @inject(IConfigurationService)
+        private configuration: IConfigurationService
+    ) {
         this.initialize();
     }
 
@@ -52,7 +60,10 @@ export class InteractiveShiftEnterBanner implements IPythonExtensionBanner {
     }
 
     public get enabled(): boolean {
-        return this.persistentState.createGlobalPersistentState<boolean>(InteractiveShiftEnterStateKeys.ShowBanner, true).value;
+        return this.persistentState.createGlobalPersistentState<boolean>(
+            InteractiveShiftEnterStateKeys.ShowBanner,
+            true
+        ).value;
     }
 
     public async showBanner(): Promise<void> {
@@ -74,7 +85,10 @@ export class InteractiveShiftEnterBanner implements IPythonExtensionBanner {
         }
 
         sendTelemetryEvent(Telemetry.ShiftEnterBannerShown);
-        const response = await this.appShell.showInformationMessage(this.bannerMessage, ...this.bannerLabels);
+        const response = await this.appShell.showInformationMessage(
+            this.bannerMessage,
+            ...this.bannerLabels
+        );
         switch (response) {
             case this.bannerLabels[InteractiveShiftEnterLabelIndex.Yes]: {
                 await this.enableInteractiveShiftEnter();
@@ -94,17 +108,32 @@ export class InteractiveShiftEnterBanner implements IPythonExtensionBanner {
 
     public async shouldShowBanner(): Promise<boolean> {
         const settings = this.configuration.getSettings();
-        return Promise.resolve(this.enabled && !this.disabledInCurrentSession && !settings.datascience.sendSelectionToInteractiveWindow && settings.datascience.enabled);
+        return Promise.resolve(
+            this.enabled &&
+                !this.disabledInCurrentSession &&
+                !settings.datascience.sendSelectionToInteractiveWindow &&
+                settings.datascience.enabled
+        );
     }
 
     @captureTelemetry(Telemetry.DisableInteractiveShiftEnter)
     public async disable(): Promise<void> {
-        await this.persistentState.createGlobalPersistentState<boolean>(InteractiveShiftEnterStateKeys.ShowBanner, false).updateValue(false);
+        await this.persistentState
+            .createGlobalPersistentState<boolean>(
+                InteractiveShiftEnterStateKeys.ShowBanner,
+                false
+            )
+            .updateValue(false);
     }
 
     @captureTelemetry(Telemetry.EnableInteractiveShiftEnter)
     public async enableInteractiveShiftEnter(): Promise<void> {
-        await this.configuration.updateSetting('dataScience.sendSelectionToInteractiveWindow', true, undefined, ConfigurationTarget.Global);
+        await this.configuration.updateSetting(
+            "dataScience.sendSelectionToInteractiveWindow",
+            true,
+            undefined,
+            ConfigurationTarget.Global
+        );
         await this.disable();
     }
 }

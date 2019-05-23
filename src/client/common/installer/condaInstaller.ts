@@ -1,19 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
-import { Uri } from 'vscode';
-import { ICondaService } from '../../interpreter/contracts';
-import { IServiceContainer } from '../../ioc/types';
-import { ExecutionInfo, IConfigurationService } from '../types';
-import { ModuleInstaller } from './moduleInstaller';
-import { IModuleInstaller } from './types';
+import { inject, injectable } from "inversify";
+import { Uri } from "vscode";
+import { ICondaService } from "../../interpreter/contracts";
+import { IServiceContainer } from "../../ioc/types";
+import { ExecutionInfo, IConfigurationService } from "../types";
+import { ModuleInstaller } from "./moduleInstaller";
+import { IModuleInstaller } from "./types";
 
 /**
  * A Python module installer for a conda environment.
  */
 @injectable()
-export class CondaInstaller extends ModuleInstaller implements IModuleInstaller {
+export class CondaInstaller extends ModuleInstaller
+    implements IModuleInstaller {
     private isCondaAvailable: boolean | undefined;
 
     constructor(
@@ -23,7 +24,7 @@ export class CondaInstaller extends ModuleInstaller implements IModuleInstaller 
     }
 
     public get displayName() {
-        return 'Conda';
+        return "Conda";
     }
 
     public get priority(): number {
@@ -42,7 +43,9 @@ export class CondaInstaller extends ModuleInstaller implements IModuleInstaller 
         if (this.isCondaAvailable === false) {
             return false;
         }
-        const condaLocator = this.serviceContainer.get<ICondaService>(ICondaService);
+        const condaLocator = this.serviceContainer.get<ICondaService>(
+            ICondaService
+        );
         this.isCondaAvailable = await condaLocator.isCondaAvailable();
         if (!this.isCondaAvailable) {
             return false;
@@ -54,21 +57,28 @@ export class CondaInstaller extends ModuleInstaller implements IModuleInstaller 
     /**
      * Return the commandline args needed to install the module.
      */
-    protected async getExecutionInfo(moduleName: string, resource?: Uri): Promise<ExecutionInfo> {
-        const condaService = this.serviceContainer.get<ICondaService>(ICondaService);
+    protected async getExecutionInfo(
+        moduleName: string,
+        resource?: Uri
+    ): Promise<ExecutionInfo> {
+        const condaService = this.serviceContainer.get<ICondaService>(
+            ICondaService
+        );
         const condaFile = await condaService.getCondaFile();
 
-        const pythonPath = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath;
+        const pythonPath = this.serviceContainer
+            .get<IConfigurationService>(IConfigurationService)
+            .getSettings(resource).pythonPath;
         const info = await condaService.getCondaEnvironment(pythonPath);
-        const args = ['install'];
+        const args = ["install"];
 
         if (info && info.name) {
             // If we have the name of the conda environment, then use that.
-            args.push('--name');
+            args.push("--name");
             args.push(info.name!.toCommandArgument());
         } else if (info && info.path) {
             // Else provide the full path to the environment path.
-            args.push('--prefix');
+            args.push("--prefix");
             args.push(info.path.fileToCommandArgument());
         }
         args.push(moduleName);
@@ -81,9 +91,15 @@ export class CondaInstaller extends ModuleInstaller implements IModuleInstaller 
     /**
      * Is anaconda the current interpreter?
      */
-    private async isCurrentEnvironmentACondaEnvironment(resource?: Uri): Promise<boolean> {
-        const condaService = this.serviceContainer.get<ICondaService>(ICondaService);
-        const pythonPath = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath;
+    private async isCurrentEnvironmentACondaEnvironment(
+        resource?: Uri
+    ): Promise<boolean> {
+        const condaService = this.serviceContainer.get<ICondaService>(
+            ICondaService
+        );
+        const pythonPath = this.serviceContainer
+            .get<IConfigurationService>(IConfigurationService)
+            .getSettings(resource).pythonPath;
         return condaService.isCondaEnvironment(pythonPath);
     }
 }

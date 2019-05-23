@@ -2,7 +2,7 @@
 *  Copyright (c) Microsoft Corporation. All rights reserved.
 *  Licensed under the MIT License. See License.txt in the project root for license information.
 *--------------------------------------------------------------------------------------------*/
-'use strict';
+"use strict";
 
 // tslint:disable:all
 export namespace vscMockPosition {
@@ -131,7 +131,7 @@ export namespace vscMockPosition {
          * Convert to a human-readable representation.
          */
         public toString(): string {
-            return '(' + this.lineNumber + ',' + this.column + ')';
+            return "(" + this.lineNumber + "," + this.column + ")";
         }
 
         // ---
@@ -148,9 +148,9 @@ export namespace vscMockPosition {
          */
         public static isIPosition(obj: any): obj is IPosition {
             return (
-                obj
-                && (typeof obj.lineNumber === 'number')
-                && (typeof obj.column === 'number')
+                obj &&
+                typeof obj.lineNumber === "number" &&
+                typeof obj.column === "number"
             );
         }
     }

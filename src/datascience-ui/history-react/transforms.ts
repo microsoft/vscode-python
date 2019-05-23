@@ -1,5 +1,5 @@
 /* tslint:disable */
-'use strict';
+"use strict";
 
 // This code is from @nteract/transforms-full except without the Vega transforms:
 // https://github.com/nteract/nteract/blob/v0.12.2/packages/transforms-full/src/index.js .
@@ -29,7 +29,7 @@ const additionalTransforms = [
     ModelDebug,
     PlotlyNullTransform,
     PlotlyTransform,
-    GeoJSONTransform,
+    GeoJSONTransform
 ];
 
 const { transforms, displayOrder } = additionalTransforms.reduce(

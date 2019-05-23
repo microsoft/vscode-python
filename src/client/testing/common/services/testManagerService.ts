@@ -1,14 +1,32 @@
-import { Disposable, Uri } from 'vscode';
-import { IConfigurationService, IDisposableRegistry, Product } from '../../../common/types';
-import { IServiceContainer } from '../../../ioc/types';
-import { ITestManager, ITestManagerFactory, ITestManagerService, ITestsHelper, UnitTestProduct } from './../types';
+import { Disposable, Uri } from "vscode";
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    Product
+} from "../../../common/types";
+import { IServiceContainer } from "../../../ioc/types";
+import {
+    ITestManager,
+    ITestManagerFactory,
+    ITestManagerService,
+    ITestsHelper,
+    UnitTestProduct
+} from "./../types";
 
 export class TestManagerService implements ITestManagerService {
     private cachedTestManagers = new Map<Product, ITestManager>();
     private readonly configurationService: IConfigurationService;
-    constructor(private wkspace: Uri, private testsHelper: ITestsHelper, private serviceContainer: IServiceContainer) {
-        const disposables = serviceContainer.get<Disposable[]>(IDisposableRegistry);
-        this.configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
+    constructor(
+        private wkspace: Uri,
+        private testsHelper: ITestsHelper,
+        private serviceContainer: IServiceContainer
+    ) {
+        const disposables = serviceContainer.get<Disposable[]>(
+            IDisposableRegistry
+        );
+        this.configurationService = serviceContainer.get<IConfigurationService>(
+            IConfigurationService
+        );
         disposables.push(this);
     }
     public dispose() {
@@ -18,23 +36,32 @@ export class TestManagerService implements ITestManagerService {
     }
     public getTestManager(): ITestManager | undefined {
         const preferredTestManager = this.getPreferredTestManager();
-        if (typeof preferredTestManager !== 'number') {
+        if (typeof preferredTestManager !== "number") {
             return;
         }
 
         // tslint:disable-next-line:no-non-null-assertion
         if (!this.cachedTestManagers.has(preferredTestManager)) {
             const testDirectory = this.getTestWorkingDirectory();
-            const testProvider = this.testsHelper.parseProviderName(preferredTestManager);
-            const factory = this.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-            this.cachedTestManagers.set(preferredTestManager, factory(testProvider, this.wkspace, testDirectory));
+            const testProvider = this.testsHelper.parseProviderName(
+                preferredTestManager
+            );
+            const factory = this.serviceContainer.get<ITestManagerFactory>(
+                ITestManagerFactory
+            );
+            this.cachedTestManagers.set(
+                preferredTestManager,
+                factory(testProvider, this.wkspace, testDirectory)
+            );
         }
         const testManager = this.cachedTestManagers.get(preferredTestManager)!;
         return testManager.enabled ? testManager : undefined;
     }
     public getTestWorkingDirectory() {
         const settings = this.configurationService.getSettings(this.wkspace);
-        return settings.testing.cwd && settings.testing.cwd.length > 0 ? settings.testing.cwd : this.wkspace.fsPath;
+        return settings.testing.cwd && settings.testing.cwd.length > 0
+            ? settings.testing.cwd
+            : this.wkspace.fsPath;
     }
     public getPreferredTestManager(): UnitTestProduct | undefined {
         const settings = this.configurationService.getSettings(this.wkspace);

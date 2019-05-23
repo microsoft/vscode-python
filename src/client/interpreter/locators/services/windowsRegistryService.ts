@@ -1,26 +1,34 @@
 // tslint:disable:no-require-imports no-var-requires underscore-consistent-invocation
-import * as fs from 'fs-extra';
-import { inject, injectable } from 'inversify';
-import * as path from 'path';
-import { Uri } from 'vscode';
-import { IPlatformService, IRegistry, RegistryHive } from '../../../common/platform/types';
-import { IPathUtils } from '../../../common/types';
-import { Architecture } from '../../../common/utils/platform';
-import { parsePythonVersion } from '../../../common/utils/version';
-import { IServiceContainer } from '../../../ioc/types';
-import { IInterpreterHelper, InterpreterType, PythonInterpreter } from '../../contracts';
-import { CacheableLocatorService } from './cacheableLocatorService';
-import { AnacondaCompanyName, AnacondaCompanyNames } from './conda';
-const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
+import * as fs from "fs-extra";
+import { inject, injectable } from "inversify";
+import * as path from "path";
+import { Uri } from "vscode";
+import {
+    IPlatformService,
+    IRegistry,
+    RegistryHive
+} from "../../../common/platform/types";
+import { IPathUtils } from "../../../common/types";
+import { Architecture } from "../../../common/utils/platform";
+import { parsePythonVersion } from "../../../common/utils/version";
+import { IServiceContainer } from "../../../ioc/types";
+import {
+    IInterpreterHelper,
+    InterpreterType,
+    PythonInterpreter
+} from "../../contracts";
+import { CacheableLocatorService } from "./cacheableLocatorService";
+import { AnacondaCompanyName, AnacondaCompanyNames } from "./conda";
+const flatten = require("lodash/flatten") as typeof import("lodash/flatten");
 
 // tslint:disable-next-line:variable-name
-const DefaultPythonExecutable = 'python.exe';
+const DefaultPythonExecutable = "python.exe";
 // tslint:disable-next-line:variable-name
-const CompaniesToIgnore = ['PYLAUNCHER'];
+const CompaniesToIgnore = ["PYLAUNCHER"];
 // tslint:disable-next-line:variable-name
-const PythonCoreCompanyDisplayName = 'Python Software Foundation';
+const PythonCoreCompanyDisplayName = "Python Software Foundation";
 // tslint:disable-next-line:variable-name
-const PythonCoreComany = 'PYTHONCORE';
+const PythonCoreComany = "PYTHONCORE";
 
 type CompanyInterpreter = {
     companyKey: string;
@@ -31,16 +39,22 @@ type CompanyInterpreter = {
 @injectable()
 export class WindowsRegistryService extends CacheableLocatorService {
     private readonly pathUtils: IPathUtils;
-    constructor(@inject(IRegistry) private registry: IRegistry,
+    constructor(
+        @inject(IRegistry) private registry: IRegistry,
         @inject(IPlatformService) private readonly platform: IPlatformService,
-        @inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super('WindowsRegistryService', serviceContainer);
+        @inject(IServiceContainer) serviceContainer: IServiceContainer
+    ) {
+        super("WindowsRegistryService", serviceContainer);
         this.pathUtils = serviceContainer.get<IPathUtils>(IPathUtils);
     }
     // tslint:disable-next-line:no-empty
-    public dispose() { }
-    protected async getInterpretersImplementation(_resource?: Uri): Promise<PythonInterpreter[]> {
-        return this.platform.isWindows ? this.getInterpretersFromRegistry() : [];
+    public dispose() {}
+    protected async getInterpretersImplementation(
+        _resource?: Uri
+    ): Promise<PythonInterpreter[]> {
+        return this.platform.isWindows
+            ? this.getInterpretersFromRegistry()
+            : [];
     }
     private async getInterpretersFromRegistry() {
         // https://github.com/python/peps/blob/master/pep-0514.txt#L357
@@ -51,49 +65,100 @@ export class WindowsRegistryService extends CacheableLocatorService {
         ];
         // https://github.com/Microsoft/PTVS/blob/ebfc4ca8bab234d453f15ee426af3b208f3c143c/Python/Product/Cookiecutter/Shared/Interpreters/PythonRegistrySearch.cs#L44
         if (this.platform.is64bit) {
-            promises.push(this.getCompanies(RegistryHive.HKLM, Architecture.x64));
+            promises.push(
+                this.getCompanies(RegistryHive.HKLM, Architecture.x64)
+            );
         }
 
         const companies = await Promise.all<CompanyInterpreter[]>(promises);
-        const companyInterpreters = await Promise.all(flatten(companies)
-            .filter(item => item !== undefined && item !== null)
-            .map(company => {
-                return this.getInterpretersForCompany(company.companyKey, company.hive, company.arch);
-            }));
+        const companyInterpreters = await Promise.all(
+            flatten(companies)
+                .filter(item => item !== undefined && item !== null)
+                .map(company => {
+                    return this.getInterpretersForCompany(
+                        company.companyKey,
+                        company.hive,
+                        company.arch
+                    );
+                })
+        );
 
-        return flatten(companyInterpreters)
-            .filter(item => item !== undefined && item !== null)
-            // tslint:disable-next-line:no-non-null-assertion
-            .map(item => item!)
-            .reduce<PythonInterpreter[]>((prev, current) => {
-                if (prev.findIndex(item => item.path.toUpperCase() === current.path.toUpperCase()) === -1) {
-                    prev.push(current);
-                }
-                return prev;
-            }, []);
+        return (
+            flatten(companyInterpreters)
+                .filter(item => item !== undefined && item !== null)
+                // tslint:disable-next-line:no-non-null-assertion
+                .map(item => item!)
+                .reduce<PythonInterpreter[]>((prev, current) => {
+                    if (
+                        prev.findIndex(
+                            item =>
+                                item.path.toUpperCase() ===
+                                current.path.toUpperCase()
+                        ) === -1
+                    ) {
+                        prev.push(current);
+                    }
+                    return prev;
+                }, [])
+        );
     }
-    private async getCompanies(hive: RegistryHive, arch?: Architecture): Promise<CompanyInterpreter[]> {
-        return this.registry.getKeys('\\Software\\Python', hive, arch)
-            .then(companyKeys => companyKeys
-                .filter(companyKey => CompaniesToIgnore.indexOf(this.pathUtils.basename(companyKey).toUpperCase()) === -1)
-                .map(companyKey => {
-                    return { companyKey, hive, arch };
-                }));
+    private async getCompanies(
+        hive: RegistryHive,
+        arch?: Architecture
+    ): Promise<CompanyInterpreter[]> {
+        return this.registry
+            .getKeys("\\Software\\Python", hive, arch)
+            .then(companyKeys =>
+                companyKeys
+                    .filter(
+                        companyKey =>
+                            CompaniesToIgnore.indexOf(
+                                this.pathUtils
+                                    .basename(companyKey)
+                                    .toUpperCase()
+                            ) === -1
+                    )
+                    .map(companyKey => {
+                        return { companyKey, hive, arch };
+                    })
+            );
     }
-    private async getInterpretersForCompany(companyKey: string, hive: RegistryHive, arch?: Architecture) {
+    private async getInterpretersForCompany(
+        companyKey: string,
+        hive: RegistryHive,
+        arch?: Architecture
+    ) {
         const tagKeys = await this.registry.getKeys(companyKey, hive, arch);
-        return Promise.all(tagKeys.map(tagKey => this.getInreterpreterDetailsForCompany(tagKey, companyKey, hive, arch)));
+        return Promise.all(
+            tagKeys.map(tagKey =>
+                this.getInreterpreterDetailsForCompany(
+                    tagKey,
+                    companyKey,
+                    hive,
+                    arch
+                )
+            )
+        );
     }
-    private getInreterpreterDetailsForCompany(tagKey: string, companyKey: string, hive: RegistryHive, arch?: Architecture): Promise<PythonInterpreter | undefined | null> {
+    private getInreterpreterDetailsForCompany(
+        tagKey: string,
+        companyKey: string,
+        hive: RegistryHive,
+        arch?: Architecture
+    ): Promise<PythonInterpreter | undefined | null> {
         const key = `${tagKey}\\InstallPath`;
-        type InterpreterInformation = null | undefined | {
-            installPath: string;
-            executablePath?: string;
-            displayName?: string;
-            version?: string;
-            companyDisplayName?: string;
-        };
-        return this.registry.getValue(key, hive, arch)
+        type InterpreterInformation =
+            | null
+            | undefined
+            | {
+                  installPath: string;
+                  executablePath?: string;
+                  displayName?: string;
+                  version?: string;
+                  companyDisplayName?: string;
+              };
+        return this.registry
+            .getValue(key, hive, arch)
             .then(installPath => {
                 // Install path is mandatory.
                 if (!installPath) {
@@ -104,28 +169,56 @@ export class WindowsRegistryService extends CacheableLocatorService {
                 // Treat all other values as optional.
                 return Promise.all([
                     Promise.resolve(installPath),
-                    this.registry.getValue(key, hive, arch, 'ExecutablePath'),
-                    this.registry.getValue(tagKey, hive, arch, 'SysVersion'),
+                    this.registry.getValue(key, hive, arch, "ExecutablePath"),
+                    this.registry.getValue(tagKey, hive, arch, "SysVersion"),
                     this.getCompanyDisplayName(companyKey, hive, arch)
-                ])
-                    .then(([installedPath, executablePath, version, companyDisplayName]) => {
-                        companyDisplayName = AnacondaCompanyNames.indexOf(companyDisplayName) === -1 ? companyDisplayName : AnacondaCompanyName;
+                ]).then(
+                    ([
+                        installedPath,
+                        executablePath,
+                        version,
+                        companyDisplayName
+                    ]) => {
+                        companyDisplayName =
+                            AnacondaCompanyNames.indexOf(companyDisplayName) ===
+                            -1
+                                ? companyDisplayName
+                                : AnacondaCompanyName;
                         // tslint:disable-next-line:prefer-type-cast no-object-literal-type-assertion
-                        return { installPath: installedPath, executablePath, version, companyDisplayName } as InterpreterInformation;
-                    });
+                        return {
+                            installPath: installedPath,
+                            executablePath,
+                            version,
+                            companyDisplayName
+                        } as InterpreterInformation;
+                    }
+                );
             })
             .then(async (interpreterInfo?: InterpreterInformation) => {
                 if (!interpreterInfo) {
                     return;
                 }
 
-                const executablePath = interpreterInfo.executablePath && interpreterInfo.executablePath.length > 0 ? interpreterInfo.executablePath : path.join(interpreterInfo.installPath, DefaultPythonExecutable);
-                const helper = this.serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
-                const details = await helper.getInterpreterInformation(executablePath);
+                const executablePath =
+                    interpreterInfo.executablePath &&
+                    interpreterInfo.executablePath.length > 0
+                        ? interpreterInfo.executablePath
+                        : path.join(
+                              interpreterInfo.installPath,
+                              DefaultPythonExecutable
+                          );
+                const helper = this.serviceContainer.get<IInterpreterHelper>(
+                    IInterpreterHelper
+                );
+                const details = await helper.getInterpreterInformation(
+                    executablePath
+                );
                 if (!details) {
                     return;
                 }
-                const version = interpreterInfo.version ? this.pathUtils.basename(interpreterInfo.version) : this.pathUtils.basename(tagKey);
+                const version = interpreterInfo.version
+                    ? this.pathUtils.basename(interpreterInfo.version)
+                    : this.pathUtils.basename(tagKey);
                 this._hasInterpreters.resolve(true);
                 // tslint:disable-next-line:prefer-type-cast no-object-literal-type-assertion
                 return {
@@ -138,19 +231,40 @@ export class WindowsRegistryService extends CacheableLocatorService {
                     type: InterpreterType.Unknown
                 } as PythonInterpreter;
             })
-            .then(interpreter => interpreter ? fs.pathExists(interpreter.path).catch(() => false).then(exists => exists ? interpreter : null) : null)
+            .then(
+                interpreter =>
+                    interpreter
+                        ? fs
+                              .pathExists(interpreter.path)
+                              .catch(() => false)
+                              .then(exists => (exists ? interpreter : null))
+                        : null
+            )
             .catch(error => {
-                console.error(`Failed to retrieve interpreter details for company ${companyKey},tag: ${tagKey}, hive: ${hive}, arch: ${arch}`);
+                console.error(
+                    `Failed to retrieve interpreter details for company ${companyKey},tag: ${tagKey}, hive: ${hive}, arch: ${arch}`
+                );
                 console.error(error);
                 return null;
             });
     }
-    private async  getCompanyDisplayName(companyKey: string, hive: RegistryHive, arch?: Architecture) {
-        const displayName = await this.registry.getValue(companyKey, hive, arch, 'DisplayName');
+    private async getCompanyDisplayName(
+        companyKey: string,
+        hive: RegistryHive,
+        arch?: Architecture
+    ) {
+        const displayName = await this.registry.getValue(
+            companyKey,
+            hive,
+            arch,
+            "DisplayName"
+        );
         if (displayName && displayName.length > 0) {
             return displayName;
         }
         const company = this.pathUtils.basename(companyKey);
-        return company.toUpperCase() === PythonCoreComany ? PythonCoreCompanyDisplayName : company;
+        return company.toUpperCase() === PythonCoreComany
+            ? PythonCoreCompanyDisplayName
+            : company;
     }
 }

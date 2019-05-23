@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
 // tslint:disable:no-any no-require-imports
 
-import { Uri } from 'vscode';
-import '../../common/extensions';
-import { Resource } from '../types';
+import { Uri } from "vscode";
+import "../../common/extensions";
+import { Resource } from "../types";
 
-type VSCodeType = typeof import('vscode');
+type VSCodeType = typeof import("vscode");
 type CacheData = {
     value: unknown;
     expiry: number;
@@ -25,21 +25,37 @@ const resourceSpecificCacheStores = new Map<string, Map<string, CacheData>>();
  * @param {VSCodeType} [vscode=require('vscode')]
  * @returns
  */
-function getCacheKey(resource: Resource, vscode: VSCodeType = require('vscode')) {
-    const section = vscode.workspace.getConfiguration('python', vscode.Uri.file(__filename));
+function getCacheKey(
+    resource: Resource,
+    vscode: VSCodeType = require("vscode")
+) {
+    const section = vscode.workspace.getConfiguration(
+        "python",
+        vscode.Uri.file(__filename)
+    );
     if (!section) {
-        return 'python';
+        return "python";
     }
-    const globalPythonPath = section.inspect<string>('pythonPath')!.globalValue || 'python';
+    const globalPythonPath =
+        section.inspect<string>("pythonPath")!.globalValue || "python";
     // Get the workspace related to this resource.
-    if (!resource || !Array.isArray(vscode.workspace.workspaceFolders) || vscode.workspace.workspaceFolders.length === 0) {
+    if (
+        !resource ||
+        !Array.isArray(vscode.workspace.workspaceFolders) ||
+        vscode.workspace.workspaceFolders.length === 0
+    ) {
         return globalPythonPath;
     }
-    const folder = resource ? vscode.workspace.getWorkspaceFolder(resource) : vscode.workspace.workspaceFolders[0];
+    const folder = resource
+        ? vscode.workspace.getWorkspaceFolder(resource)
+        : vscode.workspace.workspaceFolders[0];
     if (!folder) {
         return globalPythonPath;
     }
-    const workspacePythonPath = vscode.workspace.getConfiguration('python', resource).get<string>('pythonPath') || 'python';
+    const workspacePythonPath =
+        vscode.workspace
+            .getConfiguration("python", resource)
+            .get<string>("pythonPath") || "python";
     return `${folder.uri.fsPath}-${workspacePythonPath}`;
 }
 /**
@@ -49,7 +65,10 @@ function getCacheKey(resource: Resource, vscode: VSCodeType = require('vscode'))
  * @param {VSCodeType} [vscode=require('vscode')]
  * @returns
  */
-function getCacheStore(resource: Resource, vscode: VSCodeType = require('vscode')) {
+function getCacheStore(
+    resource: Resource,
+    vscode: VSCodeType = require("vscode")
+) {
     const key = getCacheKey(resource, vscode);
     if (!resourceSpecificCacheStores.has(key)) {
         resourceSpecificCacheStores.set(key, new Map<string, CacheData>());
@@ -58,7 +77,9 @@ function getCacheStore(resource: Resource, vscode: VSCodeType = require('vscode'
 }
 
 function getCacheKeyFromFunctionArgs(keyPrefix: string, fnArgs: any[]): string {
-    const argsKey = fnArgs.map(arg => `${JSON.stringify(arg)}`).join('-Arg-Separator-');
+    const argsKey = fnArgs
+        .map(arg => `${JSON.stringify(arg)}`)
+        .join("-Arg-Separator-");
     return `KeyPrefix=${keyPrefix}-Args=${argsKey}`;
 }
 
@@ -69,10 +90,12 @@ export function clearCache() {
 export class InMemoryInterpreterSpecificCache<T> {
     private readonly resource: Resource;
     private readonly args: any[];
-    constructor(private readonly keyPrefix: string,
+    constructor(
+        private readonly keyPrefix: string,
         protected readonly expiryDurationMs: number,
         args: [Uri | undefined, ...any[]],
-        private readonly vscode: VSCodeType = require('vscode')) {
+        private readonly vscode: VSCodeType = require("vscode")
+    ) {
         this.resource = args[0];
         this.args = args.slice(1);
     }

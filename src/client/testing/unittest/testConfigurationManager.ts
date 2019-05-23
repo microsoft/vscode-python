@@ -1,8 +1,8 @@
-import { Uri } from 'vscode';
-import { Product } from '../../common/types';
-import { IServiceContainer } from '../../ioc/types';
-import { TestConfigurationManager } from '../common/managers/testConfigurationManager';
-import { ITestConfigSettingsService } from '../types';
+import { Uri } from "vscode";
+import { Product } from "../../common/types";
+import { IServiceContainer } from "../../ioc/types";
+import { TestConfigurationManager } from "../common/managers/testConfigurationManager";
+import { ITestConfigSettingsService } from "../types";
 
 export class ConfigurationManager extends TestConfigurationManager {
     constructor(
@@ -16,23 +16,27 @@ export class ConfigurationManager extends TestConfigurationManager {
         return true;
     }
     public async configure(wkspace: Uri) {
-        const args = ['-v'];
+        const args = ["-v"];
         const subDirs = await this.getTestDirs(wkspace.fsPath);
         const testDir = await this.selectTestDir(wkspace.fsPath, subDirs);
-        args.push('-s');
-        if (typeof testDir === 'string' && testDir !== '.') {
+        args.push("-s");
+        if (typeof testDir === "string" && testDir !== ".") {
             args.push(`./${testDir}`);
         } else {
-            args.push('.');
+            args.push(".");
         }
 
         const testfilePattern = await this.selectTestFilePattern();
-        args.push('-p');
-        if (typeof testfilePattern === 'string') {
+        args.push("-p");
+        if (typeof testfilePattern === "string") {
             args.push(testfilePattern);
         } else {
-            args.push('test*.py');
+            args.push("test*.py");
         }
-        await this.testConfigSettingsService.updateTestArgs(wkspace.fsPath, Product.unittest, args);
+        await this.testConfigSettingsService.updateTestArgs(
+            wkspace.fsPath,
+            Product.unittest,
+            args
+        );
     }
 }

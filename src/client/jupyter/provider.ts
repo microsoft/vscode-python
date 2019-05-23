@@ -1,8 +1,8 @@
-import { Position, Range, TextDocument, window } from 'vscode';
+import { Position, Range, TextDocument, window } from "vscode";
 
 export class JupyterProvider {
     private static isCodeBlock(code: string): boolean {
-        return code.trim().endsWith(':') && code.indexOf('#') === -1;
+        return code.trim().endsWith(":") && code.indexOf("#") === -1;
     }
 
     /**
@@ -27,7 +27,10 @@ export class JupyterProvider {
      * @memberOf LanguageProvider
      */
     // @ts-ignore
-    public getSelectedCode(selectedCode: string, currentCell?: Range): Promise<string> {
+    public getSelectedCode(
+        selectedCode: string,
+        currentCell?: Range
+    ): Promise<string> {
         if (!JupyterProvider.isCodeBlock(selectedCode)) {
             return Promise.resolve(selectedCode);
         }
@@ -36,23 +39,35 @@ export class JupyterProvider {
         return new Promise<string>((resolve, _reject) => {
             const activeEditor = window.activeTextEditor;
             if (!activeEditor) {
-                return resolve('');
+                return resolve("");
             }
-            const endLineNumber = currentCell ? currentCell.end.line : activeEditor.document.lineCount - 1;
+            const endLineNumber = currentCell
+                ? currentCell.end.line
+                : activeEditor.document.lineCount - 1;
             const startIndent = selectedCode.indexOf(selectedCode.trim());
             const nextStartLine = activeEditor.selection.start.line + 1;
 
-            for (let lineNumber = nextStartLine; lineNumber <= endLineNumber; lineNumber += 1) {
+            for (
+                let lineNumber = nextStartLine;
+                lineNumber <= endLineNumber;
+                lineNumber += 1
+            ) {
                 const line = activeEditor.document.lineAt(lineNumber);
                 const nextLine = line.text;
                 const nextLineIndent = nextLine.indexOf(nextLine.trim());
-                if (nextLine.trim().indexOf('#') === 0) {
+                if (nextLine.trim().indexOf("#") === 0) {
                     continue;
                 }
                 if (nextLineIndent === startIndent) {
                     // Return code untill previous line
-                    const endRange = activeEditor.document.lineAt(lineNumber - 1).range.end;
-                    resolve(activeEditor.document.getText(new Range(activeEditor.selection.start, endRange)));
+                    const endRange = activeEditor.document.lineAt(
+                        lineNumber - 1
+                    ).range.end;
+                    resolve(
+                        activeEditor.document.getText(
+                            new Range(activeEditor.selection.start, endRange)
+                        )
+                    );
                 }
             }
 
@@ -70,21 +85,30 @@ export class JupyterProvider {
      *
      * @memberOf LanguageProvider
      */
-    public getFirstLineOfExecutableCode(document: TextDocument, range: Range): Promise<Position> {
-        for (let lineNumber = range.start.line; lineNumber < range.end.line; lineNumber += 1) {
+    public getFirstLineOfExecutableCode(
+        document: TextDocument,
+        range: Range
+    ): Promise<Position> {
+        for (
+            let lineNumber = range.start.line;
+            lineNumber < range.end.line;
+            lineNumber += 1
+        ) {
             const line = document.lineAt(lineNumber);
             if (line.isEmptyOrWhitespace) {
                 continue;
             }
             const lineText = line.text;
             const trimmedLine = lineText.trim();
-            if (trimmedLine.startsWith('#')) {
+            if (trimmedLine.startsWith("#")) {
                 continue;
             }
             // Yay we have a line
             // Remember, we need to set the cursor to a character other than white space
             // Highlighting doesn't kick in for comments or white space
-            return Promise.resolve(new Position(lineNumber, lineText.indexOf(trimmedLine)));
+            return Promise.resolve(
+                new Position(lineNumber, lineText.indexOf(trimmedLine))
+            );
         }
 
         // give up

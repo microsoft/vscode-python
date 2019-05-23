@@ -3,13 +3,13 @@
 
 // tslint:disable:no-constant-condition no-typeof-undefined
 
-import { EventEmitter } from 'events';
-import { injectable } from 'inversify';
-import { Readable } from 'stream';
-import { DebugProtocol } from 'vscode-debugprotocol';
-import { IProtocolParser } from '../types';
+import { EventEmitter } from "events";
+import { injectable } from "inversify";
+import { Readable } from "stream";
+import { DebugProtocol } from "vscode-debugprotocol";
+import { IProtocolParser } from "../types";
 
-const PROTOCOL_START_INDENTIFIER = '\r\n\r\n';
+const PROTOCOL_START_INDENTIFIER = "\r\n\r\n";
 
 /**
  * Parsers the debugger Protocol messages and raises the following events:
@@ -34,38 +34,38 @@ export class ProtocolParser extends EventEmitter implements IProtocolParser {
     }
     public dispose() {
         if (this.stream) {
-            this.stream.removeListener('data', this.dataCallbackHandler);
+            this.stream.removeListener("data", this.dataCallbackHandler);
             this.stream = undefined;
         }
     }
     public connect(stream: Readable) {
         this.stream = stream;
-        stream.addListener('data', this.dataCallbackHandler);
+        stream.addListener("data", this.dataCallbackHandler);
     }
     private dataCallbackHandler = (data: string | Buffer) => {
         this.handleData(data as Buffer);
-    }
+    };
     private dispatch(body: string): void {
         const message = JSON.parse(body) as DebugProtocol.ProtocolMessage;
 
         switch (message.type) {
-            case 'event': {
+            case "event": {
                 const event = message as DebugProtocol.Event;
-                if (typeof event.event === 'string') {
+                if (typeof event.event === "string") {
                     this.emit(`${message.type}_${event.event}`, event);
                 }
                 break;
             }
-            case 'request': {
+            case "request": {
                 const request = message as DebugProtocol.Request;
-                if (typeof request.command === 'string') {
+                if (typeof request.command === "string") {
                     this.emit(`${message.type}_${request.command}`, request);
                 }
                 break;
             }
-            case 'response': {
+            case "response": {
                 const reponse = message as DebugProtocol.Response;
-                if (typeof reponse.command === 'string') {
+                if (typeof reponse.command === "string") {
                     this.emit(`${message.type}_${reponse.command}`, reponse);
                 }
                 break;
@@ -75,7 +75,7 @@ export class ProtocolParser extends EventEmitter implements IProtocolParser {
             }
         }
 
-        this.emit('data', message);
+        this.emit("data", message);
     }
     private handleData(data: Buffer): void {
         if (this.disposed) {
@@ -86,7 +86,11 @@ export class ProtocolParser extends EventEmitter implements IProtocolParser {
         while (true) {
             if (this.contentLength >= 0) {
                 if (this.rawData.length >= this.contentLength) {
-                    const message = this.rawData.toString('utf8', 0, this.contentLength);
+                    const message = this.rawData.toString(
+                        "utf8",
+                        0,
+                        this.contentLength
+                    );
                     this.rawData = this.rawData.slice(this.contentLength);
                     this.contentLength = -1;
                     if (message.length > 0) {
@@ -98,15 +102,17 @@ export class ProtocolParser extends EventEmitter implements IProtocolParser {
             } else {
                 const idx = this.rawData.indexOf(PROTOCOL_START_INDENTIFIER);
                 if (idx !== -1) {
-                    const header = this.rawData.toString('utf8', 0, idx);
-                    const lines = header.split('\r\n');
+                    const header = this.rawData.toString("utf8", 0, idx);
+                    const lines = header.split("\r\n");
                     for (const line of lines) {
                         const pair = line.split(/: +/);
-                        if (pair[0] === 'Content-Length') {
+                        if (pair[0] === "Content-Length") {
                             this.contentLength = +pair[1];
                         }
                     }
-                    this.rawData = this.rawData.slice(idx + PROTOCOL_START_INDENTIFIER.length);
+                    this.rawData = this.rawData.slice(
+                        idx + PROTOCOL_START_INDENTIFIER.length
+                    );
                     continue;
                 }
             }

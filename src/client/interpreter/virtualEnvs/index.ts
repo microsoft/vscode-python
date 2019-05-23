@@ -1,21 +1,24 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
-import * as path from 'path';
-import { Uri } from 'vscode';
-import { IWorkspaceService } from '../../common/application/types';
-import { IFileSystem, IPlatformService } from '../../common/platform/types';
-import { IProcessServiceFactory } from '../../common/process/types';
-import { ITerminalActivationCommandProvider, TerminalShellType } from '../../common/terminal/types';
-import { ICurrentProcess, IPathUtils } from '../../common/types';
-import { getNamesAndValues } from '../../common/utils/enum';
-import { noop } from '../../common/utils/misc';
-import { IServiceContainer } from '../../ioc/types';
-import { InterpreterType, IPipEnvService } from '../contracts';
-import { IVirtualEnvironmentManager } from './types';
+import { inject, injectable } from "inversify";
+import * as path from "path";
+import { Uri } from "vscode";
+import { IWorkspaceService } from "../../common/application/types";
+import { IFileSystem, IPlatformService } from "../../common/platform/types";
+import { IProcessServiceFactory } from "../../common/process/types";
+import {
+    ITerminalActivationCommandProvider,
+    TerminalShellType
+} from "../../common/terminal/types";
+import { ICurrentProcess, IPathUtils } from "../../common/types";
+import { getNamesAndValues } from "../../common/utils/enum";
+import { noop } from "../../common/utils/misc";
+import { IServiceContainer } from "../../ioc/types";
+import { InterpreterType, IPipEnvService } from "../contracts";
+import { IVirtualEnvironmentManager } from "./types";
 
-const PYENVFILES = ['pyvenv.cfg', path.join('..', 'pyvenv.cfg')];
+const PYENVFILES = ["pyvenv.cfg", path.join("..", "pyvenv.cfg")];
 
 @injectable()
 export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
@@ -24,25 +27,54 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
     private fs: IFileSystem;
     private pyEnvRoot?: string;
     private workspaceService: IWorkspaceService;
-    constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {
-        this.processServiceFactory = serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
+    constructor(
+        @inject(IServiceContainer)
+        private readonly serviceContainer: IServiceContainer
+    ) {
+        this.processServiceFactory = serviceContainer.get<
+            IProcessServiceFactory
+        >(IProcessServiceFactory);
         this.fs = serviceContainer.get<IFileSystem>(IFileSystem);
-        this.pipEnvService = serviceContainer.get<IPipEnvService>(IPipEnvService);
-        this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        this.pipEnvService = serviceContainer.get<IPipEnvService>(
+            IPipEnvService
+        );
+        this.workspaceService = serviceContainer.get<IWorkspaceService>(
+            IWorkspaceService
+        );
     }
-    public async getEnvironmentName(pythonPath: string, resource?: Uri): Promise<string> {
-        const defaultWorkspaceUri = this.workspaceService.hasWorkspaceFolders ? this.workspaceService.workspaceFolders![0].uri : undefined;
-        const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
-        const workspaceUri = workspaceFolder ? workspaceFolder.uri : defaultWorkspaceUri;
-        const grandParentDirName = path.basename(path.dirname(path.dirname(pythonPath)));
-        if (workspaceUri && await this.pipEnvService.isRelatedPipEnvironment(workspaceUri.fsPath, pythonPath)) {
+    public async getEnvironmentName(
+        pythonPath: string,
+        resource?: Uri
+    ): Promise<string> {
+        const defaultWorkspaceUri = this.workspaceService.hasWorkspaceFolders
+            ? this.workspaceService.workspaceFolders![0].uri
+            : undefined;
+        const workspaceFolder = resource
+            ? this.workspaceService.getWorkspaceFolder(resource)
+            : undefined;
+        const workspaceUri = workspaceFolder
+            ? workspaceFolder.uri
+            : defaultWorkspaceUri;
+        const grandParentDirName = path.basename(
+            path.dirname(path.dirname(pythonPath))
+        );
+        if (
+            workspaceUri &&
+            (await this.pipEnvService.isRelatedPipEnvironment(
+                workspaceUri.fsPath,
+                pythonPath
+            ))
+        ) {
             // In pipenv, return the folder name of the workspace.
             return path.basename(workspaceUri.fsPath);
         }
 
         return grandParentDirName;
     }
-    public async getEnvironmentType(pythonPath: string, resource?: Uri): Promise<InterpreterType> {
+    public async getEnvironmentType(
+        pythonPath: string,
+        resource?: Uri
+    ): Promise<InterpreterType> {
         if (await this.isVenvEnvironment(pythonPath)) {
             return InterpreterType.Venv;
         }
@@ -77,10 +109,22 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
         return pyEnvRoot && pythonPath.startsWith(pyEnvRoot);
     }
     public async isPipEnvironment(pythonPath: string, resource?: Uri) {
-        const defaultWorkspaceUri = this.workspaceService.hasWorkspaceFolders ? this.workspaceService.workspaceFolders![0].uri : undefined;
-        const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
-        const workspaceUri = workspaceFolder ? workspaceFolder.uri : defaultWorkspaceUri;
-        if (workspaceUri && await this.pipEnvService.isRelatedPipEnvironment(workspaceUri.fsPath, pythonPath)) {
+        const defaultWorkspaceUri = this.workspaceService.hasWorkspaceFolders
+            ? this.workspaceService.workspaceFolders![0].uri
+            : undefined;
+        const workspaceFolder = resource
+            ? this.workspaceService.getWorkspaceFolder(resource)
+            : undefined;
+        const workspaceUri = workspaceFolder
+            ? workspaceFolder.uri
+            : defaultWorkspaceUri;
+        if (
+            workspaceUri &&
+            (await this.pipEnvService.isRelatedPipEnvironment(
+                workspaceUri.fsPath,
+                pythonPath
+            ))
+        ) {
             return true;
         }
         return false;
@@ -90,23 +134,27 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
             return this.pyEnvRoot;
         }
 
-        const currentProccess = this.serviceContainer.get<ICurrentProcess>(ICurrentProcess);
+        const currentProccess = this.serviceContainer.get<ICurrentProcess>(
+            ICurrentProcess
+        );
         const pyenvRoot = currentProccess.env.PYENV_ROOT;
         if (pyenvRoot) {
-            return this.pyEnvRoot = pyenvRoot;
+            return (this.pyEnvRoot = pyenvRoot);
         }
 
         try {
-            const processService = await this.processServiceFactory.create(resource);
-            const output = await processService.exec('pyenv', ['root']);
+            const processService = await this.processServiceFactory.create(
+                resource
+            );
+            const output = await processService.exec("pyenv", ["root"]);
             if (output.stdout.trim().length > 0) {
-                return this.pyEnvRoot = output.stdout.trim();
+                return (this.pyEnvRoot = output.stdout.trim());
             }
         } catch {
             noop();
         }
         const pathUtils = this.serviceContainer.get<IPathUtils>(IPathUtils);
-        return this.pyEnvRoot = path.join(pathUtils.home, '.pyenv');
+        return (this.pyEnvRoot = path.join(pathUtils.home, ".pyenv"));
     }
     public async isVirtualEnvironment(pythonPath: string) {
         const provider = this.getTerminalActivationProviderForVirtualEnvs();
@@ -115,7 +163,10 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
             .map(shell => shell.value);
 
         for (const shell of shells) {
-            const cmds = await provider.getActivationCommandsForInterpreter!(pythonPath, shell);
+            const cmds = await provider.getActivationCommandsForInterpreter!(
+                pythonPath,
+                shell
+            );
             if (cmds && cmds.length > 0) {
                 return true;
             }
@@ -124,8 +175,15 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
         return false;
     }
     private getTerminalActivationProviderForVirtualEnvs(): ITerminalActivationCommandProvider {
-        const isWindows = this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows;
-        const serviceName = isWindows ? 'commandPromptAndPowerShell' : 'bashCShellFish';
-        return this.serviceContainer.get<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider, serviceName);
+        const isWindows = this.serviceContainer.get<IPlatformService>(
+            IPlatformService
+        ).isWindows;
+        const serviceName = isWindows
+            ? "commandPromptAndPowerShell"
+            : "bashCShellFish";
+        return this.serviceContainer.get<ITerminalActivationCommandProvider>(
+            ITerminalActivationCommandProvider,
+            serviceName
+        );
     }
 }

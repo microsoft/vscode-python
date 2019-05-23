@@ -1,37 +1,45 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
-import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
-import { assert } from 'chai';
-import { anything, instance, mock, when } from 'ts-mockito';
-import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
-import * as TypeMoq from 'typemoq';
-import * as uuid from 'uuid/v4';
-import { Disposable, EventEmitter, Uri } from 'vscode';
+"use strict";
+import { nbformat } from "@jupyterlab/coreutils/lib/nbformat";
+import { assert } from "chai";
+import { anything, instance, mock, when } from "ts-mockito";
+import { Matcher } from "ts-mockito/lib/matcher/type/Matcher";
+import * as TypeMoq from "typemoq";
+import * as uuid from "uuid/v4";
+import { Disposable, EventEmitter, Uri } from "vscode";
 
-import { ApplicationShell } from '../../client/common/application/applicationShell';
-import { PythonSettings } from '../../client/common/configSettings';
-import { ConfigurationService } from '../../client/common/configuration/service';
-import { Logger } from '../../client/common/logger';
-import { FileSystem } from '../../client/common/platform/fileSystem';
-import { IFileSystem } from '../../client/common/platform/types';
-import { IConfigurationService, IDisposable, ILogger } from '../../client/common/types';
-import { generateCells } from '../../client/datascience/cellFactory';
-import { Commands } from '../../client/datascience/constants';
-import { HistoryCommandListener } from '../../client/datascience/history/historycommandlistener';
-import { HistoryProvider } from '../../client/datascience/history/historyProvider';
-import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
-import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
-import { JupyterImporter } from '../../client/datascience/jupyter/jupyterImporter';
-import { IHistory, INotebookServer, IStatusProvider } from '../../client/datascience/types';
-import { InterpreterService } from '../../client/interpreter/interpreterService';
-import { KnownSearchPathsForInterpreters } from '../../client/interpreter/locators/services/KnownPathsService';
-import { ServiceContainer } from '../../client/ioc/container';
-import { noop } from '../core';
-import { MockAutoSelectionService } from '../mocks/autoSelector';
-import * as vscodeMocks from '../vscode-mock';
-import { MockCommandManager } from './mockCommandManager';
-import { MockDocumentManager } from './mockDocumentManager';
+import { ApplicationShell } from "../../client/common/application/applicationShell";
+import { PythonSettings } from "../../client/common/configSettings";
+import { ConfigurationService } from "../../client/common/configuration/service";
+import { Logger } from "../../client/common/logger";
+import { FileSystem } from "../../client/common/platform/fileSystem";
+import { IFileSystem } from "../../client/common/platform/types";
+import {
+    IConfigurationService,
+    IDisposable,
+    ILogger
+} from "../../client/common/types";
+import { generateCells } from "../../client/datascience/cellFactory";
+import { Commands } from "../../client/datascience/constants";
+import { HistoryCommandListener } from "../../client/datascience/history/historycommandlistener";
+import { HistoryProvider } from "../../client/datascience/history/historyProvider";
+import { JupyterExecutionFactory } from "../../client/datascience/jupyter/jupyterExecutionFactory";
+import { JupyterExporter } from "../../client/datascience/jupyter/jupyterExporter";
+import { JupyterImporter } from "../../client/datascience/jupyter/jupyterImporter";
+import {
+    IHistory,
+    INotebookServer,
+    IStatusProvider
+} from "../../client/datascience/types";
+import { InterpreterService } from "../../client/interpreter/interpreterService";
+import { KnownSearchPathsForInterpreters } from "../../client/interpreter/locators/services/KnownPathsService";
+import { ServiceContainer } from "../../client/ioc/container";
+import { noop } from "../core";
+import { MockAutoSelectionService } from "../mocks/autoSelector";
+import * as vscodeMocks from "../vscode-mock";
+import { MockCommandManager } from "./mockCommandManager";
+import { MockDocumentManager } from "./mockDocumentManager";
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
 
@@ -51,14 +59,18 @@ class MockStatusProvider implements IStatusProvider {
         };
     }
 
-    public waitWithStatus<T>(promise: () => Promise<T>, _message: string, _timeout?: number, _canceled?: () => void): Promise<T> {
+    public waitWithStatus<T>(
+        promise: () => Promise<T>,
+        _message: string,
+        _timeout?: number,
+        _canceled?: () => void
+    ): Promise<T> {
         return promise();
     }
-
 }
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
-suite('History command listener', async () => {
+suite("History command listener", async () => {
     const interpreterService = mock(InterpreterService);
     const configService = mock(ConfigurationService);
     const knownSearchPaths = mock(KnownSearchPathsForInterpreters);
@@ -66,7 +78,10 @@ suite('History command listener', async () => {
     const fileSystem = mock(FileSystem);
     const serviceContainer = mock(ServiceContainer);
     const dummyEvent = new EventEmitter<void>();
-    const pythonSettings = new PythonSettings(undefined, new MockAutoSelectionService());
+    const pythonSettings = new PythonSettings(
+        undefined,
+        new MockAutoSelectionService()
+    );
     const disposableRegistry: IDisposable[] = [];
     const historyProvider = mock(HistoryProvider);
     const notebookImporter = mock(JupyterImporter);
@@ -76,7 +91,7 @@ suite('History command listener', async () => {
     const documentManager = new MockDocumentManager();
     const statusProvider = new MockStatusProvider();
     const commandManager = new MockCommandManager();
-    const server = createTypeMoq<INotebookServer>('jupyter server');
+    const server = createTypeMoq<INotebookServer>("jupyter server");
     let lastFileContents: any;
 
     suiteSetup(() => {
@@ -105,7 +120,7 @@ suite('History command listener', async () => {
             return this.func(value);
         }
         public toString(): string {
-            return 'FunctionMatcher';
+            return "FunctionMatcher";
         }
     }
 
@@ -113,15 +128,29 @@ suite('History command listener', async () => {
         return new FunctionMatcher(func);
     }
 
-    function createCommandListener(activeHistory: IHistory | undefined): HistoryCommandListener {
+    function createCommandListener(
+        activeHistory: IHistory | undefined
+    ): HistoryCommandListener {
         // Setup defaults
-        when(interpreterService.onDidChangeInterpreter).thenReturn(dummyEvent.event);
-        when(interpreterService.getInterpreterDetails(argThat(o => !o.includes || !o.includes('python')))).thenReject('Unknown interpreter');
+        when(interpreterService.onDidChangeInterpreter).thenReturn(
+            dummyEvent.event
+        );
+        when(
+            interpreterService.getInterpreterDetails(
+                argThat(o => !o.includes || !o.includes("python"))
+            )
+        ).thenReject("Unknown interpreter");
 
         // Service container needs logger, file system, and config service
-        when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
-        when(serviceContainer.get<IFileSystem>(IFileSystem)).thenReturn(instance(fileSystem));
-        when(serviceContainer.get<ILogger>(ILogger)).thenReturn(instance(logger));
+        when(
+            serviceContainer.get<IConfigurationService>(IConfigurationService)
+        ).thenReturn(instance(configService));
+        when(serviceContainer.get<IFileSystem>(IFileSystem)).thenReturn(
+            instance(fileSystem)
+        );
+        when(serviceContainer.get<ILogger>(ILogger)).thenReturn(
+            instance(logger)
+        );
         when(configService.getSettings()).thenReturn(pythonSettings);
 
         // Setup default settings
@@ -130,9 +159,9 @@ suite('History command listener', async () => {
             jupyterLaunchTimeout: 10,
             jupyterLaunchRetries: 3,
             enabled: true,
-            jupyterServerURI: '',
+            jupyterServerURI: "",
             changeDirOnImportExport: true,
-            notebookFileRoot: 'WORKSPACE',
+            notebookFileRoot: "WORKSPACE",
             useDefaultConfigForJupyter: true,
             jupyterInterruptTimeout: 10000,
             searchForJupyter: true,
@@ -140,63 +169,77 @@ suite('History command listener', async () => {
             collapseCellInputCodeByDefault: true,
             allowInput: true,
             maxOutputSize: 400,
-            errorBackgroundColor: '#FFFFFF',
+            errorBackgroundColor: "#FFFFFF",
             sendSelectionToInteractiveWindow: false,
             showJupyterVariableExplorer: true,
-            variableExplorerExclude: 'module;builtin_function_or_method',
-            codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
-            markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)'
+            variableExplorerExclude: "module;builtin_function_or_method",
+            codeRegularExpression:
+                "^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])",
+            markdownRegularExpression:
+                "^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)"
         };
 
-        when(knownSearchPaths.getSearchPaths()).thenReturn(['/foo/bar']);
+        when(knownSearchPaths.getSearchPaths()).thenReturn(["/foo/bar"]);
 
         // We also need a file system
         const tempFile = {
             dispose: () => {
                 return undefined;
             },
-            filePath: '/foo/bar/baz.py'
+            filePath: "/foo/bar/baz.py"
         };
         when(fileSystem.createTemporaryFile(anything())).thenResolve(tempFile);
         when(fileSystem.deleteDirectory(anything())).thenResolve();
-        when(fileSystem.writeFile(anything(), argThat(o => { lastFileContents = o; return true; }))).thenResolve();
+        when(
+            fileSystem.writeFile(
+                anything(),
+                argThat(o => {
+                    lastFileContents = o;
+                    return true;
+                })
+            )
+        ).thenResolve();
         when(fileSystem.arePathsSame(anything(), anything())).thenReturn(true);
 
         when(historyProvider.getActive()).thenReturn(activeHistory);
-        when(notebookImporter.importFromFile(anything())).thenResolve('imported');
+        when(notebookImporter.importFromFile(anything())).thenResolve(
+            "imported"
+        );
         const metadata: nbformat.INotebookMetadata = {
             language_info: {
-                name: 'python',
+                name: "python",
                 codemirror_mode: {
-                    name: 'ipython',
+                    name: "ipython",
                     version: 3
                 }
             },
             orig_nbformat: 2,
-            file_extension: '.py',
-            mimetype: 'text/x-python',
-            name: 'python',
-            npconvert_exporter: 'python',
+            file_extension: ".py",
+            mimetype: "text/x-python",
+            name: "python",
+            npconvert_exporter: "python",
             pygments_lexer: `ipython${3}`,
             version: 3
         };
-        when(notebookExporter.translateToNotebook(anything())).thenResolve(
-            {
-                cells: [],
-                nbformat: 4,
-                nbformat_minor: 2,
-                metadata: metadata
-            }
-        );
+        when(notebookExporter.translateToNotebook(anything())).thenResolve({
+            cells: [],
+            nbformat: 4,
+            nbformat_minor: 2,
+            metadata: metadata
+        });
 
         if (jupyterExecution.isNotebookSupported) {
             when(jupyterExecution.isNotebookSupported()).thenResolve(true);
         }
 
-        documentManager.addDocument('#%%\r\nprint("code")', 'bar.ipynb');
+        documentManager.addDocument('#%%\r\nprint("code")', "bar.ipynb");
 
-        when(applicationShell.showInformationMessage(anything(), anything())).thenReturn(Promise.resolve('moo'));
-        when(applicationShell.showInformationMessage(anything())).thenReturn(Promise.resolve('moo'));
+        when(
+            applicationShell.showInformationMessage(anything(), anything())
+        ).thenReturn(Promise.resolve("moo"));
+        when(applicationShell.showInformationMessage(anything())).thenReturn(
+            Promise.resolve("moo")
+        );
 
         const result = new HistoryCommandListener(
             disposableRegistry,
@@ -209,61 +252,125 @@ suite('History command listener', async () => {
             instance(fileSystem),
             instance(logger),
             instance(configService),
-            statusProvider);
+            statusProvider
+        );
 
         result.register(commandManager);
 
         return result;
     }
 
-    test('Import', async () => {
+    test("Import", async () => {
         createCommandListener(undefined);
-        when(applicationShell.showOpenDialog(argThat(o => o.openLabel && o.openLabel.includes('Import')))).thenReturn(Promise.resolve([Uri.file('foo')]));
-        await commandManager.executeCommand(Commands.ImportNotebook, undefined, undefined);
-        assert.ok(documentManager.activeTextEditor, 'Imported file was not opened');
+        when(
+            applicationShell.showOpenDialog(
+                argThat(o => o.openLabel && o.openLabel.includes("Import"))
+            )
+        ).thenReturn(Promise.resolve([Uri.file("foo")]));
+        await commandManager.executeCommand(
+            Commands.ImportNotebook,
+            undefined,
+            undefined
+        );
+        assert.ok(
+            documentManager.activeTextEditor,
+            "Imported file was not opened"
+        );
     });
-    test('Import File', async () => {
+    test("Import File", async () => {
         createCommandListener(undefined);
-        await commandManager.executeCommand(Commands.ImportNotebook, Uri.file('bar.ipynb'), undefined);
-        assert.ok(documentManager.activeTextEditor, 'Imported file was not opened');
+        await commandManager.executeCommand(
+            Commands.ImportNotebook,
+            Uri.file("bar.ipynb"),
+            undefined
+        );
+        assert.ok(
+            documentManager.activeTextEditor,
+            "Imported file was not opened"
+        );
     });
-    test('Export File', async () => {
+    test("Export File", async () => {
         createCommandListener(undefined);
-        const doc = await documentManager.openTextDocument('bar.ipynb');
+        const doc = await documentManager.openTextDocument("bar.ipynb");
         await documentManager.showTextDocument(doc);
-        when(applicationShell.showSaveDialog(argThat(o => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(Promise.resolve(Uri.file('foo')));
+        when(
+            applicationShell.showSaveDialog(
+                argThat(o => o.saveLabel && o.saveLabel.includes("Export"))
+            )
+        ).thenReturn(Promise.resolve(Uri.file("foo")));
 
-        await commandManager.executeCommand(Commands.ExportFileAsNotebook, Uri.file('bar.ipynb'), undefined);
-        assert.ok(lastFileContents, 'Export file was not written to');
+        await commandManager.executeCommand(
+            Commands.ExportFileAsNotebook,
+            Uri.file("bar.ipynb"),
+            undefined
+        );
+        assert.ok(lastFileContents, "Export file was not written to");
     });
-    test('Export File and output', async () => {
+    test("Export File and output", async () => {
         createCommandListener(undefined);
-        const doc = await documentManager.openTextDocument('bar.ipynb');
+        const doc = await documentManager.openTextDocument("bar.ipynb");
         await documentManager.showTextDocument(doc);
-        when(jupyterExecution.connectToNotebookServer(anything(), anything())).thenResolve(server.object);
-        server.setup(s => s.execute(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAnyNumber(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => {
-            return Promise.resolve(generateCells(undefined, 'a=1', 'bar.py', 0, false, uuid()));
-        });
+        when(
+            jupyterExecution.connectToNotebookServer(anything(), anything())
+        ).thenResolve(server.object);
+        server
+            .setup(s =>
+                s.execute(
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAnyNumber(),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny()
+                )
+            )
+            .returns(() => {
+                return Promise.resolve(
+                    generateCells(undefined, "a=1", "bar.py", 0, false, uuid())
+                );
+            });
 
-        when(applicationShell.showSaveDialog(argThat(o => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(Promise.resolve(Uri.file('foo')));
-        when(applicationShell.showInformationMessage(anything(), anything())).thenReturn(Promise.resolve('moo'));
+        when(
+            applicationShell.showSaveDialog(
+                argThat(o => o.saveLabel && o.saveLabel.includes("Export"))
+            )
+        ).thenReturn(Promise.resolve(Uri.file("foo")));
+        when(
+            applicationShell.showInformationMessage(anything(), anything())
+        ).thenReturn(Promise.resolve("moo"));
 
-        await commandManager.executeCommand(Commands.ExportFileAndOutputAsNotebook, Uri.file('bar.ipynb'));
-        assert.ok(lastFileContents, 'Export file was not written to');
+        await commandManager.executeCommand(
+            Commands.ExportFileAndOutputAsNotebook,
+            Uri.file("bar.ipynb")
+        );
+        assert.ok(lastFileContents, "Export file was not written to");
     });
-    test('Export skipped on no file', async () => {
+    test("Export skipped on no file", async () => {
         createCommandListener(undefined);
-        when(applicationShell.showSaveDialog(argThat(o => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(Promise.resolve(Uri.file('foo')));
-        await commandManager.executeCommand(Commands.ExportFileAndOutputAsNotebook, Uri.file('bar.ipynb'));
-        assert.notExists(lastFileContents, 'Export file was written to');
+        when(
+            applicationShell.showSaveDialog(
+                argThat(o => o.saveLabel && o.saveLabel.includes("Export"))
+            )
+        ).thenReturn(Promise.resolve(Uri.file("foo")));
+        await commandManager.executeCommand(
+            Commands.ExportFileAndOutputAsNotebook,
+            Uri.file("bar.ipynb")
+        );
+        assert.notExists(lastFileContents, "Export file was written to");
     });
-    test('Export happens on no file', async () => {
+    test("Export happens on no file", async () => {
         createCommandListener(undefined);
-        const doc = await documentManager.openTextDocument('bar.ipynb');
+        const doc = await documentManager.openTextDocument("bar.ipynb");
         await documentManager.showTextDocument(doc);
-        when(applicationShell.showSaveDialog(argThat(o => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(Promise.resolve(Uri.file('foo')));
-        await commandManager.executeCommand(Commands.ExportFileAsNotebook, undefined, undefined);
-        assert.ok(lastFileContents, 'Export file was not written to');
+        when(
+            applicationShell.showSaveDialog(
+                argThat(o => o.saveLabel && o.saveLabel.includes("Export"))
+            )
+        ).thenReturn(Promise.resolve(Uri.file("foo")));
+        await commandManager.executeCommand(
+            Commands.ExportFileAsNotebook,
+            undefined,
+            undefined
+        );
+        assert.ok(lastFileContents, "Export file was not written to");
     });
-
 });

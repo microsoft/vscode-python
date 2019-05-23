@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IToken, TokenType } from './types';
+import { IToken, TokenType } from "./types";
 
 class BracePair {
     public readonly openBrace: TokenType;

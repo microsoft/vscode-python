@@ -1,22 +1,22 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
-import * as assert from 'assert';
-import { ReactWrapper } from 'enzyme';
-import { IDisposable } from 'monaco-editor';
-import { Disposable } from 'vscode';
+"use strict";
+import * as assert from "assert";
+import { ReactWrapper } from "enzyme";
+import { IDisposable } from "monaco-editor";
+import { Disposable } from "vscode";
 
-import { createDeferred } from '../../client/common/utils/async';
-import { HistoryMessageListener } from '../../client/datascience/history/historyMessageListener';
-import { HistoryMessages } from '../../client/datascience/history/historyTypes';
-import { IHistory, IHistoryProvider } from '../../client/datascience/types';
-import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
-import { noop } from '../core';
-import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { getEditor, runMountedTest, typeCode } from './historyTestHelpers';
+import { createDeferred } from "../../client/common/utils/async";
+import { HistoryMessageListener } from "../../client/datascience/history/historyMessageListener";
+import { HistoryMessages } from "../../client/datascience/history/historyTypes";
+import { IHistory, IHistoryProvider } from "../../client/datascience/types";
+import { MonacoEditor } from "../../datascience-ui/react-common/monacoEditor";
+import { noop } from "../core";
+import { DataScienceIocContainer } from "./dataScienceIocContainer";
+import { getEditor, runMountedTest, typeCode } from "./historyTestHelpers";
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
-suite('DataScience Intellisense tests', () => {
+suite("DataScience Intellisense tests", () => {
     const disposables: Disposable[] = [];
     let ioc: DataScienceIocContainer;
 
@@ -51,19 +51,22 @@ suite('DataScience Intellisense tests', () => {
 
         // During testing the MainPanel sends the init message before our history is created.
         // Pretend like it's happening now
-        const listener = ((result as any).messageListener) as HistoryMessageListener;
+        const listener = (result as any)
+            .messageListener as HistoryMessageListener;
         listener.onMessage(HistoryMessages.Started, {});
 
         return result;
     }
 
-    function getIntellisenseTextLines(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) : string[] {
+    function getIntellisenseTextLines(
+        wrapper: ReactWrapper<any, Readonly<{}>, React.Component>
+    ): string[] {
         assert.ok(wrapper);
         const editor = getEditor(wrapper);
         assert.ok(editor);
         const domNode = editor.getDOMNode();
         assert.ok(domNode);
-        const nodes = domNode!.getElementsByClassName('monaco-list-row');
+        const nodes = domNode!.getElementsByClassName("monaco-list-row");
         assert.ok(nodes && nodes.length);
         const innerTexts: string[] = [];
         for (let i = 0; i < nodes.length; i += 1) {
@@ -76,24 +79,40 @@ suite('DataScience Intellisense tests', () => {
         return innerTexts;
     }
 
-    function verifyIntellisenseVisible(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, expectedSpan: string) {
+    function verifyIntellisenseVisible(
+        wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
+        expectedSpan: string
+    ) {
         const innerTexts = getIntellisenseTextLines(wrapper);
-        assert.ok(innerTexts.includes(expectedSpan), 'Intellisense row not matching');
+        assert.ok(
+            innerTexts.includes(expectedSpan),
+            "Intellisense row not matching"
+        );
     }
 
-    function verifyIntellisenseMissing(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, expectedSpan: string) {
+    function verifyIntellisenseMissing(
+        wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
+        expectedSpan: string
+    ) {
         const innerTexts = getIntellisenseTextLines(wrapper);
-        assert.ok(!innerTexts.includes(expectedSpan), 'Intellisense row was found when not expected');
+        assert.ok(
+            !innerTexts.includes(expectedSpan),
+            "Intellisense row was found when not expected"
+        );
     }
 
-    function waitForSuggestion(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) : { disposable: IDisposable; promise: Promise<void>} {
+    function waitForSuggestion(
+        wrapper: ReactWrapper<any, Readonly<{}>, React.Component>
+    ): { disposable: IDisposable; promise: Promise<void> } {
         const editorEnzyme = getEditor(wrapper);
         const reactEditor = editorEnzyme.instance() as MonacoEditor;
         const editor = reactEditor.state.editor;
         if (editor) {
             // The suggest controller has a suggest model on it. It has an event
             // that fires when the suggest controller is opened.
-            const suggest = editor.getContribution('editor.contrib.suggestController') as any;
+            const suggest = editor.getContribution(
+                "editor.contrib.suggestController"
+            ) as any;
             if (suggest && suggest._model) {
                 const promise = createDeferred<void>();
                 const disposable = suggest._model.onDidSuggest(() => {
@@ -114,53 +133,71 @@ suite('DataScience Intellisense tests', () => {
         };
     }
 
-    runMountedTest('Simple autocomplete', async (wrapper) => {
-        // Create a history so that it listens to the results.
-        const history = await getOrCreateHistory();
-        await history.show();
-
-        // Then enter some code. Don't submit, we're just testing that autocomplete appears
-        const suggestion = waitForSuggestion(wrapper);
-        typeCode(wrapper, 'print');
-        await suggestion.promise;
-        suggestion.disposable.dispose();
-        verifyIntellisenseVisible(wrapper, 'print');
-    }, () => { return ioc; });
-
-    runMountedTest('Jupyter autocomplete', async (wrapper) => {
-        if (ioc.mockJupyter) {
-            // This test only works when mocking.
-
+    runMountedTest(
+        "Simple autocomplete",
+        async wrapper => {
             // Create a history so that it listens to the results.
             const history = await getOrCreateHistory();
             await history.show();
 
             // Then enter some code. Don't submit, we're just testing that autocomplete appears
             const suggestion = waitForSuggestion(wrapper);
-            typeCode(wrapper, 'print');
+            typeCode(wrapper, "print");
             await suggestion.promise;
             suggestion.disposable.dispose();
-            verifyIntellisenseVisible(wrapper, 'printly');
+            verifyIntellisenseVisible(wrapper, "print");
+        },
+        () => {
+            return ioc;
         }
-    }, () => { return ioc; });
+    );
 
-    runMountedTest('Jupyter autocomplete timeout', async (wrapper) => {
-        if (ioc.mockJupyter) {
-            // This test only works when mocking.
+    runMountedTest(
+        "Jupyter autocomplete",
+        async wrapper => {
+            if (ioc.mockJupyter) {
+                // This test only works when mocking.
 
-            // Create a history so that it listens to the results.
-            const history = await getOrCreateHistory();
-            await history.show();
+                // Create a history so that it listens to the results.
+                const history = await getOrCreateHistory();
+                await history.show();
 
-            // Force a timeout on the jupyter completions
-            ioc.mockJupyter.getCurrentSession()!.setCompletionTimeout(1000);
-
-            // Then enter some code. Don't submit, we're just testing that autocomplete appears
-            const suggestion = waitForSuggestion(wrapper);
-            typeCode(wrapper, 'print');
-            await suggestion.promise;
-            suggestion.disposable.dispose();
-            verifyIntellisenseMissing(wrapper, 'printly');
+                // Then enter some code. Don't submit, we're just testing that autocomplete appears
+                const suggestion = waitForSuggestion(wrapper);
+                typeCode(wrapper, "print");
+                await suggestion.promise;
+                suggestion.disposable.dispose();
+                verifyIntellisenseVisible(wrapper, "printly");
+            }
+        },
+        () => {
+            return ioc;
         }
-    }, () => { return ioc; });
+    );
+
+    runMountedTest(
+        "Jupyter autocomplete timeout",
+        async wrapper => {
+            if (ioc.mockJupyter) {
+                // This test only works when mocking.
+
+                // Create a history so that it listens to the results.
+                const history = await getOrCreateHistory();
+                await history.show();
+
+                // Force a timeout on the jupyter completions
+                ioc.mockJupyter.getCurrentSession()!.setCompletionTimeout(1000);
+
+                // Then enter some code. Don't submit, we're just testing that autocomplete appears
+                const suggestion = waitForSuggestion(wrapper);
+                typeCode(wrapper, "print");
+                await suggestion.promise;
+                suggestion.disposable.dispose();
+                verifyIntellisenseMissing(wrapper, "printly");
+            }
+        },
+        () => {
+            return ioc;
+        }
+    );
 });

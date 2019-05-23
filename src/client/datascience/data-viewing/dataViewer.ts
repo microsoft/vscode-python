@@ -1,29 +1,44 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
-import '../../common/extensions';
+"use strict";
+import "../../common/extensions";
 
-import { inject, injectable } from 'inversify';
-import * as path from 'path';
-import { ViewColumn } from 'vscode';
+import { inject, injectable } from "inversify";
+import * as path from "path";
+import { ViewColumn } from "vscode";
 
-import { IApplicationShell, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
-import { EXTENSION_ROOT_DIR } from '../../common/constants';
-import { traceError } from '../../common/logger';
-import { IConfigurationService, IDisposable } from '../../common/types';
-import * as localize from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
-import { sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../constants';
-import { ICodeCssGenerator, IDataViewer, IJupyterVariable, IJupyterVariables, IThemeFinder } from '../types';
-import { WebViewHost } from '../webViewHost';
-import { DataViewerMessageListener } from './dataViewerMessageListener';
-import { DataViewerMessages, IDataViewerMapping, IGetRowsRequest } from './types';
+import {
+    IApplicationShell,
+    IWebPanelProvider,
+    IWorkspaceService
+} from "../../common/application/types";
+import { EXTENSION_ROOT_DIR } from "../../common/constants";
+import { traceError } from "../../common/logger";
+import { IConfigurationService, IDisposable } from "../../common/types";
+import * as localize from "../../common/utils/localize";
+import { noop } from "../../common/utils/misc";
+import { sendTelemetryEvent } from "../../telemetry";
+import { Telemetry } from "../constants";
+import {
+    ICodeCssGenerator,
+    IDataViewer,
+    IJupyterVariable,
+    IJupyterVariables,
+    IThemeFinder
+} from "../types";
+import { WebViewHost } from "../webViewHost";
+import { DataViewerMessageListener } from "./dataViewerMessageListener";
+import {
+    DataViewerMessages,
+    IDataViewerMapping,
+    IGetRowsRequest
+} from "./types";
 
 @injectable()
-export class DataViewer extends WebViewHost<IDataViewerMapping> implements IDataViewer, IDisposable {
+export class DataViewer extends WebViewHost<IDataViewerMapping>
+    implements IDataViewer, IDisposable {
     private disposed: boolean = false;
-    private variable : IJupyterVariable | undefined;
+    private variable: IJupyterVariable | undefined;
 
     constructor(
         @inject(IWebPanelProvider) provider: IWebPanelProvider,
@@ -33,7 +48,7 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IJupyterVariables) private variableManager: IJupyterVariables,
         @inject(IApplicationShell) private applicationShell: IApplicationShell
-        ) {
+    ) {
         super(
             configuration,
             provider,
@@ -41,9 +56,16 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
             themeFinder,
             workspaceService,
             (c, v, d) => new DataViewerMessageListener(c, v, d),
-            path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'data-explorer', 'index_bundle.js'),
+            path.join(
+                EXTENSION_ROOT_DIR,
+                "out",
+                "datascience-ui",
+                "data-explorer",
+                "index_bundle.js"
+            ),
             localize.DataScience.dataExplorerTitle(),
-            ViewColumn.One);
+            ViewColumn.One
+        );
     }
 
     public async showVariable(variable: IJupyterVariable): Promise<void> {
@@ -52,7 +74,9 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
             this.variable = await this.prepVariable(variable);
 
             // Create our new title with the variable name
-            let newTitle = `${localize.DataScience.dataExplorerTitle()} - ${variable.name}`;
+            let newTitle = `${localize.DataScience.dataExplorerTitle()} - ${
+                variable.name
+            }`;
             const TRIM_LENGTH = 40;
             if (newTitle.length > TRIM_LENGTH) {
                 newTitle = `${newTitle.substr(0, TRIM_LENGTH)}...`;
@@ -64,7 +88,10 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
             await super.show(true);
 
             // Send a message with our data
-            this.postMessage(DataViewerMessages.InitializeData, this.variable).ignoreErrors();
+            this.postMessage(
+                DataViewerMessages.InitializeData,
+                this.variable
+            ).ignoreErrors();
         }
     }
 
@@ -86,12 +113,16 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
         super.onMessage(message, payload);
     }
 
-    private async prepVariable(variable: IJupyterVariable) : Promise<IJupyterVariable> {
+    private async prepVariable(
+        variable: IJupyterVariable
+    ): Promise<IJupyterVariable> {
         const output = await this.variableManager.getDataFrameInfo(variable);
 
         // Log telemetry about number of rows
         try {
-            sendTelemetryEvent(Telemetry.ShowDataViewer, {rows: output.rowCount ? output.rowCount : 0 });
+            sendTelemetryEvent(Telemetry.ShowDataViewer, {
+                rows: output.rowCount ? output.rowCount : 0
+            });
         } catch {
             noop();
         }
@@ -102,8 +133,15 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
     private async getAllRows() {
         try {
             if (this.variable && this.variable.rowCount) {
-                const allRows = await this.variableManager.getDataFrameRows(this.variable, 0, this.variable.rowCount);
-                return this.postMessage(DataViewerMessages.GetAllRowsResponse, allRows);
+                const allRows = await this.variableManager.getDataFrameRows(
+                    this.variable,
+                    0,
+                    this.variable.rowCount
+                );
+                return this.postMessage(
+                    DataViewerMessages.GetAllRowsResponse,
+                    allRows
+                );
             }
         } catch (e) {
             traceError(e);
@@ -114,8 +152,16 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
     private async getRowChunk(request: IGetRowsRequest) {
         try {
             if (this.variable && this.variable.rowCount) {
-                const rows = await this.variableManager.getDataFrameRows(this.variable, request.start, Math.min(request.end, this.variable.rowCount));
-                return this.postMessage(DataViewerMessages.GetRowsResponse, { rows, start: request.start, end: request.end });
+                const rows = await this.variableManager.getDataFrameRows(
+                    this.variable,
+                    request.start,
+                    Math.min(request.end, this.variable.rowCount)
+                );
+                return this.postMessage(DataViewerMessages.GetRowsResponse, {
+                    rows,
+                    start: request.start,
+                    end: request.end
+                });
             }
         } catch (e) {
             traceError(e);

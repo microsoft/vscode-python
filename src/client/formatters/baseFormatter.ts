@@ -1,29 +1,57 @@
-import * as fs from 'fs-extra';
-import * as path from 'path';
-import * as vscode from 'vscode';
-import { IApplicationShell, IWorkspaceService } from '../common/application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
-import '../common/extensions';
-import { isNotInstalledError } from '../common/helpers';
-import { IPythonToolExecutionService } from '../common/process/types';
-import { IDisposableRegistry, IInstaller, IOutputChannel, Product } from '../common/types';
-import { IServiceContainer } from '../ioc/types';
-import { getTempFileWithDocumentContents, getTextEditsFromPatch } from './../common/editor';
-import { IFormatterHelper } from './types';
+import * as fs from "fs-extra";
+import * as path from "path";
+import * as vscode from "vscode";
+import {
+    IApplicationShell,
+    IWorkspaceService
+} from "../common/application/types";
+import { STANDARD_OUTPUT_CHANNEL } from "../common/constants";
+import "../common/extensions";
+import { isNotInstalledError } from "../common/helpers";
+import { IPythonToolExecutionService } from "../common/process/types";
+import {
+    IDisposableRegistry,
+    IInstaller,
+    IOutputChannel,
+    Product
+} from "../common/types";
+import { IServiceContainer } from "../ioc/types";
+import {
+    getTempFileWithDocumentContents,
+    getTextEditsFromPatch
+} from "./../common/editor";
+import { IFormatterHelper } from "./types";
 
 export abstract class BaseFormatter {
     protected readonly outputChannel: vscode.OutputChannel;
     protected readonly workspace: IWorkspaceService;
     private readonly helper: IFormatterHelper;
 
-    constructor(public Id: string, private product: Product, protected serviceContainer: IServiceContainer) {
-        this.outputChannel = serviceContainer.get<vscode.OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+    constructor(
+        public Id: string,
+        private product: Product,
+        protected serviceContainer: IServiceContainer
+    ) {
+        this.outputChannel = serviceContainer.get<vscode.OutputChannel>(
+            IOutputChannel,
+            STANDARD_OUTPUT_CHANNEL
+        );
         this.helper = serviceContainer.get<IFormatterHelper>(IFormatterHelper);
-        this.workspace = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        this.workspace = serviceContainer.get<IWorkspaceService>(
+            IWorkspaceService
+        );
     }
 
-    public abstract formatDocument(document: vscode.TextDocument, options: vscode.FormattingOptions, token: vscode.CancellationToken, range?: vscode.Range): Thenable<vscode.TextEdit[]>;
-    protected getDocumentPath(document: vscode.TextDocument, fallbackPath: string) {
+    public abstract formatDocument(
+        document: vscode.TextDocument,
+        options: vscode.FormattingOptions,
+        token: vscode.CancellationToken,
+        range?: vscode.Range
+    ): Thenable<vscode.TextEdit[]>;
+    protected getDocumentPath(
+        document: vscode.TextDocument,
+        fallbackPath: string
+    ) {
         if (path.basename(document.uri.fsPath) === document.uri.fsPath) {
             return fallbackPath;
         }
@@ -40,8 +68,14 @@ export abstract class BaseFormatter {
         }
         return vscode.Uri.file(__dirname);
     }
-    protected async provideDocumentFormattingEdits(document: vscode.TextDocument, _options: vscode.FormattingOptions, token: vscode.CancellationToken, args: string[], cwd?: string): Promise<vscode.TextEdit[]> {
-        if (typeof cwd !== 'string' || cwd.length === 0) {
+    protected async provideDocumentFormattingEdits(
+        document: vscode.TextDocument,
+        _options: vscode.FormattingOptions,
+        token: vscode.CancellationToken,
+        args: string[],
+        cwd?: string
+    ): Promise<vscode.TextEdit[]> {
+        if (typeof cwd !== "string" || cwd.length === 0) {
             cwd = this.getWorkspaceUri(document).fsPath;
         }
 
@@ -54,23 +88,38 @@ export abstract class BaseFormatter {
             return [];
         }
 
-        const executionInfo = this.helper.getExecutionInfo(this.product, args, document.uri);
+        const executionInfo = this.helper.getExecutionInfo(
+            this.product,
+            args,
+            document.uri
+        );
         executionInfo.args.push(tempFile);
-        const pythonToolsExecutionService = this.serviceContainer.get<IPythonToolExecutionService>(IPythonToolExecutionService);
-        const promise = pythonToolsExecutionService.exec(executionInfo, { cwd, throwOnStdErr: false, token }, document.uri)
+        const pythonToolsExecutionService = this.serviceContainer.get<
+            IPythonToolExecutionService
+        >(IPythonToolExecutionService);
+        const promise = pythonToolsExecutionService
+            .exec(
+                executionInfo,
+                { cwd, throwOnStdErr: false, token },
+                document.uri
+            )
             .then(output => output.stdout)
             .then(data => {
-                if (this.checkCancellation(document.fileName, tempFile, token)) {
+                if (
+                    this.checkCancellation(document.fileName, tempFile, token)
+                ) {
                     return [] as vscode.TextEdit[];
                 }
                 return getTextEditsFromPatch(document.getText(), data);
             })
             .catch(error => {
-                if (this.checkCancellation(document.fileName, tempFile, token)) {
+                if (
+                    this.checkCancellation(document.fileName, tempFile, token)
+                ) {
                     return [] as vscode.TextEdit[];
                 }
                 // tslint:disable-next-line:no-empty
-                this.handleError(this.Id, error, document.uri).catch(() => { });
+                this.handleError(this.Id, error, document.uri).catch(() => {});
                 return [] as vscode.TextEdit[];
             })
             .then(edits => {
@@ -78,42 +127,71 @@ export abstract class BaseFormatter {
                 return edits;
             });
 
-        const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-        const disposableRegistry = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
-        const disposable = appShell.setStatusBarMessage(`Formatting with ${this.Id}`, promise);
+        const appShell = this.serviceContainer.get<IApplicationShell>(
+            IApplicationShell
+        );
+        const disposableRegistry = this.serviceContainer.get<
+            IDisposableRegistry
+        >(IDisposableRegistry);
+        const disposable = appShell.setStatusBarMessage(
+            `Formatting with ${this.Id}`,
+            promise
+        );
         disposableRegistry.push(disposable);
         return promise;
     }
 
-    protected async handleError(_expectedFileName: string, error: Error, resource?: vscode.Uri) {
+    protected async handleError(
+        _expectedFileName: string,
+        error: Error,
+        resource?: vscode.Uri
+    ) {
         let customError = `Formatting with ${this.Id} failed.`;
 
         if (isNotInstalledError(error)) {
             const installer = this.serviceContainer.get<IInstaller>(IInstaller);
-            const isInstalled = await installer.isInstalled(this.product, resource);
+            const isInstalled = await installer.isInstalled(
+                this.product,
+                resource
+            );
             if (!isInstalled) {
-                customError += `\nYou could either install the '${this.Id}' formatter, turn it off or use another formatter.`;
-                installer.promptToInstall(this.product, resource).catch(ex => console.error('Python Extension: promptToInstall', ex));
+                customError += `\nYou could either install the '${
+                    this.Id
+                }' formatter, turn it off or use another formatter.`;
+                installer
+                    .promptToInstall(this.product, resource)
+                    .catch(ex =>
+                        console.error("Python Extension: promptToInstall", ex)
+                    );
             }
         }
 
         this.outputChannel.appendLine(`\n${customError}\n${error}`);
     }
 
-    private async createTempFile(document: vscode.TextDocument): Promise<string> {
+    private async createTempFile(
+        document: vscode.TextDocument
+    ): Promise<string> {
         return document.isDirty
             ? getTempFileWithDocumentContents(document)
             : document.fileName;
     }
 
-    private deleteTempFile(originalFile: string, tempFile: string): Promise<void> {
+    private deleteTempFile(
+        originalFile: string,
+        tempFile: string
+    ): Promise<void> {
         if (originalFile !== tempFile) {
             return fs.unlink(tempFile);
         }
         return Promise.resolve();
     }
 
-    private checkCancellation(originalFile: string, tempFile: string, token?: vscode.CancellationToken): boolean {
+    private checkCancellation(
+        originalFile: string,
+        tempFile: string,
+        token?: vscode.CancellationToken
+    ): boolean {
         if (token && token.isCancellationRequested) {
             this.deleteTempFile(originalFile, tempFile).ignoreErrors();
             return true;

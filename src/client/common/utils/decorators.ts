@@ -1,15 +1,15 @@
 // tslint:disable:no-any no-require-imports no-function-expression no-invalid-this
 
-import { ProgressLocation, ProgressOptions, Uri, window } from 'vscode';
-import '../../common/extensions';
-import { isTestExecution } from '../constants';
-import { traceError, traceVerbose } from '../logger';
-import { Resource } from '../types';
-import { createDeferred, Deferred } from './async';
-import { InMemoryInterpreterSpecificCache } from './cacheUtils';
+import { ProgressLocation, ProgressOptions, Uri, window } from "vscode";
+import "../../common/extensions";
+import { isTestExecution } from "../constants";
+import { traceError, traceVerbose } from "../logger";
+import { Resource } from "../types";
+import { createDeferred, Deferred } from "./async";
+import { InMemoryInterpreterSpecificCache } from "./cacheUtils";
 
 // tslint:disable-next-line:no-require-imports no-var-requires
-const _debounce = require('lodash/debounce') as typeof import('lodash/debounce');
+const _debounce = require("lodash/debounce") as typeof import("lodash/debounce");
 
 type VoidFunction = () => any;
 type AsyncVoidFunction = () => Promise<any>;
@@ -56,7 +56,11 @@ export function debounceAsync(wait?: number) {
 
 export function makeDebounceDecorator(wait?: number) {
     // tslint:disable-next-line:no-any no-function-expression
-    return function (_target: any, _propertyName: string, descriptor: TypedPropertyDescriptor<VoidFunction>) {
+    return function(
+        _target: any,
+        _propertyName: string,
+        descriptor: TypedPropertyDescriptor<VoidFunction>
+    ) {
         // We could also make use of _debounce() options.  For instance,
         // the following causes the original method to be called
         // immediately:
@@ -71,7 +75,7 @@ export function makeDebounceDecorator(wait?: number) {
         const options = {};
         const originalMethod = descriptor.value!;
         const debounced = _debounce(
-            function (this: any) {
+            function(this: any) {
                 return originalMethod.apply(this, arguments as any);
             },
             wait,
@@ -83,28 +87,45 @@ export function makeDebounceDecorator(wait?: number) {
 
 export function makeDebounceAsyncDecorator(wait?: number) {
     // tslint:disable-next-line:no-any no-function-expression
-    return function (_target: any, _propertyName: string, descriptor: TypedPropertyDescriptor<AsyncVoidFunction>) {
-        type StateInformation = { started: boolean; deferred: Deferred<any> | undefined; timer: number | undefined };
+    return function(
+        _target: any,
+        _propertyName: string,
+        descriptor: TypedPropertyDescriptor<AsyncVoidFunction>
+    ) {
+        type StateInformation = {
+            started: boolean;
+            deferred: Deferred<any> | undefined;
+            timer: number | undefined;
+        };
         const originalMethod = descriptor.value!;
-        const state: StateInformation = { started: false, deferred: undefined, timer: undefined };
+        const state: StateInformation = {
+            started: false,
+            deferred: undefined,
+            timer: undefined
+        };
 
         // Lets defer execution using a setTimeout for the given time.
-        (descriptor as any).value = function (this: any) {
+        (descriptor as any).value = function(this: any) {
             const existingDeferred: Deferred<any> | undefined = state.deferred;
             if (existingDeferred && state.started) {
                 return existingDeferred.promise;
             }
 
             // Clear previous timer.
-            const existingDeferredCompleted = (existingDeferred && existingDeferred.completed);
-            const deferred = state.deferred = (!existingDeferred || existingDeferredCompleted) ? createDeferred<any>() : existingDeferred;
+            const existingDeferredCompleted =
+                existingDeferred && existingDeferred.completed;
+            const deferred = (state.deferred =
+                !existingDeferred || existingDeferredCompleted
+                    ? createDeferred<any>()
+                    : existingDeferred);
             if (state.timer) {
                 clearTimeout(state.timer);
             }
 
             state.timer = setTimeout(async () => {
                 state.started = true;
-                originalMethod.apply(this)
+                originalMethod
+                    .apply(this)
                     .then(r => {
                         state.started = false;
                         deferred.resolve(r);
@@ -119,24 +140,56 @@ export function makeDebounceAsyncDecorator(wait?: number) {
     };
 }
 
-type VSCodeType = typeof import('vscode');
-type PromiseFunctionWithFirstArgOfResource = (...any: [Uri | undefined, ...any[]]) => Promise<any>;
+type VSCodeType = typeof import("vscode");
+type PromiseFunctionWithFirstArgOfResource = (
+    ...any: [Uri | undefined, ...any[]]
+) => Promise<any>;
 
-export function clearCachedResourceSpecificIngterpreterData(key: string, resource: Resource, vscode: VSCodeType = require('vscode')) {
-    const cache = new InMemoryInterpreterSpecificCache(key, 0, [resource], vscode);
+export function clearCachedResourceSpecificIngterpreterData(
+    key: string,
+    resource: Resource,
+    vscode: VSCodeType = require("vscode")
+) {
+    const cache = new InMemoryInterpreterSpecificCache(
+        key,
+        0,
+        [resource],
+        vscode
+    );
     cache.clear();
 }
-export function cacheResourceSpecificInterpreterData(key: string, expiryDurationMs: number, vscode: VSCodeType = require('vscode')) {
-    return function (_target: Object, _propertyName: string, descriptor: TypedPropertyDescriptor<PromiseFunctionWithFirstArgOfResource>) {
+export function cacheResourceSpecificInterpreterData(
+    key: string,
+    expiryDurationMs: number,
+    vscode: VSCodeType = require("vscode")
+) {
+    return function(
+        _target: Object,
+        _propertyName: string,
+        descriptor: TypedPropertyDescriptor<
+            PromiseFunctionWithFirstArgOfResource
+        >
+    ) {
         const originalMethod = descriptor.value!;
-        descriptor.value = async function (...args: [Uri | undefined, ...any[]]) {
-            const cache = new InMemoryInterpreterSpecificCache(key, expiryDurationMs, args, vscode);
+        descriptor.value = async function(
+            ...args: [Uri | undefined, ...any[]]
+        ) {
+            const cache = new InMemoryInterpreterSpecificCache(
+                key,
+                expiryDurationMs,
+                args,
+                vscode
+            );
             if (cache.hasData) {
-                traceVerbose(`Cached data exists ${key}, ${args[0] ? args[0].fsPath : '<No Resource>'}`);
+                traceVerbose(
+                    `Cached data exists ${key}, ${
+                        args[0] ? args[0].fsPath : "<No Resource>"
+                    }`
+                );
                 return Promise.resolve(cache.data);
             }
             const promise = originalMethod.apply(this, args) as Promise<any>;
-            promise.then(result => cache.data = result).ignoreErrors();
+            promise.then(result => (cache.data = result)).ignoreErrors();
             return promise;
         };
     };
@@ -151,17 +204,25 @@ export function cacheResourceSpecificInterpreterData(key: string, expiryDuration
  */
 export function swallowExceptions(scopeName: string) {
     // tslint:disable-next-line:no-any no-function-expression
-    return function (_target: any, propertyName: string, descriptor: TypedPropertyDescriptor<any>) {
+    return function(
+        _target: any,
+        propertyName: string,
+        descriptor: TypedPropertyDescriptor<any>
+    ) {
         const originalMethod = descriptor.value!;
         const errorMessage = `Python Extension (Error in ${scopeName}, method:${propertyName}):`;
         // tslint:disable-next-line:no-any no-function-expression
-        descriptor.value = function (...args: any[]) {
+        descriptor.value = function(...args: any[]) {
             try {
                 // tslint:disable-next-line:no-invalid-this no-use-before-declare no-unsafe-any
                 const result = originalMethod.apply(this, args);
 
                 // If method being wrapped returns a promise then wait and swallow errors.
-                if (result && typeof result.then === 'function' && typeof result.catch === 'function') {
+                if (
+                    result &&
+                    typeof result.then === "function" &&
+                    typeof result.catch === "function"
+                ) {
                     return (result as Promise<void>).catch(error => {
                         if (isTestExecution()) {
                             return;
@@ -182,11 +243,18 @@ export function swallowExceptions(scopeName: string) {
 // tslint:disable-next-line:no-any
 type PromiseFunction = (...any: any[]) => Promise<any>;
 
-export function displayProgress(title: string, location = ProgressLocation.Window) {
-    return function (_target: Object, _propertyName: string, descriptor: TypedPropertyDescriptor<PromiseFunction>) {
+export function displayProgress(
+    title: string,
+    location = ProgressLocation.Window
+) {
+    return function(
+        _target: Object,
+        _propertyName: string,
+        descriptor: TypedPropertyDescriptor<PromiseFunction>
+    ) {
         const originalMethod = descriptor.value!;
         // tslint:disable-next-line:no-any no-function-expression
-        descriptor.value = async function (...args: any[]) {
+        descriptor.value = async function(...args: any[]) {
             const progressOptions: ProgressOptions = { location, title };
             // tslint:disable-next-line:no-invalid-this
             const promise = originalMethod.apply(this, args);

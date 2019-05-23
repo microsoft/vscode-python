@@ -1,4 +1,4 @@
-declare module '@nteract/transform-model-debug' {
+declare module "@nteract/transform-model-debug" {
     export default class _default {
         static MIMETYPE: string;
         constructor(...args: any[]);

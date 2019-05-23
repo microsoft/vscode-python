@@ -12,7 +12,7 @@ export interface IWordAtPosition {
     readonly endColumn: number;
 }
 
-export const USUAL_WORD_SEPARATORS = '`~!@#$%^&*()-=+[{]}\\|;:\'",.<>/?';
+export const USUAL_WORD_SEPARATORS = "`~!@#$%^&*()-=+[{]}\\|;:'\",.<>/?";
 
 /**
  * Create a word definition regular expression based on default word separators.
@@ -21,36 +21,38 @@ export const USUAL_WORD_SEPARATORS = '`~!@#$%^&*()-=+[{]}\\|;:\'",.<>/?';
  * The default would look like this:
  * /(-?\d*\.\d\w*)|([^\`\~\!\@\#\$\%\^\&\*\(\)\-\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\?\s]+)/g
  */
-function createWordRegExp(allowInWords: string = ''): RegExp {
-    let source = '(-?\\d*\\.\\d\\w*)|([^';
+function createWordRegExp(allowInWords: string = ""): RegExp {
+    let source = "(-?\\d*\\.\\d\\w*)|([^";
     for (const sep of USUAL_WORD_SEPARATORS) {
         if (allowInWords.indexOf(sep) >= 0) {
             continue;
         }
         source += `\\${sep}`;
     }
-    source += '\\s]+)';
-    return new RegExp(source, 'g');
+    source += "\\s]+)";
+    return new RegExp(source, "g");
 }
 
 // catches numbers (including floating numbers) in the first group, and alphanum in the second
 export const DEFAULT_WORD_REGEXP = createWordRegExp();
 
-export function ensureValidWordDefinition(wordDefinition?: RegExp | null): RegExp {
+export function ensureValidWordDefinition(
+    wordDefinition?: RegExp | null
+): RegExp {
     let result: RegExp = DEFAULT_WORD_REGEXP;
 
-    if (wordDefinition && (wordDefinition instanceof RegExp)) {
+    if (wordDefinition && wordDefinition instanceof RegExp) {
         if (!wordDefinition.global) {
-            let flags = 'g';
+            let flags = "g";
             if (wordDefinition.ignoreCase) {
-                flags += 'i';
+                flags += "i";
             }
             if (wordDefinition.multiline) {
-                flags += 'm';
+                flags += "m";
             }
             // tslint:disable-next-line: no-any
             if ((wordDefinition as any).unicode) {
-                flags += 'u';
+                flags += "u";
             }
             result = new RegExp(wordDefinition.source, flags);
         } else {
@@ -63,11 +65,16 @@ export function ensureValidWordDefinition(wordDefinition?: RegExp | null): RegEx
     return result;
 }
 
-function getWordAtPosFast(column: number, wordDefinition: RegExp, text: string, textOffset: number): IWordAtPosition | null {
+function getWordAtPosFast(
+    column: number,
+    wordDefinition: RegExp,
+    text: string,
+    textOffset: number
+): IWordAtPosition | null {
     // find whitespace enclosed text around column and match from there
 
     const pos = column - 1 - textOffset;
-    const start = text.lastIndexOf(' ', pos - 1) + 1;
+    const start = text.lastIndexOf(" ", pos - 1) + 1;
 
     wordDefinition.lastIndex = start;
     let match: RegExpMatchArray | null = wordDefinition.exec(text);
@@ -86,7 +93,12 @@ function getWordAtPosFast(column: number, wordDefinition: RegExp, text: string, 
     return null;
 }
 
-function getWordAtPosSlow(column: number, wordDefinition: RegExp, text: string, textOffset: number): IWordAtPosition | null {
+function getWordAtPosSlow(
+    column: number,
+    wordDefinition: RegExp,
+    text: string,
+    textOffset: number
+): IWordAtPosition | null {
     // matches all words starting at the beginning
     // of the input until it finds a match that encloses
     // the desired column. slow but correct
@@ -100,7 +112,6 @@ function getWordAtPosSlow(column: number, wordDefinition: RegExp, text: string, 
         if (matchIndex > pos) {
             // |nW -> matched only after the pos
             return null;
-
         } else if (wordDefinition.lastIndex >= pos) {
             // W|W -> match encloses pos
             return {
@@ -115,8 +126,12 @@ function getWordAtPosSlow(column: number, wordDefinition: RegExp, text: string, 
     return null;
 }
 
-export function getWordAtText(column: number, wordDefinition: RegExp, text: string, textOffset: number): IWordAtPosition | null {
-
+export function getWordAtText(
+    column: number,
+    wordDefinition: RegExp,
+    text: string,
+    textOffset: number
+): IWordAtPosition | null {
     // if `words` can contain whitespace character we have to use the slow variant
     // otherwise we use the fast variant of finding a word
     wordDefinition.lastIndex = 0;
@@ -125,11 +140,12 @@ export function getWordAtText(column: number, wordDefinition: RegExp, text: stri
         return null;
     }
     // todo@joh the `match` could already be the (first) word
-    const ret = match[0].indexOf(' ') >= 0
-        // did match a word which contains a space character -> use slow word find
-        ? getWordAtPosSlow(column, wordDefinition, text, textOffset)
-        // sane word definition -> use fast word find
-        : getWordAtPosFast(column, wordDefinition, text, textOffset);
+    const ret =
+        match[0].indexOf(" ") >= 0
+            ? // did match a word which contains a space character -> use slow word find
+              getWordAtPosSlow(column, wordDefinition, text, textOffset)
+            : // sane word definition -> use fast word find
+              getWordAtPosFast(column, wordDefinition, text, textOffset);
 
     // both (getWordAtPosFast and getWordAtPosSlow) leave the wordDefinition-RegExp
     // in an undefined state and to not confuse other users of the wordDefinition
@@ -142,13 +158,18 @@ export function getWordAtText(column: number, wordDefinition: RegExp, text: stri
 export function regExpLeadsToEndlessLoop(regexp: RegExp): boolean {
     // Exit early if it's one of these special cases which are meant to match
     // against an empty string
-    if (regexp.source === '^' || regexp.source === '^$' || regexp.source === '$' || regexp.source === '^\\s*$') {
+    if (
+        regexp.source === "^" ||
+        regexp.source === "^$" ||
+        regexp.source === "$" ||
+        regexp.source === "^\\s*$"
+    ) {
         return false;
     }
 
     // We check against an empty string. If the regular expression doesn't advance
     // (e.g. ends in an endless loop) it will match an empty string.
-    const match = regexp.exec('');
+    const match = regexp.exec("");
     // tslint:disable-next-line: no-any
     return !!(match && <any>regexp.lastIndex === 0);
 }

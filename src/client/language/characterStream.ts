@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
+"use strict";
 
 // tslint:disable-next-line:import-name
-import Char from 'typescript-char';
-import { isLineBreak, isWhiteSpace } from './characters';
-import { TextIterator } from './textIterator';
-import { ICharacterStream, ITextIterator } from './types';
+import Char from "typescript-char";
+import { isLineBreak, isWhiteSpace } from "./characters";
+import { TextIterator } from "./textIterator";
+import { ICharacterStream, ITextIterator } from "./types";
 
 export class CharacterStream implements ICharacterStream {
     private text: ITextIterator;
@@ -15,7 +15,7 @@ export class CharacterStream implements ICharacterStream {
     private _isEndOfStream: boolean;
 
     constructor(text: string | ITextIterator) {
-        this.text = typeof text === 'string' ? new TextIterator(text) : text;
+        this.text = typeof text === "string" ? new TextIterator(text) : text;
         this._position = 0;
         this._currentChar = text.length > 0 ? text.charCodeAt(0) : 0;
         this._isEndOfStream = text.length === 0;
@@ -39,11 +39,15 @@ export class CharacterStream implements ICharacterStream {
     }
 
     public get nextChar(): number {
-        return this.position + 1 < this.text.length ? this.text.charCodeAt(this.position + 1) : 0;
+        return this.position + 1 < this.text.length
+            ? this.text.charCodeAt(this.position + 1)
+            : 0;
     }
 
     public get prevChar(): number {
-        return this.position - 1 >= 0 ? this.text.charCodeAt(this.position - 1) : 0;
+        return this.position - 1 >= 0
+            ? this.text.charCodeAt(this.position - 1)
+            : 0;
     }
 
     public isEndOfStream(): boolean {
@@ -52,7 +56,9 @@ export class CharacterStream implements ICharacterStream {
 
     public lookAhead(offset: number): number {
         const pos = this._position + offset;
-        return pos < 0 || pos >= this.text.length ? 0 : this.text.charCodeAt(pos);
+        return pos < 0 || pos >= this.text.length
+            ? 0
+            : this.text.charCodeAt(pos);
     }
 
     public advance(offset: number) {
@@ -108,7 +114,10 @@ export class CharacterStream implements ICharacterStream {
     }
 
     public isAtString(): boolean {
-        return this.currentChar === Char.SingleQuote || this.currentChar === Char.DoubleQuote;
+        return (
+            this.currentChar === Char.SingleQuote ||
+            this.currentChar === Char.DoubleQuote
+        );
     }
 
     public charCodeAt(index: number): number {
@@ -129,6 +138,8 @@ export class CharacterStream implements ICharacterStream {
             this._position = this.text.length;
         }
 
-        this._currentChar = this._isEndOfStream ? 0 : this.text.charCodeAt(this._position);
+        this._currentChar = this._isEndOfStream
+            ? 0
+            : this.text.charCodeAt(this._position);
     }
 }

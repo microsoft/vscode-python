@@ -1,33 +1,56 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { CancellationToken, FoldingContext, FoldingRange, FoldingRangeKind, FoldingRangeProvider, ProviderResult, Range, TextDocument } from 'vscode';
-import { IterableTextRange } from '../language/iterableTextRange';
-import { IToken, TokenizerMode, TokenType } from '../language/types';
-import { getDocumentTokens } from './providerUtilities';
+import {
+    CancellationToken,
+    FoldingContext,
+    FoldingRange,
+    FoldingRangeKind,
+    FoldingRangeProvider,
+    ProviderResult,
+    Range,
+    TextDocument
+} from "vscode";
+import { IterableTextRange } from "../language/iterableTextRange";
+import { IToken, TokenizerMode, TokenType } from "../language/types";
+import { getDocumentTokens } from "./providerUtilities";
 
 export class DocStringFoldingProvider implements FoldingRangeProvider {
-    public provideFoldingRanges(document: TextDocument, _context: FoldingContext, _token: CancellationToken): ProviderResult<FoldingRange[]> {
+    public provideFoldingRanges(
+        document: TextDocument,
+        _context: FoldingContext,
+        _token: CancellationToken
+    ): ProviderResult<FoldingRange[]> {
         return this.getFoldingRanges(document);
     }
 
     private getFoldingRanges(document: TextDocument) {
-        const tokenCollection = getDocumentTokens(document, document.lineAt(document.lineCount - 1).range.end, TokenizerMode.CommentsAndStrings);
+        const tokenCollection = getDocumentTokens(
+            document,
+            document.lineAt(document.lineCount - 1).range.end,
+            TokenizerMode.CommentsAndStrings
+        );
         const tokens = new IterableTextRange(tokenCollection);
 
         const docStringRanges: FoldingRange[] = [];
         const commentRanges: FoldingRange[] = [];
 
         for (const token of tokens) {
-            const docstringRange = this.getDocStringFoldingRange(document, token);
+            const docstringRange = this.getDocStringFoldingRange(
+                document,
+                token
+            );
             if (docstringRange) {
                 docStringRanges.push(docstringRange);
                 continue;
             }
 
-            const commentRange = this.getSingleLineCommentRange(document, token);
+            const commentRange = this.getSingleLineCommentRange(
+                document,
+                token
+            );
             if (commentRange) {
                 this.buildMultiLineCommentRange(commentRange, commentRanges);
             }
@@ -36,7 +59,10 @@ export class DocStringFoldingProvider implements FoldingRangeProvider {
         this.removeLastSingleLineComment(commentRanges);
         return docStringRanges.concat(commentRanges);
     }
-    private buildMultiLineCommentRange(commentRange: FoldingRange, commentRanges: FoldingRange[]) {
+    private buildMultiLineCommentRange(
+        commentRange: FoldingRange,
+        commentRanges: FoldingRange[]
+    ) {
         if (commentRanges.length === 0) {
             commentRanges.push(commentRange);
             return;
@@ -74,12 +100,18 @@ export class DocStringFoldingProvider implements FoldingRangeProvider {
         }
 
         const startLine = document.lineAt(startPosition);
-        if (startLine.firstNonWhitespaceCharacterIndex !== startPosition.character) {
+        if (
+            startLine.firstNonWhitespaceCharacterIndex !==
+            startPosition.character
+        ) {
             return;
         }
-        const startIndex1 = startLine.text.indexOf('\'\'\'');
+        const startIndex1 = startLine.text.indexOf("'''");
         const startIndex2 = startLine.text.indexOf('"""');
-        if (startIndex1 !== startPosition.character && startIndex2 !== startPosition.character) {
+        if (
+            startIndex1 !== startPosition.character &&
+            startIndex2 !== startPosition.character
+        ) {
             return;
         }
 
@@ -97,11 +129,18 @@ export class DocStringFoldingProvider implements FoldingRangeProvider {
         if (startPosition.line !== endPosition.line) {
             return;
         }
-        if (document.lineAt(startPosition).firstNonWhitespaceCharacterIndex !== startPosition.character) {
+        if (
+            document.lineAt(startPosition).firstNonWhitespaceCharacterIndex !==
+            startPosition.character
+        ) {
             return;
         }
 
         const range = new Range(startPosition, endPosition);
-        return new FoldingRange(range.start.line, range.end.line, FoldingRangeKind.Comment);
+        return new FoldingRange(
+            range.start.line,
+            range.end.line,
+            FoldingRangeKind.Comment
+        );
     }
 }

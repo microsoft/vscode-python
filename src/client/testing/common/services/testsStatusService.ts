@@ -1,17 +1,26 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { inject, injectable } from 'inversify';
-import { Uri } from 'vscode';
-import { TestDataItem } from '../../types';
-import { visitRecursive } from '../testVisitors/visitor';
-import { ITestCollectionStorageService, ITestsStatusUpdaterService, Tests, TestStatus, TestsToRun } from '../types';
+import { inject, injectable } from "inversify";
+import { Uri } from "vscode";
+import { TestDataItem } from "../../types";
+import { visitRecursive } from "../testVisitors/visitor";
+import {
+    ITestCollectionStorageService,
+    ITestsStatusUpdaterService,
+    Tests,
+    TestStatus,
+    TestsToRun
+} from "../types";
 
 @injectable()
 export class TestsStatusUpdaterService implements ITestsStatusUpdaterService {
-    constructor(@inject(ITestCollectionStorageService) private readonly storage: ITestCollectionStorageService) { }
+    constructor(
+        @inject(ITestCollectionStorageService)
+        private readonly storage: ITestCollectionStorageService
+    ) {}
     public updateStatusAsDiscovering(resource: Uri, tests?: Tests): void {
         if (!tests) {
             return;
@@ -20,7 +29,9 @@ export class TestsStatusUpdaterService implements ITestsStatusUpdaterService {
             item.status = TestStatus.Discovering;
             this.storage.update(resource, item);
         };
-        tests.rootTestFolders.forEach(item => visitRecursive(tests, item, visitor));
+        tests.rootTestFolders.forEach(item =>
+            visitRecursive(tests, item, visitor)
+        );
     }
     public updateStatusAsUnknown(resource: Uri, tests?: Tests): void {
         if (!tests) {
@@ -30,7 +41,9 @@ export class TestsStatusUpdaterService implements ITestsStatusUpdaterService {
             item.status = TestStatus.Unknown;
             this.storage.update(resource, item);
         };
-        tests.rootTestFolders.forEach(item => visitRecursive(tests, item, visitor));
+        tests.rootTestFolders.forEach(item =>
+            visitRecursive(tests, item, visitor)
+        );
     }
     public updateStatusAsRunning(resource: Uri, tests?: Tests): void {
         if (!tests) {
@@ -40,13 +53,19 @@ export class TestsStatusUpdaterService implements ITestsStatusUpdaterService {
             item.status = TestStatus.Running;
             this.storage.update(resource, item);
         };
-        tests.rootTestFolders.forEach(item => visitRecursive(tests, item, visitor));
+        tests.rootTestFolders.forEach(item =>
+            visitRecursive(tests, item, visitor)
+        );
     }
-    public updateStatusAsRunningFailedTests(resource: Uri, tests?: Tests): void {
+    public updateStatusAsRunningFailedTests(
+        resource: Uri,
+        tests?: Tests
+    ): void {
         if (!tests) {
             return;
         }
-        const predicate = (item: TestDataItem) => item.status === TestStatus.Fail || item.status === TestStatus.Error;
+        const predicate = (item: TestDataItem) =>
+            item.status === TestStatus.Fail || item.status === TestStatus.Error;
         const visitor = (item: TestDataItem) => {
             if (item.status && predicate(item)) {
                 item.status = TestStatus.Running;
@@ -57,9 +76,15 @@ export class TestsStatusUpdaterService implements ITestsStatusUpdaterService {
             ...tests.testFunctions.map(f => f.testFunction).filter(predicate),
             ...tests.testSuites.map(f => f.testSuite).filter(predicate)
         ];
-        failedItems.forEach(failedItem => visitRecursive(tests, failedItem, visitor));
+        failedItems.forEach(failedItem =>
+            visitRecursive(tests, failedItem, visitor)
+        );
     }
-    public updateStatusAsRunningSpecificTests(resource: Uri, testsToRun: TestsToRun, tests?: Tests): void {
+    public updateStatusAsRunningSpecificTests(
+        resource: Uri,
+        testsToRun: TestsToRun,
+        tests?: Tests
+    ): void {
         if (!tests) {
             return;
         }
@@ -74,7 +99,10 @@ export class TestsStatusUpdaterService implements ITestsStatusUpdaterService {
         };
         itemsRunning.forEach(item => visitRecursive(tests, item, visitor));
     }
-    public updateStatusOfRunningTestsAsIdle(resource: Uri, tests?: Tests): void {
+    public updateStatusOfRunningTestsAsIdle(
+        resource: Uri,
+        tests?: Tests
+    ): void {
         if (!tests) {
             return;
         }
@@ -84,13 +112,18 @@ export class TestsStatusUpdaterService implements ITestsStatusUpdaterService {
                 this.storage.update(resource, item);
             }
         };
-        tests.rootTestFolders.forEach(item => visitRecursive(tests, item, visitor));
+        tests.rootTestFolders.forEach(item =>
+            visitRecursive(tests, item, visitor)
+        );
     }
     public triggerUpdatesToTests(resource: Uri, tests?: Tests): void {
         if (!tests) {
             return;
         }
-        const visitor = (item: TestDataItem) => this.storage.update(resource, item);
-        tests.rootTestFolders.forEach(item => visitRecursive(tests, item, visitor));
+        const visitor = (item: TestDataItem) =>
+            this.storage.update(resource, item);
+        tests.rootTestFolders.forEach(item =>
+            visitRecursive(tests, item, visitor)
+        );
     }
 }

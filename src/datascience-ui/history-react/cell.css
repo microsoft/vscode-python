@@ -5,7 +5,10 @@
 }
 
 .cell-wrapper-noneditable {
-    border-bottom-color: var(--override-widget-background, var(--vscode-editorGroupHeader-tabsBackground));
+    border-bottom-color: var(
+        --override-widget-background,
+        var(--vscode-editorGroupHeader-tabsBackground)
+    );
     border-bottom-style: solid;
     border-bottom-width: 1px;
 }
@@ -17,18 +20,18 @@
 }
 
 .cell-outer {
-    display:grid;
+    display: grid;
     grid-template-columns: auto 1fr;
     grid-column-gap: 3px;
     width: 100%;
 }
 
 .cell-outer-editable {
-    display:grid;
+    display: grid;
     grid-template-columns: auto 1fr;
     grid-column-gap: 3px;
     width: 100%;
-    margin-top:16px;
+    margin-top: 16px;
 }
 
 .content-div {
@@ -50,14 +53,17 @@
     margin: 0;
 }
 
-.cell-input pre{
+.cell-input pre {
     margin: 0px;
     padding: 0px;
 }
 
 .cell-output {
     margin-top: 5px;
-    background: var(--override-widget-background, var(--vscode-notifications-background));
+    background: var(
+        --override-widget-background,
+        var(--vscode-notifications-background)
+    );
     white-space: pre-wrap;
     font-family: monospace;
 }
@@ -77,7 +83,10 @@
 }
 
 .cell-output thead {
-    border-bottom-color: var(--override-foreground, var(--vscode-editor-foreground));
+    border-bottom-color: var(
+        --override-foreground,
+        var(--vscode-editor-foreground)
+    );
     border-bottom-style: solid;
     border-bottom-width: 1px;
     vertical-align: bottom;
@@ -86,29 +95,34 @@
 .cell-output tr,
 .cell-output th,
 .cell-output td {
-  text-align: right;
-  vertical-align: middle;
-  padding: 0.5em 0.5em;
-  line-height: normal;
-  white-space: normal;
-  max-width: none;
-  border: none;
+    text-align: right;
+    vertical-align: middle;
+    padding: 0.5em 0.5em;
+    line-height: normal;
+    white-space: normal;
+    max-width: none;
+    border: none;
 }
 .cell-output th {
-  font-weight: bold;
+    font-weight: bold;
 }
 .cell-output tbody tr:nth-child(even) {
-  background: var(--override-background, var(--vscode-editor-background)); /* Force to white because the default color for output is gray */
+    background: var(
+        --override-background,
+        var(--vscode-editor-background)
+    ); /* Force to white because the default color for output is gray */
 }
 .cell-output tbody tr:hover {
-  background: var(--override-selection-background, var(--vscode-editor-selectionBackground));
+    background: var(
+        --override-selection-background,
+        var(--vscode-editor-selectionBackground)
+    );
 }
 .cell-output * + table {
-  margin-top: 1em;
+    margin-top: 1em;
 }
 
 .center-img {
     display: block;
     margin: 0 auto;
 }
-

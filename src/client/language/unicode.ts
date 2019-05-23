@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
+"use strict";
 
 // tslint:disable:no-require-imports no-var-requires
 
@@ -19,16 +19,16 @@ export enum UnicodeCategory {
 }
 
 export function getUnicodeCategory(ch: number): UnicodeCategory {
-    const unicodeLu = require('unicode/category/Lu');
-    const unicodeLl = require('unicode/category/Ll');
-    const unicodeLt = require('unicode/category/Lt');
-    const unicodeLo = require('unicode/category/Lo');
-    const unicodeLm = require('unicode/category/Lm');
-    const unicodeNl = require('unicode/category/Nl');
-    const unicodeMn = require('unicode/category/Mn');
-    const unicodeMc = require('unicode/category/Mc');
-    const unicodeNd = require('unicode/category/Nd');
-    const unicodePc = require('unicode/category/Pc');
+    const unicodeLu = require("unicode/category/Lu");
+    const unicodeLl = require("unicode/category/Ll");
+    const unicodeLt = require("unicode/category/Lt");
+    const unicodeLo = require("unicode/category/Lo");
+    const unicodeLm = require("unicode/category/Lm");
+    const unicodeNl = require("unicode/category/Nl");
+    const unicodeMn = require("unicode/category/Mn");
+    const unicodeMc = require("unicode/category/Mc");
+    const unicodeNd = require("unicode/category/Nd");
+    const unicodePc = require("unicode/category/Pc");
 
     if (unicodeLu[ch]) {
         return UnicodeCategory.UppercaseLetter;

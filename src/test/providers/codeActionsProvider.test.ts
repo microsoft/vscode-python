@@ -1,14 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-'use strict';
+"use strict";
 
-import { expect } from 'chai';
-import * as TypeMoq from 'typemoq';
-import { CancellationToken, CodeActionContext, CodeActionKind, Range, TextDocument } from 'vscode';
-import { PythonCodeActionProvider } from '../../client/providers/codeActionsProvider';
+import { expect } from "chai";
+import * as TypeMoq from "typemoq";
+import {
+    CancellationToken,
+    CodeActionContext,
+    CodeActionKind,
+    Range,
+    TextDocument
+} from "vscode";
+import { PythonCodeActionProvider } from "../../client/providers/codeActionsProvider";
 
-suite('CodeAction Provider', () => {
+suite("CodeAction Provider", () => {
     let codeActionsProvider: PythonCodeActionProvider;
     let document: TypeMoq.IMock<TextDocument>;
     let range: TypeMoq.IMock<Range>;
@@ -23,7 +29,7 @@ suite('CodeAction Provider', () => {
         token = TypeMoq.Mock.ofType<CancellationToken>();
     });
 
-    test('Ensure it always returns a source.organizeImports CodeAction', async () => {
+    test("Ensure it always returns a source.organizeImports CodeAction", async () => {
         const codeActions = await codeActionsProvider.provideCodeActions(
             document.object,
             range.object,
@@ -32,13 +38,18 @@ suite('CodeAction Provider', () => {
         );
 
         if (!codeActions) {
-            throw Error(`codeActionsProvider.provideCodeActions did not return an array (it returned ${codeActions})`);
+            throw Error(
+                `codeActionsProvider.provideCodeActions did not return an array (it returned ${codeActions})`
+            );
         }
 
         const organizeImportsCodeAction = codeActions.filter(
-            codeAction => codeAction.kind === CodeActionKind.SourceOrganizeImports
+            codeAction =>
+                codeAction.kind === CodeActionKind.SourceOrganizeImports
         );
         expect(organizeImportsCodeAction).to.have.length(1);
-        expect(organizeImportsCodeAction[0].kind).to.eq(CodeActionKind.SourceOrganizeImports);
+        expect(organizeImportsCodeAction[0].kind).to.eq(
+            CodeActionKind.SourceOrganizeImports
+        );
     });
 });

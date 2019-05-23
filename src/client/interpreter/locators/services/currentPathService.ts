@@ -1,15 +1,19 @@
 // tslint:disable:no-require-imports no-var-requires underscore-consistent-invocation no-unnecessary-callback-wrapper
-import { inject, injectable } from 'inversify';
-import { Uri } from 'vscode';
-import { traceError, traceInfo } from '../../../common/logger';
-import { IFileSystem, IPlatformService } from '../../../common/platform/types';
-import { IProcessServiceFactory } from '../../../common/process/types';
-import { IConfigurationService } from '../../../common/types';
-import { OSType } from '../../../common/utils/platform';
-import { IServiceContainer } from '../../../ioc/types';
-import { IInterpreterHelper, InterpreterType, PythonInterpreter } from '../../contracts';
-import { IPythonInPathCommandProvider } from '../types';
-import { CacheableLocatorService } from './cacheableLocatorService';
+import { inject, injectable } from "inversify";
+import { Uri } from "vscode";
+import { traceError, traceInfo } from "../../../common/logger";
+import { IFileSystem, IPlatformService } from "../../../common/platform/types";
+import { IProcessServiceFactory } from "../../../common/process/types";
+import { IConfigurationService } from "../../../common/types";
+import { OSType } from "../../../common/utils/platform";
+import { IServiceContainer } from "../../../ioc/types";
+import {
+    IInterpreterHelper,
+    InterpreterType,
+    PythonInterpreter
+} from "../../contracts";
+import { IPythonInPathCommandProvider } from "../types";
+import { CacheableLocatorService } from "./cacheableLocatorService";
 
 /**
  * Locates the currently configured Python interpreter.
@@ -23,11 +27,13 @@ export class CurrentPathService extends CacheableLocatorService {
 
     public constructor(
         @inject(IInterpreterHelper) private helper: IInterpreterHelper,
-        @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
-        @inject(IPythonInPathCommandProvider) private readonly pythonCommandProvider: IPythonInPathCommandProvider,
+        @inject(IProcessServiceFactory)
+        private readonly processServiceFactory: IProcessServiceFactory,
+        @inject(IPythonInPathCommandProvider)
+        private readonly pythonCommandProvider: IPythonInPathCommandProvider,
         @inject(IServiceContainer) serviceContainer: IServiceContainer
     ) {
-        super('CurrentPathService', serviceContainer);
+        super("CurrentPathService", serviceContainer);
         this.fs = serviceContainer.get<IFileSystem>(IFileSystem);
     }
 
@@ -37,14 +43,16 @@ export class CurrentPathService extends CacheableLocatorService {
      * Called by VS Code to indicate it is done with the resource.
      */
     // tslint:disable-next-line:no-empty
-    public dispose() { }
+    public dispose() {}
 
     /**
      * Return the located interpreters.
      *
      * This is used by CacheableLocatorService.getInterpreters().
      */
-    protected getInterpretersImplementation(resource?: Uri): Promise<PythonInterpreter[]> {
+    protected getInterpretersImplementation(
+        resource?: Uri
+    ): Promise<PythonInterpreter[]> {
         return this.suggestionsFromKnownPaths(resource);
     }
 
@@ -52,22 +60,44 @@ export class CurrentPathService extends CacheableLocatorService {
      * Return the located interpreters.
      */
     private async suggestionsFromKnownPaths(resource?: Uri) {
-        const configSettings = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource);
-        const pathsToCheck = [...this.pythonCommandProvider.getCommands(), { command: configSettings.pythonPath }];
+        const configSettings = this.serviceContainer
+            .get<IConfigurationService>(IConfigurationService)
+            .getSettings(resource);
+        const pathsToCheck = [
+            ...this.pythonCommandProvider.getCommands(),
+            { command: configSettings.pythonPath }
+        ];
 
-        const pythonPaths = Promise.all(pathsToCheck.map(item => this.getInterpreter(item)));
-        return pythonPaths
-            .then(interpreters => interpreters.filter(item => item.length > 0))
-            // tslint:disable-next-line:promise-function-async
-            .then(interpreters => Promise.all(interpreters.map(interpreter => this.getInterpreterDetails(interpreter))))
-            .then(interpreters => interpreters.filter(item => !!item).map(item => item!));
+        const pythonPaths = Promise.all(
+            pathsToCheck.map(item => this.getInterpreter(item))
+        );
+        return (
+            pythonPaths
+                .then(interpreters =>
+                    interpreters.filter(item => item.length > 0)
+                )
+                // tslint:disable-next-line:promise-function-async
+                .then(interpreters =>
+                    Promise.all(
+                        interpreters.map(interpreter =>
+                            this.getInterpreterDetails(interpreter)
+                        )
+                    )
+                )
+                .then(interpreters =>
+                    interpreters.filter(item => !!item).map(item => item!)
+                )
+        );
     }
 
     /**
      * Return the information about the identified interpreter binary.
      */
-    private async getInterpreterDetails(pythonPath: string): Promise<PythonInterpreter | undefined> {
-        return this.helper.getInterpreterInformation(pythonPath)
+    private async getInterpreterDetails(
+        pythonPath: string
+    ): Promise<PythonInterpreter | undefined> {
+        return this.helper
+            .getInterpreterInformation(pythonPath)
             .then(details => {
                 if (!details) {
                     return;
@@ -84,43 +114,78 @@ export class CurrentPathService extends CacheableLocatorService {
     /**
      * Return the path to the interpreter (or the default if not found).
      */
-    private async getInterpreter(options: { command: string; args?: string[] }) {
+    private async getInterpreter(options: {
+        command: string;
+        args?: string[];
+    }) {
         try {
             const processService = await this.processServiceFactory.create();
             const args = Array.isArray(options.args) ? options.args : [];
-            return processService.exec(options.command, args.concat(['-c', 'import sys;print(sys.executable)']), {})
+            return processService
+                .exec(
+                    options.command,
+                    args.concat(["-c", "import sys;print(sys.executable)"]),
+                    {}
+                )
                 .then(output => output.stdout.trim())
                 .then(async value => {
-                    if (value.length > 0 && await this.fs.fileExists(value)) {
+                    if (value.length > 0 && (await this.fs.fileExists(value))) {
                         return value;
                     }
-                    traceError(`Detection of Python Interpreter for Command ${options.command} and args ${args.join(' ')} failed as file ${value} does not exist`);
-                    return '';
+                    traceError(
+                        `Detection of Python Interpreter for Command ${
+                            options.command
+                        } and args ${args.join(
+                            " "
+                        )} failed as file ${value} does not exist`
+                    );
+                    return "";
                 })
                 .catch(_ex => {
-                    traceInfo(`Detection of Python Interpreter for Command ${options.command} and args ${args.join(' ')} failed`);
-                    return '';
-                });    // Ignore exceptions in getting the executable.
+                    traceInfo(
+                        `Detection of Python Interpreter for Command ${
+                            options.command
+                        } and args ${args.join(" ")} failed`
+                    );
+                    return "";
+                }); // Ignore exceptions in getting the executable.
         } catch (ex) {
-            traceError(`Detection of Python Interpreter for Command ${options.command} failed`, ex);
-            return '';    // Ignore exceptions in getting the executable.
+            traceError(
+                `Detection of Python Interpreter for Command ${
+                    options.command
+                } failed`,
+                ex
+            );
+            return ""; // Ignore exceptions in getting the executable.
         }
     }
 }
 
 @injectable()
-export class PythonInPathCommandProvider implements IPythonInPathCommandProvider {
-    constructor(@inject(IPlatformService) private readonly platform: IPlatformService) { }
+export class PythonInPathCommandProvider
+    implements IPythonInPathCommandProvider {
+    constructor(
+        @inject(IPlatformService) private readonly platform: IPlatformService
+    ) {}
     public getCommands(): { command: string; args?: string[] }[] {
-        const paths = ['python3.7', 'python3.6', 'python3', 'python2', 'python']
-            .map(item => { return { command: item }; });
+        const paths = [
+            "python3.7",
+            "python3.6",
+            "python3",
+            "python2",
+            "python"
+        ].map(item => {
+            return { command: item };
+        });
         if (this.platform.osType !== OSType.Windows) {
             return paths;
         }
 
-        const versions = ['3.7', '3.6', '3', '2'];
-        return paths.concat(versions.map(version => {
-            return { command: 'py', args: [`-${version}`] };
-        }));
+        const versions = ["3.7", "3.6", "3", "2"];
+        return paths.concat(
+            versions.map(version => {
+                return { command: "py", args: [`-${version}`] };
+            })
+        );
     }
 }

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-declare module '@phosphor/coreutils' {
+declare module "@phosphor/coreutils" {
     /**
      * A type alias for a JSON primitive.
      */
@@ -29,11 +29,15 @@ declare module '@phosphor/coreutils' {
     /**
      * A type definition for a readonly JSON array.
      */
-    export interface ReadonlyJSONArray extends ReadonlyArray<ReadonlyJSONValue> {}
+    export interface ReadonlyJSONArray
+        extends ReadonlyArray<ReadonlyJSONValue> {}
     /**
      * A type alias for a readonly JSON value.
      */
-    export type ReadonlyJSONValue = JSONPrimitive | ReadonlyJSONObject | ReadonlyJSONArray;
+    export type ReadonlyJSONValue =
+        | JSONPrimitive
+        | ReadonlyJSONObject
+        | ReadonlyJSONArray;
     /**
      * The namespace for JSON-specific functions.
      */
@@ -71,7 +75,9 @@ declare module '@phosphor/coreutils' {
          * @returns `true` if the value is a an object, `false` otherwise.
          */
         function isObject(value: JSONValue): value is JSONObject;
-        function isObject(value: ReadonlyJSONValue): value is ReadonlyJSONObject;
+        function isObject(
+            value: ReadonlyJSONValue
+        ): value is ReadonlyJSONObject;
         /**
          * Compare two JSON values for deep equality.
          *
@@ -81,7 +87,10 @@ declare module '@phosphor/coreutils' {
          *
          * @returns `true` if the values are equivalent, `false` otherwise.
          */
-        function deepEqual(first: ReadonlyJSONValue, second: ReadonlyJSONValue): boolean;
+        function deepEqual(
+            first: ReadonlyJSONValue,
+            second: ReadonlyJSONValue
+        ): boolean;
         /**
          * Create a deep copy of a JSON value.
          *

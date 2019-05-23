@@ -1,4 +1,4 @@
-declare module '@nteract/transform-geojson' {
+declare module "@nteract/transform-geojson" {
     export = index;
     const index: any;
 }

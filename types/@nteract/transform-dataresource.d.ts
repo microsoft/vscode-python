@@ -1,4 +1,4 @@
-declare module '@nteract/transform-dataresource' {
+declare module "@nteract/transform-dataresource" {
     export = index;
     const index: any;
 }
