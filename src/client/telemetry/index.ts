@@ -368,4 +368,12 @@ export interface IEventNamePropertyMapping {
     [EventName.UNITTEST_NAVIGATE_TEST_FUNCTION]: { focus_code: boolean };
     [EventName.UNITTEST_NAVIGATE_TEST_SUITE]: { focus_code: boolean };
     [EventName.UNITTEST_EXPLORER_WORK_SPACE_COUNT]: { count: number };
+    /*
+    Telemetry event sent with details of Jedi Memory usage.
+    memory - Memory usage of Process in kb.
+    limit - Upper bound for memory usage of Jedi process.
+    isUserDefinedLimit - Whether the user has configfured the upper bound limit.
+    restart - Whether to restart the Jedi Process (i.e. memory > limit).
+    */
+    [EventName.JEDI_MEMORY]: { memory: number; limit: number; isUserDefinedLimit: boolean; restart: boolean };
 }
