@@ -4,7 +4,7 @@
 import { assert } from 'chai';
 
 import { generateCells } from '../../client/datascience/cellFactory';
-import { formatStreamText } from '../../client/datascience/common';
+import { formatStreamText, stripComments } from '../../client/datascience/common';
 import { InputHistory } from '../../datascience-ui/history-react/inputHistory';
 
 // tslint:disable: max-func-body-length
@@ -219,5 +219,14 @@ class Pizza(object):
         assert.equal(cells[1].data.cell_type, 'code', 'code cell not generated');
         assert.equal(cells[1].data.source.length, 7, 'Lines for code not emitted');
         assert.equal(cells[1].data.source[3], '        self.toppings = toppings\n', 'Lines for cell not emitted');
+
+        // Non comments tests
+        let nonComments = stripComments(multilineCode);
+        assert.ok(nonComments.startsWith('myvar = """ # Lorem Ipsum'), 'Variable set to multiline string not working');
+        nonComments = stripComments(multilineTwo);
+        assert.equal(nonComments, '', 'Multline comment is not being stripped');
+        nonComments = stripComments(multilineQuoteInFunc);
+        assert.equal(nonComments.splitLines().length, 6, 'Splitting quote in func wrong number of lines');
         });
+
 });
