@@ -290,6 +290,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const errorBackgroundColor = getSettings().errorBackgroundColor;
         const actualErrorBackgroundColor = errorBackgroundColor ? errorBackgroundColor : '#FFFFFF';
         const maxTextSize = maxOutputSize && maxOutputSize < 10000 && maxOutputSize > 0 ? maxOutputSize : undefined;
+        const executionCount = this.getInputExecutionCount(this.state.cellVMs);
 
         return (
             <div className='edit-panel'>
@@ -309,6 +310,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                         ref={this.saveEditCellRef}
                         gotoCode={noop}
                         delete={noop}
+                        editExecutionCount={executionCount}
                         onCodeCreated={this.editableCodeCreated}
                         onCodeChange={this.codeChange}
                         monacoTheme={this.state.monacoTheme}

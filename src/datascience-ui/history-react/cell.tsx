@@ -21,7 +21,6 @@ import './cell.css';
 import { CellButton } from './cellButton';
 import { Code } from './code';
 import { CollapseButton } from './collapseButton';
-import { CommandPrompt } from './commandPrompt';
 import { ExecutionCount } from './executionCount';
 import { Image, ImageName } from './image';
 import { InputHistory } from './inputHistory';
@@ -41,6 +40,7 @@ interface ICellProps {
     errorBackgroundColor: string;
     monacoTheme: string | undefined;
     editorOptions: monacoEditor.editor.IEditorOptions;
+    editExecutionCount: number;
     gotoCode(): void;
     delete(): void;
     submitNewCode(code: string): void;
@@ -187,7 +187,7 @@ export class Cell extends React.Component<ICellProps> {
             return this.props.cellVM.editable ?
                 (
                     <div className='controls-div'>
-                        <CommandPrompt />
+                        <ExecutionCount isBusy={busy} count={this.props.editExecutionCount.toString()} visible={this.isCodeCell()} />
                     </div>
                 ) : (
                     <div className='controls-div'>

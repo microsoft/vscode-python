@@ -75,6 +75,7 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
                     baseTheme={baseTheme}
                     codeTheme={this.props.codeTheme}
                     showWatermark={false}
+                    editExecutionCount={0}
                     errorBackgroundColor={actualErrorBackgroundColor}
                     gotoCode={() => this.props.gotoCellCode(index)}
                     delete={() => this.props.deleteCell(index)}
