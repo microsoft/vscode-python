@@ -11,7 +11,7 @@ import { IJupyterVariable } from '../../client/datascience/types';
 import { getLocString } from '../react-common/locReactSide';
 import { getSettings } from '../react-common/settingsReactSide';
 import { CollapseButton } from './collapseButton';
-import { VariableExplorerButtonCellFormatter } from './variableExplorerButtonCellFormatter';
+import { IButtonCellValue, VariableExplorerButtonCellFormatter } from './variableExplorerButtonCellFormatter';
 import { CellStyle, VariableExplorerCellFormatter } from './variableExplorerCellFormatter';
 import { VariableExplorerEmptyRowsView } from './variableExplorerEmptyRows';
 
@@ -49,7 +49,11 @@ const MaxStringCompare = 400;
 
 interface IGridRow {
     // tslint:disable-next-line:no-any
-    [name: string]: any;
+    name: string;
+    type: string;
+    size: string;
+    value: string | undefined;
+    buttons: IButtonCellValue;
 }
 
 export class VariableExplorer extends React.Component<IVariableExplorerProps, IVariableExplorerState> {
@@ -176,9 +180,9 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                 // when showing a data viewer
                 const numberOfColumns = this.getColumnCountFromShape(newVariable.shape);
 
-                const newGridRow = {...newGridRows[i],
-                    button: {
-                        ...newGridRows[i].button,
+                const newGridRow: IGridRow = {...newGridRows[i],
+                    buttons: {
+                        ...newGridRows[i].buttons,
                         numberOfColumns
                     },
                     value: newVariable.value,
@@ -284,7 +288,8 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
 
     // Get the numerical comparison value for a column
     private getComparisonValue(gridRow: IGridRow, sortColumn: string | number): number {
-        return (sortColumn === 'size') ? this.sizeColumnComparisonValue(gridRow) : gridRow[sortColumn];
+        // tslint:disable-next-line: no-any
+        return (sortColumn === 'size') ? this.sizeColumnComparisonValue(gridRow) : (gridRow as any)[sortColumn];
     }
 
     // The size column needs special casing
@@ -331,10 +336,10 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         }
     }
 
-    private getRow = (index: number) => {
+    private getRow = (index: number) : IGridRow => {
         if (index >= 0 && index < this.state.gridRows.length) {
             return this.state.gridRows[index];
         }
-        return {buttons: '', name: '', type: '', size: '', value: ''};
+        return {buttons: { supportsDataExplorer: false, name: '', numberOfColumns: 0}, name: '', type: '', size: '', value: ''};
     }
 }

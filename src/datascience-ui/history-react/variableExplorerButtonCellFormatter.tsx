@@ -8,7 +8,7 @@ import './variableExplorerButtonCellFormatter.css';
 
 import * as React from 'react';
 
-interface IButtonCellValue {
+export interface IButtonCellValue {
     supportsDataExplorer: boolean;
     name: string;
     numberOfColumns: number;
