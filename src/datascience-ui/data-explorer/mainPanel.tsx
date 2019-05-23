@@ -16,6 +16,7 @@ import {
 } from '../../client/datascience/data-viewing/types';
 import { IJupyterVariable } from '../../client/datascience/types';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
+import { Progress } from '../react-common/progress';
 import { StyleInjector } from '../react-common/styleInjector';
 import { cellFormatterFunc } from './cellFormatter';
 import { ISlickGridAdd, ISlickRow, ReactSlickGrid } from './reactSlickGrid';
@@ -110,11 +111,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             this.sendMessage(DataViewerMessages.CompletedData);
         }
 
+        const progressBar = this.state.totalRowCount > this.state.fetchedRowCount ? <Progress /> : undefined;
+
         return (
             <div className='main-panel' ref={this.updateContainer}>
                 <StyleInjector
                     expectingDark={this.props.baseTheme !== 'vscode-light'}
                     postOffice={this.postOffice} />
+                {progressBar}
                 {this.container && this.state.totalRowCount > 0 && this.renderGrid()}
             </div>
         );
