@@ -62,7 +62,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             redoStack : [],
             submittedText: false,
             history: new InputHistory(),
-            contentTop: 24,
+            //contentTop: 24,
             editCellVM: getSettings && getSettings().allowInput ? createEditableCellVM(1) : undefined,
             editorOptions: this.computeEditorOptions()
         };
@@ -130,6 +130,39 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         const baseTheme = this.computeBaseTheme();
 
+        //return (
+            //<div id='main-panel' ref={this.updateSelf}>
+                //<StyleInjector
+                    //expectingDark={baseTheme !== 'vscode-light'}
+                    //postOffice={this.postOffice}
+                    //darkChanged={this.darkChanged}
+                    //monacoThemeChanged={this.monacoThemeChanged}
+                    //ref={this.styleInjectorRef} />
+                //<div className='main-panel-header'>
+                    //<div className='main-panel-inner'>
+                    //<div className='main-panel-inner-relative'>
+                    //<div className='main-panel-scrollable'>
+                        //{this.renderHeaderPanel(baseTheme)}
+                        //</div>
+                        //</div>
+                    //</div>
+                //</div>
+                //<div className='main-panel-content'>
+                    //<div className='main-panel-inner'>
+                    //<div className='main-panel-inner-relative'>
+                        //<div className='main-panel-scrollable'>
+                            //{this.renderContentPanel(baseTheme)}
+                        //</div>
+                    //</div>
+                    //</div>
+                //</div>
+                //<div className='main-panel-footer'>
+                    //<div className='main-panel-inner'>
+                        //{this.renderFooterPanel(baseTheme)}
+                    //</div>
+                //</div>
+            //</div>
+        //);
         return (
             <div id='main-panel' ref={this.updateSelf}>
                 <StyleInjector
@@ -138,22 +171,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     darkChanged={this.darkChanged}
                     monacoThemeChanged={this.monacoThemeChanged}
                     ref={this.styleInjectorRef} />
-                <div className='main-panel-header'>
-                    <div className='main-panel-inner'>
-                        {this.renderHeaderPanel(baseTheme)}
-                    </div>
+                <div id='main-panel-header'>
+                    {this.renderHeaderPanel(baseTheme)}
                 </div>
-                <div className='main-panel-content'>
-                    <div className='main-panel-inner'>
-                        <div className='main-panel-scrollable'>
-                            {this.renderContentPanel(baseTheme)}
-                        </div>
-                    </div>
+                <div id='main-panel-content'>
+                    {this.renderContentPanel(baseTheme)}
                 </div>
-                <div className='main-panel-footer'>
-                    <div className='main-panel-inner'>
-                        {this.renderFooterPanel(baseTheme)}
-                    </div>
+                <div id='main-panel-footer'>
+                    {this.renderFooterPanel(baseTheme)}
                 </div>
             </div>
         );
@@ -346,9 +371,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     // Called by the header control when size changes (such as expanding variables)
-    private onHeaderHeightChange = (newHeight: number) => {
-        this.setState({contentTop: newHeight});
-    }
+    //private onHeaderHeightChange = (newHeight: number) => {
+        ////this.setState({contentTop: newHeight});
+    //}
 
     private darkChanged = (newDark: boolean) => {
         // update our base theme if allowed. Don't do this
@@ -393,7 +418,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return {
             editorOptions: this.state.editorOptions,
             baseTheme: baseTheme,
-            contentTop: this.state.contentTop,
+            //contentTop: this.state.contentTop,
             cellVMs: this.state.cellVMs,
             history: this.state.history,
             testMode: this.props.testMode,
@@ -430,7 +455,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         canRedo: this.canRedo(),
         refreshVariables: this.refreshVariables,
         variableExplorerToggled: this.variableExplorerToggled,
-        onHeightChange: this.onHeaderHeightChange,
+        //onHeightChange: this.onHeaderHeightChange,
         baseTheme: baseTheme
        };
     }

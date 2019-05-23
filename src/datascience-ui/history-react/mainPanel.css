@@ -8,13 +8,43 @@ body, html {
     overflow: hidden;
 }
 
-#main-panel {
+/*#main-panel {
     background: var(--override-background, var(--vscode-editor-background));
     color: var(--override-foreground, var(--vscode-editor-foreground));
     height: 100%;
     width: 100%;
     overflow: hidden;
     display: table;
+}*/
+
+#main-panel {
+    background: var(--override-background, var(--vscode-editor-background));
+    color: var(--override-foreground, var(--vscode-editor-foreground));
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+    "header"
+    "content"
+    "footer";
+    height: 100%;
+    width: 100%;
+    position: absolute;
+}
+
+#main-panel-header {
+    grid-area: header;
+}
+#main-panel-content {
+    grid-area: content;
+    max-height: 100%;
+    overflow: auto;
+}
+#main-panel-footer {
+    grid-area: footer;
 }
 
 .hide {
@@ -33,7 +63,7 @@ body, html {
     border-top-style: solid;
     border-top-width: 1px;
 }
-
+/*
 .main-panel-header, .main-panel-content, .main-panel-footer {
     display: table-row;
 }
@@ -42,10 +72,20 @@ body, html {
     display: table-cell;
 }
 
-.main-panel-content .main-panel-inner {
+.main-panel-inner-relative {
     height: 100%;
     position: relative;
 }
+
+ .main-panel-content .main-panel-inner {
+    height: 100%;
+    position: relative;
+}
+
+.main-panel-header .main-panel-inner {
+    height: 100%;
+    position: relative;
+} 
 
 .main-panel-scrollable {
     position: absolute;
@@ -53,4 +93,4 @@ body, html {
     top: 0; bottom: 0;
     overflow-y: auto;
     overflow-x: none;
-}
+} */

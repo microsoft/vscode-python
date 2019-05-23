@@ -4,7 +4,7 @@
 import './headerPanel.css';
 
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
+//import * as ReactDOM from 'react-dom';
 
 import { getLocString } from '../react-common/locReactSide';
 import { Progress } from '../react-common/progress';
@@ -37,7 +37,7 @@ export interface IHeaderPanelProps {
     showDataExplorer(targetVariable: string): void;
     refreshVariables(): void;
     variableExplorerToggled(open: boolean): void;
-    onHeightChange(newHeight: number): void;
+    //onHeightChange(newHeight: number): void;
 }
 
 export class HeaderPanel extends React.Component<IHeaderPanelProps> {
@@ -80,21 +80,21 @@ export class HeaderPanel extends React.Component<IHeaderPanelProps> {
                 <VariableExplorer baseTheme={this.props.baseTheme}
                  showDataExplorer={this.props.showDataExplorer}
                  refreshVariables={this.props.refreshVariables}
-                 onHeightChange={this.onVariableHeightChange}
+                 //onHeightChange={this.onVariableHeightChange}
                  variableExplorerToggled={this.props.variableExplorerToggled}
                  ref={this.props.variableExplorerRef} />
             </div>
         );
     }
 
-    private onVariableHeightChange = () => {
-        const divElement = ReactDOM.findDOMNode(this) as HTMLDivElement;
+    //private onVariableHeightChange = () => {
+        //const divElement = ReactDOM.findDOMNode(this) as HTMLDivElement;
 
-        if (divElement) {
-            const computeHeight = divElement.offsetHeight;
-            this.props.onHeightChange(computeHeight);
-        }
-    }
+        //if (divElement) {
+            //const computeHeight = divElement.offsetHeight;
+            //this.props.onHeightChange(computeHeight);
+        //}
+    //}
 
     private renderExtraButtons = () => {
         if (!this.props.skipDefault) {

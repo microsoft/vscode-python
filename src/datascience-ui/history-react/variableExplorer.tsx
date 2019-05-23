@@ -4,7 +4,7 @@
 import './variableExplorer.css';
 
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
+//import * as ReactDOM from 'react-dom';
 
 import { IJupyterVariable } from '../../client/datascience/types';
 import { getLocString } from '../react-common/locReactSide';
@@ -21,7 +21,7 @@ import './variableExplorerGrid.less';
 interface IVariableExplorerProps {
     baseTheme: string;
     refreshVariables(): void;
-    onHeightChange(): void;
+    //onHeightChange(): void;
     showDataExplorer(targetVariable: string): void;
     variableExplorerToggled(open: boolean): void;
 }
@@ -127,12 +127,12 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             }
         }
 
-        this.updateHeight();
+        //this.updateHeight();
     }
 
-    public componentDidUpdate = () => {
-        this.updateHeight();
-    }
+    //public componentDidUpdate = () => {
+        //this.updateHeight();
+    //}
 
     // New variable data passed in via a ref
     // Help to keep us independent of main history window state if we choose to break out the variable explorer
@@ -291,19 +291,19 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         }
     }
 
-    private updateHeight = () => {
-        // Make sure we check for a new height so we don't get into an update loop
-        const divElement = ReactDOM.findDOMNode(this) as HTMLDivElement;
+    //private updateHeight = () => {
+        //// Make sure we check for a new height so we don't get into an update loop
+        //const divElement = ReactDOM.findDOMNode(this) as HTMLDivElement;
 
-        if (divElement) {
-            const newHeight = divElement.offsetHeight;
+        //if (divElement) {
+            //const newHeight = divElement.offsetHeight;
 
-            if (this.state.height !== newHeight) {
-                this.setState({height: newHeight});
-                this.props.onHeightChange();
-            }
-        }
-    }
+            //if (this.state.height !== newHeight) {
+                //this.setState({height: newHeight});
+                //this.props.onHeightChange();
+            //}
+        //}
+    //}
 
     private getRow = (index: number) => {
         if (index >= 0 && index < this.state.gridRows.length) {
