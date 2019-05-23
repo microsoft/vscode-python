@@ -1,3 +1,7 @@
 .number-formatter {
     text-align: right;
 }
+
+.cell-formatter {
+    margin: -1px 0px 0px 0px;
+}

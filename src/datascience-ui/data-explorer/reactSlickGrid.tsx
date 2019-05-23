@@ -19,6 +19,8 @@ import 'slickgrid/slick.dataview';
 import 'slickgrid/slick.grid';
 
 import 'slickgrid/slick.grid.css';
+
+// Make sure our css comes after the slick grid css. We override some of its styles.
 import './reactSlickGrid.css';
 
 export interface ISlickRow extends Slick.SlickData {
@@ -39,6 +41,7 @@ export interface ISlickGridProps {
 interface ISlickGridState {
     grid?: Slick.Grid<ISlickRow>;
     showingFilters?: boolean;
+    fontSize: number;
 }
 
 interface ISlickGridColumnFilter {
@@ -54,7 +57,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
     constructor(props: ISlickGridProps) {
         super(props);
-        this.state = { };
+        this.state = { fontSize: 15 };
         this.containerRef = React.createRef<HTMLDivElement>();
         this.props.rowsAdded.subscribe(this.addedRows);
     }
@@ -63,6 +66,9 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         window.addEventListener('resize', this.windowResized);
 
         if (this.containerRef.current) {
+            // Compute font size
+            const fontSize = parseInt(getComputedStyle(this.containerRef.current).getPropertyValue('--code-font-size'), 10);
+
             // Setup options for the grid
             const options : Slick.GridOptions<Slick.SlickData> = {
                 asyncEditorLoading: true,
@@ -70,12 +76,16 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 enableCellNavigation: true,
                 showHeaderRow: true,
                 enableColumnReorder: false,
-                explicitInitialization: true
+                explicitInitialization: true,
+                viewportClass: 'react-grid',
+                rowHeight: fontSize + 2
             };
 
-            // Transform columns so they are sortable
+            // Transform columns so they are sortable and stylable
             const columns = this.props.columns.map(c => {
                 c.sortable = true;
+                c.headerCssClass = 'react-grid-header-cell';
+                c.cssClass = 'react-grid-cell';
                 return c;
             });
 
@@ -116,7 +126,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             grid.setHeaderRowVisibility(false);
 
             // Save in our state
-            this.setState({ grid });
+            this.setState({ grid, fontSize });
         }
 
         // Act like a resize happened to refresh the layout.
@@ -133,19 +143,34 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         }
     }
 
-    public componentDidUpdate = () => {
+    public componentDidUpdate = (_prevProps: ISlickGridProps, prevState: ISlickGridState) => {
         if (this.state.showingFilters && this.state.grid) {
             this.state.grid.setHeaderRowVisibility(true);
         } else if (this.state.showingFilters === false && this.state.grid) {
             this.state.grid.setHeaderRowVisibility(false);
+        }
+
+        // If this is our first time setting the grid, we need to dynanically modify the styles
+        // that the slickGrid generates for the rows. It's eliminating some of the height
+        if (!prevState.grid && this.state.grid && this.containerRef.current) {
+            const gridName = (this.state.grid as any).getUID() as string;
+            const document = this.containerRef.current.ownerDocument;
+            if (document) {
+                const cssOverrideNode = document.createElement('style');
+                const rule = `.${gridName} .slick-cell {height: ${this.state.fontSize + 2}px;}`;
+                cssOverrideNode.setAttribute('type', 'text/css');
+                cssOverrideNode.setAttribute('rel', 'stylesheet');
+                cssOverrideNode.appendChild(document.createTextNode(rule));
+                document.head.appendChild(cssOverrideNode);
+            }
         }
     }
 
     public render() {
         return (
             <div className='outer-container'>
-                <button onClick={this.clickFilterButton}>Filter</button>
-                <div className='slickgrid-container' ref={this.containerRef}>
+                <button className='react-grid-filter-button' onClick={this.clickFilterButton}>Filter Rows</button>
+                <div className='react-grid-container' ref={this.containerRef}>
                 </div>
             </div>
         );

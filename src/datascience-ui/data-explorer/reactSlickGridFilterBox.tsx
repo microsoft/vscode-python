@@ -4,7 +4,7 @@
 
 import * as React from 'react';
 
-import './reactSlickGrid.css';
+import './reactSlickGridFilterBox.css';
 
 interface IFilterProps {
     column: Slick.Column<Slick.SlickData>;

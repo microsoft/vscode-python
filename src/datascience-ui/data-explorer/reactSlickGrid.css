@@ -3,7 +3,53 @@
     height:100%;
 }
 
-.slickgrid-container {
+.react-grid-container {
     height:94%; /* Slick grid has a bug where there's no space left for the bottom scroll bar */
+    border-color: var(--vscode-editor-inactiveSelectionBackground);
+    border-style: solid;
+    border-width: 1px;
 }
 
+.react-grid-filter-button {
+    background: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+    padding: 5px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin:2px;
+}
+
+.react-grid-filter-button:focus {
+    outline: none;
+}
+ 
+.react-grid-header-cell {
+    padding: 0px 4px;
+    background-color: var(--vscode-debugToolBar-background);
+    color: var(--vscode-editor-foreground);
+    text-align: left;
+    font-weight: bold;
+    border-right-color: var(--vscode-editor-inactiveSelectionBackground);
+}
+
+.react-grid-cell {
+    padding: 0px 4px;
+    background-color: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground);
+    border-bottom-color: var(--vscode-editor-inactiveSelectionBackground);
+    border-right-color: var(--vscode-editor-inactiveSelectionBackground);
+    border-right-style: solid;
+    box-sizing: border-box;
+} 
+
+/* Some overrides necessary to get the colors we want */
+.slick-headerrow-column {
+    background-color: var(--vscode-debugToolBar-background);
+    border-right-color: var(--vscode-editor-inactiveSelectionBackground);
+    border-right-style: solid;
+}
+
+.slick-header-column.ui-state-default, .slick-group-header-column.ui-state-default {
+    border-right-color: var(--vscode-editor-inactiveSelectionBackground);
+}
