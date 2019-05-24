@@ -27,6 +27,7 @@ export interface IContentPanelProps {
     deleteCell(index: number): void;
     onCodeChange(changes: monacoEditor.editor.IModelContentChange[], cellId: string, modelId: string): void;
     onCodeCreated(code: string, file: string, cellId: string, modelId: string): void;
+    openLink(uri: monacoEditor.Uri): void;
 }
 
 export class ContentPanel extends React.Component<IContentPanelProps> {
@@ -82,6 +83,7 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
                     onCodeChange={this.props.onCodeChange}
                     onCodeCreated={this.props.onCodeCreated}
                     monacoTheme={this.props.monacoTheme}
+                    openLink={this.props.openLink}
                     />
             </ErrorBoundary>
         );

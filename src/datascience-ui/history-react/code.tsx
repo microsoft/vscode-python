@@ -26,6 +26,7 @@ export interface ICodeProps {
     onSubmit(code: string): void;
     onCreated(code: string, modelId: string): void;
     onChange(changes: monacoEditor.editor.IModelContentChange[], modelId: string): void;
+    openLink(uri: monacoEditor.Uri): void;
 }
 
 interface ICodeState {
@@ -100,6 +101,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
                     language='python'
                     editorMounted={this.editorDidMount}
                     options={options}
+                    openLink={this.props.openLink}
                 />
                 <div className={waterMarkClass}>{this.getWatermarkString()}</div>
             </div>

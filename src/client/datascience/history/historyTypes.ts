@@ -53,6 +53,7 @@ export namespace HistoryMessages {
     export const LoadOnigasmAssemblyResponse = 'load_onigasm_assembly_response';
     export const LoadTmLanguageRequest = 'load_tmlanguage_request';
     export const LoadTmLanguageResponse = 'load_tmlanguage_response';
+    export const OpenLink = 'open_link';
 }
 
 // These are the messages that will mirror'd to guest/hosts in
@@ -198,4 +199,5 @@ export class IHistoryMapping {
     public [HistoryMessages.LoadOnigasmAssemblyResponse]: Buffer;
     public [HistoryMessages.LoadTmLanguageRequest]: never | undefined;
     public [HistoryMessages.LoadTmLanguageResponse]: string | undefined;
+    public [HistoryMessages.OpenLink]: string | undefined;
 }

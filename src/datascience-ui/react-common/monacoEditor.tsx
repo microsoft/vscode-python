@@ -19,6 +19,7 @@ export interface IMonacoEditorProps {
     options: monacoEditor.editor.IEditorConstructionOptions;
     testMode?: boolean;
     editorMounted(editor: monacoEditor.editor.IStandaloneCodeEditor): void;
+    openLink(uri: monacoEditor.Uri): void;
 }
 
 interface IMonacoEditorState {
@@ -74,6 +75,13 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             const model = editor.getModel();
             if (model) {
                 model.setEOL(monacoEditor.editor.EndOfLineSequence.LF);
+            }
+
+            // Register a link opener so when a user clicks on a link we can navigate to it.
+            // tslint:disable-next-line: no-any
+            const openerService = (editor.getContribution('editor.linkDetector') as any).openerService;
+            if (openerService && openerService.open) {
+                openerService.open = this.props.openLink;
             }
 
             // Save the editor and the model in our state.
