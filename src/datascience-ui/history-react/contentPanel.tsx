@@ -14,7 +14,6 @@ import { InputHistory } from './inputHistory';
 
 export interface IContentPanelProps {
     baseTheme: string;
-    //contentTop: number;
     cellVMs: ICellViewModel[];
     history: InputHistory;
     testMode?: boolean;
