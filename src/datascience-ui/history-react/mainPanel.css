@@ -8,35 +8,32 @@ body, html {
     overflow: hidden;
 }
 
-/*#main-panel {
-    background: var(--override-background, var(--vscode-editor-background));
-    color: var(--override-foreground, var(--vscode-editor-foreground));
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
-    display: table;
-}*/
-
 #main-panel {
     background: var(--override-background, var(--vscode-editor-background));
     color: var(--override-foreground, var(--vscode-editor-foreground));
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
     display: grid;
-    grid-template-rows: auto 1fr auto;
+    grid-template-rows: auto auto 1fr auto;
     grid-template-columns: 1fr;
     grid-template-areas:
-    "header"
+    "toolbar"
+    "variable"
     "content"
     "footer";
     height: 100%;
     width: 100%;
     position: absolute;
+    overflow: hidden;
 }
 
-#main-panel-header {
-    grid-area: header;
+#main-panel-toolbar {
+    grid-area: toolbar;
+    justify-self: end;
+    overflow: hidden;
+}
+
+#main-panel-variable {
+    grid-area: variable;
+    overflow: auto;
 }
 #main-panel-content {
     grid-area: content;
@@ -45,6 +42,7 @@ body, html {
 }
 #main-panel-footer {
     grid-area: footer;
+    overflow: hidden;
 }
 
 .hide {

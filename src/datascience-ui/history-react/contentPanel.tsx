@@ -44,6 +44,16 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
     }
 
     public render() {
+        //return(
+            //<div id='content-panel-div'>
+                //<div id='cell-table'>
+                    //<div id='cell-table-body'>
+                        //{this.renderCells()}
+                    //</div>
+                //</div>
+                //<div ref={this.updateBottom}/>
+            //</div>
+        //);
         return(
             <div id='content-panel-div'>
                 <div id='cell-table'>
