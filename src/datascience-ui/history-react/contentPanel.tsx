@@ -30,7 +30,7 @@ export interface IContentPanelProps {
 }
 
 export class ContentPanel extends React.Component<IContentPanelProps> {
-    private bottom: HTMLDivElement | undefined;
+    private bottomRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
     constructor(prop: IContentPanelProps) {
         super(prop);
     }
@@ -51,7 +51,7 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
                         {this.renderCells()}
                     </div>
                 </div>
-                <div ref={this.updateBottom}/>
+                <div ref={this.bottomRef}/>
             </div>
         );
     }
@@ -88,20 +88,10 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
     }
 
     private scrollToBottom = () => {
-        if (this.bottom && this.bottom.scrollIntoView && !this.props.skipNextScroll && !this.props.testMode) {
-            // Delay this until we are about to render. React hasn't setup the size of the bottom element
-            // yet so we need to delay. 10ms looks good from a user point of view
-            setTimeout(() => {
-                if (this.bottom) {
-                    this.bottom.scrollIntoView({behavior: 'smooth', block : 'end', inline: 'end'});
-                }
-            }, 100);
-        }
-    }
-
-    private updateBottom = (newBottom: HTMLDivElement) => {
-        if (newBottom !== this.bottom) {
-            this.bottom = newBottom;
+        if (this.bottomRef.current && !this.props.skipNextScroll && !this.props.testMode) {
+            // Force auto here as smooth scrolling can be canceled by updates to the window
+            // from elsewhere (and keeping track of these would make this hard to maintain)
+            this.bottomRef.current.scrollIntoView({behavior: 'auto', block: 'start', inline: 'nearest'});
         }
     }
 
