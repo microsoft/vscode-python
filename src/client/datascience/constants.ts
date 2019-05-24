@@ -122,7 +122,8 @@ export namespace Settings {
 }
 
 export namespace CodeSnippits {
-    export const ChangeDirectory = ['{0}', 'import os', 'try:', '\tos.chdir(os.path.join(os.getcwd(), \'{1}\'))', '\tprint(os.getcwd())', 'except:', '\tpass', ''];
+    export const ChangeDirectory = ['{0}', '{1}', 'import os', 'try:', '\tos.chdir(os.path.join(os.getcwd(), \'{2}\'))', '\tprint(os.getcwd())', 'except:', '\tpass', ''];
+    export const ChangeDirectoryCommentIdentifier = '# ms-python.python added'; // Not translated so can compare.
 }
 
 export namespace Identifiers {

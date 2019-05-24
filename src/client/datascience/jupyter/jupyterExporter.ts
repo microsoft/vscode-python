@@ -8,11 +8,12 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 
 import { IWorkspaceService } from '../../common/application/types';
-import { IFileSystem } from '../../common/platform/types';
+import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IConfigurationService, ILogger } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { CellMatcher } from '../cellMatcher';
+import { concatMultilineString } from '../common';
 import { CodeSnippits, Identifiers } from '../constants';
 import { CellState, ICell, IJupyterExecution, INotebookExporter, ISysInfo } from '../types';
 
@@ -24,7 +25,9 @@ export class JupyterExporter implements INotebookExporter {
         @inject(ILogger) private logger: ILogger,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IFileSystem) private fileSystem: IFileSystem) {
+        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IPlatformService) private readonly platform: IPlatformService
+        ) {
     }
 
     public dispose() {
@@ -75,7 +78,7 @@ export class JupyterExporter implements INotebookExporter {
         const changeDirectory = await this.calculateDirectoryChange(file, cells);
 
         if (changeDirectory) {
-            const exportChangeDirectory = CodeSnippits.ChangeDirectory.join(os.EOL).format(localize.DataScience.exportChangeDirectoryComment(), changeDirectory);
+            const exportChangeDirectory = CodeSnippits.ChangeDirectory.join(os.EOL).format(localize.DataScience.exportChangeDirectoryComment(), CodeSnippits.ChangeDirectoryCommentIdentifier, changeDirectory);
 
             const cell: ICell = {
                 data: {
@@ -117,21 +120,30 @@ export class JupyterExporter implements INotebookExporter {
     }
 
     private calculateDirectoryChange = async (notebookFile: string, cells: ICell[]): Promise<string | undefined> => {
+        // Make sure we don't already have a cell with a ChangeDirectory comment in it.
         let directoryChange: string | undefined;
-        const notebookFilePath = path.dirname(notebookFile);
-        // First see if we have a workspace open, this only works if we have a workspace root to be relative to
-        if (this.workspaceService.hasWorkspaceFolders) {
-            const workspacePath = await this.firstWorkspaceFolder(cells);
+        const haveChangeAlready = cells.find(c => concatMultilineString(c.data.source).includes(CodeSnippits.ChangeDirectoryCommentIdentifier));
+        if (!haveChangeAlready) {
+            const notebookFilePath = path.dirname(notebookFile);
+            // First see if we have a workspace open, this only works if we have a workspace root to be relative to
+            if (this.workspaceService.hasWorkspaceFolders) {
+                const workspacePath = await this.firstWorkspaceFolder(cells);
 
-            // Make sure that we have everything that we need here
-            if (workspacePath && path.isAbsolute(workspacePath) && notebookFilePath && path.isAbsolute(notebookFilePath)) {
-                directoryChange = path.relative(notebookFilePath, workspacePath);
+                // Make sure that we have everything that we need here
+                if (workspacePath && path.isAbsolute(workspacePath) && notebookFilePath && path.isAbsolute(notebookFilePath)) {
+                    directoryChange = path.relative(notebookFilePath, workspacePath);
+                }
             }
         }
 
         // If path.relative can't calculate a relative path, then it just returns the full second path
         // so check here, we only want this if we were able to calculate a relative path, no network shares or drives
         if (directoryChange && !path.isAbsolute(directoryChange)) {
+            // Escape windows path chars so they end up in the source escaped
+            if (this.platform.isWindows) {
+                directoryChange = directoryChange.replace('\\', '\\\\');
+            }
+
             return directoryChange;
         } else {
             return undefined;
