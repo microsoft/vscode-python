@@ -182,6 +182,15 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         );
     }
 
+    public isSuggesting() : boolean {
+        // This should mean our widgetParent has some height
+        if (this.widgetParent && this.widgetParent.firstChild && this.widgetParent.firstChild.childNodes.length >= 2) {
+            const suggestWidget = this.widgetParent.firstChild.childNodes.item(1) as HTMLDivElement;
+            return suggestWidget && suggestWidget.className.includes('visible');
+        }
+        return false;
+    }
+
     private windowResized = () => {
         if (this.resizeTimer) {
             clearTimeout(this.resizeTimer);
