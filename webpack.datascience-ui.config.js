@@ -3,7 +3,9 @@ const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const FixDefaultImportPlugin = require('webpack-fix-default-import-plugin');
 const path = require('path');
-const CopyWebpackPlugin = require('copy-webpack-plugin')
+const CopyWebpackPlugin = require('copy-webpack-plugin');
+const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin')
 
 const configFileName = 'tsconfig.datascience-ui.json';
 
@@ -21,6 +23,9 @@ module.exports = [
         // We need to use one where source is embedded, due to webviews (they restrict resources to specific schemes,
         //  this seems to prevent chrome from downloading the source maps)
         devtool: 'eval-source-map',
+        optimization: {
+            minimizer: [new TerserPlugin()]
+        },
         node: {
             fs: 'empty'
         },
@@ -33,6 +38,9 @@ module.exports = [
                 { from: './**/*.css', to: '.' },
                 { from: './**/*theme*.json', to: '.' }
             ], { context: 'src' }),
+            new MonacoWebpackPlugin({
+                languages: [] // force to empty so onigasm will be used
+            })
         ],
         resolve: {
             // Add '.ts' and '.tsx' as resolvable extensions.

@@ -24,12 +24,13 @@ export function concatMultilineString(str: nbformat.MultilineString): string {
 }
 
 // Strip out comment lines from code
-export function stripComments(str: nbformat.MultilineString): nbformat.MultilineString {
-    if (Array.isArray(str)) {
-        return extractNonComments(str);
-    } else {
-        return extractNonComments([str]);
-    }
+export function stripComments(str: string): string {
+    let result: string = '';
+    parseForComments(
+        str.splitLines({trim: false, removeEmptyEntries: false}),
+        (_s) => noop,
+        (s) => result = result.concat(`${s}\n`));
+    return result;
 }
 
 export function formatStreamText(str: string): string {
@@ -77,6 +78,7 @@ export function generateMarkdownFromCodeLines(lines: string[]) {
     return appendLineFeed(extractComments(lines.slice(1)));
 }
 
+// tslint:disable-next-line: cyclomatic-complexity
 export function parseForComments(
     lines: string[],
     foundCommentLine: (s: string, i: number) => void,
@@ -109,15 +111,20 @@ export function parseForComments(
             }
         // Not inside either, see if starting a quote
         } else if (isMultilineQuote && !isMultilineComment) {
-            insideMultilineQuote = isMultilineQuote;
+            // Make sure doesn't begin and end on the same line.
+            const beginQuote = trim.indexOf(isMultilineQuote);
+            const endQuote = trim.lastIndexOf(isMultilineQuote);
+            insideMultilineQuote = endQuote !== beginQuote ? undefined : isMultilineQuote;
             foundNonCommentLine(l, pos);
         // Not starting a quote, might be starting a comment
         } else if (isMultilineComment) {
-            insideMultilineComment = isMultilineComment;
+            // See if this line ends the comment too or not
+            const endIndex = trim.indexOf(isMultilineComment, 3);
+            insideMultilineComment = endIndex >= 0 ? undefined : isMultilineComment;
 
             // Might end with text too
             if (trim.length > 3) {
-                foundCommentLine(trim.slice(3), pos);
+                foundCommentLine(trim.slice(3, endIndex >= 0 ? endIndex : undefined), pos);
             }
         } else {
             // Normal line
@@ -134,11 +141,5 @@ export function parseForComments(
 function extractComments(lines: string[]): string[] {
     const result: string[] = [];
     parseForComments(lines, (s) => result.push(s), (_s) => noop());
-    return result;
-}
-
-function extractNonComments(lines: string[]): string[] {
-    const result: string[] = [];
-    parseForComments(lines, (_s) => noop, (s) => result.push(s));
     return result;
 }

@@ -21,6 +21,7 @@ export class MockJupyterSession implements IJupyterSession {
     private outstandingRequestTokenSources: CancellationTokenSource[] = [];
     private executes: string[] = [];
     private forceRestartTimeout : boolean = false;
+    private completionTimeout: number = 1;
 
     constructor(cellDictionary: Record<string, ICell>, timedelay: number) {
         this.dict = cellDictionary;
@@ -75,12 +76,42 @@ export class MockJupyterSession implements IJupyterSession {
         return request;
     }
 
+    public async requestComplete(_content: KernelMessage.ICompleteRequest): Promise<KernelMessage.ICompleteReplyMsg | undefined> {
+        await sleep(this.completionTimeout);
+
+        return {
+            content: {
+                matches: ['printly'], // This keeps this in the intellisense when the editor pairs down results
+                cursor_start: 0,
+                cursor_end: 7,
+                status: 'ok',
+                metadata: {}
+            },
+            channel: 'shell',
+            header: {
+                username: 'foo',
+                version: '1',
+                session: '1',
+                msg_id: '1',
+                msg_type: 'complete'
+            },
+            parent_header: {
+            },
+            metadata: {
+            }
+        };
+    }
+
     public dispose(): Promise<void> {
         return sleep(10);
     }
 
     public getExecutes() : string [] {
         return this.executes;
+    }
+
+    public setCompletionTimeout(timeout: number) {
+        this.completionTimeout = timeout;
     }
 
     private findCell = (code : string) : ICell => {

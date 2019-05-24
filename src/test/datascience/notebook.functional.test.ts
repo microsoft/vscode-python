@@ -661,15 +661,15 @@ df.head()`,
             },
             {
                 // Important to test as multiline cell magics only work if they are the first item in the cell
-                // Doesn't work with a comment though.
                 markdownRegEx: undefined,
                 code:
-                    `%%bash
+                    `#%%
+%%bash
 echo 'hello'`,
                 mimeType: 'text/plain',
                 cellType: 'code',
                 result: 'hello',
-                verifyValue: (d) => assert.ok(d.includes('hello'), 'Multiline cell magic incorrect')
+                verifyValue: (d) => assert.ok(d.includes('hello'), `Multiline cell magic incorrect - ${d}`)
             },
             {
                 // Test shell command should work on PC / Mac / Linux

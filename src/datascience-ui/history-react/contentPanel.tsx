@@ -3,7 +3,9 @@
 'use strict';
 import './contentPanel.css';
 
+import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
+
 import { noop } from '../../test/core';
 import { ErrorBoundary } from '../react-common/errorBoundary';
 import { getSettings } from '../react-common/settingsReactSide';
@@ -12,21 +14,22 @@ import { InputHistory } from './inputHistory';
 
 export interface IContentPanelProps {
     baseTheme: string;
-    contentTop: number;
     cellVMs: ICellViewModel[];
     history: InputHistory;
     testMode?: boolean;
     codeTheme: string;
     submittedText: boolean;
     skipNextScroll: boolean;
-    saveEditCellRef(ref: Cell | null): void;
+    monacoTheme: string | undefined;
+    editorOptions: monacoEditor.editor.IEditorOptions;
     gotoCellCode(index: number): void;
     deleteCell(index: number): void;
-    submitInput(code: string): void;
+    onCodeChange(changes: monacoEditor.editor.IModelContentChange[], cellId: string, modelId: string): void;
+    onCodeCreated(code: string, file: string, cellId: string, modelId: string): void;
 }
 
 export class ContentPanel extends React.Component<IContentPanelProps> {
-    private bottom: HTMLDivElement | undefined;
+    private bottomRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
     constructor(prop: IContentPanelProps) {
         super(prop);
     }
@@ -40,20 +43,14 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
     }
 
     public render() {
-        const newContentTop = `${this.props.contentTop.toString()}px solid transparent`;
-
-        const newBorderStyle: React.CSSProperties = {
-            borderTop: newContentTop
-        };
-
         return(
-            <div id='content-panel-div' style={newBorderStyle}>
+            <div id='content-panel-div'>
                 <div id='cell-table'>
                     <div id='cell-table-body'>
                         {this.renderCells()}
                     </div>
                 </div>
-                <div ref={this.updateBottom}/>
+                <div ref={this.bottomRef}/>
             </div>
         );
     }
@@ -67,38 +64,33 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
         return this.props.cellVMs.map((cellVM: ICellViewModel, index: number) =>
             <ErrorBoundary key={index}>
                 <Cell
-                    history={cellVM.editable ? this.props.history : undefined}
+                    editorOptions={this.props.editorOptions}
+                    history={undefined}
                     maxTextSize={maxTextSize}
-                    autoFocus={document.hasFocus()}
+                    autoFocus={false}
                     testMode={this.props.testMode}
                     cellVM={cellVM}
-                    submitNewCode={this.props.submitInput}
+                    submitNewCode={noop}
                     baseTheme={baseTheme}
                     codeTheme={this.props.codeTheme}
-                    showWatermark={!this.props.submittedText}
+                    showWatermark={false}
+                    editExecutionCount={0}
                     errorBackgroundColor={actualErrorBackgroundColor}
-                    ref={(r) => cellVM.editable ? this.props.saveEditCellRef(r) : noop()}
                     gotoCode={() => this.props.gotoCellCode(index)}
-                    delete={() => this.props.deleteCell(index)}/>
+                    delete={() => this.props.deleteCell(index)}
+                    onCodeChange={this.props.onCodeChange}
+                    onCodeCreated={this.props.onCodeCreated}
+                    monacoTheme={this.props.monacoTheme}
+                    />
             </ErrorBoundary>
         );
     }
 
     private scrollToBottom = () => {
-        if (this.bottom && this.bottom.scrollIntoView && !this.props.skipNextScroll && !this.props.testMode) {
-            // Delay this until we are about to render. React hasn't setup the size of the bottom element
-            // yet so we need to delay. 10ms looks good from a user point of view
-            setTimeout(() => {
-                if (this.bottom) {
-                    this.bottom.scrollIntoView({behavior: 'smooth', block : 'end', inline: 'end'});
-                }
-            }, 100);
-        }
-    }
-
-    private updateBottom = (newBottom: HTMLDivElement) => {
-        if (newBottom !== this.bottom) {
-            this.bottom = newBottom;
+        if (this.bottomRef.current && !this.props.skipNextScroll && !this.props.testMode) {
+            // Force auto here as smooth scrolling can be canceled by updates to the window
+            // from elsewhere (and keeping track of these would make this hard to maintain)
+            this.bottomRef.current.scrollIntoView({behavior: 'auto', block: 'start', inline: 'nearest'});
         }
     }
 

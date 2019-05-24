@@ -5,6 +5,8 @@
 - [ ] Create a branch against `master` for a pull request
 - [ ] Update the version in [`package.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json)
 - [ ] Run `npm install` to make sure [`package-lock.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json) is up-to-date
+- [ ] Update `requirements.txt` to point to latest release version of `ptvsd`.
+- [ ] Update `languageServerVersion` in `package.json` to point to the latest version of the Language Server.
 - [ ] Update [`CHANGELOG.md`](https://github.com/Microsoft/vscode-python/blob/master/CHANGELOG.md)
    - [ ] Create a new section for this release
    - [ ] Copy over the "Thanks" section from the previous release and make sure it's up-to-date

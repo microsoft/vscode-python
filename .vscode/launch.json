@@ -3,6 +3,22 @@
     "version": "0.1.0",
     "configurations": [
         {
+            "name": "Extension inside container",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}", "${workspaceFolder}/data"
+            ],
+            "stopOnEntry": false,
+            "smartStep": true,
+            "sourceMaps": true,
+            "outFiles": [
+                "${workspaceFolder}/out/**/*"
+            ],
+            "preLaunchTask": "Compile"
+        },
+        {
             "name": "Python: Current File with iPython",
             "type": "python",
             "request": "launch",

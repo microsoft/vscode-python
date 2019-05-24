@@ -14,13 +14,14 @@ import { Disposable } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { ILiveShareApi } from '../../common/application/types';
-import { CancellationError } from '../../common/cancellation';
+import { Cancellation, CancellationError } from '../../common/cancellation';
 import { traceInfo, traceWarning } from '../../common/logger';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { generateCells } from '../cellFactory';
+import { CellMatcher } from '../cellMatcher';
 import { concatMultilineString } from '../common';
 import { Identifiers } from '../constants';
 import {
@@ -30,6 +31,7 @@ import {
     IDataScience,
     IJupyterSession,
     IJupyterSessionManager,
+    INotebookCompletion,
     INotebookServer,
     INotebookServerLaunchInfo,
     InterruptResult
@@ -397,6 +399,28 @@ export class JupyterServerBase implements INotebookServer {
         };
     }
 
+    public async getCompletion(cellCode: string, offsetInCode: number, cancelToken?: CancellationToken) : Promise<INotebookCompletion> {
+        if (this.session) {
+            const result = await Cancellation.race(() => this.session!.requestComplete({
+                code: cellCode,
+                cursor_pos: offsetInCode
+            }), cancelToken);
+            if (result && result.content) {
+                return {
+                    matches: result.content.matches,
+                    cursor: {
+                        start: result.content.cursor_start,
+                        end: result.content.cursor_end
+                    },
+                    metadata: result.content.metadata
+                };
+            }
+        }
+
+        // Default is just say session was disposed
+        throw new Error(localize.DataScience.sessionDisposed());
+    }
+
     private finishUncompletedCells() {
         const copyPending = [...this.pendingCellSubscriptions];
         copyPending.forEach(c => c.cancel());
@@ -491,10 +515,11 @@ export class JupyterServerBase implements INotebookServer {
     private generateRequest = (code: string, silent?: boolean): Kernel.IFuture | undefined => {
         //this.logger.logInformation(`Executing code in jupyter : ${code}`)
         try {
+            const cellMatcher = new CellMatcher(this.configService.getSettings().datascience);
             return this.session ? this.session.requestExecute(
                 {
-                    // Replace windows line endings with unix line endings.
-                    code: code.replace(/\r\n/g, '\n'),
+                    // Remove the cell marker if we have one.
+                    code: cellMatcher.stripMarkers(code),
                     stop_on_error: false,
                     allow_stdin: false,
                     store_history: !silent // Silent actually means don't output anything. Store_history is what affects execution_count

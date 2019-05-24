@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 import * as assert from 'assert';
-import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { Disposable, TextDocument, TextEditor } from 'vscode';
@@ -16,6 +15,7 @@ import { HistoryMessages } from '../../client/datascience/history/historyTypes';
 import { IHistory, IHistoryProvider } from '../../client/datascience/types';
 import { CellButton } from '../../datascience-ui/history-react/cellButton';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
+//import { asyncDump } from '../common/asyncDump';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import {
@@ -64,8 +64,9 @@ suite('DataScience History output tests', () => {
         await ioc.dispose();
     });
 
+    // Uncomment this to debug hangs on exit
     // suiteTeardown(() => {
-    //     asyncDump();
+    //      asyncDump();
     // });
 
     async function getOrCreateHistory(): Promise<IHistory> {
@@ -169,7 +170,7 @@ df.head()`;
 df = pd.read_csv("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
 df.head()`;
         const matPlotLib = 'import matplotlib.pyplot as plt\r\nimport numpy as np\r\nx = np.linspace(0,20,100)\r\nplt.plot(x, np.sin(x))\r\nplt.show()';
-        const matPlotLibResults = await fs.readFile(path.join(srcDirectory(), 'matplotlib.txt'), 'utf8');
+        const matPlotLibResults = 'data:image/png;base64';
         const spinningCursor = `import sys
 import time
 

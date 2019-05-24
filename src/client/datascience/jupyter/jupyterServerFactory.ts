@@ -14,6 +14,7 @@ import {
     IConnection,
     IDataScience,
     IJupyterSessionManager,
+    INotebookCompletion,
     INotebookServer,
     INotebookServerLaunchInfo,
     InterruptResult
@@ -150,5 +151,10 @@ export class JupyterServerFactory implements INotebookServer {
     public async getSysInfo() : Promise<ICell | undefined> {
         const server = await this.serverFactory.get();
         return server.getSysInfo();
+    }
+
+    public async getCompletion(cellCode: string, offsetInCode: number, cancelToken?: CancellationToken) : Promise<INotebookCompletion> {
+        const server = await this.serverFactory.get();
+        return server.getCompletion(cellCode, offsetInCode, cancelToken);
     }
 }

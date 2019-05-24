@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
 
 import { nbformat } from '@jupyterlab/coreutils';
 import { JSONObject } from '@phosphor/coreutils';
 import ansiToHtml from 'ansi-to-html';
+import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
 // tslint:disable-next-line:match-default-export-name import-name
 import JSONTree from 'react-json-tree';
@@ -21,7 +21,6 @@ import './cell.css';
 import { CellButton } from './cellButton';
 import { Code } from './code';
 import { CollapseButton } from './collapseButton';
-import { CommandPrompt } from './commandPrompt';
 import { ExecutionCount } from './executionCount';
 import { Image, ImageName } from './image';
 import { InputHistory } from './inputHistory';
@@ -39,9 +38,14 @@ interface ICellProps {
     history: InputHistory | undefined;
     showWatermark: boolean;
     errorBackgroundColor: string;
+    monacoTheme: string | undefined;
+    editorOptions: monacoEditor.editor.IEditorOptions;
+    editExecutionCount: number;
     gotoCode(): void;
     delete(): void;
     submitNewCode(code: string): void;
+    onCodeChange(changes: monacoEditor.editor.IModelContentChange[], cellId: string, modelId: string): void;
+    onCodeCreated(code: string, file: string, cellId: string, modelId: string): void;
 }
 
 export interface ICellViewModel {
@@ -121,11 +125,12 @@ export class Cell extends React.Component<ICellProps> {
         const allowsPlainInput = getSettings().showCellInputCode || this.props.cellVM.directInput || this.props.cellVM.editable;
         const shouldRender = allowsPlainInput || (results && results.length > 0);
         const cellOuterClass = this.props.cellVM.editable ? 'cell-outer-editable' : 'cell-outer';
+        const cellWrapperClass = this.props.cellVM.editable ? 'cell-wrapper' : 'cell-wrapper cell-wrapper-noneditable';
 
         // Only render if we are allowed to.
         if (shouldRender) {
             return (
-                <div className='cell-wrapper' role='row' onClick={this.onMouseClick}>
+                <div className={cellWrapperClass} role='row' onClick={this.onMouseClick}>
                     <MenuBar baseTheme={this.props.baseTheme}>
                         <CellButton baseTheme={this.props.baseTheme} onClick={this.props.delete} tooltip={this.getDeleteString()} hidden={this.props.cellVM.editable}>
                             <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.Cancel} />
@@ -182,7 +187,7 @@ export class Cell extends React.Component<ICellProps> {
             return this.props.cellVM.editable ?
                 (
                     <div className='controls-div'>
-                        <CommandPrompt />
+                        <ExecutionCount isBusy={busy} count={this.props.editExecutionCount.toString()} visible={this.isCodeCell()} />
                     </div>
                 ) : (
                     <div className='controls-div'>
@@ -208,6 +213,7 @@ export class Cell extends React.Component<ICellProps> {
             return (
                 <div className='cell-input'>
                     <Code
+                        editorOptions={this.props.editorOptions}
                         cursorType={this.getCursorType()}
                         history={this.props.history}
                         autoFocus={this.props.autoFocus}
@@ -217,14 +223,25 @@ export class Cell extends React.Component<ICellProps> {
                         readOnly={!this.props.cellVM.editable}
                         showWatermark={this.props.showWatermark}
                         onSubmit={this.props.submitNewCode}
-                        onChangeLineCount={this.onChangeLineCount}
                         ref={this.updateCodeRef}
+                        onChange={this.onCodeChange}
+                        onCreated={this.onCodeCreated}
+                        outermostParentClass='cell-wrapper'
+                        monacoTheme={this.props.monacoTheme}
                         />
                 </div>
             );
         } else {
             return null;
         }
+    }
+
+    private onCodeChange = (changes: monacoEditor.editor.IModelContentChange[], modelId: string) => {
+        this.props.onCodeChange(changes, this.props.cellVM.cell.id, modelId);
+    }
+
+    private onCodeCreated = (code: string, modelId: string) => {
+        this.props.onCodeCreated(code, this.props.cellVM.cell.file, this.props.cellVM.cell.id, modelId);
     }
 
     private getCursorType = () : string => {
@@ -443,9 +460,5 @@ export class Cell extends React.Component<ICellProps> {
         }
         const str : string = this.getUnknownMimeTypeFormatString().format(mimetype);
         return <div key={index}>{str}</div>;
-    }
-
-    private onChangeLineCount = (_lineCount: number) => {
-        // Ignored for now. Might use this to update the . next to the code lines
     }
 }
