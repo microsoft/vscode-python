@@ -126,13 +126,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                 this.setState({fontSize: newFontSize});
             }
         }
-
-        //this.updateHeight();
     }
-
-    //public componentDidUpdate = () => {
-        //this.updateHeight();
-    //}
 
     // New variable data passed in via a ref
     // Help to keep us independent of main history window state if we choose to break out the variable explorer
@@ -290,20 +284,6 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             this.props.showDataExplorer(row.buttons.name);
         }
     }
-
-    //private updateHeight = () => {
-        //// Make sure we check for a new height so we don't get into an update loop
-        //const divElement = ReactDOM.findDOMNode(this) as HTMLDivElement;
-
-        //if (divElement) {
-            //const newHeight = divElement.offsetHeight;
-
-            //if (this.state.height !== newHeight) {
-                //this.setState({height: newHeight});
-                //this.props.onHeightChange();
-            //}
-        //}
-    //}
 
     private getRow = (index: number) => {
         if (index >= 0 && index < this.state.gridRows.length) {

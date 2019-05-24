@@ -384,11 +384,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return {};
     }
 
-    // Called by the header control when size changes (such as expanding variables)
-    //private onHeaderHeightChange = (newHeight: number) => {
-        ////this.setState({contentTop: newHeight});
-    //}
-
     private darkChanged = (newDark: boolean) => {
         // update our base theme if allowed. Don't do this
         // during testing as it will mess up the expected render count.

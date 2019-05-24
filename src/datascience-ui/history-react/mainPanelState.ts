@@ -56,7 +56,6 @@ export function generateTestState(inputBlockToggled : (id: string) => void, file
         redoStack : [],
         submittedText: false,
         history: new InputHistory(),
-        //contentTop: 24,
         rootStyle: darkStyle,
         tokenizerLoaded: true,
         editorOptions: {}
