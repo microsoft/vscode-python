@@ -4,7 +4,6 @@
 import './variableExplorer.css';
 
 import * as React from 'react';
-//import * as ReactDOM from 'react-dom';
 
 import { IJupyterVariable } from '../../client/datascience/types';
 import { getLocString } from '../react-common/locReactSide';
@@ -21,7 +20,6 @@ import './variableExplorerGrid.less';
 interface IVariableExplorerProps {
     baseTheme: string;
     refreshVariables(): void;
-    //onHeightChange(): void;
     showDataExplorer(targetVariable: string): void;
     variableExplorerToggled(open: boolean): void;
 }

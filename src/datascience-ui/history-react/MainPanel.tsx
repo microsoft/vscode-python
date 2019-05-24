@@ -63,7 +63,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             redoStack : [],
             submittedText: false,
             history: new InputHistory(),
-            //contentTop: 24,
             editCellVM: getSettings && getSettings().allowInput ? createEditableCellVM(1) : undefined,
             editorOptions: this.computeEditorOptions()
         };
@@ -131,39 +130,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         const baseTheme = this.computeBaseTheme();
 
-        //return (
-            //<div id='main-panel' ref={this.updateSelf}>
-                //<StyleInjector
-                    //expectingDark={baseTheme !== 'vscode-light'}
-                    //postOffice={this.postOffice}
-                    //darkChanged={this.darkChanged}
-                    //monacoThemeChanged={this.monacoThemeChanged}
-                    //ref={this.styleInjectorRef} />
-                //<div className='main-panel-header'>
-                    //<div className='main-panel-inner'>
-                    //<div className='main-panel-inner-relative'>
-                    //<div className='main-panel-scrollable'>
-                        //{this.renderHeaderPanel(baseTheme)}
-                        //</div>
-                        //</div>
-                    //</div>
-                //</div>
-                //<div className='main-panel-content'>
-                    //<div className='main-panel-inner'>
-                    //<div className='main-panel-inner-relative'>
-                        //<div className='main-panel-scrollable'>
-                            //{this.renderContentPanel(baseTheme)}
-                        //</div>
-                    //</div>
-                    //</div>
-                //</div>
-                //<div className='main-panel-footer'>
-                    //<div className='main-panel-inner'>
-                        //{this.renderFooterPanel(baseTheme)}
-                    //</div>
-                //</div>
-            //</div>
-        //);
         return (
             <div id='main-panel' ref={this.updateSelf}>
                 <StyleInjector
@@ -290,11 +256,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     //     };
     //     this.addCell(cell);
     // }
-
-    //private renderHeaderPanel(baseTheme: string) {
-        //const headerProps = this.getHeaderProps(baseTheme);
-        //return <HeaderPanel {...headerProps} />;
-    //}
 
     private renderToolbarPanel(baseTheme: string) {
         const toolbarProps = this.getToolbarProps(baseTheme);
@@ -427,7 +388,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return {
             editorOptions: this.state.editorOptions,
             baseTheme: baseTheme,
-            //contentTop: this.state.contentTop,
             cellVMs: this.state.cellVMs,
             history: this.state.history,
             testMode: this.props.testMode,

@@ -23,7 +23,6 @@ export interface IMainPanelState {
     redoStack : ICellViewModel[][];
     submittedText: boolean;
     history: InputHistory;
-    //contentTop: number;
     rootStyle?: string;
     theme?: string;
     forceDark?: boolean;
