@@ -6,7 +6,6 @@ import './toolbarPanel.css';
 import * as React from 'react';
 
 import { getLocString } from '../react-common/locReactSide';
-import { Progress } from '../react-common/progress';
 import { getSettings } from '../react-common/settingsReactSide';
 import { CellButton } from './cellButton';
 import { Image, ImageName } from './image';
@@ -14,14 +13,12 @@ import { MenuBar } from './menuBar';
 
 export interface IToolbarPanelProps {
     baseTheme: string;
-    busy: boolean;
     canCollapseAll: boolean;
     canExpandAll: boolean;
     canExport: boolean;
     canUndo: boolean;
     canRedo: boolean;
     skipDefault?: boolean;
-    testMode?: boolean;
     addMarkdown(): void;
     collapseAll(): void;
     expandAll(): void;
@@ -39,7 +36,6 @@ export class ToolbarPanel extends React.Component<IToolbarPanelProps> {
     }
 
     public render() {
-        const progressBar = this.props.busy && !this.props.testMode ? <Progress /> : undefined;
         return(
             <div id='toolbar-panel'>
                 <MenuBar baseTheme={this.props.baseTheme}>
@@ -69,7 +65,6 @@ export class ToolbarPanel extends React.Component<IToolbarPanelProps> {
                         <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.Cancel}/>
                     </CellButton>
                 </MenuBar>
-                {progressBar}
             </div>
         );
     }

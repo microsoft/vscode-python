@@ -5,10 +5,13 @@ import './variablePanel.css';
 
 import * as React from 'react';
 
+import { Progress } from '../react-common/progress';
 import { VariableExplorer } from './variableExplorer';
 
 export interface IVariablePanelProps {
     baseTheme: string;
+    busy: boolean;
+    testMode?: boolean;
     variableExplorerRef: React.RefObject<VariableExplorer>;
     showDataExplorer(targetVariable: string): void;
     refreshVariables(): void;
@@ -21,8 +24,10 @@ export class VariablePanel extends React.Component<IVariablePanelProps> {
     }
 
     public render() {
+        const progressBar = this.props.busy && !this.props.testMode ? <Progress /> : undefined;
         return(
                 <div id='variable-panel'>
+                    {progressBar}
                     <VariableExplorer baseTheme={this.props.baseTheme}
                     showDataExplorer={this.props.showDataExplorer}
                     refreshVariables={this.props.refreshVariables}

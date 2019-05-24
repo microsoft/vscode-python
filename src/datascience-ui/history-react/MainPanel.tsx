@@ -404,7 +404,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private getToolbarProps = (baseTheme: string): IToolbarPanelProps => {
        return {
         addMarkdown: this.addMarkdown,
-        busy: this.state.busy,
         collapseAll: this.collapseAll,
         expandAll: this.expandAll,
         export: this.export,
@@ -414,7 +413,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         redo: this.redo,
         clearAll: this.clearAll,
         skipDefault: this.props.skipDefault,
-        testMode: this.props.testMode,
         canCollapseAll: this.canCollapseAll(),
         canExpandAll: this.canExpandAll(),
         canExport: this.canExport(),
@@ -426,7 +424,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {
        return {
+        busy: this.state.busy,
         showDataExplorer: this.showDataViewer,
+        testMode: this.props.testMode,
         variableExplorerRef: this.variableExplorerRef,
         refreshVariables: this.refreshVariables,
         variableExplorerToggled: this.variableExplorerToggled,
