@@ -311,6 +311,7 @@ export interface IDataScienceSettings {
     liveShareConnectionTimeout?: number;
     decorateCells?: boolean;
     enableCellCodeLens?: boolean;
+    enableAutoMoveToNextCell?: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

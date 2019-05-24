@@ -33,6 +33,7 @@ export namespace Commands {
     export const ExportOutputAsNotebook = 'python.datascience.exportoutputasnotebook';
     export const ExecSelectionInInteractiveWindow = 'python.datascience.execSelectionInteractive';
     export const RunFileInInteractiveWindows = 'python.datascience.runFileInteractive';
+    export const AddCellBelow = 'python.datascience.addcellbelow';
 }
 
 export namespace EditorContexts {
@@ -109,7 +110,8 @@ export enum Telemetry {
     PandasTooOld = 'DATASCIENCE.SHOW_DATA_PANDAS_TOO_OLD',
     DataScienceSettings = 'DATASCIENCE.SETTINGS',
     VariableExplorerToggled = 'DATASCIENCE.VARIABLE_EXPLORER_TOGGLE',
-    VariableExplorerVariableCount = 'DATASCIENCE.VARIABLE_EXPLORER_VARIABLE_COUNT'
+    VariableExplorerVariableCount = 'DATASCIENCE.VARIABLE_EXPLORER_VARIABLE_COUNT',
+    AddCellBelow = 'DATASCIENCE.ADD_CELL_BELOW'
  }
 
 export namespace HelpLinks {

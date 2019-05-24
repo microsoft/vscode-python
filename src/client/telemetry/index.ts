@@ -321,6 +321,7 @@ export interface IEventNamePropertyMapping {
     [EventName.WORKSPACE_SYMBOLS_BUILD]: never | undefined;
     [EventName.WORKSPACE_SYMBOLS_GO_TO]: never | undefined;
     // Data Science
+    [Telemetry.AddCellBelow]: never | undefined;
     [Telemetry.CollapseAll]: never | undefined;
     [Telemetry.ConnectFailedJupyter]: never | undefined;
     [Telemetry.ConnectLocalJupyter]: never | undefined;
