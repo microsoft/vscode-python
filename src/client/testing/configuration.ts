@@ -28,7 +28,7 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
     }
     public async displayTestFrameworkError(wkspace: Uri): Promise<void> {
         const settings = this.configurationService.getSettings(wkspace);
-        let enabledCount = settings.testing.pyTestEnabled ? 1 : 0;
+        let enabledCount = settings.testing.pytestEnabled ? 1 : 0;
         enabledCount += settings.testing.nosetestsEnabled ? 1 : 0;
         enabledCount += settings.testing.unittestEnabled ? 1 : 0;
         if (enabledCount > 1) {

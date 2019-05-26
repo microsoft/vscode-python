@@ -40,7 +40,7 @@ export class TestManagerService implements ITestManagerService {
         const settings = this.configurationService.getSettings(this.wkspace);
         if (settings.testing.nosetestsEnabled) {
             return Product.nosetest;
-        } else if (settings.testing.pyTestEnabled) {
+        } else if (settings.testing.pytestEnabled) {
             return Product.pytest;
         } else if (settings.testing.unittestEnabled) {
             return Product.unittest;

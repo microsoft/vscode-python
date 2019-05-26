@@ -1927,7 +1927,7 @@
                     },
                     "scope": "resource"
                 },
-                "python.testing.pyTestEnabled": {
+                "python.testing.pytestEnabled": {
                     "type": "boolean",
                     "default": false,
                     "description": "Enable unit testing using pytest.",

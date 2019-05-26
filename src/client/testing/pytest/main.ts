@@ -14,7 +14,7 @@ export class TestManager extends BaseTestManager {
     private readonly runner: ITestManagerRunner;
     private readonly testMessageService: ITestMessageService;
     public get enabled() {
-        return this.settings.testing.pyTestEnabled;
+        return this.settings.testing.pytestEnabled;
     }
     constructor(workspaceFolder: Uri, rootDirectory: string,
         serviceContainer: IServiceContainer) {

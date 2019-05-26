@@ -43,7 +43,7 @@ export class TestConfigSettingsService implements ITestConfigSettingsService {
             case Product.unittest:
                 return 'testing.unittestEnabled';
             case Product.pytest:
-                return 'testing.pyTestEnabled';
+                return 'testing.pytestEnabled';
             case Product.nosetest:
                 return 'testing.nosetestsEnabled';
             default:

@@ -93,7 +93,7 @@ export class TestsHelper implements ITestsHelper {
                 return {
                     argsName: 'pytestArgs' as keyof ITestingSettings,
                     pathName: 'pyTestPath' as keyof ITestingSettings,
-                    enabledName: 'pyTestEnabled' as keyof ITestingSettings
+                    enabledName: 'pytestEnabled' as keyof ITestingSettings
                 };
             }
             case 'nosetest': {
