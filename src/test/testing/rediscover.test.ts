@@ -48,7 +48,7 @@ suite('Unit Tests re-discovery', () => {
     async function resetSettings() {
         await updateSetting('testing.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget);
         await updateSetting('testing.nosetestArgs', [], rootWorkspaceUri, configTarget);
-        await updateSetting('testing.pyTestArgs', [], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget);
     }
 
     function initializeDI() {
@@ -79,7 +79,7 @@ suite('Unit Tests re-discovery', () => {
     });
 
     test('Re-discover tests (pytest)', async () => {
-        await updateSetting('testing.pyTestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.pytestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
         await discoverUnitTests('pytest');
     });
 

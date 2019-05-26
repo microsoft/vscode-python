@@ -107,7 +107,7 @@ suite('Application Diagnostics - Check Test Settings', () => {
         when(appEnv.userSettingsFile).thenReturn('user.json');
         when(fs.readFile('user.json')).thenResolve('{"python.unitTest.cwd":"blah"}');
         when(fs.readFile(path.join(folder1.fsPath, '.vscode', 'settings.json'))).thenResolve('{"python.testing.cwd":"blah"}');
-        when(fs.readFile(path.join(folder2.fsPath, '.vscode', 'settings.json'))).thenResolve('{"python.unitTest.pyTestArgs":[]}');
+        when(fs.readFile(path.join(folder2.fsPath, '.vscode', 'settings.json'))).thenResolve('{"python.unitTest.pytestArgs":[]}');
         when(storage.value).thenReturn([]);
 
         const files = await diagnosticService.getFilesToBeFixed();
@@ -128,7 +128,7 @@ suite('Application Diagnostics - Check Test Settings', () => {
         when(appEnv.userSettingsFile).thenReturn('user.json');
         when(fs.readFile('user.json')).thenResolve('{"python.testing.cwd":"blah"}');
         when(fs.readFile(path.join(folder1.fsPath, '.vscode', 'settings.json'))).thenResolve('{"python.testing.cwd":"blah"}');
-        when(fs.readFile(path.join(folder2.fsPath, '.vscode', 'settings.json'))).thenResolve('{"python.testing.pyTestArgs":[]}');
+        when(fs.readFile(path.join(folder2.fsPath, '.vscode', 'settings.json'))).thenResolve('{"python.testing.pytestArgs":[]}');
         when(storage.value).thenReturn([]);
 
         const files = await diagnosticService.getFilesToBeFixed();

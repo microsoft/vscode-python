@@ -1918,7 +1918,7 @@
                     "description": "Prompt to configure a test framework if potential tests directories are discovered.",
                     "scope": "resource"
                 },
-                "python.testing.pyTestArgs": {
+                "python.testing.pytestArgs": {
                     "type": "array",
                     "description": "Arguments passed in. Each argument is a separate item in the array.",
                     "default": [],

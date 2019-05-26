@@ -12,6 +12,6 @@ from tests.__main__ import main, parse_args
 
 
 if __name__ == '__main__':
-    mainkwargs, pytestargs = parse_args()
-    ec = main(pytestargs, **mainkwargs)
+    mainkwargs, pytestArgs = parse_args()
+    ec = main(pytestArgs, **mainkwargs)
     sys.exit(ec)

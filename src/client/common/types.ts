@@ -181,7 +181,7 @@ export interface ITestingSettings {
     nosetestArgs: string[];
     readonly pyTestEnabled: boolean;
     pyTestPath: string;
-    pyTestArgs: string[];
+    pytestArgs: string[];
     readonly unittestEnabled: boolean;
     unittestArgs: string[];
     cwd?: string;

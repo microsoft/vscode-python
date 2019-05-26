@@ -304,7 +304,7 @@ export class PythonSettings implements IPythonSettings {
                 // tslint:disable-next-line:prefer-type-cast
                 // tslint:disable-next-line:no-object-literal-type-assertion
                 this.testing = {
-                    nosetestArgs: [], pyTestArgs: [], unittestArgs: [],
+                    nosetestArgs: [], pytestArgs: [], unittestArgs: [],
                     promptToConfigure: true, debugPort: 3000,
                     nosetestsEnabled: false, pyTestEnabled: false, unittestEnabled: false,
                     nosetestPath: 'nosetests', pyTestPath: 'pytest', autoTestDiscoverOnSaveEnabled: true
@@ -317,7 +317,7 @@ export class PythonSettings implements IPythonSettings {
             promptToConfigure: true,
             debugPort: 3000,
             nosetestArgs: [], nosetestPath: 'nosetest', nosetestsEnabled: false,
-            pyTestArgs: [], pyTestEnabled: false, pyTestPath: 'pytest',
+            pytestArgs: [], pyTestEnabled: false, pyTestPath: 'pytest',
             unittestArgs: [], unittestEnabled: false, autoTestDiscoverOnSaveEnabled: true
         };
         this.testing.pyTestPath = getAbsolutePath(systemVariables.resolveAny(this.testing.pyTestPath), workspaceRoot);
@@ -328,7 +328,7 @@ export class PythonSettings implements IPythonSettings {
 
         // Resolve any variables found in the test arguments.
         this.testing.nosetestArgs = this.testing.nosetestArgs.map(arg => systemVariables.resolveAny(arg));
-        this.testing.pyTestArgs = this.testing.pyTestArgs.map(arg => systemVariables.resolveAny(arg));
+        this.testing.pytestArgs = this.testing.pytestArgs.map(arg => systemVariables.resolveAny(arg));
         this.testing.unittestArgs = this.testing.unittestArgs.map(arg => systemVariables.resolveAny(arg));
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion

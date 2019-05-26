@@ -91,7 +91,7 @@ export class TestsHelper implements ITestsHelper {
         switch (id) {
             case 'pytest': {
                 return {
-                    argsName: 'pyTestArgs' as keyof ITestingSettings,
+                    argsName: 'pytestArgs' as keyof ITestingSettings,
                     pathName: 'pyTestPath' as keyof ITestingSettings,
                     enabledName: 'pyTestEnabled' as keyof ITestingSettings
                 };
