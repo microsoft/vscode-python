@@ -307,7 +307,7 @@ export class PythonSettings implements IPythonSettings {
                     nosetestArgs: [], pytestArgs: [], unittestArgs: [],
                     promptToConfigure: true, debugPort: 3000,
                     nosetestsEnabled: false, pytestEnabled: false, unittestEnabled: false,
-                    nosetestPath: 'nosetests', pyTestPath: 'pytest', autoTestDiscoverOnSaveEnabled: true
+                    nosetestPath: 'nosetests', pytestPath: 'pytest', autoTestDiscoverOnSaveEnabled: true
                 } as ITestingSettings;
             }
         }
@@ -317,10 +317,10 @@ export class PythonSettings implements IPythonSettings {
             promptToConfigure: true,
             debugPort: 3000,
             nosetestArgs: [], nosetestPath: 'nosetest', nosetestsEnabled: false,
-            pytestArgs: [], pytestEnabled: false, pyTestPath: 'pytest',
+            pytestArgs: [], pytestEnabled: false, pytestPath: 'pytest',
             unittestArgs: [], unittestEnabled: false, autoTestDiscoverOnSaveEnabled: true
         };
-        this.testing.pyTestPath = getAbsolutePath(systemVariables.resolveAny(this.testing.pyTestPath), workspaceRoot);
+        this.testing.pytestPath = getAbsolutePath(systemVariables.resolveAny(this.testing.pytestPath), workspaceRoot);
         this.testing.nosetestPath = getAbsolutePath(systemVariables.resolveAny(this.testing.nosetestPath), workspaceRoot);
         if (this.testing.cwd) {
             this.testing.cwd = getAbsolutePath(systemVariables.resolveAny(this.testing.cwd), workspaceRoot);

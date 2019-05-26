@@ -1933,7 +1933,7 @@
                     "description": "Enable unit testing using pytest.",
                     "scope": "resource"
                 },
-                "python.testing.pyTestPath": {
+                "python.testing.pytestPath": {
                     "type": "string",
                     "default": "pytest",
                     "description": "Path to pytest (pytest), you can use a custom version of pytest by modifying this setting to include the full path.",

@@ -180,7 +180,7 @@ export interface ITestingSettings {
     nosetestPath: string;
     nosetestArgs: string[];
     readonly pytestEnabled: boolean;
-    pyTestPath: string;
+    pytestPath: string;
     pytestArgs: string[];
     readonly unittestEnabled: boolean;
     unittestArgs: string[];

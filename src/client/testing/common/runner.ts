@@ -90,7 +90,7 @@ function getExecutablePath(testProvider: TestProvider, settings: IPythonSettings
             break;
         }
         case PYTEST_PROVIDER: {
-            testRunnerExecutablePath = settings.testing.pyTestPath;
+            testRunnerExecutablePath = settings.testing.pytestPath;
             break;
         }
         default: {
