@@ -13,17 +13,17 @@ from ..info import ParentInfo
 from ._pytest_item import parse_item
 
 
-def discover(pytestArgs=None, hidestdio=False,
+def discover(pytestargs=None, hidestdio=False,
              _pytest_main=pytest.main, _plugin=None, **_ignored):
     """Return the results of test discovery."""
     if _plugin is None:
         _plugin = TestCollector()
 
-    pytestArgs = _adjust_pytest_args(pytestArgs)
+    pytestargs = _adjust_pytest_args(pytestargs)
     # We use this helper rather than "-pno:terminal" due to possible
     # platform-dependent issues.
     with (util.hide_stdio() if hidestdio else util.noop_cm()) as stdio:
-        ec = _pytest_main(pytestArgs, [_plugin])
+        ec = _pytest_main(pytestargs, [_plugin])
     # See: https://docs.pytest.org/en/latest/usage.html#possible-exit-codes
     if ec == 5:
         # No tests were discovered.
@@ -44,15 +44,15 @@ def discover(pytestArgs=None, hidestdio=False,
             )
 
 
-def _adjust_pytest_args(pytestArgs):
+def _adjust_pytest_args(pytestargs):
     """Return a corrected copy of the given pytest CLI args."""
-    pytestArgs = list(pytestArgs) if pytestArgs else []
+    pytestargs = list(pytestargs) if pytestargs else []
     # Duplicate entries should be okay.
-    pytestArgs.insert(0, '--collect-only')
+    pytestargs.insert(0, '--collect-only')
     # TODO: pull in code from:
     #  src/client/testing/pytest/services/discoveryService.ts
     #  src/client/testing/pytest/services/argsService.ts
-    return pytestArgs
+    return pytestargs
 
 
 class TestCollector(object):

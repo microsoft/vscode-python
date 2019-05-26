@@ -29,23 +29,23 @@ def parse_args():
     return ns, remainder
 
 
-def main(pytestArgs, markers=None):
+def main(pytestargs, markers=None):
     sys.path.insert(1, IPYTHON_ROOT)
     sys.path.insert(1, TESTING_TOOLS_ROOT)
 
-    pytestArgs = [
+    pytestargs = [
         '--rootdir', SRC_ROOT,
         TEST_ROOT,
-        ] + pytestArgs
+        ] + pytestargs
     for marker in reversed(markers or ()):
-        pytestArgs.insert(0, marker)
-        pytestArgs.insert(0, '-m')
+        pytestargs.insert(0, marker)
+        pytestargs.insert(0, '-m')
 
-    ec = pytest.main(pytestArgs)
+    ec = pytest.main(pytestargs)
     return ec
 
 
 if __name__ == '__main__':
-    mainkwargs, pytestArgs = parse_args()
-    ec = main(pytestArgs, **mainkwargs)
+    mainkwargs, pytestargs = parse_args()
+    ec = main(pytestargs, **mainkwargs)
     sys.exit(ec)
