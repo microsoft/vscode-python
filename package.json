@@ -1930,7 +1930,7 @@
                 "python.testing.pyTestEnabled": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Enable unit testing using pytest.",
+                    "description": "Enable testing using pytest.",
                     "scope": "resource"
                 },
                 "python.testing.pyTestPath": {
