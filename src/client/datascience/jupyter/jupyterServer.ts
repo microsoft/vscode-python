@@ -21,6 +21,7 @@ import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { generateCells } from '../cellFactory';
+import { CellMatcher } from '../cellMatcher';
 import { concatMultilineString } from '../common';
 import { Identifiers } from '../constants';
 import {
@@ -514,10 +515,11 @@ export class JupyterServerBase implements INotebookServer {
     private generateRequest = (code: string, silent?: boolean): Kernel.IFuture | undefined => {
         //this.logger.logInformation(`Executing code in jupyter : ${code}`)
         try {
+            const cellMatcher = new CellMatcher(this.configService.getSettings().datascience);
             return this.session ? this.session.requestExecute(
                 {
-                    // Replace windows line endings with unix line endings.
-                    code: code.replace(/\r\n/g, '\n'),
+                    // Remove the cell marker if we have one.
+                    code: cellMatcher.stripMarkers(code),
                     stop_on_error: false,
                     allow_stdin: false,
                     store_history: !silent // Silent actually means don't output anything. Store_history is what affects execution_count

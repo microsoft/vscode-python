@@ -312,6 +312,7 @@ export interface IDataScienceSettings {
     decorateCells?: boolean;
     enableCellCodeLens?: boolean;
     askForLargeDataFrames?: boolean;
+    enableAutoMoveToNextCell?: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

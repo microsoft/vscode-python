@@ -274,13 +274,9 @@ fourth line
     test('Test the RunCell command', async () => {
         const fileName = 'test.py';
         const version = 1;
-        const inputText = ''; // This test overrides getText, so we don't need to fill this in
-        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce());
-
-        // Specify our range and text here
-        const testRange = new Range(0, 0, 10, 10);
-        const testString = 'testing';
-        document.setup(doc => doc.getText(testRange)).returns(() => testString).verifiable(TypeMoq.Times.once());
+        const testString = '#%%\ntesting';
+        const document = createDocument(testString, fileName, version, TypeMoq.Times.atLeastOnce(), true);
+        const testRange = new Range(0, 0, 1, 7);
 
         codeWatcher.setDocument(document.object);
 

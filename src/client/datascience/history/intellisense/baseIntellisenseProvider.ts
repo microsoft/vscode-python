@@ -20,8 +20,8 @@ import { IWorkspaceService } from '../../../common/application/types';
 import { CancellationError } from '../../../common/cancellation';
 import { traceWarning } from '../../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../../common/platform/types';
-import { createDeferred, Deferred } from '../../../common/utils/async';
-import { Identifiers } from '../../constants';
+import { createDeferred, Deferred, sleep } from '../../../common/utils/async';
+import { Identifiers, Settings } from '../../constants';
 import { IHistoryListener, IHistoryProvider, IJupyterExecution } from '../../types';
 import {
     HistoryMessages,
@@ -179,26 +179,30 @@ export abstract class BaseIntellisenseProvider implements IHistoryListener {
         this.cancellationSources.set(request.requestId, cancelSource);
 
         // Combine all of the results together.
-        const results = Promise.all(
+        this.postTimedResponse(
             [this.provideCompletionItems(request.position, request.context, request.cellId, cancelSource.token),
-             this.provideJupyterCompletionItems(request.position, request.context, cancelSource.token)]);
-
-        results.then(combined => {
-            const list = this.combineCompletions(combined);
-            this.postResponse(HistoryMessages.ProvideCompletionItemsResponse, {list, requestId: request.requestId});
-        }).catch(_e => {
-            this.postResponse(HistoryMessages.ProvideCompletionItemsResponse, {list: { suggestions: [], incomplete: false }, requestId: request.requestId});
-        });
+             this.provideJupyterCompletionItems(request.position, request.context, cancelSource.token)],
+            HistoryMessages.ProvideCompletionItemsResponse,
+            (c) => {
+                const list = this.combineCompletions(c);
+                return {list, requestId: request.requestId};
+            }
+        );
     }
 
     private handleHoverRequest(request: IProvideHoverRequest) {
         const cancelSource = new CancellationTokenSource();
         this.cancellationSources.set(request.requestId, cancelSource);
-        this.provideHover(request.position, request.cellId, cancelSource.token).then(hover => {
-             this.postResponse(HistoryMessages.ProvideHoverResponse, {hover, requestId: request.requestId});
-        }).catch(_e => {
-            this.postResponse(HistoryMessages.ProvideHoverResponse, {hover: { contents: [] }, requestId: request.requestId});
-        });
+        this.postTimedResponse(
+            [this.provideHover(request.position, request.cellId, cancelSource.token)],
+            HistoryMessages.ProvideHoverResponse,
+            (h) => {
+                if (h && h[0]) {
+                    return { hover: h[0]!, requestId: request.requestId};
+                } else {
+                    return { hover: { contents: [] }, requestId: request.requestId };
+                }
+            });
     }
 
     private async provideJupyterCompletionItems(position: monacoEditor.Position, _context: monacoEditor.languages.CompletionContext, cancelToken: CancellationToken) : Promise<monacoEditor.languages.CompletionList> {
@@ -248,17 +252,41 @@ export abstract class BaseIntellisenseProvider implements IHistoryListener {
 
     }
 
-    private combineCompletions(list: monacoEditor.languages.CompletionList[]) : monacoEditor.languages.CompletionList {
+    private postTimedResponse<R, M extends IHistoryMapping, T extends keyof M>(promises: Promise<R>[], message: T, formatResponse: (val: (R | null)[]) => M[T]) {
+        // Time all of the promises to make sure they don't take too long
+        const timed = promises.map(p => Promise.race([p, sleep(Settings.IntellisenseTimeout)]));
+
+        // Wait for all of of the timings.
+        const all = Promise.all(timed);
+        all.then(r => {
+
+            // Check all of the results. If they timed out, turn into
+            // a null so formatResponse can post the empty result.
+            const nulled = r.map(v => {
+                if (v === Settings.IntellisenseTimeout) {
+                    return null;
+                }
+                return v as R;
+            });
+            this.postResponse(message, formatResponse(nulled));
+        }).catch(_e => {
+            this.postResponse(message, formatResponse([null]));
+        });
+    }
+
+    private combineCompletions(list: (monacoEditor.languages.CompletionList | null)[]) : monacoEditor.languages.CompletionList {
         // Note to self. We're eliminating duplicates ourselves. The alternative would be to
         // have more than one intellisense provider at the monaco editor level and return jupyter
         // results independently. Maybe we switch to this when jupyter resides on the react side.
         const uniqueSuggestions: Map<string, monacoEditor.languages.CompletionItem> = new Map<string, monacoEditor.languages.CompletionItem>();
         list.forEach(c => {
-            c.suggestions.forEach(s => {
-                if (!uniqueSuggestions.has(s.insertText)) {
-                    uniqueSuggestions.set(s.insertText, s);
-                }
-            });
+            if (c) {
+                c.suggestions.forEach(s => {
+                    if (!uniqueSuggestions.has(s.insertText)) {
+                        uniqueSuggestions.set(s.insertText, s);
+                    }
+                });
+            }
         });
 
         return {
@@ -270,11 +298,16 @@ export abstract class BaseIntellisenseProvider implements IHistoryListener {
     private handleSignatureHelpRequest(request: IProvideSignatureHelpRequest) {
         const cancelSource = new CancellationTokenSource();
         this.cancellationSources.set(request.requestId, cancelSource);
-        this.provideSignatureHelp(request.position, request.context, request.cellId, cancelSource.token).then(signatureHelp => {
-             this.postResponse(HistoryMessages.ProvideSignatureHelpResponse, {signatureHelp, requestId: request.requestId});
-        }).catch(_e => {
-            this.postResponse(HistoryMessages.ProvideSignatureHelpResponse, {signatureHelp: { signatures: [], activeParameter: 0, activeSignature: 0 }, requestId: request.requestId});
-        });
+        this.postTimedResponse(
+            [this.provideSignatureHelp(request.position, request.context, request.cellId, cancelSource.token)],
+            HistoryMessages.ProvideSignatureHelpResponse,
+            (s) => {
+                if (s && s[0]) {
+                    return { signatureHelp: s[0]!, requestId: request.requestId};
+                } else {
+                    return {signatureHelp: { signatures: [], activeParameter: 0, activeSignature: 0 }, requestId: request.requestId};
+                }
+            });
     }
 
     private async addCell(request: IAddCell): Promise<void> {

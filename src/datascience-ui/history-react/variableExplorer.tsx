@@ -4,7 +4,6 @@
 import './variableExplorer.css';
 
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
 
 import { RegExpValues } from '../../client/datascience/constants';
 import { IJupyterVariable } from '../../client/datascience/types';
@@ -22,7 +21,6 @@ import './variableExplorerGrid.less';
 interface IVariableExplorerProps {
     baseTheme: string;
     refreshVariables(): void;
-    onHeightChange(): void;
     showDataExplorer(targetVariable: string, numberOfColumns: number): void;
     variableExplorerToggled(open: boolean): void;
 }
@@ -131,12 +129,6 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                 this.setState({fontSize: newFontSize});
             }
         }
-
-        this.updateHeight();
-    }
-
-    public componentDidUpdate = () => {
-        this.updateHeight();
     }
 
     // New variable data passed in via a ref
@@ -319,20 +311,6 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         if (row.buttons && row.buttons.supportsDataExplorer !== undefined
             && row.buttons.name && row.buttons.supportsDataExplorer) {
             this.props.showDataExplorer(row.buttons.name, row.buttons.numberOfColumns);
-        }
-    }
-
-    private updateHeight = () => {
-        // Make sure we check for a new height so we don't get into an update loop
-        const divElement = ReactDOM.findDOMNode(this) as HTMLDivElement;
-
-        if (divElement) {
-            const newHeight = divElement.offsetHeight;
-
-            if (this.state.height !== newHeight) {
-                this.setState({height: newHeight});
-                this.props.onHeightChange();
-            }
         }
     }
 

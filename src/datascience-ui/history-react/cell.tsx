@@ -21,7 +21,6 @@ import './cell.css';
 import { CellButton } from './cellButton';
 import { Code } from './code';
 import { CollapseButton } from './collapseButton';
-import { CommandPrompt } from './commandPrompt';
 import { ExecutionCount } from './executionCount';
 import { Image, ImageName } from './image';
 import { InputHistory } from './inputHistory';
@@ -41,11 +40,13 @@ interface ICellProps {
     errorBackgroundColor: string;
     monacoTheme: string | undefined;
     editorOptions: monacoEditor.editor.IEditorOptions;
+    editExecutionCount: number;
     gotoCode(): void;
     delete(): void;
     submitNewCode(code: string): void;
     onCodeChange(changes: monacoEditor.editor.IModelContentChange[], cellId: string, modelId: string): void;
     onCodeCreated(code: string, file: string, cellId: string, modelId: string): void;
+    openLink(uri: monacoEditor.Uri): void;
 }
 
 export interface ICellViewModel {
@@ -187,7 +188,7 @@ export class Cell extends React.Component<ICellProps> {
             return this.props.cellVM.editable ?
                 (
                     <div className='controls-div'>
-                        <CommandPrompt />
+                        <ExecutionCount isBusy={busy} count={this.props.editExecutionCount.toString()} visible={this.isCodeCell()} />
                     </div>
                 ) : (
                     <div className='controls-div'>
@@ -214,7 +215,6 @@ export class Cell extends React.Component<ICellProps> {
                 <div className='cell-input'>
                     <Code
                         editorOptions={this.props.editorOptions}
-                        cursorType={this.getCursorType()}
                         history={this.props.history}
                         autoFocus={this.props.autoFocus}
                         code={this.getRenderableInputCode()}
@@ -228,6 +228,7 @@ export class Cell extends React.Component<ICellProps> {
                         onCreated={this.onCodeCreated}
                         outermostParentClass='cell-wrapper'
                         monacoTheme={this.props.monacoTheme}
+                        openLink={this.props.openLink}
                         />
                 </div>
             );
@@ -242,14 +243,6 @@ export class Cell extends React.Component<ICellProps> {
 
     private onCodeCreated = (code: string, modelId: string) => {
         this.props.onCodeCreated(code, this.props.cellVM.cell.file, this.props.cellVM.cell.id, modelId);
-    }
-
-    private getCursorType = () : string => {
-        if (getSettings && getSettings().extraSettings) {
-            return getSettings().extraSettings.terminalCursor;
-        }
-
-        return 'block';
     }
 
     private renderResultsDiv = (results: JSX.Element[]) => {

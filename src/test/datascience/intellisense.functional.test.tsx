@@ -57,7 +57,7 @@ suite('DataScience Intellisense tests', () => {
         return result;
     }
 
-    function verifyIntellisenseVisible(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, expectedSpan: string) {
+    function getIntellisenseTextLines(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) : string[] {
         assert.ok(wrapper);
         const editor = getEditor(wrapper);
         assert.ok(editor);
@@ -73,7 +73,17 @@ suite('DataScience Intellisense tests', () => {
                 innerTexts.push(content);
             }
         }
+        return innerTexts;
+    }
+
+    function verifyIntellisenseVisible(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, expectedSpan: string) {
+        const innerTexts = getIntellisenseTextLines(wrapper);
         assert.ok(innerTexts.includes(expectedSpan), 'Intellisense row not matching');
+    }
+
+    function verifyIntellisenseMissing(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, expectedSpan: string) {
+        const innerTexts = getIntellisenseTextLines(wrapper);
+        assert.ok(!innerTexts.includes(expectedSpan), 'Intellisense row was found when not expected');
     }
 
     function waitForSuggestion(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) : { disposable: IDisposable; promise: Promise<void>} {
@@ -131,6 +141,26 @@ suite('DataScience Intellisense tests', () => {
             await suggestion.promise;
             suggestion.disposable.dispose();
             verifyIntellisenseVisible(wrapper, 'printly');
+        }
+    }, () => { return ioc; });
+
+    runMountedTest('Jupyter autocomplete timeout', async (wrapper) => {
+        if (ioc.mockJupyter) {
+            // This test only works when mocking.
+
+            // Create a history so that it listens to the results.
+            const history = await getOrCreateHistory();
+            await history.show();
+
+            // Force a timeout on the jupyter completions
+            ioc.mockJupyter.getCurrentSession()!.setCompletionTimeout(1000);
+
+            // Then enter some code. Don't submit, we're just testing that autocomplete appears
+            const suggestion = waitForSuggestion(wrapper);
+            typeCode(wrapper, 'print');
+            await suggestion.promise;
+            suggestion.disposable.dispose();
+            verifyIntellisenseMissing(wrapper, 'printly');
         }
     }, () => { return ioc; });
 });

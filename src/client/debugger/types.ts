@@ -36,13 +36,13 @@ interface ICommonDebugArguments {
     // Show return values of functions while stepping.
     showReturnValue?: boolean;
     subProcess?: boolean;
-}
-export interface IKnownAttachDebugArguments extends ICommonDebugArguments {
-    workspaceFolder?: string;
     // An absolute path to local directory with source.
     localRoot?: string;
     remoteRoot?: string;
     pathMappings?: { localRoot: string; remoteRoot: string }[];
+}
+export interface IKnownAttachDebugArguments extends ICommonDebugArguments {
+    workspaceFolder?: string;
     customDebugger?: boolean;
 }
 

@@ -21,6 +21,7 @@ export class MockJupyterSession implements IJupyterSession {
     private outstandingRequestTokenSources: CancellationTokenSource[] = [];
     private executes: string[] = [];
     private forceRestartTimeout : boolean = false;
+    private completionTimeout: number = 1;
 
     constructor(cellDictionary: Record<string, ICell>, timedelay: number) {
         this.dict = cellDictionary;
@@ -75,8 +76,10 @@ export class MockJupyterSession implements IJupyterSession {
         return request;
     }
 
-    public requestComplete(_content: KernelMessage.ICompleteRequest): Promise<KernelMessage.ICompleteReplyMsg | undefined> {
-        return Promise.resolve({
+    public async requestComplete(_content: KernelMessage.ICompleteRequest): Promise<KernelMessage.ICompleteReplyMsg | undefined> {
+        await sleep(this.completionTimeout);
+
+        return {
             content: {
                 matches: ['printly'], // This keeps this in the intellisense when the editor pairs down results
                 cursor_start: 0,
@@ -96,7 +99,7 @@ export class MockJupyterSession implements IJupyterSession {
             },
             metadata: {
             }
-        });
+        };
     }
 
     public dispose(): Promise<void> {
@@ -105,6 +108,10 @@ export class MockJupyterSession implements IJupyterSession {
 
     public getExecutes() : string [] {
         return this.executes;
+    }
+
+    public setCompletionTimeout(timeout: number) {
+        this.completionTimeout = timeout;
     }
 
     private findCell = (code : string) : ICell => {

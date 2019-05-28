@@ -3,6 +3,7 @@
     font-weight: bold;
     display:flex;
     color: var(--code-comment-color);
+    font-family: var(--code-font-family);
  }
 
  .execution-count-busy-outer {

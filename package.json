@@ -2,8 +2,8 @@
     "name": "python",
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, and more.",
-    "version": "2019.5.0-dev",
-    "languageServerVersion": "0.2.62",
+    "version": "2019.6.0-dev",
+    "languageServerVersion": "0.2.82",
     "publisher": "ms-python",
     "author": {
         "name": "Microsoft Corporation"
@@ -98,6 +98,11 @@
             {
                 "command": "python.datascience.runcurrentcelladvance",
                 "key": "shift+enter",
+                "when": "editorFocus && !editorHasSelection && python.datascience.hascodecells && python.datascience.featureenabled"
+            },
+            {
+                "command": "python.datascience.runcurrentcell",
+                "key": "ctrl+enter",
                 "when": "editorFocus && !editorHasSelection && python.datascience.hascodecells && python.datascience.featureenabled"
             }
         ],
@@ -428,6 +433,11 @@
                 "command": "python.datascience.collapseallcells",
                 "title": "%python.command.python.datascience.collapseallcells.title%",
                 "category": "Python"
+            },
+            {
+                "command": "python.datascience.addcellbelow",
+                "title": "%python.command.python.datascience.addcellbelow.title%",
+                "category": "Python"
             }
         ],
         "menus": {
@@ -704,6 +714,12 @@
                     "command": "python.datascience.runallcellsabove",
                     "category": "Python",
                     "when": "config.noExists"
+                },
+                {
+                    "command": "python.datascience.addcellbelow",
+                    "title": "%python.command.python.datascience.addcellbelow.title%",
+                    "category": "Python",
+                    "when": "python.datascience.featureenabled"
                 }
             ],
             "view/title": [
@@ -1284,6 +1300,12 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Enables code lens for 'cells' in a python file.",
+                    "scope": "resource"
+                },
+                "python.dataScience.enableAutoMoveToNextCell": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables moving to the next cell when clicking on a 'Run Cell' code lens.",
                     "scope": "resource"
                 },
                 "python.disableInstallationCheck": {

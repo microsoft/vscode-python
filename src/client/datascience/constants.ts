@@ -33,6 +33,7 @@ export namespace Commands {
     export const ExportOutputAsNotebook = 'python.datascience.exportoutputasnotebook';
     export const ExecSelectionInInteractiveWindow = 'python.datascience.execSelectionInteractive';
     export const RunFileInInteractiveWindows = 'python.datascience.runFileInteractive';
+    export const AddCellBelow = 'python.datascience.addcellbelow';
 }
 
 export namespace EditorContexts {
@@ -110,7 +111,8 @@ export enum Telemetry {
     PandasTooOld = 'DATASCIENCE.SHOW_DATA_PANDAS_TOO_OLD',
     DataScienceSettings = 'DATASCIENCE.SETTINGS',
     VariableExplorerToggled = 'DATASCIENCE.VARIABLE_EXPLORER_TOGGLE',
-    VariableExplorerVariableCount = 'DATASCIENCE.VARIABLE_EXPLORER_VARIABLE_COUNT'
+    VariableExplorerVariableCount = 'DATASCIENCE.VARIABLE_EXPLORER_VARIABLE_COUNT',
+    AddCellBelow = 'DATASCIENCE.ADD_CELL_BELOW'
  }
 
 export namespace HelpLinks {
@@ -119,10 +121,12 @@ export namespace HelpLinks {
 
 export namespace Settings {
     export const JupyterServerLocalLaunch = 'local';
+    export const IntellisenseTimeout = 300;
 }
 
 export namespace CodeSnippits {
-    export const ChangeDirectory = ['{0}', 'import os', 'try:', '\tos.chdir(os.path.join(os.getcwd(), \'{1}\'))', '\tprint(os.getcwd())', 'except:', '\tpass', ''];
+    export const ChangeDirectory = ['{0}', '{1}', 'import os', 'try:', '\tos.chdir(os.path.join(os.getcwd(), \'{2}\'))', '\tprint(os.getcwd())', 'except:', '\tpass', ''];
+    export const ChangeDirectoryCommentIdentifier = '# ms-python.python added'; // Not translated so can compare.
 }
 
 export namespace Identifiers {

@@ -235,6 +235,15 @@ export class DataScience implements IDataScience {
         }
     }
 
+    @captureTelemetry(Telemetry.AddCellBelow)
+    private async addCellBelow(): Promise<void> {
+        const activeEditor = this.documentManager.activeTextEditor;
+        const activeCodeWatcher = this.getCurrentCodeWatcher();
+        if (activeEditor && activeCodeWatcher) {
+            return activeCodeWatcher.addEmptyCellToBottom();
+        }
+    }
+
     private getCurrentCodeLens() : vscode.CodeLens | undefined {
         const activeEditor = this.documentManager.activeTextEditor;
         const activeCodeWatcher = this.getCurrentCodeWatcher();
@@ -348,6 +357,8 @@ export class DataScience implements IDataScience {
         disposable = this.commandManager.registerCommand(Commands.RunFromLine, this.runFromLine, this);
         this.disposableRegistry.push(disposable);
         disposable = this.commandManager.registerCommand(Commands.RunFileInInteractiveWindows, this.runFileInteractive, this);
+        this.disposableRegistry.push(disposable);
+        disposable = this.commandManager.registerCommand(Commands.AddCellBelow, this.addCellBelow, this);
         this.disposableRegistry.push(disposable);
         this.commandListeners.forEach((listener: IDataScienceCommandListener) => {
             listener.register(this.commandManager);

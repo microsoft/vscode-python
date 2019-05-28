@@ -141,6 +141,8 @@ export class WebViewHost<IMapping> implements IDisposable {
     protected generateDataScienceExtraSettings() : IDataScienceExtraSettings {
         const terminal = this.workspaceService.getConfiguration('terminal');
         const terminalCursor = terminal ? terminal.get<string>('integrated.cursorStyle', 'block') : 'block';
+        const terminalCursorBlink = terminal ? terminal.get<boolean>('integrated.cursorBlinking', true) : true;
+        const terminalCursorBlinkVal = terminalCursorBlink ? 'blink' : 'solid';
         const workbench = this.workspaceService.getConfiguration('workbench');
         const editor = this.workspaceService.getConfiguration('editor');
         const theme = !workbench ? DefaultTheme : workbench.get<string>('colorTheme', DefaultTheme);
@@ -148,6 +150,7 @@ export class WebViewHost<IMapping> implements IDisposable {
             ...this.configService.getSettings().datascience,
             extraSettings: {
                 terminalCursor: terminalCursor,
+                terminalCursorBlink: terminalCursorBlinkVal,
                 theme: theme
             },
             intellisenseOptions: {

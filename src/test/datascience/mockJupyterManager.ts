@@ -17,6 +17,7 @@ import { ExecutionResult, IProcessServiceFactory, IPythonExecutionFactory, Outpu
 import { IAsyncDisposableRegistry, IConfigurationService } from '../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { generateCells } from '../../client/datascience/cellFactory';
+import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { concatMultilineString } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import {
@@ -192,7 +193,8 @@ export class MockJupyterManager implements IJupyterSessionManager {
     public addCell(code: string, result?: undefined | string | number | nbformat.IUnrecognizedOutput | nbformat.IExecuteResult | nbformat.IDisplayData | nbformat.IStream | nbformat.IError, mimeType?: string) {
         const cells = generateCells(undefined, code, 'foo.py', 1, true, uuid());
         cells.forEach(c => {
-            const key = concatMultilineString(c.data.source).replace(LineFeedRegEx, '');
+            const cellMatcher = new CellMatcher();
+            const key = cellMatcher.stripMarkers(concatMultilineString(c.data.source)).replace(LineFeedRegEx, '');
             if (c.data.cell_type === 'code') {
                 const massagedResult = this.massageCellResult(result, mimeType);
                 const data: nbformat.ICodeCell = c.data as nbformat.ICodeCell;

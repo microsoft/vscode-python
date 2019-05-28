@@ -19,12 +19,13 @@ import { getSettings, updateSettings } from '../react-common/settingsReactSide';
 import { StyleInjector } from '../react-common/styleInjector';
 import { Cell, ICellViewModel } from './cell';
 import { ContentPanel, IContentPanelProps } from './contentPanel';
-import { HeaderPanel, IHeaderPanelProps } from './headerPanel';
 import { InputHistory } from './inputHistory';
 import { IntellisenseProvider } from './intellisenseProvider';
 import { createCellVM, createEditableCellVM, extractInputText, generateTestState, IMainPanelState } from './mainPanelState';
 import { initializeTokenizer, registerMonacoLanguage } from './tokenizer';
+import { IToolbarPanelProps, ToolbarPanel } from './toolbarPanel';
 import { VariableExplorer } from './variableExplorer';
+import { IVariablePanelProps, VariablePanel } from './variablePanel';
 
 import './mainPanel.css';
 
@@ -62,7 +63,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             redoStack : [],
             submittedText: false,
             history: new InputHistory(),
-            contentTop: 24,
             editCellVM: getSettings && getSettings().allowInput ? createEditableCellVM(1) : undefined,
             editorOptions: this.computeEditorOptions()
         };
@@ -138,22 +138,17 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     darkChanged={this.darkChanged}
                     monacoThemeChanged={this.monacoThemeChanged}
                     ref={this.styleInjectorRef} />
-                <div className='main-panel-header'>
-                    <div className='main-panel-inner'>
-                        {this.renderHeaderPanel(baseTheme)}
-                    </div>
+                <div id='main-panel-toolbar'>
+                    {this.renderToolbarPanel(baseTheme)}
                 </div>
-                <div className='main-panel-content'>
-                    <div className='main-panel-inner'>
-                        <div className='main-panel-scrollable'>
-                            {this.renderContentPanel(baseTheme)}
-                        </div>
-                    </div>
+                <div id='main-panel-variable'>
+                    {this.renderVariablePanel(baseTheme)}
                 </div>
-                <div className='main-panel-footer'>
-                    <div className='main-panel-inner'>
-                        {this.renderFooterPanel(baseTheme)}
-                    </div>
+                <div id='main-panel-content'>
+                    {this.renderContentPanel(baseTheme)}
+                </div>
+                <div id='main-panel-footer'>
+                    {this.renderFooterPanel(baseTheme)}
                 </div>
             </div>
         );
@@ -262,9 +257,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     //     this.addCell(cell);
     // }
 
-    private renderHeaderPanel(baseTheme: string) {
-        const headerProps = this.getHeaderProps(baseTheme);
-        return <HeaderPanel {...headerProps} />;
+    private renderToolbarPanel(baseTheme: string) {
+        const toolbarProps = this.getToolbarProps(baseTheme);
+        return <ToolbarPanel {...toolbarProps} />;
+    }
+
+    private renderVariablePanel(baseTheme: string) {
+        const variableProps = this.getVariableProps(baseTheme);
+        return <VariablePanel {...variableProps} />;
     }
 
     private renderContentPanel(baseTheme: string) {
@@ -290,6 +290,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const errorBackgroundColor = getSettings().errorBackgroundColor;
         const actualErrorBackgroundColor = errorBackgroundColor ? errorBackgroundColor : '#FFFFFF';
         const maxTextSize = maxOutputSize && maxOutputSize < 10000 && maxOutputSize > 0 ? maxOutputSize : undefined;
+        const executionCount = this.getInputExecutionCount(this.state.cellVMs);
 
         return (
             <div className='edit-panel'>
@@ -309,9 +310,11 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                         ref={this.saveEditCellRef}
                         gotoCode={noop}
                         delete={noop}
+                        editExecutionCount={executionCount}
                         onCodeCreated={this.editableCodeCreated}
                         onCodeChange={this.codeChange}
                         monacoTheme={this.state.monacoTheme}
+                        openLink={this.openLink}
                     />
                 </ErrorBoundary>
             </div>
@@ -320,7 +323,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private computeEditorOptions() : monacoEditor.editor.IEditorOptions {
         const intellisenseOptions = getSettings().intellisenseOptions;
-        if (intellisenseOptions) {
+        const extraSettings = getSettings().extraSettings;
+        if (intellisenseOptions && extraSettings) {
             return {
                 quickSuggestions: {
                     other: intellisenseOptions.quickSuggestions.other,
@@ -338,16 +342,13 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 wordBasedSuggestions: intellisenseOptions.wordBasedSuggestions,
                 parameterHints: {
                     enabled: intellisenseOptions.parameterHintsEnabled
-                }
+                },
+                cursorStyle: extraSettings.terminalCursor,
+                cursorBlinking: extraSettings.terminalCursorBlink
             };
         }
 
         return {};
-    }
-
-    // Called by the header control when size changes (such as expanding variables)
-    private onHeaderHeightChange = (newHeight: number) => {
-        this.setState({contentTop: newHeight});
     }
 
     private darkChanged = (newDark: boolean) => {
@@ -393,7 +394,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return {
             editorOptions: this.state.editorOptions,
             baseTheme: baseTheme,
-            contentTop: this.state.contentTop,
             cellVMs: this.state.cellVMs,
             history: this.state.history,
             testMode: this.props.testMode,
@@ -404,13 +404,13 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             skipNextScroll: this.state.skipNextScroll ? true : false,
             monacoTheme: this.state.monacoTheme,
             onCodeCreated: this.readOnlyCodeCreated,
-            onCodeChange: this.codeChange
+            onCodeChange: this.codeChange,
+            openLink: this.openLink
         };
     }
-    private getHeaderProps = (baseTheme: string): IHeaderPanelProps => {
+    private getToolbarProps = (baseTheme: string): IToolbarPanelProps => {
        return {
         addMarkdown: this.addMarkdown,
-        busy: this.state.busy,
         collapseAll: this.collapseAll,
         expandAll: this.expandAll,
         export: this.export,
@@ -420,17 +420,23 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         redo: this.redo,
         clearAll: this.clearAll,
         skipDefault: this.props.skipDefault,
-        showDataExplorer: this.showDataViewer,
-        testMode: this.props.testMode,
-        variableExplorerRef: this.variableExplorerRef,
         canCollapseAll: this.canCollapseAll(),
         canExpandAll: this.canExpandAll(),
         canExport: this.canExport(),
         canUndo: this.canUndo(),
         canRedo: this.canRedo(),
+        baseTheme: baseTheme
+       };
+    }
+
+    private getVariableProps = (baseTheme: string): IVariablePanelProps => {
+       return {
+        busy: this.state.busy,
+        showDataExplorer: this.showDataViewer,
+        testMode: this.props.testMode,
+        variableExplorerRef: this.variableExplorerRef,
         refreshVariables: this.refreshVariables,
         variableExplorerToggled: this.variableExplorerToggled,
-        onHeightChange: this.onHeaderHeightChange,
         baseTheme: baseTheme
        };
     }
@@ -478,6 +484,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private sendMessage<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) {
         this.postOffice.sendMessage<M, T>(type, payload);
+    }
+
+    private openLink = (uri: monacoEditor.Uri) => {
+        this.sendMessage(HistoryMessages.OpenLink, uri.toString());
     }
 
     private getAllCells = () => {

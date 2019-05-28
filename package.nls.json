@@ -53,6 +53,7 @@
     "python.command.python.datascience.restartkernel.title": "Restart IPython Kernel",
     "python.command.python.datascience.expandallcells.title": "Expand all Python Interactive cells",
     "python.command.python.datascience.collapseallcells.title": "Collapse all Python Interactive cells",
+    "python.command.python.datascience.addcellbelow.title": "Add empty cell to file",
     "python.snippet.launch.standard.label": "Python: Current File",
     "python.snippet.launch.module.label": "Python: Module",
     "python.snippet.launch.module.default": "enter-your-module-name",

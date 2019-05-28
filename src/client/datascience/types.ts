@@ -221,6 +221,7 @@ export interface ICodeWatcher {
     runAllCellsAbove(stopLine: number, stopCharacter: number): Promise<void>;
     runCellAndAllBelow(startLine: number, startCharacter: number): Promise<void>;
     runFileInteractive(): Promise<void>;
+    addEmptyCellToBottom(): Promise<void>;
 }
 
 export enum CellState {
@@ -294,6 +295,7 @@ export interface IJupyterCommandFactory {
 export interface IDataScienceExtraSettings extends IDataScienceSettings {
     extraSettings: {
         terminalCursor: string;
+        terminalCursorBlink: string;
         theme: string;
     };
     intellisenseOptions: {
