@@ -1305,7 +1305,7 @@
                 "python.dataScience.previewImportedNotebooksInInteractivePane": {
                     "type": "boolean",
                     "default": true,
-                    "description": "When importing ipynb files, preview the contents in the 'Python Interactive' window.",
+                    "description": "When importing ipynb files, preview the contents in the Python Interactive window.",
                     "scope": "resource"
                 },
                 "python.disableInstallationCheck": {
