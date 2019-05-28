@@ -5,8 +5,8 @@
 
 ### Enhancements
 
-1. Changed synchronous file system operation into async
-   ([#4895](https://github.com/Microsoft/vscode-python/issues/4895))
+1. Add visual separation between the variable explorer and the rest of the Interactive Window content
+   ([#5389](https://github.com/Microsoft/vscode-python/issues/5389))
 1. Show a message when no variables are defined
    ([#5228](https://github.com/Microsoft/vscode-python/issues/5228))
 1. Variable explorer UI fixes via PM / designer
@@ -24,6 +24,28 @@
 
 ### Fixes
 
+1. Advance to the next cell if cursor is in the current cell and user clicks 'Run Cell'
+   ([#5067](https://github.com/Microsoft/vscode-python/issues/5067))
+1. Fix import/export paths to be escaped on windows.
+   ([#5386](https://github.com/Microsoft/vscode-python/issues/5386))
+1. Fix magics running from a python file.
+   ([#5537](https://github.com/Microsoft/vscode-python/issues/5537))
+1. Change scrolling to not animate to workaround async updates breaking the animation.
+   ([#5560](https://github.com/Microsoft/vscode-python/issues/5560))
+1. Add support for opening hyperlinks from the interactive window.
+   ([#5630](https://github.com/Microsoft/vscode-python/issues/5630))
+1. Add 'Add empty cell to file' command. Shortcut for having to type '#%%'
+   ([#5667](https://github.com/Microsoft/vscode-python/issues/5667))
+1. Add 'ctrl+enter' as a keyboard shortcut for run current cell (runs without advancing)
+   ([#5673](https://github.com/Microsoft/vscode-python/issues/5673))
+1. Adjust input box prompt to look more an IPython console prompt.
+   ([#5729](https://github.com/Microsoft/vscode-python/issues/5729))
+1. Fix horizontal scrolling in the Interactive Window
+   ([#5734](https://github.com/Microsoft/vscode-python/issues/5734))
+1. Fix problem with using up/down arrows in autocomplete.
+   ([#5774](https://github.com/Microsoft/vscode-python/issues/5774))
+1. Fix latex and markdown scrolling.
+   ([#5775](https://github.com/Microsoft/vscode-python/issues/5775))
 1. Use the correct activation script for conda environments
    ([#4402](https://github.com/Microsoft/vscode-python/issues/4402))
 1. Improve pipenv error messages (thanks [David Lechner](https://github.com/dlech))
@@ -75,6 +97,14 @@
    ([#3568](https://github.com/Microsoft/vscode-python/issues/3568))
 1. Fix perf issues with long collections and variable explorer
    ([#5511](https://github.com/Microsoft/vscode-python/issues/5511))
+1. Changed synchronous file system operation into async
+   ([#4895](https://github.com/Microsoft/vscode-python/issues/4895))
+1. Update ptvsd to [4.2.10](https://github.com/Microsoft/ptvsd/releases/tag/v4.2.10).
+    * No longer switch off getpass on import.
+    * Fixes a crash on evaluate request.
+    * Fix a issue with running no-debug.
+    * Fixes issue with forwarding sys.stdin.read().
+    * Remove sys.prefix form library roots.
 
 ### Code Health
 
