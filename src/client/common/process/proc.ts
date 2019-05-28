@@ -48,7 +48,8 @@ export class ProcessService implements IProcessService, IDisposable {
                 return;
             }
             try {
-                proc.kill();
+                // Make sure to kill the entire process tree.
+                ProcessService.kill(proc.pid);
             } catch {
                 // Ignore.
             }
@@ -96,6 +97,11 @@ export class ProcessService implements IProcessService, IDisposable {
                 subscriber.complete();
                 disposables.forEach(disposable => disposable.dispose());
             });
+            proc.once('exit', () => {
+                procExited = true;
+                subscriber.complete();
+                disposables.forEach(disposable => disposable.dispose());
+            });
             proc.once('error', ex => {
                 procExited = true;
                 subscriber.error(ex);
@@ -107,7 +113,7 @@ export class ProcessService implements IProcessService, IDisposable {
             proc,
             out: output,
             dispose: () => {
-                if (proc && !proc.killed) {
+                if (proc && !proc.killed && !procExited) {
                     ProcessService.kill(proc.pid);
                 }
                 if (proc) {
