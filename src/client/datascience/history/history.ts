@@ -3,6 +3,7 @@
 'use strict';
 import '../../common/extensions';
 
+import { nbformat } from '@jupyterlab/coreutils';
 import * as fs from 'fs-extra';
 import { inject, injectable, multiInject } from 'inversify';
 import * as path from 'path';
@@ -47,6 +48,7 @@ import {
     IJupyterVariables,
     IJupyterVariablesResponse,
     INotebookExporter,
+    INotebookImporter,
     INotebookServer,
     InterruptResult,
     IStatusProvider,
@@ -98,7 +100,8 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IHistoryProvider) private historyProvider: IHistoryProvider,
         @inject(IDataViewerProvider) private dataExplorerProvider: IDataViewerProvider,
-        @inject(IJupyterVariables) private jupyterVariables: IJupyterVariables
+        @inject(IJupyterVariables) private jupyterVariables: IJupyterVariables,
+        @inject(INotebookImporter) private jupyterImporter: INotebookImporter
         ) {
         super(
             configuration,
@@ -384,6 +387,38 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
                 this.applicationShell.showErrorMessage(err);
             }
         }
+    }
+
+    public async importNotebook(file: string) : Promise<string> {
+        // First convert to a python file to verify this file is valid.
+        const results = await this.jupyterImporter.importFromFile(file);
+
+        // Then if it is, and the user has specified they want the notebook to auto open,
+        if (results && this.configuration.getSettings().datascience.previewImportedNotebooksInInteractivePane) {
+            // Then read in the file as json. This json should already
+            // be in the cell format
+            // tslint:disable-next-line: no-any
+            const contents = JSON.parse(await this.fileSystem.readFile(file)) as any;
+            if (contents && contents.cells && contents.cells.length) {
+                const cells = contents.cells as (nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell)[];
+
+                // Convert the inputdata into our ICell format
+                const finishedCells : ICell[] = cells.filter(c => c.source.length > 0).map(c => {
+                    return {
+                        id: uuid(),
+                        file: Identifiers.EmptyFileName,
+                        line: 0,
+                        state: CellState.finished,
+                        // Remove execution count as the original count doesn't apply.
+                        data: {...c, execution_count: null}
+                    };
+                });
+
+                // Do the same thing that happens when new code is added.
+                this.onAddCodeEvent(finishedCells);
+            }
+        }
+        return results;
     }
 
     protected async activating() {

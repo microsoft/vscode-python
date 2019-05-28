@@ -180,7 +180,7 @@ export class Cell extends React.Component<ICellProps> {
         const busy = this.props.cellVM.cell.state === CellState.init || this.props.cellVM.cell.state === CellState.executing;
         const collapseVisible = (this.props.cellVM.inputBlockCollapseNeeded && this.props.cellVM.inputBlockShow && !this.props.cellVM.editable);
         const executionCount = this.props.cellVM && this.props.cellVM.cell && this.props.cellVM.cell.data && this.props.cellVM.cell.data.execution_count ?
-            this.props.cellVM.cell.data.execution_count.toString() : '0';
+            this.props.cellVM.cell.data.execution_count.toString() : '-';
 
         // Only code cells have controls. Markdown should be empty
         if (this.isCodeCell()) {

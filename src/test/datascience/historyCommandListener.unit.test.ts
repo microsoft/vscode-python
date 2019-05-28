@@ -201,7 +201,6 @@ suite('History command listener', async () => {
         const result = new HistoryCommandListener(
             disposableRegistry,
             instance(historyProvider),
-            instance(notebookImporter),
             instance(notebookExporter),
             instance(jupyterExecution),
             documentManager,

@@ -312,6 +312,7 @@ export interface IDataScienceSettings {
     decorateCells?: boolean;
     enableCellCodeLens?: boolean;
     enableAutoMoveToNextCell?: boolean;
+    previewImportedNotebooksInInteractivePane?: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

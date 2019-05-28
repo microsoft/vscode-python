@@ -166,6 +166,7 @@ export interface IHistory extends Disposable {
     expandAllCells(): void;
     collapseAllCells(): void;
     exportCells(): void;
+    importNotebook(notebookFile: string) : Promise<string>;
 }
 
 export const IHistoryListener = Symbol('IHistoryListener');
