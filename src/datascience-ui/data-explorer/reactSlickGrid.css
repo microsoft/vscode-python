@@ -4,7 +4,7 @@
 }
 
 .react-grid-container {
-    height:94%; /* Slick grid has a bug where there's no space left for the bottom scroll bar */
+    height:90%; /* Slick grid has a bug where there's no space left for the bottom scroll bar */
     border-color: var(--vscode-editor-inactiveSelectionBackground);
     border-style: solid;
     border-width: 1px;
@@ -13,11 +13,11 @@
 .react-grid-filter-button {
     background: var(--vscode-button-background);
     color: var(--vscode-button-foreground);
-    padding: 5px;
+    padding: 10px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    margin:2px;
+    margin:8px 4px;
 }
 
 .react-grid-filter-button:focus {

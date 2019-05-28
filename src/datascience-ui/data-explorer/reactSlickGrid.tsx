@@ -22,6 +22,10 @@ import 'slickgrid/slick.grid.css';
 
 // Make sure our css comes after the slick grid css. We override some of its styles.
 import './reactSlickGrid.css';
+import { string } from 'prop-types';
+import { measureText } from '../react-common/textMeasure';
+
+const MinColumnWidth = 100;
 
 export interface ISlickRow extends Slick.SlickData {
     id: string;
@@ -54,6 +58,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     private dataView: Slick.Data.DataView<ISlickRow> = new Slick.Data.DataView();
     private columnFilters: Map<string, ISlickGridColumnFilter> = new Map<string, ISlickGridColumnFilter>();
     private resizeTimer?: number;
+    private autoResizedColumns: boolean = false;
 
     constructor(props: ISlickGridProps) {
         super(props);
@@ -66,8 +71,11 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         window.addEventListener('resize', this.windowResized);
 
         if (this.containerRef.current) {
-            // Compute font size
-            const fontSize = parseInt(getComputedStyle(this.containerRef.current).getPropertyValue('--code-font-size'), 10);
+            // Compute font size. Default to 15 if not found.
+            let fontSize = parseInt(getComputedStyle(this.containerRef.current).getPropertyValue('--vscode-font-size'), 10);
+            if (isNaN(fontSize)) {
+                fontSize = 15;
+            }
 
             // Setup options for the grid
             const options : Slick.GridOptions<Slick.SlickData> = {
@@ -159,16 +167,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         // If this is our first time setting the grid, we need to dynanically modify the styles
         // that the slickGrid generates for the rows. It's eliminating some of the height
         if (!prevState.grid && this.state.grid && this.containerRef.current) {
-            const gridName = (this.state.grid as any).getUID() as string;
-            const document = this.containerRef.current.ownerDocument;
-            if (document) {
-                const cssOverrideNode = document.createElement('style');
-                const rule = `.${gridName} .slick-cell {height: ${this.state.fontSize + 2}px;}`;
-                cssOverrideNode.setAttribute('type', 'text/css');
-                cssOverrideNode.setAttribute('rel', 'stylesheet');
-                cssOverrideNode.appendChild(document.createTextNode(rule));
-                document.head.appendChild(cssOverrideNode);
-            }
+            this.updateCssStyles();
         }
     }
 
@@ -180,6 +179,21 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 </div>
             </div>
         );
+    }
+
+    private updateCssStyles = () => {
+        if (this.state.grid && this.containerRef.current) {
+            const gridName = (this.state.grid as any).getUID() as string;
+            const document = this.containerRef.current.ownerDocument;
+            if (document) {
+                const cssOverrideNode = document.createElement('style');
+                const rule = `.${gridName} .slick-cell {height: ${this.state.fontSize + 2}px;}`;
+                cssOverrideNode.setAttribute('type', 'text/css');
+                cssOverrideNode.setAttribute('rel', 'stylesheet');
+                cssOverrideNode.appendChild(document.createTextNode(rule));
+                document.head.appendChild(cssOverrideNode);
+            }
+        }
     }
 
     private windowResized = () => {
@@ -195,11 +209,48 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         }
     }
 
+    private autoResizeColumns(rows: ISlickRow[]) {
+        if (this.state.grid) {
+            const fontString = this.computeFont();
+            const columns = this.state.grid.getColumns();
+            columns.forEach(c => {
+                let colWidth = MinColumnWidth;
+                rows.forEach((r: any) => {
+                    const field = c.field ? r[c.field] : '';
+                    const fieldWidth = field ? measureText(field.toString(), fontString) : 0;
+                    colWidth = Math.max(colWidth, fieldWidth);
+                });
+                c.width = colWidth;
+            });
+            this.state.grid.setColumns(columns);
+
+            // We also need to update the styles as slickgrid will mess up the height of rows
+            // again
+            setTimeout(this.updateCssStyles, 10);
+        }
+    }
+
+    private computeFont() : string | null {
+        if (this.containerRef.current) {
+            const style = getComputedStyle(this.containerRef.current);
+            return style ? style.font : null;
+        }
+        return null;
+    }
+
     private addedRows = (_e: Slick.EventData, data: ISlickGridAdd) => {
+        // Add all of these new rows into our data.
         this.dataView.beginUpdate();
         for (const row of data.newRows) {
             this.dataView.addItem(row);
         }
+
+        // Update columns if we haven't already
+        if (!this.autoResizedColumns) {
+            this.autoResizedColumns = true;
+            this.autoResizeColumns(data.newRows);
+        }
+
         this.dataView.endUpdate();
 
         // This should cause a rowsChanged event in the dataview that will

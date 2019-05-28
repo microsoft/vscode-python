@@ -184,12 +184,7 @@ module.exports = [
                         }
                     ]
                 },
-                { test: /\.(png|woff|woff2|eot|ttf)$/, loader: 'url-loader?limit=100000' },
-                {
-                    test: /\.(jpe?g|gif|mp3)$/i,
-                    include: /.*/,
-                    loaders: ['file-loader']
-                },
+                { test: /\.(png|woff|woff2|eot|gif|ttf)$/, loader: 'url-loader?limit=100000' },
                 {
                     test: /\.json$/,
                     type: 'javascript/auto',
