@@ -107,19 +107,10 @@ export class InvalidTestSettingDiagnosticsService extends BaseDiagnosticsService
     public async fixSettingInFile(filePath: string) {
         const fileContents = await this.fs.readFile(filePath);
         const setting = new RegExp('"python.unitTest', 'g');
+        const setting_pytest_enabled = new RegExp('.pyTestEnabled"', 'g');
 
         await this.fs.writeFile(filePath, fileContents.replace(setting, '"python.testing'));
-
-        // Keep track of updated file.
-        this.stateStore.value.push(filePath);
-        await this.stateStore.updateValue(this.stateStore.value.slice());
-    }
-    @swallowExceptions('Failed to update settings.json')
-    public async fixSettingInFilePytestEnabled(filePath: string) {
-        const fileContents = await this.fs.readFile(filePath);
-        const setting_pytest_enabled = new RegExp('"python.testing.pyTestEnabled', 'g');
-
-        await this.fs.writeFile(filePath, fileContents.replace(setting_pytest_enabled, '"python.testing.pytestEnabled'));
+        await this.fs.writeFile(filePath, fileContents.replace(setting_pytest_enabled, '.pytestEnabled"'));
 
         // Keep track of updated file.
         this.stateStore.value.push(filePath);
