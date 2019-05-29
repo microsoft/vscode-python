@@ -114,6 +114,17 @@ export class InvalidTestSettingDiagnosticsService extends BaseDiagnosticsService
         this.stateStore.value.push(filePath);
         await this.stateStore.updateValue(this.stateStore.value.slice());
     }
+    @swallowExceptions('Failed to update settings.json')
+    public async fixSettingInFilePytestEnabled(filePath: string) {
+        const fileContents = await this.fs.readFile(filePath);
+        const setting_pytest_enabled = new RegExp('"python.testing.pyTestEnabled', 'g');
+
+        await this.fs.writeFile(filePath, fileContents.replace(setting_pytest_enabled, '"python.testing.pytestEnabled'));
+
+        // Keep track of updated file.
+        this.stateStore.value.push(filePath);
+        await this.stateStore.updateValue(this.stateStore.value.slice());
+    }
     @swallowExceptions('Failed to check if file needs to be fixed')
     private async doesFileNeedToBeFixed(filePath: string) {
         // If we have fixed the path to this file once before,
