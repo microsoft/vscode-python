@@ -4,10 +4,14 @@
 }
 
 .react-grid-container {
-    height:90%; /* Slick grid has a bug where there's no space left for the bottom scroll bar */
     border-color: var(--vscode-editor-inactiveSelectionBackground);
     border-style: solid;
     border-width: 1px;
+}
+
+.react-grid-measure {
+    position: absolute;
+    bottom: 5px;
 }
 
 .react-grid-filter-button {
@@ -18,29 +22,6 @@
     border-radius: 5px;
     cursor: pointer;
     margin:8px 4px;
-}
-
-.react-grid-filter-button #react-grid-filter-tooltip {
-    visibility: hidden;
-    border-color: var(--vscode-editor-inactiveSelectionBackground);
-    background-color: black;
-    border-style: solid;
-    border-width: 1px;
-    border-radius: 2px;
-
-    background-color: var(--vscode-editor-background);
-    color: var(--vscode-editor-foreground);
-
-    text-align: center;
-    padding: 2px;
-    margin: 0px 0px 0px 15px;
-   
-    position: absolute;
-    z-index: 1;
-  }
-
-.react-grid-filter-button:hover #react-grid-filter-tooltip {
-    visibility: visible;
 }
 
 .react-grid-filter-button:focus {
@@ -79,8 +60,31 @@
 
 .slick-sort-indicator {
     float: right;
+    width: 0px;
+    margin-right: 12px;
+    margin-top: 1px;
 }
 
-.react-grid-header-cell:hover > .slick-sort-indicator {
-    background: url(../../../node_modules/slickgrid/images/sort-asc.gif);
+.react-grid-header-cell:hover > .slick-sort-indicator::before {
+    background: none;
+    content: '▲';
+    align-items: center;
+}
+
+.react-grid-header-cell > .slick-sort-indicator-asc::before {
+    background: none;
+    content: '▲';
+    align-items: center;
+}
+
+.react-grid-header-cell > .slick-sort-indicator-desc::before {
+    background: none;
+    content: '▼';
+    align-items: center;
+}
+
+.react-grid-header-cell:hover > .slick-sort-indicator-desc::before {
+    background: none;
+    content: '▼';
+    align-items: center;
 }

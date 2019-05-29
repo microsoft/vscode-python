@@ -349,15 +349,15 @@ function getString(key: string, defValue?: string) {
     if (loadedCollection && loadedCollection.hasOwnProperty(key)) {
         collection = loadedCollection;
     }
-    askedForCollection[key] = collection[key];
-    const result = collection[key];
-    if (result) {
-        return result;
+    let result = collection[key];
+    if (!result && defValue) {
+        // This can happen during development if you haven't fixed up the nls file yet or
+        // if for some reason somebody broke the functional test.
+        result = defValue;
     }
+    askedForCollection[key] = result;
 
-    // This can happen during development if you haven't fixed up the nls file yet or
-    // if for some reason somebody broke the unit test.
-    return defValue ? defValue : '<unset>';
+    return result;
 }
 
 function load() {

@@ -203,6 +203,8 @@ export function setUpDomEnvironment() {
 
     // tslist:disable-next-line:no-string-literal no-any
     (global as any)['Element'] = window.Element;
+    // tslist:disable-next-line:no-string-literal no-any
+    (global as any)['location'] = window.location;
     // tslint:disable-next-line:no-string-literal no-any
     (global as any)['window'] = window;
     // tslint:disable-next-line:no-string-literal no-any

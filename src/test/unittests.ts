@@ -25,9 +25,32 @@ const Module = require('module');
     const _require = (context: any, filepath: any) => {
         return origRequire.call(context, filepath);
     };
-    Module.prototype.require = function (filepath: any) {
+    Module.prototype.require = function (filepath: string) {
         if (filepath.endsWith('.css') || filepath.endsWith('.svg')) {
             return '';
+        }
+        if (filepath.startsWith('expose-loader?')) {
+            // Pull out the thing to expose
+            const queryEnd = filepath.indexOf('!');
+            if (queryEnd >= 0) {
+                const query = filepath.substring('expose-loader?'.length, queryEnd);
+                // tslint:disable-next-line:no-invalid-this
+                (global as any)[query] = _require(this, filepath.substring(queryEnd + 1));
+                return '';
+            }
+        }
+        if (filepath.startsWith('slickgrid/slick.core')) {
+            // Special case. This module sticks something into the global 'window' object.
+            // tslint:disable-next-line:no-invalid-this
+            const result = _require(this, filepath);
+
+            // However it doesn't look in the 'window' object later. we have to move it to
+            // the globals when in node.js
+            if ((window as any).Slick) {
+                (global as any).Slick = (window as any).Slick;
+            }
+
+            return result;
         }
         // tslint:disable-next-line:no-invalid-this
         return _require(this, filepath);

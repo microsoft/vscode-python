@@ -238,5 +238,11 @@
     "Common.notNow": "Not now",
     "Common.gotIt": "Got it!",
     "Interpreters.selectInterpreterTip": "Tip: you can change the Python interpreter used by the Python extension by clicking on the Python version in the status bar",
-    "DataScience.noRowsInVariableExplorer": "No variables defined"
+    "DataScience.noRowsInVariableExplorer": "No variables defined",
+    "DataScience.tooManyColumnsMessage" : "Variables with over a 1000 columns may take a long time to display. Are you sure you wish to continue?",
+    "DataScience.tooManyColumnsYes": "Yes",
+    "DataScience.tooManyColumnsNo": "No",
+    "DataScience.tooManyColumnsDontAskAgain": "Don't Ask Again",
+    "DataScience.filterRowsButton": "Filter Rows",
+    "DataScience.filterRowsTooltip": "Allows filtering multiple rows. Use =, >, or < signs to filter numeric values."
 }

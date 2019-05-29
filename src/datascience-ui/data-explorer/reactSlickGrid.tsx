@@ -19,6 +19,8 @@ import 'slickgrid/slick.core';
 import 'slickgrid/slick.dataview';
 import 'slickgrid/slick.grid';
 
+import 'slickgrid/plugins/slick.autotooltips';
+
 import 'slickgrid/slick.grid.css';
 
 // Make sure our css comes after the slick grid css. We override some of its styles.
@@ -116,6 +118,7 @@ class ColumnFilter {
 
 export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridState> {
     private containerRef: React.RefObject<HTMLDivElement>;
+    private measureRef: React.RefObject<HTMLDivElement>;
     private dataView: Slick.Data.DataView<ISlickRow> = new Slick.Data.DataView();
     private columnFilters: Map<string, ColumnFilter> = new Map<string, ColumnFilter>();
     private resizeTimer?: number;
@@ -125,6 +128,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         super(props);
         this.state = { fontSize: 15 };
         this.containerRef = React.createRef<HTMLDivElement>();
+        this.measureRef = React.createRef<HTMLDivElement>();
         this.props.rowsAdded.subscribe(this.addedRows);
     }
 
@@ -165,6 +169,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 columns,
                 options
             );
+            grid.registerPlugin(new Slick.AutoTooltips({ enableForCells: true, enableForHeaderCells: true}));
 
             // Setup our dataview
             this.dataView.beginUpdate();
@@ -232,12 +237,12 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     public render() {
         return (
             <div className='outer-container'>
-                <button className='react-grid-filter-button' onClick={this.clickFilterButton}>
+                <button className='react-grid-filter-button' title={this.props.filterRowsTooltip} onClick={this.clickFilterButton}>
                     <span>{this.props.filterRowsText}</span>
-                    <span id='react-grid-filter-tooltip'>{this.props.filterRowsTooltip}</span>
                 </button>
                 <div className='react-grid-container' ref={this.containerRef}>
                 </div>
+                <div className='react-grid-measure' ref={this.measureRef}/>
             </div>
         );
     }
@@ -265,7 +270,11 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     }
 
     private updateGridSize = () => {
-        if (this.state.grid) {
+        if (this.state.grid && this.containerRef.current && this.measureRef.current) {
+            // We use a div at the bottom to figure out our expected height. Slickgrid isn't
+            // so good without a specific height set in the style.
+            const height = this.measureRef.current.offsetTop - this.containerRef.current.offsetTop;
+            this.containerRef.current.style.height = `${height}px`;
             this.state.grid.resizeCanvas();
         }
     }
