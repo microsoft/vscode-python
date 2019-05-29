@@ -49,15 +49,71 @@ interface ISlickGridState {
     fontSize: number;
 }
 
-interface ISlickGridColumnFilter {
-    text: string | undefined;
-    column: Slick.Column<Slick.SlickData>;
+class ColumnFilter {
+    private matchFunc : (v: any) => boolean;
+    private lessThanRegEx = /^\s*<\s*(\d+.*)/;
+    private lessThanEqualRegEx = /^\s*<=\s*(\d+.*).*/;
+    private greaterThanRegEx = /^\s*>\s*(\d+.*).*/;
+    private greaterThanEqualRegEx = /^\s*>=\s*(\d+.*).*/;
+    private equalThanRegEx = /^\s*=\s*(\d+.*).*/;
+
+    constructor(text: string, column: Slick.Column<Slick.SlickData>) {
+        const columnType = (column as any).type;
+        switch (columnType) {
+            case 'string':
+            default:
+                this.matchFunc = (v: any) => v && text.includes(v.toString());
+                break;
+
+            case 'integer':
+            case 'float':
+            case 'int64':
+            case 'float64':
+            case 'number':
+                this.matchFunc = this.generateNumericOperation(text);
+                break;
+        }
+    }
+
+    public matches(value: any) : boolean {
+        return this.matchFunc(value);
+    }
+
+    private extractDigits(text: string, regex: RegExp) : number {
+        const match = regex.exec(text);
+        if (match && match.length > 1) {
+            return parseFloat(match[1]);
+        }
+        return 0;
+    }
+
+    private generateNumericOperation(text: string) : (v: any) => boolean {
+        if (this.lessThanRegEx.test(text)) {
+            const n1 = this.extractDigits(text, this.lessThanRegEx);
+            return (v: any) => v && v < n1;
+        } else if (this.lessThanEqualRegEx.test(text)) {
+            const n2 = this.extractDigits(text, this.lessThanEqualRegEx);
+            return (v: any) => v && v <= n2;
+        } else if (this.greaterThanRegEx.test(text)) {
+            const n3 = this.extractDigits(text, this.greaterThanRegEx);
+            return (v: any) => v && v > n3;
+        } else if (this.greaterThanEqualRegEx.test(text)) {
+            const n4 = this.extractDigits(text, this.greaterThanEqualRegEx);
+            return (v: any) => v && v >= n4;
+        } else if (this.equalThanRegEx.test(text)) {
+            const n5 = this.extractDigits(text, this.equalThanRegEx);
+            return (v: any) => v && v === n5;
+        } else {
+            const n6 = parseFloat(text);
+            return (v: any) => v && v === n6;
+        }
+    }
 }
 
 export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridState> {
     private containerRef: React.RefObject<HTMLDivElement>;
     private dataView: Slick.Data.DataView<ISlickRow> = new Slick.Data.DataView();
-    private columnFilters: Map<string, ISlickGridColumnFilter> = new Map<string, ISlickGridColumnFilter>();
+    private columnFilters: Map<string, ColumnFilter> = new Map<string, ColumnFilter>();
     private resizeTimer?: number;
     private autoResizedColumns: boolean = false;
 
@@ -271,9 +327,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             if (field) {
                 const filter = this.columnFilters.get(field);
                 if (filter) {
-                    const itemField = item[field];
-                    const actualText = itemField !== null && itemField !== undefined ? itemField.toString() : '';
-                    if (actualText && !actualText.includes(filter.text)) {
+                    if (!filter.matches(item[field])) {
                         return false;
                     }
                 }
@@ -293,7 +347,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
     private filterChanged = (text: string, column: Slick.Column<Slick.SlickData>) => {
         if (column && column.field) {
-            this.columnFilters.set(column.field, { text, column });
+            this.columnFilters.set(column.field, new ColumnFilter(text, column));
             this.dataView.refresh();
         }
     }
