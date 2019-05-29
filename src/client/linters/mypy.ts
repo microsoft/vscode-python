@@ -4,6 +4,7 @@ import { Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { BaseLinter } from './baseLinter';
 import { ILintMessage } from './types';
+import * as path from 'path';
 
 export const REGEX = '(?<file>[^:]+):(?<line>\\d+)(:(?<column>\\d+))?: (?<type>\\w+): (?<message>.*)\\r?(\\n|$)';
 
@@ -13,7 +14,9 @@ export class MyPy extends BaseLinter {
     }
 
     protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {
-        const messages = await this.run([document.uri.fsPath], document, cancellation, REGEX);
+        const cwd = this.getWorkspaceRootPath(document);
+        const relativePath = path.relative(cwd,document.uri.fsPath);
+        const messages = await this.runrelativePath document, cancellation, REGEX);
         messages.forEach(msg => {
             msg.severity = this.parseMessagesSeverity(msg.type, this.pythonSettings.linting.mypyCategorySeverity);
             msg.code = msg.type;
