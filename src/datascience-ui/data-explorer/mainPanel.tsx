@@ -15,6 +15,7 @@ import {
     IGetRowsResponse
 } from '../../client/datascience/data-viewing/types';
 import { IJupyterVariable } from '../../client/datascience/types';
+import { getLocString } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { Progress } from '../react-common/progress';
 import { StyleInjector } from '../react-common/styleInjector';
@@ -147,11 +148,16 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private renderGrid() {
+        const filterRowsText = getLocString('DataScience.filterRowsButton', 'Filter Rows');
+        const filterRowsTooltip = getLocString('DataScience.filterRowsTooltip', 'Click to filter.');
+
         return (
             <ReactSlickGrid
                 columns={this.state.gridColumns}
                 idProperty={this.state.indexColumn}
                 rowsAdded={this.gridAddEvent}
+                filterRowsText={filterRowsText}
+                filterRowsTooltip={filterRowsTooltip}
             />
         );
     }

@@ -20,6 +20,29 @@
     margin:8px 4px;
 }
 
+.react-grid-filter-button #react-grid-filter-tooltip {
+    visibility: hidden;
+    border-color: var(--vscode-editor-inactiveSelectionBackground);
+    background-color: black;
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 2px;
+
+    background-color: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground);
+
+    text-align: center;
+    padding: 2px;
+    margin: 0px 0px 0px 15px;
+   
+    position: absolute;
+    z-index: 1;
+  }
+
+.react-grid-filter-button:hover #react-grid-filter-tooltip {
+    visibility: visible;
+}
+
 .react-grid-filter-button:focus {
     outline: none;
 }
@@ -52,4 +75,12 @@
 
 .slick-header-column.ui-state-default, .slick-group-header-column.ui-state-default {
     border-right-color: var(--vscode-editor-inactiveSelectionBackground);
+}
+
+.slick-sort-indicator {
+    float: right;
+}
+
+.react-grid-header-cell:hover > .slick-sort-indicator {
+    background: url(../../../node_modules/slickgrid/images/sort-asc.gif);
 }

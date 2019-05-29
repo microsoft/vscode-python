@@ -6,6 +6,7 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { MaxStringCompare } from '../../client/datascience/data-viewing/types';
+import { measureText } from '../react-common/textMeasure';
 import { ReactSlickGridFilterBox } from './reactSlickGridFilterBox';
 
 // Slickgrid requires jquery to be defined. Globally. So we do some hacks here.
@@ -22,8 +23,6 @@ import 'slickgrid/slick.grid.css';
 
 // Make sure our css comes after the slick grid css. We override some of its styles.
 import './reactSlickGrid.css';
-import { string } from 'prop-types';
-import { measureText } from '../react-common/textMeasure';
 
 const MinColumnWidth = 100;
 
@@ -40,6 +39,8 @@ export interface ISlickGridProps {
     idProperty: string;
     columns: Slick.Column<ISlickRow>[];
     rowsAdded: Slick.Event<ISlickGridAdd>;
+    filterRowsText: string;
+    filterRowsTooltip: string;
 }
 
 interface ISlickGridState {
@@ -130,9 +131,6 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             // Init to force the actual render.
             grid.init();
 
-            // Hide the header row after we fill it in.
-            grid.setHeaderRowVisibility(false);
-
             // Set the initial sort column to our index column
             const indexColumn = columns.find(c => c.field === this.props.idProperty);
             if (indexColumn && indexColumn.id) {
@@ -174,7 +172,10 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     public render() {
         return (
             <div className='outer-container'>
-                <button className='react-grid-filter-button' onClick={this.clickFilterButton}>Filter Rows</button>
+                <button className='react-grid-filter-button' onClick={this.clickFilterButton}>
+                    <span>{this.props.filterRowsText}</span>
+                    <span id='react-grid-filter-tooltip'>{this.props.filterRowsTooltip}</span>
+                </button>
                 <div className='react-grid-container' ref={this.containerRef}>
                 </div>
             </div>
@@ -226,7 +227,13 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
             // We also need to update the styles as slickgrid will mess up the height of rows
             // again
-            setTimeout(this.updateCssStyles, 10);
+            setTimeout(() => {
+                this.updateCssStyles();
+
+                // Hide the header row after we finally resize our columns
+                this.state.grid!.setHeaderRowVisibility(false);
+            }
+            , 0);
         }
     }
 

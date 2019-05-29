@@ -170,6 +170,8 @@ export namespace DataScience {
     export const tooManyColumnsYes = localize('DataScience.tooManyColumnsYes', 'Yes');
     export const tooManyColumnsNo = localize('DataScience.tooManyColumnsNo', 'No');
     export const tooManyColumnsDontAskAgain = localize('DataScience.tooManyColumnsDontAskAgain', 'Don\'t Ask Again');
+    export const filterRowsButton = localize('DataScience.filterRowsButton', 'Filter Rows');
+    export const filterRowsTooltip = localize('DataScience.filterRowsTooltip', 'Allows filtering multiple rows. Use =, >, or < signs to filter numeric values.');
 
 }
 
