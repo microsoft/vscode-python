@@ -11,13 +11,16 @@ import { parse } from 'node-html-parser';
 import * as React from 'react';
 import * as uuid from 'uuid/v4';
 import { Disposable } from 'vscode';
+
 import { createDeferred } from '../../client/common/utils/async';
 import { Identifiers } from '../../client/datascience/constants';
 import { DataViewerMessages } from '../../client/datascience/data-viewing/types';
 import { IDataViewer, IDataViewerProvider, IHistoryProvider, IJupyterExecution } from '../../client/datascience/types';
 import { MainPanel } from '../../datascience-ui/data-explorer/mainPanel';
+import { ReactSlickGrid } from '../../datascience-ui/data-explorer/reactSlickGrid';
 import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
+import { getCellResults } from './historyTestHelpers';
 
 // import { asyncDump } from '../common/asyncDump';
 suite('DataScience DataViewer tests', () => {
@@ -133,6 +136,21 @@ suite('DataScience DataViewer tests', () => {
         });
     }
 
+    function sortRows(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, sortCol: string, sortAsc: boolean) : Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
+        return getCellResults(wrapper, 1, async () => {
+            const gridWrapper = wrapper.find(ReactSlickGrid);
+            assert.ok(gridWrapper, 'Grid not found to sort on');
+            const grid = gridWrapper.instance() as ReactSlickGrid;
+            assert.ok(grid, 'Grid instance not found');
+            if (grid.state.grid) {
+                const cols = grid.state.grid.getColumns();
+                const col = cols.find(c => c.field === sortCol);
+                assert.ok(col, `${sortCol} is not a column of the grid`);
+                grid.sort(new Slick.EventData(), {sortCol: col, sortAsc, multiColumnSort: false, grid: grid.state.grid});
+            }
+        });
+    }
+
     function verifyRows(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, rows: (string | number)[]) {
         const canvas = wrapper.find('div.react-grid-Canvas');
         assert.ok(canvas.length >= 1, 'Didn\'t find any cells being rendered');
@@ -201,5 +219,17 @@ suite('DataScience DataViewer tests', () => {
         } catch {
             noop();
         }
+    });
+
+    runMountedTest('Sorting', async (wrapper) => {
+        await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3])');
+        const gotAllRows = getCompletedPromise();
+        const dv = await createDataViewer('unknown variable');
+        assert.ok(dv, 'DataViewer not created');
+        await gotAllRows;
+
+        verifyRows(wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
+        await sortRows(wrapper, '0', false);
+        verifyRows(wrapper, [3, 3, 2, 2, 1, 1, 0, 0]);
     });
 });

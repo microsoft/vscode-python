@@ -65,10 +65,8 @@
     margin-top: 1px;
 }
 
-.react-grid-header-cell:hover > .slick-sort-indicator::before {
-    background: none;
-    content: '▲';
-    align-items: center;
+.react-grid-header-cell:hover {
+    background-color: var(--vscode-editor-inactiveSelectionBackground);
 }
 
 .react-grid-header-cell > .slick-sort-indicator-asc::before {
@@ -78,12 +76,6 @@
 }
 
 .react-grid-header-cell > .slick-sort-indicator-desc::before {
-    background: none;
-    content: '▼';
-    align-items: center;
-}
-
-.react-grid-header-cell:hover > .slick-sort-indicator-desc::before {
     background: none;
     content: '▼';
     align-items: center;

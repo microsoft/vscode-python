@@ -27,6 +27,7 @@ import 'slickgrid/slick.grid.css';
 import './reactSlickGrid.css';
 
 const MinColumnWidth = 100;
+const RowHeightAdjustment = 4;
 
 export interface ISlickRow extends Slick.SlickData {
     id: string;
@@ -151,7 +152,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 enableColumnReorder: false,
                 explicitInitialization: true,
                 viewportClass: 'react-grid',
-                rowHeight: fontSize + 2
+                rowHeight: fontSize + RowHeightAdjustment
             };
 
             // Transform columns so they are sortable and stylable
@@ -247,13 +248,21 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         );
     }
 
+    // public for testing
+    public sort = (_e: Slick.EventData, args: Slick.OnSortEventArgs<Slick.SlickData>) => {
+        // Note: dataView.fastSort is an IE workaround. Not necessary.
+        this.dataView.sort((l: any, r: any) => this.compareElements(l, r, args.sortCol), args.sortAsc);
+        args.grid.invalidateAllRows();
+        args.grid.render();
+    }
+
     private updateCssStyles = () => {
         if (this.state.grid && this.containerRef.current) {
             const gridName = (this.state.grid as any).getUID() as string;
             const document = this.containerRef.current.ownerDocument;
             if (document) {
                 const cssOverrideNode = document.createElement('style');
-                const rule = `.${gridName} .slick-cell {height: ${this.state.fontSize + 2}px;}`;
+                const rule = `.${gridName} .slick-cell {height: ${this.state.fontSize + RowHeightAdjustment}px;}`;
                 cssOverrideNode.setAttribute('type', 'text/css');
                 cssOverrideNode.setAttribute('rel', 'stylesheet');
                 cssOverrideNode.appendChild(document.createTextNode(rule));
@@ -363,13 +372,6 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             this.columnFilters.set(column.field, new ColumnFilter(text, column));
             this.dataView.refresh();
         }
-    }
-
-    private sort = (_e: Slick.EventData, args: Slick.OnSortEventArgs<Slick.SlickData>) => {
-        // Note: dataView.fastSort is an IE workaround. Not necessary.
-        this.dataView.sort((l: any, r: any) => this.compareElements(l, r, args.sortCol), args.sortAsc);
-        args.grid.invalidateAllRows();
-        args.grid.render();
     }
 
     private compareElements(a: any, b: any, col?: Slick.Column<Slick.SlickData>) : number {

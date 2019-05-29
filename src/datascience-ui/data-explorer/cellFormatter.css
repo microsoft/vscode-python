@@ -3,5 +3,6 @@
 }
 
 .cell-formatter {
-    margin: -1px 0px 0px 0px;
+    /* Note: This is impacted by the RowHeightAdjustment in reactSlickGrid.tsx */
+    margin: 0px 0px 0px 0px;
 }
