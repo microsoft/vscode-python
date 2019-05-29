@@ -58,20 +58,24 @@ class ColumnFilter {
     private equalThanRegEx = /^\s*=\s*(\d+.*).*/;
 
     constructor(text: string, column: Slick.Column<Slick.SlickData>) {
-        const columnType = (column as any).type;
-        switch (columnType) {
-            case 'string':
-            default:
-                this.matchFunc = (v: any) => v && text.includes(v.toString());
-                break;
+        if (text && text.length > 0) {
+            const columnType = (column as any).type;
+            switch (columnType) {
+                case 'string':
+                default:
+                    this.matchFunc = (v: any) => !v || v.toString().includes(text);
+                    break;
 
-            case 'integer':
-            case 'float':
-            case 'int64':
-            case 'float64':
-            case 'number':
-                this.matchFunc = this.generateNumericOperation(text);
-                break;
+                case 'integer':
+                case 'float':
+                case 'int64':
+                case 'float64':
+                case 'number':
+                    this.matchFunc = this.generateNumericOperation(text);
+                    break;
+            }
+        } else {
+            this.matchFunc = (_v: any) => true;
         }
     }
 
