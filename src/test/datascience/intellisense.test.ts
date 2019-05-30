@@ -1,6 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
+
+/*
+    WARNING:
+    Do not change this to a `*.unit.test.ts` file.
+    The file node_modules/vscode-languageclient/lib/main.js has some check in place to check the version number of VS Code.
+    Though it can be mocked in src/test/vscode-mock.ts, it will fail when VSC updates the version check in their code.
+    I.e. a temporary work around will not last.
+    Solution - just run these tests in with a proper version of vscode package. i.e. as integration/functional tests.
+*/
 import { expect } from 'chai';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as TypeMoq from 'typemoq';
