@@ -159,7 +159,8 @@ suite('Unit Tests - Debug Launcher', () => {
             stopOnEntry: false,
             showReturnValue: true,
             redirectOutput: true,
-            debugStdLib: false
+            debugStdLib: false,
+            subProcess: true
         };
     }
     function setupSuccess(
@@ -231,6 +232,9 @@ suite('Unit Tests - Debug Launcher', () => {
         }
         if (isOs(OSType.Windows)) {
             expected.debugOptions.push(DebugOptions.FixFilePathCase);
+        }
+        if (expected.subProcess) {
+            expected.debugOptions.push(DebugOptions.SubProcess);
         }
 
         setupDebugManager(
@@ -343,7 +347,8 @@ suite('Unit Tests - Debug Launcher', () => {
                 debugStdLib: true,
                 justMyCode: false,
                 // added by LaunchConfigurationResolver:
-                internalConsoleOptions: 'neverOpen'
+                internalConsoleOptions: 'neverOpen',
+                subProcess: true
             };
             setupSuccess(options, 'unittest', expected, [
                 {
