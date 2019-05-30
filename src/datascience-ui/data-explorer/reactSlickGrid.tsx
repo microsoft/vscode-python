@@ -26,7 +26,8 @@ import 'slickgrid/slick.grid.css';
 // Make sure our css comes after the slick grid css. We override some of its styles.
 import './reactSlickGrid.css';
 
-const MinColumnWidth = 100;
+const MinColumnWidth = 70;
+const MaxColumnWidth = 500;
 const RowHeightAdjustment = 4;
 
 export interface ISlickRow extends Slick.SlickData {
@@ -304,7 +305,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 rows.forEach((r: any) => {
                     const field = c.field ? r[c.field] : '';
                     const fieldWidth = field ? measureText(field.toString(), fontString) : 0;
-                    colWidth = Math.max(colWidth, fieldWidth);
+                    colWidth = Math.min(MaxColumnWidth, Math.max(colWidth, fieldWidth));
                 });
                 c.width = colWidth;
             });

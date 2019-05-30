@@ -20,8 +20,6 @@ import { MainPanel } from '../../datascience-ui/data-explorer/mainPanel';
 import { ReactSlickGrid } from '../../datascience-ui/data-explorer/reactSlickGrid';
 import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { getCellResults } from './historyTestHelpers';
-import { waitForUpdate } from './reactHelpers';
 
 // import { asyncDump } from '../common/asyncDump';
 suite('DataScience DataViewer tests', () => {

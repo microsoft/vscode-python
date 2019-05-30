@@ -80,3 +80,7 @@
     content: '▼';
     align-items: center;
 }
+
+.slick-row:hover > .react-grid-cell {
+    background-color: var(--override-selection-background, var(--vscode-editor-selectionBackground));
+}
