@@ -108,9 +108,13 @@ export class InvalidTestSettingDiagnosticsService extends BaseDiagnosticsService
         const fileContents = await this.fs.readFile(filePath);
         const setting = new RegExp('"python.unitTest', 'g');
         const setting_pytest_enabled = new RegExp('.pyTestEnabled"', 'g');
+        const setting_pytest_args = new RegExp('.pyTestArgs"', 'g');
+        const setting_pytest_path = new RegExp('.pyTestPath"', 'g');
 
         await this.fs.writeFile(filePath, fileContents.replace(setting, '"python.testing'));
         await this.fs.writeFile(filePath, fileContents.replace(setting_pytest_enabled, '.pytestEnabled"'));
+        await this.fs.writeFile(filePath, fileContents.replace(setting_pytest_args, '.pytestArgs"'));
+        await this.fs.writeFile(filePath, fileContents.replace(setting_pytest_path, '.pytestPath"'));
 
         // Keep track of updated file.
         this.stateStore.value.push(filePath);
@@ -126,7 +130,7 @@ export class InvalidTestSettingDiagnosticsService extends BaseDiagnosticsService
             return false;
         }
         const contents = await this.fs.readFile(filePath);
-        return contents.indexOf('python.unitTest.') > 0;
+        return contents.indexOf('python.unitTest.') > 0 || contents.indexOf('python.pyTest') > 0;
     }
     /**
      * Checks whether to handle a particular workspace resource.
