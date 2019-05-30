@@ -373,16 +373,6 @@ suite('Debugging - Config Resolver Launch', () => {
             expect(debugConfig).to.have.property('justMyCode', testParams.expectedResult);
         });
     });
-    test('Ensure pathMappings property is correctly derived', async () => {
-        const pythonPath = `PythonPath_${new Date().toString()}`;
-        const workspaceFolder = createMoqWorkspaceFolder(__dirname);
-        const pythonFile = 'xyz.py';
-        setupIoc(pythonPath);
-        setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
-        const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { localRoot: 'abc', remoteRoot: 'remoteabc' } as LaunchRequestArguments);
-        expect(debugConfig).to.have.property('pathMappings');
-        expect(debugConfig!.pathMappings).to.deep.equal([{ localRoot: workspaceFolder.uri.fsPath, remoteRoot: '.' }, { localRoot: 'abc', remoteRoot: 'remoteabc' }]);
-    });
     async function testFixFilePathCase(isWindows: boolean, isMac: boolean, isLinux: boolean) {
         const pythonPath = `PythonPath_${new Date().toString()}`;
         const workspaceFolder = createMoqWorkspaceFolder(__dirname);
