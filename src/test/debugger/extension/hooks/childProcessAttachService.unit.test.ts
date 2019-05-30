@@ -6,6 +6,7 @@
 // tslint:disable:no-any max-func-body-length
 
 import { expect } from 'chai';
+import * as path from 'path';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import { Uri, WorkspaceFolder } from 'vscode';
 import { ApplicationShell } from '../../../../client/common/application/applicationShell';
@@ -243,5 +244,102 @@ suite('Debug - Attach to Child Process', () => {
         expect(secondArg).to.deep.equal(debugConfig);
         expect(thirdArg).to.deep.equal(session);
         verify(shell.showErrorMessage(anything())).never();
+    });
+    test('Path mappings are not set when there is no workspace folder', async () => {
+        const shell = mock(ApplicationShell);
+        const debugService = mock(DebugService);
+        const workspaceService = mock(WorkspaceService);
+        const service = new ChildProcessAttachService(instance(shell), instance(debugService), instance(workspaceService));
+
+        const args: LaunchRequestArguments & AttachRequestArguments = {
+            request: 'launch',
+            type: 'python',
+            name: '',
+            pythonPath: '', args: [], envFile: ''
+        };
+
+        service.fixPathMappings(args);
+
+        expect(args.pathMappings).to.equal(undefined, 'Not undefined');
+    });
+    test('Path mappings are left untouched when they are provided', async () => {
+        const shell = mock(ApplicationShell);
+        const debugService = mock(DebugService);
+        const workspaceService = mock(WorkspaceService);
+        const service = new ChildProcessAttachService(instance(shell), instance(debugService), instance(workspaceService));
+
+        const pathMappings = [{ localRoot: '1', remoteRoot: '2' }];
+        const args: LaunchRequestArguments & AttachRequestArguments = {
+            request: 'launch',
+            type: 'python',
+            name: '',
+            workspaceFolder: __dirname,
+            pythonPath: '', args: [], envFile: '',
+            pathMappings: pathMappings
+        };
+
+        service.fixPathMappings(args);
+
+        expect(args.pathMappings).to.deep.equal(pathMappings);
+    });
+    test('Path mappings default to workspace folder', async () => {
+        const shell = mock(ApplicationShell);
+        const debugService = mock(DebugService);
+        const workspaceService = mock(WorkspaceService);
+        const service = new ChildProcessAttachService(instance(shell), instance(debugService), instance(workspaceService));
+
+        const expectedPathMappings = [{ localRoot: __dirname, remoteRoot: '.' }];
+        const args: LaunchRequestArguments & AttachRequestArguments = {
+            request: 'launch',
+            type: 'python',
+            name: '',
+            workspaceFolder: __dirname,
+            pythonPath: '', args: [], envFile: ''
+        };
+
+        service.fixPathMappings(args);
+
+        expect(args.pathMappings).to.deep.equal(expectedPathMappings);
+    });
+    test('Path mappings default to cwd folder', async () => {
+        const shell = mock(ApplicationShell);
+        const debugService = mock(DebugService);
+        const workspaceService = mock(WorkspaceService);
+        const service = new ChildProcessAttachService(instance(shell), instance(debugService), instance(workspaceService));
+
+        const expectedPathMappings = [{ localRoot: path.join('hello', 'world'), remoteRoot: '.' }];
+        const args: LaunchRequestArguments & AttachRequestArguments = {
+            request: 'launch',
+            type: 'python',
+            name: '',
+            cwd: path.join('hello', 'world'),
+            workspaceFolder: __dirname,
+            pythonPath: '', args: [], envFile: ''
+        };
+
+        service.fixPathMappings(args);
+
+        expect(args.pathMappings).to.deep.equal(expectedPathMappings);
+    });
+    test('Path mappings default to cwd folder relative to workspace folder', async () => {
+        const shell = mock(ApplicationShell);
+        const debugService = mock(DebugService);
+        const workspaceService = mock(WorkspaceService);
+        const service = new ChildProcessAttachService(instance(shell), instance(debugService), instance(workspaceService));
+
+        const expectedPathMappings = [{ localRoot: path.join(__dirname, 'hello', 'world'), remoteRoot: '.' }];
+        const args: LaunchRequestArguments & AttachRequestArguments = {
+            request: 'launch',
+            type: 'python',
+            name: '',
+            // tslint:disable-next-line: no-invalid-template-strings
+            cwd: path.join('${workspaceFolder}', 'hello', 'world'),
+            workspaceFolder: __dirname,
+            pythonPath: '', args: [], envFile: ''
+        };
+
+        service.fixPathMappings(args);
+
+        expect(args.pathMappings).to.deep.equal(expectedPathMappings);
     });
 });
