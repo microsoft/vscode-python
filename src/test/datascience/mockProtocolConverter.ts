@@ -13,6 +13,9 @@ export class MockProtocolConverter implements Code2ProtocolConverter {
     public asTextDocumentIdentifier(_textDocument: code.TextDocument): proto.TextDocumentIdentifier {
         throw new Error('Method not implemented.');
     }
+    public asVersionedTextDocumentIdentifier(_textDocument: code.TextDocument): proto.VersionedTextDocumentIdentifier {
+        throw new Error('Method not implemented.');
+    }
     public asOpenTextDocumentParams(_textDocument: code.TextDocument): proto.DidOpenTextDocumentParams {
         throw new Error('Method not implemented.');
     }
