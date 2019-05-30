@@ -7,9 +7,6 @@ import * as Adapter from 'enzyme-adapter-react-16';
 // tslint:disable:no-string-literal no-any object-literal-key-quotes max-func-body-length member-ordering
 // tslint:disable: no-require-imports no-var-requires
 
-// Make sure to install canvas-prebuilt first so JSDOM uses it.
-require('canvas');
-
 // Monkey patch the stylesheet impl from jsdom before loading jsdom.
 // This is necessary to get slickgrid to work.
 const utils = require('jsdom/lib/jsdom/living/generated/utils');
