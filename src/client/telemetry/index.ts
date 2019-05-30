@@ -91,7 +91,12 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     const reporter = getTelemetryReporter();
     const measures = typeof durationMs === 'number' ? { duration: durationMs } : durationMs ? durationMs : undefined;
 
-    // tslint:disable-next-line:no-any
+    if (ex && (eventName as any) !== 'ERROR') {
+        const props: Record<string, string> = {};
+        props.stackTrace = getStackTrace(ex);
+        props.originalEventName = eventName as any as string;
+        reporter.sendTelemetryEvent('ERROR', props, measures);
+    }
     const customProperties: Record<string, string> = {};
     if (properties) {
         // tslint:disable-next-line:prefer-type-cast no-any
@@ -104,21 +109,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
             (customProperties as any)[prop] = typeof data[prop] === 'string' ? data[prop] : data[prop].toString();
         });
     }
-    if (ex) {
-        customProperties.stackTrace = getStackTrace(ex);
-    }
-    if (ex && (eventName as any) !== 'ERROR') {
-        customProperties.originalEventName = eventName as any as string;
-        reporter.sendTelemetryEvent('ERROR', customProperties, measures);
-    }
     reporter.sendTelemetryEvent((eventName as any) as string, customProperties, measures);
-
-    // Enable this to debug telemetry. To be discussed whether or not we want this all of the time.
-    // try {
-    //     traceInfo(`Telemetry: ${eventName} : ${JSON.stringify(customProperties)}`);
-    // } catch {
-    //     noop();
-    // }
 }
 
 // tslint:disable-next-line:no-any function-name
