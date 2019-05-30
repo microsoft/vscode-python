@@ -530,3 +530,4 @@ steps:
     inputs:
       pathtoPublish: $(Build.ArtifactStagingDirectory)
       artifactName: $(Agent.JobName)
+    condition: always()

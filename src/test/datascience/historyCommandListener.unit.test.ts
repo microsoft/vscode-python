@@ -73,6 +73,7 @@ suite('History command listener', async () => {
     const notebookExporter = mock(JupyterExporter);
     const applicationShell = mock(ApplicationShell);
     const jupyterExecution = mock(JupyterExecutionFactory);
+    const history = createTypeMoq<IHistory>('History');
     const documentManager = new MockDocumentManager();
     const statusProvider = new MockStatusProvider();
     const commandManager = new MockCommandManager();
@@ -113,7 +114,7 @@ suite('History command listener', async () => {
         return new FunctionMatcher(func);
     }
 
-    function createCommandListener(activeHistory: IHistory | undefined): HistoryCommandListener {
+    function createCommandListener(): HistoryCommandListener {
         // Setup defaults
         when(interpreterService.onDidChangeInterpreter).thenReturn(dummyEvent.event);
         when(interpreterService.getInterpreterDetails(argThat(o => !o.includes || !o.includes('python')))).thenReject('Unknown interpreter');
@@ -145,7 +146,8 @@ suite('History command listener', async () => {
             showJupyterVariableExplorer: true,
             variableExplorerExclude: 'module;builtin_function_or_method',
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
-            markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)'
+            markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
+            previewImportedNotebooksInInteractivePane: true
         };
 
         when(knownSearchPaths.getSearchPaths()).thenReturn(['/foo/bar']);
@@ -162,7 +164,11 @@ suite('History command listener', async () => {
         when(fileSystem.writeFile(anything(), argThat(o => { lastFileContents = o; return true; }))).thenResolve();
         when(fileSystem.arePathsSame(anything(), anything())).thenReturn(true);
 
-        when(historyProvider.getActive()).thenReturn(activeHistory);
+        // mocks doesn't work with resolving things that also have promises, so use typemoq instead.
+        history.setup(s => s.importNotebook(TypeMoq.It.isAny())).returns(() => Promise.resolve('imported'));
+
+        when(historyProvider.getActive()).thenReturn(history.object);
+        when(historyProvider.getOrCreateActive()).thenResolve(history.object);
         when(notebookImporter.importFromFile(anything())).thenResolve('imported');
         const metadata: nbformat.INotebookMetadata = {
             language_info: {
@@ -201,7 +207,6 @@ suite('History command listener', async () => {
         const result = new HistoryCommandListener(
             disposableRegistry,
             instance(historyProvider),
-            instance(notebookImporter),
             instance(notebookExporter),
             instance(jupyterExecution),
             documentManager,
@@ -217,18 +222,18 @@ suite('History command listener', async () => {
     }
 
     test('Import', async () => {
-        createCommandListener(undefined);
+        createCommandListener();
         when(applicationShell.showOpenDialog(argThat(o => o.openLabel && o.openLabel.includes('Import')))).thenReturn(Promise.resolve([Uri.file('foo')]));
         await commandManager.executeCommand(Commands.ImportNotebook, undefined, undefined);
         assert.ok(documentManager.activeTextEditor, 'Imported file was not opened');
     });
     test('Import File', async () => {
-        createCommandListener(undefined);
+        createCommandListener();
         await commandManager.executeCommand(Commands.ImportNotebook, Uri.file('bar.ipynb'), undefined);
         assert.ok(documentManager.activeTextEditor, 'Imported file was not opened');
     });
     test('Export File', async () => {
-        createCommandListener(undefined);
+        createCommandListener();
         const doc = await documentManager.openTextDocument('bar.ipynb');
         await documentManager.showTextDocument(doc);
         when(applicationShell.showSaveDialog(argThat(o => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(Promise.resolve(Uri.file('foo')));
@@ -237,7 +242,7 @@ suite('History command listener', async () => {
         assert.ok(lastFileContents, 'Export file was not written to');
     });
     test('Export File and output', async () => {
-        createCommandListener(undefined);
+        createCommandListener();
         const doc = await documentManager.openTextDocument('bar.ipynb');
         await documentManager.showTextDocument(doc);
         when(jupyterExecution.connectToNotebookServer(anything(), anything())).thenResolve(server.object);
@@ -252,13 +257,13 @@ suite('History command listener', async () => {
         assert.ok(lastFileContents, 'Export file was not written to');
     });
     test('Export skipped on no file', async () => {
-        createCommandListener(undefined);
+        createCommandListener();
         when(applicationShell.showSaveDialog(argThat(o => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(Promise.resolve(Uri.file('foo')));
         await commandManager.executeCommand(Commands.ExportFileAndOutputAsNotebook, Uri.file('bar.ipynb'));
         assert.notExists(lastFileContents, 'Export file was written to');
     });
     test('Export happens on no file', async () => {
-        createCommandListener(undefined);
+        createCommandListener();
         const doc = await documentManager.openTextDocument('bar.ipynb');
         await documentManager.showTextDocument(doc);
         when(applicationShell.showSaveDialog(argThat(o => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(Promise.resolve(Uri.file('foo')));

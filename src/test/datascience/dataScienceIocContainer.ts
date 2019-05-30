@@ -358,7 +358,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
             showJupyterVariableExplorer: true,
             variableExplorerExclude: 'module;builtin_function_or_method',
-            liveShareConnectionTimeout: 100
+            liveShareConnectionTimeout: 100,
+            previewImportedNotebooksInInteractivePane: true
         };
 
         const workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration> = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
