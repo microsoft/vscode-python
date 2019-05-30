@@ -21,6 +21,7 @@ import { ReactSlickGrid } from '../../datascience-ui/data-explorer/reactSlickGri
 import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { getCellResults } from './historyTestHelpers';
+import { waitForUpdate } from './reactHelpers';
 
 // import { asyncDump } from '../common/asyncDump';
 suite('DataScience DataViewer tests', () => {
@@ -57,7 +58,7 @@ suite('DataScience DataViewer tests', () => {
 
     function mountWebView(): ReactWrapper<any, Readonly<{}>, React.Component> {
         // Setup our webview panel
-        ioc.createWebView(() => mount(<MainPanel skipDefault={true} baseTheme={'vscode-light'} forceHeight={200}/>));
+        ioc.createWebView(() => mount(<MainPanel skipDefault={true} baseTheme={'vscode-light'} testMode={true}/>));
 
         // Make sure the data explorer provider and execution factory in the container is created (the extension does this on startup in the extension)
         dataProvider = ioc.get<IDataViewerProvider>(IDataViewerProvider);
@@ -136,29 +137,30 @@ suite('DataScience DataViewer tests', () => {
         });
     }
 
-    function sortRows(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, sortCol: string, sortAsc: boolean) : Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
-        return getCellResults(wrapper, 1, async () => {
-            const gridWrapper = wrapper.find(ReactSlickGrid);
-            assert.ok(gridWrapper, 'Grid not found to sort on');
-            const grid = gridWrapper.instance() as ReactSlickGrid;
-            assert.ok(grid, 'Grid instance not found');
-            if (grid.state.grid) {
-                const cols = grid.state.grid.getColumns();
-                const col = cols.find(c => c.field === sortCol);
-                assert.ok(col, `${sortCol} is not a column of the grid`);
-                grid.sort(new Slick.EventData(), {sortCol: col, sortAsc, multiColumnSort: false, grid: grid.state.grid});
-            }
-        });
+    function sortRows(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, sortCol: string, sortAsc: boolean) : void {
+        // Cause our sort
+        const mainPanelWrapper = wrapper.find(MainPanel);
+        assert.ok(mainPanelWrapper && mainPanelWrapper.length > 0, 'Grid not found to sort on');
+        const mainPanel = mainPanelWrapper.instance() as MainPanel;
+        assert.ok(mainPanel, 'Main panel instance not found');
+        const reactGrid = (mainPanel as any).grid.current as ReactSlickGrid;
+        assert.ok(reactGrid, 'Grid control not found');
+        if (reactGrid.state.grid) {
+            const cols = reactGrid.state.grid.getColumns();
+            const col = cols.find(c => c.field === sortCol);
+            assert.ok(col, `${sortCol} is not a column of the grid`);
+            reactGrid.sort(new Slick.EventData(), { sortCol: col, sortAsc, multiColumnSort: false, grid: reactGrid.state.grid });
+        }
     }
 
     function verifyRows(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, rows: (string | number)[]) {
-        const canvas = wrapper.find('div.react-grid-Canvas');
-        assert.ok(canvas.length >= 1, 'Didn\'t find any cells being rendered');
+        const mainPanel = wrapper.find('.main-panel');
+        assert.ok(mainPanel.length >= 1, 'Didn\'t find any cells being rendered');
 
-        // Force the canvas to actually render.
-        const html = canvas.html();
+        // Force the main panel to actually render.
+        const html = mainPanel.html();
         const root = parse(html) as any;
-        const cells = root.querySelectorAll('.react-grid-Cell') as HTMLElement[];
+        const cells = root.querySelectorAll('.react-grid-cell') as HTMLElement[];
         assert.ok(cells, 'No cells found');
         assert.ok(cells.length >= rows.length, 'Not enough cells found');
         // Cells should be an array that matches up to the values we expect.
@@ -224,12 +226,12 @@ suite('DataScience DataViewer tests', () => {
     runMountedTest('Sorting', async (wrapper) => {
         await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3])');
         const gotAllRows = getCompletedPromise();
-        const dv = await createDataViewer('unknown variable');
+        const dv = await createDataViewer('x');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
 
         verifyRows(wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
-        await sortRows(wrapper, '0', false);
+        sortRows(wrapper, '0', false);
         verifyRows(wrapper, [3, 3, 2, 2, 1, 1, 0, 0]);
     });
 });

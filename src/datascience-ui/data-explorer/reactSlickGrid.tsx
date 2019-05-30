@@ -44,6 +44,7 @@ export interface ISlickGridProps {
     rowsAdded: Slick.Event<ISlickGridAdd>;
     filterRowsText: string;
     filterRowsTooltip: string;
+    forceHeight?: number;
 }
 
 interface ISlickGridState {
@@ -236,12 +237,18 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
     }
 
     public render() {
+        const style : React.CSSProperties = this.props.forceHeight ? {
+            height: `${this.props.forceHeight}px`,
+            width: `${this.props.forceHeight}px`
+        } : {
+        };
+
         return (
             <div className='outer-container'>
                 <button className='react-grid-filter-button' title={this.props.filterRowsTooltip} onClick={this.clickFilterButton}>
                     <span>{this.props.filterRowsText}</span>
                 </button>
-                <div className='react-grid-container' ref={this.containerRef}>
+                <div className='react-grid-container' style={style} ref={this.containerRef}>
                 </div>
                 <div className='react-grid-measure' ref={this.measureRef}/>
             </div>
@@ -283,7 +290,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             // We use a div at the bottom to figure out our expected height. Slickgrid isn't
             // so good without a specific height set in the style.
             const height = this.measureRef.current.offsetTop - this.containerRef.current.offsetTop;
-            this.containerRef.current.style.height = `${height}px`;
+            this.containerRef.current.style.height = `${this.props.forceHeight ? this.props.forceHeight : height}px`;
             this.state.grid.resizeCanvas();
         }
     }

@@ -28,8 +28,8 @@ import './mainPanel.css';
 
 export interface IMainPanelProps {
     skipDefault?: boolean;
-    forceHeight?: number;
     baseTheme: string;
+    testMode?: boolean;
 }
 
 //tslint:disable:no-any
@@ -39,20 +39,19 @@ interface IMainPanelState {
     fetchedRowCount: number;
     totalRowCount: number;
     filters: {};
-    gridHeight: number;
-    sortDirection: string;
-    sortColumn: string | number;
     indexColumn: string;
 }
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
-    private container: HTMLDivElement | null = null;
+    private container: React.Ref<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private sentDone = false;
     private postOffice: PostOffice = new PostOffice();
     private gridAddEvent: Slick.Event<ISlickGridAdd> = new Slick.Event<ISlickGridAdd>();
     private rowFetchSizeFirst: number = 0;
     private rowFetchSizeSubsequent: number = 0;
     private rowFetchSizeAll: number = 0;
+    // Just used for testing.
+    private grid: React.Ref<ReactSlickGrid> = React.createRef<ReactSlickGrid>();
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
@@ -66,9 +65,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 totalRowCount: data.rows.length,
                 fetchedRowCount: 0,
                 filters: {},
-                gridHeight:  100,
-                sortColumn: 'index',
-                sortDirection: 'NONE',
                 indexColumn: data.primaryKeys[0]
             };
 
@@ -83,9 +79,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 totalRowCount: 0,
                 fetchedRowCount: 0,
                 filters: {},
-                gridHeight: 100,
-                sortColumn: 'index',
-                sortDirection: 'NONE',
                 indexColumn: 'index'
             };
         }
@@ -115,12 +108,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const progressBar = this.state.totalRowCount > this.state.fetchedRowCount ? <Progress /> : undefined;
 
         return (
-            <div className='main-panel' ref={this.updateContainer}>
+            <div className='main-panel' ref={this.container}>
                 <StyleInjector
                     expectingDark={this.props.baseTheme !== 'vscode-light'}
                     postOffice={this.postOffice} />
                 {progressBar}
-                {this.container && this.state.totalRowCount > 0 && this.renderGrid()}
+                {this.state.totalRowCount > 0 && this.renderGrid()}
             </div>
         );
     }
@@ -153,11 +146,13 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         return (
             <ReactSlickGrid
+                ref={this.grid}
                 columns={this.state.gridColumns}
                 idProperty={this.state.indexColumn}
                 rowsAdded={this.gridAddEvent}
                 filterRowsText={filterRowsText}
                 filterRowsTooltip={filterRowsTooltip}
+                forceHeight={this.props.testMode ? 200 : undefined}
             />
         );
     }
@@ -283,10 +278,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             }
             return r;
         });
-    }
-
-    private updateContainer = (el: HTMLDivElement) => {
-        this.container = el;
     }
 
     private sendMessage<M extends IDataViewerMapping, T extends keyof M>(type: T, payload?: M[T]) {
