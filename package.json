@@ -2279,6 +2279,7 @@
         "babel-polyfill": "^6.26.0",
         "bootstrap": "^4.3.1",
         "bootstrap-less": "^3.3.8",
+        "canvas": "2.0.1",
         "chai": "^4.1.2",
         "chai-arrays": "^2.0.0",
         "chai-as-promised": "^7.1.1",

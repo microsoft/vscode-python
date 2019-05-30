@@ -3,13 +3,37 @@
 'use strict';
 import { ComponentClass, configure, ReactWrapper } from 'enzyme';
 import * as Adapter from 'enzyme-adapter-react-16';
+
+// tslint:disable:no-string-literal no-any object-literal-key-quotes max-func-body-length member-ordering
+// tslint:disable: no-require-imports no-var-requires
+
+// Make sure to install canvas-prebuilt first so JSDOM uses it.
+require('canvas');
+
+// Monkey patch the stylesheet impl from jsdom before loading jsdom.
+// This is necessary to get slickgrid to work.
+const utils = require('jsdom/lib/jsdom/living/generated/utils');
+const ssExports = require('jsdom/lib/jsdom/living/helpers/stylesheets');
+if (ssExports && ssExports.createStylesheet) {
+    const orig = ssExports.createStylesheet;
+    ssExports.createStylesheet = (sheetText: any, elementImpl: any, baseURL: any) => {
+        // Call the original.
+        orig(sheetText, elementImpl, baseURL);
+
+        // Then pull out the style sheet and add some properties. See the discussion here
+        // https://github.com/jsdom/jsdom/issues/992
+        if (elementImpl.sheet) {
+            elementImpl.sheet.href = baseURL;
+            elementImpl.sheet.ownerNode = utils.wrapperForImpl(elementImpl);
+        }
+    };
+}
+
 import { DOMWindow, JSDOM } from 'jsdom';
 import * as React from 'react';
 
 import { noop } from '../../client/common/utils/misc';
 
-// tslint:disable:no-string-literal no-any object-literal-key-quotes max-func-body-length member-ordering
-// tslint:disable: no-require-imports
 class MockCanvas implements CanvasRenderingContext2D {
     public canvas!: HTMLCanvasElement;
     public restore(): void {
@@ -189,13 +213,13 @@ export function setUpDomEnvironment() {
     const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', { pretendToBeVisual: true, url: 'http://localhost'});
     const { window } = dom;
 
-    // tslint:disable: no-function-expression no-empty
-    window.HTMLCanvasElement.prototype.getContext = (contextId: string, _contextAttributes?: {}): any => {
-        if (contextId === '2d') {
-            return mockCanvas;
-        }
-        return null;
-    };
+    // // tslint:disable: no-function-expression no-empty
+    // window.HTMLCanvasElement.prototype.getContext = (contextId: string, _contextAttributes?: {}): any => {
+    //     if (contextId === '2d') {
+    //         return mockCanvas;
+    //     }
+    //     return null;
+    // };
 
     window.HTMLCanvasElement.prototype.toDataURL = function () {
         return '';
