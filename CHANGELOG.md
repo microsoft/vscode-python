@@ -1,7 +1,7 @@
 # Changelog
 
 
-## 2019.5.1 (30 May 2019)
+## 2019.5.17517 (30 May 2019)
 
 ### Fixes
 
@@ -9,7 +9,7 @@
    ([#5833](https://github.com/microsoft/vscode-python/issues/5833))
 
 
-## 2019.5.0 (28 May 2019)
+## 2019.5.17059 (28 May 2019)
 
 ### Enhancements
 
