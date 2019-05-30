@@ -6,6 +6,7 @@ import io
 import operator
 import os
 import sys
+import textwrap
 import token
 import tokenize
 
@@ -80,7 +81,7 @@ def normalize_lines(source):
     error.
 
     """
-    lines = source.splitlines(False)
+    lines = textwrap.dedent(source).splitlines(False)
     # If we have two blank lines, then add two blank lines.
     # Do not trim the spaces, if we have blank lines with spaces, its possible
     # we have indented code.
