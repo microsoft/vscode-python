@@ -1,4 +1,6 @@
 
+// Note to editors, if you change this file you have to restart compile-webviews. 
+// It doesn't reload the config otherwise.
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const FixDefaultImportPlugin = require('webpack-fix-default-import-plugin');
@@ -182,6 +184,7 @@ module.exports = [
                         }
                     ]
                 },
+                { test: /\.(png|woff|woff2|eot|gif|ttf)$/, loader: 'url-loader?limit=100000' },
                 {
                     test: /\.json$/,
                     type: 'javascript/auto',

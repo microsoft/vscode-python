@@ -53,6 +53,7 @@ export namespace HistoryMessages {
     export const LoadOnigasmAssemblyResponse = 'load_onigasm_assembly_response';
     export const LoadTmLanguageRequest = 'load_tmlanguage_request';
     export const LoadTmLanguageResponse = 'load_tmlanguage_response';
+    export const OpenLink = 'open_link';
 }
 
 // These are the messages that will mirror'd to guest/hosts in
@@ -148,6 +149,11 @@ export interface IRemoveCell {
     id: string;
 }
 
+export interface IShowDataViewer {
+    variableName: string;
+    columnSize: number;
+}
+
 // Map all messages to specific payloads
 export class IHistoryMapping {
     public [HistoryMessages.StartCell]: ICell;
@@ -174,7 +180,7 @@ export class IHistoryMapping {
     public [HistoryMessages.AddedSysInfo]: IAddedSysInfo;
     public [HistoryMessages.RemoteAddCode]: IRemoteAddCode;
     public [HistoryMessages.Activate] : never | undefined;
-    public [HistoryMessages.ShowDataViewer]: string;
+    public [HistoryMessages.ShowDataViewer]: IShowDataViewer;
     public [HistoryMessages.GetVariablesRequest]: number;
     public [HistoryMessages.GetVariablesResponse]: IJupyterVariablesResponse;
     public [HistoryMessages.GetVariableValueRequest]: IJupyterVariable;
@@ -198,4 +204,5 @@ export class IHistoryMapping {
     public [HistoryMessages.LoadOnigasmAssemblyResponse]: Buffer;
     public [HistoryMessages.LoadTmLanguageRequest]: never | undefined;
     public [HistoryMessages.LoadTmLanguageResponse]: string | undefined;
+    public [HistoryMessages.OpenLink]: string | undefined;
 }

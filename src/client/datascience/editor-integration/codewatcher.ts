@@ -206,33 +206,24 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     @captureTelemetry(Telemetry.RunCell)
-    public async runCell(range: Range) {
-        if (this.document) {
-            // Use that to get our code.
-            const code = this.document.getText(range);
-
-            try {
-                const activeHistory = await this.historyProvider.getOrCreateActive();
-                await activeHistory.addCode(code, this.getFileName(), range.start.line, this.documentManager.activeTextEditor);
-            } catch (err) {
-                this.handleError(err);
-            }
+    public runCell(range: Range) : Promise<void> {
+        if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
+            return Promise.resolve();
         }
+
+        // Run the cell clicked. Advance if the cursor is inside this cell and we're allowed to
+        const advance = range.contains(this.documentManager.activeTextEditor.selection.start) && this.configService.getSettings().datascience.enableAutoMoveToNextCell;
+        return this.runMatchingCell(range, advance);
     }
 
     @captureTelemetry(Telemetry.RunCurrentCell)
-    public async runCurrentCell() {
+    public runCurrentCell() : Promise<void> {
         if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
-            return;
+            return Promise.resolve();
         }
 
-        for (const lens of this.codeLenses) {
-            // Check to see which RunCell lens range overlaps the current selection start
-            if (lens.range.contains(this.documentManager.activeTextEditor.selection.start) && lens.command && lens.command.command === Commands.RunCell) {
-                await this.runCell(lens.range);
-                break;
-            }
-        }
+        // Run the cell that matches the current cursor position.
+        return this.runMatchingCell(this.documentManager.activeTextEditor.selection, false);
     }
 
     @captureTelemetry(Telemetry.RunCurrentCellAndAdvance)
@@ -241,38 +232,67 @@ export class CodeWatcher implements ICodeWatcher {
             return;
         }
 
-        let currentRunCellLens: CodeLens | undefined;
-        let nextRunCellLens: CodeLens | undefined;
+        // Run the cell that matches the current cursor position. Always advance
+        return this.runMatchingCell(this.documentManager.activeTextEditor.selection, true);
+    }
 
-        for (const lens of this.codeLenses) {
-            // If we have already found the current code lens, then the next run cell code lens will give us the next cell
-            if (currentRunCellLens && lens.command && lens.command.command === Commands.RunCell) {
-                nextRunCellLens = lens;
-                break;
-            }
+    public async addEmptyCellToBottom() : Promise<void> {
+        const editor = this.documentManager.activeTextEditor;
+        if (editor) {
+            editor.edit((editBuilder) => {
+                editBuilder.insert(new Position(editor.document.lineCount, 0), '\n\n#%%\n');
+            });
 
-            // Check to see which RunCell lens range overlaps the current selection start
-            if (lens.range.contains(this.documentManager.activeTextEditor.selection.start) && lens.command && lens.command.command === Commands.RunCell) {
-                currentRunCellLens = lens;
-            }
+            const newPosition = new Position(editor.document.lineCount + 3, 0); // +3 to account for the added spaces and to position after the new mark
+            return this.advanceToRange(new Range(newPosition, newPosition));
         }
+    }
+
+    private async runMatchingCell(range: Range, advance?: boolean) {
+        const currentRunCellLens = this.getCurrentCellLens(range.start);
+        const nextRunCellLens = this.getNextCellLens(range.start);
 
         if (currentRunCellLens) {
-            // Either use the next cell that we found, or add a new one into the document
-            let nextRange: Range;
-            if (!nextRunCellLens) {
-                nextRange = this.createNewCell(currentRunCellLens.range);
-            } else {
-                nextRange = nextRunCellLens.range;
-            }
+            // Move the next cell if allowed.
+            if (advance) {
+                // Either use the next cell that we found, or add a new one into the document
+                let nextRange: Range;
+                if (!nextRunCellLens) {
+                    nextRange = this.createNewCell(currentRunCellLens.range);
+                } else {
+                    nextRange = nextRunCellLens.range;
+                }
 
-            if (nextRange) {
-                this.advanceToRange(nextRange);
+                if (nextRange) {
+                    this.advanceToRange(nextRange);
+                }
             }
 
             // Run the cell after moving the selection
-            await this.runCell(currentRunCellLens.range);
+            if (this.document) {
+                // Use that to get our code.
+                const code = this.document.getText(currentRunCellLens.range);
+
+                try {
+                    const activeHistory = await this.historyProvider.getOrCreateActive();
+                    await activeHistory.addCode(code, this.getFileName(), range.start.line, this.documentManager.activeTextEditor);
+                } catch (err) {
+                    this.handleError(err);
+                }
+            }
         }
+    }
+
+    private getCurrentCellLens(pos: Position) : CodeLens | undefined {
+        return this.codeLenses.find(l => l.range.contains(pos) && l.command !== undefined && l.command.command === Commands.RunCell);
+    }
+
+    private getNextCellLens(pos: Position) : CodeLens | undefined {
+        const currentIndex = this.codeLenses.findIndex(l => l.range.contains(pos) && l.command !== undefined && l.command.command === Commands.RunCell);
+        if (currentIndex >= 0) {
+            return this.codeLenses.find((l: CodeLens, i: number) => l.command !== undefined && l.command.command === Commands.RunCell && i > currentIndex);
+        }
+        return undefined;
     }
 
     private async runFileInteractiveInternal() {

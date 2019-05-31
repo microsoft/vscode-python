@@ -314,6 +314,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                         onCodeCreated={this.editableCodeCreated}
                         onCodeChange={this.codeChange}
                         monacoTheme={this.state.monacoTheme}
+                        openLink={this.openLink}
                     />
                 </ErrorBoundary>
             </div>
@@ -322,7 +323,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private computeEditorOptions() : monacoEditor.editor.IEditorOptions {
         const intellisenseOptions = getSettings().intellisenseOptions;
-        if (intellisenseOptions) {
+        const extraSettings = getSettings().extraSettings;
+        if (intellisenseOptions && extraSettings) {
             return {
                 quickSuggestions: {
                     other: intellisenseOptions.quickSuggestions.other,
@@ -340,7 +342,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 wordBasedSuggestions: intellisenseOptions.wordBasedSuggestions,
                 parameterHints: {
                     enabled: intellisenseOptions.parameterHintsEnabled
-                }
+                },
+                cursorStyle: extraSettings.terminalCursor,
+                cursorBlinking: extraSettings.terminalCursorBlink
             };
         }
 
@@ -400,7 +404,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             skipNextScroll: this.state.skipNextScroll ? true : false,
             monacoTheme: this.state.monacoTheme,
             onCodeCreated: this.readOnlyCodeCreated,
-            onCodeChange: this.codeChange
+            onCodeChange: this.codeChange,
+            openLink: this.openLink
         };
     }
     private getToolbarProps = (baseTheme: string): IToolbarPanelProps => {
@@ -473,12 +478,16 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
-    private showDataViewer = (targetVariable: string) => {
-        this.sendMessage(HistoryMessages.ShowDataViewer, targetVariable);
+    private showDataViewer = (targetVariable: string, numberOfColumns: number) => {
+        this.sendMessage(HistoryMessages.ShowDataViewer, { variableName: targetVariable, columnSize: numberOfColumns });
     }
 
     private sendMessage<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) {
         this.postOffice.sendMessage<M, T>(type, payload);
+    }
+
+    private openLink = (uri: monacoEditor.Uri) => {
+        this.sendMessage(HistoryMessages.OpenLink, uri.toString());
     }
 
     private getAllCells = () => {

@@ -354,8 +354,11 @@ suite('DataScience notebook tests', () => {
             // Try importing this. This should verify export works and that importing is possible
             const results = await importer.importFromFile(temp.filePath);
 
-            // Make sure we added a chdir into our results
-            assert.ok(results.includes('os.chdir'));
+            // Make sure we have a single chdir in our results
+            const first = results.indexOf('os.chdir');
+            assert.ok(first >= 0, 'No os.chdir in import');
+            const second = results.indexOf('os.chdir', first + 1);
+            assert.equal(second, -1, 'More than one chdir in the import. It should be skipped');
 
             // Make sure we have a cell in our results
             assert.ok(/#\s*%%/.test(results), 'No cells in returned import');

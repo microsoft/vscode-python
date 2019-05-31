@@ -22,6 +22,8 @@ import { StopWatch } from '../common/utils/stopWatch';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
+import { sendTelemetryEvent } from '../telemetry';
+import { EventName } from '../telemetry/constants';
 import { Logger } from './../common/logger';
 
 const pythonVSCodeTypeMappings = new Map<string, CompletionItemKind>();
@@ -282,7 +284,18 @@ export class JediProxy implements Disposable {
                 console.error('Python Extension: (pidusage)', err);
             } else {
                 const limit = Math.min(Math.max(this.pythonSettings.jediMemoryLimit, 1024), 8192);
-                if (result && result.memory > limit * 1024 * 1024) {
+                let restartJedi = false;
+                if (result && result.memory){
+                    restartJedi = result.memory > limit * 1024 * 1024;
+                    const props = {
+                        memory: result.memory,
+                        limit: limit * 1024 * 1024,
+                        isUserDefinedLimit: limit !== 1024,
+                        restart: restartJedi
+                    };
+                    sendTelemetryEvent(EventName.JEDI_MEMORY, undefined, props);
+                }
+                if (restartJedi) {
                     this.logger.logWarning(`IntelliSense process memory consumption exceeded limit of ${limit} MB and process will be restarted.\nThe limit is controlled by the 'python.jediMemoryLimit' setting.`);
                     await this.restartLanguageServer();
                 }

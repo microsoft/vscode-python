@@ -229,12 +229,21 @@ export class CodeCssGenerator implements ICodeCssGenerator {
                         const token = s ? s.toString() : '';
                         if (!tokenSet.has(token)) {
                             tokenSet.add(token);
-                            result.rules.push({
-                                token,
-                                foreground: settings.foreground,
-                                background: settings.background,
-                                fontStyle: settings.fontStyle
-                            });
+
+                            if (settings.foreground) {
+                                result.rules.push({
+                                    token,
+                                    foreground: settings.foreground,
+                                    background: settings.background,
+                                    fontStyle: settings.fontStyle
+                                });
+                            } else {
+                                result.rules.push({
+                                    token,
+                                    background: settings.background,
+                                    fontStyle: settings.fontStyle
+                                });
+                            }
 
                             // Special case some items. punctuation.definition.comment doesn't seem to
                             // be listed anywhere. Add it manually when we find a 'comment'

@@ -15,6 +15,7 @@ import { HistoryCommandListener } from './history/historycommandlistener';
 import { HistoryProvider } from './history/historyProvider';
 import { DotNetIntellisenseProvider } from './history/intellisense/dotNetIntellisenseProvider';
 import { JediIntellisenseProvider } from './history/intellisense/jediIntellisenseProvider';
+import { LinkProvider } from './history/linkProvider';
 import { JupyterCommandFactory } from './jupyter/jupyterCommand';
 import { JupyterExecutionFactory } from './jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from './jupyter/jupyterExporter';
@@ -68,4 +69,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, Decorator);
     serviceManager.add<IHistoryListener>(IHistoryListener, DotNetIntellisenseProvider);
     serviceManager.add<IHistoryListener>(IHistoryListener, JediIntellisenseProvider);
+    serviceManager.add<IHistoryListener>(IHistoryListener, LinkProvider);
 }

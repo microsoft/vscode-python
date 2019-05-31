@@ -23,7 +23,6 @@ import {
     IHistoryProvider,
     IJupyterExecution,
     INotebookExporter,
-    INotebookImporter,
     INotebookServer,
     IStatusProvider
 } from '../types';
@@ -33,7 +32,6 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
     constructor(
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IHistoryProvider) private historyProvider: IHistoryProvider,
-        @inject(INotebookImporter) private jupyterImporter: INotebookImporter,
         @inject(INotebookExporter) private jupyterExporter: INotebookExporter,
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
@@ -388,7 +386,8 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
         if (uris && uris.length > 0) {
             // Don't call the other overload as we'll end up with double telemetry.
             await this.waitForStatus(async () => {
-                const contents = await this.jupyterImporter.importFromFile(uris[0].fsPath);
+                const history = await this.historyProvider.getOrCreateActive();
+                const contents = await history.importNotebook(uris[0].fsPath);
                 await this.viewDocument(contents);
             }, localize.DataScience.importingFormat(), uris[0].fsPath);
         }
@@ -398,7 +397,8 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
     private async importNotebookOnFile(file: string) : Promise<void> {
         if (file && file.length > 0) {
             await this.waitForStatus(async () => {
-                const contents = await this.jupyterImporter.importFromFile(file);
+                const history = await this.historyProvider.getOrCreateActive();
+                const contents = await history.importNotebook(file);
                 await this.viewDocument(contents);
             }, localize.DataScience.importingFormat(), file);
         }

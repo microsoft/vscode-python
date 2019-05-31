@@ -3,13 +3,60 @@
 'use strict';
 import { ComponentClass, configure, ReactWrapper } from 'enzyme';
 import * as Adapter from 'enzyme-adapter-react-16';
+import { noop } from '../../client/common/utils/misc';
+
+// Custom module loader so we can skip loading the 'canvas' module which won't load
+// inside of vscode
+// tslint:disable:no-var-requires no-require-imports no-any no-function-expression
+const Module = require('module');
+
+(function () {
+    const origRequire = Module.prototype.require;
+    const _require = (context: any, filepath: any) => {
+        return origRequire.call(context, filepath);
+    };
+    Module.prototype.require = function (filepath: string) {
+        if (filepath === 'canvas') {
+            try {
+                // Make sure we aren't inside of vscode. The nodejs version of Canvas won't match. At least sometimes.
+                if (require('vscode')) {
+                    return '';
+                }
+            } catch {
+                // This should happen when not inside vscode.
+                noop();
+            }
+        }
+        // tslint:disable-next-line:no-invalid-this
+        return _require(this, filepath);
+    };
+})();
+
+// tslint:disable:no-string-literal no-any object-literal-key-quotes max-func-body-length member-ordering
+// tslint:disable: no-require-imports no-var-requires
+
+// Monkey patch the stylesheet impl from jsdom before loading jsdom.
+// This is necessary to get slickgrid to work.
+const utils = require('jsdom/lib/jsdom/living/generated/utils');
+const ssExports = require('jsdom/lib/jsdom/living/helpers/stylesheets');
+if (ssExports && ssExports.createStylesheet) {
+    const orig = ssExports.createStylesheet;
+    ssExports.createStylesheet = (sheetText: any, elementImpl: any, baseURL: any) => {
+        // Call the original.
+        orig(sheetText, elementImpl, baseURL);
+
+        // Then pull out the style sheet and add some properties. See the discussion here
+        // https://github.com/jsdom/jsdom/issues/992
+        if (elementImpl.sheet) {
+            elementImpl.sheet.href = baseURL;
+            elementImpl.sheet.ownerNode = utils.wrapperForImpl(elementImpl);
+        }
+    };
+}
+
 import { DOMWindow, JSDOM } from 'jsdom';
 import * as React from 'react';
 
-import { noop } from '../../client/common/utils/misc';
-
-// tslint:disable:no-string-literal no-any object-literal-key-quotes max-func-body-length member-ordering
-// tslint:disable: no-require-imports
 class MockCanvas implements CanvasRenderingContext2D {
     public canvas!: HTMLCanvasElement;
     public restore(): void {
@@ -190,19 +237,30 @@ export function setUpDomEnvironment() {
     const { window } = dom;
 
     // tslint:disable: no-function-expression no-empty
-    window.HTMLCanvasElement.prototype.getContext = (contextId: string, _contextAttributes?: {}): any => {
-        if (contextId === '2d') {
-            return mockCanvas;
+    try {
+        // If running inside of vscode, we need to mock the canvas because the real canvas is not
+        // returned.
+        if (require('vscode')) {
+            window.HTMLCanvasElement.prototype.getContext = (contextId: string, _contextAttributes?: {}): any => {
+                if (contextId === '2d') {
+                    return mockCanvas;
+                }
+                return null;
+            };
         }
-        return null;
-    };
+    } catch {
+        noop();
+    }
 
+    // tslint:disable-next-line: no-function-expression
     window.HTMLCanvasElement.prototype.toDataURL = function () {
         return '';
     };
 
     // tslist:disable-next-line:no-string-literal no-any
     (global as any)['Element'] = window.Element;
+    // tslist:disable-next-line:no-string-literal no-any
+    (global as any)['location'] = window.location;
     // tslint:disable-next-line:no-string-literal no-any
     (global as any)['window'] = window;
     // tslint:disable-next-line:no-string-literal no-any

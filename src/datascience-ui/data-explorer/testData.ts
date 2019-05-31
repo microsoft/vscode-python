@@ -3,26 +3,27 @@
 'use strict';
 
 export interface ITestData {
-    columns: {key: string; name: string; type: string }[];
+    columns: {id: string; name: string; type: string }[];
     primaryKeys: string[];
     rows: {}[];
+    loadingRows: {}[];
 }
 
 // tslint:disable
 export function generateTestData(_numberOfRows: number) : ITestData {
     const columns = [
-      { key: 'PassengerId', name: 'PassengerId', type: 'integer'},
-      { key: 'SibSp', name: 'SibSp', type: 'integer'},
-        { key: 'Ticket', name: 'Ticket', type: 'string'},
-        { key: 'Parch', name: 'Parch', type: 'integer'},
-        { key: 'Cabin', name: 'Cabin', type: 'string'},
-        { key: 'Age', name: 'Age', type: 'integer'},
-        { key: 'Fare', name: 'Fare', type: 'number'},
-        { key: 'Name', name: 'Name', type: 'string'},
-        { key: 'Survived', name: 'Survived', type: 'bool'},
-        { key: 'Pclass', name: 'Pclass', type: 'integer'},
-        { key: 'Embarked', name: 'Embarked', type: 'string'},
-        { key: 'Sex', name: 'Sex', type: 'string'}
+      { id: 'PassengerId', name: 'PassengerId', field: 'PassengerId', type: 'integer'},
+      { id: 'SibSp', name: 'SibSp', field: 'SibSp',type: 'integer'},
+        { id: 'Ticket', name: 'Ticket', field: 'Ticket',type: 'string'},
+        { id: 'Parch', name: 'Parch', field: 'Parch', type: 'integer'},
+        { id: 'Cabin', name: 'Cabin', field: 'Cabin',type: 'string'},
+        { id: 'Age', name: 'Age', field: 'Age',type: 'integer'},
+        { id: 'Fare', name: 'Fare', field: 'Fare',type: 'number'},
+        { id: 'Name', name: 'Name', field: 'Name',type: 'string'},
+        { id: 'Survived', name: 'Survived', field: 'Survived',type: 'bool'},
+        { id: 'Pclass', name: 'Pclass', field: 'Pclass',type: 'integer'},
+        { id: 'Embarked', name: 'Embarked', field: 'Embarked',type: 'string'},
+        { id: 'Sex', name: 'Sex', field: 'Sex',type: 'string'}
     ]
 
     const keys = ['PassengerId'];
@@ -33,6 +34,7 @@ export function generateTestData(_numberOfRows: number) : ITestData {
         columns,
         primaryKeys: keys,
         rows,
+        loadingRows: titanicData.map(_t => { return {};})
     };
 }
 

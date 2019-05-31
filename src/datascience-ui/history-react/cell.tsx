@@ -46,6 +46,7 @@ interface ICellProps {
     submitNewCode(code: string): void;
     onCodeChange(changes: monacoEditor.editor.IModelContentChange[], cellId: string, modelId: string): void;
     onCodeCreated(code: string, file: string, cellId: string, modelId: string): void;
+    openLink(uri: monacoEditor.Uri): void;
 }
 
 export interface ICellViewModel {
@@ -179,7 +180,7 @@ export class Cell extends React.Component<ICellProps> {
         const busy = this.props.cellVM.cell.state === CellState.init || this.props.cellVM.cell.state === CellState.executing;
         const collapseVisible = (this.props.cellVM.inputBlockCollapseNeeded && this.props.cellVM.inputBlockShow && !this.props.cellVM.editable);
         const executionCount = this.props.cellVM && this.props.cellVM.cell && this.props.cellVM.cell.data && this.props.cellVM.cell.data.execution_count ?
-            this.props.cellVM.cell.data.execution_count.toString() : '0';
+            this.props.cellVM.cell.data.execution_count.toString() : '-';
 
         // Only code cells have controls. Markdown should be empty
         if (this.isCodeCell()) {
@@ -214,7 +215,6 @@ export class Cell extends React.Component<ICellProps> {
                 <div className='cell-input'>
                     <Code
                         editorOptions={this.props.editorOptions}
-                        cursorType={this.getCursorType()}
                         history={this.props.history}
                         autoFocus={this.props.autoFocus}
                         code={this.getRenderableInputCode()}
@@ -228,6 +228,7 @@ export class Cell extends React.Component<ICellProps> {
                         onCreated={this.onCodeCreated}
                         outermostParentClass='cell-wrapper'
                         monacoTheme={this.props.monacoTheme}
+                        openLink={this.props.openLink}
                         />
                 </div>
             );
@@ -242,14 +243,6 @@ export class Cell extends React.Component<ICellProps> {
 
     private onCodeCreated = (code: string, modelId: string) => {
         this.props.onCodeCreated(code, this.props.cellVM.cell.file, this.props.cellVM.cell.id, modelId);
-    }
-
-    private getCursorType = () : string => {
-        if (getSettings && getSettings().extraSettings) {
-            return getSettings().extraSettings.terminalCursor;
-        }
-
-        return 'block';
     }
 
     private renderResultsDiv = (results: JSX.Element[]) => {

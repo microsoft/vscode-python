@@ -26,10 +26,12 @@ export interface IContentPanelProps {
     deleteCell(index: number): void;
     onCodeChange(changes: monacoEditor.editor.IModelContentChange[], cellId: string, modelId: string): void;
     onCodeCreated(code: string, file: string, cellId: string, modelId: string): void;
+    openLink(uri: monacoEditor.Uri): void;
 }
 
 export class ContentPanel extends React.Component<IContentPanelProps> {
     private bottomRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
+    private containerRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
     constructor(prop: IContentPanelProps) {
         super(prop);
     }
@@ -44,7 +46,7 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
 
     public render() {
         return(
-            <div id='content-panel-div'>
+            <div id='content-panel-div' ref={this.containerRef}>
                 <div id='cell-table'>
                     <div id='cell-table-body'>
                         {this.renderCells()}
@@ -81,16 +83,21 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
                     onCodeChange={this.props.onCodeChange}
                     onCodeCreated={this.props.onCodeCreated}
                     monacoTheme={this.props.monacoTheme}
+                    openLink={this.props.openLink}
                     />
             </ErrorBoundary>
         );
     }
 
     private scrollToBottom = () => {
-        if (this.bottomRef.current && !this.props.skipNextScroll && !this.props.testMode) {
+        if (this.bottomRef.current && !this.props.skipNextScroll && !this.props.testMode && this.containerRef.current) {
             // Force auto here as smooth scrolling can be canceled by updates to the window
             // from elsewhere (and keeping track of these would make this hard to maintain)
-            this.bottomRef.current.scrollIntoView({behavior: 'auto', block: 'start', inline: 'nearest'});
+            setTimeout(() => {
+                if (this.bottomRef.current) {
+                    this.bottomRef.current!.scrollIntoView({behavior: 'auto', block: 'start', inline: 'nearest'});
+                }
+            }, 100);
         }
     }
 
