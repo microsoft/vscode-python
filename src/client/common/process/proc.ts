@@ -43,7 +43,13 @@ export class ProcessService implements IProcessService, IDisposable {
         }
     }
     public dispose() {
-        this.processesToKill.forEach(p => p && p.dispose);
+        this.processesToKill.forEach(p => {
+            try {
+                p.dispose();
+            } catch {
+                // ignore.
+            }
+        });
     }
 
     public execObservable(file: string, args: string[], options: SpawnOptions = {}): ObservableExecutionResult<string> {
