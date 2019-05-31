@@ -30,6 +30,7 @@ import {
     RequestType,
     RequestType0,
     RPCMessageType,
+    ServerOptions,
     StateChangeEvent,
     StaticFeature,
     TextDocumentItem,
@@ -44,10 +45,17 @@ import { MockProtocolConverter } from './mockProtocolConverter';
 // tslint:disable:no-any unified-signatures
 export class MockLanguageClient extends LanguageClient {
     private notificationPromise : Deferred<void> | undefined;
-    private contents : string = '';
-    private versionId: number | null = 0;
-    private converter: MockProtocolConverter = new MockProtocolConverter();
+    private contents : string;
+    private versionId: number | null;
+    private converter: MockProtocolConverter;
 
+    public constructor(name: string, serverOptions: ServerOptions, clientOptions: LanguageClientOptions, forceDebug?: boolean) {
+        (LanguageClient.prototype as any).checkVersion = noop;
+        super(name, serverOptions, clientOptions, forceDebug);
+        this.contents = '';
+        this.versionId = 0;
+        this.converter = new MockProtocolConverter();
+    }
     public waitForNotification() : Promise<void> {
         this.notificationPromise = createDeferred();
         return this.notificationPromise.promise;
