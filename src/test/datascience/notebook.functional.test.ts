@@ -39,6 +39,7 @@ import {
 } from '../../client/interpreter/contracts';
 import { ICellViewModel } from '../../datascience-ui/history-react/cell';
 import { generateTestState } from '../../datascience-ui/history-react/mainPanelState';
+import { asyncDump } from '../common/asyncDump';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 
@@ -67,6 +68,7 @@ suite('DataScience notebook tests', () => {
                     await procService.exec(python.path, ['-m', 'jupyter', 'notebook', '--generate-config', '-y'], { env: process.env });
                 }
             }
+            traceInfo('Shutting down after test.');
             // tslint:disable-next-line:prefer-for-of
             for (let i = 0; i < disposables.length; i += 1) {
                 const disposable = disposables[i];
@@ -78,9 +80,14 @@ suite('DataScience notebook tests', () => {
                 }
             }
             await ioc.dispose();
+            traceInfo('Shutdown after test complete.');
         } catch (e) {
             traceError(e);
         }
+    });
+
+    suiteTeardown(() => {
+        asyncDump();
     });
 
     function escapePath(p: string) {
