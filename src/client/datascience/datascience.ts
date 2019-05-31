@@ -3,6 +3,10 @@
 'use strict';
 import '../common/extensions';
 
+import {
+    ContentsManager,
+    ServerConnection
+} from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils';
 import { inject, injectable } from 'inversify';
 import * as nodeFetch from 'node-fetch';
@@ -274,8 +278,24 @@ export class DataScience implements IDataScience {
                     // tslint:disable-next-line:no-http-string
                     headers: { Cookie: cookieString, Connection: 'keep-alive', 'Cache-Control': 'max-age=0', 'Upgrade-Insecure-Requests': '1', Referer: 'http://ianhumain2:9998/login?next=/tree?' }
                 })
-                .then(res3 => {
-                    alert(res3.status.toString());
+                .then(async res3 => {
+                    // tslint:disable-next-line:no-http-string
+                    const reqHeaders = { Cookie: cookieString, 'X-XSRFToken': xsrfCookie!, Connection: 'keep-alive', 'Cache-Control': 'max-age=0', 'Upgrade-Insecure-Requests': '1', Referer: 'http://ianhumain2:9998/login?next=/tree?' };
+                    // Now here we are going to try to connect using the services
+                    const serverSettings = ServerConnection.makeSettings(
+                        {
+                            // tslint:disable-next-line:no-http-string
+                            baseUrl: 'http://ianhumain2:9998',
+                            token: undefined,
+                            pageUrl: '',
+                            // A web socket is required to allow token authentication
+                            wsUrl: 'ws://ianhumain2:9998',
+                            init: { cache: 'no-store', credentials: 'same-origin', headers: reqHeaders }
+                        });
+
+                    // Create a temporary .ipynb file to use
+                    const cm = new ContentsManager({ serverSettings: serverSettings });
+                    const nbfile = await cm.newUntitled({type: 'notebook'});
                 });
             });
         });
