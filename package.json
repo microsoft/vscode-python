@@ -1419,15 +1419,6 @@
                     "description": "Delay before diagnostic messages are transferred to the problems list (in milliseconds).",
                     "scope": "resource"
                 },
-                "python.analysis.typeshedPaths": {
-                    "type": "array",
-                    "default": [],
-                    "items": {
-                        "type": "string"
-                    },
-                    "description": "Paths to look for typeshed modules.",
-                    "scope": "resource"
-                },
                 "python.analysis.errors": {
                     "type": "array",
                     "default": [],
@@ -1462,6 +1453,32 @@
                         "type": "string"
                     },
                     "description": "List of suppressed diagnostic messages.",
+                    "scope": "resource"
+                },
+                "python.analysis.typeshedPaths": {
+                    "type": "array",
+                    "default": [],
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Paths to Typeshed stub folders. Default is Typeshed installed with the language server. Change requires restart.",
+                    "scope": "resource"
+                },
+                "python.analysis.cacheFolderPath": {
+                    "type": "string",
+                    "description": "Path to a writable folder where analyzer can cache its data. Change requires restart.",
+                    "scope": "resource"
+                },
+                "python.analysis.memory.keepLibraryAst": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Allows code analysis to keep parser trees in memory. Increases memory consumption but may improve performance with large library analysis.",
+                    "scope": "resource"
+                },
+                "python.analysis.memory.keepLibraryLocalVariables": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Allows code analysis to keep library function local variables. Allows code navigation in Python libraries function bodies. Increases memory consumption.",
                     "scope": "resource"
                 },
                 "python.analysis.logLevel": {

@@ -277,6 +277,7 @@ export interface IAnalysisSettings {
     readonly downloadChannel?: LanguageServerDownloadChannels;
     readonly openFilesOnly: boolean;
     readonly typeshedPaths: string[];
+    readonly cacheFolderPath: string | null;
     readonly errors: string[];
     readonly warnings: string[];
     readonly information: string[];
