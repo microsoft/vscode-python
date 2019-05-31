@@ -23,6 +23,7 @@ const Module = require('module');
                     return '';
                 }
             } catch {
+                // This should happen when not inside vscode.
                 noop();
             }
         }
