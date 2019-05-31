@@ -88,6 +88,10 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
             }
         }
 
+        // TODO: remove this setting since LS 0.2.92+ is not using it.
+        // tslint:disable-next-line:no-string-literal
+        properties['DatabasePath'] = path.join(this.context.extensionPath, this.languageServerFolder);
+
         const vars = await this.envVarsProvider.getEnvironmentVariables();
         this.envPythonPath = vars.PYTHONPATH || '';
         if (this.envPythonPath !== '') {
