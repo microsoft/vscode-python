@@ -14,6 +14,7 @@ import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 
 import { Cancellation, CancellationError } from '../../client/common/cancellation';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
+import { traceError, traceInfo } from '../../client/common/logger';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IProcessServiceFactory, Output } from '../../client/common/process/types';
 import { createDeferred } from '../../client/common/utils/async';
@@ -57,24 +58,29 @@ suite('DataScience notebook tests', () => {
     });
 
     teardown(async () => {
-        if (modifiedConfig) {
-            const python = await getNotebookCapableInterpreter();
-            const procService = await processFactory.create();
-            if (procService && python) {
-                await procService.exec(python.path, ['-m', 'jupyter', 'notebook', '--generate-config', '-y'], { env: process.env });
-            }
-        }
-        // tslint:disable-next-line:prefer-for-of
-        for (let i = 0; i < disposables.length; i += 1) {
-            const disposable = disposables[i];
-            if (disposable) {
-                const promise = disposable.dispose() as Promise<any>;
-                if (promise) {
-                    await promise;
+        try {
+            if (modifiedConfig) {
+                traceInfo('Attempting to put jupyter default config back');
+                const python = await getNotebookCapableInterpreter();
+                const procService = await processFactory.create();
+                if (procService && python) {
+                    await procService.exec(python.path, ['-m', 'jupyter', 'notebook', '--generate-config', '-y'], { env: process.env });
                 }
             }
+            // tslint:disable-next-line:prefer-for-of
+            for (let i = 0; i < disposables.length; i += 1) {
+                const disposable = disposables[i];
+                if (disposable) {
+                    const promise = disposable.dispose() as Promise<any>;
+                    if (promise) {
+                        await promise;
+                    }
+                }
+            }
+            await ioc.dispose();
+        } catch (e) {
+            traceError(e);
         }
-        await ioc.dispose();
     });
 
     function escapePath(p: string) {
