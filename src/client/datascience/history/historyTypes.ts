@@ -149,6 +149,11 @@ export interface IRemoveCell {
     id: string;
 }
 
+export interface IShowDataViewer {
+    variableName: string;
+    columnSize: number;
+}
+
 // Map all messages to specific payloads
 export class IHistoryMapping {
     public [HistoryMessages.StartCell]: ICell;
@@ -175,7 +180,7 @@ export class IHistoryMapping {
     public [HistoryMessages.AddedSysInfo]: IAddedSysInfo;
     public [HistoryMessages.RemoteAddCode]: IRemoteAddCode;
     public [HistoryMessages.Activate] : never | undefined;
-    public [HistoryMessages.ShowDataViewer]: string;
+    public [HistoryMessages.ShowDataViewer]: IShowDataViewer;
     public [HistoryMessages.GetVariablesRequest]: number;
     public [HistoryMessages.GetVariablesResponse]: IJupyterVariablesResponse;
     public [HistoryMessages.GetVariableValueRequest]: IJupyterVariable;

@@ -91,7 +91,7 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
 
         // Log telemetry about number of rows
         try {
-            sendTelemetryEvent(Telemetry.ShowDataViewer, {rows: output.rowCount ? output.rowCount : 0 });
+            sendTelemetryEvent(Telemetry.ShowDataViewer, 0, {rows: output.rowCount ? output.rowCount : 0, columns: output.columns ? output.columns.length : 0 });
         } catch {
             noop();
         }

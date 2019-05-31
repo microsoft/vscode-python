@@ -13,7 +13,7 @@ export interface IVariablePanelProps {
     busy: boolean;
     testMode?: boolean;
     variableExplorerRef: React.RefObject<VariableExplorer>;
-    showDataExplorer(targetVariable: string): void;
+    showDataExplorer(targetVariable: string, numberOfColumns: number): void;
     refreshVariables(): void;
     variableExplorerToggled(open: boolean): void;
 }

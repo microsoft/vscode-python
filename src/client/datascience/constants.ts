@@ -64,7 +64,8 @@ export namespace RegExpValues {
     export const ExtractPortRegex = /https?:\/\/[^\s]+:(\d+)[^\s]+/;
     export const ConvertToRemoteUri = /(https?:\/\/)([^\s])+(:\d+[^\s]*)/;
     export const ParamsExractorRegEx = /\S+\((.*)\)\s*{/;
-    export const ArgsSplitterRegEx = /([^\s,]+)/g;
+    export const ArgsSplitterRegEx = /([^\s,]+)/;
+    export const ShapeSplitterRegEx = /.*,\s*(\d+).*/;
 }
 
 export enum Telemetry {

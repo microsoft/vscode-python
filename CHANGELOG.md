@@ -1,7 +1,15 @@
 # Changelog
 
 
-## 2019.5.0 (28 May 2019)
+## 2019.5.17517 (30 May 2019)
+
+### Fixes
+
+1. Revert changes related to pathMappings in `launch.json` for `debugging` [#3568](https://github.com/Microsoft/vscode-python/issues/3568)
+   ([#5833](https://github.com/microsoft/vscode-python/issues/5833))
+
+
+## 2019.5.17059 (28 May 2019)
 
 ### Enhancements
 

@@ -358,7 +358,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.SetJupyterURIToLocal]: never | undefined;
     [Telemetry.SetJupyterURIToUserSpecified]: never | undefined;
     [Telemetry.ShiftEnterBannerShown]: never | undefined;
-    [Telemetry.ShowDataViewer]: { rows: number | undefined };
+    [Telemetry.ShowDataViewer]: { rows: number | undefined; columns: number | undefined };
     [Telemetry.ShowHistoryPane]: never | undefined;
     [Telemetry.StartJupyter]: never | undefined;
     [Telemetry.SubmitCellThroughInput]: never | undefined;

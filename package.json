@@ -1147,6 +1147,12 @@
                     "description": "Allows a user to import a jupyter notebook into a python file anytime one is opened.",
                     "scope": "resource"
                 },
+                "python.dataScience.askForLargeDataFrames": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Warn the user before trying to open really large data frames.",
+                    "scope": "resource"
+                },
                 "python.dataScience.enabled": {
                     "type": "boolean",
                     "default": true,
@@ -2192,6 +2198,7 @@
         "request-progress": "^3.0.0",
         "rxjs": "^5.5.9",
         "semver": "^5.5.0",
+        "slickgrid": "^2.4.7",
         "stack-trace": "0.0.10",
         "strip-ansi": "^5.2.0",
         "strip-json-comments": "^2.0.1",
@@ -2259,6 +2266,7 @@
         "@types/semver": "^5.5.0",
         "@types/shortid": "^0.0.29",
         "@types/sinon": "^4.3.0",
+        "@types/slickgrid": "^2.1.27",
         "@types/stack-trace": "0.0.29",
         "@types/strip-json-comments": "0.0.30",
         "@types/temp": "^0.8.32",
@@ -2277,6 +2285,7 @@
         "babel-polyfill": "^6.26.0",
         "bootstrap": "^4.3.1",
         "bootstrap-less": "^3.3.8",
+        "canvas": "2.0.1",
         "chai": "^4.1.2",
         "chai-arrays": "^2.0.0",
         "chai-as-promised": "^7.1.1",
@@ -2291,6 +2300,7 @@
         "enzyme": "^3.7.0",
         "enzyme-adapter-react-16": "^1.6.0",
         "event-stream": "3.3.4",
+        "expose-loader": "^0.7.5",
         "file-loader": "^2.0.0",
         "flat": "^4.0.0",
         "gulp": "^4.0.0",

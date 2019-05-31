@@ -478,8 +478,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
-    private showDataViewer = (targetVariable: string) => {
-        this.sendMessage(HistoryMessages.ShowDataViewer, targetVariable);
+    private showDataViewer = (targetVariable: string, numberOfColumns: number) => {
+        this.sendMessage(HistoryMessages.ShowDataViewer, { variableName: targetVariable, columnSize: numberOfColumns });
     }
 
     private sendMessage<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) {
