@@ -528,7 +528,8 @@ for _ in range(50):
     }, () => { return ioc; });
 
     runMountedTest('Import', async (wrapper) => {
-        const testFile = path.join(srcDirectory(), 'test.ipynb');
+
+        const testFile = path.join(srcDirectory(), 'sub', 'test.ipynb');
         let results: string = '';
 
         // Import is much fewer renders than an add code since the data is already there.
