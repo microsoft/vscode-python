@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { ChildProcess, exec, execSync, spawn } from 'child_process';
+import { exec, execSync, spawn } from 'child_process';
 import { Observable } from 'rxjs/Observable';
 
 import { IDisposable } from '../types';
@@ -60,7 +60,7 @@ export class ProcessService implements IProcessService, IDisposable {
                     proc.unref();
                 }
             }
-        }
+        };
         this.processesToKill.add(disposable);
 
         const output = new Observable<Output<string>>(subscriber => {
