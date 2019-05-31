@@ -22,6 +22,7 @@ export interface ICodeProps {
     monacoTheme: string | undefined;
     outermostParentClass: string;
     editorOptions: monacoEditor.editor.IEditorOptions;
+    forceBackgroundColor?: string;
     onSubmit(code: string): void;
     onCreated(code: string, modelId: string): void;
     onChange(changes: monacoEditor.editor.IModelContentChange[], modelId: string): void;
@@ -103,6 +104,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
                     options={options}
                     openLink={this.props.openLink}
                     ref={this.editorRef}
+                    forceBackground={this.props.forceBackgroundColor}
                 />
                 <div className={waterMarkClass}>{this.getWatermarkString()}</div>
             </div>

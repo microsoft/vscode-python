@@ -9,7 +9,7 @@ import { IDataScienceSettings } from '../../client/common/types';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { concatMultilineString } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
-import { CellState, ICell, ISysInfo } from '../../client/datascience/types';
+import { CellState, ICell, IMessageCell } from '../../client/datascience/types';
 import { noop } from '../../test/core';
 import { ICellViewModel } from './cell';
 import { InputHistory } from './inputHistory';
@@ -29,6 +29,7 @@ export interface IMainPanelState {
     monacoTheme?: string;
     tokenizerLoaded?: boolean;
     editorOptions: monacoEditor.editor.IEditorOptions;
+    currentExecutionCount: number;
 }
 
 // tslint:disable-next-line: no-multiline-string
@@ -57,7 +58,8 @@ export function generateTestState(inputBlockToggled : (id: string) => void, file
         history: new InputHistory(),
         rootStyle: darkStyle,
         tokenizerLoaded: true,
-        editorOptions: {}
+        editorOptions: {},
+        currentExecutionCount: 0
     };
 }
 
@@ -76,7 +78,8 @@ export function createEditableCellVM(executionCount: number) : ICellViewModel {
             id: Identifiers.EditCellId,
             file: Identifiers.EmptyFileName,
             line: 0,
-            state: CellState.editing
+            state: CellState.editing,
+            type: 'execute'
         },
         editable: true,
         inputBlockOpen: true,
@@ -129,32 +132,35 @@ function generateVMs(inputBlockToggled : (id: string) => void, filePath: string)
 
 function generateCells(filePath: string) : ICell[] {
     const cellData = generateCellData();
-    return cellData.map((data : nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell | ISysInfo, key : number) => {
+    return cellData.map((data : nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell | IMessageCell, key : number) => {
         return {
             id : key.toString(),
             file : path.join(filePath, 'foo.py'),
             line : 1,
             state: key === cellData.length - 1 ? CellState.executing : CellState.finished,
+            type: key === 3 ? 'preview' : 'execute',
             data : data
         };
     });
 }
 
 //tslint:disable:max-func-body-length
-function generateCellData() : (nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell | ISysInfo)[] {
+function generateCellData() : (nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell | IMessageCell)[] {
 
     // Hopefully new entries here can just be copied out of a jupyter notebook (ipynb)
     return [
         {
             // These are special. Sys_info is our own custom cell
-            cell_type: 'sys_info',
-            path: 'c:\\data\\python.exe',
-            version : '3.9.9.9 The Uber Version',
-            notebook_version: '(5, 9, 9)',
+            cell_type: 'messages',
+            messages: [
+                'You have this python data:',
+                'c:\\data\\python.exe',
+                '3.9.9.9 The Uber Version',
+                '(5, 9, 9)',
+                'https:\\localhost\\token?=9343p0843084039483084308430984038403840938409384098304983094803948093848034809384'
+            ],
             source: [],
-            metadata: {},
-            message: 'You have this python data:',
-            connection: 'https:\\localhost\\token?=9343p0843084039483084308430984038403840938409384098304983094803948093848034809384'
+            metadata: {}
         },
         {
             cell_type: 'code',

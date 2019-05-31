@@ -48,6 +48,7 @@ import {
     IJupyterVariable,
     IJupyterVariables,
     IJupyterVariablesResponse,
+    IMessageCell,
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
@@ -398,36 +399,48 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         }
     }
 
-    public async importNotebook(file: string) : Promise<string> {
-        // First convert to a python file to verify this file is valid.
-        const results = await this.jupyterImporter.importFromFile(file);
+    public async previewNotebook(file: string) : Promise<void> {
+        try {
+            // First convert to a python file to verify this file is valid. This is
+            // an easy way to have something else verify the validity of the file.
+            const results = await this.jupyterImporter.importFromFile(file);
+            if (results) {
+                // Show our webpanel to make sure that the code actually shows up. (Vscode disables the webview when it's not active)
+                await this.show();
 
-        // Then if it is, and the user has specified they want the notebook to auto open,
-        if (results && this.configuration.getSettings().datascience.previewImportedNotebooksInInteractivePane) {
-            // Then read in the file as json. This json should already
-            // be in the cell format
-            // tslint:disable-next-line: no-any
-            const contents = JSON.parse(await this.fileSystem.readFile(file)) as any;
-            if (contents && contents.cells && contents.cells.length) {
-                const cells = contents.cells as (nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell)[];
+                // Then read in the file as json. This json should already
+                // be in the cell format
+                // tslint:disable-next-line: no-any
+                const contents = JSON.parse(await this.fileSystem.readFile(file)) as any;
+                if (contents && contents.cells && contents.cells.length) {
+                    // Add a header before the preview
+                    this.addPreviewHeader(file);
 
-                // Convert the inputdata into our ICell format
-                const finishedCells : ICell[] = cells.filter(c => c.source.length > 0).map(c => {
-                    return {
-                        id: uuid(),
-                        file: Identifiers.EmptyFileName,
-                        line: 0,
-                        state: CellState.finished,
-                        // Remove execution count as the original count doesn't apply.
-                        data: {...c, execution_count: null}
-                    };
-                });
+                    // Convert the cells into actual cell objects
+                    const cells = contents.cells as (nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell)[];
 
-                // Do the same thing that happens when new code is added.
-                this.onAddCodeEvent(finishedCells);
+                    // Convert the inputdata into our ICell format
+                    const finishedCells: ICell[] = cells.filter(c => c.source.length > 0).map(c => {
+                        return {
+                            id: uuid(),
+                            file: Identifiers.EmptyFileName,
+                            line: 0,
+                            state: CellState.finished,
+                            data: c,
+                            type: 'preview'
+                        };
+                    });
+
+                    // Do the same thing that happens when new code is added.
+                    this.onAddCodeEvent(finishedCells);
+
+                    // Add a footer after the preview
+                    this.addPreviewFooter(file);
+                }
             }
+        } catch (e) {
+            this.applicationShell.showErrorMessage(e);
         }
-        return results;
     }
 
     protected async activating() {
@@ -446,6 +459,35 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
             // Send this to the react control
             await this.postMessage(HistoryMessages.Activate);
         }
+    }
+
+    private addMessage(message: string, type: 'preview' | 'execute') : void {
+        const cell : ICell = {
+            id: uuid(),
+            file: Identifiers.EmptyFileName,
+            line: 0,
+            state: CellState.finished,
+            type,
+            data: {
+                cell_type: 'messages',
+                messages: [message],
+                source: [],
+                metadata: {}
+            }
+        };
+
+        // Do the same thing that happens when new code is added.
+        this.onAddCodeEvent([cell]);
+    }
+
+    private addPreviewHeader(file: string) : void {
+        const message = localize.DataScience.previewHeader().format(file);
+        this.addMessage(message, 'preview');
+    }
+
+    private addPreviewFooter(file: string) : void {
+        const message = localize.DataScience.previewFooter().format(file);
+        this.addMessage(message, 'preview');
     }
 
     private async checkPandas() : Promise<boolean> {
@@ -922,8 +964,13 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
                 }
 
                 // Update our sys info with our locally applied data.
-                sysInfo.data.message = message;
-                sysInfo.data.connection = connectionString;
+                const cell = sysInfo.data as IMessageCell;
+                if (cell) {
+                    cell.messages.unshift(message);
+                    if (connectionString && connectionString.length) {
+                        cell.messages.unshift(connectionString);
+                    }
+                }
 
                 return sysInfo;
             }
@@ -981,6 +1028,11 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
             // For anything but start, tell the other sides of a live share session
             if (reason !== SysInfoReason.Start && sysInfo) {
                 this.shareMessage(HistoryMessages.AddedSysInfo, { sysInfoCell: sysInfo, id: this.id });
+            }
+
+            // For a restart, tell our window to reset
+            if (reason === SysInfoReason.Restart || reason === SysInfoReason.New) {
+                this.postMessage(HistoryMessages.RestartKernel).ignoreErrors();
             }
 
             this.logger.logInformation(`Sys info for ${this.id} ${reason} complete`);

@@ -313,7 +313,7 @@ export interface IDataScienceSettings {
     enableCellCodeLens?: boolean;
     askForLargeDataFrames?: boolean;
     enableAutoMoveToNextCell?: boolean;
-    previewImportedNotebooksInInteractivePane?: boolean;
+    autoPreviewNotebooksInInteractivePane?: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

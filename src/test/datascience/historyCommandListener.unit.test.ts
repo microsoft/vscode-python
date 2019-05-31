@@ -147,7 +147,7 @@ suite('History command listener', async () => {
             variableExplorerExclude: 'module;builtin_function_or_method',
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
-            previewImportedNotebooksInInteractivePane: true
+            autoPreviewNotebooksInInteractivePane: true
         };
 
         when(knownSearchPaths.getSearchPaths()).thenReturn(['/foo/bar']);
@@ -165,7 +165,7 @@ suite('History command listener', async () => {
         when(fileSystem.arePathsSame(anything(), anything())).thenReturn(true);
 
         // mocks doesn't work with resolving things that also have promises, so use typemoq instead.
-        history.setup(s => s.importNotebook(TypeMoq.It.isAny())).returns(() => Promise.resolve('imported'));
+        history.setup(s => s.previewNotebook(TypeMoq.It.isAny())).returns(() => Promise.resolve());
 
         when(historyProvider.getActive()).thenReturn(history.object);
         when(historyProvider.getOrCreateActive()).thenResolve(history.object);
@@ -214,7 +214,8 @@ suite('History command listener', async () => {
             instance(fileSystem),
             instance(logger),
             instance(configService),
-            statusProvider);
+            statusProvider,
+            instance(notebookImporter));
 
         result.register(commandManager);
 

@@ -259,19 +259,20 @@ export class JupyterServerBase implements INotebookServer {
         // Combine this data together to make our sys info
         return {
             data: {
-                cell_type: 'sys_info',
-                version: version,
-                notebook_version: localize.DataScience.notebookVersionFormat().format(notebookVersion),
-                path: pythonPath,
+                cell_type: 'messages',
+                messages: [
+                    version,
+                    notebookVersion,
+                    pythonPath
+                ],
                 metadata: {},
-                source: [],
-                message: '',    // This will be filled in by the caller
-                connection: ''  // This will be filled in by the caller (before getting to the output)
+                source: []
             },
             id: uuid(),
             file: '',
             line: 0,
-            state: CellState.finished
+            state: CellState.finished,
+            type: 'execute'
         };
     }
 

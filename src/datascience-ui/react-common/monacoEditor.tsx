@@ -18,6 +18,7 @@ export interface IMonacoEditorProps {
     outermostParentClass: string;
     options: monacoEditor.editor.IEditorConstructionOptions;
     testMode?: boolean;
+    forceBackground?: string;
     editorMounted(editor: monacoEditor.editor.IStandaloneCodeEditor): void;
     openLink(uri: monacoEditor.Uri): void;
 }
@@ -155,7 +156,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         }
     }
 
-    public componentDidUpdate(prevProps: IMonacoEditorProps) {
+    public componentDidUpdate(prevProps: IMonacoEditorProps, prevState: IMonacoEditorState) {
         if (this.state.editor) {
             if (prevProps.language !== this.props.language && this.state.model) {
                 monacoEditor.editor.setModelLanguage(this.state.model, this.props.language);
@@ -170,7 +171,14 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                 this.state.model.setValue(this.props.value);
             }
         }
+
         this.updateEditorSize();
+
+        // If this is our first time setting the editor, we might need to dynanically modify the styles
+        // that the editor generates for the background colors.
+        if (!prevState.editor && this.state.editor && this.containerRef.current && this.props.forceBackground) {
+            this.updateBackgroundStyle();
+        }
     }
 
     public render() {
@@ -200,6 +208,18 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
     private startUpdateWidgetPosition = () => {
         this.updateWidgetPosition();
+    }
+
+    private updateBackgroundStyle = () => {
+        if (this.state.editor && this.containerRef.current && this.props.forceBackground) {
+            const nodes = this.containerRef.current.getElementsByClassName('monaco-editor-background');
+            if (nodes && nodes.length > 0) {
+                const backgroundNode = nodes[0] as HTMLDivElement;
+                if (backgroundNode && backgroundNode.style) {
+                    backgroundNode.style.backgroundColor = this.props.forceBackground;
+                }
+            }
+        }
     }
 
     private updateWidgetPosition(width?: number) {

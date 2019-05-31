@@ -9,20 +9,19 @@ import * as uuid from 'uuid/v4';
 
 import { IWorkspaceService } from '../../common/application/types';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
-import { IConfigurationService, ILogger } from '../../common/types';
+import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { CellMatcher } from '../cellMatcher';
 import { concatMultilineString } from '../common';
 import { CodeSnippits, Identifiers } from '../constants';
-import { CellState, ICell, IJupyterExecution, INotebookExporter, ISysInfo } from '../types';
+import { CellState, ICell, IJupyterExecution, INotebookExporter } from '../types';
 
 @injectable()
 export class JupyterExporter implements INotebookExporter {
 
     constructor(
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
-        @inject(ILogger) private logger: ILogger,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IFileSystem) private fileSystem: IFileSystem,
@@ -40,8 +39,7 @@ export class JupyterExporter implements INotebookExporter {
             cells = await this.addDirectoryChangeCell(cells, changeDirectory);
         }
 
-        // First compute our python version number
-        const pythonNumber = await this.extractPythonMainVersion(cells);
+        const pythonNumber = await this.extractPythonMainVersion();
 
         // Use this to build our metadata object
         const metadata: nbformat.INotebookMetadata = {
@@ -91,7 +89,8 @@ export class JupyterExporter implements INotebookExporter {
                 id: uuid(),
                 file: Identifiers.EmptyFileName,
                 line: 0,
-                state: CellState.finished
+                state: CellState.finished,
+                type: 'execute'
             };
 
             return [cell, ...cells];
@@ -152,7 +151,7 @@ export class JupyterExporter implements INotebookExporter {
 
     private pruneCells = (cells: ICell[], cellMatcher: CellMatcher): nbformat.IBaseCell[] => {
         // First filter out sys info cells. Jupyter doesn't understand these
-        return cells.filter(c => c.data.cell_type !== 'sys_info')
+        return cells.filter(c => c.data.cell_type !== 'messages')
             // Then prune each cell down to just the cell data.
             .map(c => this.pruneCell(c, cellMatcher));
     }
@@ -181,24 +180,8 @@ export class JupyterExporter implements INotebookExporter {
         return source;
     }
 
-    private extractPythonMainVersion = async (cells: ICell[]): Promise<number> => {
-        let pythonVersion;
-        const sysInfoCells = cells.filter((targetCell: ICell) => {
-            return targetCell.data.cell_type === 'sys_info';
-        });
-
-        if (sysInfoCells.length > 0) {
-            const sysInfo = sysInfoCells[0].data as ISysInfo;
-            const fullVersionString = sysInfo.version;
-            if (fullVersionString) {
-                pythonVersion = fullVersionString.substr(0, fullVersionString.indexOf('.'));
-                return Number(pythonVersion);
-            }
-        }
-
-        this.logger.logInformation('Failed to find python main version from sys_info cell');
-
-        // In this case, let's check the version on the active interpreter
+    private extractPythonMainVersion = async (): Promise<number> => {
+        // Use the active interpreter
         const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
         return usableInterpreter && usableInterpreter.version ? usableInterpreter.version.major : 3;
     }

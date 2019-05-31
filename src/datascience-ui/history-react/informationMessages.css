@@ -1,0 +1,33 @@
+.messages-wrapper {
+    padding: 12px;
+    display: block;
+    border-bottom-color: var(--override-tabs-background, var(--vscode-editorGroupHeader-tabsBackground));
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+}
+
+.messages-outer {
+    background: var(--override-widget-background, var(--vscode-notifications-background));
+    white-space: pre-wrap;
+    font-family: monospace;
+    width: 100%;
+}
+
+.messages-outer-preview {
+    font-weight: bold;
+    background-color: var(--override-peek-background, var(--vscode-peekViewEditor-background));
+    font-family: var(--code-font-family);
+}
+
+.messages-wrapper-preview {
+    background-color: var(--override-peek-background, var(--vscode-peekViewEditor-background));
+}
+
+.messages-result-container pre {
+    white-space: pre-wrap;
+    font-family: monospace;
+    margin: 0px;
+}
+
+
+

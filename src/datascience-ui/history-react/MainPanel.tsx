@@ -64,7 +64,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             submittedText: false,
             history: new InputHistory(),
             editCellVM: getSettings && getSettings().allowInput ? createEditableCellVM(1) : undefined,
-            editorOptions: this.computeEditorOptions()
+            editorOptions: this.computeEditorOptions(),
+            currentExecutionCount: 0
         };
 
         // Add test state if necessary
@@ -154,7 +155,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         );
     }
 
-    // tslint:disable-next-line:no-any
+    // tslint:disable-next-line:no-any cyclomatic-complexity
     public handleMessage = (msg: string, payload?: any) => {
         switch (msg) {
             case HistoryMessages.StartCell:
@@ -229,6 +230,11 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 this.handleTmLanguageResponse(payload);
                 break;
 
+            case HistoryMessages.RestartKernel:
+                // this should be the response from a restart.
+                this.setState({currentExecutionCount: 0});
+                break;
+
             default:
                 break;
         }
@@ -290,7 +296,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const errorBackgroundColor = getSettings().errorBackgroundColor;
         const actualErrorBackgroundColor = errorBackgroundColor ? errorBackgroundColor : '#FFFFFF';
         const maxTextSize = maxOutputSize && maxOutputSize < 10000 && maxOutputSize > 0 ? maxOutputSize : undefined;
-        const executionCount = this.getInputExecutionCount(this.state.cellVMs);
+        const executionCount = this.getInputExecutionCount();
 
         return (
             <div className='edit-panel'>
@@ -797,7 +803,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.sendMessage(HistoryMessages.SendInfo, info);
     }
 
-    private updateOrAdd = (cell: ICell, allowAdd? : boolean) => {
+    private updateOrAdd = (cell: ICell, allowAdd? : boolean) : boolean => {
         const index = this.state.cellVMs.findIndex((c : ICellViewModel) => {
             return c.cell.id === cell.id &&
                    c.cell.line === cell.line &&
@@ -810,18 +816,22 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             // Also update the last cell execution count. It may have changed
             const editCell = this.getEditCell();
             if (editCell) {
-                editCell.cell.data.execution_count = this.getInputExecutionCount(this.state.cellVMs);
+                editCell.cell.data.execution_count = this.getInputExecutionCount();
             }
 
             this.forceUpdate();
+
+            // We updated, indicate that to callers.
+            return true;
         } else if (allowAdd) {
             // This is an entirely new cell (it may have started out as finished)
             this.addCell(cell);
         }
+        return false;
     }
 
     private isCellSupported(cell: ICell) : boolean {
-        return !this.props.testMode || cell.data.cell_type !== 'sys_info';
+        return !this.props.testMode || cell.data.cell_type !== 'messages';
     }
 
     // tslint:disable-next-line:no-any
@@ -829,17 +839,24 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         if (payload) {
             const cell = payload as ICell;
             if (cell && this.isCellSupported(cell)) {
-                this.updateOrAdd(cell, true);
+                const updated = this.updateOrAdd(cell, true);
+                if (updated) {
+                    // This means the cell existed already so it was actual executed code.
+                    // Use its execution count to update our execution count.
+                    const newExecutionCount = cell.data.execution_count ?
+                        Math.max(this.currentExecutionCount, parseInt(cell.data.execution_count.toString(), 10)) :
+                        this.state.currentExecutionCount;
+                    if (newExecutionCount !== this.state.currentExecutionCount) {
+                        this.setState({currentExecutionCount: newExecutionCount});
+
+                        // We also need to update our variable explorer when the execution count changes
+                        // Use the ref here to maintain var explorer independence
+                        if (this.variableExplorerRef.current && this.variableExplorerRef.current.state.open) {
+                            this.refreshVariables();
+                        }
+                    }
+                }
             }
-        }
-
-        // After the cell is finished update our current execution count
-        this.currentExecutionCount = this.getCurrentExecutionCount(this.state.cellVMs);
-
-        // When a cell is finished refresh our variables
-        // Use the ref here to maintain var explorer independence
-        if (this.variableExplorerRef.current && this.variableExplorerRef.current.state.open) {
-            this.refreshVariables();
         }
     }
 
@@ -863,14 +880,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
-    // Check our list of cell vms to see what our current execution count is
-    private getCurrentExecutionCount = (cellVMs: ICellViewModel[]): number => {
-        const realCells = cellVMs.filter(c => c.cell.data.cell_type === 'code' && !c.editable && c.cell.data.execution_count);
-        return realCells && realCells.length > 0 ? parseInt(realCells[realCells.length - 1].cell.data.execution_count!.toString(), 10) : 0;
-    }
-
-    private getInputExecutionCount = (cellVMs: ICellViewModel[]) : number => {
-        return this.getCurrentExecutionCount(cellVMs) + 1;
+    private getInputExecutionCount = () : number => {
+        return this.state.currentExecutionCount + 1;
     }
 
     private submitInput = (code: string) => {
@@ -907,7 +918,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             // so that the last cell becomes busy
             this.setState({
                 cellVMs: [...this.state.cellVMs, editCell],
-                editCellVM: createEditableCellVM(this.getInputExecutionCount(this.state.cellVMs)),
+                editCellVM: createEditableCellVM(this.getInputExecutionCount()),
                 undoStack : this.pushStack(this.state.undoStack, this.state.cellVMs),
                 redoStack: this.state.redoStack,
                 skipNextScroll: false,

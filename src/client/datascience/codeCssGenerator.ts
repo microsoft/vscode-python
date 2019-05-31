@@ -32,6 +32,7 @@ const DefaultCssVars: { [key: string] : string } = {
         --override-progress-background: #0066bf;
         --override-badge-background: #c4c4c4;
         --override-lineHighlightBorder: #eeeeee;
+        --override-peek-background: #f2f8fc;
     }
 `,
     'dark' : `
@@ -45,6 +46,7 @@ const DefaultCssVars: { [key: string] : string } = {
         --override-progress-background: #0066bf;
         --override-badge-background: #4d4d4d;
         --override-lineHighlightBorder: #282828;
+        --override-peek-background: #001f33;
     }
 `
 };

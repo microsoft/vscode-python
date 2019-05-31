@@ -172,6 +172,9 @@ export namespace DataScience {
     export const tooManyColumnsDontAskAgain = localize('DataScience.tooManyColumnsDontAskAgain', 'Don\'t Ask Again');
     export const filterRowsButton = localize('DataScience.filterRowsButton', 'Filter Rows');
     export const filterRowsTooltip = localize('DataScience.filterRowsTooltip', 'Allows filtering multiple rows. Use =, >, or < signs to filter numeric values.');
+    export const previewHeader = localize('DataScience.previewHeader', '--- Begin preview of {0} ---');
+    export const previewFooter = localize('DataScience.previewFooter', '--- End preview of {0} ---');
+    export const previewStatusMessage = localize('DataScience.previewStatusMessage', 'Generating preview of {0}');
 
 }
 

@@ -23,9 +23,9 @@ import { Code } from './code';
 import { CollapseButton } from './collapseButton';
 import { ExecutionCount } from './executionCount';
 import { Image, ImageName } from './image';
+import { InformationMessages } from './informationMessages';
 import { InputHistory } from './inputHistory';
 import { MenuBar } from './menuBar';
-import { SysInfo } from './sysInfo';
 import { displayOrder, richestMimetype, transforms } from './transforms';
 
 interface ICellProps {
@@ -69,8 +69,8 @@ export class Cell extends React.Component<ICellProps> {
     }
 
     public render() {
-        if (this.props.cellVM.cell.data.cell_type === 'sys_info') {
-            return <SysInfo theme={this.props.baseTheme} connection={this.props.cellVM.cell.data.connection} path={this.props.cellVM.cell.data.path} message={this.props.cellVM.cell.data.message} version={this.props.cellVM.cell.data.version} notebook_version={this.props.cellVM.cell.data.notebook_version}/>;
+        if (this.props.cellVM.cell.data.cell_type === 'messages') {
+            return <InformationMessages messages={this.props.cellVM.cell.data.messages} type={this.props.cellVM.cell.type}/>;
         } else {
             return this.renderNormalCell();
         }
@@ -126,7 +126,10 @@ export class Cell extends React.Component<ICellProps> {
         const allowsPlainInput = getSettings().showCellInputCode || this.props.cellVM.directInput || this.props.cellVM.editable;
         const shouldRender = allowsPlainInput || (results && results.length > 0);
         const cellOuterClass = this.props.cellVM.editable ? 'cell-outer-editable' : 'cell-outer';
-        const cellWrapperClass = this.props.cellVM.editable ? 'cell-wrapper' : 'cell-wrapper cell-wrapper-noneditable';
+        let cellWrapperClass = this.props.cellVM.editable ? 'cell-wrapper' : 'cell-wrapper cell-wrapper-noneditable';
+        if (this.props.cellVM.cell.type === 'preview') {
+            cellWrapperClass += ' cell-wrapper-preview';
+        }
 
         // Only render if we are allowed to.
         if (shouldRender) {
@@ -211,6 +214,10 @@ export class Cell extends React.Component<ICellProps> {
 
     private renderInputs = () => {
         if (this.showInputs()) {
+            const backgroundColor = this.props.cellVM.cell.type === 'preview' ?
+                'var(--override-peek-background, var(--vscode-peekViewEditor-background))'
+                : undefined;
+
             return (
                 <div className='cell-input'>
                     <Code
@@ -229,6 +236,7 @@ export class Cell extends React.Component<ICellProps> {
                         outermostParentClass='cell-wrapper'
                         monacoTheme={this.props.monacoTheme}
                         openLink={this.props.openLink}
+                        forceBackgroundColor={backgroundColor}
                         />
                 </div>
             );

@@ -166,7 +166,7 @@ export interface IHistory extends Disposable {
     expandAllCells(): void;
     collapseAllCells(): void;
     exportCells(): void;
-    importNotebook(notebookFile: string) : Promise<string>;
+    previewNotebook(notebookFile: string) : Promise<void>;
 }
 
 export const IHistoryListener = Symbol('IHistoryListener');
@@ -239,7 +239,8 @@ export interface ICell {
     file: string;
     line: number;
     state: CellState;
-    data: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell | ISysInfo;
+    type: 'preview' | 'execute';
+    data: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell | IMessageCell;
 }
 
 export interface IHistoryInfo {
@@ -248,13 +249,9 @@ export interface IHistoryInfo {
     redoCount: number;
 }
 
-export interface ISysInfo extends nbformat.IBaseCell {
-    cell_type: 'sys_info';
-    version: string;
-    notebook_version: string;
-    path: string;
-    message: string;
-    connection: string;
+export interface IMessageCell extends nbformat.IBaseCell {
+    cell_type: 'messages';
+    messages: string[];
 }
 
 export const ICodeCssGenerator = Symbol('ICodeCssGenerator');

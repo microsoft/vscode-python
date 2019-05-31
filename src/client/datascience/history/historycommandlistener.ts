@@ -23,6 +23,7 @@ import {
     IHistoryProvider,
     IJupyterExecution,
     INotebookExporter,
+    INotebookImporter,
     INotebookServer,
     IStatusProvider
 } from '../types';
@@ -39,8 +40,9 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(ILogger) private logger: ILogger,
         @inject(IConfigurationService) private configuration: IConfigurationService,
-        @inject(IStatusProvider) private statusProvider : IStatusProvider)
-    {
+        @inject(IStatusProvider) private statusProvider : IStatusProvider,
+        @inject(INotebookImporter) private jupyterImporter : INotebookImporter
+        ) {
         // Listen to document open commands. We want to ask the user if they want to import.
         const disposable = this.documentManager.onDidOpenTextDocument(this.onOpenedDocument);
         this.disposableRegistry.push(disposable);
@@ -330,6 +332,11 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
         return settings && (!settings.datascience || settings.datascience.allowImportFromNotebook);
     }
 
+    private autoPreviewNotebooks = () => {
+        const settings = this.configuration.getSettings();
+        return settings && (!settings.datascience || settings.datascience.autoPreviewNotebooksInInteractivePane);
+    }
+
     private disableImportOnOpenedFile = () => {
         const settings = this.configuration.getSettings();
         if (settings && settings.datascience) {
@@ -338,6 +345,34 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
     }
 
     private onOpenedDocument = async (document: TextDocument) => {
+        // Preview and import the document if necessary.
+        const results  = await Promise.all([this.previewDocument(document), this.askForImportDocument(document)]);
+
+        // When done, make sure the current document is still the active editor if we did
+        // not do an import. Otherwise subsequent opens will cover up the interactive pane.
+        if (!results[1] && results[0]) {
+            this.documentManager.showTextDocument(document);
+        }
+    }
+
+    private async previewDocument(document: TextDocument) : Promise<boolean> {
+        if (document.fileName.endsWith('.ipynb') && this.autoPreviewNotebooks()) {
+            // Get history before putting up status so that we show a busy message when we
+            // start the preview.
+            const history = await this.historyProvider.getOrCreateActive();
+
+            // Wait for the preview.
+            await this.waitForStatus(async () => {
+                await history.previewNotebook(document.fileName);
+            }, localize.DataScience.previewStatusMessage(), document.fileName);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private async askForImportDocument(document: TextDocument) : Promise<boolean> {
         if (document.fileName.endsWith('.ipynb') && this.canImportFromOpenedFile()) {
             const yes = localize.DataScience.notebookCheckForImportYes();
             const no = localize.DataScience.notebookCheckForImportNo();
@@ -350,6 +385,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
             try {
                 if (answer === yes) {
                     await this.importNotebookOnFile(document.fileName);
+                    return true;
                 } else if (answer === dontAskAgain) {
                     this.disableImportOnOpenedFile();
                 }
@@ -358,6 +394,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
             }
         }
 
+        return false;
     }
 
     @captureTelemetry(Telemetry.ShowHistoryPane, undefined, false)
@@ -386,8 +423,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
         if (uris && uris.length > 0) {
             // Don't call the other overload as we'll end up with double telemetry.
             await this.waitForStatus(async () => {
-                const history = await this.historyProvider.getOrCreateActive();
-                const contents = await history.importNotebook(uris[0].fsPath);
+                const contents = await this.jupyterImporter.importFromFile(uris[0].fsPath);
                 await this.viewDocument(contents);
             }, localize.DataScience.importingFormat(), uris[0].fsPath);
         }
@@ -397,8 +433,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
     private async importNotebookOnFile(file: string) : Promise<void> {
         if (file && file.length > 0) {
             await this.waitForStatus(async () => {
-                const history = await this.historyProvider.getOrCreateActive();
-                const contents = await history.importNotebook(file);
+                const contents =  await this.jupyterImporter.importFromFile(file);
                 await this.viewDocument(contents);
             }, localize.DataScience.importingFormat(), file);
         }

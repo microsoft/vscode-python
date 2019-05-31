@@ -527,27 +527,16 @@ for _ in range(50):
 
     }, () => { return ioc; });
 
-    runMountedTest('Import', async (wrapper) => {
+    runMountedTest('Preview', async (wrapper) => {
 
         const testFile = path.join(srcDirectory(), 'sub', 'test.ipynb');
-        let results: string = '';
 
-        // Import is much fewer renders than an add code since the data is already there.
+        // Preview is much fewer renders than an add code since the data is already there.
         await getCellResults(wrapper, 2, async () => {
             const history = await getOrCreateHistory();
-            results = await history.importNotebook(testFile);
+            await history.previewNotebook(testFile);
         });
 
         verifyHtmlOnCell(wrapper, '<img', CellPosition.Last);
-
-        // Make sure we have a single chdir in our results
-        const first = results.indexOf('os.chdir');
-        assert.ok(first >= 0, 'No os.chdir in import');
-        const second = results.indexOf('os.chdir', first + 1);
-        assert.equal(second, -1, 'More than one chdir in the import. It should be skipped');
-
-        // Make sure we have a cell in our results
-        assert.ok(/#\s*%%/.test(results), 'No cells in returned import');
-
     }, () => { return ioc; });
 });
