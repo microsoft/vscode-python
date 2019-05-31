@@ -1,30 +1,24 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import './headerPanel.css';
+import './toolbarPanel.css';
 
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
 
 import { getLocString } from '../react-common/locReactSide';
-import { Progress } from '../react-common/progress';
 import { getSettings } from '../react-common/settingsReactSide';
 import { CellButton } from './cellButton';
 import { Image, ImageName } from './image';
 import { MenuBar } from './menuBar';
-import { VariableExplorer } from './variableExplorer';
 
-export interface IHeaderPanelProps {
+export interface IToolbarPanelProps {
     baseTheme: string;
-    busy: boolean;
     canCollapseAll: boolean;
     canExpandAll: boolean;
     canExport: boolean;
     canUndo: boolean;
     canRedo: boolean;
     skipDefault?: boolean;
-    testMode?: boolean;
-    variableExplorerRef: React.RefObject<VariableExplorer>;
     addMarkdown(): void;
     collapseAll(): void;
     expandAll(): void;
@@ -34,21 +28,16 @@ export interface IHeaderPanelProps {
     undo(): void;
     redo(): void;
     clearAll(): void;
-    showDataExplorer(targetVariable: string): void;
-    refreshVariables(): void;
-    variableExplorerToggled(open: boolean): void;
-    onHeightChange(newHeight: number): void;
 }
 
-export class HeaderPanel extends React.Component<IHeaderPanelProps> {
-    constructor(prop: IHeaderPanelProps) {
+export class ToolbarPanel extends React.Component<IToolbarPanelProps> {
+    constructor(prop: IToolbarPanelProps) {
         super(prop);
     }
 
     public render() {
-        const progressBar = this.props.busy && !this.props.testMode ? <Progress /> : undefined;
         return(
-            <div id='header-panel-div'>
+            <div id='toolbar-panel'>
                 <MenuBar baseTheme={this.props.baseTheme}>
                     {this.renderExtraButtons()}
                     <CellButton baseTheme={this.props.baseTheme} onClick={this.props.collapseAll} disabled={!this.props.canCollapseAll} tooltip={getLocString('DataScience.collapseAll', 'Collapse all cell inputs')}>
@@ -76,24 +65,8 @@ export class HeaderPanel extends React.Component<IHeaderPanelProps> {
                         <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.Cancel}/>
                     </CellButton>
                 </MenuBar>
-                {progressBar}
-                <VariableExplorer baseTheme={this.props.baseTheme}
-                 showDataExplorer={this.props.showDataExplorer}
-                 refreshVariables={this.props.refreshVariables}
-                 onHeightChange={this.onVariableHeightChange}
-                 variableExplorerToggled={this.props.variableExplorerToggled}
-                 ref={this.props.variableExplorerRef} />
             </div>
         );
-    }
-
-    private onVariableHeightChange = () => {
-        const divElement = ReactDOM.findDOMNode(this) as HTMLDivElement;
-
-        if (divElement) {
-            const computeHeight = divElement.offsetHeight;
-            this.props.onHeightChange(computeHeight);
-        }
     }
 
     private renderExtraButtons = () => {

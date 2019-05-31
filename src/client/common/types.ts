@@ -311,6 +311,9 @@ export interface IDataScienceSettings {
     liveShareConnectionTimeout?: number;
     decorateCells?: boolean;
     enableCellCodeLens?: boolean;
+    askForLargeDataFrames?: boolean;
+    enableAutoMoveToNextCell?: boolean;
+    previewImportedNotebooksInInteractivePane?: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

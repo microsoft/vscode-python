@@ -6,10 +6,11 @@ import { JSONObject } from '@phosphor/coreutils';
 import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../constants';
 import { IJupyterVariable } from '../types';
 
-export const RowFetchAllLimit = 1000;
-export const RowFetchSizeFirst = 100;
-export const RowFetchSizeSubsequent = 1000;
+export const CellFetchAllLimit = 100000;
+export const CellFetchSizeFirst = 100000;
+export const CellFetchSizeSubsequent = 1000000;
 export const MaxStringCompare = 200;
+export const ColumnWarningSize = 1000; // Anything over this takes too long to load
 
 export namespace DataViewerRowStates {
     export const Fetching = 'fetching';

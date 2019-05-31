@@ -341,7 +341,13 @@ async function checkDatascienceDependencies() {
             if (!name.startsWith('./node_modules')) {
                 return;
             }
-            const nameWithoutNodeModules = name.substring('./node_modules'.length);
+
+            let nameWithoutNodeModules = name.substring('./node_modules'.length);
+            // Special case expose-loader.
+            if (nameWithoutNodeModules.startsWith('/expose-loader')) {
+                nameWithoutNodeModules = nameWithoutNodeModules.substring(nameWithoutNodeModules.indexOf('./node_modules') + './node_modules'.length);
+            }
+
             let moduleName1 = nameWithoutNodeModules.split('/')[1];
             moduleName1 = moduleName1.endsWith('!.') ? moduleName1.substring(0, moduleName1.length - 2) : moduleName1;
             const moduleName2 = `${nameWithoutNodeModules.split('/')[1]}/${nameWithoutNodeModules.split('/')[2]}`;

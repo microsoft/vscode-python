@@ -166,6 +166,13 @@ export namespace DataScience {
     export const pandasRequiredForViewing = localize('DataScience.pandasRequiredForViewing', 'Python package \'pandas\' is required for viewing data.');
     export const valuesColumn = localize('DataScience.valuesColumn', 'values');
     export const liveShareInvalid = localize('DataScience.liveShareInvalid', 'One or more guests in the session do not have the Python Extension installed. Live share session cannot continue.');
+    export const tooManyColumnsMessage = localize('DataScience.tooManyColumnsMessage', 'Variables with over a 1000 columns may take a long time to display. Are you sure you wish to continue?');
+    export const tooManyColumnsYes = localize('DataScience.tooManyColumnsYes', 'Yes');
+    export const tooManyColumnsNo = localize('DataScience.tooManyColumnsNo', 'No');
+    export const tooManyColumnsDontAskAgain = localize('DataScience.tooManyColumnsDontAskAgain', 'Don\'t Ask Again');
+    export const filterRowsButton = localize('DataScience.filterRowsButton', 'Filter Rows');
+    export const filterRowsTooltip = localize('DataScience.filterRowsTooltip', 'Allows filtering multiple rows. Use =, >, or < signs to filter numeric values.');
+
 }
 
 export namespace DebugConfigStrings {
@@ -313,11 +320,10 @@ export function getCollectionJSON(): string {
 }
 
 // tslint:disable-next-line:no-suspicious-comment
-// TODO: Get rid of the second argument in the calls above.
-export function localize(key: string, _defValue?: string) {
+export function localize(key: string, defValue?: string) {
     // Return a pointer to function so that we refetch it on each call.
     return () => {
-        return getString(key);
+        return getString(key, defValue);
     };
 }
 
@@ -327,14 +333,14 @@ function parseLocale(): string {
     return vscodeConfigString ? JSON.parse(vscodeConfigString).locale : 'en-us';
 }
 
-function getString(key: string) {
+function getString(key: string, defValue?: string) {
     // Load the current collection
     if (!loadedCollection || parseLocale() !== loadedLocale) {
         load();
     }
 
     // The default collection (package.nls.json) is the fallback.
-    // Note that we are guaranteed the following:
+    // Note that we are guaranteed the following (during shipping)
     //  1. defaultCollection was initialized by the load() call above
     //  2. defaultCollection has the key (see the "keys exist" test)
     let collection = defaultCollection!;
@@ -343,8 +349,15 @@ function getString(key: string) {
     if (loadedCollection && loadedCollection.hasOwnProperty(key)) {
         collection = loadedCollection;
     }
-    askedForCollection[key] = collection[key];
-    return collection[key];
+    let result = collection[key];
+    if (!result && defValue) {
+        // This can happen during development if you haven't fixed up the nls file yet or
+        // if for some reason somebody broke the functional test.
+        result = defValue;
+    }
+    askedForCollection[key] = result;
+
+    return result;
 }
 
 function load() {

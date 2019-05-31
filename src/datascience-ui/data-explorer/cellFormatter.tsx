@@ -3,38 +3,27 @@
 'use strict';
 import './cellFormatter.css';
 
-import { JSONObject } from '@phosphor/coreutils';
 import * as React from 'react';
-import { DataViewerRowStates } from '../../client/datascience/data-viewing/types';
-import { getLocString } from '../react-common/locReactSide';
+import * as ReactDOMServer from 'react-dom/server';
+import { ISlickRow } from './reactSlickGrid';
 
 interface ICellFormatterProps {
     value: string | number | object | boolean;
-    row: JSONObject | string;
-    dependentValues: ICellFormatterMetaData | undefined;
+    columnDef: Slick.Column<ISlickRow>;
 }
 
-export interface ICellFormatterMetaData {
-    columnType: string;
-    columnValue: string | number | object | boolean;
-}
-
-export class CellFormatter extends React.Component<ICellFormatterProps> {
-    private loadingMessage = getLocString('DataScience.loadingMessage', 'loading ...');
+class CellFormatter extends React.Component<ICellFormatterProps> {
 
     constructor(props: ICellFormatterProps) {
         super(props);
     }
 
     public render() {
-        // If this is our special not set value, render a 'loading ...' value.
-        if (this.props.row === DataViewerRowStates.Skipped || this.props.row === DataViewerRowStates.Fetching) {
-            return (<span>{this.loadingMessage}</span>);
-        }
-
         // Render based on type
-        if (this.props.dependentValues && this.props.value !== null) {
-            switch (this.props.dependentValues.columnType) {
+        if (this.props.value !== null && this.props.columnDef && this.props.columnDef.hasOwnProperty('type')) {
+            // tslint:disable-next-line: no-any
+            const columnType = (this.props.columnDef as any).type;
+            switch (columnType) {
                 case 'bool':
                     return this.renderBool(this.props.value as boolean);
                     break;
@@ -66,4 +55,9 @@ export class CellFormatter extends React.Component<ICellFormatterProps> {
         return <div className='number-formatter cell-formatter' title={val}><span>{val}</span></div>;
     }
 
+}
+
+// tslint:disable-next-line: no-any
+export function cellFormatterFunc(_row: number, _cell: number, value: any, columnDef: Slick.Column<ISlickRow>, _dataContext: Slick.SlickData) : string {
+    return ReactDOMServer.renderToString(<CellFormatter value={value} columnDef={columnDef}/>);
 }

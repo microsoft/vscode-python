@@ -166,6 +166,7 @@ export interface IHistory extends Disposable {
     expandAllCells(): void;
     collapseAllCells(): void;
     exportCells(): void;
+    importNotebook(notebookFile: string) : Promise<string>;
 }
 
 export const IHistoryListener = Symbol('IHistoryListener');
@@ -221,6 +222,7 @@ export interface ICodeWatcher {
     runAllCellsAbove(stopLine: number, stopCharacter: number): Promise<void>;
     runCellAndAllBelow(startLine: number, startCharacter: number): Promise<void>;
     runFileInteractive(): Promise<void>;
+    addEmptyCellToBottom(): Promise<void>;
 }
 
 export enum CellState {
@@ -294,6 +296,7 @@ export interface IJupyterCommandFactory {
 export interface IDataScienceExtraSettings extends IDataScienceSettings {
     extraSettings: {
         terminalCursor: string;
+        terminalCursorBlink: string;
         theme: string;
     };
     intellisenseOptions: {

@@ -23,7 +23,6 @@ export interface IMainPanelState {
     redoStack : ICellViewModel[][];
     submittedText: boolean;
     history: InputHistory;
-    contentTop: number;
     rootStyle?: string;
     theme?: string;
     forceDark?: boolean;
@@ -56,7 +55,6 @@ export function generateTestState(inputBlockToggled : (id: string) => void, file
         redoStack : [],
         submittedText: false,
         history: new InputHistory(),
-        contentTop: 24,
         rootStyle: darkStyle,
         tokenizerLoaded: true,
         editorOptions: {}

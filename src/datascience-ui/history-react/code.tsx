@@ -18,7 +18,6 @@ export interface ICodeProps {
     testMode: boolean;
     readOnly: boolean;
     history: InputHistory | undefined;
-    cursorType: string;
     showWatermark: boolean;
     monacoTheme: string | undefined;
     outermostParentClass: string;
@@ -26,6 +25,7 @@ export interface ICodeProps {
     onSubmit(code: string): void;
     onCreated(code: string, modelId: string): void;
     onChange(changes: monacoEditor.editor.IModelContentChange[], modelId: string): void;
+    openLink(uri: monacoEditor.Uri): void;
 }
 
 interface ICodeState {
@@ -42,6 +42,7 @@ interface ICodeState {
 export class Code extends React.Component<ICodeProps, ICodeState> {
     private subscriptions: monacoEditor.IDisposable[] = [];
     private lastCleanVersionId: number = 0;
+    private editorRef: React.RefObject<MonacoEditor> = React.createRef<MonacoEditor>();
 
     constructor(prop: ICodeProps) {
         super(prop);
@@ -100,6 +101,8 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
                     language='python'
                     editorMounted={this.editorDidMount}
                     options={options}
+                    openLink={this.props.openLink}
+                    ref={this.editorRef}
                 />
                 <div className={waterMarkClass}>{this.getWatermarkString()}</div>
             </div>
@@ -133,9 +136,11 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         // Listen for model changes
         this.subscriptions.push(editor.onDidChangeModelContent(this.modelChanged));
 
-        // List for key up/down events.
-        this.subscriptions.push(editor.onKeyDown(this.onKeyDown));
-        this.subscriptions.push(editor.onKeyUp(this.onKeyUp));
+        // List for key up/down events if not read only
+        if (!this.props.readOnly) {
+            this.subscriptions.push(editor.onKeyDown(this.onKeyDown));
+            this.subscriptions.push(editor.onKeyUp(this.onKeyUp));
+        }
 
         // Indicate we're ready
         this.props.onCreated(this.props.code, model!.id);
@@ -201,8 +206,15 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         return '';
     }
 
+    private isAutoCompleteOpen() : boolean {
+        if (this.editorRef.current) {
+            return this.editorRef.current.isSuggesting();
+        }
+        return false;
+    }
+
     private arrowUp(e: monacoEditor.IKeyboardEvent) {
-        if (this.state.editor && this.state.model) {
+        if (this.state.editor && this.state.model && !this.isAutoCompleteOpen()) {
             const cursor = this.state.editor.getPosition();
             if (cursor && cursor.lineNumber === 1 && this.props.history) {
                 const currentValue = this.getContents();
@@ -218,7 +230,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
     }
 
     private arrowDown(e: monacoEditor.IKeyboardEvent) {
-        if (this.state.editor && this.state.model) {
+        if (this.state.editor && this.state.model && !this.isAutoCompleteOpen()) {
             const cursor = this.state.editor.getPosition();
             if (cursor && cursor.lineNumber === this.state.model.getLineCount() && this.props.history) {
                 const currentValue = this.getContents();

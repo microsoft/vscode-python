@@ -3,6 +3,7 @@
 'use strict';
 import '../../common/extensions';
 
+import { nbformat } from '@jupyterlab/coreutils';
 import * as fs from 'fs-extra';
 import { inject, injectable, multiInject } from 'inversify';
 import * as path from 'path';
@@ -30,6 +31,7 @@ import * as localize from '../../common/utils/localize';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { CssMessages, EditorContexts, Identifiers, Telemetry } from '../constants';
+import { ColumnWarningSize } from '../data-viewing/types';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import { JupyterKernelPromiseFailedError } from '../jupyter/jupyterKernelPromiseFailedError';
 import {
@@ -47,6 +49,7 @@ import {
     IJupyterVariables,
     IJupyterVariablesResponse,
     INotebookExporter,
+    INotebookImporter,
     INotebookServer,
     InterruptResult,
     IStatusProvider,
@@ -54,7 +57,15 @@ import {
 } from '../types';
 import { WebViewHost } from '../webViewHost';
 import { HistoryMessageListener } from './historyMessageListener';
-import { HistoryMessages, IAddedSysInfo, IGotoCode, IHistoryMapping, IRemoteAddCode, ISubmitNewCell } from './historyTypes';
+import {
+    HistoryMessages,
+    IAddedSysInfo,
+    IGotoCode,
+    IHistoryMapping,
+    IRemoteAddCode,
+    IShowDataViewer,
+    ISubmitNewCell
+} from './historyTypes';
 
 export enum SysInfoReason {
     Start,
@@ -98,7 +109,8 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IHistoryProvider) private historyProvider: IHistoryProvider,
         @inject(IDataViewerProvider) private dataExplorerProvider: IDataViewerProvider,
-        @inject(IJupyterVariables) private jupyterVariables: IJupyterVariables
+        @inject(IJupyterVariables) private jupyterVariables: IJupyterVariables,
+        @inject(INotebookImporter) private jupyterImporter: INotebookImporter
         ) {
         super(
             configuration,
@@ -386,6 +398,38 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         }
     }
 
+    public async importNotebook(file: string) : Promise<string> {
+        // First convert to a python file to verify this file is valid.
+        const results = await this.jupyterImporter.importFromFile(file);
+
+        // Then if it is, and the user has specified they want the notebook to auto open,
+        if (results && this.configuration.getSettings().datascience.previewImportedNotebooksInInteractivePane) {
+            // Then read in the file as json. This json should already
+            // be in the cell format
+            // tslint:disable-next-line: no-any
+            const contents = JSON.parse(await this.fileSystem.readFile(file)) as any;
+            if (contents && contents.cells && contents.cells.length) {
+                const cells = contents.cells as (nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell)[];
+
+                // Convert the inputdata into our ICell format
+                const finishedCells : ICell[] = cells.filter(c => c.source.length > 0).map(c => {
+                    return {
+                        id: uuid(),
+                        file: Identifiers.EmptyFileName,
+                        line: 0,
+                        state: CellState.finished,
+                        // Remove execution count as the original count doesn't apply.
+                        data: {...c, execution_count: null}
+                    };
+                });
+
+                // Do the same thing that happens when new code is added.
+                this.onAddCodeEvent(finishedCells);
+            }
+        }
+        return results;
+    }
+
     protected async activating() {
         // Only activate if the active editor is empty. This means that
         // vscode thinks we are actually supposed to have focus. It would be
@@ -404,20 +448,55 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         }
     }
 
-    private async showDataViewer(variable: string) : Promise<void> {
+    private async checkPandas() : Promise<boolean> {
+        const pandasVersion = await this.dataExplorerProvider.getPandasVersion();
+        if (!pandasVersion) {
+            sendTelemetryEvent(Telemetry.PandasNotInstalled);
+            // Warn user that there is no pandas.
+            this.applicationShell.showErrorMessage(localize.DataScience.pandasRequiredForViewing());
+            return false;
+        } else if (pandasVersion.major < 1 && pandasVersion.minor < 20) {
+            sendTelemetryEvent(Telemetry.PandasTooOld);
+            // Warn user that we cannot start because pandas is too old.
+            const versionStr = `${pandasVersion.major}.${pandasVersion.minor}.${pandasVersion.build}`;
+            this.applicationShell.showErrorMessage(localize.DataScience.pandasTooOldForViewingFormat().format(versionStr));
+            return false;
+        }
+        return true;
+    }
+
+    private shouldAskForLargeData(): boolean {
+        const settings = this.configuration.getSettings();
+        return settings && settings.datascience && settings.datascience.askForLargeDataFrames === true;
+    }
+
+    private disableAskForLargeData() {
+        const settings = this.configuration.getSettings();
+        if (settings && settings.datascience) {
+            settings.datascience.askForLargeDataFrames = false;
+        }
+    }
+
+    private async checkColumnSize(columnSize: number) : Promise<boolean> {
+        if (columnSize > ColumnWarningSize && this.shouldAskForLargeData()) {
+            const message = localize.DataScience.tooManyColumnsMessage();
+            const yes = localize.DataScience.tooManyColumnsYes();
+            const no = localize.DataScience.tooManyColumnsNo();
+            const dontAskAgain = localize.DataScience.tooManyColumnsDontAskAgain();
+
+            const result = await this.applicationShell.showWarningMessage(message, yes, no, dontAskAgain);
+            if (result === dontAskAgain) {
+                this.disableAskForLargeData();
+            }
+            return result === yes;
+        }
+        return true;
+    }
+
+    private async showDataViewer(request: IShowDataViewer) : Promise<void> {
         try {
-            const pandasVersion = await this.dataExplorerProvider.getPandasVersion();
-            if (!pandasVersion) {
-                sendTelemetryEvent(Telemetry.PandasNotInstalled);
-                // Warn user that there is no pandas.
-                this.applicationShell.showErrorMessage(localize.DataScience.pandasRequiredForViewing());
-            } else if (pandasVersion.major < 1 && pandasVersion.minor < 20) {
-                sendTelemetryEvent(Telemetry.PandasTooOld);
-                // Warn user that we cannot start because pandas is too old.
-                const versionStr = `${pandasVersion.major}.${pandasVersion.minor}.${pandasVersion.build}`;
-                this.applicationShell.showErrorMessage(localize.DataScience.pandasTooOldForViewingFormat().format(versionStr));
-            } else {
-                await this.dataExplorerProvider.create(variable);
+            if (await this.checkPandas() && await this.checkColumnSize(request.columnSize)) {
+                await this.dataExplorerProvider.create(request.variableName);
             }
         } catch (e) {
             this.applicationShell.showErrorMessage(e.toString());

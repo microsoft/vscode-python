@@ -5,6 +5,8 @@
 - [ ] Create a branch against `master` for a pull request
 - [ ] Update the version in [`package.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json)
 - [ ] Run `npm install` to make sure [`package-lock.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json) is up-to-date
+- [ ] Update `requirements.txt` to point to latest release version of `ptvsd`.
+- [ ] Update `languageServerVersion` in `package.json` to point to the latest version of the Language Server.
 - [ ] Update [`CHANGELOG.md`](https://github.com/Microsoft/vscode-python/blob/master/CHANGELOG.md)
    - [ ] Create a new section for this release
    - [ ] Copy over the "Thanks" section from the previous release and make sure it's up-to-date
@@ -59,10 +61,10 @@
 - [ ] Determine if a hotfix is needed
 - [ ] Merge `release` back into `master`
 
-## Prep for the _next_ release
-- [ ] Create a new [release plan](https://github.com/Microsoft/vscode-python/edit/master/.github/release_plan.md)
-- [ ] [(Un-)pin](https://help.github.com/en/articles/pinning-an-issue-to-your-repository) [release plan issues](https://github.com/Microsoft/vscode-python/labels/release%20plan)
-
 ## Clean up after _this_ release
 - [ ] Go through [`info needed` issues](https://github.com/Microsoft/vscode-python/issues?utf8=%E2%9C%93&q=is%3Aopen+label%3A%22info+needed%22+sort%3Acreated-asc+-label%3A%22data+science%22) and close any that have no activity for over a month
 - [ ] GDPR bookkeeping
+
+## Prep for the _next_ release
+- [ ] Create a new [release plan](https://github.com/Microsoft/vscode-python/edit/master/.github/release_plan.md)
+- [ ] [(Un-)pin](https://help.github.com/en/articles/pinning-an-issue-to-your-repository) [release plan issues](https://github.com/Microsoft/vscode-python/labels/release%20plan)

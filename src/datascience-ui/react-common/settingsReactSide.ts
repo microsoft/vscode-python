@@ -54,6 +54,7 @@ function load() {
             variableExplorerExclude: 'module;builtin_function_or_method',
             extraSettings: {
                 terminalCursor: 'block',
+                terminalCursorBlink: 'blink',
                 theme: 'Default Dark+'
             },
             intellisenseOptions: {

@@ -19,6 +19,7 @@ export interface IMonacoEditorProps {
     options: monacoEditor.editor.IEditorConstructionOptions;
     testMode?: boolean;
     editorMounted(editor: monacoEditor.editor.IStandaloneCodeEditor): void;
+    openLink(uri: monacoEditor.Uri): void;
 }
 
 interface IMonacoEditorState {
@@ -74,6 +75,13 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             const model = editor.getModel();
             if (model) {
                 model.setEOL(monacoEditor.editor.EndOfLineSequence.LF);
+            }
+
+            // Register a link opener so when a user clicks on a link we can navigate to it.
+            // tslint:disable-next-line: no-any
+            const openerService = (editor.getContribution('editor.linkDetector') as any).openerService;
+            if (openerService && openerService.open) {
+                openerService.open = this.props.openLink;
             }
 
             // Save the editor and the model in our state.
@@ -172,6 +180,15 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                 <div className='measure-width-div' ref={this.measureWidthRef} />
             </div>
         );
+    }
+
+    public isSuggesting() : boolean {
+        // This should mean our widgetParent has some height
+        if (this.widgetParent && this.widgetParent.firstChild && this.widgetParent.firstChild.childNodes.length >= 2) {
+            const suggestWidget = this.widgetParent.firstChild.childNodes.item(1) as HTMLDivElement;
+            return suggestWidget && suggestWidget.className.includes('visible');
+        }
+        return false;
     }
 
     private windowResized = () => {
