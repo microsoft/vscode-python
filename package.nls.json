@@ -244,5 +244,8 @@
     "DataScience.tooManyColumnsNo": "No",
     "DataScience.tooManyColumnsDontAskAgain": "Don't Ask Again",
     "DataScience.filterRowsButton": "Filter Rows",
-    "DataScience.filterRowsTooltip": "Allows filtering multiple rows. Use =, >, or < signs to filter numeric values."
+    "DataScience.filterRowsTooltip": "Allows filtering multiple rows. Use =, >, or < signs to filter numeric values.",
+    "DataScience.previewHeader" : "--- Begin preview of {0} ---",
+    "DataScience.previewFooter": "--- End preview of {0} ---",
+    "DataScience.previewStatusMessage": "Generating preview of {0}"
 }
