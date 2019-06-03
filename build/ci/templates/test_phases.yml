@@ -60,7 +60,7 @@ steps:
     displayName: 'Use Python $(PythonVersion)'
     inputs:
       versionSpec: $(PythonVersion)
-    conditions: or(not(eq(variables['NeedsPythonFunctionalReqs'], 'true')), eq(variables['PythonVersion'], '2.7'))
+    condition: or(not(eq(variables['NeedsPythonFunctionalReqs'], 'true')), eq(variables['PythonVersion'], '2.7'))
 
   # Ensure that npm is upgraded to the necessary version specified in `variables` above.
   # Example command line (windows pwsh):
