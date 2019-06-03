@@ -66,11 +66,11 @@ steps:
   #
   # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
   - bash: |
-      pythonVer="$(python -V 2>&1)"
-      wget https://www.python.org/ftp/python/$(pythonVer)/Python-$(pythonVer).tar.xz
-      tar xvf Python-$(pythonVer).tar.xz
-      cd Python-$(pythonVer)
-      ./configure --enable-loadable-sqlite-extensions --with-ensurepip=install --prefix=$HOME/py-$pythonVer)
+      version=$(python -V 2>&1 | grep -Po '(?<=Python )(.+)')
+      wget https://www.python.org/ftp/python/$version/Python-$version.tar.xz
+      tar xvf Python-$version.tar.xz
+      cd Python-$version
+      ./configure --enable-loadable-sqlite-extensions --with-ensurepip=install --prefix=$HOME/py-$version
       make -j 8
       sudo make install
     displayName: 'Setup python to run with sqlite on 3.*'
