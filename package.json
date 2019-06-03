@@ -257,7 +257,7 @@
             },
             {
                 "command": "python.discoveringTests",
-                "title": "%python.command.python.discoverTests.title%",
+                "title": "%python.command.python.discoveringTests.title%",
                 "category": "Python",
                 "icon": {
                     "light": "resources/light/discovering-tests.svg",
@@ -1894,7 +1894,7 @@
                 "python.testing.cwd": {
                     "type": "string",
                     "default": null,
-                    "description": "Optional working directory for unit tests.",
+                    "description": "Optional working directory for tests.",
                     "scope": "resource"
                 },
                 "python.testing.debugPort": {
@@ -1915,7 +1915,7 @@
                 "python.testing.nosetestsEnabled": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Enable unit testing using nosetests.",
+                    "description": "Enable testing using nosetests.",
                     "scope": "resource"
                 },
                 "python.testing.nosetestPath": {
@@ -1969,13 +1969,13 @@
                 "python.testing.unittestEnabled": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Enable unit testing using unittest.",
+                    "description": "Enable testing using unittest.",
                     "scope": "resource"
                 },
                 "python.testing.autoTestDiscoverOnSaveEnabled": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Enable auto run test discovery when saving a unit test file.",
+                    "description": "Enable auto run test discovery when saving a test file.",
                     "scope": "resource"
                 },
                 "python.venvFolders": {
