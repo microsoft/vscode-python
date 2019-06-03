@@ -44,14 +44,6 @@ steps:
     inputs:
       versionSpec: $(NodeVersion)
 
-  # Install the sudo requirements for the functional tests
-  #
-  # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
-  - bash: |
-      sudo apt-get install libsqlite3-dev
-    displayName: 'Setup python to run with sqlite on 3.*'
-    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Linux'), not(eq(variables['PythonVersion'], '2.7')))
-
   # Ensure the required Python version is made available on PATH for subsequent tasks.
   #
   # `PythonVersion` is set in the `variables` section above.
@@ -165,6 +157,14 @@ steps:
     displayName: 'pip install system test requirements'
     condition: and(succeeded(), eq(variables['NeedsPythonTestReqs'], 'true'))
 
+  # Install the sudo requirements for the functional tests
+  #
+  # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
+  - bash: |
+      sudo apt-get install libsqlite3-dev
+      python -m pip install pysqlite3
+    displayName: 'Setup python to run with sqlite on 3.*'
+    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Linux'), not(eq(variables['PythonVersion'], '2.7')))
 
   # Install the additional sqlite requirements
   #
