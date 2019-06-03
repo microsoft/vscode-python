@@ -62,6 +62,20 @@ steps:
       versionSpec: $(PythonVersion)
     condition: or(not(eq(variables['NeedsPythonFunctionalReqs'], 'true')), eq(variables['PythonVersion'], '2.7'))
 
+  # Install the a version of python that works with sqlite3 until this bug is addressed
+  # https://mseng.visualstudio.com/AzureDevOps/_workitems/edit/1535830
+  #
+  # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
+  - bash: |
+      wget https://www.python.org/ftp/python/$(PythonVersion)/Python-$(PythonVersion).tar.xz
+      tar xvf Python-$(PythonVersion).tar.xz
+      cd Python-$(PythonVersion)
+      ./configure --enable-loadable-sqlite-extensions --with-ensurepip=install --prefix=$HOME/py-$(python.version)
+      make -j 8
+      sudo make install
+    displayName: 'Setup python to run with sqlite on 3.*'
+    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Linux'), not(eq(variables['PythonVersion'], '2.7')))
+
   # Ensure that npm is upgraded to the necessary version specified in `variables` above.
   # Example command line (windows pwsh):
   # > npm install -g npm@latest
@@ -157,20 +171,6 @@ steps:
       python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
     displayName: 'pip install system test requirements'
     condition: and(succeeded(), eq(variables['NeedsPythonTestReqs'], 'true'))
-
-  # Install the a version of python that works with sqlite3 until this bug is addressed
-  # https://mseng.visualstudio.com/AzureDevOps/_workitems/edit/1535830
-  #
-  # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
-  - bash: |
-      wget https://www.python.org/ftp/python/$(PythonVersion)/Python-$(PythonVersion).tar.xz
-      tar xvf Python-$(PythonVersion).tar.xz
-      cd Python-$(PythonVersion)
-      ./configure --enable-loadable-sqlite-extensions --with-ensurepip=install --prefix=$HOME/py-$(python.version)
-      make -j 8
-      sudo make install
-    displayName: 'Setup python to run with sqlite on 3.*'
-    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Linux'), not(eq(variables['PythonVersion'], '2.7')))
 
   # Install the additional sqlite requirements
   #
