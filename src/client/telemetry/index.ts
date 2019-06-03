@@ -377,4 +377,11 @@ export interface IEventNamePropertyMapping {
     restart - Whether to restart the Jedi Process (i.e. memory > limit).
     */
     [EventName.JEDI_MEMORY]: { memory: number; limit: number; isUserDefinedLimit: boolean; restart: boolean };
+    /*
+    Telemetry event sent to provide information on whether we have successfully identify the type of shell used.
+    failed - If true, indicates we have failed to identify the shell. Note this impacts impacts ability to activate environments in the terminal & code.
+    usingDefaultShell - If true, this indicates we failed to identify the shell and we have reverted to using the default shell on user machine.
+    terminalProvided - If true, we used the terminal provided to detec the shell. If not provided, we use the default shell on user machine.
+    */
+    [EventName.TERMINAL_SHELL_IDENTIFICATION]: { failed: boolean; usingDefaultShell: boolean; terminalProvided: boolean };
 }

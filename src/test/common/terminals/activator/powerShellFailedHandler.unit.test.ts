@@ -21,17 +21,11 @@ suite('Terminal Activation Powershell Failed Handler', () => {
     async function testDiagnostics(mustHandleDiagnostics: boolean, isWindows: boolean, activatedSuccessfully: boolean, shellType: TerminalShellType, cmdPromptHasActivationCommands: boolean) {
         platform.setup(p => p.isWindows).returns(() => isWindows);
         helper
-            .setup(p => p.getTerminalShellPath())
-            .returns(() => '');
-        // .verifiable(TypeMoq.Times.atMostOnce());
-        helper
             .setup(p => p.identifyTerminalShell(TypeMoq.It.isAny()))
             .returns(() => shellType);
-        // .verifiable(TypeMoq.Times.atMostOnce());c
         const cmdPromptCommands = cmdPromptHasActivationCommands ? ['a'] : [];
         helper.setup(h => h.getEnvironmentActivationCommands(TypeMoq.It.isValue(TerminalShellType.commandPrompt), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(cmdPromptCommands));
-        // .verifiable(TypeMoq.Times.atMostOnce());
 
         diagnosticService
             .setup(d => d.handle(TypeMoq.It.isAny()))
