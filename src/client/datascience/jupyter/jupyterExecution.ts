@@ -354,7 +354,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             }
 
             // Modify the data rate limit if starting locally. The default prevents large dataframes from being returned.
-            extraArgs.push('--NotebookApp.iopub_data_rate_limit=10000000000');
+            extraArgs.push('--NotebookApp.iopub_data_rate_limit=10000000000.0');
 
             // Check for a docker situation.
             try {

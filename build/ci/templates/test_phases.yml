@@ -157,6 +157,16 @@ steps:
     displayName: 'pip install system test requirements'
     condition: and(succeeded(), eq(variables['NeedsPythonTestReqs'], 'true'))
 
+  # Install the sudo requirements for the functional tests
+  #
+  # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
+  - bash: |
+      sudo apt-get install libsqlite3-dev
+      python -m pip install pysqlite
+    displayName: 'Setup python to run with sqlite'
+    failOnStderr: true
+    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Linux'))
+
   # Install the requirements for functional tests.
   #
   # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
