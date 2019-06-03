@@ -70,9 +70,11 @@ steps:
       wget https://www.python.org/ftp/python/$version/Python-$version.tar.xz
       tar xvf Python-$version.tar.xz
       cd Python-$version
-      ./configure --enable-loadable-sqlite-extensions --with-ensurepip=install
+      ./configure --enable-loadable-sqlite-extensions --with-ensurepip=install --prefix=$HOME/py-$version
       make
       sudo make install
+      sudo unlink python
+      ln -s $HOME/py-$(python.version)/bin/python python
       python -c "import sys;print('P = ' + sys.executable)"
       python3 -c "import sys;print('P3 = ' + sys.executable)"
       ./python -c "import sys;print('P local = ' + sys.executable)"
