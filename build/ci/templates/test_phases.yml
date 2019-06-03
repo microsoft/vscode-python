@@ -60,17 +60,17 @@ steps:
     displayName: 'Use Python $(PythonVersion)'
     inputs:
       versionSpec: $(PythonVersion)
-    condition: or(not(eq(variables['NeedsPythonFunctionalReqs'], 'true')), eq(variables['PythonVersion'], '2.7'))
 
   # Install the a version of python that works with sqlite3 until this bug is addressed
   # https://mseng.visualstudio.com/AzureDevOps/_workitems/edit/1535830
   #
   # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
   - bash: |
-      wget https://www.python.org/ftp/python/$(PythonVersion)/Python-$(PythonVersion).tar.xz
-      tar xvf Python-$(PythonVersion).tar.xz
-      cd Python-$(PythonVersion)
-      ./configure --enable-loadable-sqlite-extensions --with-ensurepip=install --prefix=$HOME/py-$(python.version)
+      pythonVer="$(python -V 2>&1)"
+      wget https://www.python.org/ftp/python/$(pythonVer)/Python-$(pythonVer).tar.xz
+      tar xvf Python-$(pythonVer).tar.xz
+      cd Python-$(pythonVer)
+      ./configure --enable-loadable-sqlite-extensions --with-ensurepip=install --prefix=$HOME/py-$pythonVer)
       make -j 8
       sudo make install
     displayName: 'Setup python to run with sqlite on 3.*'
