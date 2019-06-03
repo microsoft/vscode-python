@@ -75,6 +75,7 @@ steps:
       sudo make install
       python -c "import sys;print('P = ' + sys.executable)"
       python3 -c "import sys;print('P3 = ' + sys.executable)"
+      ./python -c "import sys;print('P local = ' + sys.executable)"
       python -c "import sqlite3;print('SQL = ' + sqlite3.apilevel)"
     displayName: 'Setup python to run with sqlite on 3.*'
     condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Linux'), not(eq(variables['PythonVersion'], '2.7')))
