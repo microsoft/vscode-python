@@ -76,13 +76,7 @@ export class TerminalHelper implements ITerminalHelper {
         // Determine shell based on the name of the terminal.
         // See solution here https://github.com/microsoft/vscode/issues/74233#issuecomment-497527337
         if (terminal) {
-            shell = Array.from(this.detectableShells.keys())
-                .reduce((matchedShell, shellToDetect) => {
-                    if (matchedShell === TerminalShellType.other && this.detectableShells.get(shellToDetect)!.test(terminal.name)) {
-                        return shellToDetect;
-                    }
-                    return matchedShell;
-                }, TerminalShellType.other);
+            shell = this.identifyTerminalShellByName(terminal.name);
         }
 
         // If still unable to identify, then use fall back to determine path to the default shell.
@@ -103,6 +97,16 @@ export class TerminalHelper implements ITerminalHelper {
         sendTelemetryEvent(EventName.TERMINAL_SHELL_IDENTIFICATION, undefined, properties);
         return shell;
     }
+    public identifyTerminalShellByName(name: string): TerminalShellType {
+        return Array.from(this.detectableShells.keys())
+            .reduce((matchedShell, shellToDetect) => {
+                if (matchedShell === TerminalShellType.other && this.detectableShells.get(shellToDetect)!.test(name)) {
+                    return shellToDetect;
+                }
+                return matchedShell;
+            }, TerminalShellType.other);
+    }
+
     public buildCommandForTerminal(terminalShellType: TerminalShellType, command: string, args: string[]) {
         const isPowershell = terminalShellType === TerminalShellType.powershell || terminalShellType === TerminalShellType.powershellCore;
         const commandPrefix = isPowershell ? '& ' : '';

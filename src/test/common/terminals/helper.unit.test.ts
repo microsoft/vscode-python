@@ -3,7 +3,7 @@
 import { expect } from 'chai';
 import { SemVer } from 'semver';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
-import { Terminal, Uri } from 'vscode';
+import { Uri } from 'vscode';
 import { TerminalManager } from '../../../client/common/application/terminalManager';
 import { ITerminalManager } from '../../../client/common/application/types';
 import { PythonSettings } from '../../../client/common/configSettings';
@@ -25,7 +25,6 @@ import {
 import { TerminalHelper } from '../../../client/common/terminal/helper';
 import {
     ITerminalActivationCommandProvider,
-    ITerminalHelper,
     TerminalShellType
 } from '../../../client/common/terminal/types';
 import { IConfigurationService } from '../../../client/common/types';
@@ -38,7 +37,7 @@ import { CondaService } from '../../../client/interpreter/locators/services/cond
 // tslint:disable:max-func-body-length no-any
 
 suite('Terminal Service helpers', () => {
-    let helper: ITerminalHelper;
+    let helper: TerminalHelper;
     let terminalManager: ITerminalManager;
     let platformService: IPlatformService;
     let condaService: ICondaService;
@@ -136,8 +135,7 @@ suite('Terminal Service helpers', () => {
             shellPathsAndIdentification.set('/usr/bin/xonshx', TerminalShellType.other);
 
             shellPathsAndIdentification.forEach((shellType, shellPath) => {
-                const terminal = {name: shellPath} as any as Terminal;
-                expect(helper.identifyTerminalShell(terminal)).to.equal(shellType, `Incorrect Shell Type for path '${shellPath}'`);
+                expect(helper.identifyTerminalShellByName(shellPath)).to.equal(shellType, `Incorrect Shell Type for path '${shellPath}'`);
             });
         });
         test('Ensure spaces in command is quoted', async () => {
