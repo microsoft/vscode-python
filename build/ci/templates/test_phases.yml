@@ -71,8 +71,9 @@ steps:
       tar xvf Python-$version.tar.xz
       cd Python-$version
       ./configure --enable-loadable-sqlite-extensions --with-ensurepip=install --prefix=$HOME/py-$version
-      make -j 8
+      make
       sudo make install
+      python -c "import sys;print(sys.executable)"
       python -c "import sqlite3;print('SQL = ' + sqlite3.apilevel)"
     displayName: 'Setup python to run with sqlite on 3.*'
     condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Linux'), not(eq(variables['PythonVersion'], '2.7')))
