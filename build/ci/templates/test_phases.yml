@@ -162,10 +162,16 @@ steps:
   # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
   - bash: |
       sudo apt-get install libsqlite3-dev
-      python -m pip install pysqlite
     displayName: 'Setup python to run with sqlite'
-    failOnStderr: true
     condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Linux'))
+
+  # Install the additional sqlite requirements
+  #
+  # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
+  - bash: |
+      python -m pip install pysqlite
+    displayName: 'Setup python to run with sqlite on 2.7'
+    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Linux'), eq(variables['PythonVersion'], '2.7'))
 
   # Install the requirements for functional tests.
   #
