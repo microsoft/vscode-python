@@ -73,6 +73,7 @@ steps:
       ./configure --enable-loadable-sqlite-extensions --with-ensurepip=install --prefix=$HOME/py-$version
       make -j 8
       sudo make install
+      python -c "import sqlite3;print('SQL = ' + sqlite3.apilevel)"
     displayName: 'Setup python to run with sqlite on 3.*'
     condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Linux'), not(eq(variables['PythonVersion'], '2.7')))
 
@@ -413,15 +414,9 @@ steps:
   #
   # Example command line (windows pwsd):
   # > $Env:CI_PYTHON_PATH=(& python -c 'import sys;print(sys.executable)')
-  - task: PythonScript@0
+  - script: |
+        python -c "from __future__ import print_function;import sys;print('##vso[task.setvariable variable=CI_PYTHON_PATH;]{}'.format(sys.executable))"
     displayName: 'Set CI_PYTHON_PATH'
-    inputs:
-      scriptSource: inline
-      failOnStderr: true
-      script: |
-        from __future__ import print_function
-        import sys
-        print('##vso[task.setvariable variable=CI_PYTHON_PATH;]{}'.format(sys.executable))
 
   # Run the functional tests.
   #
