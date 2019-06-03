@@ -2160,6 +2160,7 @@
     "dependencies": {
         "@jupyterlab/services": "^3.2.1",
         "@types/node-fetch": "^2.3.4",
+        "@types/ws": "^6.0.1",
         "arch": "^2.1.0",
         "azure-storage": "^2.10.1",
         "diff-match-patch": "^1.0.0",
@@ -2208,7 +2209,7 @@
         "vsls": "^0.3.1291",
         "winreg": "^1.2.4",
         "winston": "^3.2.1",
-        "ws": "^3.3.1",
+        "ws": "^6.0.0",
         "xml2js": "^0.4.19"
     },
     "devDependencies": {

@@ -12,8 +12,14 @@ import {
 } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils';
 import { Slot } from '@phosphor/signaling';
+import * as nodeFetch from 'node-fetch';
+import { URLSearchParams } from 'url';
 import { Event, EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
+//import * as ws from 'ws';
+//import from 'ws';
+//import WebSocket = require('ws');
+import * as WebSocketWS from 'ws';
 
 import { Cancellation } from '../../common/cancellation';
 import { isTestExecution } from '../../common/constants';
@@ -24,6 +30,30 @@ import { noop } from '../../common/utils/misc';
 import { IConnection, IJupyterKernelSpec, IJupyterSession } from '../types';
 import { JupyterKernelPromiseFailedError } from './jupyterKernelPromiseFailedError';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
+
+export class MyWebSocket extends WebSocketWS {
+
+    // Static fields for cookie values
+    public static xsrfCookie: string;
+    public static sessionName: string;
+    public static sessionValue: string;
+
+    constructor(url: string, protocols?: string | string[] | undefined) {
+
+        // Create header cookie
+        const cookieString = `_xsrf=${MyWebSocket.xsrfCookie}; ${MyWebSocket.sessionName}=${MyWebSocket.sessionValue}`;
+
+        // Construct our client options here
+        const co: WebSocketWS.ClientOptions = {
+            headers: {
+                Cookie: cookieString
+            }
+        };
+
+        super(url, protocols, co);
+    }
+
+}
 
 export class JupyterSession implements IJupyterSession {
     private connInfo: IConnection | undefined;
@@ -114,21 +144,98 @@ export class JupyterSession implements IJupyterSession {
         return this.session && this.session.kernel ? this.session.kernel.requestComplete(content) : Promise.resolve(undefined);
     }
 
+    public getPWSettings = async(): Promise<[string, string, string]> => {
+        let xsrfCookieValue: string = '';
+        let sessionCookieName: string = '';
+        let sessionCookieValue: string = '';
+
+        // First do a get to get the xsrf for the login page
+        // tslint:disable-next-line:no-http-string
+        let res = await nodeFetch.default('http://ianhumain2:9998/login?', {
+            method: 'get',
+            redirect: 'manual',
+            headers: { Connection: 'keep-alive' }
+        });
+
+        // Get the xsrf cookie from the response
+        let cookies: string | null = res.headers.get('set-cookie');
+
+        if (cookies) {
+            const cookieSplit = cookies.split(';');
+            cookieSplit.forEach(value => {
+                const valueSplit = value.split('=');
+                if (valueSplit[0] === '_xsrf') {
+                    xsrfCookieValue = valueSplit[1];
+                }
+            });
+        }
+
+        // Now we need to hit the server with our xsrf cookie and the password
+
+        // Create the form params that we need
+        const postParams = new URLSearchParams();
+        postParams.append('_xsrf', xsrfCookieValue!);
+        postParams.append('password', 'Python');
+
+        // tslint:disable-next-line:no-http-string
+        res = await nodeFetch.default('http://ianhumain2:9998/login?', {
+            method: 'post',
+            headers: { 'X-XSRFToken': xsrfCookieValue!, Cookie: `_xsrf=${xsrfCookieValue}`, Connection: 'keep-alive' },
+            body: postParams,
+            redirect: 'manual'
+        });
+
+        // Now from this result we need to extract the session cookie
+        cookies = res.headers.get('set-cookie');
+
+        if (cookies) {
+            const firstEquals = cookies.indexOf('=');
+            sessionCookieName = cookies.substring(0, firstEquals);
+            sessionCookieValue = cookies.substring(firstEquals + 1, cookies.indexOf(';'));
+        }
+
+        // Return our pulled values
+        return [xsrfCookieValue, sessionCookieName, sessionCookieValue];
+    }
+
     public async connect(cancelToken?: CancellationToken) : Promise<void> {
         if (!this.connInfo) {
             throw new Error(localize.DataScience.sessionDisposed());
         }
 
-        // First connect to the sesssion manager
-        const serverSettings = ServerConnection.makeSettings(
+        const pwSettings = await this.getPWSettings();
+        MyWebSocket.xsrfCookie = pwSettings[0];
+        MyWebSocket.sessionName = pwSettings[1];
+        MyWebSocket.sessionValue = pwSettings[2];
+
+        const cookieString = `_xsrf=${pwSettings[0]}; ${pwSettings[1]}=${pwSettings[2]}`;
+        // tslint:disable-next-line:no-http-string
+        const reqHeaders = { Cookie: cookieString, 'X-XSRFToken': pwSettings[0], Connection: 'keep-alive', 'Cache-Control': 'max-age=0', 'Upgrade-Insecure-Requests': '1', Referer: 'http://ianhumain2:9998/login?next=/tree?' };
+        // Now here we are going to try to connect using the services
+        //const testws = new MyWebSocket('test');
+        const serverSettings: ServerConnection.ISettings = ServerConnection.makeSettings(
             {
-                baseUrl: this.connInfo.baseUrl,
-                token: this.connInfo.token,
+                // tslint:disable-next-line:no-http-string
+                baseUrl: 'http://ianhumain2:9998',
+                token: '',
                 pageUrl: '',
                 // A web socket is required to allow token authentication
-                wsUrl: this.connInfo.baseUrl.replace('http', 'ws'),
-                init: { cache: 'no-store', credentials: 'same-origin' }
+                wsUrl: 'ws://ianhumain2:9998',
+                init: { cache: 'no-store', credentials: 'same-origin', headers: reqHeaders },
+                // tslint:disable-next-line:no-any
+                WebSocket: MyWebSocket as any
             });
+
+        // First connect to the sesssion manager
+        //const serverSettings = ServerConnection.makeSettings(
+            //{
+                //baseUrl: this.connInfo.baseUrl,
+                //token: this.connInfo.token,
+                //pageUrl: '',
+                //// A web socket is required to allow token authentication
+                //wsUrl: this.connInfo.baseUrl.replace('http', 'ws'),
+                //init: { cache: 'no-store', credentials: 'same-origin' }
+            //});
         this.sessionManager = new SessionManager({ serverSettings: serverSettings });
 
         // Create a temporary .ipynb file to use

@@ -208,7 +208,7 @@ export class DataScience implements IDataScience {
     @captureTelemetry(Telemetry.SelectJupyterURI)
     public async selectJupyterURI(): Promise<void> {
         // IANHU REMOVE
-        this.TEST();
+        //this.TEST();
 
         const quickPickOptions = [localize.DataScience.jupyterSelectURILaunchLocal(), localize.DataScience.jupyterSelectURISpecifyURI()];
         const selection = await this.appShell.showQuickPick(quickPickOptions);
