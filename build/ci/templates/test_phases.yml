@@ -60,6 +60,7 @@ steps:
     displayName: 'Use Python $(PythonVersion)'
     inputs:
       versionSpec: $(PythonVersion)
+    conditions: or(not(eq(variables['NeedsPythonFunctionalReqs'], 'true')), eq(variables['PythonVersion'], '2.7'))
 
   # Ensure that npm is upgraded to the necessary version specified in `variables` above.
   # Example command line (windows pwsh):
@@ -157,12 +158,17 @@ steps:
     displayName: 'pip install system test requirements'
     condition: and(succeeded(), eq(variables['NeedsPythonTestReqs'], 'true'))
 
-  # Install the sudo requirements for the functional tests
+  # Install the a version of python that works with sqlite3 until this bug is addressed
+  # https://mseng.visualstudio.com/AzureDevOps/_workitems/edit/1535830
   #
   # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
   - bash: |
-      sudo apt-get install libsqlite3-dev
-      python -m pip install pysqlite3
+      wget https://www.python.org/ftp/python/$(PythonVersion)/Python-$(PythonVersion).tar.xz
+      tar xvf Python-$(PythonVersion).tar.xz
+      cd Python-$(PythonVersion)
+      ./configure --enable-loadable-sqlite-extensions --with-ensurepip=install --prefix=$HOME/py-$(python.version)
+      make -j 8
+      sudo make install
     displayName: 'Setup python to run with sqlite on 3.*'
     condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Linux'), not(eq(variables['PythonVersion'], '2.7')))
 
