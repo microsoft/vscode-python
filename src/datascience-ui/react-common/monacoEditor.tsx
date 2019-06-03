@@ -319,7 +319,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                         const document = contentWidgets.getRootNode() as HTMLDocument;
 
                         // His first child with the id 'root' should be where we want to parent our overflow widgets
-                        if (document) {
+                        if (document && document.getElementById) {
                             const root = document.getElementById('root');
                             if (root) {
                                 // We need to create a dummy 'monaco-editor' div so that the content widgets get the same styles.

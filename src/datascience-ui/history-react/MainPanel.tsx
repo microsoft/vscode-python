@@ -44,7 +44,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private mainPanel: HTMLDivElement | null = null;
     private variableExplorerRef: React.RefObject<VariableExplorer>;
     private styleInjectorRef: React.RefObject<StyleInjector>;
-    private currentExecutionCount: number = 0;
     private postOffice: PostOffice = new PostOffice();
     private intellisenseProvider: IntellisenseProvider;
     private onigasmPromise: Deferred<ArrayBuffer> | undefined;
@@ -803,7 +802,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.sendMessage(HistoryMessages.SendInfo, info);
     }
 
-    private updateOrAdd = (cell: ICell, allowAdd? : boolean) : boolean => {
+    private updateOrAdd = (cell: ICell, allowAdd? : boolean) => {
         const index = this.state.cellVMs.findIndex((c : ICellViewModel) => {
             return c.cell.id === cell.id &&
                    c.cell.line === cell.line &&
@@ -813,21 +812,27 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             // Update this cell
             this.state.cellVMs[index].cell = cell;
 
-            // Also update the last cell execution count. It may have changed
-            const editCell = this.getEditCell();
-            if (editCell) {
-                editCell.cell.data.execution_count = this.getInputExecutionCount();
+            // This means the cell existed already so it was actual executed code.
+            // Use its execution count to update our execution count.
+            const newExecutionCount = cell.data.execution_count ?
+                Math.max(this.state.currentExecutionCount, parseInt(cell.data.execution_count.toString(), 10)) :
+                this.state.currentExecutionCount;
+            if (newExecutionCount !== this.state.currentExecutionCount) {
+                this.setState({ currentExecutionCount: newExecutionCount });
+
+                // We also need to update our variable explorer when the execution count changes
+                // Use the ref here to maintain var explorer independence
+                if (this.variableExplorerRef.current && this.variableExplorerRef.current.state.open) {
+                    this.refreshVariables();
+                }
+            } else {
+                // Force an update anyway as we did change something
+                this.forceUpdate();
             }
-
-            this.forceUpdate();
-
-            // We updated, indicate that to callers.
-            return true;
         } else if (allowAdd) {
             // This is an entirely new cell (it may have started out as finished)
             this.addCell(cell);
         }
-        return false;
     }
 
     private isCellSupported(cell: ICell) : boolean {
@@ -839,23 +844,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         if (payload) {
             const cell = payload as ICell;
             if (cell && this.isCellSupported(cell)) {
-                const updated = this.updateOrAdd(cell, true);
-                if (updated) {
-                    // This means the cell existed already so it was actual executed code.
-                    // Use its execution count to update our execution count.
-                    const newExecutionCount = cell.data.execution_count ?
-                        Math.max(this.currentExecutionCount, parseInt(cell.data.execution_count.toString(), 10)) :
-                        this.state.currentExecutionCount;
-                    if (newExecutionCount !== this.state.currentExecutionCount) {
-                        this.setState({currentExecutionCount: newExecutionCount});
-
-                        // We also need to update our variable explorer when the execution count changes
-                        // Use the ref here to maintain var explorer independence
-                        if (this.variableExplorerRef.current && this.variableExplorerRef.current.state.open) {
-                            this.refreshVariables();
-                        }
-                    }
-                }
+                this.updateOrAdd(cell, true);
             }
         }
     }
@@ -938,7 +927,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     // When the variable explorer wants to refresh state (say if it was expanded)
     private refreshVariables = () => {
-        this.sendMessage(HistoryMessages.GetVariablesRequest, this.currentExecutionCount);
+        this.sendMessage(HistoryMessages.GetVariablesRequest, this.state.currentExecutionCount);
     }
 
     // Find the display value for one specific variable
@@ -953,7 +942,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             const variable = payload as IJupyterVariable;
 
             // Only send the updated variable data if we are on the same execution count as when we requsted it
-            if (variable && variable.executionCount !== undefined && variable.executionCount === this.currentExecutionCount) {
+            if (variable && variable.executionCount !== undefined && variable.executionCount === this.state.currentExecutionCount) {
                 if (this.variableExplorerRef.current) {
                     this.variableExplorerRef.current.newVariableData(variable);
                 }
@@ -968,7 +957,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             const variablesResponse = payload as IJupyterVariablesResponse;
 
             // Check to see if we have moved to a new execution count only send our update if we are on the same count as the request
-            if (variablesResponse.executionCount === this.currentExecutionCount) {
+            if (variablesResponse.executionCount === this.state.currentExecutionCount) {
                 if (this.variableExplorerRef.current) {
                     this.variableExplorerRef.current.newVariablesData(variablesResponse.variables);
                 }
