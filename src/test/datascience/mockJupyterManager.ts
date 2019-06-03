@@ -377,8 +377,8 @@ export class MockJupyterManager implements IJupyterSessionManager {
 
         if ((supportedCommands & SupportedCommands.notebook) === SupportedCommands.notebook) {
             this.setupPythonServiceExec(service, 'jupyter', ['notebook', '--version'], () => Promise.resolve({ stdout: '1.1.1.1' }));
-            this.setupPythonServiceExecObservable(service, 'jupyter', ['notebook', '--no-browser', /--notebook-dir=.*/, /.*/, '--NotebookApp.iopub_data_rate_limit=10000000000'], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198'], notebookProc);
-            this.setupPythonServiceExecObservable(service, 'jupyter', ['notebook', '--no-browser', /--notebook-dir=.*/, '--NotebookApp.iopub_data_rate_limit=10000000000'], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198'], notebookProc);
+            this.setupPythonServiceExecObservable(service, 'jupyter', ['notebook', '--no-browser', /--notebook-dir=.*/, /.*/, '--NotebookApp.iopub_data_rate_limit=10000000000.0'], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198'], notebookProc);
+            this.setupPythonServiceExecObservable(service, 'jupyter', ['notebook', '--no-browser', /--notebook-dir=.*/, '--NotebookApp.iopub_data_rate_limit=10000000000.0'], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198'], notebookProc);
         }
         if ((supportedCommands & SupportedCommands.kernelspec) === SupportedCommands.kernelspec) {
             this.setupPythonServiceExec(service, 'jupyter', ['kernelspec', '--version'], () => Promise.resolve({ stdout: '1.1.1.1' }));
@@ -414,8 +414,8 @@ export class MockJupyterManager implements IJupyterSessionManager {
             const getServerInfoPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
             this.setupProcessServiceExec(this.processService, workingPython.path, [getServerInfoPath], () => Promise.resolve({ stdout: 'failure to get server infos' }));
             this.setupProcessServiceExecObservable(this.processService, workingPython.path, ['-m', 'jupyter', 'kernelspec', 'list'], [], []);
-            this.setupProcessServiceExecObservable(this.processService, workingPython.path, ['-m', 'jupyter', 'notebook', '--no-browser', /--notebook-dir=.*/, /.*/, '--NotebookApp.iopub_data_rate_limit=10000000000'], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
-            this.setupProcessServiceExecObservable(this.processService, workingPython.path, ['-m', 'jupyter', 'notebook', '--no-browser', /--notebook-dir=.*/, '--NotebookApp.iopub_data_rate_limit=10000000000'], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
+            this.setupProcessServiceExecObservable(this.processService, workingPython.path, ['-m', 'jupyter', 'notebook', '--no-browser', /--notebook-dir=.*/, /.*/, '--NotebookApp.iopub_data_rate_limit=10000000000.0'], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
+            this.setupProcessServiceExecObservable(this.processService, workingPython.path, ['-m', 'jupyter', 'notebook', '--no-browser', /--notebook-dir=.*/, '--NotebookApp.iopub_data_rate_limit=10000000000.0'], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
         } else if ((supportedCommands & SupportedCommands.notebook) === SupportedCommands.notebook) {
             this.setupProcessServiceExec(this.processService, workingPython.path, ['-m', 'jupyter', 'kernelspec', 'list'], () => {
                 const results = this.kernelSpecs.map(k => {
@@ -426,8 +426,8 @@ export class MockJupyterManager implements IJupyterSessionManager {
             const getServerInfoPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
             this.setupProcessServiceExec(this.processService, workingPython.path, [getServerInfoPath], () => Promise.resolve({ stdout: 'failure to get server infos' }));
             this.setupProcessServiceExecObservable(this.processService, workingPython.path, ['-m', 'jupyter', 'kernelspec', 'list'], [], []);
-            this.setupProcessServiceExecObservable(this.processService, workingPython.path, ['-m', 'jupyter', 'notebook', '--no-browser', /--notebook-dir=.*/, /.*/, '--NotebookApp.iopub_data_rate_limit=10000000000'], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
-            this.setupProcessServiceExecObservable(this.processService, workingPython.path, ['-m', 'jupyter', 'notebook', '--no-browser', /--notebook-dir=.*/, '--NotebookApp.iopub_data_rate_limit=10000000000'], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
+            this.setupProcessServiceExecObservable(this.processService, workingPython.path, ['-m', 'jupyter', 'notebook', '--no-browser', /--notebook-dir=.*/, /.*/, '--NotebookApp.iopub_data_rate_limit=10000000000.0'], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
+            this.setupProcessServiceExecObservable(this.processService, workingPython.path, ['-m', 'jupyter', 'notebook', '--no-browser', /--notebook-dir=.*/, '--NotebookApp.iopub_data_rate_limit=10000000000.0'], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
         }
         if ((supportedCommands & SupportedCommands.nbconvert) === SupportedCommands.nbconvert) {
             this.setupProcessServiceExec(this.processService, workingPython.path, ['-m', 'jupyter', 'nbconvert', /.*/, '--to', 'python', '--stdout', '--template', /.*/], () => {
@@ -459,7 +459,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
 
         if ((supportedCommands & SupportedCommands.kernelspec) === SupportedCommands.kernelspec) {
             this.setupProcessServiceExec(service, jupyterPath, ['notebook', '--version'], () => Promise.resolve({ stdout: '1.1.1.1' }));
-            this.setupProcessServiceExecObservable(service, jupyterPath, ['notebook', '--no-browser', /--notebook-dir=.*/, /.*/, '--NotebookApp.iopub_data_rate_limit=10000000000'], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
+            this.setupProcessServiceExecObservable(service, jupyterPath, ['notebook', '--no-browser', /--notebook-dir=.*/, /.*/, '--NotebookApp.iopub_data_rate_limit=10000000000.0'], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
             this.setupProcessServiceExec(service, 'jupyter', ['notebook', '--version'], () => Promise.resolve({ stdout: '1.1.1.1' }));
         } else {
             this.setupProcessServiceExec(service, 'jupyter', ['notebook', '--version'], () => Promise.reject());
