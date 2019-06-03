@@ -70,9 +70,10 @@ steps:
       wget https://www.python.org/ftp/python/$version/Python-$version.tar.xz
       tar xvf Python-$version.tar.xz
       cd Python-$version
-      ./configure --enable-loadable-sqlite-extensions --with-ensurepip=install --prefix=$HOME/py-$version
+      ./configure --enable-loadable-sqlite-extensions --with-ensurepip=install
       make
       sudo make install
+      ls
       python -c "import sys;print(sys.executable)"
       python -c "import sqlite3;print('SQL = ' + sqlite3.apilevel)"
     displayName: 'Setup python to run with sqlite on 3.*'
