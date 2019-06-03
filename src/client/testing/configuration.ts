@@ -52,7 +52,7 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
         {
             label: 'pytest',
             product: Product.pytest,
-            description: 'Can run unittest (including trial) and nose test suites out of the box',
+            description: 'pytest framework',
             // tslint:disable-next-line:no-http-string
             detail: 'http://docs.pytest.org/'
         },
