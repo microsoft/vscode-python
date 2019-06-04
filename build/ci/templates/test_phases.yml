@@ -76,6 +76,8 @@ steps:
       export PATH=$HOME/py-$version/bin:$PATH
       echo $PATH
       ls $HOME/py-$version/bin
+      ls $HOME
+      ls $HOME/py-$version
       echo '##vso[task.prependpath]'$HOME/py-$version/bin
       python -c "import sys;print('P = ' + sys.executable)"
       python3 -c "import sys;print('P3 = ' + sys.executable)"
