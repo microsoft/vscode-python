@@ -292,8 +292,8 @@ export interface IJupyterCommandFactory {
 // Config settings we pass to our react code
 export interface IDataScienceExtraSettings extends IDataScienceSettings {
     extraSettings: {
-        terminalCursor: string;
-        terminalCursorBlink: string;
+        editorCursor: string;
+        editorCursorBlink: string;
         theme: string;
     };
     intellisenseOptions: {

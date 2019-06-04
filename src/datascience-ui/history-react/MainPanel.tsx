@@ -348,8 +348,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 parameterHints: {
                     enabled: intellisenseOptions.parameterHintsEnabled
                 },
-                cursorStyle: extraSettings.terminalCursor,
-                cursorBlinking: extraSettings.terminalCursorBlink
+                cursorStyle: extraSettings.editorCursor,
+                cursorBlinking: extraSettings.editorCursorBlink
             };
         }
 
