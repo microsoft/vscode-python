@@ -62,13 +62,21 @@
 .cell-output {
     margin-top: 5px;
     background: var(--override-widget-background, var(--vscode-notifications-background));
-    white-space: pre-wrap;
-    font-family: monospace;
 }
 
-.cell-output pre {
+.cell-output-text {
     white-space: pre-wrap;
-    font-family: monospace;
+    font-size: var(--code-font-size);
+    font-family: var(--code-font-family);
+}
+.cell-output-text pre {
+    white-space: pre-wrap;
+    font-size: var(--code-font-size);
+    font-family: var(--code-font-family);
+}
+
+.cell-output-html {
+    white-space: none;
 }
 
 .cell-output table {

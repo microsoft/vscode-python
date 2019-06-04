@@ -293,7 +293,7 @@ export class Cell extends React.Component<ICellProps> {
         return [<Transform key={0} data={source}/>];
     }
 
-    private renderWithTransform = (mimetype: string, output : nbformat.IOutput, index : number, renderWithScrollbars: boolean, forceLightTheme: boolean) => {
+    private renderWithTransform = (mimetype: string, output : nbformat.IOutput, index : number, renderWithScrollbars: boolean, forceLightTheme: boolean, isText: boolean) => {
 
         // If we found a mimetype, use the transform
         if (mimetype) {
@@ -313,6 +313,7 @@ export class Cell extends React.Component<ICellProps> {
                     if (mimetype === 'text/plain') {
                         data = concatMultilineString(data as nbformat.MultilineString);
                         renderWithScrollbars = true;
+                        isText = true;
                     }
 
                     // Create a default set of properties
@@ -332,7 +333,9 @@ export class Cell extends React.Component<ICellProps> {
                         style.color = this.invertColor(this.props.errorBackgroundColor);
                     }
 
-                    return <div id='stylewrapper' key={index} style={style}><Transform data={data} /></div>;
+                    const className = isText ? 'cell-output-text' : 'cell-output-html';
+
+                    return <div id='stylewrapper' className={className} key={index} style={style}><Transform data={data} /></div>;
                 }
             } catch (ex) {
                 window.console.log('Error in rendering');
@@ -397,10 +400,13 @@ export class Cell extends React.Component<ICellProps> {
         // Only for text and error ouptut do we add scrollbars
         let addScrollbars = false;
         let forceLightTheme = false;
+        let isText = false;
 
         // Stream and error output need to be converted
         if (copy.output_type === 'stream') {
             addScrollbars = true;
+            isText = true;
+
             // Stream output needs to be wrapped in xmp so it
             // show literally. Otherwise < chars start a new html element.
             const stream = copy as nbformat.IStream;
@@ -427,6 +433,7 @@ export class Cell extends React.Component<ICellProps> {
         } else if (copy.output_type === 'error') {
             addScrollbars = true;
             forceLightTheme = true;
+            isText = true;
             const error = copy as nbformat.IError;
             try {
                 const converter = new ansiToHtml();
@@ -450,7 +457,7 @@ export class Cell extends React.Component<ICellProps> {
 
         // If that worked, use the transform
         if (mimetype) {
-            return this.renderWithTransform(mimetype, copy, index, addScrollbars, forceLightTheme);
+            return this.renderWithTransform(mimetype, copy, index, addScrollbars, forceLightTheme, isText);
         }
 
         if (copy.data) {

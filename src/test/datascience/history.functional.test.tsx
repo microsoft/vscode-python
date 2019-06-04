@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 import * as assert from 'assert';
+import * as fs from 'fs-extra';
+import { parse } from 'node-html-parser';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { Disposable, TextDocument, TextEditor } from 'vscode';
@@ -9,15 +11,17 @@ import { Disposable, TextDocument, TextEditor } from 'vscode';
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
+import { generateCellsFromDocument } from '../../client/datascience/cellFactory';
+import { concatMultilineString } from '../../client/datascience/common';
 import { EditorContexts } from '../../client/datascience/constants';
 import { HistoryMessageListener } from '../../client/datascience/history/historyMessageListener';
 import { HistoryMessages } from '../../client/datascience/history/historyTypes';
 import { IHistory, IHistoryProvider } from '../../client/datascience/types';
 import { CellButton } from '../../datascience-ui/history-react/cellButton';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
-//import { asyncDump } from '../common/asyncDump';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
+import { createDocument } from './editor-integration/helpers';
 import {
     addCode,
     addContinuousMockData,
@@ -40,6 +44,7 @@ import {
 } from './historyTestHelpers';
 import { waitForUpdate } from './reactHelpers';
 
+//import { asyncDump } from '../common/asyncDump';
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 suite('DataScience History output tests', () => {
     const disposables: Disposable[] = [];
@@ -538,5 +543,39 @@ for _ in range(50):
         });
 
         verifyHtmlOnCell(wrapper, '<img', CellPosition.Last);
+    }, () => { return ioc; });
+
+    runMountedTest('LiveLossPlot', async (wrapper) => {
+        // Only run this test when not mocking. Too complicated to mimic otherwise
+        if (!ioc.mockJupyter) {
+            // Load all of our cells
+            const testFile = path.join(srcDirectory(), 'liveloss.py');
+            const version = 1;
+            const inputText = await fs.readFile(testFile, 'utf-8');
+            const document = createDocument(inputText, testFile, version, TypeMoq.Times.atLeastOnce(), true);
+            const cells = generateCellsFromDocument(document.object);
+            assert.ok(cells, 'No cells generated');
+            assert.equal(cells.length, 8, 'Not enough cells generated');
+
+            // Run the first 7 cells
+            for (let i = 0; i < 7; i += 1) {
+                const renderCount = i === 2 ? 5 : 4 ; // Cell 2 outputs a print statement
+                await addCode(getOrCreateHistory, wrapper, concatMultilineString(cells[i].data.source), renderCount);
+            }
+
+            // Last cell should generate a series of updates. Verify we end up with a single image
+            await addCode(getOrCreateHistory, wrapper, concatMultilineString(cells[7].data.source), 25);
+            const cell = getLastOutputCell(wrapper);
+
+            const output = cell!.find('div.cell-output');
+            assert.ok(output.length > 0, 'No output cell found');
+            const outHtml = output.html();
+
+            const root = parse(outHtml) as any;
+            const imgs = root.querySelectorAll('img') as HTMLElement[];
+            assert.ok(imgs, 'No images found');
+            assert.equal(imgs.length, 1, 'Wrong number of images');
+        }
+
     }, () => { return ioc; });
 });
