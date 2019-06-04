@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+// Refer to A/B testing wiki for more details: https://en.wikipedia.org/wiki/A/B_testing
+
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
@@ -64,6 +66,7 @@ export class ExperimentsManager implements IExperimentsManager {
 
     public inExperiment(experimentName: string): boolean {
         try {
+            // Note: experimentStorage is populated in ExtensionActivationManager.activateWorkspace()
             const experiments = this.experimentStorage.value ? this.experimentStorage.value : [];
             const experiment = experiments.find(exp => exp.name === experimentName);
             if (!experiment) {

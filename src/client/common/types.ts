@@ -426,6 +426,10 @@ export interface IAsyncDisposableRegistry extends IAsyncDisposable {
     push(disposable: IDisposable | IAsyncDisposable): void;
 }
 
+/* ABExperiments field carries the identity, and the range of the experiment,
+ where the experiment is valid for users falling between the number 'min' and 'max'
+ More details: https://en.wikipedia.org/wiki/A/B_testing
+*/
 export type ABExperiments = { name: string; salt: string; min: number; max: number }[];
 export const IExperimentsManager = Symbol('IExperimentsManager');
 export interface IExperimentsManager extends IExtensionActivationService {
