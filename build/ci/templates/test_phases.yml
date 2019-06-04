@@ -73,6 +73,7 @@ steps:
       cd Python-$version
       ./configure --enable-loadable-sqlite-extensions --with-ensurepip=install --prefix=$HOME/py-$version
       make
+      sudo make install
       export PATH=$HOME/py-$version/bin:$PATH
       echo $PATH
       ls $HOME/py-$version/bin
