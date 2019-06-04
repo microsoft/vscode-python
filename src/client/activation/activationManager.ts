@@ -56,7 +56,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
 
         await this.autoSelection.autoSelectInterpreter(resource);
         // Update experiment storage to contain the latest downloaded experiments
-        if (this.abExperiments.downloadedExperimentsStorage.value) {
+        if (Array.isArray(this.abExperiments.downloadedExperimentsStorage.value)) {
             await this.abExperiments.experimentStorage.updateValue(this.abExperiments.downloadedExperimentsStorage.value);
             await this.abExperiments.downloadedExperimentsStorage.updateValue(undefined);
         }

@@ -101,7 +101,7 @@ export class ExperimentsManager implements IExperimentsManager {
 
     @traceDecorators.error('Failed to log experiment groups')
     private logExperimentGroups(): void {
-        if (this.experimentStorage.value) {
+        if (Array.isArray(this.experimentStorage.value)) {
             for (const exp of this.experimentStorage.value) {
                 if (this.inExperiment(exp.name)) {
                     this.output.appendLine(Experiments.inGroup().format(exp.name));
