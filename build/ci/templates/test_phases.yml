@@ -74,7 +74,8 @@ steps:
       make
       sudo make install
       sudo unlink python
-      ln -s $HOME/py-$version/bin/python python
+      ln -s $HOME/py-$version/bin/python$(PythonVersion) python
+      $HOME/py-$version/bin/python$(PythonVersion) -c "import sys;print(sys.executable)"
       python -c "import sys;print('P = ' + sys.executable)"
       python3 -c "import sys;print('P3 = ' + sys.executable)"
       ./python -c "import sys;print('P local = ' + sys.executable)"
