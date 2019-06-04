@@ -79,6 +79,7 @@ steps:
       ls $HOME
       ls $HOME/py-$version
       ./python --version
+      ./python -c "import sys;print('Local ' + sys.executable)"
       ls -l python
       echo '##vso[task.prependpath]'$HOME/py-$version/bin
       python -c "import sys;print('P = ' + sys.executable)"
