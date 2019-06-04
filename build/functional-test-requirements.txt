@@ -4,6 +4,6 @@ jupyter
 numpy
 matplotlib
 pandas
-pytorch
+torch
 scikit-learn
 livelossplot
