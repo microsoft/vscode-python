@@ -29,6 +29,9 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             if (code.trim().length === 0) {
                 return '';
             }
+            // On windows cr is not handled well by python when passing in/out via stdin/stdout.
+            // So just remove cr from the input.
+            code = code.replace(new RegExp('\\r', 'g'), '');
             const pythonPath = this.configurationService.getSettings(resource).pythonPath;
             const args = [path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'normalizeForInterpreter.py'), code];
             const processService = await this.processServiceFactory.create(resource);
