@@ -78,6 +78,8 @@ steps:
       ls $HOME/py-$version/bin
       ls $HOME
       ls $HOME/py-$version
+      $HOME/py-$version/bin/python$(PythonVersion) --version
+      ls -l $HOME/py-$version/bin/python$(PythonVersion)
       echo '##vso[task.prependpath]'$HOME/py-$version/bin
       python -c "import sys;print('P = ' + sys.executable)"
       python3 -c "import sys;print('P3 = ' + sys.executable)"
