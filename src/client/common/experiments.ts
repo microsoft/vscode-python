@@ -19,7 +19,7 @@ const EXPIRY_DURATION_MS = 30 * 60 * 1000;
 const isStorageValidKey = 'IS_EXPERIMENTS_STORAGE_VALID_KEY';
 export const experimentStorageKey = 'EXPERIMENT_STORAGE_KEY';
 export const downloadedExperimentStorageKey = 'DOWNLOADED_EXPERIMENTS_STORAGE_KEY';
-const configUri = 'https://raw.githubusercontent.com/karrtikr/check/master/environments.json';
+const configUri = 'https://raw.githubusercontent.com/microsoft/vscode-python/master/environments.json';
 
 @injectable()
 export class ExperimentsManager implements IExperimentsManager {
@@ -57,7 +57,7 @@ export class ExperimentsManager implements IExperimentsManager {
         if (this.isTelemetryDisabled() || this.isStorageValid.value) {
             return;
         }
-        const downloadedExperiments = await this.httpClient.getJSONC<ABExperiments>(configUri);
+        const downloadedExperiments = await this.httpClient.getJSON<ABExperiments>(configUri, false);
         await this.downloadedExperimentsStorage.updateValue(downloadedExperiments);
         await this.isStorageValid.updateValue(true);
     }

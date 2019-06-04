@@ -23,7 +23,7 @@ export class HttpClient implements IHttpClient {
         const request = await import('request') as any as typeof requestTypes;
         return request(uri, this.requestOptions);
     }
-    public async getJSON<T>(uri: string): Promise<T> {
+    public async getJSON<T>(uri: string, strict: boolean = true): Promise<T> {
         // tslint:disable-next-line:no-require-imports
         const request = require('request') as typeof requestTypes;
         return new Promise<T>((resolve, reject) => {
@@ -34,26 +34,15 @@ export class HttpClient implements IHttpClient {
                 if (response.statusCode !== 200) {
                     return reject(new Error(`Failed with status ${response.statusCode}, ${response.statusMessage}, Uri ${uri}`));
                 }
-                resolve(JSON.parse(body) as T);
-            });
-        });
-    }
-    public async getJSONC<T>(uri: string): Promise<T> {
-        // tslint:disable-next-line:no-require-imports
-        const request = require('request') as typeof requestTypes;
-        return new Promise<T>((resolve, reject) => {
-            request(uri, this.requestOptions, (ex, response, body) => {
-                if (ex) {
-                    return reject(ex);
-                }
-                if (response.statusCode !== 200) {
-                    return reject(new Error(`Failed with status ${response.statusCode}, ${response.statusMessage}, Uri ${uri}`));
-                }
-                try {
-                    const content = parse(body, [], { allowTrailingComma: true, disallowComments: false });
-                    resolve(content);
-                } catch (ex) {
-                    return reject(ex);
+                if (strict) {
+                    resolve(JSON.parse(body) as T);
+                } else {
+                    try {
+                        const content = parse(body, [], { allowTrailingComma: true, disallowComments: false });
+                        resolve(content);
+                    } catch (ex) {
+                        return reject(ex);
+                    }
                 }
             });
         });

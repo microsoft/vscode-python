@@ -5,10 +5,10 @@
 
 // tslint:disable:no-any
 
-import { expect } from 'chai';
+import { assert, expect } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import { WorkspaceConfiguration } from 'vscode';
+import { Uri, WorkspaceConfiguration } from 'vscode';
 import { IHttpClient } from '../../client/activation/types';
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
 import { IApplicationEnvironment, IWorkspaceService } from '../../client/common/application/types';
@@ -17,7 +17,9 @@ import { CryptoUtils } from '../../client/common/crypto';
 import { downloadedExperimentStorageKey, ExperimentsManager, experimentStorageKey } from '../../client/common/experiments';
 import { HttpClient } from '../../client/common/net/httpClient';
 import { PersistentStateFactory } from '../../client/common/persistentState';
-import { ICryptoUtils, IOutputChannel, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
+import { ABExperiments, ICryptoUtils, IOutputChannel, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
+import { createDeferred, createDeferredFromPromise } from '../../client/common/utils/async';
+import { sleep } from '../common';
 
 // tslint:disable-next-line: max-func-body-length
 suite('A/B experiments', () => {
@@ -57,9 +59,9 @@ suite('A/B experiments', () => {
             .returns(() => settings as any)
             .verifiable(TypeMoq.Times.once());
         if (downloadError) {
-            when(httpClient.getJSONC(anything())).thenReject(new Error('Kaboom'));
+            when(httpClient.getJSON(anything(), false)).thenReject(new Error('Kaboom'));
         } else {
-            when(httpClient.getJSONC(anything())).thenResolve([{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }]);
+            when(httpClient.getJSON(anything(), false)).thenResolve([{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }]);
         }
 
         try {
@@ -85,7 +87,7 @@ suite('A/B experiments', () => {
 
         await testInitialization();
 
-        verify(httpClient.getJSONC(anything())).never();
+        verify(httpClient.getJSON(anything(), false)).never();
     });
 
     test('Initializing experiments downloads and stores the experiments if storage has expired', async () => {
@@ -95,7 +97,7 @@ suite('A/B experiments', () => {
 
         await testInitialization();
 
-        verify(httpClient.getJSONC(anything())).once();
+        verify(httpClient.getJSON(anything(), false)).once();
     });
 
     test('If downloading experiments fails with error, the storage is left as it is', async () => {
@@ -105,7 +107,39 @@ suite('A/B experiments', () => {
 
         await testInitialization({}, true);
 
-        verify(httpClient.getJSONC(anything())).once();
+        verify(httpClient.getJSON(anything(), false)).once();
+    });
+
+    test('Ensure experiments are reliably initialized in the background', async () => {
+        const experimentsDeferred = createDeferred<ABExperiments>();
+        const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
+        const settings = {};
+        const resource = Uri.parse('one');
+
+        experimentStorage.setup(n => n.value).returns(() => undefined).verifiable(TypeMoq.Times.once());
+        isStorageValid.setup(n => n.value).returns(() => false).verifiable(TypeMoq.Times.once());
+        isStorageValid.setup(n => n.updateValue(true)).returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.once());
+        downloadedExperimentsStorage.setup(n => n.updateValue([{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }])).returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.once());
+        when(workspaceService.getConfiguration('telemetry', anything())).thenReturn(workspaceConfig.object);
+        workspaceConfig.setup(c => c.inspect<boolean>('enableTelemetry'))
+            .returns(() => settings as any)
+            .verifiable(TypeMoq.Times.once());
+        when(httpClient.getJSON(anything(), false)).thenReturn(experimentsDeferred.promise);
+
+        const promise = expManager.activate(resource);
+        const deferred = createDeferredFromPromise(promise);
+        await sleep(1);
+        assert.equal(deferred.completed, true);
+
+        experimentsDeferred.resolve([{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }]);
+        await sleep(1);
+
+        verify(workspaceService.getConfiguration('telemetry', anything())).once();
+        workspaceConfig.verifyAll();
+        isStorageValid.verifyAll();
+        experimentStorage.verifyAll();
+        downloadedExperimentsStorage.verifyAll();
+        verify(httpClient.getJSON(anything(), false)).once();
     });
 
     const testsForInExperiment =
@@ -153,8 +187,7 @@ suite('A/B experiments', () => {
                 when(crypto.createHash(anything(), 'hex', 'number')).thenReturn(testParams.hash);
             }
 
-            output.setup(o => o.appendLine(TypeMoq.It.isAny()));
-            verify(httpClient.getJSONC(anything())).never();
+            verify(httpClient.getJSON(anything(), false)).never();
             expect(expManager.inExperiment(testParams.experimentName)).to.equal(testParams.expectedResult, 'Incorrectly identified');
         });
     });

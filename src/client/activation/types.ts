@@ -42,8 +42,7 @@ export interface ILanguageServerActivator extends IDisposable {
 export const IHttpClient = Symbol('IHttpClient');
 export interface IHttpClient {
     downloadFile(uri: string): Promise<RequestResult>;
-    getJSON<T>(uri: string): Promise<T>;
-    getJSONC<T>(uri: string): Promise<T>;
+    getJSON<T>(uri: string, strict?: boolean): Promise<T>;
 }
 
 export type FolderVersionPair = { path: string; version: SemVer };
