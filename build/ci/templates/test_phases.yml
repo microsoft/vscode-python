@@ -66,6 +66,7 @@ steps:
   #
   # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
   - bash: |
+      sudo apt-get install libsqlite3-dev
       version=$(python -V 2>&1 | grep -Po '(?<=Python )(.+)')
       wget https://www.python.org/ftp/python/$version/Python-$version.tar.xz
       tar xvf Python-$version.tar.xz
@@ -75,6 +76,7 @@ steps:
       sudo make install
       sudo unlink /usr/bin/python
       sudo ln -s $HOME/py-$version/bin/python$(PythonVersion) /usr/bin/python
+      ll /usr/bin/python
       $HOME/py-$version/bin/python$(PythonVersion) -c "import sys;print(sys.executable)"
       python -c "import sys;print('P = ' + sys.executable)"
       python3 -c "import sys;print('P3 = ' + sys.executable)"
