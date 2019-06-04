@@ -20,6 +20,7 @@ import { JupyterCommandFactory } from './jupyter/jupyterCommand';
 import { JupyterExecutionFactory } from './jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from './jupyter/jupyterExporter';
 import { JupyterImporter } from './jupyter/jupyterImporter';
+import { JupyterPasswordConnect } from './jupyter/jupyterPasswordConnect';
 import { JupyterServerFactory } from './jupyter/jupyterServerFactory';
 import { JupyterSessionManager } from './jupyter/jupyterSessionManager';
 import { JupyterVariables } from './jupyter/jupyterVariables';
@@ -38,6 +39,7 @@ import {
     IHistoryProvider,
     IJupyterCommandFactory,
     IJupyterExecution,
+    IJupyterPasswordConnect,
     IJupyterSessionManager,
     IJupyterVariables,
     INotebookExporter,
@@ -58,6 +60,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
     serviceManager.add<INotebookServer>(INotebookServer, JupyterServerFactory);
     serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
+    serviceManager.addSingleton<IJupyterPasswordConnect>(IJupyterPasswordConnect, JupyterPasswordConnect);
     serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
     serviceManager.addSingleton<IJupyterSessionManager>(IJupyterSessionManager, JupyterSessionManager);
     serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables);

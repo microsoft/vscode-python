@@ -134,6 +134,7 @@
     "DataScience.jupyterSelectURISpecifyURI": "Type in the URI to connect to a running Jupyter server",
     "DataScience.jupyterSelectURIPrompt": "Enter the URI of a Jupyter server",
     "DataScience.jupyterSelectURIInvalidURI": "Invalid URI specified",
+    "DataScience.jupyterSelectPasswordPrompt": "Enter your notebook password",
     "DataScience.jupyterNotebookFailure": "Jupyter notebook failed to launch. \r\n{0}",
     "DataScience.jupyterNotebookConnectFailed": "Failed to connect to Jupyter notebook. \r\n{0}\r\n{1}",
     "DataScience.jupyterNotebookRemoteConnectFailed": "Failed to connect to remote Jupyter notebook.\r\nCheck that the Jupyter Server URI setting has a valid running server specified.\r\n{0}\r\n{1}",
