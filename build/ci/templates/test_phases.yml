@@ -73,12 +73,11 @@ steps:
       ./configure --enable-loadable-sqlite-extensions --with-ensurepip=install --prefix=$HOME/py-$version
       make
       sudo make install
-      sudo unlink python
-      ln -s $HOME/py-$version/bin/python$(PythonVersion) python
+      sudo unlink /usr/bin/python
+      sudo ln -s $HOME/py-$version/bin/python$(PythonVersion) /usr/bin/python
       $HOME/py-$version/bin/python$(PythonVersion) -c "import sys;print(sys.executable)"
       python -c "import sys;print('P = ' + sys.executable)"
       python3 -c "import sys;print('P3 = ' + sys.executable)"
-      ./python -c "import sys;print('P local = ' + sys.executable)"
       python -c "import sqlite3;print('SQL = ' + sqlite3.apilevel)"
     displayName: 'Setup python to run with sqlite on 3.*'
     condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Linux'), not(eq(variables['PythonVersion'], '2.7')))
