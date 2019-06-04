@@ -77,7 +77,6 @@ steps:
       sudo unlink /usr/bin/python
       sudo ln -s $HOME/py-$version/bin/python$(PythonVersion) /usr/bin/python
       ll /usr/bin/python
-      $HOME/py-$version/bin/python$(PythonVersion) -c "import sys;print(sys.executable)"
       python -c "import sys;print('P = ' + sys.executable)"
       python3 -c "import sys;print('P3 = ' + sys.executable)"
       python -c "import sqlite3;print('SQL = ' + sqlite3.apilevel)"
