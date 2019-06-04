@@ -75,8 +75,8 @@ steps:
       make
       sudo make install
       sudo unlink /usr/bin/python
-      sudo ln -s $HOME/py-$version/bin/python$(PythonVersion) /usr/bin/python
-      ll /usr/bin/python
+      sudo ln -s $HOME/py-$version/bin/python3 /usr/bin/python
+      ls -l /usr/bin/python
       python -c "import sys;print('P = ' + sys.executable)"
       python3 -c "import sys;print('P3 = ' + sys.executable)"
       python -c "import sqlite3;print('SQL = ' + sqlite3.apilevel)"
