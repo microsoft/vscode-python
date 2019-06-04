@@ -75,13 +75,7 @@ steps:
       make
       sudo make install
       export PATH=$HOME/py-$version/bin:$PATH
-      echo $PATH
-      ls $HOME/py-$version/bin
-      ls $HOME
-      ls $HOME/py-$version
-      ./python --version
-      ./python -c "import sys;print('Local ' + sys.executable)"
-      ls -l python
+      ln -s $HOME/py-$version/bin/python3 $HOME/py-$version/bin/python
       echo '##vso[task.prependpath]'$HOME/py-$version/bin
       python -c "import sys;print('P = ' + sys.executable)"
       python3 -c "import sys;print('P3 = ' + sys.executable)"
