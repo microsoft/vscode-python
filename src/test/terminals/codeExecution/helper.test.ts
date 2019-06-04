@@ -124,7 +124,6 @@ suite('Terminal - Code Execution Helper', () => {
             await ensureBlankLinesAreRemoved(code + EOL, expectedCode + EOL);
         });
         test(`Ensure last two blank lines are preserved even if we have more than 2 trailing blank lines (Sample${fileNameSuffix})`, async function () {
-            return;
             // This test has not been working for many months in Python 2.7 under
             // Windows.Tracked by #2544.
             if (isOs(OSType.Windows) && await isPythonVersion('2.7')) {
