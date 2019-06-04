@@ -2,15 +2,16 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
+import * as os from 'os';
 import { Terminal, Uri } from 'vscode';
 import { ICondaService, IInterpreterService, InterpreterType, PythonInterpreter } from '../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { ITerminalManager, IWorkspaceService } from '../application/types';
+import { ITerminalManager } from '../application/types';
 import '../extensions';
 import { traceDecorators, traceError } from '../logger';
 import { IPlatformService } from '../platform/types';
-import { IConfigurationService, Resource } from '../types';
+import { IConfigurationService, ICurrentProcess, Resource } from '../types';
 import { OSType } from '../utils/platform';
 import { ITerminalActivationCommandProvider, ITerminalHelper, TerminalActivationProviders, TerminalShellType } from './types';
 
@@ -21,7 +22,7 @@ const IS_BASH = /(bash.exe$|bash$)/i;
 const IS_WSL = /(wsl.exe$)/i;
 const IS_ZSH = /(zsh$)/i;
 const IS_KSH = /(ksh$)/i;
-const IS_COMMAND = /cmd.exe$/i;
+const IS_COMMAND = /(cmd.exe$|cmd$)/i;
 const IS_POWERSHELL = /(powershell.exe$|powershell$)/i;
 const IS_POWERSHELL_CORE = /(pwsh.exe$|pwsh$)/i;
 const IS_FISH = /(fish$)/i;
@@ -41,7 +42,6 @@ export class TerminalHelper implements ITerminalHelper {
     private readonly detectableShells: Map<TerminalShellType, RegExp>;
     constructor(@inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(ITerminalManager) private readonly terminalManager: ITerminalManager,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(ICondaService) private readonly condaService: ICondaService,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
@@ -49,7 +49,8 @@ export class TerminalHelper implements ITerminalHelper {
         @inject(ITerminalActivationCommandProvider) @named(TerminalActivationProviders.bashCShellFish) private readonly bashCShellFish: ITerminalActivationCommandProvider,
         @inject(ITerminalActivationCommandProvider) @named(TerminalActivationProviders.commandPromptAndPowerShell) private readonly commandPromptAndPowerShell: ITerminalActivationCommandProvider,
         @inject(ITerminalActivationCommandProvider) @named(TerminalActivationProviders.pyenv) private readonly pyenv: ITerminalActivationCommandProvider,
-        @inject(ITerminalActivationCommandProvider) @named(TerminalActivationProviders.pipenv) private readonly pipenv: ITerminalActivationCommandProvider
+        @inject(ITerminalActivationCommandProvider) @named(TerminalActivationProviders.pipenv) private readonly pipenv: ITerminalActivationCommandProvider,
+        @inject(IConfigurationService) private readonly currentProcess: ICurrentProcess
     ) {
         this.detectableShells = new Map<TerminalShellType, RegExp>();
         this.detectableShells.set(TerminalShellType.powershell, IS_POWERSHELL);
@@ -68,37 +69,44 @@ export class TerminalHelper implements ITerminalHelper {
     public createTerminal(title?: string): Terminal {
         return this.terminalManager.createTerminal({ name: title });
     }
-    public identifyTerminalShell(shellPath: string): TerminalShellType {
+    public identifyTerminalShell(terminal?: Terminal): TerminalShellType {
+        let shell = TerminalShellType.other;
+        let usingDefaultShell = false;
+        const terminalProvided = !!terminal;
+        // Determine shell based on the name of the terminal.
+        // See solution here https://github.com/microsoft/vscode/issues/74233#issuecomment-497527337
+        if (terminal) {
+            shell = this.identifyTerminalShellByName(terminal.name);
+        }
+
+        // If still unable to identify, then use fall back to determine path to the default shell.
+        if (shell === TerminalShellType.other) {
+            const shellPath = getDefaultShell(this.platform.osType, this.currentProcess);
+            shell = Array.from(this.detectableShells.keys())
+                .reduce((matchedShell, shellToDetect) => {
+                    if (matchedShell === TerminalShellType.other && this.detectableShells.get(shellToDetect)!.test(shellPath)) {
+                        return shellToDetect;
+                    }
+                    return matchedShell;
+                }, TerminalShellType.other);
+
+            // We have restored to using the default shell.
+            usingDefaultShell = shell !== TerminalShellType.other;
+        }
+        const properties = { failed: shell === TerminalShellType.other, usingDefaultShell, terminalProvided };
+        sendTelemetryEvent(EventName.TERMINAL_SHELL_IDENTIFICATION, undefined, properties);
+        return shell;
+    }
+    public identifyTerminalShellByName(name: string): TerminalShellType {
         return Array.from(this.detectableShells.keys())
             .reduce((matchedShell, shellToDetect) => {
-                if (matchedShell === TerminalShellType.other && this.detectableShells.get(shellToDetect)!.test(shellPath)) {
+                if (matchedShell === TerminalShellType.other && this.detectableShells.get(shellToDetect)!.test(name)) {
                     return shellToDetect;
                 }
                 return matchedShell;
             }, TerminalShellType.other);
     }
-    public getTerminalShellPath(): string {
-        const shellConfig = this.workspace.getConfiguration('terminal.integrated.shell');
-        let osSection = '';
-        switch (this.platform.osType) {
-            case OSType.Windows: {
-                osSection = 'windows';
-                break;
-            }
-            case OSType.OSX: {
-                osSection = 'osx';
-                break;
-            }
-            case OSType.Linux: {
-                osSection = 'linux';
-                break;
-            }
-            default: {
-                return '';
-            }
-        }
-        return shellConfig.get<string>(osSection)!;
-    }
+
     public buildCommandForTerminal(terminalShellType: TerminalShellType, command: string, args: string[]) {
         const isPowershell = terminalShellType === TerminalShellType.powershell || terminalShellType === TerminalShellType.powershellCore;
         const commandPrefix = isPowershell ? '& ' : '';
@@ -172,4 +180,31 @@ export class TerminalHelper implements ITerminalHelper {
             }
         }
     }
+}
+
+/*
+ The following code is based on VS Code from https://github.com/microsoft/vscode/blob/5c65d9bfa4c56538150d7f3066318e0db2c6151f/src/vs/workbench/contrib/terminal/node/terminal.ts#L12-L55
+ This is only a fall back to identify the default shell used by VSC.
+ On Windows, determine the default shell.
+ On others, default to bash.
+*/
+function getDefaultShell(osType: OSType, currentProcess: ICurrentProcess): string {
+    if (osType === OSType.Windows) {
+        return getTerminalDefaultShellWindows(osType, currentProcess);
+    }
+    return '/bin/bash';
+}
+let _TERMINAL_DEFAULT_SHELL_WINDOWS: string | null = null;
+function getTerminalDefaultShellWindows(osType: OSType, currentProcess: ICurrentProcess): string {
+    if (!_TERMINAL_DEFAULT_SHELL_WINDOWS) {
+        const isAtLeastWindows10 = osType === OSType.Windows && parseFloat(os.release()) >= 10;
+        const is32ProcessOn64Windows = process.env.hasOwnProperty('PROCESSOR_ARCHITEW6432');
+        const powerShellPath = `${process.env.windir}\\${is32ProcessOn64Windows ? 'Sysnative' : 'System32'}\\WindowsPowerShell\\v1.0\\powershell.exe`;
+        _TERMINAL_DEFAULT_SHELL_WINDOWS = isAtLeastWindows10 ? powerShellPath : getWindowsShell(currentProcess);
+    }
+    return _TERMINAL_DEFAULT_SHELL_WINDOWS;
+}
+
+function getWindowsShell(currentProcess: ICurrentProcess): string {
+    return currentProcess.env.comspec || 'cmd.exe';
 }

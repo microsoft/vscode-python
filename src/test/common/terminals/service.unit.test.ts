@@ -79,7 +79,6 @@ suite('Terminal Service', () => {
         const args = ['1', '2'];
         const commandToExpect = [commandToSend].concat(args).join(' ');
         terminalHelper.setup(h => h.buildCommandForTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => commandToExpect);
-        terminalHelper.setup(h => h.getTerminalShellPath()).returns(() => '');
         terminalHelper.setup(h => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
         terminalManager.setup(t => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
 
@@ -93,7 +92,6 @@ suite('Terminal Service', () => {
         terminalHelper.setup(helper => helper.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
         service = new TerminalService(mockServiceContainer.object);
         const textToSend = 'Some Text';
-        terminalHelper.setup(h => h.getTerminalShellPath()).returns(() => '');
         terminalHelper.setup(h => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
         terminalManager.setup(t => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
 
@@ -106,7 +104,6 @@ suite('Terminal Service', () => {
     test('Ensure terminal shown', async () => {
         terminalHelper.setup(helper => helper.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
         service = new TerminalService(mockServiceContainer.object);
-        terminalHelper.setup(h => h.getTerminalShellPath()).returns(() => '');
         terminalHelper.setup(h => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
         terminalManager.setup(t => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
 
@@ -118,7 +115,6 @@ suite('Terminal Service', () => {
     test('Ensure terminal shown and focus is set to the Terminal', async () => {
         terminalHelper.setup(helper => helper.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
         service = new TerminalService(mockServiceContainer.object);
-        terminalHelper.setup(h => h.getTerminalShellPath()).returns(() => '');
         terminalHelper.setup(h => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
         terminalManager.setup(t => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
 
@@ -129,9 +125,6 @@ suite('Terminal Service', () => {
 
     test('Ensure terminal is activated once after creation', async () => {
         service = new TerminalService(mockServiceContainer.object);
-        terminalHelper
-            .setup(h => h.getTerminalShellPath()).returns(() => '')
-            .verifiable(TypeMoq.Times.once());
         terminalActivator
             .setup(h => h.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(true))
@@ -153,9 +146,6 @@ suite('Terminal Service', () => {
     test('Ensure terminal is activated once before sending text', async () => {
         service = new TerminalService(mockServiceContainer.object);
         const textToSend = 'Some Text';
-        terminalHelper
-            .setup(h => h.getTerminalShellPath()).returns(() => '')
-            .verifiable(TypeMoq.Times.once());
         terminalActivator
             .setup(h => h.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(true))
@@ -185,7 +175,6 @@ suite('Terminal Service', () => {
         });
         service = new TerminalService(mockServiceContainer.object);
         service.onDidCloseTerminal(() => eventFired = true, service);
-        terminalHelper.setup(h => h.getTerminalShellPath()).returns(() => '');
         terminalHelper.setup(h => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
         terminalManager.setup(t => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
 
@@ -209,7 +198,6 @@ suite('Terminal Service', () => {
         service = new TerminalService(mockServiceContainer.object);
         service.onDidCloseTerminal(() => eventFired = true);
 
-        terminalHelper.setup(h => h.getTerminalShellPath()).returns(() => '');
         terminalHelper.setup(h => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
         terminalManager.setup(t => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
 

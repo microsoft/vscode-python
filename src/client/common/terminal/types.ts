@@ -54,8 +54,7 @@ export const ITerminalHelper = Symbol('ITerminalHelper');
 
 export interface ITerminalHelper {
     createTerminal(title?: string): Terminal;
-    identifyTerminalShell(shellPath: string): TerminalShellType;
-    getTerminalShellPath(): string;
+    identifyTerminalShell(terminal?: Terminal): TerminalShellType;
     buildCommandForTerminal(terminalShellType: TerminalShellType, command: string, args: string[]): string;
     getEnvironmentActivationCommands(terminalShellType: TerminalShellType, resource?: Uri): Promise<string[] | undefined>;
     getEnvironmentActivationShellCommands(resource: Resource, interpreter?: PythonInterpreter): Promise<string[] | undefined>;

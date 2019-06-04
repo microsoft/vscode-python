@@ -3,16 +3,14 @@
 import { expect } from 'chai';
 import { SemVer } from 'semver';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
-import * as TypeMoq from 'typemoq';
-import { Uri, WorkspaceConfiguration } from 'vscode';
-
+import { Uri } from 'vscode';
 import { TerminalManager } from '../../../client/common/application/terminalManager';
-import { ITerminalManager, IWorkspaceService } from '../../../client/common/application/types';
-import { WorkspaceService } from '../../../client/common/application/workspace';
+import { ITerminalManager } from '../../../client/common/application/types';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { IPlatformService } from '../../../client/common/platform/types';
+import { CurrentProcess } from '../../../client/common/process/currentProcess';
 import { Bash } from '../../../client/common/terminal/environmentActivationProviders/bash';
 import { CommandPromptAndPowerShell } from '../../../client/common/terminal/environmentActivationProviders/commandPrompt';
 import {
@@ -27,7 +25,6 @@ import {
 import { TerminalHelper } from '../../../client/common/terminal/helper';
 import {
     ITerminalActivationCommandProvider,
-    ITerminalHelper,
     TerminalShellType
 } from '../../../client/common/terminal/types';
 import { IConfigurationService } from '../../../client/common/types';
@@ -40,10 +37,9 @@ import { CondaService } from '../../../client/interpreter/locators/services/cond
 // tslint:disable:max-func-body-length no-any
 
 suite('Terminal Service helpers', () => {
-    let helper: ITerminalHelper;
+    let helper: TerminalHelper;
     let terminalManager: ITerminalManager;
     let platformService: IPlatformService;
-    let workspaceService: IWorkspaceService;
     let condaService: ICondaService;
     let configurationService: IConfigurationService;
     let condaActivationProvider: ITerminalActivationCommandProvider;
@@ -65,7 +61,6 @@ suite('Terminal Service helpers', () => {
     function doSetup() {
         terminalManager = mock(TerminalManager);
         platformService = mock(PlatformService);
-        workspaceService = mock(WorkspaceService);
         condaService = mock(CondaService);
         configurationService = mock(ConfigurationService);
         condaActivationProvider = mock(CondaActivationCommandProvider);
@@ -76,7 +71,6 @@ suite('Terminal Service helpers', () => {
         pythonSettings = mock(PythonSettings);
 
         helper = new TerminalHelper(instance(platformService), instance(terminalManager),
-            instance(workspaceService),
             instance(condaService),
             instance(mock(InterpreterService)),
             instance(configurationService),
@@ -84,7 +78,8 @@ suite('Terminal Service helpers', () => {
             instance(bashActivationProvider),
             instance(cmdActivationProvider),
             instance(pyenvActivationProvider),
-            instance(pipenvActivationProvider));
+            instance(pipenvActivationProvider),
+            instance(mock(CurrentProcess)));
     }
     suite('Misc', () => {
         setup(doSetup);
@@ -111,6 +106,13 @@ suite('Terminal Service helpers', () => {
             const args = capture(terminalManager.createTerminal).first()[0];
             expect(term).to.be.deep.equal(terminal);
             expect(args.name).to.be.deep.equal(theTitle);
+        });
+        test('Revert to default shell', async () => {
+            when(platformService.osType).thenReturn(OSType.OSX);
+
+            const shellType = helper.identifyTerminalShell();
+
+            expect(shellType).to.be.equal(TerminalShellType.bash);
         });
         test('Test identification of Terminal Shells', async () => {
             const shellPathsAndIdentification = new Map<string, TerminalShellType>();
@@ -140,36 +142,8 @@ suite('Terminal Service helpers', () => {
             shellPathsAndIdentification.set('/usr/bin/xonshx', TerminalShellType.other);
 
             shellPathsAndIdentification.forEach((shellType, shellPath) => {
-                expect(helper.identifyTerminalShell(shellPath)).to.equal(shellType, `Incorrect Shell Type for path '${shellPath}'`);
+                expect(helper.identifyTerminalShellByName(shellPath)).to.equal(shellType, `Incorrect Shell Type for path '${shellPath}'`);
             });
-        });
-        async function ensurePathForShellIsCorrectlyRetrievedFromSettings(osType: OSType, expectedShellPath: string) {
-            when(platformService.osType).thenReturn(osType);
-            const cfgSetting = osType === OSType.Windows ? 'windows' : (osType === OSType.OSX ? 'osx' : 'linux');
-            const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-            const invocationCount = osType === OSType.Unknown ? 0 : 1;
-            workspaceConfig
-                .setup(w => w.get(TypeMoq.It.isValue(cfgSetting)))
-                .returns(() => expectedShellPath)
-                .verifiable(TypeMoq.Times.exactly(invocationCount));
-            when(workspaceService.getConfiguration('terminal.integrated.shell')).thenReturn(workspaceConfig.object);
-
-            const shellPath = helper.getTerminalShellPath();
-
-            workspaceConfig.verifyAll();
-            expect(shellPath).to.equal(expectedShellPath, 'Incorrect path for Osx');
-        }
-        test('Ensure path for shell is correctly retrieved from settings (osx)', async () => {
-            await ensurePathForShellIsCorrectlyRetrievedFromSettings(OSType.OSX, 'abcd');
-        });
-        test('Ensure path for shell is correctly retrieved from settings (linux)', async () => {
-            await ensurePathForShellIsCorrectlyRetrievedFromSettings(OSType.Linux, 'abcd');
-        });
-        test('Ensure path for shell is correctly retrieved from settings (windows)', async () => {
-            await ensurePathForShellIsCorrectlyRetrievedFromSettings(OSType.Windows, 'abcd');
-        });
-        test('Ensure path for shell is correctly retrieved from settings (unknown os)', async () => {
-            await ensurePathForShellIsCorrectlyRetrievedFromSettings(OSType.Unknown, '');
         });
         test('Ensure spaces in command is quoted', async () => {
             getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(item => {

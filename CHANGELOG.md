@@ -1,6 +1,14 @@
 # Changelog
 
-## 2019.5.1 (30 May 2019)
+## 2019.5.2 (4 June 2019)
+
+### Fixes
+
+1. Changes to identificaction of `shell` for the activation of environments in the terminal.
+   ([#5743](https://github.com/microsoft/vscode-python/issues/5743))
+
+
+## 2019.5.17517 (30 May 2019)
 
 ### Fixes
 

@@ -368,4 +368,11 @@ export interface IEventNamePropertyMapping {
     [EventName.UNITTEST_NAVIGATE_TEST_FUNCTION]: { focus_code: boolean };
     [EventName.UNITTEST_NAVIGATE_TEST_SUITE]: { focus_code: boolean };
     [EventName.UNITTEST_EXPLORER_WORK_SPACE_COUNT]: { count: number };
+    /*
+    Telemetry event sent to provide information on whether we have successfully identify the type of shell used.
+    failed - If true, indicates we have failed to identify the shell. Note this impacts impacts ability to activate environments in the terminal & code.
+    usingDefaultShell - If true, this indicates we failed to identify the shell and we have reverted to using the default shell on user machine.
+    terminalProvided - If true, we used the terminal provided to detec the shell. If not provided, we use the default shell on user machine.
+    */
+    [EventName.TERMINAL_SHELL_IDENTIFICATION]: { failed: boolean; usingDefaultShell: boolean; terminalProvided: boolean };
 }
