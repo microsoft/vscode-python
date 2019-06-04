@@ -76,7 +76,7 @@ steps:
       export PATH=$HOME/py-$version/bin:$PATH
       echo $PATH
       ls $HOME/py-$version/bin
-      echo ##vso[task.prependpath]$HOME/py-$version/bin
+      echo '##vso[task.prependpath]'$HOME/py-$version/bin
       python -c "import sys;print('P = ' + sys.executable)"
       python3 -c "import sys;print('P3 = ' + sys.executable)"
       python -c "import sqlite3;print('SQL = ' + sqlite3.apilevel)"
