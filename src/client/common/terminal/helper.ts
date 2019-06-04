@@ -188,7 +188,7 @@ export class TerminalHelper implements ITerminalHelper {
  On Windows, determine the default shell.
  On others, default to bash.
 */
-export function getDefaultShell(osType: OSType, currentProcess: ICurrentProcess): string {
+function getDefaultShell(osType: OSType, currentProcess: ICurrentProcess): string {
     if (osType === OSType.Windows) {
         return getTerminalDefaultShellWindows(osType, currentProcess);
     }

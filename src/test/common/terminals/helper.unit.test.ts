@@ -107,6 +107,13 @@ suite('Terminal Service helpers', () => {
             expect(term).to.be.deep.equal(terminal);
             expect(args.name).to.be.deep.equal(theTitle);
         });
+        test('Revert to default shell', async () => {
+            when(platformService.osType).thenReturn(OSType.OSX);
+
+            const shellType = helper.identifyTerminalShell();
+
+            expect(shellType).to.be.equal(TerminalShellType.bash);
+        });
         test('Test identification of Terminal Shells', async () => {
             const shellPathsAndIdentification = new Map<string, TerminalShellType>();
             shellPathsAndIdentification.set('c:\\windows\\system32\\cmd.exe', TerminalShellType.commandPrompt);
