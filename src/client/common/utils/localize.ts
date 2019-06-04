@@ -79,6 +79,7 @@ export namespace DataScience {
     export const dataExplorerTitle = localize('DataScience.dataExplorerTitle', 'Data Viewer');
     export const badWebPanelFormatString = localize('DataScience.badWebPanelFormatString', '<html><body><h1>{0} is not a valid file name</h1></body></html>');
     export const sessionDisposed = localize('DataScience.sessionDisposed', 'Cannot execute code, session has been disposed.');
+    export const passwordFailure = localize('DataScience.passwordFailure', 'Failed to connect to password protected server. Check that password is correct.');
     export const unknownMimeTypeFormat = localize('DataScience.unknownMimeTypeFormat', 'Mime type {0} is not currently supported');
     export const exportDialogTitle = localize('DataScience.exportDialogTitle', 'Export to Jupyter Notebook');
     export const exportDialogFilter = localize('DataScience.exportDialogFilter', 'Jupyter Notebooks');

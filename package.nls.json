@@ -72,6 +72,7 @@
     "DataScience.dataExplorerTitle": "Data Viewer",
     "DataScience.badWebPanelFormatString": "<html><body><h1>{0} is not a valid file name</h1></body></html>",
     "DataScience.sessionDisposed": "Cannot execute code, session has been disposed.",
+    "DataScience.passwordFailure": "Failed to connect to password protected server. Check that password is correct.",
     "DataScience.exportDialogTitle": "Export to Jupyter Notebook",
     "DataScience.exportDialogFilter": "Jupyter Notebooks",
     "DataScience.exportDialogComplete": "Notebook written to {0}",

@@ -4,7 +4,6 @@
 import { inject, injectable } from 'inversify';
 import * as nodeFetch from 'node-fetch';
 import { URLSearchParams } from 'url';
-import * as WebSocketWS from 'ws';
 import { IApplicationShell } from '../../common/application/types';
 import * as localize from '../../common/utils/localize';
 import { IJupyterPasswordConnect, IJupyterPasswordConnectInfo } from '../types';
@@ -83,8 +82,6 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
 
         const response = await nodeFetch.default(`${url}login?`, {
             method: 'post',
-            // IANHU: Remove
-            //headers: { 'X-XSRFToken': xsrfCookieValue!, Cookie: `_xsrf=${xsrfCookieValue}`, Connection: 'keep-alive' },
             headers: { Cookie: `_xsrf=${xsrfCookie}`, Connection: 'keep-alive' },
             body: postParams,
             redirect: 'manual'

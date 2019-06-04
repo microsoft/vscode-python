@@ -147,75 +147,51 @@ export class JupyterSession implements IJupyterSession {
         return this.session && this.session.kernel ? this.session.kernel.requestComplete(content) : Promise.resolve(undefined);
     }
 
-    //public getPWSettings = async(): Promise<[string, string, string]> => {
-        //let xsrfCookieValue: string = '';
-        //let sessionCookieName: string = '';
-        //let sessionCookieValue: string = '';
-
-        //// First do a get to get the xsrf for the login page
-        //// tslint:disable-next-line:no-http-string
-        //let res = await nodeFetch.default('http://ianhumain2:9998/login?', {
-            //method: 'get',
-            //redirect: 'manual',
-            //headers: { Connection: 'keep-alive' }
-        //});
-
-        //// Get the xsrf cookie from the response
-        //let cookies: string | null = res.headers.get('set-cookie');
-
-        //if (cookies) {
-            //const cookieSplit = cookies.split(';');
-            //cookieSplit.forEach(value => {
-                //const valueSplit = value.split('=');
-                //if (valueSplit[0] === '_xsrf') {
-                    //xsrfCookieValue = valueSplit[1];
-                //}
-            //});
-        //}
-
-        //// Now we need to hit the server with our xsrf cookie and the password
-
-        //// Create the form params that we need
-        //const postParams = new URLSearchParams();
-        //postParams.append('_xsrf', xsrfCookieValue!);
-        //postParams.append('password', 'Python');
-
-        //// tslint:disable-next-line:no-http-string
-        //res = await nodeFetch.default('http://ianhumain2:9998/login?', {
-            //method: 'post',
-            ////headers: { 'X-XSRFToken': xsrfCookieValue!, Cookie: `_xsrf=${xsrfCookieValue}`, Connection: 'keep-alive' },
-            //headers: { Cookie: `_xsrf=${xsrfCookieValue}`, Connection: 'keep-alive' },
-            //body: postParams,
-            //redirect: 'manual'
-        //});
-
-        //// Now from this result we need to extract the session cookie
-        //cookies = res.headers.get('set-cookie');
-
-        //if (cookies) {
-            //const firstEquals = cookies.indexOf('=');
-            //sessionCookieName = cookies.substring(0, firstEquals);
-            //sessionCookieValue = cookies.substring(firstEquals + 1, cookies.indexOf(';'));
-        //}
-
-        //// Return our pulled values
-        //return [xsrfCookieValue, sessionCookieName, sessionCookieValue];
-    //}
-
     public async connect(cancelToken?: CancellationToken) : Promise<void> {
         if (!this.connInfo) {
             throw new Error(localize.DataScience.sessionDisposed());
         }
 
-        // IANHU: Refactor getting server settings out
-        let serverSettings: ServerConnection.ISettings | undefined;
+        const serverSettings: ServerConnection.ISettings = await this.getServerConnectSettings(this.connInfo);
+
+        this.sessionManager = new SessionManager({ serverSettings: serverSettings });
+
+        // Create a temporary .ipynb file to use
+        this.contentsManager = new ContentsManager({ serverSettings: serverSettings });
+        this.notebookFile = await this.contentsManager.newUntitled({type: 'notebook'});
+
+        // Create our session options using this temporary notebook and our connection info
+        const options: Session.IOptions = {
+            path: this.notebookFile.path,
+            kernelName: this.kernelSpec ? this.kernelSpec.name : '',
+            serverSettings: serverSettings
+        };
+
+        // Start a new session
+        this.session = await Cancellation.race(() => this.sessionManager!.startNew(options), cancelToken);
+
+        // Listen for session status changes
+        this.statusHandler = this.onStatusChanged.bind(this.onStatusChanged);
+        this.session.statusChanged.connect(this.statusHandler);
+
+        // Made it this far, we're connected now
+        this.connected = true;
+    }
+
+    public get isConnected() : boolean {
+        return this.connected;
+    }
+
+    private async getServerConnectSettings(connInfo: IConnection): Promise<ServerConnection.ISettings> {
+        let serverSettings: ServerConnection.ISettings;
 
         // If we have no token, prompt and try to connect with a password.
-        if (this.connInfo.token === '' || this.connInfo.token === 'null') {
-            const pwSettings = await this.jupyterPasswordConnect.getPasswordConnectionInfo(this.connInfo.baseUrl);
+        if (connInfo.token === '' || connInfo.token === 'null') {
+            const pwSettings = await this.jupyterPasswordConnect.getPasswordConnectionInfo(connInfo.baseUrl);
 
             if (pwSettings) {
-                // IANHU: Need to make sure this is always set on connection
+                // Save our cookie connection info on the JupyterWebSocket static fields
+                // This websocket is created by the jupyter lab services code and needs access to these values
                 JupyterWebSocket.xsrfCookie = pwSettings.xsrfCookie;
                 JupyterWebSocket.sessionName = pwSettings.sessionCookieName;
                 JupyterWebSocket.sessionValue = pwSettings.sessionCookieValue;
@@ -226,61 +202,38 @@ export class JupyterSession implements IJupyterSession {
                 serverSettings = ServerConnection.makeSettings(
                     {
                         // tslint:disable-next-line:no-http-string
-                        baseUrl: this.connInfo.baseUrl,
+                        baseUrl: connInfo.baseUrl,
                         token: '',
                         pageUrl: '',
                         // A web socket is required to allow token authentication
-                        wsUrl: this.connInfo.baseUrl.replace('http', 'ws'),
+                        wsUrl: connInfo.baseUrl.replace('http', 'ws'),
                         init: { cache: 'no-store', credentials: 'same-origin', headers: reqHeaders },
+                        // This replaces the WebSocket constructor in jupyter lab services with our own implementation
                         // tslint:disable-next-line:no-any
                         WebSocket: JupyterWebSocket as any
                     });
+            } else {
+                // Failed to get password info, notify the user
+                throw new Error(localize.DataScience.passwordFailure());
             }
-            // IANHU: Notify on failure to get PW
         } else {
+            // Reset the static values on a non-password connection
             JupyterWebSocket.xsrfCookie = undefined;
             JupyterWebSocket.sessionName = undefined;
             JupyterWebSocket.sessionValue = undefined;
 
             serverSettings = ServerConnection.makeSettings(
                 {
-                    baseUrl: this.connInfo.baseUrl,
-                    token: this.connInfo.token,
+                    baseUrl: connInfo.baseUrl,
+                    token: connInfo.token,
                     pageUrl: '',
                     // A web socket is required to allow token authentication
-                    wsUrl: this.connInfo.baseUrl.replace('http', 'ws'),
+                    wsUrl: connInfo.baseUrl.replace('http', 'ws'),
                     init: { cache: 'no-store', credentials: 'same-origin' }
                 });
         }
 
-        if (serverSettings) {
-            this.sessionManager = new SessionManager({ serverSettings: serverSettings });
-
-            // Create a temporary .ipynb file to use
-            this.contentsManager = new ContentsManager({ serverSettings: serverSettings });
-            this.notebookFile = await this.contentsManager.newUntitled({type: 'notebook'});
-
-            // Create our session options using this temporary notebook and our connection info
-            const options: Session.IOptions = {
-                path: this.notebookFile.path,
-                kernelName: this.kernelSpec ? this.kernelSpec.name : '',
-                serverSettings: serverSettings
-            };
-
-            // Start a new session
-            this.session = await Cancellation.race(() => this.sessionManager!.startNew(options), cancelToken);
-
-            // Listen for session status changes
-            this.statusHandler = this.onStatusChanged.bind(this.onStatusChanged);
-            this.session.statusChanged.connect(this.statusHandler);
-
-            // Made it this far, we're connected now
-            this.connected = true;
-        }
-    }
-
-    public get isConnected() : boolean {
-        return this.connected;
+        return serverSettings;
     }
 
     private async waitForKernelPromise(kernelPromise: Promise<void>, timeout: number, errorMessage: string) : Promise<void> {
