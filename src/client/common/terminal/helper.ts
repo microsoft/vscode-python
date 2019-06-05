@@ -28,7 +28,7 @@ export class TerminalHelper implements ITerminalHelper {
         @inject(ITerminalActivationCommandProvider) @named(TerminalActivationProviders.commandPromptAndPowerShell) private readonly commandPromptAndPowerShell: ITerminalActivationCommandProvider,
         @inject(ITerminalActivationCommandProvider) @named(TerminalActivationProviders.pyenv) private readonly pyenv: ITerminalActivationCommandProvider,
         @inject(ITerminalActivationCommandProvider) @named(TerminalActivationProviders.pipenv) private readonly pipenv: ITerminalActivationCommandProvider,
-        @inject(IConfigurationService) private readonly currentProcess: ICurrentProcess,
+        @inject(ICurrentProcess) private readonly currentProcess: ICurrentProcess,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {
         this.shellDetector = new ShellDetector(this.platform, this.currentProcess, this.workspace);

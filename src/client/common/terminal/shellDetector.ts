@@ -9,7 +9,7 @@ import { IWorkspaceService } from '../application/types';
 import '../extensions';
 import { traceVerbose } from '../logger';
 import { IPlatformService } from '../platform/types';
-import { IConfigurationService, ICurrentProcess } from '../types';
+import { ICurrentProcess } from '../types';
 import { OSType } from '../utils/platform';
 import { TerminalShellType } from './types';
 
@@ -59,7 +59,7 @@ detectableShells.set(TerminalShellType.xonsh, IS_XONSH);
 @injectable()
 export class ShellDetector {
     constructor(@inject(IPlatformService) private readonly platform: IPlatformService,
-        @inject(IConfigurationService) private readonly currentProcess: ICurrentProcess,
+        @inject(ICurrentProcess) private readonly currentProcess: ICurrentProcess,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) { }
     /**
