@@ -6,7 +6,9 @@ import * as nodeFetch from 'node-fetch';
 import { URLSearchParams } from 'url';
 import { IApplicationShell } from '../../common/application/types';
 import * as localize from '../../common/utils/localize';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { IJupyterPasswordConnect, IJupyterPasswordConnectInfo } from '../types';
+import { Telemetry } from './../constants';
 
 @injectable()
 export class JupyterPasswordConnect implements IJupyterPasswordConnect {
@@ -19,6 +21,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         this.fetchImpl = nodeFetch.default;
     }
 
+    @captureTelemetry(Telemetry.GetPasswordAttempt)
     public async getPasswordConnectionInfo(url: string, fetchOverride?: (url: nodeFetch.RequestInfo, init?: nodeFetch.RequestInit) => Promise<nodeFetch.Response>): Promise<IJupyterPasswordConnectInfo | undefined> {
         // For testing allow for our fetch function to be overridden
         if (fetchOverride) {
@@ -56,8 +59,10 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
 
         // If we found everything return it all back if not, undefined as partial is useless
         if (xsrfCookie && sessionCookieName && sessionCookieValue) {
+            sendTelemetryEvent(Telemetry.GetPasswordSuccess);
             return { xsrfCookie, sessionCookieName, sessionCookieValue };
         } else {
+            sendTelemetryEvent(Telemetry.GetPasswordFailure);
             return undefined;
         }
     }

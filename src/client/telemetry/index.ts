@@ -336,6 +336,9 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ExportNotebook]: never | undefined;
     [Telemetry.ExportPythonFile]: never | undefined;
     [Telemetry.ExportPythonFileAndOutput]: never | undefined;
+    [Telemetry.GetPasswordAttempt]: never | undefined;
+    [Telemetry.GetPasswordFailure]: never | undefined;
+    [Telemetry.GetPasswordSuccess]: never | undefined;
     [Telemetry.GotoSourceCode]: never | undefined;
     [Telemetry.ImportNotebook]: { scope: 'command' | 'file' };
     [Telemetry.Interrupt]: never | undefined;
