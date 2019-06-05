@@ -1,6 +1,14 @@
 # Changelog
 
-## 2019.5.2 (4 June 2019)
+## 2019.5.3 (5 June 2019)
+
+### Fixes
+
+1. Fixes to detection of the shell.
+   ([#5916](https://github.com/microsoft/vscode-python/issues/5916))
+
+
+## 2019.5.18426 (4 June 2019)
 
 ### Fixes
 
