@@ -555,16 +555,13 @@ for _ in range(50):
             const document = createDocument(inputText, testFile, version, TypeMoq.Times.atLeastOnce(), true);
             const cells = generateCellsFromDocument(document.object);
             assert.ok(cells, 'No cells generated');
-            assert.equal(cells.length, 8, 'Not enough cells generated');
+            assert.equal(cells.length, 2, 'Not enough cells generated');
 
-            // Run the first 7 cells
-            for (let i = 0; i < 7; i += 1) {
-                const renderCount = i === 2 ? 5 : 4 ; // Cell 2 outputs a print statement
-                await addCode(getOrCreateHistory, wrapper, concatMultilineString(cells[i].data.source), renderCount);
-            }
+            // Run the first cell
+            await addCode(getOrCreateHistory, wrapper, concatMultilineString(cells[0].data.source), 4);
 
             // Last cell should generate a series of updates. Verify we end up with a single image
-            await addCode(getOrCreateHistory, wrapper, concatMultilineString(cells[7].data.source), 25);
+            await addCode(getOrCreateHistory, wrapper, concatMultilineString(cells[1].data.source), 10);
             const cell = getLastOutputCell(wrapper);
 
             const output = cell!.find('div.cell-output');
