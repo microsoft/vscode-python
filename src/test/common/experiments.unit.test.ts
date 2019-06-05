@@ -14,7 +14,7 @@ import { ApplicationEnvironment } from '../../client/common/application/applicat
 import { IApplicationEnvironment, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { CryptoUtils } from '../../client/common/crypto';
-import { downloadedExperimentStorageKey, ExperimentsManager, experimentStorageKey } from '../../client/common/experiments';
+import { ExperimentsManager, experimentStorageKey, isStorageValidKey } from '../../client/common/experiments';
 import { HttpClient } from '../../client/common/net/httpClient';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { ABExperiments, ICryptoUtils, IOutputChannel, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
@@ -30,7 +30,6 @@ suite('A/B experiments', () => {
     let persistentStateFactory: IPersistentStateFactory;
     let isStorageValid: TypeMoq.IMock<IPersistentState<boolean>>;
     let experimentStorage: TypeMoq.IMock<IPersistentState<any>>;
-    let downloadedExperimentsStorage: TypeMoq.IMock<IPersistentState<any>>;
     let output: TypeMoq.IMock<IOutputChannel>;
     let expManager: ExperimentsManager;
     setup(() => {
@@ -41,11 +40,9 @@ suite('A/B experiments', () => {
         persistentStateFactory = mock(PersistentStateFactory);
         isStorageValid = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
         experimentStorage = TypeMoq.Mock.ofType<IPersistentState<any>>();
-        downloadedExperimentsStorage = TypeMoq.Mock.ofType<IPersistentState<any>>();
         output = TypeMoq.Mock.ofType<IOutputChannel>();
-        when(persistentStateFactory.createGlobalPersistentState(anything(), false, anything())).thenReturn(isStorageValid.object);
+        when(persistentStateFactory.createGlobalPersistentState(isStorageValidKey, false, anything())).thenReturn(isStorageValid.object);
         when(persistentStateFactory.createGlobalPersistentState(experimentStorageKey, undefined as any)).thenReturn(experimentStorage.object);
-        when(persistentStateFactory.createGlobalPersistentState(downloadedExperimentStorageKey, undefined as any)).thenReturn(downloadedExperimentsStorage.object);
         expManager = new ExperimentsManager(instance(persistentStateFactory), instance(workspaceService), instance(httpClient), instance(crypto), instance(appEnvironment), output.object);
     });
 
@@ -73,7 +70,6 @@ suite('A/B experiments', () => {
         workspaceConfig.verifyAll();
         isStorageValid.verifyAll();
         experimentStorage.verifyAll();
-        downloadedExperimentsStorage.verifyAll();
     }
 
     test('If the users have opted out of telemetry, then they are opted out of AB testing ', async () => {
@@ -93,7 +89,7 @@ suite('A/B experiments', () => {
     test('Initializing experiments downloads and stores the experiments if storage has expired', async () => {
         isStorageValid.setup(n => n.value).returns(() => false).verifiable(TypeMoq.Times.once());
         isStorageValid.setup(n => n.updateValue(true)).returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.once());
-        downloadedExperimentsStorage.setup(n => n.updateValue([{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }])).returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.once());
+        experimentStorage.setup(n => n.updateValue([{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }])).returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.once());
 
         await testInitialization();
 
@@ -103,7 +99,7 @@ suite('A/B experiments', () => {
     test('If downloading experiments fails with error, the storage is left as it is', async () => {
         isStorageValid.setup(n => n.value).returns(() => false).verifiable(TypeMoq.Times.once());
         isStorageValid.setup(n => n.updateValue(true)).returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.never());
-        downloadedExperimentsStorage.setup(n => n.updateValue(anything())).returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.never());
+        experimentStorage.setup(n => n.updateValue(anything())).returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.never());
 
         await testInitialization({}, true);
 
@@ -119,7 +115,7 @@ suite('A/B experiments', () => {
         experimentStorage.setup(n => n.value).returns(() => undefined).verifiable(TypeMoq.Times.once());
         isStorageValid.setup(n => n.value).returns(() => false).verifiable(TypeMoq.Times.once());
         isStorageValid.setup(n => n.updateValue(true)).returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.once());
-        downloadedExperimentsStorage.setup(n => n.updateValue([{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }])).returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.once());
+        experimentStorage.setup(n => n.updateValue([{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }])).returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.once());
         when(workspaceService.getConfiguration('telemetry', anything())).thenReturn(workspaceConfig.object);
         workspaceConfig.setup(c => c.inspect<boolean>('enableTelemetry'))
             .returns(() => settings as any)
@@ -138,7 +134,6 @@ suite('A/B experiments', () => {
         workspaceConfig.verifyAll();
         isStorageValid.verifyAll();
         experimentStorage.verifyAll();
-        downloadedExperimentsStorage.verifyAll();
         verify(httpClient.getJSON(anything(), false)).once();
     });
 

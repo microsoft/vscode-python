@@ -14,7 +14,7 @@ import { IApplicationDiagnostics } from '../../client/application/types';
 import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { PYTHON_LANGUAGE } from '../../client/common/constants';
-import { IDisposable, IExperimentsManager } from '../../client/common/types';
+import { IDisposable } from '../../client/common/types';
 import { IInterpreterAutoSelectionService } from '../../client/interpreter/autoSelection/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
@@ -42,7 +42,6 @@ suite('Activation - ActivationManager', () => {
     let autoSelection: typemoq.IMock<IInterpreterAutoSelectionService>;
     let interpreterService: IInterpreterService;
     let documentManager: typemoq.IMock<IDocumentManager>;
-    let abExperiments: typemoq.IMock<IExperimentsManager>;
     let activationService1: IExtensionActivationService;
     let activationService2: IExtensionActivationService;
     setup(() => {
@@ -51,7 +50,6 @@ suite('Activation - ActivationManager', () => {
         autoSelection = typemoq.Mock.ofType<IInterpreterAutoSelectionService>();
         interpreterService = mock(InterpreterService);
         documentManager = typemoq.Mock.ofType<IDocumentManager>();
-        abExperiments = typemoq.Mock.ofType<IExperimentsManager>();
         activationService1 = mock(LanguageServerExtensionActivationService);
         activationService2 = mock(LanguageServerExtensionActivationService);
         managerTest = new ExtensionActivationManagerTest(
@@ -60,8 +58,7 @@ suite('Activation - ActivationManager', () => {
             instance(interpreterService),
             autoSelection.object,
             appDiagnostics.object,
-            instance(workspaceService),
-            abExperiments.object
+            instance(workspaceService)
         );
     });
     test('Initialize will add event handlers and will dispose them when running dispose', async () => {
@@ -155,15 +152,6 @@ suite('Activation - ActivationManager', () => {
         when(activationService1.activate(resource)).thenResolve();
         when(activationService2.activate(resource)).thenResolve();
         when(interpreterService.getInterpreters(anything())).thenResolve();
-        const storage = { value: [], updateValue: async () => { await Promise.resolve(); } };
-        abExperiments
-            .setup(a => a.downloadedExperimentsStorage)
-            .returns(() => storage)
-            .verifiable(typemoq.Times.atLeastOnce());
-        abExperiments
-            .setup(a => a.experimentStorage)
-            .returns(() => storage)
-            .verifiable(typemoq.Times.atLeastOnce());
         autoSelection
             .setup(a => a.autoSelectInterpreter(resource))
             .returns(() => Promise.resolve())
@@ -185,7 +173,6 @@ suite('Activation - ActivationManager', () => {
         await sleep(1);
 
         documentManager.verifyAll();
-        abExperiments.verifyAll();
         verify(workspaceService.onDidChangeWorkspaceFolders).once();
         verify(workspaceService.workspaceFolders).atLeast(1);
         verify(workspaceService.hasWorkspaceFolders).once();
@@ -198,15 +185,6 @@ suite('Activation - ActivationManager', () => {
         when(activationService1.activate(resource)).thenResolve();
         when(activationService2.activate(resource)).thenResolve();
         when(interpreterService.getInterpreters(anything())).thenResolve();
-        const storage = { value: [], updateValue: async () => { await Promise.resolve(); } };
-        abExperiments
-            .setup(a => a.downloadedExperimentsStorage)
-            .returns(() => storage)
-            .verifiable(typemoq.Times.atLeastOnce());
-        abExperiments
-            .setup(a => a.experimentStorage)
-            .returns(() => storage)
-            .verifiable(typemoq.Times.atLeastOnce());
         autoSelection
             .setup(a => a.autoSelectInterpreter(resource))
             .returns(() => Promise.resolve())
@@ -218,7 +196,6 @@ suite('Activation - ActivationManager', () => {
 
         await managerTest.activateWorkspace(resource);
 
-        abExperiments.verifyAll();
         verify(activationService1.activate(resource)).once();
         verify(activationService2.activate(resource)).once();
     });

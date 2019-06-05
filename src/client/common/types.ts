@@ -433,7 +433,5 @@ export interface IAsyncDisposableRegistry extends IAsyncDisposable {
 export type ABExperiments = { name: string; salt: string; min: number; max: number }[];
 export const IExperimentsManager = Symbol('IExperimentsManager');
 export interface IExperimentsManager extends IExtensionActivationService {
-    experimentStorage: IPersistentState<ABExperiments | undefined>;
-    downloadedExperimentsStorage: IPersistentState<ABExperiments | undefined>;
-    inExperiment(experimentName: string): boolean;
+    inExperiment(experimentName: string): boolean | undefined;
 }

@@ -18,17 +18,17 @@ import { swallowExceptions } from './utils/decorators';
 import { Experiments } from './utils/localize';
 
 const EXPIRY_DURATION_MS = 30 * 60 * 1000;
-const isStorageValidKey = 'IS_EXPERIMENTS_STORAGE_VALID_KEY';
+export const isStorageValidKey = 'IS_EXPERIMENTS_STORAGE_VALID_KEY';
 export const experimentStorageKey = 'EXPERIMENT_STORAGE_KEY';
-export const downloadedExperimentStorageKey = 'DOWNLOADED_EXPERIMENTS_STORAGE_KEY';
 const configUri = 'https://raw.githubusercontent.com/microsoft/vscode-python/master/environments.json';
 
 @injectable()
 export class ExperimentsManager implements IExperimentsManager {
     public experimentStorage: IPersistentState<ABExperiments | undefined>;
-    public downloadedExperimentsStorage: IPersistentState<ABExperiments | undefined>;
     private isStorageValid: IPersistentState<boolean>;
     private activatedWorkspaces = new Map<string, boolean>();
+    private loggedOnce: boolean = false;
+    private experimentsEnabled: boolean = true;
     private resource: Resource;
     constructor(
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
@@ -40,33 +40,39 @@ export class ExperimentsManager implements IExperimentsManager {
     ) {
         this.isStorageValid = this.persistentStateFactory.createGlobalPersistentState<boolean>(isStorageValidKey, false, EXPIRY_DURATION_MS);
         this.experimentStorage = this.persistentStateFactory.createGlobalPersistentState<ABExperiments | undefined>(experimentStorageKey, undefined);
-        this.downloadedExperimentsStorage = this.persistentStateFactory.createGlobalPersistentState<ABExperiments | undefined>(downloadedExperimentStorageKey, undefined);
     }
 
     @swallowExceptions('Failed to activate experiments')
     public async activate(resource: Uri): Promise<void> {
-        if (this.activatedWorkspaces.has(this.getWorkspacePathKey(resource))) {
+        const wkspcKey = this.getWorkspacePathKey(resource);
+        if (this.activatedWorkspaces.has(wkspcKey)) {
             return;
         }
-        this.activatedWorkspaces.set(this.getWorkspacePathKey(resource), true);
+        this.activatedWorkspaces.set(wkspcKey, true);
+        if (!this.loggedOnce) {
+            this.logExperimentGroups();
+            this.loggedOnce = true;
+        }
         this.resource = resource;
-        this.logExperimentGroups();
         this.initializeInBackground().ignoreErrors();
     }
 
     @traceDecorators.error('Failed to initialize experiments')
     public async initializeInBackground() {
-        if (this.isTelemetryDisabled() || this.isStorageValid.value) {
+        if (this.isTelemetryDisabled() || !Array.isArray(this.experimentStorage.value) || this.isStorageValid.value) {
+            this.experimentsEnabled = false;
             return;
         }
         const downloadedExperiments = await this.httpClient.getJSON<ABExperiments>(configUri, false);
-        await this.downloadedExperimentsStorage.updateValue(downloadedExperiments);
+        await this.experimentStorage.updateValue(downloadedExperiments);
         await this.isStorageValid.updateValue(true);
     }
 
-    public inExperiment(experimentName: string): boolean {
+    public inExperiment(experimentName: string): boolean | undefined {
         try {
-            // Note: experimentStorage is populated in ExtensionActivationManager.activateWorkspace()
+            if (!this.experimentsEnabled) {
+                return;
+            }
             const experiments = this.experimentStorage.value ? this.experimentStorage.value : [];
             const experiment = experiments.find(exp => exp.name === experimentName);
             if (!experiment) {
@@ -102,9 +108,9 @@ export class ExperimentsManager implements IExperimentsManager {
     @traceDecorators.error('Failed to log experiment groups')
     private logExperimentGroups(): void {
         if (Array.isArray(this.experimentStorage.value)) {
-            for (const exp of this.experimentStorage.value) {
-                if (this.inExperiment(exp.name)) {
-                    this.output.appendLine(Experiments.inGroup().format(exp.name));
+            for (const experiment of this.experimentStorage.value) {
+                if (this.isUserInRange(experiment.min, experiment.max, experiment.salt)) {
+                    this.output.appendLine(Experiments.inGroup().format(experiment.name));
                 }
             }
         }

@@ -9,7 +9,7 @@ import { IApplicationDiagnostics } from '../application/types';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { PYTHON_LANGUAGE } from '../common/constants';
 import { traceDecorators } from '../common/logger';
-import { IDisposable, IExperimentsManager, Resource } from '../common/types';
+import { IDisposable, Resource } from '../common/types';
 import { IInterpreterAutoSelectionService } from '../interpreter/autoSelection/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IExtensionActivationManager, IExtensionActivationService } from './types';
@@ -25,8 +25,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IInterpreterAutoSelectionService) private readonly autoSelection: IInterpreterAutoSelectionService,
         @inject(IApplicationDiagnostics) private readonly appDiagnostics: IApplicationDiagnostics,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IExperimentsManager) private readonly abExperiments: IExperimentsManager
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
     ) { }
 
     public dispose() {
@@ -55,11 +54,6 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         this.interpreterService.getInterpreters(resource).ignoreErrors();
 
         await this.autoSelection.autoSelectInterpreter(resource);
-        // Update experiment storage to contain the latest downloaded experiments
-        if (Array.isArray(this.abExperiments.downloadedExperimentsStorage.value)) {
-            await this.abExperiments.experimentStorage.updateValue(this.abExperiments.downloadedExperimentsStorage.value);
-            await this.abExperiments.downloadedExperimentsStorage.updateValue(undefined);
-        }
         await Promise.all(this.activationServices.map(item => item.activate(resource)));
         await this.appDiagnostics.performPreStartupHealthCheck(resource);
     }

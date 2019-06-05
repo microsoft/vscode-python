@@ -9,6 +9,7 @@ import { LSNotSupportedDiagnosticServiceId } from '../application/diagnostics/ch
 import { IDiagnosticsService } from '../application/diagnostics/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
+import { LSControl, LSEnabled } from '../common/experimentGroups';
 import '../common/extensions';
 import { IConfigurationService, IDisposableRegistry, IExperimentsManager, IOutputChannel, IPersistentStateFactory, IPythonSettings, Resource } from '../common/types';
 import { swallowExceptions } from '../common/utils/decorators';
@@ -122,10 +123,10 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
 
     public useJedi(): boolean {
         if (this.isJediUsingDefaultConfiguration()) {
-            if (this.abExperiments.inExperiment('LS - enabled')) {
+            if (this.abExperiments.inExperiment(LSEnabled)) {
                 return false;
             }
-            this.abExperiments.inExperiment('LS - control');
+            this.abExperiments.inExperiment(LSControl);
         }
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const enabled = configurationService.getSettings(this.resource).jediEnabled;
