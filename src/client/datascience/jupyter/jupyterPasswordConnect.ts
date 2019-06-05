@@ -11,14 +11,11 @@ import { IJupyterPasswordConnect, IJupyterPasswordConnectInfo } from '../types';
 @injectable()
 export class JupyterPasswordConnect implements IJupyterPasswordConnect {
     private fetchImpl: (url: nodeFetch.RequestInfo, init?: nodeFetch.RequestInit) => Promise<nodeFetch.Response>;
-//declare function fetch(
-    //url: RequestInfo,
-    //init?: RequestInit
-//): Promise<Response>;
 
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell
     ) {
+        // By default, use nodeFetch as our fetch function. Test can override this via arg on getPasswordConnectionInfo
         this.fetchImpl = nodeFetch.default;
     }
 
@@ -76,7 +73,6 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
     private async getXSRFToken(url: string): Promise<string | undefined> {
         let xsrfCookie: string | undefined;
 
-        //const response = await nodeFetch.default(`${url}login?`, {
         const response = await this.fetchImpl(`${url}login?`, {
             method: 'get',
             redirect: 'manual',
@@ -102,7 +98,6 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         postParams.append('password', password);
 
         const response = await this.fetchImpl(`${url}login?`, {
-        //const response = await nodeFetch.default(`${url}login?`, {
             method: 'post',
             headers: { Cookie: `_xsrf=${xsrfCookie}`, Connection: 'keep-alive' },
             body: postParams,
