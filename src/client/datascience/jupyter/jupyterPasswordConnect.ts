@@ -10,17 +10,37 @@ import { IJupyterPasswordConnect, IJupyterPasswordConnectInfo } from '../types';
 
 @injectable()
 export class JupyterPasswordConnect implements IJupyterPasswordConnect {
+    private fetchImpl: (url: nodeFetch.RequestInfo, init?: nodeFetch.RequestInit) => Promise<nodeFetch.Response>;
+//declare function fetch(
+    //url: RequestInfo,
+    //init?: RequestInit
+//): Promise<Response>;
+
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell
     ) {
+        this.fetchImpl = nodeFetch.default;
     }
 
-    public async getPasswordConnectionInfo(url: string): Promise<IJupyterPasswordConnectInfo | undefined> {
+    public async getPasswordConnectionInfo(url: string, fetchOverride?: (url: nodeFetch.RequestInfo, init?: nodeFetch.RequestInit) => Promise<nodeFetch.Response>): Promise<IJupyterPasswordConnectInfo | undefined> {
+        // For testing allow for our fetch function to be overridden
+        if (fetchOverride) {
+            this.fetchImpl = fetchOverride;
+        }
+
         let xsrfCookie: string | undefined;
         let sessionCookieName: string | undefined;
         let sessionCookieValue: string | undefined;
 
-        // IANHU: Validation on url, end with slash?
+        if (!url || url.length < 1) {
+            return undefined;
+        }
+
+        // Add on a trailing slash to our URL if it's not there already
+        let newUrl = url;
+        if (newUrl[newUrl.length - 1] !== '/') {
+            newUrl = `${newUrl}/`;
+        }
 
         // Get password first
         const userPassword = await this.getUserPassword();
@@ -56,7 +76,8 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
     private async getXSRFToken(url: string): Promise<string | undefined> {
         let xsrfCookie: string | undefined;
 
-        const response = await nodeFetch.default(`${url}login?`, {
+        //const response = await nodeFetch.default(`${url}login?`, {
+        const response = await this.fetchImpl(`${url}login?`, {
             method: 'get',
             redirect: 'manual',
             headers: { Connection: 'keep-alive' }
@@ -80,7 +101,8 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         postParams.append('_xsrf', xsrfCookie);
         postParams.append('password', password);
 
-        const response = await nodeFetch.default(`${url}login?`, {
+        const response = await this.fetchImpl(`${url}login?`, {
+        //const response = await nodeFetch.default(`${url}login?`, {
             method: 'post',
             headers: { Cookie: `_xsrf=${xsrfCookie}`, Connection: 'keep-alive' },
             body: postParams,
@@ -108,7 +130,6 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
 
         if (cookies) {
             cookies.split(';').forEach(value => {
-                // IANHU: verify cookie looks as expected?
                 const cookieKey = value.substring(0, value.indexOf('='));
                 const cookieVal = value.substring(value.indexOf('=') + 1);
                 cookieList.set(cookieKey, cookieVal);
