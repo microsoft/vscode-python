@@ -3,14 +3,9 @@
 'use strict';
 import '../common/extensions';
 
-import {
-    ContentsManager,
-    ServerConnection
-} from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils';
 import { inject, injectable } from 'inversify';
-import * as nodeFetch from 'node-fetch';
-import { URL, URLSearchParams } from 'url';
+import { URL } from 'url';
 import * as vscode from 'vscode';
 
 import { IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService } from '../common/application/types';
@@ -223,117 +218,6 @@ export class DataScience implements IDataScience {
                 // If user cancels quick pick we will get undefined as the selection and fall through here
                 break;
         }
-    }
-
-    private TEST = (): void => {
-        //nodeFetch.default('https://www.google.com')
-        //.then(res => {
-            //const code = res.status;
-            //alert(code.toString());
-        //});
-        // tslint:disable-next-line:no-http-string
-        nodeFetch.default('http://ianhumain2:9998/login?', {
-            method: 'get',
-            redirect: 'manual',
-            headers: { Connection: 'keep-alive' }
-        })
-        .then(res => {
-            // First we need to fish out the xsrf cookie
-            const xsrfCookie = this.getCookie(res, '_xsrf');
-
-            // AFter we get the xsrfCookie it's time to hit the server with the password
-
-            // Create the form params that we need
-            const postParams = new URLSearchParams();
-            postParams.append('_xsrf', xsrfCookie!);
-            postParams.append('password', 'Python');
-
-            // tslint:disable-next-line:no-http-string
-            nodeFetch.default('http://ianhumain2:9998/login?', {
-                method: 'post',
-                headers: { 'X-XSRFToken': xsrfCookie!, Cookie: `_xsrf=${xsrfCookie}`, Connection: 'keep-alive' },
-                body: postParams,
-                redirect: 'manual'
-            })
-            .then(res2 => {
-                // Now at this point we should have our official session cookie sent back
-                const fullCookie = this.getFullCookie(res2);
-
-                // Now try to create a request to fetch the full normal tree with our
-                // xsrf cookie and our full validation cookie
-
-                // Build full cookie string
-                const cookieString = `_xsrf=${xsrfCookie}; ${fullCookie[0]}=${fullCookie[1]}`;
-
-                // tslint:disable-next-line:no-http-string
-                //nodeFetch.default('http://ianhumain2:9998/tree?', {
-                    //method: 'get',
-                    //redirect: 'manual',
-                    //headers: { 'X-XSRFToken': xsrfCookie!, Cookie: cookieString, Connection: 'keep-alive' }
-                //})
-                // tslint:disable-next-line:no-http-string
-                nodeFetch.default('http://ianhumain2:9998/tree?', {
-                    method: 'get',
-                    redirect: 'manual',
-                    // tslint:disable-next-line:no-http-string
-                    headers: { Cookie: cookieString, Connection: 'keep-alive', 'Cache-Control': 'max-age=0', 'Upgrade-Insecure-Requests': '1', Referer: 'http://ianhumain2:9998/login?next=/tree?' }
-                })
-                .then(async res3 => {
-                    // tslint:disable-next-line:no-http-string
-                    const reqHeaders = { Cookie: cookieString, 'X-XSRFToken': xsrfCookie!, Connection: 'keep-alive', 'Cache-Control': 'max-age=0', 'Upgrade-Insecure-Requests': '1', Referer: 'http://ianhumain2:9998/login?next=/tree?' };
-                    // Now here we are going to try to connect using the services
-                    const serverSettings = ServerConnection.makeSettings(
-                        {
-                            // tslint:disable-next-line:no-http-string
-                            baseUrl: 'http://ianhumain2:9998',
-                            token: undefined,
-                            pageUrl: '',
-                            // A web socket is required to allow token authentication
-                            wsUrl: 'ws://ianhumain2:9998',
-                            init: { cache: 'no-store', credentials: 'same-origin', headers: reqHeaders }
-                        });
-
-                    // Create a temporary .ipynb file to use
-                    const cm = new ContentsManager({ serverSettings: serverSettings });
-                    const nbfile = await cm.newUntitled({type: 'notebook'});
-                });
-            });
-        });
-    }
-
-    private getFullCookie(res: nodeFetch.Response): [string, string] {
-        const cookie: string | null = res.headers.get('set-cookie');
-
-        let cookieName: string = '';
-        let cookieValue: string = '';
-
-        if (cookie) {
-            const firstEquals = cookie.indexOf('=');
-            cookieName = cookie.substring(0, firstEquals);
-            cookieValue = cookie.substring(firstEquals + 1, cookie.indexOf(';'));
-            //cookieValue = cookie.substring(firstEquals + 2);
-            //const firstQuote = cookieValue.indexOf('"');
-            //cookieValue = cookieValue.substring(0, firstQuote);
-        }
-
-        return [cookieName, cookieValue];
-    }
-
-    private getCookie(res: nodeFetch.Response, cookieName: string): string | undefined {
-        const cookies: string | null = res.headers.get('set-cookie');
-        let cookieValue: string | undefined;
-
-        if (cookies) {
-            const cookieSplit = cookies.split(';');
-            cookieSplit.forEach(value => {
-                const valueSplit = value.split('=');
-                if (valueSplit[0] === cookieName) {
-                    cookieValue = valueSplit[1];
-                }
-            });
-        }
-
-        return cookieValue;
     }
 
     @captureTelemetry(Telemetry.SetJupyterURIToLocal)

@@ -12,12 +12,8 @@ import {
 } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils';
 import { Slot } from '@phosphor/signaling';
-import { inject, injectable } from 'inversify';
-import * as nodeFetch from 'node-fetch';
-import { URLSearchParams } from 'url';
 import { Event, EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-import * as WebSocketWS from 'ws';
 
 import { Cancellation } from '../../common/cancellation';
 import { isTestExecution } from '../../common/constants';
@@ -29,30 +25,6 @@ import { IConnection, IJupyterKernelSpec, IJupyterPasswordConnect, IJupyterSessi
 import { JupyterKernelPromiseFailedError } from './jupyterKernelPromiseFailedError';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 import { JupyterWebSocket } from './jupyterWebSocket';
-
-//export class MyWebSocket extends WebSocketWS {
-
-    //// Static fields for cookie values
-    //public static xsrfCookie: string;
-    //public static sessionName: string;
-    //public static sessionValue: string;
-
-    //constructor(url: string, protocols?: string | string[] | undefined) {
-
-        //// Create header cookie
-        //const cookieString = `_xsrf=${MyWebSocket.xsrfCookie}; ${MyWebSocket.sessionName}=${MyWebSocket.sessionValue}`;
-
-        //// Construct our client options here
-        //const co: WebSocketWS.ClientOptions = {
-            //headers: {
-                //Cookie: cookieString
-            //}
-        //};
-
-        //super(url, protocols, co);
-    //}
-
-//}
 
 export class JupyterSession implements IJupyterSession {
     private connInfo: IConnection | undefined;
@@ -209,6 +181,8 @@ export class JupyterSession implements IJupyterSession {
                         wsUrl: connInfo.baseUrl.replace('http', 'ws'),
                         init: { cache: 'no-store', credentials: 'same-origin', headers: reqHeaders },
                         // This replaces the WebSocket constructor in jupyter lab services with our own implementation
+                        // See _createSocket here:
+                        // https://github.com/jupyterlab/jupyterlab/blob/cfc8ebda95e882b4ed2eefd54863bb8cdb0ab763/packages/services/src/kernel/default.ts
                         // tslint:disable-next-line:no-any
                         WebSocket: JupyterWebSocket as any
                     });
