@@ -71,7 +71,8 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         // First get the proposed URI from the user
         return this.appShell.showInputBox({
             prompt: localize.DataScience.jupyterSelectPasswordPrompt(),
-            ignoreFocusOut: true
+            ignoreFocusOut: true,
+            password: true
         });
     }
 
@@ -94,6 +95,10 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         return xsrfCookie;
     }
 
+    // Jupyter uses a session cookie to validate so by hitting the login page with the password we can get that cookie and use it ourselves
+    // This workflow can be seen by running fiddler and hitting the login page with a browser
+    // First you need a get at the login page to get the xsrf token, then you send back that token along with the password in a post
+    // That will return back the session cookie. This session cookie then needs to be added to our requests and websockets for @jupyterlab/services
     private async getSessionCookie(url: string, xsrfCookie: string, password: string): Promise<[string | undefined, string | undefined]> {
         let sessionCookieName: string | undefined;
         let sessionCookieValue: string | undefined;
