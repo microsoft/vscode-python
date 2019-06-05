@@ -2,10 +2,12 @@
 // Licensed under the MIT License.
 import { expect } from 'chai';
 import { SemVer } from 'semver';
+import * as sinon from 'sinon';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { TerminalManager } from '../../../client/common/application/terminalManager';
 import { ITerminalManager } from '../../../client/common/application/types';
+import { WorkspaceService } from '../../../client/common/application/workspace';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { PlatformService } from '../../../client/common/platform/platformService';
@@ -23,6 +25,7 @@ import {
     PyEnvActivationCommandProvider
 } from '../../../client/common/terminal/environmentActivationProviders/pyenvActivationProvider';
 import { TerminalHelper } from '../../../client/common/terminal/helper';
+import { ShellDetector } from '../../../client/common/terminal/shellDetector';
 import {
     ITerminalActivationCommandProvider,
     TerminalShellType
@@ -48,6 +51,8 @@ suite('Terminal Service helpers', () => {
     let pyenvActivationProvider: ITerminalActivationCommandProvider;
     let pipenvActivationProvider: ITerminalActivationCommandProvider;
     let pythonSettings: PythonSettings;
+    let currentProcess: CurrentProcess;
+    let shellDetectorIdentifyTerminalShell: sinon.SinonStub;
 
     const pythonInterpreter: PythonInterpreter = {
         path: '/foo/bar/python.exe',
@@ -69,7 +74,8 @@ suite('Terminal Service helpers', () => {
         pyenvActivationProvider = mock(PyEnvActivationCommandProvider);
         pipenvActivationProvider = mock(PipEnvActivationCommandProvider);
         pythonSettings = mock(PythonSettings);
-
+        currentProcess = mock(CurrentProcess);
+        shellDetectorIdentifyTerminalShell = sinon.stub(ShellDetector.prototype, 'identifyTerminalShell');
         helper = new TerminalHelper(instance(platformService), instance(terminalManager),
             instance(condaService),
             instance(mock(InterpreterService)),
@@ -79,8 +85,10 @@ suite('Terminal Service helpers', () => {
             instance(cmdActivationProvider),
             instance(pyenvActivationProvider),
             instance(pipenvActivationProvider),
-            instance(mock(CurrentProcess)));
+            instance(currentProcess),
+            instance(mock(WorkspaceService)));
     }
+    teardown(() => shellDetectorIdentifyTerminalShell.restore());
     suite('Misc', () => {
         setup(doSetup);
 
@@ -106,44 +114,6 @@ suite('Terminal Service helpers', () => {
             const args = capture(terminalManager.createTerminal).first()[0];
             expect(term).to.be.deep.equal(terminal);
             expect(args.name).to.be.deep.equal(theTitle);
-        });
-        test('Revert to default shell', async () => {
-            when(platformService.osType).thenReturn(OSType.OSX);
-
-            const shellType = helper.identifyTerminalShell();
-
-            expect(shellType).to.be.equal(TerminalShellType.bash);
-        });
-        test('Test identification of Terminal Shells', async () => {
-            const shellPathsAndIdentification = new Map<string, TerminalShellType>();
-            shellPathsAndIdentification.set('c:\\windows\\system32\\cmd.exe', TerminalShellType.commandPrompt);
-
-            shellPathsAndIdentification.set('c:\\windows\\system32\\bash.exe', TerminalShellType.bash);
-            shellPathsAndIdentification.set('c:\\windows\\system32\\wsl.exe', TerminalShellType.wsl);
-            shellPathsAndIdentification.set('c:\\windows\\system32\\gitbash.exe', TerminalShellType.gitbash);
-            shellPathsAndIdentification.set('/usr/bin/bash', TerminalShellType.bash);
-            shellPathsAndIdentification.set('/usr/bin/zsh', TerminalShellType.zsh);
-            shellPathsAndIdentification.set('/usr/bin/ksh', TerminalShellType.ksh);
-
-            shellPathsAndIdentification.set('c:\\windows\\system32\\powershell.exe', TerminalShellType.powershell);
-            shellPathsAndIdentification.set('c:\\windows\\system32\\pwsh.exe', TerminalShellType.powershellCore);
-            shellPathsAndIdentification.set('/usr/microsoft/xxx/powershell/powershell', TerminalShellType.powershell);
-            shellPathsAndIdentification.set('/usr/microsoft/xxx/powershell/pwsh', TerminalShellType.powershellCore);
-
-            shellPathsAndIdentification.set('/usr/bin/fish', TerminalShellType.fish);
-
-            shellPathsAndIdentification.set('c:\\windows\\system32\\shell.exe', TerminalShellType.other);
-            shellPathsAndIdentification.set('/usr/bin/shell', TerminalShellType.other);
-
-            shellPathsAndIdentification.set('/usr/bin/csh', TerminalShellType.cshell);
-            shellPathsAndIdentification.set('/usr/bin/tcsh', TerminalShellType.tcshell);
-
-            shellPathsAndIdentification.set('/usr/bin/xonsh', TerminalShellType.xonsh);
-            shellPathsAndIdentification.set('/usr/bin/xonshx', TerminalShellType.other);
-
-            shellPathsAndIdentification.forEach((shellType, shellPath) => {
-                expect(helper.identifyTerminalShellByName(shellPath)).to.equal(shellType, `Incorrect Shell Type for path '${shellPath}'`);
-            });
         });
         test('Ensure spaces in command is quoted', async () => {
             getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(item => {
@@ -181,6 +151,7 @@ suite('Terminal Service helpers', () => {
             });
         });
     });
+
 
     function title(resource?: Uri, interpreter?: PythonInterpreter) {
         return `${resource ? 'With a resource' : 'Without a resource'}${interpreter ? ' and an interpreter' : ''}`;
@@ -342,23 +313,11 @@ suite('Terminal Service helpers', () => {
                 });
                 [undefined, pythonInterpreter].forEach(interpreter => {
                     test('Activation command for Shell must be empty for unknown os', async () => {
-                        const pythonPath = 'some python Path value';
-                        ensureCondaIsSupported(false, pythonPath, []);
-
                         when(platformService.osType).thenReturn(OSType.Unknown);
-                        when(bashActivationProvider.isShellSupported(anything())).thenReturn(false);
-                        when(cmdActivationProvider.isShellSupported(anything())).thenReturn(false);
 
                         const cmd = await helper.getEnvironmentActivationShellCommands(resource, interpreter);
 
                         expect(cmd).to.equal(undefined, 'Command must be undefined');
-                        verify(pythonSettings.terminal).never();
-                        verify(pythonSettings.pythonPath).never();
-                        verify(condaService.isCondaEnvironment(pythonPath)).never();
-                        verify(bashActivationProvider.isShellSupported(anything())).never();
-                        verify(pyenvActivationProvider.isShellSupported(anything())).never();
-                        verify(pipenvActivationProvider.isShellSupported(anything())).never();
-                        verify(cmdActivationProvider.isShellSupported(anything())).never();
                     });
                 });
                 [undefined, pythonInterpreter].forEach(interpreter => {
@@ -368,6 +327,7 @@ suite('Terminal Service helpers', () => {
                             const shellToExpect = osType === OSType.Windows ? TerminalShellType.commandPrompt : TerminalShellType.bash;
                             ensureCondaIsSupported(false, pythonPath, []);
 
+                            shellDetectorIdentifyTerminalShell.returns(shellToExpect);
                             when(platformService.osType).thenReturn(osType);
                             when(bashActivationProvider.isShellSupported(shellToExpect)).thenReturn(false);
                             when(cmdActivationProvider.isShellSupported(shellToExpect)).thenReturn(false);
