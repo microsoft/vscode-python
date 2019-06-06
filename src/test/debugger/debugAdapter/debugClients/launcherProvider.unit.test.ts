@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../../../client/common/constants';
-import { DebuggerLauncherScriptProvider, NoDebugLauncherScriptProvider, RemoteDebuggerLauncherScriptProvider, RemoteDebuggerExternalLauncherScriptProvider } from '../../../../client/debugger/debugAdapter/DebugClients/launcherProvider';
+import { DebuggerLauncherScriptProvider, NoDebugLauncherScriptProvider, RemoteDebuggerExternalLauncherScriptProvider } from '../../../../client/debugger/debugAdapter/DebugClients/launcherProvider';
 
 const expectedPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'ptvsd_launcher.py');
 
@@ -50,16 +50,6 @@ suite('Debugger - Launcher Script Provider', () => {
             test('Test non-debug launcher args and custom ptvsd', async () => {
                 const args = new NoDebugLauncherScriptProvider(testParams.path).getLauncherArgs({ host: 'something', port: 1234, customDebugger: true });
                 const expectedArgs = [testParams.expectedPath, '--custom', '--nodebug', '--client', '--host', 'something', '--port', '1234'];
-                expect(args).to.be.deep.equal(expectedArgs);
-            });
-            test('Test remote debug launcher args (and do not wait for debugger to attach)', async () => {
-                const args = new RemoteDebuggerLauncherScriptProvider(testParams.path).getLauncherArgs({ host: 'something', port: 1234, waitUntilDebuggerAttaches: false });
-                const expectedArgs = [testParams.expectedPath, '--default', '--host', 'something', '--port', '1234'];
-                expect(args).to.be.deep.equal(expectedArgs);
-            });
-            test('Test remote debug launcher args (and wait for debugger to attach)', async () => {
-                const args = new RemoteDebuggerLauncherScriptProvider(testParams.path).getLauncherArgs({ host: 'something', port: 1234, waitUntilDebuggerAttaches: true });
-                const expectedArgs = [testParams.expectedPath, '--default', '--host', 'something', '--port', '1234', '--wait'];
                 expect(args).to.be.deep.equal(expectedArgs);
             });
         });
