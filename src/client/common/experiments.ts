@@ -24,8 +24,24 @@ const configUri = 'https://raw.githubusercontent.com/karrtikr/check/master/envir
 
 @injectable()
 export class ExperimentsManager implements IExperimentsManager {
+    /**
+     * @private experimentStorage
+     * Keeps track of the downloaded experiments in the previous sessions
+     */
     private experimentStorage: IPersistentState<ABExperiments | undefined>;
+    /**
+     * @private downloadedExperimentsStorage
+     * Keeps track of the downloaded experiments in the current session, to be used in the next startup
+     * Note experiments downloaded in the current session has to be distinguished
+     * from the experiments download in the previous session (experimentsStorage contains that)
+     */
     private downloadedExperimentsStorage: IPersistentState<ABExperiments | undefined>;
+    /**
+     * @private isStorageValid
+     * Keeps track if the storage needs updating or not.
+     * Note this has to be separate from the actual storage as
+     * storages by itself should not have an Expiry (so that it can be used even when download fails)
+     */
     private isStorageValid: IPersistentState<boolean>;
     private activatedOnce: boolean = false;
     constructor(
@@ -66,6 +82,11 @@ export class ExperimentsManager implements IExperimentsManager {
         await this.isStorageValid.updateValue(true);
     }
 
+    /**
+     * Checks if user is in experiment or not
+     * @param experimentName Name of the experiment
+     * @returns `true` if user is in experiment, `false` if user is not in experiment and `undefined` if it cannot be inferred
+     */
     public inExperiment(experimentName: string): boolean | undefined {
         try {
             const experiments = this.experimentStorage.value ? this.experimentStorage.value : [];
@@ -84,6 +105,9 @@ export class ExperimentsManager implements IExperimentsManager {
         }
     }
 
+    /**
+     * Checks if the telemetry is disabled in user settings
+     */
     public isTelemetryDisabled(): boolean {
         const settings = this.workspaceService.getConfiguration('telemetry').inspect<boolean>('enableTelemetry')!;
         return settings.globalValue === false ? true : false;
@@ -100,6 +124,12 @@ export class ExperimentsManager implements IExperimentsManager {
         }
     }
 
+    /**
+     * Checks if user falls between the range of the experiment
+     * @param min The lower limit
+     * @param max The upper limit
+     * @param salt The experiment salt value
+     */
     public isUserInRange(min: number, max: number, salt: string) {
         const hash = this.crypto.createHash(`${this.appEnvironment.machineId}+${salt}`, 'hex', 'number');
         return hash % 100 >= min && hash % 100 < max;

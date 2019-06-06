@@ -126,6 +126,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
             if (this.abExperiments.inExperiment(LSEnabled)) {
                 return false;
             }
+            // Send telemetry for the control group
             this.abExperiments.inExperiment(LSControl);
         }
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
