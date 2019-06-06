@@ -76,7 +76,7 @@
 }
 
 .cell-output-html {
-    white-space: none;
+    white-space: unset;
 }
 
 .cell-output table {

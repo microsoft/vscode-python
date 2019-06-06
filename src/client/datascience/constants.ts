@@ -124,17 +124,18 @@ export namespace Settings {
     export const IntellisenseTimeout = 300;
 }
 
-export namespace CodeSnippits {
-    export const ChangeDirectory = ['{0}', '{1}', 'import os', 'try:', '\tos.chdir(os.path.join(os.getcwd(), \'{2}\'))', '\tprint(os.getcwd())', 'except:', '\tpass', ''];
-    export const ChangeDirectoryCommentIdentifier = '# ms-python.python added'; // Not translated so can compare.
-}
-
 export namespace Identifiers {
     export const EmptyFileName = '2DB9B899-6519-4E1B-88B0-FA728A274115';
     export const GeneratedThemeName = 'ipython-theme'; // This needs to be all lower class and a valid class name.
     export const HistoryPurpose = 'history';
     export const MatplotLibDefaultParams = '_VSCode_defaultMatplotlib_Params';
     export const EditCellId = '3D3AB152-ADC1-4501-B813-4B83B49B0C10';
+}
+
+export namespace CodeSnippits {
+    export const ChangeDirectory = ['{0}', '{1}', 'import os', 'try:', '\tos.chdir(os.path.join(os.getcwd(), \'{2}\'))', '\tprint(os.getcwd())', 'except:', '\tpass', ''];
+    export const ChangeDirectoryCommentIdentifier = '# ms-python.python added'; // Not translated so can compare.
+    export const MatplotLibInit = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_format = 'svg'`;
 }
 
 export namespace JupyterCommands {

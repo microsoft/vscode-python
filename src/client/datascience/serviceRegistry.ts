@@ -16,6 +16,7 @@ import { HistoryProvider } from './history/historyProvider';
 import { DotNetIntellisenseProvider } from './history/intellisense/dotNetIntellisenseProvider';
 import { JediIntellisenseProvider } from './history/intellisense/jediIntellisenseProvider';
 import { LinkProvider } from './history/linkProvider';
+import { ShowPlotListener } from './history/showPlotListener';
 import { JupyterCommandFactory } from './jupyter/jupyterCommand';
 import { JupyterExecutionFactory } from './jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from './jupyter/jupyterExporter';
@@ -23,6 +24,8 @@ import { JupyterImporter } from './jupyter/jupyterImporter';
 import { JupyterServerFactory } from './jupyter/jupyterServerFactory';
 import { JupyterSessionManager } from './jupyter/jupyterSessionManager';
 import { JupyterVariables } from './jupyter/jupyterVariables';
+import { PlotViewer } from './plotting/plotViewer';
+import { PlotViewerProvider } from './plotting/plotViewerProvider';
 import { StatusProvider } from './statusProvider';
 import { ThemeFinder } from './themeFinder';
 import {
@@ -43,6 +46,8 @@ import {
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
+    IPlotViewer,
+    IPlotViewerProvider,
     IStatusProvider,
     IThemeFinder
 } from './types';
@@ -70,4 +75,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<IHistoryListener>(IHistoryListener, DotNetIntellisenseProvider);
     serviceManager.add<IHistoryListener>(IHistoryListener, JediIntellisenseProvider);
     serviceManager.add<IHistoryListener>(IHistoryListener, LinkProvider);
+    serviceManager.add<IHistoryListener>(IHistoryListener, ShowPlotListener);
+    serviceManager.addSingleton<IPlotViewerProvider>(IPlotViewerProvider, PlotViewerProvider);
+    serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
 }

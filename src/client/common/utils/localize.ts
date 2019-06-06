@@ -175,6 +175,7 @@ export namespace DataScience {
     export const previewHeader = localize('DataScience.previewHeader', '--- Begin preview of {0} ---');
     export const previewFooter = localize('DataScience.previewFooter', '--- End preview of {0} ---');
     export const previewStatusMessage = localize('DataScience.previewStatusMessage', 'Generating preview of {0}');
+    export const plotViewerTitle = localize('DataScience.plotViewerTitle', 'Plots');
 
 }
 

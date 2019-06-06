@@ -320,6 +320,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                         onCodeChange={this.codeChange}
                         monacoTheme={this.state.monacoTheme}
                         openLink={this.openLink}
+                        expandImage={noop}
                     />
                 </ErrorBoundary>
             </div>
@@ -395,6 +396,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return this.props.baseTheme;
     }
 
+    private showPlot = (imageHtml: string) => {
+        this.sendMessage(HistoryMessages.ShowPlot, imageHtml);
+    }
+
     private getContentProps = (baseTheme: string): IContentPanelProps => {
         return {
             editorOptions: this.state.editorOptions,
@@ -410,7 +415,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             monacoTheme: this.state.monacoTheme,
             onCodeCreated: this.readOnlyCodeCreated,
             onCodeChange: this.codeChange,
-            openLink: this.openLink
+            openLink: this.openLink,
+            expandImage: this.showPlot
         };
     }
     private getToolbarProps = (baseTheme: string): IToolbarPanelProps => {

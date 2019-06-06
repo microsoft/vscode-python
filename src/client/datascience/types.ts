@@ -355,3 +355,15 @@ export const IDataViewer = Symbol('IDataViewer');
 export interface IDataViewer extends IDisposable {
     showVariable(variable: IJupyterVariable) : Promise<void>;
 }
+
+export const IPlotViewerProvider = Symbol('IPlotViewerProvider');
+export interface IPlotViewerProvider {
+    showPlot(imageHtml: string) : Promise<void>;
+}
+export const IPlotViewer = Symbol('IPlotViewer');
+
+export interface IPlotViewer extends IDisposable {
+    closed: Event<IPlotViewer>;
+    addPlot(imageHtml: string) : Promise<void>;
+    show(): Promise<void>;
+}

@@ -47,6 +47,7 @@ interface ICellProps {
     onCodeChange(changes: monacoEditor.editor.IModelContentChange[], cellId: string, modelId: string): void;
     onCodeCreated(code: string, file: string, cellId: string, modelId: string): void;
     openLink(uri: monacoEditor.Uri): void;
+    expandImage(imageHtml: string): void;
 }
 
 export interface ICellViewModel {
@@ -306,14 +307,30 @@ export class Cell extends React.Component<ICellProps> {
             }
 
             try {
-                // Text/plain has to be massaged. It expects a continuous string
+                // Massage our data to make sure it displays well
                 if (output.data) {
                     const mimeBundle = output.data as nbformat.IMimeBundle;
                     let data: nbformat.MultilineString | JSONObject = mimeBundle[mimetype];
-                    if (mimetype === 'text/plain') {
-                        data = concatMultilineString(data as nbformat.MultilineString);
-                        renderWithScrollbars = true;
-                        isText = true;
+                    switch (mimetype) {
+                        case 'text/plain':
+                            // Data needs to be contiguous for us to display it.
+                            data = concatMultilineString(data as nbformat.MultilineString);
+                            renderWithScrollbars = true;
+                            isText = true;
+                            break;
+
+                        case 'image/svg+xml':
+                            // Jupyter adds a universal selector style that messes
+                            // up all of our other styles. Remove it.
+                            const html = concatMultilineString(data as nbformat.MultilineString);
+                            data = html.replace(/\<style[\s\S]*\<\/style\>/m, '');
+
+                            // Also change the width to 100% so it scales correctly.
+                            data = data.replace(/width=".*pt"/, 'width="100%"');
+                            break;
+
+                        default:
+                            break;
                     }
 
                     // Create a default set of properties
@@ -335,7 +352,7 @@ export class Cell extends React.Component<ICellProps> {
 
                     const className = isText ? 'cell-output-text' : 'cell-output-html';
 
-                    return <div id='stylewrapper' className={className} key={index} style={style}><Transform data={data} /></div>;
+                    return <div id='stylewrapper' role='group' onDoubleClick={this.doubleClick} onClick={this.click} className={className} key={index} style={style}><Transform data={data} /></div>;
                 }
             } catch (ex) {
                 window.console.log('Error in rendering');
@@ -345,6 +362,33 @@ export class Cell extends React.Component<ICellProps> {
         }
 
         return <div></div>;
+    }
+
+    private doubleClick = (event: React.MouseEvent<HTMLDivElement>) => {
+        // Extract the svg image from whatever was clicked
+        // tslint:disable-next-line: no-any
+        const svgChild = event.target as any;
+        if (svgChild && svgChild.ownerSVGElement) {
+            const svg = svgChild.ownerSVGElement as SVGElement;
+            this.props.expandImage(svg.outerHTML);
+        }
+    }
+
+    private click = (event: React.MouseEvent<HTMLDivElement>) => {
+        // If this is an anchor element, forward the click as Jupyter does.
+        let anchor = event.target as HTMLAnchorElement;
+        if (anchor && anchor.href) {
+            // Href may be redirected to an inner anchor
+            if (anchor.href.startsWith('vscode')) {
+                const inner = anchor.getElementsByTagName('a');
+                if (inner && inner.length > 0) {
+                    anchor = inner[0];
+                }
+            }
+            if (anchor && anchor.href && !anchor.href.startsWith('vscode')) {
+                this.props.openLink(monacoEditor.Uri.parse(anchor.href));
+            }
+        }
     }
 
     private convertToLinearRgb(color: number) : number {

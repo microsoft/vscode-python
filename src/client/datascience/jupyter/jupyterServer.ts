@@ -6,7 +6,6 @@ import '../../common/extensions';
 import { nbformat } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 import * as fs from 'fs-extra';
-import * as os from 'os';
 import { Observable } from 'rxjs/Observable';
 import { Subscriber } from 'rxjs/Subscriber';
 import * as uuid from 'uuid/v4';
@@ -23,7 +22,7 @@ import { noop } from '../../common/utils/misc';
 import { generateCells } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
 import { concatMultilineString } from '../common';
-import { Identifiers } from '../constants';
+import { CodeSnippits, Identifiers } from '../constants';
 import {
     CellState,
     ICell,
@@ -551,7 +550,7 @@ export class JupyterServerBase implements INotebookServer {
             // Force matplotlib to inline and save the default style. We'll use this later if we
             // get a request to update style
             await this.executeSilently(
-                `import matplotlib${os.EOL}%matplotlib inline${os.EOL}${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)`,
+                CodeSnippits.MatplotLibInit,
                 cancelToken
             );
         } catch (e) {
