@@ -199,12 +199,14 @@ async function updateBuildNumber(args) {
 }
 
 async function buildWebPack(webpackConfigName, args) {
-    const allowedWarnings = getAllowedWarningsForWebPack(webpackConfigName);
+    // Remember to perform a case insensitive search.
+    const allowedWarnings = getAllowedWarningsForWebPack(webpackConfigName).map(item => item.toLowerCase());
     const stdOut = await spawnAsync('npx', ['webpack', ...args, ...['--mode', 'production']], allowedWarnings);
     const stdOutLines = stdOut
         .split('\n')
         .map(item => item.trim())
         .filter(item => item.length > 0);
+    // Remember to perform a case insensitive search.
     const warnings = stdOutLines
         .filter(item => item.startsWith('WARNING in '))
         .filter(item => allowedWarnings.findIndex(allowedWarning => item.toLowerCase().startsWith(allowedWarning.toLowerCase())) == -1);
