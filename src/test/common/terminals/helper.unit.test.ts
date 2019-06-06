@@ -315,9 +315,10 @@ suite('Terminal Service helpers', () => {
                     test('Activation command for Shell must be empty for unknown os', async () => {
                         when(platformService.osType).thenReturn(OSType.Unknown);
 
-                        const cmd = await helper.getEnvironmentActivationShellCommands(resource, interpreter);
-
-                        expect(cmd).to.equal(undefined, 'Command must be undefined');
+                        for (const item of getNamesAndValues<TerminalShellType>(TerminalShellType)) {
+                            const cmd = await helper.getEnvironmentActivationShellCommands(resource, item.value, interpreter);
+                            expect(cmd).to.equal(undefined, 'Command must be undefined');
+                        }
                     });
                 });
                 [undefined, pythonInterpreter].forEach(interpreter => {
@@ -332,7 +333,7 @@ suite('Terminal Service helpers', () => {
                             when(bashActivationProvider.isShellSupported(shellToExpect)).thenReturn(false);
                             when(cmdActivationProvider.isShellSupported(shellToExpect)).thenReturn(false);
 
-                            const cmd = await helper.getEnvironmentActivationShellCommands(resource, interpreter);
+                            const cmd = await helper.getEnvironmentActivationShellCommands(resource, shellToExpect, interpreter);
 
                             expect(cmd).to.equal(undefined, 'Command must be undefined');
                             verify(pythonSettings.terminal).once();

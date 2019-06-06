@@ -52,12 +52,8 @@ export class TerminalHelper implements ITerminalHelper {
         this.sendTelemetry(resource, terminalShellType, EventName.PYTHON_INTERPRETER_ACTIVATION_FOR_TERMINAL, promise).ignoreErrors();
         return promise;
     }
-    public async getEnvironmentActivationShellCommands(resource: Resource, interpreter?: PythonInterpreter): Promise<string[] | undefined> {
-        if (this.platform.osType === OSType.Unknown){
-            return;
-        }
-        const shell = this.shellDetector.identifyTerminalShell();
-        if (!shell) {
+    public async getEnvironmentActivationShellCommands(resource: Resource, shell: TerminalShellType, interpreter?: PythonInterpreter): Promise<string[] | undefined> {
+        if (this.platform.osType === OSType.Unknown) {
             return;
         }
         const providers = [this.bashCShellFish, this.commandPromptAndPowerShell];
