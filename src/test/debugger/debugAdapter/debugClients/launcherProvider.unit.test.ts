@@ -55,7 +55,7 @@ suite('Debugger - Launcher Script Provider', () => {
         });
     });
 
-    suite('External Debug Launcher', () =>
+    suite('External Debug Launcher', () => {
         [
             {
                 testName: 'When path to ptvsd launcher does not contains spaces',
@@ -81,5 +81,5 @@ suite('Debugger - Launcher Script Provider', () => {
                 });
             });
         });
-});
+    });
 });
