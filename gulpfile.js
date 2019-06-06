@@ -235,6 +235,8 @@ function getAllowedWarningsForWebPack(buildConfig) {
             ];
         case 'extension':
             return [
+                'WARNING in ./node_modules/ws/lib/BufferUtil.js',
+                'WARNING in ./node_modules/ws/lib/buffer-util.js',
                 'WARNING in ./node_modules/ws/lib/Validation.js',
                 'WARNING in ./node_modules/ws/lib/validation.js'
             ];
