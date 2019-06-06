@@ -48,14 +48,6 @@ export class JupyterSession implements IJupyterSession {
         this.jupyterPasswordConnect = jupyterPasswordConnect;
     }
 
-    public static getSessionCookieString(pwSettings: IJupyterPasswordConnectInfo): string {
-        // Save our cookie connection info on the JupyterWebSocket static field
-        // This websocket is created by the jupyter lab services code and needs access to these values
-        JupyterWebSocket.cookieString = `_xsrf=${pwSettings.xsrfCookie}; ${pwSettings.sessionCookieName}=${pwSettings.sessionCookieValue}`;
-
-        return JupyterWebSocket.cookieString;
-    }
-
     public dispose() : Promise<void> {
         return this.shutdown();
     }
@@ -162,6 +154,14 @@ export class JupyterSession implements IJupyterSession {
         return this.connected;
     }
 
+    private getSessionCookieString(pwSettings: IJupyterPasswordConnectInfo): string {
+        // Save our cookie connection info on the JupyterWebSocket static field
+        // This websocket is created by the jupyter lab services code and needs access to these values
+        JupyterWebSocket.cookieString = `_xsrf=${pwSettings.xsrfCookie}; ${pwSettings.sessionCookieName}=${pwSettings.sessionCookieValue}`;
+
+        return JupyterWebSocket.cookieString;
+    }
+
     private async getServerConnectSettings(connInfo: IConnection): Promise<ServerConnection.ISettings> {
         let serverSettings: ServerConnection.ISettings;
 
@@ -171,7 +171,7 @@ export class JupyterSession implements IJupyterSession {
 
             if (pwSettings) {
                 // Get our cookie string (also sets statics that the JupyterWebSocket needs to pick up)
-                const cookieString = JupyterSession.getSessionCookieString(pwSettings);
+                const cookieString = this.getSessionCookieString(pwSettings);
                 const reqHeaders = { Cookie: cookieString, 'X-XSRFToken': pwSettings.xsrfCookie };
 
                 serverSettings = ServerConnection.makeSettings(

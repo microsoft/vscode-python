@@ -40,7 +40,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         }
 
         // Get password first
-        const userPassword = await this.getUserPassword();
+        let userPassword = await this.getUserPassword();
 
         if (userPassword) {
             // First get the xsrf cookie by hitting the initial login page
@@ -53,6 +53,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
                 sessionCookieValue = sessionResult.sessionCookieValue;
             }
         }
+        userPassword = undefined;
 
         // If we found everything return it all back if not, undefined as partial is useless
         if (xsrfCookie && sessionCookieName && sessionCookieValue) {
