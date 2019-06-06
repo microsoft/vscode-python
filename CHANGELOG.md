@@ -1,6 +1,15 @@
 # Changelog
 
-## 2019.5.3 (5 June 2019)
+## 2019.5.4 (6 June 2019)
+
+### Fixes
+
+1. Disable quoting of paths sent to the debugger as arguments.
+   ([#5861](https://github.com/microsoft/vscode-python/issues/5861))
+1. Fixes to activation of Conda environments.
+   ([#5929](https://github.com/microsoft/vscode-python/issues/5929))
+
+## 2019.5.18678 (5 June 2019)
 
 ### Fixes
 
