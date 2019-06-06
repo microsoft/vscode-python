@@ -32,6 +32,7 @@ const nativeDependencyChecker = require('node-has-native-dependencies');
 const flat = require('flat');
 const inlinesource = require('gulp-inline-source');
 const argv = require('yargs').argv;
+const os = require('os');
 
 const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
 
@@ -83,10 +84,10 @@ gulp.task('compile', (done) => {
     const tsProject = ts.createProject("tsconfig.json");
     tsProject.src()
         .pipe(tsProject())
-        .on("error", ()=> failed = true)
+        .on("error", () => failed = true)
         .js
         .pipe(gulp.dest("out"))
-        .on("finish",  ()=> failed ? done(new Error('TypeScript compilation errors')) : done());
+        .on("finish", () => failed ? done(new Error('TypeScript compilation errors')) : done());
 });
 
 gulp.task('precommit', (done) => run({ exitOnError: true, mode: 'staged' }, done));
@@ -203,7 +204,7 @@ async function buildWebPack(webpackConfigName, args) {
     const allowedWarnings = getAllowedWarningsForWebPack(webpackConfigName).map(item => item.toLowerCase());
     const stdOut = await spawnAsync('npx', ['webpack', ...args, ...['--mode', 'production']], allowedWarnings);
     const stdOutLines = stdOut
-        .split('\n')
+        .split(os.EOL)
         .map(item => item.trim())
         .filter(item => item.length > 0);
     // Remember to perform a case insensitive search.
@@ -233,7 +234,10 @@ function getAllowedWarningsForWebPack(buildConfig) {
                 'WARNING in ./node_modules/ws/lib/validation.js'
             ];
         case 'extension':
-            return [];
+            return [
+                'WARNING in ./node_modules/ws/lib/Validation.js',
+                'WARNING in ./node_modules/ws/lib/validation.js'
+            ];
         case 'debugAdapter':
             return ['WARNING in ./node_modules/vscode-uri/lib/index.js'];
         default:
