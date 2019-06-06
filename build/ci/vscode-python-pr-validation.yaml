@@ -24,6 +24,22 @@ variables:
 
 jobs:
 
+- job: Compile
+  variables:
+    Build: false
+  pool:
+    vmImage: "macos-10.13"
+  steps:
+    - template: templates/build.yml
+
+- job: Build
+  variables:
+    Build: true
+  pool:
+    vmImage: "macos-10.13"
+  steps:
+    - template: templates/build.yml
+
 - job: 'PR'
 
   strategy:
