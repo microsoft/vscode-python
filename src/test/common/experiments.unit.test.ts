@@ -17,6 +17,8 @@ import { CryptoUtils } from '../../client/common/crypto';
 import { downloadedExperimentStorageKey, ExperimentsManager, experimentStorageKey, isStorageValidKey } from '../../client/common/experiments';
 import { HttpClient } from '../../client/common/net/httpClient';
 import { PersistentStateFactory } from '../../client/common/persistentState';
+import { FileSystem } from '../../client/common/platform/fileSystem';
+import { IFileSystem } from '../../client/common/platform/types';
 import { ABExperiments, ICryptoUtils, IOutputChannel, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
 import { createDeferred, createDeferredFromPromise } from '../../client/common/utils/async';
 import { sleep } from '../common';
@@ -32,6 +34,7 @@ suite('A/B experiments', () => {
     let experimentStorage: TypeMoq.IMock<IPersistentState<any>>;
     let downloadedExperimentsStorage: TypeMoq.IMock<IPersistentState<any>>;
     let output: TypeMoq.IMock<IOutputChannel>;
+    let fs: IFileSystem;
     let expManager: ExperimentsManager;
     setup(() => {
         workspaceService = mock(WorkspaceService);
@@ -43,10 +46,11 @@ suite('A/B experiments', () => {
         experimentStorage = TypeMoq.Mock.ofType<IPersistentState<any>>();
         downloadedExperimentsStorage = TypeMoq.Mock.ofType<IPersistentState<any>>();
         output = TypeMoq.Mock.ofType<IOutputChannel>();
+        fs = mock(FileSystem);
         when(persistentStateFactory.createGlobalPersistentState(isStorageValidKey, false, anything())).thenReturn(isStorageValid.object);
         when(persistentStateFactory.createGlobalPersistentState(experimentStorageKey, undefined as any)).thenReturn(experimentStorage.object);
         when(persistentStateFactory.createGlobalPersistentState(downloadedExperimentStorageKey, undefined as any)).thenReturn(downloadedExperimentsStorage.object);
-        expManager = new ExperimentsManager(instance(persistentStateFactory), instance(workspaceService), instance(httpClient), instance(crypto), instance(appEnvironment), output.object);
+        expManager = new ExperimentsManager(instance(persistentStateFactory), instance(workspaceService), instance(httpClient), instance(crypto), instance(appEnvironment), output.object, instance(fs));
     });
 
     async function testInitialization(
@@ -78,6 +82,7 @@ suite('A/B experiments', () => {
     test('If the users have opted out of telemetry, then they are opted out of AB testing ', async () => {
         isStorageValid.setup(n => n.value).returns(() => false).verifiable(TypeMoq.Times.never());
 
+        // settings = { globalValue: false }
         await testInitialization({ globalValue: false });
     });
 
@@ -104,6 +109,7 @@ suite('A/B experiments', () => {
         isStorageValid.setup(n => n.updateValue(true)).returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.never());
         downloadedExperimentsStorage.setup(n => n.updateValue(anything())).returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.never());
 
+        // settings = {}, error = true
         await testInitialization({}, true);
 
         verify(httpClient.getJSON(anything(), false)).once();
@@ -118,6 +124,7 @@ suite('A/B experiments', () => {
             .setup(n => n.value)
             .returns(() => undefined)
             .verifiable(TypeMoq.Times.once());
+        when(fs.fileExists(anything())).thenResolve(false);
         experimentStorage.setup(n => n.value).returns(() => undefined)
             .verifiable(TypeMoq.Times.once());
         isStorageValid
@@ -131,6 +138,7 @@ suite('A/B experiments', () => {
         // First activation
         await expManager.activate();
 
+        verify(fs.fileExists(anything())).once();
         isStorageValid.verifyAll();
         experimentStorage.verifyAll();
         downloadedExperimentsStorage.verifyAll();
@@ -147,10 +155,7 @@ suite('A/B experiments', () => {
         downloadedExperimentsStorage.verifyAll();
     });
 
-    test('Ensure activate() updates experiment storage to contain the latest downloaded experiments', async () => {
-        const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-        const settings = {};
-
+    test('Ensure experiment storage is updated to contain the latest downloaded experiments', async () => {
         downloadedExperimentsStorage
             .setup(n => n.value)
             .returns(() => [{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }])
@@ -162,19 +167,41 @@ suite('A/B experiments', () => {
         experimentStorage
             .setup(n => n.updateValue([{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }]))
             .returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.once());
-        experimentStorage.setup(n => n.value).returns(() => undefined)
-            .verifiable(TypeMoq.Times.once());
-        isStorageValid
+
+        await expManager.updateExperimentStorage();
+
+        experimentStorage.verifyAll();
+        downloadedExperimentsStorage.verifyAll();
+    });
+
+    test('Experiment storage is updated using local experiments file if no downloaded experiments are available', async () => {
+        downloadedExperimentsStorage
             .setup(n => n.value)
-            .returns(() => true)
+            .returns(() => undefined)
             .verifiable(TypeMoq.Times.once());
-        when(workspaceService.getConfiguration('telemetry')).thenReturn(workspaceConfig.object);
-        workspaceConfig.setup(c => c.inspect<boolean>('enableTelemetry'))
-            .returns(() => settings as any);
+        downloadedExperimentsStorage
+            .setup(n => n.updateValue(undefined))
+            .returns(() => Promise.resolve(undefined))
+            .verifiable(TypeMoq.Times.never());
 
-        await expManager.activate();
+        // tslint:disable-next-line:no-multiline-string
+        const fileContent = `
+        // Yo! I am a JSON file with comments as well as trailing commas!
 
-        isStorageValid.verifyAll();
+        [{ "name": "experiment1", "salt": "salt", "min": 90, "max": 100, },]
+        `;
+
+        when(fs.fileExists(anything())).thenResolve(true);
+        when(fs.readFile(anything())).thenResolve(fileContent);
+
+        experimentStorage
+            .setup(n => n.updateValue([{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }]))
+            .returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.once());
+
+        await expManager.updateExperimentStorage();
+
+        verify(fs.fileExists(anything())).once();
+        verify(fs.readFile(anything())).once();
         experimentStorage.verifyAll();
         downloadedExperimentsStorage.verifyAll();
     });
@@ -271,7 +298,7 @@ suite('A/B experiments', () => {
                 expectedResult: true
             },
             {
-                testName: 'Returns false if hash modulo is less than max',
+                testName: 'Returns false if hash modulo is less than min',
                 hash: 967,
                 expectedResult: false
             },
@@ -289,37 +316,6 @@ suite('A/B experiments', () => {
                 when(crypto.createHash(anything(), 'hex', 'number')).thenReturn(testParams.hash);
 
                 expect(expManager.isUserInRange(79, 94, 'salt')).to.equal(testParams.expectedResult, 'Incorrectly identified');
-            });
-        });
-    });
-
-    const testsForisTelemetryDisabled =
-        [
-            {
-                testName: 'Returns true when globalValue is set to false',
-                settings: { globalValue: false },
-                expectedResult: true
-            },
-            {
-                testName: 'Returns false otherwise',
-                settings: {},
-                expectedResult: false
-            }
-        ];
-
-    suite('Function isTelemetryDisabled()', () => {
-        testsForisTelemetryDisabled.forEach(testParams => {
-            test(testParams.testName, async () => {
-                const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-                when(workspaceService.getConfiguration('telemetry')).thenReturn(workspaceConfig.object);
-                workspaceConfig.setup(c => c.inspect<string>('enableTelemetry'))
-                    .returns(() => testParams.settings as any)
-                    .verifiable(TypeMoq.Times.once());
-
-                expect(expManager.isTelemetryDisabled()).to.equal(testParams.expectedResult);
-
-                verify(workspaceService.getConfiguration('telemetry')).once();
-                workspaceConfig.verifyAll();
             });
         });
     });

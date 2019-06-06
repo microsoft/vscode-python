@@ -6,12 +6,15 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
+import { parse } from 'jsonc-parser';
+import * as path from 'path';
 import { IHttpClient } from '../activation/types';
-import { sendTelemetryEvent } from '../telemetry';
+import { isTelemetryDisabled, sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { IApplicationEnvironment, IWorkspaceService } from './application/types';
-import { STANDARD_OUTPUT_CHANNEL } from './constants';
+import { EXTENSION_ROOT_DIR, STANDARD_OUTPUT_CHANNEL } from './constants';
 import { traceDecorators, traceError } from './logger';
+import { IFileSystem } from './platform/types';
 import { ABExperiments, ICryptoUtils, IExperimentsManager, IOutputChannel, IPersistentState, IPersistentStateFactory } from './types';
 import { swallowExceptions } from './utils/decorators';
 import { Experiments } from './utils/localize';
@@ -20,6 +23,7 @@ const EXPIRY_DURATION_MS = 30 * 60 * 1000;
 export const isStorageValidKey = 'IS_EXPERIMENTS_STORAGE_VALID_KEY';
 export const experimentStorageKey = 'EXPERIMENT_STORAGE_KEY';
 export const downloadedExperimentStorageKey = 'DOWNLOADED_EXPERIMENTS_STORAGE_KEY';
+const configFile = path.join(EXTENSION_ROOT_DIR, 'experiments.json');
 const configUri = 'https://raw.githubusercontent.com/karrtikr/check/master/environments.json';
 
 @injectable()
@@ -50,7 +54,8 @@ export class ExperimentsManager implements IExperimentsManager {
         @inject(IHttpClient) private readonly httpClient: IHttpClient,
         @inject(ICryptoUtils) private readonly crypto: ICryptoUtils,
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
-        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel
+        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel,
+        @inject(IFileSystem) private readonly fs: IFileSystem
     ) {
         this.isStorageValid = this.persistentStateFactory.createGlobalPersistentState<boolean>(isStorageValidKey, false, EXPIRY_DURATION_MS);
         this.experimentStorage = this.persistentStateFactory.createGlobalPersistentState<ABExperiments | undefined>(experimentStorageKey, undefined);
@@ -63,18 +68,14 @@ export class ExperimentsManager implements IExperimentsManager {
             return;
         }
         this.activatedOnce = true;
-        // Update experiment storage to contain the latest downloaded experiments
-        if (this.downloadedExperimentsStorage.value) {
-            await this.experimentStorage.updateValue(this.downloadedExperimentsStorage.value);
-            await this.downloadedExperimentsStorage.updateValue(undefined);
-        }
+        await this.updateExperimentStorage();
         this.logExperimentGroups();
         this.initializeInBackground().ignoreErrors();
     }
 
     @traceDecorators.error('Failed to initialize experiments')
     public async initializeInBackground() {
-        if (this.isTelemetryDisabled() || this.isStorageValid.value) {
+        if (isTelemetryDisabled(this.workspaceService) || this.isStorageValid.value) {
             return;
         }
         const downloadedExperiments = await this.httpClient.getJSON<ABExperiments>(configUri, false);
@@ -106,11 +107,14 @@ export class ExperimentsManager implements IExperimentsManager {
     }
 
     /**
-     * Checks if the telemetry is disabled in user settings
+     * Checks if user falls between the range of the experiment
+     * @param min The lower limit
+     * @param max The upper limit
+     * @param salt The experiment salt value
      */
-    public isTelemetryDisabled(): boolean {
-        const settings = this.workspaceService.getConfiguration('telemetry').inspect<boolean>('enableTelemetry')!;
-        return settings.globalValue === false ? true : false;
+    public isUserInRange(min: number, max: number, salt: string) {
+        const hash = this.crypto.createHash(`${this.appEnvironment.machineId}+${salt}`, 'hex', 'number');
+        return hash % 100 >= min && hash % 100 < max;
     }
 
     @traceDecorators.error('Failed to log experiment groups')
@@ -125,13 +129,26 @@ export class ExperimentsManager implements IExperimentsManager {
     }
 
     /**
-     * Checks if user falls between the range of the experiment
-     * @param min The lower limit
-     * @param max The upper limit
-     * @param salt The experiment salt value
+     * Updates experiment storage using local data if available
      */
-    public isUserInRange(min: number, max: number, salt: string) {
-        const hash = this.crypto.createHash(`${this.appEnvironment.machineId}+${salt}`, 'hex', 'number');
-        return hash % 100 >= min && hash % 100 < max;
+    @swallowExceptions('Failed to update experiment storage')
+    public async updateExperimentStorage(): Promise<void> {
+        // Step 1. Update experiment storage using downloaded experiments in the last session if any
+        if (Array.isArray(this.downloadedExperimentsStorage.value)) {
+            await this.experimentStorage.updateValue(this.downloadedExperimentsStorage.value);
+            await this.downloadedExperimentsStorage.updateValue(undefined);
+            return;
+        }
+
+        // Step 2. Update experiment storage using local experiments file if available
+        if (await this.fs.fileExists(configFile)) {
+            const content = await this.fs.readFile(configFile);
+            try {
+                const experiments = parse(content, [], { allowTrailingComma: true, disallowComments: false });
+                await this.experimentStorage.updateValue(experiments);
+            } catch (ex) {
+                traceError('Failed to parse experiments configuration file to update storage', ex);
+            }
+        }
     }
 }
