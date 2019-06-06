@@ -241,7 +241,9 @@ suite('DataScience notebook tests', () => {
             // We have a connection string here, so try to connect jupyterExecution to the notebook server
             const server = await jupyterExecution.connectToNotebookServer({ uri, useDefaultConfig: true, purpose: '' });
             if (!server) {
-                assert.fail('Failed to connect to remote server');
+                assert.fail('Failed to connect to remote password server');
+            } else {
+                await verifySimple(server, `a=1${os.EOL}a`, 1);
             }
             // Have to dispose here otherwise the process may exit before hand and mess up cleanup.
             await server!.dispose();
@@ -272,7 +274,10 @@ suite('DataScience notebook tests', () => {
             const server = await jupyterExecution.connectToNotebookServer({ uri, useDefaultConfig: true, purpose: '' });
             if (!server) {
                 assert.fail('Failed to connect to remote server');
+            } else {
+                await verifySimple(server, `a=1${os.EOL}a`, 1);
             }
+
             // Have to dispose here otherwise the process may exit before hand and mess up cleanup.
             await server!.dispose();
         }

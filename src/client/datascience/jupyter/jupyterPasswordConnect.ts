@@ -12,20 +12,17 @@ import { Telemetry } from './../constants';
 
 @injectable()
 export class JupyterPasswordConnect implements IJupyterPasswordConnect {
-    private fetchImpl: (url: nodeFetch.RequestInfo, init?: nodeFetch.RequestInit) => Promise<nodeFetch.Response>;
 
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell
     ) {
-        // By default, use nodeFetch as our fetch function. Test can override this via arg on getPasswordConnectionInfo
-        this.fetchImpl = nodeFetch.default;
     }
 
     @captureTelemetry(Telemetry.GetPasswordAttempt)
-    public async getPasswordConnectionInfo(url: string, fetchOverride?: (url: nodeFetch.RequestInfo, init?: nodeFetch.RequestInit) => Promise<nodeFetch.Response>): Promise<IJupyterPasswordConnectInfo | undefined> {
+    public async getPasswordConnectionInfo(url: string, fetchFunction?: (url: nodeFetch.RequestInfo, init?: nodeFetch.RequestInit) => Promise<nodeFetch.Response>): Promise<IJupyterPasswordConnectInfo | undefined> {
         // For testing allow for our fetch function to be overridden
-        if (fetchOverride) {
-            this.fetchImpl = fetchOverride;
+        if (!fetchFunction) {
+            fetchFunction = nodeFetch.default;
         }
 
         let xsrfCookie: string | undefined;
@@ -47,13 +44,13 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
 
         if (userPassword) {
             // First get the xsrf cookie by hitting the initial login page
-            xsrfCookie = await this.getXSRFToken(url);
+            xsrfCookie = await this.getXSRFToken(url, fetchFunction);
 
             // Then get the session cookie by hitting that same page with the xsrftoken and the password
             if (xsrfCookie) {
-                const sessionResult = await this.getSessionCookie(url, xsrfCookie, userPassword);
-                sessionCookieName = sessionResult[0];
-                sessionCookieValue = sessionResult[1];
+                const sessionResult = await this.getSessionCookie(url, xsrfCookie, userPassword, fetchFunction);
+                sessionCookieName = sessionResult.sessionCookieName;
+                sessionCookieValue = sessionResult.sessionCookieValue;
             }
         }
 
@@ -76,10 +73,10 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         });
     }
 
-    private async getXSRFToken(url: string): Promise<string | undefined> {
+    private async getXSRFToken(url: string, fetchFunction: (url: nodeFetch.RequestInfo, init?: nodeFetch.RequestInit) => Promise<nodeFetch.Response>): Promise<string | undefined> {
         let xsrfCookie: string | undefined;
 
-        const response = await this.fetchImpl(`${url}login?`, {
+        const response = await fetchFunction(`${url}login?`, {
             method: 'get',
             redirect: 'manual',
             headers: { Connection: 'keep-alive' }
@@ -99,7 +96,10 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
     // This workflow can be seen by running fiddler and hitting the login page with a browser
     // First you need a get at the login page to get the xsrf token, then you send back that token along with the password in a post
     // That will return back the session cookie. This session cookie then needs to be added to our requests and websockets for @jupyterlab/services
-    private async getSessionCookie(url: string, xsrfCookie: string, password: string): Promise<[string | undefined, string | undefined]> {
+    private async getSessionCookie(url: string,
+        xsrfCookie: string,
+        password: string,
+        fetchFunction: (url: nodeFetch.RequestInfo, init?: nodeFetch.RequestInit) => Promise<nodeFetch.Response>): Promise<{sessionCookieName: string | undefined; sessionCookieValue: string | undefined}> {
         let sessionCookieName: string | undefined;
         let sessionCookieValue: string | undefined;
         // Create the form params that we need
@@ -107,7 +107,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         postParams.append('_xsrf', xsrfCookie);
         postParams.append('password', password);
 
-        const response = await this.fetchImpl(`${url}login?`, {
+        const response = await fetchFunction(`${url}login?`, {
             method: 'post',
             headers: { Cookie: `_xsrf=${xsrfCookie}`, Connection: 'keep-alive' },
             body: postParams,
@@ -125,7 +125,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
             }
         }
 
-        return [sessionCookieName, sessionCookieValue];
+        return {sessionCookieName, sessionCookieValue};
     }
 
     private getCookies(response: nodeFetch.Response): Map<string, string> {
