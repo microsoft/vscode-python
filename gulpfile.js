@@ -207,7 +207,7 @@ async function buildWebPack(webpackConfigName, args) {
         .filter(item => item.length > 0);
     const warnings = stdOutLines
         .filter(item => item.startsWith('WARNING in '))
-        .filter(item => allowedWarnings.findIndex(allowedWarning => item.startsWith(allowedWarning)) == -1);
+        .filter(item => allowedWarnings.findIndex(allowedWarning => item.toLowerCase().startsWith(allowedWarning.toLowerCase())) == -1);
     const errors = stdOutLines.some(item => item.startsWith('ERROR in'));
     if (errors) {
         throw new Error(`Errors in ${webpackConfigName}, \n${warnings.join(', ')}\n\n${stdOut}`);
@@ -226,7 +226,9 @@ function getAllowedWarningsForWebPack(buildConfig) {
                 'WARNING in ./node_modules/vsls/vscode.js',
                 'WARNING in ./node_modules/encoding/lib/iconv-loader.js',
                 'WARNING in ./node_modules/ws/lib/BufferUtil.js',
-                'WARNING in ./node_modules/ws/lib/Validation.js'
+                'WARNING in ./node_modules/ws/lib/buffer-util.js',
+                'WARNING in ./node_modules/ws/lib/Validation.js',
+                'WARNING in ./node_modules/ws/lib/validation.js'
             ];
         case 'extension':
             return [];
