@@ -21,7 +21,7 @@ import { traceInfo } from '../../common/logger';
 import { sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { IConnection, IJupyterKernelSpec, IJupyterPasswordConnect, IJupyterSession } from '../types';
+import { IConnection, IJupyterKernelSpec, IJupyterPasswordConnect, IJupyterPasswordConnectInfo, IJupyterSession } from '../types';
 import { JupyterKernelPromiseFailedError } from './jupyterKernelPromiseFailedError';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 import { JupyterWebSocket } from './jupyterWebSocket';
@@ -46,6 +46,14 @@ export class JupyterSession implements IJupyterSession {
         this.connInfo = connInfo;
         this.kernelSpec = kernelSpec;
         this.jupyterPasswordConnect = jupyterPasswordConnect;
+    }
+
+    public static getSessionCookieString(pwSettings: IJupyterPasswordConnectInfo): string {
+        // Save our cookie connection info on the JupyterWebSocket static field
+        // This websocket is created by the jupyter lab services code and needs access to these values
+        JupyterWebSocket.cookieString = `_xsrf=${pwSettings.xsrfCookie}; ${pwSettings.sessionCookieName}=${pwSettings.sessionCookieValue}`;
+
+        return JupyterWebSocket.cookieString;
     }
 
     public dispose() : Promise<void> {
@@ -162,13 +170,8 @@ export class JupyterSession implements IJupyterSession {
             const pwSettings = await this.jupyterPasswordConnect.getPasswordConnectionInfo(connInfo.baseUrl);
 
             if (pwSettings) {
-                // Save our cookie connection info on the JupyterWebSocket static fields
-                // This websocket is created by the jupyter lab services code and needs access to these values
-                JupyterWebSocket.xsrfCookie = pwSettings.xsrfCookie;
-                JupyterWebSocket.sessionName = pwSettings.sessionCookieName;
-                JupyterWebSocket.sessionValue = pwSettings.sessionCookieValue;
-
-                const cookieString = `_xsrf=${pwSettings.xsrfCookie}; ${pwSettings.sessionCookieName}=${pwSettings.sessionCookieValue}`;
+                // Get our cookie string (also sets statics that the JupyterWebSocket needs to pick up)
+                const cookieString = JupyterSession.getSessionCookieString(pwSettings);
                 const reqHeaders = { Cookie: cookieString, 'X-XSRFToken': pwSettings.xsrfCookie };
 
                 serverSettings = ServerConnection.makeSettings(
@@ -191,10 +194,8 @@ export class JupyterSession implements IJupyterSession {
                 throw new Error(localize.DataScience.passwordFailure());
             }
         } else {
-            // Reset the static values on a non-password connection
-            JupyterWebSocket.xsrfCookie = undefined;
-            JupyterWebSocket.sessionName = undefined;
-            JupyterWebSocket.sessionValue = undefined;
+            // Reset the static cookie value on a non-password connection
+            JupyterWebSocket.cookieString = undefined;
 
             serverSettings = ServerConnection.makeSettings(
                 {
