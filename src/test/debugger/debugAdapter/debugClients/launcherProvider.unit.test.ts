@@ -21,12 +21,12 @@ suite('Debugger - Launcher Script Provider', () => {
             {
                 testName: 'When path to ptvsd launcher does not contains spaces',
                 path: path.join('path', 'to', 'ptvsd_launcher'),
-                expectedPath: 'path/to/ptvsd_launcher'
+                expectedPath: path.join('path', 'to', 'ptvsd_launcher')
             },
             {
                 testName: 'When path to ptvsd launcher contains spaces',
                 path: path.join('path', 'to', 'ptvsd_launcher', 'with spaces'),
-                expectedPath: 'path/to/ptvsd_launcher/with spaces'
+                expectedPath: path.join('path', 'to', 'ptvsd_launcher', 'with spaces')
             }
         ];
 
