@@ -15,7 +15,7 @@ export class NoDebugLauncherScriptProvider implements IDebugLauncherScriptProvid
     constructor(@optional() private script: string = pathToScript) { }
     public getLauncherArgs(options: LocalDebugOptions): string[] {
         const customDebugger = options.customDebugger ? '--custom' : '--default';
-        return [this.script.fileToCommandArgument(), customDebugger, '--nodebug', '--client', '--host', options.host, '--port', options.port.toString()];
+        return [this.script, customDebugger, '--nodebug', '--client', '--host', options.host, '--port', options.port.toString()];
     }
 }
 
@@ -23,11 +23,18 @@ export class DebuggerLauncherScriptProvider implements IDebugLauncherScriptProvi
     constructor(@optional() private script: string = pathToScript) { }
     public getLauncherArgs(options: LocalDebugOptions): string[] {
         const customDebugger = options.customDebugger ? '--custom' : '--default';
-        return [this.script.fileToCommandArgument(), customDebugger, '--client', '--host', options.host, '--port', options.port.toString()];
+        return [this.script, customDebugger, '--client', '--host', options.host, '--port', options.port.toString()];
     }
 }
 
-export class RemoteDebuggerLauncherScriptProvider implements IRemoteDebugLauncherScriptProvider {
+/**
+ * This class is used to provide the launch scripts so external code can launch the debugger.
+ * As we're passing command arguments, we need to ensure the file paths are quoted.
+ * @export
+ * @class RemoteDebuggerExternalLauncherScriptProvider
+ * @implements {IRemoteDebugLauncherScriptProvider}
+ */
+export class RemoteDebuggerExternalLauncherScriptProvider implements IRemoteDebugLauncherScriptProvider {
     constructor(@optional() private script: string = pathToScript) { }
     public getLauncherArgs(options: RemoteDebugOptions): string[] {
         const waitArgs = options.waitUntilDebuggerAttaches ? ['--wait'] : [];
