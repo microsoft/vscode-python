@@ -5,7 +5,6 @@
 import { HexBase64Latin1Encoding } from 'crypto';
 import { Socket } from 'net';
 import { ConfigurationTarget, DiagnosticSeverity, Disposable, DocumentSymbolProvider, Event, Extension, ExtensionContext, OutputChannel, Uri, WorkspaceEdit } from 'vscode';
-import { IExtensionActivationService } from '../activation/types';
 import { CommandsWithoutArgs } from './application/commands';
 import { EnvironmentVariables } from './variables/types';
 export const IOutputChannel = Symbol('IOutputChannel');
@@ -432,6 +431,7 @@ export interface IAsyncDisposableRegistry extends IAsyncDisposable {
 */
 export type ABExperiments = { name: string; salt: string; min: number; max: number }[];
 export const IExperimentsManager = Symbol('IExperimentsManager');
-export interface IExperimentsManager extends IExtensionActivationService {
+export interface IExperimentsManager {
+    activate(): Promise<void>;
     inExperiment(experimentName: string): boolean | undefined;
 }
