@@ -11,10 +11,10 @@ import { getLocString } from './locReactSide';
 
 import './svgViewer.css';
 
-
 interface ISvgViewerProps {
     svg: string;
     baseTheme: string;
+    size: {width: string; height: string};
     prevButtonClicked?(): void;
     nextButtonClicked?(): void;
     exportButtonClicked?(): void;
@@ -60,7 +60,7 @@ class SvgViewerToolbar extends React.Component<IToolbarProps> {
                     </ImageButton> : null
                     }
             </div>
-        )
+        );
     }
 
     private pan = () => {
@@ -98,7 +98,7 @@ export class SvgViewer extends React.Component<ISvgViewerProps> {
                     customToolbar={this.renderToolbar}
                     customMiniature={this.renderMiniature}
                     detectWheel={true}>
-                    <svg width={'331.045312pt'} height={'574.678125pt'}>
+                    <svg width={this.props.size.width} height={this.props.size.height}>
                         <SvgLoader svgXML={this.props.svg}/>
                     </svg>
                 </UncontrolledReactSVGPanZoom>
@@ -132,4 +132,3 @@ export class SvgViewer extends React.Component<ISvgViewerProps> {
         );
     }
 }
-

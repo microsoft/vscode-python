@@ -20,10 +20,16 @@ export interface IMainPanelProps {
     testMode?: boolean;
 }
 
+interface ISize {
+    width: string;
+    height: string;
+}
+
 //tslint:disable:no-any
 interface IMainPanelState {
     images: string[];
     thumbnails: string[];
+    sizes: ISize[];
     currentImage: number;
 }
 
@@ -41,8 +47,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             [TestSvg, TestSvg, TestSvg] :
             [];
         const thumbnails = images.map(this.generateThumbnail);
+        const sizes = images.map(this.extractSize);
 
-        this.state = {images, thumbnails, currentImage: images.length > 0 ? 0 : -1}
+        this.state = {images, thumbnails, sizes, currentImage: images.length > 0 ? 0 : -1};
     }
 
     public componentWillMount() {
@@ -87,6 +94,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private addPlot(payload: any) {
         this.setState({
             images: [...this.state.images, payload as string],
+            thumbnails: [...this.state.thumbnails, this.generateThumbnail(payload)],
+            sizes: [...this.state.sizes, this.extractSize(payload)],
             currentImage: this.state.currentImage + 1
         });
     }
@@ -100,11 +109,13 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private renderPlot() {
         // Render current plot
         const currentPlot = this.state.currentImage >= 0 ? this.state.images[this.state.currentImage] : undefined;
-        if (currentPlot) {
+        const currentSize = this.state.currentImage >= 0 ? this.state.sizes[this.state.currentImage] : undefined;
+        if (currentPlot && currentSize) {
             return (
                 <SvgViewer
                     baseTheme={this.props.baseTheme}
                     svg={currentPlot}
+                    size={currentSize}
                     exportButtonClicked={this.exportCurrent}
                     prevButtonClicked={this.state.currentImage > 0 ? this.prevClicked : undefined}
                     nextButtonClicked={this.state.currentImage < this.state.images.length - 1 ? this.nextClicked : undefined}
@@ -116,10 +127,28 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private generateThumbnail(image: string): string {
-        // A 'thumbnail' is really just an svg image with 
+        // A 'thumbnail' is really just an svg image with
         // the width and height forced to 100%
         const h = image.replace(HeightRegex, '$1100%\"');
         return h.replace(WidthRegex, '$1100%\"');
+    }
+
+    private extractSize(image: string): ISize {
+        const heightMatch = HeightRegex.exec(image);
+        let height = '100px';
+        if (heightMatch && heightMatch.length > 2) {
+            height = heightMatch[2];
+        }
+        const widthMatch = WidthRegex.exec(image);
+        let width = '100px';
+        if (widthMatch && widthMatch.length > 2) {
+            width = widthMatch[2];
+        }
+
+        return {
+            height,
+            width
+        };
     }
 
     private imageClicked = (index: number) => {

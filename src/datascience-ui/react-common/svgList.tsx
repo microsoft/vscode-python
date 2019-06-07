@@ -12,7 +12,6 @@ interface ISvgListProps {
     imageClicked(index: number): void;
 }
 
-
 export class SvgList extends React.Component<ISvgListProps> {
     constructor(props: ISvgListProps) {
         super(props);
