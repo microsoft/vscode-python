@@ -2,17 +2,18 @@
 // Licensed under the MIT License.
 'use strict';
 import * as React from 'react';
-import { ReactSVGPanZoom } from 'react-svg-pan-zoom';
-import { AutoSizer } from 'react-virtualized';
 
 import { IPlotViewerMapping, PlotViewerMessages } from '../../client/datascience/plotting/types';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
-//import { ReactFromHtml } from '../react-common/reactFromHtml';
 import { StyleInjector } from '../react-common/styleInjector';
+import { SvgList } from '../react-common/svgList';
+import { SvgViewer } from '../react-common/svgViewer';
 
 // Our css has to come after in order to override body styles
 import './mainPanel.css';
+import { TestSvg } from './testSvg';
 
+//import { ReactFromHtml } from '../react-common/reactFromHtml';
 export interface IMainPanelProps {
     skipDefault?: boolean;
     baseTheme: string;
@@ -22,7 +23,12 @@ export interface IMainPanelProps {
 //tslint:disable:no-any
 interface IMainPanelState {
     images: string[];
+    thumbnails: string[];
+    currentImage: number;
 }
+
+const HeightRegex = /(\<svg.*height=\")(.*?)\"/;
+const WidthRegex = /(\<svg.*width=\")(.*?)\"/;
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
     private container: React.Ref<HTMLDivElement> = React.createRef<HTMLDivElement>();
@@ -31,7 +37,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
         super(props);
-        this.state = {images: []};
+        const images = !props.skipDefault ?
+            [TestSvg, TestSvg, TestSvg] :
+            [];
+        const thumbnails = images.map(this.generateThumbnail);
+
+        this.state = {images, thumbnails, currentImage: images.length > 0 ? 0 : -1}
     }
 
     public componentWillMount() {
@@ -53,7 +64,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 <StyleInjector
                     expectingDark={this.props.baseTheme !== 'vscode-light'}
                     postOffice={this.postOffice} />
-                {this.renderPlots()}
+                {this.renderThumbnails()}
+                {this.renderPlot()}
             </div>
         );
     }
@@ -74,31 +86,55 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private addPlot(payload: any) {
         this.setState({
-            images: [...this.state.images, payload as string]
+            images: [...this.state.images, payload as string],
+            currentImage: this.state.currentImage + 1
         });
     }
 
-    private renderPlots() {
-        // Just render last plot for now
-        const lastPlot = this.state.images.length > 0 ? this.state.images[this.state.images.length - 1] : undefined;
-        if (lastPlot) {
+    private renderThumbnails() {
+        return (
+            <SvgList images={this.state.thumbnails} currentImage={this.state.currentImage} imageClicked={this.imageClicked}/>
+        );
+    }
+
+    private renderPlot() {
+        // Render current plot
+        const currentPlot = this.state.currentImage >= 0 ? this.state.images[this.state.currentImage] : undefined;
+        if (currentPlot) {
             return (
-                <AutoSizer>
-                {({ height, width }) => (
-                    width === 0 || height === 0 ? null :
-                    <ReactSVGPanZoom width={width} height={height}>
-                        <svg viewBox="0 0 16 16">
-                            <title>PopIn_16x</title><g id="canvas">
-                                <path className="icon-canvas-transparent" d="M16,16H0V0H16Z"/></g><g id="outline" >
-                                    <path className="icon-vs-out" d="M16,0V15H13V5.121L7.121,11H12v3H2V4H5V8.879L10.879,3H1V0Z" /></g><g id="iconBg">
-                                        <path className="icon-vs-bg" d="M15,1V14H14V2H2V1ZM11.146,4.146,4,11.293V5H3v8h8V12H4.707l7.147-7.146Z"/></g>
-                                        </svg>
-                    </ReactSVGPanZoom>
-                )}
-                </AutoSizer>
+                <SvgViewer
+                    baseTheme={this.props.baseTheme}
+                    svg={currentPlot}
+                    exportButtonClicked={this.exportCurrent}
+                    prevButtonClicked={this.state.currentImage > 0 ? this.prevClicked : undefined}
+                    nextButtonClicked={this.state.currentImage < this.state.images.length - 1 ? this.nextClicked : undefined}
+                />
             );
         }
 
         return null;
+    }
+
+    private generateThumbnail(image: string): string {
+        // A 'thumbnail' is really just an svg image with 
+        // the width and height forced to 100%
+        const h = image.replace(HeightRegex, '$1100%\"');
+        return h.replace(WidthRegex, '$1100%\"');
+    }
+
+    private imageClicked = (index: number) => {
+        this.setState({currentImage: index});
+    }
+
+    private exportCurrent = () => {
+        // Do nothing for now.
+    }
+
+    private prevClicked = () => {
+        this.setState({currentImage: this.state.currentImage - 1});
+    }
+
+    private nextClicked = () => {
+        this.setState({currentImage: this.state.currentImage + 1});
     }
 }

@@ -15,18 +15,19 @@ import { concatMultilineString, formatStreamText } from '../../client/datascienc
 import { Identifiers } from '../../client/datascience/constants';
 import { CellState, ICell } from '../../client/datascience/types';
 import { noop } from '../../test/core';
+import { Image, ImageName } from '../react-common/image';
+import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
 import { getSettings } from '../react-common/settingsReactSide';
-import './cell.css';
-import { CellButton } from './cellButton';
 import { Code } from './code';
 import { CollapseButton } from './collapseButton';
 import { ExecutionCount } from './executionCount';
-import { Image, ImageName } from './image';
 import { InformationMessages } from './informationMessages';
 import { InputHistory } from './inputHistory';
 import { MenuBar } from './menuBar';
 import { displayOrder, richestMimetype, transforms } from './transforms';
+
+import './cell.css';
 
 interface ICellProps {
     cellVM: ICellViewModel;
@@ -137,12 +138,12 @@ export class Cell extends React.Component<ICellProps> {
             return (
                 <div className={cellWrapperClass} role='row' onClick={this.onMouseClick}>
                     <MenuBar baseTheme={this.props.baseTheme}>
-                        <CellButton baseTheme={this.props.baseTheme} onClick={this.props.delete} tooltip={this.getDeleteString()} hidden={this.props.cellVM.editable}>
-                            <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.Cancel} />
-                        </CellButton>
-                        <CellButton baseTheme={this.props.baseTheme} onClick={this.props.gotoCode} tooltip={this.getGoToCodeString()} hidden={hasNoSource}>
-                            <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.GoToSourceCode} />
-                        </CellButton>
+                        <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.delete} tooltip={this.getDeleteString()} hidden={this.props.cellVM.editable}>
+                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Cancel} />
+                        </ImageButton>
+                        <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.gotoCode} tooltip={this.getGoToCodeString()} hidden={hasNoSource}>
+                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.GoToSourceCode} />
+                        </ImageButton>
                     </MenuBar>
                     <div className={cellOuterClass}>
                         {this.renderControls()}
