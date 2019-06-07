@@ -98,6 +98,7 @@ export class SvgViewer extends React.Component<ISvgViewerProps> {
                     customToolbar={this.renderToolbar}
                     customMiniature={this.renderMiniature}
                     SVGBackground={'transparent'}
+                    background={'var(--override-widget-background, var(--vscode-notifications-background))'}
                     detectWheel={true}>
                     <svg width={this.props.size.width} height={this.props.size.height}>
                         <SvgLoader svgXML={this.props.svg}/>
