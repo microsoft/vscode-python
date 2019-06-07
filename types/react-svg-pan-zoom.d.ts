@@ -65,6 +65,12 @@ export interface OptionalProps {
 	// value of the viewer (current point of view)
 	value: Value | null;
 
+	// default value of the viewer
+	defaultValue?: Value;
+
+	// default tool to start with
+	defaultTool?: Tool;
+
 	// CSS style of the Viewer
 	style: object;
 

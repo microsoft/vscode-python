@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as React from 'react';
-import { POSITION_TOP, Tool, UncontrolledReactSVGPanZoom, Value } from 'react-svg-pan-zoom';
+import { POSITION_TOP, Tool, ReactSVGPanZoom, Value } from 'react-svg-pan-zoom';
 import { SvgLoader } from 'react-svgmt';
 import { AutoSizer } from 'react-virtualized';
 import { Image, ImageName } from './image';
@@ -13,11 +13,19 @@ import './svgViewer.css';
 
 interface ISvgViewerProps {
     svg: string;
+    id: string; // Unique identified for this svg (in case they are the same)
     baseTheme: string;
     size: {width: string; height: string};
+    defaultValue: Value | undefined;
+    changeValue(value: Value): void;
     prevButtonClicked?(): void;
     nextButtonClicked?(): void;
     exportButtonClicked?(): void;
+}
+
+interface ISvgViewerState {
+    value: Value;
+    tool: Tool;
 }
 
 interface IToolbarProps {
@@ -76,10 +84,20 @@ class SvgViewerToolbar extends React.Component<IToolbarProps> {
     }
 }
 
-export class SvgViewer extends React.Component<ISvgViewerProps> {
-    private svgPanZoomRef : React.RefObject<UncontrolledReactSVGPanZoom> = React.createRef<UncontrolledReactSVGPanZoom>();
+export class SvgViewer extends React.Component<ISvgViewerProps, ISvgViewerState> {
+    private svgPanZoomRef : React.RefObject<ReactSVGPanZoom> = React.createRef<ReactSVGPanZoom>();
     constructor(props: ISvgViewerProps) {
         super(props);
+        this.state = { value: props.defaultValue ? props.defaultValue : {} as Value, tool: 'pan'};
+    }
+
+    public componentDidUpdate(prevProps: ISvgViewerProps) {
+        // May need to update state if props changed
+        if (prevProps.defaultValue !== this.props.defaultValue || this.props.id !== prevProps.id) {
+            this.setState( {
+                value: this.props.defaultValue ? this.props.defaultValue : {} as Value
+            })
+        }
     }
 
     public render() {
@@ -87,12 +105,14 @@ export class SvgViewer extends React.Component<ISvgViewerProps> {
             <AutoSizer>
             {({ height, width }) => (
                 width === 0 || height === 0 ? null :
-                <UncontrolledReactSVGPanZoom
+                <ReactSVGPanZoom
                     ref={this.svgPanZoomRef}
                     width={width}
                     height={height}
                     toolbarProps={{position: POSITION_TOP}}
                     detectAutoPan={true}
+                    tool={this.state.tool}
+                    value={this.state.value}
                     onChangeTool={this.changeTool}
                     onChangeValue={this.changeValue}
                     customToolbar={this.renderToolbar}
@@ -103,26 +123,22 @@ export class SvgViewer extends React.Component<ISvgViewerProps> {
                     <svg width={this.props.size.width} height={this.props.size.height}>
                         <SvgLoader svgXML={this.props.svg}/>
                     </svg>
-                </UncontrolledReactSVGPanZoom>
+                </ReactSVGPanZoom>
             )}
             </AutoSizer>
         );
     }
 
-    private changeTool = (_tool?: Tool) => {
-        // Do nothing
+    private changeTool = (tool: Tool) => {
+        this.setState({tool})
     }
 
-    private changeValue = (_value?: Value) => {
-        // Do nothing
+    private changeValue = (value: Value) => {
+        this.setState({value});
+        this.props.changeValue(value);
     }
 
     private renderToolbar = (toolbarProps: IToolbarProps) => {
-        // If toolbar is still saying none, change it
-        if (toolbarProps.tool === 'none') {
-            toolbarProps.onChangeTool('pan');
-        }
-
         return (
             <SvgViewerToolbar baseTheme={this.props.baseTheme} tool={toolbarProps.tool} value={toolbarProps.value} onChangeTool={toolbarProps.onChangeTool} onChangeValue={toolbarProps.onChangeValue} />
         );

@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 import * as React from 'react';
+import * as uuid from 'uuid/v4';
+import { Value } from 'react-svg-pan-zoom';
 
 import { IPlotViewerMapping, PlotViewerMessages } from '../../client/datascience/plotting/types';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
@@ -30,6 +32,8 @@ interface IMainPanelState {
     images: string[];
     thumbnails: string[];
     sizes: ISize[];
+    values: (Value | undefined)[];
+    ids: string[];
     currentImage: number;
 }
 
@@ -39,6 +43,7 @@ const WidthRegex = /(\<svg.*width=\")(.*?)\"/;
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
     private container: React.Ref<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private postOffice: PostOffice = new PostOffice();
+    private currentValue: Value | undefined;
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
@@ -48,8 +53,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             [];
         const thumbnails = images.map(this.generateThumbnail);
         const sizes = images.map(this.extractSize);
+        const values = images.map(_i => undefined);
+        const ids = images.map(_i => uuid());
 
-        this.state = {images, thumbnails, sizes, currentImage: images.length > 0 ? 0 : -1};
+        this.state = {images, thumbnails, sizes, values, ids, currentImage: images.length > 0 ? 0 : -1};
     }
 
     public componentWillMount() {
@@ -96,6 +103,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             images: [...this.state.images, payload as string],
             thumbnails: [...this.state.thumbnails, this.generateThumbnail(payload)],
             sizes: [...this.state.sizes, this.extractSize(payload)],
+            values: [...this.state.values, undefined],
+            ids: [...this.state.ids, uuid()],
             currentImage: this.state.currentImage + 1
         });
     }
@@ -110,12 +119,17 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         // Render current plot
         const currentPlot = this.state.currentImage >= 0 ? this.state.images[this.state.currentImage] : undefined;
         const currentSize = this.state.currentImage >= 0 ? this.state.sizes[this.state.currentImage] : undefined;
-        if (currentPlot && currentSize) {
+        const currentId = this.state.currentImage >= 0 ? this.state.ids[this.state.currentImage] : undefined;
+        const value = this.state.currentImage >= 0 ? this.state.values[this.state.currentImage] : undefined;
+        if (currentPlot && currentSize && currentId) {
             return (
                 <SvgViewer
                     baseTheme={this.props.baseTheme}
                     svg={currentPlot}
+                    id={currentId}
                     size={currentSize}
+                    defaultValue={value}
+                    changeValue={this.changeCurrentValue}
                     exportButtonClicked={this.exportCurrent}
                     prevButtonClicked={this.state.currentImage > 0 ? this.prevClicked : undefined}
                     nextButtonClicked={this.state.currentImage < this.state.images.length - 1 ? this.nextClicked : undefined}
@@ -131,6 +145,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         // the width and height forced to 100%
         const h = image.replace(HeightRegex, '$1100%\"');
         return h.replace(WidthRegex, '$1100%\"');
+    }
+
+    private changeCurrentValue = (value: Value) => {
+        this.currentValue = {...value};
     }
 
     private extractSize(image: string): ISize {
@@ -151,8 +169,23 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         };
     }
 
+    private changeCurrentImage(index: number) {
+        // Update our state for our current image and our current value
+        if (index !== this.state.currentImage) {
+            const newValues = [...this.state.values];
+            newValues[this.state.currentImage] = this.currentValue;
+            this.setState({
+                currentImage: index,
+                values: newValues
+            });
+
+            // Reassign the current value to the new index so we track it.
+            this.currentValue = newValues[index];
+        }
+    }
+
     private imageClicked = (index: number) => {
-        this.setState({currentImage: index});
+        this.changeCurrentImage(index);
     }
 
     private exportCurrent = () => {
@@ -160,10 +193,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private prevClicked = () => {
-        this.setState({currentImage: this.state.currentImage - 1});
+        this.changeCurrentImage(this.state.currentImage - 1);
     }
 
     private nextClicked = () => {
-        this.setState({currentImage: this.state.currentImage + 1});
+        this.changeCurrentImage(this.state.currentImage + 1);
     }
 }
