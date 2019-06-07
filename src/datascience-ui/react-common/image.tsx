@@ -26,7 +26,8 @@ export enum ImageName {
     Zoom,
     ZoomOut,
     Next,
-    Prev
+    Prev,
+    Copy
 }
 
 // All of the images must be 'require' so that webpack doesn't rewrite the import as requiring a .default.
@@ -119,6 +120,11 @@ const images: { [key: string] : { light: string; dark: string } } = {
             light: require('./images/ZoomOut/zoomout.svg'),
             dark : require('./images/ZoomOut/zoomout.svg')
         },
+    Copy:
+        {
+            light: require('./images/Copy/copy.svg'),
+            dark : require('./images/Copy/copy.svg')
+        }
 };
 
 interface IImageProps {

@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+// tslint:disable-next-line: import-name
+//import copy from 'copy-to-clipboard';
 import * as React from 'react';
+import { Tool, Value } from 'react-svg-pan-zoom';
 import * as uuid from 'uuid/v4';
-import { Value } from 'react-svg-pan-zoom';
 
 import { IPlotViewerMapping, PlotViewerMessages } from '../../client/datascience/plotting/types';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
@@ -14,6 +16,7 @@ import { SvgViewer } from '../react-common/svgViewer';
 // Our css has to come after in order to override body styles
 import './mainPanel.css';
 import { TestSvg } from './testSvg';
+import { Toolbar } from './toolbar';
 
 //import { ReactFromHtml } from '../react-common/reactFromHtml';
 export interface IMainPanelProps {
@@ -35,6 +38,7 @@ interface IMainPanelState {
     values: (Value | undefined)[];
     ids: string[];
     currentImage: number;
+    tool: Tool;
 }
 
 const HeightRegex = /(\<svg.*height=\")(.*?)\"/;
@@ -56,7 +60,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const values = images.map(_i => undefined);
         const ids = images.map(_i => uuid());
 
-        this.state = {images, thumbnails, sizes, values, ids, currentImage: images.length > 0 ? 0 : -1};
+        this.state = {images, thumbnails, sizes, values, ids, tool: 'pan', currentImage: images.length > 0 ? 0 : -1};
     }
 
     public componentWillMount() {
@@ -78,6 +82,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 <StyleInjector
                     expectingDark={this.props.baseTheme !== 'vscode-light'}
                     postOffice={this.postOffice} />
+                {this.renderToolbar()}
                 {this.renderThumbnails()}
                 {this.renderPlot()}
             </div>
@@ -115,6 +120,19 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         );
     }
 
+    private renderToolbar() {
+        const prev = this.state.currentImage > 0 ? this.prevClicked : undefined;
+        const next = this.state.currentImage < this.state.images.length - 1 ? this.nextClicked : undefined;
+        return (
+            <Toolbar
+                baseTheme={this.props.baseTheme}
+                changeTool={this.changeTool}
+                exportButtonClicked={this.exportCurrent}
+                copyButtonClicked={this.copyCurrent}
+                prevButtonClicked={prev}
+                nextButtonClicked={next} />
+        );
+    }
     private renderPlot() {
         // Render current plot
         const currentPlot = this.state.currentImage >= 0 ? this.state.images[this.state.currentImage] : undefined;
@@ -129,10 +147,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     id={currentId}
                     size={currentSize}
                     defaultValue={value}
+                    tool={this.state.tool}
                     changeValue={this.changeCurrentValue}
-                    exportButtonClicked={this.exportCurrent}
-                    prevButtonClicked={this.state.currentImage > 0 ? this.prevClicked : undefined}
-                    nextButtonClicked={this.state.currentImage < this.state.images.length - 1 ? this.nextClicked : undefined}
                 />
             );
         }
@@ -149,6 +165,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private changeCurrentValue = (value: Value) => {
         this.currentValue = {...value};
+    }
+
+    private changeTool = (tool: Tool) => {
+        this.setState({tool});
     }
 
     private extractSize(image: string): ISize {
@@ -188,8 +208,20 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.changeCurrentImage(index);
     }
 
+    private sendMessage<M extends IPlotViewerMapping, T extends keyof M>(type: T, payload?: M[T]) {
+        this.postOffice.sendMessage<M, T>(type, payload);
+    }
+
     private exportCurrent = () => {
-        // Do nothing for now.
+        this.sendMessage(PlotViewerMessages.ExportPlot, this.state.images[this.state.currentImage]);
+    }
+
+    private copyCurrent = () => {
+        // Try copying locally
+        return window.navigator.clipboard.writeText('Test clipboard');
+        // copy(this.state.images[this.state.currentImage], {
+        //     format: 'image/svg+xml'
+        // });
     }
 
     private prevClicked = () => {

@@ -176,6 +176,10 @@ export namespace DataScience {
     export const previewFooter = localize('DataScience.previewFooter', '--- End preview of {0} ---');
     export const previewStatusMessage = localize('DataScience.previewStatusMessage', 'Generating preview of {0}');
     export const plotViewerTitle = localize('DataScience.plotViewerTitle', 'Plots');
+    export const exportPlotTitle = localize('DataScience.exportPlotTitle', 'Save plot image');
+    export const pdfFilter = localize('DataScience.pdfFilter', 'PDF');
+    export const pngFilter = localize('DataScience.pdfFilter', 'PNG');
+    export const svgFilter = localize('DataScience.pdfFilter', 'SVG');
 
 }
 
