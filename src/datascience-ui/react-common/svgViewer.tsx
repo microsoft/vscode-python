@@ -2,10 +2,9 @@
 // Licensed under the MIT License.
 'use strict';
 import * as React from 'react';
-import { POSITION_TOP, Tool, ReactSVGPanZoom, Value } from 'react-svg-pan-zoom';
+import { POSITION_TOP, ReactSVGPanZoom, Tool, Value } from 'react-svg-pan-zoom';
 import { SvgLoader } from 'react-svgmt';
 import { AutoSizer } from 'react-virtualized';
-
 import './svgViewer.css';
 
 interface ISvgViewerProps {
@@ -27,19 +26,20 @@ export class SvgViewer extends React.Component<ISvgViewerProps, ISvgViewerState>
     private svgPanZoomRef : React.RefObject<ReactSVGPanZoom> = React.createRef<ReactSVGPanZoom>();
     constructor(props: ISvgViewerProps) {
         super(props);
+        // tslint:disable-next-line: no-object-literal-type-assertion
         this.state = { value: props.defaultValue ? props.defaultValue : {} as Value, tool: props.tool};
     }
 
     public componentDidUpdate(prevProps: ISvgViewerProps) {
         // May need to update state if props changed
-        if (prevProps.defaultValue !== this.props.defaultValue || 
+        if (prevProps.defaultValue !== this.props.defaultValue ||
             this.props.id !== prevProps.id) {
-            this.setState( {
+            this.setState({
+                // tslint:disable-next-line: no-object-literal-type-assertion
                 value: this.props.defaultValue ? this.props.defaultValue : {} as Value,
                 tool: this.props.tool
             });
-        }
-        else if (this.props.tool !== this.state.tool) {
+        } else if (this.props.tool !== this.state.tool) {
             this.setState({tool: this.props.tool});
         }
     }
@@ -74,7 +74,7 @@ export class SvgViewer extends React.Component<ISvgViewerProps, ISvgViewerState>
     }
 
     private changeTool = (tool: Tool) => {
-        this.setState({tool})
+        this.setState({tool});
     }
 
     private changeValue = (value: Value) => {
