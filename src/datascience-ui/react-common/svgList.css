@@ -6,16 +6,18 @@
 
 .svg-list {
     list-style-type: none;
-    overflow: hidden;
+    overflow-x: scroll;
+    overflow-y: hidden;
+    white-space: nowrap;
     padding-inline-start: 0px;
 }
 
 .svg-list-item {
     width: 100px;
     height: 100%;
-    float: left;
     box-sizing: border-box;
     border: 1px solid transparent;
+    display: inline-block;
 }
 
 .svg-list-item-selected {

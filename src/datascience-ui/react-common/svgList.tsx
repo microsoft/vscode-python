@@ -20,9 +20,9 @@ export class SvgList extends React.Component<ISvgListProps> {
     public render() {
         return (
             <div className='svg-list-container'>
-                <ul className='svg-list'>
+                <div className='svg-list'>
                 {this.renderImages()}
-                </ul>
+                </div>
             </div>
         );
     }
@@ -34,12 +34,12 @@ export class SvgList extends React.Component<ISvgListProps> {
             return (
                 // See the comments here: https://github.com/Microsoft/tslint-microsoft-contrib/issues/676
                 // tslint:disable-next-line: react-this-binding-issue
-                <li className={className} role='button' onClick={clickHandler} key={index}>
+                <div className={className} role='button' onClick={clickHandler} key={index}>
                     <div className='svg-list-item-image'>
                         <SvgLoader svgXML={image}>
                         </SvgLoader>
                     </div>
-                </li>
+                </div>
             );
         });
     }
