@@ -15,9 +15,9 @@
 .svg-list-item {
     width: 100px;
     height: 100%;
-    box-sizing: border-box;
     border: 1px solid transparent;
     display: inline-block;
+    overflow: hidden;
 }
 
 .svg-list-item-selected {

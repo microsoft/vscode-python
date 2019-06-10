@@ -43,8 +43,11 @@ interface IMainPanelState {
     tool: Tool;
 }
 
+const PanKeyboardSize = 10;
+
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
     private container: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
+    private viewer: React.RefObject<SvgViewer> = React.createRef<SvgViewer>();
     private postOffice: PostOffice = new PostOffice();
     private currentValue: Value | undefined;
 
@@ -68,16 +71,21 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         // Tell the plot viewer code we have started.
         this.postOffice.sendMessage<IPlotViewerMapping, 'started'>(PlotViewerMessages.Started);
+
+        // Listen to key events
+        window.addEventListener('keydown', this.onKeyDown);
     }
 
     public componentWillUnmount() {
         this.postOffice.removeHandler(this);
         this.postOffice.dispose();
+        // Stop listening to key events
+        window.removeEventListener('keydown', this.onKeyDown);
     }
 
     public render = () => {
         return (
-            <div className='main-panel' ref={this.container}>
+            <div className='main-panel' role='group' ref={this.container}>
                 <StyleInjector
                     expectingDark={this.props.baseTheme !== 'vscode-light'}
                     postOffice={this.postOffice} />
@@ -102,6 +110,63 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return false;
     }
 
+    private onKeyDown = (event: KeyboardEvent) => {
+        if (!event.ctrlKey) {
+            switch (event.key) {
+                case 'ArrowRight':
+                    if (this.state.currentImage < this.state.images.length - 1) {
+                        this.setState({currentImage: this.state.currentImage + 1});
+                    }
+                    break;
+
+                case 'ArrowLeft':
+                    if (this.state.currentImage > 0) {
+                        this.setState({currentImage: this.state.currentImage - 1});
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+        } else if (event.ctrlKey && !event.altKey && this.viewer && this.viewer.current) {
+            switch (event.key) {
+                case 'ArrowRight':
+                    this.viewer.current.move(PanKeyboardSize, 0);
+                    break;
+
+                case 'ArrowLeft':
+                    this.viewer.current.move(-PanKeyboardSize, 0);
+                    break;
+
+                case 'ArrowUp':
+                    this.viewer.current.move(0, -PanKeyboardSize);
+                    break;
+
+                case 'ArrowDown':
+                    this.viewer.current.move(0, PanKeyboardSize);
+                    break;
+
+                default:
+                    break;
+            }
+        } else if (event.ctrlKey && event.altKey && this.viewer && this.viewer.current) {
+            switch (event.key) {
+                case 'ArrowUp':
+                    this.viewer.current.zoom(1.5);
+                    break;
+
+                case 'ArrowDown':
+                    this.viewer.current.zoom(0.5);
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        window.console.log(JSON.stringify(event));
+    }
+
     private addPlot(payload: any) {
         this.setState({
             images: [...this.state.images, payload as string],
@@ -109,7 +174,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             sizes: [...this.state.sizes, this.extractSize(payload)],
             values: [...this.state.values, undefined],
             ids: [...this.state.ids, uuid()],
-            currentImage: this.state.currentImage + 1
+            currentImage: this.state.images.length
         });
     }
 
@@ -150,6 +215,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     defaultValue={value}
                     tool={this.state.tool}
                     changeValue={this.changeCurrentValue}
+                    ref={this.viewer}
                 />
             );
         }

@@ -44,6 +44,18 @@ export class SvgViewer extends React.Component<ISvgViewerProps, ISvgViewerState>
         }
     }
 
+    public move(offsetX: number, offsetY: number) {
+        if (this.svgPanZoomRef && this.svgPanZoomRef.current) {
+            this.svgPanZoomRef.current.pan(offsetX, offsetY);
+        }
+    }
+
+    public zoom(amount: number) {
+        if (this.svgPanZoomRef && this.svgPanZoomRef.current) {
+            this.svgPanZoomRef.current.zoomOnViewerCenter(amount);
+        }
+    }
+
     public render() {
         return (
             <AutoSizer>
