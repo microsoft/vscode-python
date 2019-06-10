@@ -156,15 +156,13 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     break;
 
                 case 'ArrowDown':
-                    this.viewer.current.zoom(0.5);
+                    this.viewer.current.zoom(0.66666);
                     break;
 
                 default:
                     break;
             }
         }
-
-        window.console.log(JSON.stringify(event));
     }
 
     private addPlot(payload: any) {

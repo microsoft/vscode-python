@@ -310,6 +310,7 @@ export class Cell extends React.Component<ICellProps> {
             try {
                 // Massage our data to make sure it displays well
                 if (output.data) {
+                    let extraButton = null;
                     const mimeBundle = output.data as nbformat.IMimeBundle;
                     let data: nbformat.MultilineString | JSONObject = mimeBundle[mimetype];
                     switch (mimetype) {
@@ -337,6 +338,15 @@ export class Cell extends React.Component<ICellProps> {
                                 sizeTag = Identifiers.SvgSizeTag.format(width, height);
                             }
                             data = data.replace(RegExpValues.SvgWidthRegex, `$1100%" tag="${sizeTag}"`);
+
+                            // Also add an extra button to open this image
+                            extraButton = (
+                                <div className='plot-open-button'>
+                                    <ImageButton baseTheme={this.props.baseTheme} tooltip={getLocString('DataScience.plotOpen', 'Expand image')} onClick={this.plotOpenClick}>
+                                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.OpenInNewWindow} />
+                                    </ImageButton>
+                                </div>
+                            );
                             break;
 
                         default:
@@ -362,7 +372,12 @@ export class Cell extends React.Component<ICellProps> {
 
                     const className = isText ? 'cell-output-text' : 'cell-output-html';
 
-                    return <div id='stylewrapper' role='group' onDoubleClick={this.doubleClick} onClick={this.click} className={className} key={index} style={style}><Transform data={data} /></div>;
+                    return (
+                        <div id='stylewrapper' role='group' onDoubleClick={this.doubleClick} onClick={this.click} className={className} key={index} style={style}>
+                            {extraButton}
+                            <Transform data={data} />
+                        </div>
+                    );
                 }
             } catch (ex) {
                 window.console.log('Error in rendering');
@@ -381,6 +396,16 @@ export class Cell extends React.Component<ICellProps> {
         if (svgChild && svgChild.ownerSVGElement) {
             const svg = svgChild.ownerSVGElement as SVGElement;
             this.props.expandImage(svg.outerHTML);
+        }
+    }
+
+    private plotOpenClick = (event?: React.MouseEvent<HTMLButtonElement>) => {
+        const divChild = event && event.currentTarget;
+        if (divChild && divChild.parentElement && divChild.parentElement.parentElement) {
+            const svgs = divChild.parentElement.parentElement.getElementsByTagName('svg');
+            if (svgs && svgs.length > 1) { // First svg should be the button itself.
+                this.props.expandImage(svgs[1].outerHTML);
+            }
         }
     }
 
