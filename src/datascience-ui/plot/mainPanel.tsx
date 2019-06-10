@@ -1,12 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-// tslint:disable-next-line: import-name
+
 //import copy from 'copy-to-clipboard';
 import * as React from 'react';
 import { Tool, Value } from 'react-svg-pan-zoom';
 import * as uuid from 'uuid/v4';
 
+
+import { createDeferred } from '../../client/common/utils/async';
 import { IPlotViewerMapping, PlotViewerMessages } from '../../client/datascience/plotting/types';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { StyleInjector } from '../react-common/styleInjector';
@@ -45,7 +47,7 @@ const HeightRegex = /(\<svg.*height=\")(.*?)\"/;
 const WidthRegex = /(\<svg.*width=\")(.*?)\"/;
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
-    private container: React.Ref<HTMLDivElement> = React.createRef<HTMLDivElement>();
+    private container: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private postOffice: PostOffice = new PostOffice();
     private currentValue: Value | undefined;
 
@@ -216,9 +218,62 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.sendMessage(PlotViewerMessages.ExportPlot, this.state.images[this.state.currentImage]);
     }
 
-    private copyCurrent = () => {
+    private copyCurrent = async () => {
         // Try copying locally
-        return window.navigator.clipboard.writeText('Test clipboard');
+        // First create a dummy canvas
+        if (this.container && this.container.current) {
+            const doc = this.container.current.ownerDocument;
+            if (doc) {
+                const canvas = doc.createElement('canvas');
+                if (canvas) {
+                    canvas.width = parseInt(this.state.sizes[this.state.currentImage].width, 10);
+                    canvas.height = parseInt(this.state.sizes[this.state.currentImage].height, 10);
+                    const ctx = canvas.getContext('2d');
+                    if (ctx) {
+                        let waitable = createDeferred();
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        const svgBlob = new Blob([this.state.images[this.state.currentImage]], { type: 'image/svg+xml;charset=utf-8' });
+                        const img = new Image();
+                        const url = window.URL.createObjectURL(svgBlob);
+                        img.onload = () => {
+                            ctx.drawImage(img, 0, 0);
+                            waitable.resolve();
+                        };
+                        img.src = url;
+                        await waitable.promise;
+
+                        // Now copy the output.
+                        // copy(canvas.toDataURL('png'), { format: 'URL' });
+                        waitable = createDeferred();
+                        const imgPng = doc.createElement('img');
+                        imgPng.width = canvas.width;
+                        imgPng.height = canvas.height;
+                        doc.body.appendChild(imgPng);
+                        imgPng.onload = () => {
+                            waitable.resolve();
+                        };
+                        imgPng.src = canvas.toDataURL('png');
+                        await waitable.promise;
+                        const selection = window.getSelection();
+                        if (selection) {
+                            selection.removeAllRanges();
+                            const range = doc.createRange();
+                            range.selectNodeContents(imgPng);
+                            selection.addRange(range);
+                            try {
+                                const success = doc.execCommand('copy');
+                                window.console.log(`Copy was ${success}`);
+                            } catch (err) {
+                                window.console.log(err);
+                            }
+
+                        }
+                        doc.body.removeChild(imgPng);
+                    }
+                    canvas.remove();
+                }
+            }
+        }
         // copy(this.state.images[this.state.currentImage], {
         //     format: 'image/svg+xml'
         // });

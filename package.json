@@ -2190,6 +2190,7 @@
         "@jupyterlab/services": "^3.2.1",
         "arch": "^2.1.0",
         "azure-storage": "^2.10.1",
+        "copy-to-clipboard": "^3.2.0",
         "diff-match-patch": "^1.0.0",
         "fs-extra": "^4.0.3",
         "fuzzy": "^0.1.3",
