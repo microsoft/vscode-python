@@ -3,7 +3,7 @@
 'use strict';
 import { JSONObject } from '@phosphor/coreutils';
 
-import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../constants';
+import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../messages';
 import { IJupyterVariable } from '../types';
 
 export const CellFetchAllLimit = 100000;

@@ -10,7 +10,8 @@ import { IWebPanel, IWebPanelMessageListener, IWebPanelProvider, IWorkspaceServi
 import { traceInfo } from '../common/logger';
 import { IConfigurationService, IDisposable } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
-import { CssMessages, DefaultTheme, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from './constants';
+import { DefaultTheme } from './constants';
+import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from './messages';
 import { ICodeCssGenerator, IDataScienceExtraSettings, IThemeFinder } from './types';
 
 @injectable() // For some reason this is necessary to get the class hierarchy to work.

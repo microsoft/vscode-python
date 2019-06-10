@@ -7,8 +7,8 @@ import * as React from 'react';
 import { Tool, Value } from 'react-svg-pan-zoom';
 import * as uuid from 'uuid/v4';
 
-
 import { createDeferred } from '../../client/common/utils/async';
+import { RegExpValues } from '../../client/datascience/constants';
 import { IPlotViewerMapping, PlotViewerMessages } from '../../client/datascience/plotting/types';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { StyleInjector } from '../react-common/styleInjector';
@@ -42,9 +42,6 @@ interface IMainPanelState {
     currentImage: number;
     tool: Tool;
 }
-
-const HeightRegex = /(\<svg.*height=\")(.*?)\"/;
-const WidthRegex = /(\<svg.*width=\")(.*?)\"/;
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
     private container: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
@@ -161,8 +158,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private generateThumbnail(image: string): string {
         // A 'thumbnail' is really just an svg image with
         // the width and height forced to 100%
-        const h = image.replace(HeightRegex, '$1100%\"');
-        return h.replace(WidthRegex, '$1100%\"');
+        const h = image.replace(RegExpValues.SvgHeightRegex, '$1100%\"');
+        return h.replace(RegExpValues.SvgWidthRegex, '$1100%\"');
     }
 
     private changeCurrentValue = (value: Value) => {
@@ -174,15 +171,24 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private extractSize(image: string): ISize {
-        const heightMatch = HeightRegex.exec(image);
         let height = '100px';
-        if (heightMatch && heightMatch.length > 2) {
-            height = heightMatch[2];
-        }
-        const widthMatch = WidthRegex.exec(image);
         let width = '100px';
-        if (widthMatch && widthMatch.length > 2) {
-            width = widthMatch[2];
+
+        // Try the tags that might have been added by the cell formatter
+        const sizeTagMatch = RegExpValues.SvgSizeTagRegex.exec(image);
+        if (sizeTagMatch && sizeTagMatch.length > 2) {
+            width = sizeTagMatch[1];
+            height = sizeTagMatch[2];
+        } else {
+            // Otherwise just parse the height/width directly
+            const heightMatch = RegExpValues.SvgHeightRegex.exec(image);
+            if (heightMatch && heightMatch.length > 2) {
+                height = heightMatch[2];
+            }
+            const widthMatch = RegExpValues.SvgHeightRegex.exec(image);
+            if (widthMatch && widthMatch.length > 2) {
+                width = widthMatch[2];
+            }
         }
 
         return {
@@ -214,23 +220,27 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.postOffice.sendMessage<M, T>(type, payload);
     }
 
-    private exportCurrent = () => {
-        this.sendMessage(PlotViewerMessages.ExportPlot, this.state.images[this.state.currentImage]);
+    private convertSizeToPixels(size: string) : number {
+        let multiplier = 1;
+        if (size.endsWith('pt')) {
+            multiplier = 1.33;
+        }
+        return parseInt(size, 10) * multiplier;
     }
 
-    private copyCurrent = async () => {
-        // Try copying locally
-        // First create a dummy canvas
+    private exportCurrent = async () => {
+        // In order to export, we need the png and the svg. Generate
+        // a png by drawing to a canvas and then turning the canvas into a dataurl.
         if (this.container && this.container.current) {
             const doc = this.container.current.ownerDocument;
             if (doc) {
                 const canvas = doc.createElement('canvas');
                 if (canvas) {
-                    canvas.width = parseInt(this.state.sizes[this.state.currentImage].width, 10);
-                    canvas.height = parseInt(this.state.sizes[this.state.currentImage].height, 10);
+                    canvas.width = this.convertSizeToPixels(this.state.sizes[this.state.currentImage].width);
+                    canvas.height = this.convertSizeToPixels(this.state.sizes[this.state.currentImage].height);
                     const ctx = canvas.getContext('2d');
                     if (ctx) {
-                        let waitable = createDeferred();
+                        const waitable = createDeferred();
                         ctx.clearRect(0, 0, canvas.width, canvas.height);
                         const svgBlob = new Blob([this.state.images[this.state.currentImage]], { type: 'image/svg+xml;charset=utf-8' });
                         const img = new Image();
@@ -241,42 +251,19 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                         };
                         img.src = url;
                         await waitable.promise;
+                        const png = canvas.toDataURL('png');
+                        canvas.remove();
 
-                        // Now copy the output.
-                        // copy(canvas.toDataURL('png'), { format: 'URL' });
-                        waitable = createDeferred();
-                        const imgPng = doc.createElement('img');
-                        imgPng.width = canvas.width;
-                        imgPng.height = canvas.height;
-                        doc.body.appendChild(imgPng);
-                        imgPng.onload = () => {
-                            waitable.resolve();
-                        };
-                        imgPng.src = canvas.toDataURL('png');
-                        await waitable.promise;
-                        const selection = window.getSelection();
-                        if (selection) {
-                            selection.removeAllRanges();
-                            const range = doc.createRange();
-                            range.selectNodeContents(imgPng);
-                            selection.addRange(range);
-                            try {
-                                const success = doc.execCommand('copy');
-                                window.console.log(`Copy was ${success}`);
-                            } catch (err) {
-                                window.console.log(err);
-                            }
-
-                        }
-                        doc.body.removeChild(imgPng);
+                        // Send both our image and the png.
+                        this.sendMessage(PlotViewerMessages.ExportPlot, { svg: this.state.images[this.state.currentImage], png });
                     }
-                    canvas.remove();
                 }
             }
         }
-        // copy(this.state.images[this.state.currentImage], {
-        //     format: 'image/svg+xml'
-        // });
+    }
+
+    private copyCurrent = async () => {
+        // Not supported at the moment.
     }
 
     private prevClicked = () => {

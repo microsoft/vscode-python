@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 
 import { IS_WINDOWS } from '../common/platform/constants';
 
@@ -66,6 +65,10 @@ export namespace RegExpValues {
     export const ParamsExractorRegEx = /\S+\((.*)\)\s*{/;
     export const ArgsSplitterRegEx = /([^\s,]+)/;
     export const ShapeSplitterRegEx = /.*,\s*(\d+).*/;
+    export const SvgHeightRegex = /(\<svg.*height=\")(.*?)\"/;
+    export const SvgWidthRegex = /(\<svg.*width=\")(.*?)\"/;
+    export const SvgSizeTagRegex = /\<svg.*tag=\"sizeTag=\{(.*),\s*(.*)\}\"/;
+
 }
 
 export enum Telemetry {
@@ -133,6 +136,7 @@ export namespace Identifiers {
     export const HistoryPurpose = 'history';
     export const MatplotLibDefaultParams = '_VSCode_defaultMatplotlib_Params';
     export const EditCellId = '3D3AB152-ADC1-4501-B813-4B83B49B0C10';
+    export const SvgSizeTag = 'sizeTag={{0}, {1}}';
 }
 
 export namespace CodeSnippits {
@@ -180,34 +184,4 @@ export namespace LiveShareCommands {
     export const historyCreateSync = 'historyCreateSync';
     export const disposeServer = 'disposeServer';
     export const guestCheck = 'guestCheck';
-}
-
-export namespace CssMessages {
-    export const GetCssRequest = 'get_css_request';
-    export const GetCssResponse = 'get_css_response';
-    export const GetMonacoThemeRequest = 'get_monaco_theme_request';
-    export const GetMonacoThemeResponse = 'get_monaco_theme_response';
-}
-
-export namespace SharedMessages {
-    export const UpdateSettings = 'update_settings';
-    export const Started = 'started';
-}
-
-export interface IGetCssRequest {
-    isDark: boolean;
-}
-
-export interface IGetMonacoThemeRequest {
-    isDark: boolean;
-}
-
-export interface IGetCssResponse {
-    css: string;
-    theme: string;
-    knownDark?: boolean;
-}
-
-export interface IGetMonacoThemeResponse {
-    theme: monacoEditor.editor.IStandaloneThemeData;
 }

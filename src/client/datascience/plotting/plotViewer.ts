@@ -6,7 +6,6 @@ import '../../common/extensions';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as pdfkit from 'pdfkit';
-import { SVGtoPDF } from 'svg-to-pdfkit';
 import { Event, EventEmitter, ViewColumn } from 'vscode';
 
 import { IApplicationShell, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
@@ -17,7 +16,7 @@ import * as localize from '../../common/utils/localize';
 import { ICodeCssGenerator, IPlotViewer, IThemeFinder } from '../types';
 import { WebViewHost } from '../webViewHost';
 import { PlotViewerMessageListener } from './plotViewerMessageListener';
-import { IPlotViewerMapping, PlotViewerMessages } from './types';
+import { IExportPlotRequest, IPlotViewerMapping, PlotViewerMessages } from './types';
 
 @injectable()
 export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlotViewer, IDisposable {
@@ -84,7 +83,7 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
                 break;
 
             case PlotViewerMessages.ExportPlot:
-                this.exportPlot(payload.toString()).ignoreErrors();
+                this.exportPlot(payload).ignoreErrors();
                 break;
 
             default:
@@ -100,12 +99,12 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
         return Promise.resolve();
     }
 
-    private async exportPlot(svg: string) : Promise<void> {
+    private async exportPlot(payload: IExportPlotRequest) : Promise<void> {
 
         const filtersObject: Record<string, string[]> = {};
-        filtersObject[localize.DataScience.pdfFilter()] = ['.pdf'];
-        filtersObject[localize.DataScience.pngFilter()] = ['.png'];
-        filtersObject[localize.DataScience.svgFilter()] = ['.svg'];
+        filtersObject[localize.DataScience.pdfFilter()] = ['pdf'];
+        filtersObject[localize.DataScience.pngFilter()] = ['png'];
+        filtersObject[localize.DataScience.svgFilter()] = ['svg'];
 
         // Ask the user what file to save to
         const file = await this.applicationShell.showSaveDialog({
@@ -116,17 +115,23 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
             const ext = path.extname(file.fsPath);
             switch (ext.toLowerCase()) {
                 case '.pdf':
+                    // tslint:disable-next-line: no-require-imports
+                    const SVGtoPDF = require('svg-to-pdfkit');
                     const doc = new pdfkit();
-                    SVGtoPDF(doc, svg, 0, 0);
+                    SVGtoPDF(doc, payload.svg, 0, 0);
+                    doc.pipe(this.fileSystem.createWriteStream(file.fsPath));
+                    doc.end();
                     break;
 
                 case '.png':
+                    const buffer = new Buffer(payload.png.replace('data:image/png;base64', ''), 'base64');
+                    await this.fileSystem.writeFile(file.fsPath, buffer);
                     break;
 
                 default:
                 case '.svg':
                     // This is the easy one:
-                    await this.fileSystem.writeFile(file.fsPath, svg);
+                    await this.fileSystem.writeFile(file.fsPath, payload.svg);
                     break;
             }
 

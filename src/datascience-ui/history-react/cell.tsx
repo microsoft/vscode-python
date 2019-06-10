@@ -12,7 +12,7 @@ import JSONTree from 'react-json-tree';
 
 import '../../client/common/extensions';
 import { concatMultilineString, formatStreamText } from '../../client/datascience/common';
-import { Identifiers } from '../../client/datascience/constants';
+import { Identifiers, RegExpValues } from '../../client/datascience/constants';
 import { CellState, ICell } from '../../client/datascience/types';
 import { noop } from '../../test/core';
 import { Image, ImageName } from '../react-common/image';
@@ -326,8 +326,17 @@ export class Cell extends React.Component<ICellProps> {
                             const html = concatMultilineString(data as nbformat.MultilineString);
                             data = html.replace(/\<style[\s\S]*\<\/style\>/m, '');
 
-                            // Also change the width to 100% so it scales correctly.
-                            data = data.replace(/width=".*pt"/, 'width="100%"');
+                            // Also change the width to 100% so it scales correctly. We need to save the
+                            // width/height for the plot window though
+                            let sizeTag = '';
+                            const widthMatch = RegExpValues.SvgWidthRegex.exec(data);
+                            const heightMatch = RegExpValues.SvgHeightRegex.exec(data);
+                            if (widthMatch && heightMatch && widthMatch.length > 2 && heightMatch.length > 2) {
+                                const width = widthMatch[2];
+                                const height = heightMatch[2];
+                                sizeTag = Identifiers.SvgSizeTag.format(width, height);
+                            }
+                            data = data.replace(RegExpValues.SvgWidthRegex, `$1100%" tag="${sizeTag}"`);
                             break;
 
                         default:

@@ -39,9 +39,10 @@ export class Toolbar extends React.Component<IToolbarProps> {
                     <ImageButton baseTheme={this.props.baseTheme} onClick={this.zoomOut} tooltip={getLocString('DataScience.zoomOut', 'Zoom Out')}>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.ZoomOut}/>
                     </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.copyButtonClicked} tooltip={getLocString('DataScience.copyPlot', 'Copy image to clipboard')}>
+                    {/* This isn't possible until VS Code supports copying images to the clipboard. See https://github.com/microsoft/vscode/issues/217
+                     <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.copyButtonClicked} tooltip={getLocString('DataScience.copyPlot', 'Copy image to clipboard')}>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Copy}/>
-                    </ImageButton>
+                    </ImageButton> */}
                     <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.exportButtonClicked} tooltip={getLocString('DataScience.exportPlot', 'Export to different formats.')}>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.SaveAs}/>
                     </ImageButton>
