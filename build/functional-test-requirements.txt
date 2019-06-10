@@ -3,7 +3,4 @@ versioneer
 jupyter
 numpy
 matplotlib
-pandas
-torch
-scikit-learn
 livelossplot

@@ -112,7 +112,10 @@ export enum Telemetry {
     DataScienceSettings = 'DATASCIENCE.SETTINGS',
     VariableExplorerToggled = 'DATASCIENCE.VARIABLE_EXPLORER_TOGGLE',
     VariableExplorerVariableCount = 'DATASCIENCE.VARIABLE_EXPLORER_VARIABLE_COUNT',
-    AddCellBelow = 'DATASCIENCE.ADD_CELL_BELOW'
+    AddCellBelow = 'DATASCIENCE.ADD_CELL_BELOW',
+    GetPasswordAttempt = 'DATASCIENCE.GET_PASSWORD_ATTEMPT',
+    GetPasswordFailure = 'DATASCIENCE.GET_PASSWORD_FAILURE',
+    GetPasswordSuccess = 'DATASCIENCE.GET_PASSWORD_SUCCESS'
  }
 
 export namespace HelpLinks {

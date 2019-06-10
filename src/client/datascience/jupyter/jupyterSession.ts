@@ -21,9 +21,10 @@ import { traceInfo } from '../../common/logger';
 import { sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { IConnection, IJupyterKernelSpec, IJupyterSession } from '../types';
+import { IConnection, IJupyterKernelSpec, IJupyterPasswordConnect, IJupyterPasswordConnectInfo, IJupyterSession } from '../types';
 import { JupyterKernelPromiseFailedError } from './jupyterKernelPromiseFailedError';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
+import { JupyterWebSocket } from './jupyterWebSocket';
 
 export class JupyterSession implements IJupyterSession {
     private connInfo: IConnection | undefined;
@@ -35,12 +36,16 @@ export class JupyterSession implements IJupyterSession {
     private onRestartedEvent : EventEmitter<void> | undefined;
     private statusHandler : Slot<Session.ISession, Kernel.Status> | undefined;
     private connected: boolean = false;
+    private jupyterPasswordConnect: IJupyterPasswordConnect;
 
     constructor(
         connInfo: IConnection,
-        kernelSpec: IJupyterKernelSpec | undefined) {
+        kernelSpec: IJupyterKernelSpec | undefined,
+        jupyterPasswordConnect: IJupyterPasswordConnect
+        ) {
         this.connInfo = connInfo;
         this.kernelSpec = kernelSpec;
+        this.jupyterPasswordConnect = jupyterPasswordConnect;
     }
 
     public dispose() : Promise<void> {
@@ -119,16 +124,8 @@ export class JupyterSession implements IJupyterSession {
             throw new Error(localize.DataScience.sessionDisposed());
         }
 
-        // First connect to the sesssion manager
-        const serverSettings = ServerConnection.makeSettings(
-            {
-                baseUrl: this.connInfo.baseUrl,
-                token: this.connInfo.token,
-                pageUrl: '',
-                // A web socket is required to allow token authentication
-                wsUrl: this.connInfo.baseUrl.replace('http', 'ws'),
-                init: { cache: 'no-store', credentials: 'same-origin' }
-            });
+        const serverSettings: ServerConnection.ISettings = await this.getServerConnectSettings(this.connInfo);
+
         this.sessionManager = new SessionManager({ serverSettings: serverSettings });
 
         // Create a temporary .ipynb file to use
@@ -155,6 +152,63 @@ export class JupyterSession implements IJupyterSession {
 
     public get isConnected() : boolean {
         return this.connected;
+    }
+
+    private getSessionCookieString(pwSettings: IJupyterPasswordConnectInfo): string {
+        // Save our cookie connection info on the JupyterWebSocket static field
+        // This websocket is created by the jupyter lab services code and needs access to these values
+        JupyterWebSocket.cookieString = `_xsrf=${pwSettings.xsrfCookie}; ${pwSettings.sessionCookieName}=${pwSettings.sessionCookieValue}`;
+
+        return JupyterWebSocket.cookieString;
+    }
+
+    private async getServerConnectSettings(connInfo: IConnection): Promise<ServerConnection.ISettings> {
+        let serverSettings: ServerConnection.ISettings;
+
+        // If we have no token, prompt and try to connect with a password.
+        if (connInfo.token === '' || connInfo.token === 'null') {
+            const pwSettings = await this.jupyterPasswordConnect.getPasswordConnectionInfo(connInfo.baseUrl);
+
+            if (pwSettings) {
+                // Get our cookie string (also sets statics that the JupyterWebSocket needs to pick up)
+                const cookieString = this.getSessionCookieString(pwSettings);
+                const reqHeaders = { Cookie: cookieString, 'X-XSRFToken': pwSettings.xsrfCookie };
+
+                serverSettings = ServerConnection.makeSettings(
+                    {
+                        // tslint:disable-next-line:no-http-string
+                        baseUrl: connInfo.baseUrl,
+                        token: '',
+                        pageUrl: '',
+                        // A web socket is required to allow token authentication
+                        wsUrl: connInfo.baseUrl.replace('http', 'ws'),
+                        init: { cache: 'no-store', credentials: 'same-origin', headers: reqHeaders },
+                        // This replaces the WebSocket constructor in jupyter lab services with our own implementation
+                        // See _createSocket here:
+                        // https://github.com/jupyterlab/jupyterlab/blob/cfc8ebda95e882b4ed2eefd54863bb8cdb0ab763/packages/services/src/kernel/default.ts
+                        // tslint:disable-next-line:no-any
+                        WebSocket: JupyterWebSocket as any
+                    });
+            } else {
+                // Failed to get password info, notify the user
+                throw new Error(localize.DataScience.passwordFailure());
+            }
+        } else {
+            // Reset the static cookie value on a non-password connection
+            JupyterWebSocket.cookieString = undefined;
+
+            serverSettings = ServerConnection.makeSettings(
+                {
+                    baseUrl: connInfo.baseUrl,
+                    token: connInfo.token,
+                    pageUrl: '',
+                    // A web socket is required to allow token authentication
+                    wsUrl: connInfo.baseUrl.replace('http', 'ws'),
+                    init: { cache: 'no-store', credentials: 'same-origin' }
+                });
+        }
+
+        return serverSettings;
     }
 
     private async waitForKernelPromise(kernelPromise: Promise<void>, timeout: number, errorMessage: string) : Promise<void> {

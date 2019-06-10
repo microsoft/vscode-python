@@ -95,6 +95,7 @@ import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterC
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
 import { JupyterImporter } from '../../client/datascience/jupyter/jupyterImporter';
+import { JupyterPasswordConnect } from '../../client/datascience/jupyter/jupyterPasswordConnect';
 import { JupyterServerFactory } from '../../client/datascience/jupyter/jupyterServerFactory';
 import { JupyterSessionManager } from '../../client/datascience/jupyter/jupyterSessionManager';
 import { JupyterVariables } from '../../client/datascience/jupyter/jupyterVariables';
@@ -112,6 +113,7 @@ import {
     IHistoryProvider,
     IJupyterCommandFactory,
     IJupyterExecution,
+    IJupyterPasswordConnect,
     IJupyterSessionManager,
     IJupyterVariables,
     INotebookExporter,
@@ -480,6 +482,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory);
             this.serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
             this.serviceManager.addSingleton<IJupyterSessionManager>(IJupyterSessionManager, JupyterSessionManager);
+            this.serviceManager.addSingleton<IJupyterPasswordConnect>(IJupyterPasswordConnect, JupyterPasswordConnect);
         }
 
         if (this.serviceManager.get<IPlatformService>(IPlatformService).isWindows) {
@@ -495,6 +498,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));
         appShell.setup(a => a.showSaveDialog(TypeMoq.It.isAny())).returns(() => Promise.resolve(Uri.file('test.ipynb')));
         appShell.setup(a => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
+        appShell.setup(a => a.showInputBox(TypeMoq.It.isAny())).returns(() => Promise.resolve('Python'));
 
         const interpreterManager = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         interpreterManager.initialize();

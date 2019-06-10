@@ -11,6 +11,7 @@ import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
 import { PYTHON_LANGUAGE } from '../../common/constants';
+import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
 import * as localize from '../../common/utils/localize';
@@ -54,7 +55,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
         disposable = commandManager.registerCommand(Commands.ImportNotebook, (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => {
             return this.listenForErrors(() => {
                 if (file && file.fsPath) {
-                    return this.importNotebookOnFile(file.fsPath);
+                    return this.importNotebookOnFile(file.fsPath, true);
                 } else {
                     return this.importNotebook();
                 }
@@ -346,7 +347,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
 
     private onOpenedDocument = async (document: TextDocument) => {
         // Preview and import the document if necessary.
-        const results  = await Promise.all([this.previewDocument(document), this.askForImportDocument(document)]);
+        const results  = await Promise.all([this.previewNotebook(document.fileName), this.askForImportDocument(document)]);
 
         // When done, make sure the current document is still the active editor if we did
         // not do an import. Otherwise subsequent opens will cover up the interactive pane.
@@ -355,16 +356,16 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
         }
     }
 
-    private async previewDocument(document: TextDocument) : Promise<boolean> {
-        if (document.fileName.endsWith('.ipynb') && this.autoPreviewNotebooks()) {
+    private async previewNotebook(fileName: string) : Promise<boolean> {
+        if (fileName && fileName.endsWith('.ipynb') && this.autoPreviewNotebooks()) {
             // Get history before putting up status so that we show a busy message when we
             // start the preview.
             const history = await this.historyProvider.getOrCreateActive();
 
             // Wait for the preview.
             await this.waitForStatus(async () => {
-                await history.previewNotebook(document.fileName);
-            }, localize.DataScience.previewStatusMessage(), document.fileName);
+                await history.previewNotebook(fileName);
+            }, localize.DataScience.previewStatusMessage(), fileName);
 
             return true;
         }
@@ -384,7 +385,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
 
             try {
                 if (answer === yes) {
-                    await this.importNotebookOnFile(document.fileName);
+                    await this.importNotebookOnFile(document.fileName, false);
                     return true;
                 } else if (answer === dontAskAgain) {
                     this.disableImportOnOpenedFile();
@@ -421,6 +422,9 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
             });
 
         if (uris && uris.length > 0) {
+            // Preview a file whenever we import
+            this.previewNotebook(uris[0].fsPath).catch(traceError);
+
             // Don't call the other overload as we'll end up with double telemetry.
             await this.waitForStatus(async () => {
                 const contents = await this.jupyterImporter.importFromFile(uris[0].fsPath);
@@ -430,8 +434,13 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
     }
 
     @captureTelemetry(Telemetry.ImportNotebook, { scope: 'file' }, false)
-    private async importNotebookOnFile(file: string) : Promise<void> {
+    private async importNotebookOnFile(file: string, preview: boolean) : Promise<void> {
         if (file && file.length > 0) {
+            // Preview a file whenever we import if not already previewed
+            if (preview) {
+                this.previewNotebook(file).catch(traceError);
+            }
+
             await this.waitForStatus(async () => {
                 const contents =  await this.jupyterImporter.importFromFile(file);
                 await this.viewDocument(contents);

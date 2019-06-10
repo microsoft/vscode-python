@@ -95,10 +95,7 @@ suite('Terminal - Code Execution Helper', () => {
         const doubleCrIndex = normalizedCode.indexOf('\r\r');
         expect(doubleCrIndex).to.be.equal(-1, 'Double CR (CRCRLF) line endings detected in normalized code snippet.');
     });
-    // https://github.com/microsoft/vscode-python/issues/5896
-    // https://dev.azure.com/ms/vscode-python/_build/results?buildId=18374&view=ms.vss-test-web.build-test-results-tab
-    // Remove '8' from the array.
-    ['', '1', '2', '3', '4', '5', '6', '7'].forEach(fileNameSuffix => {
+    ['', '1', '2', '3', '4', '5', '6', '7', '8'].forEach(fileNameSuffix => {
         test(`Ensure blank lines are removed (Sample${fileNameSuffix})`, async function () {
             // This test has not been working for many months in Python 2.7 under
             // Windows.Tracked by #2544.

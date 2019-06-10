@@ -109,6 +109,17 @@ export interface IJupyterExecution extends IAsyncDisposable {
     getServer(options?: INotebookServerOptions) : Promise<INotebookServer | undefined>;
 }
 
+export interface IJupyterPasswordConnectInfo {
+    xsrfCookie: string;
+    sessionCookieName: string;
+    sessionCookieValue: string;
+}
+
+export const IJupyterPasswordConnect = Symbol('IJupyterPasswordConnect');
+export interface IJupyterPasswordConnect {
+    getPasswordConnectionInfo(url: string): Promise<IJupyterPasswordConnectInfo | undefined>;
+}
+
 export const IJupyterSession = Symbol('IJupyterSession');
 export interface IJupyterSession extends IAsyncDisposable {
     onRestarted: Event<void>;

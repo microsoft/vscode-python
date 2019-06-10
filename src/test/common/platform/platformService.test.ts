@@ -55,6 +55,14 @@ suite('PlatformService', () => {
         expect(result).to.be.equal(expected, 'invalid value');
     });
 
+    test('osRelease', async () => {
+        const expected = os.release();
+        const svc = new PlatformService();
+        const result = svc.osRelease;
+
+        expect(result).to.be.equal(expected, 'invalid value');
+    });
+
     test('is64bit', async () => {
         // tslint:disable-next-line:no-require-imports
         const arch = require('arch');
