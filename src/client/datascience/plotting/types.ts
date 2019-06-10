@@ -10,6 +10,7 @@ export namespace PlotViewerMessages {
     export const SendPlot = 'send_plot';
     export const CopyPlot = 'copy_plot';
     export const ExportPlot = 'export_plot';
+    export const RemovePlot = 'remove_plot';
 }
 
 export interface IExportPlotRequest {
@@ -24,6 +25,7 @@ export class IPlotViewerMapping {
     public [PlotViewerMessages.SendPlot]: string;
     public [PlotViewerMessages.CopyPlot]: string;
     public [PlotViewerMessages.ExportPlot]: IExportPlotRequest;
+    public [PlotViewerMessages.RemovePlot]: number;
     public [CssMessages.GetCssRequest] : IGetCssRequest;
     public [CssMessages.GetCssResponse] : IGetCssResponse;
 }

@@ -122,6 +122,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private renderToolbar() {
         const prev = this.state.currentImage > 0 ? this.prevClicked : undefined;
         const next = this.state.currentImage < this.state.images.length - 1 ? this.nextClicked : undefined;
+        const deleteClickHandler = this.state.currentImage !== -1 ? this.deleteClicked : undefined;
         return (
             <Toolbar
                 baseTheme={this.props.baseTheme}
@@ -129,7 +130,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 exportButtonClicked={this.exportCurrent}
                 copyButtonClicked={this.copyCurrent}
                 prevButtonClicked={prev}
-                nextButtonClicked={next} />
+                nextButtonClicked={next}
+                deleteButtonClicked={deleteClickHandler} />
         );
     }
     private renderPlot() {
@@ -272,5 +274,23 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private nextClicked = () => {
         this.changeCurrentImage(this.state.currentImage + 1);
+    }
+
+    private deleteClicked = () => {
+        if (this.state.currentImage >= 0) {
+            const oldCurrent = this.state.currentImage;
+            const newCurrent = this.state.images.length > 1 ? this.state.currentImage : -1;
+
+            this.setState({
+                images: this.state.images.filter((_v, i) => i !== oldCurrent),
+                sizes: this.state.sizes.filter((_v, i) => i !== oldCurrent),
+                values: this.state.values.filter((_v, i) => i !== oldCurrent),
+                thumbnails: this.state.thumbnails.filter((_v, i) => i !== oldCurrent),
+                currentImage : newCurrent
+            });
+
+            // Tell the other side too as we don't want it sending this image again
+            this.sendMessage(PlotViewerMessages.RemovePlot, oldCurrent);
+        }
     }
 }

@@ -22,6 +22,7 @@ import { IExportPlotRequest, IPlotViewerMapping, PlotViewerMessages } from './ty
 export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlotViewer, IDisposable {
     private disposed: boolean = false;
     private closedEvent: EventEmitter<IPlotViewer> = new EventEmitter<IPlotViewer>();
+    private removedEvent: EventEmitter<number> = new EventEmitter<number>();
 
     constructor(
         @inject(IWebPanelProvider) provider: IWebPanelProvider,
@@ -46,6 +47,10 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
 
     public get closed(): Event<IPlotViewer> {
         return this.closedEvent.event;
+    }
+
+    public get removed(): Event<number> {
+        return this.removedEvent.event;
     }
 
     public async show(): Promise<void> {
@@ -86,11 +91,19 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
                 this.exportPlot(payload).ignoreErrors();
                 break;
 
+            case PlotViewerMessages.RemovePlot:
+                this.removePlot(payload);
+                break;
+
             default:
                 break;
         }
 
         super.onMessage(message, payload);
+    }
+
+    private removePlot(payload: number) {
+        this.removedEvent.fire(payload);
     }
 
     private copyPlot(_svg: string) : Promise<void> {

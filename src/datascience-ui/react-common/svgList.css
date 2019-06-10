@@ -21,7 +21,8 @@
 }
 
 .svg-list-item-selected {
-    border: 1px solid green;
+    border-color: var(--vscode-editor-selectionBackground);    
+    border: 1px solid;
 }
 
 .svg-list-item-image {

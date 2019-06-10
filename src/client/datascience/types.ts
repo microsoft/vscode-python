@@ -375,6 +375,7 @@ export const IPlotViewer = Symbol('IPlotViewer');
 
 export interface IPlotViewer extends IDisposable {
     closed: Event<IPlotViewer>;
+    removed: Event<number>;
     addPlot(imageHtml: string) : Promise<void>;
     show(): Promise<void>;
 }

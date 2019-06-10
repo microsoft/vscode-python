@@ -41,6 +41,7 @@ export class PlotViewerProvider implements IPlotViewerProvider, IAsyncDisposable
         if (!this.currentViewer) {
             this.currentViewer = this.serviceContainer.get<IPlotViewer>(IPlotViewer);
             this.currentViewerClosed = this.currentViewer.closed(this.closedViewer);
+            this.currentViewer.removed(this.removedPlot);
             await this.currentViewer.show();
         }
 
@@ -55,5 +56,9 @@ export class PlotViewerProvider implements IPlotViewerProvider, IAsyncDisposable
             this.currentViewerClosed.dispose();
             this.currentViewerClosed = undefined;
         }
+    }
+
+    private removedPlot = (index: number) => {
+        this.imageList.splice(index, 1);
     }
 }
