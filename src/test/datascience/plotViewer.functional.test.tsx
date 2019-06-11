@@ -12,7 +12,6 @@ import { Disposable } from 'vscode';
 
 import { IPlotViewerProvider } from '../../client/datascience/types';
 import { MainPanel } from '../../datascience-ui/plot/mainPanel';
-import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { waitForUpdate } from './reactHelpers';
 
@@ -66,16 +65,6 @@ suite('DataScience PlotViewer tests', () => {
 
         // Wait for all of the renders to go through
         await renderPromise;
-    }
-
-    function findButton(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, index: number): ReactWrapper<any, Readonly<{}>, React.Component> | undefined {
-        const mainObj = wrapper.find(MainPanel);
-        if (mainObj) {
-            const buttons = mainObj.find(ImageButton);
-            if (buttons) {
-                return buttons.at(index);
-            }
-        }
     }
 
     // tslint:disable-next-line:no-any
