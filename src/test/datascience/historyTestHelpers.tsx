@@ -12,8 +12,8 @@ import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { IDataScienceSettings } from '../../client/common/types';
 import { HistoryMessages } from '../../client/datascience/history/historyTypes';
 import { IHistory, IJupyterExecution } from '../../client/datascience/types';
-import { CellButton } from '../../datascience-ui/history-react/cellButton';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
+import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { updateSettings } from '../../datascience-ui/react-common/settingsReactSide';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createInputEvent, createKeyboardEvent, waitForUpdate } from './reactHelpers';
@@ -290,7 +290,7 @@ export async function enterInput(wrapper: ReactWrapper<any, Readonly<{}>, React.
 export function findButton(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, index: number): ReactWrapper<any, Readonly<{}>, React.Component> | undefined {
     const mainObj = wrapper.find(MainPanel);
     if (mainObj) {
-        const buttons = mainObj.find(CellButton);
+        const buttons = mainObj.find(ImageButton);
         if (buttons) {
             return buttons.at(index);
         }

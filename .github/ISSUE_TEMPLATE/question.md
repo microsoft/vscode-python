@@ -1,6 +1,7 @@
 ---
 name: Question
 about: Please search existing issues or Stack Overflow (https://stackoverflow.com/questions/tagged/visual-studio-code+python) to avoid creating duplicates
+labels: classify
 ---
 
 <!--

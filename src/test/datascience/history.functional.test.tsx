@@ -17,8 +17,8 @@ import { EditorContexts } from '../../client/datascience/constants';
 import { HistoryMessageListener } from '../../client/datascience/history/historyMessageListener';
 import { HistoryMessages } from '../../client/datascience/history/historyTypes';
 import { IHistory, IHistoryProvider } from '../../client/datascience/types';
-import { CellButton } from '../../datascience-ui/history-react/cellButton';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
+import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createDocument } from './editor-integration/helpers';
@@ -319,10 +319,10 @@ for _ in range(50):
         assert.equal(afterUndo.length, 3, `Undo should put cells back`);
 
         // find the buttons on the cell itself
-        const cellButtons = afterUndo.at(afterUndo.length - 2).find(CellButton);
-        assert.equal(cellButtons.length, 2, 'Cell buttons not found');
-        const goto = cellButtons.at(1);
-        const deleteButton = cellButtons.at(0);
+        const ImageButtons = afterUndo.at(afterUndo.length - 2).find(ImageButton);
+        assert.equal(ImageButtons.length, 2, 'Cell buttons not found');
+        const goto = ImageButtons.at(1);
+        const deleteButton = ImageButtons.at(0);
 
         // Make sure goto works
         await waitForMessageResponse(() => goto.simulate('click'));
@@ -477,9 +477,9 @@ for _ in range(50):
 
         // Then delete the node
         const lastCell = getLastOutputCell(wrapper);
-        const cellButtons = lastCell.find(CellButton);
-        assert.equal(cellButtons.length, 2, 'Cell buttons not found');
-        const deleteButton = cellButtons.at(0);
+        const ImageButtons = lastCell.find(ImageButton);
+        assert.equal(ImageButtons.length, 2, 'Cell buttons not found');
+        const deleteButton = ImageButtons.at(0);
 
         // Make sure delete works
         const afterDelete = await getCellResults(wrapper, 1, async () => {

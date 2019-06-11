@@ -110,8 +110,8 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
 
         const response = await fetchFunction(`${url}login?`, {
             method: 'post',
-            headers: { Cookie: `_xsrf=${xsrfCookie}`, Connection: 'keep-alive' },
-            body: postParams,
+            headers: { Cookie: `_xsrf=${xsrfCookie}`, Connection: 'keep-alive', 'content-type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+            body: postParams.toString(),
             redirect: 'manual'
         });
 

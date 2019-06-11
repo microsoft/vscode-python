@@ -53,7 +53,7 @@ suite('JupyterPasswordConnect', () => {
         //tslint:disable-next-line:no-http-string
         fetchMock.setup(fm => fm('http://TESTNAME:8888/login?', typemoq.It.isObjectWith({
             method: 'post',
-            headers: { Cookie: `_xsrf=${xsrfValue}`, Connection: 'keep-alive' }
+            headers: { Cookie: `_xsrf=${xsrfValue}`, Connection: 'keep-alive', 'content-type': 'application/x-www-form-urlencoded;charset=UTF-8' }
         }))).returns(() => Promise.resolve(mockSessionResponse.object)).verifiable(typemoq.Times.once());
 
         //tslint:disable-next-line:no-http-string

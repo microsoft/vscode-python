@@ -76,7 +76,8 @@
 }
 
 .cell-output-html {
-    white-space: none;
+    white-space: unset;
+    position: relative;
 }
 
 .cell-output table {
@@ -122,5 +123,16 @@
 .center-img {
     display: block;
     margin: 0 auto;
+}
+
+.cell-output-html .plot-open-button {
+    z-index: 10;
+    position: absolute;
+    left: 2px;
+    visibility: hidden;
+}
+
+.cell-output-html:hover .plot-open-button {
+    visibility: visible;
 }
 

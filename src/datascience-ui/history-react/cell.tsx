@@ -12,21 +12,22 @@ import JSONTree from 'react-json-tree';
 
 import '../../client/common/extensions';
 import { concatMultilineString, formatStreamText } from '../../client/datascience/common';
-import { Identifiers } from '../../client/datascience/constants';
+import { Identifiers, RegExpValues } from '../../client/datascience/constants';
 import { CellState, ICell } from '../../client/datascience/types';
 import { noop } from '../../test/core';
+import { Image, ImageName } from '../react-common/image';
+import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
 import { getSettings } from '../react-common/settingsReactSide';
-import './cell.css';
-import { CellButton } from './cellButton';
 import { Code } from './code';
 import { CollapseButton } from './collapseButton';
 import { ExecutionCount } from './executionCount';
-import { Image, ImageName } from './image';
 import { InformationMessages } from './informationMessages';
 import { InputHistory } from './inputHistory';
 import { MenuBar } from './menuBar';
 import { displayOrder, richestMimetype, transforms } from './transforms';
+
+import './cell.css';
 
 interface ICellProps {
     cellVM: ICellViewModel;
@@ -47,6 +48,7 @@ interface ICellProps {
     onCodeChange(changes: monacoEditor.editor.IModelContentChange[], cellId: string, modelId: string): void;
     onCodeCreated(code: string, file: string, cellId: string, modelId: string): void;
     openLink(uri: monacoEditor.Uri): void;
+    expandImage(imageHtml: string): void;
 }
 
 export interface ICellViewModel {
@@ -136,12 +138,12 @@ export class Cell extends React.Component<ICellProps> {
             return (
                 <div className={cellWrapperClass} role='row' onClick={this.onMouseClick}>
                     <MenuBar baseTheme={this.props.baseTheme}>
-                        <CellButton baseTheme={this.props.baseTheme} onClick={this.props.delete} tooltip={this.getDeleteString()} hidden={this.props.cellVM.editable}>
-                            <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.Cancel} />
-                        </CellButton>
-                        <CellButton baseTheme={this.props.baseTheme} onClick={this.props.gotoCode} tooltip={this.getGoToCodeString()} hidden={hasNoSource}>
-                            <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.GoToSourceCode} />
-                        </CellButton>
+                        <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.delete} tooltip={this.getDeleteString()} hidden={this.props.cellVM.editable}>
+                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Cancel} />
+                        </ImageButton>
+                        <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.gotoCode} tooltip={this.getGoToCodeString()} hidden={hasNoSource}>
+                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.GoToSourceCode} />
+                        </ImageButton>
                     </MenuBar>
                     <div className={cellOuterClass}>
                         {this.renderControls()}
@@ -306,14 +308,52 @@ export class Cell extends React.Component<ICellProps> {
             }
 
             try {
-                // Text/plain has to be massaged. It expects a continuous string
+                // Massage our data to make sure it displays well
                 if (output.data) {
+                    let extraButton = null;
                     const mimeBundle = output.data as nbformat.IMimeBundle;
                     let data: nbformat.MultilineString | JSONObject = mimeBundle[mimetype];
-                    if (mimetype === 'text/plain') {
-                        data = concatMultilineString(data as nbformat.MultilineString);
-                        renderWithScrollbars = true;
-                        isText = true;
+                    switch (mimetype) {
+                        case 'text/plain':
+                            // Data needs to be contiguous for us to display it.
+                            data = concatMultilineString(data as nbformat.MultilineString);
+                            renderWithScrollbars = true;
+                            isText = true;
+                            break;
+
+                        case 'image/svg+xml':
+                            // Jupyter adds a universal selector style that messes
+                            // up all of our other styles. Remove it.
+                            const html = concatMultilineString(data as nbformat.MultilineString);
+                            data = html.replace(RegExpValues.StyleTagRegex, '');
+
+                            // Also change the width to 100% so it scales correctly. We need to save the
+                            // width/height for the plot window though
+                            let sizeTag = '';
+                            const widthMatch = RegExpValues.SvgWidthRegex.exec(data);
+                            const heightMatch = RegExpValues.SvgHeightRegex.exec(data);
+                            if (widthMatch && heightMatch && widthMatch.length > 2 && heightMatch.length > 2) {
+                                // SvgHeightRegex and SvgWidthRegex match both the <svg.* and the width entry, so
+                                // pick the second group
+                                const width = widthMatch[2];
+                                const height = heightMatch[2];
+                                sizeTag = Identifiers.SvgSizeTag.format(width, height);
+                            }
+                            data = data.replace(RegExpValues.SvgWidthRegex, `$1100%" tag="${sizeTag}"`);
+
+                            // Also add an extra button to open this image.
+                            // Note: This affects the plotOpenClick. We have to skip the svg on this extraButton there
+                            extraButton = (
+                                <div className='plot-open-button'>
+                                    <ImageButton baseTheme={this.props.baseTheme} tooltip={getLocString('DataScience.plotOpen', 'Expand image')} onClick={this.plotOpenClick}>
+                                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.OpenInNewWindow} />
+                                    </ImageButton>
+                                </div>
+                            );
+                            break;
+
+                        default:
+                            break;
                     }
 
                     // Create a default set of properties
@@ -335,7 +375,12 @@ export class Cell extends React.Component<ICellProps> {
 
                     const className = isText ? 'cell-output-text' : 'cell-output-html';
 
-                    return <div id='stylewrapper' className={className} key={index} style={style}><Transform data={data} /></div>;
+                    return (
+                        <div id='stylewrapper' role='group' onDoubleClick={this.doubleClick} onClick={this.click} className={className} key={index} style={style}>
+                            {extraButton}
+                            <Transform data={data} />
+                        </div>
+                    );
                 }
             } catch (ex) {
                 window.console.log('Error in rendering');
@@ -345,6 +390,43 @@ export class Cell extends React.Component<ICellProps> {
         }
 
         return <div></div>;
+    }
+
+    private doubleClick = (event: React.MouseEvent<HTMLDivElement>) => {
+        // Extract the svg image from whatever was clicked
+        // tslint:disable-next-line: no-any
+        const svgChild = event.target as any;
+        if (svgChild && svgChild.ownerSVGElement) {
+            const svg = svgChild.ownerSVGElement as SVGElement;
+            this.props.expandImage(svg.outerHTML);
+        }
+    }
+
+    private plotOpenClick = (event?: React.MouseEvent<HTMLButtonElement>) => {
+        const divChild = event && event.currentTarget;
+        if (divChild && divChild.parentElement && divChild.parentElement.parentElement) {
+            const svgs = divChild.parentElement.parentElement.getElementsByTagName('svg');
+            if (svgs && svgs.length > 1) { // First svg should be the button itself. See the code above where we bind to this function.
+                this.props.expandImage(svgs[1].outerHTML);
+            }
+        }
+    }
+
+    private click = (event: React.MouseEvent<HTMLDivElement>) => {
+        // If this is an anchor element, forward the click as Jupyter does.
+        let anchor = event.target as HTMLAnchorElement;
+        if (anchor && anchor.href) {
+            // Href may be redirected to an inner anchor
+            if (anchor.href.startsWith('vscode')) {
+                const inner = anchor.getElementsByTagName('a');
+                if (inner && inner.length > 0) {
+                    anchor = inner[0];
+                }
+            }
+            if (anchor && anchor.href && !anchor.href.startsWith('vscode')) {
+                this.props.openLink(monacoEditor.Uri.parse(anchor.href));
+            }
+        }
     }
 
     private convertToLinearRgb(color: number) : number {

@@ -9,7 +9,7 @@ import * as path from 'path';
 import { LogOptions, traceDecorators, traceError, traceVerbose } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { IProcessServiceFactory } from '../../common/process/types';
-import { ITerminalHelper } from '../../common/terminal/types';
+import { ITerminalHelper, TerminalShellType } from '../../common/terminal/types';
 import { ICurrentProcess, IDisposable, Resource } from '../../common/types';
 import {
     cacheResourceSpecificInterpreterData,
@@ -29,9 +29,9 @@ const getEnvironmentTimeout = 30000;
 
 // The shell under which we'll execute activation scripts.
 const defaultShells = {
-    [OSType.Windows]: 'cmd',
-    [OSType.OSX]: 'bash',
-    [OSType.Linux]: 'bash',
+    [OSType.Windows]: { shell: 'cmd', shellType: TerminalShellType.commandPrompt },
+    [OSType.OSX]: { shell: 'bash', shellType: TerminalShellType.bash },
+    [OSType.Linux]: { shell: 'bash', shellType: TerminalShellType.bash },
     [OSType.Unknown]: undefined
 };
 
@@ -54,14 +54,14 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     @captureTelemetry(EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES, { failed: false }, true)
     @cacheResourceSpecificInterpreterData('ActivatedEnvironmentVariables', cacheDuration)
     public async getActivatedEnvironmentVariables(resource: Resource, interpreter?: PythonInterpreter, allowExceptions?: boolean): Promise<NodeJS.ProcessEnv | undefined> {
-        const shell = defaultShells[this.platform.osType];
-        if (!shell) {
+        const shellInfo = defaultShells[this.platform.osType];
+        if (!shellInfo) {
             return;
         }
 
         try {
-            const activationCommands = await this.helper.getEnvironmentActivationShellCommands(resource, interpreter);
-            traceVerbose(`Activation Commands received ${activationCommands}`);
+            const activationCommands = await this.helper.getEnvironmentActivationShellCommands(resource, shellInfo.shellType, interpreter);
+            traceVerbose(`Activation Commands received ${activationCommands} for shell ${shellInfo.shell}`);
             if (!activationCommands || !Array.isArray(activationCommands) || activationCommands.length === 0) {
                 return;
             }
@@ -84,7 +84,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             // See the discussion from hidesoon in this issue: https://github.com/Microsoft/vscode-python/issues/4424
             // His issue is conda never finishing during activate. This is a conda issue, but we
             // should at least tell the user.
-            const result = await processService.shellExec(command, { env, shell, timeout: getEnvironmentTimeout, maxBuffer: 1000 * 1000 });
+            const result = await processService.shellExec(command, { env, shell: shellInfo.shell, timeout: getEnvironmentTimeout, maxBuffer: 1000 * 1000 });
             if (result.stderr && result.stderr.length > 0) {
                 throw new Error(`StdErr from ShellExec, ${result.stderr}`);
             }

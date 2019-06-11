@@ -4,7 +4,7 @@
 'use strict';
 
 import { traceError } from './common/logger';
-import { RemoteDebuggerLauncherScriptProvider } from './debugger/debugAdapter/DebugClients/launcherProvider';
+import { RemoteDebuggerExternalLauncherScriptProvider } from './debugger/debugAdapter/DebugClients/launcherProvider';
 
 /*
  * Do not introduce any breaking changes to this API.
@@ -42,7 +42,7 @@ export function buildApi(ready: Promise<any>) {
         }),
         debug: {
             async getRemoteLauncherCommand(host: string, port: number, waitUntilDebuggerAttaches: boolean = true): Promise<string[]> {
-                return new RemoteDebuggerLauncherScriptProvider().getLauncherArgs({ host, port, waitUntilDebuggerAttaches });
+                return new RemoteDebuggerExternalLauncherScriptProvider().getLauncherArgs({ host, port, waitUntilDebuggerAttaches });
             }
         }
     };

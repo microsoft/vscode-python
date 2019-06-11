@@ -3,7 +3,7 @@
 'use strict';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 
-import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../constants';
+import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../messages';
 import { ICell, IHistoryInfo, IJupyterVariable, IJupyterVariablesResponse } from '../types';
 
 export namespace HistoryMessages {
@@ -54,6 +54,7 @@ export namespace HistoryMessages {
     export const LoadTmLanguageRequest = 'load_tmlanguage_request';
     export const LoadTmLanguageResponse = 'load_tmlanguage_response';
     export const OpenLink = 'open_link';
+    export const ShowPlot = 'show_plot';
 }
 
 // These are the messages that will mirror'd to guest/hosts in
@@ -205,4 +206,5 @@ export class IHistoryMapping {
     public [HistoryMessages.LoadTmLanguageRequest]: never | undefined;
     public [HistoryMessages.LoadTmLanguageResponse]: string | undefined;
     public [HistoryMessages.OpenLink]: string | undefined;
+    public [HistoryMessages.ShowPlot]: string | undefined;
 }

@@ -1,6 +1,7 @@
 ---
 name: Bug report
 about: Create a report to help us improve
+labels: classify, type-bug
 ---
 
 <!-- Please search existing issues to avoid creating duplicates. -->

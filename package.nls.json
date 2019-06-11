@@ -250,5 +250,17 @@
     "DataScience.filterRowsTooltip": "Allows filtering multiple rows. Use =, >, or < signs to filter numeric values.",
     "DataScience.previewHeader": "--- Begin preview of {0} ---",
     "DataScience.previewFooter": "--- End preview of {0} ---",
-    "DataScience.previewStatusMessage": "Generating preview of {0}"
+    "DataScience.previewStatusMessage": "Generating preview of {0}",
+    "DataScience.plotViewerTitle" : "Plots",
+    "DataScience.exportPlotTitle" : "Save plot image",
+    "DataScience.pdfFilter" : "PDF",
+    "DataScience.pngFilter" : "PNG",
+    "DataScience.svgFilter" : "SVG",
+    "DataScience.previousPlot" : "Previous",
+    "DataScience.nextPlot" : "Next",
+    "DataScience.panPlot" : "Pan",
+    "DataScience.zoomInPlot" : "Zoom in",
+    "DataScience.zoomOutPlot" : "Zoom out",
+    "DataScience.exportPlot" : "Export to different formats",
+    "DataScience.deletePlot" : "Remove"    
 }
