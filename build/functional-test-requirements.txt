@@ -3,4 +3,5 @@ versioneer
 jupyter
 numpy
 matplotlib
+pandas
 livelossplot
