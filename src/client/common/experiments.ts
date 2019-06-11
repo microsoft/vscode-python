@@ -23,6 +23,10 @@ const EXPIRY_DURATION_MS = 30 * 60 * 1000;
 export const isDownloadedStorageValidKey = 'IS_EXPERIMENTS_STORAGE_VALID_KEY';
 export const experimentStorageKey = 'EXPERIMENT_STORAGE_KEY';
 export const downloadedExperimentStorageKey = 'DOWNLOADED_EXPERIMENTS_STORAGE_KEY';
+/**
+ * Local experiments config file. We have this to ensure that experiments are used in the first session itself,
+ * as about 40% of the users never come back for the second session.
+ */
 const configFile = path.join(EXTENSION_ROOT_DIR, 'experiments.json');
 const configUri = 'https://raw.githubusercontent.com/karrtikr/check/master/environments.json';
 
@@ -139,8 +143,12 @@ export class ExperimentsManager implements IExperimentsManager {
     /**
      * Updates experiment storage using local data if available
      * Local data could be:
-     * * Experiments downloaded in the last session, the function makes sure these are used in the current session
+     * * Experiments downloaded in the last session
+     *   - The function makes sure these are used in the current session
      * * A default experiments file shipped with the extension
+     *   - Note this file is only used the first time the extension loads, and then is deleted.
+     *   - We have this local file to ensure that experiments are used in the first session itself,
+     *     as about 40% of the users never come back for the second session.
      */
     @swallowExceptions('Failed to update experiment storage')
     public async updateExperimentStorage(): Promise<void> {
@@ -159,7 +167,9 @@ export class ExperimentsManager implements IExperimentsManager {
                 await this.experimentStorage.updateValue(experiments);
             } catch (ex) {
                 traceError('Failed to parse experiments configuration file to update storage', ex);
+                return;
             }
+            await this.fs.deleteFile(configFile);
         }
     }
 }
