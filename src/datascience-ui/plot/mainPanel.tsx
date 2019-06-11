@@ -150,11 +150,11 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             }
         } else if (event.ctrlKey && event.altKey && this.viewer && this.viewer.current) {
             switch (event.key) {
-                case 'ArrowUp':
+                case '+':
                     this.viewer.current.zoom(1.5);
                     break;
 
-                case 'ArrowDown':
+                case '-':
                     this.viewer.current.zoom(0.66666);
                     break;
 
