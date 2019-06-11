@@ -118,7 +118,8 @@ export enum Telemetry {
     AddCellBelow = 'DATASCIENCE.ADD_CELL_BELOW',
     GetPasswordAttempt = 'DATASCIENCE.GET_PASSWORD_ATTEMPT',
     GetPasswordFailure = 'DATASCIENCE.GET_PASSWORD_FAILURE',
-    GetPasswordSuccess = 'DATASCIENCE.GET_PASSWORD_SUCCESS'
+    GetPasswordSuccess = 'DATASCIENCE.GET_PASSWORD_SUCCESS',
+    OpenPlotViewer = 'DATASCIENCE.OPEN_PLOT_VIEWER'
  }
 
 export namespace HelpLinks {

@@ -7,6 +7,8 @@ import { inject, injectable } from 'inversify';
 
 import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposable } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
+import { sendTelemetryEvent } from '../../telemetry';
+import { Telemetry } from '../constants';
 import { IPlotViewer, IPlotViewerProvider } from '../types';
 
 @injectable()
@@ -42,6 +44,7 @@ export class PlotViewerProvider implements IPlotViewerProvider, IAsyncDisposable
             this.currentViewer = this.serviceContainer.get<IPlotViewer>(IPlotViewer);
             this.currentViewerClosed = this.currentViewer.closed(this.closedViewer);
             this.currentViewer.removed(this.removedPlot);
+            sendTelemetryEvent(Telemetry.OpenPlotViewer);
             await this.currentViewer.show();
         }
 
