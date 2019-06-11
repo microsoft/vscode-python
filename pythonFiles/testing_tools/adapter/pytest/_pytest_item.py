@@ -102,10 +102,20 @@ import _pytest.unittest
 from ..info import TestInfo, TestPath
 
 
-class ShouldNeverReachHere(NotImplementedError):
-
-    def __init__(self, *info):
-        for line in info:
+def should_never_reach_here(node, *extra):
+    """Indicates a code path we should never reach."""
+    print('The Python extension has run into an unexpected situation')
+    print('while processing a pytest node during test discovery.  Please')
+    print('Please open an issue at:')
+    print('  https://github.com/microsoft/vscode-python/issues')
+    print('and paste the following output there.')
+    print()
+    for field, info in _summarize_item(node):
+        print('{}: {}'.format(field, info))
+    if extra:
+        print()
+        print('extra info:')
+        for info in extra:
             if isinstance(line, str):
                 print(str)
             else:
@@ -113,7 +123,15 @@ class ShouldNeverReachHere(NotImplementedError):
                     print(*line)
                 except TypeError:
                     print(line)
-        NotImplementedError.__init__(self, info)
+    print()
+    print('traceback:')
+    import traceback
+    traceback.print_stack()
+
+    msg = 'Unexpected pytest node (see printed output).'
+    exc = NotImplementedError(msg)
+    exc.node = node
+    return exc
 
 
 def parse_item(item, _normcase, _pathsep):
@@ -136,24 +154,28 @@ def parse_item(item, _normcase, _pathsep):
     relfile = fileid
     fspath = _normcase(str(item.fspath))
     if not fspath.endswith(relfile[1:]):
-        raise ShouldNeverReachHere(
-            (fspath, fileid),
+        raise should_never_reach_here(
+            item,
+            fspath,
             relfile,
             )
     testroot = fspath[:-len(relfile) + 1]
     location, fullname = _get_location(item, relfile, _normcase, _pathsep)
     if kind == 'function':
         if testfunc and fullname != testfunc + parameterized:
-            raise ShouldNeverReachHere(
-                item.nodeid,
-                (fullname, testfunc, parameterized),
+            raise should_never_reach_here(
+                item,
+                fullname,
+                testfunc,
+                parameterized,
                 )
     elif kind == 'doctest':
         if (testfunc and fullname != testfunc and
                 fullname != '[doctest] ' + testfunc):
-            raise ShouldNeverReachHere(
-                item.nodeid,
-                (fullname, testfunc),
+            raise should_never_reach_here(
+                item,
+                fullname,
+                testfunc,
                 )
         testfunc = None
 
@@ -257,8 +279,9 @@ def _parse_node_id(testid, kind, _pathsep, _normcase):
         elif kind == 'function':
             funcname = name
         else:
-            raise ShouldNeverReachHere(
-                (testid, kind),
+            raise should_never_reach_here(
+                testid,
+                kind,
                 )
         fullname = funcname
 
@@ -274,8 +297,9 @@ def _parse_node_id(testid, kind, _pathsep, _normcase):
         elif kind == 'suite':
             fullname = name + '.' + fullname
         else:
-            raise ShouldNeverReachHere(
-                (testid, node),
+            raise should_never_reach_here(
+                testid,
+                node,
                 )
     else:
         fileid = None
@@ -291,7 +315,7 @@ def _iter_nodes(nodeid, kind, _pathsep, _normcase):
     if kind == 'function' and nodeid.endswith(']'):
         funcid, sep, parameterized = nodeid.partition('[')
         if not sep:
-            raise ShouldNeverReachHere(
+            raise should_never_reach_here(
                 nodeid,
                 )
         yield (nodeid, sep + parameterized, 'subtest')
@@ -305,7 +329,7 @@ def _iter_nodes(nodeid, kind, _pathsep, _normcase):
             yield (nodeid, name, kind)
             return
         # We expect at least a filename and a name.
-        raise ShouldNeverReachHere(
+        raise should_never_reach_here(
             nodeid,
             )
     yield (nodeid, name, kind)
@@ -343,7 +367,7 @@ def _normalize_node_id(nodeid, kind, _pathsep, _normcase):
         nodeid = _normcase(fileid) + sep + remainder
 
     if nodeid.startswith(_pathsep):
-        raise ShouldNeverReachHere(
+        raise should_never_reach_here(
             nodeid,
             )
     if not nodeid.startswith('.' + _pathsep):
@@ -367,22 +391,46 @@ def _get_item_kind(item):
 #############################
 # useful for debugging
 
+_FIELDS = [
+    'nodeid',
+    'kind',
+    'class',
+    'name',
+    'fspath',
+    'location',
+    'function',
+    'markers',
+    'user_properties',
+    'attrnames',
+    ]
+
+
+def _summarize_item(item):
+    if not hasattr(item, 'nodeid'):
+        yield 'nodeid', item
+        return
+
+    for field in _FIELDS:
+        try:
+            if field == 'kind':
+                yield field,_get_item_kind(item)
+            elif field == 'class':
+                yield field, item.__class__.__name__
+            elif field == 'markers':
+                yield field, item.own_markers
+                #yield field, list(item.iter_markers())
+            elif field == 'attrnames':
+                yield field, dir(item)
+            else:
+                yield field, getattr(item, field, '<???>')
+        except Exception as exc:
+            yield field, '<error>'
+
+
 def _debug_item(item, showsummary=False):
     item._debugging = True
     try:
-        summary = {
-                'id': item.nodeid,
-                'kind': _get_item_kind(item),
-                'class': item.__class__.__name__,
-                'name': item.name,
-                'fspath': item.fspath,
-                'location': item.location,
-                'func': getattr(item, 'function', None),
-                'markers': item.own_markers,
-                #'markers': list(item.iter_markers()),
-                'props': item.user_properties,
-                'attrnames': dir(item),
-                }
+        summary = dict(_summarize_item(item))
     finally:
         item._debugging = False
 
