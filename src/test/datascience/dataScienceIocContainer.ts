@@ -99,6 +99,8 @@ import { JupyterPasswordConnect } from '../../client/datascience/jupyter/jupyter
 import { JupyterServerFactory } from '../../client/datascience/jupyter/jupyterServerFactory';
 import { JupyterSessionManager } from '../../client/datascience/jupyter/jupyterSessionManager';
 import { JupyterVariables } from '../../client/datascience/jupyter/jupyterVariables';
+import { PlotViewer } from '../../client/datascience/plotting/plotViewer';
+import { PlotViewerProvider } from '../../client/datascience/plotting/plotViewerProvider';
 import { StatusProvider } from '../../client/datascience/statusProvider';
 import { ThemeFinder } from '../../client/datascience/themeFinder';
 import {
@@ -119,6 +121,8 @@ import {
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
+    IPlotViewer,
+    IPlotViewerProvider,
     IStatusProvider,
     IThemeFinder
 } from '../../client/datascience/types';
@@ -286,9 +290,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecutionFactory);
         this.serviceManager.addSingleton<IHistoryProvider>(IHistoryProvider, HistoryProvider);
         this.serviceManager.addSingleton<IDataViewerProvider>(IDataViewerProvider, DataViewerProvider);
+        this.serviceManager.addSingleton<IPlotViewerProvider>(IPlotViewerProvider, PlotViewerProvider);
         this.serviceManager.addSingleton<ILogger>(ILogger, Logger);
         this.serviceManager.add<IHistory>(IHistory, History);
         this.serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
+        this.serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
         this.serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
         this.serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
         this.serviceManager.addSingleton<ILiveShareApi>(ILiveShareApi, MockLiveShareApi);

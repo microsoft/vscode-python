@@ -359,6 +359,10 @@ export function setUpDomEnvironment() {
         };
     };
 
+    (global as any)['DOMParser'] = dom.window.DOMParser;
+    (global as any)['Blob'] = dom.window.Blob;
+    (global as any)['Image'] = dom.window.Blob;
+
     configure({ adapter: new Adapter() });
 
     // Special case for the node_modules\monaco-editor\esm\vs\editor\browser\config\configuration.js. It doesn't
