@@ -36,6 +36,10 @@ const configUri = 'https://raw.githubusercontent.com/karrtikr/check/master/envir
 @injectable()
 export class ExperimentsManager implements IExperimentsManager {
     /**
+     * Keeps track of the list of experiments user is in
+     */
+    public userExperiments: ABExperiments = [];
+    /**
      * Keeps track of the downloaded experiments in the previous sessions
      */
     private experimentStorage: IPersistentState<ABExperiments | undefined>;
@@ -57,10 +61,6 @@ export class ExperimentsManager implements IExperimentsManager {
      * download storages by itself should not have an Expiry (so that it can be used in the next session even when download fails in the current session)
      */
     private isDownloadedStorageValid: IPersistentState<boolean>;
-    /**
-     * Keeps track of the list of experiments user is in
-     */
-    private userExperiments: ABExperiments = [];
     private activatedOnce: boolean = false;
     constructor(
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
@@ -85,12 +85,17 @@ export class ExperimentsManager implements IExperimentsManager {
         await this.updateExperimentStorage();
         this.populateUserExperiments();
         for (const exp of this.userExperiments || []) {
+            /**
+             * Experiments can change the way the extension activates and functions.
+             * We need to know the logs we observe are because of an experiment or simply because of a user-preference.
+             */
             this.output.appendLine(Experiments.inGroup().format(exp.name));
         }
         this.initializeInBackground().ignoreErrors();
     }
 
     public inExperiment(experimentName: string): boolean {
+        this.sendTelemetryIfInExperiment(experimentName);
         return this.userExperiments.find(exp => exp.name === experimentName) ? true : false;
     }
 
@@ -101,15 +106,19 @@ export class ExperimentsManager implements IExperimentsManager {
     public populateUserExperiments(): void {
         if (Array.isArray(this.experimentStorage.value)) {
             for (const experiment of this.experimentStorage.value) {
-                if (this.isUserInRange(experiment.min, experiment.max, experiment.salt)) {
-                    this.userExperiments.push(experiment);
+                try {
+                    if (this.isUserInRange(experiment.min, experiment.max, experiment.salt)) {
+                        this.userExperiments.push(experiment);
+                    }
+                } catch (ex) {
+                    traceError(`Failed to populate experiment list for experiment '${experiment.name}'`, ex);
                 }
             }
         }
     }
 
     public sendTelemetryIfInExperiment(experimentName: string): void {
-        if (this.inExperiment(experimentName)) {
+        if (this.userExperiments.find(exp => exp.name === experimentName)) {
             sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS, undefined, { expName: experimentName });
         }
     }
@@ -135,13 +144,13 @@ export class ExperimentsManager implements IExperimentsManager {
      * @param max The upper limit
      * @param salt The experiment salt value
      */
-    public isUserInRange(min: number, max: number, salt: string) {
+    public isUserInRange(min: number, max: number, salt: string): boolean {
         const hash = this.crypto.createHash(`${this.appEnvironment.machineId}+${salt}`, 'hex', 'number');
         return hash % 100 >= min && hash % 100 < max;
     }
 
     /**
-     * Updates experiment storage using local data if available
+     * Updates experiment storage using local data if available.
      * Local data could be:
      * * Experiments downloaded in the last session
      *   - The function makes sure these are used in the current session

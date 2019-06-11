@@ -24,7 +24,7 @@ import { createDeferred, createDeferredFromPromise } from '../../client/common/u
 import { sleep } from '../common';
 
 // tslint:disable-next-line: max-func-body-length
-suite('A/B experiments', () => {
+suite('xA/B experiments', () => {
     let workspaceService: IWorkspaceService;
     let httpClient: IHttpClient;
     let crypto: ICryptoUtils;
@@ -244,26 +244,20 @@ suite('A/B experiments', () => {
             {
                 testName: 'If experiment\'s name is not in user experiment list, user is not in experiment',
                 experimentName: 'imaginary experiment',
+                userExperiments: [{ name: 'experiment1', salt: 'salt', min: 79, max: 94 }, { name: 'experiment2', salt: 'salt', min: 19, max: 30 }],
                 expectedResult: false
             },
             {
                 testName: 'If experiment\'s name is in user experiment list and hash modulo output is in range, user is in experiment',
                 experimentName: 'experiment1',
+                userExperiments: [{ name: 'experiment1', salt: 'salt', min: 79, max: 94 }, { name: 'experiment2', salt: 'salt', min: 19, max: 30 }],
                 expectedResult: true
             }
         ];
 
     testsForInExperiment.forEach(testParams => {
         test(testParams.testName, async () => {
-            experimentStorage.setup(n => n.value).returns(() => [{ name: 'experiment1', salt: 'salt', min: 79, max: 94 }]);
-            when(appEnvironment.machineId).thenReturn('101');
-            if (testParams.error) {
-                when(crypto.createHash(anything(), 'hex', 'number')).thenThrow(new Error('Kaboom'));
-            } else {
-                when(crypto.createHash(anything(), 'hex', 'number')).thenReturn(testParams.hash);
-            }
-
-            verify(httpClient.getJSON(anything(), false)).never();
+            expManager.userExperiments = testParams.userExperiments;
             expect(expManager.inExperiment(testParams.experimentName)).to.equal(testParams.expectedResult, 'Incorrectly identified');
         });
     });
@@ -285,6 +279,12 @@ suite('A/B experiments', () => {
                 testName: 'Returns false if hash modulo is more than max',
                 hash: 3297,
                 expectedResult: false
+            },
+            {
+                testName: 'If checking if user is in range fails with error, throw error',
+                hash: 3297,
+                error: true,
+                expectedResult: false
             }
         ];
 
@@ -292,40 +292,39 @@ suite('A/B experiments', () => {
         testsForIsUserInRange.forEach(testParams => {
             test(testParams.testName, async () => {
                 when(appEnvironment.machineId).thenReturn('101');
-                when(crypto.createHash(anything(), 'hex', 'number')).thenReturn(testParams.hash);
-
-                expect(expManager.isUserInRange(79, 94, 'salt')).to.equal(testParams.expectedResult, 'Incorrectly identified');
+                if (testParams.error) {
+                    const error = new Error('Kaboom');
+                    when(crypto.createHash(anything(), 'hex', 'number')).thenThrow(error);
+                    expect(() => expManager.isUserInRange(79, 94, 'salt')).to.throw(error);
+                } else {
+                    when(crypto.createHash(anything(), 'hex', 'number')).thenReturn(testParams.hash);
+                    expect(expManager.isUserInRange(79, 94, 'salt')).to.equal(testParams.expectedResult, 'Incorrectly identified');
+                }
             });
         });
     });
 
-    const testsForLogExperimentGroups =
+    const testsForPopulateUserExperiments =
         [
             {
-                testName: 'Does not log anything if experiment storage value is not an array',
+                testName: 'User experiments list is empty if experiment storage value is not an array',
                 experimentStorageValue: undefined,
-                logged: false
+                expectedResult: []
             },
             {
-                testName: 'Does not log anything if experiment storage value is an empty array',
+                testName: 'User experiments list is empty if experiment storage value is an empty array',
                 experimentStorageValue: [],
-                logged: false
+                expectedResult: []
             },
             {
-                testName: 'Does not log anything if user is not in experiment range',
-                experimentStorageValue: [{ name: 'experiment1', salt: 'salt', min: 79, max: 94 }],
-                hash: 612,
-                logged: false
-            },
-            {
-                testName: 'Logs experiment group if user is in experiment range',
-                experimentStorageValue: [{ name: 'experiment1', salt: 'salt', min: 79, max: 94 }],
+                testName: 'User experiments list contains the experiment if and only if user is in experiment range',
+                experimentStorageValue: [{ name: 'experiment1', salt: 'salt', min: 79, max: 94 }, { name: 'experiment2', salt: 'salt', min: 19, max: 30 }],
                 hash: 8187,
-                logged: true
+                expectedResult: [{ name: 'experiment1', salt: 'salt', min: 79, max: 94 }]
             }
         ];
 
-    testsForLogExperimentGroups.forEach(testParams => {
+    testsForPopulateUserExperiments.forEach(testParams => {
         test(testParams.testName, async () => {
             experimentStorage
                 .setup(n => n.value)
@@ -334,17 +333,8 @@ suite('A/B experiments', () => {
             if (testParams.hash) {
                 when(crypto.createHash(anything(), 'hex', 'number')).thenReturn(testParams.hash);
             }
-            if (testParams.logged) {
-                output
-                    .setup(o => o.appendLine(TypeMoq.It.isAny()))
-                    .verifiable(TypeMoq.Times.once());
-            } else {
-                output
-                    .setup(o => o.appendLine(TypeMoq.It.isAny()))
-                    .verifiable(TypeMoq.Times.never());
-            }
-            expManager.logExperimentGroups();
-            output.verifyAll();
+            expManager.populateUserExperiments();
+            assert.deepEqual(expManager.userExperiments, testParams.expectedResult);
         });
     });
 });
