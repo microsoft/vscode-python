@@ -325,7 +325,7 @@ export class Cell extends React.Component<ICellProps> {
                             // Jupyter adds a universal selector style that messes
                             // up all of our other styles. Remove it.
                             const html = concatMultilineString(data as nbformat.MultilineString);
-                            data = html.replace(/\<style[\s\S]*\<\/style\>/m, '');
+                            data = html.replace(RegExpValues.StyleTagRegex, '');
 
                             // Also change the width to 100% so it scales correctly. We need to save the
                             // width/height for the plot window though
@@ -333,13 +333,16 @@ export class Cell extends React.Component<ICellProps> {
                             const widthMatch = RegExpValues.SvgWidthRegex.exec(data);
                             const heightMatch = RegExpValues.SvgHeightRegex.exec(data);
                             if (widthMatch && heightMatch && widthMatch.length > 2 && heightMatch.length > 2) {
+                                // SvgHeightRegex and SvgWidthRegex match both the <svg.* and the width entry, so
+                                // pick the second group
                                 const width = widthMatch[2];
                                 const height = heightMatch[2];
                                 sizeTag = Identifiers.SvgSizeTag.format(width, height);
                             }
                             data = data.replace(RegExpValues.SvgWidthRegex, `$1100%" tag="${sizeTag}"`);
 
-                            // Also add an extra button to open this image
+                            // Also add an extra button to open this image.
+                            // Note: This affects the plotOpenClick. We have to skip the svg on this extraButton there
                             extraButton = (
                                 <div className='plot-open-button'>
                                     <ImageButton baseTheme={this.props.baseTheme} tooltip={getLocString('DataScience.plotOpen', 'Expand image')} onClick={this.plotOpenClick}>
@@ -403,7 +406,7 @@ export class Cell extends React.Component<ICellProps> {
         const divChild = event && event.currentTarget;
         if (divChild && divChild.parentElement && divChild.parentElement.parentElement) {
             const svgs = divChild.parentElement.parentElement.getElementsByTagName('svg');
-            if (svgs && svgs.length > 1) { // First svg should be the button itself.
+            if (svgs && svgs.length > 1) { // First svg should be the button itself. See the code above where we bind to this function.
                 this.props.expandImage(svgs[1].outerHTML);
             }
         }

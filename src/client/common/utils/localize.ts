@@ -180,8 +180,8 @@ export namespace DataScience {
     export const plotViewerTitle = localize('DataScience.plotViewerTitle', 'Plots');
     export const exportPlotTitle = localize('DataScience.exportPlotTitle', 'Save plot image');
     export const pdfFilter = localize('DataScience.pdfFilter', 'PDF');
-    export const pngFilter = localize('DataScience.pdfFilter', 'PNG');
-    export const svgFilter = localize('DataScience.pdfFilter', 'SVG');
+    export const pngFilter = localize('DataScience.pngFilter', 'PNG');
+    export const svgFilter = localize('DataScience.svgFilter', 'SVG');
     export const previousPlot = localize('DataScience.previousPlot', 'Previous');
     export const nextPlot = localize('DataScience.nextPlot', 'Next');
     export const panPlot = localize('DataScience.panPlot', 'Pan');

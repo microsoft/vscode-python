@@ -361,7 +361,6 @@ export function setUpDomEnvironment() {
 
     (global as any)['DOMParser'] = dom.window.DOMParser;
     (global as any)['Blob'] = dom.window.Blob;
-    (global as any)['Image'] = dom.window.Blob;
 
     configure({ adapter: new Adapter() });
 

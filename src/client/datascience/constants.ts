@@ -68,6 +68,7 @@ export namespace RegExpValues {
     export const SvgHeightRegex = /(\<svg.*height=\")(.*?)\"/;
     export const SvgWidthRegex = /(\<svg.*width=\")(.*?)\"/;
     export const SvgSizeTagRegex = /\<svg.*tag=\"sizeTag=\{(.*),\s*(.*)\}\"/;
+    export const StyleTagRegex = /\<style[\s\S]*\<\/style\>/m;
 
 }
 

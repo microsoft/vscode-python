@@ -20,7 +20,6 @@ import './mainPanel.css';
 import { TestSvg } from './testSvg';
 import { Toolbar } from './toolbar';
 
-//import { ReactFromHtml } from '../react-common/reactFromHtml';
 export interface IMainPanelProps {
     skipDefault?: boolean;
     baseTheme: string;
@@ -289,7 +288,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private convertSizeToPixels(size: string) : number {
         let multiplier = 1;
         if (size.endsWith('pt')) {
-            multiplier = 1.33;
+            multiplier = window.devicePixelRatio * 0.8866666;
         }
         return parseInt(size, 10) * multiplier;
     }

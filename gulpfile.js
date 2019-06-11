@@ -158,7 +158,7 @@ gulp.task('inlinesource', () => {
 
 gulp.task('check-datascience-dependencies', () => checkDatascienceDependencies());
 
-gulp.task('compile-webviews', async () => spawnAsync('npx', ['webpack', '--config', 'webpack.datascience-ui.config.js', '--mode', 'production']));
+gulp.task('compile-webviews', async () => spawnAsync('npx', ['-n', '--max_old_space_size=4096', 'webpack', '--config', 'webpack.datascience-ui.config.js', '--mode', 'production']));
 
 gulp.task('webpack', async () => {
     await buildWebPack('production', []);
@@ -202,7 +202,7 @@ async function updateBuildNumber(args) {
 async function buildWebPack(webpackConfigName, args) {
     // Remember to perform a case insensitive search.
     const allowedWarnings = getAllowedWarningsForWebPack(webpackConfigName).map(item => item.toLowerCase());
-    const stdOut = await spawnAsync('npx', ['webpack', ...args, ...['--mode', 'production']], allowedWarnings);
+    const stdOut = await spawnAsync('npx', ['-n', '--max_old_space_size=4096', 'webpack', ...args, ...['--mode', 'production']], allowedWarnings);
     const stdOutLines = stdOut
         .split(os.EOL)
         .map(item => item.trim())
