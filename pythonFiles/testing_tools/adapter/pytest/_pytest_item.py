@@ -144,7 +144,6 @@ def parse_item(item, _normcase, _pathsep):
     location, fullname = _get_location(item, relfile, _normcase, _pathsep)
     if kind == 'function':
         if testfunc and fullname != testfunc + parameterized:
-            # TODO: What to do?
             raise ShouldNeverReachHere(
                 item.nodeid,
                 (fullname, testfunc, parameterized),
@@ -152,7 +151,6 @@ def parse_item(item, _normcase, _pathsep):
     elif kind == 'doctest':
         if (testfunc and fullname != testfunc and
                 fullname != '[doctest] ' + testfunc):
-            # TODO: What to do?
             raise ShouldNeverReachHere(
                 item.nodeid,
                 (fullname, testfunc),
@@ -178,7 +176,7 @@ def parse_item(item, _normcase, _pathsep):
             markers.add('skip-if')
         elif marker.name == 'xfail':
             markers.add('expected-failure')
-        # TODO: Support other markers?
+        # We can add support for other markers as we need them?
 
     test = TestInfo(
         id=nodeid,
@@ -302,10 +300,11 @@ def _iter_nodes(nodeid, kind, _pathsep, _normcase):
     parentid, _, name = nodeid.rpartition('::')
     if not parentid:
         if kind is None:
-            # TODO: Is this really possible with plugins?
+            # This assumes that plugins can generate nodes that do not
+            # have a parent.  All the builtin nodes have one.
             yield (nodeid, name, kind)
             return
-        # TODO: What to do?  We expect at least a filename and a name.
+        # We expect at least a filename and a name.
         raise ShouldNeverReachHere(
             nodeid,
             )
@@ -326,7 +325,8 @@ def _iter_nodes(nodeid, kind, _pathsep, _normcase):
         folderid = parentid
         parentid, _, foldername = folderid.rpartition(_pathsep)
         yield (folderid, foldername, 'folder')
-    testroot = None  # TODO: For now we fill it in later, if needed.
+    # We set the actual test root later at the bottom of parse_item().
+    testroot = None
     yield (parentid, testroot, 'folder')
 
 
@@ -358,7 +358,7 @@ def _get_item_kind(item):
     elif isinstance(item, _pytest.unittest.TestCaseFunction):
         return 'function', True
     elif isinstance(item, pytest.Function):
-        # TODO: maybe return "method", "subtest", etc.?
+        # We *could* be more specific, e.g. "method", "subtest".
         return 'function', False
     else:
         return None, False
@@ -370,7 +370,6 @@ def _get_item_kind(item):
 def _debug_item(item, showsummary=False):
     item._debugging = True
     try:
-        # TODO: Make a PytestTest class to wrap the item?
         summary = {
                 'id': item.nodeid,
                 'kind': _get_item_kind(item),
