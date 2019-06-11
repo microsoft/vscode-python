@@ -20,33 +20,39 @@ import { swallowExceptions } from './utils/decorators';
 import { Experiments } from './utils/localize';
 
 const EXPIRY_DURATION_MS = 30 * 60 * 1000;
-export const isStorageValidKey = 'IS_EXPERIMENTS_STORAGE_VALID_KEY';
+export const isDownloadedStorageValidKey = 'IS_EXPERIMENTS_STORAGE_VALID_KEY';
 export const experimentStorageKey = 'EXPERIMENT_STORAGE_KEY';
 export const downloadedExperimentStorageKey = 'DOWNLOADED_EXPERIMENTS_STORAGE_KEY';
 const configFile = path.join(EXTENSION_ROOT_DIR, 'experiments.json');
 const configUri = 'https://raw.githubusercontent.com/karrtikr/check/master/environments.json';
 
+/**
+ * Manages and stores experiments, implements the AB testing functionality
+ */
 @injectable()
 export class ExperimentsManager implements IExperimentsManager {
     /**
-     * @private experimentStorage
      * Keeps track of the downloaded experiments in the previous sessions
      */
     private experimentStorage: IPersistentState<ABExperiments | undefined>;
     /**
-     * @private downloadedExperimentsStorage
      * Keeps track of the downloaded experiments in the current session, to be used in the next startup
      * Note experiments downloaded in the current session has to be distinguished
-     * from the experiments download in the previous session (experimentsStorage contains that)
+     * from the experiments download in the previous session (experimentsStorage contains that), reason being the following
+     *
+     * THE REASON TO WHY WE NEED TWO STATE STORES USED TO STORE EXPERIMENTS:
+     * We do not intend to change experiments mid-session. To implement this, we should make sure that we do not replace
+     * the experiments used in the current session by the newly downloaded experiments. That's why we have a separate
+     * storage(downloadedExperimentsStorage) to store experiments downloaded in the current session.
+     * Function updateExperimentStorage() makes sure these are used in the next session.
      */
     private downloadedExperimentsStorage: IPersistentState<ABExperiments | undefined>;
     /**
-     * @private isStorageValid
      * Keeps track if the storage needs updating or not.
      * Note this has to be separate from the actual storage as
-     * storages by itself should not have an Expiry (so that it can be used even when download fails)
+     * download storages by itself should not have an Expiry (so that it can be used in the next session even when download fails in the current session)
      */
-    private isStorageValid: IPersistentState<boolean>;
+    private isDownloadedStorageValid: IPersistentState<boolean>;
     private activatedOnce: boolean = false;
     constructor(
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
@@ -57,7 +63,7 @@ export class ExperimentsManager implements IExperimentsManager {
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel,
         @inject(IFileSystem) private readonly fs: IFileSystem
     ) {
-        this.isStorageValid = this.persistentStateFactory.createGlobalPersistentState<boolean>(isStorageValidKey, false, EXPIRY_DURATION_MS);
+        this.isDownloadedStorageValid = this.persistentStateFactory.createGlobalPersistentState<boolean>(isDownloadedStorageValidKey, false, EXPIRY_DURATION_MS);
         this.experimentStorage = this.persistentStateFactory.createGlobalPersistentState<ABExperiments | undefined>(experimentStorageKey, undefined);
         this.downloadedExperimentsStorage = this.persistentStateFactory.createGlobalPersistentState<ABExperiments | undefined>(downloadedExperimentStorageKey, undefined);
     }
@@ -73,21 +79,6 @@ export class ExperimentsManager implements IExperimentsManager {
         this.initializeInBackground().ignoreErrors();
     }
 
-    @traceDecorators.error('Failed to initialize experiments')
-    public async initializeInBackground() {
-        if (isTelemetryDisabled(this.workspaceService) || this.isStorageValid.value) {
-            return;
-        }
-        const downloadedExperiments = await this.httpClient.getJSON<ABExperiments>(configUri, false);
-        await this.downloadedExperimentsStorage.updateValue(downloadedExperiments);
-        await this.isStorageValid.updateValue(true);
-    }
-
-    /**
-     * Checks if user is in experiment or not
-     * @param experimentName Name of the experiment
-     * @returns `true` if user is in experiment, `false` if user is not in experiment and `undefined` if it cannot be inferred
-     */
     public inExperiment(experimentName: string): boolean | undefined {
         try {
             const experiments = this.experimentStorage.value ? this.experimentStorage.value : [];
@@ -107,6 +98,21 @@ export class ExperimentsManager implements IExperimentsManager {
     }
 
     /**
+     * Downloads experiments and updates storage given following conditions are met
+     * * Telemetry is not disabled
+     * * Previously downloaded experiments are no longer valid
+     */
+    @traceDecorators.error('Failed to initialize experiments')
+    public async initializeInBackground() {
+        if (isTelemetryDisabled(this.workspaceService) || this.isDownloadedStorageValid.value) {
+            return;
+        }
+        const downloadedExperiments = await this.httpClient.getJSON<ABExperiments>(configUri, false);
+        await this.downloadedExperimentsStorage.updateValue(downloadedExperiments);
+        await this.isDownloadedStorageValid.updateValue(true);
+    }
+
+    /**
      * Checks if user falls between the range of the experiment
      * @param min The lower limit
      * @param max The upper limit
@@ -117,6 +123,9 @@ export class ExperimentsManager implements IExperimentsManager {
         return hash % 100 >= min && hash % 100 < max;
     }
 
+    /**
+     * Logs the experiment groups user is in
+     */
     @traceDecorators.error('Failed to log experiment groups')
     public logExperimentGroups(): void {
         if (Array.isArray(this.experimentStorage.value)) {
@@ -130,6 +139,9 @@ export class ExperimentsManager implements IExperimentsManager {
 
     /**
      * Updates experiment storage using local data if available
+     * Local data could be:
+     * * Experiments downloaded in the last session, the function makes sure these are used in the current session
+     * * A default experiments file shipped with the extension
      */
     @swallowExceptions('Failed to update experiment storage')
     public async updateExperimentStorage(): Promise<void> {

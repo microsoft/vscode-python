@@ -116,17 +116,26 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         }
     }
 
+    /**
+     * Checks if user has not manually set `jediEnabled` setting
+     * @param resource
+     * @returns `true` if user has NOT manually added the setting and is using default configuration, `false` if user has `jediEnabled` setting added
+     */
     public isJediUsingDefaultConfiguration(resource?: Uri): boolean {
         const settings = this.workspaceService.getConfiguration('python', resource)!.inspect<boolean>('jediEnabled')!;
         return (settings.globalValue === undefined && settings.workspaceValue === undefined && settings.workspaceFolderValue === undefined);
     }
 
+    /**
+     * Checks if user is using Jedi as intellisense
+     * @returns `true` if user is using jedi, `false` if user is using language server
+     */
     public useJedi(): boolean {
         if (this.isJediUsingDefaultConfiguration()) {
             if (this.abExperiments.inExperiment(LSEnabled)) {
                 return false;
             }
-            // Send telemetry for the control group
+            // Send telemetry if user is in control group
             this.abExperiments.inExperiment(LSControl);
         }
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);

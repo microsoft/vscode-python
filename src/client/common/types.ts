@@ -410,13 +410,26 @@ export interface IAsyncDisposable {
     dispose(): Promise<void>;
 }
 
+/**
+ * Stores hash formats
+ */
 export interface IHashFormat {
-    'number': number;
-    'string': string;
+    'number': number; // If hash format is a number
+    'string': string; // If hash format is a string
 }
 
+/**
+ * Interface used to implement cryptography tools
+ */
 export const ICryptoUtils = Symbol('ICryptoUtils');
 export interface ICryptoUtils {
+    /**
+     * Creates hash using the data and encoding specified
+     * @returns hash as number, or string
+     * @param data The string to hash
+     * @param encoding Data encoding to use
+     * @param hashFormat Return format of the hash, number or string
+     */
     createHash<E extends keyof IHashFormat>(data: string, encoding: HexBase64Latin1Encoding, hashFormat: E): IHashFormat[E];
 }
 
@@ -429,9 +442,27 @@ export interface IAsyncDisposableRegistry extends IAsyncDisposable {
  where the experiment is valid for users falling between the number 'min' and 'max'
  More details: https://en.wikipedia.org/wiki/A/B_testing
 */
-export type ABExperiments = { name: string; salt: string; min: number; max: number }[];
+export type ABExperiments = {
+    name: string; // Name of the experiment
+    salt: string; // Salt string for the experiment
+    min: number;  // Lower limit for the experiment
+    max: number;  // Upper limit for the experiment
+}[];
+
+/**
+ * Interface used to implement AB testing
+ */
 export const IExperimentsManager = Symbol('IExperimentsManager');
 export interface IExperimentsManager {
+    /**
+     * Checks if experiments are enabled, sets required environment to be used for the experiments, logs experiment groups
+     */
     activate(): Promise<void>;
+
+    /**
+     * Checks if user is in experiment or not
+     * @param experimentName Name of the experiment
+     * @returns `true` if user is in experiment, `false` if user is not in experiment and `undefined` if it cannot be inferred
+     */
     inExperiment(experimentName: string): boolean | undefined;
 }

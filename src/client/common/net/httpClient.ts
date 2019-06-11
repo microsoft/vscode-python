@@ -24,11 +24,6 @@ export class HttpClient implements IHttpClient {
         return request(uri, this.requestOptions);
     }
 
-    /**
-     * Downloads file from uri as string and parses them into JSON objects
-     * @param uri The uri to download the JSON from
-     * @param strict Set `false` to allow trailing comma and comments in the JSON, defaults to `true`
-     */
     public async getJSON<T>(uri: string, strict: boolean = true): Promise<T> {
         // tslint:disable-next-line:no-require-imports
         const request = require('request') as typeof requestTypes;

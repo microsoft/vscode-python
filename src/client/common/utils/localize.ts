@@ -50,7 +50,7 @@ export namespace LanguageService {
 }
 
 export namespace Experiments {
-    export const inGroup = localize('Experiments.inGroup', 'User belongs to experiment group, {0}');
+    export const inGroup = localize('Experiments.inGroup', 'User belongs to experiment group {0}');
 }
 export namespace Interpreters {
     export const loading = localize('Interpreters.LoadingInterpreters', 'Loading Python Interpreters');

@@ -42,6 +42,11 @@ export interface ILanguageServerActivator extends IDisposable {
 export const IHttpClient = Symbol('IHttpClient');
 export interface IHttpClient {
     downloadFile(uri: string): Promise<RequestResult>;
+    /**
+     * Downloads file from uri as string and parses them into JSON objects
+     * @param uri The uri to download the JSON from
+     * @param strict Set `false` to allow trailing comma and comments in the JSON, defaults to `true`
+     */
     getJSON<T>(uri: string, strict?: boolean): Promise<T>;
 }
 

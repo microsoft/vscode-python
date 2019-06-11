@@ -14,7 +14,7 @@ import { ApplicationEnvironment } from '../../client/common/application/applicat
 import { IApplicationEnvironment, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { CryptoUtils } from '../../client/common/crypto';
-import { downloadedExperimentStorageKey, ExperimentsManager, experimentStorageKey, isStorageValidKey } from '../../client/common/experiments';
+import { downloadedExperimentStorageKey, ExperimentsManager, experimentStorageKey, isDownloadedStorageValidKey } from '../../client/common/experiments';
 import { HttpClient } from '../../client/common/net/httpClient';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { FileSystem } from '../../client/common/platform/fileSystem';
@@ -47,7 +47,7 @@ suite('A/B experiments', () => {
         downloadedExperimentsStorage = TypeMoq.Mock.ofType<IPersistentState<any>>();
         output = TypeMoq.Mock.ofType<IOutputChannel>();
         fs = mock(FileSystem);
-        when(persistentStateFactory.createGlobalPersistentState(isStorageValidKey, false, anything())).thenReturn(isStorageValid.object);
+        when(persistentStateFactory.createGlobalPersistentState(isDownloadedStorageValidKey, false, anything())).thenReturn(isStorageValid.object);
         when(persistentStateFactory.createGlobalPersistentState(experimentStorageKey, undefined as any)).thenReturn(experimentStorage.object);
         when(persistentStateFactory.createGlobalPersistentState(downloadedExperimentStorageKey, undefined as any)).thenReturn(downloadedExperimentsStorage.object);
         expManager = new ExperimentsManager(instance(persistentStateFactory), instance(workspaceService), instance(httpClient), instance(crypto), instance(appEnvironment), output.object, instance(fs));
