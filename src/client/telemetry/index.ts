@@ -323,6 +323,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ConnectLocalJupyter]: never | undefined;
     [Telemetry.ConnectRemoteJupyter]: never | undefined;
     [Telemetry.ConnectRemoteFailedJupyter]: never | undefined;
+    [Telemetry.CopySourceCode]: never | undefined;
     [Telemetry.DataScienceSettings]: JSONObject;
     [Telemetry.DeleteAllCells]: never | undefined;
     [Telemetry.DeleteCell]: never | undefined;

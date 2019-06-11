@@ -9,6 +9,7 @@ import * as TypeMoq from 'typemoq';
 import { Disposable, TextDocument, TextEditor } from 'vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
+import { PYTHON_LANGUAGE } from '../../client/common/constants';
 import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { generateCellsFromDocument } from '../../client/datascience/cellFactory';
@@ -320,7 +321,7 @@ for _ in range(50):
 
         // find the buttons on the cell itself
         const ImageButtons = afterUndo.at(afterUndo.length - 2).find(ImageButton);
-        assert.equal(ImageButtons.length, 2, 'Cell buttons not found');
+        assert.equal(ImageButtons.length, 3, 'Cell buttons not found');
         const goto = ImageButtons.at(1);
         const deleteButton = ImageButtons.at(0);
 
@@ -466,6 +467,43 @@ for _ in range(50):
         verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
     }, () => { return ioc; });
 
+    runMountedTest('Copy to source input', async (wrapper) => {
+        const showedEditor = createDeferred();
+        const textEditors: TextEditor[] = [];
+        const docManager = TypeMoq.Mock.ofType<IDocumentManager>();
+        const visibleEditor = TypeMoq.Mock.ofType<TextEditor>();
+        const dummyDocument = TypeMoq.Mock.ofType<TextDocument>();
+        dummyDocument.setup(d => d.fileName).returns(() => 'foo.py');
+        dummyDocument.setup(d => d.languageId).returns(() => PYTHON_LANGUAGE);
+        dummyDocument.setup(d => d.lineCount).returns(() => 10);
+        dummyDocument.setup(d => d.getText()).returns(() => '# No cells here');
+        visibleEditor.setup(v => v.show()).returns(noop);
+        visibleEditor.setup(v => v.revealRange(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => showedEditor.resolve());
+        visibleEditor.setup(v => v.document).returns(() => dummyDocument.object);
+        visibleEditor.setup(v => v.edit(TypeMoq.It.isAny())).returns(() => Promise.resolve(true));
+        textEditors.push(visibleEditor.object);
+        docManager.setup(a => a.visibleTextEditors).returns(() => textEditors);
+        docManager.setup(a => a.activeTextEditor).returns(() => undefined);
+        ioc.serviceManager.rebindInstance<IDocumentManager>(IDocumentManager, docManager.object);
+
+        // Create a history so that it listens to the results.
+        const history = await getOrCreateHistory();
+        await history.show();
+
+        // Then enter some code.
+        await enterInput(wrapper, 'a=1\na');
+        verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
+        const ImageButtons = getLastOutputCell(wrapper).find(ImageButton);
+        assert.equal(ImageButtons.length, 3, 'Cell buttons not found');
+        const copyToSource = ImageButtons.at(2);
+
+        // Then click the copy to source button
+        await waitForMessageResponse(() => copyToSource.simulate('click'));
+        await Promise.race([sleep(100), showedEditor.promise]);
+        assert.ok(showedEditor.resolved, 'Copy to source is not adding code to the editor');
+
+    }, () => { return ioc; });
+
     runMountedTest('Multiple input', async (wrapper) => {
         // Create a history so that it listens to the results.
         const history = await getOrCreateHistory();
@@ -478,7 +516,7 @@ for _ in range(50):
         // Then delete the node
         const lastCell = getLastOutputCell(wrapper);
         const ImageButtons = lastCell.find(ImageButton);
-        assert.equal(ImageButtons.length, 2, 'Cell buttons not found');
+        assert.equal(ImageButtons.length, 3, 'Cell buttons not found');
         const deleteButton = ImageButtons.at(0);
 
         // Make sure delete works
