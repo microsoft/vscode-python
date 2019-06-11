@@ -102,6 +102,20 @@ import _pytest.unittest
 from ..info import TestInfo, TestPath
 
 
+class ShouldNeverReachHere(NotImplementedError):
+
+    def __init__(self, *info):
+        for line in info:
+            if isinstance(line, str):
+                print(str)
+            else:
+                try:
+                    print(*line)
+                except TypeError:
+                    print(line)
+        NotImplementedError.__init__(self, info)
+
+
 def parse_item(item, _normcase, _pathsep):
     """Return (TestInfo, [suite ID]) for the given item.
 
@@ -122,24 +136,27 @@ def parse_item(item, _normcase, _pathsep):
     relfile = fileid
     fspath = _normcase(str(item.fspath))
     if not fspath.endswith(relfile[1:]):
-        print(fspath, fileid)
-        print(relfile)
-        raise NotImplementedError
+        raise ShouldNeverReachHere(
+            (fspath, fileid),
+            relfile,
+            )
     testroot = fspath[:-len(relfile) + 1]
     location, fullname = _get_location(item, relfile, _normcase, _pathsep)
     if kind == 'function':
         if testfunc and fullname != testfunc + parameterized:
-            print(item.nodeid)
-            print(fullname, testfunc, parameterized)
             # TODO: What to do?
-            raise NotImplementedError
+            raise ShouldNeverReachHere(
+                item.nodeid,
+                (fullname, testfunc, parameterized),
+                )
     elif kind == 'doctest':
         if (testfunc and fullname != testfunc and
                 fullname != '[doctest] ' + testfunc):
-            print(item.nodeid)
-            print(fullname, testfunc)
             # TODO: What to do?
-            raise NotImplementedError
+            raise ShouldNeverReachHere(
+                item.nodeid,
+                (fullname, testfunc),
+                )
         testfunc = None
 
     # Sort out the parent.
@@ -242,8 +259,9 @@ def _parse_node_id(testid, kind, _pathsep, _normcase):
         elif kind == 'function':
             funcname = name
         else:
-            print(testid, kind)
-            raise NotImplementedError
+            raise ShouldNeverReachHere(
+                (testid, kind),
+                )
         fullname = funcname
 
     for node in nodes:
@@ -258,8 +276,9 @@ def _parse_node_id(testid, kind, _pathsep, _normcase):
         elif kind == 'suite':
             fullname = name + '.' + fullname
         else:
-            print(testid, node)
-            raise NotImplementedError
+            raise ShouldNeverReachHere(
+                (testid, node),
+                )
     else:
         fileid = None
     parents.extend(nodes) # Add the rest in as-is.
@@ -274,8 +293,9 @@ def _iter_nodes(nodeid, kind, _pathsep, _normcase):
     if kind == 'function' and nodeid.endswith(']'):
         funcid, sep, parameterized = nodeid.partition('[')
         if not sep:
-            print(nodeid)
-            raise NotImplementedError
+            raise ShouldNeverReachHere(
+                nodeid,
+                )
         yield (nodeid, sep + parameterized, 'subtest')
         nodeid = funcid
 
@@ -286,8 +306,9 @@ def _iter_nodes(nodeid, kind, _pathsep, _normcase):
             yield (nodeid, name, kind)
             return
         # TODO: What to do?  We expect at least a filename and a name.
-        print(nodeid)
-        raise NotImplementedError
+        raise ShouldNeverReachHere(
+            nodeid,
+            )
     yield (nodeid, name, kind)
 
     # Extract the suites.
@@ -322,8 +343,9 @@ def _normalize_node_id(nodeid, kind, _pathsep, _normcase):
         nodeid = _normcase(fileid) + sep + remainder
 
     if nodeid.startswith(_pathsep):
-        print(nodeid)
-        raise NotImplementedError
+        raise ShouldNeverReachHere(
+            nodeid,
+            )
     if not nodeid.startswith('.' + _pathsep):
         nodeid = '.' + _pathsep + nodeid
     return nodeid
