@@ -53,6 +53,10 @@ export class ExperimentsManager implements IExperimentsManager {
      * download storages by itself should not have an Expiry (so that it can be used in the next session even when download fails in the current session)
      */
     private isDownloadedStorageValid: IPersistentState<boolean>;
+    /**
+     * Keeps track of the list of experiments user is in
+     */
+    private userExperiments: ABExperiments = [];
     private activatedOnce: boolean = false;
     constructor(
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
@@ -75,25 +79,34 @@ export class ExperimentsManager implements IExperimentsManager {
         }
         this.activatedOnce = true;
         await this.updateExperimentStorage();
-        this.logExperimentGroups();
+        this.populateUserExperiments();
+        for (const exp of this.userExperiments || []) {
+            this.output.appendLine(Experiments.inGroup().format(exp.name));
+        }
         this.initializeInBackground().ignoreErrors();
     }
 
-    public inExperiment(experimentName: string): boolean | undefined {
-        try {
-            const experiments = this.experimentStorage.value ? this.experimentStorage.value : [];
-            const experiment = experiments.find(exp => exp.name === experimentName);
-            if (!experiment) {
-                return false;
+    public inExperiment(experimentName: string): boolean {
+        return this.userExperiments.find(exp => exp.name === experimentName) ? true : false;
+    }
+
+    /**
+     * Populates list of experiments user is in
+     */
+    @traceDecorators.error('Failed to populate user experiments')
+    public populateUserExperiments(): void {
+        if (Array.isArray(this.experimentStorage.value)) {
+            for (const experiment of this.experimentStorage.value) {
+                if (this.isUserInRange(experiment.min, experiment.max, experiment.salt)) {
+                    this.userExperiments.push(experiment);
+                }
             }
-            const inExp = this.isUserInRange(experiment.min, experiment.max, experiment.salt);
-            if (inExp) {
-                sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS, undefined, { expName: experimentName });
-                return true;
-            }
-            return false;
-        } catch (ex) {
-            traceError(`Failed to check if user is in experiment '${experimentName}'`, ex);
+        }
+    }
+
+    public sendTelemetryIfInExperiment(experimentName: string): void {
+        if (this.inExperiment(experimentName)) {
+            sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS, undefined, { expName: experimentName });
         }
     }
 
@@ -121,20 +134,6 @@ export class ExperimentsManager implements IExperimentsManager {
     public isUserInRange(min: number, max: number, salt: string) {
         const hash = this.crypto.createHash(`${this.appEnvironment.machineId}+${salt}`, 'hex', 'number');
         return hash % 100 >= min && hash % 100 < max;
-    }
-
-    /**
-     * Logs the experiment groups user is in
-     */
-    @traceDecorators.error('Failed to log experiment groups')
-    public logExperimentGroups(): void {
-        if (Array.isArray(this.experimentStorage.value)) {
-            for (const experiment of this.experimentStorage.value) {
-                if (this.isUserInRange(experiment.min, experiment.max, experiment.salt)) {
-                    this.output.appendLine(Experiments.inGroup().format(experiment.name));
-                }
-            }
-        }
     }
 
     /**

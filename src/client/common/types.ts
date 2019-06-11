@@ -462,7 +462,13 @@ export interface IExperimentsManager {
     /**
      * Checks if user is in experiment or not
      * @param experimentName Name of the experiment
-     * @returns `true` if user is in experiment, `false` if user is not in experiment and `undefined` if it cannot be inferred
+     * @returns `true` if user is in experiment, `false` if user is not in experiment
      */
-    inExperiment(experimentName: string): boolean | undefined;
+    inExperiment(experimentName: string): boolean;
+
+    /**
+     * Sends experiment telemetry if user is in experiment
+     * @param experimentName Name of the experiment
+     */
+    sendTelemetryIfInExperiment(experimentName: string): void;
 }

@@ -136,7 +136,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
                 return false;
             }
             // Send telemetry if user is in control group
-            this.abExperiments.inExperiment(LSControl);
+            this.abExperiments.sendTelemetryIfInExperiment(LSControl);
         }
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const enabled = configurationService.getSettings(this.resource).jediEnabled;

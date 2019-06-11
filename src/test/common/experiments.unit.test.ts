@@ -242,35 +242,14 @@ suite('A/B experiments', () => {
     const testsForInExperiment =
         [
             {
-                testName: 'If experiment\'s name is not in experiment list, user is not in experiment',
+                testName: 'If experiment\'s name is not in user experiment list, user is not in experiment',
                 experimentName: 'imaginary experiment',
-                hash: 223,
                 expectedResult: false
             },
             {
-                testName: 'If experiment\'s name is in experiment list and hash modulo output is in range, user is in experiment',
+                testName: 'If experiment\'s name is in user experiment list and hash modulo output is in range, user is in experiment',
                 experimentName: 'experiment1',
-                hash: 1181,
                 expectedResult: true
-            },
-            {
-                testName: 'If experiment\'s name is in experiment list and hash modulo is less than min, user is not in experiment',
-                experimentName: 'experiment1',
-                hash: 967,
-                expectedResult: false
-            },
-            {
-                testName: 'If experiment\'s name is in experiment list and hash modulo is more than max, user is not in experiment',
-                experimentName: 'experiment1',
-                hash: 3297,
-                expectedResult: false
-            },
-            {
-                testName: 'If checking if user is in experiment fails with error, user is not in experiment and inExperiment returns undefined',
-                experimentName: 'experiment1',
-                hash: 1181,
-                expectedResult: undefined,
-                error: true
             }
         ];
 
