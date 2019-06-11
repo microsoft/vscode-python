@@ -7,9 +7,16 @@ import * as WebSocketWS from 'ws';
 export class JupyterWebSocket extends WebSocketWS {
     // Static field for cookie values set by our Jupyter connection code
     public static cookieString: string | undefined;
+    public static allowUnauthorized: boolean | undefined;
 
     constructor(url: string, protocols?: string | string[] | undefined) {
-        if (JupyterWebSocket.cookieString) {
+        if (JupyterWebSocket.allowUnauthorized) {
+            const co: WebSocketWS.ClientOptions = {
+                rejectUnauthorized: false
+            };
+
+            super(url, protocols, co);
+        } else if (JupyterWebSocket.cookieString) {
             // Construct our client options here
             const co: WebSocketWS.ClientOptions = {
                 headers: {

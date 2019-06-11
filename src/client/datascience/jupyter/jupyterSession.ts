@@ -12,6 +12,7 @@ import {
 } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils';
 import { Slot } from '@phosphor/signaling';
+import { Agent as HttpsAgent } from 'https';
 import { Event, EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
@@ -197,6 +198,21 @@ export class JupyterSession implements IJupyterSession {
             // Reset the static cookie value on a non-password connection
             JupyterWebSocket.cookieString = undefined;
 
+            //const reqHeaders = { rejectUnauthorized: 'false' };
+            const requestAgent = new HttpsAgent({rejectUnauthorized: false});
+            // tslint:disable:no-any
+            const requestOptions: any = { cache: 'no-store', credentials: 'same-origin', agent: requestAgent };
+            JupyterWebSocket.allowUnauthorized = true;
+
+            //serverSettings = ServerConnection.makeSettings(
+                //{
+                    //baseUrl: connInfo.baseUrl,
+                    //token: connInfo.token,
+                    //pageUrl: '',
+                    //// A web socket is required to allow token authentication
+                    //wsUrl: connInfo.baseUrl.replace('http', 'ws'),
+                    //init: { cache: 'no-store', credentials: 'same-origin' }
+                //});
             serverSettings = ServerConnection.makeSettings(
                 {
                     baseUrl: connInfo.baseUrl,
@@ -204,7 +220,8 @@ export class JupyterSession implements IJupyterSession {
                     pageUrl: '',
                     // A web socket is required to allow token authentication
                     wsUrl: connInfo.baseUrl.replace('http', 'ws'),
-                    init: { cache: 'no-store', credentials: 'same-origin' }
+                    init: requestOptions,
+                    WebSocket: JupyterWebSocket as any
                 });
         }
 
