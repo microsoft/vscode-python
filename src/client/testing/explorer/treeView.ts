@@ -36,8 +36,14 @@ export class TreeViewService implements IExtensionActivationService, IDisposable
         this._treeView = this.appShell.createTreeView('python_tests', { showCollapseAll: true, treeDataProvider: this.treeViewProvider });
         this.disposables.push(this._treeView);
         this.disposables.push(this.commandManager.registerCommand(Commands.Test_Reveal_Test_Item, this.onRevealTestItem, this));
+        this.disposables.push(this.commandManager.registerCommand(Commands.Test_Display_Test_Explorer, this.show, this));
     }
     public async onRevealTestItem(testItem: TestDataItem): Promise<void> {
         await this.treeView.reveal(testItem);
+    }
+    public async show(): Promise<void> {
+        if (!this.treeView.visible){
+            await this.commandManager.executeCommand('workbench.view.extension.test');
+        }
     }
 }

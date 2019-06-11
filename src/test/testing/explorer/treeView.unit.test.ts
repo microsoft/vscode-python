@@ -39,13 +39,14 @@ suite('Unit Tests Test Explorer Tree View', () => {
         await treeViewService.activate(Uri.file(__filename));
         verify(appShell.createTreeView('python_tests', deepEqual({ showCollapseAll: true, treeDataProvider: instance(treeViewProvider) }))).once();
     });
-    test('Activation will add command handlers (without a resource)', async () => {
+    test('Activation will add command handlers once (with & without a resource)', async () => {
         await treeViewService.activate(undefined);
-        verify(commandManager.registerCommand(Commands.Test_Reveal_Test_Item, treeViewService.onRevealTestItem, treeViewService)).once();
-    });
-    test('Activation will add command handlers (with a resource)', async () => {
+        await treeViewService.activate(undefined);
         await treeViewService.activate(Uri.file(__filename));
+        await treeViewService.activate(Uri.file(__filename));
+
         verify(commandManager.registerCommand(Commands.Test_Reveal_Test_Item, treeViewService.onRevealTestItem, treeViewService)).once();
+        verify(commandManager.registerCommand(Commands.Test_Display_Test_Explorer, treeViewService.show, treeViewService)).once();
     });
     test('Invoking the command handler will reveal the node in the tree', async () => {
         const data = {} as any;
@@ -59,5 +60,19 @@ suite('Unit Tests Test Explorer Tree View', () => {
         await treeViewService.onRevealTestItem(data);
 
         treeView.verifyAll();
+    });
+    test('Command used to display test explorer is not invoked if test explorer is not already visible', async () => {
+        (treeViewService as any)._treeView = { visible: true };
+
+        await treeViewService.show();
+
+        verify(commandManager.executeCommand('workbench.view.extension.test')).never();
+    });
+    test('Command used to display test explorer is invoked if test explorer is not visible', async () => {
+        (treeViewService as any)._treeView = { visible: false };
+
+        await treeViewService.show();
+
+        verify(commandManager.executeCommand('workbench.view.extension.test')).once();
     });
 });

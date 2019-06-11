@@ -3,10 +3,32 @@ import { TestProvider, UnitTestProduct } from './types';
 
 export const CANCELLATION_REASON = 'cancelled_user_request';
 export enum CommandSource {
+    /**
+     * Tests discovery/run was triggered by extension as part of activation process.
+     * If extension has identified the fact that user has tests, then we automatically discover those tests.
+     */
+    autoActivate = 'autoActivate',
+    /**
+     * Tests discovery/run was triggered by extension automatically.
+     * E.g. when user changes configuration settings related to tests.
+     */
     auto = 'auto',
+    /**
+     * Tests discovery/run was triggered by user through the UI.
+     * This excludes command Palette, codelenses & test explorer
+     */
     ui = 'ui',
+    /**
+     * Tests discovery/run was triggered by user through code lenses.
+     */
     codelens = 'codelens',
+    /**
+     * Tests discovery/run was triggered by user through the command palette.
+     */
     commandPalette = 'commandpalette',
+    /**
+     * Tests discovery/run was triggered by user through the test explorer.
+     */
     testExplorer = 'testExplorer'
 }
 export const TEST_OUTPUT_CHANNEL = 'TEST_OUTPUT_CHANNEL';

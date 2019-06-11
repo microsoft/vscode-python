@@ -29,7 +29,7 @@ import { selectTestWorkspace } from './common/testUtils';
 import {
     ITestCollectionStorageService, ITestManager,
     IWorkspaceTestManagerService, TestFile,
-    TestFunction, TestStatus, TestsToRun
+    TestFunction, Tests, TestStatus, TestsToRun
 } from './common/types';
 import {
     ITestConfigurationService, ITestDisplay,
@@ -42,6 +42,7 @@ import {
 
 @injectable()
 export class UnitTestManagementService implements ITestManagementService, Disposable {
+    public readonly _onTestsDiscovered: EventEmitter<{ triggerSource: CommandSource; tests?: Tests }> = new EventEmitter<{ triggerSource: CommandSource; tests?: Tests }>();
     private readonly outputChannel: OutputChannel;
     private activatedOnce: boolean = false;
     private readonly disposableRegistry: Disposable[];
@@ -78,6 +79,9 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
     public get onDidStatusChange(): Event<WorkspaceTestStatus> {
         return this._onDidStatusChange.event;
     }
+    public get onTestsDiscovered(): Event<{ triggerSource: CommandSource; tests?: Tests }> {
+        return this._onTestsDiscovered.event;
+    }
     public async activate(symbolProvider: DocumentSymbolProvider): Promise<void> {
         if (this.activatedOnce) {
             return;
@@ -88,7 +92,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
         this.registerHandlers();
         this.registerCommands();
 
-        this.autoDiscoverTests(undefined)
+        this.autoDiscoverTests(undefined, CommandSource.autoActivate)
             .catch(ex => this.serviceContainer.get<ILogger>(ILogger).logError('Failed to auto discover tests upon activation', ex));
         await this.registerSymbolProvider(symbolProvider);
     }
@@ -148,7 +152,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
         if (this.testResultDisplay) {
             this.testResultDisplay.enabled = true;
         }
-        this.autoDiscoverTests(workspaceUri)
+        this.autoDiscoverTests(workspaceUri, CommandSource.auto)
             .catch(ex => this.serviceContainer.get<ILogger>(ILogger).logError('Failed to auto discover tests upon activation', ex));
     }
 
@@ -170,7 +174,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
         }
         this.autoDiscoverTimer = setTimeout(() => this.discoverTests(CommandSource.auto, doc.uri, true, false, true), 1000);
     }
-    public async autoDiscoverTests(resource: Resource) {
+    public async autoDiscoverTests(resource: Resource, triggerSource: CommandSource) {
         if (!this.workspaceService.hasWorkspaceFolders) {
             return;
         }
@@ -184,9 +188,9 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
             return;
         }
 
-        this.discoverTests(CommandSource.auto, resource, true).ignoreErrors();
+        this.discoverTests(triggerSource, resource, true).ignoreErrors();
     }
-    public async discoverTests(cmdSource: CommandSource, resource?: Uri, ignoreCache?: boolean, userInitiated?: boolean, quietMode?: boolean, clearTestStatus?: boolean) {
+    public async discoverTests(cmdSource: CommandSource, resource?: Uri, ignoreCache?: boolean, userInitiated?: boolean, quietMode?: boolean, clearTestStatus?: boolean): Promise<void> {
         const testManager = await this.getTestManager(true, resource);
         if (!testManager) {
             return;
@@ -202,7 +206,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
         const discoveryPromise = testManager.discoverTests(cmdSource, ignoreCache, quietMode, userInitiated, clearTestStatus);
         this.testResultDisplay.displayDiscoverStatus(discoveryPromise, quietMode)
             .catch(ex => console.error('Python Extension: displayDiscoverStatus', ex));
-        await discoveryPromise;
+        await discoveryPromise.then(tests => this._onTestsDiscovered.fire({ triggerSource: cmdSource, tests }));
     }
     public async stopTests(resource: Uri) {
         sendTelemetryEvent(EventName.UNITTEST_STOP);
@@ -329,7 +333,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
         await promise;
     }
 
-    private async registerSymbolProvider(symbolProvider: DocumentSymbolProvider): Promise<void> {
+    public async registerSymbolProvider(symbolProvider: DocumentSymbolProvider): Promise<void> {
         const testCollectionStorage = this.serviceContainer.get<ITestCollectionStorageService>(ITestCollectionStorageService);
         const event = new EventEmitter<void>();
         this.disposableRegistry.push(event);
@@ -343,7 +347,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
     }
 
     @captureTelemetry(EventName.UNITTEST_CONFIGURE, undefined, false)
-    private async configureTests(resource?: Uri) {
+    public async configureTests(resource?: Uri) {
         let wkspace: Uri | undefined;
         if (resource) {
             const wkspaceFolder = this.workspaceService.getWorkspaceFolder(resource);
@@ -358,7 +362,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
         const configurationService = this.serviceContainer.get<ITestConfigurationService>(ITestConfigurationService);
         await configurationService.promptToEnableAndConfigureTestFramework(wkspace!);
     }
-    private registerCommands(): void {
+    public registerCommands(): void {
         const disposablesRegistry = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
         const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
 
@@ -410,7 +414,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
 
         disposablesRegistry.push(...disposables);
     }
-    private onDocumentSaved(doc: TextDocument) {
+    public onDocumentSaved(doc: TextDocument) {
         const settings = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(doc.uri);
         if (!settings.testing.autoTestDiscoverOnSaveEnabled) {
             return;
@@ -418,7 +422,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
         this.discoverTestsForDocument(doc)
             .ignoreErrors();
     }
-    private registerHandlers() {
+    public registerHandlers() {
         const documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
 
         this.disposableRegistry.push(documentManager.onDidSaveTextDocument(this.onDocumentSaved.bind(this)));

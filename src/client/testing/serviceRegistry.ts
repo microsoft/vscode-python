@@ -34,6 +34,7 @@ import { UnitTestConfigurationService } from './configuration';
 import { TestConfigurationManagerFactory } from './configurationFactory';
 import { TestResultDisplay } from './display/main';
 import { TestDisplay } from './display/picker';
+import { AutoDisplayTestExplorer } from './explorer/autoDisplayTestExplorer';
 import { TestExplorerCommandHandler } from './explorer/commandHandlers';
 import { FailedTestHandler } from './explorer/failedTestHandler';
 import { TestTreeViewProvider } from './explorer/testTreeViewProvider';
@@ -117,6 +118,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ITestExplorerCommandHandler>(ITestExplorerCommandHandler, TestExplorerCommandHandler);
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, TreeViewService);
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, FailedTestHandler);
+    serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, AutoDisplayTestExplorer);
 
     serviceManager.addFactory<ITestManager>(ITestManagerFactory, (context) => {
         return (testProvider: TestProvider, workspaceFolder: Uri, rootDirectory: string) => {

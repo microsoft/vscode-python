@@ -46,10 +46,11 @@ export interface ITestDisplay {
 export const ITestManagementService = Symbol('ITestManagementService');
 export interface ITestManagementService {
     readonly onDidStatusChange: Event<WorkspaceTestStatus>;
+    readonly onTestsDiscovered: Event<{ triggerSource: CommandSource; tests?: Tests }>;
     activate(symbolProvider: DocumentSymbolProvider): Promise<void>;
     getTestManager(displayTestNotConfiguredMessage: boolean, resource?: Uri): Promise<ITestManager | undefined | void>;
     discoverTestsForDocument(doc: TextDocument): Promise<void>;
-    autoDiscoverTests(resource: Resource): Promise<void>;
+    autoDiscoverTests(resource: Resource, triggerSource: CommandSource): Promise<void>;
     discoverTests(cmdSource: CommandSource, resource?: Uri, ignoreCache?: boolean, userInitiated?: boolean, quietMode?: boolean): Promise<void>;
     stopTests(resource: Uri): Promise<void>;
     displayStopUI(message: string): Promise<void>;
