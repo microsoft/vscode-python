@@ -108,22 +108,22 @@ const images: { [key: string] : { light: string; dark: string } } = {
     Pan:
         {
             light: require('./images/Pan/pan.svg'),
-            dark : require('./images/Pan/pan.svg')
+            dark : require('./images/Pan/pan_inverse.svg')
         },
     Zoom:
         {
             light: require('./images/Zoom/zoom.svg'),
-            dark : require('./images/Zoom/zoom.svg')
+            dark : require('./images/Zoom/zoom_inverse.svg')
         },
     ZoomOut:
         {
             light: require('./images/ZoomOut/zoomout.svg'),
-            dark : require('./images/ZoomOut/zoomout.svg')
+            dark : require('./images/ZoomOut/zoomout_inverse.svg')
         },
     Copy:
         {
             light: require('./images/Copy/copy.svg'),
-            dark : require('./images/Copy/copy.svg')
+            dark : require('./images/Copy/copy_inverse.svg')
         }
 };
 
