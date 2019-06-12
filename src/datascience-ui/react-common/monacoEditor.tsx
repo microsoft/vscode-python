@@ -99,6 +99,9 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                 this.windowResized();
             }));
 
+            // List for key down events
+            this.subscriptions.push(editor.onKeyDown(this.onKeyDown));
+
             // Setup our context menu to show up outside. Autocomplete doesn't have this problem so it just works
             this.subscriptions.push(editor.onContextMenu((e) => {
                 if (this.state.editor) {
@@ -211,6 +214,30 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
     private startUpdateWidgetPosition = () => {
         this.updateWidgetPosition();
+    }
+
+    private onKeyDown = (e: monacoEditor.IKeyboardEvent) => {
+        if (e.keyCode === monacoEditor.KeyCode.Escape) {
+            const nextElement = this.findNextTabStop();
+            if (nextElement) {
+                nextElement.focus();
+            }
+        }
+    }
+
+    private findNextTabStop() : HTMLElement | undefined {
+        if (this.state.editor) {
+            const editorDomNode = this.state.editor.getDomNode();
+            if (editorDomNode) {
+                const textArea = editorDomNode.getElementsByTagName('textarea');
+                const allFocusable = document.querySelectorAll('input, button, select, textarea, a[href]');
+                if (allFocusable && textArea && textArea.length > 0) {
+                    const tabable = Array.prototype.filter.call(allFocusable, i => i.tabIndex >= 0);
+                    const self = tabable.indexOf(textArea.item(0));
+                    return tabable[self + 1] || tabable[0];
+                }
+            }
+        }
     }
 
     private updateBackgroundStyle = () => {

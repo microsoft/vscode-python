@@ -20,7 +20,9 @@ export class MenuBar extends React.Component<IMenuBarProps> {
     public render() {
         return (
             <div className='menuBar'>
-                {this.props.children}
+                <div className='menuBar-childContainer'>
+                    {this.props.children}
+                </div>
             </div>
         );
     }

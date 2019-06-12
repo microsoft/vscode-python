@@ -182,11 +182,11 @@ export class Cell extends React.Component<ICellProps> {
             return (
                 <div className={cellWrapperClass} role={this.props.role} onClick={this.onMouseClick}>
                     <MenuBar baseTheme={this.props.baseTheme}>
-                        <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.delete} tooltip={this.getDeleteString()} hidden={this.props.cellVM.editable}>
-                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Cancel} />
-                        </ImageButton>
                         <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.gotoCode} tooltip={this.getGoToCodeString()} hidden={hasNoSource}>
                             <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.GoToSourceCode} />
+                        </ImageButton>
+                        <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.delete} tooltip={this.getDeleteString()} hidden={this.props.cellVM.editable}>
+                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Cancel} />
                         </ImageButton>
                     </MenuBar>
                     <div className={cellOuterClass}>
