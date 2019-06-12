@@ -56,7 +56,7 @@ export class DownloadedLanguageClientFactory implements ILanguageClientFactory {
         const serverModule = path.join(EXTENSION_ROOT_DIR, languageServerFolder, this.platformData.engineExecutableName);
         const options = { stdio: 'pipe', env };
         const serverOptions: ServerOptions = {
-            run: { command: serverModule, rgs: [], options },
+            run: { command: serverModule, args: [], options },
             debug: { command: serverModule, args: ['--debug'], options }
         };
         const vscodeLanguageClient = require('vscode-languageclient') as typeof import('vscode-languageclient');

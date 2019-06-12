@@ -74,9 +74,11 @@
         "onCommand:python.datascience.selectjupyteruri",
         "onCommand:python.datascience.exportfileasnotebook",
         "onCommand:python.datascience.exportfileandoutputasnotebook",
-        "onCommand:python.enableSourceMapSupport"
+        "onCommand:python.enableSourceMapSupport",
+        "onCommand:python.datascience.openNotebookFolder"
     ],
     "main": "./out/client/extension",
+    "enableProposedApi": true,
     "contributes": {
         "snippets": [
             {
@@ -438,6 +440,10 @@
                 "command": "python.datascience.addcellbelow",
                 "title": "%python.command.python.datascience.addcellbelow.title%",
                 "category": "Python"
+            },
+            {
+                "command": "python.datascience.openNotebookFolder",
+                "title": "Open Notebook Folder"
             }
         ],
         "menus": {
@@ -2380,7 +2386,7 @@
         "url-loader": "^1.1.2",
         "uuid": "^3.3.2",
         "vsce": "^1.59.0",
-        "vscode": "^1.1.33",
+        "vscode": "^1.1.34",
         "vscode-debugadapter-testsupport": "^1.27.0",
         "webpack": "^4.20.2",
         "webpack-bundle-analyzer": "^3.3.2",

@@ -2,9 +2,12 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { CodeLens, Command, Position, Range, Selection, TextDocument, TextEditor, TextEditorRevealType } from 'vscode';
+import * as path from 'path';
+import { CodeLens, Command, Position, Range, Selection, TextDocument, TextEditor, TextEditorRevealType, Uri, window } from 'vscode';
+import { EXTENSION_ROOT_DIR } from '../../constants';
 
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
+import { WebPanel } from '../../common/application/webPanel';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDataScienceSettings, ILogger } from '../../common/types';
 import * as localize from '../../common/utils/localize';
@@ -23,11 +26,11 @@ export class CodeWatcher implements ICodeWatcher {
     private cachedSettings: IDataScienceSettings | undefined;
 
     constructor(@inject(IApplicationShell) private applicationShell: IApplicationShell,
-                @inject(ILogger) private logger: ILogger,
-                @inject(IHistoryProvider) private historyProvider : IHistoryProvider,
-                @inject(IFileSystem) private fileSystem: IFileSystem,
-                @inject(IConfigurationService) private configService: IConfigurationService,
-                @inject(IDocumentManager) private documentManager : IDocumentManager) {}
+        @inject(ILogger) private logger: ILogger,
+        @inject(IHistoryProvider) private historyProvider: IHistoryProvider,
+        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IConfigurationService) private configService: IConfigurationService,
+        @inject(IDocumentManager) private documentManager: IDocumentManager) { }
 
     public setDocument(document: TextDocument) {
         this.document = document;
@@ -79,7 +82,7 @@ export class CodeWatcher implements ICodeWatcher {
         return this.version;
     }
 
-    public getCachedSettings() : IDataScienceSettings | undefined {
+    public getCachedSettings(): IDataScienceSettings | undefined {
         return this.cachedSettings;
     }
 
@@ -158,7 +161,7 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     @captureTelemetry(Telemetry.RunSelectionOrLine)
-    public async runSelectionOrLine(activeEditor : TextEditor | undefined) {
+    public async runSelectionOrLine(activeEditor: TextEditor | undefined) {
         if (this.document && activeEditor &&
             this.fileSystem.arePathsSame(activeEditor.document.fileName, this.document.fileName)) {
 
@@ -206,7 +209,7 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     @captureTelemetry(Telemetry.RunCell)
-    public runCell(range: Range) : Promise<void> {
+    public runCell(range: Range): Promise<void> {
         if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
             return Promise.resolve();
         }
@@ -217,7 +220,7 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     @captureTelemetry(Telemetry.RunCurrentCell)
-    public runCurrentCell() : Promise<void> {
+    public runCurrentCell(): Promise<void> {
         if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
             return Promise.resolve();
         }
@@ -236,7 +239,7 @@ export class CodeWatcher implements ICodeWatcher {
         return this.runMatchingCell(this.documentManager.activeTextEditor.selection, true);
     }
 
-    public async addEmptyCellToBottom() : Promise<void> {
+    public async addEmptyCellToBottom(): Promise<void> {
         const editor = this.documentManager.activeTextEditor;
         if (editor) {
             editor.edit((editBuilder) => {
@@ -275,7 +278,15 @@ export class CodeWatcher implements ICodeWatcher {
 
                 try {
                     const activeHistory = await this.historyProvider.getOrCreateActive();
-                    await activeHistory.addCode(code, this.getFileName(), range.start.line, this.documentManager.activeTextEditor);
+                    const editor = this.documentManager.activeTextEditor!;
+                    await activeHistory.addCode(code, this.getFileName(), range.start.line, editor);
+                    const insetRange = new Range(new Position(range.end.line, 0), new Position(2 * range.end.line - range.start.line, 0));
+                    const htmldir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'inset-react');
+                    const htmlpath = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'inset-react', 'index_bundle.js');
+                    const inset = window.createWebviewTextEditorInset(editor, insetRange,
+                        { enableScripts: true, localResourceRoots: [Uri.file(htmldir)] });
+                    const html = WebPanel.generateReactHtml(htmlpath);
+                    inset.webview.html = html; // WebPanel.generateReactHtml(htmlpath);
                 } catch (err) {
                     this.handleError(err);
                 }
@@ -283,11 +294,11 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
-    private getCurrentCellLens(pos: Position) : CodeLens | undefined {
+    private getCurrentCellLens(pos: Position): CodeLens | undefined {
         return this.codeLenses.find(l => l.range.contains(pos) && l.command !== undefined && l.command.command === Commands.RunCell);
     }
 
-    private getNextCellLens(pos: Position) : CodeLens | undefined {
+    private getNextCellLens(pos: Position): CodeLens | undefined {
         const currentIndex = this.codeLenses.findIndex(l => l.range.contains(pos) && l.command !== undefined && l.command.command === Commands.RunCell);
         if (currentIndex >= 0) {
             return this.codeLenses.find((l: CodeLens, i: number) => l.command !== undefined && l.command.command === Commands.RunCell && i > currentIndex);
@@ -304,7 +315,7 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     // tslint:disable-next-line:no-any
-    private handleError = (err : any) => {
+    private handleError = (err: any) => {
         if (err instanceof JupyterInstallError) {
             const jupyterError = err as JupyterInstallError;
 

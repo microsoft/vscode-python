@@ -15,6 +15,16 @@ import { IWebPanel, IWebPanelMessageListener, WebPanelMessage } from './types';
 
 export class WebPanel implements IWebPanel {
 
+    public get title(): string {
+        return this.panel ? this.panel.title : '';
+    }
+
+    public set title(newTitle: string) {
+        if (this.panel) {
+            this.panel.title = newTitle;
+        }
+    }
+
     private listener: IWebPanelMessageListener;
     private panel: WebviewPanel | undefined;
     private loadPromise: Promise<void>;
@@ -45,80 +55,8 @@ export class WebPanel implements IWebPanel {
         this.loadPromise = this.load(mainScriptPath, embeddedCss, settings);
     }
 
-    public async show(preserveFocus: boolean) {
-        await this.loadPromise;
-        if (this.panel) {
-            this.panel.reveal(this.panel.viewColumn, preserveFocus);
-        }
-    }
-
-    public close() {
-        if (this.panel) {
-            this.panel.dispose();
-        }
-    }
-
-    public isVisible() : boolean {
-        return this.panel ? this.panel.visible : false;
-    }
-
-    public isActive() : boolean {
-        return this.panel ? this.panel.active : false;
-    }
-
-    public postMessage(message: WebPanelMessage) {
-        if (this.panel && this.panel.webview) {
-            this.panel.webview.postMessage(message);
-        }
-    }
-
-    public get title(): string {
-        return this.panel ? this.panel.title : '';
-    }
-
-    public set title(newTitle: string) {
-        if (this.panel) {
-            this.panel.title = newTitle;
-        }
-    }
-
     // tslint:disable-next-line:no-any
-    private async load(mainScriptPath: string, embeddedCss?: string, settings?: any) {
-        if (this.panel) {
-            if (await fs.pathExists(mainScriptPath)) {
-
-                // Call our special function that sticks this script inside of an html page
-                // and translates all of the paths to vscode-resource URIs
-                this.panel.webview.html = this.generateReactHtml(mainScriptPath, embeddedCss, settings);
-
-                // Reset when the current panel is closed
-                this.disposableRegistry.push(this.panel.onDidDispose(() => {
-                    this.panel = undefined;
-                    this.listener.dispose().ignoreErrors();
-                }));
-
-                this.disposableRegistry.push(this.panel.webview.onDidReceiveMessage(message => {
-                    // Pass the message onto our listener
-                    this.listener.onMessage(message.type, message.payload);
-                }));
-
-                this.disposableRegistry.push(this.panel.onDidChangeViewState((_e) => {
-                    // Pass the state change onto our listener
-                    this.listener.onChangeViewState(this);
-                }));
-
-                // Set initial state
-                this.listener.onChangeViewState(this);
-            } else {
-                // Indicate that we can't load the file path
-                const badPanelString = localize.DataScience.badWebPanelFormatString();
-                this.panel.webview.html = badPanelString.format(mainScriptPath);
-            }
-        }
-    }
-
-    // tslint:disable-next-line:no-any
-    private generateReactHtml(mainScriptPath: string, embeddedCss?: string, settings?: any) {
+    public static generateReactHtml(mainScriptPath: string, embeddedCss?: string, settings?: any) {
         const uriBasePath = Uri.file(`${path.dirname(mainScriptPath)}/`);
         const uriPath = Uri.file(mainScriptPath);
         const uriBase = uriBasePath.with({ scheme: 'vscode-resource'});
@@ -127,6 +65,7 @@ export class WebPanel implements IWebPanel {
         const style = embeddedCss ? embeddedCss : '';
         const settingsString = settings ? JSON.stringify(settings) : '{}';
 
+        console.log('***URI***', uri);
         return `<!doctype html>
         <html lang="en">
             <head>
@@ -160,5 +99,67 @@ export class WebPanel implements IWebPanel {
                 </script>
             <script type="text/javascript" src="${uri}"></script></body>
         </html>`;
+    }
+
+    public async show(preserveFocus: boolean) {
+        await this.loadPromise;
+        if (this.panel) {
+            this.panel.reveal(this.panel.viewColumn, preserveFocus);
+        }
+    }
+
+    public close() {
+        if (this.panel) {
+            this.panel.dispose();
+        }
+    }
+
+    public isVisible() : boolean {
+        return this.panel ? this.panel.visible : false;
+    }
+
+    public isActive() : boolean {
+        return this.panel ? this.panel.active : false;
+    }
+
+    public postMessage(message: WebPanelMessage) {
+        if (this.panel && this.panel.webview) {
+            this.panel.webview.postMessage(message);
+        }
+    }
+
+    // tslint:disable-next-line:no-any
+    private async load(mainScriptPath: string, embeddedCss?: string, settings?: any) {
+        if (this.panel) {
+            if (await fs.pathExists(mainScriptPath)) {
+
+                // Call our special function that sticks this script inside of an html page
+                // and translates all of the paths to vscode-resource URIs
+                this.panel.webview.html = WebPanel.generateReactHtml(mainScriptPath, embeddedCss, settings);
+
+                // Reset when the current panel is closed
+                this.disposableRegistry.push(this.panel.onDidDispose(() => {
+                    this.panel = undefined;
+                    this.listener.dispose().ignoreErrors();
+                }));
+
+                this.disposableRegistry.push(this.panel.webview.onDidReceiveMessage(message => {
+                    // Pass the message onto our listener
+                    this.listener.onMessage(message.type, message.payload);
+                }));
+
+                this.disposableRegistry.push(this.panel.onDidChangeViewState((_e) => {
+                    // Pass the state change onto our listener
+                    this.listener.onChangeViewState(this);
+                }));
+
+                // Set initial state
+                this.listener.onChangeViewState(this);
+            } else {
+                // Indicate that we can't load the file path
+                const badPanelString = localize.DataScience.badWebPanelFormatString();
+                this.panel.webview.html = badPanelString.format(mainScriptPath);
+            }
+        }
     }
 }
