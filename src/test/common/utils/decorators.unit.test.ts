@@ -14,13 +14,6 @@ import { sleep } from '../../core';
 
 // tslint:disable:no-any max-func-body-length no-unnecessary-class
 suite('Common Utils - Decorators', () => {
-
-    setup(function () {
-        // This test is flakey. 
-        // tslint:disable-next-line:no-invalid-this
-        this.skip();
-    })
-
     teardown(() => {
         clearCache();
     });
@@ -114,13 +107,13 @@ suite('Common Utils - Decorators', () => {
         public calls: string[];
         public timestamps: number[];
         constructor() {
-            this.created = Date.now();
+            this.created = new Date().getTime();
             this.calls = [];
             this.timestamps = [];
         }
         protected _addCall(funcname: string, timestamp?: number): void {
             if (!timestamp) {
-                timestamp = Date.now();
+                timestamp = new Date().getTime();
             }
             this.calls.push(funcname);
             this.timestamps.push(timestamp);
@@ -149,7 +142,7 @@ suite('Common Utils - Decorators', () => {
         }
         const one = new One();
 
-        const start = Date.now();
+        const start = new Date().getTime();
         one.run();
         await waitForCalls(one.timestamps, 1);
         const delay = one.timestamps[0] - start;
@@ -169,7 +162,7 @@ suite('Common Utils - Decorators', () => {
         }
         const one = new One();
 
-        const start = Date.now();
+        const start = new Date().getTime();
         let errored = false;
         one.run().catch(() => errored = true);
         await waitForCalls(one.timestamps, 1);
@@ -191,7 +184,7 @@ suite('Common Utils - Decorators', () => {
         }
         const one = new One();
 
-        const start = Date.now();
+        const start = new Date().getTime();
         await one.run();
         await waitForCalls(one.timestamps, 1);
         const delay = one.timestamps[0] - start;
@@ -212,7 +205,7 @@ suite('Common Utils - Decorators', () => {
         }
         const one = new One();
 
-        const start = Date.now();
+        const start = new Date().getTime();
         let capturedEx: Error | undefined;
         await one.run().catch(ex => capturedEx = ex);
         await waitForCalls(one.timestamps, 1);
@@ -234,7 +227,7 @@ suite('Common Utils - Decorators', () => {
         }
         const one = new One();
 
-        const start = Date.now();
+        const start = new Date().getTime();
         let errored = false;
         one.run().catch(() => errored = true);
         one.run().catch(() => errored = true);
@@ -260,7 +253,7 @@ suite('Common Utils - Decorators', () => {
         }
         const one = new One();
 
-        const start = Date.now();
+        const start = new Date().getTime();
         await Promise.all([one.run(), one.run(), one.run(), one.run()]);
         await waitForCalls(one.timestamps, 1);
         const delay = one.timestamps[0] - start;
@@ -280,7 +273,7 @@ suite('Common Utils - Decorators', () => {
         }
         const one = new One();
 
-        const start = Date.now();
+        const start = new Date().getTime();
         let errored = false;
         one.run().catch(() => errored = true);
         await one.run();
@@ -305,7 +298,7 @@ suite('Common Utils - Decorators', () => {
         }
         const one = new One();
 
-        const start = Date.now();
+        const start = new Date().getTime();
         one.run();
         one.run();
         one.run();
@@ -316,12 +309,7 @@ suite('Common Utils - Decorators', () => {
         expect(one.calls).to.deep.equal(['run']);
         expect(one.timestamps).to.have.lengthOf(one.calls.length);
     });
-    test('Debounce: multiple calls spread', async function () {
-
-        // This test is flakey.
-        // tslint:disable-next-line:no-invalid-this
-        this.skip();
-
+    test('Debounce: multiple calls spread', async () => {
         const wait = 100;
         // tslint:disable-next-line:max-classes-per-file
         class One extends Base {
