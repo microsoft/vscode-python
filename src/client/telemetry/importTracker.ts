@@ -31,7 +31,7 @@ only usable for imports (`from` can also be used when raising an exception, but 
 first keyword on a line in that instance). We also get to rely on the fact that we only care about
 the top-level package, keeping the regex extremely greedy and simple for performance.
 */
-const ImportRegEx = /^\s*(from\s+(?<fromImport>\w+)|import\s+(?<importImport>(\w+(?:\s*,\s*)?)+))/;
+const ImportRegEx = /^\s*(from\s+(?<fromImport>\w+)(?:\.\w+)*\s+import\s+(?:\(\s*)?(?:\w+(?:\s*,\s*)?)+(?:\)|\s+as\s+\w+)?|import\s+(?<importImport>(\w+(?:\s*,\s*)?)+)(?:\s+as\s+\w+)?)$/;
 const MAX_DOCUMENT_LINES = 1000;
 
 // Capture isTestExecution on module load so that a test can turn it off and still
