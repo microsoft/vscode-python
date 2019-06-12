@@ -210,6 +210,12 @@ Series)`;
         expect(Reporter.properties).to.deep.equal([{hashedName: pandasHash}]);
     });
 
+    test('import pkg # Comment', () => {
+        const code = `import pandas  # Because we wants it.`;
+        emitDocEvent(code, savedEventEmitter);
+        expect(Reporter.properties).to.deep.equal([{hashedName: pandasHash}]);
+    });
+
     test('Import from within a function', () => {
         const code = `
 def drumhead_height(n, k, distance, angle, t):
