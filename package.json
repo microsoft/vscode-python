@@ -1240,7 +1240,8 @@
                     "type": "string",
                     "default": "#FFFFFF",
                     "description": "Background color (in hex) for exception messages in the Python Interactive window.",
-                    "scope": "resource"
+                    "scope": "resource",
+                    "deprecationMessage": "No longer necessary as the theme colors are used for error messages"
                 },
                 "python.dataScience.sendSelectionToInteractiveWindow": {
                     "type": "boolean",

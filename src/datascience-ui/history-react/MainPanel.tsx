@@ -292,8 +292,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
 
         const maxOutputSize = getSettings().maxOutputSize;
-        const errorBackgroundColor = getSettings().errorBackgroundColor;
-        const actualErrorBackgroundColor = errorBackgroundColor ? errorBackgroundColor : '#FFFFFF';
         const maxTextSize = maxOutputSize && maxOutputSize < 10000 && maxOutputSize > 0 ? maxOutputSize : undefined;
         const executionCount = this.getInputExecutionCount();
 
@@ -301,6 +299,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             <div className='edit-panel'>
                 <ErrorBoundary>
                     <Cell
+                        role='textbox'
                         editorOptions={this.state.editorOptions}
                         history={this.state.history}
                         maxTextSize={maxTextSize}
@@ -311,7 +310,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                         baseTheme={baseTheme}
                         codeTheme={this.props.codeTheme}
                         showWatermark={!this.state.submittedText}
-                        errorBackgroundColor={actualErrorBackgroundColor}
                         ref={this.saveEditCellRef}
                         gotoCode={noop}
                         delete={noop}

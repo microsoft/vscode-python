@@ -344,7 +344,8 @@
                         return "<%= htmlWebpackPlugin.options.imageBaseUrl %>" + relativePath;
                     }
                     function getInitialSettings() {
-                        return { allowInput: true,
+						return { allowInput: true,
+							     showJupyterVariableExplorer: true,
                                 extraSettings: { editorCursor: 'block', editorCursorBlink: 'blink'}
                                };
                     }

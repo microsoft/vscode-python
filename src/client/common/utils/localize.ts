@@ -119,6 +119,8 @@ export namespace DataScience {
     export const executingCode = localize('DataScience.executingCode', 'Executing Cell');
     export const collapseAll = localize('DataScience.collapseAll', 'Collapse all cell inputs');
     export const expandAll = localize('DataScience.expandAll', 'Expand all cell inputs');
+    export const collapseSingle = localize('DataScience.collapseSingle', 'Collapse');
+    export const expandSingle = localize('DataScience.expandSingle', 'Expand');
     export const exportKey = localize('DataScience.export', 'Export as Jupyter Notebook');
     export const restartServer = localize('DataScience.restartServer', 'Restart iPython Kernel');
     export const undo = localize('DataScience.undo', 'Undo');
