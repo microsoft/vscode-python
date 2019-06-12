@@ -10,24 +10,37 @@ export class JupyterWebSocket extends WebSocketWS {
     public static allowUnauthorized: boolean | undefined;
 
     constructor(url: string, protocols?: string | string[] | undefined) {
+        let co: WebSocketWS.ClientOptions = {};
+
         if (JupyterWebSocket.allowUnauthorized) {
-            const co: WebSocketWS.ClientOptions = {
-                rejectUnauthorized: false
-            };
-
-            super(url, protocols, co);
-        } else if (JupyterWebSocket.cookieString) {
-            // Construct our client options here
-            const co: WebSocketWS.ClientOptions = {
-                headers: {
-                    Cookie: JupyterWebSocket.cookieString
-                }
-            };
-
-            super(url, protocols, co);
-        } else {
-            super(url, protocols);
+            co = {...co, rejectUnauthorized: false};
         }
+
+        if (JupyterWebSocket.cookieString) {
+            co = {...co, headers: {
+                Cookie: JupyterWebSocket.cookieString
+            }};
+        }
+
+        super(url, protocols, co);
+        //if (JupyterWebSocket.allowUnauthorized) {
+            //const co: WebSocketWS.ClientOptions = {
+                //rejectUnauthorized: false
+            //};
+
+            //super(url, protocols, co);
+        //} else if (JupyterWebSocket.cookieString) {
+            //// Construct our client options here
+            //const co: WebSocketWS.ClientOptions = {
+                //headers: {
+                    //Cookie: JupyterWebSocket.cookieString
+                //}
+            //};
+
+            //super(url, protocols, co);
+        //} else {
+            //super(url, protocols);
+        //}
     }
 
 }
