@@ -25,7 +25,8 @@ import { noop } from '../../common/utils/misc';
 import { IConnection, IJupyterKernelSpec, IJupyterPasswordConnect, IJupyterPasswordConnectInfo, IJupyterSession } from '../types';
 import { JupyterKernelPromiseFailedError } from './jupyterKernelPromiseFailedError';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
-import { JupyterWebSocket } from './jupyterWebSocket';
+//import { JupyterWebSocket } from './jupyterWebSocket';
+import { createJupyterWebSocket } from './jupyterWebSocket';
 
 export class JupyterSession implements IJupyterSession {
     private connInfo: IConnection | undefined;
@@ -158,9 +159,11 @@ export class JupyterSession implements IJupyterSession {
     private getSessionCookieString(pwSettings: IJupyterPasswordConnectInfo): string {
         // Save our cookie connection info on the JupyterWebSocket static field
         // This websocket is created by the jupyter lab services code and needs access to these values
-        JupyterWebSocket.cookieString = `_xsrf=${pwSettings.xsrfCookie}; ${pwSettings.sessionCookieName}=${pwSettings.sessionCookieValue}`;
+        //JupyterWebSocket.cookieString = `_xsrf=${pwSettings.xsrfCookie}; ${pwSettings.sessionCookieName}=${pwSettings.sessionCookieValue}`;
 
-        return JupyterWebSocket.cookieString;
+        //return JupyterWebSocket.cookieString;
+
+        return `_xsrf=${pwSettings.xsrfCookie}; ${pwSettings.sessionCookieName}=${pwSettings.sessionCookieValue}`;
     }
     private async getServerConnectSettings(connInfo: IConnection): Promise<ServerConnection.ISettings> {
         let serverSettings: Partial<ServerConnection.ISettings> =
@@ -181,13 +184,16 @@ export class JupyterSession implements IJupyterSession {
         // tslint:disable-next-line:no-any
         let requestInit: any = { cache: 'no-store', credentials: 'same-origin' };
         let requiresWebSocket = false;
+        let cookieString;
+        let allowUnauthorized;
 
         // If no token is specified prompt for a password
         if (connInfo.token === '' || connInfo.token === 'null') {
             serverSettings = {...serverSettings, token: ''};
             const pwSettings = await this.jupyterPasswordConnect.getPasswordConnectionInfo(connInfo.baseUrl);
             if (pwSettings) {
-                const cookieString = this.getSessionCookieString(pwSettings);
+                //const cookieString = this.getSessionCookieString(pwSettings);
+                cookieString = this.getSessionCookieString(pwSettings);
                 const requestHeaders = { Cookie: cookieString, 'X-XSRFToken': pwSettings.xsrfCookie };
                 requestInit = {...requestInit, headers: requestHeaders};
                 requiresWebSocket = true;
@@ -198,7 +204,7 @@ export class JupyterSession implements IJupyterSession {
         } else {
             serverSettings = {...serverSettings, token: connInfo.token};
             // Reset the static cookie value on a non-password connection
-            JupyterWebSocket.cookieString = undefined;
+            //JupyterWebSocket.cookieString = undefined;
         }
 
         // If this is an https connection and we want to allow unauthorized connections set some more values here
@@ -206,9 +212,10 @@ export class JupyterSession implements IJupyterSession {
             const requestAgent = new HttpsAgent({rejectUnauthorized: false});
             requestInit = {...requestInit, agent: requestAgent};
             requiresWebSocket = true;
-            JupyterWebSocket.allowUnauthorized = true;
+            allowUnauthorized = true;
+            //JupyterWebSocket.allowUnauthorized = true;
         } else {
-            JupyterWebSocket.allowUnauthorized = false;
+            //JupyterWebSocket.allowUnauthorized = false;
         }
 
         serverSettings = {...serverSettings, init: requestInit};
@@ -218,7 +225,9 @@ export class JupyterSession implements IJupyterSession {
             // See _createSocket here:
             // https://github.com/jupyterlab/jupyterlab/blob/cfc8ebda95e882b4ed2eefd54863bb8cdb0ab763/packages/services/src/kernel/default.ts
             // tslint:disable-next-line:no-any
-            serverSettings = {...serverSettings, WebSocket: JupyterWebSocket as any};
+            //serverSettings = {...serverSettings, WebSocket: JupyterWebSocket as any};
+            // tslint:disable-next-line:no-any
+            serverSettings = {...serverSettings, WebSocket: createJupyterWebSocket(cookieString, allowUnauthorized) as any};
         }
 
         return ServerConnection.makeSettings(serverSettings);
