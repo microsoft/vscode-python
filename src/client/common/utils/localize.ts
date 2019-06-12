@@ -177,6 +177,18 @@ export namespace DataScience {
     export const previewHeader = localize('DataScience.previewHeader', '--- Begin preview of {0} ---');
     export const previewFooter = localize('DataScience.previewFooter', '--- End preview of {0} ---');
     export const previewStatusMessage = localize('DataScience.previewStatusMessage', 'Generating preview of {0}');
+    export const plotViewerTitle = localize('DataScience.plotViewerTitle', 'Plots');
+    export const exportPlotTitle = localize('DataScience.exportPlotTitle', 'Save plot image');
+    export const pdfFilter = localize('DataScience.pdfFilter', 'PDF');
+    export const pngFilter = localize('DataScience.pngFilter', 'PNG');
+    export const svgFilter = localize('DataScience.svgFilter', 'SVG');
+    export const previousPlot = localize('DataScience.previousPlot', 'Previous');
+    export const nextPlot = localize('DataScience.nextPlot', 'Next');
+    export const panPlot = localize('DataScience.panPlot', 'Pan');
+    export const zoomInPlot = localize('DataScience.zoomInPlot', 'Zoom in');
+    export const zoomOutPlot = localize('DataScience.zoomOutPlot', 'Zoom out');
+    export const exportPlot = localize('DataScience.exportPlot', 'Export to different formats');
+    export const deletePlot = localize('DataScience.deletePlot', 'Remove');
 
 }
 

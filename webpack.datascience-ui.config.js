@@ -123,6 +123,9 @@ module.exports = [
         // We need to use one where source is embedded, due to webviews (they restrict resources to specific schemes,
         //  this seems to prevent chrome from downloading the source maps)
         devtool: 'eval-source-map',
+        optimization: {
+            minimizer: [new TerserPlugin()]
+        },
         node: {
             fs: 'empty'
         },
@@ -200,10 +203,10 @@ module.exports = [
         }
     },
     {
-        entry: ['babel-polyfill', './src/datascience-ui/inset-react/index.tsx'],
+        entry: ['babel-polyfill', './src/datascience-ui/plot/index.tsx'],
         output: {
             path: path.join(__dirname, 'out'),
-            filename: 'datascience-ui/inset-react/index_bundle.js',
+            filename: 'datascience-ui/plot/index_bundle.js',
             publicPath: './'
         },
 
@@ -212,11 +215,14 @@ module.exports = [
         // We need to use one where source is embedded, due to webviews (they restrict resources to specific schemes,
         //  this seems to prevent chrome from downloading the source maps)
         devtool: 'eval-source-map',
+        optimization: {
+            minimizer: [new TerserPlugin()]
+        },
         node: {
             fs: 'empty'
         },
         plugins: [
-            new HtmlWebpackPlugin({ template: 'src/datascience-ui/inset-react/index.html', imageBaseUrl: `${__dirname.replace(/\\/g, '/')}/out/datascience-ui/inset-react`, indexUrl: `${__dirname}/out/1`, filename: './datascience-ui/inset-react/index.html' }),
+            new HtmlWebpackPlugin({ template: 'src/datascience-ui/plot/index.html', imageBaseUrl: `${__dirname.replace(/\\/g, '/')}/out/datascience-ui/plot`, indexUrl: `${__dirname}/out/1`, filename: './datascience-ui/plot/index.html' }),
             new FixDefaultImportPlugin(),
             new CopyWebpackPlugin([
                 { from: './**/*.png', to: '.' },

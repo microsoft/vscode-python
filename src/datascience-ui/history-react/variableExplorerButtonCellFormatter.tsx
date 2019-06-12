@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { getLocString } from '../react-common/locReactSide';
-import { CellButton } from './cellButton';
-import { Image, ImageName } from './image';
-import './variableExplorerButtonCellFormatter.css';
-
 import * as React from 'react';
+
+import { Image, ImageName } from '../react-common/image';
+import { ImageButton } from '../react-common/imageButton';
+import { getLocString } from '../react-common/locReactSide';
+
+import './variableExplorerButtonCellFormatter.css';
 
 export interface IButtonCellValue {
     supportsDataExplorer: boolean;
@@ -31,9 +32,9 @@ export class VariableExplorerButtonCellFormatter extends React.Component<IVariab
             if (this.props.value.supportsDataExplorer) {
                 return(
                     <div className={className}>
-                        <CellButton baseTheme={this.props.baseTheme} tooltip={getLocString('DataScience.showDataExplorerTooltip', 'Show variable in data viewer.')} onClick={this.onDataExplorerClick}>
-                            <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.OpenInNewWindow}/>
-                        </CellButton>
+                        <ImageButton baseTheme={this.props.baseTheme} tooltip={getLocString('DataScience.showDataExplorerTooltip', 'Show variable in data viewer.')} onClick={this.onDataExplorerClick}>
+                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.OpenInNewWindow}/>
+                        </ImageButton>
                     </div>
                 );
             } else {

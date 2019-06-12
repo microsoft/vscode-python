@@ -3,7 +3,7 @@
 'use strict';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 
-import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../constants';
+import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../messages';
 import { ICell, IHistoryInfo, IJupyterVariable, IJupyterVariablesResponse } from '../types';
 
 export namespace HistoryMessages {
@@ -11,6 +11,7 @@ export namespace HistoryMessages {
     export const FinishCell = 'finish_cell';
     export const UpdateCell = 'update_cell';
     export const GotoCodeCell = 'gotocell_code';
+    export const CopyCodeCell = 'copycell_code';
     export const RestartKernel = 'restart_kernel';
     export const Export = 'export_to_ipynb';
     export const GetAllCells = 'get_all_cells';
@@ -54,6 +55,7 @@ export namespace HistoryMessages {
     export const LoadTmLanguageRequest = 'load_tmlanguage_request';
     export const LoadTmLanguageResponse = 'load_tmlanguage_response';
     export const OpenLink = 'open_link';
+    export const ShowPlot = 'show_plot';
 }
 
 // These are the messages that will mirror'd to guest/hosts in
@@ -66,6 +68,10 @@ export const HistoryRemoteMessages : string[] = [
 export interface IGotoCode {
     file: string;
     line: number;
+}
+
+export interface ICopyCode {
+    source: string;
 }
 
 export interface IAddedSysInfo {
@@ -160,6 +166,7 @@ export class IHistoryMapping {
     public [HistoryMessages.FinishCell]: ICell;
     public [HistoryMessages.UpdateCell]: ICell;
     public [HistoryMessages.GotoCodeCell]: IGotoCode;
+    public [HistoryMessages.CopyCodeCell]: ICopyCode;
     public [HistoryMessages.RestartKernel]: never | undefined;
     public [HistoryMessages.Export]: ICell[];
     public [HistoryMessages.GetAllCells]: ICell;
@@ -205,4 +212,5 @@ export class IHistoryMapping {
     public [HistoryMessages.LoadTmLanguageRequest]: never | undefined;
     public [HistoryMessages.LoadTmLanguageResponse]: string | undefined;
     public [HistoryMessages.OpenLink]: string | undefined;
+    public [HistoryMessages.ShowPlot]: string | undefined;
 }

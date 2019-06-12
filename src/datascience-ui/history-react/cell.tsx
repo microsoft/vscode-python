@@ -7,22 +7,25 @@ import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
 
 import '../../client/common/extensions';
-import { concatMultilineString } from '../../client/datascience/common';
-import { Identifiers } from '../../client/datascience/constants';
+import { concatMultilineString, formatStreamText } from '../../client/datascience/common';
+import { Identifiers, RegExpValues } from '../../client/datascience/constants';
 import { CellState, ICell } from '../../client/datascience/types';
+import { noop } from '../../test/core';
+import { Image, ImageName } from '../react-common/image';
+import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
 import { getSettings } from '../react-common/settingsReactSide';
-import './cell.css';
-import { CellButton } from './cellButton';
-import { CellOutput } from './cellOutput';
 import { Code } from './code';
 import { CollapseButton } from './collapseButton';
 import { ExecutionCount } from './executionCount';
-import { Image, ImageName } from './image';
 import { InformationMessages } from './informationMessages';
 import { InputHistory } from './inputHistory';
 import { MenuBar } from './menuBar';
 import { transforms } from './transforms';
+
+import './cell.css';
+import { CellOutput } from './cellOutput';
+import { JSONObject } from '@phosphor/coreutils';
 
 interface ICellProps {
     cellVM: ICellViewModel;
@@ -38,11 +41,13 @@ interface ICellProps {
     editorOptions: monacoEditor.editor.IEditorOptions;
     editExecutionCount: number;
     gotoCode(): void;
+    copyCode(): void;
     delete(): void;
     submitNewCode(code: string): void;
     onCodeChange(changes: monacoEditor.editor.IModelContentChange[], cellId: string, modelId: string): void;
     onCodeCreated(code: string, file: string, cellId: string, modelId: string): void;
     openLink(uri: monacoEditor.Uri): void;
+    expandImage(imageHtml: string): void;
 }
 
 export interface ICellViewModel {
@@ -96,6 +101,10 @@ export class Cell extends React.Component<ICellProps> {
         return getLocString('DataScience.gotoCodeButtonTooltip', 'Go to code');
     }
 
+    private getCopyBackToSourceString = () => {
+        return getLocString('DataScience.copyBackToSource', 'Paste code into file');
+    }
+
     private getCell = () => {
         return this.props.cellVM.cell;
     }
@@ -132,12 +141,15 @@ export class Cell extends React.Component<ICellProps> {
             return (
                 <div className={cellWrapperClass} role='row' onClick={this.onMouseClick}>
                     <MenuBar baseTheme={this.props.baseTheme}>
-                        <CellButton baseTheme={this.props.baseTheme} onClick={this.props.delete} tooltip={this.getDeleteString()} hidden={this.props.cellVM.editable}>
-                            <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.Cancel} />
-                        </CellButton>
-                        <CellButton baseTheme={this.props.baseTheme} onClick={this.props.gotoCode} tooltip={this.getGoToCodeString()} hidden={hasNoSource}>
-                            <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.GoToSourceCode} />
-                        </CellButton>
+                        <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.delete} tooltip={this.getDeleteString()} hidden={this.props.cellVM.editable}>
+                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Cancel} />
+                        </ImageButton>
+                        <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.gotoCode} tooltip={this.getGoToCodeString()} hidden={hasNoSource}>
+                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.GoToSourceCode} />
+                        </ImageButton>
+                        <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.copyCode} tooltip={this.getCopyBackToSourceString()} hidden={!hasNoSource || this.props.cellVM.editable}>
+                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Copy} />
+                        </ImageButton>
                     </MenuBar>
                     <div className={cellOuterClass}>
                         {this.renderControls()}
@@ -285,7 +297,175 @@ export class Cell extends React.Component<ICellProps> {
         const source = concatMultilineString(markdown.source);
         const Transform = transforms['text/markdown'];
 
-        return [<Transform key={0} data={source} />];
+        return [<Transform key={0} data={source}/>];
+    }
+
+    private renderWithTransform = (mimetype: string, output : nbformat.IOutput, index : number, renderWithScrollbars: boolean, forceLightTheme: boolean, isText: boolean) => {
+
+        // If we found a mimetype, use the transform
+        if (mimetype) {
+
+            // Get the matching React.Component for that mimetype
+            const Transform = transforms[mimetype];
+
+            if (typeof mimetype !== 'string') {
+                return <div key={index}>{this.getUnknownMimeTypeFormatString().format(mimetype)}</div>;
+            }
+
+            try {
+                // Massage our data to make sure it displays well
+                if (output.data) {
+                    let extraButton = null;
+                    const mimeBundle = output.data as nbformat.IMimeBundle;
+                    let data: nbformat.MultilineString | JSONObject = mimeBundle[mimetype];
+                    switch (mimetype) {
+                        case 'text/plain':
+                            // Data needs to be contiguous for us to display it.
+                            data = concatMultilineString(data as nbformat.MultilineString);
+                            renderWithScrollbars = true;
+                            isText = true;
+                            break;
+
+                        case 'image/svg+xml':
+                            // Jupyter adds a universal selector style that messes
+                            // up all of our other styles. Remove it.
+                            const html = concatMultilineString(data as nbformat.MultilineString);
+                            data = html.replace(RegExpValues.StyleTagRegex, '');
+
+                            // Also change the width to 100% so it scales correctly. We need to save the
+                            // width/height for the plot window though
+                            let sizeTag = '';
+                            const widthMatch = RegExpValues.SvgWidthRegex.exec(data);
+                            const heightMatch = RegExpValues.SvgHeightRegex.exec(data);
+                            if (widthMatch && heightMatch && widthMatch.length > 2 && heightMatch.length > 2) {
+                                // SvgHeightRegex and SvgWidthRegex match both the <svg.* and the width entry, so
+                                // pick the second group
+                                const width = widthMatch[2];
+                                const height = heightMatch[2];
+                                sizeTag = Identifiers.SvgSizeTag.format(width, height);
+                            }
+                            data = data.replace(RegExpValues.SvgWidthRegex, `$1100%" tag="${sizeTag}"`);
+
+                            // Also add an extra button to open this image.
+                            // Note: This affects the plotOpenClick. We have to skip the svg on this extraButton there
+                            extraButton = (
+                                <div className='plot-open-button'>
+                                    <ImageButton baseTheme={this.props.baseTheme} tooltip={getLocString('DataScience.plotOpen', 'Expand image')} onClick={this.plotOpenClick}>
+                                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.OpenInNewWindow} />
+                                    </ImageButton>
+                                </div>
+                            );
+                            break;
+
+                        default:
+                            break;
+                    }
+
+                    // Create a default set of properties
+                    const style: React.CSSProperties = {
+                    };
+
+                    // Create a scrollbar style if necessary
+                    if (renderWithScrollbars && this.props.maxTextSize) {
+                        style.overflowX = 'auto';
+                        style.overflowY = 'auto';
+                        style.maxHeight = `${this.props.maxTextSize}px`;
+                    }
+
+                    // Change the background if necessary
+                    if (forceLightTheme) {
+                        style.backgroundColor = this.props.errorBackgroundColor;
+                        style.color = this.invertColor(this.props.errorBackgroundColor);
+                    }
+
+                    const className = isText ? 'cell-output-text' : 'cell-output-html';
+
+                    return (
+                        <div id='stylewrapper' role='group' onDoubleClick={this.doubleClick} onClick={this.click} className={className} key={index} style={style}>
+                            {extraButton}
+                            <Transform data={data} />
+                        </div>
+                    );
+                }
+            } catch (ex) {
+                window.console.log('Error in rendering');
+                window.console.log(ex);
+                return <div></div>;
+            }
+        }
+
+        return <div></div>;
+    }
+
+    private doubleClick = (event: React.MouseEvent<HTMLDivElement>) => {
+        // Extract the svg image from whatever was clicked
+        // tslint:disable-next-line: no-any
+        const svgChild = event.target as any;
+        if (svgChild && svgChild.ownerSVGElement) {
+            const svg = svgChild.ownerSVGElement as SVGElement;
+            this.props.expandImage(svg.outerHTML);
+        }
+    }
+
+    private plotOpenClick = (event?: React.MouseEvent<HTMLButtonElement>) => {
+        const divChild = event && event.currentTarget;
+        if (divChild && divChild.parentElement && divChild.parentElement.parentElement) {
+            const svgs = divChild.parentElement.parentElement.getElementsByTagName('svg');
+            if (svgs && svgs.length > 1) { // First svg should be the button itself. See the code above where we bind to this function.
+                this.props.expandImage(svgs[1].outerHTML);
+            }
+        }
+    }
+
+    private click = (event: React.MouseEvent<HTMLDivElement>) => {
+        // If this is an anchor element, forward the click as Jupyter does.
+        let anchor = event.target as HTMLAnchorElement;
+        if (anchor && anchor.href) {
+            // Href may be redirected to an inner anchor
+            if (anchor.href.startsWith('vscode')) {
+                const inner = anchor.getElementsByTagName('a');
+                if (inner && inner.length > 0) {
+                    anchor = inner[0];
+                }
+            }
+            if (anchor && anchor.href && !anchor.href.startsWith('vscode')) {
+                this.props.openLink(monacoEditor.Uri.parse(anchor.href));
+            }
+        }
+    }
+
+    private convertToLinearRgb(color: number) : number {
+        let c = color / 255;
+        if (c <= 0.03928) {
+            c = c / 12.92;
+        } else {
+            c = Math.pow((c + 0.055) / 1.055, 2.4);
+        }
+        return c;
+    }
+
+    private invertColor(color: string) {
+        if (color.indexOf('#') === 0) {
+            color = color.slice(1);
+        }
+        // convert 3-digit hex to 6-digits.
+        if (color.length === 3) {
+            color = color[0] + color[0] + color[1] + color[1] + color[2] + color[2];
+        }
+        if (color.length === 6) {
+            // http://stackoverflow.com/a/3943023/112731
+            const r = this.convertToLinearRgb(parseInt(color.slice(0, 2), 16));
+            const g = this.convertToLinearRgb(parseInt(color.slice(2, 4), 16));
+            const b = this.convertToLinearRgb(parseInt(color.slice(4, 6), 16));
+
+            const L = (0.2126 * r) + (0.7152 * g) + (0.0722 * b);
+
+            return (L > 0.179)
+                ? '#000000'
+                : '#FFFFFF';
+        } else {
+            return color;
+        }
     }
 
 }
