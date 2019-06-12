@@ -136,7 +136,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                         tooltip={getLocString('DataScience.collapseVariableExplorerTooltip', 'Collapse variable explorer')}
                         label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')} />
                     <div className={contentClassName}>
-                        <div id='variable-explorer-data-grid' role='table'>
+                        <div id='variable-explorer-data-grid' role='table' aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
                             <AdazzleReactDataGrid
                                 columns = {this.state.gridColumns.map(c => { return {...defaultColumnProperties, ...c }; })}
                                 rowGetter = {this.getRow}

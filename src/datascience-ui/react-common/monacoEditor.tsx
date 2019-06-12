@@ -124,6 +124,12 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             // Make sure our suggest and hover windows show up on top of other stuff
             this.updateWidgetParent(editor);
 
+            // If we're readonly, monaco is not putting the aria-readonly property on the textarea
+            // We should do that
+            if (this.props.options.readOnly) {
+                this.setAriaReadOnly(editor);
+            }
+
             // Eliminate the find action if possible
             // tslint:disable-next-line: no-any
             const editorAny = editor as any;
@@ -203,6 +209,19 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             return suggestVisible || signatureVisible;
         }
         return false;
+    }
+
+    private setAriaReadOnly(editor: monacoEditor.editor.IStandaloneCodeEditor) {
+        const editorDomNode = editor.getDomNode();
+        if (editorDomNode) {
+            const textArea = editorDomNode.getElementsByTagName('textarea');
+            if (textArea && textArea.length > 0) {
+                const item = textArea.item(0);
+                if (item) {
+                    item.setAttribute('aria-readonly', 'true');
+                }
+            }
+        }
     }
 
     private windowResized = () => {
