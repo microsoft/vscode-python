@@ -85,10 +85,7 @@ export class ExperimentsManager implements IExperimentsManager {
         await this.updateExperimentStorage();
         this.populateUserExperiments();
         for (const exp of this.userExperiments || []) {
-            /**
-             * Experiments can change the way the extension activates and functions.
-             * We need to know the logs we observe are because of an experiment or simply because of a user-preference.
-             */
+            // We need to know whether an experiment influences the logs we observe in github issues, so log the experiment group
             this.output.appendLine(Experiments.inGroup().format(exp.name));
         }
         this.initializeInBackground().ignoreErrors();
@@ -145,6 +142,9 @@ export class ExperimentsManager implements IExperimentsManager {
      * @param salt The experiment salt value
      */
     public isUserInRange(min: number, max: number, salt: string): boolean {
+        if (typeof (this.appEnvironment.machineId) !== 'string') {
+            throw new Error('Machine ID should be a string');
+        }
         const hash = this.crypto.createHash(`${this.appEnvironment.machineId}+${salt}`, 'hex', 'number');
         return hash % 100 >= min && hash % 100 < max;
     }
