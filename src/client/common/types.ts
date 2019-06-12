@@ -3,6 +3,7 @@
 'use strict';
 
 import { Socket } from 'net';
+import { Request as RequestResult } from 'request';
 import { ConfigurationTarget, DiagnosticSeverity, Disposable, DocumentSymbolProvider, Event, Extension, ExtensionContext, OutputChannel, Uri, WorkspaceEdit } from 'vscode';
 import { CommandsWithoutArgs } from './application/commands';
 import { EnvironmentVariables } from './variables/types';
@@ -329,6 +330,12 @@ export const ISocketServer = Symbol('ISocketServer');
 export interface ISocketServer extends Disposable {
     readonly client: Promise<Socket>;
     Start(options?: { port?: number; host?: string }): Promise<number>;
+}
+
+export const IHttpClient = Symbol('IHttpClient');
+export interface IHttpClient {
+    downloadFile(uri: string): Promise<RequestResult>;
+    getJSON<T>(uri: string): Promise<T>;
 }
 
 export const IExtensionContext = Symbol('ExtensionContext');

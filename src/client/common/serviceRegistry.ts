@@ -1,6 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { IHttpClient } from '../activation/types';
 import { IServiceManager } from '../ioc/types';
 import { ImportTracker } from '../telemetry/importTracker';
 import { IImportTracker } from '../telemetry/types';
@@ -64,6 +63,7 @@ import {
     IEditorUtils,
     IExtensions,
     IFeatureDeprecationManager,
+    IHttpClient,
     IInstaller,
     ILogger,
     IPathUtils,
