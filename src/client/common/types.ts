@@ -315,6 +315,7 @@ export interface IDataScienceSettings {
     askForLargeDataFrames?: boolean;
     enableAutoMoveToNextCell?: boolean;
     autoPreviewNotebooksInInteractivePane?: boolean;
+    allowUnauthorizedRemoteConnection?: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

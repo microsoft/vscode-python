@@ -306,8 +306,11 @@ export class JupyterExecutionBase implements IJupyterExecution {
             // This should already have been parsed when set, so just throw if it's not right here
             throw err;
         }
+        const settings = this.configuration.getSettings();
+        const allowUnauthorized = settings.datascience.allowUnauthorizedRemoteConnection ? settings.datascience.allowUnauthorizedRemoteConnection : false;
 
         return {
+            allowUnauthorized,
             baseUrl: `${url.protocol}//${url.host}${url.pathname}`,
             token: `${url.searchParams.get('token')}`,
             localLaunch: false,
