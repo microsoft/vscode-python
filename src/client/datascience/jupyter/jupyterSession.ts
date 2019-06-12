@@ -25,7 +25,6 @@ import { noop } from '../../common/utils/misc';
 import { IConnection, IJupyterKernelSpec, IJupyterPasswordConnect, IJupyterPasswordConnectInfo, IJupyterSession } from '../types';
 import { JupyterKernelPromiseFailedError } from './jupyterKernelPromiseFailedError';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
-//import { JupyterWebSocket } from './jupyterWebSocket';
 import { createJupyterWebSocket } from './jupyterWebSocket';
 
 export class JupyterSession implements IJupyterSession {
@@ -193,8 +192,7 @@ export class JupyterSession implements IJupyterSession {
         }
 
         // If this is an https connection and we want to allow unauthorized connections set that option on our agent
-        // we don't need to save the agent in particuar as the previous behaviour is just to create a temporary default
-        // agent to use for the request
+        // we don't need to save the agent as the previous behaviour is just to create a temporary default agent when not specified
         if (connInfo.baseUrl.startsWith('https') && connInfo.allowUnauthorized) {
             const requestAgent = new HttpsAgent({rejectUnauthorized: false});
             requestInit = {...requestInit, agent: requestAgent};
