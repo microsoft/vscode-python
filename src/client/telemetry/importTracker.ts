@@ -18,8 +18,7 @@ import { IImportTracker } from './types';
 Python has a fairly rich import statement. Originally the matching regexp was kept simple for
 performance worries, but it led to false-positives due to matching things like docstrings with
 phrases along the lines of "from the thing" or "import the thing". To minimize false-positives the
-regexp does its best to validate the structure of the import line is accurate. This leads to us
-capturing:
+regexp does its best to validate the structure of the import line. This leads to us supporting:
 
 - `from pkg import _`
 - `from pkg import (_, _)`
@@ -30,9 +29,10 @@ capturing:
 - `import pkg as _`
 
 We can rely on the fact that the use of the `from` and `import` keywords from the start of a line are
-only usable for imports (`from` can also be used when raising an exception, but `raise` would be the
-first keyword on a line in that instance). We also get to rely on the fact that we only care about
-the top-level package, keeping the regex extremely greedy.
+only usable for imports in valid code (`from` can also be used when raising an exception, but `raise`
+would be the first keyword on a line in that instance). We also get to rely on the fact that we only
+care about the top-level package, keeping the regex extremely greedy. This should lead to the regex
+failing fast and having low performance overhead.
 
 We can also ignore multi-line/parenthesized imports for simplicity since we don't' need 100% accuracy,
 just enough to be able to tell what packages user's rely on to make sure we are covering our bases
