@@ -191,6 +191,7 @@ export namespace DataScience {
     export const zoomOutPlot = localize('DataScience.zoomOutPlot', 'Zoom out');
     export const exportPlot = localize('DataScience.exportPlot', 'Export to different formats');
     export const deletePlot = localize('DataScience.deletePlot', 'Remove');
+    export const editSection = localize('DataScience.editSection', 'Input new cells here.');
 
 }
 

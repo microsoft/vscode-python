@@ -12,6 +12,7 @@ export interface IVariablePanelProps {
     baseTheme: string;
     busy: boolean;
     skipDefault?: boolean;
+    testMode?: boolean;
     variableExplorerRef: React.RefObject<VariableExplorer>;
     showDataExplorer(targetVariable: string, numberOfColumns: number): void;
     refreshVariables(): void;

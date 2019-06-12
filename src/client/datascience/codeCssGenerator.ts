@@ -30,7 +30,7 @@ const DefaultCssVars: { [key: string] : string } = {
         --override-foreground: #000000;
         --override-background: #FFFFFF;
         --override-selection-background: #add6ff;
-        --override-watermark-color: #cccedb;
+        --override-watermark-color: rgba(66, 66, 66, 0.75);
         --override-tabs-background: #f3f3f3;
         --override-progress-background: #0066bf;
         --override-badge-background: #c4c4c4;
@@ -44,7 +44,7 @@ const DefaultCssVars: { [key: string] : string } = {
         --override-foreground: #d4d4d4;
         --override-background: #1e1e1e;
         --override-selection-background: #264f78;
-        --override-watermark-color: #3f3f46;
+        --override-watermark-color: rgba(231, 231, 231, 0.6);
         --override-tabs-background: #252526;
         --override-progress-background: #0066bf;
         --override-badge-background: #4d4d4d;
