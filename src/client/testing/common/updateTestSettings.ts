@@ -5,13 +5,13 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { IExtensionActivationService } from '../../../activation/types';
-import { IApplicationEnvironment, IWorkspaceService } from '../../../common/application/types';
-import '../../../common/extensions';
-import { traceDecorators } from '../../../common/logger';
-import { IFileSystem } from '../../../common/platform/types';
-import { Resource } from '../../../common/types';
-import { swallowExceptions } from '../../../common/utils/decorators';
+import { IExtensionActivationService } from '../../activation/types';
+import { IApplicationEnvironment, IWorkspaceService } from '../../common/application/types';
+import '../../common/extensions';
+import { traceDecorators, traceError } from '../../common/logger';
+import { IFileSystem } from '../../common/platform/types';
+import { Resource } from '../../common/types';
+import { swallowExceptions } from '../../common/utils/decorators';
 
 @injectable()
 export class UpdateTestSettingService implements IExtensionActivationService {
@@ -60,9 +60,13 @@ export class UpdateTestSettingService implements IExtensionActivationService {
         fileContents = fileContents.replace(setting_pytest_path, '.pytestPath"');
         await this.fs.writeFile(filePath, fileContents);
     }
-    @swallowExceptions('Failed to check if file needs to be fixed')
     public async doesFileNeedToBeFixed(filePath: string) {
-        const contents = await this.fs.readFile(filePath);
-        return contents.indexOf('python.unitTest.') > 0 || contents.indexOf('.pyTest') > 0;
+        try {
+            const contents = await this.fs.readFile(filePath);
+            return contents.indexOf('python.unitTest.') > 0 || contents.indexOf('.pyTest') > 0;
+        } catch (ex) {
+            traceError('Failed to check if file needs to be fixed', ex);
+            return false;
+        }
     }
 }

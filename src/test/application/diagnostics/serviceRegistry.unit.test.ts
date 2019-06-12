@@ -4,7 +4,6 @@
 'use strict';
 
 import { instance, mock, verify } from 'ts-mockito';
-import { IExtensionActivationService } from '../../../client/activation/types';
 import { ApplicationDiagnostics } from '../../../client/application/diagnostics/applicationDiagnostics';
 import { EnvironmentPathVariableDiagnosticsService, EnvironmentPathVariableDiagnosticsServiceId } from '../../../client/application/diagnostics/checks/envPathVariable';
 import { InvalidLaunchJsonDebuggerService, InvalidLaunchJsonDebuggerServiceId } from '../../../client/application/diagnostics/checks/invalidLaunchJsonDebugger';
@@ -13,7 +12,6 @@ import { LSNotSupportedDiagnosticService, LSNotSupportedDiagnosticServiceId } fr
 import { InvalidMacPythonInterpreterService, InvalidMacPythonInterpreterServiceId } from '../../../client/application/diagnostics/checks/macPythonInterpreter';
 import { PowerShellActivationHackDiagnosticsService, PowerShellActivationHackDiagnosticsServiceId } from '../../../client/application/diagnostics/checks/powerShellActivation';
 import { InvalidPythonInterpreterService, InvalidPythonInterpreterServiceId } from '../../../client/application/diagnostics/checks/pythonInterpreter';
-import { UpdateTestSettingService } from '../../../client/application/diagnostics/checks/updateTestSettings';
 import { DiagnosticsCommandFactory } from '../../../client/application/diagnostics/commands/factory';
 import { IDiagnosticsCommandFactory } from '../../../client/application/diagnostics/commands/types';
 import { DiagnosticFilterService } from '../../../client/application/diagnostics/filter';
@@ -41,7 +39,6 @@ suite('Application Diagnostics - Register classes in IOC Container', () => {
         verify(serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, LSNotSupportedDiagnosticService, LSNotSupportedDiagnosticServiceId));
         verify(serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, PowerShellActivationHackDiagnosticsService, PowerShellActivationHackDiagnosticsServiceId));
         verify(serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, InvalidMacPythonInterpreterService, InvalidMacPythonInterpreterServiceId));
-        verify(serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, UpdateTestSettingService));
         verify(serviceManager.addSingleton<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory, DiagnosticsCommandFactory));
         verify(serviceManager.addSingleton<IApplicationDiagnostics>(IApplicationDiagnostics, ApplicationDiagnostics));
     })

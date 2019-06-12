@@ -19,7 +19,7 @@ import { IFileSystem } from '../../../../client/common/platform/types';
 import { IPersistentState } from '../../../../client/common/types';
 
 // tslint:disable:max-func-body-length no-invalid-this no-any
-suite('xApplication Diagnostics - Check Test Settings', () => {
+suite('Application Diagnostics - Check Test Settings', () => {
     let diagnosticService: UpdateTestSettingService;
     let fs: IFileSystem;
     let appEnv: IApplicationEnvironment;
