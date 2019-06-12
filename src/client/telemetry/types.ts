@@ -100,7 +100,7 @@ export type TestRunTelemetry = {
     tool: TestTool;
     scope: 'currentFile' | 'all' | 'file' | 'class' | 'function' | 'failed';
     debugging: boolean;
-    triggerSource: 'ui' | 'codelens' | 'commandpalette' | 'auto' | 'testExplorer';
+    triggerSource: 'ui' | 'codelens' | 'commandpalette' | 'auto' | 'testExplorer' | 'autoActivate';
     failed: boolean;
 };
 export type TestDiscoverytTelemetry = {
