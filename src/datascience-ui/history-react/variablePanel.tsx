@@ -11,7 +11,7 @@ import { VariableExplorer } from './variableExplorer';
 export interface IVariablePanelProps {
     baseTheme: string;
     busy: boolean;
-    testMode?: boolean;
+    skipDefault?: boolean;
     variableExplorerRef: React.RefObject<VariableExplorer>;
     showDataExplorer(targetVariable: string, numberOfColumns: number): void;
     refreshVariables(): void;
@@ -29,6 +29,7 @@ export class VariablePanel extends React.Component<IVariablePanelProps> {
                 <div id='variable-panel'>
                     {progressBar}
                     <VariableExplorer baseTheme={this.props.baseTheme}
+                    skipDefault={this.props.skipDefault}
                     showDataExplorer={this.props.showDataExplorer}
                     refreshVariables={this.props.refreshVariables}
                     variableExplorerToggled={this.props.variableExplorerToggled}

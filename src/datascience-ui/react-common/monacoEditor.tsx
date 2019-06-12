@@ -218,23 +218,25 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
     private onKeyDown = (e: monacoEditor.IKeyboardEvent) => {
         if (e.keyCode === monacoEditor.KeyCode.Escape) {
-            const nextElement = this.findNextTabStop();
+            // Shift Escape is special, so it doesn't work as going backwards.
+            // For now just support escape to get out of a cell (like Jupyter does)
+            const nextElement = this.findTabStop(1);
             if (nextElement) {
                 nextElement.focus();
             }
         }
     }
 
-    private findNextTabStop() : HTMLElement | undefined {
+    private findTabStop(direction: number) : HTMLElement | undefined {
         if (this.state.editor) {
             const editorDomNode = this.state.editor.getDomNode();
             if (editorDomNode) {
                 const textArea = editorDomNode.getElementsByTagName('textarea');
                 const allFocusable = document.querySelectorAll('input, button, select, textarea, a[href]');
                 if (allFocusable && textArea && textArea.length > 0) {
-                    const tabable = Array.prototype.filter.call(allFocusable, i => i.tabIndex >= 0);
+                    const tabable = Array.prototype.filter.call(allFocusable, (i: HTMLElement) => i.tabIndex >= 0);
                     const self = tabable.indexOf(textArea.item(0));
-                    return tabable[self + 1] || tabable[0];
+                    return direction >= 0 ? tabable[self + 1] || tabable[0] : tabable[self - 1] || tabable[0];
                 }
             }
         }

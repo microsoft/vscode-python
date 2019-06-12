@@ -442,7 +442,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
        return {
         busy: this.state.busy,
         showDataExplorer: this.showDataViewer,
-        testMode: this.props.testMode,
+        skipDefault: this.props.skipDefault,
         variableExplorerRef: this.variableExplorerRef,
         refreshVariables: this.refreshVariables,
         variableExplorerToggled: this.variableExplorerToggled,

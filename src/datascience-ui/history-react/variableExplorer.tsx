@@ -20,6 +20,7 @@ import './variableExplorerGrid.less';
 
 interface IVariableExplorerProps {
     baseTheme: string;
+    skipDefault?: boolean;
     refreshVariables(): void;
     showDataExplorer(targetVariable: string, numberOfColumns: number): void;
     variableExplorerToggled(open: boolean): void;
@@ -69,7 +70,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         ];
         this.state = { open: false,
                         gridColumns: columns,
-                        gridRows: [],
+                        gridRows: !this.props.skipDefault ? this.generateDummyVariables() : [],
                         gridHeight: 200,
                         height: 0,
                         fontSize: 14,
@@ -212,6 +213,22 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             sortDirection,
             gridRows: this.internalSortRows(this.state.gridRows, sortColumn, sortDirection)
         });
+    }
+
+    private generateDummyVariables() : IGridRow[] {
+        return [
+            {
+                name: 'foo',
+                value: 'bar',
+                type: 'DataFrame',
+                size: '(100, 100)',
+                buttons: {
+                    supportsDataExplorer: true,
+                    name: 'foo',
+                    numberOfColumns: 100
+                }
+            }
+        ];
     }
 
     private getColumnType(key: string | number) : string | undefined {
