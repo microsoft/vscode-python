@@ -31,12 +31,14 @@ export class JupyterSession implements IJupyterSession {
     private kernelSpec: IJupyterKernelSpec | undefined;
     private sessionManager : SessionManager | undefined;
     private session: Session.ISession | undefined;
+    private restartSessionPromise: Promise<Session.ISession> | undefined;
     private contentsManager: ContentsManager | undefined;
     private notebookFile: Contents.IModel | undefined;
     private onRestartedEvent : EventEmitter<void> | undefined;
     private statusHandler : Slot<Session.ISession, Kernel.Status> | undefined;
     private connected: boolean = false;
     private jupyterPasswordConnect: IJupyterPasswordConnect;
+    private currentSessionOptions : Session.IOptions | undefined;
 
     constructor(
         connInfo: IConnection,
@@ -99,10 +101,18 @@ export class JupyterSession implements IJupyterSession {
         }
     }
 
-    public restart(timeout: number) : Promise<void> {
-        return this.session && this.session.kernel ?
-            this.waitForKernelPromise(this.session.kernel.restart(), timeout, localize.DataScience.restartingKernelFailed()) :
-            Promise.resolve();
+    public async restart(_timeout: number) : Promise<void> {
+        // Just kill the current session and switch to the other
+        if (this.restartSessionPromise && this.session && this.sessionManager && this.currentSessionOptions) {
+            const oldSession = this.session;
+            this.session = await this.restartSessionPromise;
+
+            // After switching, start another in case we restart again.
+            oldSession.dispose();
+            this.restartSessionPromise = this.sessionManager.startNew(this.currentSessionOptions);
+        } else {
+            throw new Error(localize.DataScience.sessionDisposed());
+        }
     }
 
     public interrupt(timeout: number) : Promise<void> {
@@ -133,14 +143,17 @@ export class JupyterSession implements IJupyterSession {
         this.notebookFile = await this.contentsManager.newUntitled({type: 'notebook'});
 
         // Create our session options using this temporary notebook and our connection info
-        const options: Session.IOptions = {
+        this.currentSessionOptions = {
             path: this.notebookFile.path,
             kernelName: this.kernelSpec ? this.kernelSpec.name : '',
             serverSettings: serverSettings
         };
 
         // Start a new session
-        this.session = await Cancellation.race(() => this.sessionManager!.startNew(options), cancelToken);
+        this.session = await Cancellation.race(() => this.sessionManager!.startNew(this.currentSessionOptions!), cancelToken);
+
+        // Start another session to handle restarts
+        this.restartSessionPromise = this.sessionManager.startNew(this.currentSessionOptions);
 
         // Listen for session status changes
         this.statusHandler = this.onStatusChanged.bind(this.onStatusChanged);

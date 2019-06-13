@@ -359,13 +359,21 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
     @captureTelemetry(Telemetry.RestartKernel)
     public async restartKernel() : Promise<void> {
         if (this.jupyterServer && !this.restartingKernel) {
-            // Ask the user if they want us to restart or not.
-            const message = localize.DataScience.restartKernelMessage();
-            const yes = localize.DataScience.restartKernelMessageYes();
-            const no = localize.DataScience.restartKernelMessageNo();
+            if (this.shouldAskForRestart()) {
+                // Ask the user if they want us to restart or not.
+                const message = localize.DataScience.restartKernelMessage();
+                const yes = localize.DataScience.restartKernelMessageYes();
+                const dontAskAgain = localize.DataScience.restartKernelMessageDontAskAgain();
+                const no = localize.DataScience.restartKernelMessageNo();
 
-            const v = await this.applicationShell.showInformationMessage(message, yes, no);
-            if (v === yes) {
+                const v = await this.applicationShell.showInformationMessage(message, yes, dontAskAgain, no);
+                if (v === dontAskAgain) {
+                    this.disableAskForRestart();
+                    await this.restartKernelInternal();
+                } else if (v === yes) {
+                    await this.restartKernelInternal();
+                }
+            } else {
                 await this.restartKernelInternal();
             }
         }
@@ -467,6 +475,19 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
             await this.postMessage(HistoryMessages.Activate);
         }
     }
+
+    private shouldAskForRestart(): boolean {
+        const settings = this.configuration.getSettings();
+        return settings && settings.datascience && settings.datascience.askForKernelRestart === true;
+    }
+
+    private disableAskForRestart() {
+        const settings = this.configuration.getSettings();
+        if (settings && settings.datascience) {
+            settings.datascience.askForKernelRestart = false;
+        }
+    }
+
 
     private addMessage(message: string, type: 'preview' | 'execute') : void {
         const cell : ICell = {
