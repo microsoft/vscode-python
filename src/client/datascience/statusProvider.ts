@@ -9,10 +9,9 @@ import { createDeferred, Deferred } from '../common/utils/async';
 import { IHistoryProvider, IStatusProvider } from './types';
 
 class StatusItem implements Disposable {
-
-    private deferred : Deferred<void>;
+    private deferred: Deferred<void>;
     private disposed: boolean = false;
-    private timeout: NodeJS.Timer | undefined;
+    private timeout: NodeJS.Timer | number | undefined;
     private disposeCallback: () => void;
 
     constructor(_title: string, disposeCallback: () => void, timeout?: number) {
@@ -29,7 +28,8 @@ class StatusItem implements Disposable {
         if (!this.disposed) {
             this.disposed = true;
             if (this.timeout) {
-                clearTimeout(this.timeout);
+                // tslint:disable-next-line: no-any
+                clearTimeout(this.timeout as any);
                 this.timeout = undefined;
             }
             this.disposeCallback();
@@ -39,7 +39,7 @@ class StatusItem implements Disposable {
         }
     }
 
-    public promise = () : Promise<void> => {
+    public promise = (): Promise<void> => {
         return this.deferred.promise;
     }
 
@@ -47,19 +47,15 @@ class StatusItem implements Disposable {
         this.deferred.reject();
         this.dispose();
     }
-
 }
 
 @injectable()
 export class StatusProvider implements IStatusProvider {
-    private statusCount : number = 0;
+    private statusCount: number = 0;
 
-    constructor(
-        @inject(IApplicationShell) private applicationShell: IApplicationShell,
-        @inject(IHistoryProvider) private historyProvider: IHistoryProvider) {
-    }
+    constructor(@inject(IApplicationShell) private applicationShell: IApplicationShell, @inject(IHistoryProvider) private historyProvider: IHistoryProvider) {}
 
-    public set(message: string, timeout?: number, cancel?: () => void, skipHistory?: boolean) : Disposable {
+    public set(message: string, timeout?: number, cancel?: () => void, skipHistory?: boolean): Disposable {
         // Start our progress
         this.incrementCount(skipHistory);
 
@@ -73,27 +69,23 @@ export class StatusProvider implements IStatusProvider {
         };
 
         // Set our application shell status with a busy icon
-        this.applicationShell.withProgress(
-            progressOptions,
-            (_p, c) =>
-            {
-                if (c && cancel) {
-                    c.onCancellationRequested(() => {
-                        cancel();
-                        statusItem.reject();
-                    });
-                }
-                return statusItem.promise();
+        this.applicationShell.withProgress(progressOptions, (_p, c) => {
+            if (c && cancel) {
+                c.onCancellationRequested(() => {
+                    cancel();
+                    statusItem.reject();
+                });
             }
-        );
+            return statusItem.promise();
+        });
 
         return statusItem;
     }
 
-    public async waitWithStatus<T>(promise: () => Promise<T>, message: string, timeout?: number, cancel?: () => void, skipHistory?: boolean) : Promise<T> {
+    public async waitWithStatus<T>(promise: () => Promise<T>, message: string, timeout?: number, cancel?: () => void, skipHistory?: boolean): Promise<T> {
         // Create a status item and wait for our promise to either finish or reject
         const status = this.set(message, timeout, cancel, skipHistory);
-        let result : T;
+        let result: T;
         try {
             result = await promise();
         } finally {
@@ -122,5 +114,4 @@ export class StatusProvider implements IStatusProvider {
         }
         this.statusCount = Math.max(updatedCount, 0);
     }
-
 }

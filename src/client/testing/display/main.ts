@@ -19,7 +19,7 @@ export class TestResultDisplay implements ITestResultDisplay {
     private statusBar: StatusBarItem;
     private discoverCounter = 0;
     private ticker = ['|', '/', '-', '|', '/', '-', '\\'];
-    private progressTimeout: NodeJS.Timer | null = null;
+    private progressTimeout: NodeJS.Timer | number | null = null;
     private _enabled: boolean = false;
     private progressPrefix!: string;
     private readonly didChange = new EventEmitter<void>();
@@ -62,13 +62,15 @@ export class TestResultDisplay implements ITestResultDisplay {
     }
     public displayDiscoverStatus(testDiscovery: Promise<Tests>, quietMode: boolean = false) {
         this.displayProgress('Discovering Tests', 'Discovering tests (click to stop)', constants.Commands.Tests_Ask_To_Stop_Discovery);
-        return testDiscovery.then(tests => {
-            this.updateWithDiscoverSuccess(tests, quietMode);
-            return tests;
-        }).catch(reason => {
-            this.updateWithDiscoverFailure(reason);
-            return Promise.reject(reason);
-        });
+        return testDiscovery
+            .then(tests => {
+                this.updateWithDiscoverSuccess(tests, quietMode);
+                return tests;
+            })
+            .catch(reason => {
+                this.updateWithDiscoverFailure(reason);
+                return Promise.reject(reason);
+            });
     }
 
     private updateTestRunWithSuccess(tests: Tests, debug: boolean = false): Tests {
@@ -140,7 +142,8 @@ export class TestResultDisplay implements ITestResultDisplay {
     }
     private clearProgressTicker() {
         if (this.progressTimeout) {
-            clearInterval(this.progressTimeout);
+            // tslint:disable-next-line: no-any
+            clearInterval(this.progressTimeout as any);
         }
         this.progressTimeout = null;
         this.discoverCounter = 0;
@@ -150,8 +153,7 @@ export class TestResultDisplay implements ITestResultDisplay {
     // tslint:disable-next-line:no-any
     private async disableTests(): Promise<any> {
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        const settingsToDisable = ['testing.promptToConfigure', 'testing.pytestEnabled',
-            'testing.unittestEnabled', 'testing.nosetestsEnabled'];
+        const settingsToDisable = ['testing.promptToConfigure', 'testing.pytestEnabled', 'testing.unittestEnabled', 'testing.nosetestsEnabled'];
 
         for (const setting of settingsToDisable) {
             await configurationService.updateSetting(setting, false).catch(noop);
@@ -161,7 +163,7 @@ export class TestResultDisplay implements ITestResultDisplay {
 
     private updateWithDiscoverSuccess(tests: Tests, quietMode: boolean = false) {
         this.clearProgressTicker();
-        const haveTests = tests && (tests.testFunctions.length > 0);
+        const haveTests = tests && tests.testFunctions.length > 0;
         this.statusBar.text = '$(zap) Run Tests';
         this.statusBar.tooltip = 'Run Tests';
         this.statusBar.command = constants.Commands.Tests_View_UI;
@@ -171,14 +173,15 @@ export class TestResultDisplay implements ITestResultDisplay {
         }
 
         if (!haveTests && !quietMode) {
-            this.appShell.showInformationMessage('No tests discovered, please check the configuration settings for the tests.', Testing.disableTests(), Testing.configureTests()).then(item => {
-                if (item === Testing.disableTests()) {
-                    this.disableTests()
-                        .catch(ex => console.error('Python Extension: disableTests', ex));
-                } else if (item === Testing.configureTests()) {
-                    this.cmdManager.executeCommand(constants.Commands.Tests_Configure, undefined, undefined, undefined).then(noop);
-                }
-            });
+            this.appShell
+                .showInformationMessage('No tests discovered, please check the configuration settings for the tests.', Testing.disableTests(), Testing.configureTests())
+                .then(item => {
+                    if (item === Testing.disableTests()) {
+                        this.disableTests().catch(ex => console.error('Python Extension: disableTests', ex));
+                    } else if (item === Testing.configureTests()) {
+                        this.cmdManager.executeCommand(constants.Commands.Tests_Configure, undefined, undefined, undefined).then(noop);
+                    }
+                });
         }
     }
 

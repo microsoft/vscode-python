@@ -40,17 +40,14 @@ const testExecution = isTestExecution();
 
 @injectable()
 export class ImportTracker implements IImportTracker {
-
-    private pendingDocs = new Map<string, NodeJS.Timer>();
+    private pendingDocs = new Map<string, NodeJS.Timer | number>();
     private sentMatches: Set<string> = new Set<string>();
     // tslint:disable-next-line:no-require-imports
     private hashFn = require('hash.js').sha256;
 
-    constructor(
-        @inject(IDocumentManager) private documentManager: IDocumentManager
-    ) {
-        this.documentManager.onDidOpenTextDocument((t) => this.onOpenedOrSavedDocument(t));
-        this.documentManager.onDidSaveTextDocument((t) => this.onOpenedOrSavedDocument(t));
+    constructor(@inject(IDocumentManager) private documentManager: IDocumentManager) {
+        this.documentManager.onDidOpenTextDocument(t => this.onOpenedOrSavedDocument(t));
+        this.documentManager.onDidSaveTextDocument(t => this.onOpenedOrSavedDocument(t));
     }
 
     public async activate(): Promise<void> {
@@ -58,15 +55,17 @@ export class ImportTracker implements IImportTracker {
         this.documentManager.textDocuments.forEach(d => this.onOpenedOrSavedDocument(d));
     }
 
-    private getDocumentLines(document: TextDocument) : (string | undefined)[] {
+    private getDocumentLines(document: TextDocument): (string | undefined)[] {
         const array = Array<string>(Math.min(document.lineCount, MAX_DOCUMENT_LINES)).fill('');
-        return array.map((_a: string, i: number) => {
-            const line = document.lineAt(i);
-            if (line && !line.isEmptyOrWhitespace) {
-                return line.text;
-            }
-            return undefined;
-        }).filter((f: string | undefined) => f);
+        return array
+            .map((_a: string, i: number) => {
+                const line = document.lineAt(i);
+                if (line && !line.isEmptyOrWhitespace) {
+                    return line.text;
+                }
+                return undefined;
+            })
+            .filter((f: string | undefined) => f);
     }
 
     private onOpenedOrSavedDocument(document: TextDocument) {
@@ -80,7 +79,8 @@ export class ImportTracker implements IImportTracker {
         // If already scheduled, cancel.
         const currentTimeout = this.pendingDocs.get(document.fileName);
         if (currentTimeout) {
-            clearTimeout(currentTimeout);
+            // tslint:disable-next-line: no-any
+            clearTimeout(currentTimeout as any);
             this.pendingDocs.delete(document.fileName);
         }
 
@@ -108,8 +108,10 @@ export class ImportTracker implements IImportTracker {
         this.sentMatches.add(packageName);
         // Hash the package name so that we will never accidentally see a
         // user's private package name.
-        const hash = this.hashFn().update(packageName).digest('hex');
-        sendTelemetryEvent(EventName.HASHED_PACKAGE_NAME, undefined, {hashedName: hash});
+        const hash = this.hashFn()
+            .update(packageName)
+            .digest('hex');
+        sendTelemetryEvent(EventName.HASHED_PACKAGE_NAME, undefined, { hashedName: hash });
     }
 
     private lookForImports(lines: (string | undefined)[]) {
