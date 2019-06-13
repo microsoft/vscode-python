@@ -18,8 +18,9 @@ suite('Common Utils - Decorators', () => {
         clearCache();
     });
     /**
-     * Don't use new Date().getTime() as this is inaccurate.
-     * We're dealing with tests that need accuracy of 1ms.
+     * Don't use new Date().getTime() to calculate differences in times.
+     * This has an accuracy of around 2-20ms.
+     * However we're dealing with tests that need accuracy of 1ms.
      * Use API that'll give us better accuracy when dealing with elapsed times.
      *
      * @class HighPrecisionStopWatch
