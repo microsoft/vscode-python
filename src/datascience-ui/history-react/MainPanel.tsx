@@ -300,7 +300,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             <div className='edit-panel'>
                 <ErrorBoundary>
                     <Cell
-                        role='textbox'
                         editorOptions={this.state.editorOptions}
                         history={this.state.history}
                         maxTextSize={maxTextSize}

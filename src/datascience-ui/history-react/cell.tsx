@@ -30,7 +30,7 @@ import { displayOrder, richestMimetype, transforms } from './transforms';
 import './cell.css';
 
 interface ICellProps {
-    role: string;
+    role?: string;
     cellVM: ICellViewModel;
     baseTheme: string;
     codeTheme: string;
