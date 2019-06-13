@@ -39,7 +39,7 @@ in terms of support. This allows us to anchor the start and end of the regexp an
 parentheses case which adds a lot more optional parts to the regexp.
 */
 //const ImportRegEx = /^\s*(from\s+(?<fromImport>\w+)(?:\.\w+)*\s+import\s+(?:\(\s*)?(?:\w+(?:\s*,\s*)?)+(?:\)|\s+as\s+\w+)?|import\s+(?<importImport>(\w+(?:\s*,\s*)?)+)(?:\s+as\s+\w+)?)(?:\s*#.*)?$/;
-const ImportRegEx = /^\s*(from\s+(?<fromImport>\w+)(?:\.\w+)*\s+import\s+\w+(?:\s+as\s+\w+|(?:\s*,\s*\w+)+(?:\s*,)?)?|import\s+(?<importImport>(?:\w+(?:\s*,\s*)?)+)(?:\s+as\s+\w+)?)\s*#.*$/;
+const ImportRegEx = /^\s*(from\s+(?<fromImport>\w+)(?:\.\w+)*\s+import\s+\w+(?:\s+as\s+\w+|(?:\s*,\s*\w+)+(?:\s*,)?)?|import\s+(?<importImport>(?:\w+(?:\s*,\s*)?)+)(?:\s+as\s+\w+)?)\s*(#.*)?$/;
 const MAX_DOCUMENT_LINES = 1000;
 
 // Capture isTestExecution on module load so that a test can turn it off and still
