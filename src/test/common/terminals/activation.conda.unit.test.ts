@@ -429,7 +429,7 @@ suite('Terminal Environment Activation conda', () => {
             testName: 'Activation uses full path on windows under powershell, environment name has spaces',
             basePath: windowsTestPath,
             envName: 'The Tester Environment',
-            expectedResult: ['conda activate TesterEnv'],
+            expectedResult: ['conda activate "The Tester Environment"'],
             expectedRawCmd: `${path.join(windowsTestPath, 'activate')}`,
             terminalKind: TerminalShellType.powershell
         },
