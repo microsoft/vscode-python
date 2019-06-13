@@ -158,6 +158,14 @@ suite('Application Diagnostics - Check Test Settings', () => {
             verify(fs.readFile(__filename)).once();
         });
     });
+    test('File should not be fixed if there\'s an error in reading the file', async () => {
+        when(fs.readFile(__filename)).thenReject(new Error('Kaboom'));
+
+        const needsToBeFixed = await diagnosticService.doesFileNeedToBeFixed(__filename);
+
+        assert.ok(!needsToBeFixed);
+        verify(fs.readFile(__filename)).once();
+    });
 
     [
         {
