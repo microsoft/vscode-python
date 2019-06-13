@@ -262,5 +262,6 @@
     "DataScience.zoomInPlot" : "Zoom in",
     "DataScience.zoomOutPlot" : "Zoom out",
     "DataScience.exportPlot" : "Export to different formats",
-    "DataScience.deletePlot" : "Remove"    
+    "DataScience.deletePlot" : "Remove",
+    "DataScience.restartKernelMessageDontAskAgain" : "Don't Ask Again"
 }
