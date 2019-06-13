@@ -40,13 +40,7 @@ class Options:
     workspace_folder: str
     temp_folder: str
     screenshots_dir: str
-    embed_screenshots: bool
-    output: str
     python_path: str
-    python_type: str
-    python_version: str
-    python3_path: str
-    pipenv_path: str
     logfiles_dir: str
     conda_path: str
     python_extension_dir: str
@@ -76,23 +70,11 @@ def close(context):
 def get_options(
     destination=".vscode test",
     vsix="ms-python-insiders.vsix",
-    embed_screenshots=True,
-    output="file",
     channel="stable",
     python_path=sys.executable,
-    python_type=None,
-    python_version=f"{sys.version_info[0]}.{sys.version_info[1]}",
-    python3_path=sys.executable,
-    pipenv_path=None,
     conda_path="conda",
 ):
     """Gets the options used for smoke tests."""
-    embed_screenshots = (
-        embed_screenshots == "True"
-        if type(embed_screenshots) is str
-        else embed_screenshots
-    )
-
     destination = os.path.abspath(destination)
     options = Options(
         channel,
@@ -103,13 +85,7 @@ def get_options(
         os.path.join(destination, "workspace folder"),
         os.path.join(destination, "temp"),
         os.path.join(destination, "screenshots"),
-        embed_screenshots,
-        output,
         python_path,
-        python_type,
-        python_version,
-        python3_path,
-        pipenv_path,
         os.path.join(destination, "logs"),
         conda_path,
         os.path.join(destination, "extensions", "pythonExtension"),
@@ -350,9 +326,6 @@ def exit(context):
 
 
 def capture_screen(context):
-    if context.options.output != "file":
-        return
-
     # So its easy to tell the order of screenshots taken.
     counter = getattr(context, "screenshot_counter", 1)
     context.screenshot_counter = counter + 1
@@ -360,6 +333,7 @@ def capture_screen(context):
     screenshot = context.driver.get_screenshot_as_base64()
     uitests.report.PrettyCucumberJSONFormatter.instance.attach_image(screenshot)
 
+    capture_screen_to_file(context)
     # # Also save for logging purposes (easier to look at images).
     # filename = tempfile.NamedTemporaryFile(prefix=f"screen_capture_{counter}_")
     # filename = f"{os.path.basename(filename.name)}.png"
@@ -458,7 +432,6 @@ def _launch(options):
     CONTEXT["driver"] = app_context.driver
     if CONTEXT["options"] is None:
         CONTEXT["options"] = options
-    # extension.activate_python_extension(app_context)
     return app_context
 
 

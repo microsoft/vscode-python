@@ -2,10 +2,11 @@
 # Licensed under the MIT License.
 
 import os.path
-import behave
+import time
 
-import uitests.vscode.documents
+import behave
 import uitests.tools
+import uitests.vscode.documents
 
 
 @behave.given('a file named "{name}" is created with the following contents')
@@ -72,11 +73,15 @@ def then_file_opened(context, name):
 
 @behave.when("I go to line {line_number:d}")
 def when_go_to_line(context, line_number):
+    # Wait for 1/2 second, else things happen too quickly.
+    time.sleep(0.5)
     uitests.vscode.documents.go_to_line(context, line_number)
 
 
 @behave.when("I go to line {line_number:d}, column {column:d}")
 def when_go_to_line_column(context, line_number, column):
+    # Wait for 1/2 second, else things happen too quickly.
+    time.sleep(0.5)
     uitests.vscode.documents.go_to_line_column(context, line_number, column)
 
 

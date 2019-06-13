@@ -109,7 +109,6 @@ Feature: Test Explorer - Re-run Failed Tests
             [1,2,3,4,5,6]
             """
         When I run failed tests
-        And I wait for 1 seconds
         Then the stop icon is visible in the toolbar
         Then the node "TestFirstSuite" has a status of "Progress"
         And the node "test_three_first_suite" has a status of "Progress"

@@ -128,14 +128,19 @@ def node_one_status(context, status):
 
 
 @behave.then("all of the test tree nodes have a progress icon")
+@uitests.tools.retry(AssertionError, tries=20, delay=0.5)
 def all_progress(context):
+    """Retry, & wait for 0.5 seconds (longer than default 0.1).
+    Wait for long enough for tests to start and UI get updated."""
     icons = uitests.vscode.testing.get_node_icons(context)
     assert all("discovering-tests.svg" in icon.get_attribute("style") for icon in icons)
 
 
 @behave.then("the stop icon is visible in the toolbar")
-@uitests.tools.retry(AssertionError)
+@uitests.tools.retry(AssertionError, tries=20, delay=0.5)
 def stop_icon_visible(context):
+    """Retry, & wait for 0.5 seconds (longer than default 0.1).
+    Wait for long enough for tests to start and UI get updated."""
     uitests.vscode.testing.wait_for_stop_icon(context)
 
 

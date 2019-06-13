@@ -34,7 +34,6 @@ Feature: Test Explorer
             10
             """
         When I select the command "Python: Run All Tests"
-        And I wait for 1 second
         Then all of the test tree nodes have a progress icon
         And the stop icon is visible in the toolbar
         When I stop running tests

@@ -36,7 +36,6 @@ Feature: Test Explorer
         Then there are <node_count> nodes in the tree
         And <node_count> nodes have a status of "Unknown"
         When I run the test node "test_two_first_suite"
-        And I wait for 1 seconds
         Then the stop icon is visible in the toolbar
         And 1 node has a status of "Progress"
         And the node "test_two_first_suite" has a status of "Progress"
@@ -73,7 +72,6 @@ Feature: Test Explorer
         Then there are <node_count> nodes in the tree
         And <node_count> nodes have a status of "Unknown"
         When I run the test node "test_three_first_suite"
-        And I wait for 1 seconds
         Then the stop icon is visible in the toolbar
         And 1 node has a status of "Progress"
         And the node "test_three_first_suite" has a status of "Progress"

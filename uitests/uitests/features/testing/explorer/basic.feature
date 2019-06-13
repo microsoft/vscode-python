@@ -67,7 +67,6 @@ Feature: Test Explorer
             """
         When I select the command "Python: Discover Tests"
         And I wait for tests discovery to complete
-        And I wait for 1 second
         Then all of the test tree nodes have a progress icon
         And the stop icon is visible in the toolbar
         When I stop discovering tests

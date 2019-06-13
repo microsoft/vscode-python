@@ -17,28 +17,21 @@ Feature: Language Server
         Then auto completion list will contain the item "excepthook"
         And auto completion list will contain the item "exec_prefix"
         And auto completion list will contain the item "executable"
-        # Wait for 1/2 second, else things happen too quickly
-        And wait for 0.5 seconds
         When I go to line 11, column 21
         And I press ctrl+space
         Then auto completion list will contain the item "age"
-        And wait for 0.5 seconds
         When I go to line 12, column 21
         And I press ctrl+space
         Then auto completion list will contain the item "name"
-        And wait for 0.5 seconds
         When I go to line 17, column 10
         And I press ctrl+space
         Then auto completion list will contain the item "say_something"
-        And wait for 0.5 seconds
         When I go to line 18, column 10
         And I press ctrl+space
         Then auto completion list will contain the item "age"
-        And wait for 0.5 seconds
         When I go to line 19, column 10
         And I press ctrl+space
         Then auto completion list will contain the item "name"
-        And wait for 0.5 seconds
         When I go to line 17, column 24
         And I press .
         Then auto completion list will contain the item "capitalize"

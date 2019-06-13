@@ -5,28 +5,41 @@
 """PVSC Smoke Tests.
 
 Usage:
-  uitests download [options]
-  uitests install [options]
-  uitests launch [options]
-  uitests test [options] [--] [<behave-options> ...]
-  uitests report [options]
-  uitests (-h | --help)
+  uitests download [--channel=<stable_or_insider>] [--destination=<path>]
+  uitests install [--channel=<stable_or_insider>] [--destination=<path>]
+  uitests launch [--channel=<stable_or_insider>] [--destination=<path>] [--timeout=<seconds>] [--vsix=<vsix>]
+  uitests test [--channel=<stable_or_insider>] [--destination=<path>] [--timeout=<seconds>] [--vsix=<vsix>] [--] [<behave-options> ...]
+  uitests report [--destination=<path>] [--show]
+  uitests behave -- [<behave-options> ...]
 
 Options:
-  -h --help                     Show this screen.
-  -D, --destination=PATH        Path for smoke tests [default: .vscode test].
-  -C, --channel=CHANNEL         Defines the channel for VSC (stable or insider) [default: stable].
-  --vsix=VSIX                   Path to VSIX [default: ms-python-insiders.vsix].
-  -O, --out=OUTPUT              Output for test results (console or file) [default: file].
-  --embed_screenshots           Whether to embed screenshots (applicable only when using --out=file).
-  -L, --log=LEVEL               Log Level [default: INFO].
-  --config=PATH                 Path to the config file [default: uitests/uitests/config.json]
-  --show                        Whether to display the report or not.
-  -T, --timeout=TIMEOUT         Timeout for closing instance of VSC when Launched to validate instance of VSC [default: 30]
+  -h --help                         Show this screen.
+  --channel=<stable_or_insider>     Defines the channel for VSC (stable or insider) [default: stable].
+  --destination=<path>              Path for smoke tests [default: .vscode test].
+  --vsix=VSIX                       Path to VSIX [default: ms-python-insiders.vsix].
+  --timeout=TIMEOUT                 Timeout for closing instance of VSC when Launched to validate instance of VSC [default: 30]
+  --show                            Whether to display the report or not.
+  --log=LEVEL                       Log Level [default: INFO].
+
+ Commands:
+  download                          Downloads chromedriver and VS Code (stable/insider based on --channel)
+                                    E.g. `python uitests download`, `python uitests download --channel=insider`
+  install                           Installs the extensions in VS Code.
+                                    E.g. `python uitests install`, `python uitests install --channel=insider --vsix=hello.vsix`
+  launch                            Launches VS Code (stable/insider based on --channel) with a default timeout of 30s.
+                                    Used for development purposes (e.g. check if VS loads, etc).
+                                    E.g. `python uitests launch`, `python uitests launch --channel=insider --timeout=60`
+                                    E.g. `python uitests install`, `python uitests install --channel=insider --vsix=hello.vsix`
+  test                              Launches the BDD tests using behave
+                                    E.g. `python uitests test`, `python uitests test --channel=insider -- --custom-behave=arguments --tags=@wip`
+  report                            Generates the BDD test reports (html report)
+                                    E.g. `python uitests report`, `python uitests report --show`
+  behave                            Run behave manually passing in the arguments after `--`
+                                    Used for development purposes.
+                                    E.g. `python uitests behave --- --dry-run`
 
 """
 import glob
-import json
 import logging
 import os
 import os.path
@@ -71,13 +84,16 @@ def launch(destination, channel, vsix, timeout=30, **kwargs):
     destination = os.path.abspath(destination)
     vsix = os.path.abspath(vsix)
     options = vscode.application.get_options(destination, vsix=vsix, channel=channel)
-    logging.info(f"Launched VSC will exit in {timeout}s")
-    vscode.application.start(options)
+    logging.info(f"Launched VSC ({channel}) will exit in {timeout}s")
+    context = vscode.application.start(options)
+    logging.info(f"Activating Python Extension (assuming it is installed")
+    vscode.extension.activate_python_extension(context)
     time.sleep(int(timeout))
+    vscode.application.exit(context)
 
 
 def report(destination, show=False, **kwargs):
-    """Generates an HTML report and displays it."""
+    """Generates an HTML report and optionally displays it."""
     _update_junit_report(destination, **kwargs)
     destination = os.path.abspath(destination)
     report_dir = os.path.join(destination, "reports")
@@ -104,51 +120,40 @@ def _update_junit_report(destination, **kwargs):
         xml.write()
 
 
-def test(out, destination, channel, vsix, behave_options, embed_screenshots, **kwargs):
-    """Start the smoke tests."""
+def test(destination, channel, vsix, behave_options, **kwargs):
+    """Start the bdd tests."""
     destination = os.path.abspath(destination)
+
     vsix = os.path.abspath(vsix)
-    embed_screenshots = False if embed_screenshots is None else embed_screenshots
-    report_args = [
-        "-f",
-        "uitests.report:PrettyCucumberJSONFormatter",
-        "-o",
-        os.path.join(destination, "reports", "report.json"),
-        "--junit",
-        "--junit-directory",
-        os.path.join(destination, "reports"),
-        "--define",
-        f"embed_screenshots={embed_screenshots}",
-    ]
-    stdout_args = [
-        "--format",
-        "plain",
-        "-no-timings",
-        "--no-capture",
-        "--define",
-        f"embed_screenshots=False",
-    ]
-    args = report_args if out == "file" else stdout_args
     args = (
-        args
+        [
+            "-f",
+            "uitests.report:PrettyCucumberJSONFormatter",
+            "-o",
+            os.path.join(destination, "reports", "report.json"),
+            "--junit",
+            "--junit-directory",
+            os.path.join(destination, "reports"),
+        ]
         + [
             "--define",
             f"destination={destination}",
             "--define",
-            f"embed_screenshots={embed_screenshots}",
-            "--define",
             f"channel={channel}",
             "--define",
             f"vsix={vsix}",
-            "--define",
-            f"output={out}",
             os.path.abspath("uitests/uitests"),
         ]
+        # Custom arguments provided via command line or on CI.
         + behave_options
     )
 
     # Change directory for behave to work correctly.
     os.chdir(pathlib.Path(__file__).parent)
+
+    # Selenium and other packages write to stderr & so does default logging output.
+    # Confused how this can be configured with behave and other libs.
+    # Hence just capture exit code from behave and throw error to signal failure to CI.
     exit_code = __main__.main(args)
     if exit_code > 0:
         sys.stderr.write("Behave tests failed")
@@ -157,19 +162,28 @@ def test(out, destination, channel, vsix, behave_options, embed_screenshots, **k
     return exit_code
 
 
+def run_behave(destination, *args):
+    """Start the smoke tests."""
+    destination = os.path.abspath(destination)
+
+    # Change directory for behave to work correctly.
+    os.chdir(pathlib.Path(__file__).parent)
+
+    __main__.main([*args])
+
+
 def main():
     arguments = docopt(__doc__, version="1.0")
-    with open(os.path.abspath(arguments.get("--config")), "r") as file:
-        config_options = json.load(file)
     behave_options = arguments.get("<behave-options>")
-    arguments = dict(
-        (str(key), arguments.get(key) or config_options.get(key))
-        for key in set(config_options) | set(arguments)
-    )
     options = {
-        key[2:]: value for (key, value) in arguments.items() if key.startswith("--")
+        **{
+            key[2:]: value for (key, value) in arguments.items() if key.startswith("--")
+        },
+        **{
+            key: value for (key, value) in arguments.items() if not key.startswith("--")
+        },
     }
-    log = arguments.get("--log")
+    log = arguments.get("--log", "INFO")
     log_level = getattr(logging, log.upper())
 
     if log_level == logging.INFO:
@@ -191,6 +205,9 @@ def main():
         handler = test
     if arguments.get("report"):
         handler = report
+    if arguments.get("behave"):
+        options = behave_options
+        return run_behave(arguments.get("--destination"), *behave_options)
     return handler(**options)
 
 

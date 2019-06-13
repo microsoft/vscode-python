@@ -137,7 +137,7 @@ steps:
     # Skip @skip tagged tests
     # Always dump to a text file (easier than scrolling and downloading the logs seprately).
     # This way all logs are part of the artificat for each test.
-    - script: python uitests test --embed_screenshots --channel=$(VSCodeChannel) -- --format=pretty $(Tags) --tags=~@skip --logging-level=INFO --no-logcapture --no-capture -D python_path=$(CI_PYTHON_PATH) | tee '.vscode test/reports/behave_log.log'
+    - script: python uitests test --channel=$(VSCodeChannel) -- --format=pretty $(Tags) --tags=~@skip --logging-level=INFO --no-logcapture --no-capture -D python_path=$(CI_PYTHON_PATH) | tee '.vscode test/reports/behave_log.log'
       env:
           DISPLAY: :10
           AgentJobName: $(Agent.JobName)
