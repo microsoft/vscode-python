@@ -17,6 +17,7 @@ import {
 import { Telemetry } from '../../client/datascience/constants';
 import { InteractiveShiftEnterBanner, InteractiveShiftEnterStateKeys } from '../../client/datascience/shiftEnterBanner';
 import { IJupyterExecution } from '../../client/datascience/types';
+import { clearTelemetryReporter } from '../../client/telemetry';
 
 suite('Interactive Shift Enter Banner', () => {
     const oldValueOfVSC_PYTHON_UNIT_TEST = process.env.VSC_PYTHON_UNIT_TEST;
@@ -53,7 +54,7 @@ suite('Interactive Shift Enter Banner', () => {
         Reporter.eventNames = [];
         Reporter.measures = [];
         rewiremock.disable();
-
+        clearTelemetryReporter();
     });
 
     test('Shift Enter Banner with Jupyter available', async() => {
