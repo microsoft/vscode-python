@@ -86,6 +86,7 @@ export enum Telemetry {
     DeleteAllCells = 'DATASCIENCE.DELETE_ALL_CELLS',
     DeleteCell = 'DATASCIENCE.DELETE_CELL',
     GotoSourceCode = 'DATASCIENCE.GOTO_SOURCE',
+    CopySourceCode = 'DATASCIENCE.COPY_SOURCE',
     RestartKernel = 'DATASCIENCE.RESTART_KERNEL',
     ExportNotebook = 'DATASCIENCE.EXPORT_NOTEBOOK',
     Undo = 'DATASCIENCE.UNDO',

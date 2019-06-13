@@ -30,6 +30,7 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { CellMatcher } from '../cellMatcher';
 import { EditorContexts, Identifiers, Telemetry } from '../constants';
 import { ColumnWarningSize } from '../data-viewing/types';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
@@ -62,6 +63,7 @@ import { HistoryMessageListener } from './historyMessageListener';
 import {
     HistoryMessages,
     IAddedSysInfo,
+    ICopyCode,
     IGotoCode,
     IHistoryMapping,
     IRemoteAddCode,
@@ -185,6 +187,10 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         switch (message) {
             case HistoryMessages.GotoCodeCell:
                 this.dispatchMessage(message, payload, this.gotoCode);
+                break;
+
+            case HistoryMessages.CopyCodeCell:
+                this.dispatchMessage(message, payload, this.copyCode);
                 break;
 
             case HistoryMessages.RestartKernel:
@@ -865,6 +871,37 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         if (editor) {
             editor.revealRange(new Range(line, 0, line, 0));
             editor.selection = new Selection(new Position(line, 0), new Position(line, 0));
+        }
+    }
+
+    @captureTelemetry(Telemetry.CopySourceCode, undefined, false)
+    private copyCode(args: ICopyCode) {
+        this.copyCodeInternal(args.source).catch(err => {
+            this.applicationShell.showErrorMessage(err);
+        });
+    }
+
+    private async copyCodeInternal(source: string) {
+        let editor = this.documentManager.activeTextEditor;
+        if (!editor || editor.document.languageId !== PYTHON_LANGUAGE) {
+            // Find the first visible python editor
+            const pythonEditors = this.documentManager.visibleTextEditors.filter(
+                e => e.document.languageId === PYTHON_LANGUAGE);
+
+            if (pythonEditors.length > 0) {
+                editor = pythonEditors[0];
+            }
+        }
+        if (editor && editor.document.languageId === PYTHON_LANGUAGE) {
+            const cellMatcher = new CellMatcher(this.generateDataScienceExtraSettings());
+            const hasCellsAlready = cellMatcher.isCell(editor.document.getText());
+            const line = editor.document.lineCount;
+            const newCode = hasCellsAlready || line <= 0 ? `\n\n#%%\n${source}` : `\n\n${source}`;
+            await editor.edit((editBuilder) => {
+                editBuilder.insert(new Position(line, 0), newCode);
+            });
+            editor.revealRange(new Range(line + 2, 0, line + source.split('\n').length + 3, 0));
+            editor.selection = new Selection(new Position(line + 2, 0), new Position(line + 2, 0));
         }
     }
 

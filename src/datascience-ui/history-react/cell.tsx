@@ -43,6 +43,7 @@ interface ICellProps {
     editorOptions: monacoEditor.editor.IEditorOptions;
     editExecutionCount: number;
     gotoCode(): void;
+    copyCode(): void;
     delete(): void;
     submitNewCode(code: string): void;
     onCodeChange(changes: monacoEditor.editor.IModelContentChange[], cellId: string, modelId: string): void;
@@ -146,6 +147,10 @@ export class Cell extends React.Component<ICellProps> {
         return getLocString('DataScience.gotoCodeButtonTooltip', 'Go to code');
     }
 
+    private getCopyBackToSourceString = () => {
+        return getLocString('DataScience.copyBackToSource', 'Paste code into file');
+    }
+
     private getCell = () => {
         return this.props.cellVM.cell;
     }
@@ -184,6 +189,9 @@ export class Cell extends React.Component<ICellProps> {
                     <MenuBar baseTheme={this.props.baseTheme}>
                         <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.gotoCode} tooltip={this.getGoToCodeString()} hidden={hasNoSource}>
                             <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.GoToSourceCode} />
+                        </ImageButton>
+                        <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.copyCode} tooltip={this.getCopyBackToSourceString()} hidden={!hasNoSource || this.props.cellVM.editable}>
+                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Copy} />
                         </ImageButton>
                         <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.delete} tooltip={this.getDeleteString()} hidden={this.props.cellVM.editable}>
                             <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Cancel} />

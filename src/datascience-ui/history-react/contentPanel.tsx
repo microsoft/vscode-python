@@ -23,6 +23,7 @@ export interface IContentPanelProps {
     monacoTheme: string | undefined;
     editorOptions: monacoEditor.editor.IEditorOptions;
     gotoCellCode(index: number): void;
+    copyCellCode(index: number): void;
     deleteCell(index: number): void;
     onCodeChange(changes: monacoEditor.editor.IModelContentChange[], cellId: string, modelId: string): void;
     onCodeCreated(code: string, file: string, cellId: string, modelId: string): void;
@@ -78,6 +79,7 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
                     showWatermark={false}
                     editExecutionCount={0}
                     gotoCode={() => this.props.gotoCellCode(index)}
+                    copyCode={() => this.props.copyCellCode(index)}
                     delete={() => this.props.deleteCell(index)}
                     onCodeChange={this.props.onCodeChange}
                     onCodeCreated={this.props.onCodeCreated}

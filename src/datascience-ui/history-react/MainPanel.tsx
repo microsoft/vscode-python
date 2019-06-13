@@ -313,6 +313,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                         showWatermark={!this.state.submittedText}
                         ref={this.saveEditCellRef}
                         gotoCode={noop}
+                        copyCode={noop}
                         delete={noop}
                         editExecutionCount={executionCount}
                         onCodeCreated={this.editableCodeCreated}
@@ -409,6 +410,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             codeTheme: this.props.codeTheme,
             submittedText: this.state.submittedText,
             gotoCellCode: this.gotoCellCode,
+            copyCellCode: this.copyCellCode,
             deleteCell: this.deleteCell,
             skipNextScroll: this.state.skipNextScroll ? true : false,
             monacoTheme: this.state.monacoTheme,
@@ -571,6 +573,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         // Send a message to the other side to jump to a particular cell
         this.sendMessage(HistoryMessages.GotoCodeCell, { file : cellVM.cell.file, line: cellVM.cell.line });
+    }
+
+    private copyCellCode = (index: number) => {
+        // Find our cell
+        const cellVM = this.state.cellVMs[index];
+
+        // Send a message to the other side to jump to a particular cell
+        this.sendMessage(HistoryMessages.CopyCodeCell, { source: extractInputText(cellVM.cell, getSettings()) });
     }
 
     private deleteCell = (index: number) => {
