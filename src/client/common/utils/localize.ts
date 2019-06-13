@@ -98,6 +98,8 @@ export namespace DataScience {
     export const jupyterNbConvertNotSupported = localize('DataScience.jupyterNbConvertNotSupported', 'Jupyter nbconvert is not installed');
     export const jupyterLaunchTimedOut = localize('DataScience.jupyterLaunchTimedOut', 'The Jupyter notebook server failed to launch in time');
     export const jupyterLaunchNoURL = localize('DataScience.jupyterLaunchNoURL', 'Failed to find the URL of the launched Jupyter notebook server');
+    export const jupyterSelfCertFail = localize('DataScience.jupyterSelfCertFail', 'The target server {0} is using self signed certificates, which are a security risk. \r\nTo connect to this server enable the Allow Unauthorized Remote Connection setting in VSCode preferences. \r\nOpen preferences page now?');
+    export const jupyterSelfCertEnable = localize('DataScience.jupyterSelfCertEnable', 'Allow Self Signed Certificates');
     export const pythonInteractiveHelpLink = localize('DataScience.pythonInteractiveHelpLink', 'See [https://aka.ms/pyaiinstall] for help on installing jupyter.');
     export const importingFormat = localize('DataScience.importingFormat', 'Importing {0}');
     export const startingJupyter = localize('DataScience.startingJupyter', 'Starting Jupyter server');

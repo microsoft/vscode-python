@@ -8,7 +8,7 @@ import * as fs from 'fs-extra';
 import { inject, injectable, multiInject } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { Event, EventEmitter, Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
+import { ConfigurationTarget, Event, EventEmitter, Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
@@ -34,6 +34,7 @@ import { EditorContexts, Identifiers, Telemetry } from '../constants';
 import { ColumnWarningSize } from '../data-viewing/types';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import { JupyterKernelPromiseFailedError } from '../jupyter/jupyterKernelPromiseFailedError';
+import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
 import { CssMessages } from '../messages';
 import {
     CellState,
@@ -1097,6 +1098,20 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
             // Then load the jupyter server
             await this.loadJupyterServer();
 
+        } catch (e) {
+            if (e instanceof JupyterSelfCertsError) {
+                // On a self cert error, warn the user and ask if they want to change the setting
+                const enableOption: string = localize.DataScience.jupyterSelfCertEnable();
+                this.applicationShell.showErrorMessage(localize.DataScience.jupyterSelfCertFail().format(e.message), enableOption).then(value => {
+                    if (value === enableOption) {
+                        sendTelemetryEvent(Telemetry.SelfCertsMessageEnabled);
+                        this.configuration.updateSetting('dataScience.allowUnauthorizedRemoteConnection', true, undefined, ConfigurationTarget.Workspace).ignoreErrors();
+                    }
+                });
+                throw e;
+            } else {
+                throw e;
+            }
         } finally {
             status.dispose();
         }

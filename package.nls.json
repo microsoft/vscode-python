@@ -94,6 +94,8 @@
     "DataScience.jupyterNbConvertNotSupported": "Importing notebooks requires Jupyter nbconvert to be installed.",
     "DataScience.jupyterLaunchNoURL": "Failed to find the URL of the launched Jupyter notebook server",
     "DataScience.jupyterLaunchTimedOut": "The Jupyter notebook server failed to launch in time",
+    "DataScience.jupyterSelfCertFail": "The target server {0} is using self signed certificates, which are a security risk. \r\nTo connect to this server enable the Allow Unauthorized Remote Connection setting in VSCode preferences. \r\nEnable the setting for this workspace now?",
+    "DataScience.jupyterSelfCertEnable": "Allow Self Signed Certificates",
     "DataScience.jupyterServerCrashed": "Jupyter server crashed. Unable to connect. \r\nError code from jupyter: {0}",
     "DataScience.pythonInteractiveHelpLink": "Get more help",
     "DataScience.importingFormat": "Importing {0}",

@@ -36,6 +36,7 @@ import {
 } from '../types';
 import { JupyterConnection, JupyterServerInfo } from './jupyterConnection';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
+import { JupyterSelfCertsError } from './jupyterSelfCertsError';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 
 enum ModuleExistsResult {
@@ -180,7 +181,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
                             // Check for the self signed certs error specifically
                             if (err.message.indexOf('reason: self signed certificate') >= 0) {
-                                throw new Error(localize.DataScience.jupyterNotebookRemoteConnectSelfCertsFailed().format(startInfo.connection.baseUrl, err));
+                                sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
+                                throw new JupyterSelfCertsError(startInfo.connection.baseUrl);
                             } else {
                                 throw new Error(localize.DataScience.jupyterNotebookRemoteConnectFailed().format(startInfo.connection.baseUrl, err));
                             }
