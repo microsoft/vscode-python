@@ -9,7 +9,6 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { UpdateTestSettingService } from '../../../../client/application/diagnostics/checks/updateTestSettings';
 import { ApplicationEnvironment } from '../../../../client/common/application/applicationEnvironment';
 import { IApplicationEnvironment, IWorkspaceService } from '../../../../client/common/application/types';
 import { WorkspaceService } from '../../../../client/common/application/workspace';
@@ -17,6 +16,7 @@ import { PersistentState, PersistentStateFactory } from '../../../../client/comm
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../../client/common/platform/types';
 import { IPersistentState } from '../../../../client/common/types';
+import { UpdateTestSettingService } from '../../../../client/testing/common/updateTestSettings';
 
 // tslint:disable:max-func-body-length no-invalid-this no-any
 suite('Application Diagnostics - Check Test Settings', () => {
