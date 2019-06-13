@@ -21,8 +21,7 @@ phrases along the lines of "from the thing" or "import the thing". To minimize f
 regexp does its best to validate the structure of the import line. This leads to us supporting:
 
 - `from pkg import _`
-- `from pkg import (_, _)`
-- `from pkg import (_, _ `: Start of a multi-line import.
+- `from pkg import _, _`
 - `from pkg import _ as _`
 - `import pkg`
 - `import pkg, pkg`
@@ -36,10 +35,11 @@ failing fast and having low performance overhead.
 
 We can also ignore multi-line/parenthesized imports for simplicity since we don't' need 100% accuracy,
 just enough to be able to tell what packages user's rely on to make sure we are covering our bases
-in terms of support. This allows us to anchor the start and end of the regexp.
+in terms of support. This allows us to anchor the start and end of the regexp and not try to handle the
+parentheses case which adds a lot more optional parts to the regexp.
 */
 //const ImportRegEx = /^\s*(from\s+(?<fromImport>\w+)(?:\.\w+)*\s+import\s+(?:\(\s*)?(?:\w+(?:\s*,\s*)?)+(?:\)|\s+as\s+\w+)?|import\s+(?<importImport>(\w+(?:\s*,\s*)?)+)(?:\s+as\s+\w+)?)(?:\s*#.*)?$/;
-const ImportRegEx = /^\s*(from\s+(?<fromImport>\w+)(?:\.\w+)*\s+import\s+\w+(?:\s+as\s+\w+|(?:\s*,\s*\w+)+(?:\s*,)?)?|import\s+(?<importImport>(?:\w+(?:\s*,\s*)?)+)(?:\s+as\s+\w+)?)\s*$/;
+const ImportRegEx = /^\s*(from\s+(?<fromImport>\w+)(?:\.\w+)*\s+import\s+\w+(?:\s+as\s+\w+|(?:\s*,\s*\w+)+(?:\s*,)?)?|import\s+(?<importImport>(?:\w+(?:\s*,\s*)?)+)(?:\s+as\s+\w+)?)\s*#.*$/;
 const MAX_DOCUMENT_LINES = 1000;
 
 // Capture isTestExecution on module load so that a test can turn it off and still
