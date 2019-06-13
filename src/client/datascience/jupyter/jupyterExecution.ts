@@ -177,7 +177,13 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         // Something else went wrong
                         if (options && options.uri) {
                             sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter);
-                            throw new Error(localize.DataScience.jupyterNotebookRemoteConnectFailed().format(startInfo.connection.baseUrl, err));
+
+                            // Check for the self signed certs error specifically
+                            if (err.message.indexOf('reason: self signed certificate') >= 0) {
+                                throw new Error(localize.DataScience.jupyterNotebookRemoteConnectSelfCertsFailed().format(startInfo.connection.baseUrl, err));
+                            } else {
+                                throw new Error(localize.DataScience.jupyterNotebookRemoteConnectFailed().format(startInfo.connection.baseUrl, err));
+                            }
                         } else {
                             sendTelemetryEvent(Telemetry.ConnectFailedJupyter);
                             throw new Error(localize.DataScience.jupyterNotebookConnectFailed().format(startInfo.connection.baseUrl, err));
