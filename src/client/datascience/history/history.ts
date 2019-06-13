@@ -488,7 +488,6 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         }
     }
 
-
     private addMessage(message: string, type: 'preview' | 'execute') : void {
         const cell : ICell = {
             id: uuid(),
