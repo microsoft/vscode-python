@@ -324,6 +324,8 @@ export class JupyterSession implements IJupyterSession {
         if (this.session || this.sessionManager) {
             try {
                 await this.shutdownSession(this.session, this.statusHandler);
+                const restartSession = await this.restartSessionPromise;
+                await this.shutdownSession(restartSession, undefined);
 
                 if (this.sessionManager && !this.sessionManager.isDisposed) {
                     this.sessionManager.dispose();
