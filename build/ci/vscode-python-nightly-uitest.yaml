@@ -22,10 +22,18 @@ jobs:
     jobs:
     - test: "Smoke"
       tags: "--tags=@smoke"
+      # Smoke tests are cheap, so run them against all Python Versions.
     - test: "Test"
       tags: "--tags=@testing"
+      # We have python code that is involved in running/discovering tests.
+      # Hence test against all versions, until we have CI running for the Python code.
+      # I.e. when all test dicovery/running is done purely in Python.
     - test: "Terminal"
       tags: "--tags=@terminal --tags=~@terminal.pipenv"
+      # No need to run tests against all versions.
+      # This is faster/cheaper, besides activation of terminals is generic enough
+      # not to warrant testing against all versions.
+      ignorePythonVersions: "3.6,3.5"
     - test: "Debugging"
       tags: "--tags=@debugging"
       # No need to run tests against all versions.

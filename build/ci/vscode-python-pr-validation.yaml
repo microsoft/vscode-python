@@ -25,6 +25,16 @@ variables:
 jobs:
 - template: templates/build_compile_jobs.yml
 
+- template: templates/uitest_jobs.yml
+  parameters:
+    # In PRs, test only against stable version of VSC.
+    vscodeChannels: ['stable']
+    # In PRs, run smoke tests against 3.7 and 2.7 (excluding others).
+    jobs:
+    - test: "Smoke"
+      tags: "--tags=@smoke"
+      ignorePythonVersions: "3.6,3.5"
+
 - job: 'PR'
   dependsOn: []
   strategy:
@@ -110,13 +120,3 @@ jobs:
     TestsToRun: 'testUnitTests'
   steps:
     - template: templates/merge_upload_coverage.yml
-
-- template: templates/uitest_jobs.yml
-  parameters:
-    # In PRs, test only against stable version of VSC.
-    vscodeChannels: ['stable']
-    # In PRs, run smoke tests against 3.7 and 2.7 (excluding others).
-    jobs:
-    - test: "Smoke"
-      tags: "--tags=@smoke"
-      ignorePythonVersions: "3.6,3.5"
