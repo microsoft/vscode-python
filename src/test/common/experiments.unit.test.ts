@@ -164,11 +164,6 @@ suite('xA/B experiments', () => {
         // First activation
         await expManager.activate();
 
-        verify(fs.fileExists(anything())).once();
-        isDownloadedStorageValid.verifyAll();
-        experimentStorage.verifyAll();
-        downloadedExperimentsStorage.verifyAll();
-
         downloadedExperimentsStorage.reset();
         downloadedExperimentsStorage
             .setup(n => n.value)
@@ -179,6 +174,10 @@ suite('xA/B experiments', () => {
         await expManager.activate();
 
         downloadedExperimentsStorage.verifyAll();
+
+        verify(fs.fileExists(anything())).once();
+        isDownloadedStorageValid.verifyAll();
+        experimentStorage.verifyAll();
     });
 
     test('Ensure experiments are reliably initialized in the background', async () => {
