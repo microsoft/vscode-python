@@ -196,7 +196,7 @@ z = np.array([drumhead_height(1, 1, r, theta, 0.5) for r in radius])`;
         expect(Reporter.properties).to.deep.equal([{hashedName: sklearnHash}, {hashedName: pandasHash}]);
     });
 
-    test('from <pkg> import (_, _)', () => {
+    /*test('from <pkg> import (_, _)', () => {
         const code = `from pandas import (DataFrame, Series)`;
         emitDocEvent(code, savedEventEmitter);
         expect(Reporter.properties).to.deep.equal([{hashedName: pandasHash}]);
@@ -214,7 +214,7 @@ Series)`;
         const code = `import pandas  # Because we wants it.`;
         emitDocEvent(code, savedEventEmitter);
         expect(Reporter.properties).to.deep.equal([{hashedName: pandasHash}]);
-    });
+    });*/
 
     test('Import from within a function', () => {
         const code = `
