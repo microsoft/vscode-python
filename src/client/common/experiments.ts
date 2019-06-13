@@ -28,7 +28,7 @@ export const downloadedExperimentStorageKey = 'DOWNLOADED_EXPERIMENTS_STORAGE_KE
  * as about 40% of the users never come back for the second session.
  */
 const configFile = path.join(EXTENSION_ROOT_DIR, 'experiments.json');
-const configUri = 'https://raw.githubusercontent.com/karrtikr/check/master/environments.json';
+export const configUri = 'https://raw.githubusercontent.com/karrtikr/check/master/environments.json';
 
 /**
  * Manages and stores experiments, implements the AB testing functionality
@@ -131,6 +131,9 @@ export class ExperimentsManager implements IExperimentsManager {
             return;
         }
         const downloadedExperiments = await this.httpClient.getJSON<ABExperiments>(configUri, false);
+        if (!this.areExperimentsValid(downloadedExperiments)) {
+            return;
+        }
         await this.downloadedExperimentsStorage.updateValue(downloadedExperiments);
         await this.isDownloadedStorageValid.updateValue(true);
     }
@@ -173,6 +176,9 @@ export class ExperimentsManager implements IExperimentsManager {
             const content = await this.fs.readFile(configFile);
             try {
                 const experiments = parse(content, [], { allowTrailingComma: true, disallowComments: false });
+                if (!this.areExperimentsValid(experiments)) {
+                    throw new Error('Parsed experiments are not valid');
+                }
                 await this.experimentStorage.updateValue(experiments);
             } catch (ex) {
                 traceError('Failed to parse experiments configuration file to update storage', ex);
@@ -180,5 +186,24 @@ export class ExperimentsManager implements IExperimentsManager {
             }
             await this.fs.deleteFile(configFile);
         }
+    }
+
+    /**
+     * Checks that experiments are not invalid or incomplete
+     * @param experiments Local or downloaded experiments
+     * @returns `true` if type of experiments equals `ABExperiments` type, `false` otherwise
+     */
+    public areExperimentsValid(experiments: ABExperiments): boolean {
+        if (!Array.isArray(experiments)) {
+            traceError('Experiments are not of array type');
+            return false;
+        }
+        for (const exp of experiments) {
+            if (exp.name === undefined || exp.salt === undefined || exp.min === undefined || exp.max === undefined) {
+                traceError('Experiments are missing fields from ABExperiments type');
+                return false;
+            }
+        }
+        return true;
     }
 }

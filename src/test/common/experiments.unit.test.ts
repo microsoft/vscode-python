@@ -14,7 +14,7 @@ import { ApplicationEnvironment } from '../../client/common/application/applicat
 import { IApplicationEnvironment, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { CryptoUtils } from '../../client/common/crypto';
-import { downloadedExperimentStorageKey, ExperimentsManager, experimentStorageKey, isDownloadedStorageValidKey } from '../../client/common/experiments';
+import { configUri, downloadedExperimentStorageKey, ExperimentsManager, experimentStorageKey, isDownloadedStorageValidKey } from '../../client/common/experiments';
 import { HttpClient } from '../../client/common/net/httpClient';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { FileSystem } from '../../client/common/platform/fileSystem';
@@ -55,7 +55,8 @@ suite('xA/B experiments', () => {
 
     async function testInitialization(
         settings: { globalValue?: boolean } = {},
-        downloadError: boolean = false
+        downloadError: boolean = false,
+        experimentsDownloaded?: any
     ) {
         const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
         when(workspaceService.getConfiguration('telemetry')).thenReturn(workspaceConfig.object);
@@ -63,9 +64,13 @@ suite('xA/B experiments', () => {
             .returns(() => settings as any)
             .verifiable(TypeMoq.Times.once());
         if (downloadError) {
-            when(httpClient.getJSON(anything(), false)).thenReject(new Error('Kaboom'));
+            when(httpClient.getJSON(configUri, false)).thenReject(new Error('Kaboom'));
         } else {
-            when(httpClient.getJSON(anything(), false)).thenResolve([{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }]);
+            if (experimentsDownloaded) {
+                when(httpClient.getJSON(configUri, false)).thenResolve(experimentsDownloaded);
+            } else {
+                when(httpClient.getJSON(configUri, false)).thenResolve([{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }]);
+            }
         }
 
         try {
@@ -91,17 +96,38 @@ suite('xA/B experiments', () => {
 
         await testInitialization();
 
-        verify(httpClient.getJSON(anything(), false)).never();
+        verify(httpClient.getJSON(configUri, false)).never();
     });
 
-    test('Initializing experiments downloads and stores the experiments if storage has expired', async () => {
+    test('If storage has expired, initializing experiments downloads the experiments, but does not store them if they are invalid or incomplete', async () => {
+        const experiments = [{ name: 'experiment1', salt: 'salt', max: 100 }];
+        isDownloadedStorageValid
+            .setup(n => n.value)
+            .returns(() => false)
+            .verifiable(TypeMoq.Times.once());
+        isDownloadedStorageValid
+            .setup(n => n.updateValue(true))
+            .returns(() => Promise.resolve(undefined))
+            .verifiable(TypeMoq.Times.never());
+        downloadedExperimentsStorage
+            .setup(n => n.updateValue(experiments))
+            .returns(() => Promise.resolve(undefined))
+            .verifiable(TypeMoq.Times.never());
+
+        // settings = {}, downloadError = false, experimentsDownloaded = experiments
+        await testInitialization({}, false, experiments);
+
+        verify(httpClient.getJSON(configUri, false)).once();
+    });
+
+    test('If storage has expired, initializing experiments downloads the experiments, and stores them if they are valid', async () => {
         isDownloadedStorageValid.setup(n => n.value).returns(() => false).verifiable(TypeMoq.Times.once());
         isDownloadedStorageValid.setup(n => n.updateValue(true)).returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.once());
         downloadedExperimentsStorage.setup(n => n.updateValue([{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }])).returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.once());
 
         await testInitialization();
 
-        verify(httpClient.getJSON(anything(), false)).once();
+        verify(httpClient.getJSON(configUri, false)).once();
     });
 
     test('If downloading experiments fails with error, the storage is left as it is', async () => {
@@ -109,10 +135,10 @@ suite('xA/B experiments', () => {
         isDownloadedStorageValid.setup(n => n.updateValue(true)).returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.never());
         downloadedExperimentsStorage.setup(n => n.updateValue(anything())).returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.never());
 
-        // settings = {}, error = true
+        // settings = {}, downloadError = true
         await testInitialization({}, true);
 
-        verify(httpClient.getJSON(anything(), false)).once();
+        verify(httpClient.getJSON(configUri, false)).once();
     });
 
     test('Ensure experiments can only be activated once', async () => {
@@ -169,7 +195,7 @@ suite('xA/B experiments', () => {
         workspaceConfig.setup(c => c.inspect<boolean>('enableTelemetry'))
             .returns(() => settings as any)
             .verifiable(TypeMoq.Times.once());
-        when(httpClient.getJSON(anything(), false)).thenReturn(experimentsDeferred.promise);
+        when(httpClient.getJSON(configUri, false)).thenReturn(experimentsDeferred.promise);
 
         const promise = expManager.activate();
         const deferred = createDeferredFromPromise(promise);
@@ -185,7 +211,7 @@ suite('xA/B experiments', () => {
         workspaceConfig.verifyAll();
         isDownloadedStorageValid.verifyAll();
         downloadedExperimentsStorage.verifyAll();
-        verify(httpClient.getJSON(anything(), false)).once();
+        verify(httpClient.getJSON(configUri, false)).once();
     });
 
     test('Ensure experiment storage is updated to contain the latest downloaded experiments', async () => {
@@ -207,7 +233,41 @@ suite('xA/B experiments', () => {
         downloadedExperimentsStorage.verifyAll();
     });
 
-    test('Experiment storage is updated using local experiments file (which is then deleted) if no downloaded experiments are available', async () => {
+    test('When no downloaded experiments are available, and if local experiments file is not valid, experiment storage is not updated', async () => {
+        downloadedExperimentsStorage
+            .setup(n => n.value)
+            .returns(() => undefined)
+            .verifiable(TypeMoq.Times.once());
+        downloadedExperimentsStorage
+            .setup(n => n.updateValue(undefined))
+            .returns(() => Promise.resolve(undefined))
+            .verifiable(TypeMoq.Times.never());
+
+        // tslint:disable-next-line:no-multiline-string
+        const fileContent = `
+        // Yo! I am a JSON file with comments as well as trailing commas!
+
+        [{ "name": "experiment1", "salt": "salt", "min": 90, },]
+        `;
+
+        when(fs.fileExists(anything())).thenResolve(true);
+        when(fs.readFile(anything())).thenResolve(fileContent);
+        when(fs.deleteFile(anything())).thenResolve(undefined);
+
+        experimentStorage
+            .setup(n => n.updateValue(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.never());
+
+        await expManager.updateExperimentStorage();
+
+        verify(fs.fileExists(anything())).once();
+        verify(fs.readFile(anything())).once();
+        verify(fs.deleteFile(anything())).never();
+        experimentStorage.verifyAll();
+        downloadedExperimentsStorage.verifyAll();
+    });
+
+    test('When no downloaded experiments are available, experiment storage is updated using local experiments file (which is then deleted) given experiments are valid', async () => {
         downloadedExperimentsStorage
             .setup(n => n.value)
             .returns(() => undefined)
@@ -336,9 +396,15 @@ suite('xA/B experiments', () => {
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.never());
 
+            // tslint:disable-next-line:no-multiline-string
+            const fileContent = `
+            // Yo! I am a JSON file with comments as well as trailing commas!
+
+            [{ "name": "experiment1", "salt": "salt", "min": 90, "max": 100 },]
+            `;
             const error = new Error('Kaboom');
             when(fs.fileExists(anything())).thenResolve(true);
-            when(fs.readFile(anything())).thenResolve('fileContent');
+            when(fs.readFile(anything())).thenResolve(fileContent);
             when(fs.deleteFile(anything())).thenResolve(undefined);
 
             experimentStorage
@@ -461,6 +527,48 @@ suite('xA/B experiments', () => {
             }
             expManager.populateUserExperiments();
             assert.deepEqual(expManager.userExperiments, testParams.expectedResult);
+        });
+    });
+
+    const testsForAreExperimentsValid =
+        [
+            {
+                testName: 'If experiments are not an array, return false',
+                experiments: undefined,
+                expectedResult: false
+            },
+            {
+                testName: 'If any experiment have `min` field missing, return false',
+                experiments: [{ name: 'experiment1', salt: 'salt', max: 94 }, { name: 'experiment2', salt: 'salt', min: 19, max: 30 }],
+                expectedResult: false
+            },
+            {
+                testName: 'If any experiment have `max` field missing, return false',
+                experiments: [{ name: 'experiment1', salt: 'salt', min: 79 }, { name: 'experiment2', salt: 'salt', min: 19, max: 30 }],
+                expectedResult: false
+            },
+            {
+                testName: 'If any experiment have `salt` field missing, return false',
+                experiments: [{ name: 'experiment1', min: 79, max: 94 }, { name: 'experiment2', salt: 'salt', min: 19, max: 30 }],
+                expectedResult: false
+            },
+            {
+                testName: 'If any experiment have `name` field missing, return false',
+                experiments: [{ salt: 'salt', min: 79, max: 94 }, { name: 'experiment2', salt: 'salt', min: 19, max: 30 }],
+                expectedResult: false
+            },
+            {
+                testName: 'If all experiments contain all the fields in type `ABExperiment`, return true',
+                experiments: [{ name: 'experiment1', salt: 'salt', min: 79, max: 94 }, { name: 'experiment2', salt: 'salt', min: 19, max: 30 }],
+                expectedResult: true
+            }
+        ];
+
+    suite('Function areExperimentsValid()', () => {
+        testsForAreExperimentsValid.forEach(testParams => {
+            test(testParams.testName, () => {
+                expect(expManager.areExperimentsValid(testParams.experiments as any)).to.equal(testParams.expectedResult);
+            });
         });
     });
 });
