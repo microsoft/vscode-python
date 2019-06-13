@@ -3,11 +3,10 @@
 
 'use strict';
 
-// tslint:disable-next-line: no-any
+// tslint:disable: no-any
 
 import { expect } from 'chai';
 import * as typemoq from 'typemoq';
-import { IHttpClient } from '../../client/activation/types';
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { CommandManager } from '../../client/common/application/commandManager';
@@ -45,14 +44,14 @@ import { PyEnvActivationCommandProvider } from '../../client/common/terminal/env
 import { TerminalServiceFactory } from '../../client/common/terminal/factory';
 import { TerminalHelper } from '../../client/common/terminal/helper';
 import { ITerminalActivationCommandProvider, ITerminalActivationHandler, ITerminalActivator, ITerminalHelper, ITerminalServiceFactory, TerminalActivationProviders } from '../../client/common/terminal/types';
-import { IAsyncDisposableRegistry, IBrowserService, IConfigurationService, ICryptoUtils, ICurrentProcess, IEditorUtils, IExperimentsManager, IExtensions, IFeatureDeprecationManager, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IRandom } from '../../client/common/types';
+import { IAsyncDisposableRegistry, IBrowserService, IConfigurationService, ICryptoUtils, ICurrentProcess, IEditorUtils, IExperimentsManager, IExtensions, IFeatureDeprecationManager, IHttpClient, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IRandom } from '../../client/common/types';
 import { IMultiStepInputFactory, MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
 import { Random } from '../../client/common/utils/random';
 import { IServiceManager } from '../../client/ioc/types';
 import { ImportTracker } from '../../client/telemetry/importTracker';
 import { IImportTracker } from '../../client/telemetry/types';
 
-suite('xCommon - Service Registry', () => {
+suite('Common - Service Registry', () => {
     test('Registrations', () => {
         const serviceManager = typemoq.Mock.ofType<IServiceManager>();
 

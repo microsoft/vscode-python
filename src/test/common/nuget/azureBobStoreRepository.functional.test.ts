@@ -9,11 +9,11 @@ import * as typeMoq from 'typemoq';
 import { WorkspaceConfiguration } from 'vscode';
 import { LanguageServerPackageStorageContainers } from '../../../client/activation/languageServer/languageServerPackageRepository';
 import { LanguageServerPackageService } from '../../../client/activation/languageServer/languageServerPackageService';
-import { IHttpClient } from '../../../client/activation/types';
 import { IApplicationEnvironment, IWorkspaceService } from '../../../client/common/application/types';
 import { AzureBlobStoreNugetRepository } from '../../../client/common/nuget/azureBlobStoreNugetRepository';
 import { INugetService } from '../../../client/common/nuget/types';
 import { PlatformService } from '../../../client/common/platform/platformService';
+import { IHttpClient } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 
 const azureBlobStorageAccount = 'https://pvsc.blob.core.windows.net';

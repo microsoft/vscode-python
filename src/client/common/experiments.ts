@@ -8,7 +8,7 @@
 import { inject, injectable, named } from 'inversify';
 import { parse } from 'jsonc-parser';
 import * as path from 'path';
-import { IHttpClient } from '../activation/types';
+import { IHttpClient } from '../common/types';
 import { isTelemetryDisabled, sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { IApplicationEnvironment, IWorkspaceService } from './application/types';

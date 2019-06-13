@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { parse, SemVer } from 'semver';
-import { IHttpClient } from '../../activation/types';
+import { IHttpClient } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { INugetRepository, NugetPackage } from './types';
 

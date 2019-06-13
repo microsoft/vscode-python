@@ -3,7 +3,6 @@
 
 'use strict';
 
-import { Request as RequestResult } from 'request';
 import { SemVer } from 'semver';
 import { Event } from 'vscode';
 import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
@@ -37,17 +36,6 @@ export enum LanguageServerActivator {
 export const ILanguageServerActivator = Symbol('ILanguageServerActivator');
 export interface ILanguageServerActivator extends IDisposable {
     activate(resource: Resource): Promise<void>;
-}
-
-export const IHttpClient = Symbol('IHttpClient');
-export interface IHttpClient {
-    downloadFile(uri: string): Promise<RequestResult>;
-    /**
-     * Downloads file from uri as string and parses them into JSON objects
-     * @param uri The uri to download the JSON from
-     * @param strict Set `false` to allow trailing comma and comments in the JSON, defaults to `true`
-     */
-    getJSON<T>(uri: string, strict?: boolean): Promise<T>;
 }
 
 export type FolderVersionPair = { path: string; version: SemVer };

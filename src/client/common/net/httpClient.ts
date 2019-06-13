@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { parse } from 'jsonc-parser';
 import * as requestTypes from 'request';
-import { IHttpClient } from '../../activation/types';
+import { IHttpClient } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { IWorkspaceService } from '../application/types';
 
