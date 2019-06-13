@@ -105,7 +105,16 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         const activate = await this.getWindowsActivateCommand();
         return [`${activate} ${envName.toCommandArgument()}`];
     }
-
+    /**
+     * The expectation is for the user to configure Powershell for Conda.
+     * Hence we just send the command `conda activate ...`.
+     * This configuration is documented on Conda.
+     * Extension will not attempt to work around issues by trying to setup shell for user.
+     *
+     * @param {string} envName
+     * @returns {(Promise<string[] | undefined>)}
+     * @memberof CondaActivationCommandProvider
+     */
     public async getPowershellCommands(envName: string): Promise<string[] | undefined> {
         return [`conda activate ${envName.toCommandArgument()}`];
     }
