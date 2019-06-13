@@ -7,8 +7,7 @@
         "obj": true,
         "bin": true,
         "**/__pycache__": true,
-        "node_modules": true,
-        ".vscode-test": true,
+        "node_modules": false,
         "**/.mypy_cache/**": true,
         "**/.ropeproject/**": true
     },
@@ -17,16 +16,21 @@
         "coverage": true,
         "languageServer*/**": true
     },
+    "editor.formatOnSave": true,
     "typescript.tsdk": "./node_modules/typescript/lib", // we want to use the TS server from our node_modules folder to control its version
-    "tslint.enable": true,
-    "python.linting.enabled": false,
-    "python.testing.promptToConfigure": false,
-    "python.workspaceSymbols.enabled": false,
-    "python.formatting.provider": "none",
     "typescript.preferences.quoteStyle": "single",
     "javascript.preferences.quoteStyle": "single",
     "typescriptHero.imports.stringQuoteStyle": "'",
-    "prettier.tslintIntegration": false,
-    "prettier.printWidth": 180,
-    "prettier.singleQuote": true
+    "tslint.enable": true,
+    "python.jediEnabled": false,
+    "python.analysis.logLevel": "Trace",
+    "python.analysis.downloadChannel": "beta",
+    "python.unitTest.promptToConfigure": false,
+    "python.workspaceSymbols.enabled": false,
+    "python.formatting.provider": "black",
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": false,
+    "python.linting.flake8Enabled": true,
+    "cucumberautocomplete.skipDocStringsFormat": true,
+    "python.linting.flake8Args": ["--max-line-length=120"]
 }
