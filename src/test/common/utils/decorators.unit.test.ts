@@ -17,6 +17,27 @@ suite('Common Utils - Decorators', () => {
     teardown(() => {
         clearCache();
     });
+    /**
+     * Don't use new Date().getTime() as this is inaccurate.
+     * We're dealing with tests that need accuracy of 1ms.
+     * Use API that'll give us better accuracy when dealing with elapsed times.
+     *
+     * @class HighPrecisionStopWatch
+     */
+    class HighPrecisionStopWatch {
+        /**
+         * Time in milliseconds (from some arbitrary point in time for current process).
+         *
+         * @static
+         * @returns {number}
+         * @memberof HighPrecisionStopWatch
+         */
+        public static getTime(): number {
+            const currentTime = process.hrtime();
+            // Convert seconds to ms and nanoseconds to ms.
+            return (currentTime[0] * 1000) + (currentTime[1] / 1000_000);
+        }
+    }
     function createMockVSC(pythonPath: string): typeof import('vscode') {
         return {
             workspace: {
@@ -102,18 +123,19 @@ suite('Common Utils - Decorators', () => {
     });
 
     // debounce()
+    // tslint:disable-next-line: max-classes-per-file
     class Base {
         public created: number;
         public calls: string[];
         public timestamps: number[];
         constructor() {
-            this.created = new Date().getTime();
+            this.created = HighPrecisionStopWatch.getTime();
             this.calls = [];
             this.timestamps = [];
         }
         protected _addCall(funcname: string, timestamp?: number): void {
             if (!timestamp) {
-                timestamp = new Date().getTime();
+                timestamp = HighPrecisionStopWatch.getTime();
             }
             this.calls.push(funcname);
             this.timestamps.push(timestamp);
@@ -142,7 +164,7 @@ suite('Common Utils - Decorators', () => {
         }
         const one = new One();
 
-        const start = new Date().getTime();
+        const start = HighPrecisionStopWatch.getTime();
         one.run();
         await waitForCalls(one.timestamps, 1);
         const delay = one.timestamps[0] - start;
@@ -162,7 +184,7 @@ suite('Common Utils - Decorators', () => {
         }
         const one = new One();
 
-        const start = new Date().getTime();
+        const start = HighPrecisionStopWatch.getTime();
         let errored = false;
         one.run().catch(() => errored = true);
         await waitForCalls(one.timestamps, 1);
@@ -184,7 +206,7 @@ suite('Common Utils - Decorators', () => {
         }
         const one = new One();
 
-        const start = new Date().getTime();
+        const start = HighPrecisionStopWatch.getTime();
         await one.run();
         await waitForCalls(one.timestamps, 1);
         const delay = one.timestamps[0] - start;
@@ -205,7 +227,7 @@ suite('Common Utils - Decorators', () => {
         }
         const one = new One();
 
-        const start = new Date().getTime();
+        const start = HighPrecisionStopWatch.getTime();
         let capturedEx: Error | undefined;
         await one.run().catch(ex => capturedEx = ex);
         await waitForCalls(one.timestamps, 1);
@@ -227,7 +249,7 @@ suite('Common Utils - Decorators', () => {
         }
         const one = new One();
 
-        const start = new Date().getTime();
+        const start = HighPrecisionStopWatch.getTime();
         let errored = false;
         one.run().catch(() => errored = true);
         one.run().catch(() => errored = true);
@@ -253,7 +275,7 @@ suite('Common Utils - Decorators', () => {
         }
         const one = new One();
 
-        const start = new Date().getTime();
+        const start = HighPrecisionStopWatch.getTime();
         await Promise.all([one.run(), one.run(), one.run(), one.run()]);
         await waitForCalls(one.timestamps, 1);
         const delay = one.timestamps[0] - start;
@@ -273,7 +295,7 @@ suite('Common Utils - Decorators', () => {
         }
         const one = new One();
 
-        const start = new Date().getTime();
+        const start = HighPrecisionStopWatch.getTime();
         let errored = false;
         one.run().catch(() => errored = true);
         await one.run();
@@ -298,7 +320,7 @@ suite('Common Utils - Decorators', () => {
         }
         const one = new One();
 
-        const start = new Date().getTime();
+        const start = HighPrecisionStopWatch.getTime();
         one.run();
         one.run();
         one.run();
