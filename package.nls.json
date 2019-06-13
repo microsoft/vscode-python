@@ -107,8 +107,8 @@
     "Common.doNotShowAgain": "Do not show again",
     "Interpreters.environmentPromptMessage": "We noticed a new virtual environment has been created. Do you want to select it for the workspace folder?",
     "DataScience.restartKernelMessage": "Do you want to restart the IPython kernel? All variables will be lost.",
-    "DataScience.restartKernelMessageYes": "Restart",
-    "DataScience.restartKernelMessageNo": "Cancel",
+    "DataScience.restartKernelMessageYes": "Yes",
+    "DataScience.restartKernelMessageNo": "No",
     "DataScience.restartingKernelFailed": "Kernel restart failed. Jupyter server is hung. Please reload VS Code.",
     "DataScience.interruptingKernelFailed": "Kernel interrupt failed. Jupyter server is hung. Please reload VS Code.",
     "DataScienceSurveyBanner.bannerMessage": "Can you please take 2 minutes to tell us how the Python Data Science features are working for you?",
@@ -270,5 +270,5 @@
     "DataScience.collapseSingle" : "Collapse",
     "DataScience.expandSingle" : "Expand",
     "DataScience.editSection" : "Input new cells here.",
-    "DataScience.restartKernelMessageDontAskAgain" : "Don't Ask Again"
+    "DataScience.restartKernelMessageDontAskAgain" : "Yes, and Don't Ask Again"
 }
