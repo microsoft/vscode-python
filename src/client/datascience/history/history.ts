@@ -1139,10 +1139,13 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
             if (e instanceof JupyterSelfCertsError) {
                 // On a self cert error, warn the user and ask if they want to change the setting
                 const enableOption: string = localize.DataScience.jupyterSelfCertEnable();
-                this.applicationShell.showErrorMessage(localize.DataScience.jupyterSelfCertFail().format(e.message), enableOption).then(value => {
+                const closeOption: string = localize.DataScience.jupyterSelfCertClose();
+                this.applicationShell.showErrorMessage(localize.DataScience.jupyterSelfCertFail().format(e.message), enableOption, closeOption).then(value => {
                     if (value === enableOption) {
                         sendTelemetryEvent(Telemetry.SelfCertsMessageEnabled);
                         this.configuration.updateSetting('dataScience.allowUnauthorizedRemoteConnection', true, undefined, ConfigurationTarget.Workspace).ignoreErrors();
+                    } else if (value === closeOption) {
+                        sendTelemetryEvent(Telemetry.SelfCertsMessageClose);
                     }
                 });
                 throw e;
