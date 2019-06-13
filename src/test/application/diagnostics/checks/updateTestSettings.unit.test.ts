@@ -4,14 +4,11 @@
 'use strict';
 
 import * as assert from 'assert';
+import { expect } from 'chai';
 import * as path from 'path';
-import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
+import * as sinon from 'sinon';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { InvalidTestSettingDiagnosticsService, InvalidTestSettingsDiagnostic } from '../../../../client/application/diagnostics/checks/updateTestSettings';
-import { DiagnosticsCommandFactory } from '../../../../client/application/diagnostics/commands/factory';
-import { IDiagnosticsCommandFactory } from '../../../../client/application/diagnostics/commands/types';
-import { DiagnosticCommandPromptHandlerService, MessageCommandPrompt } from '../../../../client/application/diagnostics/promptHandler';
-import { IDiagnosticHandlerService } from '../../../../client/application/diagnostics/types';
 import { ApplicationEnvironment } from '../../../../client/common/application/applicationEnvironment';
 import { IApplicationEnvironment, IWorkspaceService } from '../../../../client/common/application/types';
 import { WorkspaceService } from '../../../../client/common/application/workspace';
@@ -19,128 +16,187 @@ import { PersistentState, PersistentStateFactory } from '../../../../client/comm
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../../client/common/platform/types';
 import { IPersistentState } from '../../../../client/common/types';
-import { Common, Diagnostics } from '../../../../client/common/utils/localize';
-import { ServiceContainer } from '../../../../client/ioc/container';
+import { UpdateTestSettingService } from '../../../../client/testing/common/updateTestSettings';
 
-// tslint:disable:max-func-body-length
+// tslint:disable:max-func-body-length no-invalid-this no-any
 suite('Application Diagnostics - Check Test Settings', () => {
-    let diagnosticService: InvalidTestSettingDiagnosticsService;
+    let diagnosticService: UpdateTestSettingService;
     let fs: IFileSystem;
     let appEnv: IApplicationEnvironment;
     let storage: IPersistentState<string[]>;
-    let commandFactory: IDiagnosticsCommandFactory;
     let workspace: IWorkspaceService;
-    let messageService: IDiagnosticHandlerService<MessageCommandPrompt>;
+    const sandbox = sinon.sandbox.create();
     setup(() => {
         fs = mock(FileSystem);
         appEnv = mock(ApplicationEnvironment);
         storage = mock(PersistentState);
-        commandFactory = mock(DiagnosticsCommandFactory);
         workspace = mock(WorkspaceService);
-        messageService = mock(DiagnosticCommandPromptHandlerService);
-        const serviceContainer = mock(ServiceContainer);
         const stateFactory = mock(PersistentStateFactory);
 
         when(stateFactory.createGlobalPersistentState('python.unitTest.Settings', anything())).thenReturn(instance(storage));
 
-        diagnosticService = new InvalidTestSettingDiagnosticsService(instance(serviceContainer),
-            instance(fs), instance(appEnv), instance(stateFactory),
-            instance(messageService),
-            instance(commandFactory), instance(workspace), []);
+        diagnosticService = new UpdateTestSettingService(instance(fs), instance(appEnv), instance(workspace));
+    });
+    teardown(() => {
+        sandbox.restore();
+    });
+    [Uri.file(__filename), undefined].forEach(resource => {
+        const resourceTitle = resource ? '(with a resource)' : '(without a resource)';
+
+        test(`activate method invokes UpdateTestSettings ${resourceTitle}`, async () => {
+            const updateTestSettings = sandbox.stub(UpdateTestSettingService.prototype, 'updateTestSettings');
+            updateTestSettings.resolves();
+            diagnosticService = new UpdateTestSettingService(instance(fs), instance(appEnv), instance(workspace));
+
+            await diagnosticService.activate(resource);
+
+            assert.ok(updateTestSettings.calledOnce);
+        });
+
+        test(`activate method invokes UpdateTestSettings and ignores errors raised by UpdateTestSettings ${resourceTitle}`, async () => {
+            const updateTestSettings = sandbox.stub(UpdateTestSettingService.prototype, 'updateTestSettings');
+            updateTestSettings.rejects(new Error('Kaboom'));
+            diagnosticService = new UpdateTestSettingService(instance(fs), instance(appEnv), instance(workspace));
+
+            await diagnosticService.activate(resource);
+
+            assert.ok(updateTestSettings.calledOnce);
+        });
+
+        test(`When there are no workspaces, then return just the user settings file ${resourceTitle}`, async () => {
+            when(workspace.getWorkspaceFolder(anything())).thenReturn();
+            when(appEnv.userSettingsFile).thenReturn('user.json');
+
+            const files = diagnosticService.getSettingsFiles(resource);
+
+            assert.deepEqual(files, ['user.json']);
+            verify(workspace.getWorkspaceFolder(resource)).once();
+        });
+        test(`When there are no workspaces & no user file, then return an empty array ${resourceTitle}`, async () => {
+            when(workspace.getWorkspaceFolder(anything())).thenReturn();
+            when(appEnv.userSettingsFile).thenReturn();
+
+            const files = diagnosticService.getSettingsFiles(resource);
+
+            assert.deepEqual(files, []);
+            verify(workspace.getWorkspaceFolder(resource)).once();
+        });
+        test(`When there is a workspace folder, then return the user settings file & workspace file ${resourceTitle}`, async function () {
+            if (!resource) {
+                return this.skip();
+            }
+            when(workspace.getWorkspaceFolder(resource)).thenReturn({ name: '1', uri: Uri.file('folder1'), index: 0 });
+            when(appEnv.userSettingsFile).thenReturn('user.json');
+
+            const files = diagnosticService.getSettingsFiles(resource);
+
+            assert.deepEqual(files, ['user.json', path.join(Uri.file('folder1').fsPath, '.vscode', 'settings.json')]);
+            verify(workspace.getWorkspaceFolder(resource)).once();
+        });
+        test(`When there is a workspace folder & no user file, then workspace file ${resourceTitle}`, async function () {
+            if (!resource) {
+                return this.skip();
+            }
+            when(workspace.getWorkspaceFolder(resource)).thenReturn({ name: '1', uri: Uri.file('folder1'), index: 0 });
+            when(appEnv.userSettingsFile).thenReturn();
+
+            const files = diagnosticService.getSettingsFiles(resource);
+
+            assert.deepEqual(files, [path.join(Uri.file('folder1').fsPath, '.vscode', 'settings.json')]);
+            verify(workspace.getWorkspaceFolder(resource)).once();
+        });
+        test(`Return an empty array if there are no files ${resourceTitle}`, async () => {
+            const getSettingsFiles = sandbox.stub(UpdateTestSettingService.prototype, 'getSettingsFiles');
+            getSettingsFiles.returns([]);
+            diagnosticService = new UpdateTestSettingService(instance(fs), instance(appEnv), instance(workspace));
+
+            const files = await diagnosticService.getFilesToBeFixed(resource);
+
+            expect(files).to.deep.equal([]);
+        });
+        test(`Filter files based on whether they need to be fixed ${resourceTitle}`, async () => {
+            const getSettingsFiles = sandbox.stub(UpdateTestSettingService.prototype, 'getSettingsFiles');
+            const filterFiles = sandbox.stub(UpdateTestSettingService.prototype, 'doesFileNeedToBeFixed');
+            filterFiles.callsFake(file => Promise.resolve(file === 'file_a' || file === 'file_c'));
+            getSettingsFiles.returns(['file_a', 'file_b', 'file_c', 'file_d']);
+
+            diagnosticService = new UpdateTestSettingService(instance(fs), instance(appEnv), instance(workspace));
+
+            const files = await diagnosticService.getFilesToBeFixed(resource);
+
+            expect(files).to.deep.equal(['file_a', 'file_c']);
+        });
+    });
+    [
+        {
+            testTitle: 'Should fix file if contents contains python.unitTest.',
+            expectedValue: true,
+            contents: '{"python.pythonPath":"1234", "python.unitTest.unitTestArgs":[]}'
+        },
+        {
+            testTitle: 'Should fix file if contents contains python.pyTest.',
+            expectedValue: true,
+            contents: '{"python.pythonPath":"1234", "python.pyTestArgs":[]}'
+        },
+        {
+            testTitle: 'Should fix file if contents contains python.pyTest. & python.unitTest.',
+            expectedValue: true,
+            contents: '{"python.pythonPath":"1234", "python.testing.pyTestArgs":[], "python.unitTest.unitTestArgs":[]}'
+        },
+        {
+            testTitle: 'Should not fix file if contents does not contain python.unitTest. and python.pyTest',
+            expectedValue: false,
+            contents: '{"python.pythonPath":"1234", "python.unittest.unitTestArgs":[]}'
+        }
+    ].forEach(item => {
+        test(item.testTitle, async () => {
+            when(fs.readFile(__filename)).thenResolve(item.contents);
+
+            const needsToBeFixed = await diagnosticService.doesFileNeedToBeFixed(__filename);
+
+            expect(needsToBeFixed).to.equal(item.expectedValue);
+            verify(fs.readFile(__filename)).once();
+        });
+    });
+    test('File should not be fixed if there\'s an error in reading the file', async () => {
+        when(fs.readFile(__filename)).thenReject(new Error('Kaboom'));
+
+        const needsToBeFixed = await diagnosticService.doesFileNeedToBeFixed(__filename);
+
+        assert.ok(!needsToBeFixed);
+        verify(fs.readFile(__filename)).once();
     });
 
-    test('When handing diagnostics, the right messsage will be displayed', async () => {
-        const diagnostic = new InvalidTestSettingsDiagnostic();
+    [
+        {
+            testTitle: 'Should replace python.unitTest.',
+            contents: '{"python.pythonPath":"1234", "python.unitTest.unitTestArgs":[]}',
+            expectedContents: '{"python.pythonPath":"1234", "python.testing.unitTestArgs":[]}'
+        },
+        {
+            testTitle: 'Should replace python.unitTest.pyTest.',
+            contents: '{"python.pythonPath":"1234", "python.unitTest.pyTestArgs":[], "python.unitTest.pyTestArgs":[], "python.unitTest.pyTestPath":[]}',
+            expectedContents: '{"python.pythonPath":"1234", "python.testing.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}',
+        },
+        {
+            testTitle: 'Should replace python.testing.pyTest.',
+            contents: '{"python.pythonPath":"1234", "python.testing.pyTestArgs":[], "python.testing.pyTestArgs":[], "python.testing.pyTestPath":[]}',
+            expectedContents: '{"python.pythonPath":"1234", "python.testing.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}',
+        },
+        {
+            testTitle: 'Should not make any changes to the file',
+            contents: '{"python.pythonPath":"1234", "python.unittest.unitTestArgs":[], "python.unitTest.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}',
+            expectedContents: '{"python.pythonPath":"1234", "python.unittest.unitTestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}'
+        }
+    ].forEach(item => {
+        test(item.testTitle, async () => {
+            when(fs.readFile(__filename)).thenResolve(item.contents);
+            when(fs.writeFile(__filename, anything())).thenResolve();
 
-        await diagnosticService.onHandle([diagnostic]);
+            await diagnosticService.fixSettingInFile(__filename);
 
-        verify(messageService.handle(diagnostic, anything())).once();
-
-        const options = capture(messageService.handle).first();
-        const prompts = options[1]!.commandPrompts;
-
-        assert.equal(prompts.length, 3);
-        assert.equal(prompts[0].prompt, Diagnostics.updateSettings());
-        assert.equal(prompts[1].prompt, Common.noIWillDoItLater());
-        assert.equal(prompts[2].prompt, Common.doNotShowAgain());
-    });
-    test('When there are no workspaces open, then return just the user settings file', async () => {
-        when(workspace.hasWorkspaceFolders).thenReturn(false);
-        when(appEnv.userSettingsFile).thenReturn('user.json');
-
-        const files = await diagnosticService.getSettingsFiles();
-
-        assert.deepEqual(files, ['user.json']);
-    });
-    test('When there are no workspaces open & no user file, then return an empty array', async () => {
-        when(workspace.hasWorkspaceFolders).thenReturn(false);
-        when(appEnv.userSettingsFile).thenReturn();
-
-        const files = await diagnosticService.getSettingsFiles();
-
-        assert.deepEqual(files, []);
-    });
-    test('When there are workspaces open, then return user settings file with the workspace files', async () => {
-        when(workspace.hasWorkspaceFolders).thenReturn(true);
-        when(workspace.workspaceFolders).thenReturn([
-            { name: '1', uri: Uri.file('folder1'), index: 0 },
-            { name: '2', uri: Uri.file('folder2'), index: 1 }
-        ]);
-        when(appEnv.userSettingsFile).thenReturn('user.json');
-
-        const files = await diagnosticService.getSettingsFiles();
-
-        assert.deepEqual(files, [
-            path.join(Uri.file('folder1').fsPath, '.vscode', 'settings.json'),
-            path.join(Uri.file('folder2').fsPath, '.vscode', 'settings.json'),
-            'user.json'
-        ]);
-    });
-    test('Get settings files that contain the old unitTest setting', async () => {
-        const folder1 = Uri.file('folder1');
-        const folder2 = Uri.file('folder2');
-        when(workspace.hasWorkspaceFolders).thenReturn(true);
-        when(workspace.workspaceFolders).thenReturn([
-            { name: '1', uri: folder1, index: 0 },
-            { name: '2', uri: folder2, index: 1 }
-        ]);
-        when(appEnv.userSettingsFile).thenReturn('user.json');
-        when(fs.readFile('user.json')).thenResolve('{"python.unitTest.cwd":"blah"}');
-        when(fs.readFile(path.join(folder1.fsPath, '.vscode', 'settings.json'))).thenResolve('{"python.testing.cwd":"blah"}');
-        when(fs.readFile(path.join(folder2.fsPath, '.vscode', 'settings.json'))).thenResolve('{"python.unitTest.pytestArgs":[]}');
-        when(storage.value).thenReturn([]);
-
-        const files = await diagnosticService.getFilesToBeFixed();
-
-        assert.deepEqual(files, [
-            path.join(folder2.fsPath, '.vscode', 'settings.json'),
-            'user.json'
-        ]);
-    });
-    test('None of the settings file need to be fixed', async () => {
-        const folder1 = Uri.file('folder1');
-        const folder2 = Uri.file('folder2');
-        when(workspace.hasWorkspaceFolders).thenReturn(true);
-        when(workspace.workspaceFolders).thenReturn([
-            { name: '1', uri: folder1, index: 0 },
-            { name: '2', uri: folder2, index: 1 }
-        ]);
-        when(appEnv.userSettingsFile).thenReturn('user.json');
-        when(fs.readFile('user.json')).thenResolve('{"python.testing.cwd":"blah"}');
-        when(fs.readFile(path.join(folder1.fsPath, '.vscode', 'settings.json'))).thenResolve('{"python.testing.cwd":"blah"}');
-        when(fs.readFile(path.join(folder2.fsPath, '.vscode', 'settings.json'))).thenResolve('{"python.testing.pytestArgs":[]}');
-        when(storage.value).thenReturn([]);
-
-        const files = await diagnosticService.getFilesToBeFixed();
-
-        assert.deepEqual(files, []);
-    });
-    test('Updates to the settings file will replace unitTest with testing', async () => {
-        when(fs.readFile('user.json')).thenResolve('{"python.unitTest.cwd":"blah"}');
-        when(fs.writeFile('user.json', anything())).thenResolve();
-
-        await diagnosticService.fixSettingInFile('user.json');
-
-        verify(fs.writeFile('user.json', '{"python.testing.cwd":"blah"}')).once();
+            verify(fs.readFile(__filename)).once();
+            verify(fs.writeFile(__filename, item.expectedContents)).once();
+        });
     });
 });
