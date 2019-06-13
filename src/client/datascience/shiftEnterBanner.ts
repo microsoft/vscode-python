@@ -69,7 +69,7 @@ export class InteractiveShiftEnterBanner implements IPythonExtensionBanner {
         // The Jupyter check should only happen once and should disable the banner if it fails (don't reprompt and don't recheck)
         const jupyterFound = await this.jupyterExecution.isNotebookSupported();
         if (!jupyterFound) {
-            await this.disable();
+            await this.disableBanner();
             return;
         }
 
@@ -78,11 +78,10 @@ export class InteractiveShiftEnterBanner implements IPythonExtensionBanner {
         switch (response) {
             case this.bannerLabels[InteractiveShiftEnterLabelIndex.Yes]: {
                 await this.enableInteractiveShiftEnter();
-                await this.disable();
                 break;
             }
             case this.bannerLabels[InteractiveShiftEnterLabelIndex.No]: {
-                await this.disable();
+                await this.disableInteractiveShiftEnter();
                 break;
             }
             default: {
@@ -98,13 +97,18 @@ export class InteractiveShiftEnterBanner implements IPythonExtensionBanner {
     }
 
     @captureTelemetry(Telemetry.DisableInteractiveShiftEnter)
-    public async disable(): Promise<void> {
-        await this.persistentState.createGlobalPersistentState<boolean>(InteractiveShiftEnterStateKeys.ShowBanner, false).updateValue(false);
+    public async disableInteractiveShiftEnter(): Promise<void> {
+        await this.configuration.updateSetting('dataScience.sendSelectionToInteractiveWindow', false, undefined, ConfigurationTarget.Global);
+        await this.disableBanner();
     }
 
     @captureTelemetry(Telemetry.EnableInteractiveShiftEnter)
     public async enableInteractiveShiftEnter(): Promise<void> {
         await this.configuration.updateSetting('dataScience.sendSelectionToInteractiveWindow', true, undefined, ConfigurationTarget.Global);
-        await this.disable();
+        await this.disableBanner();
+    }
+
+    private async disableBanner(): Promise<void> {
+        await this.persistentState.createGlobalPersistentState<boolean>(InteractiveShiftEnterStateKeys.ShowBanner, false).updateValue(false);
     }
 }
