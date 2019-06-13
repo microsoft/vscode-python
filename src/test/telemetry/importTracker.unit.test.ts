@@ -175,18 +175,11 @@ z = np.array([drumhead_height(1, 1, r, theta, 0.5) for r in radius])`;
         expect(Reporter.properties).to.deep.equal([{hashedName: scipyHash}]);
     });
 
-    test('Import from within a function', () => {
-        const code = `
-def drumhead_height(n, k, distance, angle, t):
-   import sklearn as sk
-   return np.cos(t) * np.cos(n*angle) * special.jn(n, distance*kth_zero)
-theta = np.r_[0:2*np.pi:50j]
-radius = np.r_[0:1:50j]
-x = np.array([r * np.cos(theta) for r in radius])
-y = np.array([r * np.sin(theta) for r in radius])
-z = np.array([drumhead_height(1, 1, r, theta, 0.5) for r in radius])`;
+
+    test('from <pkg> import _ as _', () => {
+        const code = `from pandas import DataFrame as df`;
         emitDocEvent(code, savedEventEmitter);
-        expect(Reporter.properties).to.deep.equal([{hashedName: sklearnHash}]);
+        expect(Reporter.properties).to.deep.equal([{hashedName: pandasHash}]);
     });
 
     test('import <pkg1>, <pkg2>', () => {
@@ -203,6 +196,40 @@ z = np.array([drumhead_height(1, 1, r, theta, 0.5) for r in radius])`;
         expect(Reporter.properties).to.deep.equal([{hashedName: sklearnHash}, {hashedName: pandasHash}]);
     });
 
+    /*test('from <pkg> import (_, _)', () => {
+        const code = `from pandas import (DataFrame, Series)`;
+        emitDocEvent(code, savedEventEmitter);
+        expect(Reporter.properties).to.deep.equal([{hashedName: pandasHash}]);
+    });
+
+    test('from <pkg> import (_,', () => {
+        const code = `
+from pandas import (DataFrame,
+Series)`;
+        emitDocEvent(code, savedEventEmitter);
+        expect(Reporter.properties).to.deep.equal([{hashedName: pandasHash}]);
+    });*/
+
+    test('import pkg # Comment', () => {
+        const code = `import pandas  # Because we wants it.`;
+        emitDocEvent(code, savedEventEmitter);
+        expect(Reporter.properties).to.deep.equal([{hashedName: pandasHash}]);
+    });
+
+    test('Import from within a function', () => {
+        const code = `
+def drumhead_height(n, k, distance, angle, t):
+   import sklearn as sk
+   return np.cos(t) * np.cos(n*angle) * special.jn(n, distance*kth_zero)
+theta = np.r_[0:2*np.pi:50j]
+radius = np.r_[0:1:50j]
+x = np.array([r * np.cos(theta) for r in radius])
+y = np.array([r * np.sin(theta) for r in radius])
+z = np.array([drumhead_height(1, 1, r, theta, 0.5) for r in radius])`;
+        emitDocEvent(code, savedEventEmitter);
+        expect(Reporter.properties).to.deep.equal([{hashedName: sklearnHash}]);
+    });
+
     test('Do not send the same package twice', () => {
         const code = `
 import pandas
@@ -213,6 +240,22 @@ import pandas`;
 
     test('Ignore relative imports', () => {
         const code = 'from .pandas import not_real';
+        emitDocEvent(code, savedEventEmitter);
+        expect(Reporter.properties).to.deep.equal([]);
+    });
+
+    test('Ignore docstring for `from` imports', () => {
+        const code = `"""
+from numpy import the random function
+"""`;
+        emitDocEvent(code, savedEventEmitter);
+        expect(Reporter.properties).to.deep.equal([]);
+    });
+
+    test('Ignore docstring for `import` imports', () => {
+        const code = `"""
+import numpy for all the things
+"""`;
         emitDocEvent(code, savedEventEmitter);
         expect(Reporter.properties).to.deep.equal([]);
     });

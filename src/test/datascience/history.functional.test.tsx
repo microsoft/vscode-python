@@ -281,9 +281,9 @@ for _ in range(50):
         await addCode(getOrCreateHistory, wrapper, 'a=1\na');
 
         // 'Click' the buttons in the react control
-        const undo = findButton(wrapper, 5);
-        const redo = findButton(wrapper, 6);
-        const clear = findButton(wrapper, 7);
+        const undo = findButton(wrapper, 2);
+        const redo = findButton(wrapper, 1);
+        const clear = findButton(wrapper, 0);
 
         // Now verify if we undo, we have no cells
         let afterUndo = await getCellResults(wrapper, 1, () => {
@@ -322,8 +322,8 @@ for _ in range(50):
         // find the buttons on the cell itself
         const ImageButtons = afterUndo.at(afterUndo.length - 2).find(ImageButton);
         assert.equal(ImageButtons.length, 3, 'Cell buttons not found');
-        const goto = ImageButtons.at(1);
-        const deleteButton = ImageButtons.at(0);
+        const goto = ImageButtons.at(0);
+        const deleteButton = ImageButtons.at(2);
 
         // Make sure goto works
         await waitForMessageResponse(() => goto.simulate('click'));
@@ -363,8 +363,8 @@ for _ in range(50):
         assert.equal(exportCalled, true, 'Export is not being called during export');
 
         // Remove the cell
-        const exportButton = findButton(wrapper, 2);
-        const undo = findButton(wrapper, 5);
+        const exportButton = findButton(wrapper, 5);
+        const undo = findButton(wrapper, 2);
 
         // Now verify if we undo, we have no cells
         const afterUndo = await getCellResults(wrapper, 1, () => {
@@ -495,7 +495,7 @@ for _ in range(50):
         verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
         const ImageButtons = getLastOutputCell(wrapper).find(ImageButton);
         assert.equal(ImageButtons.length, 3, 'Cell buttons not found');
-        const copyToSource = ImageButtons.at(2);
+        const copyToSource = ImageButtons.at(1);
 
         // Then click the copy to source button
         await waitForMessageResponse(() => copyToSource.simulate('click'));
@@ -517,7 +517,7 @@ for _ in range(50):
         const lastCell = getLastOutputCell(wrapper);
         const ImageButtons = lastCell.find(ImageButton);
         assert.equal(ImageButtons.length, 3, 'Cell buttons not found');
-        const deleteButton = ImageButtons.at(0);
+        const deleteButton = ImageButtons.at(2);
 
         // Make sure delete works
         const afterDelete = await getCellResults(wrapper, 1, async () => {

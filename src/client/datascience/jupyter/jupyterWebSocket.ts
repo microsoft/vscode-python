@@ -4,23 +4,24 @@
 import * as WebSocketWS from 'ws';
 
 // We need to override the websocket that jupyter lab services uses to put in our cookie information
-export class JupyterWebSocket extends WebSocketWS {
-    // Static field for cookie values set by our Jupyter connection code
-    public static cookieString: string | undefined;
+// Do this as a function so that we can pass in variables the the socket will have local access to
+export function createJupyterWebSocket(cookieString?: string, allowUnauthorized?: boolean) {
+    class JupyterWebSocket extends WebSocketWS {
+        constructor(url: string, protocols?: string | string[] | undefined) {
+            let co: WebSocketWS.ClientOptions = {};
 
-    constructor(url: string, protocols?: string | string[] | undefined) {
-        if (JupyterWebSocket.cookieString) {
-            // Construct our client options here
-            const co: WebSocketWS.ClientOptions = {
-                headers: {
-                    Cookie: JupyterWebSocket.cookieString
-                }
-            };
+            if (allowUnauthorized) {
+                co = {...co, rejectUnauthorized: false};
+            }
+
+            if (cookieString) {
+                co = {...co, headers: {
+                    Cookie: cookieString
+                }};
+            }
 
             super(url, protocols, co);
-        } else {
-            super(url, protocols);
         }
     }
-
+    return JupyterWebSocket;
 }

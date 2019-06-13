@@ -36,6 +36,7 @@ import {
 } from '../types';
 import { JupyterConnection, JupyterServerInfo } from './jupyterConnection';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
+import { JupyterSelfCertsError } from './jupyterSelfCertsError';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 
 enum ModuleExistsResult {
@@ -177,7 +178,14 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         // Something else went wrong
                         if (options && options.uri) {
                             sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter);
-                            throw new Error(localize.DataScience.jupyterNotebookRemoteConnectFailed().format(startInfo.connection.baseUrl, err));
+
+                            // Check for the self signed certs error specifically
+                            if (err.message.indexOf('reason: self signed certificate') >= 0) {
+                                sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
+                                throw new JupyterSelfCertsError(startInfo.connection.baseUrl);
+                            } else {
+                                throw new Error(localize.DataScience.jupyterNotebookRemoteConnectFailed().format(startInfo.connection.baseUrl, err));
+                            }
                         } else {
                             sendTelemetryEvent(Telemetry.ConnectFailedJupyter);
                             throw new Error(localize.DataScience.jupyterNotebookConnectFailed().format(startInfo.connection.baseUrl, err));
@@ -306,8 +314,11 @@ export class JupyterExecutionBase implements IJupyterExecution {
             // This should already have been parsed when set, so just throw if it's not right here
             throw err;
         }
+        const settings = this.configuration.getSettings();
+        const allowUnauthorized = settings.datascience.allowUnauthorizedRemoteConnection ? settings.datascience.allowUnauthorizedRemoteConnection : false;
 
         return {
+            allowUnauthorized,
             baseUrl: `${url.protocol}//${url.host}${url.pathname}`,
             token: `${url.searchParams.get('token')}`,
             localLaunch: false,

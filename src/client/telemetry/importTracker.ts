@@ -15,23 +15,31 @@ import { EventName } from './constants';
 import { IImportTracker } from './types';
 
 /*
-Python has a fairly rich import statement, but luckily we only care about top-level (public) packages.
-That means we can ignore:
+Python has a fairly rich import statement. Originally the matching regexp was kept simple for
+performance worries, but it led to false-positives due to matching things like docstrings with
+phrases along the lines of "from the thing" or "import the thing". To minimize false-positives the
+regexp does its best to validate the structure of the import line. This leads to us supporting:
 
-- Relative imports
-- `as` rebindings
--  The`fromlist`
+- `from pkg import _`
+- `from pkg import _, _`
+- `from pkg import _ as _`
+- `import pkg`
+- `import pkg, pkg`
+- `import pkg as _`
+
+We can rely on the fact that the use of the `from` and `import` keywords from the start of a line are
+only usable for imports in valid code (`from` can also be used when raising an exception, but `raise`
+would be the first keyword on a line in that instance). We also get to rely on the fact that we only
+care about the top-level package, keeping the regex extremely greedy. This should lead to the regex
+failing fast and having low performance overhead.
 
 We can also ignore multi-line/parenthesized imports for simplicity since we don't' need 100% accuracy,
 just enough to be able to tell what packages user's rely on to make sure we are covering our bases
-in terms of support.
-
-We can rely on the fact that the use of the `from` and `import` keywords from the start of a line are
-only usable for imports (`from` can also be used when raising an exception, but `raise` would be the
-first keyword on a line in that instance). We also get to rely on the fact that we only care about
-the top-level package, keeping the regex extremely greedy and simple for performance.
+in terms of support. This allows us to anchor the start and end of the regexp and not try to handle the
+parentheses case which adds a lot more optional parts to the regexp.
 */
-const ImportRegEx = /^\s*(from\s+(?<fromImport>\w+)|import\s+(?<importImport>(\w+(?:\s*,\s*)?)+))/;
+//const ImportRegEx = /^\s*(from\s+(?<fromImport>\w+)(?:\.\w+)*\s+import\s+(?:\(\s*)?(?:\w+(?:\s*,\s*)?)+(?:\)|\s+as\s+\w+)?|import\s+(?<importImport>(\w+(?:\s*,\s*)?)+)(?:\s+as\s+\w+)?)(?:\s*#.*)?$/;
+const ImportRegEx = /^\s*(from\s+(?<fromImport>\w+)(?:\.\w+)*\s+import\s+\w+(?:\s+as\s+\w+|(?:\s*,\s*\w+)+(?:\s*,)?)?|import\s+(?<importImport>(?:\w+(?:\s*,\s*)?)+)(?:\s+as\s+\w+)?)\s*(#.*)?$/;
 const MAX_DOCUMENT_LINES = 1000;
 
 // Capture isTestExecution on module load so that a test can turn it off and still

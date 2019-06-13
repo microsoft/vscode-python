@@ -8,10 +8,12 @@ import { IApplicationShell, IDocumentManager } from '../../common/application/ty
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDataScienceSettings, ILogger } from '../../common/types';
 import * as localize from '../../common/utils/localize';
+import { noop } from '../../common/utils/misc';
 import { captureTelemetry } from '../../telemetry';
 import { generateCellRanges } from '../cellFactory';
 import { Commands, Telemetry } from '../constants';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
+import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
 import { ICodeWatcher, IHistoryProvider } from '../types';
 
 @injectable()
@@ -315,6 +317,9 @@ export class CodeWatcher implements ICodeWatcher {
                     this.applicationShell.openUrl(jupyterError.action);
                 }
             });
+        } else if (err instanceof JupyterSelfCertsError) {
+            // Don't show the message for self cert errors
+            noop();
         } else if (err.message) {
             this.applicationShell.showErrorMessage(err.message);
         } else {

@@ -6,13 +6,13 @@
 	.icon_x002D_vs_x002D_out{fill:#F6F6F6;}
 	.icon_x002D_vs_x002D_bg{fill:#424242;}
 </style>
-<g id="canvas">
+<g >
 	<path class="icon_x002D_canvas_x002D_transparent" d="M16,16H0V0h16V16z"/>
 </g>
-<g id="outline" style="display: none;">
+<g  style="display: none;">
 	<path class="icon_x002D_vs_x002D_out" d="M13,13H3V3h10V13z"/>
 </g>
-<g id="iconBg">
+<g >
 	<path class="icon_x002D_vs_x002D_bg" d="M12,12H4V4h8V12z"/>
 	<g>
 	</g>

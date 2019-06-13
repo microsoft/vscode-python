@@ -14,6 +14,7 @@ import { Identifiers } from '../../client/datascience/constants';
 import { HistoryMessages, IHistoryMapping } from '../../client/datascience/history/historyTypes';
 import { CellState, ICell, IHistoryInfo, IJupyterVariable, IJupyterVariablesResponse } from '../../client/datascience/types';
 import { ErrorBoundary } from '../react-common/errorBoundary';
+import { getLocString } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { getSettings, updateSettings } from '../react-common/settingsReactSide';
 import { StyleInjector } from '../react-common/styleInjector';
@@ -138,18 +139,18 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     darkChanged={this.darkChanged}
                     monacoThemeChanged={this.monacoThemeChanged}
                     ref={this.styleInjectorRef} />
-                <div id='main-panel-toolbar'>
+                <header id='main-panel-toolbar'>
                     {this.renderToolbarPanel(baseTheme)}
-                </div>
-                <div id='main-panel-variable'>
+                </header>
+                <section id='main-panel-variable' aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
                     {this.renderVariablePanel(baseTheme)}
-                </div>
-                <div id='main-panel-content'>
+                </section>
+                <main id='main-panel-content'>
                     {this.renderContentPanel(baseTheme)}
-                </div>
-                <div id='main-panel-footer'>
+                </main>
+                <section id='main-panel-footer' aria-label={getLocString('DataScience.editSection', 'Input new cells here')}>
                     {this.renderFooterPanel(baseTheme)}
-                </div>
+                </section>
             </div>
         );
     }
@@ -295,8 +296,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
 
         const maxOutputSize = getSettings().maxOutputSize;
-        const errorBackgroundColor = getSettings().errorBackgroundColor;
-        const actualErrorBackgroundColor = errorBackgroundColor ? errorBackgroundColor : '#FFFFFF';
         const maxTextSize = maxOutputSize && maxOutputSize < 10000 && maxOutputSize > 0 ? maxOutputSize : undefined;
         const executionCount = this.getInputExecutionCount();
 
@@ -314,7 +313,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                         baseTheme={baseTheme}
                         codeTheme={this.props.codeTheme}
                         showWatermark={!this.state.submittedText}
-                        errorBackgroundColor={actualErrorBackgroundColor}
                         ref={this.saveEditCellRef}
                         gotoCode={noop}
                         copyCode={noop}
@@ -449,6 +447,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
        return {
         busy: this.state.busy,
         showDataExplorer: this.showDataViewer,
+        skipDefault: this.props.skipDefault,
         testMode: this.props.testMode,
         variableExplorerRef: this.variableExplorerRef,
         refreshVariables: this.refreshVariables,

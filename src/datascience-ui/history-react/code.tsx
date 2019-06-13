@@ -54,12 +54,6 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         this.subscriptions.forEach(d => d.dispose());
     }
 
-    public componentDidUpdate = () => {
-        if (this.props.autoFocus && this.state.editor && !this.props.readOnly) {
-            this.state.editor.focus();
-        }
-    }
-
     public render() {
         const readOnly = this.props.readOnly;
         const waterMarkClass = this.props.showWatermark && this.state.allowWatermark && !readOnly ? 'code-watermark' : 'hide';

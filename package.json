@@ -1246,7 +1246,8 @@
                     "type": "string",
                     "default": "#FFFFFF",
                     "description": "Background color (in hex) for exception messages in the Python Interactive window.",
-                    "scope": "resource"
+                    "scope": "resource",
+                    "deprecationMessage": "No longer necessary as the theme colors are used for error messages"
                 },
                 "python.dataScience.sendSelectionToInteractiveWindow": {
                     "type": "boolean",
@@ -1318,6 +1319,12 @@
                     "type": "boolean",
                     "default": true,
                     "description": "When opening ipynb files, automatically preview the contents in the Python Interactive window.",
+                    "scope": "resource"
+                },
+                "python.dataScience.allowUnauthorizedRemoteConnection": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Allow for connecting the Python Interactive window to a https Jupyter server that does not have valid certificates. This can be a security risk, so only use for known and trusted servers.",
                     "scope": "resource"
                 },
                 "python.disableInstallationCheck": {

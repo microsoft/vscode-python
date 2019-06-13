@@ -99,6 +99,9 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                 this.windowResized();
             }));
 
+            // List for key down events
+            this.subscriptions.push(editor.onKeyDown(this.onKeyDown));
+
             // Setup our context menu to show up outside. Autocomplete doesn't have this problem so it just works
             this.subscriptions.push(editor.onContextMenu((e) => {
                 if (this.state.editor) {
@@ -120,6 +123,12 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
             // Make sure our suggest and hover windows show up on top of other stuff
             this.updateWidgetParent(editor);
+
+            // If we're readonly, monaco is not putting the aria-readonly property on the textarea
+            // We should do that
+            if (this.props.options.readOnly) {
+                this.setAriaReadOnly(editor);
+            }
 
             // Eliminate the find action if possible
             // tslint:disable-next-line: no-any
@@ -202,6 +211,19 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         return false;
     }
 
+    private setAriaReadOnly(editor: monacoEditor.editor.IStandaloneCodeEditor) {
+        const editorDomNode = editor.getDomNode();
+        if (editorDomNode) {
+            const textArea = editorDomNode.getElementsByTagName('textarea');
+            if (textArea && textArea.length > 0) {
+                const item = textArea.item(0);
+                if (item) {
+                    item.setAttribute('aria-readonly', 'true');
+                }
+            }
+        }
+    }
+
     private windowResized = () => {
         if (this.resizeTimer) {
             clearTimeout(this.resizeTimer);
@@ -211,6 +233,32 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
     private startUpdateWidgetPosition = () => {
         this.updateWidgetPosition();
+    }
+
+    private onKeyDown = (e: monacoEditor.IKeyboardEvent) => {
+        if (e.keyCode === monacoEditor.KeyCode.Escape) {
+            // Shift Escape is special, so it doesn't work as going backwards.
+            // For now just support escape to get out of a cell (like Jupyter does)
+            const nextElement = this.findTabStop(1);
+            if (nextElement) {
+                nextElement.focus();
+            }
+        }
+    }
+
+    private findTabStop(direction: number) : HTMLElement | undefined {
+        if (this.state.editor) {
+            const editorDomNode = this.state.editor.getDomNode();
+            if (editorDomNode) {
+                const textArea = editorDomNode.getElementsByTagName('textarea');
+                const allFocusable = document.querySelectorAll('input, button, select, textarea, a[href]');
+                if (allFocusable && textArea && textArea.length > 0) {
+                    const tabable = Array.prototype.filter.call(allFocusable, (i: HTMLElement) => i.tabIndex >= 0);
+                    const self = tabable.indexOf(textArea.item(0));
+                    return direction >= 0 ? tabable[self + 1] || tabable[0] : tabable[self - 1] || tabable[0];
+                }
+            }
+        }
     }
 
     private updateBackgroundStyle = () => {

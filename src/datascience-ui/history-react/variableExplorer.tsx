@@ -15,11 +15,14 @@ import { CellStyle, VariableExplorerCellFormatter } from './variableExplorerCell
 import { VariableExplorerEmptyRowsView } from './variableExplorerEmptyRows';
 
 import * as AdazzleReactDataGrid from 'react-data-grid';
+import { VariableExplorerHeaderCellFormatter } from './variableExplorerHeaderCellFormatter';
+import { VariableExplorerRowRenderer } from './variableExplorerRowRenderer';
 
 import './variableExplorerGrid.less';
 
 interface IVariableExplorerProps {
     baseTheme: string;
+    skipDefault?: boolean;
     refreshVariables(): void;
     showDataExplorer(targetVariable: string, numberOfColumns: number): void;
     variableExplorerToggled(open: boolean): void;
@@ -61,15 +64,51 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     constructor(prop: IVariableExplorerProps) {
         super(prop);
         const columns = [
-            {key: 'name', name: getLocString('DataScience.variableExplorerNameColumn', 'Name'), type: 'string', width: 120, formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.variable} />},
-            {key: 'type', name: getLocString('DataScience.variableExplorerTypeColumn', 'Type'), type: 'string', width: 120},
-            {key: 'size', name: getLocString('DataScience.variableExplorerSizeColumn', 'Count'), type: 'string', width: 120, formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.numeric} />},
-            {key: 'value', name: getLocString('DataScience.variableExplorerValueColumn', 'Value'), type: 'string', width: 300},
-            {key: 'buttons', name: '', type: 'boolean', width: 34, sortable: false, resizable: false, formatter: <VariableExplorerButtonCellFormatter showDataExplorer={this.props.showDataExplorer} baseTheme={this.props.baseTheme} /> }
+            {
+                key: 'name',
+                name: getLocString('DataScience.variableExplorerNameColumn', 'Name'),
+                type: 'string',
+                width: 120,
+                formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.variable} />,
+                headerRenderer: <VariableExplorerHeaderCellFormatter/>
+            },
+            {
+                key: 'type',
+                name: getLocString('DataScience.variableExplorerTypeColumn', 'Type'),
+                type: 'string',
+                width: 120,
+                formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.string} />,
+                headerRenderer: <VariableExplorerHeaderCellFormatter/>
+            },
+            {
+                key: 'size',
+                name: getLocString('DataScience.variableExplorerSizeColumn', 'Count'),
+                type: 'string',
+                width: 120,
+                formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.numeric} />,
+                headerRenderer: <VariableExplorerHeaderCellFormatter/>
+            },
+            {
+                key: 'value',
+                name: getLocString('DataScience.variableExplorerValueColumn', 'Value'),
+                type: 'string',
+                width: 300,
+                formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.string} />,
+                headerRenderer: <VariableExplorerHeaderCellFormatter/>
+            },
+            {
+                key: 'buttons',
+                name: '',
+                type: 'boolean',
+                width: 34,
+                sortable: false,
+                resizable: false,
+                formatter: <VariableExplorerButtonCellFormatter showDataExplorer={this.props.showDataExplorer} baseTheme={this.props.baseTheme} />
+            }
         ];
         this.state = { open: false,
                         gridColumns: columns,
-                        gridRows: [],
+                        gridRows: !this.props.skipDefault ? this.generateDummyVariables() : [],
                         gridHeight: 200,
                         height: 0,
                         fontSize: 14,
@@ -97,7 +136,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                         tooltip={getLocString('DataScience.collapseVariableExplorerTooltip', 'Collapse variable explorer')}
                         label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')} />
                     <div className={contentClassName}>
-                        <div id='variable-explorer-data-grid'>
+                        <div id='variable-explorer-data-grid' role='table' aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
                             <AdazzleReactDataGrid
                                 columns = {this.state.gridColumns.map(c => { return {...defaultColumnProperties, ...c }; })}
                                 rowGetter = {this.getRow}
@@ -108,6 +147,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                                 onRowDoubleClick = {this.rowDoubleClick}
                                 onGridSort = {this.sortRows}
                                 emptyRowsView = {VariableExplorerEmptyRowsView}
+                                rowRenderer = {VariableExplorerRowRenderer}
                             />
                         </div>
                     </div>
@@ -212,6 +252,22 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             sortDirection,
             gridRows: this.internalSortRows(this.state.gridRows, sortColumn, sortDirection)
         });
+    }
+
+    private generateDummyVariables() : IGridRow[] {
+        return [
+            {
+                name: 'foo',
+                value: 'bar',
+                type: 'DataFrame',
+                size: '(100, 100)',
+                buttons: {
+                    supportsDataExplorer: true,
+                    name: 'foo',
+                    numberOfColumns: 100
+                }
+            }
+        ];
     }
 
     private getColumnType(key: string | number) : string | undefined {

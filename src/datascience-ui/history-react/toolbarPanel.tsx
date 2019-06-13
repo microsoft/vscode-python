@@ -36,34 +36,35 @@ export class ToolbarPanel extends React.Component<IToolbarPanelProps> {
     }
 
     public render() {
+        // note to self - tabIndex should not be provided as that's global to the whole page. Instead order of elements matters
         return(
             <div id='toolbar-panel'>
                 <MenuBar baseTheme={this.props.baseTheme}>
-                    {this.renderExtraButtons()}
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.collapseAll} disabled={!this.props.canCollapseAll} tooltip={getLocString('DataScience.collapseAll', 'Collapse all cell inputs')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.CollapseAll}/>
-                    </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.expandAll} disabled={!this.props.canExpandAll} tooltip={getLocString('DataScience.expandAll', 'Expand all cell inputs')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.ExpandAll}/>
-                    </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.export} disabled={!this.props.canExport} tooltip={getLocString('DataScience.export', 'Export as Jupyter Notebook')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.SaveAs}/>
-                    </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.restartKernel} tooltip={getLocString('DataScience.restartServer', 'Restart iPython Kernel')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Restart}/>
-                    </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.interruptKernel} tooltip={getLocString('DataScience.interruptKernel', 'Interrupt iPython Kernel')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Interrupt}/>
-                    </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.undo} disabled={!this.props.canUndo} tooltip={getLocString('DataScience.undo', 'Undo')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Undo}/>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.clearAll} tooltip={getLocString('DataScience.clearAll', 'Remove All Cells')}>
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Cancel}/>
                     </ImageButton>
                     <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.redo} disabled={!this.props.canRedo} tooltip={getLocString('DataScience.redo', 'Redo')}>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Redo}/>
                     </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.clearAll} tooltip={getLocString('DataScience.clearAll', 'Remove All Cells')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Cancel}/>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.undo} disabled={!this.props.canUndo} tooltip={getLocString('DataScience.undo', 'Undo')}>
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Undo}/>
                     </ImageButton>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.interruptKernel} tooltip={getLocString('DataScience.interruptKernel', 'Interrupt iPython Kernel')}>
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Interrupt}/>
+                    </ImageButton>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.restartKernel} tooltip={getLocString('DataScience.restartServer', 'Restart iPython Kernel')}>
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Restart}/>
+                    </ImageButton>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.export} disabled={!this.props.canExport} tooltip={getLocString('DataScience.export', 'Export as Jupyter Notebook')}>
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.SaveAs}/>
+                    </ImageButton>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.expandAll} disabled={!this.props.canExpandAll} tooltip={getLocString('DataScience.expandAll', 'Expand all cell inputs')}>
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.ExpandAll}/>
+                    </ImageButton>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.collapseAll} disabled={!this.props.canCollapseAll} tooltip={getLocString('DataScience.collapseAll', 'Collapse all cell inputs')}>
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.CollapseAll}/>
+                    </ImageButton>
+                    {this.renderExtraButtons()}
                 </MenuBar>
             </div>
         );

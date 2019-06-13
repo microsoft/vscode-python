@@ -94,6 +94,9 @@
     "DataScience.jupyterNbConvertNotSupported": "Importing notebooks requires Jupyter nbconvert to be installed.",
     "DataScience.jupyterLaunchNoURL": "Failed to find the URL of the launched Jupyter notebook server",
     "DataScience.jupyterLaunchTimedOut": "The Jupyter notebook server failed to launch in time",
+    "DataScience.jupyterSelfCertFail": "The security certificate used by server {0} was not issued by a trusted certificate authority.\r\nThis may indicate an attempt to steal your information.\r\nDo you want to enable the Allow Unauthorized Remote Connection setting for this workspace to allow you to connect?",
+    "DataScience.jupyterSelfCertEnable": "Yes, connect anyways",
+    "DataScience.jupyterSelfCertClose": "No, close the connection",
     "DataScience.jupyterServerCrashed": "Jupyter server crashed. Unable to connect. \r\nError code from jupyter: {0}",
     "DataScience.pythonInteractiveHelpLink": "Get more help",
     "DataScience.importingFormat": "Importing {0}",
@@ -140,6 +143,7 @@
     "DataScience.jupyterNotebookFailure": "Jupyter notebook failed to launch. \r\n{0}",
     "DataScience.jupyterNotebookConnectFailed": "Failed to connect to Jupyter notebook. \r\n{0}\r\n{1}",
     "DataScience.jupyterNotebookRemoteConnectFailed": "Failed to connect to remote Jupyter notebook.\r\nCheck that the Jupyter Server URI setting has a valid running server specified.\r\n{0}\r\n{1}",
+    "DataScience.jupyterNotebookRemoteConnectSelfCertsFailed": "Failed to connect to remote Jupyter notebook.\r\nSpecified server is using self signed certs. Enable Allow Unauthorized Remote Connection setting to connect anyways\r\n{0}\r\n{1}",
     "DataScience.notebookVersionFormat": "Jupyter Notebook Version: {0}",
     "DataScience.jupyterKernelNotSupportedOnActive": "Jupyter kernel cannot be started from '{0}'. Using closest match {1} instead.",
     "DataScience.jupyterKernelSpecNotFound": "Cannot create a Jupyter kernel spec and none are available for use",
@@ -263,5 +267,8 @@
     "DataScience.zoomOutPlot" : "Zoom out",
     "DataScience.exportPlot" : "Export to different formats",
     "DataScience.deletePlot" : "Remove",
+    "DataScience.collapseSingle" : "Collapse",
+    "DataScience.expandSingle" : "Expand",
+    "DataScience.editSection" : "Input new cells here.",
     "DataScience.restartKernelMessageDontAskAgain" : "Don't Ask Again"
 }
