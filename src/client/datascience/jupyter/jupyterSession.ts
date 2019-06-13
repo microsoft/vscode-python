@@ -12,16 +12,23 @@ import {
 } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils';
 import { Slot } from '@phosphor/signaling';
+import * as uuid from 'uuid/v4';
 import { Event, EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { Cancellation } from '../../common/cancellation';
 import { isTestExecution } from '../../common/constants';
-import { traceInfo } from '../../common/logger';
+import { traceInfo, traceWarning } from '../../common/logger';
 import { sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { IConnection, IJupyterKernelSpec, IJupyterPasswordConnect, IJupyterPasswordConnectInfo, IJupyterSession } from '../types';
+import {
+    IConnection,
+    IJupyterKernelSpec,
+    IJupyterPasswordConnect,
+    IJupyterPasswordConnectInfo,
+    IJupyterSession
+} from '../types';
 import { JupyterKernelPromiseFailedError } from './jupyterKernelPromiseFailedError';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 import { JupyterWebSocket } from './jupyterWebSocket';
@@ -33,12 +40,11 @@ export class JupyterSession implements IJupyterSession {
     private session: Session.ISession | undefined;
     private restartSessionPromise: Promise<Session.ISession> | undefined;
     private contentsManager: ContentsManager | undefined;
-    private notebookFile: Contents.IModel | undefined;
+    private notebookFiles: Contents.IModel[] = [];
     private onRestartedEvent : EventEmitter<void> | undefined;
     private statusHandler : Slot<Session.ISession, Kernel.Status> | undefined;
     private connected: boolean = false;
     private jupyterPasswordConnect: IJupyterPasswordConnect;
-    private currentSessionOptions : Session.IOptions | undefined;
 
     constructor(
         connInfo: IConnection,
@@ -58,13 +64,14 @@ export class JupyterSession implements IJupyterSession {
         await this.destroyKernelSpec();
 
         // Destroy the notebook file if not local. Local is cleaned up when we destroy the kernel spec.
-        if (this.notebookFile && this.contentsManager && this.connInfo && !this.connInfo.localLaunch) {
+        if (this.notebookFiles.length && this.contentsManager && this.connInfo && !this.connInfo.localLaunch) {
             try {
                 // Make sure we have a session first and it returns something
                 if (this.sessionManager)
                 {
                     await this.sessionManager.refreshRunning();
-                    await this.contentsManager.delete(this.notebookFile.path);
+                    await Promise.all(this.notebookFiles.map(f => this.contentsManager!.delete(f.path)));
+                    this.notebookFiles = [];
                 }
             } catch {
                 noop();
@@ -103,13 +110,21 @@ export class JupyterSession implements IJupyterSession {
 
     public async restart(_timeout: number) : Promise<void> {
         // Just kill the current session and switch to the other
-        if (this.restartSessionPromise && this.session && this.sessionManager && this.currentSessionOptions) {
+        if (this.restartSessionPromise && this.session && this.sessionManager && this.contentsManager) {
+            // Save old state for shutdown
             const oldSession = this.session;
+            const oldStatusHandler = this.statusHandler;
+
+            // Just switch to the other session.
             this.session = await this.restartSessionPromise;
 
+            // Rewire our status changed event.
+            this.statusHandler = this.onStatusChanged.bind(this.onStatusChanged);
+            this.session.statusChanged.connect(this.statusHandler);
+
             // After switching, start another in case we restart again.
-            oldSession.dispose();
-            this.restartSessionPromise = this.sessionManager.startNew(this.currentSessionOptions);
+            this.restartSessionPromise = this.createSession(oldSession.serverSettings, this.contentsManager);
+            this.shutdownSession(oldSession, oldStatusHandler).ignoreErrors();
         } else {
             throw new Error(localize.DataScience.sessionDisposed());
         }
@@ -135,25 +150,14 @@ export class JupyterSession implements IJupyterSession {
         }
 
         const serverSettings: ServerConnection.ISettings = await this.getServerConnectSettings(this.connInfo);
-
         this.sessionManager = new SessionManager({ serverSettings: serverSettings });
-
-        // Create a temporary .ipynb file to use
         this.contentsManager = new ContentsManager({ serverSettings: serverSettings });
-        this.notebookFile = await this.contentsManager.newUntitled({type: 'notebook'});
-
-        // Create our session options using this temporary notebook and our connection info
-        this.currentSessionOptions = {
-            path: this.notebookFile.path,
-            kernelName: this.kernelSpec ? this.kernelSpec.name : '',
-            serverSettings: serverSettings
-        };
 
         // Start a new session
-        this.session = await Cancellation.race(() => this.sessionManager!.startNew(this.currentSessionOptions!), cancelToken);
+        this.session = await this.createSession(serverSettings, this.contentsManager, cancelToken);
 
         // Start another session to handle restarts
-        this.restartSessionPromise = this.sessionManager.startNew(this.currentSessionOptions);
+        this.restartSessionPromise = this.createSession(serverSettings, this.contentsManager, cancelToken);
 
         // Listen for session status changes
         this.statusHandler = this.onStatusChanged.bind(this.onStatusChanged);
@@ -165,6 +169,22 @@ export class JupyterSession implements IJupyterSession {
 
     public get isConnected() : boolean {
         return this.connected;
+    }
+
+    private async createSession(serverSettings: ServerConnection.ISettings, contentsManager: ContentsManager, cancelToken?: CancellationToken) : Promise<Session.ISession> {
+
+        // Create a temporary notebook for this session.
+        this.notebookFiles.push(await contentsManager.newUntitled({type: 'notebook'}));
+
+        // Create our session options using this temporary notebook and our connection info
+        const options : Session.IOptions = {
+            path: this.notebookFiles[this.notebookFiles.length - 1].path,
+            kernelName: this.kernelSpec ? this.kernelSpec.name : '',
+            name: uuid(), // This is crucial to distinguish this session from any other.
+            serverSettings: serverSettings
+        };
+
+        return Cancellation.race(() => this.sessionManager!.startNew(options), cancelToken);
     }
 
     private getSessionCookieString(pwSettings: IJupyterPasswordConnectInfo): string {
@@ -250,6 +270,48 @@ export class JupyterSession implements IJupyterSession {
         this.kernelSpec = undefined;
     }
 
+    private async shutdownSession(session: Session.ISession | undefined, statusHandler: Slot<Session.ISession, Kernel.Status> | undefined) : Promise<void> {
+        if (session) {
+            try {
+                if (statusHandler) {
+                    session.statusChanged.disconnect(statusHandler);
+                }
+                try {
+                    // When running under a test, mark all futures as done so we
+                    // don't hit this problem:
+                    // https://github.com/jupyterlab/jupyterlab/issues/4252
+                    // tslint:disable:no-any
+                    if (isTestExecution()) {
+                        if (session && session.kernel) {
+                            const defaultKernel = session.kernel as any;
+                            if (defaultKernel && defaultKernel._futures) {
+                                const futures = defaultKernel._futures as Map<any, any>;
+                                if (futures) {
+                                    futures.forEach(f => {
+                                        if (f._status !== undefined) {
+                                            f._status |= 4;
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                    }
+
+                    // Shutdown may fail if the process has been killed
+                    await Promise.race([session.shutdown(), sleep(1000)]);
+                } catch {
+                    noop();
+                }
+                if (session && !session.isDisposed) {
+                    session.dispose();
+                }
+            } catch (e) {
+                // Ignore, just trace.
+                traceWarning(e);
+            }
+        }
+    }
+
     //tslint:disable:cyclomatic-complexity
     private async shutdownSessionAndConnection(): Promise<void> {
         if (this.contentsManager) {
@@ -258,41 +320,8 @@ export class JupyterSession implements IJupyterSession {
         }
         if (this.session || this.sessionManager) {
             try {
-                if (this.statusHandler && this.session) {
-                    this.session.statusChanged.disconnect(this.statusHandler);
-                    this.statusHandler = undefined;
-                }
-                if (this.session) {
-                    try {
-                        // When running under a test, mark all futures as done so we
-                        // don't hit this problem:
-                        // https://github.com/jupyterlab/jupyterlab/issues/4252
-                        // tslint:disable:no-any
-                        if (isTestExecution()) {
-                            if (this.session && this.session.kernel) {
-                                const defaultKernel = this.session.kernel as any;
-                                if (defaultKernel && defaultKernel._futures) {
-                                    const futures = defaultKernel._futures as Map<any, any>;
-                                    if (futures) {
-                                        futures.forEach(f => {
-                                            if (f._status !== undefined) {
-                                                f._status |= 4;
-                                            }
-                                        });
-                                    }
-                                }
-                            }
-                        }
+                await this.shutdownSession(this.session, this.statusHandler);
 
-                        // Shutdown may fail if the process has been killed
-                        await Promise.race([this.session.shutdown(), sleep(1000)]);
-                    } catch {
-                        noop();
-                    }
-                    if (this.session && !this.session.isDisposed) {
-                        this.session.dispose();
-                    }
-                }
                 if (this.sessionManager && !this.sessionManager.isDisposed) {
                     this.sessionManager.dispose();
                 }
@@ -301,6 +330,7 @@ export class JupyterSession implements IJupyterSession {
             }
             this.session = undefined;
             this.sessionManager = undefined;
+            this.restartSessionPromise = undefined;
         }
         if (this.onRestartedEvent) {
             this.onRestartedEvent.dispose();
