@@ -11,7 +11,6 @@
 const gulp = require('gulp');
 const filter = require('gulp-filter');
 const es = require('event-stream');
-const tsfmt = require('typescript-formatter');
 const tslint = require('tslint');
 const relative = require('relative');
 const ts = require('gulp-typescript');
@@ -19,13 +18,10 @@ const cp = require('child_process');
 const spawn = require('cross-spawn');
 const colors = require('colors/safe');
 const path = require('path');
-const jeditor = require("gulp-json-editor");
 const del = require('del');
 const sourcemaps = require('gulp-sourcemaps');
 const fs = require('fs-extra');
 const fsExtra = require('fs-extra');
-const remapIstanbul = require('remap-istanbul');
-const istanbul = require('istanbul');
 const glob = require('glob');
 const _ = require('lodash');
 const nativeDependencyChecker = require('node-has-native-dependencies');
@@ -468,35 +464,6 @@ const hygiene = (options, done) => {
             });
 
         this.emit('data', file);
-    });
-
-    const formatOptions = { verify: true, tsconfig: true, tslint: true, editorconfig: true, tsfmt: true };
-    const formatting = es.map(function (file, cb) {
-        tsfmt.processString(file.path, file.contents.toString('utf8'), formatOptions)
-            .then(result => {
-                if (result.error) {
-                    let message = result.message.trim();
-                    let formattedMessage = '';
-                    if (message.startsWith(__dirname)) {
-                        message = message.substr(__dirname.length);
-                        message = message.startsWith(path.sep) ? message.substr(1) : message;
-                        const index = message.indexOf('.ts ');
-                        if (index === -1) {
-                            formattedMessage = colors.red(message);
-                        } else {
-                            const file = message.substr(0, index + 3);
-                            const errorMessage = message.substr(index + 4).trim();
-                            formattedMessage = `${colors.red(file)} ${errorMessage}`;
-                        }
-                    } else {
-                        formattedMessage = colors.red(message);
-                    }
-                    console.error(formattedMessage);
-                    errorCount++;
-                }
-                cb(null, file);
-            })
-            .catch(cb);
     });
 
     let reportedLinterFailures = [];
