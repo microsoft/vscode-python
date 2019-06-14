@@ -20,13 +20,14 @@ import {
 import { LSNotSupportedDiagnosticServiceId } from '../../client/application/diagnostics/checks/lsNotSupported';
 import { IDiagnostic, IDiagnosticsService } from '../../client/application/diagnostics/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
+import { LSEnabled } from '../../client/common/experimentGroups';
 import { IPlatformService } from '../../client/common/platform/types';
 import { IConfigurationService, IDisposable, IDisposableRegistry, IExperimentsManager, IOutputChannel, IPersistentState, IPersistentStateFactory, IPythonSettings, Resource } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
 
 // tslint:disable:no-any
 
-suite('Activation - ActivationService', () => {
+suite('xActivation - ActivationService', () => {
     [true, false, undefined].forEach(jediIsEnabled => {
         suite(`${jediIsEnabled ? 'Jedi is enabled' : `${jediIsEnabled === false ? 'Jedi is disabled' : 'Test default jedi value'}`}`, () => {
             let serviceContainer: TypeMoq.IMock<IServiceContainer>;
@@ -67,7 +68,7 @@ suite('Activation - ActivationService', () => {
                     .returns(() => state.object);
                 state.setup(s => s.value).returns(() => undefined);
                 state.setup(s => s.updateValue(TypeMoq.It.isAny())).returns(() => Promise.resolve());
-                const setting = {};
+                const setting = { workspaceFolderValue: jediIsEnabled };
                 workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
                 workspaceService.setup(ws => ws.getConfiguration('python', TypeMoq.It.isAny())).returns(() => workspaceConfig.object);
                 workspaceConfig.setup(c => c.inspect<boolean>('jediEnabled'))
@@ -139,7 +140,7 @@ suite('Activation - ActivationService', () => {
                     experiments
                         .setup(ex => ex.inExperiment(TypeMoq.It.isAny()))
                         .returns(() => false)
-                        .verifiable(TypeMoq.Times.atLeastOnce());
+                        .verifiable(TypeMoq.Times.never());
 
                     await activationService.activate(undefined);
 
@@ -430,7 +431,7 @@ suite('Activation - ActivationService', () => {
                         experiments
                             .setup(ex => ex.inExperiment(TypeMoq.It.isAny()))
                             .returns(() => false)
-                            .verifiable(TypeMoq.Times.atLeastOnce());
+                            .verifiable(TypeMoq.Times.never());
 
                         await activationService.activate(resource);
 
@@ -503,7 +504,7 @@ suite('Activation - ActivationService', () => {
                         experiments
                             .setup(ex => ex.inExperiment(TypeMoq.It.isAny()))
                             .returns(() => false)
-                            .verifiable(TypeMoq.Times.atLeastOnce());
+                            .verifiable(TypeMoq.Times.never());
                         await activationService.activate(folder1.uri);
                         activator1.verifyAll();
                         serviceContainer.verifyAll();
@@ -521,7 +522,7 @@ suite('Activation - ActivationService', () => {
                         experiments
                             .setup(ex => ex.inExperiment(TypeMoq.It.isAny()))
                             .returns(() => false)
-                            .verifiable(TypeMoq.Times.atLeastOnce());
+                            .verifiable(TypeMoq.Times.never());
                         await activationService.activate(folder2.uri);
                         serviceContainer.verifyAll();
                         activator2.verifyAll();
@@ -529,42 +530,43 @@ suite('Activation - ActivationService', () => {
                     });
                 }
             } else {
-                const testsForisJediUsingDefaultConfiguration =
-                    [
-                        {
-                            testName: 'Returns true if none of workspaceFolder, workspace and global settings are specified',
-                            settings: { workspaceFolderValue: undefined, workspaceValue: undefined, globalValue: undefined },
-                            expectedResult: true
-                        },
-                        {
-                            testName: 'Returns false otherwise',
-                            settings: { workspaceValue: true, globalValue: false },
-                            expectedResult: false
-                        }
-                    ];
 
                 suite('Function isJediUsingDefaultConfiguration()', () => {
-                    testsForisJediUsingDefaultConfiguration.forEach(testParams => {
-                        test(testParams.testName, async () => {
-                            workspaceConfig.reset();
-                            workspaceConfig.setup(c => c.inspect<boolean>('jediEnabled'))
-                                .returns(() => testParams.settings as any)
-                                .verifiable(TypeMoq.Times.once());
+                    const value = [undefined, true, false]; // Possible values of settings
+                    const index = [0, 1, 2]; // Index associated with each value
+                    const expectedResult: boolean[][][] = // Initializing a 3D array with default value `false`
+                        Array(3).fill(false)
+                            .map(() => Array(3).fill(false)
+                                .map(() => Array(3).fill(false)));
+                    expectedResult[0][0][0] = true;
+                    for (const globalIndex of index) {
+                        for (const workspaceIndex of index) {
+                            for (const workspaceFolderIndex of index) {
+                                const expected = expectedResult[globalIndex][workspaceIndex][workspaceFolderIndex];
+                                const settings = { globalValue: value[globalIndex], workspaceValue: value[workspaceIndex], workspaceFolderValue: value[workspaceFolderIndex] };
+                                const testName = `Returns ${expected} for setting = ${JSON.stringify(settings)}`;
+                                test(testName, async () => {
+                                    workspaceConfig.reset();
+                                    workspaceConfig.setup(c => c.inspect<boolean>('jediEnabled'))
+                                        .returns(() => settings as any)
+                                        .verifiable(TypeMoq.Times.once());
 
-                            const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
-                            const result = activationService.isJediUsingDefaultConfiguration(Uri.parse('a'));
-                            expect(result).to.equal(testParams.expectedResult);
+                                    const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
+                                    const result = activationService.isJediUsingDefaultConfiguration(Uri.parse('a'));
+                                    expect(result).to.equal(expected);
 
-                            workspaceService.verifyAll();
-                            workspaceConfig.verifyAll();
-                        });
-                    });
+                                    workspaceService.verifyAll();
+                                    workspaceConfig.verifyAll();
+                                });
+                            }
+                        }
+                    }
                 });
 
                 test('If LS-enabled experiment is enabled and default value of jedi is being used, then LS is enabled', async () => {
                     const settings = {};
                     experiments
-                        .setup(ex => ex.inExperiment('LS - enabled'))
+                        .setup(ex => ex.inExperiment(LSEnabled))
                         .returns(() => true)
                         .verifiable(TypeMoq.Times.atLeastOnce());
                     workspaceConfig.setup(c => c.inspect<boolean>('jediEnabled'))

@@ -11,6 +11,7 @@ import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { LSControl, LSEnabled } from '../common/experimentGroups';
 import '../common/extensions';
+import { traceError } from '../common/logger';
 import { IConfigurationService, IDisposableRegistry, IExperimentsManager, IOutputChannel, IPersistentStateFactory, IPythonSettings, Resource } from '../common/types';
 import { swallowExceptions } from '../common/utils/decorators';
 import { IServiceContainer } from '../ioc/types';
@@ -122,7 +123,11 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
      * @returns `true` if user has NOT manually added the setting and is using default configuration, `false` if user has `jediEnabled` setting added
      */
     public isJediUsingDefaultConfiguration(resource?: Uri): boolean {
-        const settings = this.workspaceService.getConfiguration('python', resource)!.inspect<boolean>('jediEnabled')!;
+        const settings = this.workspaceService.getConfiguration('python', resource).inspect<boolean>('jediEnabled');
+        if (!settings) {
+            traceError('WorkspaceConfiguration.inspect returns `undefined` for setting `python.jediEnabled`');
+            return false;
+        }
         return (settings.globalValue === undefined && settings.workspaceValue === undefined && settings.workspaceFolderValue === undefined);
     }
 
