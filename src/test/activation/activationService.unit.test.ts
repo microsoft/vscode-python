@@ -20,7 +20,7 @@ import {
 import { LSNotSupportedDiagnosticServiceId } from '../../client/application/diagnostics/checks/lsNotSupported';
 import { IDiagnostic, IDiagnosticsService } from '../../client/application/diagnostics/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
-import { LSEnabled } from '../../client/common/experimentGroups';
+import { LSControl, LSEnabled } from '../../client/common/experimentGroups';
 import { IPlatformService } from '../../client/common/platform/types';
 import { IConfigurationService, IDisposable, IDisposableRegistry, IExperimentsManager, IOutputChannel, IPersistentState, IPersistentStateFactory, IPythonSettings, Resource } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
@@ -530,45 +530,16 @@ suite('xActivation - ActivationService', () => {
                     });
                 }
             } else {
-
-                suite('Function isJediUsingDefaultConfiguration()', () => {
-                    const value = [undefined, true, false]; // Possible values of settings
-                    const index = [0, 1, 2]; // Index associated with each value
-                    const expectedResult: boolean[][][] = // Initializing a 3D array with default value `false`
-                        Array(3).fill(false)
-                            .map(() => Array(3).fill(false)
-                                .map(() => Array(3).fill(false)));
-                    expectedResult[0][0][0] = true;
-                    for (const globalIndex of index) {
-                        for (const workspaceIndex of index) {
-                            for (const workspaceFolderIndex of index) {
-                                const expected = expectedResult[globalIndex][workspaceIndex][workspaceFolderIndex];
-                                const settings = { globalValue: value[globalIndex], workspaceValue: value[workspaceIndex], workspaceFolderValue: value[workspaceFolderIndex] };
-                                const testName = `Returns ${expected} for setting = ${JSON.stringify(settings)}`;
-                                test(testName, async () => {
-                                    workspaceConfig.reset();
-                                    workspaceConfig.setup(c => c.inspect<boolean>('jediEnabled'))
-                                        .returns(() => settings as any)
-                                        .verifiable(TypeMoq.Times.once());
-
-                                    const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
-                                    const result = activationService.isJediUsingDefaultConfiguration(Uri.parse('a'));
-                                    expect(result).to.equal(expected);
-
-                                    workspaceService.verifyAll();
-                                    workspaceConfig.verifyAll();
-                                });
-                            }
-                        }
-                    }
-                });
-
-                test('If LS-enabled experiment is enabled and default value of jedi is being used, then LS is enabled', async () => {
+                test('If default value of jedi is being used, and LSEnabled experiment is enabled, then LS is enabled', async () => {
                     const settings = {};
                     experiments
                         .setup(ex => ex.inExperiment(LSEnabled))
                         .returns(() => true)
-                        .verifiable(TypeMoq.Times.atLeastOnce());
+                        .verifiable(TypeMoq.Times.once());
+                    experiments
+                        .setup(ex => ex.sendTelemetryIfInExperiment(TypeMoq.It.isAny()))
+                        .returns(() => undefined)
+                        .verifiable(TypeMoq.Times.never());
                     workspaceConfig.setup(c => c.inspect<boolean>('jediEnabled'))
                         .returns(() => settings as any)
                         .verifiable(TypeMoq.Times.once());
@@ -579,6 +550,74 @@ suite('xActivation - ActivationService', () => {
 
                     workspaceService.verifyAll();
                     workspaceConfig.verifyAll();
+                    experiments.verifyAll();
+                });
+
+                test('If default value of jedi is being used, and LSEnabled experiment is disabled, then send telemetry if user is in Experiment LSControl', async () => {
+                    const settings = {};
+                    experiments
+                        .setup(ex => ex.inExperiment(LSEnabled))
+                        .returns(() => false)
+                        .verifiable(TypeMoq.Times.once());
+                    experiments
+                        .setup(ex => ex.sendTelemetryIfInExperiment(LSControl))
+                        .returns(() => undefined)
+                        .verifiable(TypeMoq.Times.once());
+                    workspaceConfig.setup(c => c.inspect<boolean>('jediEnabled'))
+                        .returns(() => settings as any)
+                        .verifiable(TypeMoq.Times.once());
+
+                    const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
+                    activationService.useJedi();
+
+                    experiments.verifyAll();
+                    workspaceService.verifyAll();
+                    workspaceConfig.verifyAll();
+                });
+
+                suite('Function isJediUsingDefaultConfiguration()', () => {
+                    const value = [undefined, true, false]; // Possible values of settings
+                    const index = [0, 1, 2]; // Index associated with each value
+                    const expectedResults: boolean[][][] = // Initializing a 3D array with default value `false`
+                        Array(3).fill(false)
+                            .map(() => Array(3).fill(false)
+                                .map(() => Array(3).fill(false)));
+                    expectedResults[0][0][0] = true;
+                    for (const globalIndex of index) {
+                        for (const workspaceIndex of index) {
+                            for (const workspaceFolderIndex of index) {
+                                const expectedResult = expectedResults[globalIndex][workspaceIndex][workspaceFolderIndex];
+                                const settings = { globalValue: value[globalIndex], workspaceValue: value[workspaceIndex], workspaceFolderValue: value[workspaceFolderIndex] };
+                                const testName = `Returns ${expectedResult} for setting = ${JSON.stringify(settings)}`;
+                                test(testName, async () => {
+                                    workspaceConfig.reset();
+                                    workspaceConfig.setup(c => c.inspect<boolean>('jediEnabled'))
+                                        .returns(() => settings as any)
+                                        .verifiable(TypeMoq.Times.once());
+
+                                    const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
+                                    const result = activationService.isJediUsingDefaultConfiguration(Uri.parse('a'));
+                                    expect(result).to.equal(expectedResult);
+
+                                    workspaceService.verifyAll();
+                                    workspaceConfig.verifyAll();
+                                });
+                            }
+                        }
+                    }
+                    test('Returns false for settings = undefined', async () => {
+                        workspaceConfig.reset();
+                        workspaceConfig.setup(c => c.inspect<boolean>('jediEnabled'))
+                            .returns(() => undefined as any)
+                            .verifiable(TypeMoq.Times.once());
+
+                        const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
+                        const result = activationService.isJediUsingDefaultConfiguration(Uri.parse('a'));
+                        expect(result).to.equal(false, 'Return value should be false');
+
+                        workspaceService.verifyAll();
+                        workspaceConfig.verifyAll();
+                    });
                 });
             }
         });
