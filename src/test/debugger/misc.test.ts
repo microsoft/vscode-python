@@ -46,7 +46,6 @@ suite(`Standard Debugging - Misc tests: ${debuggerType}`, () => {
     });
     /**
      * Creates the debug adapter.
-     * We do not need to support code coverage on AppVeyor, lets use the standard test adapter.
      * @returns {DebugClient}
      */
     function createDebugAdapter(): DebugClient {

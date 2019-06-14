@@ -103,17 +103,15 @@ gulp.task('watch', gulp.parallel('hygiene-modified', 'hygiene-watch'));
 // Duplicate to allow duplicate task in tasks.json (one ith problem matching, and one without)
 gulp.task('watchProblems', gulp.parallel('hygiene-modified', 'hygiene-watch'));
 
-gulp.task('debugger-coverage', buildDebugAdapterCoverage);
-
 gulp.task('hygiene-watch-branch', () => gulp.watch(tsFilter, gulp.series('hygiene-branch')));
 
 gulp.task('hygiene-all', (done) => run({ mode: 'all' }, done));
 
 gulp.task('hygiene-branch', (done) => run({ mode: 'diffMaster' }, done));
 
-gulp.task('cover:clean', () => del(['coverage', 'debug_coverage*']));
+gulp.task('cover:clean', () => del(['coverage']));
 
-gulp.task('output:clean', () => del(['coverage', 'debug_coverage*']));
+gulp.task('output:clean', () => del(['coverage']));
 
 gulp.task('clean:cleanExceptTests', () => del(['clean:vsix', 'out/client', 'out/datascience-ui', 'out/server']));
 gulp.task('clean:vsix', () => del(['*.vsix']));
@@ -126,24 +124,6 @@ gulp.task('checkNativeDependencies', (done) => {
         done(new Error('Native dependencies deteced'));
     }
     done();
-});
-
-gulp.task('cover:enable', () => {
-    return gulp.src("./build/coverconfig.json")
-        .pipe(jeditor((json) => {
-            json.enabled = true;
-            return json;
-        }))
-        .pipe(gulp.dest("./out", { 'overwrite': true }));
-});
-
-gulp.task('cover:disable', () => {
-    return gulp.src("./build/coverconfig.json")
-        .pipe(jeditor((json) => {
-            json.enabled = false;
-            return json;
-        }))
-        .pipe(gulp.dest("./out", { 'overwrite': true }));
 });
 
 /**
@@ -420,25 +400,6 @@ function hasNativeDependencies() {
     return false;
 }
 
-function buildDebugAdapterCoverage(done) {
-    const matches = glob.sync(path.join(__dirname, 'debug_coverage*/coverage.json'));
-    matches.forEach(coverageFile => {
-        const finalCoverageFile = path.join(path.dirname(coverageFile), 'coverage-final-upload.json');
-        const remappedCollector = remapIstanbul.remap(JSON.parse(fs.readFileSync(coverageFile, 'utf8')), {
-            warn: warning => {
-                // We expect some warnings as any JS file without a typescript mapping will cause this.
-                // By default, we'll skip printing these to the console as it clutters it up.
-                console.warn(warning);
-            }
-        });
-
-        const reporter = new istanbul.Reporter(undefined, path.dirname(coverageFile));
-        reporter.add('lcov');
-        reporter.write(remappedCollector, true, () => { });
-    });
-
-    done();
-}
 
 /**
 * @typedef {Object} hygieneOptions - creates a new type named 'SpecialType'
