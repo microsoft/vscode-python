@@ -27,7 +27,7 @@ import { EnvironmentVariables } from '../../../../client/common/variables/types'
 import { IServiceContainer } from '../../../../client/ioc/types';
 
 // tslint:disable:max-func-body-length no-any
-suite('xApplication Diagnostics - Checks Env Path Variable', () => {
+suite('Application Diagnostics - Checks Env Path Variable', () => {
     let diagnosticService: IDiagnosticsService;
     let platformService: typemoq.IMock<IPlatformService>;
     let messageHandler: typemoq.IMock<IDiagnosticHandlerService<MessageCommandPrompt>>;
@@ -134,7 +134,7 @@ suite('xApplication Diagnostics - Checks Env Path Variable', () => {
 
         const diagnostics = await diagnosticService.diagnose(undefined);
 
-        expect(diagnostics).to.be.lengthOf(11231311);
+        expect(diagnostics).to.be.lengthOf(1);
         expect(diagnostics[0].code).to.be.equal(DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic);
         expect(diagnostics[0].message).to.contain(extensionName);
         expect(diagnostics[0].message).to.contain(pathVariableName);
