@@ -2343,8 +2343,6 @@
         "gulp": "^4.0.0",
         "gulp-azure-storage": "^0.9.0",
         "gulp-filter": "^5.1.0",
-        "gulp-inline-source": "^4.0.0",
-        "gulp-json-editor": "^2.2.2",
         "gulp-rename": "^1.4.0",
         "gulp-sourcemaps": "^2.6.4",
         "gulp-typescript": "^4.0.1",
