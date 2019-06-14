@@ -65,7 +65,6 @@ export class WebPanel implements IWebPanel {
         const style = embeddedCss ? embeddedCss : '';
         const settingsString = settings ? JSON.stringify(settings) : '{}';
 
-        console.log('***URI***', uri);
         return `<!doctype html>
         <html lang="en">
             <head>

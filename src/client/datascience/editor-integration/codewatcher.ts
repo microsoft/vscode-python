@@ -2,12 +2,9 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
-import { CodeLens, Command, Position, Range, Selection, TextDocument, TextEditor, TextEditorRevealType, Uri, window } from 'vscode';
-import { EXTENSION_ROOT_DIR } from '../../constants';
+import { CodeLens, Command, Position, Range, Selection, TextDocument, TextEditor, TextEditorRevealType } from 'vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
-import { WebPanel } from '../../common/application/webPanel';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDataScienceSettings, ILogger } from '../../common/types';
 import * as localize from '../../common/utils/localize';
@@ -280,13 +277,6 @@ export class CodeWatcher implements ICodeWatcher {
                     const activeHistory = await this.historyProvider.getOrCreateActive();
                     const editor = this.documentManager.activeTextEditor!;
                     await activeHistory.addCode(code, this.getFileName(), range.start.line, editor);
-                    const insetRange = new Range(new Position(range.end.line, 0), new Position(2 * range.end.line - range.start.line, 0));
-                    const htmldir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'inset-react');
-                    const htmlpath = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'inset-react', 'index_bundle.js');
-                    const inset = window.createWebviewTextEditorInset(editor, insetRange,
-                        { enableScripts: true, localResourceRoots: [Uri.file(htmldir)] });
-                    const html = WebPanel.generateReactHtml(htmlpath);
-                    inset.webview.html = html; // WebPanel.generateReactHtml(htmlpath);
                 } catch (err) {
                     this.handleError(err);
                 }

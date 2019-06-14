@@ -70,6 +70,7 @@ import {
     IShowDataViewer,
     ISubmitNewCell
 } from './historyTypes';
+import { CellOutputInset } from '../cellOutputInset';
 
 export enum SysInfoReason {
     Start,
@@ -92,6 +93,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
     private jupyterServer: INotebookServer | undefined;
     private id : string;
     private executeEvent: EventEmitter<string> = new EventEmitter<string>();
+    private codeInsetPerLine = new Map<number, CellOutputInset>();
 
     constructor(
         @multiInject(IHistoryListener) private readonly listeners: IHistoryListener[],
@@ -115,7 +117,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         @inject(IDataViewerProvider) private dataExplorerProvider: IDataViewerProvider,
         @inject(IJupyterVariables) private jupyterVariables: IJupyterVariables,
         @inject(INotebookImporter) private jupyterImporter: INotebookImporter
-        ) {
+    ) {
         super(
             configuration,
             provider,
@@ -670,7 +672,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         }
     }
 
-    private async submitCode(code: string, file: string, line: number, id?: string, _editor?: TextEditor) : Promise<void> {
+    private async submitCode(code: string, file: string, line: number, id?: string, editor?: TextEditor) : Promise<void> {
         this.logger.logInformation(`Submitting code for ${this.id}`);
 
         // Start a status item
@@ -717,6 +719,13 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
                 // Normally set via the workspace, but we might not have one here if loading a single loose file
                 if (file !== Identifiers.EmptyFileName) {
                     await this.jupyterServer.setInitialDirectory(path.dirname(file));
+                }
+
+                if (!this.codeInsetPerLine.has(line)) {
+                    console.log(`***CREATING*** ${line}`)
+                    this.codeInsetPerLine.set(line, new CellOutputInset(
+                        new Range(new Position(line, 0), new Position(line + code.split('\n').length, 0)),
+                        editor!, this.cssGenerator, this.themeFinder, this.workspaceService));
                 }
 
                 // Attempt to evaluate this cell in the jupyter notebook
@@ -769,7 +778,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
             switch (cell.state) {
                 case CellState.init:
                     // Tell the react controls we have a new cell
-                    this.postMessage(HistoryMessages.StartCell, cell).ignoreErrors();
+                    this.broadcastMessage(HistoryMessages.StartCell, cell);
 
                     // Keep track of this unfinished cell so if we restart we can finish right away.
                     this.unfinishedCells.push(cell);
@@ -777,13 +786,13 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
 
                 case CellState.executing:
                     // Tell the react controls we have an update
-                    this.postMessage(HistoryMessages.UpdateCell, cell).ignoreErrors();
+                    this.broadcastMessage(HistoryMessages.UpdateCell, cell);
                     break;
 
                 case CellState.error:
                 case CellState.finished:
                     // Tell the react controls we're done
-                    this.postMessage(HistoryMessages.FinishCell, cell).ignoreErrors();
+                    this.broadcastMessage(HistoryMessages.FinishCell, cell);
 
                     // Remove from the list of unfinished cells
                     this.unfinishedCells = this.unfinishedCells.filter(c => c.id !== cell.id);
@@ -802,6 +811,16 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
                     editBuilder.insert(new Position(cells[1].line, 0), '#%%\n');
                 });
             }
+        }
+    }
+
+    private broadcastMessage(type: keyof IHistoryMapping, cell: ICell) {
+        this.postMessage(type, cell).ignoreErrors();
+
+        const inset = this.codeInsetPerLine.get(cell.line);
+        if (inset) {
+            console.log(`POST ${type} ${JSON.stringify(cell)}`);
+            inset.postMessage(type.toString(), cell);
         }
     }
 
@@ -1155,7 +1174,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         if (excludeString) {
             const excludeArray = excludeString.split(';');
             variablesResponse.variables = variablesResponse.variables.filter((value) => {
-               return excludeArray.indexOf(value.type) === -1;
+                return excludeArray.indexOf(value.type) === -1;
             });
         }
 

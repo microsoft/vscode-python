@@ -334,7 +334,6 @@
 
     </head>
     <body>
-		<div>Holy shit</div>
         <div id="root"></div>
                 <script type="text/javascript">
                     function resolvePath(relativePath) {
@@ -343,11 +342,6 @@
                         }
 
                         return "<%= htmlWebpackPlugin.options.imageBaseUrl %>" + relativePath;
-                    }
-                    function getInitialSettings() {
-                        return { allowInput: true,
-                                extraSettings: { editorCursor: 'block', editorCursorBlink: 'blink'}
-                               };
                     }
                 </script>
     </body>

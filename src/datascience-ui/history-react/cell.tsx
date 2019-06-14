@@ -21,9 +21,9 @@ import { InformationMessages } from './informationMessages';
 import { InputHistory } from './inputHistory';
 import { MenuBar } from './menuBar';
 import { transforms } from './transforms';
+import { CellOutput } from './cellOutput';
 
 import './cell.css';
-import { CellOutput } from './cellOutput';
 
 interface ICellProps {
     cellVM: ICellViewModel;
