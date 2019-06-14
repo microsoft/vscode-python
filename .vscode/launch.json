@@ -166,7 +166,7 @@
                 "--recursive",
                 "--colors",
                 "--grep",
-                "xActivation",
+                "xCrypto",
                 "--timeout=300000"
             ],
             "outFiles": [
