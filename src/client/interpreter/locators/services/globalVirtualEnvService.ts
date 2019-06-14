@@ -34,8 +34,12 @@ export class GlobalVirtualEnvironmentsSearchPathProvider implements IVirtualEnvi
 
     public async getSearchPaths(resource?: Uri): Promise<string[]> {
         const homedir = os.homedir();
-        const venvFolders = this.config.getSettings(resource).venvFolders;
-        const folders = venvFolders.map(item => path.join(homedir, item));
+        const venvFolders = [
+            'envs',
+            '.pyenv',
+            '.direnv',
+            ...this.config.getSettings(resource).venvFolders];
+        const folders = [...new Set(venvFolders.map(item => path.join(homedir, item)))];
 
         // tslint:disable-next-line:no-string-literal
         const pyenvRoot = await this.virtualEnvMgr.getPyEnvRoot(resource);

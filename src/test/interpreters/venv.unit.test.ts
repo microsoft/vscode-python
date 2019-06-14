@@ -52,11 +52,15 @@ suite('Virtual environments', () => {
         const pathProvider = new GlobalVirtualEnvironmentsSearchPathProvider(serviceContainer);
 
         const homedir = os.homedir();
-        const folders = ['Envs', '.virtualenvs'];
+        const folders = ['Envs', 'testpath'];
         settings.setup(x => x.venvFolders).returns(() => folders);
         virtualEnvMgr.setup(v => v.getPyEnvRoot(TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
         let paths = await pathProvider.getSearchPaths();
-        let expected = folders.map(item => path.join(homedir, item));
+        let expected = [
+            'envs',
+            '.pyenv',
+            '.direnv',
+            ...folders].map(item => path.join(homedir, item));
 
         virtualEnvMgr.verifyAll();
         expect(paths).to.deep.equal(expected, 'Global search folder list is incorrect.');
@@ -68,6 +72,18 @@ suite('Virtual environments', () => {
         virtualEnvMgr.verifyAll();
         expected = expected.concat(['pyenv_path', path.join('pyenv_path', 'versions')]);
         expect(paths).to.deep.equal(expected, 'pyenv path not resolved correctly.');
+    });
+
+    test('Global search paths with duplicates', async () => {
+        const pathProvider = new GlobalVirtualEnvironmentsSearchPathProvider(serviceContainer);
+
+        const folders = ['.virtualenvs', '.direnv'];
+        settings.setup(x => x.venvFolders).returns(() => folders);
+        virtualEnvMgr.setup(v => v.getPyEnvRoot(TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
+        const paths = await pathProvider.getSearchPaths();
+
+        virtualEnvMgr.verifyAll();
+        expect([...new Set(paths)]).to.deep.equal(paths, 'Duplicates are not removed from the list of global search paths');
     });
 
     test('Workspace search paths', async () => {
