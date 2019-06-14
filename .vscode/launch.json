@@ -183,7 +183,7 @@
             ]
         },
         {
-            "name": "UI Tests (BDD)",
+            "name": "Behave Smoke Tests",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/uitests/__main__.py",

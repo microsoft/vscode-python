@@ -32,6 +32,27 @@ CONTEXT = {"driver": None, "options": None}
 
 @dataclass
 class Options:
+    """Options used to configure tests.
+    E.g. version of VSC, where are tests located,
+    where are extensions installed. etc.
+    Some of these can change during the course of the tests.
+
+    Attrs:
+        channel: Are we using stable or insiders version of VSC.
+        executable_dir: Directory where VSC executable is located.
+        user_dir: Directory where VSC will store user related information (user settings, logs).
+        extensions:dir: Directory where VSC extensions are installed.
+        extension_path: Path to Python Extension VSIX.
+        workspace_folder: Directory opened in VSC (during tests).
+        temp_folder: Temp directory.
+        screenshots_dir: Directory where screenshots are stored.
+        python_path: Path to python executable.
+        logfiles_dir: Directory where logs are stored.
+        conda_path: Path to conda
+        python_extension_dir: Directory where Python Extension is installed.
+        reports_dir: Directory where reports are stored.
+    """
+
     channel: str
     executable_dir: str
     user_dir: str
@@ -49,22 +70,24 @@ class Options:
 
 @dataclass
 class Context:
+    """Context object available in all parts of the test lifecycle.
+    The behave hooks, steps will have access to this objet.
+
+    Attrs:
+        options: Instance of options.
+        driver: Instance of webdriver.Chrome
+    """
+
     options: application.Options
     driver: webdriver.Chrome
 
 
 def start(options):
+    """Starts VS Code and returns a context object"""
     logging.debug("Starting VS Code")
     uitests.tools.empty_directory(options.workspace_folder)
     setup_user_settings(options)
     return _launch(options)
-
-
-def close(context):
-    # Ignore all messages written to console.
-    with contextlib.redirect_stdout(io.StringIO()):
-        with contextlib.redirect_stderr(io.StringIO()):
-            uitests.vscode.application.exit(context)
 
 
 def get_options(
@@ -111,6 +134,11 @@ def setup_environment(options):
 
 
 def setup_user_settings(options):
+    """Set up user settings for VS Code.
+    E.g. we want to ensure VS Code uses a specific version of Python as the default.
+    Or we want to ensure VS Code starts maximized, etc.
+
+    """
     settings_to_add = {
         "python.pythonPath": options.python_path,
         # Log everything in LS server, to ensure they are captured in reports.
@@ -164,6 +192,7 @@ def install_extension(options):
 
 
 def clear_logs(options):
+    """Clears logs created between tests"""
     uitests.tools.empty_directory(options.logfiles_dir)
     os.makedirs(options.logfiles_dir, exist_ok=True)
 
@@ -178,6 +207,7 @@ def clear_vscode(options):
 
 
 def reload(context):
+    """Reloads VS Code."""
     logging.debug("Reloading VS Code")
     # Ignore all messages written to console.
     with contextlib.redirect_stdout(io.StringIO()):
@@ -190,6 +220,10 @@ def reload(context):
 
 
 def clear_everything(context):
+    """Clears everyting within VS Code, that could interfer with tests.
+    E.g. close opened editors, dismiss all messages..
+
+    """
     commands = [
         "View: Revert and Close Editor",
         "Terminal: Kill the Active Terminal Instance",
@@ -206,10 +240,10 @@ def clear_everything(context):
 
 
 def setup_workspace(context, source_repo=None):
-    """
-    Set the workspace for a feature/scenario.
+    """Set the workspace for a feature/scenario.
     source_repo is either the github url of the repo to be used as the workspace folder.
-        Or it is None.
+    Or it is None.
+
     """
     logging.debug(f"Setting up workspace folder from {source_repo}")
 
@@ -297,6 +331,7 @@ def launch_vscode(options):
 
 
 def exit(context):
+    """Exits VS Code"""
     # Ignore all messages written to console.
     with contextlib.redirect_stdout(io.StringIO()):
         with contextlib.redirect_stderr(io.StringIO()):
@@ -326,6 +361,10 @@ def exit(context):
 
 
 def capture_screen(context):
+    """Capture screenshots and attach to the report.
+    Also save to screenshots directory.
+
+    """
     # So its easy to tell the order of screenshots taken.
     counter = getattr(context, "screenshot_counter", 1)
     context.screenshot_counter = counter + 1
@@ -346,6 +385,7 @@ def capture_screen(context):
 
 
 def capture_exception(context, info):
+    """Capture exception infor and attach to the report."""
     formatted_ex = "<br>".join(
         map(
             html.escape,
@@ -358,6 +398,7 @@ def capture_exception(context, info):
 
 
 def capture_screen_to_file(context, file_path=None, prefix=""):
+    """Capture screenshots to a file"""
     if file_path is None:
         with tempfile.NamedTemporaryFile(prefix=f"{prefix}screen_capture_") as fp:
             filename = f"{os.path.basename(fp.name)}.png"
@@ -370,9 +411,11 @@ def capture_screen_to_file(context, file_path=None, prefix=""):
 
 
 def _set_permissions(options):
-    # Set necessary permissions on Linux to be able to start.
-    # Else selenium throws errors.
-    # & so does VSC, when accessing vscode-ripgrep/bin/rg.
+    """Set necessary permissions on Linux to be able to start VSC.
+    Else selenium throws errors.
+    & so does VSC, when accessing vscode-ripgrep/bin/rg.
+
+    """
     if sys.platform.startswith("linux"):
         binary_location = _get_binary_location(options.executable_dir, options.channel)
         file_stat = os.stat(binary_location)
@@ -403,6 +446,7 @@ def _install_extension(extensions_dir, extension_name, vsix):
 
 
 def _get_binary_location(executable_directory, channel):
+    """Returns the path to the VSC executable"""
     if sys.platform.startswith("darwin"):
         return os.path.join(
             executable_directory,

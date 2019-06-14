@@ -3,98 +3,102 @@
 ## Usage
 
 Assuming you have created a virtual environment (for Python 3.7),
-installed the `requirements.txt` dependencies, and activated the virtual environment:
+installed the `uitests/requirements.txt` dependencies, and activated the virtual environment:
 
 ```shell
 $ python uitests download
 $ python uitests install
 $ python uitests test
+$ python uitests --help # for more information.
 ```
 
 ## Overview
 
 -   These are a set of UI tests for the Python Extension in VSC.
 -   The UI is driven using the [selenium webdriver](https://selenium-python.readthedocs.io/).
--   [BDD](https://docs.cucumber.io/bdd/overview/) is used to create the tests using [Behave](https://behave.readthedocs.io/en/latest/).
+-   [BDD](https://docs.cucumber.io/bdd/overview/) is used to create the , and executed using [Behave](https://behave.readthedocs.io/en/latest/).
 
 ## How does it work?
 
 Here are the steps involved in running the tests:
 
--   Setup environment:
-    -   Download a completely fresh version of VS Code.
-    -   Identify the version of [Electron](https://electronjs.org/) that VS Code is built upon.
-    -   Download [Chrome Driver](http://chromedriver.chromium.org/) corresponding to the version of Electron used.
+* Setup environment:
+    -   Download a completely fresh version of VS Code (`stable/insiders`. Defaults to `stable`).
+    -   Download [ChromeDriver](http://chromedriver.chromium.org/) corresponding to the version of [Electron](https://electronjs.org/) upon which VS Code is built.
         -   WARNING: When testing against VSC Insiders, it was found that chromedriver for electron 4.2.3 didn't work, and we had to revert to the version used in electron found in stable VSC.
-        -   Currently when testing against VSC insiders, we use the same version of chromedriver used for VSC Stable.
+        -   Currently when testing against VSC insiders, we use the same version of chromedriver used for VSC Stable. (due to a known issue in `ChromeDriver`)
     -   Use [selenium webdriver](https://selenium-python.readthedocs.io/) to drive the VSC UI.
-    -   Create a folder named `.vsccode-test` with the following sub-directories:
--   When launching VSC, we will launch it as a completely stand alone version of VSC.
+    -   Create a folder named `.vsccode test` where test specific files will be created (reports, logs, VS Code, etc).
+
+*   When launching VSC, we will launch it as a completely stand alone version of VSC.
     -   I.e. even if it is installed on the current machine, we'll download and launch a new instance.
     -   This new instance will not interfere with currently installed version of VSC.
     -   All user settings, etc will be in a separate directory (see `user` folder).
     -   VSC will not have any extensions (see `extensions` folder).
--   Automate VSC UI
-    -   Launch VSC using the [Chrome Driver](http://chromedriver.chromium.org/)
+*   Automate VSC UI
+    -   Launch VSC using the [ChromeDriver](http://chromedriver.chromium.org/)
     -   Use [selenium webdriver](https://selenium-python.readthedocs.io/) to drive the VSC UI.
-    -   The tests are written and executed using [Behave](https://behave.readthedocs.io/en/latest/).
--   Workspace folder/files
+    -   The [BDD](https://docs.cucumber.io/bdd/overview/) tests are written and executed using [Behave](https://behave.readthedocs.io/en/latest/).
+*   Workspace folder/files
     -   Each [feature](https://docs.cucumber.io/gherkin/reference/#feature) can have its own set of files in the form of a github repo.
     -   Just add a tag with the path of the github repo url to the `feature`.
-    -   When starting the tests for a feature, the repo is downloaded into `workspace folder`.
-    -   At the begining of every scenario, the workspace folder is reset.
+    -   When starting the tests for a feature, the repo is downloaded into a new random directory `.vscode test/temp/workspace folder xyz`
+    -   At the begining of every scenario, we repeate the previous step.
     -   This ensures each scenario starts with a clean workspace folder.
--   Reports
+*   Reports
     -   Test results are stored in the `reports` directory
     -   These `json` (`cucumber format`) report files are converted into HTML using an `npm` script [cucumber-html-reporter](https://www.npmjs.com/package/cucumber-html-reporter).
+    -   For each `scenario` that's executed, we create a corresponding directory in `reports` directory.
+        -   This will contain all screenshots realted to that scenario.
+        -   If the scenario fails, all logs, workspace folder are copied into this directory.
+        -   Thus, when ever a test fails, we have everything related to that test.
+        -   If the scenario passes, this directory is deleted (we don't need them on CI server).
 
 ## Technology
 
--   99% of the code is written in `Python`.
--   Downloading of `chrome driver` and generating `html reports` is done in `node.js` (using pre-existing `npm` packages).
--   The tests are written using [Behave](https://behave.readthedocs.io/en/latest/) in `Python`.
--   `GitHub` repos are used to provide the files to be used for testing in a workspace folder.
--   The reports (`cucumber format`) are converted into HTML using an `npm` script [cucumber-html-reporter](https://www.npmjs.com/package/cucumber-html-reporter).
+*   99% of the code is written in `Python`.
+*   Downloading of `chrome driver` and generating `html reports` is done in `node.js` (using pre-existing `npm` packages).
+*   The tests are written using [Behave](https://behave.readthedocs.io/en/latest/) in `Python`.
+*   `GitHub` repos are used to provide the files to be used for testing in a workspace folder.
+*   The reports (`cucumber format`) are converted into HTML using an `npm` script [cucumber-html-reporter](https://www.npmjs.com/package/cucumber-html-reporter).
+*   Test result reports are generated using `junit` format, for Azure Devops.
 
 ## Caveats
 
--   **If using the `node.js` scripts from VSC itself, most of the following caveats do not apply. However as we're using Python, hence there are a few drawbacks.**
--   VSC UI must be a top level window for elements to receive focus. Hence when running tests, do not do anything else.
--   Screenshots are generally embedded into the HTML report, however as the number of tests grow so would the size of the generated `json` and resultant `html` file.
-    -   If the size is too large then consider storing the `screenshots` as external files (see `--embed-screenshots` CLI arg).
--   Reloading VSC will reset the connection (`driver` connection).
-    -   Hence reloading is basically performed by re-starting VSC.
--   As reloading of VSC is not a cheap operation, resettting workspaces is slow.
-    -   Current approach is to `clone` a `git repo` directly into the workspace folder and use `git reset` for ever scenario.
-    -   Note: Deleting workspace folder is not an option, as this would result in VSC loosing the workspace folder (things go south from there).
--   `chrome driver` only supports arguments that begin with `--`. Hence arguments passed to VSC are limited to those that start with `--`.
--   `Terminal` output cannot be retrieved using the `driver`. Hence output from terminal cannot be inspected.
--   Sending characters to an input is slow, the `selenium driver` seems to send text one character at a time. Hence tests are slow.
--   `Behave` does not generate reports that comply with the `cucumber json` report format. Hence the custom formatter in `report.py`.
+*   VSC UI needs be a top level window for elements to receive focus. Hence when running tests, try not do anything else.
+*   For each test we create a whole new folder and open that in VS Code: - We could use `git reset`, however on Windows, this is flaky if VSC is open. - Deleting files on `Windows` is flaky due to files being in use, etc. - Majority of the issues are around `fs` on `windows` - The easies fix for all of this is simple - create new folders for every test.
+*   `chromedriver` only supports arguments that begin with `--`. Hence arguments passed to VSC are limited to those that start with `--`.
+*   `Terminal` output cannot be retrieved using the `driver`. Hence output from terminal cannot be inspected. - Perhaps thi sis possible, but at the time of writinng this I couldn't find a solution. - I believe the `Terminal` in VSC is `SVG` based, hence reading text is out of the question.
+*   Sending characters to an input is slow, the `selenium` send text one character at a time. Hence tests are slow.
+*   Sending text to an editor can be flaky. - Assume we would like to `type` some code into a VSC editor. - As `selenium` sends a character at a time, VSC kicks in and attempts to format/autocomplete code and the like. This interferes with the code being typed out. - Solution: Copy code into clipboard, then pase into editor.
+*   `Behave` does not generate any HTML reports
+    -   Solution, we generate `cucumber` compliant `json` report. Hence the custom formatter in `report.py`.
     -   Using a `cucumber json` report format allows us to use existing tools to generate other HTML reports out of the raw `json` files.
--   Sending keyboard commands to VSC is currently not possible (not known).
+*   Sending keyboard commands to VSC (such as `ctrl+p`) is currently not possible (**not known how to**).
     -   `Selenium driver` can only send keyboard commands to a specific `html element`.
     -   But kyeboard commands such as `ctrl+p` are to be sent to the main window, and this isn't possible/not known.
+        -   Solution: We need to find the `html element` in VSC that will accept keys such as `ctrl+p` and the like.
     -   Fortunately almost everything in VSC can be driven through commands in the `command palette`.
         -   Hence, we have an extension that opens the `command palette`, from there, we use `selenium driver` to select commands.
         -   This same extension is used to `activate` the `Python extension`.
         -   This extension is referred to as the `bootstrap extension`.
--   When updating settings in VSC, do not alter the settings files directly. VSC could take a while to detect file changes and load the settings.
-
+*   When updating settings in VSC, do not alter the settings files directly. VSC could take a while to detect file changes and load the settings.
     -   An even better way, is to use the VSC api to update the settings (via the bootstrap API) or edit the settings file directly through the UI.
     -   Updating settings through the editor (by editing the `settings.json` file directly is not easy, as its not easy to update/remove settings).
     -   Using the API we can easily determine when VSC is aware of the changes (basically when API completes, VSC is aware of the new settings).
 
 ## Files & Folders
 
--   The folder `.vsccode-test` in the root directory is where VSC is downloaded, workspace files created, etc.
+*   The folder `.vsccode-test` in the root directory is where VSC is downloaded, workspace files created, etc.
+    -   `stable` This is VS Code stable is downloaded (corresponding version of `chromedriver` is also downloaded and stored in this same place).
+    -   `insider` This is VS Code insider is downloaded (corresponding version of `chromedriver` is also downloaded and stored in this same place).
+    -   `user` Directory VS Code uses to store user information (settings, etc)
     -   `extensions` This is where the extensions get installed for the instance of VSC used for testing.
+    -   `workspace folder` Folder opened in VS Code for testing
+    -   `temp` Temporary directory for testing. (sometimes tests will create folders named `workspace folder xyz` to be used as workspace folders used for testing)
     -   `reports` Location where generated reports are stored.
-    -   `screenshots` Location where screenshots are stored.
-    -   `stable` Loaction where stable version of VSC is downloaded and stored.
-    -   `insiders` Loaction where insiders version of VSC is downloaded and stored.
-    -   `user` Loaction where user information related to VSC is stored.
-    -   `workspace folder`Workspace folder opened in VSC (this is where files used for smoke tests will be stored).
+    -   `logs` Logs for tests
+    -   `screenshots` Screen shots captured during tests
 -   `uitests/tests/bootstrap` This is where the source for the bootstrap extension is stored.
 -   `uitests/tests/features` Location where all `BDD features` are stored.
 -   `uitests/tests/steps` Location where all `BDD steps` are defined.
@@ -104,5 +108,8 @@ Here are the steps involved in running the tests:
 
 ## Miscellaneous
 
--   Use the debug configuration `Behave Smoke Tests` for debugging.
--   In order to pass custom arguments to `Behave`, refer to the `CLI` (pass `behave` specific args after `--` in `python uitests test`).
+*   Use the debug configuration `Behave Smoke Tests` for debugging.
+*   In order to pass custom arguments to `Behave`, refer to the `CLI` (pass `behave` specific args after `--` in `python uitests test`)
+*   Remember, the automated UI interactions can be faster than normal user interactions.
+    - E.g. just because we started debugging (using command `Debug: Start Debugging`), that doesn't mean the debug panel will open immediately. User interactions are slower compared to code execution.
+    - Solution, always wait for the UI elements to be available/active. E.g. when you open a file, check whether the corresponding elements are visible.

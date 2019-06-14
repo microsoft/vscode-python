@@ -8,9 +8,7 @@ from selenium.common import exceptions
 
 
 class ElementVisibleException(exceptions.InvalidElementStateException):
-    """
-    Thrown when an element is present on the DOM,
-    it is not visible when it should not be.
+    """Thrown when an element is present/visible on the DOM, when it should not be.
     """
 
     pass
@@ -116,6 +114,8 @@ def wait_for_elements(
 
 
 def wait_for_active_element(driver, css_selector, **kwargs):
+    """Wait till a DOM element with a given css selector is the active element."""
+
     def is_active():
         element = driver.find_element_by_css_selector(css_selector)
         assert element == driver.switch_to.active_element

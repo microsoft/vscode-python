@@ -31,12 +31,12 @@ behave.register_type(Number=parse_number)
 
 
 def restore_context():
-    """
-    The context object gets created a new for every test.
+    """The context object gets created a new for every test.
     We need to ensure we keep adding the required items.
     We need to update the `driver` and `options` property of the context.
     Note, its possible we have a new driver instance due to reloading of VSC.
     This needs to be done for every hook.
+
     """
 
     def deco_context(f):
@@ -87,10 +87,10 @@ def before_feature(context, feature):
 @uitests.tools.log_exceptions()
 @restore_context()
 def before_scenario(context, scenario):
-    """
-    Note:
+    """Note:
     - Create new workspace folders for each test.
     - Shutdown and start vscode for every test.
+
     Reasons:
     - Its alsmost impossible to use the same folder in Windows, as we cannot delete files.
      If VSC is open, Windows won't let us delete files... etc.
@@ -104,6 +104,7 @@ def before_scenario(context, scenario):
      However this is not desired in our tests. Hence just create a new folder.
      - As we need to create new folders, and sometimes we have a few flaky issues with selenium,
      its easier to just start vs code evertime.
+
     """
     _exit(context)
 

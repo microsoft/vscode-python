@@ -173,7 +173,7 @@ def when_open_vscode_first_time(context):
     (that's pretty much same as Opening VSC from scratch).
 
     """
-    uitests.vscode.application.close(context)
+    uitests.vscode.application.exit(context)
     uitests.vscode.application.clear_vscode(context.options)
     uitests.vscode.application.reload(context)
 

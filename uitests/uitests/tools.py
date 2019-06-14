@@ -8,7 +8,6 @@ import os.path
 import shutil
 import subprocess
 import sys
-import tempfile
 import time
 import traceback
 from functools import wraps
@@ -19,8 +18,7 @@ import requests
 
 
 def retry(exceptions, tries=100, delay=0.1, backoff=1):
-    """
-    Retry calling the decorated function using an exponential backoff.
+    """Retry calling the decorated function using an exponential backoff.
     Original source from https://www.calazan.com/retry-decorator-for-python-3/
     Args:
         exceptions: The exception to check. may be a tuple of
@@ -29,6 +27,7 @@ def retry(exceptions, tries=100, delay=0.1, backoff=1):
         delay: Initial delay between retries in seconds.
         backoff: Backoff multiplier (e.g. value of 2 will double the delay
             each retry).
+
     """
 
     def deco_retry(f):
@@ -65,9 +64,9 @@ def retry(exceptions, tries=100, delay=0.1, backoff=1):
 
 
 def log_exceptions():
-    """
-    Decorator to just log exceptions and re-raise them.
+    """Decorator to just log exceptions and re-raise them.
     For some reason behave doesn't print the entire stack trace when handling exceptions.
+
     """
 
     def deco_log_exceptions(f):
@@ -87,7 +86,9 @@ def log_exceptions():
 def run_command(command, *, cwd=None, silent=False, progress_message=None, env=None):
     """Run the specified command in a subprocess shell with the following options:
     - Pipe output from subprocess into current console.
-    - Display a progress message."""
+    - Display a progress message.
+
+    """
 
     if progress_message is not None:
         logging.info(progress_message)

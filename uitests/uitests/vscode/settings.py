@@ -90,7 +90,9 @@ def _send_command_to_bootstrap(context, crud_settings):
     """Let the bootstrap extension update the settings. This way VSC will be aware of it and extensions
     will get the right values. If we update the file directly then VSC might not get notified immediately.
     We'll let the bootstrap extension update the settings and delete the original file.
-    When the file has been deleted we know the settings have been updated and VSC is aware of the updates."""
+    When the file has been deleted we know the settings have been updated and VSC is aware of the updates.
+
+    """
     instructions_file = os.path.join(
         context.options.extensions_dir, "settingsToUpdate.txt"
     )
