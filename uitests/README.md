@@ -1,4 +1,4 @@
-# xxx Tests for Python Extension.
+# UI driven BDD Tests for Python Extension.
 
 ## Usage
 
@@ -105,6 +105,28 @@ Here are the steps involved in running the tests:
 -   `uitests/tests/js` Location with helper `js` files (download chrome driver and generate html reports).
 -   `uitests/tests/vscode` Contains all modules related to `vscode` (driving the UI, downloading, starting, etc).
 -   `environment.py` `enviroyment` file for `Behave`.
+
+## CI Integration
+
+* For more details please check `build/ci`.
+* We generally try to run all tests against all permutations of OS + Python Version + VSC
+    - I.e. we run tests across permutations of the follows:
+        - OS: Windows, Mac, Linux
+        - Python: 2.7, 3.5, 3.6, 3.7
+        - VSC: Stable, Insiders
+* Each scenario is treated as a test
+    - These results are published on Azure Devops
+    - Artifacts are published containing a folder named `.vscode test/reports/<scenario name>`
+        - This folder contains all information related to that test run:
+        - Screenshots (including the point in time the test failed) for every step in the scenario (sequentially named files)
+        - VS Code logs (including output from the output panels)
+        - The workspace folder that was opened in VSC code (we have the exact files used by VSC)
+        - Our logs (Extension logs, debugger logs)
+        - Basically we have everything we'd need to diagnoze the failure.
+* The report for the entire run is uploaded as part of the artifact for the test job.
+    - The HTML report contains test results (screenshots & all the steps).
+* The same ui tests are run as smoke tests as part of a PR.
+
 
 ## Miscellaneous
 
