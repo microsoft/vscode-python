@@ -195,6 +195,7 @@ steps:
     - task: PublishTestResults@2
       displayName: "TestResults"
       inputs:
+          testRunTitle: $(Agent.JobName)
           testRunner: JUnit
           testResultsFiles: "$(Build.SourcesDirectory)/.vscode test/reports/*.xml"
       condition: always()
