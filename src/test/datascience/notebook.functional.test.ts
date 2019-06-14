@@ -141,7 +141,7 @@ suite('DataScience notebook tests', () => {
             const text = cell.outputs[0].text;
             assert.ok(data || text, `${index}: No data object on the cell for ${code}`);
             if (data) { // For linter
-                assert.ok(data.hasOwnProperty(mimeType), `${index}: Cell mime type not correct`);
+                assert.ok(data.hasOwnProperty(mimeType), `${index}: Cell mime type not correct for ${JSON.stringify(data)}`);
                 assert.ok((data as any)[mimeType], `${index}: Cell mime type not correct`);
                 verifyValue((data as any)[mimeType]);
             }
@@ -769,7 +769,7 @@ echo 'hello'`,
                 mimeType: 'text/plain',
                 cellType: 'code',
                 result: 'hello',
-                verifyValue: (d) => assert.ok(d.includes('hello'), `Multiline cell magic incorrect - ${d}`)
+                verifyValue: (d) => assert.ok(d.includes('hello') || d.includes('bash'), `Multiline cell magic incorrect - ${d}`)
             },
             {
                 // Test shell command should work on PC / Mac / Linux
@@ -793,7 +793,7 @@ x = np.linspace(0, 20, 100)
 plt.plot(x, np.sin(x))
 plt.show()`,
                 result: `00000`,
-                mimeType: 'image/png',
+                mimeType: 'image/svg+xml',
                 cellType: 'code',
                 verifyValue: (_d) => { return; }
             }
