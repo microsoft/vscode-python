@@ -1151,13 +1151,13 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Warn the user before trying to open really large data frames.",
-                    "scope": "resource"
+                    "scope": "application"
                 },
                 "python.dataScience.askForKernelRestart": {
                     "type": "boolean",
                     "default": true,
                     "description": "Warn the user before restarting a kernel.",
-                    "scope": "resource"
+                    "scope": "application"
                 },
                 "python.dataScience.enabled": {
                     "type": "boolean",

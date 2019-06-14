@@ -486,6 +486,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         const settings = this.configuration.getSettings();
         if (settings && settings.datascience) {
             settings.datascience.askForKernelRestart = false;
+            this.configuration.updateSetting('dataScience.askForKernelRestart', false, undefined, ConfigurationTarget.Global).ignoreErrors();
         }
     }
 
@@ -544,6 +545,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         const settings = this.configuration.getSettings();
         if (settings && settings.datascience) {
             settings.datascience.askForLargeDataFrames = false;
+            this.configuration.updateSetting('dataScience.askForLargeDataFrames', false, undefined, ConfigurationTarget.Global).ignoreErrors();
         }
     }
 
