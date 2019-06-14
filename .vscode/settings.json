@@ -33,6 +33,7 @@
     "typescript.preferences.quoteStyle": "single",
     "javascript.preferences.quoteStyle": "single",
     "typescriptHero.imports.stringQuoteStyle": "'",
+    "prettier.tslintIntegration": true,
     "prettier.printWidth": 180,
     "prettier.singleQuote": true,
     "python.jediEnabled": false,
