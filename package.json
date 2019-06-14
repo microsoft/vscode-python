@@ -2397,7 +2397,7 @@
         "tslint-microsoft-contrib": "^5.0.3",
         "typed-react-markdown": "^0.1.0",
         "typemoq": "^2.1.0",
-        "typescript": "^3.4.3",
+        "typescript": "^3.5.2",
         "typescript-formatter": "^7.1.0",
         "url-loader": "^1.1.2",
         "uuid": "^3.3.2",
