@@ -83,7 +83,7 @@ jobs:
               ${{ if not(contains(coalesce(job.ignoreOperatingSystems, ''), 'mac')) }}:
                 ${{ format('Mac{2}{0}{1}', py.displayName, job.test, channel) }}:
                     PythonVersion: ${{ py.version }}
-                    VMImageName: "macos-10.13"
+                    VMImageName: "macos-latest"
                     VSCodeChannel: ${{ channel }}
                     Tags: ${{ format('{0} {1} --tags=~@win --tags=~@linux', job.tags, py.excludeTags) }}
 
@@ -91,14 +91,14 @@ jobs:
                 ${{ format('Win{2}{0}{1}', py.displayName, job.test, channel) }}:
                     PythonVersion: ${{ py.version }}
                     VSCodeChannel: ${{ channel }}
-                    VMImageName: "vs2017-win2016"
+                    VMImageName: "windows-latest"
                     Tags: ${{ format('{0} {1} --tags=~@mac --tags=~@linux', job.tags, py.excludeTags) }}
 
               ${{ if not(contains(coalesce(job.ignoreOperatingSystems, ''), 'linux')) }}:
                 ${{ format('Linux{2}{0}{1}', py.displayName, job.test, channel) }}:
                     PythonVersion: ${{ py.version }}
                     VSCodeChannel: ${{ channel }}
-                    VMImageName: "ubuntu-16.04"
+                    VMImageName: "ubuntu-latest"
                     Tags: ${{ format('{0} {1} --tags=~@mac --tags=~@win', job.tags, py.excludeTags) }}
 
   pool:

@@ -3,7 +3,7 @@ jobs:
   variables:
     build: false
   pool:
-    vmImage: "macos-10.13"
+    vmImage: "macos-latest"
   steps:
     - template: build_compile_steps.yml
 
@@ -11,6 +11,6 @@ jobs:
   variables:
     build: true
   pool:
-    vmImage: "macos-10.13"
+    vmImage: "macos-latest"
   steps:
     - template: build_compile_steps.yml
