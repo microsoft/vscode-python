@@ -145,21 +145,30 @@ steps:
   # This will only run if the string 'testUnitTests' exists in variable `TestsToRun`
   #
   # Example command line (windows pwsh):
-  # > npm run test:unittests
+  # > npm run test:unittests:cover
   - bash: |
-      npm run test:unittests
-    displayName: 'run test:unittest'
+      npm run test:unittests:cover
+    displayName: 'run test:unittests'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testUnitTests'))
 
   # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
   - task: PublishTestResults@2
-    displayName: 'Publish test:unittest results'
+    displayName: 'Publish test:unittests results'
     condition: contains(variables['TestsToRun'], 'testUnitTests')
     inputs:
       testResultsFiles: '$(MOCHA_FILE)'
       testRunTitle: 'unittests-$(Agent.Os)-Py$(pythonVersion)'
       buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
       buildConfiguration: 'UnitTests'
+
+  # Publish Code Coverage Results
+  - task: PublishCodeCoverageResults@1
+    displayName: 'Publish test:unittests coverage results'
+    condition: contains(variables['TestsToRun'], 'testUnitTests')
+    inputs:
+      codeCoverageTool: 'cobertura'
+      summaryFileLocation: "$(System.DefaultWorkingDirectory)/coverage/cobertura-coverage.xml"
+      reportDirectory: "$(System.DefaultWorkingDirectory)/coverage"
 
   # Install the requirements for the Python or the system tests. This includes the supporting libs that
   # we ship in our extension such as PTVSD and Jedi.
