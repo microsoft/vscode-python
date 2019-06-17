@@ -492,15 +492,20 @@ suite('DataScience notebook tests', () => {
 
         console.log('Restarting kernel');
         try {
+            traceInfo('***** about to restart kernel');
             await server!.restartKernel(10000);
 
+            traceInfo('***** past restart');
             console.log('Waiting for idle');
             await server!.waitForIdle(10000);
 
+            traceInfo('***** past idle');
             console.log('Verifying restart');
             await verifyError(server, 'a', `name 'a' is not defined`);
 
         } catch (exc) {
+            traceInfo('***** exeception');
+            traceInfo(exc.message);
             assert.ok(exc instanceof JupyterKernelPromiseFailedError, 'Restarting did not timeout correctly');
         }
 

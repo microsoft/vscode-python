@@ -183,8 +183,8 @@
                 "--ui=tdd",
                 "--recursive",
                 "--colors",
-                //"--grep", "<suite name>",
-                "--timeout=300000"
+                "--grep", "Restart",
+                "--timeout=30000"
             ],
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
