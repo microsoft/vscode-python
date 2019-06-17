@@ -8,14 +8,18 @@ import { CellOutput } from '../history-react/cellOutput';
 import '../history-react/cell.css';
 import { StyleInjector } from '../react-common/styleInjector';
 
+// The WebPanel constructed by the extension should inject a getInitialSettings function into
+// the script. This should return a dictionary of key value pairs for settings
+// tslint:disable-next-line:no-any
+export declare function getInitialSettings(): any;
+
 export interface ICellResultProps {
     baseTheme: string;
     codeTheme: string;
 }
 
 interface ICellResultState {
-    cell: ICell | undefined;
-    status: string;
+    cell: ICell | undefined
 }
 
 export class CellResult extends React.Component<ICellResultProps, ICellResultState> implements IMessageHandler {
@@ -23,11 +27,14 @@ export class CellResult extends React.Component<ICellResultProps, ICellResultSta
 
     constructor(props: ICellResultProps) {
         super(props);
-        this.state = { cell: undefined, status: '...' };
+        let cell: ICell | undefined = undefined;
+        if (typeof getInitialSettings !== 'undefined') {
+            cell = getInitialSettings().cell;
+        }
+        this.state = { cell: cell };
     }
 
     public componentWillMount() {
-        // Add ourselves as a handler for the post office
         this.postOffice.addHandler(this);
     }
 
@@ -37,23 +44,24 @@ export class CellResult extends React.Component<ICellResultProps, ICellResultSta
     }
 
     public render() {
-        console.log('RENDER ' + this.state.status);
         if (!this.state.cell) return <div />;
+
         const data = this.state.cell.data;
         if (!data || data.cell_type !== 'code') return <div />;
         const outputClassNames = `cell-output cell-output-${this.props.baseTheme}`;
-        const baseTheme = 'vscode-light'; // FIXME
+        const baseTheme = this.props.baseTheme;
         return (
-            <div>
+            <div className='inline-result'>
                 <StyleInjector
                     expectingDark={baseTheme !== 'vscode-light'}
                     postOffice={this.postOffice} />
+
                 <div className={outputClassNames}>
                     {data.outputs.map(output =>
                         <CellOutput
                             output={output}
-                            baseTheme={"vscode-light"}
-                            errorBackgroundColor={"orange"}
+                            baseTheme={baseTheme}
+                            errorBackgroundColor="#FFFFFF"
                             expandImage={() => { }}
                             openLink={() => { }}
                         />)}
@@ -62,44 +70,16 @@ export class CellResult extends React.Component<ICellResultProps, ICellResultSta
         );
     }
 
-    // tslint:disable-next-line:no-any cyclomatic-complexity
     public handleMessage = (msg: string, payload?: any) => {
-        console.log('MESSAGE ' + msg + ' ' + JSON.stringify(payload))
         const cell = payload as ICell;
         switch (msg) {
             case HistoryMessages.StartCell:
-                this.setState({ cell: cell, status: 'start' });
-                return true;
-
             case HistoryMessages.FinishCell:
-                this.setState({ cell: cell, status: 'finish' });
-                return true;
-
             case HistoryMessages.UpdateCell:
-                // this.updateCell(payload);
+                this.setState({ cell: cell });
                 return true;
-
-            case HistoryMessages.GetAllCells:
-                // this.getAllCells();
-                return true;
-
-            case HistoryMessages.ExpandAll:
-                // this.expandAllSilent();
-                return true;
-
-            case HistoryMessages.CollapseAll:
-                // this.collapseAllSilent();
-                return true;
-
-            case HistoryMessages.DeleteAllCells:
-                // this.clearAllSilent();
-                return true;
-
-            default:
-                break;
         }
-
         return false;
     }
-    
+
 }

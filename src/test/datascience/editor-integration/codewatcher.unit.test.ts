@@ -425,7 +425,7 @@ testing3`;
                                 TypeMoq.It.isValue(fileName),
                                 TypeMoq.It.isValue(4))).verifiable(TypeMoq.Times.once());
 
-        await codeWatcher.runCellAndAllBelow(2, 0);
+        await codeWatcher.runCellAndAllBelow(2, 0, textEditor.object);
 
         // Verify function calls
         activeHistory.verifyAll();
@@ -463,7 +463,7 @@ testing2`;
                                 TypeMoq.It.isValue(fileName),
                                 TypeMoq.It.isValue(2))).verifiable(TypeMoq.Times.once());
 
-        await codeWatcher.runAllCellsAbove(4, 0);
+        await codeWatcher.runAllCellsAbove(4, 0, textEditor.object);
 
         // Verify function calls
         activeHistory.verifyAll();

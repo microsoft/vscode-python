@@ -127,7 +127,8 @@ export class DataScience implements IDataScience {
             const codeWatcher = this.getCodeWatcher(file);
 
             if (codeWatcher) {
-                return codeWatcher.runAllCellsAbove(stopLine, stopCharacter);
+                const textEditor = this.documentManager.activeTextEditor;
+                return codeWatcher.runAllCellsAbove(stopLine, stopCharacter, textEditor);
             }
         }
     }
@@ -139,7 +140,8 @@ export class DataScience implements IDataScience {
             const codeWatcher = this.getCodeWatcher(file);
 
             if (codeWatcher) {
-                return codeWatcher.runCellAndAllBelow(startLine, startCharacter);
+                const textEditor = this.documentManager.activeTextEditor;
+                return codeWatcher.runCellAndAllBelow(startLine, startCharacter, textEditor);
             }
         }
     }
@@ -266,7 +268,8 @@ export class DataScience implements IDataScience {
         if (currentCodeLens) {
             const activeCodeWatcher = this.getCurrentCodeWatcher();
             if (activeCodeWatcher) {
-                return activeCodeWatcher.runAllCellsAbove(currentCodeLens.range.start.line, currentCodeLens.range.start.character);
+                const textEditor = this.documentManager.activeTextEditor;
+                return activeCodeWatcher.runAllCellsAbove(currentCodeLens.range.start.line, currentCodeLens.range.start.character, textEditor);
             }
         } else {
             return Promise.resolve();
@@ -280,7 +283,8 @@ export class DataScience implements IDataScience {
         if (currentCodeLens) {
             const activeCodeWatcher = this.getCurrentCodeWatcher();
             if (activeCodeWatcher) {
-                return activeCodeWatcher.runCellAndAllBelow(currentCodeLens.range.start.line, currentCodeLens.range.start.character);
+                const textEditor = this.documentManager.activeTextEditor;
+                return activeCodeWatcher.runCellAndAllBelow(currentCodeLens.range.start.line, currentCodeLens.range.start.character, textEditor);
             }
         } else {
             return Promise.resolve();

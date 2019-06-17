@@ -119,7 +119,7 @@ export class CodeWatcher implements ICodeWatcher {
 
     // Run all cells up to the cell containing this start line and character
     @captureTelemetry(Telemetry.RunAllCellsAbove)
-    public async runAllCellsAbove(stopLine: number, stopCharacter: number) {
+    public async runAllCellsAbove(stopLine: number, stopCharacter: number, activeEditor: TextEditor | undefined) {
         // Run our code lenses up to this point, lenses are created in order on document load
         // so we can rely on them being in linear order for this
         for (const lens of this.codeLenses) {
@@ -130,7 +130,7 @@ export class CodeWatcher implements ICodeWatcher {
                     // We have a cell and we are not past or at the stop point
                     const code = this.document.getText(lens.range);
                     const activeHistory = await this.historyProvider.getOrCreateActive();
-                    await activeHistory.addCode(code, this.getFileName(), lens.range.start.line);
+                    await activeHistory.addCode(code, this.getFileName(), lens.range.start.line, activeEditor);
                 } else {
                     // If we get a cell past or at the stop point stop
                     break;
@@ -140,7 +140,7 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     @captureTelemetry(Telemetry.RunAllCellsAbove)
-    public async runCellAndAllBelow(startLine: number, startCharacter: number) {
+    public async runCellAndAllBelow(startLine: number, startCharacter: number, activeEditor: TextEditor | undefined) {
         // Run our code lenses from this point to the end, lenses are created in order on document load
         // so we can rely on them being in linear order for this
         for (const lens of this.codeLenses) {
@@ -151,7 +151,7 @@ export class CodeWatcher implements ICodeWatcher {
                     // We have a cell and we are not past or at the stop point
                     const code = this.document.getText(lens.range);
                     const activeHistory = await this.historyProvider.getOrCreateActive();
-                    await activeHistory.addCode(code, this.getFileName(), lens.range.start.line);
+                    await activeHistory.addCode(code, this.getFileName(), lens.range.start.line, activeEditor);
                 }
             }
         }

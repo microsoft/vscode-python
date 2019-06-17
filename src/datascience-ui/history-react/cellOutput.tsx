@@ -13,6 +13,7 @@ import { Identifiers } from '../../client/datascience/constants';
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
+import '../../client/common/extensions';
 
 export interface ICellOutputProps {
     output: nbformat.IOutput;
@@ -115,7 +116,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         return getLocString('DataScience.unknownMimeTypeFormat', 'Unknown Mime Type');
     }
 
-    private renderWithTransform = (mimetype: string, output : nbformat.IOutput, renderWithScrollbars: boolean, forceLightTheme: boolean, isText: boolean) => {
+    private renderWithTransform = (mimetype: string, output: nbformat.IOutput, renderWithScrollbars: boolean, forceLightTheme: boolean, isText: boolean) => {
 
         // If we found a mimetype, use the transform
         if (mimetype) {
@@ -275,7 +276,7 @@ function invertColor(color: string): string {
     }
 }
 
-function convertToLinearRgb(color: number) : number {
+function convertToLinearRgb(color: number): number {
     let c = color / 255;
     if (c <= 0.03928) {
         c = c / 12.92;
