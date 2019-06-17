@@ -16,7 +16,7 @@ import { sleep } from '../../core';
 suite('Common Utils - Decorators', () => {
 
     setup(function () {
-        // This test is flakey. 
+        // This test is flakey.
         // tslint:disable-next-line:no-invalid-this
         this.skip();
     })
@@ -138,7 +138,10 @@ suite('Common Utils - Decorators', () => {
             throw Error(`timed out after ${timeout}ms`);
         }
     }
-    test('Debounce: one sync call', async () => {
+    test('Debounce: one sync call', function() {
+        // tslint:disable-next-line: no-invalid-this
+        return this.skip();
+
         const wait = 100;
         // tslint:disable-next-line:max-classes-per-file
         class One extends Base {
@@ -151,7 +154,7 @@ suite('Common Utils - Decorators', () => {
 
         const start = Date.now();
         one.run();
-        await waitForCalls(one.timestamps, 1);
+        waitForCalls(one.timestamps, 1);
         const delay = one.timestamps[0] - start;
 
         expect(delay).to.be.at.least(wait);
