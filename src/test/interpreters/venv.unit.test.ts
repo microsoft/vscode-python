@@ -18,6 +18,9 @@ import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 
+// tslint:disable-next-line:no-require-imports no-var-requires
+const untildify: (value: string) => string = require('untildify');
+
 // tslint:disable-next-line: max-func-body-length
 suite('Virtual environments', () => {
     let serviceManager: ServiceManager;
@@ -90,7 +93,7 @@ suite('Virtual environments', () => {
         const pathProvider = new GlobalVirtualEnvironmentsSearchPathProvider(serviceContainer);
 
         const homedir = os.homedir();
-        const workonFolder = '~/.workonFolder';
+        const workonFolder = path.join('~', '.workonFolder');
         process.setup(p => p.env).returns(() => {
             return { WORKON_HOME: workonFolder };
         });
@@ -103,7 +106,7 @@ suite('Virtual environments', () => {
             '.direnv',
             '.virtualenvs'
         ].map(item => path.join(homedir, item));
-        expected.push(path.join(homedir, workonFolder.substr(1)));
+        expected.push(untildify(workonFolder));
 
         expect(paths).to.deep.equal(expected, 'WORKON_HOME environment variable not read.');
     });
@@ -112,7 +115,7 @@ suite('Virtual environments', () => {
         const pathProvider = new GlobalVirtualEnvironmentsSearchPathProvider(serviceContainer);
 
         const homedir = os.homedir();
-        const workonFolder = '/path/to/.workonFolder';
+        const workonFolder = path.join('path', 'to', '.workonFolder');
         process.setup(p => p.env).returns(() => {
             return { WORKON_HOME: workonFolder };
         });
