@@ -607,9 +607,9 @@ for _ in range(50):
             const outHtml = output.html();
 
             const root = parse(outHtml) as any;
-            const imgs = root.querySelectorAll('img') as HTMLElement[];
-            assert.ok(imgs, 'No images found');
-            assert.equal(imgs.length, 1, 'Wrong number of images');
+            const svgs = root.querySelectorAll('svg') as HTMLElement[];
+            assert.ok(svgs, 'No svgs found');
+            assert.equal(svgs.length, 1, 'Wrong number of svgs');
         }
 
     }, () => { return ioc; });

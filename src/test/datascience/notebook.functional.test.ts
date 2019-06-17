@@ -239,10 +239,14 @@ suite('DataScience notebook tests', () => {
             const pemFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'serverConfigFiles', 'jcert.pem');
             const keyFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'serverConfigFiles', 'jkey.key');
 
+            traceInfo(configFile);
+            traceInfo(pemFile);
+            traceInfo(keyFile);
             const exeResult = procService.execObservable(python.path, ['-m', 'jupyter', 'notebook', `--config=${configFile}`, `--certfile=${pemFile}`, `--keyfile=${keyFile}`], { env: process.env, throwOnStdErr: false });
             disposables.push(exeResult);
 
             exeResult.out.subscribe((output: Output<string>) => {
+                traceInfo(output.out);
                 const connectionURL = getIPConnectionInfo(output.out);
                 if (connectionURL) {
                     connectionFound.resolve(connectionURL);
@@ -250,6 +254,8 @@ suite('DataScience notebook tests', () => {
             });
 
             const connString = await connectionFound.promise;
+            traceInfo('Connection string found');
+            traceInfo(connString);
             const uri = connString as string;
 
             // We have a connection string here, so try to connect jupyterExecution to the notebook server
