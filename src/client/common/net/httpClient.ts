@@ -4,11 +4,12 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { parse } from 'jsonc-parser';
+import { parse, ParseError } from 'jsonc-parser';
 import * as requestTypes from 'request';
 import { IHttpClient } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { IWorkspaceService } from '../application/types';
+import { traceError } from '../logger';
 
 @injectable()
 export class HttpClient implements IHttpClient {
@@ -35,15 +36,21 @@ export class HttpClient implements IHttpClient {
                 if (response.statusCode !== 200) {
                     return reject(new Error(`Failed with status ${response.statusCode}, ${response.statusMessage}, Uri ${uri}`));
                 }
-                if (strict) {
-                    resolve(JSON.parse(body) as T);
-                } else {
-                    try {
-                        const content = parse(body, [], { allowTrailingComma: true, disallowComments: false });
+                try {
+                    if (strict) {
+                        const content = JSON.parse(body) as T;
                         resolve(content);
-                    } catch (ex) {
-                        return reject(ex);
+                    } else {
+                        // tslint:disable-next-line: prefer-const
+                        let errors: ParseError[] = [];
+                        const content = parse(body, errors, { allowTrailingComma: true, disallowComments: false }) as T;
+                        if (errors.length > 0) {
+                            traceError('JSONC parser returned ParseError codes', errors);
+                        }
+                        resolve(content);
                     }
+                } catch (ex) {
+                    return reject(ex);
                 }
             });
         });
