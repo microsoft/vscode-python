@@ -1,15 +1,46 @@
+# -----------------------------------------------------------------------------------------------------------------------------
+# Overview:
+# -----------------------------------------------------------------------------------------------------------------------------
+# Steps to be executed as part of the UI tests.
+# 1. Show all env vars                        - Logging (display environment variabels).
+# 2. Use Node                                 - Specify and use node version.
+# 3. Setup Python ? for extension             - Version of Python to be used for testing in Extension.
+# 4. Setup CI_PYTHON_PATH for extension       - Export Env variable that'll be used by a seprate step.
+#                                               Note: This env variable is NOT used by any Code (used purely in the Azdo step further below).
+# 5. Use Python 2.7                           - Ensure minimum version of Python (2.7) is available on CI for Python Extension.
+# 6. Use Python 3.7                           - Ensure latest version of Python (3.7) is available on CI for Python Extension.
+# 7. npm ci                                   - Install npm packages for some JS scripts used in testing (NOT for extension).
+# 8. Show Dependency Versions                 - Logging.
+# 9. Start xvfb                               - Start in-memory display server (for launching VSC).
+# 10. Restore VSIX                            - VSIX has been built in another Job, download that from artificats.
+# 11. Copy VSIX                               - Copy the VSIX into root directory (test suite expects it to be in root - default setup).
+# 12. Setup pyperclicp dependency             - We use pyperclip to copy text into clipboard buffer (see where this is used in code for info).
+# 13. Download & install UI Test dependencies - Download & Install everything requried for the UI tests.
+# 14. Run Tests                               - Launch the UI tests in Python
+# 15. Copy Reports
+# 16. Copy Screenshots
+# 17. Copy Extension Logs
+# 18. Copy VSC Logs
+# 19. Upload Reports                          - Upload as artifacts to Azure Devops
+# 20. Test Results                            - Upload test results to Azure Devops
+# -----------------------------------------------------------------------------------------------------------------------------
 # Variables:
-# Parameters:
+# -----------------------------------------------------------------------------------------------------------------------------
 # 1. VSCodeChannel
 #   Mandatory.
 #   VS Code channel to be tested against. `stable` or `insider`.
-# 1. Tags
+# 2. Tags
 #   Mandatory.
 #   Contain the `--tags=....` arguments to be passed into behave to exclude certain tags.
 #   Multiple tags can be passed as `--tags=@smoke --tags=~@ignore1 --tags=~@another --tags=~@andMore`
 #   More information on --tags argument for behave can be found here:
 #       * https://behave.readthedocs.io/en/latest/tutorial.html#controlling-things-with-tags
 #       * https://behave.readthedocs.io/en/latest/tag_expressions.html
+# 3. PythonVersion
+#   Python version to be used.
+# 4. VMImageName
+#   VM Image to be used (standard Azure Devops variable).
+
 
 steps:
     - bash: |
