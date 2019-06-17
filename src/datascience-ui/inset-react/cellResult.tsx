@@ -61,7 +61,6 @@ export class CellResult extends React.Component<ICellResultProps, ICellResultSta
                         <CellOutput
                             output={output}
                             baseTheme={baseTheme}
-                            errorBackgroundColor="#FFFFFF"
                             expandImage={() => { }}
                             openLink={() => { }}
                         />)}

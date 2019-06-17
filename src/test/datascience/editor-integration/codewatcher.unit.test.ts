@@ -16,6 +16,7 @@ import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-
 import { CodeWatcher } from '../../../client/datascience/editor-integration/codewatcher';
 import { ICodeWatcher, IHistory, IHistoryProvider } from '../../../client/datascience/types';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { ICodeExecutionHelper } from '../../../client/terminals/types';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
 import { createDocument } from './helpers';
 
@@ -32,6 +33,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let configService: TypeMoq.IMock<IConfigurationService>;
     let serviceContainer : TypeMoq.IMock<IServiceContainer>;
+    let helper: TypeMoq.IMock<ICodeExecutionHelper>;
     let tokenSource : CancellationTokenSource;
     const pythonSettings = new class extends PythonSettings {
         public fireChangeEvent() {
@@ -49,6 +51,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
         textEditor = TypeMoq.Mock.ofType<TextEditor>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
+        helper = TypeMoq.Mock.ofType<ICodeExecutionHelper>();
 
         // Setup default settings
         pythonSettings.datascience = {
@@ -77,7 +80,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
 
         // Setup the service container to return code watchers
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICodeWatcher))).returns(() => new CodeWatcher(appShell.object, logger.object, historyProvider.object, fileSystem.object, configService.object, documentManager.object));
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICodeWatcher))).returns(() => new CodeWatcher(appShell.object, logger.object, historyProvider.object, fileSystem.object, configService.object, documentManager.object, helper.object));
 
         // Setup our active history instance
         historyProvider.setup(h => h.getOrCreateActive()).returns(() => Promise.resolve(activeHistory.object));
@@ -91,7 +94,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
         // Setup config service
         configService.setup(c => c.getSettings()).returns(() => pythonSettings);
 
-        codeWatcher = new CodeWatcher(appShell.object, logger.object, historyProvider.object, fileSystem.object, configService.object, documentManager.object);
+        codeWatcher = new CodeWatcher(appShell.object, logger.object, historyProvider.object, fileSystem.object, configService.object, documentManager.object, helper.object);
     });
 
     function createTypeMoq<T>(tag: string): TypeMoq.IMock<T> {
@@ -570,6 +573,10 @@ testing2`;
         const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce());
 
         codeWatcher.setDocument(document.object);
+        helper.setup(h => h.getSelectedTextToExecute(TypeMoq.It.is((ed: TextEditor) => {
+            return textEditor.object === ed;
+        }))).returns(() => Promise.resolve('testing2'));
+        helper.setup(h => h.normalizeLines(TypeMoq.It.isAny())).returns(() => Promise.resolve('testing2'));
 
         // Set up our expected calls to add code
         activeHistory.setup(h => h.addCode(TypeMoq.It.isValue('testing2'),
@@ -585,34 +592,6 @@ testing2`;
 
         // Try our RunCell command with the first selection point
         await codeWatcher.runSelectionOrLine(textEditor.object);
-
-        // Verify function calls
-        activeHistory.verifyAll();
-        document.verifyAll();
-    });
-
-    test('Test the RunCurrentCell command outside of a cell', async () => {
-        const fileName = 'test.py';
-        const version = 1;
-        const inputText =
-`testing1
-#%%
-testing2`;
-        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce());
-
-        codeWatcher.setDocument(document.object);
-
-        // We don't want to ever call add code here
-        activeHistory.setup(h => h.addCode(TypeMoq.It.isAny(),
-                                TypeMoq.It.isAny(),
-                                TypeMoq.It.isAny(),
-                                TypeMoq.It.isAny())).verifiable(TypeMoq.Times.never());
-
-        // For this test we need to set up a document selection point
-        textEditor.setup(te => te.selection).returns(() => new Selection(0, 0, 0, 0));
-
-        // Try our RunCell command with the first selection point
-        await codeWatcher.runCurrentCell();
 
         // Verify function calls
         activeHistory.verifyAll();

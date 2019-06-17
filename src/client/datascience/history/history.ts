@@ -8,7 +8,7 @@ import * as fs from 'fs-extra';
 import { inject, injectable, multiInject } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { Event, EventEmitter, Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
+import { ConfigurationTarget, Event, EventEmitter, Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
@@ -35,6 +35,7 @@ import { EditorContexts, Identifiers, Telemetry } from '../constants';
 import { ColumnWarningSize } from '../data-viewing/types';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import { JupyterKernelPromiseFailedError } from '../jupyter/jupyterKernelPromiseFailedError';
+import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
 import { CssMessages } from '../messages';
 import {
     CellState,
@@ -361,13 +362,21 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory {
     @captureTelemetry(Telemetry.RestartKernel)
     public async restartKernel(): Promise<void> {
         if (this.jupyterServer && !this.restartingKernel) {
-            // Ask the user if they want us to restart or not.
-            const message = localize.DataScience.restartKernelMessage();
-            const yes = localize.DataScience.restartKernelMessageYes();
-            const no = localize.DataScience.restartKernelMessageNo();
+            if (this.shouldAskForRestart()) {
+                // Ask the user if they want us to restart or not.
+                const message = localize.DataScience.restartKernelMessage();
+                const yes = localize.DataScience.restartKernelMessageYes();
+                const dontAskAgain = localize.DataScience.restartKernelMessageDontAskAgain();
+                const no = localize.DataScience.restartKernelMessageNo();
 
-            const v = await this.applicationShell.showInformationMessage(message, yes, no);
-            if (v === yes) {
+                const v = await this.applicationShell.showInformationMessage(message, yes, dontAskAgain, no);
+                if (v === dontAskAgain) {
+                    this.disableAskForRestart();
+                    await this.restartKernelInternal();
+                } else if (v === yes) {
+                    await this.restartKernelInternal();
+                }
+            } else {
                 await this.restartKernelInternal();
             }
         }
@@ -470,8 +479,21 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory {
         }
     }
 
-    private addMessage(message: string, type: 'preview' | 'execute'): void {
-        const cell: ICell = {
+    private shouldAskForRestart(): boolean {
+        const settings = this.configuration.getSettings();
+        return settings && settings.datascience && settings.datascience.askForKernelRestart === true;
+    }
+
+    private disableAskForRestart() {
+        const settings = this.configuration.getSettings();
+        if (settings && settings.datascience) {
+            settings.datascience.askForKernelRestart = false;
+            this.configuration.updateSetting('dataScience.askForKernelRestart', false, undefined, ConfigurationTarget.Global).ignoreErrors();
+        }
+    }
+
+    private addMessage(message: string, type: 'preview' | 'execute') : void {
+        const cell : ICell = {
             id: uuid(),
             file: Identifiers.EmptyFileName,
             line: 0,
@@ -525,6 +547,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory {
         const settings = this.configuration.getSettings();
         if (settings && settings.datascience) {
             settings.datascience.askForLargeDataFrames = false;
+            this.configuration.updateSetting('dataScience.askForLargeDataFrames', false, undefined, ConfigurationTarget.Global).ignoreErrors();
         }
     }
 
@@ -1158,6 +1181,23 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory {
             // Then load the jupyter server
             await this.loadJupyterServer();
 
+        } catch (e) {
+            if (e instanceof JupyterSelfCertsError) {
+                // On a self cert error, warn the user and ask if they want to change the setting
+                const enableOption: string = localize.DataScience.jupyterSelfCertEnable();
+                const closeOption: string = localize.DataScience.jupyterSelfCertClose();
+                this.applicationShell.showErrorMessage(localize.DataScience.jupyterSelfCertFail().format(e.message), enableOption, closeOption).then(value => {
+                    if (value === enableOption) {
+                        sendTelemetryEvent(Telemetry.SelfCertsMessageEnabled);
+                        this.configuration.updateSetting('dataScience.allowUnauthorizedRemoteConnection', true, undefined, ConfigurationTarget.Workspace).ignoreErrors();
+                    } else if (value === closeOption) {
+                        sendTelemetryEvent(Telemetry.SelfCertsMessageClose);
+                    }
+                });
+                throw e;
+            } else {
+                throw e;
+            }
         } finally {
             status.dispose();
         }

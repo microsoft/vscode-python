@@ -40,7 +40,7 @@ export function createDocument(inputText: string, fileName: string, fileVersion:
         document.setup(d => d.getText(TypeMoq.It.isAny())).returns((r: Range) => {
             let results = '';
             if (r) {
-                for (let line = r.start.line; line <= r.end.line; line += 1) {
+                for (let line = r.start.line; line <= r.end.line && line < inputLines.length; line += 1) {
                     const startIndex = line === r.start.line ? r.start.character : 0;
                     const endIndex = line === r.end.line ? r.end.character : inputLines[line].length - 1;
                     results += inputLines[line].slice(startIndex, endIndex + 1);

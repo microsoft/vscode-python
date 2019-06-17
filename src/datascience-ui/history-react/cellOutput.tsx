@@ -18,11 +18,56 @@ import '../../client/common/extensions';
 export interface ICellOutputProps {
     output: nbformat.IOutput;
     maxTextSize?: number;
-    errorBackgroundColor: string;
     baseTheme: string;
     openLink(uri: monacoEditor.Uri): void;
     expandImage(imageHtml: string): void;
 }
+
+function getAnsiToHtmlOptions() : { fg: string; bg: string; colors: string [] } {
+    // Here's the default colors for ansiToHtml. We need to use the
+    // colors from our current theme.
+    // const colors = {
+    //     0: '#000',
+    //     1: '#A00',
+    //     2: '#0A0',
+    //     3: '#A50',
+    //     4: '#00A',
+    //     5: '#A0A',
+    //     6: '#0AA',
+    //     7: '#AAA',
+    //     8: '#555',
+    //     9: '#F55',
+    //     10: '#5F5',
+    //     11: '#FF5',
+    //     12: '#55F',
+    //     13: '#F5F',
+    //     14: '#5FF',
+    //     15: '#FFF'
+    // };
+    return {
+        fg: 'var(--vscode-terminal-foreground)',
+        bg: 'var(--vscode-terminal-background)',
+        colors: [
+            'var(--vscode-terminal-ansiBlack)',         // 0
+            'var(--vscode-terminal-ansiBrightRed)',     // 1
+            'var(--vscode-terminal-ansiGreen)',         // 2
+            'var(--vscode-terminal-ansiYellow)',        // 3
+            'var(--vscode-terminal-ansiBrightBlue)',    // 4
+            'var(--vscode-terminal-ansiMagenta)',       // 5
+            'var(--vscode-terminal-ansiCyan)',          // 6
+            'var(--vscode-terminal-ansiBrightBlack)',   // 7
+            'var(--vscode-terminal-ansiWhite)',         // 8
+            'var(--vscode-terminal-ansiRed)',           // 9
+            'var(--vscode-terminal-ansiBrightGreen)',   // 10
+            'var(--vscode-terminal-ansiBrightYellow)',  // 11
+            'var(--vscode-terminal-ansiBlue)',          // 12
+            'var(--vscode-terminal-ansiBrightMagenta)', // 13
+            'var(--vscode-terminal-ansiBrightCyan)',    // 14
+            'var(--vscode-terminal-ansiBrightWhite)'    // 15
+        ]
+    };
+}
+
 
 export class CellOutput extends React.Component<ICellOutputProps> {
     public render() {
@@ -41,8 +86,8 @@ export class CellOutput extends React.Component<ICellOutputProps> {
 
         // Only for text and error ouptut do we add scrollbars
         let addScrollbars = false;
-        let forceLightTheme = false;
         let isText = false;
+        let isError = false;
 
         // Stream and error output need to be converted
         if (copy.output_type === 'stream') {
@@ -74,11 +119,11 @@ export class CellOutput extends React.Component<ICellOutputProps> {
 
         } else if (copy.output_type === 'error') {
             addScrollbars = true;
-            forceLightTheme = true;
             isText = true;
+            isError = true;
             const error = copy as nbformat.IError;
             try {
-                const converter = new ansiToHtml();
+                const converter = new ansiToHtml(getAnsiToHtmlOptions());
                 const trace = converter.toHtml(error.traceback.join('\n'));
                 copy.data = {
                     'text/html': trace
@@ -99,7 +144,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
 
         // If that worked, use the transform
         if (mimetype) {
-            return this.renderWithTransform(mimetype, copy, addScrollbars, forceLightTheme, isText);
+            return this.renderWithTransform(mimetype, copy, addScrollbars, isText, isError);
         }
 
         if (copy.data) {
@@ -116,7 +161,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         return getLocString('DataScience.unknownMimeTypeFormat', 'Unknown Mime Type');
     }
 
-    private renderWithTransform = (mimetype: string, output: nbformat.IOutput, renderWithScrollbars: boolean, forceLightTheme: boolean, isText: boolean) => {
+    private renderWithTransform = (mimetype: string, output: nbformat.IOutput, renderWithScrollbars: boolean, isText: boolean, isError: boolean) => {
 
         // If we found a mimetype, use the transform
         if (mimetype) {
@@ -188,16 +233,11 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                         style.maxHeight = `${this.props.maxTextSize}px`;
                     }
 
-                    // Change the background if necessary
-                    if (forceLightTheme) {
-                        style.backgroundColor = this.props.errorBackgroundColor;
-                        style.color = invertColor(this.props.errorBackgroundColor);
-                    }
-
-                    const className = isText ? 'cell-output-text' : 'cell-output-html';
+                    let className = isText ? 'cell-output-text' : 'cell-output-html';
+                    className = isError ? `${className} cell-output-error` : className;
 
                     return (
-                        <div id='stylewrapper' role='group' onDoubleClick={this.doubleClick} onClick={this.click} className={className} style={style}>
+                        <div role='group' onDoubleClick={this.doubleClick} onClick={this.click} className={className} style={style}>
                             {extraButton}
                             <Transform data={data} />
                         </div>
@@ -250,38 +290,4 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         }
     }
 
-}
-
-function invertColor(color: string): string {
-    if (color.indexOf('#') === 0) {
-        color = color.slice(1);
-    }
-    // convert 3-digit hex to 6-digits.
-    if (color.length === 3) {
-        color = color[0] + color[0] + color[1] + color[1] + color[2] + color[2];
-    }
-    if (color.length === 6) {
-        // http://stackoverflow.com/a/3943023/112731
-        const r = convertToLinearRgb(parseInt(color.slice(0, 2), 16));
-        const g = convertToLinearRgb(parseInt(color.slice(2, 4), 16));
-        const b = convertToLinearRgb(parseInt(color.slice(4, 6), 16));
-
-        const L = (0.2126 * r) + (0.7152 * g) + (0.0722 * b);
-
-        return (L > 0.179)
-            ? '#000000'
-            : '#FFFFFF';
-    } else {
-        return color;
-    }
-}
-
-function convertToLinearRgb(color: number): number {
-    let c = color / 255;
-    if (c <= 0.03928) {
-        c = c / 12.92;
-    } else {
-        c = Math.pow((c + 0.055) / 1.055, 2.4);
-    }
-    return c;
 }

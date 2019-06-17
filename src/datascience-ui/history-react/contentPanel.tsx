@@ -50,7 +50,7 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
         return(
             <div id='content-panel-div' ref={this.containerRef}>
                 <div id='cell-table'>
-                    <div id='cell-table-body'>
+                    <div id='cell-table-body' role='list'>
                         {this.renderCells()}
                     </div>
                 </div>
@@ -61,13 +61,12 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
 
     private renderCells = () => {
         const maxOutputSize = getSettings().maxOutputSize;
-        const errorBackgroundColor = getSettings().errorBackgroundColor;
-        const actualErrorBackgroundColor = errorBackgroundColor ? errorBackgroundColor : '#FFFFFF';
         const maxTextSize = maxOutputSize && maxOutputSize < 10000 && maxOutputSize > 0 ? maxOutputSize : undefined;
         const baseTheme = getSettings().ignoreVscodeTheme ? 'vscode-light' : this.props.baseTheme;
         return this.props.cellVMs.map((cellVM: ICellViewModel, index: number) =>
             <ErrorBoundary key={index}>
                 <Cell
+                    role='listitem'
                     editorOptions={this.props.editorOptions}
                     history={undefined}
                     maxTextSize={maxTextSize}
@@ -79,7 +78,6 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
                     codeTheme={this.props.codeTheme}
                     showWatermark={false}
                     editExecutionCount={0}
-                    errorBackgroundColor={actualErrorBackgroundColor}
                     gotoCode={() => this.props.gotoCellCode(index)}
                     copyCode={() => this.props.copyCellCode(index)}
                     delete={() => this.props.deleteCell(index)}

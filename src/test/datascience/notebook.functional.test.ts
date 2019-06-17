@@ -141,7 +141,7 @@ suite('DataScience notebook tests', () => {
             const text = cell.outputs[0].text;
             assert.ok(data || text, `${index}: No data object on the cell for ${code}`);
             if (data) { // For linter
-                assert.ok(data.hasOwnProperty(mimeType), `${index}: Cell mime type not correct`);
+                assert.ok(data.hasOwnProperty(mimeType), `${index}: Cell mime type not correct for ${JSON.stringify(data)}`);
                 assert.ok((data as any)[mimeType], `${index}: Cell mime type not correct`);
                 verifyValue((data as any)[mimeType]);
             }
@@ -226,6 +226,44 @@ suite('DataScience notebook tests', () => {
         }
     }
 
+    runTest('Remote Self Certs', async () => {
+        const python = await getNotebookCapableInterpreter();
+        const procService = await processFactory.create();
+
+        // We will only connect if we allow for self signed cert connections
+        ioc.getSettings().datascience.allowUnauthorizedRemoteConnection = true;
+
+        if (procService && python) {
+            const connectionFound = createDeferred();
+            const configFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'serverConfigFiles', 'selfCert.py');
+            const pemFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'serverConfigFiles', 'jcert.pem');
+            const keyFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'serverConfigFiles', 'jkey.key');
+
+            const exeResult = procService.execObservable(python.path, ['-m', 'jupyter', 'notebook', `--config=${configFile}`, `--certfile=${pemFile}`, `--keyfile=${keyFile}`], { env: process.env, throwOnStdErr: false });
+            disposables.push(exeResult);
+
+            exeResult.out.subscribe((output: Output<string>) => {
+                const connectionURL = getIPConnectionInfo(output.out);
+                if (connectionURL) {
+                    connectionFound.resolve(connectionURL);
+                }
+            });
+
+            const connString = await connectionFound.promise;
+            const uri = connString as string;
+
+            // We have a connection string here, so try to connect jupyterExecution to the notebook server
+            const server = await jupyterExecution.connectToNotebookServer({ uri, useDefaultConfig: true, purpose: '' });
+            if (!server) {
+                assert.fail('Failed to connect to remote self cert server');
+            } else {
+                await verifySimple(server, `a=1${os.EOL}a`, 1);
+            }
+            // Have to dispose here otherwise the process may exit before hand and mess up cleanup.
+            await server!.dispose();
+        }
+    });
+
     runTest('Remote Password', async () => {
         const python = await getNotebookCapableInterpreter();
         const procService = await processFactory.create();
@@ -237,7 +275,7 @@ suite('DataScience notebook tests', () => {
             disposables.push(exeResult);
 
             exeResult.out.subscribe((output: Output<string>) => {
-                const connectionURL = getPasswordConnectionInfo(output.out);
+                const connectionURL = getIPConnectionInfo(output.out);
                 if (connectionURL) {
                     connectionFound.resolve(connectionURL);
                 }
@@ -295,14 +333,16 @@ suite('DataScience notebook tests', () => {
         await createNotebookServer(true);
     });
 
-    function getPasswordConnectionInfo(output: string): string | undefined {
+    // IP = * format is a bit different from localhost format
+    function getIPConnectionInfo(output: string): string | undefined {
         // String format: http://(NAME or IP):PORT/
-        const nameAndPortRegEx = /http:\/\/\(([a-zA-Z0-9]*) or [0-9.]*\):([0-9]*)\//;
+        const nameAndPortRegEx = /(https?):\/\/\(([a-zA-Z0-9]*) or [0-9.]*\):([0-9]*)\/(?:\?token=)?([a-zA-Z0-9]*)?/;
 
         const urlMatch = nameAndPortRegEx.exec(output);
-        if (urlMatch) {
-            // tslint:disable-next-line:no-http-string
-            return `http://${urlMatch[1]}:${urlMatch[2]}/`;
+        if (urlMatch && !urlMatch[4]) {
+            return `${urlMatch[1]}://${urlMatch[2]}:${urlMatch[3]}/`;
+        } else if (urlMatch && urlMatch.length === 5) {
+            return `${urlMatch[1]}://${urlMatch[2]}:${urlMatch[3]}/?token=${urlMatch[4]}`;
         }
 
         return undefined;
@@ -729,7 +769,7 @@ echo 'hello'`,
                 mimeType: 'text/plain',
                 cellType: 'code',
                 result: 'hello',
-                verifyValue: (d) => assert.ok(d.includes('hello'), `Multiline cell magic incorrect - ${d}`)
+                verifyValue: (d) => assert.ok(d.includes('hello') || d.includes('bash'), `Multiline cell magic incorrect - ${d}`)
             },
             {
                 // Test shell command should work on PC / Mac / Linux
@@ -753,7 +793,7 @@ x = np.linspace(0, 20, 100)
 plt.plot(x, np.sin(x))
 plt.show()`,
                 result: `00000`,
-                mimeType: 'image/png',
+                mimeType: 'image/svg+xml',
                 cellType: 'code',
                 verifyValue: (_d) => { return; }
             }

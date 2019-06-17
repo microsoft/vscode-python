@@ -40,6 +40,7 @@ export interface IConnection extends Disposable {
     localLaunch: boolean;
     localProcExitCode: number | undefined;
     disconnected: Event<number>;
+    allowUnauthorized?: boolean;
 }
 
 export enum InterruptResult {

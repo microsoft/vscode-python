@@ -129,27 +129,6 @@
             "preLaunchTask": "Compile"
         },
         {
-            "name": "Tests (VS Code, with code coverage, *.test.ts)",
-            "type": "extensionHost",
-            "request": "launch",
-            "runtimeExecutable": "${execPath}",
-            "args": [
-                "${workspaceFolder}/src/test",
-                "--disable-extensions",
-                "--extensionDevelopmentPath=${workspaceFolder}",
-                "--extensionTestsPath=${workspaceFolder}/out/test"
-            ],
-            "stopOnEntry": false,
-            "smartStep": true,
-            "sourceMaps": true,
-            "outFiles": [
-                "${workspaceFolder}/out/**/*.js"
-            ],
-            "env": {
-                "MOCHA_REPORTER_JUNIT": "true"
-            }
-        },
-        {
             "name": "Unit Tests (without VS Code, *.unit.test.ts)",
             "type": "node",
             "request": "launch",

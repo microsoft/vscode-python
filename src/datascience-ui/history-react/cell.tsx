@@ -26,6 +26,7 @@ import { CellOutput } from './cellOutput';
 import './cell.css';
 
 interface ICellProps {
+    role?: string;
     cellVM: ICellViewModel;
     baseTheme: string;
     codeTheme: string;
@@ -34,7 +35,6 @@ interface ICellProps {
     maxTextSize?: number;
     history: InputHistory | undefined;
     showWatermark: boolean;
-    errorBackgroundColor: string;
     monacoTheme: string | undefined;
     editorOptions: monacoEditor.editor.IEditorOptions;
     editExecutionCount: number;
@@ -137,16 +137,16 @@ export class Cell extends React.Component<ICellProps> {
         // Only render if we are allowed to.
         if (shouldRender) {
             return (
-                <div className={cellWrapperClass} role='row' onClick={this.onMouseClick}>
+                <div className={cellWrapperClass} role={this.props.role} onClick={this.onMouseClick}>
                     <MenuBar baseTheme={this.props.baseTheme}>
-                        <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.delete} tooltip={this.getDeleteString()} hidden={this.props.cellVM.editable}>
-                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Cancel} />
-                        </ImageButton>
                         <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.gotoCode} tooltip={this.getGoToCodeString()} hidden={hasNoSource}>
                             <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.GoToSourceCode} />
                         </ImageButton>
                         <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.copyCode} tooltip={this.getCopyBackToSourceString()} hidden={!hasNoSource || this.props.cellVM.editable}>
                             <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Copy} />
+                        </ImageButton>
+                        <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.delete} tooltip={this.getDeleteString()} hidden={this.props.cellVM.editable}>
+                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Cancel} />
                         </ImageButton>
                     </MenuBar>
                     <div className={cellOuterClass}>

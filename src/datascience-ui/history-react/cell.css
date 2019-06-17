@@ -136,3 +136,8 @@
     visibility: visible;
 }
 
+.cell-output-error {
+    background: var(--override-background, var(--vscode-editor-background));
+}
+
+

@@ -52,7 +52,8 @@ export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
                         'architecture', 'sysVersion', 'version'];
                     for (const prop of props) {
                         if (!existingItem[prop] && current[prop]) {
-                            existingItem[prop] = current[prop];
+                            // tslint:disable-next-line: no-any
+                            (existingItem as any)[prop] = current[prop];
                         }
                     }
                 }

@@ -194,6 +194,8 @@ import {
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
+import { CodeExecutionHelper } from '../../client/terminals/codeExecution/helper';
+import { ICodeExecutionHelper } from '../../client/terminals/types';
 import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
@@ -309,6 +311,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IPythonInPathCommandProvider>(IPythonInPathCommandProvider, PythonInPathCommandProvider);
         this.serviceManager.addSingleton<IEnvironmentActivationService>(IEnvironmentActivationService, EnvironmentActivationService);
         this.serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
+        this.serviceManager.add<ICodeExecutionHelper>(ICodeExecutionHelper, CodeExecutionHelper);
         this.serviceManager.add<IDataScienceCommandListener>(IDataScienceCommandListener, HistoryCommandListener);
         this.serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables);
 

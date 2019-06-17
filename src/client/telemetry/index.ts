@@ -323,6 +323,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ConnectLocalJupyter]: never | undefined;
     [Telemetry.ConnectRemoteJupyter]: never | undefined;
     [Telemetry.ConnectRemoteFailedJupyter]: never | undefined;
+    [Telemetry.ConnectRemoteSelfCertFailedJupyter]: never | undefined;
     [Telemetry.CopySourceCode]: never | undefined;
     [Telemetry.DataScienceSettings]: JSONObject;
     [Telemetry.DeleteAllCells]: never | undefined;
@@ -355,6 +356,8 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RunToLine]: never | undefined;
     [Telemetry.RunFileInteractive]: never | undefined;
     [Telemetry.RunFromLine]: never | undefined;
+    [Telemetry.SelfCertsMessageClose]: never | undefined;
+    [Telemetry.SelfCertsMessageEnabled]: never | undefined;
     [Telemetry.SelectJupyterURI]: never | undefined;
     [Telemetry.SetJupyterURIToLocal]: never | undefined;
     [Telemetry.SetJupyterURIToUserSpecified]: never | undefined;
