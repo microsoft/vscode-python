@@ -20,6 +20,7 @@ suite('Common Utils - Decorators', () => {
     /*
      * Time in milliseconds (from some arbitrary point in time for current process).
      * Don't use new Date().getTime() to calculate differences in times.
+     * Similarly setTimeout doesn't always trigger at prescribed time (accuracy isn't guaranteed).
      * This has an accuracy of around 2-20ms.
      * However we're dealing with tests that need accuracy of 1ms.
      * Use API that'll give us better accuracy when dealing with elapsed times.
@@ -30,6 +31,28 @@ suite('Common Utils - Decorators', () => {
         const currentTime = process.hrtime();
         // Convert seconds to ms and nanoseconds to ms.
         return (currentTime[0] * 1000) + (currentTime[1] / 1000_000);
+    }
+
+    /**
+     * setTimeout doesn't always trigger at prescribed time (accuracy isn't guaranteed).
+     * Allow a discrepancy of +-5%.
+     * Here's a simple test to prove this (this has been reported by others too):
+     * ```js
+     * // Execute the following around 100 times, you'll see at least one where elapsed time is < 100.
+     * const startTime = ....
+     * await new Promise(resolve = setTimeout(resolve, 100))
+     * console.log(currentTime - startTijme)
+     * ```
+     *
+     * @param {number} actualDelay
+     * @param {number} expectedDelay
+     */
+    function assertElapsedTimeWithinRange(actualDelay: number, expectedDelay: number) {
+        const difference = actualDelay - expectedDelay;
+        if (difference >= 0) {
+            return;
+        }
+        expect(Math.abs(difference)).to.be.lessThan(expectedDelay * 0.05, `Actual delay  ${actualDelay}, expected delay ${expectedDelay}, not within 5% of accuracy`);
     }
     function createMockVSC(pythonPath: string): typeof import('vscode') {
         return {
@@ -162,7 +185,7 @@ suite('Common Utils - Decorators', () => {
         await waitForCalls(one.timestamps, 1);
         const delay = one.timestamps[0] - start;
 
-        expect(delay).to.be.at.least(wait);
+        assertElapsedTimeWithinRange(delay, wait);
         expect(one.calls).to.deep.equal(['run']);
         expect(one.timestamps).to.have.lengthOf(one.calls.length);
     });
@@ -183,7 +206,7 @@ suite('Common Utils - Decorators', () => {
         await waitForCalls(one.timestamps, 1);
         const delay = one.timestamps[0] - start;
 
-        expect(delay).to.be.at.least(wait);
+        assertElapsedTimeWithinRange(delay, wait);
         expect(one.calls).to.deep.equal(['run']);
         expect(one.timestamps).to.have.lengthOf(one.calls.length);
         expect(errored).to.be.equal(false, 'Exception raised when there shouldn\'t have been any');
@@ -204,7 +227,7 @@ suite('Common Utils - Decorators', () => {
         await waitForCalls(one.timestamps, 1);
         const delay = one.timestamps[0] - start;
 
-        expect(delay).to.be.at.least(wait);
+        assertElapsedTimeWithinRange(delay, wait);
         expect(one.calls).to.deep.equal(['run']);
         expect(one.timestamps).to.have.lengthOf(one.calls.length);
     });
@@ -226,7 +249,7 @@ suite('Common Utils - Decorators', () => {
         await waitForCalls(one.timestamps, 1);
         const delay = one.timestamps[0] - start;
 
-        expect(delay).to.be.at.least(wait);
+        assertElapsedTimeWithinRange(delay, wait);
         expect(one.calls).to.deep.equal(['run']);
         expect(one.timestamps).to.have.lengthOf(one.calls.length);
         expect(capturedEx).to.not.be.equal(undefined, 'Exception not re-thrown');
@@ -251,7 +274,7 @@ suite('Common Utils - Decorators', () => {
         await waitForCalls(one.timestamps, 1);
         const delay = one.timestamps[0] - start;
 
-        expect(delay).to.be.at.least(wait);
+        assertElapsedTimeWithinRange(delay, wait);
         expect(one.calls).to.deep.equal(['run']);
         expect(one.timestamps).to.have.lengthOf(one.calls.length);
         expect(errored).to.be.equal(false, 'Exception raised when there shouldn\'t have been any');
@@ -273,7 +296,7 @@ suite('Common Utils - Decorators', () => {
         await waitForCalls(one.timestamps, 1);
         const delay = one.timestamps[0] - start;
 
-        expect(delay).to.be.at.least(wait);
+        assertElapsedTimeWithinRange(delay, wait);
         expect(one.calls).to.deep.equal(['run']);
         expect(one.timestamps).to.have.lengthOf(one.calls.length);
     });
@@ -297,7 +320,7 @@ suite('Common Utils - Decorators', () => {
         await waitForCalls(one.timestamps, 2);
         const delay = one.timestamps[1] - start;
 
-        expect(delay).to.be.at.least(wait);
+        assertElapsedTimeWithinRange(delay, wait);
         expect(one.calls).to.deep.equal(['run', 'run']);
         expect(one.timestamps).to.have.lengthOf(one.calls.length);
         expect(errored).to.be.equal(false, 'Exception raised when there shouldn\'t have been any');
@@ -320,7 +343,7 @@ suite('Common Utils - Decorators', () => {
         await waitForCalls(one.timestamps, 1);
         const delay = one.timestamps[0] - start;
 
-        expect(delay).to.be.at.least(wait);
+        assertElapsedTimeWithinRange(delay, wait);
         expect(one.calls).to.deep.equal(['run']);
         expect(one.timestamps).to.have.lengthOf(one.calls.length);
     });
