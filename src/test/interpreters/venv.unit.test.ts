@@ -88,7 +88,7 @@ suite('Virtual environments', () => {
         expect([...new Set(paths)]).to.deep.equal(paths, 'Duplicates are not removed from the list of global search paths');
     });
 
-    test('Global search paths with WORKON environment variable', async () => {
+    test('Global search paths with WORKON_HOME environment variable', async () => {
         const pathProvider = new GlobalVirtualEnvironmentsSearchPathProvider(serviceContainer);
 
         const workonFolder = '.workonFolder';
