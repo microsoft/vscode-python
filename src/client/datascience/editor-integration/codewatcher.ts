@@ -170,6 +170,9 @@ export class CodeWatcher implements ICodeWatcher {
 
             // Get just the text of the selection or the current line if none
             const codeToExecute = await this.executionHelper.getSelectedTextToExecute(activeEditor);
+            if (!codeToExecute) {
+                return ;
+            }
             const normalizedCode = await this.executionHelper.normalizeLines(codeToExecute!);
             if (!normalizedCode || normalizedCode.trim().length === 0) {
                 return;
