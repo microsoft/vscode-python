@@ -40,6 +40,9 @@ export class GlobalVirtualEnvironmentsSearchPathProvider implements IVirtualEnvi
             '.direnv',
             '.virtualenvs',
             ...this.config.getSettings(resource).venvFolders];
+        if (process.env.WORKON_HOME) {
+            venvFolders.push(process.env.WORKON_HOME);
+        }
         const folders = [...new Set(venvFolders.map(item => path.join(homedir, item)))];
 
         // tslint:disable-next-line:no-string-literal

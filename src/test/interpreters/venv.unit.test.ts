@@ -18,6 +18,7 @@ import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 
+// tslint:disable-next-line: max-func-body-length
 suite('Virtual environments', () => {
     let serviceManager: ServiceManager;
     let serviceContainer: ServiceContainer;
@@ -85,6 +86,28 @@ suite('Virtual environments', () => {
 
         virtualEnvMgr.verifyAll();
         expect([...new Set(paths)]).to.deep.equal(paths, 'Duplicates are not removed from the list of global search paths');
+    });
+
+    test('Global search paths with WORKON environment variable', async () => {
+        const pathProvider = new GlobalVirtualEnvironmentsSearchPathProvider(serviceContainer);
+
+        const workonFolder = '.workonFolder';
+        global.process.env.WORKON_HOME = workonFolder;
+        settings.setup(x => x.venvFolders).returns(() => []);
+        virtualEnvMgr.setup(v => v.getPyEnvRoot(TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
+
+        const homedir = os.homedir();
+        const paths = await pathProvider.getSearchPaths();
+        const expected = [
+            'envs',
+            '.pyenv',
+            '.direnv',
+            '.virtualenvs',
+            workonFolder].map(item => path.join(homedir, item));
+
+        delete global.process.env.WORKON_HOME;
+        virtualEnvMgr.verifyAll();
+        expect(paths).to.deep.equal(expected, 'WORKON_HOME environment variable not read.');
     });
 
     test('Workspace search paths', async () => {
