@@ -56,7 +56,7 @@ jobs:
         # UploadBinary: [true|false] - upload test binaries to Azure if true. False if not set.
       'Win-Py3.7 Unit':
         VMImageName: 'vs2017-win2016'
-        TestsToRun: 'runHygiene, testUnitTests, pythonUnitTests, pythonInternalTools'
+        TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
         NeedsPythonTestReqs: true
       'Win-Py2.7 Unit':
         PythonVersion: '2.7'
@@ -81,7 +81,7 @@ jobs:
       'Mac-Py2.7 Unit+Single':
         PythonVersion: '2.7'
         VMImageName: 'macos-10.13'
-        TestsToRun: 'testUnitTests, pythonUnitTests, testSingleWorkspace'
+        TestsToRun: 'pythonUnitTests, testSingleWorkspace'
         NeedsPythonTestReqs: true
       'Linux-Py3.7 Unit':
         PythonVersion: '3.7'
@@ -101,7 +101,7 @@ jobs:
       'Linux-Py2.7 Unit+Single':
         PythonVersion: '2.7'
         VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'testUnitTests, pythonUnitTests, testSingleWorkspace'
+        TestsToRun: 'pythonUnitTests, testSingleWorkspace'
         NeedsPythonTestReqs: true
       'Linux-Py3.7 Functional':
         PythonVersion: '3.7'

@@ -130,16 +130,6 @@ steps:
     inputs:
       targets: 'prePublishNonBundle'
 
-  # Run tslint on the project source to ensure that the added code adheres
-  # to the # code standards we are trying to maintain.
-  # Example command line (windows pwsh):
-  # > npx tslint ./src/**/*.ts{,x}
-  - bash: |
-      npx tslint ./src/**/*.ts{,x}
-      #npx gulp hygiene
-    displayName: 'code hygiene'
-    condition: and(succeeded(), contains(variables['TestsToRun'], 'runHygiene'))
-
   # Run the typescript unit tests.
   #
   # This will only run if the string 'testUnitTests' exists in variable `TestsToRun`
