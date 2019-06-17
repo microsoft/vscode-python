@@ -1317,7 +1317,7 @@
                 },
                 "python.dataScience.autoPreviewNotebooksInInteractivePane": {
                     "type": "boolean",
-                    "default": true,
+                    "default": false,
                     "description": "When opening ipynb files, automatically preview the contents in the Python Interactive window.",
                     "scope": "resource"
                 },

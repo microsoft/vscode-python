@@ -3,7 +3,7 @@
 'use strict';
 // tslint:disable:max-func-body-length no-trailing-whitespace no-multiline-string chai-vague-errors no-unused-expression
 // Disable whitespace / multiline as we use that to pass in our fake file strings
-import { expect } from 'chai';
+import { assert, expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, CodeLens, Range, Selection, TextEditor } from 'vscode';
 
@@ -589,6 +589,59 @@ testing2`;
         // Verify function calls
         activeHistory.verifyAll();
         document.verifyAll();
+    });
+
+    async function verifyCodeRun(input: string, selectedLines: number[], output: string): Promise<void> {
+        const fileName = 'test.py';
+        const version = 1;
+        const document = createDocument(input, fileName, version, TypeMoq.Times.atLeastOnce(), true);
+
+        codeWatcher.setDocument(document.object);
+
+        // Set up our expected calls to add code
+        let actualOutput = '';
+        activeHistory.setup(h => h.addCode(TypeMoq.It.isAny(),
+                                TypeMoq.It.isValue(fileName),
+                                TypeMoq.It.isAny(),
+                                TypeMoq.It.isAny())).returns((c, _f, _l, _e) => {
+                                    actualOutput = c;
+                                    return Promise.resolve();
+                                });
+
+        // For this test we need to set up a document selection point
+        const startLine = selectedLines[0];
+        const endLine = selectedLines[selectedLines.length - 1];
+        textEditor = TypeMoq.Mock.ofType<TextEditor>();
+        textEditor.setup(te => te.document).returns(() => document.object);
+        textEditor.setup(te => te.selection).returns(() => new Selection(startLine, 0, endLine, 0));
+
+        // Try our RunCell command with the first selection point
+        await codeWatcher.runSelectionOrLine(textEditor.object);
+ 
+        assert.equal(actualOutput, output, 'Output code does not match');
+    }
+
+    test('Test the RunSelection command with different indentation', async () => {
+        let inputText =
+`#%%
+testing1
+#%%
+   testing2`;
+        await verifyCodeRun(inputText, [3], 'testing2');
+        inputText =
+`#%%
+testing1
+#%%
+   testing2
+      testing3`;
+        await verifyCodeRun(inputText, [3, 5], 'testing2\n   testing3');
+        inputText =
+`#%%
+testing1
+#%%
+   testing2
+testing3`;
+        await verifyCodeRun(inputText, [3, 5], 'testing2\ntesting3');
     });
 
     test('Test the RunCurrentCell command outside of a cell', async () => {

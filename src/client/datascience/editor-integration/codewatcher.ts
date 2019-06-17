@@ -175,8 +175,24 @@ export class CodeWatcher implements ICodeWatcher {
             }
 
             if (code && code.trim().length) {
+                // Remove spacing from all lines based on the spaces in the first line if there is
+                // any. Warning this isn't going to work if not consistent tabs and spaces.
+                let lines = code.splitLines({trim: false, removeEmptyEntries: false});
+                if (lines && lines.length > 0) {
+                    const trimmed = lines[0].trimLeft();
+                    if (trimmed.length < lines[0].length) {
+                        const regex = new RegExp(`^\\s{${lines[0].length - trimmed.length}}(.*)`);
+                        lines = lines.map(l => l.replace(regex, '$1'));
+                    }
+
+                    // If an empty line was added at the end, remove it. splitLines is adding it.
+                    if (lines[lines.length - 1].length === 0) {
+                        lines = lines.filter((_v, i) => i < lines.length - 1);
+                    }
+                }
+                const trimmedCode = lines.join('\n');
                 const activeHistory = await this.historyProvider.getOrCreateActive();
-                await activeHistory.addCode(code, this.getFileName(), activeEditor.selection.start.line, activeEditor);
+                await activeHistory.addCode(trimmedCode, this.getFileName(), activeEditor.selection.start.line, activeEditor);
             }
         }
     }
