@@ -61,7 +61,6 @@ suite('Virtual environments', () => {
             '.pyenv',
             '.direnv',
             '.virtualenvs',
-            path.join('.local', 'share', 'virtualenvs'),
             ...folders].map(item => path.join(homedir, item));
 
         virtualEnvMgr.verifyAll();

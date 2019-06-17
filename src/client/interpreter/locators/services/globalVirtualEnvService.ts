@@ -39,7 +39,6 @@ export class GlobalVirtualEnvironmentsSearchPathProvider implements IVirtualEnvi
             '.pyenv',
             '.direnv',
             '.virtualenvs',
-            path.join('.local', 'share', 'virtualenvs'),
             ...this.config.getSettings(resource).venvFolders];
         const folders = [...new Set(venvFolders.map(item => path.join(homedir, item)))];
 
