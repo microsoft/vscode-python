@@ -1314,6 +1314,12 @@
                     "description": "Enables moving to the next cell when clicking on a 'Run Cell' code lens.",
                     "scope": "resource"
                 },
+                "python.dataScience.inlineCellOutput": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Show cell outputs inside the editor.",
+                    "scope": "resource"
+                },
                 "python.dataScience.autoPreviewNotebooksInInteractivePane": {
                     "type": "boolean",
                     "default": true,

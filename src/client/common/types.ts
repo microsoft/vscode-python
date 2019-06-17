@@ -314,6 +314,7 @@ export interface IDataScienceSettings {
     enableCellCodeLens?: boolean;
     askForLargeDataFrames?: boolean;
     enableAutoMoveToNextCell?: boolean;
+    inlineCellOutput?: boolean;
     autoPreviewNotebooksInInteractivePane?: boolean;
 }
 
