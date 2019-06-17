@@ -20,7 +20,6 @@ const stopWatch = new StopWatch();
 import { Container } from 'inversify';
 import {
     CodeActionKind,
-    commands,
     debug,
     DebugConfigurationProvider,
     Disposable,
@@ -32,8 +31,7 @@ import {
     OutputChannel,
     ProgressLocation,
     ProgressOptions,
-    window,
-    workspace
+    window
 } from 'vscode';
 
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
@@ -87,7 +85,6 @@ import { registerTypes as interpretersRegisterTypes } from './interpreter/servic
 import { ServiceContainer } from './ioc/container';
 import { ServiceManager } from './ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from './ioc/types';
-import { JupyterFileSystem } from './jupyter/fileSystemProvider';
 import { LinterCommands } from './linters/linterCommands';
 import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
 import { ILintingEngine } from './linters/types';
@@ -220,19 +217,6 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     serviceContainer.getAll<DebugConfigurationProvider>(IDebugConfigurationService).forEach(debugConfigProvider => {
         context.subscriptions.push(debug.registerDebugConfigurationProvider(DebuggerTypeName, debugConfigProvider));
     });
-
-    context.subscriptions.push(
-        commands.registerCommand('python.datascience.openNotebookFolder', () => {
-            window.showOpenDialog({ canSelectFolders: true }).then(uri => {
-                if (!uri) { return; }
-                workspace.updateWorkspaceFolders(0, 0, { uri: JupyterFileSystem.uriForDirectory(uri[0]) });
-            });
-        }));
-
-    const jupyterFS = new JupyterFileSystem();
-    context.subscriptions.push(
-        workspace.registerFileSystemProvider('jupyterfs', jupyterFS, { isCaseSensitive: true })
-    );
 
     serviceContainer.get<IDebuggerBanner>(IDebuggerBanner).initialize();
     durations.endActivateTime = stopWatch.elapsedTime;

@@ -85,7 +85,7 @@ export class CodeWatcher implements ICodeWatcher {
         return this.version;
     }
 
-    public getCachedSettings(): IDataScienceSettings | undefined {
+    public getCachedSettings() : IDataScienceSettings | undefined {
         return this.cachedSettings;
     }
 
@@ -164,7 +164,7 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     @captureTelemetry(Telemetry.RunSelectionOrLine)
-    public async runSelectionOrLine(activeEditor: TextEditor | undefined) {
+    public async runSelectionOrLine(activeEditor : TextEditor | undefined) {
         if (this.document && activeEditor &&
             this.fileSystem.arePathsSame(activeEditor.document.fileName, this.document.fileName)) {
 
@@ -210,7 +210,7 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     @captureTelemetry(Telemetry.RunCell)
-    public runCell(range: Range): Promise<void> {
+    public runCell(range: Range) : Promise<void> {
         if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
             return Promise.resolve();
         }
@@ -221,7 +221,7 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     @captureTelemetry(Telemetry.RunCurrentCell)
-    public runCurrentCell(): Promise<void> {
+    public runCurrentCell() : Promise<void> {
         if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
             return Promise.resolve();
         }
@@ -240,7 +240,7 @@ export class CodeWatcher implements ICodeWatcher {
         return this.runMatchingCell(this.documentManager.activeTextEditor.selection, true);
     }
 
-    public async addEmptyCellToBottom(): Promise<void> {
+    public async addEmptyCellToBottom() : Promise<void> {
         const editor = this.documentManager.activeTextEditor;
         if (editor) {
             editor.edit((editBuilder) => {
@@ -288,11 +288,11 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
-    private getCurrentCellLens(pos: Position): CodeLens | undefined {
+    private getCurrentCellLens(pos: Position) : CodeLens | undefined {
         return this.codeLenses.find(l => l.range.contains(pos) && l.command !== undefined && l.command.command === Commands.RunCell);
     }
 
-    private getNextCellLens(pos: Position): CodeLens | undefined {
+    private getNextCellLens(pos: Position) : CodeLens | undefined {
         const currentIndex = this.codeLenses.findIndex(l => l.range.contains(pos) && l.command !== undefined && l.command.command === Commands.RunCell);
         if (currentIndex >= 0) {
             return this.codeLenses.find((l: CodeLens, i: number) => l.command !== undefined && l.command.command === Commands.RunCell && i > currentIndex);
@@ -309,7 +309,7 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     // tslint:disable-next-line:no-any
-    private handleError = (err: any) => {
+    private handleError = (err : any) => {
         if (err instanceof JupyterInstallError) {
             const jupyterError = err as JupyterInstallError;
 
