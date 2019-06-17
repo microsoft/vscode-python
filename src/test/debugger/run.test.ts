@@ -7,7 +7,6 @@
 
 import * as path from 'path';
 import { DebugClient } from 'vscode-debugadapter-testsupport';
-import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { noop } from '../../client/common/utils/misc';
 import { DebuggerTypeName, PTVSD_PATH } from '../../client/debugger/constants';
 import { DebugOptions, LaunchRequestArguments } from '../../client/debugger/types';
@@ -24,8 +23,7 @@ suite('Run without Debugging', () => {
             this.skip();
         }
         await new Promise(resolve => setTimeout(resolve, 1000));
-        const coverageDirectory = path.join(EXTENSION_ROOT_DIR, `debug_coverage_nodebug${this.currentTest!.title}`);
-        debugClient = await createDebugAdapter(coverageDirectory);
+        debugClient = await createDebugAdapter();
     });
     teardown(async () => {
         // Wait for a second before starting another test (sometimes, sockets take a while to get closed).

@@ -39,8 +39,7 @@ suite('Debugging - Attach Debugger', () => {
             this.skip();
         }
         this.timeout(30000);
-        const coverageDirectory = path.join(EXTENSION_ROOT_DIR, 'debug_coverage_attach_ptvsd');
-        debugClient = await createDebugAdapter(coverageDirectory);
+        debugClient = await createDebugAdapter();
     });
     teardown(async () => {
         // Wait for a second before starting another test (sometimes, sockets take a while to get closed).
