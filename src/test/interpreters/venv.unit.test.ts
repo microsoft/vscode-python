@@ -92,7 +92,9 @@ suite('Virtual environments', () => {
         const pathProvider = new GlobalVirtualEnvironmentsSearchPathProvider(serviceContainer);
 
         const workonFolder = '.workonFolder';
-        global.process.env.WORKON_HOME = workonFolder;
+        process.setup(p => p.env).returns(() => {
+            return { WORKON_HOME: workonFolder };
+        });
         settings.setup(x => x.venvFolders).returns(() => []);
         virtualEnvMgr.setup(v => v.getPyEnvRoot(TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
 
@@ -105,7 +107,6 @@ suite('Virtual environments', () => {
             '.virtualenvs',
             workonFolder].map(item => path.join(homedir, item));
 
-        delete global.process.env.WORKON_HOME;
         virtualEnvMgr.verifyAll();
         expect(paths).to.deep.equal(expected, 'WORKON_HOME environment variable not read.');
     });
