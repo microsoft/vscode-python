@@ -13,6 +13,9 @@ import { IVirtualEnvironmentsSearchPathProvider } from '../../contracts';
 import { IVirtualEnvironmentManager } from '../../virtualEnvs/types';
 import { BaseVirtualEnvService } from './baseVirtualEnvService';
 
+// tslint:disable-next-line:no-require-imports no-var-requires
+const untildify: (value: string) => string = require('untildify');
+
 @injectable()
 export class GlobalVirtualEnvService extends BaseVirtualEnvService {
     public constructor(
@@ -47,9 +50,7 @@ export class GlobalVirtualEnvironmentsSearchPathProvider implements IVirtualEnvi
         // Add support for the WORKON_HOME environment variable used by pipenv and virtualenvwrapper.
         const workonHomePath = this.currentProcess.env.WORKON_HOME;
         if (workonHomePath) {
-            // tslint:disable-next-line:no-require-imports no-var-requires
-            const untildify: (value: string) => string = require('untildify');
-            folders.push(workonHomePath[0] === '~' ? untildify(workonHomePath) : workonHomePath);
+            folders.push(untildify(workonHomePath));
         }
 
         // tslint:disable-next-line:no-string-literal
