@@ -48,8 +48,11 @@ suite('Common Utils - Decorators', () => {
      * @param {number} expectedDelay
      */
     function assertElapsedTimeWithinRange(actualDelay: number, expectedDelay: number) {
-        const difference = Math.abs(actualDelay - expectedDelay);
-        expect(difference).to.be.lessThan(5, `Actual delay  ${actualDelay}, expected delay ${expectedDelay}, not within 5% of accuracy`);
+        const difference = actualDelay - expectedDelay;
+        if (difference >= 0) {
+            return;
+        }
+        expect(Math.abs(difference)).to.be.lessThan(expectedDelay * 0.05, `Actual delay  ${actualDelay}, expected delay ${expectedDelay}, not within 5% of accuracy`);
     }
     function createMockVSC(pythonPath: string): typeof import('vscode') {
         return {
