@@ -35,7 +35,7 @@ suite('Common Utils - Decorators', () => {
 
     /**
      * setTimeout doesn't always trigger at prescribed time (accuracy isn't guaranteed).
-     * Allow a range of +5% to -5%.
+     * Allow a discrepancy of +-5%.
      * Here's a simple test to prove this (this has been reported by others too):
      * ```js
      * // Execute the following around 100 times, you'll see at least one where elapsed time is < 100.
