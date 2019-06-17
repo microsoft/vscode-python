@@ -28,7 +28,7 @@ export const downloadedExperimentStorageKey = 'DOWNLOADED_EXPERIMENTS_STORAGE_KE
  * as about 40% of the users never come back for the second session.
  */
 const configFile = path.join(EXTENSION_ROOT_DIR, 'experiments.json');
-export const configUri = 'https://raw.githubusercontent.com/karrtikr/check/master/environments.json';
+export const configUri = 'https://raw.githubusercontent.com/microsoft/vscode-python/master/experiments.json';
 
 /**
  * Manages and stores experiments, implements the AB testing functionality
