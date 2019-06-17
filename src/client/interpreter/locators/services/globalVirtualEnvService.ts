@@ -40,6 +40,7 @@ export class GlobalVirtualEnvironmentsSearchPathProvider implements IVirtualEnvi
             '.direnv',
             '.virtualenvs',
             ...this.config.getSettings(resource).venvFolders];
+        // Add support for the WORKON_HOME environment variable used by pipenv and virtualenvwrapper.
         if (process.env.WORKON_HOME) {
             venvFolders.push(process.env.WORKON_HOME);
         }
