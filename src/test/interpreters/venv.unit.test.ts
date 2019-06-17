@@ -81,33 +81,52 @@ suite('Virtual environments', () => {
 
         const folders = ['.virtualenvs', '.direnv'];
         settings.setup(x => x.venvFolders).returns(() => folders);
-        virtualEnvMgr.setup(v => v.getPyEnvRoot(TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
         const paths = await pathProvider.getSearchPaths();
 
-        virtualEnvMgr.verifyAll();
         expect([...new Set(paths)]).to.deep.equal(paths, 'Duplicates are not removed from the list of global search paths');
     });
 
-    test('Global search paths with WORKON_HOME environment variable', async () => {
+    test('Global search paths with tilde path in the WORKON_HOME environment variable', async () => {
         const pathProvider = new GlobalVirtualEnvironmentsSearchPathProvider(serviceContainer);
 
-        const workonFolder = '.workonFolder';
+        const homedir = os.homedir();
+        const workonFolder = '~/.workonFolder';
         process.setup(p => p.env).returns(() => {
             return { WORKON_HOME: workonFolder };
         });
         settings.setup(x => x.venvFolders).returns(() => []);
-        virtualEnvMgr.setup(v => v.getPyEnvRoot(TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
 
-        const homedir = os.homedir();
         const paths = await pathProvider.getSearchPaths();
         const expected = [
             'envs',
             '.pyenv',
             '.direnv',
-            '.virtualenvs',
-            workonFolder].map(item => path.join(homedir, item));
+            '.virtualenvs'
+        ].map(item => path.join(homedir, item));
+        expected.push(path.join(homedir, workonFolder.substr(1)));
 
-        virtualEnvMgr.verifyAll();
+        expect(paths).to.deep.equal(expected, 'WORKON_HOME environment variable not read.');
+    });
+
+    test('Global search paths with absolute path in the WORKON_HOME environment variable', async () => {
+        const pathProvider = new GlobalVirtualEnvironmentsSearchPathProvider(serviceContainer);
+
+        const homedir = os.homedir();
+        const workonFolder = '/path/to/.workonFolder';
+        process.setup(p => p.env).returns(() => {
+            return { WORKON_HOME: workonFolder };
+        });
+        settings.setup(x => x.venvFolders).returns(() => []);
+
+        const paths = await pathProvider.getSearchPaths();
+        const expected = [
+            'envs',
+            '.pyenv',
+            '.direnv',
+            '.virtualenvs'
+        ].map(item => path.join(homedir, item));
+        expected.push(workonFolder);
+
         expect(paths).to.deep.equal(expected, 'WORKON_HOME environment variable not read.');
     });
 

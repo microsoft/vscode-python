@@ -42,11 +42,15 @@ export class GlobalVirtualEnvironmentsSearchPathProvider implements IVirtualEnvi
             '.direnv',
             '.virtualenvs',
             ...this.config.getSettings(resource).venvFolders];
-        // Add support for the WORKON_HOME environment variable used by pipenv and virtualenvwrapper.
-        if (this.currentProcess.env.WORKON_HOME) {
-            venvFolders.push(this.currentProcess.env.WORKON_HOME);
-        }
         const folders = [...new Set(venvFolders.map(item => path.join(homedir, item)))];
+
+        // Add support for the WORKON_HOME environment variable used by pipenv and virtualenvwrapper.
+        const workonHomePath = this.currentProcess.env.WORKON_HOME;
+        if (workonHomePath) {
+            // tslint:disable-next-line:no-require-imports no-var-requires
+            const untildify: (value: string) => string = require('untildify');
+            folders.push(workonHomePath[0] === '~' ? untildify(workonHomePath) : workonHomePath);
+        }
 
         // tslint:disable-next-line:no-string-literal
         const pyenvRoot = await this.virtualEnvMgr.getPyEnvRoot(resource);
