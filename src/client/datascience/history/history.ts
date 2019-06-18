@@ -81,7 +81,7 @@ export enum SysInfoReason {
 }
 
 @injectable()
-export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
+export class History extends WebViewHost<IHistoryMapping> implements IHistory {
     private disposed: boolean = false;
     private loadPromise: Promise<void>;
     private interpreterChangedDisposable: Disposable;
@@ -92,13 +92,13 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
     private addSysInfoPromise: Deferred<boolean> | undefined;
     private waitingForExportCells: boolean = false;
     private jupyterServer: INotebookServer | undefined;
-    private id : string;
+    private id: string;
     private executeEvent: EventEmitter<string> = new EventEmitter<string>();
     private codeInsetPerLine = new Map<number, CellOutputInset>();
 
     constructor(
         @multiInject(IHistoryListener) private readonly listeners: IHistoryListener[],
-        @inject(ILiveShareApi) private liveShare : ILiveShareApi,
+        @inject(ILiveShareApi) private liveShare: ILiveShareApi,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
@@ -118,7 +118,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         @inject(IDataViewerProvider) private dataExplorerProvider: IDataViewerProvider,
         @inject(IJupyterVariables) private jupyterVariables: IJupyterVariables,
         @inject(INotebookImporter) private jupyterImporter: INotebookImporter
-        ) {
+    ) {
         super(
             configuration,
             provider,
@@ -154,7 +154,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         this.listeners.forEach(l => l.postMessage((e) => this.postMessageInternal(e.message, e.payload)));
     }
 
-    public get ready() : Promise<void> {
+    public get ready(): Promise<void> {
         // We need this to ensure the history window is up and ready to receive messages.
         return this.loadPromise;
     }
@@ -176,11 +176,11 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         return this.closedEvent.event;
     }
 
-    public get onExecutedCode() : Event<string> {
+    public get onExecutedCode(): Event<string> {
         return this.executeEvent.event;
     }
 
-    public addCode(code: string, file: string, line: number, editor?: TextEditor) : Promise<void> {
+    public addCode(code: string, file: string, line: number, editor?: TextEditor): Promise<void> {
         // Call the internal method.
         return this.submitCode(code, file, line, undefined, editor);
     }
@@ -360,7 +360,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
     }
 
     @captureTelemetry(Telemetry.RestartKernel)
-    public async restartKernel() : Promise<void> {
+    public async restartKernel(): Promise<void> {
         if (this.jupyterServer && !this.restartingKernel) {
             if (this.shouldAskForRestart()) {
                 // Ask the user if they want us to restart or not.
@@ -385,7 +385,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
     }
 
     @captureTelemetry(Telemetry.Interrupt)
-    public async interruptKernel() : Promise<void> {
+    public async interruptKernel(): Promise<void> {
         if (this.jupyterServer && !this.restartingKernel) {
             const status = this.statusProvider.set(localize.DataScience.interruptKernelStatus());
 
@@ -417,7 +417,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         }
     }
 
-    public async previewNotebook(file: string) : Promise<void> {
+    public async previewNotebook(file: string): Promise<void> {
         try {
             // First convert to a python file to verify this file is valid. This is
             // an easy way to have something else verify the validity of the file.
@@ -492,8 +492,8 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         }
     }
 
-    private addMessage(message: string, type: 'preview' | 'execute') : void {
-        const cell : ICell = {
+    private addMessage(message: string, type: 'preview' | 'execute'): void {
+        const cell: ICell = {
             id: uuid(),
             file: Identifiers.EmptyFileName,
             line: 0,
@@ -511,17 +511,17 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         this.onAddCodeEvent([cell]);
     }
 
-    private addPreviewHeader(file: string) : void {
+    private addPreviewHeader(file: string): void {
         const message = localize.DataScience.previewHeader().format(file);
         this.addMessage(message, 'preview');
     }
 
-    private addPreviewFooter(file: string) : void {
+    private addPreviewFooter(file: string): void {
         const message = localize.DataScience.previewFooter().format(file);
         this.addMessage(message, 'preview');
     }
 
-    private async checkPandas() : Promise<boolean> {
+    private async checkPandas(): Promise<boolean> {
         const pandasVersion = await this.dataExplorerProvider.getPandasVersion();
         if (!pandasVersion) {
             sendTelemetryEvent(Telemetry.PandasNotInstalled);
@@ -551,7 +551,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         }
     }
 
-    private async checkColumnSize(columnSize: number) : Promise<boolean> {
+    private async checkColumnSize(columnSize: number): Promise<boolean> {
         if (columnSize > ColumnWarningSize && this.shouldAskForLargeData()) {
             const message = localize.DataScience.tooManyColumnsMessage();
             const yes = localize.DataScience.tooManyColumnsYes();
@@ -567,7 +567,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         return true;
     }
 
-    private async showDataViewer(request: IShowDataViewer) : Promise<void> {
+    private async showDataViewer(request: IShowDataViewer): Promise<void> {
         try {
             if (await this.checkPandas() && await this.checkColumnSize(request.columnSize)) {
                 await this.dataExplorerProvider.create(request.variableName);
@@ -578,13 +578,13 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
     }
 
     // tslint:disable-next-line:no-any
-    private dispatchMessage<M extends IHistoryMapping, T extends keyof M>(_message: T, payload: any, handler: (args : M[T]) => void) {
+    private dispatchMessage<M extends IHistoryMapping, T extends keyof M>(_message: T, payload: any, handler: (args: M[T]) => void) {
         const args = payload as M[T];
         handler.bind(this)(args);
     }
 
     // tslint:disable-next-line:no-any
-    private onAddedSysInfo(sysInfo : IAddedSysInfo) {
+    private onAddedSysInfo(sysInfo: IAddedSysInfo) {
         // See if this is from us or not.
         if (sysInfo.id !== this.id) {
 
@@ -690,12 +690,12 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
 
             // Activate the other side, and send as if came from a file
             this.historyProvider.getOrCreateActive().then(_v => {
-                this.shareMessage(HistoryMessages.RemoteAddCode, {code: info.code, file: Identifiers.EmptyFileName, line: 0, id: info.id, originator: this.id});
+                this.shareMessage(HistoryMessages.RemoteAddCode, { code: info.code, file: Identifiers.EmptyFileName, line: 0, id: info.id, originator: this.id });
             }).ignoreErrors();
         }
     }
 
-    private async submitCode(code: string, file: string, line: number, id?: string, editor?: TextEditor) : Promise<void> {
+    private async submitCode(code: string, file: string, line: number, id?: string, editor?: TextEditor): Promise<void> {
         this.logger.logInformation(`Submitting code for ${this.id}`);
 
         // Start a status item
@@ -704,7 +704,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         // Transmit this submission to all other listeners (in a live share session)
         if (!id) {
             id = uuid();
-            this.shareMessage(HistoryMessages.RemoteAddCode, {code, file, line, id, originator: this.id});
+            this.shareMessage(HistoryMessages.RemoteAddCode, { code, file, line, id, originator: this.id });
         }
 
         // Create a deferred object that will wait until the status is disposed
@@ -744,7 +744,9 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
                     await this.jupyterServer.setInitialDirectory(path.dirname(file));
                 }
 
-                const inlineResults = this.configuration.getSettings().datascience.inlineCellOutput;
+                const inlineResults = CellOutputInset.featureAvailable &&
+                    this.configuration.getSettings().datascience.inlineCellOutput;
+
                 if (inlineResults && !this.codeInsetPerLine.has(line)) {
                     const lines = code.split('\n');
                     const numLines = lines.length - 1 - (lines[lines.length - 1].length ? 0 : 1); // don't consider a final blank line
@@ -793,7 +795,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         return result;
     }
 
-    private logTelemetry = (event : Telemetry) => {
+    private logTelemetry = (event: Telemetry) => {
         sendTelemetryEvent(event);
     }
 
@@ -857,7 +859,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         this.loadPromise = this.reloadWithNew();
     }
 
-    private async reloadWithNew() : Promise<void> {
+    private async reloadWithNew(): Promise<void> {
         const status = this.setStatus(localize.DataScience.startingJupyter());
         try {
             // Not the same as reload, we need to actually dispose the server.
@@ -876,7 +878,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         }
     }
 
-    private async reloadAfterShutdown() : Promise<void> {
+    private async reloadAfterShutdown(): Promise<void> {
         try {
             if (this.loadPromise) {
                 await this.loadPromise;
@@ -975,7 +977,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         }
     }
 
-    private showInformationMessage(message: string, question?: string) : Thenable<string | undefined> {
+    private showInformationMessage(message: string, question?: string): Thenable<string | undefined> {
         if (question) {
             return this.applicationShell.showInformationMessage(message, question);
         } else {
@@ -1128,7 +1130,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         }
     }
 
-    private async checkUsable() : Promise<boolean> {
+    private async checkUsable(): Promise<boolean> {
         let activeInterpreter: PythonInterpreter | undefined;
         try {
             activeInterpreter = await this.interpreterService.getActiveInterpreter();
@@ -1206,7 +1208,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
     private async requestVariables(requestExecutionCount: number): Promise<void> {
         // Request our new list of variables
         const vars: IJupyterVariable[] = await this.jupyterVariables.getVariables();
-        const variablesResponse: IJupyterVariablesResponse = {executionCount: requestExecutionCount, variables: vars };
+        const variablesResponse: IJupyterVariablesResponse = { executionCount: requestExecutionCount, variables: vars };
 
         // Tag all of our jupyter variables with the execution count of the request
         variablesResponse.variables.forEach((value: IJupyterVariable) => {
@@ -1258,7 +1260,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         });
     }
 
-    private async requestOnigasm() : Promise<void> {
+    private async requestOnigasm(): Promise<void> {
         // Look for the file next or our current file (this is where it's installed in the vsix)
         let filePath = path.join(__dirname, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
         traceInfo(`Request for onigasm file at ${filePath}`);

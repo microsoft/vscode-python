@@ -11,6 +11,8 @@ import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest } from './messages'
 import { ICell, ICodeCssGenerator, IThemeFinder } from './types';
 
 export class CellOutputInset {
+    public static featureAvailable = !!window.createWebviewTextEditorInset;
+
     private inset: WebviewEditorInset;
     private themeIsDarkPromise: Deferred<boolean>;
 
@@ -89,7 +91,6 @@ export class CellOutputInset {
         inset.webview.onDidReceiveMessage(m => this.onMessage(m.type, m.payload));
         return inset;
     }
-
 }
 
 function computeSizeInLines(cell: ICell): number {
