@@ -87,10 +87,10 @@ import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
 import { DataViewer } from '../../client/datascience/data-viewing/dataViewer';
 import { DataViewerProvider } from '../../client/datascience/data-viewing/dataViewerProvider';
 import { CodeWatcher } from '../../client/datascience/editor-integration/codewatcher';
-import { History } from '../../client/datascience/history/history';
-import { HistoryCommandListener } from '../../client/datascience/history/historycommandlistener';
-import { HistoryProvider } from '../../client/datascience/history/historyProvider';
-import { DotNetIntellisenseProvider } from '../../client/datascience/history/intellisense/dotNetIntellisenseProvider';
+import { DotNetIntellisenseProvider } from '../../client/datascience/interactive-window/intellisense/dotNetIntellisenseProvider';
+import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
+import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
+import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterCommand';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
@@ -110,9 +110,9 @@ import {
     IDataScienceCommandListener,
     IDataViewer,
     IDataViewerProvider,
-    IHistory,
-    IHistoryListener,
-    IHistoryProvider,
+    IInteractiveWindow,
+    IInteractiveWindowListener,
+    IInteractiveWindowProvider,
     IJupyterCommandFactory,
     IJupyterExecution,
     IJupyterPasswordConnect,
@@ -290,11 +290,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     public registerDataScienceTypes() {
         this.registerFileSystemTypes();
         this.serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecutionFactory);
-        this.serviceManager.addSingleton<IHistoryProvider>(IHistoryProvider, HistoryProvider);
+        this.serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
         this.serviceManager.addSingleton<IDataViewerProvider>(IDataViewerProvider, DataViewerProvider);
         this.serviceManager.addSingleton<IPlotViewerProvider>(IPlotViewerProvider, PlotViewerProvider);
         this.serviceManager.addSingleton<ILogger>(ILogger, Logger);
-        this.serviceManager.add<IHistory>(IHistory, History);
+        this.serviceManager.add<IInteractiveWindow>(IInteractiveWindow, InteractiveWindow);
         this.serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
         this.serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
         this.serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
@@ -312,7 +312,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IEnvironmentActivationService>(IEnvironmentActivationService, EnvironmentActivationService);
         this.serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
         this.serviceManager.add<ICodeExecutionHelper>(ICodeExecutionHelper, CodeExecutionHelper);
-        this.serviceManager.add<IDataScienceCommandListener>(IDataScienceCommandListener, HistoryCommandListener);
+        this.serviceManager.add<IDataScienceCommandListener>(IDataScienceCommandListener, InteractiveWindowCommandListener);
         this.serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables);
 
         this.serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
@@ -330,7 +330,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
         this.serviceManager.addSingleton<ILanguageServer>(ILanguageServer, MockLanguageServer);
         this.serviceManager.addSingleton<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, MockLanguageServerAnalysisOptions);
-        this.serviceManager.add<IHistoryListener>(IHistoryListener, DotNetIntellisenseProvider);
+        this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, DotNetIntellisenseProvider);
 
         // Setup our command list
         this.commandManager.registerCommand('setContext', (name: string, value: boolean) => {
@@ -561,7 +561,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         });
         webPanel.setup(p => p.show(true));
 
-        // We need to mount the react control before we even create a history object. Otherwise the mount will miss rendering some parts
+        // We need to mount the react control before we even create an interactive window object. Otherwise the mount will miss rendering some parts
         this.mountReactControl(mount);
     }
 

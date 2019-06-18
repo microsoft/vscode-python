@@ -172,7 +172,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     }
 
     // New variable data passed in via a ref
-    // Help to keep us independent of main history window state if we choose to break out the variable explorer
+    // Help to keep us independent of main interactive window state if we choose to break out the variable explorer
     public newVariablesData(newVariables: IJupyterVariable[]) {
         const newGridRows = newVariables.map(newVar => {
             return {

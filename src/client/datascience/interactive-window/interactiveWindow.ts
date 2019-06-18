@@ -43,10 +43,10 @@ import {
     ICodeCssGenerator,
     IConnection,
     IDataViewerProvider,
-    IHistory,
-    IHistoryInfo,
-    IHistoryListener,
-    IHistoryProvider,
+    IInteractiveWindow,
+    IInteractiveWindowInfo,
+    IInteractiveWindowListener,
+    IInteractiveWindowProvider,
     IJupyterExecution,
     IJupyterVariable,
     IJupyterVariables,
@@ -60,17 +60,17 @@ import {
     IThemeFinder
 } from '../types';
 import { WebViewHost } from '../webViewHost';
-import { HistoryMessageListener } from './historyMessageListener';
+import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
 import {
-    HistoryMessages,
     IAddedSysInfo,
     ICopyCode,
     IGotoCode,
-    IHistoryMapping,
+    IInteractiveWindowMapping,
+    InteractiveWindowMessages,
     IRemoteAddCode,
     IShowDataViewer,
     ISubmitNewCell
-} from './historyTypes';
+} from './interactiveWindowTypes';
 
 export enum SysInfoReason {
     Start,
@@ -80,11 +80,11 @@ export enum SysInfoReason {
 }
 
 @injectable()
-export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
+export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> implements IInteractiveWindow  {
     private disposed: boolean = false;
     private loadPromise: Promise<void>;
     private interpreterChangedDisposable: Disposable;
-    private closedEvent: EventEmitter<IHistory>;
+    private closedEvent: EventEmitter<IInteractiveWindow>;
     private unfinishedCells: ICell[] = [];
     private restartingKernel: boolean = false;
     private potentiallyUnfinishedStatus: Disposable[] = [];
@@ -95,7 +95,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
     private executeEvent: EventEmitter<string> = new EventEmitter<string>();
 
     constructor(
-        @multiInject(IHistoryListener) private readonly listeners: IHistoryListener[],
+        @multiInject(IInteractiveWindowListener) private readonly listeners: IInteractiveWindowListener[],
         @inject(ILiveShareApi) private liveShare : ILiveShareApi,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
@@ -112,7 +112,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(INotebookExporter) private jupyterExporter: INotebookExporter,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
-        @inject(IHistoryProvider) private historyProvider: IHistoryProvider,
+        @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(IDataViewerProvider) private dataExplorerProvider: IDataViewerProvider,
         @inject(IJupyterVariables) private jupyterVariables: IJupyterVariables,
         @inject(INotebookImporter) private jupyterImporter: INotebookImporter
@@ -123,19 +123,19 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
             cssGenerator,
             themeFinder,
             workspaceService,
-            (c, v, d) => new HistoryMessageListener(liveShare, c, v, d),
+            (c, v, d) => new InteractiveWindowMessageListener(liveShare, c, v, d),
             path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'history-react', 'index_bundle.js'),
             localize.DataScience.historyTitle(),
             ViewColumn.Two);
 
-        // Create our unique id. We use this to skip messages we send to other history windows
+        // Create our unique id. We use this to skip messages we send to other interactive windows
         this.id = uuid();
 
         // Sign up for configuration changes
         this.interpreterChangedDisposable = this.interpreterService.onDidChangeInterpreter(this.onInterpreterChanged);
 
         // Create our event emitter
-        this.closedEvent = new EventEmitter<IHistory>();
+        this.closedEvent = new EventEmitter<IInteractiveWindow>();
         this.disposables.push(this.closedEvent);
 
         // Listen for active text editor changes. This is the only way we can tell that we might be needing to gain focus
@@ -153,7 +153,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
     }
 
     public get ready() : Promise<void> {
-        // We need this to ensure the history window is up and ready to receive messages.
+        // We need this to ensure the interactive window is up and ready to receive messages.
         return this.loadPromise;
     }
 
@@ -170,7 +170,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         }
     }
 
-    public get closed(): Event<IHistory> {
+    public get closed(): Event<IInteractiveWindow> {
         return this.closedEvent.event;
     }
 
@@ -186,91 +186,91 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
     // tslint:disable-next-line: no-any no-empty cyclomatic-complexity max-func-body-length
     public onMessage(message: string, payload: any) {
         switch (message) {
-            case HistoryMessages.GotoCodeCell:
+            case InteractiveWindowMessages.GotoCodeCell:
                 this.dispatchMessage(message, payload, this.gotoCode);
                 break;
 
-            case HistoryMessages.CopyCodeCell:
+            case InteractiveWindowMessages.CopyCodeCell:
                 this.dispatchMessage(message, payload, this.copyCode);
                 break;
 
-            case HistoryMessages.RestartKernel:
+            case InteractiveWindowMessages.RestartKernel:
                 this.restartKernel().ignoreErrors();
                 break;
 
-            case HistoryMessages.ReturnAllCells:
+            case InteractiveWindowMessages.ReturnAllCells:
                 this.dispatchMessage(message, payload, this.handleReturnAllCells);
                 break;
 
-            case HistoryMessages.Interrupt:
+            case InteractiveWindowMessages.Interrupt:
                 this.interruptKernel().ignoreErrors();
                 break;
 
-            case HistoryMessages.Export:
+            case InteractiveWindowMessages.Export:
                 this.dispatchMessage(message, payload, this.export);
                 break;
 
-            case HistoryMessages.SendInfo:
+            case InteractiveWindowMessages.SendInfo:
                 this.dispatchMessage(message, payload, this.updateContexts);
                 break;
 
-            case HistoryMessages.SubmitNewCell:
+            case InteractiveWindowMessages.SubmitNewCell:
                 this.dispatchMessage(message, payload, this.submitNewCell);
                 break;
 
-            case HistoryMessages.DeleteAllCells:
+            case InteractiveWindowMessages.DeleteAllCells:
                 this.logTelemetry(Telemetry.DeleteAllCells);
                 break;
 
-            case HistoryMessages.DeleteCell:
+            case InteractiveWindowMessages.DeleteCell:
                 this.logTelemetry(Telemetry.DeleteCell);
                 break;
 
-            case HistoryMessages.Undo:
+            case InteractiveWindowMessages.Undo:
                 this.logTelemetry(Telemetry.Undo);
                 break;
 
-            case HistoryMessages.Redo:
+            case InteractiveWindowMessages.Redo:
                 this.logTelemetry(Telemetry.Redo);
                 break;
 
-            case HistoryMessages.ExpandAll:
+            case InteractiveWindowMessages.ExpandAll:
                 this.logTelemetry(Telemetry.ExpandAll);
                 break;
 
-            case HistoryMessages.CollapseAll:
+            case InteractiveWindowMessages.CollapseAll:
                 this.logTelemetry(Telemetry.CollapseAll);
                 break;
 
-            case HistoryMessages.VariableExplorerToggle:
+            case InteractiveWindowMessages.VariableExplorerToggle:
                 this.variableExplorerToggle(payload);
                 break;
 
-            case HistoryMessages.AddedSysInfo:
+            case InteractiveWindowMessages.AddedSysInfo:
                 this.dispatchMessage(message, payload, this.onAddedSysInfo);
                 break;
 
-            case HistoryMessages.RemoteAddCode:
+            case InteractiveWindowMessages.RemoteAddCode:
                 this.dispatchMessage(message, payload, this.onRemoteAddedCode);
                 break;
 
-            case HistoryMessages.ShowDataViewer:
+            case InteractiveWindowMessages.ShowDataViewer:
                 this.dispatchMessage(message, payload, this.showDataViewer);
                 break;
 
-            case HistoryMessages.GetVariablesRequest:
+            case InteractiveWindowMessages.GetVariablesRequest:
                 this.dispatchMessage(message, payload, this.requestVariables);
                 break;
 
-            case HistoryMessages.GetVariableValueRequest:
+            case InteractiveWindowMessages.GetVariableValueRequest:
                 this.dispatchMessage(message, payload, this.requestVariableValue);
                 break;
 
-            case HistoryMessages.LoadTmLanguageRequest:
+            case InteractiveWindowMessages.LoadTmLanguageRequest:
                 this.dispatchMessage(message, payload, this.requestTmLanguage);
                 break;
 
-            case HistoryMessages.LoadOnigasmAssemblyRequest:
+            case InteractiveWindowMessages.LoadOnigasmAssemblyRequest:
                 this.dispatchMessage(message, payload, this.requestOnigasm);
                 break;
 
@@ -317,36 +317,36 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
     }
 
     public startProgress() {
-        this.postMessage(HistoryMessages.StartProgress).ignoreErrors();
+        this.postMessage(InteractiveWindowMessages.StartProgress).ignoreErrors();
     }
 
     public stopProgress() {
-        this.postMessage(HistoryMessages.StopProgress).ignoreErrors();
+        this.postMessage(InteractiveWindowMessages.StopProgress).ignoreErrors();
     }
 
     @captureTelemetry(Telemetry.Undo)
     public undoCells() {
-        this.postMessage(HistoryMessages.Undo).ignoreErrors();
+        this.postMessage(InteractiveWindowMessages.Undo).ignoreErrors();
     }
 
     @captureTelemetry(Telemetry.Redo)
     public redoCells() {
-        this.postMessage(HistoryMessages.Redo).ignoreErrors();
+        this.postMessage(InteractiveWindowMessages.Redo).ignoreErrors();
     }
 
     @captureTelemetry(Telemetry.DeleteAllCells)
     public removeAllCells() {
-        this.postMessage(HistoryMessages.DeleteAllCells).ignoreErrors();
+        this.postMessage(InteractiveWindowMessages.DeleteAllCells).ignoreErrors();
     }
 
     @captureTelemetry(Telemetry.ExpandAll)
     public expandAllCells() {
-        this.postMessage(HistoryMessages.ExpandAll).ignoreErrors();
+        this.postMessage(InteractiveWindowMessages.ExpandAll).ignoreErrors();
     }
 
     @captureTelemetry(Telemetry.CollapseAll)
     public collapseAllCells() {
-        this.postMessage(HistoryMessages.CollapseAll).ignoreErrors();
+        this.postMessage(InteractiveWindowMessages.CollapseAll).ignoreErrors();
     }
 
     public exportCells() {
@@ -354,7 +354,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         this.waitingForExportCells = true;
 
         // Telemetry will fire when the export function is called.
-        this.postMessage(HistoryMessages.GetAllCells).ignoreErrors();
+        this.postMessage(InteractiveWindowMessages.GetAllCells).ignoreErrors();
     }
 
     @captureTelemetry(Telemetry.RestartKernel)
@@ -473,7 +473,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
             await super.show(false);
 
             // Send this to the react control
-            await this.postMessage(HistoryMessages.Activate);
+            await this.postMessage(InteractiveWindowMessages.Activate);
         }
     }
 
@@ -576,7 +576,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
     }
 
     // tslint:disable-next-line:no-any
-    private dispatchMessage<M extends IHistoryMapping, T extends keyof M>(_message: T, payload: any, handler: (args : M[T]) => void) {
+    private dispatchMessage<M extends IInteractiveWindowMapping, T extends keyof M>(_message: T, payload: any, handler: (args : M[T]) => void) {
         const args = payload as M[T];
         handler.bind(this)(args);
     }
@@ -586,7 +586,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         // See if this is from us or not.
         if (sysInfo.id !== this.id) {
 
-            // Not from us, must come from a different history window. Add to our
+            // Not from us, must come from a different interactive window. Add to our
             // own to keep in sync
             if (sysInfo.sysInfoCell) {
                 this.onAddCodeEvent([sysInfo.sysInfoCell]);
@@ -609,7 +609,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
     private finishOutstandingCells() {
         this.unfinishedCells.forEach(c => {
             c.state = CellState.error;
-            this.postMessage(HistoryMessages.FinishCell, c).ignoreErrors();
+            this.postMessage(InteractiveWindowMessages.FinishCell, c).ignoreErrors();
         });
         this.unfinishedCells = [];
         this.potentiallyUnfinishedStatus.forEach(s => s.dispose());
@@ -661,7 +661,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         }
     }
 
-    private updateContexts(info: IHistoryInfo | undefined) {
+    private updateContexts(info: IInteractiveWindowInfo | undefined) {
         // This should be called by the python interactive window every
         // time state changes. We use this opportunity to update our
         // extension contexts
@@ -687,8 +687,8 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
             this.submitCode(info.code, Identifiers.EmptyFileName, 0, info.id, undefined).ignoreErrors();
 
             // Activate the other side, and send as if came from a file
-            this.historyProvider.getOrCreateActive().then(_v => {
-                this.shareMessage(HistoryMessages.RemoteAddCode, {code: info.code, file: Identifiers.EmptyFileName, line: 0, id: info.id, originator: this.id});
+            this.interactiveWindowProvider.getOrCreateActive().then(_v => {
+                this.shareMessage(InteractiveWindowMessages.RemoteAddCode, {code: info.code, file: Identifiers.EmptyFileName, line: 0, id: info.id, originator: this.id});
             }).ignoreErrors();
         }
     }
@@ -702,7 +702,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         // Transmit this submission to all other listeners (in a live share session)
         if (!id) {
             id = uuid();
-            this.shareMessage(HistoryMessages.RemoteAddCode, {code, file, line, id, originator: this.id});
+            this.shareMessage(InteractiveWindowMessages.RemoteAddCode, {code, file, line, id, originator: this.id});
         }
 
         // Create a deferred object that will wait until the status is disposed
@@ -792,7 +792,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
             switch (cell.state) {
                 case CellState.init:
                     // Tell the react controls we have a new cell
-                    this.postMessage(HistoryMessages.StartCell, cell).ignoreErrors();
+                    this.postMessage(InteractiveWindowMessages.StartCell, cell).ignoreErrors();
 
                     // Keep track of this unfinished cell so if we restart we can finish right away.
                     this.unfinishedCells.push(cell);
@@ -800,13 +800,13 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
 
                 case CellState.executing:
                     // Tell the react controls we have an update
-                    this.postMessage(HistoryMessages.UpdateCell, cell).ignoreErrors();
+                    this.postMessage(InteractiveWindowMessages.UpdateCell, cell).ignoreErrors();
                     break;
 
                 case CellState.error:
                 case CellState.finished:
                     // Tell the react controls we're done
-                    this.postMessage(HistoryMessages.FinishCell, cell).ignoreErrors();
+                    this.postMessage(InteractiveWindowMessages.FinishCell, cell).ignoreErrors();
 
                     // Remove from the list of unfinished cells
                     this.unfinishedCells = this.unfinishedCells.filter(c => c.id !== cell.id);
@@ -994,7 +994,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         const knownDark = await this.isDark();
 
         // Extract our options
-        const options = await this.historyProvider.getNotebookOptions();
+        const options = await this.interactiveWindowProvider.getNotebookOptions();
 
         this.logger.logInformation('Connecting to jupyter server ...');
 
@@ -1088,12 +1088,12 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
 
             // For anything but start, tell the other sides of a live share session
             if (reason !== SysInfoReason.Start && sysInfo) {
-                this.shareMessage(HistoryMessages.AddedSysInfo, { sysInfoCell: sysInfo, id: this.id });
+                this.shareMessage(InteractiveWindowMessages.AddedSysInfo, { sysInfoCell: sysInfo, id: this.id });
             }
 
             // For a restart, tell our window to reset
             if (reason === SysInfoReason.Restart || reason === SysInfoReason.New) {
-                this.postMessage(HistoryMessages.RestartKernel).ignoreErrors();
+                this.postMessage(InteractiveWindowMessages.RestartKernel).ignoreErrors();
             }
 
             this.logger.logInformation(`Sys info for ${this.id} ${reason} complete`);
@@ -1140,7 +1140,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
 
     private load = async (): Promise<void> => {
         // Status depends upon if we're about to connect to existing server or not.
-        const status = (await this.jupyterExecution.getServer(await this.historyProvider.getNotebookOptions())) ?
+        const status = (await this.jupyterExecution.getServer(await this.interactiveWindowProvider.getNotebookOptions())) ?
             this.setStatus(localize.DataScience.connectingToJupyter()) : this.setStatus(localize.DataScience.startingJupyter());
 
         // Check to see if we support ipykernel or not
@@ -1199,7 +1199,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
             });
         }
 
-        this.postMessage(HistoryMessages.GetVariablesResponse, variablesResponse).ignoreErrors();
+        this.postMessage(InteractiveWindowMessages.GetVariablesResponse, variablesResponse).ignoreErrors();
         sendTelemetryEvent(Telemetry.VariableExplorerVariableCount, undefined, { variableCount: variablesResponse.variables.length });
     }
 
@@ -1209,7 +1209,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
             const targetVar = payload as IJupyterVariable;
             // Request our variable value
             const varValue: IJupyterVariable = await this.jupyterVariables.getValue(targetVar);
-            this.postMessage(HistoryMessages.GetVariableValueResponse, varValue).ignoreErrors();
+            this.postMessage(InteractiveWindowMessages.GetVariableValueResponse, varValue).ignoreErrors();
         }
     }
 
@@ -1228,9 +1228,9 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         // Get the contents of the appropriate tmLanguage file.
         traceInfo('Request for tmlanguage file.');
         this.themeFinder.findTmLanguage(PYTHON_LANGUAGE).then(s => {
-            this.postMessage(HistoryMessages.LoadTmLanguageResponse, s).ignoreErrors();
+            this.postMessage(InteractiveWindowMessages.LoadTmLanguageResponse, s).ignoreErrors();
         }).catch(_e => {
-            this.postMessage(HistoryMessages.LoadTmLanguageResponse, undefined).ignoreErrors();
+            this.postMessage(InteractiveWindowMessages.LoadTmLanguageResponse, undefined).ignoreErrors();
         });
     }
 
@@ -1241,23 +1241,23 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         if (this.fileSystem) {
             if (await this.fileSystem.fileExists(filePath)) {
                 const contents = await fs.readFile(filePath);
-                this.postMessage(HistoryMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
+                this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
             } else {
                 // During development it's actually in the node_modules folder
                 filePath = path.join(EXTENSION_ROOT_DIR, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
                 traceInfo(`Backup request for onigasm file at ${filePath}`);
                 if (await this.fileSystem.fileExists(filePath)) {
                     const contents = await fs.readFile(filePath);
-                    this.postMessage(HistoryMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
+                    this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
                 } else {
                     traceWarning('Onigasm file not found. Colorization will not be available.');
-                    this.postMessage(HistoryMessages.LoadOnigasmAssemblyResponse, undefined).ignoreErrors();
+                    this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, undefined).ignoreErrors();
                 }
             }
         } else {
             // This happens during testing. Onigasm not needed as we're not testing colorization.
             traceWarning('File system not found. Colorization will not be available.');
-            this.postMessage(HistoryMessages.LoadOnigasmAssemblyResponse, undefined).ignoreErrors();
+            this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, undefined).ignoreErrors();
         }
     }
 }

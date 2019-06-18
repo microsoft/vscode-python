@@ -7,16 +7,16 @@ import { ReactWrapper } from 'enzyme';
 import { parse } from 'node-html-parser';
 import * as React from 'react';
 import { Disposable } from 'vscode';
-import { HistoryMessageListener } from '../../client/datascience/history/historyMessageListener';
-import { HistoryMessages } from '../../client/datascience/history/historyTypes';
-import { IHistory, IHistoryProvider, IJupyterVariable } from '../../client/datascience/types';
+import { InteractiveWindowMessageListener } from '../../client/datascience/interactive-window/interactiveWindowMessageListener';
+import { InteractiveWindowMessages } from '../../client/datascience/interactive-window/interactiveWindowTypes';
+import { IInteractiveWindow, IInteractiveWindowProvider, IJupyterVariable } from '../../client/datascience/types';
 import { VariableExplorer } from '../../datascience-ui/history-react/variableExplorer';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { addCode, runMountedTest } from './historyTestHelpers';
+import { addCode, runMountedTest } from './interactiveWindowTestHelpers';
 import { waitForUpdate } from './reactHelpers';
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
-suite('DataScience History variable explorer tests', () => {
+suite('DataScience Interactive Window variable explorer tests', () => {
     const disposables: Disposable[] = [];
     let ioc: DataScienceIocContainer;
 
@@ -50,14 +50,14 @@ suite('DataScience History variable explorer tests', () => {
         await ioc.dispose();
     });
 
-    async function getOrCreateHistory(): Promise<IHistory> {
-        const historyProvider = ioc.get<IHistoryProvider>(IHistoryProvider);
-        const result = await historyProvider.getOrCreateActive();
+    async function getOrCreateInteractiveWindow(): Promise<IInteractiveWindow> {
+        const interactiveWindowProvider = ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
+        const result = await interactiveWindowProvider.getOrCreateActive();
 
-        // During testing the MainPanel sends the init message before our history is created.
+        // During testing the MainPanel sends the init message before our interactive window is created.
         // Pretend like it's happening now
-        const listener = ((result as any).messageListener) as HistoryMessageListener;
-        listener.onMessage(HistoryMessages.Started, {});
+        const listener = ((result as any).messageListener) as InteractiveWindowMessageListener;
+        listener.onMessage(InteractiveWindowMessages.Started, {});
 
         return result;
     }
@@ -70,8 +70,8 @@ value = 'hello world'`;
 
         openVariableExplorer(wrapper);
 
-        await addCode(getOrCreateHistory, wrapper, 'a=1\na');
-        await addCode(getOrCreateHistory, wrapper, basicCode, 4);
+        await addCode(getOrCreateInteractiveWindow, wrapper, 'a=1\na');
+        await addCode(getOrCreateInteractiveWindow, wrapper, basicCode, 4);
         await waitForUpdate(wrapper, VariableExplorer, 3);
 
         // We should show a string and show an int, the modules should be hidden
@@ -86,7 +86,7 @@ value = 'hello world'`;
         ioc.getSettings().datascience.variableExplorerExclude = 'str';
 
         // Add another string and check our vars, modules should be shown and str should be hidden
-        await addCode(getOrCreateHistory, wrapper, basicCode2, 4);
+        await addCode(getOrCreateInteractiveWindow, wrapper, basicCode2, 4);
         await waitForUpdate(wrapper, VariableExplorer, 7);
 
         targetVariables = [
@@ -106,7 +106,7 @@ value = 'hello world'`;
 
         openVariableExplorer(wrapper);
 
-        await addCode(getOrCreateHistory, wrapper, 'a=1\na');
+        await addCode(getOrCreateInteractiveWindow, wrapper, 'a=1\na');
         await waitForUpdate(wrapper, VariableExplorer, 2);
 
         // Check that we have just the 'a' variable
@@ -116,7 +116,7 @@ value = 'hello world'`;
         verifyVariables(wrapper, targetVariables);
 
         // Add another variable and check it
-        await addCode(getOrCreateHistory, wrapper, basicCode, 4);
+        await addCode(getOrCreateInteractiveWindow, wrapper, basicCode, 4);
         await waitForUpdate(wrapper, VariableExplorer, 3);
 
         targetVariables = [
@@ -127,7 +127,7 @@ value = 'hello world'`;
         verifyVariables(wrapper, targetVariables);
 
         // Add a second variable and check it
-        await addCode(getOrCreateHistory, wrapper, basicCode2, 4);
+        await addCode(getOrCreateInteractiveWindow, wrapper, basicCode2, 4);
         await waitForUpdate(wrapper, VariableExplorer, 4);
 
         targetVariables = [
@@ -145,8 +145,8 @@ value = 'hello world'`;
 
         openVariableExplorer(wrapper);
 
-        await addCode(getOrCreateHistory, wrapper, 'a=1\na');
-        await addCode(getOrCreateHistory, wrapper, basicCode, 4);
+        await addCode(getOrCreateInteractiveWindow, wrapper, 'a=1\na');
+        await addCode(getOrCreateInteractiveWindow, wrapper, basicCode, 4);
 
         // Here we are only going to wait for two renders instead of the needed three
         // a should have the value updated, but value should still be loading
@@ -177,8 +177,8 @@ myDict = {'a': 1}`;
 
         openVariableExplorer(wrapper);
 
-        await addCode(getOrCreateHistory, wrapper, 'a=1\na');
-        await addCode(getOrCreateHistory, wrapper, basicCode, 4);
+        await addCode(getOrCreateInteractiveWindow, wrapper, 'a=1\na');
+        await addCode(getOrCreateInteractiveWindow, wrapper, basicCode, 4);
 
         // Verify that we actually update the variable explorer
         // Count here is our main render + a render for each variable row as they come in
@@ -209,8 +209,8 @@ myTuple = 1,2,3,4,5,6,7,8,9
 
         openVariableExplorer(wrapper);
 
-        await addCode(getOrCreateHistory, wrapper, 'a=1\na');
-        await addCode(getOrCreateHistory, wrapper, basicCode, 4);
+        await addCode(getOrCreateInteractiveWindow, wrapper, 'a=1\na');
+        await addCode(getOrCreateInteractiveWindow, wrapper, basicCode, 4);
 
         // Verify that we actually update the variable explorer
         // Count here is our main render + a render for each variable row as they come in
@@ -318,7 +318,7 @@ myTuple = 1,2,3,4,5,6,7,8,9
 27           54.00108
 28           56.00112
 29           58.00116
-             ...     
+             ...
 49970     99941.99884
 49971     99943.99888
 49972     99945.99892
@@ -364,8 +364,8 @@ strc = 'c'`;
 
         openVariableExplorer(wrapper);
 
-        await addCode(getOrCreateHistory, wrapper, 'a=1\na');
-        await addCode(getOrCreateHistory, wrapper, basicCode, 4);
+        await addCode(getOrCreateInteractiveWindow, wrapper, 'a=1\na');
+        await addCode(getOrCreateInteractiveWindow, wrapper, basicCode, 4);
 
         await waitForUpdate(wrapper, VariableExplorer, 7);
 
