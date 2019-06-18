@@ -7,11 +7,11 @@ import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, CodeLens, Range, Selection, TextEditor } from 'vscode';
 
-import { IApplicationShell, IDocumentManager } from '../../../client/common/application/types';
+import { IApplicationShell, ICommandManager, IDocumentManager } from '../../../client/common/application/types';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, ILogger } from '../../../client/common/types';
-import { Commands } from '../../../client/datascience/constants';
+import { Commands, EditorContexts } from '../../../client/datascience/constants';
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
 import { CodeWatcher } from '../../../client/datascience/editor-integration/codewatcher';
 import { ICodeWatcher, IInteractiveWindow, IInteractiveWindowProvider } from '../../../client/datascience/types';
@@ -29,12 +29,14 @@ suite('DataScience Code Watcher Unit Tests', () => {
     let interactiveWindowProvider: TypeMoq.IMock<IInteractiveWindowProvider>;
     let activeInteractiveWindow: TypeMoq.IMock<IInteractiveWindow>;
     let documentManager: TypeMoq.IMock<IDocumentManager>;
+    let commandManager: TypeMoq.IMock<ICommandManager>;
     let textEditor: TypeMoq.IMock<TextEditor>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let configService: TypeMoq.IMock<IConfigurationService>;
     let serviceContainer : TypeMoq.IMock<IServiceContainer>;
     let helper: TypeMoq.IMock<ICodeExecutionHelper>;
     let tokenSource : CancellationTokenSource;
+    const contexts : Map<string, boolean> = new Map<string, boolean>();
     const pythonSettings = new class extends PythonSettings {
         public fireChangeEvent() {
             this.changed.fire();
@@ -52,6 +54,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
         helper = TypeMoq.Mock.ofType<ICodeExecutionHelper>();
+        commandManager = TypeMoq.Mock.ofType<ICommandManager>();
 
         // Setup default settings
         pythonSettings.datascience = {
@@ -93,6 +96,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
 
         // Setup config service
         configService.setup(c => c.getSettings()).returns(() => pythonSettings);
+
         codeWatcher = new CodeWatcher(appShell.object, logger.object, interactiveWindowProvider.object, fileSystem.object, configService.object, documentManager.object, helper.object);
     });
 
@@ -656,12 +660,14 @@ testing2`; // Command tests override getText, so just need the ranges here
         const inputText = '#%% foobar';
         const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce());
         documentManager.setup(d => d.textDocuments).returns(() => [document.object]);
-        const codeLensProvider = new DataScienceCodeLensProvider(serviceContainer.object, documentManager.object, configService.object);
+        const codeLensProvider = new DataScienceCodeLensProvider(serviceContainer.object, documentManager.object, configService.object, commandManager.object);
 
         let result = codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
         expect(result, 'result not okay').to.be.ok;
         let codeLens = result as CodeLens[];
         expect(codeLens.length).to.equal(2, 'Code lens wrong length');
+
+        expect(contexts.get(EditorContexts.HasCodeCells)).to.be.equal(true, 'Code cells context not set');
 
         // Change settings
         pythonSettings.datascience.codeRegularExpression = '#%%%.*dude';
@@ -669,6 +675,8 @@ testing2`; // Command tests override getText, so just need the ranges here
         expect(result, 'result not okay').to.be.ok;
         codeLens = result as CodeLens[];
         expect(codeLens.length).to.equal(0, 'Code lens wrong length');
+
+        expect(contexts.get(EditorContexts.HasCodeCells)).to.be.equal(false, 'Code cells context not set');
 
         // Change settings to empty
         pythonSettings.datascience.codeRegularExpression = '';
