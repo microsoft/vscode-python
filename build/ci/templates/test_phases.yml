@@ -160,6 +160,13 @@ steps:
       summaryFileLocation: "$(System.DefaultWorkingDirectory)/coverage/cobertura-coverage.xml"
       reportDirectory: "$(System.DefaultWorkingDirectory)/coverage"
 
+      # Upload Code Coverage Results (to be merged later).
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathtoPublish: "$(Build.SourcesDirectory)/.nyc_output"
+      artifactName: 'coverage-output-$(Agent.Os)'
+    condition: always()
+
   # Install the requirements for the Python or the system tests. This includes the supporting libs that
   # we ship in our extension such as PTVSD and Jedi.
   #
