@@ -167,24 +167,15 @@ export class CodeWatcher implements ICodeWatcher {
     public async runSelectionOrLine(activeEditor : TextEditor | undefined) {
         if (this.document && activeEditor &&
             this.fileSystem.arePathsSame(activeEditor.document.fileName, this.document.fileName)) {
-
             // Get just the text of the selection or the current line if none
             const codeToExecute = await this.executionHelper.getSelectedTextToExecute(activeEditor);
             if (!codeToExecute) {
                 return ;
             }
-<<<<<<< HEAD
             const normalizedCode = await this.executionHelper.normalizeLines(codeToExecute!);
             if (!normalizedCode || normalizedCode.trim().length === 0) {
                 return;
-=======
-
-            if (code && code.trim().length) {
-                const activeInteractiveWindow = await this.interactiveWindowProvider.getOrCreateActive();
-                await activeInteractiveWindow.addCode(code, this.getFileName(), activeEditor.selection.start.line, activeEditor);
->>>>>>> Rename history to interactive window
             }
-
             const activeInteractiveWindow = await this.interactiveWindowProvider.getOrCreateActive();
             await activeInteractiveWindow.addCode(normalizedCode, this.getFileName(), activeEditor.selection.start.line, activeEditor);
         }

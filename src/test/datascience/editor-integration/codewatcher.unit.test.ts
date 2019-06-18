@@ -80,11 +80,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
 
         // Setup the service container to return code watchers
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-<<<<<<< HEAD
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICodeWatcher))).returns(() => new CodeWatcher(appShell.object, logger.object, interactiveWindowProvider.object, fileSystem.object, configService.object, documentManager.object, helper.object));
-=======
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICodeWatcher))).returns(() => new CodeWatcher(appShell.object, logger.object, interactiveWindowProvider.object, fileSystem.object, configService.object, documentManager.object));
->>>>>>> Rename history to interactive window
 
         // Setup our active history instance
         interactiveWindowProvider.setup(h => h.getOrCreateActive()).returns(() => Promise.resolve(activeInteractiveWindow.object));
@@ -97,12 +93,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
 
         // Setup config service
         configService.setup(c => c.getSettings()).returns(() => pythonSettings);
-
-<<<<<<< HEAD
         codeWatcher = new CodeWatcher(appShell.object, logger.object, interactiveWindowProvider.object, fileSystem.object, configService.object, documentManager.object, helper.object);
-=======
-        codeWatcher = new CodeWatcher(appShell.object, logger.object, interactiveWindowProvider.object, fileSystem.object, configService.object, documentManager.object);
->>>>>>> Rename history to interactive window
     });
 
     function createTypeMoq<T>(tag: string): TypeMoq.IMock<T> {
