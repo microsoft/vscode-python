@@ -422,11 +422,11 @@ testing3`;
         // Set up our expected calls to add code
         activeHistory.setup(h => h.addCode(TypeMoq.It.isValue(targetText1),
                                 TypeMoq.It.isValue(fileName),
-                                TypeMoq.It.isValue(2))).verifiable(TypeMoq.Times.once());
+                                TypeMoq.It.isValue(2), textEditor.object)).verifiable(TypeMoq.Times.once());
 
         activeHistory.setup(h => h.addCode(TypeMoq.It.isValue(targetText2),
                                 TypeMoq.It.isValue(fileName),
-                                TypeMoq.It.isValue(4))).verifiable(TypeMoq.Times.once());
+                                TypeMoq.It.isValue(4), textEditor.object)).verifiable(TypeMoq.Times.once());
 
         await codeWatcher.runCellAndAllBelow(2, 0, textEditor.object);
 
@@ -460,11 +460,11 @@ testing2`;
         // Set up our expected calls to add code
         activeHistory.setup(h => h.addCode(TypeMoq.It.isValue(targetText1),
                                 TypeMoq.It.isValue(fileName),
-                                TypeMoq.It.isValue(0))).verifiable(TypeMoq.Times.once());
+                                TypeMoq.It.isValue(0), textEditor.object)).verifiable(TypeMoq.Times.once());
 
         activeHistory.setup(h => h.addCode(TypeMoq.It.isValue(targetText2),
                                 TypeMoq.It.isValue(fileName),
-                                TypeMoq.It.isValue(2))).verifiable(TypeMoq.Times.once());
+                                TypeMoq.It.isValue(2), textEditor.object)).verifiable(TypeMoq.Times.once());
 
         await codeWatcher.runAllCellsAbove(4, 0, textEditor.object);
 
