@@ -42,6 +42,7 @@ import { generateTestState } from '../../datascience-ui/history-react/mainPanelS
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 
+import { asyncDump } from '../common/asyncDump';
 // tslint:disable:no-any no-multiline-string max-func-body-length no-console max-classes-per-file trailing-comma
 suite('DataScience notebook tests', () => {
     const disposables: Disposable[] = [];
@@ -83,6 +84,11 @@ suite('DataScience notebook tests', () => {
         } catch (e) {
             traceError(e);
         }
+    });
+
+    // Uncomment this to debug hangs on exit
+    suiteTeardown(() => {
+         asyncDump();
     });
 
     function escapePath(p: string) {
