@@ -152,17 +152,17 @@ export interface INotebookExporter extends Disposable {
     translateToNotebook(cells: ICell[], directoryChange?: string) : Promise<JSONObject | undefined>;
 }
 
-export const IHistoryProvider = Symbol('IHistoryProvider');
-export interface IHistoryProvider {
+export const IInteractiveWindowProvider = Symbol('IInteractiveWindowProvider');
+export interface IInteractiveWindowProvider {
     onExecutedCode: Event<string>;
-    getActive() : IHistory | undefined;
-    getOrCreateActive(): Promise<IHistory>;
+    getActive() : IInteractiveWindow | undefined;
+    getOrCreateActive(): Promise<IInteractiveWindow>;
     getNotebookOptions() : Promise<INotebookServerOptions>;
 }
 
-export const IHistory = Symbol('IHistory');
-export interface IHistory extends Disposable {
-    closed: Event<IHistory>;
+export const IInteractiveWindow = Symbol('IInteractiveWindow');
+export interface IInteractiveWindow extends Disposable {
+    closed: Event<IInteractiveWindow>;
     ready: Promise<void>;
     onExecutedCode: Event<string>;
     show() : Promise<void>;
@@ -181,19 +181,19 @@ export interface IHistory extends Disposable {
     previewNotebook(notebookFile: string) : Promise<void>;
 }
 
-export const IHistoryListener = Symbol('IHistoryListener');
+export const IInteractiveWindowListener = Symbol('IInteractiveWindowListener');
 
 /**
  * Listens to history messages to provide extra functionality
  */
-export interface IHistoryListener extends IDisposable {
+export interface IInteractiveWindowListener extends IDisposable {
     /**
      * Fires this event when posting a response message
      */
     // tslint:disable-next-line: no-any
     postMessage: Event<{message: string; payload: any}>;
     /**
-     * Handles messages that the history window receives
+     * Handles messages that the interactive window receives
      * @param message message type
      * @param payload message payload
      */
@@ -255,7 +255,7 @@ export interface ICell {
     data: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell | IMessageCell;
 }
 
-export interface IHistoryInfo {
+export interface IInteractiveWindowInfo {
     cellCount: number;
     undoCount: number;
     redoCount: number;
@@ -282,7 +282,7 @@ export interface IThemeFinder {
 export const IStatusProvider = Symbol('IStatusProvider');
 export interface IStatusProvider {
     // call this function to set the new status on the active
-    // history window. Dispose of the returned object when done.
+    // interactive window. Dispose of the returned object when done.
     set(message: string, timeout?: number) : Disposable;
 
     // call this function to wait for a promise while displaying status

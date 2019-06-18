@@ -10,8 +10,8 @@ import { CancellationToken } from 'vscode';
 
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { IDataScienceSettings } from '../../client/common/types';
-import { HistoryMessages } from '../../client/datascience/history/historyTypes';
-import { IHistory, IJupyterExecution } from '../../client/datascience/types';
+import { InteractiveWindowMessages } from '../../client/datascience/interactive-window/interactiveWindowTypes';
+import { IInteractiveWindow, IJupyterExecution } from '../../client/datascience/types';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { updateSettings } from '../../datascience-ui/react-common/settingsReactSide';
@@ -47,14 +47,14 @@ export function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<an
     });
 }
 
-//export async function getOrCreateHistory(ioc: DataScienceIocContainer): Promise<IHistory> {
-    //const historyProvider = ioc.get<IHistoryProvider>(IHistoryProvider);
-    //const result = await historyProvider.getOrCreateActive();
+//export async function getOrCreateHistory(ioc: DataScienceIocContainer): Promise<IInteractiveWindow> {
+    //const interactiveWindowProvider = ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
+    //const result = await interactiveWindowProvider.getOrCreateActive();
 
     //// During testing the MainPanel sends the init message before our history is created.
     //// Pretend like it's happening now
-    //const listener = ((result as any).messageListener) as HistoryMessageListener;
-    //listener.onMessage(HistoryMessages.Started, {});
+    //const listener = ((result as any).messageListener) as InteractiveWindowMessageListener;
+    //listener.onMessage(InteractiveWindowMessages.Started, {});
 
     //return result;
 //}
@@ -182,7 +182,7 @@ export async function getCellResults(wrapper: ReactWrapper<any, Readonly<{}>, Re
     return wrapper.find('Cell');
 }
 
-export async function addCode(historyProvider: () => Promise<IHistory>, wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string, expectedRenderCount: number = 5): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
+export async function addCode(interactiveWindowProvider: () => Promise<IInteractiveWindow>, wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string, expectedRenderCount: number = 5): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
     // Adding code should cause 5 renders to happen.
     // 1) Input
     // 2) Status ready
@@ -190,7 +190,7 @@ export async function addCode(historyProvider: () => Promise<IHistory>, wrapper:
     // 4) Output message (if there's only one)
     // 5) Status finished
     return getCellResults(wrapper, expectedRenderCount, async () => {
-        const history = await historyProvider();
+        const history = await interactiveWindowProvider();
         await history.addCode(code, 'foo.py', 2);
     });
 }
@@ -343,7 +343,7 @@ export function updateDataScienceSettings(wrapper: ReactWrapper<any, Readonly<{}
     const settingsString = JSON.stringify(newSettings);
     const mainPanel = getMainPanel(wrapper);
     if (mainPanel) {
-        mainPanel.handleMessage(HistoryMessages.UpdateSettings, settingsString);
+        mainPanel.handleMessage(InteractiveWindowMessages.UpdateSettings, settingsString);
     }
     wrapper.update();
 }

@@ -4,9 +4,9 @@
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 
 import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../messages';
-import { ICell, IHistoryInfo, IJupyterVariable, IJupyterVariablesResponse } from '../types';
+import { ICell, IInteractiveWindowInfo, IJupyterVariable, IJupyterVariablesResponse } from '../types';
 
-export namespace HistoryMessages {
+export namespace InteractiveWindowMessages {
     export const StartCell = 'start_cell';
     export const FinishCell = 'finish_cell';
     export const UpdateCell = 'update_cell';
@@ -60,9 +60,9 @@ export namespace HistoryMessages {
 
 // These are the messages that will mirror'd to guest/hosts in
 // a live share session
-export const HistoryRemoteMessages : string[] = [
-    HistoryMessages.AddedSysInfo,
-    HistoryMessages.RemoteAddCode
+export const InteractiveWindowRemoteMessages : string[] = [
+    InteractiveWindowMessages.AddedSysInfo,
+    InteractiveWindowMessages.RemoteAddCode
 ];
 
 export interface IGotoCode {
@@ -161,56 +161,56 @@ export interface IShowDataViewer {
 }
 
 // Map all messages to specific payloads
-export class IHistoryMapping {
-    public [HistoryMessages.StartCell]: ICell;
-    public [HistoryMessages.FinishCell]: ICell;
-    public [HistoryMessages.UpdateCell]: ICell;
-    public [HistoryMessages.GotoCodeCell]: IGotoCode;
-    public [HistoryMessages.CopyCodeCell]: ICopyCode;
-    public [HistoryMessages.RestartKernel]: never | undefined;
-    public [HistoryMessages.Export]: ICell[];
-    public [HistoryMessages.GetAllCells]: ICell;
-    public [HistoryMessages.ReturnAllCells]: ICell[];
-    public [HistoryMessages.DeleteCell]: never | undefined;
-    public [HistoryMessages.DeleteAllCells]: never | undefined;
-    public [HistoryMessages.Undo]: never | undefined;
-    public [HistoryMessages.Redo]: never | undefined;
-    public [HistoryMessages.ExpandAll]: never | undefined;
-    public [HistoryMessages.CollapseAll]: never | undefined;
-    public [HistoryMessages.StartProgress]: never | undefined;
-    public [HistoryMessages.StopProgress]: never | undefined;
-    public [HistoryMessages.Interrupt]: never | undefined;
-    public [HistoryMessages.UpdateSettings]: string;
-    public [HistoryMessages.SubmitNewCell]: ISubmitNewCell;
-    public [HistoryMessages.SendInfo]: IHistoryInfo;
-    public [HistoryMessages.Started]: never | undefined;
-    public [HistoryMessages.AddedSysInfo]: IAddedSysInfo;
-    public [HistoryMessages.RemoteAddCode]: IRemoteAddCode;
-    public [HistoryMessages.Activate] : never | undefined;
-    public [HistoryMessages.ShowDataViewer]: IShowDataViewer;
-    public [HistoryMessages.GetVariablesRequest]: number;
-    public [HistoryMessages.GetVariablesResponse]: IJupyterVariablesResponse;
-    public [HistoryMessages.GetVariableValueRequest]: IJupyterVariable;
-    public [HistoryMessages.GetVariableValueResponse]: IJupyterVariable;
-    public [HistoryMessages.VariableExplorerToggle]: boolean;
+export class IInteractiveWindowMapping {
+    public [InteractiveWindowMessages.StartCell]: ICell;
+    public [InteractiveWindowMessages.FinishCell]: ICell;
+    public [InteractiveWindowMessages.UpdateCell]: ICell;
+    public [InteractiveWindowMessages.GotoCodeCell]: IGotoCode;
+    public [InteractiveWindowMessages.CopyCodeCell]: ICopyCode;
+    public [InteractiveWindowMessages.RestartKernel]: never | undefined;
+    public [InteractiveWindowMessages.Export]: ICell[];
+    public [InteractiveWindowMessages.GetAllCells]: ICell;
+    public [InteractiveWindowMessages.ReturnAllCells]: ICell[];
+    public [InteractiveWindowMessages.DeleteCell]: never | undefined;
+    public [InteractiveWindowMessages.DeleteAllCells]: never | undefined;
+    public [InteractiveWindowMessages.Undo]: never | undefined;
+    public [InteractiveWindowMessages.Redo]: never | undefined;
+    public [InteractiveWindowMessages.ExpandAll]: never | undefined;
+    public [InteractiveWindowMessages.CollapseAll]: never | undefined;
+    public [InteractiveWindowMessages.StartProgress]: never | undefined;
+    public [InteractiveWindowMessages.StopProgress]: never | undefined;
+    public [InteractiveWindowMessages.Interrupt]: never | undefined;
+    public [InteractiveWindowMessages.UpdateSettings]: string;
+    public [InteractiveWindowMessages.SubmitNewCell]: ISubmitNewCell;
+    public [InteractiveWindowMessages.SendInfo]: IInteractiveWindowInfo;
+    public [InteractiveWindowMessages.Started]: never | undefined;
+    public [InteractiveWindowMessages.AddedSysInfo]: IAddedSysInfo;
+    public [InteractiveWindowMessages.RemoteAddCode]: IRemoteAddCode;
+    public [InteractiveWindowMessages.Activate] : never | undefined;
+    public [InteractiveWindowMessages.ShowDataViewer]: IShowDataViewer;
+    public [InteractiveWindowMessages.GetVariablesRequest]: number;
+    public [InteractiveWindowMessages.GetVariablesResponse]: IJupyterVariablesResponse;
+    public [InteractiveWindowMessages.GetVariableValueRequest]: IJupyterVariable;
+    public [InteractiveWindowMessages.GetVariableValueResponse]: IJupyterVariable;
+    public [InteractiveWindowMessages.VariableExplorerToggle]: boolean;
     public [CssMessages.GetCssRequest] : IGetCssRequest;
     public [CssMessages.GetCssResponse] : IGetCssResponse;
-    public [HistoryMessages.ProvideCompletionItemsRequest] : IProvideCompletionItemsRequest;
-    public [HistoryMessages.CancelCompletionItemsRequest] : ICancelIntellisenseRequest;
-    public [HistoryMessages.ProvideCompletionItemsResponse] : IProvideCompletionItemsResponse;
-    public [HistoryMessages.ProvideHoverRequest] : IProvideHoverRequest;
-    public [HistoryMessages.CancelHoverRequest] : ICancelIntellisenseRequest;
-    public [HistoryMessages.ProvideHoverResponse] : IProvideHoverResponse;
-    public [HistoryMessages.ProvideSignatureHelpRequest] : IProvideSignatureHelpRequest;
-    public [HistoryMessages.CancelSignatureHelpRequest] : ICancelIntellisenseRequest;
-    public [HistoryMessages.ProvideSignatureHelpResponse] : IProvideSignatureHelpResponse;
-    public [HistoryMessages.AddCell] : IAddCell;
-    public [HistoryMessages.EditCell] : IEditCell;
-    public [HistoryMessages.RemoveCell] : IRemoveCell;
-    public [HistoryMessages.LoadOnigasmAssemblyRequest]: never | undefined;
-    public [HistoryMessages.LoadOnigasmAssemblyResponse]: Buffer;
-    public [HistoryMessages.LoadTmLanguageRequest]: never | undefined;
-    public [HistoryMessages.LoadTmLanguageResponse]: string | undefined;
-    public [HistoryMessages.OpenLink]: string | undefined;
-    public [HistoryMessages.ShowPlot]: string | undefined;
+    public [InteractiveWindowMessages.ProvideCompletionItemsRequest] : IProvideCompletionItemsRequest;
+    public [InteractiveWindowMessages.CancelCompletionItemsRequest] : ICancelIntellisenseRequest;
+    public [InteractiveWindowMessages.ProvideCompletionItemsResponse] : IProvideCompletionItemsResponse;
+    public [InteractiveWindowMessages.ProvideHoverRequest] : IProvideHoverRequest;
+    public [InteractiveWindowMessages.CancelHoverRequest] : ICancelIntellisenseRequest;
+    public [InteractiveWindowMessages.ProvideHoverResponse] : IProvideHoverResponse;
+    public [InteractiveWindowMessages.ProvideSignatureHelpRequest] : IProvideSignatureHelpRequest;
+    public [InteractiveWindowMessages.CancelSignatureHelpRequest] : ICancelIntellisenseRequest;
+    public [InteractiveWindowMessages.ProvideSignatureHelpResponse] : IProvideSignatureHelpResponse;
+    public [InteractiveWindowMessages.AddCell] : IAddCell;
+    public [InteractiveWindowMessages.EditCell] : IEditCell;
+    public [InteractiveWindowMessages.RemoveCell] : IRemoveCell;
+    public [InteractiveWindowMessages.LoadOnigasmAssemblyRequest]: never | undefined;
+    public [InteractiveWindowMessages.LoadOnigasmAssemblyResponse]: Buffer;
+    public [InteractiveWindowMessages.LoadTmLanguageRequest]: never | undefined;
+    public [InteractiveWindowMessages.LoadTmLanguageResponse]: string | undefined;
+    public [InteractiveWindowMessages.OpenLink]: string | undefined;
+    public [InteractiveWindowMessages.ShowPlot]: string | undefined;
 }

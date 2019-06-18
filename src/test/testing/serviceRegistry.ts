@@ -5,15 +5,15 @@ import { Uri } from 'vscode';
 
 import { IProcessServiceFactory } from '../../client/common/process/types';
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
-import { History } from '../../client/datascience/history/history';
-import { HistoryProvider } from '../../client/datascience/history/historyProvider';
+import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
+import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterImporter } from '../../client/datascience/jupyter/jupyterImporter';
 import { JupyterServerFactory } from '../../client/datascience/jupyter/jupyterServerFactory';
 import {
     ICodeCssGenerator,
-    IHistory,
-    IHistoryProvider,
+    IInteractiveWindow,
+    IInteractiveWindowProvider,
     IJupyterExecution,
     INotebookImporter,
     INotebookServer
@@ -153,8 +153,8 @@ export class UnitTestIocContainer extends IocContainer {
 
     public registerDataScienceTypes() {
         this.serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecutionFactory);
-        this.serviceManager.addSingleton<IHistoryProvider>(IHistoryProvider, HistoryProvider);
-        this.serviceManager.add<IHistory>(IHistory, History);
+        this.serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
+        this.serviceManager.add<IInteractiveWindow>(IInteractiveWindow, InteractiveWindow);
         this.serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
         this.serviceManager.add<INotebookServer>(INotebookServer, JupyterServerFactory);
         this.serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);

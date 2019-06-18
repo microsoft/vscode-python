@@ -15,9 +15,9 @@ import { noop } from '../../client/common/utils/misc';
 import { generateCellsFromDocument } from '../../client/datascience/cellFactory';
 import { concatMultilineString } from '../../client/datascience/common';
 import { EditorContexts } from '../../client/datascience/constants';
-import { HistoryMessageListener } from '../../client/datascience/history/historyMessageListener';
-import { HistoryMessages } from '../../client/datascience/history/historyTypes';
-import { IHistory, IHistoryProvider } from '../../client/datascience/types';
+import { InteractiveWindowMessageListener } from '../../client/datascience/interactive-window/interactiveWindowMessageListener';
+import { InteractiveWindowMessages } from '../../client/datascience/interactive-window/interactiveWindowTypes';
+import { IInteractiveWindow, IInteractiveWindowProvider } from '../../client/datascience/types';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { sleep } from '../core';
@@ -42,12 +42,12 @@ import {
     updateDataScienceSettings,
     verifyHtmlOnCell,
     verifyLastCellInputState
-} from './historyTestHelpers';
+} from './interactiveWindowTestHelpers';
 import { waitForUpdate } from './reactHelpers';
 
 //import { asyncDump } from '../common/asyncDump';
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
-suite('DataScience History output tests', () => {
+suite('DataScience Interactive Window output tests', () => {
     const disposables: Disposable[] = [];
     let ioc: DataScienceIocContainer;
 
@@ -75,14 +75,14 @@ suite('DataScience History output tests', () => {
     //      asyncDump();
     // });
 
-    async function getOrCreateHistory(): Promise<IHistory> {
-        const historyProvider = ioc.get<IHistoryProvider>(IHistoryProvider);
-        const result = await historyProvider.getOrCreateActive();
+    async function getOrCreateInteractiveWindow(): Promise<IInteractiveWindow> {
+        const interactiveWindowProvider = ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
+        const result = await interactiveWindowProvider.getOrCreateActive();
 
-        // During testing the MainPanel sends the init message before our history is created.
+        // During testing the MainPanel sends the init message before our interactive window is created.
         // Pretend like it's happening now
-        const listener = ((result as any).messageListener) as HistoryMessageListener;
-        listener.onMessage(HistoryMessages.Started, {});
+        const listener = ((result as any).messageListener) as InteractiveWindowMessageListener;
+        listener.onMessage(InteractiveWindowMessages.Started, {});
 
         return result;
     }
@@ -95,7 +95,7 @@ suite('DataScience History output tests', () => {
     }
 
     runMountedTest('Simple text', async (wrapper) => {
-        await addCode(getOrCreateHistory, wrapper, 'a=1\na');
+        await addCode(getOrCreateInteractiveWindow, wrapper, 'a=1\na');
 
         verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
     }, () => { return ioc; });
@@ -103,13 +103,13 @@ suite('DataScience History output tests', () => {
     runMountedTest('Hide inputs', async (wrapper) => {
         initialDataScienceSettings({ ...defaultDataScienceSettings(), showCellInputCode: false });
 
-        await addCode(getOrCreateHistory, wrapper, 'a=1\na');
+        await addCode(getOrCreateInteractiveWindow, wrapper, 'a=1\na');
 
         verifyLastCellInputState(wrapper, CellInputState.Hidden);
 
         // Add a cell without output, this cell should not show up at all
         addMockData(ioc, 'a=1', undefined, 'text/plain');
-        await addCode(getOrCreateHistory, wrapper, 'a=1', 4);
+        await addCode(getOrCreateInteractiveWindow, wrapper, 'a=1', 4);
 
         verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.First);
         verifyHtmlOnCell(wrapper, undefined, CellPosition.Last);
@@ -118,7 +118,7 @@ suite('DataScience History output tests', () => {
     runMountedTest('Show inputs', async (wrapper) => {
         initialDataScienceSettings({ ...defaultDataScienceSettings() });
 
-        await addCode(getOrCreateHistory, wrapper, 'a=1\na');
+        await addCode(getOrCreateInteractiveWindow, wrapper, 'a=1\na');
 
         verifyLastCellInputState(wrapper, CellInputState.Visible);
         verifyLastCellInputState(wrapper, CellInputState.Collapsed);
@@ -126,14 +126,14 @@ suite('DataScience History output tests', () => {
 
     runMountedTest('Expand inputs', async (wrapper) => {
         initialDataScienceSettings({ ...defaultDataScienceSettings(), collapseCellInputCodeByDefault: false });
-        await addCode(getOrCreateHistory, wrapper, 'a=1\na');
+        await addCode(getOrCreateInteractiveWindow, wrapper, 'a=1\na');
 
         verifyLastCellInputState(wrapper, CellInputState.Expanded);
     }, () => { return ioc; });
 
     runMountedTest('Collapse / expand cell', async (wrapper) => {
         initialDataScienceSettings({ ...defaultDataScienceSettings() });
-        await addCode(getOrCreateHistory, wrapper, 'a=1\na');
+        await addCode(getOrCreateInteractiveWindow, wrapper, 'a=1\na');
 
         verifyLastCellInputState(wrapper, CellInputState.Visible);
         verifyLastCellInputState(wrapper, CellInputState.Collapsed);
@@ -151,7 +151,7 @@ suite('DataScience History output tests', () => {
 
     runMountedTest('Hide / show cell', async (wrapper) => {
         initialDataScienceSettings({ ...defaultDataScienceSettings() });
-        await addCode(getOrCreateHistory, wrapper, 'a=1\na');
+        await addCode(getOrCreateInteractiveWindow, wrapper, 'a=1\na');
 
         verifyLastCellInputState(wrapper, CellInputState.Visible);
         verifyLastCellInputState(wrapper, CellInputState.Collapsed);
@@ -208,28 +208,28 @@ for _ in range(50):
             return Promise.resolve({ result: result, haveMore: loops > 0 });
         });
 
-        await addCode(getOrCreateHistory, wrapper, badPanda, 4);
+        await addCode(getOrCreateInteractiveWindow, wrapper, badPanda, 4);
         verifyHtmlOnCell(wrapper, `has no attribute 'read'`, CellPosition.Last);
 
-        await addCode(getOrCreateHistory, wrapper, goodPanda);
+        await addCode(getOrCreateInteractiveWindow, wrapper, goodPanda);
         verifyHtmlOnCell(wrapper, `<td>`, CellPosition.Last);
 
-        await addCode(getOrCreateHistory, wrapper, matPlotLib);
+        await addCode(getOrCreateInteractiveWindow, wrapper, matPlotLib);
         verifyHtmlOnCell(wrapper, matPlotLibResults, CellPosition.Last);
 
-        await addCode(getOrCreateHistory, wrapper, spinningCursor, 4 + (ioc.mockJupyter ? (cursors.length * 3) : 0));
+        await addCode(getOrCreateInteractiveWindow, wrapper, spinningCursor, 4 + (ioc.mockJupyter ? (cursors.length * 3) : 0));
         verifyHtmlOnCell(wrapper, '<xmp>', CellPosition.Last);
     }, () => { return ioc; });
 
     runMountedTest('Undo/redo commands', async (wrapper) => {
-        const history = await getOrCreateHistory();
+        const interactiveWindow = await getOrCreateInteractiveWindow();
 
         // Get a cell into the list
-        await addCode(getOrCreateHistory, wrapper, 'a=1\na');
+        await addCode(getOrCreateInteractiveWindow, wrapper, 'a=1\na');
 
         // Now verify if we undo, we have no cells
         let afterUndo = await getCellResults(wrapper, 1, () => {
-            history.undoCells();
+            interactiveWindow.undoCells();
             return Promise.resolve();
         });
 
@@ -237,25 +237,25 @@ for _ in range(50):
 
         // Redo should put the cells back
         const afterRedo = await getCellResults(wrapper, 1, () => {
-            history.redoCells();
+            interactiveWindow.redoCells();
             return Promise.resolve();
         });
         assert.equal(afterRedo.length, 2, 'Redo should put cells back');
 
         // Get another cell into the list
-        const afterAdd = await addCode(getOrCreateHistory, wrapper, 'a=1\na');
+        const afterAdd = await addCode(getOrCreateInteractiveWindow, wrapper, 'a=1\na');
         assert.equal(afterAdd.length, 3, 'Second cell did not get added');
 
         // Clear everything
         const afterClear = await getCellResults(wrapper, 1, () => {
-            history.removeAllCells();
+            interactiveWindow.removeAllCells();
             return Promise.resolve();
         });
         assert.equal(afterClear.length, 1, 'Clear didn\'t work');
 
         // Undo should put them back
         afterUndo = await getCellResults(wrapper, 1, () => {
-            history.undoCells();
+            interactiveWindow.undoCells();
             return Promise.resolve();
         });
 
@@ -278,7 +278,7 @@ for _ in range(50):
         ioc.serviceManager.rebindInstance<IDocumentManager>(IDocumentManager, docManager.object);
 
         // Get a cell into the list
-        await addCode(getOrCreateHistory, wrapper, 'a=1\na');
+        await addCode(getOrCreateInteractiveWindow, wrapper, 'a=1\na');
 
         // 'Click' the buttons in the react control
         const undo = findButton(wrapper, 2);
@@ -301,7 +301,7 @@ for _ in range(50):
         assert.equal(afterRedo.length, 2, 'Redo should put cells back');
 
         // Get another cell into the list
-        const afterAdd = await addCode(getOrCreateHistory, wrapper, 'a=1\na');
+        const afterAdd = await addCode(getOrCreateInteractiveWindow, wrapper, 'a=1\na');
         assert.equal(afterAdd.length, 3, 'Second cell did not get added');
 
         // Clear everything
@@ -354,12 +354,12 @@ for _ in range(50):
         appShell.setup(a => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
         ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
 
-        // Make sure to create the history after the rebind or it gets the wrong application shell.
-        await addCode(getOrCreateHistory, wrapper, 'a=1\na');
-        const history = await getOrCreateHistory();
+        // Make sure to create the interactive window after the rebind or it gets the wrong application shell.
+        await addCode(getOrCreateInteractiveWindow, wrapper, 'a=1\na');
+        const interactiveWindow = await getOrCreateInteractiveWindow();
 
         // Export should cause exportCalled to change to true
-        await waitForMessageResponse(() => history.exportCells());
+        await waitForMessageResponse(() => interactiveWindow.exportCells());
         assert.equal(exportCalled, true, 'Export is not being called during export');
 
         // Remove the cell
@@ -384,20 +384,20 @@ for _ in range(50):
 
     runMountedTest('Dispose test', async () => {
         // tslint:disable-next-line:no-any
-        const history = await getOrCreateHistory();
-        await history.show(); // Have to wait for the load to finish
-        await history.dispose();
+        const interactiveWindow = await getOrCreateInteractiveWindow();
+        await interactiveWindow.show(); // Have to wait for the load to finish
+        await interactiveWindow.dispose();
         // tslint:disable-next-line:no-any
-        const h2 = await getOrCreateHistory();
+        const h2 = await getOrCreateInteractiveWindow();
         // Check equal and then dispose so the test goes away
-        const equal = Object.is(history, h2);
+        const equal = Object.is(interactiveWindow, h2);
         await h2.show();
-        assert.ok(!equal, 'Disposing is not removing the active history');
+        assert.ok(!equal, 'Disposing is not removing the active interactive window');
     }, () => { return ioc; });
 
     runMountedTest('Editor Context', async (wrapper) => {
         // Verify we can send different commands to the UI and it will respond
-        const history = await getOrCreateHistory();
+        const interactiveWindow = await getOrCreateInteractiveWindow();
 
         // Before we have any cells, verify our contexts are not set
         assert.equal(ioc.getContext(EditorContexts.HaveInteractive), false, 'Should not have interactive before starting');
@@ -407,8 +407,8 @@ for _ in range(50):
         // Get an update promise so we can wait for the add code
         const updatePromise = waitForUpdate(wrapper, MainPanel);
 
-        // Send some code to the history
-        await history.addCode('a=1\na', 'foo.py', 2);
+        // Send some code to the interactive window
+        await interactiveWindow.addCode('a=1\na', 'foo.py', 2);
 
         // Wait for the render to go through
         await updatePromise;
@@ -437,30 +437,30 @@ for _ in range(50):
 
         // Now send an undo command. This should change the state, so use our waitForInfo promise instead
         resetWaiting();
-        history.undoCells();
+        interactiveWindow.undoCells();
         await Promise.race([deferred.promise, sleep(2000)]);
         assert.ok(deferred.resolved, 'Never got update to state');
         assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), false, 'Should not have interactive cells after undo as sysinfo is ignored');
         assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), true, 'Should have redoable after undo');
 
         resetWaiting();
-        history.redoCells();
+        interactiveWindow.redoCells();
         await Promise.race([deferred.promise, sleep(2000)]);
         assert.ok(deferred.resolved, 'Never got update to state');
         assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), true, 'Should have interactive cells after redo');
         assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), false, 'Should not have redoable after redo');
 
         resetWaiting();
-        history.removeAllCells();
+        interactiveWindow.removeAllCells();
         await Promise.race([deferred.promise, sleep(2000)]);
         assert.ok(deferred.resolved, 'Never got update to state');
         assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), false, 'Should not have interactive cells after delete');
     }, () => { return ioc; });
 
     runMountedTest('Simple input', async (wrapper) => {
-        // Create a history so that it listens to the results.
-        const history = await getOrCreateHistory();
-        await history.show();
+        // Create an interactive window so that it listens to the results.
+        const interactiveWindow = await getOrCreateInteractiveWindow();
+        await interactiveWindow.show();
 
         // Then enter some code.
         await enterInput(wrapper, 'a=1\na');
@@ -486,9 +486,9 @@ for _ in range(50):
         docManager.setup(a => a.activeTextEditor).returns(() => undefined);
         ioc.serviceManager.rebindInstance<IDocumentManager>(IDocumentManager, docManager.object);
 
-        // Create a history so that it listens to the results.
-        const history = await getOrCreateHistory();
-        await history.show();
+        // Create an interactive window so that it listens to the results.
+        const interactiveWindow = await getOrCreateInteractiveWindow();
+        await interactiveWindow.show();
 
         // Then enter some code.
         await enterInput(wrapper, 'a=1\na');
@@ -505,9 +505,9 @@ for _ in range(50):
     }, () => { return ioc; });
 
     runMountedTest('Multiple input', async (wrapper) => {
-        // Create a history so that it listens to the results.
-        const history = await getOrCreateHistory();
-        await history.show();
+        // Create an interactive window so that it listens to the results.
+        const interactiveWindow = await getOrCreateInteractiveWindow();
+        await interactiveWindow.show();
 
         // Then enter some code.
         await enterInput(wrapper, 'a=1\na');
@@ -538,7 +538,7 @@ for _ in range(50):
 
     runMountedTest('Restart with session failure', async (wrapper) => {
         // Prime the pump
-        await addCode(getOrCreateHistory, wrapper, 'a=1\na');
+        await addCode(getOrCreateInteractiveWindow, wrapper, 'a=1\na');
         verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
 
         // Then something that could possibly timeout
@@ -555,17 +555,17 @@ for _ in range(50):
         }
 
         // Then try executing our long running cell and restarting in the middle
-        const history = await getOrCreateHistory();
+        const interactiveWindow = await getOrCreateInteractiveWindow();
         const executed = createDeferred();
         // We have to wait until the execute goes through before we reset.
-        history.onExecutedCode(() => executed.resolve());
-        const added = history.addCode('import time\r\ntime.sleep(1000)', 'foo', 0);
+        interactiveWindow.onExecutedCode(() => executed.resolve());
+        const added = interactiveWindow.addCode('import time\r\ntime.sleep(1000)', 'foo', 0);
         await executed.promise;
-        await history.restartKernel();
+        await interactiveWindow.restartKernel();
         await added;
 
-        // Now see if our wrapper still works. History should have force a restart
-        await history.addCode('a=1\na', 'foo', 0);
+        // Now see if our wrapper still works. Interactive window should have forced a restart
+        await interactiveWindow.addCode('a=1\na', 'foo', 0);
         verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
 
     }, () => { return ioc; });
@@ -576,8 +576,8 @@ for _ in range(50):
 
         // Preview is much fewer renders than an add code since the data is already there.
         await getCellResults(wrapper, 2, async () => {
-            const history = await getOrCreateHistory();
-            await history.previewNotebook(testFile);
+            const interactiveWindow = await getOrCreateInteractiveWindow();
+            await interactiveWindow.previewNotebook(testFile);
         });
 
         verifyHtmlOnCell(wrapper, '<img', CellPosition.Last);
@@ -596,10 +596,10 @@ for _ in range(50):
             assert.equal(cells.length, 2, 'Not enough cells generated');
 
             // Run the first cell
-            await addCode(getOrCreateHistory, wrapper, concatMultilineString(cells[0].data.source), 4);
+            await addCode(getOrCreateInteractiveWindow, wrapper, concatMultilineString(cells[0].data.source), 4);
 
             // Last cell should generate a series of updates. Verify we end up with a single image
-            await addCode(getOrCreateHistory, wrapper, concatMultilineString(cells[1].data.source), 10);
+            await addCode(getOrCreateInteractiveWindow, wrapper, concatMultilineString(cells[1].data.source), 10);
             const cell = getLastOutputCell(wrapper);
 
             const output = cell!.find('div.cell-output');

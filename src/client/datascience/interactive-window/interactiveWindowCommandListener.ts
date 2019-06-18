@@ -21,7 +21,7 @@ import { generateCellRanges, generateCellsFromDocument } from '../cellFactory';
 import { Commands, Telemetry } from '../constants';
 import {
     IDataScienceCommandListener,
-    IHistoryProvider,
+    IInteractiveWindowProvider,
     IJupyterExecution,
     INotebookExporter,
     INotebookImporter,
@@ -30,10 +30,10 @@ import {
 } from '../types';
 
 @injectable()
-export class HistoryCommandListener implements IDataScienceCommandListener {
+export class InteractiveWindowCommandListener implements IDataScienceCommandListener {
     constructor(
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
-        @inject(IHistoryProvider) private historyProvider: IHistoryProvider,
+        @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(INotebookExporter) private jupyterExporter: INotebookExporter,
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
@@ -50,7 +50,7 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
     }
 
     public register(commandManager: ICommandManager): void {
-        let disposable = commandManager.registerCommand(Commands.ShowHistoryPane, () => this.showHistoryPane());
+        let disposable = commandManager.registerCommand(Commands.ShowHistoryPane, () => this.showInteractiveWindow());
         this.disposableRegistry.push(disposable);
         disposable = commandManager.registerCommand(Commands.ImportNotebook, (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => {
             return this.listenForErrors(() => {
@@ -273,58 +273,58 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
     }
 
     private undoCells() {
-        const history = this.historyProvider.getActive();
-        if (history) {
-            history.undoCells();
+        const interactiveWindow = this.interactiveWindowProvider.getActive();
+        if (interactiveWindow) {
+            interactiveWindow.undoCells();
         }
     }
 
     private redoCells() {
-        const history = this.historyProvider.getActive();
-        if (history) {
-            history.redoCells();
+        const interactiveWindow = this.interactiveWindowProvider.getActive();
+        if (interactiveWindow) {
+            interactiveWindow.redoCells();
         }
     }
 
     private removeAllCells() {
-        const history = this.historyProvider.getActive();
-        if (history) {
-            history.removeAllCells();
+        const interactiveWindow = this.interactiveWindowProvider.getActive();
+        if (interactiveWindow) {
+            interactiveWindow.removeAllCells();
         }
     }
 
     private interruptKernel() {
-        const history = this.historyProvider.getActive();
-        if (history) {
-            history.interruptKernel().ignoreErrors();
+        const interactiveWindow = this.interactiveWindowProvider.getActive();
+        if (interactiveWindow) {
+            interactiveWindow.interruptKernel().ignoreErrors();
         }
     }
 
     private restartKernel() {
-        const history = this.historyProvider.getActive();
-        if (history) {
-            history.restartKernel().ignoreErrors();
+        const interactiveWindow = this.interactiveWindowProvider.getActive();
+        if (interactiveWindow) {
+            interactiveWindow.restartKernel().ignoreErrors();
         }
     }
 
     private expandAllCells() {
-        const history = this.historyProvider.getActive();
-        if (history) {
-            history.expandAllCells();
+        const interactiveWindow = this.interactiveWindowProvider.getActive();
+        if (interactiveWindow) {
+            interactiveWindow.expandAllCells();
         }
     }
 
     private collapseAllCells() {
-        const history = this.historyProvider.getActive();
-        if (history) {
-            history.collapseAllCells();
+        const interactiveWindow = this.interactiveWindowProvider.getActive();
+        if (interactiveWindow) {
+            interactiveWindow.collapseAllCells();
         }
     }
 
     private exportCells() {
-        const history = this.historyProvider.getActive();
-        if (history) {
-            history.exportCells();
+        const interactiveWindow = this.interactiveWindowProvider.getActive();
+        if (interactiveWindow) {
+            interactiveWindow.exportCells();
         }
     }
 
@@ -360,11 +360,11 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
         if (fileName && fileName.endsWith('.ipynb') && this.autoPreviewNotebooks()) {
             // Get history before putting up status so that we show a busy message when we
             // start the preview.
-            const history = await this.historyProvider.getOrCreateActive();
+            const interactiveWindow = await this.interactiveWindowProvider.getOrCreateActive();
 
             // Wait for the preview.
             await this.waitForStatus(async () => {
-                await history.previewNotebook(fileName);
+                await interactiveWindow.previewNotebook(fileName);
             }, localize.DataScience.previewStatusMessage(), fileName);
 
             return true;
@@ -399,8 +399,8 @@ export class HistoryCommandListener implements IDataScienceCommandListener {
     }
 
     @captureTelemetry(Telemetry.ShowHistoryPane, undefined, false)
-    private async showHistoryPane() : Promise<void>{
-        const active = await this.historyProvider.getOrCreateActive();
+    private async showInteractiveWindow() : Promise<void>{
+        const active = await this.interactiveWindowProvider.getOrCreateActive();
         return active.show();
     }
 

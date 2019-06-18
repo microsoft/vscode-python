@@ -22,24 +22,24 @@ import { traceWarning } from '../../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../../common/platform/types';
 import { createDeferred, Deferred, sleep } from '../../../common/utils/async';
 import { Identifiers, Settings } from '../../constants';
-import { IHistoryListener, IHistoryProvider, IJupyterExecution } from '../../types';
+import { IInteractiveWindowListener, IInteractiveWindowProvider, IJupyterExecution } from '../../types';
 import {
-    HistoryMessages,
     IAddCell,
     ICancelIntellisenseRequest,
     IEditCell,
-    IHistoryMapping,
+    IInteractiveWindowMapping,
+    InteractiveWindowMessages,
     IProvideCompletionItemsRequest,
     IProvideHoverRequest,
     IProvideSignatureHelpRequest,
     IRemoveCell
-} from '.././historyTypes';
+} from '../interactiveWindowTypes';
 import { convertStringsToSuggestions } from './conversion';
 import { IntellisenseDocument } from './intellisenseDocument';
 
 // tslint:disable:no-any
 @injectable()
-export abstract class BaseIntellisenseProvider implements IHistoryListener {
+export abstract class BaseIntellisenseProvider implements IInteractiveWindowListener {
 
     private documentPromise: Deferred<IntellisenseDocument> | undefined;
     private temporaryFile: TemporaryFile | undefined;
@@ -50,7 +50,7 @@ export abstract class BaseIntellisenseProvider implements IHistoryListener {
         @unmanaged() private workspaceService: IWorkspaceService,
         @unmanaged() private fileSystem: IFileSystem,
         @unmanaged() private jupyterExecution: IJupyterExecution,
-        @unmanaged() private historyProvider: IHistoryProvider
+        @unmanaged() private interactiveWindowProvider: IInteractiveWindowProvider
     ) {
     }
 
@@ -66,48 +66,48 @@ export abstract class BaseIntellisenseProvider implements IHistoryListener {
 
     public onMessage(message: string, payload?: any) {
         switch (message) {
-            case HistoryMessages.CancelCompletionItemsRequest:
-            case HistoryMessages.CancelHoverRequest:
+            case InteractiveWindowMessages.CancelCompletionItemsRequest:
+            case InteractiveWindowMessages.CancelHoverRequest:
                 if (this.isActive) {
                     this.dispatchMessage(message, payload, this.handleCancel);
                 }
                 break;
 
-            case HistoryMessages.ProvideCompletionItemsRequest:
+            case InteractiveWindowMessages.ProvideCompletionItemsRequest:
                 if (this.isActive) {
                     this.dispatchMessage(message, payload, this.handleCompletionItemsRequest);
                 }
                 break;
 
-            case HistoryMessages.ProvideHoverRequest:
+            case InteractiveWindowMessages.ProvideHoverRequest:
                 if (this.isActive) {
                     this.dispatchMessage(message, payload, this.handleHoverRequest);
                 }
                 break;
 
-            case HistoryMessages.ProvideSignatureHelpRequest:
+            case InteractiveWindowMessages.ProvideSignatureHelpRequest:
                 if (this.isActive) {
                     this.dispatchMessage(message, payload, this.handleSignatureHelpRequest);
                 }
                 break;
 
-            case HistoryMessages.EditCell:
+            case InteractiveWindowMessages.EditCell:
                 this.dispatchMessage(message, payload, this.editCell);
                 break;
 
-            case HistoryMessages.AddCell:
+            case InteractiveWindowMessages.AddCell:
                 this.dispatchMessage(message, payload, this.addCell);
                 break;
 
-            case HistoryMessages.RemoveCell:
+            case InteractiveWindowMessages.RemoveCell:
                 this.dispatchMessage(message, payload, this.removeCell);
                 break;
 
-            case HistoryMessages.DeleteAllCells:
+            case InteractiveWindowMessages.DeleteAllCells:
                 this.dispatchMessage(message, payload, this.removeAllCells);
                 break;
 
-            case HistoryMessages.RestartKernel:
+            case InteractiveWindowMessages.RestartKernel:
                 this.dispatchMessage(message, payload, this.restartKernel);
                 break;
 
@@ -147,12 +147,12 @@ export abstract class BaseIntellisenseProvider implements IHistoryListener {
     protected abstract provideSignatureHelp(position: monacoEditor.Position, context: monacoEditor.languages.SignatureHelpContext, cellId: string, token: CancellationToken) : Promise<monacoEditor.languages.SignatureHelp>;
     protected abstract handleChanges(originalFile: string | undefined, document: IntellisenseDocument, changes: TextDocumentContentChangeEvent[]) : Promise<void>;
 
-    private dispatchMessage<M extends IHistoryMapping, T extends keyof M>(_message: T, payload: any, handler: (args : M[T]) => void) {
+    private dispatchMessage<M extends IInteractiveWindowMapping, T extends keyof M>(_message: T, payload: any, handler: (args : M[T]) => void) {
         const args = payload as M[T];
         handler.bind(this)(args);
     }
 
-    private postResponse<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) : void {
+    private postResponse<M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]) : void {
         const response = payload as any;
         if (response && response.id) {
             const cancelSource = this.cancellationSources.get(response.id);
@@ -182,7 +182,7 @@ export abstract class BaseIntellisenseProvider implements IHistoryListener {
         this.postTimedResponse(
             [this.provideCompletionItems(request.position, request.context, request.cellId, cancelSource.token),
              this.provideJupyterCompletionItems(request.position, request.context, cancelSource.token)],
-            HistoryMessages.ProvideCompletionItemsResponse,
+            InteractiveWindowMessages.ProvideCompletionItemsResponse,
             (c) => {
                 const list = this.combineCompletions(c);
                 return {list, requestId: request.requestId};
@@ -195,7 +195,7 @@ export abstract class BaseIntellisenseProvider implements IHistoryListener {
         this.cancellationSources.set(request.requestId, cancelSource);
         this.postTimedResponse(
             [this.provideHover(request.position, request.cellId, cancelSource.token)],
-            HistoryMessages.ProvideHoverResponse,
+            InteractiveWindowMessages.ProvideHoverResponse,
             (h) => {
                 if (h && h[0]) {
                     return { hover: h[0]!, requestId: request.requestId};
@@ -207,7 +207,7 @@ export abstract class BaseIntellisenseProvider implements IHistoryListener {
 
     private async provideJupyterCompletionItems(position: monacoEditor.Position, _context: monacoEditor.languages.CompletionContext, cancelToken: CancellationToken) : Promise<monacoEditor.languages.CompletionList> {
         try {
-            const activeServer = await this.jupyterExecution.getServer(await this.historyProvider.getNotebookOptions());
+            const activeServer = await this.jupyterExecution.getServer(await this.interactiveWindowProvider.getNotebookOptions());
             const document = await this.getDocument();
             if (activeServer && document) {
                 const code = document.getEditCellContent();
@@ -252,7 +252,7 @@ export abstract class BaseIntellisenseProvider implements IHistoryListener {
 
     }
 
-    private postTimedResponse<R, M extends IHistoryMapping, T extends keyof M>(promises: Promise<R>[], message: T, formatResponse: (val: (R | null)[]) => M[T]) {
+    private postTimedResponse<R, M extends IInteractiveWindowMapping, T extends keyof M>(promises: Promise<R>[], message: T, formatResponse: (val: (R | null)[]) => M[T]) {
         // Time all of the promises to make sure they don't take too long
         const timed = promises.map(p => Promise.race([p, sleep(Settings.IntellisenseTimeout)]));
 
@@ -300,7 +300,7 @@ export abstract class BaseIntellisenseProvider implements IHistoryListener {
         this.cancellationSources.set(request.requestId, cancelSource);
         this.postTimedResponse(
             [this.provideSignatureHelp(request.position, request.context, request.cellId, cancelSource.token)],
-            HistoryMessages.ProvideSignatureHelpResponse,
+            InteractiveWindowMessages.ProvideSignatureHelpResponse,
             (s) => {
                 if (s && s[0]) {
                     return { signatureHelp: s[0]!, requestId: request.requestId};
