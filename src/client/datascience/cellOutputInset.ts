@@ -1,14 +1,14 @@
-import { TextEditor, Position, Range, Uri, WebviewEditorInset, window } from 'vscode';
-import { EXTENSION_ROOT_DIR } from '../constants';
-import * as path from 'path';
-import { WebPanel } from '../common/application/webPanel';
-import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest } from './messages';
-import { ICodeCssGenerator, IThemeFinder, ICell } from './types';
-import { Deferred, createDeferred } from '../common/utils/async';
-import { DefaultTheme, RegExpValues } from './constants';
-import { IWorkspaceService } from '../common/application/types';
 import { nbformat } from '@jupyterlab/coreutils';
-import ansiToHtml = require('ansi-to-html');
+import ansiToHtml from 'ansi-to-html';
+import * as path from 'path';
+import { Position, Range, TextEditor, Uri, WebviewEditorInset, window } from 'vscode';
+import { IWorkspaceService } from '../common/application/types';
+import { WebPanel } from '../common/application/webPanel';
+import { createDeferred, Deferred } from '../common/utils/async';
+import { EXTENSION_ROOT_DIR } from '../constants';
+import { DefaultTheme, RegExpValues } from './constants';
+import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest } from './messages';
+import { ICell, ICodeCssGenerator, IThemeFinder } from './types';
 
 export class CellOutputInset {
     private inset: WebviewEditorInset;
@@ -26,26 +26,18 @@ export class CellOutputInset {
         this.themeIsDarkPromise = createDeferred<boolean>();
     }
 
-    private createInset(heightInLines: number, cell: ICell | undefined) {
-        const insetRange = new Range(new Position(this.line, 0), new Position(this.line + heightInLines, 0));
-        const htmldir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'inset-react');
-        const mainScriptPath = path.join(htmldir, 'index_bundle.js');
-        const inset = window.createWebviewTextEditorInset(this.editor, insetRange, { enableScripts: true, localResourceRoots: [Uri.file(htmldir)] });
-        inset.webview.html = WebPanel.generateReactHtml(mainScriptPath, undefined, { cell: cell });
-        inset.webview.onDidReceiveMessage(m => this.onMessage(m.type, m.payload));
-        return inset;
-    }
-
     public showCellOutput(cell: ICell) {
         this.inset.dispose();
         const numLines = computeSizeInLines(cell);
         this.inset = this.createInset(numLines, cell);
     }
 
+    // tslint:disable-next-line: no-any
     public postMessage(type: string, payload?: any) {
         this.inset.webview.postMessage({ type: type, payload: payload });
     }
 
+    // tslint:disable-next-line: no-any
     protected onMessage(message: string, payload: any) {
         switch (message) {
             case CssMessages.GetCssRequest:
@@ -88,13 +80,23 @@ export class CellOutputInset {
         return this.postMessage(CssMessages.GetMonacoThemeResponse, { theme: monacoTheme });
     }
 
+    private createInset(heightInLines: number, cell: ICell | undefined) {
+        const insetRange = new Range(new Position(this.line, 0), new Position(this.line + heightInLines, 0));
+        const htmldir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'inset-react');
+        const mainScriptPath = path.join(htmldir, 'index_bundle.js');
+        const inset = window.createWebviewTextEditorInset(this.editor, insetRange, { enableScripts: true, localResourceRoots: [Uri.file(htmldir)] });
+        inset.webview.html = WebPanel.generateReactHtml(mainScriptPath, undefined, { cell: cell });
+        inset.webview.onDidReceiveMessage(m => this.onMessage(m.type, m.payload));
+        return inset;
+    }
+
 }
 
-
-function computeSizeInLines(cell: ICell) {
+function computeSizeInLines(cell: ICell): number {
     const codeCell = cell.data as nbformat.ICodeCell;
     if (!codeCell) { return 1; }
-    function computeOutputSizeInLines(output: nbformat.IOutput) {
+
+    function computeOutputSizeInLines(output: nbformat.IOutput): number {
         if (nbformat.isExecuteResult(output) || nbformat.isDisplayData(output)) {
             const bundle = output.data;
             const svg = bundle['image/svg+xml'] as string;
@@ -123,6 +125,7 @@ function computeSizeInLines(cell: ICell) {
         }
         return 5;
     }
+
     return codeCell.outputs.reduce((sum, output) =>
         sum + computeOutputSizeInLines(output), 0);
 }
