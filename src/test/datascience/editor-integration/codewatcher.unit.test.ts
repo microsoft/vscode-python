@@ -97,6 +97,13 @@ suite('DataScience Code Watcher Unit Tests', () => {
         // Setup config service
         configService.setup(c => c.getSettings()).returns(() => pythonSettings);
 
+        commandManager.setup(c => c.executeCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((c, n, v) => {
+            if (c === 'setContext') {
+                contexts.set(n, v);
+            }
+            return Promise.resolve();
+        });
+
         codeWatcher = new CodeWatcher(appShell.object, logger.object, interactiveWindowProvider.object, fileSystem.object, configService.object, documentManager.object, helper.object);
     });
 
