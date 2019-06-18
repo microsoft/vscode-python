@@ -60,7 +60,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
  * @extends {ICommandNameWithoutArgumentTypeMapping}
  */
 export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgumentTypeMapping {
-    ['setContext']: ['testsDiscovered', boolean];
+    ['setContext']: [string, boolean];
     ['revealLine']: [{ lineNumber: number; at: 'top' | 'center' | 'bottom' }];
     ['python._loadLanguageServerExtension']: {}[];
     ['python.SelectAndInsertDebugConfiguration']: [TextDocument, Position, CancellationToken];
