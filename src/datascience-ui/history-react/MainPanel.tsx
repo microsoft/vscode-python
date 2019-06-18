@@ -575,6 +575,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         // Send a message to the other side to jump to a particular cell
         this.sendMessage(InteractiveWindowMessages.GotoCodeCell, { file : cellVM.cell.file, line: cellVM.cell.line });
+<<<<<<< HEAD
     }
 
     private copyCellCode = (index: number) => {
@@ -583,6 +584,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         // Send a message to the other side to jump to a particular cell
         this.sendMessage(InteractiveWindowMessages.CopyCodeCell, { source: extractInputText(cellVM.cell, getSettings()) });
+=======
+>>>>>>> Rename history to interactive window
     }
 
     private deleteCell = (index: number) => {
