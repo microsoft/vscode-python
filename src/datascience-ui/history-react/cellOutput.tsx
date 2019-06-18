@@ -1,19 +1,18 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import { JSONObject } from '@phosphor/coreutils';
 import ansiToHtml from 'ansi-to-html';
+import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
 // tslint:disable-next-line:match-default-export-name import-name
 import JSONTree from 'react-json-tree';
+import '../../client/common/extensions';
 import { concatMultilineString, formatStreamText } from '../../client/datascience/common';
+import { Identifiers, RegExpValues } from '../../client/datascience/constants';
 import { noop } from '../../test/core';
-import { getLocString } from '../react-common/locReactSide';
-import { displayOrder, richestMimetype, transforms } from './transforms';
-import { RegExpValues } from '../../client/datascience/constants';
-import { Identifiers } from '../../client/datascience/constants';
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
-import '../../client/common/extensions';
+import { getLocString } from '../react-common/locReactSide';
+import { displayOrder, richestMimetype, transforms } from './transforms';
 
 export interface ICellOutputProps {
     output: nbformat.IOutput;
@@ -67,7 +66,6 @@ function getAnsiToHtmlOptions() : { fg: string; bg: string; colors: string [] } 
         ]
     };
 }
-
 
 export class CellOutput extends React.Component<ICellOutputProps> {
     public render() {

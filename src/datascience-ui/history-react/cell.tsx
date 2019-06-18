@@ -14,6 +14,7 @@ import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
 import { getSettings } from '../react-common/settingsReactSide';
+import { CellOutput } from './cellOutput';
 import { Code } from './code';
 import { CollapseButton } from './collapseButton';
 import { ExecutionCount } from './executionCount';
@@ -21,7 +22,6 @@ import { InformationMessages } from './informationMessages';
 import { InputHistory } from './inputHistory';
 import { MenuBar } from './menuBar';
 import { transforms } from './transforms';
-import { CellOutput } from './cellOutput';
 
 import './cell.css';
 

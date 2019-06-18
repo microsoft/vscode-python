@@ -1,9 +1,11 @@
 // tslint:disable-next-line: import-name
+import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
+// tslint:disable-next-line: import-name
 import React from 'react';
-import { HistoryMessages } from '../../client/datascience/history/historyTypes';
-import { IMessageHandler, PostOffice } from '../react-common/postOffice';
+import { HistoryMessages, IHistoryMapping } from '../../client/datascience/history/historyTypes';
 import { ICell } from '../../client/datascience/types';
 import { CellOutput } from '../history-react/cellOutput';
+import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 
 import '../history-react/cell.css';
 import { StyleInjector } from '../react-common/styleInjector';
@@ -19,7 +21,7 @@ export interface ICellResultProps {
 }
 
 interface ICellResultState {
-    cell: ICell | undefined
+    cell: ICell | undefined;
 }
 
 export class CellResult extends React.Component<ICellResultProps, ICellResultState> implements IMessageHandler {
@@ -27,8 +29,8 @@ export class CellResult extends React.Component<ICellResultProps, ICellResultSta
 
     constructor(props: ICellResultProps) {
         super(props);
-        let cell: ICell | undefined = undefined;
-        if (typeof getInitialSettings !== 'undefined') {
+        let cell: ICell | undefined;
+        if (getInitialSettings) {
             cell = getInitialSettings().cell;
         }
         this.state = { cell: cell };
@@ -44,10 +46,10 @@ export class CellResult extends React.Component<ICellResultProps, ICellResultSta
     }
 
     public render() {
-        if (!this.state.cell) return <div />;
+        if (!this.state.cell) { return <div />; }
 
         const data = this.state.cell.data;
-        if (!data || data.cell_type !== 'code') return <div />;
+        if (!data || data.cell_type !== 'code') { return <div />; }
         const outputClassNames = `cell-output cell-output-${this.props.baseTheme}`;
         const baseTheme = this.props.baseTheme;
         return (
@@ -61,14 +63,15 @@ export class CellResult extends React.Component<ICellResultProps, ICellResultSta
                         <CellOutput
                             output={output}
                             baseTheme={baseTheme}
-                            expandImage={() => { }}
-                            openLink={() => { }}
+                            expandImage={this.showPlot}
+                            openLink={this.openLink}
                         />)}
                 </div>
             </div>
         );
     }
 
+    // tslint:disable-next-line: no-any
     public handleMessage = (msg: string, payload?: any) => {
         const cell = payload as ICell;
         switch (msg) {
@@ -77,8 +80,21 @@ export class CellResult extends React.Component<ICellResultProps, ICellResultSta
             case HistoryMessages.UpdateCell:
                 this.setState({ cell: cell });
                 return true;
+            default:
+                return false;
         }
-        return false;
+    }
+
+    private sendMessage<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) {
+        this.postOffice.sendMessage<M, T>(type, payload);
+    }
+
+    private showPlot = (imageHtml: string) => {
+        this.sendMessage(HistoryMessages.ShowPlot, imageHtml);
+    }
+
+    private openLink = (uri: monacoEditor.Uri) => {
+        this.sendMessage(HistoryMessages.OpenLink, uri.toString());
     }
 
 }

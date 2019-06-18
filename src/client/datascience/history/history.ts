@@ -31,6 +31,7 @@ import * as localize from '../../common/utils/localize';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { CellMatcher } from '../cellMatcher';
+import { CellOutputInset } from '../cellOutputInset';
 import { EditorContexts, Identifiers, Telemetry } from '../constants';
 import { ColumnWarningSize } from '../data-viewing/types';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
@@ -71,7 +72,6 @@ import {
     IShowDataViewer,
     ISubmitNewCell
 } from './historyTypes';
-import { CellOutputInset } from '../cellOutputInset';
 
 export enum SysInfoReason {
     Start,
