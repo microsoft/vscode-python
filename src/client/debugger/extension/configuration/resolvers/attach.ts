@@ -104,14 +104,11 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
                     }];
                 } else {
                     // Expand ${workspaceFolder} variable first if necessary.
-                    configPathMappings = debugConfiguration.pathMappings.map(({ localRoot: mappedLocalRoot, remoteRoot }) => {
-                        const systemVariables = new SystemVariables(workspaceFolder.fsPath);
-                        const expandedPath = systemVariables.resolveAny(mappedLocalRoot);
-                        return {
-                            localRoot: expandedPath,
-                            remoteRoot
-                        };
-                    });
+                    const systemVariables = new SystemVariables(workspaceFolder.fsPath);
+                    configPathMappings = debugConfiguration.pathMappings.map(({ localRoot: mappedLocalRoot, remoteRoot }) => ({
+                        localRoot: systemVariables.resolveAny(mappedLocalRoot),
+                        remoteRoot
+                    }));
                 }
                 // If on Windows, lowercase the drive letter for path mappings.
                 let pathMappings = configPathMappings;
