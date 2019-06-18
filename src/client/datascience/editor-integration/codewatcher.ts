@@ -173,9 +173,16 @@ export class CodeWatcher implements ICodeWatcher {
             if (!codeToExecute) {
                 return ;
             }
+<<<<<<< HEAD
             const normalizedCode = await this.executionHelper.normalizeLines(codeToExecute!);
             if (!normalizedCode || normalizedCode.trim().length === 0) {
                 return;
+=======
+
+            if (code && code.trim().length) {
+                const activeInteractiveWindow = await this.interactiveWindowProvider.getOrCreateActive();
+                await activeInteractiveWindow.addCode(code, this.getFileName(), activeEditor.selection.start.line, activeEditor);
+>>>>>>> 43653e8f16098ff0f4ee1d3da6999c58efccfff6
             }
 
             const activeInteractiveWindow = await this.interactiveWindowProvider.getOrCreateActive();

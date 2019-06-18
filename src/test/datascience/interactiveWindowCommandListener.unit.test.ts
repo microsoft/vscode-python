@@ -216,7 +216,6 @@ suite('Interactive window command listener', async () => {
             instance(configService),
             statusProvider,
             instance(notebookImporter));
-
         result.register(commandManager);
 
         return result;
