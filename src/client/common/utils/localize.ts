@@ -49,6 +49,9 @@ export namespace LanguageService {
 
 }
 
+export namespace Experiments {
+    export const inGroup = localize('Experiments.inGroup', 'User belongs to experiment group \'{0}\'');
+}
 export namespace Interpreters {
     export const loading = localize('Interpreters.LoadingInterpreters', 'Loading Python Interpreters');
     export const refreshing = localize('Interpreters.RefreshingInterpreters', 'Refreshing Python Interpreters');

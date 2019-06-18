@@ -54,6 +54,7 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
+    IExperimentsManager,
     IExtensionContext,
     IFeatureDeprecationManager,
     IMemento,
@@ -283,6 +284,8 @@ function registerServices(context: ExtensionContext, serviceManager: ServiceMana
 }
 
 async function initializeServices(context: ExtensionContext, serviceManager: ServiceManager, serviceContainer: ServiceContainer) {
+    const abExperiments = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+    await abExperiments.activate();
     const selector = serviceContainer.get<IInterpreterSelector>(IInterpreterSelector);
     selector.initialize();
     context.subscriptions.push(selector);

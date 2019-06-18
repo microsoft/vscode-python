@@ -25,14 +25,14 @@ const logLevelMap = {
 };
 
 function log(logLevel: LogLevel, ...args: any[]) {
-    if (consoleLogger.transports.length > 0){
+    if (consoleLogger.transports.length > 0) {
         const message = args.length === 0 ? '' : util.format(args[0], ...args.slice(1));
         consoleLogger.log(logLevelMap[logLevel], message);
     }
     logToFile(logLevel, ...args);
 }
 function logToFile(logLevel: LogLevel, ...args: any[]) {
-    if (fileLogger.transports.length === 0){
+    if (fileLogger.transports.length === 0) {
         return;
     }
     const message = args.length === 0 ? '' : util.format(args[0], ...args.slice(1));
@@ -119,7 +119,7 @@ function initializeConsoleLogger() {
         };
     }
 
-    if (isTestExecution() && !process.env.VSC_PYTHON_FORCE_LOGGING){
+    if (isTestExecution() && !process.env.VSC_PYTHON_FORCE_LOGGING) {
         // Do not log to console if running tests on CI and we're not asked to do so.
         return;
     }

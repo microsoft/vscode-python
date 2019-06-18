@@ -7,6 +7,7 @@ import { basename as pathBasename, sep as pathSep } from 'path';
 import * as stackTrace from 'stack-trace';
 import TelemetryReporter from 'vscode-extension-telemetry';
 
+import { IWorkspaceService } from '../common/application/types';
 import { EXTENSION_ROOT_DIR, isTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
 import { StopWatch } from '../common/utils/stopWatch';
 import { Telemetry } from '../datascience/constants';
@@ -55,6 +56,16 @@ function isTelemetrySupported(): boolean {
         return false;
     }
 }
+
+/**
+ * Checks if the telemetry is disabled in user settings
+ * @returns {boolean}
+ */
+export function isTelemetryDisabled(workspaceService: IWorkspaceService): boolean {
+    const settings = workspaceService.getConfiguration('telemetry').inspect<boolean>('enableTelemetry')!;
+    return settings.globalValue === false ? true : false;
+}
+
 let telemetryReporter: TelemetryReporter | undefined;
 function getTelemetryReporter() {
     if (!isTestExecution() && telemetryReporter) {
@@ -295,6 +306,7 @@ export interface IEventNamePropertyMapping {
     [EventName.PYTHON_LANGUAGE_SERVER_READY]: never | undefined;
     [EventName.PYTHON_LANGUAGE_SERVER_STARTUP]: never | undefined;
     [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: any;
+    [EventName.PYTHON_EXPERIMENTS]: { error?: string; expName?: string };
     [EventName.REFACTOR_EXTRACT_FUNCTION]: never | undefined;
     [EventName.REFACTOR_EXTRACT_VAR]: never | undefined;
     [EventName.REFACTOR_RENAME]: never | undefined;

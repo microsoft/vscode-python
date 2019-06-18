@@ -1,0 +1,10 @@
+{
+    "extends": "@istanbuljs/nyc-config-typescript",
+    "all": true,
+    "reporter": ["lcov", "html", "text", "text-summary", "cobertura"],
+    "include": [
+        "src/client/**/*.ts", "src/test/**/*.js",
+        "src/datascience-ui/**/*.ts", "src/datascience-ui/**/*.js"
+    ],
+    "exclude": ["src/test/**/*.ts", "src/test/**/*.js"]
+}
