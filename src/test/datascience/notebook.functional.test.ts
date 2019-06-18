@@ -42,7 +42,6 @@ import { generateTestState } from '../../datascience-ui/history-react/mainPanelS
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 
-import { asyncDump } from '../common/asyncDump';
 // tslint:disable:no-any no-multiline-string max-func-body-length no-console max-classes-per-file trailing-comma
 suite('DataScience notebook tests', () => {
     const disposables: Disposable[] = [];
@@ -84,11 +83,6 @@ suite('DataScience notebook tests', () => {
         } catch (e) {
             traceError(e);
         }
-    });
-
-    // Uncomment this to debug hangs on exit
-    suiteTeardown(() => {
-         asyncDump();
     });
 
     function escapePath(p: string) {
@@ -245,14 +239,10 @@ suite('DataScience notebook tests', () => {
             const pemFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'serverConfigFiles', 'jcert.pem');
             const keyFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'serverConfigFiles', 'jkey.key');
 
-            traceInfo(configFile);
-            traceInfo(pemFile);
-            traceInfo(keyFile);
             const exeResult = procService.execObservable(python.path, ['-m', 'jupyter', 'notebook', `--config=${configFile}`, `--certfile=${pemFile}`, `--keyfile=${keyFile}`], { env: process.env, throwOnStdErr: false });
             disposables.push(exeResult);
 
             exeResult.out.subscribe((output: Output<string>) => {
-                traceInfo(output.out);
                 const connectionURL = getIPConnectionInfo(output.out);
                 if (connectionURL) {
                     connectionFound.resolve(connectionURL);
@@ -260,8 +250,6 @@ suite('DataScience notebook tests', () => {
             });
 
             const connString = await connectionFound.promise;
-            traceInfo('Connection string found');
-            traceInfo(connString);
             const uri = connString as string;
 
             // We have a connection string here, so try to connect jupyterExecution to the notebook server
@@ -498,20 +486,15 @@ suite('DataScience notebook tests', () => {
 
         console.log('Restarting kernel');
         try {
-            traceInfo('***** about to restart kernel');
             await server!.restartKernel(10000);
 
-            traceInfo('***** past restart');
             console.log('Waiting for idle');
             await server!.waitForIdle(10000);
 
-            traceInfo('***** past idle');
             console.log('Verifying restart');
             await verifyError(server, 'a', `name 'a' is not defined`);
 
         } catch (exc) {
-            traceInfo('***** exeception');
-            traceInfo(exc.message);
             assert.ok(exc instanceof JupyterKernelPromiseFailedError, 'Restarting did not timeout correctly');
         }
 

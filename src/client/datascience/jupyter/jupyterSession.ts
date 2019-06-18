@@ -113,36 +113,20 @@ export class JupyterSession implements IJupyterSession {
         // Just kill the current session and switch to the other
         if (this.restartSessionPromise && this.session && this.sessionManager && this.contentsManager) {
             // Save old state for shutdown
-            traceInfo('**** save old session state');
             const oldSession = this.session;
             const oldStatusHandler = this.statusHandler;
-            //const oldContentsManager = this.contentsManager;
-            //const oldSessionManager = this.sessionManager;
 
-            traceInfo('**** switch to other session');
             // Just switch to the other session.
             this.session = await this.restartSessionPromise;
 
-            traceInfo('**** rewire status change');
             // Rewire our status changed event.
             this.statusHandler = this.onStatusChanged.bind(this.onStatusChanged);
             this.session.statusChanged.connect(this.statusHandler);
 
-            traceInfo('**** create new session');
             // After switching, start another in case we restart again.
             this.restartSessionPromise = this.createSession(oldSession.serverSettings, this.contentsManager);
             this.shutdownSession(oldSession, oldStatusHandler).ignoreErrors();
-
-            //await this.restartSessionPromise;
-            //// Clear out our old contents manager and session manager now that createSession has created new ones
-            //if (oldContentsManager) {
-                //oldContentsManager.dispose();
-            //}
-            //if (oldSessionManager && !oldSessionManager.isDisposed) {
-                //oldSessionManager.dispose();
-            //}
         } else {
-            traceInfo('**** exception in session restart');
             throw new Error(localize.DataScience.sessionDisposed());
         }
     }
@@ -344,7 +328,6 @@ export class JupyterSession implements IJupyterSession {
                 await this.shutdownSession(restartSession, undefined);
 
                 if (this.sessionManager && !this.sessionManager.isDisposed) {
-                    traceInfo('***** session manager dispose');
                     this.sessionManager.dispose();
                 }
             } catch {

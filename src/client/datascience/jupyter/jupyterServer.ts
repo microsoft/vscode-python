@@ -280,16 +280,11 @@ export class JupyterServerBase implements INotebookServer {
             // Update our start time so we don't keep sending responses
             this.sessionStartTime = Date.now();
 
-            traceInfo('**** server restart kernel');
-
             // Complete all pending as an error. We're restarting
             this.finishUncompletedCells();
 
-            traceInfo('**** server finish uncompleted calls');
             // Restart our kernel
             await this.session.restart(timeoutMs);
-
-            traceInfo('**** server session after restart');
 
             // Rerun our initial setup for the notebook
             this.ranInitialSetup = false;
