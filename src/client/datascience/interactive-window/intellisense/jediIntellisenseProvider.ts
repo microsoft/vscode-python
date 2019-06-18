@@ -15,14 +15,14 @@ import { JediFactory } from '../../../languageServices/jediProxyFactory';
 import { PythonCompletionItemProvider } from '../../../providers/completionProvider';
 import { PythonHoverProvider } from '../../../providers/hoverProvider';
 import { PythonSignatureProvider } from '../../../providers/signatureProvider';
-import { IHistoryListener, IHistoryProvider, IJupyterExecution } from '../../types';
+import { IInteractiveWindowListener, IInteractiveWindowProvider, IJupyterExecution } from '../../types';
 import { BaseIntellisenseProvider } from './baseIntellisenseProvider';
 import { convertToMonacoCompletionList, convertToMonacoHover, convertToMonacoSignatureHelp } from './conversion';
 import { IntellisenseDocument } from './intellisenseDocument';
 
 // tslint:disable:no-any
 @injectable()
-export class JediIntellisenseProvider extends BaseIntellisenseProvider implements IHistoryListener {
+export class JediIntellisenseProvider extends BaseIntellisenseProvider implements IInteractiveWindowListener {
 
     private active: boolean = false;
     private pythonHoverProvider : PythonHoverProvider | undefined;
@@ -38,9 +38,9 @@ export class JediIntellisenseProvider extends BaseIntellisenseProvider implement
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IFileSystem) fileSystem: IFileSystem,
         @inject(IJupyterExecution) jupyterExecution: IJupyterExecution,
-        @inject(IHistoryProvider) historyProvider: IHistoryProvider
+        @inject(IInteractiveWindowProvider) interactiveWindowProvider: IInteractiveWindowProvider
     ) {
-        super(workspaceService, fileSystem, jupyterExecution, historyProvider);
+        super(workspaceService, fileSystem, jupyterExecution, interactiveWindowProvider);
 
         this.context = this.serviceManager.get<IExtensionContext>(IExtensionContext);
         this.jediFactory = new JediFactory(this.context.asAbsolutePath('.'), this.serviceManager);

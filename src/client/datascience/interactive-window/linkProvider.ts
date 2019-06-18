@@ -8,12 +8,12 @@ import { Event, EventEmitter } from 'vscode';
 
 import { IApplicationShell } from '../../common/application/types';
 import { noop } from '../../common/utils/misc';
-import { IHistoryListener } from '../types';
-import { HistoryMessages } from './historyTypes';
+import { IInteractiveWindowListener } from '../types';
+import { InteractiveWindowMessages } from './interactiveWindowTypes';
 
 // tslint:disable: no-any
 @injectable()
-export class LinkProvider implements IHistoryListener {
+export class LinkProvider implements IInteractiveWindowListener {
     private postEmitter: EventEmitter<{message: string; payload: any}> = new EventEmitter<{message: string; payload: any}>();
     constructor(@inject(IApplicationShell) private applicationShell: IApplicationShell) {
         noop();
@@ -25,7 +25,7 @@ export class LinkProvider implements IHistoryListener {
 
     public onMessage(message: string, payload?: any): void {
         switch (message) {
-            case HistoryMessages.OpenLink:
+            case InteractiveWindowMessages.OpenLink:
                 if (payload) {
                     this.applicationShell.openUrl(payload.toString());
                 }

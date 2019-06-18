@@ -10,12 +10,12 @@ import { DataScience } from './datascience';
 import { DataScienceCodeLensProvider } from './editor-integration/codelensprovider';
 import { CodeWatcher } from './editor-integration/codewatcher';
 import { Decorator } from './editor-integration/decorator';
-import { History } from './history/history';
-import { HistoryCommandListener } from './history/historycommandlistener';
-import { HistoryProvider } from './history/historyProvider';
-import { DotNetIntellisenseProvider } from './history/intellisense/dotNetIntellisenseProvider';
-import { JediIntellisenseProvider } from './history/intellisense/jediIntellisenseProvider';
-import { LinkProvider } from './history/linkProvider';
+import { DotNetIntellisenseProvider } from './interactive-window/intellisense/dotNetIntellisenseProvider';
+import { JediIntellisenseProvider } from './interactive-window/intellisense/jediIntellisenseProvider';
+import { InteractiveWindow } from './interactive-window/interactiveWindow';
+import { InteractiveWindowCommandListener } from './interactive-window/interactiveWindowCommandListener';
+import { InteractiveWindowProvider } from './interactive-window/interactiveWindowProvider';
+import { LinkProvider } from './interactive-window/linkProvider';
 import { JupyterCommandFactory } from './jupyter/jupyterCommand';
 import { JupyterExecutionFactory } from './jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from './jupyter/jupyterExporter';
@@ -33,9 +33,9 @@ import {
     IDataScienceCommandListener,
     IDataViewer,
     IDataViewerProvider,
-    IHistory,
-    IHistoryListener,
-    IHistoryProvider,
+    IInteractiveWindow,
+    IInteractiveWindowListener,
+    IInteractiveWindowProvider,
     IJupyterCommandFactory,
     IJupyterExecution,
     IJupyterSessionManager,
@@ -51,9 +51,9 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider, DataScienceCodeLensProvider);
     serviceManager.addSingleton<IDataScience>(IDataScience, DataScience);
     serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecutionFactory);
-    serviceManager.add<IDataScienceCommandListener>(IDataScienceCommandListener, HistoryCommandListener);
-    serviceManager.addSingleton<IHistoryProvider>(IHistoryProvider, HistoryProvider);
-    serviceManager.add<IHistory>(IHistory, History);
+    serviceManager.add<IDataScienceCommandListener>(IDataScienceCommandListener, InteractiveWindowCommandListener);
+    serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
+    serviceManager.add<IInteractiveWindow>(IInteractiveWindow, InteractiveWindow);
     serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
     serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
     serviceManager.add<INotebookServer>(INotebookServer, JupyterServerFactory);
@@ -67,7 +67,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDataViewerProvider>(IDataViewerProvider, DataViewerProvider);
     serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, Decorator);
-    serviceManager.add<IHistoryListener>(IHistoryListener, DotNetIntellisenseProvider);
-    serviceManager.add<IHistoryListener>(IHistoryListener, JediIntellisenseProvider);
-    serviceManager.add<IHistoryListener>(IHistoryListener, LinkProvider);
+    serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, DotNetIntellisenseProvider);
+    serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, JediIntellisenseProvider);
+    serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, LinkProvider);
 }

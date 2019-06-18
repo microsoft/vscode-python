@@ -6,7 +6,7 @@ import { Disposable, ProgressLocation, ProgressOptions } from 'vscode';
 
 import { IApplicationShell } from '../common/application/types';
 import { createDeferred, Deferred } from '../common/utils/async';
-import { IHistoryProvider, IStatusProvider } from './types';
+import { IInteractiveWindowProvider, IStatusProvider } from './types';
 
 class StatusItem implements Disposable {
 
@@ -56,7 +56,7 @@ export class StatusProvider implements IStatusProvider {
 
     constructor(
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
-        @inject(IHistoryProvider) private historyProvider: IHistoryProvider) {
+        @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider) {
     }
 
     public set(message: string, timeout?: number, cancel?: () => void, skipHistory?: boolean) : Disposable {
@@ -104,7 +104,7 @@ export class StatusProvider implements IStatusProvider {
 
     private incrementCount = (skipHistory?: boolean) => {
         if (this.statusCount === 0) {
-            const history = this.historyProvider.getActive();
+            const history = this.interactiveWindowProvider.getActive();
             if (history && !skipHistory) {
                 history.startProgress();
             }
@@ -115,7 +115,7 @@ export class StatusProvider implements IStatusProvider {
     private decrementCount = (skipHistory?: boolean) => {
         const updatedCount = this.statusCount - 1;
         if (updatedCount === 0) {
-            const history = this.historyProvider.getActive();
+            const history = this.interactiveWindowProvider.getActive();
             if (history && !skipHistory) {
                 history.stopProgress();
             }

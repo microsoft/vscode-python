@@ -7,13 +7,13 @@ import { IDisposable } from 'monaco-editor';
 import { Disposable } from 'vscode';
 
 import { createDeferred } from '../../client/common/utils/async';
-import { HistoryMessageListener } from '../../client/datascience/history/historyMessageListener';
-import { HistoryMessages } from '../../client/datascience/history/historyTypes';
-import { IHistory, IHistoryProvider } from '../../client/datascience/types';
+import { InteractiveWindowMessageListener } from '../../client/datascience/interactive-window/interactiveWindowMessageListener';
+import { InteractiveWindowMessages } from '../../client/datascience/interactive-window/interactiveWindowTypes';
+import { IInteractiveWindow, IInteractiveWindowProvider } from '../../client/datascience/types';
 import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
 import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { getEditor, runMountedTest, typeCode } from './historyTestHelpers';
+import { getEditor, runMountedTest, typeCode } from './interactiveWindowTestHelpers';
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 suite('DataScience Intellisense tests', () => {
@@ -45,14 +45,14 @@ suite('DataScience Intellisense tests', () => {
     //     asyncDump();
     // });
 
-    async function getOrCreateHistory(): Promise<IHistory> {
-        const historyProvider = ioc.get<IHistoryProvider>(IHistoryProvider);
-        const result = await historyProvider.getOrCreateActive();
+    async function getOrCreateInteractiveWindow(): Promise<IInteractiveWindow> {
+        const interactiveWindowProvider = ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
+        const result = await interactiveWindowProvider.getOrCreateActive();
 
-        // During testing the MainPanel sends the init message before our history is created.
+        // During testing the MainPanel sends the init message before our interactive window is created.
         // Pretend like it's happening now
-        const listener = ((result as any).messageListener) as HistoryMessageListener;
-        listener.onMessage(HistoryMessages.Started, {});
+        const listener = ((result as any).messageListener) as InteractiveWindowMessageListener;
+        listener.onMessage(InteractiveWindowMessages.Started, {});
 
         return result;
     }
@@ -115,9 +115,9 @@ suite('DataScience Intellisense tests', () => {
     }
 
     runMountedTest('Simple autocomplete', async (wrapper) => {
-        // Create a history so that it listens to the results.
-        const history = await getOrCreateHistory();
-        await history.show();
+        // Create an interactive window so that it listens to the results.
+        const interactiveWindow = await getOrCreateInteractiveWindow();
+        await interactiveWindow.show();
 
         // Then enter some code. Don't submit, we're just testing that autocomplete appears
         const suggestion = waitForSuggestion(wrapper);
@@ -131,9 +131,9 @@ suite('DataScience Intellisense tests', () => {
         if (ioc.mockJupyter) {
             // This test only works when mocking.
 
-            // Create a history so that it listens to the results.
-            const history = await getOrCreateHistory();
-            await history.show();
+            // Create an interactive window so that it listens to the results.
+            const interactiveWindow = await getOrCreateInteractiveWindow();
+            await interactiveWindow.show();
 
             // Then enter some code. Don't submit, we're just testing that autocomplete appears
             const suggestion = waitForSuggestion(wrapper);
@@ -148,9 +148,9 @@ suite('DataScience Intellisense tests', () => {
         if (ioc.mockJupyter) {
             // This test only works when mocking.
 
-            // Create a history so that it listens to the results.
-            const history = await getOrCreateHistory();
-            await history.show();
+            // Create an interactive window so that it listens to the results.
+            const interactiveWindow = await getOrCreateInteractiveWindow();
+            await interactiveWindow.show();
 
             // Force a timeout on the jupyter completions
             ioc.mockJupyter.getCurrentSession()!.setCompletionTimeout(1000);
