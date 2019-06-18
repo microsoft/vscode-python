@@ -20,6 +20,10 @@ module.exports = [
     merge(datascience[2], {
         devtool: 'eval'
     }),
+    // inset-react
+    merge(datascience[3], {
+        devtool: 'eval'
+    }),
     merge(extensionDependencies, {
         mode: 'production',
         devtool: 'source-map',
