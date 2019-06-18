@@ -1,0 +1,48 @@
+steps:
+    - bash: |
+          printenv
+      displayName: "Show all env vars"
+      condition: eq(variables['system.debug'], 'true')
+
+    - task: NodeTool@0
+      displayName: "Use Node $(NodeVersion)"
+      inputs:
+          versionSpec: $(NodeVersion)
+
+    - task: Npm@1
+      displayName: "Use NPM $(NpmVersion)"
+      inputs:
+          command: custom
+          verbose: true
+          customCommand: "install -g npm@$(NpmVersion)"
+
+    - task: Npm@1
+      displayName: "npm ci"
+      inputs:
+          command: custom
+          verbose: true
+          customCommand: ci
+
+    - task: DownloadBuildArtifacts@0
+      inputs:
+          buildType: "current"
+          allowPartiallySucceededBuilds: true
+          downloadType: "Specific"
+          itemPattern: ".nyc_output/*.json"
+          downloadPath: "$(Build.SourcesDirectory)"
+      displayName: "Restore Coverage Info"
+      condition: always()
+
+    # - task: CopyFiles@2
+    #   inputs:
+    #       sourceFolder: "$(Build.SourcesDirectory)/VSIX"
+    #       targetFolder: $(Build.SourcesDirectory)
+    #   displayName: "Copy VSIX"
+    #   condition: succeeded()
+
+    - bash: |
+        ls
+        cd .nyc_output
+        ls
+      displayName: "List nyc_output"
+      condition: succeeded()
