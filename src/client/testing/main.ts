@@ -6,8 +6,9 @@ import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, Disposable, DocumentSymbolProvider, Event, EventEmitter, OutputChannel, TextDocument, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService } from '../common/application/types';
 import * as constants from '../common/constants';
+import { AlwaysDisplayTestExplorerGroups } from '../common/experimentGroups';
 import '../common/extensions';
-import { IConfigurationService, IDisposableRegistry, ILogger, IOutputChannel, Resource } from '../common/types';
+import { IConfigurationService, IDisposableRegistry, IExperimentsManager, ILogger, IOutputChannel, Resource } from '../common/types';
 import { noop } from '../common/utils/misc';
 import { IServiceContainer } from '../ioc/types';
 import { EventName } from '../telemetry/constants';
@@ -67,11 +68,19 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
 
         this.registerHandlers();
         this.registerCommands();
-
+        this.checkExperiments();
         this.autoDiscoverTests(undefined).catch(ex => this.serviceContainer.get<ILogger>(ILogger).logError('Failed to auto discover tests upon activation', ex));
         await this.registerSymbolProvider(symbolProvider);
     }
-
+    public checkExperiments() {
+        const experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+        if (experiments.inExperiment(AlwaysDisplayTestExplorerGroups.enabled)) {
+            const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
+            commandManager.executeCommand('setContext', 'testsDiscovered', true).then(noop, noop);
+        } else {
+            experiments.sendTelemetryIfInExperiment(AlwaysDisplayTestExplorerGroups.control);
+        }
+    }
     public async getTestManager(displayTestNotConfiguredMessage: boolean, resource?: Uri): Promise<ITestManager | undefined | void> {
         let wkspace: Uri | undefined;
         if (resource) {
@@ -305,7 +314,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
         await promise;
     }
 
-    private async registerSymbolProvider(symbolProvider: DocumentSymbolProvider): Promise<void> {
+    public async registerSymbolProvider(symbolProvider: DocumentSymbolProvider): Promise<void> {
         const testCollectionStorage = this.serviceContainer.get<ITestCollectionStorageService>(ITestCollectionStorageService);
         const event = new EventEmitter<void>();
         this.disposableRegistry.push(event);
@@ -319,7 +328,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
     }
 
     @captureTelemetry(EventName.UNITTEST_CONFIGURE, undefined, false)
-    private async configureTests(resource?: Uri) {
+    public async configureTests(resource?: Uri) {
         let wkspace: Uri | undefined;
         if (resource) {
             const wkspaceFolder = this.workspaceService.getWorkspaceFolder(resource);
@@ -334,7 +343,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
         const configurationService = this.serviceContainer.get<ITestConfigurationService>(ITestConfigurationService);
         await configurationService.promptToEnableAndConfigureTestFramework(wkspace!);
     }
-    private registerCommands(): void {
+    public registerCommands(): void {
         const disposablesRegistry = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
         const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
 
@@ -409,14 +418,14 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
 
         disposablesRegistry.push(...disposables);
     }
-    private onDocumentSaved(doc: TextDocument) {
+    public onDocumentSaved(doc: TextDocument) {
         const settings = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(doc.uri);
         if (!settings.testing.autoTestDiscoverOnSaveEnabled) {
             return;
         }
         this.discoverTestsForDocument(doc).ignoreErrors();
     }
-    private registerHandlers() {
+    public registerHandlers() {
         const documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
 
         this.disposableRegistry.push(documentManager.onDidSaveTextDocument(this.onDocumentSaved.bind(this)));
