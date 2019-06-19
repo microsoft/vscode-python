@@ -70,7 +70,7 @@ def sections(directory):
     """Yield the sections in their appropriate order."""
     found = []
     for path in directory.iterdir():
-        if not path.is_dir() or path.name.startswith("."):
+        if not path.is_dir() or path.name.startswith((".", "_")):
             continue
         position, sep, title = path.name.partition(" ")
         if not sep:
