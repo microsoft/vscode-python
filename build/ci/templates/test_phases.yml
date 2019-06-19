@@ -165,7 +165,7 @@ steps:
     inputs:
       pathtoPublish: "$(Build.SourcesDirectory)/.nyc_output"
       artifactName: 'coverage-output-$(Agent.Os)'
-    condition: always()
+    condition: contains(variables['TestsToRun'], 'testUnitTests')
 
   # Install the requirements for the Python or the system tests. This includes the supporting libs that
   # we ship in our extension such as PTVSD and Jedi.
