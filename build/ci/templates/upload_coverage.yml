@@ -27,6 +27,7 @@ steps:
     # into the root directory (they'll go under `.nyc_output/...`)
     # These are the coverage output files that can be merged and then we can generate a report from them.
     - bash: |
+        echo "List folders0"
         cp -r coverage-output-*/ ./
         ls
         echo "List folders"
