@@ -335,6 +335,17 @@ export interface ISocketServer extends Disposable {
     Start(options?: { port?: number; host?: string }): Promise<number>;
 }
 
+export type DownloadOptions = {
+    progressMessagePrefix: 'Downloading ... ' | string;
+    outputChannel?: IOutputChannel;
+    extension: 'tmp' | string;
+}
+
+export const IFileDownloader = Symbol('IFileDownloader');
+export interface IFileDownloader {
+    downloadFile(uri: string, options: DownloadOptions): Promise<string>;
+}
+
 export const IHttpClient = Symbol('IHttpClient');
 export interface IHttpClient {
     downloadFile(uri: string): Promise<RequestResult>;
