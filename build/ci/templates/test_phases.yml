@@ -137,7 +137,7 @@ steps:
   # Example command line (windows pwsh):
   # > npm run test:unittests:cover
   - bash: |
-      npm run test:unittests:cover
+      npm run test:unittests:cover --grep=Test
     displayName: 'run test:unittests'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testUnitTests'))
 
@@ -154,7 +154,7 @@ steps:
   - task: CopyFiles@2
     inputs:
         sourceFolder: "$(Build.SourcesDirectory)/.nyc_output"
-        targetFolder: "$(Build.ArtifactStagingDirectory)/nyc"
+        targetFolder: "$(Build.ArtifactStagingDirectory)/nyc/.nyc_output"
     displayName: "Copy nyc_output to publish as artificat"
     condition: contains(variables['TestsToRun'], 'testUnitTests')
 
