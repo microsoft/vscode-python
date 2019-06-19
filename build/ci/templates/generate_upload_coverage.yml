@@ -15,21 +15,3 @@ steps:
         codeCoverageTool: 'cobertura'
         summaryFileLocation: "$(System.DefaultWorkingDirectory)/coverage/cobertura-coverage.xml"
         reportDirectory: "$(System.DefaultWorkingDirectory)/coverage"
-
-    - script: |
-        echo $BUILD_BUILDID
-        export COVERALLS_SERVICE_JOB_ID=$BUILD_BUILDID
-        echo $COVERALLS_SERVICE_JOB_ID
-      condition: contains(variables['TestsToRun'], 'testUnitTests')
-  
-    # Upload to coveralls
-    - bash: |
-        echo "COVERALLS_SERVICE_JOB_ID"
-        echo $COVERALLS_SERVICE_JOB_ID
-        echo $COVERALLS_SERVICE_JOB_ID
-        echo "Publish Coverage"
-        ls
-        cd coverage
-        ls
-      displayName: "Publish Coverage to Coveralls"
-      condition: contains(variables['TestsToRun'], 'testUnitTests')
