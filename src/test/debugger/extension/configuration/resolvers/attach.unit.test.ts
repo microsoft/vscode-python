@@ -197,10 +197,11 @@ getNamesAndValues(OSType).forEach(os => {
                 const defaultWorkspace = path.join('usr', 'desktop');
                 setupWorkspaces([defaultWorkspace]);
 
-                const localRoot = `\${workspaceFolder}/Debug_PythonPath_${new Date().toString()}`;
-                const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { localRoot, host, request: 'attach' } as any as DebugConfiguration);
+                const localRoot = `Debug_PythonPath_${new Date().toString()}`;
+                const debugPathMappings = [ { localRoot: `\${workspaceFolder}/${localRoot}`, remoteRoot: '/app/' }];
+                const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { localRoot, pathMappings: debugPathMappings, host, request: 'attach' } as any as DebugConfiguration);
                 const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
-                const lowercasedLocalRoot = workspaceFolder.uri.fsPath.charAt(0).toLowerCase() + workspaceFolder.uri.fsPath.substr(1);
+                const lowercasedLocalRoot = path.join(`${workspaceFolder.uri.fsPath.charAt(0).toLowerCase()}${workspaceFolder.uri.fsPath.substr(1)}`, localRoot);
 
                 expect(pathMappings![0].localRoot).to.be.equal(lowercasedLocalRoot);
             });
