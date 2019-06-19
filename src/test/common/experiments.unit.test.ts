@@ -23,7 +23,7 @@ import { createDeferred, createDeferredFromPromise } from '../../client/common/u
 import { sleep } from '../common';
 
 // tslint:disable-next-line: max-func-body-length
-suite('xA/B experiments', () => {
+suite('A/B experiments', () => {
     let workspaceService: IWorkspaceService;
     let httpClient: IHttpClient;
     let crypto: ICryptoUtils;
@@ -151,7 +151,7 @@ suite('xA/B experiments', () => {
             .verifiable(TypeMoq.Times.once());
         when(fs.fileExists(anything())).thenResolve(false);
         experimentStorage.setup(n => n.value).returns(() => undefined)
-            .verifiable(TypeMoq.Times.once());
+            .verifiable(TypeMoq.Times.exactly(2));
         isDownloadedStorageValid
             .setup(n => n.value)
             .returns(() => true)
@@ -257,7 +257,46 @@ suite('xA/B experiments', () => {
         downloadedExperimentsStorage.verifyAll();
     });
 
-    test('When no downloaded experiments are available, and if local experiments file is not valid, experiment storage is not updated', async () => {
+    test('When no downloaded experiments are available, and experiment storage contains experiments, then experiment storage is not updated', async () => {
+        downloadedExperimentsStorage
+            .setup(n => n.value)
+            .returns(() => undefined)
+            .verifiable(TypeMoq.Times.once());
+        downloadedExperimentsStorage
+            .setup(n => n.updateValue(undefined))
+            .returns(() => Promise.resolve(undefined))
+            .verifiable(TypeMoq.Times.never());
+
+        // tslint:disable-next-line:no-multiline-string
+        const fileContent = `
+        [{ "name": "experiment1", "salt": "salt", "min": 90, "max": 100 }]
+        `;
+
+        when(
+            fs.fileExists(anything())
+        ).thenResolve(true);
+        when(
+            fs.readFile(anything())
+        ).thenResolve(fileContent);
+
+        experimentStorage
+            .setup(n => n.value)
+            .returns(() => [{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }])
+            .verifiable(TypeMoq.Times.once());
+        experimentStorage
+            .setup(n => n.updateValue(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(undefined))
+            .verifiable(TypeMoq.Times.never());
+
+        await expManager.updateExperimentStorage();
+
+        verify(fs.fileExists(anything())).never();
+        verify(fs.readFile(anything())).never();
+        experimentStorage.verifyAll();
+        downloadedExperimentsStorage.verifyAll();
+    });
+
+    test('When no downloaded experiments are available, experiment storage is empty, but if local experiments file is not valid, experiment storage is not updated', async () => {
         downloadedExperimentsStorage
             .setup(n => n.value)
             .returns(() => undefined)
@@ -280,10 +319,11 @@ suite('xA/B experiments', () => {
         when(
             fs.readFile(anything())
         ).thenResolve(fileContent);
-        when(
-            fs.deleteFile(anything())
-        ).thenResolve(undefined);
 
+        experimentStorage
+            .setup(n => n.value)
+            .returns(() => undefined)
+            .verifiable(TypeMoq.Times.once());
         experimentStorage
             .setup(n => n.updateValue(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.never());
@@ -292,12 +332,11 @@ suite('xA/B experiments', () => {
 
         verify(fs.fileExists(anything())).once();
         verify(fs.readFile(anything())).once();
-        verify(fs.deleteFile(anything())).never();
         experimentStorage.verifyAll();
         downloadedExperimentsStorage.verifyAll();
     });
 
-    test('When no downloaded experiments are available, experiment storage is updated using local experiments file (which is then deleted) given experiments are valid', async () => {
+    test('When no downloaded experiments are available, and experiment storage is empty, then experiment storage is updated using local experiments file given experiments are valid', async () => {
         downloadedExperimentsStorage
             .setup(n => n.value)
             .returns(() => undefined)
@@ -320,10 +359,11 @@ suite('xA/B experiments', () => {
         when(
             fs.readFile(anything())
         ).thenResolve(fileContent);
-        when(
-            fs.deleteFile(anything())
-        ).thenResolve(undefined);
 
+        experimentStorage
+            .setup(n => n.value)
+            .returns(() => undefined)
+            .verifiable(TypeMoq.Times.once());
         experimentStorage
             .setup(n => n.updateValue([{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }]))
             .returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.once());
@@ -332,13 +372,12 @@ suite('xA/B experiments', () => {
 
         verify(fs.fileExists(anything())).once();
         verify(fs.readFile(anything())).once();
-        verify(fs.deleteFile(anything())).once();
         experimentStorage.verifyAll();
         downloadedExperimentsStorage.verifyAll();
     });
 
     // tslint:disable-next-line:max-func-body-length
-    suite('When no downloaded experiments are available, function updateExperimentStorage() stops execution and returns', () => {
+    suite('When no downloaded experiments are available, and experiment storage is empty, then function updateExperimentStorage() stops execution and returns', () => {
         test('If checking the existence of config file fails', async () => {
             downloadedExperimentsStorage
                 .setup(n => n.value)
@@ -356,10 +395,11 @@ suite('xA/B experiments', () => {
             when(
                 fs.readFile(anything())
             ).thenResolve('fileContent');
-            when(
-                fs.deleteFile(anything())
-            ).thenResolve(undefined);
 
+            experimentStorage
+                .setup(n => n.value)
+                .returns(() => undefined)
+                .verifiable(TypeMoq.Times.once());
             experimentStorage
                 .setup(n => n.updateValue(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve(undefined))
@@ -369,7 +409,6 @@ suite('xA/B experiments', () => {
 
             verify(fs.fileExists(anything())).once();
             verify(fs.readFile(anything())).never();
-            verify(fs.deleteFile(anything())).never();
             experimentStorage.verifyAll();
             downloadedExperimentsStorage.verifyAll();
         });
@@ -391,10 +430,11 @@ suite('xA/B experiments', () => {
             when(
                 fs.readFile(anything())
             ).thenThrow(error);
-            when(
-                fs.deleteFile(anything())
-            ).thenResolve(undefined);
 
+            experimentStorage
+                .setup(n => n.value)
+                .returns(() => undefined)
+                .verifiable(TypeMoq.Times.once());
             experimentStorage
                 .setup(n => n.updateValue(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve(undefined))
@@ -404,7 +444,6 @@ suite('xA/B experiments', () => {
 
             verify(fs.fileExists(anything())).once();
             verify(fs.readFile(anything())).once();
-            verify(fs.deleteFile(anything())).never();
             experimentStorage.verifyAll();
             downloadedExperimentsStorage.verifyAll();
         });
@@ -425,10 +464,11 @@ suite('xA/B experiments', () => {
             when(
                 fs.readFile(anything())
             ).thenResolve('fileContent');
-            when(
-                fs.deleteFile(anything())
-            ).thenResolve(undefined);
 
+            experimentStorage
+                .setup(n => n.value)
+                .returns(() => undefined)
+                .verifiable(TypeMoq.Times.once());
             experimentStorage
                 .setup(n => n.updateValue(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve(undefined))
@@ -438,7 +478,6 @@ suite('xA/B experiments', () => {
 
             verify(fs.fileExists(anything())).once();
             verify(fs.readFile(anything())).never();
-            verify(fs.deleteFile(anything())).never();
             experimentStorage.verifyAll();
             downloadedExperimentsStorage.verifyAll();
         });
@@ -466,10 +505,11 @@ suite('xA/B experiments', () => {
             when(
                 fs.readFile(anything())
             ).thenResolve(fileContent);
-            when(
-                fs.deleteFile(anything())
-            ).thenResolve(undefined);
 
+            experimentStorage
+                .setup(n => n.value)
+                .returns(() => undefined)
+                .verifiable(TypeMoq.Times.once());
             experimentStorage
                 .setup(n => n.updateValue(TypeMoq.It.isAny()))
                 .returns(() => Promise.reject(error))
@@ -479,7 +519,6 @@ suite('xA/B experiments', () => {
 
             verify(fs.fileExists(anything())).once();
             verify(fs.readFile(anything())).once();
-            verify(fs.deleteFile(anything())).never();
             experimentStorage.verifyAll();
             downloadedExperimentsStorage.verifyAll();
         });

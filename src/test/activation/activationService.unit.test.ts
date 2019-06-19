@@ -27,7 +27,7 @@ import { IServiceContainer } from '../../client/ioc/types';
 
 // tslint:disable:no-any
 
-suite('xActivation - ActivationService', () => {
+suite('Activation - ActivationService', () => {
     [true, false].forEach(jediIsEnabled => {
         suite(`Test activation - ${jediIsEnabled ? 'Jedi is enabled' : 'Jedi is disabled'}`, () => {
             let serviceContainer: TypeMoq.IMock<IServiceContainer>;
