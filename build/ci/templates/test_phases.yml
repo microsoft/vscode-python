@@ -137,7 +137,7 @@ steps:
   # Example command line (windows pwsh):
   # > npm run test:unittests:cover
   - bash: |
-      npm run test:unittests:cover --grep=Test
+      npm run test:unittests:cover
     displayName: 'run test:unittests'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testUnitTests'))
 
