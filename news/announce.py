@@ -160,17 +160,21 @@ def main(run_type, directory, news_file=None):
     directory = pathlib.Path(directory)
     data = gather(directory)
     markdown = changelog_markdown(data)
-    if run_type != RunType.dry_run:
-        if news_file:
-            with open(news_file, "r", encoding="utf-8") as file:
-                previous_news = file.read()
-            package_config_path = pathlib.Path(news_file).parent / "package.json"
-            config = json.loads(package_config_path.read_text())
-            new_news = complete_news(config["version"], markdown, previous_news)
+    if news_file:
+        with open(news_file, "r", encoding="utf-8") as file:
+            previous_news = file.read()
+        package_config_path = pathlib.Path(news_file).parent / "package.json"
+        config = json.loads(package_config_path.read_text())
+        new_news = complete_news(config["version"], markdown, previous_news)
+        if run_type == RunType.dry_run:
+            print(f"would be written to {news_file}:")
+            print()
+            print(new_news)
+        else:
             with open(news_file, "w", encoding="utf-8") as file:
                 file.write(new_news)
-        else:
-            print(markdown)
+    else:
+        print(markdown)
     if run_type == RunType.final:
         cleanup(data)
 
