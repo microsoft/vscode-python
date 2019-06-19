@@ -8,9 +8,8 @@
 - [ ] Update `requirements.txt` to point to latest release version of [ptvsd](https://github.com/microsoft/ptvsd).
 - [ ] Update `languageServerVersion` in `package.json` to point to the latest version (???) of [the Language Server](https://github.com/Microsoft/python-language-server).
 - [ ] Update [`CHANGELOG.md`](https://github.com/Microsoft/vscode-python/blob/master/CHANGELOG.md)
-   - [ ] Create a new section for this release
-   - [ ] Copy over the "Thanks" section from the previous release and make sure it's up-to-date (compare to versions in requirements.json)
    - [ ] Run [`news`](https://github.com/Microsoft/vscode-python/tree/master/news) (typically `python news --final --update CHANGELOG.md | code-insiders -`)
+   - [ ] Copy over the "Thanks" section from the previous release and make sure it's up-to-date (compare to versions in requirements.json)
    - [ ] Touch up news entries
    - [ ] Add any relevant news entries for ptvsd and the language server if they were updated
 - [ ] Update [`ThirdPartyNotices-Distribution.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Distribution.txt) by running [`tpn`](https://github.com/Microsoft/vscode-python/tree/master/tpn) (typically `python tpn --npm package-lock.json --npm-overrides package.datascience-ui.dependencies.json --config tpn/distribution.toml ThirdPartyNotices-Distribution.txt`)
