@@ -49,5 +49,3 @@ steps:
       condition: always()
 
     - template: generate_upload_coverage.yml
-      parameters:
-        TestsToRun: 'testUnitTests'    

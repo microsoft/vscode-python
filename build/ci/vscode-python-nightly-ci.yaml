@@ -482,5 +482,7 @@ jobs:
     - Nightly
   pool:
     vmImage: "macos-latest"
+  variables:
+    TestsToRun: 'testUnitTests'
   steps:
     - template: templates/merge_upload_coverage.yml
