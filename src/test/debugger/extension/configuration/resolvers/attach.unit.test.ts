@@ -198,7 +198,7 @@ getNamesAndValues(OSType).forEach(os => {
                 setupWorkspaces([defaultWorkspace]);
 
                 const localRoot = `Debug_PythonPath_${new Date().toString()}`;
-                const debugPathMappings = [ { localRoot: `\${workspaceFolder}/${localRoot}`, remoteRoot: '/app/' }];
+                const debugPathMappings = [ { localRoot: path.join('${workspaceFolder}', localRoot), remoteRoot: '/app/' }];
                 const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { localRoot, pathMappings: debugPathMappings, host, request: 'attach' } as any as DebugConfiguration);
                 const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
                 const lowercasedLocalRoot = path.join(`${workspaceFolder.uri.fsPath.charAt(0).toLowerCase()}${workspaceFolder.uri.fsPath.substr(1)}`, localRoot);
