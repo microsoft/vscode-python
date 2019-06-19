@@ -251,7 +251,6 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     private async runMatchingCell(range: Range, advance?: boolean) {
-        console.log(`*** runMathcingCell ${range.start.line}:${range.start.character}-${range.end.line}:${range.end.character}`);
         const currentRunCellLens = this.getCurrentCellLens(range.start);
         const nextRunCellLens = this.getNextCellLens(range.start);
 

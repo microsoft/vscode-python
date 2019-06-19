@@ -696,7 +696,6 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
     }
 
     private async submitCode(code: string, file: string, line: number, id?: string, editor?: TextEditor): Promise<void> {
-        console.log(`*** submitCode ${line}`);
         this.logger.logInformation(`Submitting code for ${this.id}`);
 
         // Start a status item
