@@ -8,7 +8,6 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../common/application/types';
 import '../common/extensions';
-import { traceDecorators } from '../common/logger';
 import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService, IPersistentStateFactory, Resource } from '../common/types';
 import { Common, Linters } from '../common/utils/localize';
