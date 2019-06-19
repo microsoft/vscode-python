@@ -1,3 +1,10 @@
+# Prerequisites
+
+* Python 3.7 and higher
+* run `python3 -m pip install --user -r news/requirements.txt`
+* run `python3 -m pip install --user -r tpn/requirements.txt`
+
+
 # Release candidate (Tuesday, XXX XX)
 
 - [ ] Ensure all new features are tracked via telemetry
