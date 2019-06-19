@@ -14,14 +14,14 @@ import { IFileSystem } from '../../../common/platform/types';
 import { IConfigurationService } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { Identifiers } from '../../constants';
-import { IHistoryListener, IHistoryProvider, IJupyterExecution } from '../../types';
+import { IInteractiveWindowListener, IInteractiveWindowProvider, IJupyterExecution } from '../../types';
 import { BaseIntellisenseProvider } from './baseIntellisenseProvider';
 import { convertToMonacoCompletionList, convertToMonacoHover, convertToMonacoSignatureHelp } from './conversion';
 import { IntellisenseDocument } from './intellisenseDocument';
 
 // tslint:disable:no-any
 @injectable()
-export class DotNetIntellisenseProvider extends BaseIntellisenseProvider implements IHistoryListener {
+export class DotNetIntellisenseProvider extends BaseIntellisenseProvider implements IInteractiveWindowListener {
 
     private languageClientPromise : Deferred<vscodeLanguageClient.LanguageClient> | undefined;
     private sentOpenDocument : boolean = false;
@@ -34,9 +34,9 @@ export class DotNetIntellisenseProvider extends BaseIntellisenseProvider impleme
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IFileSystem) fileSystem: IFileSystem,
         @inject(IJupyterExecution) jupyterExecution: IJupyterExecution,
-        @inject(IHistoryProvider) historyProvider: IHistoryProvider
+        @inject(IInteractiveWindowProvider) interactiveWindowProvider: IInteractiveWindowProvider
     ) {
-        super(workspaceService, fileSystem, jupyterExecution, historyProvider);
+        super(workspaceService, fileSystem, jupyterExecution, interactiveWindowProvider);
 
         // Make sure we're active. We still listen to messages for adding and editing cells,
         // but we don't actually return any data.

@@ -336,7 +336,7 @@ suite('DataScience notebook tests', () => {
     // IP = * format is a bit different from localhost format
     function getIPConnectionInfo(output: string): string | undefined {
         // String format: http://(NAME or IP):PORT/
-        const nameAndPortRegEx = /(https?):\/\/\(([a-zA-Z0-9]*) or [0-9.]*\):([0-9]*)\/(?:\?token=)?([a-zA-Z0-9]*)?/;
+        const nameAndPortRegEx = /(https?):\/\/\(([^\s]*) or [0-9.]*\):([0-9]*)\/(?:\?token=)?([a-zA-Z0-9]*)?/;
 
         const urlMatch = nameAndPortRegEx.exec(output);
         if (urlMatch && !urlMatch[4]) {

@@ -164,7 +164,7 @@ export namespace LiveShare {
     export const JupyterServerSharedService = 'jupyterServerSharedService';
     export const CommandBrokerService = 'commmandBrokerService';
     export const WebPanelMessageService = 'webPanelMessageService';
-    export const HistoryProviderService = 'historyProviderService';
+    export const InteractiveWindowProviderService = 'interactiveWindowProviderService';
     export const GuestCheckerService = 'guestCheckerService';
     export const LiveShareBroadcastRequest = 'broadcastRequest';
     export const ResponseLifetime = 15000;
@@ -186,8 +186,8 @@ export namespace LiveShareCommands {
     export const syncRequest = 'synchRequest';
     export const restart = 'restart';
     export const interrupt = 'interrupt';
-    export const historyCreate = 'historyCreate';
-    export const historyCreateSync = 'historyCreateSync';
+    export const interactiveWindowCreate = 'interactiveWindowCreate';
+    export const interactiveWindowCreateSync = 'interactiveWindowCreateSync';
     export const disposeServer = 'disposeServer';
     export const guestCheck = 'guestCheck';
 }

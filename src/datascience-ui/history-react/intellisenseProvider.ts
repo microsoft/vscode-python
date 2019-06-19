@@ -6,12 +6,12 @@ import * as uuid from 'uuid/v4';
 import { IDisposable } from '../../client/common/types';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
 import {
-    HistoryMessages,
-    IHistoryMapping,
+    IInteractiveWindowMapping,
+    InteractiveWindowMessages,
     IProvideCompletionItemsResponse,
     IProvideHoverResponse,
     IProvideSignatureHelpResponse
-} from '../../client/datascience/history/historyTypes';
+} from '../../client/datascience/interactive-window/interactiveWindowTypes';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 
 interface IRequestData<T> {
@@ -47,11 +47,11 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
 
         const cancelDisposable = token.onCancellationRequested(() => {
             promise.resolve();
-            this.sendMessage(HistoryMessages.CancelCompletionItemsRequest, { requestId });
+            this.sendMessage(InteractiveWindowMessages.CancelCompletionItemsRequest, { requestId });
         });
 
         this.completionRequests.set(requestId, { promise, cancelDisposable });
-        this.sendMessage(HistoryMessages.ProvideCompletionItemsRequest, { position, context, requestId, cellId: this.getCellId(model.id) });
+        this.sendMessage(InteractiveWindowMessages.ProvideCompletionItemsRequest, { position, context, requestId, cellId: this.getCellId(model.id) });
 
         return promise.promise;
     }
@@ -66,11 +66,11 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
 
         const cancelDisposable = token.onCancellationRequested(() => {
             promise.resolve();
-            this.sendMessage(HistoryMessages.CancelCompletionItemsRequest, { requestId });
+            this.sendMessage(InteractiveWindowMessages.CancelCompletionItemsRequest, { requestId });
         });
 
         this.hoverRequests.set(requestId, { promise, cancelDisposable });
-        this.sendMessage(HistoryMessages.ProvideHoverRequest, { position, requestId, cellId: this.getCellId(model.id) });
+        this.sendMessage(InteractiveWindowMessages.ProvideHoverRequest, { position, requestId, cellId: this.getCellId(model.id) });
 
         return promise.promise;
     }
@@ -86,11 +86,11 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
 
         const cancelDisposable = token.onCancellationRequested(() => {
             promise.resolve();
-            this.sendMessage(HistoryMessages.CancelSignatureHelpRequest, { requestId });
+            this.sendMessage(InteractiveWindowMessages.CancelSignatureHelpRequest, { requestId });
         });
 
         this.signatureHelpRequests.set(requestId, { promise, cancelDisposable });
-        this.sendMessage(HistoryMessages.ProvideSignatureHelpRequest, { position, context, requestId, cellId: this.getCellId(model.id) });
+        this.sendMessage(InteractiveWindowMessages.ProvideSignatureHelpRequest, { position, context, requestId, cellId: this.getCellId(model.id) });
 
         return promise.promise;
     }
@@ -110,15 +110,15 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
     // tslint:disable-next-line: no-any
     public handleMessage(type: string, payload?: any): boolean {
         switch (type) {
-            case HistoryMessages.ProvideCompletionItemsResponse:
+            case InteractiveWindowMessages.ProvideCompletionItemsResponse:
                 this.handleCompletionResponse(payload);
                 return true;
 
-            case HistoryMessages.ProvideHoverResponse:
+            case InteractiveWindowMessages.ProvideHoverResponse:
                 this.handleHoverResponse(payload);
                 return true;
 
-            case HistoryMessages.ProvideSignatureHelpResponse:
+            case InteractiveWindowMessages.ProvideSignatureHelpResponse:
                 this.handleSignatureHelpResponse(payload);
                 return true;
 
@@ -170,7 +170,7 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
         }
     }
 
-    private sendMessage<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) {
+    private sendMessage<M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]) {
         this.postOffice.sendMessage<M, T>(type, payload);
     }
 }

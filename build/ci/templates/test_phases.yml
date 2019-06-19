@@ -151,14 +151,21 @@ steps:
       buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
       buildConfiguration: 'UnitTests'
 
-  # Publish Code Coverage Results
-  - task: PublishCodeCoverageResults@1
-    displayName: 'Publish test:unittests coverage results'
-    condition: contains(variables['TestsToRun'], 'testUnitTests')
+  - task: CopyFiles@2
     inputs:
-      codeCoverageTool: 'cobertura'
-      summaryFileLocation: "$(System.DefaultWorkingDirectory)/coverage/cobertura-coverage.xml"
-      reportDirectory: "$(System.DefaultWorkingDirectory)/coverage"
+        sourceFolder: "$(Build.SourcesDirectory)/.nyc_output"
+        targetFolder: "$(Build.ArtifactStagingDirectory)/nyc/.nyc_output"
+    displayName: "Copy nyc_output to publish as artificat"
+    condition: contains(variables['TestsToRun'], 'testUnitTests')
+
+  # Upload Code Coverage Results (to be merged later).
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathtoPublish: "$(Build.ArtifactStagingDirectory)/nyc"
+      artifactName: 'coverage-output-$(Agent.Os)'
+    condition: contains(variables['TestsToRun'], 'testUnitTests')
+
+  - template: generate_upload_coverage.yml
 
   # Install the requirements for the Python or the system tests. This includes the supporting libs that
   # we ship in our extension such as PTVSD and Jedi.
