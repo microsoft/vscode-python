@@ -30,3 +30,12 @@ steps:
         ls -dlU .*/ */
       displayName: "List nyc_output"
       condition: always()
+
+    - bash: |
+        echo "Publish Coverage"
+        ls
+        echo "List folders"
+        ls -dlU .*/ */
+      workingDirectory: $(Build.SourcesDirectory)
+      displayName: "List nyc_output"
+      condition: always()

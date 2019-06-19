@@ -33,6 +33,21 @@ steps:
       displayName: "Restore Coverage Info"
       condition: always()
 
+    - bash: |
+        echo "Publish Coverage1"
+        echo $SOMETHING
+        echo "Publish Coverage2"
+        pwd
+        echo "Publish Coverage3"
+        ls
+        echo "List folders"
+        ls -dlU .*/ */
+      env:
+        SOMETHING: "$(Build.SourcesDirectory)"
+      workingDirectory: $(Build.SourcesDirectory)
+      displayName: "List nyc_output"
+      condition: always()
+
     # - task: CopyFiles@2
     #   inputs:
     #       sourceFolder: "$(Build.SourcesDirectory)/VSIX"
