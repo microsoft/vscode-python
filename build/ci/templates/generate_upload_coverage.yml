@@ -17,7 +17,9 @@ steps:
         reportDirectory: "$(System.DefaultWorkingDirectory)/coverage"
 
     - script: |
-        echo '##vso[task.setvariable variable=COVERALLS_SERVICE_JOB_ID]$BUILD_BUILDID'
+        echo $BUILD_BUILDID
+        export COVERALLS_SERVICE_JOB_ID=$BUILD_BUILDID
+        echo $COVERALLS_SERVICE_JOB_ID
       condition: contains(variables['TestsToRun'], 'testUnitTests')
   
     # Upload to coveralls
