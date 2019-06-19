@@ -310,3 +310,11 @@ jobs:
 
   steps:
     - template: templates/test_phases.yml
+
+- job: Coverage
+  dependsOn:
+    - CI
+  pool:
+    vmImage: "macos-latest"
+  steps:
+    - template: templates/merge_upload_coverage.yml
