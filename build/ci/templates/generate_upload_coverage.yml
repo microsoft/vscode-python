@@ -16,12 +16,15 @@ steps:
         summaryFileLocation: "$(System.DefaultWorkingDirectory)/coverage/cobertura-coverage.xml"
         reportDirectory: "$(System.DefaultWorkingDirectory)/coverage"
 
-
-    # - bash: |
-    #     echo "Publish Coverage"
-    #     ls
-    #     echo "List folders"
-    #     ls -dlU .*/ */
-    #   workingDirectory: $(Build.SourcesDirectory)
-    #   displayName: "List nyc_output"
-    #   condition: always()
+    - script: |
+        echo '##vso[task.setvariable variable=COVERALLS_SERVICE_JOB_ID]$BUILD_BUILDID'
+      condition: contains(variables['TestsToRun'], 'testUnitTests')
+  
+    # Upload to coveralls
+    - bash: |
+        echo "COVERALLS_SERVICE_JOB_ID"
+        echo $COVERALLS_SERVICE_JOB_ID
+        echo $COVERALLS_SERVICE_JOB_ID
+        echo "Publish Coverage"
+      displayName: "Publish Coverage to Coveralls"
+      condition: contains(variables['TestsToRun'], 'testUnitTests')
