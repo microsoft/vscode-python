@@ -200,7 +200,8 @@ export namespace DataScience {
     export const exportPlot = localize('DataScience.exportPlot', 'Export to different formats');
     export const deletePlot = localize('DataScience.deletePlot', 'Remove');
     export const editSection = localize('DataScience.editSection', 'Input new cells here.');
-
+    export const selectedImageListLabel = localize('DataScience.selectedImageListLabel', 'Selected Image');
+    export const imageListLabel = localize('DataScience.imageListLabel', 'Image');
 }
 
 export namespace DebugConfigStrings {
