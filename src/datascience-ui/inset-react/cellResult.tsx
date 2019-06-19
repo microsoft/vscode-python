@@ -2,7 +2,7 @@
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 // tslint:disable-next-line: import-name
 import React from 'react';
-import { HistoryMessages, IHistoryMapping } from '../../client/datascience/history/historyTypes';
+import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../../client/datascience/interactive-window/interactiveWindowTypes';
 import { ICell } from '../../client/datascience/types';
 import { CellOutput } from '../history-react/cellOutput';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
@@ -75,9 +75,9 @@ export class CellResult extends React.Component<ICellResultProps, ICellResultSta
     public handleMessage = (msg: string, payload?: any) => {
         const cell = payload as ICell;
         switch (msg) {
-            case HistoryMessages.StartCell:
-            case HistoryMessages.FinishCell:
-            case HistoryMessages.UpdateCell:
+            case InteractiveWindowMessages.StartCell:
+            case InteractiveWindowMessages.FinishCell:
+            case InteractiveWindowMessages.UpdateCell:
                 this.setState({ cell: cell });
                 return true;
             default:
@@ -85,16 +85,16 @@ export class CellResult extends React.Component<ICellResultProps, ICellResultSta
         }
     }
 
-    private sendMessage<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) {
+    private sendMessage<M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]) {
         this.postOffice.sendMessage<M, T>(type, payload);
     }
 
     private showPlot = (imageHtml: string) => {
-        this.sendMessage(HistoryMessages.ShowPlot, imageHtml);
+        this.sendMessage(InteractiveWindowMessages.ShowPlot, imageHtml);
     }
 
     private openLink = (uri: monacoEditor.Uri) => {
-        this.sendMessage(HistoryMessages.OpenLink, uri.toString());
+        this.sendMessage(InteractiveWindowMessages.OpenLink, uri.toString());
     }
 
 }

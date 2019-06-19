@@ -136,7 +136,7 @@ export class CodeWatcher implements ICodeWatcher {
                     // We have a cell and we are not past or at the stop point
                     const code = this.document.getText(lens.range);
                     const activeInteractiveWindow = await this.interactiveWindowProvider.getOrCreateActive();
-                    await activeInteractiveWindow.addCode(code, this.getFileName(), lens.range.start.line); // , activeEditor
+                    await activeInteractiveWindow.addCode(code, this.getFileName(), lens.range.start.line, activeEditor);
                 } else {
                     // If we get a cell past or at the stop point stop
                     break;
@@ -157,7 +157,7 @@ export class CodeWatcher implements ICodeWatcher {
                     // We have a cell and we are not past or at the stop point
                     const code = this.document.getText(lens.range);
                     const activeInteractiveWindow = await this.interactiveWindowProvider.getOrCreateActive();
-                    await activeInteractiveWindow.addCode(code, this.getFileName(), lens.range.start.line); // , activeEditor
+                    await activeInteractiveWindow.addCode(code, this.getFileName(), lens.range.start.line, activeEditor);
                 }
             }
         }

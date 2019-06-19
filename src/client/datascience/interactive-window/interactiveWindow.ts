@@ -845,15 +845,6 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         }
     }
 
-    private broadcastMessage(type: keyof IHistoryMapping, cell: ICell) {
-        this.postMessage(type, cell).ignoreErrors();
-
-        const inset = this.codeInsetPerLine.get(cell.line);
-        if (inset) {
-            inset.postMessage(type.toString(), cell);
-        }
-    }
-
     private onInterpreterChanged = () => {
         // Update our load promise. We need to restart the jupyter server
         this.loadPromise = this.reloadWithNew();
