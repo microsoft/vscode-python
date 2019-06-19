@@ -26,7 +26,7 @@ steps:
     - bash: |
         echo "Publish Coverage"
         ls
-        cd .nyc_output
-        ls
+        echo "List folders"
+        ls -dlU .*/ */
       displayName: "List nyc_output"
       condition: always()
