@@ -1,5 +1,211 @@
 # Changelog
 
+## 2019.6.0-rc (19 June 2019)
+
+### Enhancements
+
+1. Dedent selected code before sending it to the terminal.
+   ([#2837](https://github.com/Microsoft/vscode-python/issues/2837))
+1. Allow password for remote authentication.
+   ([#3624](https://github.com/Microsoft/vscode-python/issues/3624))
+1. Add support for sub process debugging, when debugging tests.
+   ([#4525](https://github.com/Microsoft/vscode-python/issues/4525))
+1. Change title of `Discover Tests` to `Discovering` when discovering tests.
+   ([#4562](https://github.com/Microsoft/vscode-python/issues/4562))
+1. Add an extra viewer for plots in the interactive window.
+   ([#4967](https://github.com/Microsoft/vscode-python/issues/4967))
+1. Allow for self signed certificates for jupyter connections.
+   ([#4987](https://github.com/Microsoft/vscode-python/issues/4987))
+1. Add support for A/B testing and staged rollouts of new functionality.
+   ([#5042](https://github.com/Microsoft/vscode-python/issues/5042))
+1. Removed `--nothreading` flag from the `Django` debug configuration.
+   ([#5116](https://github.com/Microsoft/vscode-python/issues/5116))
+1. Test Explorer : Remove time from all nodes except the tests.
+   ([#5120](https://github.com/Microsoft/vscode-python/issues/5120))
+1. Add support for a copy back to source.
+   ([#5286](https://github.com/Microsoft/vscode-python/issues/5286))
+1. Add visual separation between the variable explorer and the rest of the Interactive Window content.
+   ([#5389](https://github.com/Microsoft/vscode-python/issues/5389))
+1. Changes placeholder label in testConfigurationManager.ts from 'Select the directory containing the unit tests' to 'Select the directory containing the tests'.
+   (thanks [James Flynn](https://github.com/james-flynn-ie/))
+   ([#5602](https://github.com/Microsoft/vscode-python/issues/5602))
+1. Updated labels in File > Preferences > Settings. It now states 'Pytest' where it stated 'Py Test'.
+   (thanks [James Flynn](https://github.com/james-flynn-ie/))
+   ([#5603](https://github.com/Microsoft/vscode-python/issues/5603))
+1. Updated label for "Enable unit testing for Pytest" to remove the word "unit".
+   (thanks [James Flynn](https://github.com/james-flynn-ie/))
+   ([#5604](https://github.com/Microsoft/vscode-python/issues/5604))
+1. Importing a notebook should show the output of the notebook in the Python Interactive window. This feature can be turned off with the 'previewImportedNotebooksInInteractivePane' setting.
+   ([#5675](https://github.com/Microsoft/vscode-python/issues/5675))
+1. Add flag to auto preview an ipynb file when opened.
+   ([#5790](https://github.com/Microsoft/vscode-python/issues/5790))
+1. Change pytest description from configuration menu.
+   ([#5832](https://github.com/Microsoft/vscode-python/issues/5832))
+1. Support faster restart of the kernel by creating two kernels (two python processes running under the covers).
+   ([#5876](https://github.com/Microsoft/vscode-python/issues/5876))
+1. Allow a 'Dont ask me again' option for restarting the kernel.
+   ([#5951](https://github.com/Microsoft/vscode-python/issues/5951))
+1. Added experiment to always display the test explorer.
+   ([#6211](https://github.com/Microsoft/vscode-python/issues/6211))
+
+### Fixes
+
+1. Added support for activation of conda environments in `powershell`.
+   ([#668](https://github.com/Microsoft/vscode-python/issues/668))
+1. Provide `pathMappings` to debugger when attaching to child processes.
+   ([#3568](https://github.com/Microsoft/vscode-python/issues/3568))
+1. Add virtualenvwrapper default virtual environment location to the `python.venvFolders` config setting.
+   ([#4642](https://github.com/Microsoft/vscode-python/issues/4642))
+1. Advance to the next cell if cursor is in the current cell and user clicks 'Run Cell'.
+   ([#5067](https://github.com/Microsoft/vscode-python/issues/5067))
+1. Fix localhost path mappings to lowercase the drive letter on Windows.
+   ([#5362](https://github.com/Microsoft/vscode-python/issues/5362))
+1. Fix import/export paths to be escaped on windows.
+   ([#5386](https://github.com/Microsoft/vscode-python/issues/5386))
+1. Support loading larger dataframes in the dataviewer (anything more than 1000 columns will still be slow, but won't crash).
+   ([#5469](https://github.com/Microsoft/vscode-python/issues/5469))
+1. Fix magics running from a python file.
+   ([#5537](https://github.com/Microsoft/vscode-python/issues/5537))
+1. Change scrolling to not animate to workaround async updates breaking the animation.
+   ([#5560](https://github.com/Microsoft/vscode-python/issues/5560))
+1. Add support for opening hyperlinks from the interactive window.
+   ([#5630](https://github.com/Microsoft/vscode-python/issues/5630))
+1. Remove extra padding in the dataviewer.
+   ([#5653](https://github.com/Microsoft/vscode-python/issues/5653))
+1. Add 'Add empty cell to file' command. Shortcut for having to type '#%%'.
+   ([#5667](https://github.com/Microsoft/vscode-python/issues/5667))
+1. Add 'ctrl+enter' as a keyboard shortcut for run current cell (runs without advancing)
+   ([#5673](https://github.com/Microsoft/vscode-python/issues/5673))
+1. Adjust input box prompt to look more an IPython console prompt.
+   ([#5729](https://github.com/Microsoft/vscode-python/issues/5729))
+1. Jupyter-notebook exists after shutdown.
+   ([#5731](https://github.com/Microsoft/vscode-python/issues/5731))
+1. Fix horizontal scrolling in the Interactive Window.
+   ([#5734](https://github.com/Microsoft/vscode-python/issues/5734))
+1. Fix problem with using up/down arrows in autocomplete.
+   ([#5774](https://github.com/Microsoft/vscode-python/issues/5774))
+1. Fix latex and markdown scrolling.
+   ([#5775](https://github.com/Microsoft/vscode-python/issues/5775))
+1. Add support for jupyter controls that clear.
+   ([#5801](https://github.com/Microsoft/vscode-python/issues/5801))
+1. Fix up arrow on signature help closing the help.
+   ([#5813](https://github.com/Microsoft/vscode-python/issues/5813))
+1. Make the interactive window respect editor cursor and blink style.
+   ([#5814](https://github.com/Microsoft/vscode-python/issues/5814))
+1. Remove extra overlay on editor when matching parentheses.
+   ([#5815](https://github.com/Microsoft/vscode-python/issues/5815))
+1. Fix theme color missing errors inside interactive window.
+   ([#5827](https://github.com/Microsoft/vscode-python/issues/5827))
+1. Fix problem with shift+enter not working after using goto source.
+   ([#5829](https://github.com/Microsoft/vscode-python/issues/5829))
+1. Fix CI failures related to history import changes.
+   ([#5844](https://github.com/Microsoft/vscode-python/issues/5844))
+1. Disable quoting of paths sent to the debugger as arguments.
+   ([#5861](https://github.com/Microsoft/vscode-python/issues/5861))
+1. Fix shift+enter to work in newly created files with cells.
+   ([#5879](https://github.com/Microsoft/vscode-python/issues/5879))
+1. Fix nightly failures caused by new jupyter command line.
+   ([#5883](https://github.com/Microsoft/vscode-python/issues/5883))
+1. Improve accessibility of the 'Python Interactive' window.
+   ([#5884](https://github.com/Microsoft/vscode-python/issues/5884))
+1. Auto preview notebooks on import.
+   ([#5891](https://github.com/Microsoft/vscode-python/issues/5891))
+1. Fix liveloss test to not have so many dependencies.
+   ([#5909](https://github.com/Microsoft/vscode-python/issues/5909))
+1. Fixes to detection of the shell.
+   ([#5916](https://github.com/Microsoft/vscode-python/issues/5916))
+1. Fixes to activation of Conda environments.
+   ([#5929](https://github.com/Microsoft/vscode-python/issues/5929))
+1. Fix themes in the interactive window that use 3 color hex values (like Cobalt2).
+   ([#5950](https://github.com/Microsoft/vscode-python/issues/5950))
+1. Fix jupyter services node-fetch connection issue.
+   ([#5956](https://github.com/Microsoft/vscode-python/issues/5956))
+1. Allow selection and running of indented code in the python interactive window.
+   ([#5983](https://github.com/Microsoft/vscode-python/issues/5983))
+1. Account for files being opened in Visual Studio Code that do not belong to a workspace.
+   ([#6624](https://github.com/Microsoft/vscode-python/issues/6624))
+
+### Code Health
+
+1. Add code coverage reporting.
+   ([#4472](https://github.com/Microsoft/vscode-python/issues/4472))
+1. Minimize data sent as part of the `ERROR` telemetry event.
+   ([#4602](https://github.com/Microsoft/vscode-python/issues/4602))
+1. Fixes to decorator tests.
+   ([#5085](https://github.com/Microsoft/vscode-python/issues/5085))
+1. Add sorting test for DataViewer.
+   ([#5415](https://github.com/Microsoft/vscode-python/issues/5415))
+1. Rename "unit test" to "tests" from drop menu when clicking on "Run Tests" on the status bar.
+   ([#5605](https://github.com/Microsoft/vscode-python/issues/5605))
+1. Added telemetry to track memory usage of the `Jedi Language Server` process.
+   ([#5726](https://github.com/Microsoft/vscode-python/issues/5726))
+1. Fix nightly functional tests from timing out during process cleanup.
+   ([#5870](https://github.com/Microsoft/vscode-python/issues/5870))
+1. Change how telemetry is sent for the 'shift+enter' banner.
+   ([#5887](https://github.com/Microsoft/vscode-python/issues/5887))
+1. Fixes to gulp script used to bundle the extension with `WebPack`.
+   ([#5932](https://github.com/Microsoft/vscode-python/issues/5932))
+1. Tighten up the import-matching regex to minimize false-positives.
+   ([#5988](https://github.com/Microsoft/vscode-python/issues/5988))
+1. Merge multiple coverage reports into one.
+   ([#6000](https://github.com/Microsoft/vscode-python/issues/6000))
+1. Fix DataScience nightly tests.
+   ([#6032](https://github.com/Microsoft/vscode-python/issues/6032))
+1. Update version of TypeScript to 3.5.
+   ([#6033](https://github.com/Microsoft/vscode-python/issues/6033))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+- [isort 4.3.20](https://pypi.org/project/isort/4.3.20/)
+- [jedi 0.12.0](https://pypi.org/project/jedi/0.12.0/)
+  and [parso 0.2.1](https://pypi.org/project/parso/0.2.1/)
+- [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+- [ptvsd](https://pypi.org/project/ptvsd/)
+- [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+- [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+- Debugging support:
+  [Django](https://pypi.org/project/Django/),
+  [Flask](https://pypi.org/project/Flask/),
+  [gevent](https://pypi.org/project/gevent/),
+  [Jinja](https://pypi.org/project/Jinja/),
+  [Pyramid](https://pypi.org/project/pyramid/),
+  [PySpark](https://pypi.org/project/pyspark/),
+  [Scrapy](https://pypi.org/project/Scrapy/),
+  [Watson](https://pypi.org/project/Watson/)
+- Formatting:
+  [autopep8](https://pypi.org/project/autopep8/),
+  [black](https://pypi.org/project/black/),
+  [yapf](https://pypi.org/project/yapf/)
+- Interpreter support:
+  [conda](https://conda.io/),
+  [direnv](https://direnv.net/),
+  [pipenv](https://pypi.org/project/pipenv/),
+  [pyenv](https://github.com/pyenv/pyenv),
+  [venv](https://docs.python.org/3/library/venv.html#module-venv),
+  [virtualenv](https://pypi.org/project/virtualenv/)
+- Linting:
+  [bandit](https://pypi.org/project/bandit/),
+  [flake8](https://pypi.org/project/flake8/),
+  [mypy](https://pypi.org/project/mypy/),
+  [prospector](https://pypi.org/project/prospector/),
+  [pylint](https://pypi.org/project/pylint/),
+  [pydocstyle](https://pypi.org/project/pydocstyle/),
+  [pylama](https://pypi.org/project/pylama/)
+- Testing:
+  [nose](https://pypi.org/project/nose/),
+  [pytest](https://pypi.org/project/pytest/),
+  [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
+
 ## 2019.5.18426 (4 June 2019)
 
 ### Fixes
