@@ -26,5 +26,8 @@ steps:
         echo $COVERALLS_SERVICE_JOB_ID
         echo $COVERALLS_SERVICE_JOB_ID
         echo "Publish Coverage"
+        ls
+        cd coverage
+        ls
       displayName: "Publish Coverage to Coveralls"
       condition: contains(variables['TestsToRun'], 'testUnitTests')
