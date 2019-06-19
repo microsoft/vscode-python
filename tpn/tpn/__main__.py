@@ -89,6 +89,7 @@ def main(tpn_path, *, config_path, npm_path=None, npm_overrides=None, pypi_path=
         print("*" * 20)  # Make failure stand out more.
         for name, details in failures.items():
             print(f"{name!r} {details.version} @ {details.url}: {details.error}")
+            print(f"NPM URL: {details.npm}")
             print(textwrap.dedent(f"""
             [[project]]
             name = "{name}"
