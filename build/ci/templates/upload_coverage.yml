@@ -23,10 +23,19 @@ steps:
     #   displayName: "Copy VSIX"
     #   condition: succeeded()
 
+    # Now that we have downloaded artificats from `coverage-output-`, copy them
+    # into the root directory (they'll go under `.nyc_output/...`)
+    # These are the coverage output files that can be merged and then we can generate a report from them.
     - bash: |
-        echo "Publish Coverage"
+        cp -r coverage-output-*/ ./
         ls
         echo "List folders"
+        ls -dlU .*/ */
+        echo "List folders2"
+        pwd
+        echo "List folders3"
+        cd ./.nyc_output
+        ls
         ls -dlU .*/ */
       displayName: "List nyc_output"
       condition: always()

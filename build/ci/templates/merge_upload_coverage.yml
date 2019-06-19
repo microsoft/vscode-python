@@ -1,27 +1,27 @@
 steps:
-    # - bash: |
-    #       printenv
-    #   displayName: "Show all env vars"
-    #   condition: eq(variables['system.debug'], 'true')
+    - bash: |
+          printenv
+      displayName: "Show all env vars"
+      condition: eq(variables['system.debug'], 'true')
 
-    # - task: NodeTool@0
-    #   displayName: "Use Node $(NodeVersion)"
-    #   inputs:
-    #       versionSpec: $(NodeVersion)
+    - task: NodeTool@0
+      displayName: "Use Node $(NodeVersion)"
+      inputs:
+          versionSpec: $(NodeVersion)
 
-    # - task: Npm@1
-    #   displayName: "Use NPM $(NpmVersion)"
-    #   inputs:
-    #       command: custom
-    #       verbose: true
-    #       customCommand: "install -g npm@$(NpmVersion)"
+    - task: Npm@1
+      displayName: "Use NPM $(NpmVersion)"
+      inputs:
+          command: custom
+          verbose: true
+          customCommand: "install -g npm@$(NpmVersion)"
 
-    # - task: Npm@1
-    #   displayName: "npm ci"
-    #   inputs:
-    #       command: custom
-    #       verbose: true
-    #       customCommand: ci
+    - task: Npm@1
+      displayName: "npm ci"
+      inputs:
+          command: custom
+          verbose: true
+          customCommand: ci
 
     - task: DownloadBuildArtifacts@0
       inputs:
