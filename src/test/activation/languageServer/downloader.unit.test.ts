@@ -177,7 +177,15 @@ suite('Activation - Downloader', () => {
                 instance(fs), instance(workspaceService));
         });
 
-        test('Log message in output channel before downloading', async () => {
+        test('Log downloading message', async () => {
+            const downloadedFile = 'This is the downloaded file';
+            when(fileDownloader.downloadFile(anything(), anything())).thenResolve(downloadedFile);
+
+            await lsDownloader.downloadFile(downloadUri, downloadTitle);
+
+            verify(outputChannel.append(`Downloading ${downloadUri}... `)).once();
+        });
+        test('Downloaded file name must be returned from file downloader and right args passed', async () => {
             const downloadedFile = 'This is the downloaded file';
             when(fileDownloader.downloadFile(anything(), anything())).thenResolve(downloadedFile);
             const expectedDownloadOptions = {
@@ -191,24 +199,22 @@ suite('Activation - Downloader', () => {
             expect(file).to.be.equal(downloadedFile);
             verify(fileDownloader.downloadFile(anything(), anything())).once();
             verify(fileDownloader.downloadFile(downloadUri, deepEqual(expectedDownloadOptions))).once();
-            verify(outputChannel.append(`Downloading ${downloadUri}... `)).once();
+        });
+        test('If download succeeds then log completion message', async () => {
+            when(fileDownloader.downloadFile(anything(), anything())).thenResolve();
+
+            await lsDownloader.downloadFile(downloadUri, downloadTitle);
+
+            verify(fileDownloader.downloadFile(anything(), anything())).once();
             verify(outputChannel.appendLine(LanguageService.extractionCompletedOutputMessage())).once();
         });
         test('If download fails do not log completion message', async () => {
             const ex = new Error('kaboom');
             when(fileDownloader.downloadFile(anything(), anything())).thenReject(ex);
-            const expectedDownloadOptions = {
-                extension: '.nupkg',
-                outputChannel: instance(outputChannel),
-                progressMessagePrefix: downloadTitle
-            };
 
             const promise = lsDownloader.downloadFile(downloadUri, downloadTitle);
             await promise.catch(noop);
 
-            verify(fileDownloader.downloadFile(anything(), anything())).once();
-            verify(fileDownloader.downloadFile(downloadUri, deepEqual(expectedDownloadOptions))).once();
-            verify(outputChannel.append(`Downloading ${downloadUri}... `)).once();
             verify(outputChannel.appendLine(LanguageService.extractionCompletedOutputMessage())).never();
             expect(promise).to.eventually.be.rejectedWith('kaboom');
         });
