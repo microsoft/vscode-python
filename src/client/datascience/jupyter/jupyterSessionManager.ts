@@ -2,19 +2,22 @@
 // Licensed under the MIT License.
 'use strict';
 import { ServerConnection, SessionManager } from '@jupyterlab/services';
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode-jsonrpc';
 
-import { IConnection, IJupyterKernelSpec, IJupyterSession, IJupyterSessionManager } from '../types';
+import { IConnection, IJupyterKernelSpec, IJupyterPasswordConnect, IJupyterSession, IJupyterSessionManager } from '../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { JupyterSession } from './jupyterSession';
 
 @injectable()
 export class JupyterSessionManager implements IJupyterSessionManager {
+    constructor(
+        @inject(IJupyterPasswordConnect) private jupyterPasswordConnect: IJupyterPasswordConnect
+    ) {}
 
     public async startNew(connInfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, cancelToken?: CancellationToken) : Promise<IJupyterSession> {
         // Create a new session and attempt to connect to it
-        const session = new JupyterSession(connInfo, kernelSpec);
+        const session = new JupyterSession(connInfo, kernelSpec, this.jupyterPasswordConnect);
         try {
             await session.connect(cancelToken);
         } finally {

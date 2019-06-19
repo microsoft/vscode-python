@@ -2,22 +2,27 @@
 // Licensed under the MIT License.
 'use strict';
 import * as assert from 'assert';
+import * as fs from 'fs-extra';
+import { parse } from 'node-html-parser';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { Disposable, TextDocument, TextEditor } from 'vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
+import { PYTHON_LANGUAGE } from '../../client/common/constants';
 import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
+import { generateCellsFromDocument } from '../../client/datascience/cellFactory';
+import { concatMultilineString } from '../../client/datascience/common';
 import { EditorContexts } from '../../client/datascience/constants';
 import { HistoryMessageListener } from '../../client/datascience/history/historyMessageListener';
 import { HistoryMessages } from '../../client/datascience/history/historyTypes';
 import { IHistory, IHistoryProvider } from '../../client/datascience/types';
-import { CellButton } from '../../datascience-ui/history-react/cellButton';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
-//import { asyncDump } from '../common/asyncDump';
+import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
+import { createDocument } from './editor-integration/helpers';
 import {
     addCode,
     addContinuousMockData,
@@ -40,6 +45,7 @@ import {
 } from './historyTestHelpers';
 import { waitForUpdate } from './reactHelpers';
 
+//import { asyncDump } from '../common/asyncDump';
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 suite('DataScience History output tests', () => {
     const disposables: Disposable[] = [];
@@ -170,7 +176,7 @@ df.head()`;
 df = pd.read_csv("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
 df.head()`;
         const matPlotLib = 'import matplotlib.pyplot as plt\r\nimport numpy as np\r\nx = np.linspace(0,20,100)\r\nplt.plot(x, np.sin(x))\r\nplt.show()';
-        const matPlotLibResults = 'data:image/png;base64';
+        const matPlotLibResults = 'svg';
         const spinningCursor = `import sys
 import time
 
@@ -275,9 +281,9 @@ for _ in range(50):
         await addCode(getOrCreateHistory, wrapper, 'a=1\na');
 
         // 'Click' the buttons in the react control
-        const undo = findButton(wrapper, 5);
-        const redo = findButton(wrapper, 6);
-        const clear = findButton(wrapper, 7);
+        const undo = findButton(wrapper, 2);
+        const redo = findButton(wrapper, 1);
+        const clear = findButton(wrapper, 0);
 
         // Now verify if we undo, we have no cells
         let afterUndo = await getCellResults(wrapper, 1, () => {
@@ -314,10 +320,10 @@ for _ in range(50):
         assert.equal(afterUndo.length, 3, `Undo should put cells back`);
 
         // find the buttons on the cell itself
-        const cellButtons = afterUndo.at(afterUndo.length - 2).find(CellButton);
-        assert.equal(cellButtons.length, 2, 'Cell buttons not found');
-        const goto = cellButtons.at(1);
-        const deleteButton = cellButtons.at(0);
+        const ImageButtons = afterUndo.at(afterUndo.length - 2).find(ImageButton);
+        assert.equal(ImageButtons.length, 3, 'Cell buttons not found');
+        const goto = ImageButtons.at(0);
+        const deleteButton = ImageButtons.at(2);
 
         // Make sure goto works
         await waitForMessageResponse(() => goto.simulate('click'));
@@ -357,8 +363,8 @@ for _ in range(50):
         assert.equal(exportCalled, true, 'Export is not being called during export');
 
         // Remove the cell
-        const exportButton = findButton(wrapper, 2);
-        const undo = findButton(wrapper, 5);
+        const exportButton = findButton(wrapper, 5);
+        const undo = findButton(wrapper, 2);
 
         // Now verify if we undo, we have no cells
         const afterUndo = await getCellResults(wrapper, 1, () => {
@@ -461,6 +467,43 @@ for _ in range(50):
         verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
     }, () => { return ioc; });
 
+    runMountedTest('Copy to source input', async (wrapper) => {
+        const showedEditor = createDeferred();
+        const textEditors: TextEditor[] = [];
+        const docManager = TypeMoq.Mock.ofType<IDocumentManager>();
+        const visibleEditor = TypeMoq.Mock.ofType<TextEditor>();
+        const dummyDocument = TypeMoq.Mock.ofType<TextDocument>();
+        dummyDocument.setup(d => d.fileName).returns(() => 'foo.py');
+        dummyDocument.setup(d => d.languageId).returns(() => PYTHON_LANGUAGE);
+        dummyDocument.setup(d => d.lineCount).returns(() => 10);
+        dummyDocument.setup(d => d.getText()).returns(() => '# No cells here');
+        visibleEditor.setup(v => v.show()).returns(noop);
+        visibleEditor.setup(v => v.revealRange(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => showedEditor.resolve());
+        visibleEditor.setup(v => v.document).returns(() => dummyDocument.object);
+        visibleEditor.setup(v => v.edit(TypeMoq.It.isAny())).returns(() => Promise.resolve(true));
+        textEditors.push(visibleEditor.object);
+        docManager.setup(a => a.visibleTextEditors).returns(() => textEditors);
+        docManager.setup(a => a.activeTextEditor).returns(() => undefined);
+        ioc.serviceManager.rebindInstance<IDocumentManager>(IDocumentManager, docManager.object);
+
+        // Create a history so that it listens to the results.
+        const history = await getOrCreateHistory();
+        await history.show();
+
+        // Then enter some code.
+        await enterInput(wrapper, 'a=1\na');
+        verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
+        const ImageButtons = getLastOutputCell(wrapper).find(ImageButton);
+        assert.equal(ImageButtons.length, 3, 'Cell buttons not found');
+        const copyToSource = ImageButtons.at(1);
+
+        // Then click the copy to source button
+        await waitForMessageResponse(() => copyToSource.simulate('click'));
+        await Promise.race([sleep(100), showedEditor.promise]);
+        assert.ok(showedEditor.resolved, 'Copy to source is not adding code to the editor');
+
+    }, () => { return ioc; });
+
     runMountedTest('Multiple input', async (wrapper) => {
         // Create a history so that it listens to the results.
         const history = await getOrCreateHistory();
@@ -472,9 +515,9 @@ for _ in range(50):
 
         // Then delete the node
         const lastCell = getLastOutputCell(wrapper);
-        const cellButtons = lastCell.find(CellButton);
-        assert.equal(cellButtons.length, 2, 'Cell buttons not found');
-        const deleteButton = cellButtons.at(0);
+        const ImageButtons = lastCell.find(ImageButton);
+        assert.equal(ImageButtons.length, 3, 'Cell buttons not found');
+        const deleteButton = ImageButtons.at(2);
 
         // Make sure delete works
         const afterDelete = await getCellResults(wrapper, 1, async () => {
@@ -527,27 +570,47 @@ for _ in range(50):
 
     }, () => { return ioc; });
 
-    runMountedTest('Import', async (wrapper) => {
+    runMountedTest('Preview', async (wrapper) => {
 
         const testFile = path.join(srcDirectory(), 'sub', 'test.ipynb');
-        let results: string = '';
 
-        // Import is much fewer renders than an add code since the data is already there.
+        // Preview is much fewer renders than an add code since the data is already there.
         await getCellResults(wrapper, 2, async () => {
             const history = await getOrCreateHistory();
-            results = await history.importNotebook(testFile);
+            await history.previewNotebook(testFile);
         });
 
         verifyHtmlOnCell(wrapper, '<img', CellPosition.Last);
+    }, () => { return ioc; });
 
-        // Make sure we have a single chdir in our results
-        const first = results.indexOf('os.chdir');
-        assert.ok(first >= 0, 'No os.chdir in import');
-        const second = results.indexOf('os.chdir', first + 1);
-        assert.equal(second, -1, 'More than one chdir in the import. It should be skipped');
+    runMountedTest('LiveLossPlot', async (wrapper) => {
+        // Only run this test when not mocking. Too complicated to mimic otherwise
+        if (!ioc.mockJupyter) {
+            // Load all of our cells
+            const testFile = path.join(srcDirectory(), 'liveloss.py');
+            const version = 1;
+            const inputText = await fs.readFile(testFile, 'utf-8');
+            const document = createDocument(inputText, testFile, version, TypeMoq.Times.atLeastOnce(), true);
+            const cells = generateCellsFromDocument(document.object);
+            assert.ok(cells, 'No cells generated');
+            assert.equal(cells.length, 2, 'Not enough cells generated');
 
-        // Make sure we have a cell in our results
-        assert.ok(/#\s*%%/.test(results), 'No cells in returned import');
+            // Run the first cell
+            await addCode(getOrCreateHistory, wrapper, concatMultilineString(cells[0].data.source), 4);
+
+            // Last cell should generate a series of updates. Verify we end up with a single image
+            await addCode(getOrCreateHistory, wrapper, concatMultilineString(cells[1].data.source), 10);
+            const cell = getLastOutputCell(wrapper);
+
+            const output = cell!.find('div.cell-output');
+            assert.ok(output.length > 0, 'No output cell found');
+            const outHtml = output.html();
+
+            const root = parse(outHtml) as any;
+            const svgs = root.querySelectorAll('svg') as HTMLElement[];
+            assert.ok(svgs, 'No svgs found');
+            assert.equal(svgs.length, 1, 'Wrong number of svgs');
+        }
 
     }, () => { return ioc; });
 });

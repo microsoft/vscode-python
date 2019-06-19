@@ -10,7 +10,8 @@ import { IWebPanel, IWebPanelMessageListener, IWebPanelProvider, IWorkspaceServi
 import { traceInfo } from '../common/logger';
 import { IConfigurationService, IDisposable } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
-import { CssMessages, DefaultTheme, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from './constants';
+import { DefaultTheme } from './constants';
+import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from './messages';
 import { ICodeCssGenerator, IDataScienceExtraSettings, IThemeFinder } from './types';
 
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
@@ -22,7 +23,6 @@ export class WebViewHost<IMapping> implements IDisposable {
     private messageListener: IWebPanelMessageListener;
     private themeChangeHandler: IDisposable | undefined;
     private settingsChangeHandler: IDisposable | undefined;
-    private currentTheme: string;
     private themeIsDarkPromise: Deferred<boolean>;
 
     constructor(
@@ -40,10 +40,8 @@ export class WebViewHost<IMapping> implements IDisposable {
         // Create our message listener for our web panel.
         this.messageListener = messageListenerCtor(this.onMessage.bind(this), this.onViewStateChanged.bind(this), this.dispose.bind(this));
 
-        // Listen for theme changes.
-        const workbench = this.workspaceService.getConfiguration('workbench');
-        this.currentTheme = workbench ? workbench.get<string>('colorTheme', DefaultTheme) : DefaultTheme;
-        this.themeChangeHandler = this.workspaceService.onDidChangeConfiguration(this.onPossibleThemeChange, this);
+        // Listen for settings changes from vscode.
+        this.themeChangeHandler = this.workspaceService.onDidChangeConfiguration(this.onPossibleSettingsChange, this);
 
         // Listen for settings changes
         this.settingsChangeHandler = this.configService.getSettings().onDidChange(this.onDataScienceSettingsChanged.bind(this));
@@ -139,18 +137,14 @@ export class WebViewHost<IMapping> implements IDisposable {
     }
 
     protected generateDataScienceExtraSettings() : IDataScienceExtraSettings {
-        const terminal = this.workspaceService.getConfiguration('terminal');
-        const terminalCursor = terminal ? terminal.get<string>('integrated.cursorStyle', 'block') : 'block';
-        const terminalCursorBlink = terminal ? terminal.get<boolean>('integrated.cursorBlinking', true) : true;
-        const terminalCursorBlinkVal = terminalCursorBlink ? 'blink' : 'solid';
-        const workbench = this.workspaceService.getConfiguration('workbench');
         const editor = this.workspaceService.getConfiguration('editor');
+        const workbench = this.workspaceService.getConfiguration('workbench');
         const theme = !workbench ? DefaultTheme : workbench.get<string>('colorTheme', DefaultTheme);
         return {
             ...this.configService.getSettings().datascience,
             extraSettings: {
-                terminalCursor: terminalCursor,
-                terminalCursorBlink: terminalCursorBlinkVal,
+                editorCursor: this.getValue(editor, 'cursorStyle', 'line'),
+                editorCursorBlink: this.getValue(editor, 'cursorBlinking', 'blink'),
                 theme: theme
             },
             intellisenseOptions: {
@@ -226,12 +220,13 @@ export class WebViewHost<IMapping> implements IDisposable {
     }
 
     // Post a message to our webpanel and update our new datascience settings
-    private onPossibleThemeChange = (event: ConfigurationChangeEvent) => {
-        if (event.affectsConfiguration('workbench.colorTheme')) {
+    private onPossibleSettingsChange = (event: ConfigurationChangeEvent) => {
+        if (event.affectsConfiguration('workbench.colorTheme') ||
+            event.affectsConfiguration('editor.cursorStyle') ||
+            event.affectsConfiguration('editor.cursorBlinking')) {
             // See if the theme changed
             const newSettings = this.generateDataScienceExtraSettings();
-            if (newSettings && newSettings.extraSettings.theme !== this.currentTheme) {
-                this.currentTheme = newSettings.extraSettings.theme;
+            if (newSettings) {
                 const dsSettings = JSON.stringify(newSettings);
                 this.postMessageInternal(SharedMessages.UpdateSettings, dsSettings).ignoreErrors();
             }

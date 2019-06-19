@@ -22,6 +22,7 @@ export interface ICodeProps {
     monacoTheme: string | undefined;
     outermostParentClass: string;
     editorOptions: monacoEditor.editor.IEditorOptions;
+    forceBackgroundColor?: string;
     onSubmit(code: string): void;
     onCreated(code: string, modelId: string): void;
     onChange(changes: monacoEditor.editor.IModelContentChange[], modelId: string): void;
@@ -53,12 +54,6 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         this.subscriptions.forEach(d => d.dispose());
     }
 
-    public componentDidUpdate = () => {
-        if (this.props.autoFocus && this.state.editor && !this.props.readOnly) {
-            this.state.editor.focus();
-        }
-    }
-
     public render() {
         const readOnly = this.props.readOnly;
         const waterMarkClass = this.props.showWatermark && this.state.allowWatermark && !readOnly ? 'code-watermark' : 'hide';
@@ -88,6 +83,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
             readOnly: readOnly,
             lineDecorationsWidth: 0,
             contextmenu: false,
+            matchBrackets: false,
             ...this.props.editorOptions
         };
 
@@ -103,6 +99,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
                     options={options}
                     openLink={this.props.openLink}
                     ref={this.editorRef}
+                    forceBackground={this.props.forceBackgroundColor}
                 />
                 <div className={waterMarkClass}>{this.getWatermarkString()}</div>
             </div>

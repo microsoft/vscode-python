@@ -7,15 +7,16 @@ import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, CodeLens, Range, Selection, TextEditor } from 'vscode';
 
-import { IApplicationShell, IDocumentManager } from '../../../client/common/application/types';
+import { IApplicationShell, ICommandManager, IDocumentManager } from '../../../client/common/application/types';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, ILogger } from '../../../client/common/types';
-import { Commands } from '../../../client/datascience/constants';
+import { Commands, EditorContexts } from '../../../client/datascience/constants';
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
 import { CodeWatcher } from '../../../client/datascience/editor-integration/codewatcher';
 import { ICodeWatcher, IHistory, IHistoryProvider } from '../../../client/datascience/types';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { ICodeExecutionHelper } from '../../../client/terminals/types';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
 import { createDocument } from './helpers';
 
@@ -28,11 +29,14 @@ suite('DataScience Code Watcher Unit Tests', () => {
     let historyProvider: TypeMoq.IMock<IHistoryProvider>;
     let activeHistory: TypeMoq.IMock<IHistory>;
     let documentManager: TypeMoq.IMock<IDocumentManager>;
+    let commandManager: TypeMoq.IMock<ICommandManager>;
     let textEditor: TypeMoq.IMock<TextEditor>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let configService: TypeMoq.IMock<IConfigurationService>;
     let serviceContainer : TypeMoq.IMock<IServiceContainer>;
+    let helper: TypeMoq.IMock<ICodeExecutionHelper>;
     let tokenSource : CancellationTokenSource;
+    const contexts : Map<string, boolean> = new Map<string, boolean>();
     const pythonSettings = new class extends PythonSettings {
         public fireChangeEvent() {
             this.changed.fire();
@@ -49,6 +53,8 @@ suite('DataScience Code Watcher Unit Tests', () => {
         textEditor = TypeMoq.Mock.ofType<TextEditor>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
+        helper = TypeMoq.Mock.ofType<ICodeExecutionHelper>();
+        commandManager = TypeMoq.Mock.ofType<ICommandManager>();
 
         // Setup default settings
         pythonSettings.datascience = {
@@ -77,7 +83,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
 
         // Setup the service container to return code watchers
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICodeWatcher))).returns(() => new CodeWatcher(appShell.object, logger.object, historyProvider.object, fileSystem.object, configService.object, documentManager.object));
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICodeWatcher))).returns(() => new CodeWatcher(appShell.object, logger.object, historyProvider.object, fileSystem.object, configService.object, documentManager.object, helper.object));
 
         // Setup our active history instance
         historyProvider.setup(h => h.getOrCreateActive()).returns(() => Promise.resolve(activeHistory.object));
@@ -91,7 +97,14 @@ suite('DataScience Code Watcher Unit Tests', () => {
         // Setup config service
         configService.setup(c => c.getSettings()).returns(() => pythonSettings);
 
-        codeWatcher = new CodeWatcher(appShell.object, logger.object, historyProvider.object, fileSystem.object, configService.object, documentManager.object);
+        commandManager.setup(c => c.executeCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((c, n, v) => {
+            if (c === 'setContext') {
+                contexts.set(n, v);
+            }
+            return Promise.resolve();
+        });
+
+        codeWatcher = new CodeWatcher(appShell.object, logger.object, historyProvider.object, fileSystem.object, configService.object, documentManager.object, helper.object);
     });
 
     function createTypeMoq<T>(tag: string): TypeMoq.IMock<T> {
@@ -570,6 +583,10 @@ testing2`;
         const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce());
 
         codeWatcher.setDocument(document.object);
+        helper.setup(h => h.getSelectedTextToExecute(TypeMoq.It.is((ed: TextEditor) => {
+            return textEditor.object === ed;
+        }))).returns(() => Promise.resolve('testing2'));
+        helper.setup(h => h.normalizeLines(TypeMoq.It.isAny())).returns(() => Promise.resolve('testing2'));
 
         // Set up our expected calls to add code
         activeHistory.setup(h => h.addCode(TypeMoq.It.isValue('testing2'),
@@ -585,34 +602,6 @@ testing2`;
 
         // Try our RunCell command with the first selection point
         await codeWatcher.runSelectionOrLine(textEditor.object);
-
-        // Verify function calls
-        activeHistory.verifyAll();
-        document.verifyAll();
-    });
-
-    test('Test the RunCurrentCell command outside of a cell', async () => {
-        const fileName = 'test.py';
-        const version = 1;
-        const inputText =
-`testing1
-#%%
-testing2`;
-        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce());
-
-        codeWatcher.setDocument(document.object);
-
-        // We don't want to ever call add code here
-        activeHistory.setup(h => h.addCode(TypeMoq.It.isAny(),
-                                TypeMoq.It.isAny(),
-                                TypeMoq.It.isAny(),
-                                TypeMoq.It.isAny())).verifiable(TypeMoq.Times.never());
-
-        // For this test we need to set up a document selection point
-        textEditor.setup(te => te.selection).returns(() => new Selection(0, 0, 0, 0));
-
-        // Try our RunCell command with the first selection point
-        await codeWatcher.runCurrentCell();
 
         // Verify function calls
         activeHistory.verifyAll();
@@ -678,12 +667,14 @@ testing2`; // Command tests override getText, so just need the ranges here
         const inputText = '#%% foobar';
         const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce());
         documentManager.setup(d => d.textDocuments).returns(() => [document.object]);
-        const codeLensProvider = new DataScienceCodeLensProvider(serviceContainer.object, documentManager.object, configService.object);
+        const codeLensProvider = new DataScienceCodeLensProvider(serviceContainer.object, documentManager.object, configService.object, commandManager.object);
 
         let result = codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
         expect(result, 'result not okay').to.be.ok;
         let codeLens = result as CodeLens[];
         expect(codeLens.length).to.equal(2, 'Code lens wrong length');
+
+        expect(contexts.get(EditorContexts.HasCodeCells)).to.be.equal(true, 'Code cells context not set');
 
         // Change settings
         pythonSettings.datascience.codeRegularExpression = '#%%%.*dude';
@@ -691,6 +682,8 @@ testing2`; // Command tests override getText, so just need the ranges here
         expect(result, 'result not okay').to.be.ok;
         codeLens = result as CodeLens[];
         expect(codeLens.length).to.equal(0, 'Code lens wrong length');
+
+        expect(contexts.get(EditorContexts.HasCodeCells)).to.be.equal(false, 'Code cells context not set');
 
         // Change settings to empty
         pythonSettings.datascience.codeRegularExpression = '';

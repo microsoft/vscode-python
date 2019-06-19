@@ -21,7 +21,8 @@ SCRIPT = os.path.join(TESTING_TOOLS_ROOT, 'run_adapter.py')
 
 
 def resolve_testroot(name):
-    projroot = os.path.join(DATA_DIR, name)
+    projroot = os.path.normcase(
+            os.path.join(DATA_DIR, name))
     return projroot, os.path.join(projroot, 'tests')
 
 

@@ -57,6 +57,9 @@ export class PlatformService implements IPlatformService {
     public get isLinux(): boolean {
         return this.osType === OSType.Linux;
     }
+    public get osRelease(): string {
+        return os.release();
+    }
     public get is64bit(): boolean {
         // tslint:disable-next-line:no-require-imports
         const arch = require('arch');

@@ -8,7 +8,7 @@ import * as fs from 'fs-extra';
 import { inject, injectable, multiInject } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { Event, EventEmitter, Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
+import { ConfigurationTarget, Event, EventEmitter, Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
@@ -30,10 +30,13 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { CssMessages, EditorContexts, Identifiers, Telemetry } from '../constants';
+import { CellMatcher } from '../cellMatcher';
+import { EditorContexts, Identifiers, Telemetry } from '../constants';
 import { ColumnWarningSize } from '../data-viewing/types';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import { JupyterKernelPromiseFailedError } from '../jupyter/jupyterKernelPromiseFailedError';
+import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
+import { CssMessages } from '../messages';
 import {
     CellState,
     ICell,
@@ -48,6 +51,7 @@ import {
     IJupyterVariable,
     IJupyterVariables,
     IJupyterVariablesResponse,
+    IMessageCell,
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
@@ -60,6 +64,7 @@ import { HistoryMessageListener } from './historyMessageListener';
 import {
     HistoryMessages,
     IAddedSysInfo,
+    ICopyCode,
     IGotoCode,
     IHistoryMapping,
     IRemoteAddCode,
@@ -183,6 +188,10 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         switch (message) {
             case HistoryMessages.GotoCodeCell:
                 this.dispatchMessage(message, payload, this.gotoCode);
+                break;
+
+            case HistoryMessages.CopyCodeCell:
+                this.dispatchMessage(message, payload, this.copyCode);
                 break;
 
             case HistoryMessages.RestartKernel:
@@ -351,13 +360,21 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
     @captureTelemetry(Telemetry.RestartKernel)
     public async restartKernel() : Promise<void> {
         if (this.jupyterServer && !this.restartingKernel) {
-            // Ask the user if they want us to restart or not.
-            const message = localize.DataScience.restartKernelMessage();
-            const yes = localize.DataScience.restartKernelMessageYes();
-            const no = localize.DataScience.restartKernelMessageNo();
+            if (this.shouldAskForRestart()) {
+                // Ask the user if they want us to restart or not.
+                const message = localize.DataScience.restartKernelMessage();
+                const yes = localize.DataScience.restartKernelMessageYes();
+                const dontAskAgain = localize.DataScience.restartKernelMessageDontAskAgain();
+                const no = localize.DataScience.restartKernelMessageNo();
 
-            const v = await this.applicationShell.showInformationMessage(message, yes, no);
-            if (v === yes) {
+                const v = await this.applicationShell.showInformationMessage(message, yes, dontAskAgain, no);
+                if (v === dontAskAgain) {
+                    this.disableAskForRestart();
+                    await this.restartKernelInternal();
+                } else if (v === yes) {
+                    await this.restartKernelInternal();
+                }
+            } else {
                 await this.restartKernelInternal();
             }
         }
@@ -398,36 +415,48 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         }
     }
 
-    public async importNotebook(file: string) : Promise<string> {
-        // First convert to a python file to verify this file is valid.
-        const results = await this.jupyterImporter.importFromFile(file);
+    public async previewNotebook(file: string) : Promise<void> {
+        try {
+            // First convert to a python file to verify this file is valid. This is
+            // an easy way to have something else verify the validity of the file.
+            const results = await this.jupyterImporter.importFromFile(file);
+            if (results) {
+                // Show our webpanel to make sure that the code actually shows up. (Vscode disables the webview when it's not active)
+                await this.show();
 
-        // Then if it is, and the user has specified they want the notebook to auto open,
-        if (results && this.configuration.getSettings().datascience.previewImportedNotebooksInInteractivePane) {
-            // Then read in the file as json. This json should already
-            // be in the cell format
-            // tslint:disable-next-line: no-any
-            const contents = JSON.parse(await this.fileSystem.readFile(file)) as any;
-            if (contents && contents.cells && contents.cells.length) {
-                const cells = contents.cells as (nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell)[];
+                // Then read in the file as json. This json should already
+                // be in the cell format
+                // tslint:disable-next-line: no-any
+                const contents = JSON.parse(await this.fileSystem.readFile(file)) as any;
+                if (contents && contents.cells && contents.cells.length) {
+                    // Add a header before the preview
+                    this.addPreviewHeader(file);
 
-                // Convert the inputdata into our ICell format
-                const finishedCells : ICell[] = cells.filter(c => c.source.length > 0).map(c => {
-                    return {
-                        id: uuid(),
-                        file: Identifiers.EmptyFileName,
-                        line: 0,
-                        state: CellState.finished,
-                        // Remove execution count as the original count doesn't apply.
-                        data: {...c, execution_count: null}
-                    };
-                });
+                    // Convert the cells into actual cell objects
+                    const cells = contents.cells as (nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell)[];
 
-                // Do the same thing that happens when new code is added.
-                this.onAddCodeEvent(finishedCells);
+                    // Convert the inputdata into our ICell format
+                    const finishedCells: ICell[] = cells.filter(c => c.source.length > 0).map(c => {
+                        return {
+                            id: uuid(),
+                            file: Identifiers.EmptyFileName,
+                            line: 0,
+                            state: CellState.finished,
+                            data: c,
+                            type: 'preview'
+                        };
+                    });
+
+                    // Do the same thing that happens when new code is added.
+                    this.onAddCodeEvent(finishedCells);
+
+                    // Add a footer after the preview
+                    this.addPreviewFooter(file);
+                }
             }
+        } catch (e) {
+            this.applicationShell.showErrorMessage(e);
         }
-        return results;
     }
 
     protected async activating() {
@@ -446,6 +475,48 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
             // Send this to the react control
             await this.postMessage(HistoryMessages.Activate);
         }
+    }
+
+    private shouldAskForRestart(): boolean {
+        const settings = this.configuration.getSettings();
+        return settings && settings.datascience && settings.datascience.askForKernelRestart === true;
+    }
+
+    private disableAskForRestart() {
+        const settings = this.configuration.getSettings();
+        if (settings && settings.datascience) {
+            settings.datascience.askForKernelRestart = false;
+            this.configuration.updateSetting('dataScience.askForKernelRestart', false, undefined, ConfigurationTarget.Global).ignoreErrors();
+        }
+    }
+
+    private addMessage(message: string, type: 'preview' | 'execute') : void {
+        const cell : ICell = {
+            id: uuid(),
+            file: Identifiers.EmptyFileName,
+            line: 0,
+            state: CellState.finished,
+            type,
+            data: {
+                cell_type: 'messages',
+                messages: [message],
+                source: [],
+                metadata: {}
+            }
+        };
+
+        // Do the same thing that happens when new code is added.
+        this.onAddCodeEvent([cell]);
+    }
+
+    private addPreviewHeader(file: string) : void {
+        const message = localize.DataScience.previewHeader().format(file);
+        this.addMessage(message, 'preview');
+    }
+
+    private addPreviewFooter(file: string) : void {
+        const message = localize.DataScience.previewFooter().format(file);
+        this.addMessage(message, 'preview');
     }
 
     private async checkPandas() : Promise<boolean> {
@@ -474,6 +545,7 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         const settings = this.configuration.getSettings();
         if (settings && settings.datascience) {
             settings.datascience.askForLargeDataFrames = false;
+            this.configuration.updateSetting('dataScience.askForLargeDataFrames', false, undefined, ConfigurationTarget.Global).ignoreErrors();
         }
     }
 
@@ -825,6 +897,37 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
         }
     }
 
+    @captureTelemetry(Telemetry.CopySourceCode, undefined, false)
+    private copyCode(args: ICopyCode) {
+        this.copyCodeInternal(args.source).catch(err => {
+            this.applicationShell.showErrorMessage(err);
+        });
+    }
+
+    private async copyCodeInternal(source: string) {
+        let editor = this.documentManager.activeTextEditor;
+        if (!editor || editor.document.languageId !== PYTHON_LANGUAGE) {
+            // Find the first visible python editor
+            const pythonEditors = this.documentManager.visibleTextEditors.filter(
+                e => e.document.languageId === PYTHON_LANGUAGE);
+
+            if (pythonEditors.length > 0) {
+                editor = pythonEditors[0];
+            }
+        }
+        if (editor && editor.document.languageId === PYTHON_LANGUAGE) {
+            const cellMatcher = new CellMatcher(this.generateDataScienceExtraSettings());
+            const hasCellsAlready = cellMatcher.isCell(editor.document.getText());
+            const line = editor.document.lineCount;
+            const newCode = hasCellsAlready || line <= 0 ? `\n\n#%%\n${source}` : `\n\n${source}`;
+            await editor.edit((editBuilder) => {
+                editBuilder.insert(new Position(line, 0), newCode);
+            });
+            editor.revealRange(new Range(line + 2, 0, line + source.split('\n').length + 3, 0));
+            editor.selection = new Selection(new Position(line + 2, 0), new Position(line + 2, 0));
+        }
+    }
+
     @captureTelemetry(Telemetry.ExportNotebook, undefined, false)
     // tslint:disable-next-line: no-any no-empty
     private export(cells: ICell[]) {
@@ -922,8 +1025,13 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
                 }
 
                 // Update our sys info with our locally applied data.
-                sysInfo.data.message = message;
-                sysInfo.data.connection = connectionString;
+                const cell = sysInfo.data as IMessageCell;
+                if (cell) {
+                    cell.messages.unshift(message);
+                    if (connectionString && connectionString.length) {
+                        cell.messages.unshift(connectionString);
+                    }
+                }
 
                 return sysInfo;
             }
@@ -981,6 +1089,11 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
             // For anything but start, tell the other sides of a live share session
             if (reason !== SysInfoReason.Start && sysInfo) {
                 this.shareMessage(HistoryMessages.AddedSysInfo, { sysInfoCell: sysInfo, id: this.id });
+            }
+
+            // For a restart, tell our window to reset
+            if (reason === SysInfoReason.Restart || reason === SysInfoReason.New) {
+                this.postMessage(HistoryMessages.RestartKernel).ignoreErrors();
             }
 
             this.logger.logInformation(`Sys info for ${this.id} ${reason} complete`);
@@ -1044,6 +1157,23 @@ export class History extends WebViewHost<IHistoryMapping> implements IHistory  {
             // Then load the jupyter server
             await this.loadJupyterServer();
 
+        } catch (e) {
+            if (e instanceof JupyterSelfCertsError) {
+                // On a self cert error, warn the user and ask if they want to change the setting
+                const enableOption: string = localize.DataScience.jupyterSelfCertEnable();
+                const closeOption: string = localize.DataScience.jupyterSelfCertClose();
+                this.applicationShell.showErrorMessage(localize.DataScience.jupyterSelfCertFail().format(e.message), enableOption, closeOption).then(value => {
+                    if (value === enableOption) {
+                        sendTelemetryEvent(Telemetry.SelfCertsMessageEnabled);
+                        this.configuration.updateSetting('dataScience.allowUnauthorizedRemoteConnection', true, undefined, ConfigurationTarget.Workspace).ignoreErrors();
+                    } else if (value === closeOption) {
+                        sendTelemetryEvent(Telemetry.SelfCertsMessageClose);
+                    }
+                });
+                throw e;
+            } else {
+                throw e;
+            }
         } finally {
             status.dispose();
         }

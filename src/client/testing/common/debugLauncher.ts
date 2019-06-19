@@ -86,7 +86,8 @@ export class DebugLauncher implements ITestDebugLauncher {
             debugConfig = {
                 name: 'Debug Unit Test',
                 type: 'python',
-                request: 'test'
+                request: 'test',
+                subProcess: true
             };
         }
         if (!debugConfig.rules) {
@@ -143,6 +144,9 @@ export class DebugLauncher implements ITestDebugLauncher {
         }
         if (cfg.debugStdLib === undefined) {
             cfg.debugStdLib = false;
+        }
+        if (cfg.subProcess === undefined) {
+            cfg.subProcess = true;
         }
     }
 

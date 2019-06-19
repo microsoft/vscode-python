@@ -4,6 +4,10 @@
     display: block;
 }
 
+.cell-wrapper-preview {
+    background-color: var(--override-peek-background, var(--vscode-peekViewEditor-background));
+}
+
 .cell-wrapper-noneditable {
     border-bottom-color: var(--override-widget-background, var(--vscode-editorGroupHeader-tabsBackground));
     border-bottom-style: solid;
@@ -58,13 +62,22 @@
 .cell-output {
     margin-top: 5px;
     background: var(--override-widget-background, var(--vscode-notifications-background));
-    white-space: pre-wrap;
-    font-family: monospace;
 }
 
-.cell-output pre {
+.cell-output-text {
     white-space: pre-wrap;
-    font-family: monospace;
+    font-size: var(--code-font-size);
+    font-family: var(--code-font-family);
+}
+.cell-output-text pre {
+    white-space: pre-wrap;
+    font-size: var(--code-font-size);
+    font-family: var(--code-font-family);
+}
+
+.cell-output-html {
+    white-space: unset;
+    position: relative;
 }
 
 .cell-output table {
@@ -111,4 +124,20 @@
     display: block;
     margin: 0 auto;
 }
+
+.cell-output-html .plot-open-button {
+    z-index: 10;
+    position: absolute;
+    left: 2px;
+    visibility: hidden;
+}
+
+.cell-output-html:hover .plot-open-button {
+    visibility: visible;
+}
+
+.cell-output-error {
+    background: var(--override-background, var(--vscode-editor-background));
+}
+
 

@@ -29,6 +29,7 @@ import {
     ITestRunner, ITestsHelper, ITestsParser, ITestsStatusUpdaterService, ITestVisitor,
     IUnitTestSocketServer, IWorkspaceTestManagerService, IXUnitParser, TestProvider
 } from './common/types';
+import { UpdateTestSettingService } from './common/updateTestSettings';
 import { XUnitParser } from './common/xUnitParser';
 import { UnitTestConfigurationService } from './configuration';
 import { TestConfigurationManagerFactory } from './configurationFactory';
@@ -117,6 +118,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ITestExplorerCommandHandler>(ITestExplorerCommandHandler, TestExplorerCommandHandler);
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, TreeViewService);
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, FailedTestHandler);
+    serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, UpdateTestSettingService);
 
     serviceManager.addFactory<ITestManager>(ITestManagerFactory, (context) => {
         return (testProvider: TestProvider, workspaceFolder: Uri, rootDirectory: string) => {

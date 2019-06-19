@@ -96,8 +96,14 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
         if (workspaceFolder && debugConfiguration.host &&
             debugConfiguration.pathMappings!.length === 0 &&
             ['LOCALHOST', '127.0.0.1', '::1'].indexOf(debugConfiguration.host.toUpperCase()) >= 0) {
+            // If on Windows, lowercase the drive letter for path mappings.
+            let localRoot = workspaceFolder.fsPath;
+            if (this.platformService.isWindows && localRoot.match(/^[A-Z]:/)) {
+                localRoot = `${localRoot[0].toLowerCase()}${localRoot.substr(1)}`;
+            }
+
             debugConfiguration.pathMappings!.push({
-                localRoot: workspaceFolder.fsPath,
+                localRoot,
                 remoteRoot: workspaceFolder.fsPath
             });
         }

@@ -14,6 +14,7 @@ import { Identifiers } from '../../client/datascience/constants';
 import { HistoryMessages, IHistoryMapping } from '../../client/datascience/history/historyTypes';
 import { CellState, ICell, IHistoryInfo, IJupyterVariable, IJupyterVariablesResponse } from '../../client/datascience/types';
 import { ErrorBoundary } from '../react-common/errorBoundary';
+import { getLocString } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { getSettings, updateSettings } from '../react-common/settingsReactSide';
 import { StyleInjector } from '../react-common/styleInjector';
@@ -44,7 +45,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private mainPanel: HTMLDivElement | null = null;
     private variableExplorerRef: React.RefObject<VariableExplorer>;
     private styleInjectorRef: React.RefObject<StyleInjector>;
-    private currentExecutionCount: number = 0;
     private postOffice: PostOffice = new PostOffice();
     private intellisenseProvider: IntellisenseProvider;
     private onigasmPromise: Deferred<ArrayBuffer> | undefined;
@@ -64,7 +64,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             submittedText: false,
             history: new InputHistory(),
             editCellVM: getSettings && getSettings().allowInput ? createEditableCellVM(1) : undefined,
-            editorOptions: this.computeEditorOptions()
+            editorOptions: this.computeEditorOptions(),
+            currentExecutionCount: 0
         };
 
         // Add test state if necessary
@@ -138,23 +139,23 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     darkChanged={this.darkChanged}
                     monacoThemeChanged={this.monacoThemeChanged}
                     ref={this.styleInjectorRef} />
-                <div id='main-panel-toolbar'>
+                <header id='main-panel-toolbar'>
                     {this.renderToolbarPanel(baseTheme)}
-                </div>
-                <div id='main-panel-variable'>
+                </header>
+                <section id='main-panel-variable' aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
                     {this.renderVariablePanel(baseTheme)}
-                </div>
-                <div id='main-panel-content'>
+                </section>
+                <main id='main-panel-content'>
                     {this.renderContentPanel(baseTheme)}
-                </div>
-                <div id='main-panel-footer'>
+                </main>
+                <section id='main-panel-footer' aria-label={getLocString('DataScience.editSection', 'Input new cells here')}>
                     {this.renderFooterPanel(baseTheme)}
-                </div>
+                </section>
             </div>
         );
     }
 
-    // tslint:disable-next-line:no-any
+    // tslint:disable-next-line:no-any cyclomatic-complexity
     public handleMessage = (msg: string, payload?: any) => {
         switch (msg) {
             case HistoryMessages.StartCell:
@@ -229,6 +230,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 this.handleTmLanguageResponse(payload);
                 break;
 
+            case HistoryMessages.RestartKernel:
+                // this should be the response from a restart.
+                this.setState({currentExecutionCount: 0});
+                if (this.variableExplorerRef.current && this.variableExplorerRef.current.state.open) {
+                    this.refreshVariables();
+                }
+                break;
+
             default:
                 break;
         }
@@ -287,10 +296,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
 
         const maxOutputSize = getSettings().maxOutputSize;
-        const errorBackgroundColor = getSettings().errorBackgroundColor;
-        const actualErrorBackgroundColor = errorBackgroundColor ? errorBackgroundColor : '#FFFFFF';
         const maxTextSize = maxOutputSize && maxOutputSize < 10000 && maxOutputSize > 0 ? maxOutputSize : undefined;
-        const executionCount = this.getInputExecutionCount(this.state.cellVMs);
+        const executionCount = this.getInputExecutionCount();
 
         return (
             <div className='edit-panel'>
@@ -306,15 +313,16 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                         baseTheme={baseTheme}
                         codeTheme={this.props.codeTheme}
                         showWatermark={!this.state.submittedText}
-                        errorBackgroundColor={actualErrorBackgroundColor}
                         ref={this.saveEditCellRef}
                         gotoCode={noop}
+                        copyCode={noop}
                         delete={noop}
                         editExecutionCount={executionCount}
                         onCodeCreated={this.editableCodeCreated}
                         onCodeChange={this.codeChange}
                         monacoTheme={this.state.monacoTheme}
                         openLink={this.openLink}
+                        expandImage={noop}
                     />
                 </ErrorBoundary>
             </div>
@@ -343,8 +351,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 parameterHints: {
                     enabled: intellisenseOptions.parameterHintsEnabled
                 },
-                cursorStyle: extraSettings.terminalCursor,
-                cursorBlinking: extraSettings.terminalCursorBlink
+                cursorStyle: extraSettings.editorCursor,
+                cursorBlinking: extraSettings.editorCursorBlink
             };
         }
 
@@ -390,6 +398,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return this.props.baseTheme;
     }
 
+    private showPlot = (imageHtml: string) => {
+        this.sendMessage(HistoryMessages.ShowPlot, imageHtml);
+    }
+
     private getContentProps = (baseTheme: string): IContentPanelProps => {
         return {
             editorOptions: this.state.editorOptions,
@@ -400,12 +412,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             codeTheme: this.props.codeTheme,
             submittedText: this.state.submittedText,
             gotoCellCode: this.gotoCellCode,
+            copyCellCode: this.copyCellCode,
             deleteCell: this.deleteCell,
             skipNextScroll: this.state.skipNextScroll ? true : false,
             monacoTheme: this.state.monacoTheme,
             onCodeCreated: this.readOnlyCodeCreated,
             onCodeChange: this.codeChange,
-            openLink: this.openLink
+            openLink: this.openLink,
+            expandImage: this.showPlot
         };
     }
     private getToolbarProps = (baseTheme: string): IToolbarPanelProps => {
@@ -433,6 +447,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
        return {
         busy: this.state.busy,
         showDataExplorer: this.showDataViewer,
+        skipDefault: this.props.skipDefault,
         testMode: this.props.testMode,
         variableExplorerRef: this.variableExplorerRef,
         refreshVariables: this.refreshVariables,
@@ -560,6 +575,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         // Send a message to the other side to jump to a particular cell
         this.sendMessage(HistoryMessages.GotoCodeCell, { file : cellVM.cell.file, line: cellVM.cell.line });
+    }
+
+    private copyCellCode = (index: number) => {
+        // Find our cell
+        const cellVM = this.state.cellVMs[index];
+
+        // Send a message to the other side to jump to a particular cell
+        this.sendMessage(HistoryMessages.CopyCodeCell, { source: extractInputText(cellVM.cell, getSettings()) });
     }
 
     private deleteCell = (index: number) => {
@@ -807,13 +830,23 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             // Update this cell
             this.state.cellVMs[index].cell = cell;
 
-            // Also update the last cell execution count. It may have changed
-            const editCell = this.getEditCell();
-            if (editCell) {
-                editCell.cell.data.execution_count = this.getInputExecutionCount(this.state.cellVMs);
-            }
+            // This means the cell existed already so it was actual executed code.
+            // Use its execution count to update our execution count.
+            const newExecutionCount = cell.data.execution_count ?
+                Math.max(this.state.currentExecutionCount, parseInt(cell.data.execution_count.toString(), 10)) :
+                this.state.currentExecutionCount;
+            if (newExecutionCount !== this.state.currentExecutionCount) {
+                this.setState({ currentExecutionCount: newExecutionCount });
 
-            this.forceUpdate();
+                // We also need to update our variable explorer when the execution count changes
+                // Use the ref here to maintain var explorer independence
+                if (this.variableExplorerRef.current && this.variableExplorerRef.current.state.open) {
+                    this.refreshVariables();
+                }
+            } else {
+                // Force an update anyway as we did change something
+                this.forceUpdate();
+            }
         } else if (allowAdd) {
             // This is an entirely new cell (it may have started out as finished)
             this.addCell(cell);
@@ -821,7 +854,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private isCellSupported(cell: ICell) : boolean {
-        return !this.props.testMode || cell.data.cell_type !== 'sys_info';
+        return !this.props.testMode || cell.data.cell_type !== 'messages';
     }
 
     // tslint:disable-next-line:no-any
@@ -831,15 +864,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             if (cell && this.isCellSupported(cell)) {
                 this.updateOrAdd(cell, true);
             }
-        }
-
-        // After the cell is finished update our current execution count
-        this.currentExecutionCount = this.getCurrentExecutionCount(this.state.cellVMs);
-
-        // When a cell is finished refresh our variables
-        // Use the ref here to maintain var explorer independence
-        if (this.variableExplorerRef.current && this.variableExplorerRef.current.state.open) {
-            this.refreshVariables();
         }
     }
 
@@ -863,14 +887,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
-    // Check our list of cell vms to see what our current execution count is
-    private getCurrentExecutionCount = (cellVMs: ICellViewModel[]): number => {
-        const realCells = cellVMs.filter(c => c.cell.data.cell_type === 'code' && !c.editable && c.cell.data.execution_count);
-        return realCells && realCells.length > 0 ? parseInt(realCells[realCells.length - 1].cell.data.execution_count!.toString(), 10) : 0;
-    }
-
-    private getInputExecutionCount = (cellVMs: ICellViewModel[]) : number => {
-        return this.getCurrentExecutionCount(cellVMs) + 1;
+    private getInputExecutionCount = () : number => {
+        return this.state.currentExecutionCount + 1;
     }
 
     private submitInput = (code: string) => {
@@ -907,7 +925,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             // so that the last cell becomes busy
             this.setState({
                 cellVMs: [...this.state.cellVMs, editCell],
-                editCellVM: createEditableCellVM(this.getInputExecutionCount(this.state.cellVMs)),
+                editCellVM: createEditableCellVM(this.getInputExecutionCount()),
                 undoStack : this.pushStack(this.state.undoStack, this.state.cellVMs),
                 redoStack: this.state.redoStack,
                 skipNextScroll: false,
@@ -927,7 +945,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     // When the variable explorer wants to refresh state (say if it was expanded)
     private refreshVariables = () => {
-        this.sendMessage(HistoryMessages.GetVariablesRequest, this.currentExecutionCount);
+        this.sendMessage(HistoryMessages.GetVariablesRequest, this.state.currentExecutionCount);
     }
 
     // Find the display value for one specific variable
@@ -942,7 +960,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             const variable = payload as IJupyterVariable;
 
             // Only send the updated variable data if we are on the same execution count as when we requsted it
-            if (variable && variable.executionCount !== undefined && variable.executionCount === this.currentExecutionCount) {
+            if (variable && variable.executionCount !== undefined && variable.executionCount === this.state.currentExecutionCount) {
                 if (this.variableExplorerRef.current) {
                     this.variableExplorerRef.current.newVariableData(variable);
                 }
@@ -957,7 +975,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             const variablesResponse = payload as IJupyterVariablesResponse;
 
             // Check to see if we have moved to a new execution count only send our update if we are on the same count as the request
-            if (variablesResponse.executionCount === this.currentExecutionCount) {
+            if (variablesResponse.executionCount === this.state.currentExecutionCount) {
                 if (this.variableExplorerRef.current) {
                     this.variableExplorerRef.current.newVariablesData(variablesResponse.variables);
                 }

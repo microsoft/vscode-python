@@ -53,8 +53,8 @@ function load() {
             showJupyterVariableExplorer: true,
             variableExplorerExclude: 'module;builtin_function_or_method',
             extraSettings: {
-                terminalCursor: 'block',
-                terminalCursorBlink: 'blink',
+                editorCursor: 'line',
+                editorCursorBlink: 'blink',
                 theme: 'Default Dark+'
             },
             intellisenseOptions: {

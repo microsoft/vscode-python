@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 
 import { IS_WINDOWS } from '../common/platform/constants';
 
@@ -66,6 +65,11 @@ export namespace RegExpValues {
     export const ParamsExractorRegEx = /\S+\((.*)\)\s*{/;
     export const ArgsSplitterRegEx = /([^\s,]+)/;
     export const ShapeSplitterRegEx = /.*,\s*(\d+).*/;
+    export const SvgHeightRegex = /(\<svg.*height=\")(.*?)\"/;
+    export const SvgWidthRegex = /(\<svg.*width=\")(.*?)\"/;
+    export const SvgSizeTagRegex = /\<svg.*tag=\"sizeTag=\{(.*),\s*(.*)\}\"/;
+    export const StyleTagRegex = /\<style[\s\S]*\<\/style\>/m;
+
 }
 
 export enum Telemetry {
@@ -82,6 +86,7 @@ export enum Telemetry {
     DeleteAllCells = 'DATASCIENCE.DELETE_ALL_CELLS',
     DeleteCell = 'DATASCIENCE.DELETE_CELL',
     GotoSourceCode = 'DATASCIENCE.GOTO_SOURCE',
+    CopySourceCode = 'DATASCIENCE.COPY_SOURCE',
     RestartKernel = 'DATASCIENCE.RESTART_KERNEL',
     ExportNotebook = 'DATASCIENCE.EXPORT_NOTEBOOK',
     Undo = 'DATASCIENCE.UNDO',
@@ -101,6 +106,9 @@ export enum Telemetry {
     ConnectRemoteJupyter = 'DATASCIENCE.CONNECTREMOTEJUPYTER',
     ConnectFailedJupyter = 'DATASCIENCE.CONNECTFAILEDJUPYTER',
     ConnectRemoteFailedJupyter = 'DATASCIENCE.CONNECTREMOTEFAILEDJUPYTER',
+    ConnectRemoteSelfCertFailedJupyter = 'DATASCIENCE.CONNECTREMOTESELFCERTFAILEDJUPYTER',
+    SelfCertsMessageEnabled = 'DATASCIENCE.SELFCERTSMESSAGEENABLED',
+    SelfCertsMessageClose = 'DATASCIENCE.SELFCERTSMESSAGECLOSE',
     RemoteAddCode = 'DATASCIENCE.LIVESHARE.ADDCODE',
     ShiftEnterBannerShown = 'DATASCIENCE.SHIFTENTER_BANNER_SHOWN',
     EnableInteractiveShiftEnter = 'DATASCIENCE.ENABLE_INTERACTIVE_SHIFT_ENTER',
@@ -112,7 +120,11 @@ export enum Telemetry {
     DataScienceSettings = 'DATASCIENCE.SETTINGS',
     VariableExplorerToggled = 'DATASCIENCE.VARIABLE_EXPLORER_TOGGLE',
     VariableExplorerVariableCount = 'DATASCIENCE.VARIABLE_EXPLORER_VARIABLE_COUNT',
-    AddCellBelow = 'DATASCIENCE.ADD_CELL_BELOW'
+    AddCellBelow = 'DATASCIENCE.ADD_CELL_BELOW',
+    GetPasswordAttempt = 'DATASCIENCE.GET_PASSWORD_ATTEMPT',
+    GetPasswordFailure = 'DATASCIENCE.GET_PASSWORD_FAILURE',
+    GetPasswordSuccess = 'DATASCIENCE.GET_PASSWORD_SUCCESS',
+    OpenPlotViewer = 'DATASCIENCE.OPEN_PLOT_VIEWER'
  }
 
 export namespace HelpLinks {
@@ -124,17 +136,19 @@ export namespace Settings {
     export const IntellisenseTimeout = 300;
 }
 
-export namespace CodeSnippits {
-    export const ChangeDirectory = ['{0}', '{1}', 'import os', 'try:', '\tos.chdir(os.path.join(os.getcwd(), \'{2}\'))', '\tprint(os.getcwd())', 'except:', '\tpass', ''];
-    export const ChangeDirectoryCommentIdentifier = '# ms-python.python added'; // Not translated so can compare.
-}
-
 export namespace Identifiers {
     export const EmptyFileName = '2DB9B899-6519-4E1B-88B0-FA728A274115';
     export const GeneratedThemeName = 'ipython-theme'; // This needs to be all lower class and a valid class name.
     export const HistoryPurpose = 'history';
     export const MatplotLibDefaultParams = '_VSCode_defaultMatplotlib_Params';
     export const EditCellId = '3D3AB152-ADC1-4501-B813-4B83B49B0C10';
+    export const SvgSizeTag = 'sizeTag={{0}, {1}}';
+}
+
+export namespace CodeSnippits {
+    export const ChangeDirectory = ['{0}', '{1}', 'import os', 'try:', '\tos.chdir(os.path.join(os.getcwd(), \'{2}\'))', '\tprint(os.getcwd())', 'except:', '\tpass', ''];
+    export const ChangeDirectoryCommentIdentifier = '# ms-python.python added'; // Not translated so can compare.
+    export const MatplotLibInit = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_format = 'svg'`;
 }
 
 export namespace JupyterCommands {
@@ -176,34 +190,4 @@ export namespace LiveShareCommands {
     export const historyCreateSync = 'historyCreateSync';
     export const disposeServer = 'disposeServer';
     export const guestCheck = 'guestCheck';
-}
-
-export namespace CssMessages {
-    export const GetCssRequest = 'get_css_request';
-    export const GetCssResponse = 'get_css_response';
-    export const GetMonacoThemeRequest = 'get_monaco_theme_request';
-    export const GetMonacoThemeResponse = 'get_monaco_theme_response';
-}
-
-export namespace SharedMessages {
-    export const UpdateSettings = 'update_settings';
-    export const Started = 'started';
-}
-
-export interface IGetCssRequest {
-    isDark: boolean;
-}
-
-export interface IGetMonacoThemeRequest {
-    isDark: boolean;
-}
-
-export interface IGetCssResponse {
-    css: string;
-    theme: string;
-    knownDark?: boolean;
-}
-
-export interface IGetMonacoThemeResponse {
-    theme: monacoEditor.editor.IStandaloneThemeData;
 }

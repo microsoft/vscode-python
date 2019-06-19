@@ -1,20 +1,10 @@
 {
-    "check-coverage": false,
-    "per-file": true,
+    "extends": "@istanbuljs/nyc-config-typescript",
+    "all": true,
+    "reporter": ["lcov", "html", "text", "text-summary", "cobertura"],
     "include": [
-        "out/client/**/*.js"
+        "src/client/**/*.ts", "src/test/**/*.js",
+        "src/datascience-ui/**/*.ts", "src/datascience-ui/**/*.js"
     ],
-    "exclude": [
-        "out/test/*.js",
-        "out/**/*.jsx"
-    ],
-    "reporter": [
-        "lcov",
-        "html"
-    ],
-    "extension": [
-        ".js"
-    ],
-    "cache": true,
-    "all": true
+    "exclude": ["src/test/**/*.ts", "src/test/**/*.js"]
 }

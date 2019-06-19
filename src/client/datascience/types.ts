@@ -40,6 +40,7 @@ export interface IConnection extends Disposable {
     localLaunch: boolean;
     localProcExitCode: number | undefined;
     disconnected: Event<number>;
+    allowUnauthorized?: boolean;
 }
 
 export enum InterruptResult {
@@ -109,6 +110,17 @@ export interface IJupyterExecution extends IAsyncDisposable {
     getServer(options?: INotebookServerOptions) : Promise<INotebookServer | undefined>;
 }
 
+export interface IJupyterPasswordConnectInfo {
+    xsrfCookie: string;
+    sessionCookieName: string;
+    sessionCookieValue: string;
+}
+
+export const IJupyterPasswordConnect = Symbol('IJupyterPasswordConnect');
+export interface IJupyterPasswordConnect {
+    getPasswordConnectionInfo(url: string): Promise<IJupyterPasswordConnectInfo | undefined>;
+}
+
 export const IJupyterSession = Symbol('IJupyterSession');
 export interface IJupyterSession extends IAsyncDisposable {
     onRestarted: Event<void>;
@@ -166,7 +178,7 @@ export interface IHistory extends Disposable {
     expandAllCells(): void;
     collapseAllCells(): void;
     exportCells(): void;
-    importNotebook(notebookFile: string) : Promise<string>;
+    previewNotebook(notebookFile: string) : Promise<void>;
 }
 
 export const IHistoryListener = Symbol('IHistoryListener');
@@ -239,7 +251,8 @@ export interface ICell {
     file: string;
     line: number;
     state: CellState;
-    data: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell | ISysInfo;
+    type: 'preview' | 'execute';
+    data: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell | IMessageCell;
 }
 
 export interface IHistoryInfo {
@@ -248,13 +261,9 @@ export interface IHistoryInfo {
     redoCount: number;
 }
 
-export interface ISysInfo extends nbformat.IBaseCell {
-    cell_type: 'sys_info';
-    version: string;
-    notebook_version: string;
-    path: string;
-    message: string;
-    connection: string;
+export interface IMessageCell extends nbformat.IBaseCell {
+    cell_type: 'messages';
+    messages: string[];
 }
 
 export const ICodeCssGenerator = Symbol('ICodeCssGenerator');
@@ -295,8 +304,8 @@ export interface IJupyterCommandFactory {
 // Config settings we pass to our react code
 export interface IDataScienceExtraSettings extends IDataScienceSettings {
     extraSettings: {
-        terminalCursor: string;
-        terminalCursorBlink: string;
+        editorCursor: string;
+        editorCursorBlink: string;
         theme: string;
     };
     intellisenseOptions: {
@@ -357,4 +366,17 @@ export const IDataViewer = Symbol('IDataViewer');
 
 export interface IDataViewer extends IDisposable {
     showVariable(variable: IJupyterVariable) : Promise<void>;
+}
+
+export const IPlotViewerProvider = Symbol('IPlotViewerProvider');
+export interface IPlotViewerProvider {
+    showPlot(imageHtml: string) : Promise<void>;
+}
+export const IPlotViewer = Symbol('IPlotViewer');
+
+export interface IPlotViewer extends IDisposable {
+    closed: Event<IPlotViewer>;
+    removed: Event<number>;
+    addPlot(imageHtml: string) : Promise<void>;
+    show(): Promise<void>;
 }

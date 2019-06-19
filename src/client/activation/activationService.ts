@@ -9,8 +9,10 @@ import { LSNotSupportedDiagnosticServiceId } from '../application/diagnostics/ch
 import { IDiagnosticsService } from '../application/diagnostics/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
+import { LSControl, LSEnabled } from '../common/experimentGroups';
 import '../common/extensions';
-import { IConfigurationService, IDisposableRegistry, IOutputChannel, IPersistentStateFactory, IPythonSettings, Resource } from '../common/types';
+import { traceError } from '../common/logger';
+import { IConfigurationService, IDisposableRegistry, IExperimentsManager, IOutputChannel, IPersistentStateFactory, IPythonSettings, Resource } from '../common/types';
 import { swallowExceptions } from '../common/utils/decorators';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
@@ -33,7 +35,8 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
     private resource!: Resource;
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(IPersistentStateFactory) private stateFactory: IPersistentStateFactory) {
+        @inject(IPersistentStateFactory) private stateFactory: IPersistentStateFactory,
+        @inject(IExperimentsManager) private readonly abExperiments: IExperimentsManager) {
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.output = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
@@ -113,6 +116,39 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
             sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_SWITCHED, undefined, { change: message });
         }
     }
+
+    /**
+     * Checks if user has not manually set `jediEnabled` setting
+     * @param resource
+     * @returns `true` if user has NOT manually added the setting and is using default configuration, `false` if user has `jediEnabled` setting added
+     */
+    public isJediUsingDefaultConfiguration(resource?: Uri): boolean {
+        const settings = this.workspaceService.getConfiguration('python', resource).inspect<boolean>('jediEnabled');
+        if (!settings) {
+            traceError('WorkspaceConfiguration.inspect returns `undefined` for setting `python.jediEnabled`');
+            return false;
+        }
+        return (settings.globalValue === undefined && settings.workspaceValue === undefined && settings.workspaceFolderValue === undefined);
+    }
+
+    /**
+     * Checks if user is using Jedi as intellisense
+     * @returns `true` if user is using jedi, `false` if user is using language server
+     */
+    public useJedi(): boolean {
+        if (this.isJediUsingDefaultConfiguration()) {
+            if (this.abExperiments.inExperiment(LSEnabled)) {
+                return false;
+            }
+            // Send telemetry if user is in control group
+            this.abExperiments.sendTelemetryIfInExperiment(LSControl);
+        }
+        const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        const enabled = configurationService.getSettings(this.resource).jediEnabled;
+        this.trackLangaugeServerSwitch(enabled).ignoreErrors();
+        return enabled;
+    }
+
     protected onWorkspaceFoldersChanged() {
         //If an activated workspace folder was removed, dispose its activator
         const workspaceKeys = this.workspaceService.workspaceFolders!.map(workspaceFolder => this.getWorkspacePathKey(workspaceFolder.uri));
@@ -152,12 +188,6 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         if (item === 'Reload') {
             this.serviceContainer.get<ICommandManager>(ICommandManager).executeCommand('workbench.action.reloadWindow');
         }
-    }
-    private useJedi(): boolean {
-        const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        const enabled = configurationService.getSettings(this.resource).jediEnabled;
-        this.trackLangaugeServerSwitch(enabled).ignoreErrors();
-        return enabled;
     }
     private getWorkspacePathKey(resource: Resource): string {
         return this.workspaceService.getWorkspaceFolderIdentifier(resource, workspacePathNameForGlobalWorkspaces);

@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { ChildProcess, exec, execSync, spawn } from 'child_process';
+import { exec, execSync, spawn } from 'child_process';
 import { Observable } from 'rxjs/Observable';
 
 import { IDisposable } from '../types';
@@ -20,7 +20,7 @@ import {
 
 // tslint:disable:no-any
 export class ProcessService implements IProcessService, IDisposable {
-    private processesToKill = new Set<ChildProcess>();
+    private processesToKill = new Set<IDisposable>();
     constructor(private readonly decoder: IBufferDecoder, private readonly env?: EnvironmentVariables) { }
     public static isAlive(pid: number): boolean {
         try {
@@ -43,15 +43,11 @@ export class ProcessService implements IProcessService, IDisposable {
         }
     }
     public dispose() {
-        this.processesToKill.forEach(proc => {
-            if (proc.killed) {
-                return;
-            }
+        this.processesToKill.forEach(p => {
             try {
-                // Make sure to kill the entire process tree.
-                ProcessService.kill(proc.pid);
+                p.dispose();
             } catch {
-                // Ignore.
+                // ignore.
             }
         });
     }
@@ -60,8 +56,18 @@ export class ProcessService implements IProcessService, IDisposable {
         const spawnOptions = this.getDefaultOptions(options);
         const encoding = spawnOptions.encoding ? spawnOptions.encoding : 'utf8';
         const proc = spawn(file, args, spawnOptions);
-        this.processesToKill.add(proc);
         let procExited = false;
+        const disposable : IDisposable = {
+            dispose: () => {
+                if (proc && !proc.killed && !procExited) {
+                    ProcessService.kill(proc.pid);
+                }
+                if (proc) {
+                    proc.unref();
+                }
+            }
+        };
+        this.processesToKill.add(disposable);
 
         const output = new Observable<Output<string>>(subscriber => {
             const disposables: IDisposable[] = [];
@@ -95,39 +101,39 @@ export class ProcessService implements IProcessService, IDisposable {
             proc.once('close', () => {
                 procExited = true;
                 subscriber.complete();
-                disposables.forEach(disposable => disposable.dispose());
+                disposables.forEach(d => d.dispose());
             });
             proc.once('exit', () => {
                 procExited = true;
                 subscriber.complete();
-                disposables.forEach(disposable => disposable.dispose());
+                disposables.forEach(d => d.dispose());
             });
             proc.once('error', ex => {
                 procExited = true;
                 subscriber.error(ex);
-                disposables.forEach(disposable => disposable.dispose());
+                disposables.forEach(d => d.dispose());
             });
         });
 
         return {
             proc,
             out: output,
-            dispose: () => {
-                if (proc && !proc.killed && !procExited) {
-                    ProcessService.kill(proc.pid);
-                }
-                if (proc) {
-                    proc.unref();
-                }
-            }
+            dispose: disposable.dispose
         };
     }
     public exec(file: string, args: string[], options: SpawnOptions = {}): Promise<ExecutionResult<string>> {
         const spawnOptions = this.getDefaultOptions(options);
         const encoding = spawnOptions.encoding ? spawnOptions.encoding : 'utf8';
         const proc = spawn(file, args, spawnOptions);
-        this.processesToKill.add(proc);
         const deferred = createDeferred<ExecutionResult<string>>();
+        const disposable : IDisposable = {
+            dispose: () => {
+                if (!proc.killed && !deferred.completed) {
+                    proc.kill();
+                }
+            }
+        };
+        this.processesToKill.add(disposable);
         const disposables: IDisposable[] = [];
 
         const on = (ee: NodeJS.EventEmitter, name: string, fn: Function) => {
@@ -136,11 +142,7 @@ export class ProcessService implements IProcessService, IDisposable {
         };
 
         if (options.token) {
-            disposables.push(options.token.onCancellationRequested(() => {
-                if (!proc.killed && !deferred.completed) {
-                    proc.kill();
-                }
-            }));
+            disposables.push(options.token.onCancellationRequested(disposable.dispose));
         }
 
         const stdoutBuffers: Buffer[] = [];
@@ -166,11 +168,11 @@ export class ProcessService implements IProcessService, IDisposable {
                 const stdout = this.decoder.decode(stdoutBuffers, encoding);
                 deferred.resolve({ stdout, stderr });
             }
-            disposables.forEach(disposable => disposable.dispose());
+            disposables.forEach(d => d.dispose());
         });
         proc.once('error', ex => {
             deferred.reject(ex);
-            disposables.forEach(disposable => disposable.dispose());
+            disposables.forEach(d => d.dispose());
         });
 
         return deferred.promise;
@@ -190,7 +192,14 @@ export class ProcessService implements IProcessService, IDisposable {
                     resolve({ stderr: stderr && stderr.length > 0 ? stderr : undefined, stdout: stdout });
                 }
             });
-            this.processesToKill.add(proc);
+            const disposable : IDisposable = {
+                dispose: () => {
+                    if (!proc.killed) {
+                        proc.kill();
+                    }
+                }
+            };
+            this.processesToKill.add(disposable);
         });
     }
 

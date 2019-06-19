@@ -37,8 +37,7 @@ export class DjangoLaunchDebugConfigurationProvider implements IDebugConfigurati
             program: program || defaultProgram,
             args: [
                 'runserver',
-                '--noreload',
-                '--nothreading'
+                '--noreload'
             ],
             django: true
         };

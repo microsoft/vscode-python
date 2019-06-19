@@ -38,7 +38,8 @@ suite('JupyterVariables', () => {
             id: '0',
             file: '',
             line: 0,
-            state: CellState.finished
+            state: CellState.finished,
+            type: 'execute'
         };
     }
 

@@ -7,6 +7,7 @@ import { basename as pathBasename, sep as pathSep } from 'path';
 import * as stackTrace from 'stack-trace';
 import TelemetryReporter from 'vscode-extension-telemetry';
 
+import { IWorkspaceService } from '../common/application/types';
 import { EXTENSION_ROOT_DIR, isTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
 import { StopWatch } from '../common/utils/stopWatch';
 import { Telemetry } from '../datascience/constants';
@@ -55,6 +56,16 @@ function isTelemetrySupported(): boolean {
         return false;
     }
 }
+
+/**
+ * Checks if the telemetry is disabled in user settings
+ * @returns {boolean}
+ */
+export function isTelemetryDisabled(workspaceService: IWorkspaceService): boolean {
+    const settings = workspaceService.getConfiguration('telemetry').inspect<boolean>('enableTelemetry')!;
+    return settings.globalValue === false ? true : false;
+}
+
 let telemetryReporter: TelemetryReporter | undefined;
 function getTelemetryReporter() {
     if (!isTestExecution() && telemetryReporter) {
@@ -91,7 +102,17 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     const reporter = getTelemetryReporter();
     const measures = typeof durationMs === 'number' ? { duration: durationMs } : durationMs ? durationMs : undefined;
 
-    // tslint:disable-next-line:no-any
+    if (ex && (eventName as any) !== 'ERROR') {
+        // When sending `ERROR` telemetry event no need to send custom properties.
+        // Else we have to review all properties everytime as part of GDPR.
+        // Assume we have 10 events all with their own properties.
+        // As we have errors for each event, those properties are treated as new data items.
+        // Hence they need to be classified as part of the GDPR process, and thats unnecessary and onerous.
+        const props: Record<string, string> = {};
+        props.stackTrace = getStackTrace(ex);
+        props.originalEventName = eventName as any as string;
+        reporter.sendTelemetryEvent('ERROR', props, measures);
+    }
     const customProperties: Record<string, string> = {};
     if (properties) {
         // tslint:disable-next-line:prefer-type-cast no-any
@@ -104,21 +125,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
             (customProperties as any)[prop] = typeof data[prop] === 'string' ? data[prop] : data[prop].toString();
         });
     }
-    if (ex) {
-        customProperties.stackTrace = getStackTrace(ex);
-    }
-    if (ex && (eventName as any) !== 'ERROR') {
-        customProperties.originalEventName = eventName as any as string;
-        reporter.sendTelemetryEvent('ERROR', customProperties, measures);
-    }
     reporter.sendTelemetryEvent((eventName as any) as string, customProperties, measures);
-
-    // Enable this to debug telemetry. To be discussed whether or not we want this all of the time.
-    // try {
-    //     traceInfo(`Telemetry: ${eventName} : ${JSON.stringify(customProperties)}`);
-    // } catch {
-    //     noop();
-    // }
 }
 
 // tslint:disable-next-line:no-any function-name
@@ -299,6 +306,7 @@ export interface IEventNamePropertyMapping {
     [EventName.PYTHON_LANGUAGE_SERVER_READY]: never | undefined;
     [EventName.PYTHON_LANGUAGE_SERVER_STARTUP]: never | undefined;
     [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: any;
+    [EventName.PYTHON_EXPERIMENTS]: { error?: string; expName?: string };
     [EventName.REFACTOR_EXTRACT_FUNCTION]: never | undefined;
     [EventName.REFACTOR_EXTRACT_VAR]: never | undefined;
     [EventName.REFACTOR_RENAME]: never | undefined;
@@ -327,6 +335,8 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ConnectLocalJupyter]: never | undefined;
     [Telemetry.ConnectRemoteJupyter]: never | undefined;
     [Telemetry.ConnectRemoteFailedJupyter]: never | undefined;
+    [Telemetry.ConnectRemoteSelfCertFailedJupyter]: never | undefined;
+    [Telemetry.CopySourceCode]: never | undefined;
     [Telemetry.DataScienceSettings]: JSONObject;
     [Telemetry.DeleteAllCells]: never | undefined;
     [Telemetry.DeleteCell]: never | undefined;
@@ -336,11 +346,15 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ExportNotebook]: never | undefined;
     [Telemetry.ExportPythonFile]: never | undefined;
     [Telemetry.ExportPythonFileAndOutput]: never | undefined;
+    [Telemetry.GetPasswordAttempt]: never | undefined;
+    [Telemetry.GetPasswordFailure]: never | undefined;
+    [Telemetry.GetPasswordSuccess]: never | undefined;
     [Telemetry.GotoSourceCode]: never | undefined;
     [Telemetry.ImportNotebook]: { scope: 'command' | 'file' };
     [Telemetry.Interrupt]: never | undefined;
     [Telemetry.PandasNotInstalled]: never | undefined;
     [Telemetry.PandasTooOld]: never | undefined;
+    [Telemetry.OpenPlotViewer]: never | undefined;
     [Telemetry.Redo]: never | undefined;
     [Telemetry.RemoteAddCode]: never | undefined;
     [Telemetry.RestartKernel]: never | undefined;
@@ -354,6 +368,8 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RunToLine]: never | undefined;
     [Telemetry.RunFileInteractive]: never | undefined;
     [Telemetry.RunFromLine]: never | undefined;
+    [Telemetry.SelfCertsMessageClose]: never | undefined;
+    [Telemetry.SelfCertsMessageEnabled]: never | undefined;
     [Telemetry.SelectJupyterURI]: never | undefined;
     [Telemetry.SetJupyterURIToLocal]: never | undefined;
     [Telemetry.SetJupyterURIToUserSpecified]: never | undefined;
@@ -377,4 +393,32 @@ export interface IEventNamePropertyMapping {
     restart - Whether to restart the Jedi Process (i.e. memory > limit).
     */
     [EventName.JEDI_MEMORY]: { memory: number; limit: number; isUserDefinedLimit: boolean; restart: boolean };
+    /*
+    Telemetry event sent to provide information on whether we have successfully identify the type of shell used.
+    This information is useful in determining how well we identify shells on users machines.
+    This impacts executing code in terminals and activation of environments in terminal.
+    So, the better this works, the better it is for the user.
+    failed - If true, indicates we have failed to identify the shell. Note this impacts impacts ability to activate environments in the terminal & code.
+    shellIdentificationSource - How was the shell identified. One of 'terminalName' | 'settings' | 'environment' | 'default'
+                                If terminalName, then this means we identified the type of the shell based on the name of the terminal.
+                                If settings, then this means we identified the type of the shell based on user settings in VS Code.
+                                If environment, then this means we identified the type of the shell based on their environment (env variables, etc).
+                                    I.e. their default OS Shell.
+                                If default, then we reverted to OS defaults (cmd on windows, and bash on the rest).
+                                    This is the worst case scenario.
+                                    I.e. we could not identify the shell at all.
+    terminalProvided - If true, we used the terminal provided to detec the shell. If not provided, we use the default shell on user machine.
+    hasCustomShell - If undefined (not set), we didn't check.
+                     If true, user has customzied their shell in VSC Settings.
+    hasShellInEnv - If undefined (not set), we didn't check.
+                    If true, user has a shell in their environment.
+                    If false, user does not have a shell in their environment.
+    */
+    [EventName.TERMINAL_SHELL_IDENTIFICATION]: {
+        failed: boolean;
+        terminalProvided: boolean;
+        shellIdentificationSource: 'terminalName' | 'settings' | 'environment' | 'default';
+        hasCustomShell: undefined | boolean;
+        hasShellInEnv: undefined | boolean;
+    };
 }

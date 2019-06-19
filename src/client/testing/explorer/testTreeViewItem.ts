@@ -82,9 +82,9 @@ export class TestTreeItem extends TreeItem {
                 return '';
             }
             if (result.functionsDidNotRun) {
-                return `${result.functionsFailed} failed, ${result.functionsDidNotRun} not run and ${result.functionsPassed} passed in ${+result.time.toFixed(3)} seconds`;
+                return `${result.functionsFailed} failed, ${result.functionsDidNotRun} not run and ${result.functionsPassed} passed`;
             }
-            return `${result.functionsFailed} failed, ${result.functionsPassed} passed in ${+result.time.toFixed(3)} seconds`;
+            return `${result.functionsFailed} failed, ${result.functionsPassed} passed`;
         }
         switch (this.data.status) {
             case TestStatus.Error:

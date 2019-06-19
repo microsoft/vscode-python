@@ -16,13 +16,17 @@ import { HistoryProvider } from './history/historyProvider';
 import { DotNetIntellisenseProvider } from './history/intellisense/dotNetIntellisenseProvider';
 import { JediIntellisenseProvider } from './history/intellisense/jediIntellisenseProvider';
 import { LinkProvider } from './history/linkProvider';
+import { ShowPlotListener } from './history/showPlotListener';
 import { JupyterCommandFactory } from './jupyter/jupyterCommand';
 import { JupyterExecutionFactory } from './jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from './jupyter/jupyterExporter';
 import { JupyterImporter } from './jupyter/jupyterImporter';
+import { JupyterPasswordConnect } from './jupyter/jupyterPasswordConnect';
 import { JupyterServerFactory } from './jupyter/jupyterServerFactory';
 import { JupyterSessionManager } from './jupyter/jupyterSessionManager';
 import { JupyterVariables } from './jupyter/jupyterVariables';
+import { PlotViewer } from './plotting/plotViewer';
+import { PlotViewerProvider } from './plotting/plotViewerProvider';
 import { StatusProvider } from './statusProvider';
 import { ThemeFinder } from './themeFinder';
 import {
@@ -38,11 +42,14 @@ import {
     IHistoryProvider,
     IJupyterCommandFactory,
     IJupyterExecution,
+    IJupyterPasswordConnect,
     IJupyterSessionManager,
     IJupyterVariables,
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
+    IPlotViewer,
+    IPlotViewerProvider,
     IStatusProvider,
     IThemeFinder
 } from './types';
@@ -58,6 +65,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
     serviceManager.add<INotebookServer>(INotebookServer, JupyterServerFactory);
     serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
+    serviceManager.addSingleton<IJupyterPasswordConnect>(IJupyterPasswordConnect, JupyterPasswordConnect);
     serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
     serviceManager.addSingleton<IJupyterSessionManager>(IJupyterSessionManager, JupyterSessionManager);
     serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables);
@@ -70,4 +78,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<IHistoryListener>(IHistoryListener, DotNetIntellisenseProvider);
     serviceManager.add<IHistoryListener>(IHistoryListener, JediIntellisenseProvider);
     serviceManager.add<IHistoryListener>(IHistoryListener, LinkProvider);
+    serviceManager.add<IHistoryListener>(IHistoryListener, ShowPlotListener);
+    serviceManager.addSingleton<IPlotViewerProvider>(IPlotViewerProvider, PlotViewerProvider);
+    serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
 }

@@ -182,7 +182,7 @@ suite('Unit Tests - ConfigurationService', () => {
                 appShell.verifyAll();
             });
             test('Prompt to enable a test if a test framework is not enabled', async () => {
-                unitTestSettings.setup(u => u.pyTestEnabled).returns(() => false);
+                unitTestSettings.setup(u => u.pytestEnabled).returns(() => false);
                 unitTestSettings.setup(u => u.unittestEnabled).returns(() => false);
                 unitTestSettings.setup(u => u.nosetestsEnabled).returns(() => false);
 
@@ -204,7 +204,7 @@ suite('Unit Tests - ConfigurationService', () => {
                 appShell.verifyAll();
             });
             test('Prompt to select a test if a test framework is not enabled', async () => {
-                unitTestSettings.setup(u => u.pyTestEnabled).returns(() => false);
+                unitTestSettings.setup(u => u.pytestEnabled).returns(() => false);
                 unitTestSettings.setup(u => u.unittestEnabled).returns(() => false);
                 unitTestSettings.setup(u => u.nosetestsEnabled).returns(() => false);
 
@@ -234,7 +234,7 @@ suite('Unit Tests - ConfigurationService', () => {
                 appShell.verifyAll();
             });
             test('Configure selected test framework and disable others', async () => {
-                unitTestSettings.setup(u => u.pyTestEnabled).returns(() => false);
+                unitTestSettings.setup(u => u.pytestEnabled).returns(() => false);
                 unitTestSettings.setup(u => u.unittestEnabled).returns(() => false);
                 unitTestSettings.setup(u => u.nosetestsEnabled).returns(() => false);
 
@@ -279,7 +279,7 @@ suite('Unit Tests - ConfigurationService', () => {
                 workspaceConfig.verifyAll();
             });
             test('If more than one test framework is enabled, then prompt to select a test framework', async () => {
-                unitTestSettings.setup(u => u.pyTestEnabled).returns(() => true);
+                unitTestSettings.setup(u => u.pytestEnabled).returns(() => true);
                 unitTestSettings.setup(u => u.unittestEnabled).returns(() => true);
                 unitTestSettings.setup(u => u.nosetestsEnabled).returns(() => true);
 
@@ -304,7 +304,7 @@ suite('Unit Tests - ConfigurationService', () => {
                 appShell.verifyAll();
             });
             test('If more than one test framework is enabled, then prompt to select a test framework and enable test, but do not configure', async () => {
-                unitTestSettings.setup(u => u.pyTestEnabled).returns(() => true);
+                unitTestSettings.setup(u => u.pytestEnabled).returns(() => true);
                 unitTestSettings.setup(u => u.unittestEnabled).returns(() => true);
                 unitTestSettings.setup(u => u.nosetestsEnabled).returns(() => true);
 
@@ -349,7 +349,7 @@ suite('Unit Tests - ConfigurationService', () => {
             });
 
             test('Prompt to enable and configure selected test framework', async () => {
-                unitTestSettings.setup(u => u.pyTestEnabled).returns(() => false);
+                unitTestSettings.setup(u => u.pytestEnabled).returns(() => false);
                 unitTestSettings.setup(u => u.unittestEnabled).returns(() => false);
                 unitTestSettings.setup(u => u.nosetestsEnabled).returns(() => false);
 

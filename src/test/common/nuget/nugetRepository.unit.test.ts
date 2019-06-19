@@ -6,8 +6,8 @@
 import { expect } from 'chai';
 import { SemVer } from 'semver';
 import * as typeMoq from 'typemoq';
-import { IHttpClient } from '../../../client/activation/types';
 import { NugetRepository } from '../../../client/common/nuget/nugetRepository';
+import { IHttpClient } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 
 suite('Nuget on Nuget Repo', () => {

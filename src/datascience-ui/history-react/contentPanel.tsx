@@ -23,10 +23,12 @@ export interface IContentPanelProps {
     monacoTheme: string | undefined;
     editorOptions: monacoEditor.editor.IEditorOptions;
     gotoCellCode(index: number): void;
+    copyCellCode(index: number): void;
     deleteCell(index: number): void;
     onCodeChange(changes: monacoEditor.editor.IModelContentChange[], cellId: string, modelId: string): void;
     onCodeCreated(code: string, file: string, cellId: string, modelId: string): void;
     openLink(uri: monacoEditor.Uri): void;
+    expandImage(imageHtml: string): void;
 }
 
 export class ContentPanel extends React.Component<IContentPanelProps> {
@@ -48,7 +50,7 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
         return(
             <div id='content-panel-div' ref={this.containerRef}>
                 <div id='cell-table'>
-                    <div id='cell-table-body'>
+                    <div id='cell-table-body' role='list'>
                         {this.renderCells()}
                     </div>
                 </div>
@@ -59,13 +61,12 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
 
     private renderCells = () => {
         const maxOutputSize = getSettings().maxOutputSize;
-        const errorBackgroundColor = getSettings().errorBackgroundColor;
-        const actualErrorBackgroundColor = errorBackgroundColor ? errorBackgroundColor : '#FFFFFF';
         const maxTextSize = maxOutputSize && maxOutputSize < 10000 && maxOutputSize > 0 ? maxOutputSize : undefined;
         const baseTheme = getSettings().ignoreVscodeTheme ? 'vscode-light' : this.props.baseTheme;
         return this.props.cellVMs.map((cellVM: ICellViewModel, index: number) =>
             <ErrorBoundary key={index}>
                 <Cell
+                    role='listitem'
                     editorOptions={this.props.editorOptions}
                     history={undefined}
                     maxTextSize={maxTextSize}
@@ -77,13 +78,14 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
                     codeTheme={this.props.codeTheme}
                     showWatermark={false}
                     editExecutionCount={0}
-                    errorBackgroundColor={actualErrorBackgroundColor}
                     gotoCode={() => this.props.gotoCellCode(index)}
+                    copyCode={() => this.props.copyCellCode(index)}
                     delete={() => this.props.deleteCell(index)}
                     onCodeChange={this.props.onCodeChange}
                     onCodeCreated={this.props.onCodeCreated}
                     monacoTheme={this.props.monacoTheme}
                     openLink={this.props.openLink}
+                    expandImage={this.props.expandImage}
                     />
             </ErrorBoundary>
         );

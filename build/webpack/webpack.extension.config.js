@@ -48,7 +48,10 @@ const config = {
                         loader: 'ts-loader'
                     }
                 ]
-            }
+            },
+            {enforce: 'post', test: /unicode-properties[\/\\]index.js$/, loader: "transform-loader?brfs"},
+            {enforce: 'post', test: /fontkit[\/\\]index.js$/, loader: "transform-loader?brfs"},
+            {enforce: 'post', test: /linebreak[\/\\]src[\/\\]linebreaker.js/, loader: "transform-loader?brfs"}
         ]
     },
     externals: [

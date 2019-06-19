@@ -88,22 +88,22 @@
             {
                 "command": "python.execSelectionInTerminal",
                 "key": "shift+enter",
-                "when": "editorFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && !python.datascience.ownsSelection"
+                "when": "editorTextFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && !python.datascience.ownsSelection"
             },
             {
                 "command": "python.datascience.execSelectionInteractive",
                 "key": "shift+enter",
-                "when": "editorFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && python.datascience.ownsSelection && python.datascience.featureenabled"
+                "when": "editorTextFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && python.datascience.ownsSelection && python.datascience.featureenabled"
             },
             {
                 "command": "python.datascience.runcurrentcelladvance",
                 "key": "shift+enter",
-                "when": "editorFocus && !editorHasSelection && python.datascience.hascodecells && python.datascience.featureenabled"
+                "when": "editorTextFocus && !editorHasSelection && python.datascience.hascodecells && python.datascience.featureenabled"
             },
             {
                 "command": "python.datascience.runcurrentcell",
                 "key": "ctrl+enter",
-                "when": "editorFocus && !editorHasSelection && python.datascience.hascodecells && python.datascience.featureenabled"
+                "when": "editorTextFocus && !editorHasSelection && python.datascience.hascodecells && python.datascience.featureenabled"
             }
         ],
         "commands": [
@@ -257,7 +257,7 @@
             },
             {
                 "command": "python.discoveringTests",
-                "title": "%python.command.python.discoverTests.title%",
+                "title": "%python.command.python.discoveringTests.title%",
                 "category": "Python",
                 "icon": {
                     "light": "resources/light/discovering-tests.svg",
@@ -1151,7 +1151,13 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Warn the user before trying to open really large data frames.",
-                    "scope": "resource"
+                    "scope": "application"
+                },
+                "python.dataScience.askForKernelRestart": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Warn the user before restarting a kernel.",
+                    "scope": "application"
                 },
                 "python.dataScience.enabled": {
                     "type": "boolean",
@@ -1240,7 +1246,8 @@
                     "type": "string",
                     "default": "#FFFFFF",
                     "description": "Background color (in hex) for exception messages in the Python Interactive window.",
-                    "scope": "resource"
+                    "scope": "resource",
+                    "deprecationMessage": "No longer necessary as the theme colors are used for error messages"
                 },
                 "python.dataScience.sendSelectionToInteractiveWindow": {
                     "type": "boolean",
@@ -1308,10 +1315,16 @@
                     "description": "Enables moving to the next cell when clicking on a 'Run Cell' code lens.",
                     "scope": "resource"
                 },
-                "python.dataScience.previewImportedNotebooksInInteractivePane": {
+                "python.dataScience.autoPreviewNotebooksInInteractivePane": {
                     "type": "boolean",
-                    "default": true,
-                    "description": "When importing ipynb files, preview the contents in the Python Interactive window.",
+                    "default": false,
+                    "description": "When opening ipynb files, automatically preview the contents in the Python Interactive window.",
+                    "scope": "resource"
+                },
+                "python.dataScience.allowUnauthorizedRemoteConnection": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Allow for connecting the Python Interactive window to a https Jupyter server that does not have valid certificates. This can be a security risk, so only use for known and trusted servers.",
                     "scope": "resource"
                 },
                 "python.disableInstallationCheck": {
@@ -1911,7 +1924,7 @@
                 "python.testing.cwd": {
                     "type": "string",
                     "default": null,
-                    "description": "Optional working directory for unit tests.",
+                    "description": "Optional working directory for tests.",
                     "scope": "resource"
                 },
                 "python.testing.debugPort": {
@@ -1932,7 +1945,7 @@
                 "python.testing.nosetestsEnabled": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Enable unit testing using nosetests.",
+                    "description": "Enable testing using nosetests.",
                     "scope": "resource"
                 },
                 "python.testing.nosetestPath": {
@@ -1947,7 +1960,7 @@
                     "description": "Prompt to configure a test framework if potential tests directories are discovered.",
                     "scope": "resource"
                 },
-                "python.testing.pyTestArgs": {
+                "python.testing.pytestArgs": {
                     "type": "array",
                     "description": "Arguments passed in. Each argument is a separate item in the array.",
                     "default": [],
@@ -1956,13 +1969,13 @@
                     },
                     "scope": "resource"
                 },
-                "python.testing.pyTestEnabled": {
+                "python.testing.pytestEnabled": {
                     "type": "boolean",
                     "default": false,
                     "description": "Enable testing using pytest.",
                     "scope": "resource"
                 },
-                "python.testing.pyTestPath": {
+                "python.testing.pytestPath": {
                     "type": "string",
                     "default": "pytest",
                     "description": "Path to pytest (pytest), you can use a custom version of pytest by modifying this setting to include the full path.",
@@ -1986,23 +1999,19 @@
                 "python.testing.unittestEnabled": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Enable unit testing using unittest.",
+                    "description": "Enable testing using unittest.",
                     "scope": "resource"
                 },
                 "python.testing.autoTestDiscoverOnSaveEnabled": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Enable auto run test discovery when saving a unit test file.",
+                    "description": "Enable auto run test discovery when saving a test file.",
                     "scope": "resource"
                 },
                 "python.venvFolders": {
                     "type": "array",
-                    "default": [
-                        "envs",
-                        ".pyenv",
-                        ".direnv"
-                    ],
-                    "description": "Folders in your home directory to look into for virtual environments.",
+                    "default": [],
+                    "description": "Folders in your home directory to look into for virtual environments (supports pyenv, direnv and virtualenvwrapper by default).",
                     "scope": "resource",
                     "items": {
                         "type": "string"
@@ -2162,14 +2171,14 @@
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-python-insiders.vsix",
         "compile": "tsc -watch -p ./",
-        "compile-webviews-watch": "npx webpack --config webpack.datascience-ui.config.js --watch",
-        "dump-datascience-webpack-stats": "webpack --config webpack.datascience-ui.config.js --profile --json > tmp/ds-stats.json",
+        "compile-webviews-watch": "npx npx -n --max_old_space_size=4096 webpack --config webpack.datascience-ui.config.js --watch",
+        "dump-datascience-webpack-stats": "npx -n --max_old_space_size=4096 webpack --config webpack.datascience-ui.config.js --profile --json > tmp/ds-stats.json",
         "compile-webviews": "gulp compile-webviews",
         "compile-webviews-verbose": "npx webpack --config webpack.datascience-ui.config.js",
         "postinstall": "node ./node_modules/vscode/bin/install && node ./build/ci/postInstall.js",
         "test": "node ./out/test/standardTest.js && node ./out/test/multiRootTest.js",
-        "test:unittests": "mocha --require source-map-support/register --opts ./build/.mocha.unittests.opts",
-        "test:unittests:cover": "npm run test:unittests",
+        "test:unittests": "mocha --opts ./build/.mocha.unittests.js.opts",
+        "test:unittests:cover": "nyc --nycrc-path build/.nycrc mocha --opts ./build/.mocha.unittests.ts.opts",
         "test:functional": "mocha --require source-map-support/register --opts ./build/.mocha.functional.opts",
         "test:functional:cover": "npm run test:functional",
         "testDebugger": "node ./out/test/testBootstrap.js ./out/test/debuggerTest.js",
@@ -2180,9 +2189,6 @@
         "lint-staged": "node gulpfile.js",
         "lint": "tslint src/**/*.ts -t verbose",
         "clean": "gulp clean",
-        "cover:enable": "gulp cover:enable",
-        "debugger-coverage": "gulp debugger-coverage",
-        "cover:inlinesource": "gulp inlinesource",
         "updateBuildNumber": "gulp updateBuildNumber",
         "verifyBundle": "gulp verifyBundle"
     },
@@ -2207,9 +2213,14 @@
         "monaco-editor-textmate": "^2.1.1",
         "monaco-textmate": "^3.0.0",
         "named-js-regexp": "^1.3.3",
+        "node-fetch": "^1.0.0",
         "node-stream-zip": "^1.6.0",
         "onigasm": "^2.2.2",
+        "pdfkit": "^0.10.0",
         "pidusage": "^1.2.0",
+        "react-svg-pan-zoom": "^3.1.0",
+        "react-svgmt": "^1.1.8",
+        "react-virtualized": "^9.21.1",
         "reflect-metadata": "^0.1.12",
         "request": "^2.87.0",
         "request-progress": "^3.0.0",
@@ -2220,6 +2231,7 @@
         "strip-ansi": "^5.2.0",
         "strip-json-comments": "^2.0.1",
         "sudo-prompt": "^8.2.0",
+        "svg-to-pdfkit": "^0.1.7",
         "tmp": "^0.0.29",
         "tree-kill": "^1.2.0",
         "tslint": "^5.14.0",
@@ -2236,7 +2248,7 @@
         "vsls": "^0.3.1291",
         "winreg": "^1.2.4",
         "winston": "^3.2.1",
-        "ws": "^3.3.1",
+        "ws": "^6.0.0",
         "xml2js": "^0.4.19"
     },
     "devDependencies": {
@@ -2247,6 +2259,7 @@
         "@babel/preset-env": "^7.1.0",
         "@babel/preset-react": "^7.0.0",
         "@babel/register": "^7.4.4",
+        "@istanbuljs/nyc-config-typescript": "^0.1.3",
         "@nteract/plotly": "^1.47.1",
         "@nteract/transform-dataresource": "^4.3.5",
         "@nteract/transform-geojson": "^3.2.3",
@@ -2268,21 +2281,23 @@
         "@types/glob": "^5.0.35",
         "@types/html-webpack-plugin": "^3.2.0",
         "@types/iconv-lite": "^0.0.1",
-        "@types/istanbul": "^0.4.29",
         "@types/jsdom": "^11.12.0",
         "@types/loader-utils": "^1.1.3",
         "@types/lodash": "^4.14.104",
         "@types/md5": "^2.1.32",
         "@types/mocha": "^5.2.6",
         "@types/node": "9.4.7",
+        "@types/node-fetch": "^2.3.4",
+        "@types/pdfkit": "^0.7.36",
         "@types/promisify-node": "^0.4.0",
         "@types/react": "^16.4.14",
         "@types/react-dom": "^16.0.8",
         "@types/react-json-tree": "^0.6.8",
+        "@types/react-virtualized": "^9.21.2",
         "@types/request": "^2.47.0",
         "@types/semver": "^5.5.0",
         "@types/shortid": "^0.0.29",
-        "@types/sinon": "^4.3.0",
+        "@types/sinon": "^4.3.3",
         "@types/slickgrid": "^2.1.27",
         "@types/stack-trace": "0.0.29",
         "@types/strip-json-comments": "0.0.30",
@@ -2292,6 +2307,7 @@
         "@types/uuid": "^3.4.3",
         "@types/webpack-bundle-analyzer": "^2.13.0",
         "@types/winreg": "^1.2.30",
+        "@types/ws": "^6.0.1",
         "@types/xml2js": "^0.4.2",
         "JSONStream": "^1.3.2",
         "ansi-to-html": "^0.6.7",
@@ -2302,11 +2318,11 @@
         "babel-polyfill": "^6.26.0",
         "bootstrap": "^4.3.1",
         "bootstrap-less": "^3.3.8",
+        "brfs": "^2.0.2",
         "canvas": "2.0.1",
         "chai": "^4.1.2",
         "chai-arrays": "^2.0.0",
         "chai-as-promised": "^7.1.1",
-        "codecov": "^3.0.0",
         "colors": "^1.2.1",
         "copy-webpack-plugin": "^4.6.0",
         "cross-spawn": "^6.0.5",
@@ -2323,8 +2339,6 @@
         "gulp": "^4.0.0",
         "gulp-azure-storage": "^0.9.0",
         "gulp-filter": "^5.1.0",
-        "gulp-inline-source": "^4.0.0",
-        "gulp-json-editor": "^2.2.2",
         "gulp-rename": "^1.4.0",
         "gulp-sourcemaps": "^2.6.4",
         "gulp-typescript": "^4.0.1",
@@ -2332,7 +2346,6 @@
         "husky": "^1.1.2",
         "immutable": "^4.0.0-rc.12",
         "is-running": "^2.1.0",
-        "istanbul": "^0.4.5",
         "jsdom": "^15.0.0",
         "json-loader": "^0.5.7",
         "less": "^3.9.0",
@@ -2345,7 +2358,7 @@
         "monaco-editor-webpack-plugin": "^1.7.0",
         "node-has-native-dependencies": "^1.0.2",
         "node-html-parser": "^1.1.13",
-        "nyc": "^14.1.0",
+        "nyc": "^14.1.1",
         "raw-loader": "^0.5.1",
         "react": "^16.5.2",
         "react-data-grid": "^6.0.2-0",
@@ -2354,31 +2367,34 @@
         "react-dom": "^16.5.2",
         "react-json-tree": "^0.11.0",
         "relative": "^3.0.2",
-        "remap-istanbul": "^0.10.1",
         "retyped-diff-match-patch-tsd-ambient": "^1.0.0-0",
         "rewiremock": "^3.13.0",
         "sass-loader": "^7.1.0",
         "shortid": "^2.2.8",
+        "sinon": "^7.3.2",
+        "source-map-support": "^0.5.12",
         "style-loader": "^0.23.1",
         "styled-jsx": "^3.1.0",
         "svg-inline-loader": "^0.8.0",
         "svg-inline-react": "^3.1.0",
         "terser-webpack-plugin": "^1.2.3",
+        "transform-loader": "^0.2.4",
         "ts-loader": "^5.3.0",
         "ts-mockito": "^2.3.1",
+        "ts-node": "^8.3.0",
         "tsconfig-paths-webpack-plugin": "^3.2.0",
         "tslint-eslint-rules": "^5.1.0",
         "tslint-microsoft-contrib": "^5.0.3",
         "typed-react-markdown": "^0.1.0",
         "typemoq": "^2.1.0",
-        "typescript": "^3.4.3",
+        "typescript": "^3.5.2",
         "typescript-formatter": "^7.1.0",
         "url-loader": "^1.1.2",
         "uuid": "^3.3.2",
         "vsce": "^1.59.0",
         "vscode": "^1.1.33",
         "vscode-debugadapter-testsupport": "^1.27.0",
-        "webpack": "^4.20.2",
+        "webpack": "^4.33.0",
         "webpack-bundle-analyzer": "^3.3.2",
         "webpack-cli": "^3.1.2",
         "webpack-fix-default-import-plugin": "^1.0.3",

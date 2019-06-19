@@ -16,6 +16,7 @@ interface IVariableExplorerCellFormatterProps {
     cellStyle: CellStyle;
     // value gets populated by the default cell formatter props
     value?: string | number | object | boolean;
+    role?: string;
 }
 
 // Our formatter for cells in the variable explorer. Allow for different styles per column type
@@ -27,7 +28,7 @@ export class VariableExplorerCellFormatter extends React.Component<IVariableExpl
     public render() {
         const className = `react-grid-variable-explorer-cell-${this.props.cellStyle.toString()}`;
         if (this.props.value !== null && this.props.value !== undefined) {
-            return(<div className={className} title={this.props.value.toString()}>{this.props.value}</div>);
+            return(<div className={className} role={this.props.role ? this.props.role : 'cell'} title={this.props.value.toString()}>{this.props.value}</div>);
         }
         return [];
     }

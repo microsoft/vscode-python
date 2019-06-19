@@ -10,38 +10,16 @@ import { ITerminalManager, IWorkspaceService } from '../application/types';
 import '../extensions';
 import { traceDecorators, traceError } from '../logger';
 import { IPlatformService } from '../platform/types';
-import { IConfigurationService, Resource } from '../types';
+import { IConfigurationService, ICurrentProcess, Resource } from '../types';
 import { OSType } from '../utils/platform';
+import { ShellDetector } from './shellDetector';
 import { ITerminalActivationCommandProvider, ITerminalHelper, TerminalActivationProviders, TerminalShellType } from './types';
-
-// Types of shells can be found here:
-// 1. https://wiki.ubuntu.com/ChangingShells
-const IS_GITBASH = /(gitbash.exe$)/i;
-const IS_BASH = /(bash.exe$|bash$)/i;
-const IS_WSL = /(wsl.exe$)/i;
-const IS_ZSH = /(zsh$)/i;
-const IS_KSH = /(ksh$)/i;
-const IS_COMMAND = /cmd.exe$/i;
-const IS_POWERSHELL = /(powershell.exe$|powershell$)/i;
-const IS_POWERSHELL_CORE = /(pwsh.exe$|pwsh$)/i;
-const IS_FISH = /(fish$)/i;
-const IS_CSHELL = /(csh$)/i;
-const IS_TCSHELL = /(tcsh$)/i;
-const IS_XONSH = /(xonsh$)/i;
-
-const defaultOSShells = {
-    [OSType.Linux]: TerminalShellType.bash,
-    [OSType.OSX]: TerminalShellType.bash,
-    [OSType.Windows]: TerminalShellType.commandPrompt,
-    [OSType.Unknown]: undefined
-};
 
 @injectable()
 export class TerminalHelper implements ITerminalHelper {
-    private readonly detectableShells: Map<TerminalShellType, RegExp>;
+    private readonly shellDetector: ShellDetector;
     constructor(@inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(ITerminalManager) private readonly terminalManager: ITerminalManager,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(ICondaService) private readonly condaService: ICondaService,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
@@ -49,56 +27,20 @@ export class TerminalHelper implements ITerminalHelper {
         @inject(ITerminalActivationCommandProvider) @named(TerminalActivationProviders.bashCShellFish) private readonly bashCShellFish: ITerminalActivationCommandProvider,
         @inject(ITerminalActivationCommandProvider) @named(TerminalActivationProviders.commandPromptAndPowerShell) private readonly commandPromptAndPowerShell: ITerminalActivationCommandProvider,
         @inject(ITerminalActivationCommandProvider) @named(TerminalActivationProviders.pyenv) private readonly pyenv: ITerminalActivationCommandProvider,
-        @inject(ITerminalActivationCommandProvider) @named(TerminalActivationProviders.pipenv) private readonly pipenv: ITerminalActivationCommandProvider
+        @inject(ITerminalActivationCommandProvider) @named(TerminalActivationProviders.pipenv) private readonly pipenv: ITerminalActivationCommandProvider,
+        @inject(ICurrentProcess) private readonly currentProcess: ICurrentProcess,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {
-        this.detectableShells = new Map<TerminalShellType, RegExp>();
-        this.detectableShells.set(TerminalShellType.powershell, IS_POWERSHELL);
-        this.detectableShells.set(TerminalShellType.gitbash, IS_GITBASH);
-        this.detectableShells.set(TerminalShellType.bash, IS_BASH);
-        this.detectableShells.set(TerminalShellType.wsl, IS_WSL);
-        this.detectableShells.set(TerminalShellType.zsh, IS_ZSH);
-        this.detectableShells.set(TerminalShellType.ksh, IS_KSH);
-        this.detectableShells.set(TerminalShellType.commandPrompt, IS_COMMAND);
-        this.detectableShells.set(TerminalShellType.fish, IS_FISH);
-        this.detectableShells.set(TerminalShellType.tcshell, IS_TCSHELL);
-        this.detectableShells.set(TerminalShellType.cshell, IS_CSHELL);
-        this.detectableShells.set(TerminalShellType.powershellCore, IS_POWERSHELL_CORE);
-        this.detectableShells.set(TerminalShellType.xonsh, IS_XONSH);
+        this.shellDetector = new ShellDetector(this.platform, this.currentProcess, this.workspace);
+
     }
     public createTerminal(title?: string): Terminal {
         return this.terminalManager.createTerminal({ name: title });
     }
-    public identifyTerminalShell(shellPath: string): TerminalShellType {
-        return Array.from(this.detectableShells.keys())
-            .reduce((matchedShell, shellToDetect) => {
-                if (matchedShell === TerminalShellType.other && this.detectableShells.get(shellToDetect)!.test(shellPath)) {
-                    return shellToDetect;
-                }
-                return matchedShell;
-            }, TerminalShellType.other);
+    public identifyTerminalShell(terminal?: Terminal): TerminalShellType {
+        return this.shellDetector.identifyTerminalShell(terminal);
     }
-    public getTerminalShellPath(): string {
-        const shellConfig = this.workspace.getConfiguration('terminal.integrated.shell');
-        let osSection = '';
-        switch (this.platform.osType) {
-            case OSType.Windows: {
-                osSection = 'windows';
-                break;
-            }
-            case OSType.OSX: {
-                osSection = 'osx';
-                break;
-            }
-            case OSType.Linux: {
-                osSection = 'linux';
-                break;
-            }
-            default: {
-                return '';
-            }
-        }
-        return shellConfig.get<string>(osSection)!;
-    }
+
     public buildCommandForTerminal(terminalShellType: TerminalShellType, command: string, args: string[]) {
         const isPowershell = terminalShellType === TerminalShellType.powershell || terminalShellType === TerminalShellType.powershellCore;
         const commandPrefix = isPowershell ? '& ' : '';
@@ -110,9 +52,8 @@ export class TerminalHelper implements ITerminalHelper {
         this.sendTelemetry(resource, terminalShellType, EventName.PYTHON_INTERPRETER_ACTIVATION_FOR_TERMINAL, promise).ignoreErrors();
         return promise;
     }
-    public async getEnvironmentActivationShellCommands(resource: Resource, interpreter?: PythonInterpreter): Promise<string[] | undefined> {
-        const shell = defaultOSShells[this.platform.osType];
-        if (!shell) {
+    public async getEnvironmentActivationShellCommands(resource: Resource, shell: TerminalShellType, interpreter?: PythonInterpreter): Promise<string[] | undefined> {
+        if (this.platform.osType === OSType.Unknown) {
             return;
         }
         const providers = [this.bashCShellFish, this.commandPromptAndPowerShell];

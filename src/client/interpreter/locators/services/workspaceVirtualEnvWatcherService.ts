@@ -20,13 +20,15 @@ const timeToPollForEnvCreation = 2_000;
 @injectable()
 export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, Disposable {
     private readonly didCreate: EventEmitter<Resource>;
-    private timers = new Map<string, { timer: NodeJS.Timer; counter: number }>();
+    private timers = new Map<string, { timer: NodeJS.Timer | number; counter: number }>();
     private fsWatchers: FileSystemWatcher[] = [];
     private resource: Resource;
-    constructor(@inject(IDisposableRegistry) private readonly disposableRegistry: Disposable[],
+    constructor(
+        @inject(IDisposableRegistry) private readonly disposableRegistry: Disposable[],
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
-        @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory) {
+        @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory
+    ) {
         this.didCreate = new EventEmitter<Resource>();
         disposableRegistry.push(this);
     }
@@ -73,7 +75,7 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, D
             }
             return this.timers.delete(pythonPath);
         }
-        if (counter > (maxTimeToWaitForEnvCreation / timeToPollForEnvCreation)) {
+        if (counter > maxTimeToWaitForEnvCreation / timeToPollForEnvCreation) {
             // Send notification before we give up trying.
             this.didCreate.fire(this.resource);
             this.timers.delete(pythonPath);
@@ -84,7 +86,8 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, D
         this.timers.set(pythonPath, { timer, counter });
     }
     private clearTimers() {
-        this.timers.forEach(item => clearTimeout(item.timer));
+        // tslint:disable-next-line: no-any
+        this.timers.forEach(item => clearTimeout(item.timer as any));
         this.timers.clear();
     }
     private async isValidExecutable(pythonPath: string): Promise<boolean> {

@@ -3,7 +3,6 @@
 
 'use strict';
 
-import { Request as RequestResult } from 'request';
 import { SemVer } from 'semver';
 import { Event } from 'vscode';
 import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
@@ -37,12 +36,6 @@ export enum LanguageServerActivator {
 export const ILanguageServerActivator = Symbol('ILanguageServerActivator');
 export interface ILanguageServerActivator extends IDisposable {
     activate(resource: Resource): Promise<void>;
-}
-
-export const IHttpClient = Symbol('IHttpClient');
-export interface IHttpClient {
-    downloadFile(uri: string): Promise<RequestResult>;
-    getJSON<T>(uri: string): Promise<T>;
 }
 
 export type FolderVersionPair = { path: string; version: SemVer };
