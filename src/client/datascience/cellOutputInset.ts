@@ -15,6 +15,7 @@ export class CellOutputInset {
 
     private inset: WebviewEditorInset;
     private themeIsDarkPromise: Deferred<boolean>;
+    private heightInLines: number = 0;
 
     constructor(
         private line: number,
@@ -29,9 +30,12 @@ export class CellOutputInset {
     }
 
     public showCellOutput(cell: ICell) {
-        this.inset.dispose();
         const numLines = computeSizeInLines(cell);
-        this.inset = this.createInset(numLines, cell);
+        if (numLines !== this.heightInLines) {
+            this.heightInLines = numLines;
+            this.inset.dispose();
+            this.inset = this.createInset(numLines, cell);
+        }
     }
 
     // tslint:disable-next-line: no-any

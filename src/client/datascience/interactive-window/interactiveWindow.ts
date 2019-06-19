@@ -696,6 +696,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
     }
 
     private async submitCode(code: string, file: string, line: number, id?: string, editor?: TextEditor): Promise<void> {
+        console.log(`*** submitCode ${line}`);
         this.logger.logInformation(`Submitting code for ${this.id}`);
 
         // Start a status item
@@ -750,7 +751,6 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
                 if (inlineResults && !this.codeInsetPerLine.has(line)) {
                     const lines = code.split('\n');
                     const numLines = lines.length - 1 - (lines[lines.length - 1].length ? 0 : 1); // don't consider a final blank line
-                    // const range = new Range(new Position(line, 0), new Position(line + numLines, 0));
                     this.codeInsetPerLine.set(line,
                         new CellOutputInset(line + numLines, editor!, this.cssGenerator, this.themeFinder, this.workspaceService));
                 }
@@ -805,7 +805,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
             switch (cell.state) {
                 case CellState.init:
                     // Tell the react controls we have a new cell
-                    this.postMessage(InteractiveWindowMessages.StartCell, cell).ignoreErrors();
+                    this.broadcastMessage(InteractiveWindowMessages.StartCell, cell);
 
                     // Keep track of this unfinished cell so if we restart we can finish right away.
                     this.unfinishedCells.push(cell);
@@ -813,7 +813,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
 
                 case CellState.executing:
                     // Tell the react controls we have an update
-                    this.postMessage(InteractiveWindowMessages.UpdateCell, cell).ignoreErrors();
+                    this.broadcastMessage(InteractiveWindowMessages.UpdateCell, cell);
                     break;
 
                 case CellState.error:
@@ -823,7 +823,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
                         inset.showCellOutput(cell);
                     }
                     // Tell the react controls we're done
-                    this.postMessage(InteractiveWindowMessages.FinishCell, cell).ignoreErrors();
+                    this.broadcastMessage(InteractiveWindowMessages.FinishCell, cell);
 
                     // Remove from the list of unfinished cells
                     this.unfinishedCells = this.unfinishedCells.filter(c => c.id !== cell.id);
@@ -842,6 +842,16 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
                     editBuilder.insert(new Position(cells[1].line, 0), '#%%\n');
                 });
             }
+        }
+    }
+
+    // post message to panel and relevant inset
+    private broadcastMessage(type: keyof IInteractiveWindowMapping, cell: ICell) {
+        this.postMessage(type, cell).ignoreErrors();
+
+        const inset = this.codeInsetPerLine.get(cell.line);
+        if (inset) {
+            inset.postMessage(type.toString(), cell);
         }
     }
 

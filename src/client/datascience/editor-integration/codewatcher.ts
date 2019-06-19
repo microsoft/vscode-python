@@ -251,6 +251,7 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     private async runMatchingCell(range: Range, advance?: boolean) {
+        console.log(`*** runMathcingCell ${range.start.line}:${range.start.character}-${range.end.line}:${range.end.character}`);
         const currentRunCellLens = this.getCurrentCellLens(range.start);
         const nextRunCellLens = this.getNextCellLens(range.start);
 
@@ -277,7 +278,7 @@ export class CodeWatcher implements ICodeWatcher {
 
                 try {
                     const activeInteractiveWindow = await this.interactiveWindowProvider.getOrCreateActive();
-                    await activeInteractiveWindow.addCode(code, this.getFileName(), range.start.line, this.documentManager.activeTextEditor);
+                    await activeInteractiveWindow.addCode(code, this.getFileName(), currentRunCellLens.range.start.line, this.documentManager.activeTextEditor);
                 } catch (err) {
                     this.handleError(err);
                 }

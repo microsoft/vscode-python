@@ -74,6 +74,7 @@ export class CellResult extends React.Component<ICellResultProps, ICellResultSta
     // tslint:disable-next-line: no-any
     public handleMessage = (msg: string, payload?: any) => {
         const cell = payload as ICell;
+        console.log(`**MSG** ${msg}`);
         switch (msg) {
             case InteractiveWindowMessages.StartCell:
             case InteractiveWindowMessages.FinishCell:
