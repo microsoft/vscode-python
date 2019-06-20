@@ -380,7 +380,7 @@ Microsoft Python extension for Visual Studio Code incorporates third party mater
 373. underscore 1.8.3 (https://registry.npmjs.org/underscore/-/underscore-1.8.3.tgz)
 374. unherit 1.1.1 (https://registry.npmjs.org/unherit/-/unherit-1.1.1.tgz)
 375. unicode 10.0.0 (https://registry.npmjs.org/unicode/-/unicode-10.0.0.tgz)
-376. unicode-properties 1.2.2 (https://registry.npmjs.org/unicode-properties/-/unicode-properties-1.2.2.tgz)
+376. unicode-properties 1.1.0 (https://registry.npmjs.org/unicode-properties/-/unicode-properties-1.1.0.tgz)
 377. unicode-trie 0.3.1 (https://registry.npmjs.org/unicode-trie/-/unicode-trie-0.3.1.tgz)
 378. unified 6.2.0 (https://registry.npmjs.org/unified/-/unified-6.2.0.tgz)
 379. uniqid 5.0.3 (https://registry.npmjs.org/uniqid/-/uniqid-5.0.3.tgz)
@@ -12168,7 +12168,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 =========================================
 END OF unicode NOTICES AND INFORMATION
 
-%% unicode-properties 1.2.2 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/unicode-properties/-/unicode-properties-1.2.2.tgz)
+%% unicode-properties 1.1.0 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/unicode-properties/-/unicode-properties-1.1.0.tgz)
 =========================================
 Copyright 2018
 
@@ -12177,7 +12177,6 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 
 =========================================
 END OF unicode-properties NOTICES AND INFORMATION
