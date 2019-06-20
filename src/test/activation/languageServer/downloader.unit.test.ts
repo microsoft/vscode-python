@@ -177,14 +177,6 @@ suite('Activation - Downloader', () => {
                 instance(fs), instance(workspaceService));
         });
 
-        test('Log downloading message', async () => {
-            const downloadedFile = 'This is the downloaded file';
-            when(fileDownloader.downloadFile(anything(), anything())).thenResolve(downloadedFile);
-
-            await lsDownloader.downloadFile(downloadUri, downloadTitle);
-
-            verify(outputChannel.append(`Downloading ${downloadUri}... `)).once();
-        });
         test('Downloaded file name must be returned from file downloader and right args passed', async () => {
             const downloadedFile = 'This is the downloaded file';
             when(fileDownloader.downloadFile(anything(), anything())).thenResolve(downloadedFile);

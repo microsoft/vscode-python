@@ -107,7 +107,6 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
         this.output.show(true);
     }
     public async downloadFile(uri: string, title: string): Promise<string> {
-        this.output.append(`Downloading ${uri}... `);
         const downloadOptions = {
             extension: downloadFileExtension,
             outputChannel: this.output,
