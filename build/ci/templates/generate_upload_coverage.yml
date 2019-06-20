@@ -19,4 +19,7 @@ steps:
       displayName: 'Upload coverage to coveralls'
       condition: contains(variables['TestsToRun'], 'testUnitTests')
       failOnStderr: false
-
+      env:
+          COVERALLS_SERVICE_JOB_ID: $(Build.BuildId)
+          COVERALLS_REPO_TOKEN: $(COVERALLS_REPO_TOKEN)
+          COVERALLS_SERVICE_NAME: $(COVERALLS_SERVICE_NAME)
