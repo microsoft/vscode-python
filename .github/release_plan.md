@@ -46,7 +46,7 @@
    - [ ] Create a pull request against `master`
    - [ ] Merge pull request into `master`
 - [ ] Announce the code freeze is over
-- [ ] Update [Component Governance](https://dev.azure.com/ms/vscode-python/)
+- [ ] Update [Component Governance](https://dev.azure.com/ms/vscode-python/_componentGovernance) (Click on "microsoft/vscode-python" on that page)
   - [ ] Provide details for any automatically detected npm dependencies
   - [ ] Manually add any repository dependencies
 - [ ] GDPR bookkeeping (@brettcannon)
