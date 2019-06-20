@@ -23,7 +23,7 @@ import { createDeferred, createDeferredFromPromise } from '../../client/common/u
 import { sleep } from '../common';
 
 // tslint:disable-next-line: max-func-body-length
-suite('xA/B experiments', () => {
+suite('A/B experiments', () => {
     let workspaceService: IWorkspaceService;
     let httpClient: IHttpClient;
     let crypto: ICryptoUtils;
@@ -119,7 +119,7 @@ suite('xA/B experiments', () => {
         isDownloadedStorageValid.setup(n => n.updateValue(true)).returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.never());
         downloadedExperimentsStorage.setup(n => n.updateValue(anything())).returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.never());
 
-        // settings = {}, downloadError = true
+        // downloadError = true
         await testInitialization(true);
 
         verify(httpClient.getJSON(configUri, false)).once();
