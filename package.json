@@ -2390,6 +2390,7 @@
         "typemoq": "^2.1.0",
         "typescript": "^3.5.2",
         "typescript-formatter": "^7.1.0",
+        "unicode-properties": "1.1.0",
         "url-loader": "^1.1.2",
         "uuid": "^3.3.2",
         "vsce": "^1.59.0",
