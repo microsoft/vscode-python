@@ -1,7 +1,6 @@
 steps:
     # Generate the coverage reports.
-    - bash: |
-        npm run test:cover:report
+    - bash: npm run test:cover:report
       displayName: 'run test:cover:report'
       condition: contains(variables['TestsToRun'], 'testUnitTests')
       failOnStderr: false
@@ -15,3 +14,9 @@ steps:
         codeCoverageTool: 'cobertura'
         summaryFileLocation: "$(System.DefaultWorkingDirectory)/coverage/cobertura-coverage.xml"
         reportDirectory: "$(System.DefaultWorkingDirectory)/coverage"
+
+    - bash: cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
+      displayName: 'Upload coverage to coveralls'
+      condition: contains(variables['TestsToRun'], 'testUnitTests')
+      failOnStderr: false
+
