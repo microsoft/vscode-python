@@ -78,7 +78,7 @@ export class ExperimentsManager implements IExperimentsManager {
 
     @swallowExceptions('Failed to activate experiments')
     public async activate(): Promise<void> {
-        if (this.activatedOnce) {
+        if (this.activatedOnce || isTelemetryDisabled(this.workspaceService)) {
             return;
         }
         this.activatedOnce = true;
@@ -123,13 +123,11 @@ export class ExperimentsManager implements IExperimentsManager {
     }
 
     /**
-     * Downloads experiments and updates storage given following conditions are met
-     * * Telemetry is not disabled
-     * * Previously downloaded experiments are no longer valid
+     * Downloads experiments and updates storage given previously downloaded experiments are no longer valid
      */
     @traceDecorators.error('Failed to initialize experiments')
     public async initializeInBackground() {
-        if (isTelemetryDisabled(this.workspaceService) || this.isDownloadedStorageValid.value) {
+        if (this.isDownloadedStorageValid.value) {
             return;
         }
         const downloadedExperiments = await this.httpClient.getJSON<ABExperiments>(configUri, false);
