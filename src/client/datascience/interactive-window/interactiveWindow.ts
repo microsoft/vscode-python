@@ -1169,6 +1169,8 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
                     } else if (value === closeOption) {
                         sendTelemetryEvent(Telemetry.SelfCertsMessageClose);
                     }
+                    // Don't leave our Interactive Window open in a non-connected state
+                    this.dispose();
                 });
                 throw e;
             } else {

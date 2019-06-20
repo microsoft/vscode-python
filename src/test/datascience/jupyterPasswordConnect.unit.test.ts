@@ -57,7 +57,7 @@ suite('JupyterPasswordConnect', () => {
         }))).returns(() => Promise.resolve(mockSessionResponse.object)).verifiable(typemoq.Times.once());
 
         //tslint:disable-next-line:no-http-string
-        const result = await jupyterPasswordConnect.getPasswordConnectionInfo('http://TESTNAME:8888/', fetchMock.object);
+        const result = await jupyterPasswordConnect.getPasswordConnectionInfo('http://TESTNAME:8888/', false, fetchMock.object);
         assert(result, 'Failed to get password');
         if (result) {
             assert(result.xsrfCookie === xsrfValue, 'Incorrect xsrf value');
@@ -93,7 +93,7 @@ suite('JupyterPasswordConnect', () => {
         })).returns(() => Promise.resolve(mockXsrfResponse.object)).verifiable(typemoq.Times.once());
 
         //tslint:disable-next-line:no-http-string
-        const result = await jupyterPasswordConnect.getPasswordConnectionInfo('http://TESTNAME:8888/', fetchMock.object);
+        const result = await jupyterPasswordConnect.getPasswordConnectionInfo('http://TESTNAME:8888/', false, fetchMock.object);
         assert(!result);
 
         // Verfiy calls

@@ -210,7 +210,7 @@ export class JupyterSession implements IJupyterSession {
         // If no token is specified prompt for a password
         if (connInfo.token === '' || connInfo.token === 'null') {
             serverSettings = {...serverSettings, token: ''};
-            const pwSettings = await this.jupyterPasswordConnect.getPasswordConnectionInfo(connInfo.baseUrl);
+            const pwSettings = await this.jupyterPasswordConnect.getPasswordConnectionInfo(connInfo.baseUrl, connInfo.allowUnauthorized ? true : false);
             if (pwSettings) {
                 cookieString = this.getSessionCookieString(pwSettings);
                 const requestHeaders = { Cookie: cookieString, 'X-XSRFToken': pwSettings.xsrfCookie };
