@@ -547,13 +547,10 @@ steps:
     env:
       DISPLAY: :10
 
-  - task: Npm@1
+  - bash: npm run testSmoke
     displayName: 'Run Smoke Tests'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testSmoke'))
-    inputs:
-        command: custom
-        verbose: true
-        customCommand: "run testSmoke"
+    failOnStderr: true
     env:
       DISPLAY: :10
 
