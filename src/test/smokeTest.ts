@@ -62,7 +62,7 @@ class TestRunner {
     }
 }
 
-new TestRunner().start().catch(ex => {
+new TestRunner().start().then(ex => {
     console.error('Error in running Smoke Tests', ex);
     process.exit(1);
 });
