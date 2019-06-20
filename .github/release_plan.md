@@ -49,8 +49,11 @@
 - [ ] Update [Component Governance](https://dev.azure.com/ms/vscode-python/)
   - [ ] Provide details for any automatically detected npm dependencies
   - [ ] Manually add any repository dependencies
-- [ ] GDPR bookkeeping
+- [ ] GDPR bookkeeping (@brettcannon)
 - [ ] Open appropriate [documentation issues](https://github.com/microsoft/vscode-docs/issues?q=is%3Aissue+is%3Aopen+label%3Apython)
+   + new features
+   + settings changes
+   + etc. (ask the team)
 - [ ] Begin drafting a [blog](http://aka.ms/pythonblog) post
 - [ ] Ask CTI to test the release candidate
 
