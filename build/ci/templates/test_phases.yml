@@ -542,17 +542,18 @@ steps:
       npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID
       npm run package
       npx gulp clean:cleanExceptTests
-    displayName: 'Build for Smoke Tests'
+      npm run testSmoke
+    displayName: 'Run Smoke Tests'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testSmoke'))
     env:
       DISPLAY: :10
 
-  - bash: npm run testSmoke
-    displayName: 'Run Smoke Tests'
-    condition: and(succeeded(), contains(variables['TestsToRun'], 'testSmoke'))
-    failOnStderr: true
-    env:
-      DISPLAY: :10
+  # - bash: npm run testSmoke
+  #   displayName: 'Run Smoke Tests'
+  #   condition: and(succeeded(), contains(variables['TestsToRun'], 'testSmoke'))
+  #   failOnStderr: true
+  #   env:
+  #     DISPLAY: :10
 
   - task: PublishBuildArtifacts@1
     inputs:

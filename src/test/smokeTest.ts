@@ -62,4 +62,7 @@ class TestRunner {
     }
 }
 
-new TestRunner().start().catch(ex => console.error('Error in running Smoke Tests', ex));
+new TestRunner().start().catch(ex => {
+    console.error('Error in running Smoke Tests', ex);
+    process.exit(1); 
+});
