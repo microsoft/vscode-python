@@ -187,9 +187,9 @@ We deleted all the code to fix all the things. ;)
 
 def test_complete_news():
     version = "2019.3.0"
-    date = datetime.date.today().strftime("%d %b %Y")
+    date = datetime.date.today().strftime("%d %B %Y")
     news = ann.complete_news(version, NEW_NEWS, f"{TITLE}\n\n\n{OLD_NEWS}")
-    expected = f"{TITLE}\n\n\n## {version} ({date})\n\n{NEW_NEWS.strip()}\n\n\n{OLD_NEWS.strip()}"
+    expected = f"{TITLE}\n\n## {version} ({date})\n\n{NEW_NEWS.strip()}\n\n\n{OLD_NEWS.strip()}"
     assert news == expected
 
 
