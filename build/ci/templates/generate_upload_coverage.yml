@@ -23,3 +23,6 @@ steps:
           COVERALLS_SERVICE_JOB_ID: $(Build.BuildId)
           COVERALLS_REPO_TOKEN: $(COVERALLS_REPO_TOKEN)
           COVERALLS_SERVICE_NAME: $(COVERALLS_SERVICE_NAME)
+          COVERALLS_GIT_COMMIT: $(Build.SourceVersion)
+          COVERALLS_GIT_BRANCH: $(Build.SourceBranch)
+          CI_PULL_REQUEST: $(System.PullRequest.PullRequestNumber)
