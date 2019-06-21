@@ -67,7 +67,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
     }
 
     // For HTTPS connections respect our allowUnauthorized setting by adding in an agent to enable that on the request
-    private allowUnauthorized(url: string, allowUnauthorized: boolean, options: nodeFetch.RequestInit): nodeFetch.RequestInit {
+    private addAllowUnauthorized(url: string, allowUnauthorized: boolean, options: nodeFetch.RequestInit): nodeFetch.RequestInit {
         if (url.startsWith('https') && allowUnauthorized) {
             const requestAgent = new HttpsAgent({rejectUnauthorized: false});
             return {...options, agent: requestAgent};
@@ -88,7 +88,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
     private async getXSRFToken(url: string, allowUnauthorized: boolean, fetchFunction: (url: nodeFetch.RequestInfo, init?: nodeFetch.RequestInit) => Promise<nodeFetch.Response>): Promise<string | undefined> {
         let xsrfCookie: string | undefined;
 
-        const response = await fetchFunction(`${url}login?`, this.allowUnauthorized(url, allowUnauthorized, {
+        const response = await fetchFunction(`${url}login?`, this.addAllowUnauthorized(url, allowUnauthorized, {
             method: 'get',
             redirect: 'manual',
             headers: { Connection: 'keep-alive' }
@@ -120,7 +120,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         postParams.append('_xsrf', xsrfCookie);
         postParams.append('password', password);
 
-        const response = await fetchFunction(`${url}login?`, this.allowUnauthorized(url, allowUnauthorized, {
+        const response = await fetchFunction(`${url}login?`, this.addAllowUnauthorized(url, allowUnauthorized, {
             method: 'post',
             headers: { Cookie: `_xsrf=${xsrfCookie}`, Connection: 'keep-alive', 'content-type': 'application/x-www-form-urlencoded;charset=UTF-8' },
             body: postParams.toString(),
