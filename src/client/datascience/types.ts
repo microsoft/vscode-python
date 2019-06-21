@@ -16,10 +16,15 @@ import {
     TextEditor
 } from 'vscode';
 
+import { INotebookModel } from '@jupyterlab/notebook/lib/model';
 import { ICommandManager } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
 import { IAsyncDisposable, IDataScienceSettings, IDisposable } from '../common/types';
 import { PythonInterpreter } from '../interpreter/contracts';
+import { ExecutionLogSlicer, SlicedExecution } from './gather/analysis/slice/log-slicer';
+import { CellProgram } from './gather/analysis/slice/program-builder';
+import { CellOutput, DefSelection, EditorDef, GatherEventData, GatherModelEvent, GatherState, IGatherObserver, OutputSelection, SliceSelection } from './gather/model';
+import { IGatherCell } from './gather/model/cell';
 
 // Main interface
 export const IDataScience = Symbol('IDataScience');
@@ -235,6 +240,52 @@ export interface ICodeWatcher {
     runCellAndAllBelow(startLine: number, startCharacter: number): Promise<void>;
     runFileInteractive(): Promise<void>;
     addEmptyCellToBottom(): Promise<void>;
+}
+
+export const IGatherModel = Symbol('IGatherModel');
+export interface IGatherModel {
+    state: GatherState;
+    lastExecutedCell: IGatherCell;
+    lastDeletedCell: IGatherCell;
+    lastEditedCell: IGatherCell;
+    executionLog: ExecutionLogSlicer;
+    editorDefs: ReadonlyArray<EditorDef>;
+    outputs: ReadonlyArray<CellOutput>;
+    selectedDefs: ReadonlyArray<DefSelection>;
+    selectedOutputs: ReadonlyArray<OutputSelection>;
+    selectedSlices: ReadonlyArray<SliceSelection>;
+    addObserver(observer: IGatherObserver) : void;
+    notifyObservers(property: GatherModelEvent, eventData?: GatherEventData): void;
+    getCellProgram(cell: IGatherCell): CellProgram;
+    requestStateChange(state: GatherState): void;
+    addEditorDef(def: EditorDef): void;
+    removeEditorDefsForCell(cellExecutionEventId: string): void;
+    clearEditorDefs(): void;
+    addOutput(output: CellOutput): void;
+    clearOutputs(): void;
+    selectSlice(slice: SliceSelection): void;
+    deselectSlice(slice: SliceSelection): void;
+    deselectAllDefs(): void;
+    isDefSelected(def: DefSelection): boolean;
+    addSelectedDefSlices(defSelection: DefSelection, ...slices: SlicedExecution[]): void;
+    getSelectedDefSlices(defSelection: DefSelection): SlicedExecution[];
+    removeSelectedDefSlices(defSelection: DefSelection): void;
+    deselectOutput(output: OutputSelection): void;
+    deselectOutputsForCell(cellExecutionEventId: string): void;
+    deselectAllOutputs(): void;
+    deselectAll(): void;
+    addSelectedOutputSlices(outputSelection: OutputSelection, ...slices: SlicedExecution[]): void;
+    getSelectedOutputSlices(outputSelection: OutputSelection): SlicedExecution[];
+    removeSelectedOutputSlices(outputSelection: OutputSelection): void;
+    addChosenSlices(...slices: SlicedExecution[]): void;
+    resetChosenSlices(): void;
+}
+
+export const IGatherModelRegistry = Symbol('IGatherModelRegistry');
+export interface IGatherModelRegistry {
+    addGatherModel(notebookModel: INotebookModel, gatherModel: IGatherModel): boolean;
+    getGatherModel(notebookModel: INotebookModel): IGatherModel | null;
+
 }
 
 export enum CellState {

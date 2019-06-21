@@ -33,6 +33,9 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { CellMatcher } from '../cellMatcher';
 import { EditorContexts, Identifiers, Telemetry } from '../constants';
 import { ColumnWarningSize } from '../data-viewing/types';
+import { DataflowAnalyzer } from '../gather/analysis/slice/data-flow';
+import { ExecutionLogSlicer } from '../gather/analysis/slice/log-slicer';
+import { SliceConfiguration } from '../gather/analysis/slice/slice-config';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import { JupyterKernelPromiseFailedError } from '../jupyter/jupyterKernelPromiseFailedError';
 import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
@@ -43,6 +46,7 @@ import {
     ICodeCssGenerator,
     IConnection,
     IDataViewerProvider,
+    IGatherModel,
     IInteractiveWindow,
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
@@ -93,6 +97,10 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
     private jupyterServer: INotebookServer | undefined;
     private id : string;
     private executeEvent: EventEmitter<string> = new EventEmitter<string>();
+    private _sliceConfiguration: SliceConfiguration;
+    private executionLog: ExecutionLogSlicer = new ExecutionLogSlicer(
+        new DataflowAnalyzer(this._sliceConfiguration)
+    );
 
     constructor(
         @multiInject(IInteractiveWindowListener) private readonly listeners: IInteractiveWindowListener[],
@@ -115,7 +123,8 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(IDataViewerProvider) private dataExplorerProvider: IDataViewerProvider,
         @inject(IJupyterVariables) private jupyterVariables: IJupyterVariables,
-        @inject(INotebookImporter) private jupyterImporter: INotebookImporter
+        @inject(INotebookImporter) private jupyterImporter: INotebookImporter,
+        @inject(IGatherModel) private gatherModel: IGatherModel
         ) {
         super(
             configuration,
@@ -150,6 +159,8 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
 
         // For each listener sign up for their post events
         this.listeners.forEach(l => l.postMessage((e) => this.postMessageInternal(e.message, e.payload)));
+
+        // Set this._sliceConfiguration
     }
 
     public get ready() : Promise<void> {
@@ -272,6 +283,10 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
 
             case InteractiveWindowMessages.LoadOnigasmAssemblyRequest:
                 this.dispatchMessage(message, payload, this.requestOnigasm);
+                break;
+
+            case InteractiveWindowMessages.GatherScript:
+                this.dispatchMessage(message, payload, this.gatherScript);
                 break;
 
             default:
@@ -767,6 +782,8 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
                 // Wait for the cell to finish
                 await finishedAddingCode.promise;
                 traceInfo(`Finished execution for ${id}`);
+
+                // GATHERTODO: Add recently-executed cell to execution log
             }
         } catch (err) {
             status.dispose();

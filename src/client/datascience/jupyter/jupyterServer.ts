@@ -11,6 +11,7 @@ import { Subscriber } from 'rxjs/Subscriber';
 import * as uuid from 'uuid/v4';
 import { Disposable } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
+// import { ExecutionLogSlicer } from '../gather/analysis/slice/log-slicer';
 
 import { ILiveShareApi } from '../../common/application/types';
 import { Cancellation, CancellationError } from '../../common/cancellation';
@@ -23,6 +24,7 @@ import { generateCells } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
 import { concatMultilineString } from '../common';
 import { CodeSnippits, Identifiers } from '../constants';
+// import { DataflowAnalyzer } from '../gather/analysis/slice/data-flow';
 import {
     CellState,
     ICell,
@@ -35,6 +37,7 @@ import {
     INotebookServerLaunchInfo,
     InterruptResult
 } from '../types';
+// import { SliceConfiguration } from '../gather/analysis/slice/slice-config';
 
 class CellSubscriber {
     private deferred: Deferred<CellState> = createDeferred<CellState>();
@@ -495,9 +498,11 @@ export class JupyterServerBase implements INotebookServer {
             // Might have more than one (markdown might be split)
             if (cells.length > 1) {
                 // We need to combine results
-                return this.combineObservables(
+// tslint:disable-next-line: no-unnecessary-local-variable
+                const results: Observable<ICell[]> =  this.combineObservables(
                     this.executeMarkdownObservable(cells[0]),
                     this.executeCodeObservable(cells[1], silent));
+                return results;
             } else if (cells.length > 0) {
                 // Either markdown or or code
                 return this.combineObservables(
@@ -553,6 +558,11 @@ export class JupyterServerBase implements INotebookServer {
                 CodeSnippits.MatplotLibInit,
                 cancelToken
             );
+
+            // Create a log of executed cells
+                // const executionLog = new ExecutionLogSlicer(
+                //     new DataflowAnalyzer()
+                // );
         } catch (e) {
             traceWarning(e);
         }
@@ -601,6 +611,24 @@ export class JupyterServerBase implements INotebookServer {
         if (this.launchInfo && this.launchInfo.connectionInfo.localLaunch && await fs.pathExists(directory)) {
             await this.executeSilently(`%cd "${directory}"`);
         }
+    }
+
+    private executeCodeObservable(cell: ICell, silent?: boolean): Observable<ICell> {
+        return new Observable<ICell>(subscriber => {
+            // Tell our listener. NOTE: have to do this asap so that markdown cells don't get
+            // run before our cells.
+            subscriber.next(cell);
+
+            // Wrap the subscriber and save it. It is now pending and waiting completion.
+            const cellSubscriber = new CellSubscriber(cell, subscriber, (self: CellSubscriber) => {
+                this.pendingCellSubscriptions = this.pendingCellSubscriptions.filter(p => p !== self);
+            });
+            this.pendingCellSubscriptions.push(cellSubscriber);
+
+            // Attempt to change to the current directory. When that finishes
+            // send our real request
+            this.handleCodeRequest(cellSubscriber, silent);
+        });
     }
 
     private handleCodeRequest = (subscriber: CellSubscriber, silent?: boolean) => {
@@ -690,24 +718,6 @@ export class JupyterServerBase implements INotebookServer {
             subscriber.complete(this.sessionStartTime);
         }
 
-    }
-
-    private executeCodeObservable(cell: ICell, silent?: boolean): Observable<ICell> {
-        return new Observable<ICell>(subscriber => {
-            // Tell our listener. NOTE: have to do this asap so that markdown cells don't get
-            // run before our cells.
-            subscriber.next(cell);
-
-            // Wrap the subscriber and save it. It is now pending and waiting completion.
-            const cellSubscriber = new CellSubscriber(cell, subscriber, (self: CellSubscriber) => {
-                this.pendingCellSubscriptions = this.pendingCellSubscriptions.filter(p => p !== self);
-            });
-            this.pendingCellSubscriptions.push(cellSubscriber);
-
-            // Attempt to change to the current directory. When that finishes
-            // send our real request
-            this.handleCodeRequest(cellSubscriber, silent);
-        });
     }
 
     private addToCellData = (cell: ICell, output: nbformat.IUnrecognizedOutput | nbformat.IExecuteResult | nbformat.IDisplayData | nbformat.IStream | nbformat.IError, clearState: Map<string, boolean>) => {
