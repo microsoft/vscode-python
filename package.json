@@ -2194,6 +2194,10 @@
         "verifyBundle": "gulp verifyBundle"
     },
     "dependencies": {
+        "@jupyterlab/application": "^0.19.1",
+        "@jupyterlab/apputils": "^0.19.1",
+        "@jupyterlab/docmanager": "^0.19.1",
+        "@jupyterlab/notebook": "^0.19.2",
         "@jupyterlab/services": "^3.2.1",
         "arch": "^2.1.0",
         "azure-storage": "^2.10.1",
