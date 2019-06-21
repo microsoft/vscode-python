@@ -64,5 +64,6 @@ class TestRunner {
 
 new TestRunner().start().catch(ex => {
     console.error('Error in running Smoke Tests', ex);
+    // Exit with non zero exit code, so CI fails.
     process.exit(1);
 });
