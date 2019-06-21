@@ -160,6 +160,12 @@ def then_nothing(context):
     pass
 
 
+@behave.then("do nothing")
+def then_do_nothing(context):
+    """Do nothing."""
+    pass
+
+
 @behave.when("I reload VSC")
 def when_reload_vsc(context):
     """Reload VS Code."""

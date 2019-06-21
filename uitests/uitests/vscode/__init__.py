@@ -11,6 +11,7 @@ from . import (  # noqa
     extension,
     notifications,
     output_panel,
+    problems,
     quick_input,
     quick_open,
     screen,

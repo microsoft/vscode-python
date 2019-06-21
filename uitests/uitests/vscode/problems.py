@@ -17,6 +17,13 @@ class ProblemType(Enum):
 def get_problem_count(context, problem_type=ProblemType.All, **kwargs):
     if problem_type == ProblemType.All:
         selector = ".part.panel.bottom .action-item.checked .badge-content"
+        try:
+            element = context.driver.find_element_by_css_selector(selector)
+            if element is None or not element.is_displayed():
+                return 0
+        except Exception:
+            pass
+
         element = core.wait_for_element(context.driver, selector, **kwargs)
         if element.text == "":
             return 0
@@ -35,6 +42,13 @@ def get_problem_count(context, problem_type=ProblemType.All, **kwargs):
 
 def get_problem_files(context, **kwargs):
     selector = ".part.panel.bottom .content .tree-container .monaco-tl-row .file-icon .label-name span span"
+
+    elements = core.wait_for_elements(context.driver, selector, **kwargs)
+    return [element.text for element in elements]
+
+
+def get_problems(context, **kwargs):
+    selector = ".part.panel.bottom .content .tree-container .monaco-tl-row .marker-message-details"
 
     elements = core.wait_for_elements(context.driver, selector, **kwargs)
     return [element.text for element in elements]
