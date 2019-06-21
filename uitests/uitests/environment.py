@@ -67,7 +67,10 @@ def after_all(context):
 
 def before_feature(context, feature):
     for scenario in feature.scenarios:
-        if "autoretry" in scenario.effective_tags:
+        # If we're working on a scenario, then don't retry.
+        if "wip" in scenario.effective_tags:
+            continue
+        elif "autoretry" in scenario.effective_tags:
             patch_scenario_with_autoretry(scenario, max_attempts=3)
         else:
             # Try at least once.
@@ -171,7 +174,12 @@ def after_scenario(context, scenario):
                 shutil.copytree(source, os.path.join(context.scenario_log_dir, target))
             except Exception:
                 pass
-
+        # We need user settings as well.
+        os.makedirs(os.path.join(context.scenario_log_dir, "User"), exist_ok=True)
+        shutil.copyfile(
+            os.path.join(context.options.user_dir, "User", "settings.json"),
+            os.path.join(context.scenario_log_dir, "User", "settings.json"),
+        )
     # We don't need these logs anymore.
     _exit(context)
     uitests.tools.empty_directory(context.options.logfiles_dir)

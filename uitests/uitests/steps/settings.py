@@ -31,6 +31,11 @@ def given_user_setting_disabled(context, name):
     uitests.vscode.settings.update_user_settings(context, {name: False})
 
 
+@behave.given('the user setting "{name}" is enabled')
+def given_user_setting_enabled(context, name):
+    uitests.vscode.settings.update_user_settings(context, {name: True})
+
+
 @behave.when('I update the workspace setting "{name}" with the value "{value}"')
 def given_workspace_setting_value(context, name, value):
     uitests.vscode.settings.update_workspace_settings(context, {name: value})

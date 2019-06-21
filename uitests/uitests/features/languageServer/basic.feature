@@ -14,6 +14,21 @@ Feature: Language Server
             | enabled      | 5                | Jedi Python language engine      | Jedi Python language engine |
             | disabled     | 120              | Microsoft Python language server | Initializing for            |
 
+    Scenario Outline: Language Server is downloaded with http.proxyStrictSSL set to true and false
+        When I open VS Code for the first time
+        Given the workspace setting "python.jediEnabled" is disabled
+        And the user setting "http.proxyStrictSSL" is <enabled_disabled>
+        When I wait for the Python extension to activate
+        And I select the command "Python: Show Output"
+        Then the text "Microsoft Python language server" will be displayed in the output panel within 120 seconds
+        Then the text "<protocol_to_look_for>" will be displayed in the output panel within 120 seconds
+        And the text "Initializing for" will be displayed in the output panel within 120 seconds
+
+        Examples:
+            | enabled_disabled | protocol_to_look_for |
+            | enabled          | https://             |
+            | disabled         | http://              |
+
     @autoretry
     Scenario Outline: Navigate to definition of a variable when extension has already been activated with Jedi <jedi_enabled>
         Given the workspace setting "python.jediEnabled" is <jedi_enabled>
