@@ -10,6 +10,8 @@ import { DataScience } from './datascience';
 import { DataScienceCodeLensProvider } from './editor-integration/codelensprovider';
 import { CodeWatcher } from './editor-integration/codewatcher';
 import { Decorator } from './editor-integration/decorator';
+import { GatherModel } from './gather/model';
+import { GatherModelRegistry } from './gather/model/gather-registry';
 import { DotNetIntellisenseProvider } from './interactive-window/intellisense/dotNetIntellisenseProvider';
 import { JediIntellisenseProvider } from './interactive-window/intellisense/jediIntellisenseProvider';
 import { InteractiveWindow } from './interactive-window/interactiveWindow';
@@ -37,6 +39,8 @@ import {
     IDataScienceCommandListener,
     IDataViewer,
     IDataViewerProvider,
+    IGatherModel,
+    IGatherModelRegistry,
     IInteractiveWindow,
     IInteractiveWindowListener,
     IInteractiveWindowProvider,
@@ -81,4 +85,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, ShowPlotListener);
     serviceManager.addSingleton<IPlotViewerProvider>(IPlotViewerProvider, PlotViewerProvider);
     serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
+    serviceManager.add<IGatherModel>(IGatherModel, GatherModel);
+    serviceManager.add<IGatherModelRegistry>(IGatherModelRegistry, GatherModelRegistry);
 }

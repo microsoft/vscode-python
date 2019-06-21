@@ -712,6 +712,11 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
+    // gather button was clicked
+    private gatherScript() {
+        // Send message to history
+    }
+
     private getEditCell() : ICellViewModel | undefined {
         return this.state.editCellVM;
     }
