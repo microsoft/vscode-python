@@ -29,7 +29,6 @@ steps:
           customCommand: ci
 
     - bash: |
-          node blah.js
           echo AVAILABLE DEPENDENCY VERSIONS
           echo Node Version = `node -v`
           echo NPM Version = `npm -v`
