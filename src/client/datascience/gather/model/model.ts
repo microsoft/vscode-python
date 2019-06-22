@@ -1,5 +1,6 @@
-import { IGatherModel } from '../../types';
-import { ExecutionLogSlicer, SlicedExecution } from '../analysis/slice/log-slicer';
+import { inject, injectable } from 'inversify';
+import { IExecutionLogSlicer, IGatherModel } from '../../types';
+import { SlicedExecution } from '../analysis/slice/log-slicer';
 import { CellProgram } from '../analysis/slice/program-builder';
 import { log } from '../util/log';
 import { IGatherCell } from './cell';
@@ -41,25 +42,19 @@ export enum GatherModelEvent {
 /**
  * Types of data that can be passed with model events.
  */
-export type GatherEventData =
-    | GatherState
-    | IGatherCell
-    | EditorDef
-    | DefSelection
-    | CellOutput
-    | OutputSelection
-    | SliceSelection;
+export type GatherEventData = GatherState | IGatherCell | EditorDef | DefSelection | CellOutput | OutputSelection | SliceSelection;
 
 /**
  * Model for the state of a "gather" application.
  */
+@injectable()
 export class GatherModel implements IGatherModel {
     private _state: GatherState = GatherState.SELECTING;
-    private _executionLog: ExecutionLogSlicer;
+    private _executionLog: IExecutionLogSlicer;
     private _observers: IGatherObserver[] = [];
-    private _lastExecutedCell: IGatherCell;
-    private _lastDeletedCell: IGatherCell;
-    private _lastEditedCell: IGatherCell;
+    private _lastExecutedCell: IGatherCell | undefined;
+    private _lastDeletedCell: IGatherCell | undefined;
+    private _lastEditedCell: IGatherCell | undefined;
     private _editorDefs: EditorDef[] = [];
     private _selectedDefs: DefSelection[] = [];
     private _outputs: CellOutput[] = [];
@@ -69,13 +64,12 @@ export class GatherModel implements IGatherModel {
     private _selectedOutputSlices: [OutputSelection, SlicedExecution[]][] = [];
     private _chosenSlices: SlicedExecution[] = [];
 
-    constructor(executionLog: ExecutionLogSlicer) {
+    constructor(
+        @inject(IExecutionLogSlicer) executionLog: IExecutionLogSlicer
+    ) {
         this._executionLog = executionLog;
         this._executionLog.executionLogged.connect((_, cellExecution) => {
-            this.notifyObservers(
-                GatherModelEvent.CELL_EXECUTION_LOGGED,
-                cellExecution.cell
-            );
+            this.notifyObservers(GatherModelEvent.CELL_EXECUTION_LOGGED, cellExecution.cell);
         });
     }
 
@@ -98,7 +92,7 @@ export class GatherModel implements IGatherModel {
     /**
      * Get exeuction history for the notebook.
      */
-    get executionLog(): ExecutionLogSlicer {
+    get executionLog(): IExecutionLogSlicer {
         return this._executionLog;
     }
 
@@ -200,7 +194,7 @@ export class GatherModel implements IGatherModel {
     /**
      * Clear all editor defs.
      */
-    clearEditorDefs() {
+    public clearEditorDefs() {
         for (let i = this._editorDefs.length - 1; i >= 0; i--) {
             const editorDef = this._editorDefs[i];
             this._editorDefs.splice(i, 1);
@@ -312,10 +306,7 @@ export class GatherModel implements IGatherModel {
     /**
      * Store all execution slices for a def selection
      */
-    public addSelectedDefSlices(
-        defSelection: DefSelection,
-        ...slices: SlicedExecution[]
-    ) {
+    public addSelectedDefSlices(defSelection: DefSelection, ...slices: SlicedExecution[]) {
         this._selectedDefSlices.push([defSelection, slices]);
     }
 
@@ -405,10 +396,7 @@ export class GatherModel implements IGatherModel {
     /**
      * Store all execution slices for an output selection
      */
-    public addSelectedOutputSlices(
-        outputSelection: OutputSelection,
-        ...slices: SlicedExecution[]
-    ) {
+    public addSelectedOutputSlices(outputSelection: OutputSelection, ...slices: SlicedExecution[]) {
         this._selectedOutputSlices.push([outputSelection, slices]);
     }
 
@@ -471,9 +459,5 @@ export interface IGatherObserver {
     /**
      * Callback that gets triggered whenever the model changes.
      */
-    onModelChange: (
-        property: GatherModelEvent,
-        eventData: GatherEventData,
-        model?: GatherModel
-    ) => void;
+    onModelChange(property: GatherModelEvent, eventData: GatherEventData, model?: GatherModel): void;
 }

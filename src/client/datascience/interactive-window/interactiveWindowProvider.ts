@@ -14,6 +14,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { Identifiers, LiveShare, LiveShareCommands, Settings } from '../constants';
 import { PostOffice } from '../liveshare/postOffice';
 import { IGatherModelRegistry, IInteractiveWindow, IInteractiveWindowProvider, INotebookServerOptions, IGatherModel } from '../types';
+import { GatherModel } from '../gather/model';
 
 interface ISyncData {
     count: number;
@@ -23,8 +24,7 @@ interface ISyncData {
 @injectable()
 export class InteractiveWindowProvider implements IInteractiveWindowProvider, IAsyncDisposable {
 
-    private activeInteractiveWindow : IInteractiveWindow;
-    private gatherModel : IGatherModel;
+    private activeInteractiveWindow : IInteractiveWindow | undefined;
     private postOffice : PostOffice;
     private id: string;
     private pendingSyncs : Map<string, ISyncData> = new Map<string, ISyncData>();
