@@ -1,6 +1,6 @@
 import { INotebookModel } from '@jupyterlab/notebook';
 import { JSONArray, JSONObject } from '@phosphor/coreutils';
-import { ExecutionLogSlicer } from '../analysis/slice/log-slicer';
+import { ExecutionLogSlicer } from '../analysis/slice/logSlicer';
 import { EXECUTION_HISTORY_METADATA_KEY } from './load';
 import { nbformat } from '@jupyterlab/coreutils';
 

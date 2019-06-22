@@ -7,7 +7,7 @@ import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
 import { Kernel } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils';
 import { Signal } from '@phosphor/signaling';
-import { SlicedExecution } from '../analysis/slice/log-slicer';
+import { SlicedExecution } from '../analysis/slice/logSlicer';
 import { OutputSelection } from '../model';
 
 /**

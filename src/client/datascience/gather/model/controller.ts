@@ -1,6 +1,6 @@
 import { DocumentManager } from '@jupyterlab/docmanager';
 import { INotebookTracker } from '@jupyterlab/notebook';
-import { ExecutionLogSlicer } from '../analysis/slice/log-slicer';
+import { ExecutionLogSlicer } from '../analysis/slice/logSlicer';
 import { LocationSet } from '../analysis/slice/slice';
 import { Clipboard, NotebookOpener, ScriptOpener } from '../main/gather-actions';
 import { GatherEventData, GatherModel, GatherModelEvent, GatherState, IGatherObserver } from '../model';

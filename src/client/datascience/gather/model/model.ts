@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { IExecutionLogSlicer, IGatherModel } from '../../types';
-import { SlicedExecution } from '../analysis/slice/log-slicer';
-import { CellProgram } from '../analysis/slice/program-builder';
+import { SlicedExecution } from '../analysis/slice/logSlicer';
+import { CellProgram } from '../analysis/slice/programBuilder';
 import { log } from '../util/log';
 import { IGatherCell } from './cell';
 import { CellOutput, DefSelection, EditorDef, OutputSelection, SliceSelection } from './selections';

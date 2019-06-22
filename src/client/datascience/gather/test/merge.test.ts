@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { SlicedExecution } from '../analysis/slice/log-slicer';
+import { SlicedExecution } from '../analysis/slice/logSlicer';
 import { LocationSet } from '../analysis/slice/slice';
 import { IGatherCell, LogCell } from '../model/cell';
 import { CellSlice } from '../model/cellslice';

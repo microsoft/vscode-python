@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { MagicsRewriter, MatchPosition, PylabLineMagicRewriter, TimeLineMagicRewriter } from '../analysis/slice/rewrite-magics';
+import { MagicsRewriter, MatchPosition, PylabLineMagicRewriter, TimeLineMagicRewriter } from '../analysis/slice/rewriteMagics';
 
 describe('MagicsRewriter', () => {
     let magicsTranslator: MagicsRewriter;
