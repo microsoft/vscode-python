@@ -11,7 +11,7 @@ import { DataScienceCodeLensProvider } from './editor-integration/codelensprovid
 import { CodeWatcher } from './editor-integration/codewatcher';
 import { Decorator } from './editor-integration/decorator';
 import { GatherModel } from './gather/model';
-import { GatherModelRegistry } from './gather/model/gather-registry';
+import { GatherModelRegistry } from './gather/model/gatherRegistry';
 import { DotNetIntellisenseProvider } from './interactive-window/intellisense/dotNetIntellisenseProvider';
 import { JediIntellisenseProvider } from './interactive-window/intellisense/jediIntellisenseProvider';
 import { InteractiveWindow } from './interactive-window/interactiveWindow';

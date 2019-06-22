@@ -3,7 +3,7 @@ import { ISyntaxNode, parse } from '../analysis/parse/python/python-parser';
 import { ControlFlowGraph } from '../analysis/slice/controlFlow';
 import { DataflowAnalyzer, IDataflow, IRef, ReferenceType, RefSet, SymbolType } from '../analysis/slice/dataFlow';
 import { Set, StringSet } from '../analysis/slice/set';
-import { SliceConfiguration } from '../analysis/slice/slice-config';
+import { SliceConfiguration } from '../analysis/slice/sliceConfig';
 
 describe('detects dataflow dependencies', () => {
     function analyze(...codeLines: string[]): Set<IDataflow> {

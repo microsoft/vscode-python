@@ -11,7 +11,7 @@ import '../../style/index.css';
 import { DataflowAnalyzer } from '../analysis/slice/dataFlow';
 import { ExecutionLogSlicer } from '../analysis/slice/logSlicer';
 import { GatherController, GatherModel, GatherState, SliceSelection } from '../model';
-import { GatherModelRegistry, getGatherModelForActiveNotebook } from '../model/gather-registry';
+import { GatherModelRegistry, getGatherModelForActiveNotebook } from '../model/gatherRegistry';
 import { CellChangeListener } from '../overlay/cell-listener';
 import { MarkerManager } from '../overlay/gather-markers';
 import { NotifactionExtension as NotificationExtension } from '../overlay/notification';
@@ -20,9 +20,9 @@ import { initToolbar } from '../overlay/toolbar';
 import { loadHistory } from '../persistence/load';
 import { storeHistory } from '../persistence/store';
 import { initLogger, log } from '../util/log';
-import { ExecutionLogger } from './execution-logger';
+import { ExecutionLogger } from './executionLogger';
 import { Clipboard } from './gather-actions';
-import { SliceConfiguration } from '../analysis/slice/slice-config';
+import { SliceConfiguration } from '../analysis/slice/sliceConfig';
 import { IGatherModel } from '../../types';
 
 const extension: JupyterLabPlugin<void> = {
