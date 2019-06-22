@@ -23,14 +23,14 @@ import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../com
 import { IAsyncDisposable, IDataScienceSettings, IDisposable } from '../common/types';
 import { PythonInterpreter } from '../interpreter/contracts';
 import * as ast from './gather/analysis/parse/python/python-parser';
+import { DataflowAnalysisResult, RefSet, IDataflow } from './gather/analysis/slice/data-flow';
 import { CellExecution, SlicedExecution } from './gather/analysis/slice/log-slicer';
 import { CellProgram, ProgramBuilder } from './gather/analysis/slice/program-builder';
+import { StringSet } from './gather/analysis/slice/set';
 import { LocationSet } from './gather/analysis/slice/slice';
 import { CellOutput, DefSelection, EditorDef, GatherEventData, GatherModelEvent, GatherState, IGatherObserver, OutputSelection, SliceSelection } from './gather/model';
 import { IGatherCell } from './gather/model/cell';
-import { StringSet } from './gather/analysis/slice/set';
-import { RefSet, DataflowAnalysisResult } from './gather/analysis/slice/data-flow';
-import { ControlFlowGraph } from './gather/analysis/slice/control-flow';
+import { Block, ControlFlowGraph } from './gather/analysis/slice/control-flow';
 import { SliceConfiguration } from './gather/analysis/slice/slice-config';
 
 // Main interface
@@ -315,6 +315,15 @@ export interface IDataflowAnalyzer {
     analyze(cfg: ControlFlowGraph, sliceConfiguration?: SliceConfiguration, namesDefined?: StringSet): DataflowAnalysisResult;
     getDefs(statement: ast.ISyntaxNode, symbolTable: ISymbolTable): RefSet;
     getUses(statement: ast.ISyntaxNode, _: ISymbolTable): RefSet;
+}
+
+export const IControlFlowGraph = Symbol('IControlFlowGraph');
+export interface IControlFlowGraph {
+    blocks: Block[];
+    getSuccessors(block: Block): Block[];
+    getPredecessors(block: Block): Block[];
+    print(): void;
+    getControlDependencies(): IDataflow[];
 }
 
 export interface ISymbolTable {
