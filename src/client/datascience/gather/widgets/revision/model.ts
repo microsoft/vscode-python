@@ -1,5 +1,5 @@
 import { nbformat } from '@jupyterlab/coreutils';
-import { SlicedExecution } from '../../analysis/slice/log-slicer';
+import { SlicedExecution } from '../../analysis/slice/logSlicer';
 import { ICodeVersionModel } from '../codeversion/model';
 import { GatherModel } from '../../model';
 

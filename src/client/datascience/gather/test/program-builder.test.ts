@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { ProgramBuilder } from '../analysis/slice/program-builder';
+import { ProgramBuilder } from '../analysis/slice/programBuilder';
 import { IGatherCell, LogCell } from '../model/cell';
 
 describe('program builder', () => {

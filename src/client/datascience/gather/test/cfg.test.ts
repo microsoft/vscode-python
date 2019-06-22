@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { parse } from '../analysis/parse/python/python-parser';
-import { ControlFlowGraph } from '../analysis/slice/control-flow';
+import { ControlFlowGraph } from '../analysis/slice/controlFlow';
 
 describe('ControlFlowGraph', () => {
     function makeCfg(...codeLines: string[]): ControlFlowGraph {
