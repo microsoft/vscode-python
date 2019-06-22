@@ -2337,6 +2337,7 @@
         "event-stream": "3.3.4",
         "expose-loader": "^0.7.5",
         "file-loader": "^2.0.0",
+        "filemanager-webpack-plugin": "^2.0.5",
         "flat": "^4.0.0",
         "gulp": "^4.0.0",
         "gulp-azure-storage": "^0.9.0",

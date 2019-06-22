@@ -11,6 +11,7 @@ const configFileName = path.join(constants_1.ExtensionRootDir, 'tsconfig.extensi
 // Some modules will be pre-genearted and stored in out/.. dir and they'll be referenced via NormalModuleReplacementPlugin
 // We need to ensure they do not get bundled into the output (as they are large).
 const existingModulesInOutDir = common_1.getListOfExistingModulesInOutDir();
+const FileManagerPlugin = require('filemanager-webpack-plugin');
 const config = {
     mode: 'production',
     target: 'node',
@@ -51,6 +52,7 @@ const config = {
             },
             {enforce: 'post', test: /unicode-properties[\/\\]index.js$/, loader: "transform-loader?brfs"},
             {enforce: 'post', test: /fontkit[\/\\]index.js$/, loader: "transform-loader?brfs"},
+            {enforce: 'post', test: /pdfkit[\\\/]js[\\\/].*js$/, loader: "transform-loader?brfs"},
             {enforce: 'post', test: /linebreak[\/\\]src[\/\\]linebreaker.js/, loader: "transform-loader?brfs"}
         ]
     },
@@ -60,7 +62,19 @@ const config = {
         ...existingModulesInOutDir
     ],
     plugins: [
-        ...common_1.getDefaultPlugins('extension')
+        ...common_1.getDefaultPlugins('extension'),
+        // Copy pdfkit bits after extension builds. webpack can't handle pdfkit.
+        new FileManagerPlugin({
+            onEnd: [
+                {
+                    copy: [
+                        { source: "./node_modules/pdfkit/js/data/*.*", destination: "./out/client/node_modules/data" },
+                        { source: "./node_modules/pdfkit/js/pdfkit.js", destination: "./out/client/node_modules/" }
+                    ]
+                },
+            ]
+        })
+
     ],
     resolve: {
         extensions: ['.ts', '.js'],
