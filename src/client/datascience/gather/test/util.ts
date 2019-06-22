@@ -20,9 +20,9 @@ export class SimpleObservableString implements IObservableString {
     clear: null;
     dispose: null;
     isDisposed: false;
-  constructor(value: string) {
-    this.text = value;
-  }
+    constructor(value: string) {
+        this.text = value;
+    }
 }
 
 export class SimpleOutputAreaModel implements IOutputAreaModel {
@@ -49,51 +49,45 @@ export class SimpleOutputAreaModel implements IOutputAreaModel {
     get length(): number {
         return this._outputs.length;
     }
-
 }
 
 export class SimpleOutputModel implements IOutputModel {
-  constructor(type: string, data?: nbformat.IOutput) {
-    this.type = type;
-    this.data = data;
-  }
-  changed: null;
-  type: string;
-  executionCount: null;
-  trusted: true;
-  dispose: null;
-  toJSON: null;
-  data: nbformat.IOutput;
-  metadata: {};
-  setData: null;
+    constructor(type: string, data?: nbformat.IOutput) {
+        this.type = type;
+        this.data = data;
+    }
+    changed: null;
+    type: string;
+    executionCount: null;
+    trusted: true;
+    dispose: null;
+    toJSON: null;
+    data: nbformat.IOutput;
+    metadata: {};
+    setData: null;
 }
 
 export class SimpleCodeCellModel implements ICodeCellModel {
-  constructor(
-    id: string,
-    executionCount: number,
-    text: string,
-    outputs?: IOutputAreaModel
-  ) {
-    this.id = id;
-    this.executionCount = executionCount;
-    this.value = new SimpleObservableString(text);
-    this.outputs = outputs;
-  }
-  type: 'code';
-  executionCount: number;
-  outputs: IOutputAreaModel;
-  id: string;
-  contentChanged: null;
-  stateChanged: null;
-  trusted: true;
-  metadata: null;
-  toJSON: null;
-  mimeTypeChanged: null;
-  value: IObservableString;
-  mimeType: null;
-  selections: null;
-  modelDB: null;
-  isDisposed: false;
-  dispose: null;
+    constructor(id: string, executionCount: number, text: string, outputs?: IOutputAreaModel) {
+        this.id = id;
+        this.executionCount = executionCount;
+        this.value = new SimpleObservableString(text);
+        this.outputs = outputs;
+    }
+    type: 'code';
+    executionCount: number;
+    outputs: IOutputAreaModel;
+    id: string;
+    contentChanged: null;
+    stateChanged: null;
+    trusted: true;
+    metadata: null;
+    toJSON: null;
+    mimeTypeChanged: null;
+    value: IObservableString;
+    mimeType: null;
+    selections: null;
+    modelDB: null;
+    isDisposed: false;
+    dispose: null;
 }
