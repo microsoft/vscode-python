@@ -85,6 +85,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, ShowPlotListener);
     serviceManager.addSingleton<IPlotViewerProvider>(IPlotViewerProvider, PlotViewerProvider);
     serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
-    serviceManager.add<IGatherModel>(IGatherModel, GatherModel);
     serviceManager.add<IGatherModelRegistry>(IGatherModelRegistry, GatherModelRegistry);
 }
