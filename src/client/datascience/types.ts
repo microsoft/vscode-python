@@ -17,14 +17,21 @@ import {
 } from 'vscode';
 
 import { INotebookModel } from '@jupyterlab/notebook/lib/model';
+import { Signal } from '@phosphor/signaling';
 import { ICommandManager } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
 import { IAsyncDisposable, IDataScienceSettings, IDisposable } from '../common/types';
 import { PythonInterpreter } from '../interpreter/contracts';
-import { ExecutionLogSlicer, SlicedExecution } from './gather/analysis/slice/log-slicer';
-import { CellProgram } from './gather/analysis/slice/program-builder';
+import * as ast from './gather/analysis/parse/python/python-parser';
+import { CellExecution, SlicedExecution } from './gather/analysis/slice/log-slicer';
+import { CellProgram, ProgramBuilder } from './gather/analysis/slice/program-builder';
+import { LocationSet } from './gather/analysis/slice/slice';
 import { CellOutput, DefSelection, EditorDef, GatherEventData, GatherModelEvent, GatherState, IGatherObserver, OutputSelection, SliceSelection } from './gather/model';
 import { IGatherCell } from './gather/model/cell';
+import { StringSet } from './gather/analysis/slice/set';
+import { RefSet, DataflowAnalysisResult } from './gather/analysis/slice/data-flow';
+import { ControlFlowGraph } from './gather/analysis/slice/control-flow';
+import { SliceConfiguration } from './gather/analysis/slice/slice-config';
 
 // Main interface
 export const IDataScience = Symbol('IDataScience');
@@ -248,7 +255,7 @@ export interface IGatherModel {
     lastExecutedCell: IGatherCell;
     lastDeletedCell: IGatherCell;
     lastEditedCell: IGatherCell;
-    executionLog: ExecutionLogSlicer;
+    executionLog: IExecutionLogSlicer;
     editorDefs: ReadonlyArray<EditorDef>;
     outputs: ReadonlyArray<CellOutput>;
     selectedDefs: ReadonlyArray<DefSelection>;
@@ -287,6 +294,37 @@ export interface IGatherModelRegistry {
     getGatherModel(notebookModel: INotebookModel): IGatherModel | null;
 
 }
+
+export const IExecutionLogSlicer = Symbol('IExecutionLogSlicer');
+export interface IExecutionLogSlicer {
+    _executionLog: CellExecution[];
+    _programBuilder: ProgramBuilder;
+    cellExecutions: ReadonlyArray<CellExecution>;
+    readonly executionLogged: Signal<this, CellExecution>;
+    logExecution(cell: IGatherCell): void;
+    addExecutionToLog(cellExecution: CellExecution): void;
+    reset(): void;
+    sliceLatestExecution(cell: IGatherCell, seedLocations?: LocationSet): SlicedExecution | undefined;
+    sliceAllExecutions(cell: IGatherCell, pSeedLocations?: LocationSet): SlicedExecution[] | undefined;
+    getCellProgram(cell: IGatherCell): CellProgram;
+}
+
+export const IDataflowAnalyzer = Symbol('IDataflowAnalyzer');
+export interface IDataflowAnalyzer {
+    getDefsUses(statement: ast.ISyntaxNode, symbolTable?: ISymbolTable): IDefUseInfo;
+    analyze(cfg: ControlFlowGraph, sliceConfiguration?: SliceConfiguration, namesDefined?: StringSet): DataflowAnalysisResult;
+    getDefs(statement: ast.ISyntaxNode, symbolTable: ISymbolTable): RefSet;
+    getUses(statement: ast.ISyntaxNode, _: ISymbolTable): RefSet;
+}
+
+export interface ISymbolTable {
+    moduleNames: StringSet;
+}
+
+export interface IDefUseInfo {
+    defs: RefSet;
+    uses: RefSet;
+  }
 
 export enum CellState {
     editing = -1,
