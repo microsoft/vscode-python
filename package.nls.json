@@ -273,5 +273,6 @@
     "DataScience.editSection" : "Input new cells here.",
     "DataScience.restartKernelMessageDontAskAgain" : "Yes, and Don't Ask Again",
     "DataScience.selectedImageListLabel" : "Selected Image",
-    "DataScience.imageListLabel" : "Image"
+    "DataScience.imageListLabel" : "Image",
+    "DataScience.exportImageFailed" : "Error exporting image: {0}"
 }

@@ -11,6 +11,7 @@ import { traceInfo } from '../../../client/common/logger';
 import { createDeferred } from '../../../client/common/utils/async';
 import { IApplicationShell, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
+import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposable } from '../../common/types';
 import * as localize from '../../common/utils/localize';
@@ -131,6 +132,7 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
                 switch (ext.toLowerCase()) {
                     case '.pdf':
                         traceInfo('Attempting pdf write...');
+                        // Import here since pdfkit is so huge.
                         // tslint:disable-next-line: no-require-imports
                         const SVGtoPDF = require('svg-to-pdfkit');
                         const deferred = createDeferred<void>();
@@ -163,7 +165,8 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
             }
 
         } catch (e) {
-            this.applicationShell.showErrorMessage(e);
+            traceError(e);
+            this.applicationShell.showErrorMessage(localize.DataScience.exportImageFailed().format(e));
         }
     }
 

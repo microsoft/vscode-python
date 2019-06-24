@@ -2,10 +2,11 @@
 // Licensed under the MIT License.
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
+// tslint:disable-next-line: no-require-imports
+const copyWebpackPlugin = require("copy-webpack-plugin");
 const path = require("path");
 const constants_1 = require("../constants");
 const common_1 = require("./common");
-const copyWebpackPlugin = require("copy-webpack-plugin");
 const entryItems = {};
 common_1.nodeModulesToExternalize.forEach(moduleName => {
     entryItems[`node_modules/${moduleName}`] = `./node_modules/${moduleName}`;
@@ -29,10 +30,10 @@ const config = {
                     }
                 ]
             },
-            {enforce: 'post', test: /unicode-properties[\/\\]index.js$/, loader: "transform-loader?brfs"},
-            {enforce: 'post', test: /fontkit[\/\\]index.js$/, loader: "transform-loader?brfs"},
-            {enforce: 'post', test: /pdfkit[\\\/]js[\\\/].*js$/, loader: "transform-loader?brfs"},
-            {enforce: 'post', test: /linebreak[\/\\]src[\/\\]linebreaker.js/, loader: "transform-loader?brfs"}
+            { enforce: 'post', test: /unicode-properties[\/\\]index.js$/, loader: 'transform-loader?brfs' },
+            { enforce: 'post', test: /fontkit[\/\\]index.js$/, loader: 'transform-loader?brfs' },
+            { enforce: 'post', test: /pdfkit[\\\/]js[\\\/].*js$/, loader: 'transform-loader?brfs' },
+            { enforce: 'post', test: /linebreak[\/\\]src[\/\\]linebreaker.js/, loader: 'transform-loader?brfs' }
         ]
     },
     externals: [
