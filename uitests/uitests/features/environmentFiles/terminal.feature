@@ -39,7 +39,7 @@ Feature: Environment Files
         When I open the file "simple sample.py"
         And I select the command "Debug: Start Debugging"
         Then the debugger starts
-        And the debugger pauses
+        And the debugger stops
         And a file named "log1.log" will be created
 
     Scenario: Environment variable defined in envFile of launch.json is used by debugger
@@ -62,7 +62,7 @@ Feature: Environment Files
         When I open the file "simple sample.py"
         And I select the command "Debug: Start Debugging"
         Then the debugger starts
-        And the debugger pauses
+        And the debugger stops
         And a file named "log2.log" will be created
 
     Scenario: Environment variable defined in envFile of settings.json is used by debugger
@@ -85,5 +85,5 @@ Feature: Environment Files
         When I open the file "simple sample.py"
         And I select the command "Debug: Start Debugging"
         Then the debugger starts
-        And the debugger pauses
+        And the debugger stops
         And a file named "log2.log" will be created
