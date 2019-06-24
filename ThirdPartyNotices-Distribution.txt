@@ -198,7 +198,7 @@ Microsoft Python extension for Visual Studio Code incorporates third party mater
 191. isarray 1.0.0 (https://github.com/juliangruber/isarray/blob/v1.0.0)
 192. isort 4.3.4 (https://github.com/timothycrosley/isort/tree/4.3.4)
 193. isstream 0.1.2 (https://registry.npmjs.org/isstream/-/isstream-0.1.2.tgz)
-194. Jedi 0.12.0 (https://github.com/davidhalter/jedi/tree/v0.12.0)
+194. Jedi 0.13.3 (https://github.com/davidhalter/jedi/tree/v0.13.3)
 195. jquery 3.4.1 (https://registry.npmjs.org/jquery/-/jquery-3.4.1.tgz)
 196. jquery-ui 1.12.1 (https://registry.npmjs.org/jquery-ui/-/jquery-ui-1.12.1.tgz)
 197. js-tokens 3.0.2 (https://registry.npmjs.org/js-tokens/-/js-tokens-3.0.2.tgz)
@@ -6111,7 +6111,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 =========================================
 END OF isstream NOTICES AND INFORMATION
 
-%% Jedi 0.12.0 NOTICES AND INFORMATION BEGIN HERE (https://github.com/davidhalter/jedi/tree/v0.12.0)
+%% Jedi 0.13.3 NOTICES AND INFORMATION BEGIN HERE (https://github.com/davidhalter/jedi/tree/v0.13.3)
 =========================================
 All contributions towards Jedi are MIT licensed.
 
