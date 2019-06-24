@@ -11,8 +11,8 @@ import * as path from 'path';
 import { coerce, SemVer } from 'semver';
 import { ConfigurationTarget, Event, TextDocument, Uri } from 'vscode';
 import { IExtensionApi } from '../client/api';
-import { IProcessService } from '../client/common/process/types';
-import { IPythonSettings, Resource } from '../client/common/types';
+import { ExecutionResult, IProcessService } from '../client/common/process/types';
+import { IOutputChannel, IPythonSettings, Resource } from '../client/common/types';
 import { PythonInterpreter } from '../client/interpreter/contracts';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
 import {
@@ -255,16 +255,16 @@ export function correctPathForOsType(pathToCorrect: string, os?: OSType): string
  * @param {procService} IProcessService Optionally specify the IProcessService implementation to use to execute with.
  * @return `SemVer` version of the Python interpreter, or `undefined` if an error occurs.
  */
-export async function getPythonSemVer(procService?: IProcessService): Promise<SemVer | undefined> {
+export async function getPythonSemVer(procService?: IProcessService, outputChannel?: IOutputChannel): Promise<SemVer | undefined> {
     const decoder = await import('../client/common/process/decoder');
     const proc = await import('../client/common/process/proc');
 
-    const pythonProcRunner = procService ? procService : new proc.ProcessService(new decoder.BufferDecoder());
+    const pythonProcRunner = procService ? procService : new proc.ProcessService(new decoder.BufferDecoder(), outputChannel as IOutputChannel);
     const pyVerArgs = ['-c', 'import sys;print("{0}.{1}.{2}".format(*sys.version_info[:3]))'];
 
     return pythonProcRunner.exec(PYTHON_PATH, pyVerArgs)
-        .then(strVersion => new SemVer(strVersion.stdout.trim()))
-        .catch((err) => {
+        .then((strVersion: ExecutionResult<string>) => new SemVer(strVersion.stdout.trim()))
+        .catch((err: Error) => {
             // if the call fails this should make it loudly apparent.
             console.error('Failed to get Python Version in getPythonSemVer', err);
             return undefined;
@@ -376,8 +376,8 @@ export async function isPythonVersionInProcess(procService?: IProcessService, ..
  * @param {resource} vscode.Uri Current workspace resource Uri or undefined.
  * @return true if the current Python version matches a version in the skip list, false otherwise.
  */
-export async function isPythonVersion(...versions: string[]): Promise<boolean> {
-    const currentPyVersion = await getPythonSemVer();
+export async function isPythonVersion(outputChannel: IOutputChannel, ...versions: string[]): Promise<boolean> {
+    const currentPyVersion = await getPythonSemVer(undefined, outputChannel);
     if (currentPyVersion) {
         return isVersionInList(currentPyVersion, ...versions);
     } else {

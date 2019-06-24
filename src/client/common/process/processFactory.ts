@@ -6,7 +6,9 @@
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IServiceContainer } from '../../ioc/types';
-import { IDisposableRegistry } from '../types';
+import { IWorkspaceService } from '../application/types';
+import { STANDARD_OUTPUT_CHANNEL } from '../constants';
+import { IDisposableRegistry, IOutputChannel } from '../types';
 import { IEnvironmentVariablesProvider } from '../variables/types';
 import { ProcessService } from './proc';
 import { IBufferDecoder, IProcessService, IProcessServiceFactory } from './types';
@@ -21,7 +23,9 @@ export class ProcessServiceFactory implements IProcessServiceFactory {
         const customEnvVars = await this.envVarsService.getEnvironmentVariables(resource);
         const decoder = this.serviceContainer.get<IBufferDecoder>(IBufferDecoder);
         const disposableRegistry = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
-        const proc = new ProcessService(decoder, customEnvVars);
+        const output = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+        const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        const proc = new ProcessService(decoder, output, workspaceService, customEnvVars);
         disposableRegistry.push(proc);
         return proc;
     }

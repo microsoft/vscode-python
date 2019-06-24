@@ -1,10 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { exec, execSync, spawn } from 'child_process';
+import * as path from 'path';
 import { Observable } from 'rxjs/Observable';
+import { window } from 'vscode';
 
-import { IDisposable } from '../types';
+import { IWorkspaceService } from '../application/types';
+import { traceInfo } from '../logger';
+import { IDisposable, IOutputChannel } from '../types';
 import { createDeferred } from '../utils/async';
+import { Logging } from '../utils/localize';
 import { EnvironmentVariables } from '../variables/types';
 import { DEFAULT_ENCODING } from './constants';
 import {
@@ -21,7 +26,7 @@ import {
 // tslint:disable:no-any
 export class ProcessService implements IProcessService, IDisposable {
     private processesToKill = new Set<IDisposable>();
-    constructor(private readonly decoder: IBufferDecoder, private readonly env?: EnvironmentVariables) { }
+    constructor(private readonly decoder: IBufferDecoder, private readonly output: IOutputChannel, private readonly workspaceService?: IWorkspaceService, private readonly env?: EnvironmentVariables) { }
     public static isAlive(pid: number): boolean {
         try {
             process.kill(pid, 0);
@@ -115,6 +120,8 @@ export class ProcessService implements IProcessService, IDisposable {
             });
         });
 
+        this.logProcessExec(file, args, options);
+
         return {
             proc,
             out: output,
@@ -175,11 +182,16 @@ export class ProcessService implements IProcessService, IDisposable {
             disposables.forEach(d => d.dispose());
         });
 
+        this.logProcessExec(file, args, options);
+
         return deferred.promise;
     }
 
     public shellExec(command: string, options: ShellOptions = {}): Promise<ExecutionResult<string>> {
         const shellOptions = this.getDefaultOptions(options);
+
+        this.logProcessExec(command, [], options);
+
         return new Promise((resolve, reject) => {
             const proc = exec(command, shellOptions, (e, stdout, stderr) => {
                 if (e && e !== null) {
@@ -225,6 +237,25 @@ export class ProcessService implements IProcessService, IDisposable {
         }
 
         return defaultOptions;
+    }
+
+    private logProcessExec(file: string, args: string[], options: SpawnOptions) {
+        const formattedArgs = args.reduce((accumulator, current, index) => index === 0 ? current : `${accumulator} ${current}`, '');
+        let currentWorkingDirectory;
+
+        if (this.workspaceService && this.workspaceService.hasWorkspaceFolders) {
+            currentWorkingDirectory = this.workspaceService.workspaceFolders![0].uri.fsPath;
+        } else {
+            const openFile = window.activeTextEditor ? window.activeTextEditor!.document.uri : undefined;
+            currentWorkingDirectory = openFile ? path.dirname(openFile.fsPath) : options.cwd!;
+        }
+        const info = [
+            `> ${file} ${formattedArgs}`,
+            `${Logging.currentWorkingDirectory()} ${currentWorkingDirectory}`
+        ].join('\n');
+
+        traceInfo(info);
+        this.output.appendLine(info);
     }
 
 }

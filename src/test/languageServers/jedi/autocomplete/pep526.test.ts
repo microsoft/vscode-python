@@ -16,13 +16,14 @@ import { UnitTestIocContainer } from '../../../testing/serviceRegistry';
 
 const autoCompPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'autocomp');
 const filePep526 = path.join(autoCompPath, 'pep526.py');
+const output = vscode.window.createOutputChannel('Tests');
 
 // tslint:disable-next-line:max-func-body-length
 suite('Autocomplete PEP 526', () => {
     let ioc: UnitTestIocContainer;
     suiteSetup(async function () {
         // Pep526 only valid for 3.6+ (#2545)
-        if (await isPythonVersion('2', '3.4', '3.5')) {
+        if (await isPythonVersion(output, '2', '3.4', '3.5')) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
@@ -31,7 +32,10 @@ suite('Autocomplete PEP 526', () => {
         initializeDI();
     });
     setup(initializeTest);
-    suiteTeardown(closeActiveWindows);
+    suiteTeardown(async () => {
+        output.dispose();
+        await closeActiveWindows();
+    });
     teardown(async () => {
         await closeActiveWindows();
         await ioc.dispose();

@@ -6,7 +6,9 @@ import { IEnvironmentActivationService } from '../../interpreter/activation/type
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { IConfigurationService, IDisposableRegistry } from '../types';
+import { IWorkspaceService } from '../application/types';
+import { STANDARD_OUTPUT_CHANNEL } from '../constants';
+import { IConfigurationService, IDisposableRegistry, IOutputChannel } from '../types';
 import { ProcessService } from './proc';
 import { PythonExecutionService } from './pythonProcess';
 import {
@@ -39,7 +41,9 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             return this.create({ resource: options.resource, pythonPath: options.interpreter ? options.interpreter.path : undefined });
         }
         const pythonPath = options.interpreter ? options.interpreter.path : this.configService.getSettings(options.resource).pythonPath;
-        const processService = new ProcessService(this.decoder, { ...envVars });
+        const output = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+        const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        const processService = new ProcessService(this.decoder, output, workspaceService, { ...envVars });
         this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(processService);
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
     }

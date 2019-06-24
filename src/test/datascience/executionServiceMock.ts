@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 import { SemVer } from 'semver';
+import { IWorkspaceService } from '../../client/common/application/types';
+import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
 import { ErrorUtils } from '../../client/common/errors/errorUtils';
 import { ModuleNotInstalledError } from '../../client/common/errors/moduleNotInstalledError';
 import { BufferDecoder } from '../../client/common/process/decoder';
@@ -13,15 +15,19 @@ import {
     ObservableExecutionResult,
     SpawnOptions
 } from '../../client/common/process/types';
+import { IOutputChannel } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
+import { IServiceContainer } from '../../client/ioc/types';
 
 export class MockPythonExecutionService implements IPythonExecutionService {
 
     private procService : ProcessService;
     private pythonPath : string = 'python';
 
-    constructor() {
-        this.procService = new ProcessService(new BufferDecoder());
+    constructor(serviceContainer: IServiceContainer) {
+        const output = serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+        const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        this.procService = new ProcessService(new BufferDecoder(), output, workspaceService);
     }
     public getInterpreterInformation(): Promise<InterpreterInfomation> {
         return Promise.resolve(

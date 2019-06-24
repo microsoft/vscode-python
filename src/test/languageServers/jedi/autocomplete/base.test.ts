@@ -21,6 +21,7 @@ const fileDecorator = path.join(autoCompPath, 'deco.py');
 const fileEncoding = path.join(autoCompPath, 'four.py');
 const fileEncodingUsed = path.join(autoCompPath, 'five.py');
 const fileSuppress = path.join(autoCompPath, 'suppress.py');
+const output = vscode.window.createOutputChannel('Tests');
 
 // tslint:disable-next-line:max-func-body-length
 suite('Autocomplete Base Tests', function () {
@@ -37,7 +38,10 @@ suite('Autocomplete Base Tests', function () {
         initializeDI();
     });
     setup(initializeTest);
-    suiteTeardown(closeActiveWindows);
+    suiteTeardown(async () => {
+        output.dispose();
+        await closeActiveWindows();
+    });
     teardown(async () => {
         await closeActiveWindows();
         await ioc.dispose();
@@ -96,7 +100,7 @@ suite('Autocomplete Base Tests', function () {
 
     // https://github.com/DonJayamanne/pythonVSCode/issues/265
     test('For "lambda"', async function () {
-        if (await isPythonVersion('2')) {
+        if (await isPythonVersion(output, '2')) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
