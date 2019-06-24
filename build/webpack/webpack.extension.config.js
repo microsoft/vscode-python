@@ -53,7 +53,6 @@ const config = {
             },
             { enforce: 'post', test: /unicode-properties[\/\\]index.js$/, loader: 'transform-loader?brfs' },
             { enforce: 'post', test: /fontkit[\/\\]index.js$/, loader: 'transform-loader?brfs' },
-            { enforce: 'post', test: /pdfkit[\\\/]js[\\\/].*js$/, loader: 'transform-loader?brfs' },
             { enforce: 'post', test: /linebreak[\/\\]src[\/\\]linebreaker.js/, loader: 'transform-loader?brfs' }
         ]
     },
@@ -77,6 +76,9 @@ const config = {
         })
     ],
     resolve: {
+        alias:{
+            'pdfkit':path.resolve(__dirname, 'pdfkit.js')
+        },
         extensions: ['.ts', '.js'],
         plugins: [
             new tsconfig_paths_webpack_plugin_1.TsconfigPathsPlugin({ configFile: configFileName })
