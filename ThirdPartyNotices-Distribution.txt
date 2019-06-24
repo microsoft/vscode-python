@@ -267,7 +267,7 @@ Microsoft Python extension for Visual Studio Code incorporates third party mater
 260. os-browserify 0.3.0 (https://registry.npmjs.org/os-browserify/-/os-browserify-0.3.0.tgz)
 261. os-tmpdir 1.0.2 (https://registry.npmjs.org/os-tmpdir/-/os-tmpdir-1.0.2.tgz)
 262. parse-entities 1.2.0 (https://registry.npmjs.org/parse-entities/-/parse-entities-1.2.0.tgz)
-263. parso 0.2.1 (https://github.com/davidhalter/parso/tree/v0.2.1)
+263. parso 0.5.0 (https://github.com/davidhalter/parso/tree/v0.5.0)
 264. path-browserify 0.0.0 (https://registry.npmjs.org/path-browserify/-/path-browserify-0.0.0.tgz)
 265. path-is-absolute 1.0.1 (https://registry.npmjs.org/path-is-absolute/-/path-is-absolute-1.0.1.tgz)
 266. path-parse 1.0.5 (https://github.com/jbgutierrez/path-parse)
@@ -8335,7 +8335,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 =========================================
 END OF parse-entities NOTICES AND INFORMATION
 
-%% parso 0.2.1 NOTICES AND INFORMATION BEGIN HERE (https://github.com/davidhalter/parso/tree/v0.2.1)
+%% parso 0.5.0 NOTICES AND INFORMATION BEGIN HERE (https://github.com/davidhalter/parso/tree/v0.5.0)
 =========================================
 All contributions towards parso are MIT licensed.
 

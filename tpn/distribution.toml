@@ -1234,8 +1234,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 [[project]]
 name = "parso"
-version = "0.2.1"
-url = "https://github.com/davidhalter/parso/tree/v0.2.1"
+version = "0.5.0"
+url = "https://github.com/davidhalter/parso/tree/v0.5.0"
 purpose = "PyPI"
 license = """
 All contributions towards parso are MIT licensed.
