@@ -2261,7 +2261,7 @@
         "@babel/preset-react": "^7.0.0",
         "@babel/register": "^7.4.4",
         "@istanbuljs/nyc-config-typescript": "^0.1.3",
-        "@nteract/plotly": "^1.47.1",
+        "@nteract/plotly": "^1.48.3",
         "@nteract/transform-dataresource": "^4.3.5",
         "@nteract/transform-geojson": "^3.2.3",
         "@nteract/transform-model-debug": "^3.2.3",

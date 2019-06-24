@@ -5,9 +5,9 @@
 
 ---
 
-| `release` branch | `master` branch | Nightly CI | 
-|-|-|-|
-| [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/CI?branchName=release)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=88&branchName=release) | [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/CI?branchName=master)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=88&branchName=master) | [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/Nightly%20Build?branchName=master)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=85&branchName=master) | 
+| `release` branch | `master` branch | Nightly CI | coverage (`master` branch) |
+|-|-|-|-|
+| [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/CI?branchName=release)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=88&branchName=release) | [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/CI?branchName=master)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=88&branchName=master) | [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/Nightly%20Build?branchName=master)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=85&branchName=master) | [![Coverage Status](https://coveralls.io/repos/github/microsoft/vscode-python/badge.svg?branch=master)](https://coveralls.io/github/microsoft/vscode-python?branch=master) |
 
 [[Development build](https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix)]
 

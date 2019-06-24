@@ -57,7 +57,55 @@ suite('JupyterPasswordConnect', () => {
         }))).returns(() => Promise.resolve(mockSessionResponse.object)).verifiable(typemoq.Times.once());
 
         //tslint:disable-next-line:no-http-string
-        const result = await jupyterPasswordConnect.getPasswordConnectionInfo('http://TESTNAME:8888/', fetchMock.object);
+        const result = await jupyterPasswordConnect.getPasswordConnectionInfo('http://TESTNAME:8888/', false, fetchMock.object);
+        assert(result, 'Failed to get password');
+        if (result) {
+            assert(result.xsrfCookie === xsrfValue, 'Incorrect xsrf value');
+            assert(result.sessionCookieName === sessionName, 'Incorrect session name');
+            assert(result.sessionCookieValue === sessionValue, 'Incorrect session value');
+        }
+
+        // Verfiy calls
+        mockXsrfHeaders.verifyAll();
+        mockSessionHeaders.verifyAll();
+        mockXsrfResponse.verifyAll();
+        mockSessionResponse.verifyAll();
+        fetchMock.verifyAll();
+    });
+
+    test('getPasswordConnectionInfo allowUnauthorized', async() => {
+        // Set up our fake node fetch
+        const fetchMock: typemoq.IMock<typeof nodeFetch.default> = typemoq.Mock.ofInstance(nodeFetch.default);
+
+        // Mock our first call to get xsrf cookie
+        const mockXsrfResponse = typemoq.Mock.ofType(nodeFetch.Response);
+        const mockXsrfHeaders = typemoq.Mock.ofType(nodeFetch.Headers);
+        mockXsrfHeaders.setup(mh => mh.get('set-cookie')).returns(() => `_xsrf=${xsrfValue}`).verifiable(typemoq.Times.once());
+        mockXsrfResponse.setup(mr => mr.ok).returns(() => true).verifiable(typemoq.Times.once());
+        mockXsrfResponse.setup(mr => mr.headers).returns(() => mockXsrfHeaders.object).verifiable(typemoq.Times.once());
+
+        //tslint:disable-next-line:no-http-string
+        fetchMock.setup(fm => fm('https://TESTNAME:8888/login?', typemoq.It.isObjectWith({
+            method: 'get',
+            headers: { Connection: 'keep-alive' }
+        }))).returns(() => Promise.resolve(mockXsrfResponse.object)).verifiable(typemoq.Times.once());
+
+        // Mock our second call to get session cookie
+        const mockSessionResponse = typemoq.Mock.ofType(nodeFetch.Response);
+        const mockSessionHeaders = typemoq.Mock.ofType(nodeFetch.Headers);
+        mockSessionHeaders.setup(mh => mh.get('set-cookie')).returns(() => `${sessionName}=${sessionValue}`).verifiable(typemoq.Times.once());
+        mockSessionResponse.setup(mr => mr.status).returns(() => 302).verifiable(typemoq.Times.once());
+        mockSessionResponse.setup(mr => mr.headers).returns(() => mockSessionHeaders.object).verifiable(typemoq.Times.once());
+
+        // typemoq doesn't love this comparison, so generalize it a bit
+        //tslint:disable-next-line:no-http-string
+        fetchMock.setup(fm => fm('https://TESTNAME:8888/login?', typemoq.It.isObjectWith({
+            method: 'post',
+            headers: { Cookie: `_xsrf=${xsrfValue}`, Connection: 'keep-alive', 'content-type': 'application/x-www-form-urlencoded;charset=UTF-8' }
+        }))).returns(() => Promise.resolve(mockSessionResponse.object)).verifiable(typemoq.Times.once());
+
+        //tslint:disable-next-line:no-http-string
+        const result = await jupyterPasswordConnect.getPasswordConnectionInfo('https://TESTNAME:8888/', true, fetchMock.object);
         assert(result, 'Failed to get password');
         if (result) {
             assert(result.xsrfCookie === xsrfValue, 'Incorrect xsrf value');
@@ -93,7 +141,7 @@ suite('JupyterPasswordConnect', () => {
         })).returns(() => Promise.resolve(mockXsrfResponse.object)).verifiable(typemoq.Times.once());
 
         //tslint:disable-next-line:no-http-string
-        const result = await jupyterPasswordConnect.getPasswordConnectionInfo('http://TESTNAME:8888/', fetchMock.object);
+        const result = await jupyterPasswordConnect.getPasswordConnectionInfo('http://TESTNAME:8888/', false, fetchMock.object);
         assert(!result);
 
         // Verfiy calls

@@ -13,7 +13,12 @@ import {
 import { sleep } from '../../core';
 
 // tslint:disable:no-any max-func-body-length no-unnecessary-class
-suite('Common Utils - Decorators', () => {
+suite('Common Utils - Decorators', function () {
+    // For some reason, sometimes we have timeouts on CI.
+    // Note: setTimeout and similar functions are not guaranteed to execute
+    // at the precise time prescribed.
+    // tslint:disable-next-line: no-invalid-this
+    this.retries(3);
     teardown(() => {
         clearCache();
     });

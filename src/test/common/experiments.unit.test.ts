@@ -6,7 +6,7 @@
 // tslint:disable:no-any
 
 import { assert, expect } from 'chai';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { anything, instance, mock, resetCalls, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { WorkspaceConfiguration } from 'vscode';
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
@@ -53,15 +53,9 @@ suite('A/B experiments', () => {
     });
 
     async function testInitialization(
-        settings: { globalValue?: boolean } = {},
         downloadError: boolean = false,
         experimentsDownloaded?: any
     ) {
-        const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-        when(workspaceService.getConfiguration('telemetry')).thenReturn(workspaceConfig.object);
-        workspaceConfig.setup(c => c.inspect<boolean>('enableTelemetry'))
-            .returns(() => settings as any)
-            .verifiable(TypeMoq.Times.once());
         if (downloadError) {
             when(httpClient.getJSON(configUri, false)).thenReject(new Error('Kaboom'));
         } else {
@@ -77,18 +71,9 @@ suite('A/B experiments', () => {
             // tslint:disable-next-line:no-empty
         } catch { }
 
-        verify(workspaceService.getConfiguration('telemetry')).once();
-        workspaceConfig.verifyAll();
         isDownloadedStorageValid.verifyAll();
         experimentStorage.verifyAll();
     }
-
-    test('If the users have opted out of telemetry, then they are opted out of AB testing ', async () => {
-        isDownloadedStorageValid.setup(n => n.value).returns(() => false).verifiable(TypeMoq.Times.never());
-
-        // settings = { globalValue: false }
-        await testInitialization({ globalValue: false });
-    });
 
     test('Initializing experiments does not download experiments if storage is valid and contains experiments', async () => {
         isDownloadedStorageValid.setup(n => n.value).returns(() => true).verifiable(TypeMoq.Times.once());
@@ -113,8 +98,8 @@ suite('A/B experiments', () => {
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.never());
 
-        // settings = {}, downloadError = false, experimentsDownloaded = experiments
-        await testInitialization({}, false, experiments);
+        // downloadError = false, experimentsDownloaded = experiments
+        await testInitialization(false, experiments);
 
         verify(httpClient.getJSON(configUri, false)).once();
     });
@@ -134,10 +119,32 @@ suite('A/B experiments', () => {
         isDownloadedStorageValid.setup(n => n.updateValue(true)).returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.never());
         downloadedExperimentsStorage.setup(n => n.updateValue(anything())).returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.never());
 
-        // settings = {}, downloadError = true
-        await testInitialization({}, true);
+        // downloadError = true
+        await testInitialization(true);
 
         verify(httpClient.getJSON(configUri, false)).once();
+    });
+
+    test('If the users have opted out of telemetry, then they are opted out of AB testing ', async () => {
+        const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
+        const settings = { globalValue: false };
+
+        when(
+            workspaceService.getConfiguration('telemetry')
+        ).thenReturn(workspaceConfig.object);
+        workspaceConfig.setup(c => c.inspect<boolean>('enableTelemetry'))
+            .returns(() => settings as any)
+            .verifiable(TypeMoq.Times.once());
+        downloadedExperimentsStorage
+            .setup(n => n.value)
+            .returns(() => undefined)
+            .verifiable(TypeMoq.Times.never());
+
+        await expManager.activate();
+
+        verify(workspaceService.getConfiguration('telemetry')).once();
+        workspaceConfig.verifyAll();
+        downloadedExperimentsStorage.verifyAll();
     });
 
     test('Ensure experiments can only be activated once', async () => {
@@ -145,38 +152,42 @@ suite('A/B experiments', () => {
         const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
         const settings = {};
 
+        when(
+            workspaceService.getConfiguration('telemetry')
+        ).thenReturn(workspaceConfig.object);
+        workspaceConfig.setup(c => c.inspect<boolean>('enableTelemetry'))
+            .returns(() => settings as any)
+            .verifiable(TypeMoq.Times.once());
+
         downloadedExperimentsStorage
             .setup(n => n.value)
             .returns(() => undefined)
             .verifiable(TypeMoq.Times.once());
-        when(fs.fileExists(anything())).thenResolve(false);
+        when(
+            fs.fileExists(anything())
+        ).thenResolve(false);
         experimentStorage.setup(n => n.value).returns(() => undefined)
             .verifiable(TypeMoq.Times.exactly(2));
         isDownloadedStorageValid
             .setup(n => n.value)
             .returns(() => true)
             .verifiable(TypeMoq.Times.once());
-        when(workspaceService.getConfiguration('telemetry')).thenReturn(workspaceConfig.object);
-        workspaceConfig.setup(c => c.inspect<boolean>('enableTelemetry'))
-            .returns(() => settings as any);
 
         // First activation
         await expManager.activate();
 
-        downloadedExperimentsStorage.reset();
-        downloadedExperimentsStorage
-            .setup(n => n.value)
-            .returns(() => undefined)
-            .verifiable(TypeMoq.Times.never());
+        resetCalls(workspaceService);
 
         // Second activation
         await expManager.activate();
 
-        downloadedExperimentsStorage.verifyAll();
+        verify(workspaceService.getConfiguration(anything())).never();
 
+        workspaceConfig.verifyAll();
         verify(fs.fileExists(anything())).once();
         isDownloadedStorageValid.verifyAll();
         experimentStorage.verifyAll();
+        downloadedExperimentsStorage.verifyAll();
     });
 
     test('Ensure experiments are reliably initialized in the background', async () => {
