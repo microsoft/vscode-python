@@ -2,10 +2,11 @@
 // Licensed under the MIT License.
 'use strict';
 Object.defineProperty(exports, "__esModule", { value: true });
+// tslint:disable-next-line: no-require-imports
+const copyWebpackPlugin = require("copy-webpack-plugin");
 const path = require("path");
 const constants_1 = require("../constants");
 const common_1 = require("./common");
-const copyWebpackPlugin = require("copy-webpack-plugin");
 const entryItems = {};
 common_1.nodeModulesToExternalize.forEach(moduleName => {
     entryItems[`node_modules/${moduleName}`] = `./node_modules/${moduleName}`;
@@ -28,7 +29,10 @@ const config = {
                         loader: path.join(__dirname, 'loaders', 'fixEvalRequire.js')
                     }
                 ]
-            }
+            },
+            { enforce: 'post', test: /unicode-properties[\/\\]index.js$/, loader: 'transform-loader?brfs' },
+            { enforce: 'post', test: /fontkit[\/\\]index.js$/, loader: 'transform-loader?brfs' },
+            { enforce: 'post', test: /linebreak[\/\\]src[\/\\]linebreaker.js/, loader: 'transform-loader?brfs' }
         ]
     },
     externals: [
@@ -48,6 +52,12 @@ const config = {
         ])
     ],
     resolve: {
+        alias:{
+            // Pointing pdfkit to a dummy js file so webpack doesn't fall over.
+            // Since pdfkit has been externalized (it gets updated with the valid code by copying the pdfkit files
+            // into the right destination).
+            'pdfkit':path.resolve(__dirname, 'pdfkit.js')
+        },
         extensions: ['.js']
     },
     output: {

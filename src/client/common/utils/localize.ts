@@ -206,6 +206,7 @@ export namespace DataScience {
     export const editSection = localize('DataScience.editSection', 'Input new cells here.');
     export const selectedImageListLabel = localize('DataScience.selectedImageListLabel', 'Selected Image');
     export const imageListLabel = localize('DataScience.imageListLabel', 'Image');
+    export const exportImageFailed = localize('DataScience.exportImageFailed', 'Error exporting image: {0}');
 }
 
 export namespace DebugConfigStrings {
