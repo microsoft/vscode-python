@@ -18,7 +18,7 @@ Microsoft Python extension for Visual Studio Code incorporates third party mater
 11.  @nteract/markdown 2.1.4 (https://registry.npmjs.org/@nteract/markdown/-/markdown-2.1.4.tgz)
 12.  @nteract/mathjax 2.1.4 (https://registry.npmjs.org/@nteract/mathjax/-/mathjax-2.1.4.tgz)
 13.  @nteract/octicons 0.4.3 (https://registry.npmjs.org/@nteract/octicons/-/octicons-0.4.3.tgz)
-14.  @nteract/plotly 1.47.1 (https://registry.npmjs.org/@nteract/plotly/-/plotly-1.47.1.tgz)
+14.  @nteract/plotly 1.48.3 (https://registry.npmjs.org/@nteract/plotly/-/plotly-1.48.3.tgz)
 15.  @nteract/transform-dataresource 4.3.5 (https://registry.npmjs.org/@nteract/transform-dataresource/-/transform-dataresource-4.3.5.tgz)
 16.  @nteract/transform-geojson 3.2.3 (https://registry.npmjs.org/@nteract/transform-geojson/-/transform-geojson-3.2.3.tgz)
 17.  @nteract/transform-model-debug 3.2.3 (https://registry.npmjs.org/@nteract/transform-model-debug/-/transform-model-debug-3.2.3.tgz)
@@ -831,7 +831,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 =========================================
 END OF @nteract/octicons NOTICES AND INFORMATION
 
-%% @nteract/plotly 1.47.1 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/@nteract/plotly/-/plotly-1.47.1.tgz)
+%% @nteract/plotly 1.48.3 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/@nteract/plotly/-/plotly-1.48.3.tgz)
 =========================================
 BSD 3-Clause License
 
