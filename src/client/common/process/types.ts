@@ -40,12 +40,6 @@ export type ExecutionResult<T extends string | Buffer> = {
     stderr?: T;
 };
 
-// export type ProcessServiceEventArgs = {
-//     file: string;
-//     args: string[];
-//     options: SpawnOptions;
-// };
-
 export const IProcessLogger = Symbol('IProcessLogger');
 export interface IProcessLogger {
     logProcess(file: string, ars: string[], options?: SpawnOptions): void;
