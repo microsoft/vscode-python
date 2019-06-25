@@ -5,11 +5,12 @@ import * as assert from 'assert';
 import { expect } from 'chai';
 import { SemVer } from 'semver';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
-import { Uri } from 'vscode';
+import { Disposable, Uri } from 'vscode';
 
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { BufferDecoder } from '../../../client/common/process/decoder';
+import { ProcessLogger } from '../../../client/common/process/logger';
 import { ProcessService } from '../../../client/common/process/proc';
 import { ProcessServiceFactory } from '../../../client/common/process/processFactory';
 import { PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
@@ -17,6 +18,7 @@ import { PythonExecutionService } from '../../../client/common/process/pythonPro
 import {
     ExecutionFactoryCreationOptions,
     IBufferDecoder,
+    IProcessLogger,
     IProcessServiceFactory,
     IPythonExecutionService
 } from '../../../client/common/process/types';
@@ -67,14 +69,21 @@ suite('Process - PythonExecutionFactory', () => {
             let bufferDecoder: IBufferDecoder;
             let procecssFactory: IProcessServiceFactory;
             let configService: IConfigurationService;
-
+            let processLogger: IProcessLogger;
+            let processService: ProcessService;
             setup(() => {
                 bufferDecoder = mock(BufferDecoder);
                 activationHelper = mock(EnvironmentActivationService);
                 procecssFactory = mock(ProcessServiceFactory);
                 configService = mock(ConfigurationService);
+                processLogger = mock(ProcessLogger);
+                when(processLogger.logProcess({file: '', args: [], options: {}})).thenReturn();
+                processService = mock(ProcessService);
+                const disposable = mock(Disposable);
+                when(processService.processExecutedEvent).thenReturn(() => disposable);
                 const serviceContainer = mock(ServiceContainer);
                 when(serviceContainer.get<IDisposableRegistry>(IDisposableRegistry)).thenReturn([]);
+                when(serviceContainer.get<IProcessLogger>(IProcessLogger)).thenReturn(processLogger);
                 factory = new PythonExecutionFactory(instance(serviceContainer),
                     instance(activationHelper), instance(procecssFactory),
                     instance(configService), instance(bufferDecoder));
@@ -82,7 +91,7 @@ suite('Process - PythonExecutionFactory', () => {
 
             test('Ensure PythonExecutionService is created', async () => {
                 const pythonSettings = mock(PythonSettings);
-                when(procecssFactory.create(resource)).thenResolve(instance(mock(ProcessService)));
+                when(procecssFactory.create(resource)).thenResolve(instance(processService));
                 when(activationHelper.getActivatedEnvironmentVariables(resource)).thenResolve({ x: '1' });
                 when(pythonSettings.pythonPath).thenReturn('HELLO');
                 when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
