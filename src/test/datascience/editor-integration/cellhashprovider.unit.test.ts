@@ -60,6 +60,7 @@ suite('CellHashProvider Unit Tests', () => {
 
      });
 
+
      test('Add a cell, delete it, and recreate it', () => {
         const file = '#%%\r\nprint("foo")\r\n#%%\r\nprint("bar")';
         const code = '#%%\r\nprint("bar")';
@@ -309,4 +310,108 @@ suite('CellHashProvider Unit Tests', () => {
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
     });
 
+    test('Add a cell and edit different parts of it', () => {
+        const file = '#%%\r\nprint("foo")\r\n#%%\r\nprint("bar")';
+        const code = '#%%\r\nprint("bar")';
+        // Create our document
+        documentManager.addDocument(file, 'foo.py');
+
+        // Add this code
+        hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code, file: 'foo.py', line: 2 });
+
+        // We should have a single hash
+        const hashes = hashProvider.getHashes();
+        assert.equal(hashes.length, 1, 'No hashes found');
+        assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
+        assert.equal(hashes[0].hashes[0].line, 3, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].endLine, 4, 'Wrong end line');
+        assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
+
+        // Edit the cell we added
+        documentManager.changeDocument('foo.py', new Range(new Position(2, 0), new Position(2, 0)), '#');
+        assert.equal(hashProvider.getHashes().length, 0, 'Cell should be destroyed');
+        documentManager.changeDocument('foo.py', new Range(new Position(2, 0), new Position(2, 1)), '');
+        assert.equal(hashProvider.getHashes().length, 1, 'Cell should be back');
+        documentManager.changeDocument('foo.py', new Range(new Position(2, 0), new Position(2, 1)), '');
+        assert.equal(hashProvider.getHashes().length, 0, 'Cell should be destroyed');
+        documentManager.changeDocument('foo.py', new Range(new Position(2, 0), new Position(2, 0)), '#');
+        assert.equal(hashProvider.getHashes().length, 1, 'Cell should be back');
+        documentManager.changeDocument('foo.py', new Range(new Position(2, 1), new Position(2, 2)), '');
+        assert.equal(hashProvider.getHashes().length, 0, 'Cell should be destroyed');
+        documentManager.changeDocument('foo.py', new Range(new Position(2, 1), new Position(2, 1)), '%');
+        assert.equal(hashProvider.getHashes().length, 1, 'Cell should be back');
+        documentManager.changeDocument('foo.py', new Range(new Position(2, 2), new Position(2, 3)), '');
+        assert.equal(hashProvider.getHashes().length, 0, 'Cell should be destroyed');
+        documentManager.changeDocument('foo.py', new Range(new Position(2, 2), new Position(2, 2)), '%');
+        assert.equal(hashProvider.getHashes().length, 1, 'Cell should be back');
+        documentManager.changeDocument('foo.py', new Range(new Position(2, 3), new Position(2, 4)), '');
+        assert.equal(hashProvider.getHashes().length, 0, 'Cell should be destroyed');
+        documentManager.changeDocument('foo.py', new Range(new Position(2, 3), new Position(2, 3)), '\r');
+        assert.equal(hashProvider.getHashes().length, 1, 'Cell should be back');
+        documentManager.changeDocument('foo.py', new Range(new Position(2, 4), new Position(2, 5)), '');
+        assert.equal(hashProvider.getHashes().length, 0, 'Cell should be destroyed');
+        documentManager.changeDocument('foo.py', new Range(new Position(2, 4), new Position(2, 4)), '\n');
+        assert.equal(hashProvider.getHashes().length, 1, 'Cell should be back');
+     });
+
+     test('Add a cell and edit it to be exactly the same', () => {
+        const file = '#%%\r\nprint("foo")\r\n#%%\r\nprint("bar")';
+        const code = '#%%\r\nprint("bar")';
+        // Create our document
+        documentManager.addDocument(file, 'foo.py');
+
+        // Add this code
+        hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code, file: 'foo.py', line: 2 });
+
+        // We should have a single hash
+        let hashes = hashProvider.getHashes();
+        assert.equal(hashes.length, 1, 'No hashes found');
+        assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
+        assert.equal(hashes[0].hashes[0].line, 3, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].endLine, 4, 'Wrong end line');
+        assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
+
+        // Replace with the same cell
+        documentManager.changeDocument('foo.py', new Range(new Position(0, 0), new Position(3, 14)), file);
+        hashes = hashProvider.getHashes();
+        assert.equal(hashes.length, 1, 'No hashes found');
+        assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
+        assert.equal(hashes[0].hashes[0].line, 3, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].endLine, 4, 'Wrong end line');
+        assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
+        assert.equal(hashProvider.getHashes().length, 1, 'Cell should be back');
+     });
+
+     test('Add a cell and edit it to not be exactly the same', () => {
+        const file = '#%%\r\nprint("foo")\r\n#%%\r\nprint("bar")';
+        const file2 = '#%%\r\nprint("fooze")\r\n#%%\r\nprint("bar")';
+        const code = '#%%\r\nprint("bar")';
+        // Create our document
+        documentManager.addDocument(file, 'foo.py');
+
+        // Add this code
+        hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code, file: 'foo.py', line: 2 });
+
+        // We should have a single hash
+        let hashes = hashProvider.getHashes();
+        assert.equal(hashes.length, 1, 'No hashes found');
+        assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
+        assert.equal(hashes[0].hashes[0].line, 3, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].endLine, 4, 'Wrong end line');
+        assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
+
+        // Replace with the new code
+        documentManager.changeDocument('foo.py', new Range(new Position(0, 0), new Position(3, 14)), file2);
+        hashes = hashProvider.getHashes();
+        assert.equal(hashes.length, 0, 'Hashes should be gone');
+
+        // Put back old code
+        documentManager.changeDocument('foo.py', new Range(new Position(0, 0), new Position(3, 14)), file);
+        hashes = hashProvider.getHashes();
+        assert.equal(hashes.length, 1, 'No hashes found');
+        assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
+        assert.equal(hashes[0].hashes[0].line, 3, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].endLine, 4, 'Wrong end line');
+        assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
+     });
 });

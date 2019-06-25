@@ -126,6 +126,10 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
         const lineDiff = c.text.split('\n').length - d.getText(c.range).split('\n').length;
         const offsetDiff = c.text.length - c.rangeLength;
 
+        // Compute the length that is modified by the cell. If this is an insertion, include
+        // the actual text being added.
+        const minRangeLength = c.rangeLength === 0 ? c.text.length : c.rangeLength;
+
         // Also compute the text of the document with the change applied
         const appliedText = this.applyChange(d, c);
 
@@ -133,22 +137,15 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
             // See how this existing cell compares to the change
             if (h.endOffset < c.rangeOffset) {
                 // No change. This cell is entirely before the change
-            } else if (h.startOffset >= c.rangeOffset + c.rangeLength) {
+            } else if (h.startOffset >= c.rangeOffset + minRangeLength) {
                 // This cell is after the text that got replaced. Adjust its start/end lines
                 h.line += lineDiff;
                 h.endLine += lineDiff;
                 h.startOffset += offsetDiff;
                 h.endOffset += offsetDiff;
-            } else if (!h.deleted) {
-                // Cell intersects. Mark as deleted
-                h.deleted = true;
-                // Leave other aspects alone as they will be updated by other updates
             } else {
-                // Already deleted and intersects the change. See if the change made
-                // the deletion invalid.
-                if (appliedText.substr(h.startOffset, h.endOffset - h.startOffset) === h.realCode) {
-                    h.deleted = false;
-                }
+                // Cell intersects. Mark as deleted if not exactly the same (user could type over the exact same values)
+                h.deleted = appliedText.substr(h.startOffset, h.endOffset - h.startOffset) !== h.realCode;
             }
         });
     }
