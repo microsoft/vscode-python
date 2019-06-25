@@ -74,7 +74,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
     }
     public checkExperiments() {
         const experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
-        if (experiments.inExperiment(AlwaysDisplayTestExplorerGroups.enabled)) {
+        if (experiments.inExperiment(AlwaysDisplayTestExplorerGroups.experiment)) {
             const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
             commandManager.executeCommand('setContext', 'testsDiscovered', true).then(noop, noop);
         } else {
