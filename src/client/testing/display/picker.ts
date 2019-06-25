@@ -124,13 +124,13 @@ function getSummary(tests?: Tests) {
 }
 function buildItems(tests?: Tests): TestItem[] {
     const items: TestItem[] = [];
-    items.push({ description: '', label: 'Run All Unit Tests', type: Type.RunAll });
-    items.push({ description: '', label: 'Discover Unit Tests', type: Type.ReDiscover });
-    items.push({ description: '', label: 'Run Unit Test Method ...', type: Type.SelectAndRunMethod });
-    items.push({ description: '', label: 'Configure Unit Tests', type: Type.Configure });
+    items.push({ description: '', label: 'Run All Tests', type: Type.RunAll });
+    items.push({ description: '', label: 'Discover Tests', type: Type.ReDiscover });
+    items.push({ description: '', label: 'Run Test Method ...', type: Type.SelectAndRunMethod });
+    items.push({ description: '', label: 'Configure Tests', type: Type.Configure });
 
     const summary = getSummary(tests);
-    items.push({ description: '', label: 'View Unit Test Output', type: Type.ViewTestOutput, detail: summary });
+    items.push({ description: '', label: 'View Test Output', type: Type.ViewTestOutput, detail: summary });
 
     if (tests && tests.summary.failures > 0) {
         items.push({ description: '', label: 'Run Failed Tests', type: Type.RunFailed, detail: `${constants.Octicons.Test_Fail} ${tests.summary.failures} Failed` });

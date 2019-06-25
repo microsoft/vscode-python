@@ -8,7 +8,6 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import { traceError } from '../../../common/logger';
-import { IFileSystem } from '../../../common/platform/types';
 import { TestDataItem } from '../../types';
 import { getParentFile, getParentSuite, getTestType } from '../testUtils';
 import { FlattenedTestFunction, FlattenedTestSuite, SubtestParent, TestFile, TestFolder, TestFunction, Tests, TestSuite, TestType } from '../types';
@@ -16,8 +15,7 @@ import { DiscoveredTests, ITestDiscoveredTestParser, TestContainer, TestItem } f
 
 @injectable()
 export class TestDiscoveredTestParser implements ITestDiscoveredTestParser {
-    constructor(@inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService) { }
+    constructor(@inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService) { }
     public parse(resource: Uri, discoveredTests: DiscoveredTests[]): Tests {
         const tests: Tests = {
             rootTestFolders: [],
@@ -43,29 +41,9 @@ export class TestDiscoveredTestParser implements ITestDiscoveredTestParser {
             tests.rootTestFolders.push(rootFolder);
             tests.testFolders.push(rootFolder);
             this.buildChildren(rootFolder, rootFolder, data, tests);
-            this.fixRootFolders(workspace.uri, data, tests);
         }
 
         return tests;
-    }
-    /**
-     * Users workspace folder is not to be treated as the root.
-     * All root folders are relative to the worspace folder.
-     * @protected
-     * @param {Uri} workspaceFolder
-     * @param {DiscoveredTests} discoveredTests
-     * @param {Tests} tests
-     * @returns {void}
-     * @memberof TestDiscoveredTestParser
-     */
-    protected fixRootFolders(workspaceFolder: Uri, discoveredTests: DiscoveredTests, tests: Tests): void {
-        const isWorkspaceFolderTheRoot = this.fs.arePathsSame(discoveredTests.root, workspaceFolder.fsPath);
-        if (!isWorkspaceFolderTheRoot) {
-            return;
-        }
-        const indexToRemove = tests.rootTestFolders.findIndex(folder => folder.name === discoveredTests.root);
-        const rootFolder = tests.rootTestFolders.splice(indexToRemove, 1)[0];
-        tests.rootTestFolders.push(...rootFolder.folders);
     }
     /**
      * Not the best solution to use `case statements`, but it keeps the code simple and easy to read in one place.

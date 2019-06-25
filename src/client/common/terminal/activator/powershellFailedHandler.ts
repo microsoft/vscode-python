@@ -17,11 +17,11 @@ export class PowershellTerminalActivationFailedHandler implements ITerminalActiv
         @inject(IPlatformService) private readonly platformService: IPlatformService,
         @inject(IDiagnosticsService) @named(PowerShellActivationHackDiagnosticsServiceId) private readonly diagnosticService: IDiagnosticsService) {
     }
-    public async handleActivation(_terminal: Terminal, resource: Resource, _preserveFocus: boolean, activated: boolean) {
+    public async handleActivation(terminal: Terminal, resource: Resource, _preserveFocus: boolean, activated: boolean) {
         if (activated || !this.platformService.isWindows) {
             return;
         }
-        const shell = this.helper.identifyTerminalShell(this.helper.getTerminalShellPath());
+        const shell = this.helper.identifyTerminalShell(terminal);
         if (shell !== TerminalShellType.powershell && shell !== TerminalShellType.powershellCore) {
             return;
         }

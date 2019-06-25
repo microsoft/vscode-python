@@ -16,3 +16,7 @@ class Project:
     license: Optional[str] = None
     error: Optional[Exception] = None
     purpose: Optional[str] = None
+
+    @property
+    def npm(self):
+        return f"https://www.npmjs.com/package/{self.name}"

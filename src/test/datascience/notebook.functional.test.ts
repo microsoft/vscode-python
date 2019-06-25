@@ -14,6 +14,7 @@ import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 
 import { Cancellation, CancellationError } from '../../client/common/cancellation';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
+import { traceError, traceInfo } from '../../client/common/logger';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IProcessServiceFactory, Output } from '../../client/common/process/types';
 import { createDeferred } from '../../client/common/utils/async';
@@ -21,7 +22,6 @@ import { noop } from '../../client/common/utils/misc';
 import { concatMultilineString } from '../../client/datascience/common';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/jupyterKernelPromiseFailedError';
-import { IRoleBasedObject, RoleBasedFactory } from '../../client/datascience/jupyter/liveshare/roleBasedFactory';
 import {
     CellState,
     IConnection,
@@ -37,19 +37,13 @@ import {
     IKnownSearchPathsForInterpreters,
     PythonInterpreter
 } from '../../client/interpreter/contracts';
-import { ClassType } from '../../client/ioc/types';
 import { ICellViewModel } from '../../datascience-ui/history-react/cell';
 import { generateTestState } from '../../datascience-ui/history-react/mainPanelState';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { MockJupyterSession } from './mockJupyterSession';
-
-interface IJupyterServerInterface extends IRoleBasedObject, INotebookServer {
-
-}
 
 // tslint:disable:no-any no-multiline-string max-func-body-length no-console max-classes-per-file trailing-comma
-suite('Jupyter notebook tests', () => {
+suite('DataScience notebook tests', () => {
     const disposables: Disposable[] = [];
     let jupyterExecution: IJupyterExecution;
     let processFactory: IProcessServiceFactory;
@@ -64,24 +58,31 @@ suite('Jupyter notebook tests', () => {
     });
 
     teardown(async () => {
-        if (modifiedConfig) {
-            const python = await getNotebookCapableInterpreter();
-            const procService = await processFactory.create();
-            if (procService && python) {
-                await procService.exec(python.path, ['-m', 'jupyter', 'notebook', '--generate-config', '-y'], { env: process.env });
-            }
-        }
-        // tslint:disable-next-line:prefer-for-of
-        for (let i = 0; i < disposables.length; i += 1) {
-            const disposable = disposables[i];
-            if (disposable) {
-                const promise = disposable.dispose() as Promise<any>;
-                if (promise) {
-                    await promise;
+        try {
+            if (modifiedConfig) {
+                traceInfo('Attempting to put jupyter default config back');
+                const python = await getNotebookCapableInterpreter();
+                const procService = await processFactory.create();
+                if (procService && python) {
+                    await procService.exec(python.path, ['-m', 'jupyter', 'notebook', '--generate-config', '-y'], { env: process.env });
                 }
             }
+            traceInfo('Shutting down after test.');
+            // tslint:disable-next-line:prefer-for-of
+            for (let i = 0; i < disposables.length; i += 1) {
+                const disposable = disposables[i];
+                if (disposable) {
+                    const promise = disposable.dispose() as Promise<any>;
+                    if (promise) {
+                        await promise;
+                    }
+                }
+            }
+            await ioc.dispose();
+            traceInfo('Shutdown after test complete.');
+        } catch (e) {
+            traceError(e);
         }
-        await ioc.dispose();
     });
 
     function escapePath(p: string) {
@@ -140,7 +141,7 @@ suite('Jupyter notebook tests', () => {
             const text = cell.outputs[0].text;
             assert.ok(data || text, `${index}: No data object on the cell for ${code}`);
             if (data) { // For linter
-                assert.ok(data.hasOwnProperty(mimeType), `${index}: Cell mime type not correct`);
+                assert.ok(data.hasOwnProperty(mimeType), `${index}: Cell mime type not correct for ${JSON.stringify(data)}`);
                 assert.ok((data as any)[mimeType], `${index}: Cell mime type not correct`);
                 verifyValue((data as any)[mimeType]);
             }
@@ -225,13 +226,84 @@ suite('Jupyter notebook tests', () => {
         }
     }
 
+    runTest('Remote Self Certs', async () => {
+        const python = await getNotebookCapableInterpreter();
+        const procService = await processFactory.create();
+
+        // We will only connect if we allow for self signed cert connections
+        ioc.getSettings().datascience.allowUnauthorizedRemoteConnection = true;
+
+        if (procService && python) {
+            const connectionFound = createDeferred();
+            const configFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'serverConfigFiles', 'selfCert.py');
+            const pemFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'serverConfigFiles', 'jcert.pem');
+            const keyFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'serverConfigFiles', 'jkey.key');
+
+            const exeResult = procService.execObservable(python.path, ['-m', 'jupyter', 'notebook', `--config=${configFile}`, `--certfile=${pemFile}`, `--keyfile=${keyFile}`], { env: process.env, throwOnStdErr: false });
+            disposables.push(exeResult);
+
+            exeResult.out.subscribe((output: Output<string>) => {
+                const connectionURL = getIPConnectionInfo(output.out);
+                if (connectionURL) {
+                    connectionFound.resolve(connectionURL);
+                }
+            });
+
+            const connString = await connectionFound.promise;
+            const uri = connString as string;
+
+            // We have a connection string here, so try to connect jupyterExecution to the notebook server
+            const server = await jupyterExecution.connectToNotebookServer({ uri, useDefaultConfig: true, purpose: '' });
+            if (!server) {
+                assert.fail('Failed to connect to remote self cert server');
+            } else {
+                await verifySimple(server, `a=1${os.EOL}a`, 1);
+            }
+            // Have to dispose here otherwise the process may exit before hand and mess up cleanup.
+            await server!.dispose();
+        }
+    });
+
+    runTest('Remote Password', async () => {
+        const python = await getNotebookCapableInterpreter();
+        const procService = await processFactory.create();
+
+        if (procService && python) {
+            const connectionFound = createDeferred();
+            const configFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'serverConfigFiles', 'remotePassword.py');
+            const exeResult = procService.execObservable(python.path, ['-m', 'jupyter', 'notebook', `--config=${configFile}`], { env: process.env, throwOnStdErr: false });
+            disposables.push(exeResult);
+
+            exeResult.out.subscribe((output: Output<string>) => {
+                const connectionURL = getIPConnectionInfo(output.out);
+                if (connectionURL) {
+                    connectionFound.resolve(connectionURL);
+                }
+            });
+
+            const connString = await connectionFound.promise;
+            const uri = connString as string;
+
+            // We have a connection string here, so try to connect jupyterExecution to the notebook server
+            const server = await jupyterExecution.connectToNotebookServer({ uri, useDefaultConfig: true, purpose: '' });
+            if (!server) {
+                assert.fail('Failed to connect to remote password server');
+            } else {
+                await verifySimple(server, `a=1${os.EOL}a`, 1);
+            }
+            // Have to dispose here otherwise the process may exit before hand and mess up cleanup.
+            await server!.dispose();
+        }
+    });
+
     runTest('Remote', async () => {
         const python = await getNotebookCapableInterpreter();
         const procService = await processFactory.create();
 
         if (procService && python) {
             const connectionFound = createDeferred();
-            const exeResult = procService.execObservable(python.path, ['-m', 'jupyter', 'notebook', '--no-browser'], { env: process.env, throwOnStdErr: false });
+            const configFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'serverConfigFiles', 'remoteToken.py');
+            const exeResult = procService.execObservable(python.path, ['-m', 'jupyter', 'notebook', `--config=${configFile}`], { env: process.env, throwOnStdErr: false });
             disposables.push(exeResult);
 
             exeResult.out.subscribe((output: Output<string>) => {
@@ -248,7 +320,10 @@ suite('Jupyter notebook tests', () => {
             const server = await jupyterExecution.connectToNotebookServer({ uri, useDefaultConfig: true, purpose: '' });
             if (!server) {
                 assert.fail('Failed to connect to remote server');
+            } else {
+                await verifySimple(server, `a=1${os.EOL}a`, 1);
             }
+
             // Have to dispose here otherwise the process may exit before hand and mess up cleanup.
             await server!.dispose();
         }
@@ -257,6 +332,21 @@ suite('Jupyter notebook tests', () => {
     runTest('Creation', async () => {
         await createNotebookServer(true);
     });
+
+    // IP = * format is a bit different from localhost format
+    function getIPConnectionInfo(output: string): string | undefined {
+        // String format: http://(NAME or IP):PORT/
+        const nameAndPortRegEx = /(https?):\/\/\(([^\s]*) or [0-9.]*\):([0-9]*)\/(?:\?token=)?([a-zA-Z0-9]*)?/;
+
+        const urlMatch = nameAndPortRegEx.exec(output);
+        if (urlMatch && !urlMatch[4]) {
+            return `${urlMatch[1]}://${urlMatch[2]}:${urlMatch[3]}/`;
+        } else if (urlMatch && urlMatch.length === 5) {
+            return `${urlMatch[1]}://${urlMatch[2]}:${urlMatch[3]}/?token=${urlMatch[4]}`;
+        }
+
+        return undefined;
+    }
 
     function getConnectionInfo(output: string): string | undefined {
         const UrlPatternRegEx = /(https?:\/\/[^\s]+)/;
@@ -361,8 +451,11 @@ suite('Jupyter notebook tests', () => {
             // Try importing this. This should verify export works and that importing is possible
             const results = await importer.importFromFile(temp.filePath);
 
-            // Make sure we added a chdir into our results
-            assert.ok(results.includes('os.chdir'));
+            // Make sure we have a single chdir in our results
+            const first = results.indexOf('os.chdir');
+            assert.ok(first >= 0, 'No os.chdir in import');
+            const second = results.indexOf('os.chdir', first + 1);
+            assert.equal(second, -1, 'More than one chdir in the import. It should be skipped');
 
             // Make sure we have a cell in our results
             assert.ok(/#\s*%%/.test(results), 'No cells in returned import');
@@ -668,15 +761,15 @@ df.head()`,
             },
             {
                 // Important to test as multiline cell magics only work if they are the first item in the cell
-                // Doesn't work with a comment though.
                 markdownRegEx: undefined,
                 code:
-                    `%%bash
+                    `#%%
+%%bash
 echo 'hello'`,
                 mimeType: 'text/plain',
                 cellType: 'code',
                 result: 'hello',
-                verifyValue: (d) => assert.ok(d.includes('hello'), 'Multiline cell magic incorrect')
+                verifyValue: (d) => assert.ok(d.includes('hello') || d.includes('bash'), `Multiline cell magic incorrect - ${d}`)
             },
             {
                 // Test shell command should work on PC / Mac / Linux
@@ -700,7 +793,7 @@ x = np.linspace(0, 20, 100)
 plt.plot(x, np.sin(x))
 plt.show()`,
                 result: `00000`,
-                mimeType: 'image/png',
+                mimeType: 'image/svg+xml',
                 cellType: 'code',
                 verifyValue: (_d) => { return; }
             }
@@ -763,36 +856,6 @@ plt.show()`,
             assert.ok(server, 'Never connected to a default server with a bad default config');
 
             await verifySimple(server, `a=1${os.EOL}a`, 1);
-        }
-    });
-
-    async function getNotebookSession(server: INotebookServer | undefined): Promise<MockJupyterSession | undefined> {
-        if (server) {
-            // This is kinda fragile. It reliese on impl details to get to the session. Might
-            // just expose it?
-            const innerServerFactory = (server as any).serverFactory as RoleBasedFactory<IJupyterServerInterface, ClassType<IJupyterServerInterface>>;
-            const innerServer = await innerServerFactory.get();
-            assert.ok(innerServer, 'Cannot find the inner server');
-            return (innerServer as any).session as MockJupyterSession;
-        }
-    }
-
-    runTest('Theme modifies execution', async () => {
-        if (ioc.mockJupyter) {
-            let server = await createNotebookServer(true, false, false);
-            let session = await getNotebookSession(server);
-            const light = '%matplotlib inline\nimport matplotlib.pyplot as plt';
-            const dark = '%matplotlib inline\nimport matplotlib.pyplot as plt\nfrom matplotlib import style\nstyle.use(\'dark_background\')';
-
-            assert.ok(session!.getExecutes().indexOf(light) >= 0, 'light not found');
-            assert.ok(session!.getExecutes().indexOf(dark) < 0, 'dark found when not allowed');
-            await server!.dispose();
-
-            server = await createNotebookServer(true, false, true);
-            session = await getNotebookSession(server);
-            assert.ok(session!.getExecutes().indexOf(dark) >= 0, 'dark not found');
-            assert.ok(session!.getExecutes().indexOf(light) < 0, 'light found when not allowed');
-            await server!.dispose();
         }
     });
 

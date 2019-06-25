@@ -1,5 +1,6 @@
 {
     "compilerOptions": {
+        "baseUrl": ".",
         "module": "commonjs",
         "target": "es5",
         "outDir": "out",
@@ -14,6 +15,7 @@
             "src",
             "types"
         ],
+        "paths": { "*": ["types/*"] },
         "experimentalDecorators": true,
         "allowSyntheticDefaultImports": true,
         "noImplicitThis": false,

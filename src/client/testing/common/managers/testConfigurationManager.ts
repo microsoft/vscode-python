@@ -40,7 +40,7 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
             ignoreFocusOut: true,
             matchOnDescription: true,
             matchOnDetail: true,
-            placeHolder: 'Select the directory containing the unit tests'
+            placeHolder: 'Select the directory containing the tests'
         };
         let items: QuickPickItem[] = subDirs
             .map(dir => {

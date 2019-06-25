@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 'use strict';
 
+import { HexBase64Latin1Encoding } from 'crypto';
 import { Socket } from 'net';
+import { Request as RequestResult } from 'request';
 import { ConfigurationTarget, DiagnosticSeverity, Disposable, DocumentSymbolProvider, Event, Extension, ExtensionContext, OutputChannel, Uri, WorkspaceEdit } from 'vscode';
 import { CommandsWithoutArgs } from './application/commands';
 import { EnvironmentVariables } from './variables/types';
@@ -54,9 +56,12 @@ export enum LogLevel {
 export const ILogger = Symbol('ILogger');
 
 export interface ILogger {
-    logError(message: string, error?: Error): void;
-    logWarning(message: string, error?: Error): void;
-    logInformation(message: string, error?: Error): void;
+    // tslint:disable-next-line: no-any
+    logError(...args: any[]): void;
+    // tslint:disable-next-line: no-any
+    logWarning(...args: any[]): void;
+    // tslint:disable-next-line: no-any
+    logInformation(...args: any[]): void;
 }
 
 export enum InstallerResponse {
@@ -176,9 +181,9 @@ export interface ITestingSettings {
     readonly nosetestsEnabled: boolean;
     nosetestPath: string;
     nosetestArgs: string[];
-    readonly pyTestEnabled: boolean;
-    pyTestPath: string;
-    pyTestArgs: string[];
+    readonly pytestEnabled: boolean;
+    pytestPath: string;
+    pytestArgs: string[];
     readonly unittestEnabled: boolean;
     unittestArgs: string[];
     cwd?: string;
@@ -274,6 +279,7 @@ export interface IAnalysisSettings {
     readonly downloadChannel?: LanguageServerDownloadChannels;
     readonly openFilesOnly: boolean;
     readonly typeshedPaths: string[];
+    readonly cacheFolderPath: string | null;
     readonly errors: string[];
     readonly warnings: string[];
     readonly information: string[];
@@ -287,6 +293,7 @@ export interface IDataScienceSettings {
     enabled: boolean;
     jupyterInterruptTimeout: number;
     jupyterLaunchTimeout: number;
+    jupyterLaunchRetries: number;
     jupyterServerURI: string;
     notebookFileRoot: string;
     changeDirOnImportExport: boolean;
@@ -307,6 +314,11 @@ export interface IDataScienceSettings {
     liveShareConnectionTimeout?: number;
     decorateCells?: boolean;
     enableCellCodeLens?: boolean;
+    askForLargeDataFrames?: boolean;
+    enableAutoMoveToNextCell?: boolean;
+    autoPreviewNotebooksInInteractivePane?: boolean;
+    allowUnauthorizedRemoteConnection?: boolean;
+    askForKernelRestart?: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');
@@ -321,6 +333,17 @@ export const ISocketServer = Symbol('ISocketServer');
 export interface ISocketServer extends Disposable {
     readonly client: Promise<Socket>;
     Start(options?: { port?: number; host?: string }): Promise<number>;
+}
+
+export const IHttpClient = Symbol('IHttpClient');
+export interface IHttpClient {
+    downloadFile(uri: string): Promise<RequestResult>;
+    /**
+     * Downloads file from uri as string and parses them into JSON objects
+     * @param uri The uri to download the JSON from
+     * @param strict Set `false` to allow trailing comma and comments in the JSON, defaults to `true`
+     */
+    getJSON<T>(uri: string, strict?: boolean): Promise<T>;
 }
 
 export const IExtensionContext = Symbol('ExtensionContext');
@@ -399,7 +422,65 @@ export interface IAsyncDisposable {
     dispose(): Promise<void>;
 }
 
+/**
+ * Stores hash formats
+ */
+export interface IHashFormat {
+    'number': number; // If hash format is a number
+    'string': string; // If hash format is a string
+}
+
+/**
+ * Interface used to implement cryptography tools
+ */
+export const ICryptoUtils = Symbol('ICryptoUtils');
+export interface ICryptoUtils {
+    /**
+     * Creates hash using the data and encoding specified
+     * @returns hash as number, or string
+     * @param data The string to hash
+     * @param encoding Data encoding to use
+     * @param hashFormat Return format of the hash, number or string
+     */
+    createHash<E extends keyof IHashFormat>(data: string, encoding: HexBase64Latin1Encoding, hashFormat: E): IHashFormat[E];
+}
+
 export const IAsyncDisposableRegistry = Symbol('IAsyncDisposableRegistry');
 export interface IAsyncDisposableRegistry extends IAsyncDisposable {
     push(disposable: IDisposable | IAsyncDisposable): void;
+}
+
+/* ABExperiments field carries the identity, and the range of the experiment,
+ where the experiment is valid for users falling between the number 'min' and 'max'
+ More details: https://en.wikipedia.org/wiki/A/B_testing
+*/
+export type ABExperiments = {
+    name: string; // Name of the experiment
+    salt: string; // Salt string for the experiment
+    min: number;  // Lower limit for the experiment
+    max: number;  // Upper limit for the experiment
+}[];
+
+/**
+ * Interface used to implement AB testing
+ */
+export const IExperimentsManager = Symbol('IExperimentsManager');
+export interface IExperimentsManager {
+    /**
+     * Checks if experiments are enabled, sets required environment to be used for the experiments, logs experiment groups
+     */
+    activate(): Promise<void>;
+
+    /**
+     * Checks if user is in experiment or not
+     * @param experimentName Name of the experiment
+     * @returns `true` if user is in experiment, `false` if user is not in experiment
+     */
+    inExperiment(experimentName: string): boolean;
+
+    /**
+     * Sends experiment telemetry if user is in experiment
+     * @param experimentName Name of the experiment
+     */
+    sendTelemetryIfInExperiment(experimentName: string): void;
 }

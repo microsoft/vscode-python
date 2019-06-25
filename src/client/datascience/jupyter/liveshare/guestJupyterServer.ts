@@ -17,6 +17,7 @@ import {
     IConnection,
     IDataScience,
     IJupyterSessionManager,
+    INotebookCompletion,
     INotebookServer,
     INotebookServerLaunchInfo,
     InterruptResult
@@ -98,6 +99,10 @@ export class GuestJupyterServer
         return Promise.resolve();
     }
 
+    public async setMatplotLibStyle(_useDark: boolean): Promise<void> {
+        // Guest can't change the style. Maybe output a warning here?
+    }
+
     public executeObservable(code: string, file: string, line: number, id: string): Observable<ICell[]> {
         // Mimic this to the other side and then wait for a response
         this.waitForService().then(s => {
@@ -154,6 +159,17 @@ export class GuestJupyterServer
             const result = await service.request(LiveShareCommands.getSysInfo, []);
             return (result as ICell);
         }
+    }
+
+    public async getCompletion(_cellCode: string, _offsetInCode: number, _cancelToken?: CancellationToken) : Promise<INotebookCompletion> {
+        return Promise.resolve({
+            matches: [],
+            cursor: {
+                start: 0,
+                end: 0
+            },
+            metadata: {}
+        });
     }
 
     public async onAttach(api: vsls.LiveShare | null) : Promise<void> {

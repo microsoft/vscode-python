@@ -255,6 +255,7 @@ export function createMockTestExplorer(
     dispRegMoq.setup(d => d.push(typemoq.It.isAny()));
 
     return new TestTreeViewProvider(
-        testStore, unitTestMgmtService, workspaceService, commandManager, dispRegMoq.object
+        testStore, unitTestMgmtService, workspaceService, commandManager,
+        dispRegMoq.object
     );
 }

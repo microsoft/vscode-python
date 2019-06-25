@@ -4,9 +4,11 @@
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 
-import { IDocumentManager } from '../../common/application/types';
+import { ICommandManager, IDocumentManager } from '../../common/application/types';
+import { ContextKey } from '../../common/contextKey';
 import { IConfigurationService, IDataScienceSettings } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
+import { EditorContexts } from '../constants';
 import { ICodeWatcher, IDataScienceCodeLensProvider } from '../types';
 
 @injectable()
@@ -14,14 +16,32 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     private activeCodeWatchers: ICodeWatcher[] = [];
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
                 @inject(IDocumentManager) private documentManager: IDocumentManager,
-                @inject(IConfigurationService) private configuration: IConfigurationService)
+                @inject(IConfigurationService) private configuration: IConfigurationService,
+                @inject(ICommandManager) private commandManager: ICommandManager
+        )
     {
     }
 
     // CodeLensProvider interface
     // Some implementation based on DonJayamanne's jupyter extension work
-    public provideCodeLenses(document: vscode.TextDocument, _token: vscode.CancellationToken):
-        vscode.CodeLens[] {
+    public provideCodeLenses(document: vscode.TextDocument, _token: vscode.CancellationToken): vscode.CodeLens[] {
+        // Get the list of code lens for this document.
+        const result = this.getCodeLens(document);
+
+        // Update the hasCodeCells context at the same time we are asked for codelens as VS code will
+        // ask whenever a change occurs.
+        const editorContext = new ContextKey(EditorContexts.HasCodeCells, this.commandManager);
+        editorContext.set(result && result.length > 0).catch();
+
+        return result;
+    }
+
+    // IDataScienceCodeLensProvider interface
+    public getCodeWatcher(document: vscode.TextDocument): ICodeWatcher | undefined {
+        return this.matchWatcher(document.fileName, document.version, this.configuration.getSettings().datascience);
+    }
+
+    private getCodeLens(document: vscode.TextDocument): vscode.CodeLens[] {
         // Don't provide any code lenses if we have not enabled data science
         const settings = this.configuration.getSettings();
         if (!settings.datascience.enabled || !settings.datascience.enableCellCodeLens) {
@@ -44,11 +64,6 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         newCodeWatcher.setDocument(document);
         this.activeCodeWatchers.push(newCodeWatcher);
         return newCodeWatcher.getCodeLenses();
-    }
-
-    // IDataScienceCodeLensProvider interface
-    public getCodeWatcher(document: vscode.TextDocument): ICodeWatcher | undefined {
-        return this.matchWatcher(document.fileName, document.version, this.configuration.getSettings().datascience);
     }
 
     private matchWatcher(fileName: string, version: number, settings: IDataScienceSettings) : ICodeWatcher | undefined {

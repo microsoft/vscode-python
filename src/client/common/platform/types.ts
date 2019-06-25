@@ -20,6 +20,7 @@ export interface IRegistry {
 export const IPlatformService = Symbol('IPlatformService');
 export interface IPlatformService {
     readonly osType: OSType;
+    osRelease: string;
     readonly pathVariableName: 'Path' | 'PATH';
     readonly virtualEnvBinName: 'bin' | 'Scripts';
 

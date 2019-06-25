@@ -17,25 +17,17 @@ import {
 } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import { Commands } from '../../client/datascience/constants';
-import { HistoryMessageListener } from '../../client/datascience/history/historyMessageListener';
-import { HistoryMessages } from '../../client/datascience/history/historyTypes';
-import {
-    ICodeWatcher,
-    IDataScienceCommandListener,
-    IHistory,
-    IHistoryProvider,
-    IJupyterExecution
-} from '../../client/datascience/types';
+import { ICodeWatcher, IDataScienceCommandListener, IInteractiveWindow, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createDocument } from './editor-integration/helpers';
-import { addMockData, CellPosition, verifyHtmlOnCell } from './historyTestHelpers';
+import { addMockData, CellPosition, verifyHtmlOnCell } from './interactiveWindowTestHelpers';
 import { waitForUpdate } from './reactHelpers';
 
 //tslint:disable:trailing-comma no-any no-multiline-string
 
 // tslint:disable-next-line:max-func-body-length no-any
-suite('LiveShare tests', () => {
+suite('DataScience LiveShare tests', () => {
     const disposables: Disposable[] = [];
     let hostContainer: DataScienceIocContainer;
     let guestContainer: DataScienceIocContainer;
@@ -83,29 +75,16 @@ suite('LiveShare tests', () => {
         result.createWebView(() => mount(<MainPanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />), role);
 
         // Make sure the history provider and execution factory in the container is created (the extension does this on startup in the extension)
-        const historyProvider = result.get<IHistoryProvider>(IHistoryProvider);
+        // This is necessary to get the appropriate live share services up and running.
+        result.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
         result.get<IJupyterExecution>(IJupyterExecution);
-
-        // The history provider create needs to be rewritten to make the history window think the mounted web panel is
-        // ready.
-        const origFunc = (historyProvider as any).create.bind(historyProvider);
-        (historyProvider as any).create = async (): Promise<void> => {
-            await origFunc();
-            const history = historyProvider.getActive();
-
-            // During testing the MainPanel sends the init message before our history is created.
-            // Pretend like it's happening now
-            const listener = ((history as any).messageListener) as HistoryMessageListener;
-            listener.onMessage(HistoryMessages.Started, {});
-        };
-
         return result;
     }
 
-    function getOrCreateHistory(role: vsls.Role): Promise<IHistory> {
+    function getOrCreateInteractiveWindow(role: vsls.Role): Promise<IInteractiveWindow> {
         // Get the container to use based on the role.
         const container = role === vsls.Role.Host ? hostContainer : guestContainer;
-        return container!.get<IHistoryProvider>(IHistoryProvider).getOrCreateActive();
+        return container!.get<IInteractiveWindowProvider>(IInteractiveWindowProvider).getOrCreateActive();
     }
 
     function isSessionStarted(role: vsls.Role): boolean {
@@ -137,8 +116,8 @@ suite('LiveShare tests', () => {
             // Generate our results
             await resultGenerator(true);
 
-            // Wait for all of the renders to go through
-            await Promise.all([hostRenderPromise, guestRenderPromise]);
+            // Wait for all of the renders to go through. Guest may have been shutdown by now.
+            await Promise.all([hostRenderPromise, isSessionStarted(vsls.Role.Guest) ? guestRenderPromise : Promise.resolve()]);
         }
         return container.wrapper!;
     }
@@ -146,15 +125,15 @@ suite('LiveShare tests', () => {
     async function addCodeToRole(role: vsls.Role, code: string, expectedRenderCount: number = 5): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
         return waitForResults(role, async (both: boolean) => {
             if (!both) {
-                const history = await getOrCreateHistory(role);
+                const history = await getOrCreateInteractiveWindow(role);
                 return history.addCode(code, 'foo.py', 2);
             } else {
                 // Add code to the apropriate container
-                const host = await getOrCreateHistory(vsls.Role.Host);
+                const host = await getOrCreateInteractiveWindow(vsls.Role.Host);
 
                 // Make sure guest is still creatable
                 if (isSessionStarted(vsls.Role.Guest)) {
-                    const guest = await getOrCreateHistory(vsls.Role.Guest);
+                    const guest = await getOrCreateInteractiveWindow(vsls.Role.Guest);
                     return (role === vsls.Role.Host ? host.addCode(code, 'foo.py', 2) : guest.addCode(code, 'foo.py', 2));
                 } else {
                     return host.addCode(code, 'foo.py', 2);
@@ -198,9 +177,9 @@ suite('LiveShare tests', () => {
         addMockData(hostContainer!, 'a=1\na', 1);
 
         // Create the host history and then the guest history
-        await getOrCreateHistory(vsls.Role.Host);
+        await getOrCreateInteractiveWindow(vsls.Role.Host);
         await startSession(vsls.Role.Host);
-        await getOrCreateHistory(vsls.Role.Guest);
+        await getOrCreateInteractiveWindow(vsls.Role.Guest);
         await startSession(vsls.Role.Guest);
 
         // Send code through the host
@@ -217,7 +196,7 @@ suite('LiveShare tests', () => {
         addMockData(hostContainer!, 'a=1\na', 1);
 
         // Create the host history and then the guest history
-        await getOrCreateHistory(vsls.Role.Host);
+        await getOrCreateInteractiveWindow(vsls.Role.Host);
         await startSession(vsls.Role.Host);
 
         // Send code through the host
@@ -237,7 +216,7 @@ suite('LiveShare tests', () => {
         addMockData(hostContainer!, 'a=1\na', 1);
 
         // Start the host, and add some data
-        const host = await getOrCreateHistory(vsls.Role.Host);
+        const host = await getOrCreateInteractiveWindow(vsls.Role.Host);
         await startSession(vsls.Role.Host);
 
         // Send code through the host

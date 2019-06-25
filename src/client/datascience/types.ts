@@ -5,7 +5,16 @@ import { nbformat } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
 import { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
-import { CancellationToken, CodeLens, CodeLensProvider, Disposable, Event, Range, TextDocument, TextEditor } from 'vscode';
+import {
+    CancellationToken,
+    CodeLens,
+    CodeLensProvider,
+    Disposable,
+    Event,
+    Range,
+    TextDocument,
+    TextEditor
+} from 'vscode';
 
 import { ICommandManager } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
@@ -31,6 +40,7 @@ export interface IConnection extends Disposable {
     localLaunch: boolean;
     localProcExitCode: number | undefined;
     disconnected: Event<number>;
+    allowUnauthorized?: boolean;
 }
 
 export enum InterruptResult {
@@ -46,9 +56,17 @@ export interface INotebookServerLaunchInfo
     currentInterpreter: PythonInterpreter | undefined;
     uri: string | undefined; // Different from the connectionInfo as this is the setting used, not the result
     kernelSpec: IJupyterKernelSpec | undefined;
-    usingDarkTheme: boolean;
     workingDir: string | undefined;
     purpose: string | undefined; // Purpose this server is for
+}
+
+export interface INotebookCompletion {
+    matches: ReadonlyArray<string>;
+    cursor: {
+        start: number;
+        end: number;
+    };
+    metadata: {};
 }
 
 // Talks to a jupyter ipython kernel to retrieve data for cells
@@ -57,6 +75,7 @@ export interface INotebookServer extends IAsyncDisposable {
     connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken) : Promise<void>;
     executeObservable(code: string, file: string, line: number, id: string, silent: boolean) : Observable<ICell[]>;
     execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken, silent?: boolean) : Promise<ICell[]>;
+    getCompletion(cellCode: string, offsetInCode: number, cancelToken?: CancellationToken) : Promise<INotebookCompletion>;
     restartKernel(timeoutInMs: number) : Promise<void>;
     waitForIdle(timeoutInMs: number) : Promise<void>;
     shutdown() : Promise<void>;
@@ -65,6 +84,7 @@ export interface INotebookServer extends IAsyncDisposable {
     waitForConnect(): Promise<INotebookServerLaunchInfo | undefined>;
     getConnectionInfo(): IConnection | undefined;
     getSysInfo() : Promise<ICell | undefined>;
+    setMatplotLibStyle(useDark: boolean) : Promise<void>;
 }
 
 export interface INotebookServerOptions {
@@ -90,6 +110,17 @@ export interface IJupyterExecution extends IAsyncDisposable {
     getServer(options?: INotebookServerOptions) : Promise<INotebookServer | undefined>;
 }
 
+export interface IJupyterPasswordConnectInfo {
+    xsrfCookie: string;
+    sessionCookieName: string;
+    sessionCookieValue: string;
+}
+
+export const IJupyterPasswordConnect = Symbol('IJupyterPasswordConnect');
+export interface IJupyterPasswordConnect {
+    getPasswordConnectionInfo(url: string, allowUnauthorized: boolean): Promise<IJupyterPasswordConnectInfo | undefined>;
+}
+
 export const IJupyterSession = Symbol('IJupyterSession');
 export interface IJupyterSession extends IAsyncDisposable {
     onRestarted: Event<void>;
@@ -97,6 +128,7 @@ export interface IJupyterSession extends IAsyncDisposable {
     interrupt(timeout: number) : Promise<void>;
     waitForIdle(timeout: number) : Promise<void>;
     requestExecute(content: KernelMessage.IExecuteRequest, disposeOnDone?: boolean, metadata?: JSONObject) : Kernel.IFuture | undefined;
+    requestComplete(content: KernelMessage.ICompleteRequest): Promise<KernelMessage.ICompleteReplyMsg | undefined>;
 }
 export const IJupyterSessionManager = Symbol('IJupyterSessionManager');
 export interface IJupyterSessionManager {
@@ -120,17 +152,17 @@ export interface INotebookExporter extends Disposable {
     translateToNotebook(cells: ICell[], directoryChange?: string) : Promise<JSONObject | undefined>;
 }
 
-export const IHistoryProvider = Symbol('IHistoryProvider');
-export interface IHistoryProvider {
+export const IInteractiveWindowProvider = Symbol('IInteractiveWindowProvider');
+export interface IInteractiveWindowProvider {
     onExecutedCode: Event<string>;
-    getActive() : IHistory | undefined;
-    getOrCreateActive(): Promise<IHistory>;
+    getActive() : IInteractiveWindow | undefined;
+    getOrCreateActive(): Promise<IInteractiveWindow>;
     getNotebookOptions() : Promise<INotebookServerOptions>;
 }
 
-export const IHistory = Symbol('IHistory');
-export interface IHistory extends Disposable {
-    closed: Event<IHistory>;
+export const IInteractiveWindow = Symbol('IInteractiveWindow');
+export interface IInteractiveWindow extends Disposable {
+    closed: Event<IInteractiveWindow>;
     ready: Promise<void>;
     onExecutedCode: Event<string>;
     show() : Promise<void>;
@@ -146,6 +178,27 @@ export interface IHistory extends Disposable {
     expandAllCells(): void;
     collapseAllCells(): void;
     exportCells(): void;
+    previewNotebook(notebookFile: string) : Promise<void>;
+}
+
+export const IInteractiveWindowListener = Symbol('IInteractiveWindowListener');
+
+/**
+ * Listens to history messages to provide extra functionality
+ */
+export interface IInteractiveWindowListener extends IDisposable {
+    /**
+     * Fires this event when posting a response message
+     */
+    // tslint:disable-next-line: no-any
+    postMessage: Event<{message: string; payload: any}>;
+    /**
+     * Handles messages that the interactive window receives
+     * @param message message type
+     * @param payload message payload
+     */
+    // tslint:disable-next-line: no-any
+    onMessage(message: string, payload?: any): void;
 }
 
 // Wraps the vscode API in order to send messages back and forth from a webview
@@ -181,6 +234,7 @@ export interface ICodeWatcher {
     runAllCellsAbove(stopLine: number, stopCharacter: number): Promise<void>;
     runCellAndAllBelow(startLine: number, startCharacter: number): Promise<void>;
     runFileInteractive(): Promise<void>;
+    addEmptyCellToBottom(): Promise<void>;
 }
 
 export enum CellState {
@@ -197,39 +251,38 @@ export interface ICell {
     file: string;
     line: number;
     state: CellState;
-    data: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell | ISysInfo;
+    type: 'preview' | 'execute';
+    data: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell | IMessageCell;
 }
 
-export interface IHistoryInfo {
+export interface IInteractiveWindowInfo {
     cellCount: number;
     undoCount: number;
     redoCount: number;
 }
 
-export interface ISysInfo extends nbformat.IBaseCell {
-    cell_type: 'sys_info';
-    version: string;
-    notebook_version: string;
-    path: string;
-    message: string;
-    connection: string;
+export interface IMessageCell extends nbformat.IBaseCell {
+    cell_type: 'messages';
+    messages: string[];
 }
 
 export const ICodeCssGenerator = Symbol('ICodeCssGenerator');
 export interface ICodeCssGenerator {
     generateThemeCss(isDark: boolean, theme: string) : Promise<string>;
+    generateMonacoTheme(isDark: boolean, theme: string) : Promise<JSONObject>;
 }
 
 export const IThemeFinder = Symbol('IThemeFinder');
 export interface IThemeFinder {
     findThemeRootJson(themeName: string) : Promise<string | undefined>;
+    findTmLanguage(language: string) : Promise<string | undefined>;
     isThemeDark(themeName: string) : Promise<boolean | undefined>;
 }
 
 export const IStatusProvider = Symbol('IStatusProvider');
 export interface IStatusProvider {
     // call this function to set the new status on the active
-    // history window. Dispose of the returned object when done.
+    // interactive window. Dispose of the returned object when done.
     set(message: string, timeout?: number) : Disposable;
 
     // call this function to wait for a promise while displaying status
@@ -251,8 +304,24 @@ export interface IJupyterCommandFactory {
 // Config settings we pass to our react code
 export interface IDataScienceExtraSettings extends IDataScienceSettings {
     extraSettings: {
-        terminalCursor: string;
+        editorCursor: string;
+        editorCursorBlink: string;
         theme: string;
+    };
+    intellisenseOptions: {
+        quickSuggestions: {
+            other: boolean;
+            comments: boolean;
+            strings: boolean;
+        };
+        acceptSuggestionOnEnter: boolean | 'on' | 'smart' | 'off';
+        quickSuggestionsDelay: number;
+        suggestOnTriggerCharacters: boolean;
+        tabCompletion: boolean | 'on' | 'off' | 'onlySnippets';
+        suggestLocalityBonus: boolean;
+        suggestSelection: 'first' | 'recentlyUsed' | 'recentlyUsedByPrefix';
+        wordBasedSuggestions: boolean;
+        parameterHintsEnabled: boolean;
     };
 }
 
@@ -271,6 +340,7 @@ export interface IJupyterVariable {
     truncated: boolean;
     columns?: { key: string; type: string }[];
     rowCount?: number;
+    indexColumn?: string;
 }
 
 export const IJupyterVariables = Symbol('IJupyterVariables');
@@ -279,6 +349,12 @@ export interface IJupyterVariables {
     getValue(targetVariable: IJupyterVariable): Promise<IJupyterVariable>;
     getDataFrameInfo(targetVariable: IJupyterVariable) : Promise<IJupyterVariable>;
     getDataFrameRows(targetVariable: IJupyterVariable, start: number, end: number) : Promise<JSONObject>;
+}
+
+// Wrapper to hold an execution count for our variable requests
+export interface IJupyterVariablesResponse {
+    executionCount: number;
+    variables: IJupyterVariable[];
 }
 
 export const IDataViewerProvider = Symbol('IDataViewerProvider');
@@ -290,4 +366,17 @@ export const IDataViewer = Symbol('IDataViewer');
 
 export interface IDataViewer extends IDisposable {
     showVariable(variable: IJupyterVariable) : Promise<void>;
+}
+
+export const IPlotViewerProvider = Symbol('IPlotViewerProvider');
+export interface IPlotViewerProvider {
+    showPlot(imageHtml: string) : Promise<void>;
+}
+export const IPlotViewer = Symbol('IPlotViewer');
+
+export interface IPlotViewer extends IDisposable {
+    closed: Event<IPlotViewer>;
+    removed: Event<number>;
+    addPlot(imageHtml: string) : Promise<void>;
+    show(): Promise<void>;
 }

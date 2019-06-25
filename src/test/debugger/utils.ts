@@ -19,12 +19,11 @@ const debuggerType = DebuggerTypeName;
 
 /**
  * Creates the debug adapter.
- * We do not need to support code coverage on AppVeyor, lets use the standard test adapter.
  * @returns {DebugClient}
  */
-export async function createDebugAdapter(_coverageDirectory: string): Promise<DebugClient> {
+export async function createDebugAdapter(): Promise<DebugClient> {
     await new Promise(resolve => setTimeout(resolve, 1000));
-    const debugClient = new DebugClient('node', testAdapterFilePath, debuggerType);
+    const debugClient = new DebugClient(process.env.NODE_PATH || 'node', testAdapterFilePath, debuggerType);
     debugClient.defaultTimeout = DEBUGGER_TIMEOUT;
     await debugClient.start();
     return debugClient;

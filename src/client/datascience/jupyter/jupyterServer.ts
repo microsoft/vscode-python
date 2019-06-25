@@ -6,7 +6,6 @@ import '../../common/extensions';
 import { nbformat } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 import * as fs from 'fs-extra';
-import * as os from 'os';
 import { Observable } from 'rxjs/Observable';
 import { Subscriber } from 'rxjs/Subscriber';
 import * as uuid from 'uuid/v4';
@@ -14,15 +13,16 @@ import { Disposable } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { ILiveShareApi } from '../../common/application/types';
-import { CancellationError } from '../../common/cancellation';
+import { Cancellation, CancellationError } from '../../common/cancellation';
 import { traceInfo, traceWarning } from '../../common/logger';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { generateCells } from '../cellFactory';
+import { CellMatcher } from '../cellMatcher';
 import { concatMultilineString } from '../common';
-import { Identifiers } from '../constants';
+import { CodeSnippits, Identifiers } from '../constants';
 import {
     CellState,
     ICell,
@@ -30,6 +30,7 @@ import {
     IDataScience,
     IJupyterSession,
     IJupyterSessionManager,
+    INotebookCompletion,
     INotebookServer,
     INotebookServerLaunchInfo,
     InterruptResult
@@ -173,7 +174,8 @@ export class JupyterServerBase implements INotebookServer {
 
             // Wait for it to be ready
             traceInfo(`Waiting for idle ${this.id}`);
-            await this.session.waitForIdle(Number.MAX_SAFE_INTEGER);
+            const idleTimeout = this.configService.getSettings().datascience.jupyterLaunchTimeout;
+            await this.session.waitForIdle(idleTimeout);
 
             traceInfo(`Performing initial setup ${this.id}`);
             // Run our initial setup and plot magics
@@ -256,19 +258,20 @@ export class JupyterServerBase implements INotebookServer {
         // Combine this data together to make our sys info
         return {
             data: {
-                cell_type: 'sys_info',
-                version: version,
-                notebook_version: localize.DataScience.notebookVersionFormat().format(notebookVersion),
-                path: pythonPath,
+                cell_type: 'messages',
+                messages: [
+                    version,
+                    notebookVersion,
+                    pythonPath
+                ],
                 metadata: {},
-                source: [],
-                message: '',    // This will be filled in by the caller
-                connection: ''  // This will be filled in by the caller (before getting to the output)
+                source: []
             },
             id: uuid(),
             file: '',
             line: 0,
-            state: CellState.finished
+            state: CellState.finished,
+            type: 'execute'
         };
     }
 
@@ -375,6 +378,14 @@ export class JupyterServerBase implements INotebookServer {
         return this.connectPromise.promise;
     }
 
+    public async setMatplotLibStyle(useDark: boolean) : Promise<void> {
+        // Reset the matplotlib style based on if dark or not.
+        await this.executeSilently(useDark ?
+            'matplotlib.style.use(\'dark_background\')' :
+            `matplotlib.rcParams.update(${Identifiers.MatplotLibDefaultParams})`);
+
+    }
+
     // Return a copy of the connection information that this server used to connect with
     public getConnectionInfo(): IConnection | undefined {
         if (!this.launchInfo) {
@@ -386,6 +397,28 @@ export class JupyterServerBase implements INotebookServer {
             ...this.launchInfo.connectionInfo,
             dispose: noop
         };
+    }
+
+    public async getCompletion(cellCode: string, offsetInCode: number, cancelToken?: CancellationToken) : Promise<INotebookCompletion> {
+        if (this.session) {
+            const result = await Cancellation.race(() => this.session!.requestComplete({
+                code: cellCode,
+                cursor_pos: offsetInCode
+            }), cancelToken);
+            if (result && result.content) {
+                return {
+                    matches: result.content.matches,
+                    cursor: {
+                        start: result.content.cursor_start,
+                        end: result.content.cursor_end
+                    },
+                    metadata: result.content.metadata
+                };
+            }
+        }
+
+        // Default is just say session was disposed
+        throw new Error(localize.DataScience.sessionDisposed());
     }
 
     private finishUncompletedCells() {
@@ -482,10 +515,11 @@ export class JupyterServerBase implements INotebookServer {
     private generateRequest = (code: string, silent?: boolean): Kernel.IFuture | undefined => {
         //this.logger.logInformation(`Executing code in jupyter : ${code}`)
         try {
+            const cellMatcher = new CellMatcher(this.configService.getSettings().datascience);
             return this.session ? this.session.requestExecute(
                 {
-                    // Replace windows line endings with unix line endings.
-                    code: code.replace(/\r\n/g, '\n'),
+                    // Remove the cell marker if we have one.
+                    code: cellMatcher.stripMarkers(code),
                     stop_on_error: false,
                     allow_stdin: false,
                     store_history: !silent // Silent actually means don't output anything. Store_history is what affects execution_count
@@ -513,8 +547,10 @@ export class JupyterServerBase implements INotebookServer {
                 await this.changeDirectoryIfPossible(this.launchInfo.workingDir);
             }
 
+            // Force matplotlib to inline and save the default style. We'll use this later if we
+            // get a request to update style
             await this.executeSilently(
-                `%matplotlib inline${os.EOL}import matplotlib.pyplot as plt${(this.launchInfo && this.launchInfo.usingDarkTheme) ? `${os.EOL}from matplotlib import style${os.EOL}style.use(\'dark_background\')` : ''}`,
+                CodeSnippits.MatplotLibInit,
                 cancelToken
             );
         } catch (e) {
@@ -597,24 +633,28 @@ export class JupyterServerBase implements INotebookServer {
                     });
                 }
 
+                const clearState : Map<string, boolean> = new Map<string, boolean>();
+
                 // Listen to the reponse messages and update state as we go
                 if (request) {
                     request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
                         try {
                             if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
-                                this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, subscriber.cell);
+                                this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, clearState, subscriber.cell);
                             } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
-                                this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, subscriber.cell);
+                                this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, clearState, subscriber.cell);
                             } else if (jupyterLab.KernelMessage.isStatusMsg(msg)) {
-                                this.handleStatusMessage(msg as KernelMessage.IStatusMsg, subscriber.cell);
+                                this.handleStatusMessage(msg as KernelMessage.IStatusMsg, clearState, subscriber.cell);
                             } else if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
-                                this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, subscriber.cell);
+                                this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, clearState, subscriber.cell);
                             } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
-                                this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, subscriber.cell);
+                                this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, clearState, subscriber.cell);
                             } else if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg)) {
-                                this.handleUpdateDisplayData(msg as KernelMessage.IUpdateDisplayDataMsg, subscriber.cell);
+                                this.handleUpdateDisplayData(msg as KernelMessage.IUpdateDisplayDataMsg, clearState, subscriber.cell);
+                            } else if (jupyterLab.KernelMessage.isClearOutputMsg(msg)) {
+                                this.handleClearOutput(msg as KernelMessage.IClearOutputMsg, clearState, subscriber.cell);
                             } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
-                                this.handleError(msg as KernelMessage.IErrorMsg, subscriber.cell);
+                                this.handleError(msg as KernelMessage.IErrorMsg, clearState, subscriber.cell);
                             } else {
                                 this.logger.logWarning(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
                             }
@@ -624,7 +664,7 @@ export class JupyterServerBase implements INotebookServer {
                                 subscriber.cell.data.execution_count = msg.content.execution_count as number;
                             }
 
-                            // Show our update if any new output
+                            // Show our update if any new output.
                             subscriber.next(this.sessionStartTime);
                         } catch (err) {
                             // If not a restart error, then tell the subscriber
@@ -670,21 +710,38 @@ export class JupyterServerBase implements INotebookServer {
         });
     }
 
-    private addToCellData = (cell: ICell, output: nbformat.IUnrecognizedOutput | nbformat.IExecuteResult | nbformat.IDisplayData | nbformat.IStream | nbformat.IError) => {
-        const data: nbformat.ICodeCell = cell.data as nbformat.ICodeCell;
-        data.outputs = [...data.outputs, output];
-        cell.data = data;
+    private addToCellData = (cell: ICell, output: nbformat.IUnrecognizedOutput | nbformat.IExecuteResult | nbformat.IDisplayData | nbformat.IStream | nbformat.IError, clearState: Map<string, boolean>) => {
+        // If a clear is pending, replace the output with the new one
+        if (clearState.get(output.output_type)) {
+            clearState.delete(output.output_type);
+            const data: nbformat.ICodeCell = cell.data as nbformat.ICodeCell;
+            const index = data.outputs.findIndex(o => o.output_type === output.output_type);
+            if (index >= 0) {
+                data.outputs.splice(index, 1, output);
+            } else {
+                data.outputs = [...data.outputs, output];
+            }
+            cell.data = data;
+        } else {
+            // Then append this data onto the end.
+            const data: nbformat.ICodeCell = cell.data as nbformat.ICodeCell;
+            data.outputs = [...data.outputs, output];
+            cell.data = data;
+        }
     }
 
-    private handleExecuteResult(msg: KernelMessage.IExecuteResultMsg, cell: ICell) {
-        this.addToCellData(cell, { output_type: 'execute_result', data: msg.content.data, metadata: msg.content.metadata, execution_count: msg.content.execution_count });
+    private handleExecuteResult(msg: KernelMessage.IExecuteResultMsg, clearState: Map<string, boolean>, cell: ICell) {
+        this.addToCellData(
+            cell,
+            { output_type: 'execute_result', data: msg.content.data, metadata: msg.content.metadata, execution_count: msg.content.execution_count },
+            clearState);
     }
 
-    private handleExecuteInput(msg: KernelMessage.IExecuteInputMsg, cell: ICell) {
+    private handleExecuteInput(msg: KernelMessage.IExecuteInputMsg, _clearState: Map<string, boolean>, cell: ICell) {
         cell.data.execution_count = msg.content.execution_count;
     }
 
-    private handleStatusMessage(msg: KernelMessage.IStatusMsg, cell: ICell) {
+    private handleStatusMessage(msg: KernelMessage.IStatusMsg, _clearState: Map<string, boolean>, cell: ICell) {
         // Status change to idle generally means we finished. Not sure how to
         // make sure of this. Maybe only bother if an interrupt
         if (msg.content.execution_state === 'idle' && cell.state !== CellState.error) {
@@ -692,13 +749,20 @@ export class JupyterServerBase implements INotebookServer {
         }
     }
 
-    private handleStreamMesssage(msg: KernelMessage.IStreamMsg, cell: ICell) {
+    private handleStreamMesssage(msg: KernelMessage.IStreamMsg, clearState: Map<string, boolean>, cell: ICell) {
         // Might already have a stream message. If so, just add on to it.
         const data: nbformat.ICodeCell = cell.data as nbformat.ICodeCell;
         const existing = data.outputs.find(o => o.output_type === 'stream');
         if (existing && existing.name === msg.content.name) {
-            // tslint:disable-next-line:restrict-plus-operands
-            existing.text = existing.text + msg.content.text;
+            // If clear pending, then don't add.
+            if (clearState.get('stream')) {
+                clearState.delete('stream');
+                existing.text = msg.content.text;
+            } else {
+                // tslint:disable-next-line:restrict-plus-operands
+                existing.text = existing.text + msg.content.text;
+            }
+
         } else {
             // Create a new stream entry
             const output: nbformat.IStream = {
@@ -706,26 +770,41 @@ export class JupyterServerBase implements INotebookServer {
                 name: msg.content.name,
                 text: msg.content.text
             };
-            this.addToCellData(cell, output);
+            this.addToCellData(cell, output, clearState);
         }
     }
 
-    private handleDisplayData(msg: KernelMessage.IDisplayDataMsg, cell: ICell) {
+    private handleDisplayData(msg: KernelMessage.IDisplayDataMsg, clearState: Map<string, boolean>, cell: ICell) {
         const output: nbformat.IDisplayData = {
             output_type: 'display_data',
             data: msg.content.data,
             metadata: msg.content.metadata
         };
-        this.addToCellData(cell, output);
+        this.addToCellData(cell, output, clearState);
     }
 
-    private handleUpdateDisplayData(msg: KernelMessage.IUpdateDisplayDataMsg, cell: ICell) {
+    private handleUpdateDisplayData(msg: KernelMessage.IUpdateDisplayDataMsg, _clearState: Map<string, boolean>, cell: ICell) {
         // Should already have a display data output in our cell.
         const data: nbformat.ICodeCell = cell.data as nbformat.ICodeCell;
         const output = data.outputs.find(o => o.output_type === 'display_data');
         if (output) {
             output.data = msg.content.data;
             output.metadata = msg.content.metadata;
+        }
+    }
+
+    private handleClearOutput(msg: KernelMessage.IClearOutputMsg, clearState: Map<string, boolean>, cell: ICell) {
+        // If the message says wait, add every message type to our clear state. This will
+        // make us wait for this type of output before we clear it.
+        if (msg && msg.content.wait) {
+            clearState.set('display_data', true);
+            clearState.set('error', true);
+            clearState.set('execute_result', true);
+            clearState.set('stream', true);
+        } else {
+            // Clear all outputs and start over again.
+            const data: nbformat.ICodeCell = cell.data as nbformat.ICodeCell;
+            data.outputs = [];
         }
     }
 
@@ -744,17 +823,17 @@ export class JupyterServerBase implements INotebookServer {
                     '[1;31mKeyboardInterrupt[0m: '
                 ]
             }
-        }, cell);
+        }, new Map<string, boolean>(), cell);
     }
 
-    private handleError(msg: KernelMessage.IErrorMsg, cell: ICell) {
+    private handleError(msg: KernelMessage.IErrorMsg, clearState: Map<string, boolean>, cell: ICell) {
         const output: nbformat.IError = {
             output_type: 'error',
             ename: msg.content.ename,
             evalue: msg.content.evalue,
             traceback: msg.content.traceback
         };
-        this.addToCellData(cell, output);
+        this.addToCellData(cell, output, clearState);
         cell.state = CellState.error;
     }
 }

@@ -36,6 +36,7 @@ import {
 } from '../types';
 import { JupyterConnection, JupyterServerInfo } from './jupyterConnection';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
+import { JupyterSelfCertsError } from './jupyterSelfCertsError';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 
 enum ModuleExistsResult {
@@ -135,9 +136,10 @@ export class JupyterExecutionBase implements IJupyterExecution {
             traceInfo(`Connecting to ${options ? options.purpose : 'unknown type of'} server`);
             const interpreter = await this.interpreterService.getActiveInterpreter();
 
-            // Try to connect to our jupyter process. Give it at most 2 tries.
+            // Try to connect to our jupyter process. Check our setting for the number of tries
             let tryCount = 0;
-            while (tryCount < 2) {
+            const maxTries = this.configuration.getSettings().datascience.jupyterLaunchRetries;
+            while (tryCount < maxTries) {
                 try {
                     // Start or connect to the process
                     startInfo = await this.startOrConnect(options, cancelToken);
@@ -150,7 +152,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         connectionInfo: startInfo.connection,
                         currentInterpreter: interpreter,
                         kernelSpec: startInfo.kernelSpec,
-                        usingDarkTheme: options && options.usingDarkTheme ? options.usingDarkTheme : false,
                         workingDir: options ? options.workingDir : undefined,
                         uri: options ? options.uri : undefined,
                         purpose: options ? options.purpose : uuid()
@@ -168,7 +169,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         traceInfo('Killing server because of error');
                         await result.dispose();
                     }
-                    if (err instanceof JupyterWaitForIdleError && tryCount < 2) {
+                    if (err instanceof JupyterWaitForIdleError && tryCount < maxTries) {
                         // Special case. This sometimes happens where jupyter doesn't ever connect. Cleanup after
                         // ourselves and propagate the failure outwards.
                         traceInfo('Retry because of wait for idle problem.');
@@ -177,7 +178,14 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         // Something else went wrong
                         if (options && options.uri) {
                             sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter);
-                            throw new Error(localize.DataScience.jupyterNotebookRemoteConnectFailed().format(startInfo.connection.baseUrl, err));
+
+                            // Check for the self signed certs error specifically
+                            if (err.message.indexOf('reason: self signed certificate') >= 0) {
+                                sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
+                                throw new JupyterSelfCertsError(startInfo.connection.baseUrl);
+                            } else {
+                                throw new Error(localize.DataScience.jupyterNotebookRemoteConnectFailed().format(startInfo.connection.baseUrl, err));
+                            }
                         } else {
                             sendTelemetryEvent(Telemetry.ConnectFailedJupyter);
                             throw new Error(localize.DataScience.jupyterNotebookConnectFailed().format(startInfo.connection.baseUrl, err));
@@ -306,8 +314,11 @@ export class JupyterExecutionBase implements IJupyterExecution {
             // This should already have been parsed when set, so just throw if it's not right here
             throw err;
         }
+        const settings = this.configuration.getSettings();
+        const allowUnauthorized = settings.datascience.allowUnauthorizedRemoteConnection ? settings.datascience.allowUnauthorizedRemoteConnection : false;
 
         return {
+            allowUnauthorized,
             baseUrl: `${url.protocol}//${url.host}${url.pathname}`,
             token: `${url.searchParams.get('token')}`,
             localLaunch: false,
@@ -317,6 +328,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         };
     }
 
+    // tslint:disable-next-line: max-func-body-length
     @captureTelemetry(Telemetry.StartJupyter)
     private async startNotebookServer(useDefaultConfig: boolean, cancelToken?: CancellationToken): Promise<{ connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined }> {
         // First we find a way to start a notebook server
@@ -351,6 +363,9 @@ export class JupyterExecutionBase implements IJupyterExecution {
             if (process.env && process.env.VSCODE_PYTHON_DEBUG_JUPYTER) {
                 extraArgs.push('--debug');
             }
+
+            // Modify the data rate limit if starting locally. The default prevents large dataframes from being returned.
+            extraArgs.push('--NotebookApp.iopub_data_rate_limit=10000000000.0');
 
             // Check for a docker situation.
             try {
@@ -590,13 +605,16 @@ export class JupyterExecutionBase implements IJupyterExecution {
             const spec = specs[i];
             let score = 0;
 
-            if (spec && spec.path && spec.path.length > 0 && info && spec.path === info.path) {
-                // Path match
-                score += 10;
-            }
+            // First match on language. No point if not python.
             if (spec && spec.language && spec.language.toLocaleLowerCase() === 'python') {
                 // Language match
                 score += 1;
+
+                // See if the path matches. Don't bother if the language doesn't.
+                if (spec && spec.path && spec.path.length > 0 && info && spec.path === info.path) {
+                    // Path match
+                    score += 10;
+                }
 
                 // See if the version is the same
                 if (info && info.version && specDetails[i]) {

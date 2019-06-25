@@ -5,8 +5,8 @@
 
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { CancellationToken, CompletionContext, ConfigurationChangeEvent, Disposable, Event, EventEmitter, OutputChannel, Position, TextDocument } from 'vscode';
-import { LanguageClientOptions, ProvideCompletionItemsSignature, RevealOutputChannelOn } from 'vscode-languageclient';
+import { CancellationToken, CompletionContext, ConfigurationChangeEvent, Disposable, Event, EventEmitter, OutputChannel, Position, TextDocument, WorkspaceFolder } from 'vscode';
+import { DocumentFilter, DocumentSelector, LanguageClientOptions, ProvideCompletionItemsSignature, RevealOutputChannelOn } from 'vscode-languageclient';
 import { IWorkspaceService } from '../../common/application/types';
 import { isTestExecution, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import { traceDecorators, traceError } from '../../common/logger';
@@ -88,6 +88,7 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
             }
         }
 
+        // TODO: remove this setting since LS 0.2.92+ is not using it.
         // tslint:disable-next-line:no-string-literal
         properties['DatabasePath'] = path.join(this.context.extensionPath, this.languageServerFolder);
 
@@ -103,17 +104,10 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
         this.excludedFiles = this.getExcludedFiles();
         this.typeshedPaths = this.getTypeshedPaths();
         const workspaceFolder = this.workspace.getWorkspaceFolder(this.resource);
-        const documentSelector = [
-            { scheme: 'file', language: PYTHON_LANGUAGE },
-            { scheme: 'untitled', language: PYTHON_LANGUAGE }
-        ];
-        if (workspaceFolder) {
-            // tslint:disable-next-line:no-any
-            (documentSelector[0] as any).pattern = `${workspaceFolder.uri.fsPath}/**/*`;
-        }
-        // Options to control the language client
+        const documentSelector = this.getDocumentSelector(workspaceFolder);
+        // Options to control the language client.
         return {
-            // Register the server for Python documents
+            // Register the server for Python documents.
             documentSelector,
             workspaceFolder,
             synchronize: {
@@ -134,6 +128,7 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
                 },
                 searchPaths,
                 typeStubSearchPaths: this.typeshedPaths,
+                cacheFolderPath: this.getCacheFolderPath(),
                 excludeFiles: this.excludedFiles,
                 testEnvironment: isTestExecution(),
                 analysisUpdates: true,
@@ -147,6 +142,18 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
                 }
             }
         };
+    }
+    protected getDocumentSelector(workspaceFolder?: WorkspaceFolder): DocumentSelector {
+        const documentSelector: DocumentFilter[] = [
+            { scheme: 'file', language: PYTHON_LANGUAGE },
+            { scheme: 'untitled', language: PYTHON_LANGUAGE }
+        ];
+        // Set the document selector only when in a multi-root workspace scenario.
+        if (workspaceFolder && Array.isArray(this.workspace.workspaceFolders) && this.workspace.workspaceFolders!.length > 1) {
+            // tslint:disable-next-line:no-any
+            documentSelector[0].pattern = `${workspaceFolder.uri.fsPath}/**/*`;
+        }
+        return documentSelector;
     }
     protected getExcludedFiles(): string[] {
         const list: string[] = ['**/Lib/**', '**/site-packages/**'];
@@ -179,6 +186,11 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
         return settings.analysis.typeshedPaths && settings.analysis.typeshedPaths.length > 0
             ? settings.analysis.typeshedPaths
             : [path.join(this.context.extensionPath, this.languageServerFolder, 'Typeshed')];
+    }
+    protected getCacheFolderPath(): string | null {
+        const settings = this.configuration.getSettings(this.resource);
+        return settings.analysis.cacheFolderPath && settings.analysis.cacheFolderPath.length > 0
+            ? settings.analysis.cacheFolderPath : null;
     }
     protected async onSettingsChangedHandler(e?: ConfigurationChangeEvent): Promise<void> {
         if (e && !e.affectsConfiguration('python', this.resource)) {
@@ -220,7 +232,7 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
 
     protected async notifyifEnvPythonPathChanged(): Promise<void> {
         const vars = await this.envVarsProvider.getEnvironmentVariables();
-        const envPythonPath = vars.PYTHONPATH;
+        const envPythonPath = vars.PYTHONPATH || '';
 
         if (this.envPythonPath !== envPythonPath) {
             this.didChange.fire();

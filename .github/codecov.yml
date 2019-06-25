@@ -1,9 +1,0 @@
-coverage:
-  precision: 0
-  round: up
-  range: "70...90"
-  status:
-    project: off
-comment:
-  layout: "diff, flags"
-  behavior: default

@@ -68,14 +68,12 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         if (typeof debugConfiguration.stopOnEntry !== 'boolean') {
             debugConfiguration.stopOnEntry = false;
         }
-        if (typeof debugConfiguration.showReturnValue !== 'boolean') {
-            debugConfiguration.showReturnValue = false;
-        }
+        debugConfiguration.showReturnValue = debugConfiguration.showReturnValue !== false;
         if (!debugConfiguration.console) {
             debugConfiguration.console = 'integratedTerminal';
         }
         // If using a terminal, then never open internal console.
-        if (debugConfiguration.console !== 'none' && !debugConfiguration.internalConsoleOptions) {
+        if (debugConfiguration.console !== 'internalConsole' && !debugConfiguration.internalConsoleOptions) {
             debugConfiguration.internalConsoleOptions = 'neverOpen';
         }
         if (!Array.isArray(debugConfiguration.debugOptions)) {

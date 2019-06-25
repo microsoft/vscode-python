@@ -19,7 +19,7 @@ const originalLoad = Module._load;
 
 function generateMock<K extends keyof VSCode>(name: K): void {
     const mockedObj = TypeMoq.Mock.ofType<VSCode[K]>();
-    mockedVSCode[name] = mockedObj.object;
+    (mockedVSCode as any)[name] = mockedObj.object;
     mockedVSCodeNamespaces[name] = mockedObj as any;
 }
 
@@ -40,9 +40,9 @@ export function initialize() {
         if (request === 'vscode-extension-telemetry') {
             return { default: vscMockTelemetryReporter };
         }
-        // scss files need to be in import statements to be converted to css
+        // less files need to be in import statements to be converted to css
         // But we don't want to try to load them in the mock vscode
-        if (/\.scss$/.test(request)) {
+        if (/\.less$/.test(request)) {
             return;
         }
         return originalLoad.apply(this, arguments);
@@ -77,6 +77,7 @@ mockedVSCode.ViewColumn = vscodeMocks.vscMockExtHostedTypes.ViewColumn;
 mockedVSCode.TextEditorRevealType = vscodeMocks.vscMockExtHostedTypes.TextEditorRevealType;
 mockedVSCode.TreeItem = vscodeMocks.vscMockExtHostedTypes.TreeItem;
 mockedVSCode.TreeItemCollapsibleState = vscodeMocks.vscMockExtHostedTypes.TreeItemCollapsibleState;
+mockedVSCode.CodeActionKind = vscodeMocks.vscMock.CodeActionKind;
 
 // This API is used in src/client/telemetry/telemetry.ts
 const extensions = TypeMoq.Mock.ofType<typeof vscode.extensions>();

@@ -51,6 +51,7 @@ suite('Theme colors', () => {
         settings.datascience = {
             allowImportFromNotebook: true,
             jupyterLaunchTimeout: 20000,
+            jupyterLaunchRetries: 3,
             enabled: true,
             jupyterServerURI: 'local',
             notebookFileRoot: 'WORKSPACE',
@@ -64,6 +65,8 @@ suite('Theme colors', () => {
             maxOutputSize: 400,
             errorBackgroundColor: '#FFFFFF',
             sendSelectionToInteractiveWindow: false,
+            showJupyterVariableExplorer: true,
+            variableExplorerExclude: 'module;builtin_function_or_method',
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)'
         };
@@ -98,15 +101,17 @@ suite('Theme colors', () => {
                 .returns((_s, d) => {
                     return d;
                 });
+                const theme = await cssGenerator.generateMonacoTheme(isDark, themeName);
+                assert.ok(theme, `Cannot find monaco theme for ${themeName}`);
                 const colors = await cssGenerator.generateThemeCss(isDark, themeName);
-                assert.ok(colors, `Cannot find theme colors for ${themeName}`);
+                assert.ok(colors, 'Cannot find theme colors for Kimbie Dark');
 
                 // Make sure we have a string value that is not set to a variable
                 // (that would be the default and all themes have a string color)
-                const matches = /span\.cm-string\s\{color\:\s(.*?);/gm.exec(colors);
-                assert.ok(matches, 'No matches found for string color');
-                assert.equal(matches!.length, 2, 'Wrong number of matches for for string color');
-                assert.ok(matches![1].includes('#'), 'String color not found');
+                assert.ok(theme.rules, 'No rules found in monaco theme');
+                // tslint:disable-next-line: no-any
+                const commentPunctuation = (theme.rules as any[]).findIndex(r => r.token === 'punctuation.definition.comment');
+                assert.ok(commentPunctuation >= 0, 'No punctuation.comment found');
             } else {
                 assert.notOk(json, `Found ${themeName} when not expected`);
             }
@@ -144,7 +149,7 @@ suite('Theme colors', () => {
 
         // Make sure we have a string value that is not set to a variable
         // (that would be the default and all themes have a string color)
-        const matches = /span\.cm-string\s\{color\:\s(.*?);/gm.exec(colors);
+        const matches = /--code-string-color\:\s(.*?);/gm.exec(colors);
         assert.ok(matches, 'No matches found for string color');
         assert.equal(matches!.length, 2, 'Wrong number of matches for for string color');
         assert.ok(matches![1].includes('#'), 'String color not found');

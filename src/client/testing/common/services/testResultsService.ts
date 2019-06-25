@@ -38,13 +38,10 @@ export class TestResultsService implements ITestResultsService {
         }
         let allChildrenPassed = true;
         let noChildrenRan = true;
-        test.time = test.functionsPassed = test.functionsFailed = test.functionsDidNotRun = 0;
+        test.functionsPassed = test.functionsFailed = test.functionsDidNotRun = 0;
 
         const children = getChildren(test);
         children.forEach(child => {
-            if (child.time) {
-                test.time! += child.time;
-            }
             if (getTestType(child) === TestType.testFunction) {
                 if (typeof child.passed === 'boolean') {
                     noChildrenRan = false;

@@ -14,7 +14,7 @@ export class TestManager extends BaseTestManager {
     private readonly runner: ITestManagerRunner;
     private readonly testMessageService: ITestMessageService;
     public get enabled() {
-        return this.settings.testing.pyTestEnabled;
+        return this.settings.testing.pytestEnabled;
     }
     constructor(workspaceFolder: Uri, rootDirectory: string,
         serviceContainer: IServiceContainer) {
@@ -25,7 +25,7 @@ export class TestManager extends BaseTestManager {
         this.testMessageService = this.serviceContainer.get<ITestMessageService>(ITestMessageService, this.testProvider);
     }
     public getDiscoveryOptions(ignoreCache: boolean): TestDiscoveryOptions {
-        const args = this.settings.testing.pyTestArgs.slice(0);
+        const args = this.settings.testing.pytestArgs.slice(0);
         return {
             workspaceFolder: this.workspaceFolder,
             cwd: this.rootDirectory, args,
@@ -38,9 +38,9 @@ export class TestManager extends BaseTestManager {
 
         const runAllTests = this.helper.shouldRunAllTests(testsToRun);
         if (debug) {
-            args = this.argsService.filterArguments(this.settings.testing.pyTestArgs, runAllTests ? TestFilter.debugAll : TestFilter.debugSpecific);
+            args = this.argsService.filterArguments(this.settings.testing.pytestArgs, runAllTests ? TestFilter.debugAll : TestFilter.debugSpecific);
         } else {
-            args = this.argsService.filterArguments(this.settings.testing.pyTestArgs, runAllTests ? TestFilter.runAll : TestFilter.runSpecific);
+            args = this.argsService.filterArguments(this.settings.testing.pytestArgs, runAllTests ? TestFilter.runAll : TestFilter.runSpecific);
         }
 
         if (runFailedTests === true && args.indexOf('--lf') === -1 && args.indexOf('--last-failed') === -1) {

@@ -4,3 +4,4 @@ jupyter
 numpy
 matplotlib
 pandas
+livelossplot

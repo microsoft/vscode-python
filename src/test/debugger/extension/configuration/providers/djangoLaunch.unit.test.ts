@@ -15,7 +15,7 @@ import { FileSystem } from '../../../../../client/common/platform/fileSystem';
 import { PathUtils } from '../../../../../client/common/platform/pathUtils';
 import { IFileSystem } from '../../../../../client/common/platform/types';
 import { IPathUtils } from '../../../../../client/common/types';
-import { localize } from '../../../../../client/common/utils/localize';
+import { DebugConfigStrings } from '../../../../../client/common/utils/localize';
 import { MultiStepInput } from '../../../../../client/common/utils/multiStepInput';
 import { DebuggerTypeName } from '../../../../../client/debugger/constants';
 import { DjangoLaunchDebugConfigurationProvider } from '../../../../../client/debugger/extension/configuration/providers/djangoLaunch';
@@ -131,14 +131,13 @@ suite('Debugging - Configuration Provider Django', () => {
         await provider.buildConfiguration(instance(input), state);
 
         const config = {
-            name: localize('python.snippet.launch.django.label', 'Python: Django')(),
+            name: DebugConfigStrings.django.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
             program: 'xyz.py',
             args: [
                 'runserver',
-                '--noreload',
-                '--nothreading'
+                '--noreload'
             ],
             django: true
         };
@@ -155,14 +154,13 @@ suite('Debugging - Configuration Provider Django', () => {
         await provider.buildConfiguration(instance(input), state);
 
         const config = {
-            name: localize('python.snippet.launch.django.label', 'Python: Django')(),
+            name: DebugConfigStrings.django.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
             program: 'hello',
             args: [
                 'runserver',
-                '--noreload',
-                '--nothreading'
+                '--noreload'
             ],
             django: true
         };
@@ -182,14 +180,13 @@ suite('Debugging - Configuration Provider Django', () => {
         await provider.buildConfiguration(instance(input), state);
 
         const config = {
-            name: localize('python.snippet.launch.django.label', 'Python: Django')(),
+            name: DebugConfigStrings.django.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
             program: defaultProgram,
             args: [
                 'runserver',
-                '--noreload',
-                '--nothreading'
+                '--noreload'
             ],
             django: true
         };

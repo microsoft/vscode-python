@@ -7,7 +7,7 @@ import * as assert from 'assert';
 import * as path from 'path';
 import { deepEqual, instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
-import { CancellationTokenSource, Uri } from 'vscode';
+import { CancellationTokenSource, OutputChannel, Uri, ViewColumn } from 'vscode';
 import { PythonExecutionFactory } from '../../../../client/common/process/pythonExecutionFactory';
 import { ExecutionFactoryCreateWithEnvironmentOptions, IPythonExecutionFactory, IPythonExecutionService, SpawnOptions } from '../../../../client/common/process/types';
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
@@ -19,13 +19,16 @@ import { MockOutputChannel } from '../../../mockClasses';
 
 // tslint:disable:no-unnecessary-override no-any
 suite('Unit Tests - Common Discovery', () => {
+    let output: OutputChannel;
     let discovery: TestsDiscoveryService;
     let executionFactory: IPythonExecutionFactory;
     let parser: ITestDiscoveredTestParser;
     setup(() => {
+        // tslint:disable-next-line:no-use-before-declare
+        output = mock(StubOutput);
         executionFactory = mock(PythonExecutionFactory);
         parser = mock(TestDiscoveredTestParser);
-        discovery = new TestsDiscoveryService(instance(executionFactory), instance(parser));
+        discovery = new TestsDiscoveryService(instance(executionFactory), instance(parser), instance(output));
     });
     test('Use parser to parse results', async () => {
         const options: TestDiscoveryOptions = {
@@ -73,3 +76,17 @@ suite('Unit Tests - Common Discovery', () => {
         assert.deepEqual(result, executionResult);
     });
 });
+
+// tslint:disable:no-empty
+
+//class StubOutput implements OutputChannel {
+class StubOutput {
+    constructor(public name: string) {}
+    public append(_value: string) {}
+    public appendLine(_value: string) {}
+    public clear() {}
+    //public show(_preserveFocus?: boolean) {}
+    public show(_column?: ViewColumn | boolean, _preserveFocus?: boolean) {}
+    public hide() {}
+    public dispose() {}
+}

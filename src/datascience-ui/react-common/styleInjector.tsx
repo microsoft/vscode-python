@@ -1,16 +1,21 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
 
-import { CssMessages, IGetCssResponse, SharedMessages } from '../../client/datascience/constants';
+import { CssMessages, IGetCssResponse, SharedMessages } from '../../client/datascience/messages';
+import { IGetMonacoThemeResponse } from '../../client/datascience/monacoMessages';
 import { IDataScienceExtraSettings } from '../../client/datascience/types';
 import { IMessageHandler, PostOffice } from './postOffice';
+import { getSettings } from './settingsReactSide';
 import { detectBaseTheme } from './themeDetector';
 
 export interface IStyleInjectorProps {
     expectingDark: boolean;
+    postOffice: PostOffice;
     darkChanged?(newDark: boolean): void;
+    monacoThemeChanged?(theme: string): void;
 }
 
 interface IStyleInjectorState {
@@ -28,19 +33,20 @@ export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleIn
 
     public componentWillMount() {
         // Add ourselves as a handler for the post office
-        PostOffice.addHandler(this);
+        this.props.postOffice.addHandler(this);
     }
 
     public componentWillUnmount() {
         // Remove ourselves as a handler for the post office
-        PostOffice.removeHandler(this);
+        this.props.postOffice.removeHandler(this);
     }
 
     public componentDidMount() {
         if (!this.state.rootCss) {
             // Set to a temporary value.
             this.setState({rootCss: ' '});
-            PostOffice.sendUnsafeMessage(CssMessages.GetCssRequest, { isDark: this.props.expectingDark });
+            this.props.postOffice.sendUnsafeMessage(CssMessages.GetCssRequest, { isDark: this.props.expectingDark });
+            this.props.postOffice.sendUnsafeMessage(CssMessages.GetMonacoThemeRequest, { isDark: this.props.expectingDark });
         }
     }
 
@@ -59,7 +65,11 @@ export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleIn
     public handleMessage = (msg: string, payload?: any) : boolean => {
         switch (msg) {
             case CssMessages.GetCssResponse:
-                this.handleResponse(payload);
+                this.handleCssResponse(payload);
+                break;
+
+            case CssMessages.GetMonacoThemeResponse:
+                this.handleMonacoThemeResponse(payload);
                 break;
 
             case SharedMessages.UpdateSettings:
@@ -74,7 +84,7 @@ export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleIn
     }
 
     // tslint:disable-next-line:no-any
-    private handleResponse(payload?: any) {
+    private handleCssResponse(payload?: any) {
         const response = payload as IGetCssResponse;
         if (response && response.css) {
 
@@ -98,6 +108,21 @@ export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleIn
         }
     }
 
+    // tslint:disable-next-line: no-any
+    private handleMonacoThemeResponse(payload?: any) {
+        const response = payload as IGetMonacoThemeResponse;
+        if (response && response.theme) {
+
+            // Tell monaco we have a new theme. THis is like a state update for monaco
+            monacoEditor.editor.defineTheme('interactiveWindow', response.theme);
+
+            // Tell the main panel we have a theme now
+            if (this.props.monacoThemeChanged) {
+                this.props.monacoThemeChanged('interactiveWindow');
+            }
+        }
+    }
+
     // tslint:disable-next-line:no-any
     private updateSettings(payload: any) {
         if (payload) {
@@ -105,13 +130,15 @@ export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleIn
             const dsSettings = newSettings as IDataScienceExtraSettings;
             if (dsSettings && dsSettings.extraSettings && dsSettings.extraSettings.theme !== this.state.theme) {
                 // User changed the current theme. Rerender
-                PostOffice.sendUnsafeMessage(CssMessages.GetCssRequest, { isDark: this.computeKnownDark() });
+                this.props.postOffice.sendUnsafeMessage(CssMessages.GetCssRequest, { isDark: this.computeKnownDark() });
+                this.props.postOffice.sendUnsafeMessage(CssMessages.GetMonacoThemeRequest, { isDark: this.computeKnownDark() });
             }
         }
     }
 
     private computeKnownDark() : boolean {
-        const baseTheme = detectBaseTheme();
+        const ignore = getSettings && getSettings().ignoreVscodeTheme ? true : false;
+        const baseTheme = ignore ? 'vscode-light' : detectBaseTheme();
         return baseTheme !== 'vscode-light';
     }
 }

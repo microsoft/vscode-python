@@ -1,0 +1,4 @@
+# List of requirements for ipython tests
+numpy
+pandas
+ipython

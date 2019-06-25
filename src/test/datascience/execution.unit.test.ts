@@ -12,7 +12,7 @@ import { anyString, anything, instance, match, mock, when } from 'ts-mockito';
 import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
-import { ConfigurationChangeEvent, Disposable, EventEmitter } from 'vscode';
+import { CancellationToken, ConfigurationChangeEvent, Disposable, EventEmitter } from 'vscode';
 
 import { IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
@@ -36,7 +36,15 @@ import { Architecture } from '../../client/common/utils/platform';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterCommand';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
-import { ICell, IConnection, IJupyterKernelSpec, INotebookServer, INotebookServerLaunchInfo, InterruptResult } from '../../client/datascience/types';
+import {
+    ICell,
+    IConnection,
+    IJupyterKernelSpec,
+    INotebookCompletion,
+    INotebookServer,
+    INotebookServerLaunchInfo,
+    InterruptResult
+} from '../../client/datascience/types';
 import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
 import { InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
@@ -72,6 +80,10 @@ class MockJupyterServer implements INotebookServer {
     public executeObservable(_code: string, _f: string, _line: number): Observable<ICell[]> {
         throw new Error('Method not implemented');
     }
+
+    public async getCompletion(_cellCode: string, _offsetInCode: number, _cancelToken?: CancellationToken) : Promise<INotebookCompletion> {
+        throw new Error('Method not implemented');
+    }
     public execute(_code: string, _f: string, _line: number): Promise<ICell[]> {
         throw new Error('Method not implemented');
     }
@@ -86,6 +98,10 @@ class MockJupyterServer implements INotebookServer {
     }
     public setInitialDirectory(_directory: string): Promise<void> {
         throw new Error('Method not implemented');
+    }
+
+    public async setMatplotLibStyle(_useDark: boolean): Promise<void> {
+        noop();
     }
     public getConnectionInfo(): IConnection | undefined {
         return this.launchInfo ? this.launchInfo.connectionInfo : undefined;
@@ -397,7 +413,7 @@ suite('Jupyter Execution', async () => {
         const getServerInfoPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
         setupPythonService(service, undefined, [getServerInfoPath], Promise.resolve({ stdout: 'failure to get server infos' }));
         setupPythonServiceExecObservable(service, 'jupyter', ['kernelspec', 'list'], [], []);
-        setupPythonServiceExecObservable(service, 'jupyter', ['notebook', '--no-browser', /--notebook-dir=.*/, /.*/], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
+        setupPythonServiceExecObservable(service, 'jupyter', ['notebook', '--no-browser', /--notebook-dir=.*/, /.*/, '--NotebookApp.iopub_data_rate_limit=10000000000.0'], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
 
     }
 
@@ -409,7 +425,7 @@ suite('Jupyter Execution', async () => {
         const getServerInfoPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
         setupPythonService(service, undefined, [getServerInfoPath], Promise.resolve({ stdout: 'failure to get server infos' }));
         setupPythonServiceExecObservable(service, 'jupyter', ['kernelspec', 'list'], [], []);
-        setupPythonServiceExecObservable(service, 'jupyter', ['notebook', '--no-browser', /--notebook-dir=.*/, /.*/], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
+        setupPythonServiceExecObservable(service, 'jupyter', ['notebook', '--no-browser', /--notebook-dir=.*/, /.*/, '--NotebookApp.iopub_data_rate_limit=10000000000.0'], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
     }
 
     function setupMissingNotebookPythonService(service: TypeMoq.IMock<IPythonExecutionService>) {
@@ -437,7 +453,7 @@ suite('Jupyter Execution', async () => {
         const getServerInfoPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
         setupProcessServiceExec(service, workingPython.path, [getServerInfoPath], Promise.resolve({ stdout: 'failure to get server infos' }));
         setupProcessServiceExecObservable(service, workingPython.path, ['-m', 'jupyter', 'kernelspec', 'list'], [], []);
-        setupProcessServiceExecObservable(service, workingPython.path, ['-m', 'jupyter', 'notebook', '--no-browser', /--notebook-dir=.*/, /.*/], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
+        setupProcessServiceExecObservable(service, workingPython.path, ['-m', 'jupyter', 'notebook', '--no-browser', /--notebook-dir=.*/, /.*/, '--NotebookApp.iopub_data_rate_limit=10000000000.0'], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
     }
 
     function setupMissingKernelProcessService(service: TypeMoq.IMock<IProcessService>, notebookStdErr?: string[]) {
@@ -445,7 +461,7 @@ suite('Jupyter Execution', async () => {
         const getServerInfoPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
         setupProcessServiceExec(service, missingKernelPython.path, [getServerInfoPath], Promise.resolve({ stdout: 'failure to get server infos' }));
         setupProcessServiceExecObservable(service, missingKernelPython.path, ['-m', 'jupyter', 'kernelspec', 'list'], [], []);
-        setupProcessServiceExecObservable(service, missingKernelPython.path, ['-m', 'jupyter', 'notebook', '--no-browser', /--notebook-dir=.*/, /.*/], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
+        setupProcessServiceExecObservable(service, missingKernelPython.path, ['-m', 'jupyter', 'notebook', '--no-browser', /--notebook-dir=.*/, /.*/, '--NotebookApp.iopub_data_rate_limit=10000000000.0'], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
     }
 
     function setupPathProcessService(jupyterPath: string, service: TypeMoq.IMock<IProcessService>, notebookStdErr?: string[]) {
@@ -454,7 +470,7 @@ suite('Jupyter Execution', async () => {
         setupProcessServiceExec(service, jupyterPath, ['--version'], Promise.resolve({ stdout: '1.1.1.1' }));
         setupProcessServiceExec(service, jupyterPath, ['notebook', '--version'], Promise.resolve({ stdout: '1.1.1.1' }));
         setupProcessServiceExec(service, jupyterPath, ['kernelspec', '--version'], Promise.resolve({ stdout: '1.1.1.1' }));
-        setupProcessServiceExecObservable(service, jupyterPath, ['notebook', '--no-browser', /--notebook-dir=.*/, /.*/], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
+        setupProcessServiceExecObservable(service, jupyterPath, ['notebook', '--no-browser', /--notebook-dir=.*/, /.*/, '--NotebookApp.iopub_data_rate_limit=10000000000.0'], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
 
         // WE also check for existence with just the key jupyter
         setupProcessServiceExec(service, 'jupyter', ['--version'], Promise.resolve({ stdout: '1.1.1.1' }));
@@ -517,6 +533,7 @@ suite('Jupyter Execution', async () => {
         pythonSettings.datascience = {
             allowImportFromNotebook: true,
             jupyterLaunchTimeout: 10,
+            jupyterLaunchRetries: 3,
             enabled: true,
             jupyterServerURI: 'local',
             notebookFileRoot: 'WORKSPACE',
@@ -530,6 +547,8 @@ suite('Jupyter Execution', async () => {
             maxOutputSize: 400,
             errorBackgroundColor: '#FFFFFF',
             sendSelectionToInteractiveWindow: false,
+            showJupyterVariableExplorer: true,
+            variableExplorerExclude: 'module;builtin_function_or_method',
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
             allowLiveShare: false

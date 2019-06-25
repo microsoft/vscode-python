@@ -39,6 +39,7 @@ use(chaiAsPromised);
 
 // tslint:disable-next-line:max-func-body-length no-any
 suite('Unit Tests - Debug Launcher', () => {
+    let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let unitTestSettings: TypeMoq.IMock<ITestingSettings>;
     let debugLauncher: DebugLauncher;
     let debugService: TypeMoq.IMock<IDebugService>;
@@ -48,7 +49,7 @@ suite('Unit Tests - Debug Launcher', () => {
     let settings: TypeMoq.IMock<IPythonSettings>;
     let hasWorkspaceFolders: boolean;
     setup(async () => {
-        const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
+        serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
         const configService = TypeMoq.Mock.ofType<IConfigurationService>(undefined, TypeMoq.MockBehavior.Strict);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService)))
             .returns(() => configService.object);
@@ -152,13 +153,14 @@ suite('Unit Tests - Debug Launcher', () => {
             name: 'Debug Unit Test',
             type: DebuggerTypeName,
             request: 'launch',
-            console: 'none',
+            console: 'internalConsole',
             env: {},
             envFile: __filename,
             stopOnEntry: false,
-            showReturnValue: false,
+            showReturnValue: true,
             redirectOutput: true,
-            debugStdLib: false
+            debugStdLib: false,
+            subProcess: true
         };
     }
     function setupSuccess(
@@ -227,6 +229,9 @@ suite('Unit Tests - Debug Launcher', () => {
         }
         if (expected.redirectOutput) {
             expected.debugOptions.push(DebugOptions.RedirectOutput);
+        }
+        if (expected.subProcess) {
+            expected.debugOptions.push(DebugOptions.SubProcess);
         }
         if (isOs(OSType.Windows)) {
             expected.debugOptions.push(DebugOptions.FixFilePathCase);
@@ -342,7 +347,8 @@ suite('Unit Tests - Debug Launcher', () => {
             debugStdLib: true,
             justMyCode: false,
             // added by LaunchConfigurationResolver:
-            internalConsoleOptions: 'neverOpen'
+            internalConsoleOptions: 'neverOpen',
+            subProcess: true
         };
         setupSuccess(options, 'unittest', expected, [
             {
@@ -403,32 +409,32 @@ suite('Unit Tests - Debug Launcher', () => {
     const malformedFiles = [
         '// test 1',
         '// test 2 \n\
-{ \n\
-    "name": "spam", \n\
-    "type": "python", \n\
-    "request": "test" \n\
-} \n\
-        ',
-        '// test 3 \n\
-[ \n\
     { \n\
         "name": "spam", \n\
         "type": "python", \n\
         "request": "test" \n\
     } \n\
-] \n\
-        ',
-        '// test 4 \n\
-{ \n\
-    "configurations": [ \n\
+            ',
+        '// test 3 \n\
+    [ \n\
         { \n\
             "name": "spam", \n\
             "type": "python", \n\
             "request": "test" \n\
         } \n\
     ] \n\
-} \n\
-        '
+            ',
+        '// test 4 \n\
+    { \n\
+        "configurations": [ \n\
+            { \n\
+                "name": "spam", \n\
+                "type": "python", \n\
+                "request": "test" \n\
+            } \n\
+        ] \n\
+    } \n\
+            '
     ];
     for (const text of malformedFiles) {
         const testID = text.split('\n')[0].substring(3).trim();
@@ -552,24 +558,47 @@ suite('Unit Tests - Debug Launcher', () => {
         expected.name = 'spam';
         expected.stopOnEntry = true;
         setupSuccess(options, 'unittest', expected, ' \n\
-{ \n\
-    "version": "0.1.0", \n\
-    "configurations": [ \n\
-        // my thing \n\
-        { \n\
-            // "test" debug config \n\
-            "name": "spam",  /* non-empty */ \n\
-            "type": "python",  /* must be "python" */ \n\
-            "request": "test",  /* must be "test" */ \n\
-            // extra stuff here: \n\
-            "stopOnEntry": true \n\
-        } \n\
-    ] \n\
-} \n\
-        ');
+    { \n\
+        "version": "0.1.0", \n\
+        "configurations": [ \n\
+            // my thing \n\
+            { \n\
+                // "test" debug config \n\
+                "name": "spam",  /* non-empty */ \n\
+                "type": "python",  /* must be "python" */ \n\
+                "request": "test",  /* must be "test" */ \n\
+                // extra stuff here: \n\
+                "stopOnEntry": true \n\
+            } \n\
+        ] \n\
+    } \n\
+            ');
 
         await debugLauncher.launchDebugger(options);
 
         debugService.verifyAll();
+    });
+    test('Ensure trailing commands in JSON are handled', async () => {
+        const workspaceFolder = { name: 'abc', index: 0, uri: Uri.file(__filename) };
+        const filename = path.join(workspaceFolder.uri.fsPath, '.vscode', 'launch.json');
+        const jsonc = '{"version":"1234", "configurations":[1,2,],}';
+        filesystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(filename))).returns(() => Promise.resolve(true));
+        filesystem.setup(fs => fs.readFile(TypeMoq.It.isValue(filename))).returns(() => Promise.resolve(jsonc));
+
+        const configs = await debugLauncher.readAllDebugConfigs(workspaceFolder);
+
+        expect(configs).to.be.deep.equal([1, 2]);
+    });
+    test('Ensure empty configuration is returned when launch.json cannot be parsed', async () => {
+        const workspaceFolder = { name: 'abc', index: 0, uri: Uri.file(__filename) };
+        const filename = path.join(workspaceFolder.uri.fsPath, '.vscode', 'launch.json');
+        const jsonc = '{"version":"1234"';
+
+        filesystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(filename))).returns(() => Promise.resolve(true));
+        filesystem.setup(fs => fs.readFile(TypeMoq.It.isValue(filename))).returns(() => Promise.resolve(jsonc));
+
+        const configs = await debugLauncher.readAllDebugConfigs(workspaceFolder);
+
+        expect(configs).to.be.deep.equal([]);
     });
 });

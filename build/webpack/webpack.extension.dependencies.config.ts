@@ -3,11 +3,12 @@
 
 'use strict';
 
+// tslint:disable-next-line: no-require-imports
+import copyWebpackPlugin = require('copy-webpack-plugin');
 import * as path from 'path';
 import * as webpack from 'webpack';
 import { ExtensionRootDir } from '../constants';
 import { getDefaultPlugins, nodeModulesToExternalize } from './common';
-import copyWebpackPlugin = require('copy-webpack-plugin');
 
 const entryItems: Record<string, string> = {};
 nodeModulesToExternalize.forEach(moduleName => {
@@ -32,7 +33,11 @@ const config: webpack.Configuration = {
                         loader: path.join(__dirname, 'loaders', 'fixEvalRequire.js')
                     }
                 ]
-            }            
+            },
+            {enforce: 'post', test: /unicode-properties[\/\\]index.js$/, loader: 'transform-loader?brfs'},
+            {enforce: 'post', test: /fontkit[\/\\]index.js$/, loader: 'transform-loader?brfs'},
+            {enforce: 'post', test: /pdfkit[\\\/]js[\\\/].*js$/, loader: 'transform-loader?brfs'},
+            {enforce: 'post', test: /linebreak[\/\\]src[\/\\]linebreaker.js/, loader: 'transform-loader?brfs'}
         ]
     },
     externals: [
@@ -45,6 +50,10 @@ const config: webpack.Configuration = {
         // 'find' the calling extension.
         new copyWebpackPlugin([
             { from: './package.json', to: '.' }
+        ]),
+        // onigasm requires our onigasm.wasm to be in node_modules
+        new copyWebpackPlugin([
+            { from: './node_modules/onigasm/lib/onigasm.wasm', to: './node_modules/onigasm/lib/onigasm.wasm' }
         ])
     ],
     resolve: {

@@ -9,7 +9,7 @@ import { expect } from 'chai';
 import * as path from 'path';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { localize } from '../../../../../client/common/utils/localize';
+import { DebugConfigStrings } from '../../../../../client/common/utils/localize';
 import { MultiStepInput } from '../../../../../client/common/utils/multiStepInput';
 import { DebuggerTypeName } from '../../../../../client/debugger/constants';
 import { RemoteAttachDebugConfigurationProvider } from '../../../../../client/debugger/extension/configuration/providers/remoteAttach';
@@ -79,7 +79,7 @@ suite('Debugging - Configuration Provider Remote Attach', () => {
         }
 
         const config = {
-            name: localize('python.snippet.launch.attach.label', 'Python: Attach')(),
+            name: DebugConfigStrings.attach.snippet.name(),
             type: DebuggerTypeName,
             request: 'attach',
             port: 5678,
@@ -112,7 +112,7 @@ suite('Debugging - Configuration Provider Remote Attach', () => {
         }
 
         const config = {
-            name: localize('python.snippet.launch.attach.label', 'Python: Attach')(),
+            name: DebugConfigStrings.attach.snippet.name(),
             type: DebuggerTypeName,
             request: 'attach',
             port: 9999,

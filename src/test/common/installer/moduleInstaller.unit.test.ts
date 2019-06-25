@@ -217,6 +217,9 @@ suite('Module Installer', () => {
                                 test(`Test args (${product.name})`, async () => {
                                     setActiveInterpreter();
                                     const expectedArgs = ['install', moduleName, '--dev'];
+                                    if (moduleName === 'black') {
+                                        expectedArgs.push('--pre')
+                                    }
                                     await installModuleAndVerifyCommand(pipenvName, expectedArgs);
                                 });
                             }

@@ -123,12 +123,13 @@ suite('Interpreters - PipEnv', () => {
                 expect(environments).to.be.deep.equal([]);
                 fileSystem.verifyAll();
             });
-            test(`Should display warning message if there is a \'PipFile\' but \'pipenv --venv\' failes ${testSuffix}`, async () => {
+            test(`Should display warning message if there is a \'PipFile\' but \'pipenv --version\' fails ${testSuffix}`, async () => {
                 const env = {};
                 currentProcess.setup(c => c.env).returns(() => env);
-                processService.setup(p => p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.reject(''));
+                processService.setup(p => p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny())).returns(() => Promise.reject(''));
                 fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile')))).returns(() => Promise.resolve(true));
-                appShell.setup(a => a.showWarningMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve('')).verifiable(TypeMoq.Times.once());
+                const warningMessage = 'Workspace contains Pipfile but \'pipenv\' was not found. Make sure \'pipenv\' is on the PATH.';
+                appShell.setup(a => a.showWarningMessage(warningMessage)).returns(() => Promise.resolve('')).verifiable(TypeMoq.Times.once());
                 logger.setup(l => l.logWarning(TypeMoq.It.isAny(), TypeMoq.It.isAny())).verifiable(TypeMoq.Times.exactly(2));
                 const environments = await pipEnvService.getInterpreters(resource);
 
@@ -136,12 +137,14 @@ suite('Interpreters - PipEnv', () => {
                 appShell.verifyAll();
                 logger.verifyAll();
             });
-            test(`Should display warning message if there is a \'PipFile\' but \'pipenv --venv\' failes with stderr ${testSuffix}`, async () => {
+            test(`Should display warning message if there is a \'PipFile\' but \'pipenv --venv\' fails with stderr ${testSuffix}`, async () => {
                 const env = {};
                 currentProcess.setup(c => c.env).returns(() => env);
-                processService.setup(p => p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stderr: 'PipEnv Failed', stdout: '' }));
+                processService.setup(p => p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stderr: '', stdout: 'pipenv, version 2018.11.26' }));
+                processService.setup(p => p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isValue(['--venv']), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stderr: 'Aborted!', stdout: '' }));
                 fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile')))).returns(() => Promise.resolve(true));
-                appShell.setup(a => a.showWarningMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve('')).verifiable(TypeMoq.Times.once());
+                const warningMessage = 'Workspace contains Pipfile but the associated virtual environment has not been setup. Setup the virtual environment manually if needed.';
+                appShell.setup(a => a.showWarningMessage(warningMessage)).returns(() => Promise.resolve('')).verifiable(TypeMoq.Times.once());
                 logger.setup(l => l.logWarning(TypeMoq.It.isAny(), TypeMoq.It.isAny())).verifiable(TypeMoq.Times.exactly(2));
                 const environments = await pipEnvService.getInterpreters(resource);
 

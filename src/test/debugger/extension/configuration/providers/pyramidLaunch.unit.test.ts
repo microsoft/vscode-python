@@ -15,7 +15,7 @@ import { FileSystem } from '../../../../../client/common/platform/fileSystem';
 import { PathUtils } from '../../../../../client/common/platform/pathUtils';
 import { IFileSystem } from '../../../../../client/common/platform/types';
 import { IPathUtils } from '../../../../../client/common/types';
-import { localize } from '../../../../../client/common/utils/localize';
+import { DebugConfigStrings } from '../../../../../client/common/utils/localize';
 import { MultiStepInput } from '../../../../../client/common/utils/multiStepInput';
 import { DebuggerTypeName } from '../../../../../client/debugger/constants';
 import { PyramidLaunchDebugConfigurationProvider } from '../../../../../client/debugger/extension/configuration/providers/pyramidLaunch';
@@ -131,7 +131,7 @@ suite('Debugging - Configuration Provider Pyramid', () => {
         await provider.buildConfiguration(instance(input), state);
 
         const config = {
-            name: localize('python.snippet.launch.pyramid.label', 'Python: Pyramid Application')(),
+            name: DebugConfigStrings.pyramid.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
             args: [
@@ -153,7 +153,7 @@ suite('Debugging - Configuration Provider Pyramid', () => {
         await provider.buildConfiguration(instance(input), state);
 
         const config = {
-            name: localize('python.snippet.launch.pyramid.label', 'Python: Pyramid Application')(),
+            name: DebugConfigStrings.pyramid.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
             args: [
@@ -178,7 +178,7 @@ suite('Debugging - Configuration Provider Pyramid', () => {
         await provider.buildConfiguration(instance(input), state);
 
         const config = {
-            name: localize('python.snippet.launch.pyramid.label', 'Python: Pyramid Application')(),
+            name: DebugConfigStrings.pyramid.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
             args: [

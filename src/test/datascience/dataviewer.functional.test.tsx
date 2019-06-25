@@ -14,15 +14,15 @@ import { Disposable } from 'vscode';
 
 import { createDeferred } from '../../client/common/utils/async';
 import { Identifiers } from '../../client/datascience/constants';
-import { DataViewerMessageListener } from '../../client/datascience/data-viewing/dataViewerMessageListener';
 import { DataViewerMessages } from '../../client/datascience/data-viewing/types';
-import { IDataViewer, IDataViewerProvider, IHistoryProvider, IJupyterExecution } from '../../client/datascience/types';
+import { IDataViewer, IDataViewerProvider, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
 import { MainPanel } from '../../datascience-ui/data-explorer/mainPanel';
+import { ReactSlickGrid } from '../../datascience-ui/data-explorer/reactSlickGrid';
 import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 
 // import { asyncDump } from '../common/asyncDump';
-suite('DataViewer tests', () => {
+suite('DataScience DataViewer tests', () => {
     const disposables: Disposable[] = [];
     let dataProvider: IDataViewerProvider;
     let ioc: DataScienceIocContainer;
@@ -55,26 +55,11 @@ suite('DataViewer tests', () => {
     });
 
     function mountWebView(): ReactWrapper<any, Readonly<{}>, React.Component> {
-
         // Setup our webview panel
-        ioc.createWebView(() => mount(<MainPanel skipDefault={true} baseTheme={'vscode-light'} forceHeight={200}/>));
+        ioc.createWebView(() => mount(<MainPanel skipDefault={true} baseTheme={'vscode-light'} testMode={true}/>));
 
         // Make sure the data explorer provider and execution factory in the container is created (the extension does this on startup in the extension)
         dataProvider = ioc.get<IDataViewerProvider>(IDataViewerProvider);
-
-        // The history provider create needs to be rewritten to make the history window think the mounted web panel is
-        // ready.
-        const origFunc = (dataProvider as any).create.bind(dataProvider);
-        (dataProvider as any).create = async (v: string): Promise<void> => {
-            const dataViewer = await origFunc(v);
-
-            // During testing the MainPanel sends the init message before our history is created.
-            // Pretend like it's happening now
-            const listener = ((dataViewer as any).messageListener) as DataViewerMessageListener;
-            listener.onMessage(DataViewerMessages.Started, {});
-
-            return dataViewer;
-        };
 
         return ioc.wrapper!;
     }
@@ -104,8 +89,8 @@ suite('DataViewer tests', () => {
 
     async function injectCode(code: string) : Promise<void> {
         const exec = ioc.get<IJupyterExecution>(IJupyterExecution);
-        const historyProvider = ioc.get<IHistoryProvider>(IHistoryProvider);
-        const server = await exec.connectToNotebookServer(await historyProvider.getNotebookOptions());
+        const interactiveWindowProvider = ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
+        const server = await exec.connectToNotebookServer(await interactiveWindowProvider.getNotebookOptions());
         if (server) {
             const cells = await server.execute(code, Identifiers.EmptyFileName, 0, uuid());
             assert.equal(cells.length, 1, `Wrong number of cells returned`);
@@ -150,14 +135,30 @@ suite('DataViewer tests', () => {
         });
     }
 
-    function verifyRows(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, rows: (string | number)[]) {
-        const canvas = wrapper.find('div.react-grid-Canvas');
-        assert.ok(canvas.length >= 1, 'Didn\'t find any cells being rendered');
+    function sortRows(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, sortCol: string, sortAsc: boolean) : void {
+        // Cause our sort
+        const mainPanelWrapper = wrapper.find(MainPanel);
+        assert.ok(mainPanelWrapper && mainPanelWrapper.length > 0, 'Grid not found to sort on');
+        const mainPanel = mainPanelWrapper.instance() as MainPanel;
+        assert.ok(mainPanel, 'Main panel instance not found');
+        const reactGrid = (mainPanel as any).grid.current as ReactSlickGrid;
+        assert.ok(reactGrid, 'Grid control not found');
+        if (reactGrid.state.grid) {
+            const cols = reactGrid.state.grid.getColumns();
+            const col = cols.find(c => c.field === sortCol);
+            assert.ok(col, `${sortCol} is not a column of the grid`);
+            reactGrid.sort(new Slick.EventData(), { sortCol: col, sortAsc, multiColumnSort: false, grid: reactGrid.state.grid });
+        }
+    }
 
-        // Force the canvas to actually render.
-        const html = canvas.html();
+    function verifyRows(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, rows: (string | number)[]) {
+        const mainPanel = wrapper.find('.main-panel');
+        assert.ok(mainPanel.length >= 1, 'Didn\'t find any cells being rendered');
+
+        // Force the main panel to actually render.
+        const html = mainPanel.html();
         const root = parse(html) as any;
-        const cells = root.querySelectorAll('.react-grid-Cell') as HTMLElement[];
+        const cells = root.querySelectorAll('.react-grid-cell') as HTMLElement[];
         assert.ok(cells, 'No cells found');
         assert.ok(cells.length >= rows.length, 'Not enough cells found');
         // Cells should be an array that matches up to the values we expect.
@@ -218,5 +219,17 @@ suite('DataViewer tests', () => {
         } catch {
             noop();
         }
+    });
+
+    runMountedTest('Sorting', async (wrapper) => {
+        await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3])');
+        const gotAllRows = getCompletedPromise();
+        const dv = await createDataViewer('x');
+        assert.ok(dv, 'DataViewer not created');
+        await gotAllRows;
+
+        verifyRows(wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
+        sortRows(wrapper, '0', false);
+        verifyRows(wrapper, [3, 3, 2, 2, 1, 1, 0, 0]);
     });
 });

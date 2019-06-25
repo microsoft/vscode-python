@@ -1,24 +1,34 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import './mainPanel.css';
-
 import { min } from 'lodash';
+import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
+import * as uuid from 'uuid/v4';
 
+import { createDeferred, Deferred } from '../../client/common/utils/async';
+import { noop } from '../../client/common/utils/misc';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { generateMarkdownFromCodeLines } from '../../client/datascience/common';
-import { HistoryMessages, IHistoryMapping } from '../../client/datascience/history/historyTypes';
-import { CellState, ICell, IHistoryInfo, IJupyterVariable } from '../../client/datascience/types';
+import { Identifiers } from '../../client/datascience/constants';
+import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../../client/datascience/interactive-window/interactiveWindowTypes';
+import { CellState, ICell, IInteractiveWindowInfo, IJupyterVariable, IJupyterVariablesResponse } from '../../client/datascience/types';
+import { ErrorBoundary } from '../react-common/errorBoundary';
+import { getLocString } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { getSettings, updateSettings } from '../react-common/settingsReactSide';
 import { StyleInjector } from '../react-common/styleInjector';
 import { Cell, ICellViewModel } from './cell';
 import { ContentPanel, IContentPanelProps } from './contentPanel';
-import { HeaderPanel, IHeaderPanelProps } from './headerPanel';
 import { InputHistory } from './inputHistory';
+import { IntellisenseProvider } from './intellisenseProvider';
 import { createCellVM, createEditableCellVM, extractInputText, generateTestState, IMainPanelState } from './mainPanelState';
+import { initializeTokenizer, registerMonacoLanguage } from './tokenizer';
+import { IToolbarPanelProps, ToolbarPanel } from './toolbarPanel';
 import { VariableExplorer } from './variableExplorer';
+import { IVariablePanelProps, VariablePanel } from './variablePanel';
+
+import './mainPanel.css';
 
 export interface IMainPanelProps {
     skipDefault?: boolean;
@@ -35,23 +45,32 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private mainPanel: HTMLDivElement | null = null;
     private variableExplorerRef: React.RefObject<VariableExplorer>;
     private styleInjectorRef: React.RefObject<StyleInjector>;
-    private currentExecutionCount: number = 0;
+    private postOffice: PostOffice = new PostOffice();
+    private intellisenseProvider: IntellisenseProvider;
+    private onigasmPromise: Deferred<ArrayBuffer> | undefined;
+    private tmlangugePromise: Deferred<string> | undefined;
+    private monacoIdToCellId: Map<string, string> = new Map<string, string>();
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
         super(props);
 
         // Default state should show a busy message
-        this.state = { cellVMs: [], busy: true, undoStack: [], redoStack : [], submittedText: false, history: new InputHistory(), contentTop: 24 };
+        this.state = {
+            cellVMs: [],
+            busy: true,
+            undoStack: [],
+            redoStack : [],
+            submittedText: false,
+            history: new InputHistory(),
+            editCellVM: getSettings && getSettings().allowInput ? createEditableCellVM(1) : undefined,
+            editorOptions: this.computeEditorOptions(),
+            currentExecutionCount: 0
+        };
 
         // Add test state if necessary
         if (!this.props.skipDefault) {
             this.state = generateTestState(this.inputBlockToggled);
-        }
-
-        // Add a single empty cell if it's supported
-        if (getSettings && getSettings().allowInput) {
-            this.state.cellVMs.push(createEditableCellVM(1));
         }
 
         // Create the ref to hold our variable explorer
@@ -59,14 +78,30 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         // Create the ref to hold our style injector
         this.styleInjectorRef = React.createRef<StyleInjector>();
+
+        // Setup the completion provider for monaco. We only need one
+        this.intellisenseProvider = new IntellisenseProvider(this.postOffice, this.getCellId);
+
+        // Setup the tokenizer for monaco if running inside of vscode
+        if (this.props.skipDefault) {
+            if (this.props.testMode) {
+                // Running a test, skip the tokenizer. We want the UI to display synchronously
+                this.state = {tokenizerLoaded: true, ...this.state};
+
+                // However we still need to register python as a language
+                registerMonacoLanguage();
+            } else {
+                initializeTokenizer(this.loadOnigasm, this.loadTmlanguage, this.tokenizerLoaded).ignoreErrors();
+            }
+        }
     }
 
     public componentWillMount() {
         // Add ourselves as a handler for the post office
-        PostOffice.addHandler(this);
+        this.postOffice.addHandler(this);
 
-        // Tell the history code we have started.
-        PostOffice.sendMessage<IHistoryMapping, 'started'>(HistoryMessages.Started);
+        // Tell the interactive window code we have started.
+        this.postOffice.sendMessage<IInteractiveWindowMapping, 'started'>(InteractiveWindowMessages.Started);
     }
 
     public componentDidUpdate(_prevProps: Readonly<IMainPanelProps>, _prevState: Readonly<IMainPanelState>, _snapshot?: {}) {
@@ -78,7 +113,13 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     public componentWillUnmount() {
         // Remove ourselves as a handler for the post office
-        PostOffice.removeHandler(this);
+        this.postOffice.removeHandler(this);
+
+        // Get rid of our completion provider
+        this.intellisenseProvider.dispose();
+
+        // Get rid of our post office
+        this.postOffice.dispose();
     }
 
     public render() {
@@ -90,83 +131,111 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         const baseTheme = this.computeBaseTheme();
 
-        const headerProps = this.getHeaderProps(baseTheme);
-        const contentProps = this.getContentProps(baseTheme);
-
         return (
             <div id='main-panel' ref={this.updateSelf}>
-                <StyleInjector expectingDark={baseTheme !== 'vscode-light'} darkChanged={this.darkChanged} ref={this.styleInjectorRef} />
-                <HeaderPanel {...headerProps} />
-                <ContentPanel {...contentProps} />
+                <StyleInjector
+                    expectingDark={baseTheme !== 'vscode-light'}
+                    postOffice={this.postOffice}
+                    darkChanged={this.darkChanged}
+                    monacoThemeChanged={this.monacoThemeChanged}
+                    ref={this.styleInjectorRef} />
+                <header id='main-panel-toolbar'>
+                    {this.renderToolbarPanel(baseTheme)}
+                </header>
+                <section id='main-panel-variable' aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
+                    {this.renderVariablePanel(baseTheme)}
+                </section>
+                <main id='main-panel-content'>
+                    {this.renderContentPanel(baseTheme)}
+                </main>
+                <section id='main-panel-footer' aria-label={getLocString('DataScience.editSection', 'Input new cells here')}>
+                    {this.renderFooterPanel(baseTheme)}
+                </section>
             </div>
         );
     }
 
-    // tslint:disable-next-line:no-any
+    // tslint:disable-next-line:no-any cyclomatic-complexity
     public handleMessage = (msg: string, payload?: any) => {
         switch (msg) {
-            case HistoryMessages.StartCell:
+            case InteractiveWindowMessages.StartCell:
                 this.startCell(payload);
                 return true;
 
-            case HistoryMessages.FinishCell:
+            case InteractiveWindowMessages.FinishCell:
                 this.finishCell(payload);
                 return true;
 
-            case HistoryMessages.UpdateCell:
+            case InteractiveWindowMessages.UpdateCell:
                 this.updateCell(payload);
                 return true;
 
-            case HistoryMessages.GetAllCells:
+            case InteractiveWindowMessages.GetAllCells:
                 this.getAllCells();
                 return true;
 
-            case HistoryMessages.ExpandAll:
+            case InteractiveWindowMessages.ExpandAll:
                 this.expandAllSilent();
                 return true;
 
-            case HistoryMessages.CollapseAll:
+            case InteractiveWindowMessages.CollapseAll:
                 this.collapseAllSilent();
                 return true;
 
-            case HistoryMessages.DeleteAllCells:
+            case InteractiveWindowMessages.DeleteAllCells:
                 this.clearAllSilent();
                 return true;
 
-            case HistoryMessages.Redo:
+            case InteractiveWindowMessages.Redo:
                 this.redo();
                 return true;
 
-            case HistoryMessages.Undo:
+            case InteractiveWindowMessages.Undo:
                 this.undo();
                 return true;
 
-            case HistoryMessages.StartProgress:
+            case InteractiveWindowMessages.StartProgress:
                 if (!this.props.testMode) {
                     this.setState({busy: true});
                 }
                 break;
 
-            case HistoryMessages.StopProgress:
+            case InteractiveWindowMessages.StopProgress:
                 if (!this.props.testMode) {
                     this.setState({busy: false});
                 }
                 break;
 
-            case HistoryMessages.UpdateSettings:
+            case InteractiveWindowMessages.UpdateSettings:
                 this.updateSettings(payload);
                 break;
 
-            case HistoryMessages.Activate:
+            case InteractiveWindowMessages.Activate:
                 this.activate();
                 break;
 
-            case HistoryMessages.GetVariablesResponse:
+            case InteractiveWindowMessages.GetVariablesResponse:
                 this.getVariablesResponse(payload);
                 break;
 
-            case HistoryMessages.GetVariableValueResponse:
+            case InteractiveWindowMessages.GetVariableValueResponse:
                 this.getVariableValueResponse(payload);
+                break;
+
+            case InteractiveWindowMessages.LoadOnigasmAssemblyResponse:
+                this.handleOnigasmResponse(payload);
+                break;
+
+            case InteractiveWindowMessages.LoadTmLanguageResponse:
+                this.handleTmLanguageResponse(payload);
+                break;
+
+            case InteractiveWindowMessages.RestartKernel:
+                // this should be the response from a restart.
+                this.setState({currentExecutionCount: 0});
+                if (this.variableExplorerRef.current && this.variableExplorerRef.current.state.open) {
+                    this.refreshVariables();
+                }
                 break;
 
             default:
@@ -197,18 +266,121 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     //     this.addCell(cell);
     // }
 
-    // Called by the header control when size changes (such as expanding variables)
-    private onHeaderHeightChange = (newHeight: number) => {
-        this.setState({contentTop: newHeight});
+    private renderToolbarPanel(baseTheme: string) {
+        const toolbarProps = this.getToolbarProps(baseTheme);
+        return <ToolbarPanel {...toolbarProps} />;
+    }
+
+    private renderVariablePanel(baseTheme: string) {
+        const variableProps = this.getVariableProps(baseTheme);
+        return <VariablePanel {...variableProps} />;
+    }
+
+    private renderContentPanel(baseTheme: string) {
+        // Skip if the tokenizer isn't finished yet. It needs
+        // to finish loading so our code editors work.
+        if (!this.state.tokenizerLoaded && !this.props.testMode) {
+            return null;
+        }
+
+        // Otherwise render our cells.
+        const contentProps = this.getContentProps(baseTheme);
+        return <ContentPanel {...contentProps} />;
+    }
+
+    private renderFooterPanel(baseTheme: string) {
+        // Skip if the tokenizer isn't finished yet. It needs
+        // to finish loading so our code editors work.
+        if (!this.state.tokenizerLoaded || !this.state.editCellVM) {
+            return null;
+        }
+
+        const maxOutputSize = getSettings().maxOutputSize;
+        const maxTextSize = maxOutputSize && maxOutputSize < 10000 && maxOutputSize > 0 ? maxOutputSize : undefined;
+        const executionCount = this.getInputExecutionCount();
+
+        return (
+            <div className='edit-panel'>
+                <ErrorBoundary>
+                    <Cell
+                        editorOptions={this.state.editorOptions}
+                        history={this.state.history}
+                        maxTextSize={maxTextSize}
+                        autoFocus={document.hasFocus()}
+                        testMode={this.props.testMode}
+                        cellVM={this.state.editCellVM}
+                        submitNewCode={this.submitInput}
+                        baseTheme={baseTheme}
+                        codeTheme={this.props.codeTheme}
+                        showWatermark={!this.state.submittedText}
+                        ref={this.saveEditCellRef}
+                        gotoCode={noop}
+                        copyCode={noop}
+                        delete={noop}
+                        editExecutionCount={executionCount}
+                        onCodeCreated={this.editableCodeCreated}
+                        onCodeChange={this.codeChange}
+                        monacoTheme={this.state.monacoTheme}
+                        openLink={this.openLink}
+                        expandImage={noop}
+                    />
+                </ErrorBoundary>
+            </div>
+        );
+    }
+
+    private computeEditorOptions() : monacoEditor.editor.IEditorOptions {
+        const intellisenseOptions = getSettings().intellisenseOptions;
+        const extraSettings = getSettings().extraSettings;
+        if (intellisenseOptions && extraSettings) {
+            return {
+                quickSuggestions: {
+                    other: intellisenseOptions.quickSuggestions.other,
+                    comments: intellisenseOptions.quickSuggestions.comments,
+                    strings: intellisenseOptions.quickSuggestions.strings
+                },
+                acceptSuggestionOnEnter: intellisenseOptions.acceptSuggestionOnEnter,
+                quickSuggestionsDelay: intellisenseOptions.quickSuggestionsDelay,
+                suggestOnTriggerCharacters: intellisenseOptions.suggestOnTriggerCharacters,
+                tabCompletion: intellisenseOptions.tabCompletion,
+                suggest: {
+                    localityBonus: intellisenseOptions.suggestLocalityBonus
+                },
+                suggestSelection: intellisenseOptions.suggestSelection,
+                wordBasedSuggestions: intellisenseOptions.wordBasedSuggestions,
+                parameterHints: {
+                    enabled: intellisenseOptions.parameterHintsEnabled
+                },
+                cursorStyle: extraSettings.editorCursor,
+                cursorBlinking: extraSettings.editorCursorBlink
+            };
+        }
+
+        return {};
     }
 
     private darkChanged = (newDark: boolean) => {
-        // update our base theme
-        this.setState(
-            {
-                forceDark: newDark
-            }
-        );
+        // update our base theme if allowed. Don't do this
+        // during testing as it will mess up the expected render count.
+        if (!this.props.testMode) {
+            this.setState(
+                {
+                    forceDark: newDark
+                }
+            );
+        }
+    }
+
+    private monacoThemeChanged = (theme: string) => {
+        // update our base theme if allowed. Don't do this
+        // during testing as it will mess up the expected render count.
+        if (!this.props.testMode) {
+            this.setState(
+                {
+                    monacoTheme: theme
+                }
+            );
+        }
     }
 
     private computeBaseTheme(): string {
@@ -226,26 +398,33 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return this.props.baseTheme;
     }
 
+    private showPlot = (imageHtml: string) => {
+        this.sendMessage(InteractiveWindowMessages.ShowPlot, imageHtml);
+    }
+
     private getContentProps = (baseTheme: string): IContentPanelProps => {
         return {
+            editorOptions: this.state.editorOptions,
             baseTheme: baseTheme,
-            contentTop: this.state.contentTop,
             cellVMs: this.state.cellVMs,
             history: this.state.history,
             testMode: this.props.testMode,
             codeTheme: this.props.codeTheme,
             submittedText: this.state.submittedText,
-            saveEditCellRef: this.saveEditCellRef,
             gotoCellCode: this.gotoCellCode,
+            copyCellCode: this.copyCellCode,
             deleteCell: this.deleteCell,
-            submitInput: this.submitInput,
-            skipNextScroll: this.state.skipNextScroll ? true : false
+            skipNextScroll: this.state.skipNextScroll ? true : false,
+            monacoTheme: this.state.monacoTheme,
+            onCodeCreated: this.readOnlyCodeCreated,
+            onCodeChange: this.codeChange,
+            openLink: this.openLink,
+            expandImage: this.showPlot
         };
     }
-    private getHeaderProps = (baseTheme: string): IHeaderPanelProps => {
+    private getToolbarProps = (baseTheme: string): IToolbarPanelProps => {
        return {
         addMarkdown: this.addMarkdown,
-        busy: this.state.busy,
         collapseAll: this.collapseAll,
         expandAll: this.expandAll,
         export: this.export,
@@ -255,16 +434,24 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         redo: this.redo,
         clearAll: this.clearAll,
         skipDefault: this.props.skipDefault,
-        showDataExplorer: this.showDataViewer,
-        testMode: this.props.testMode,
-        variableExplorerRef: this.variableExplorerRef,
         canCollapseAll: this.canCollapseAll(),
         canExpandAll: this.canExpandAll(),
         canExport: this.canExport(),
         canUndo: this.canUndo(),
         canRedo: this.canRedo(),
+        baseTheme: baseTheme
+       };
+    }
+
+    private getVariableProps = (baseTheme: string): IVariablePanelProps => {
+       return {
+        busy: this.state.busy,
+        showDataExplorer: this.showDataViewer,
+        skipDefault: this.props.skipDefault,
+        testMode: this.props.testMode,
+        variableExplorerRef: this.variableExplorerRef,
         refreshVariables: this.refreshVariables,
-        onHeightChange: this.onHeaderHeightChange,
+        variableExplorerToggled: this.variableExplorerToggled,
         baseTheme: baseTheme
        };
     }
@@ -295,18 +482,27 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             // If our settings change updated show inputs we need to fix up our cells
             const showInputs = getSettings().showCellInputCode;
 
+            // Also save the editor options. Intellisense options may have changed.
+            this.setState({
+                editorOptions: this.computeEditorOptions()
+            });
+
             if (prevShowInputs !== showInputs) {
                 this.toggleCellInputVisibility(showInputs, getSettings().collapseCellInputCodeByDefault);
             }
         }
     }
 
-    private showDataViewer = (targetVariable: string) => {
-        this.sendMessage(HistoryMessages.ShowDataViewer, targetVariable);
+    private showDataViewer = (targetVariable: string, numberOfColumns: number) => {
+        this.sendMessage(InteractiveWindowMessages.ShowDataViewer, { variableName: targetVariable, columnSize: numberOfColumns });
     }
 
-    private sendMessage<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) {
-        PostOffice.sendMessage<M, T>(type, payload);
+    private sendMessage<M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]) {
+        this.postOffice.sendMessage<M, T>(type, payload);
+    }
+
+    private openLink = (uri: monacoEditor.Uri) => {
+        this.sendMessage(InteractiveWindowMessages.OpenLink, uri.toString());
     }
 
     private getAllCells = () => {
@@ -315,7 +511,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             return cellVM.cell;
         });
 
-        this.sendMessage(HistoryMessages.ReturnAllCells, cells);
+        this.sendMessage(InteractiveWindowMessages.ReturnAllCells, cells);
     }
 
     private saveEditCellRef = (ref: Cell | null) => {
@@ -378,11 +574,23 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const cellVM = this.state.cellVMs[index];
 
         // Send a message to the other side to jump to a particular cell
-        this.sendMessage(HistoryMessages.GotoCodeCell, { file : cellVM.cell.file, line: cellVM.cell.line });
+        this.sendMessage(InteractiveWindowMessages.GotoCodeCell, { file : cellVM.cell.file, line: cellVM.cell.line });
+    }
+
+    private copyCellCode = (index: number) => {
+        // Find our cell
+        const cellVM = this.state.cellVMs[index];
+
+        // Send a message to the other side to jump to a particular cell
+        this.sendMessage(InteractiveWindowMessages.CopyCodeCell, { source: extractInputText(cellVM.cell, getSettings()) });
     }
 
     private deleteCell = (index: number) => {
-        this.sendMessage(HistoryMessages.DeleteCell);
+        this.sendMessage(InteractiveWindowMessages.DeleteCell);
+        const cellVM = this.state.cellVMs[index];
+        if (cellVM) {
+            this.sendMessage(InteractiveWindowMessages.RemoveCell, {id: cellVM.cell.id});
+        }
 
         // Update our state
         this.setState({
@@ -395,27 +603,24 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private collapseAll = () => {
-        this.sendMessage(HistoryMessages.CollapseAll);
+        this.sendMessage(InteractiveWindowMessages.CollapseAll);
         this.collapseAllSilent();
     }
 
     private expandAll = () => {
-        this.sendMessage(HistoryMessages.ExpandAll);
+        this.sendMessage(InteractiveWindowMessages.ExpandAll);
         this.expandAllSilent();
     }
 
     private clearAll = () => {
-        this.sendMessage(HistoryMessages.DeleteAllCells);
+        this.sendMessage(InteractiveWindowMessages.DeleteAllCells);
         this.clearAllSilent();
     }
 
     private clearAllSilent = () => {
-        // Make sure the edit cell doesn't go away
-        const editCell = this.getEditCell();
-
         // Update our state
         this.setState({
-            cellVMs: editCell ? [editCell] : [],
+            cellVMs: [],
             undoStack : this.pushStack(this.state.undoStack, this.state.cellVMs),
             skipNextScroll: true,
             busy: false // No more progress on delete all
@@ -430,7 +635,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const cells = this.state.redoStack[this.state.redoStack.length - 1];
         const redoStack = this.state.redoStack.slice(0, this.state.redoStack.length - 1);
         const undoStack = this.pushStack(this.state.undoStack, this.state.cellVMs);
-        this.sendMessage(HistoryMessages.Redo);
+        this.sendMessage(InteractiveWindowMessages.Redo);
         this.setState({
             cellVMs: cells,
             undoStack: undoStack,
@@ -447,7 +652,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const cells = this.state.undoStack[this.state.undoStack.length - 1];
         const undoStack = this.state.undoStack.slice(0, this.state.undoStack.length - 1);
         const redoStack = this.pushStack(this.state.redoStack, this.state.cellVMs);
-        this.sendMessage(HistoryMessages.Undo);
+        this.sendMessage(InteractiveWindowMessages.Undo);
         this.setState({
             cellVMs: cells,
             undoStack : undoStack,
@@ -461,18 +666,18 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private restartKernel = () => {
         // Send a message to the other side to restart the kernel
-        this.sendMessage(HistoryMessages.RestartKernel);
+        this.sendMessage(InteractiveWindowMessages.RestartKernel);
     }
 
     private interruptKernel = () => {
         // Send a message to the other side to restart the kernel
-        this.sendMessage(HistoryMessages.Interrupt);
+        this.sendMessage(InteractiveWindowMessages.Interrupt);
     }
 
     private export = () => {
         // Send a message to the other side to export our current list
         const cellContents: ICell[] = this.state.cellVMs.map((cellVM: ICellViewModel, _index: number) => { return cellVM.cell; });
-        this.sendMessage(HistoryMessages.Export, cellContents);
+        this.sendMessage(InteractiveWindowMessages.Export, cellContents);
     }
 
     private updateSelf = (r: HTMLDivElement) => {
@@ -493,19 +698,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             cellVM = this.alterCellVM(cellVM, showInputs, !collapseInputs);
 
             if (cellVM) {
-                let newList : ICellViewModel[] = [];
-
-                // Insert before the edit cell if we have one
-                const editCell = this.getEditCell();
-                if (editCell) {
-                    newList = [...this.state.cellVMs.filter(c => !c.editable), cellVM, editCell];
-
-                    // Update execution count on the last cell
-                    editCell.cell.data.execution_count = this.getInputExecutionCount(newList);
-                } else {
-                    newList = [...this.state.cellVMs, cellVM];
-                }
-
+                const newList = [...this.state.cellVMs, cellVM];
                 this.setState({
                     cellVMs: newList,
                     undoStack: this.pushStack(this.state.undoStack, this.state.cellVMs),
@@ -520,12 +713,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private getEditCell() : ICellViewModel | undefined {
-        const editCells = this.state.cellVMs.filter(c => c.editable);
-        if (editCells && editCells.length === 1) {
-            return editCells[0];
-        }
-
-        return undefined;
+        return this.state.editCellVM;
     }
 
     private inputBlockToggled = (id: string) => {
@@ -624,12 +812,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private sendInfo = () => {
-        const info : IHistoryInfo = {
+        const info : IInteractiveWindowInfo = {
             cellCount: this.getNonEditCellVMs().length,
             undoCount: this.state.undoStack.length,
             redoCount: this.state.redoStack.length
         };
-        this.sendMessage(HistoryMessages.SendInfo, info);
+        this.sendMessage(InteractiveWindowMessages.SendInfo, info);
     }
 
     private updateOrAdd = (cell: ICell, allowAdd? : boolean) => {
@@ -642,13 +830,23 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             // Update this cell
             this.state.cellVMs[index].cell = cell;
 
-            // Also update the last cell execution count. It may have changed
-            const editCell = this.getEditCell();
-            if (editCell) {
-                editCell.cell.data.execution_count = this.getInputExecutionCount(this.state.cellVMs);
-            }
+            // This means the cell existed already so it was actual executed code.
+            // Use its execution count to update our execution count.
+            const newExecutionCount = cell.data.execution_count ?
+                Math.max(this.state.currentExecutionCount, parseInt(cell.data.execution_count.toString(), 10)) :
+                this.state.currentExecutionCount;
+            if (newExecutionCount !== this.state.currentExecutionCount) {
+                this.setState({ currentExecutionCount: newExecutionCount });
 
-            this.forceUpdate();
+                // We also need to update our variable explorer when the execution count changes
+                // Use the ref here to maintain var explorer independence
+                if (this.variableExplorerRef.current && this.variableExplorerRef.current.state.open) {
+                    this.refreshVariables();
+                }
+            } else {
+                // Force an update anyway as we did change something
+                this.forceUpdate();
+            }
         } else if (allowAdd) {
             // This is an entirely new cell (it may have started out as finished)
             this.addCell(cell);
@@ -656,7 +854,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private isCellSupported(cell: ICell) : boolean {
-        return !this.props.testMode || cell.data.cell_type !== 'sys_info';
+        return !this.props.testMode || cell.data.cell_type !== 'messages';
     }
 
     // tslint:disable-next-line:no-any
@@ -666,15 +864,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             if (cell && this.isCellSupported(cell)) {
                 this.updateOrAdd(cell, true);
             }
-        }
-
-        // After the cell is finished update our current execution count
-        this.currentExecutionCount = this.getCurrentExecutionCount(this.state.cellVMs);
-
-        // When a cell is finished refresh our variables
-        // Use the ref here to maintain var explorer independence
-        if (this.variableExplorerRef.current && this.variableExplorerRef.current.state.open) {
-            this.refreshVariables();
         }
     }
 
@@ -698,23 +887,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
-    // Check our list of cell vms to see what our current execution count is
-    private getCurrentExecutionCount = (cellVMs: ICellViewModel[]): number => {
-        const realCells = cellVMs.filter(c => c.cell.data.cell_type === 'code' && !c.editable && c.cell.data.execution_count);
-        return realCells && realCells.length > 0 ? parseInt(realCells[realCells.length - 1].cell.data.execution_count!.toString(), 10) : 0;
-    }
-
-    private getInputExecutionCount = (cellVMs: ICellViewModel[]) : number => {
-        return this.getCurrentExecutionCount(cellVMs) + 1;
+    private getInputExecutionCount = () : number => {
+        return this.state.currentExecutionCount + 1;
     }
 
     private submitInput = (code: string) => {
         // This should be from our last entry. Switch this entry to read only, and add a new item to our list
         let editCell = this.getEditCell();
         if (editCell) {
-            // Save a copy of the ones without edits.
-            const withoutEdits = this.state.cellVMs.filter(c => !c.editable);
-
             // Change this editable cell to not editable.
             editCell.cell.state = CellState.executing;
             editCell.cell.data.source = code;
@@ -734,6 +914,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             const collapseInputs = getSettings().collapseCellInputCodeByDefault;
             editCell = this.alterCellVM(editCell, true, !collapseInputs);
 
+            // Generate a new id (as the edit cell always has the same one)
+            editCell.cell.id = uuid();
+
             // Indicate this is direct input so that we don't hide it if the user has
             // hide all inputs turned on.
             editCell.directInput = true;
@@ -741,7 +924,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             // Stick in a new cell at the bottom that's editable and update our state
             // so that the last cell becomes busy
             this.setState({
-                cellVMs: [...withoutEdits, editCell, createEditableCellVM(this.getInputExecutionCount(withoutEdits))],
+                cellVMs: [...this.state.cellVMs, editCell],
+                editCellVM: createEditableCellVM(this.getInputExecutionCount()),
                 undoStack : this.pushStack(this.state.undoStack, this.state.cellVMs),
                 redoStack: this.state.redoStack,
                 skipNextScroll: false,
@@ -750,19 +934,23 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
             // Send a message to execute this code if necessary.
             if (editCell.cell.state !== CellState.finished) {
-                this.sendMessage(HistoryMessages.SubmitNewCell, { code, id: editCell.cell.id });
+                this.sendMessage(InteractiveWindowMessages.SubmitNewCell, { code, id: editCell.cell.id });
             }
         }
     }
 
+    private variableExplorerToggled = (open: boolean) => {
+        this.sendMessage(InteractiveWindowMessages.VariableExplorerToggle, open);
+    }
+
     // When the variable explorer wants to refresh state (say if it was expanded)
     private refreshVariables = () => {
-        this.sendMessage(HistoryMessages.GetVariablesRequest, this.currentExecutionCount);
+        this.sendMessage(InteractiveWindowMessages.GetVariablesRequest, this.state.currentExecutionCount);
     }
 
     // Find the display value for one specific variable
     private refreshVariable = (targetVar: IJupyterVariable) => {
-        this.sendMessage(HistoryMessages.GetVariableValueRequest, targetVar);
+        this.sendMessage(InteractiveWindowMessages.GetVariableValueRequest, targetVar);
     }
 
     // When we get a variable value back use the ref to pass to the variable explorer
@@ -772,7 +960,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             const variable = payload as IJupyterVariable;
 
             // Only send the updated variable data if we are on the same execution count as when we requsted it
-            if (variable && variable.executionCount !== undefined && variable.executionCount === this.currentExecutionCount) {
+            if (variable && variable.executionCount !== undefined && variable.executionCount === this.state.currentExecutionCount) {
                 if (this.variableExplorerRef.current) {
                     this.variableExplorerRef.current.newVariableData(variable);
                 }
@@ -784,17 +972,103 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     // tslint:disable-next-line:no-any
     private getVariablesResponse = (payload?: any) => {
         if (payload) {
-            const variables = payload as IJupyterVariable[];
+            const variablesResponse = payload as IJupyterVariablesResponse;
 
             // Check to see if we have moved to a new execution count only send our update if we are on the same count as the request
-            if (variables.length > 0 && variables[0].executionCount !== undefined && variables[0].executionCount === this.currentExecutionCount) {
+            if (variablesResponse.executionCount === this.state.currentExecutionCount) {
                 if (this.variableExplorerRef.current) {
-                    this.variableExplorerRef.current.newVariablesData(variables);
+                    this.variableExplorerRef.current.newVariablesData(variablesResponse.variables);
                 }
 
                 // Now put out a request for all of the sub values for the variables
-                variables.forEach(this.refreshVariable);
+                variablesResponse.variables.forEach(this.refreshVariable);
             }
+        }
+    }
+
+    private codeChange = (changes: monacoEditor.editor.IModelContentChange[], id: string, modelId: string) => {
+        // If the model id doesn't match, skip sending this edit. This happens
+        // when a cell is reused after deleting another
+        const expectedCellId = this.monacoIdToCellId.get(modelId);
+        if (expectedCellId !== id) {
+            // A cell has been reused. Update our mapping
+            this.monacoIdToCellId.set(modelId, id);
+        } else {
+            // Just a normal edit. Pass this onto the completion provider running in the extension
+            this.sendMessage(InteractiveWindowMessages.EditCell, { changes, id });
+        }
+    }
+
+    private readOnlyCodeCreated = (_text: string, file: string, id: string, monacoId: string) => {
+        const cell = this.state.cellVMs.find(c => c.cell.id === id);
+        if (cell) {
+            // Pass this onto the completion provider running in the extension
+            this.sendMessage(InteractiveWindowMessages.AddCell, {
+                fullText: extractInputText(cell.cell, getSettings()),
+                currentText: cell.inputBlockText,
+                file,
+                id
+            });
+        }
+
+        // Save in our map of monaco id to cell id
+        this.monacoIdToCellId.set(monacoId, id);
+    }
+
+    private editableCodeCreated = (_text: string, _file: string, id: string, monacoId: string) => {
+        // Save in our map of monaco id to cell id
+        this.monacoIdToCellId.set(monacoId, id);
+    }
+
+    private getCellId = (monacoId: string) : string => {
+        const result = this.monacoIdToCellId.get(monacoId);
+        if (result) {
+            return result;
+        }
+
+        // Just assume it's the edit cell if not found.
+        return Identifiers.EditCellId;
+    }
+
+    // tslint:disable-next-line: no-any
+    private tokenizerLoaded = (_e?: any) => {
+        this.setState({ tokenizerLoaded: true });
+    }
+
+    private loadOnigasm = () : Promise<ArrayBuffer> => {
+        if (!this.onigasmPromise) {
+            this.onigasmPromise = createDeferred<ArrayBuffer>();
+            // Send our load onigasm request
+            this.sendMessage(InteractiveWindowMessages.LoadOnigasmAssemblyRequest);
+        }
+        return this.onigasmPromise.promise;
+    }
+
+    private loadTmlanguage = () : Promise<string> => {
+        if (!this.tmlangugePromise) {
+            this.tmlangugePromise = createDeferred<string>();
+            // Send our load onigasm request
+            this.sendMessage(InteractiveWindowMessages.LoadTmLanguageRequest);
+        }
+        return this.tmlangugePromise.promise;
+    }
+
+    // tslint:disable-next-line: no-any
+    private handleOnigasmResponse(payload: any) {
+        if (payload && this.onigasmPromise) {
+            const typedArray = new Uint8Array(payload.data);
+            this.onigasmPromise.resolve(typedArray.buffer);
+        } else if (this.onigasmPromise) {
+            this.onigasmPromise.resolve(undefined);
+        }
+    }
+
+    // tslint:disable-next-line: no-any
+    private handleTmLanguageResponse(payload: any) {
+        if (payload && this.tmlangugePromise) {
+            this.tmlangugePromise.resolve(payload.toString());
+        } else if (this.tmlangugePromise) {
+            this.tmlangugePromise.resolve(undefined);
         }
     }
 }

@@ -86,7 +86,7 @@ class MockSocketClient {
     private socket?: net.Socket;
     private socketStream?: SocketStream;
     private def?: Deferred<any>;
-    constructor(private port: number) { }
+    constructor(private port: number) {}
     public get SocketStream(): SocketStream {
         if (this.socketStream === undefined) {
             throw Error('not listening');
@@ -104,7 +104,7 @@ class MockSocketClient {
         }
         this.socketStream = new SocketStream(this.socket, new Buffer(''));
         this.def.resolve();
-        this.socket.on('error', () => { });
+        this.socket.on('error', () => {});
         this.socket.on('data', (data: Buffer) => {
             try {
                 this.SocketStream.Append(data);
@@ -156,7 +156,7 @@ class MockSocketClient {
 // Defines a Mocha test suite to group tests of similar kind together
 suite('SocketCallbackHandler', () => {
     let socketServer: SocketServer;
-    setup(() => socketServer = new SocketServer());
+    setup(() => (socketServer = new SocketServer()));
     teardown(() => socketServer.Stop());
 
     test('Succesfully starts without any specific host or port', async () => {
@@ -213,20 +213,20 @@ suite('SocketCallbackHandler', () => {
         await socketClient.start();
 
         const def = createDeferred<any>();
-        let timeOut: NodeJS.Timer | undefined = setTimeout(() => {
+        let timeOut: NodeJS.Timer | undefined | number = setTimeout(() => {
             def.reject('Handshake not completed in allocated time');
         }, 5000);
 
         callbackHandler.on('handshake', () => {
             if (timeOut) {
-                clearTimeout(timeOut);
+                clearTimeout(timeOut as any);
                 timeOut = undefined;
             }
             def.reject('handshake should fail, but it succeeded!');
         });
         callbackHandler.on('error', (actual: string | number, expected: string, message: string) => {
             if (timeOut) {
-                clearTimeout(timeOut);
+                clearTimeout(timeOut as any);
                 timeOut = undefined;
             }
             if (actual === 0 && message === 'pids not the same') {

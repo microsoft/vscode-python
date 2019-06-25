@@ -32,6 +32,11 @@ export class CellMatcher {
         return this.codeMatchRegEx.test(code);
     }
 
+    public stripMarkers(code: string) : string {
+        const lines = code.splitLines({trim: false, removeEmptyEntries: false});
+        return lines.filter(l => !this.isCode(l) && !this.isMarkdown(l)).join('\n');
+    }
+
     public exec(code: string) : string | undefined {
         let result: RegExpExecArray | null = null;
         if (this.codeMatchRegEx.test(code)) {

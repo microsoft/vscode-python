@@ -89,7 +89,7 @@ suite('Language Server - LanguageClient Factory', () => {
 
         const serverModule = path.join(EXTENSION_ROOT_DIR, languageServerFolder, engineDllName);
         const expectedServerOptions = {
-            run: { command: serverModule, rgs: [], options: { stdio: 'pipe', env: { FOO: 'bar' } } },
+            run: { command: serverModule, args: [], options: { stdio: 'pipe', env: { FOO: 'bar' } } },
             debug: { command: serverModule, args: ['--debug'], options: { stdio: 'pipe', env: { FOO: 'bar' } } }
         };
         rewiremock.enable();

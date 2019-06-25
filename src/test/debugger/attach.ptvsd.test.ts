@@ -16,6 +16,7 @@ import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IPlatformService } from '../../client/common/platform/types';
 import { IConfigurationService } from '../../client/common/types';
+import { MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
 import { DebuggerTypeName, PTVSD_PATH } from '../../client/debugger/constants';
 import { PythonDebugConfigurationService } from '../../client/debugger/extension/configuration/debugConfigurationService';
 import { AttachConfigurationResolver } from '../../client/debugger/extension/configuration/resolvers/attach';
@@ -25,7 +26,6 @@ import { IServiceContainer } from '../../client/ioc/types';
 import { PYTHON_PATH, sleep } from '../common';
 import { IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 import { continueDebugging, createDebugAdapter } from './utils';
-import { MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
 
 // tslint:disable:no-invalid-this max-func-body-length no-empty no-increment-decrement no-unused-variable no-console
 const fileToDebug = path.join(EXTENSION_ROOT_DIR, 'src', 'testMultiRootWkspc', 'workspace5', 'remoteDebugger-start-with-ptvsd.py');
@@ -39,8 +39,7 @@ suite('Debugging - Attach Debugger', () => {
             this.skip();
         }
         this.timeout(30000);
-        const coverageDirectory = path.join(EXTENSION_ROOT_DIR, 'debug_coverage_attach_ptvsd');
-        debugClient = await createDebugAdapter(coverageDirectory);
+        debugClient = await createDebugAdapter();
     });
     teardown(async () => {
         // Wait for a second before starting another test (sometimes, sockets take a while to get closed).
@@ -140,5 +139,7 @@ suite('Debugging - Attach Debugger', () => {
     }
     test('Confirm we are able to attach to a running program', async () => {
         await testAttachingToRemoteProcess(path.dirname(fileToDebug), path.dirname(fileToDebug), IS_WINDOWS);
-    });
+    })
+        // Retry as tests can timeout on server due to connectivity issues.
+        .retries(3);
 });

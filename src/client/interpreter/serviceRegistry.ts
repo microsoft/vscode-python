@@ -46,6 +46,7 @@ import {
     WORKSPACE_VIRTUAL_ENV_SERVICE
 } from './contracts';
 import { InterpreterDisplay } from './display';
+import { InterpreterSelectionTip } from './display/interpreterSelectionTip';
 import { InterpreterLocatorProgressStatubarHandler } from './display/progressDisplay';
 import { ShebangCodeLensProvider } from './display/shebangCodeLensProvider';
 import { InterpreterHelper } from './helpers';
@@ -80,6 +81,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
     serviceManager.addSingleton<IVirtualEnvironmentManager>(IVirtualEnvironmentManager, VirtualEnvironmentManager);
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, VirtualEnvironmentPrompt);
+    serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, InterpreterSelectionTip);
     serviceManager.addSingleton<IPythonInPathCommandProvider>(IPythonInPathCommandProvider, PythonInPathCommandProvider);
 
     serviceManager.add<IInterpreterWatcher>(IInterpreterWatcher, WorkspaceVirtualEnvWatcherService, WORKSPACE_VIRTUAL_ENV_SERVICE);

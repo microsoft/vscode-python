@@ -9,7 +9,7 @@ import * as typemoq from 'typemoq';
 import { CancellationTokenSource, CompletionItem, CompletionItemKind, Position, SnippetString, TextDocument, Uri } from 'vscode';
 import { LanguageService } from '../../../../../client/common/application/languageService';
 import { ILanguageService } from '../../../../../client/common/application/types';
-import { DebugConfigurationPrompts } from '../../../../../client/common/utils/localize';
+import { DebugConfigStrings } from '../../../../../client/common/utils/localize';
 import { LaunchJsonCompletionProvider } from '../../../../../client/debugger/extension/configuration/launch.json/completionProvider';
 
 // tslint:disable:no-any no-multiline-string max-func-body-length
@@ -111,14 +111,14 @@ suite('Debugging - launch.json Completion Provider', () => {
         const expectedCompletionItem: CompletionItem = {
             command: {
                 command: 'python.SelectAndInsertDebugConfiguration',
-                title: DebugConfigurationPrompts.launchJsonConfigurationsCompletionDescription(),
+                title: DebugConfigStrings.launchJsonCompletions.description(),
                 arguments: [document.object, position, token]
             },
-            documentation: DebugConfigurationPrompts.launchJsonConfigurationsCompletionDescription(),
+            documentation: DebugConfigStrings.launchJsonCompletions.description(),
             sortText: 'AAAA',
             preselect: true,
             kind: CompletionItemKind.Enum,
-            label: DebugConfigurationPrompts.launchJsonConfigurationsCompletionLabel(),
+            label: DebugConfigStrings.launchJsonCompletions.label(),
             insertText: new SnippetString()
         };
 

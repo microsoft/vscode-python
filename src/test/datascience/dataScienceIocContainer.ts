@@ -21,6 +21,7 @@ import {
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
+import { ILanguageServer, ILanguageServerAnalysisOptions } from '../../client/activation/types';
 import { TerminalManager } from '../../client/common/application/terminalManager';
 import {
     IApplicationShell,
@@ -76,7 +77,7 @@ import {
     IPersistentStateFactory,
     IsWindows
 } from '../../client/common/types';
-import { Deferred } from '../../client/common/utils/async';
+import { Deferred, sleep } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
 import { EnvironmentVariablesService } from '../../client/common/variables/environment';
@@ -86,16 +87,20 @@ import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
 import { DataViewer } from '../../client/datascience/data-viewing/dataViewer';
 import { DataViewerProvider } from '../../client/datascience/data-viewing/dataViewerProvider';
 import { CodeWatcher } from '../../client/datascience/editor-integration/codewatcher';
-import { History } from '../../client/datascience/history/history';
-import { HistoryCommandListener } from '../../client/datascience/history/historycommandlistener';
-import { HistoryProvider } from '../../client/datascience/history/historyProvider';
+import { DotNetIntellisenseProvider } from '../../client/datascience/interactive-window/intellisense/dotNetIntellisenseProvider';
+import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
+import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
+import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterCommand';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
 import { JupyterImporter } from '../../client/datascience/jupyter/jupyterImporter';
+import { JupyterPasswordConnect } from '../../client/datascience/jupyter/jupyterPasswordConnect';
 import { JupyterServerFactory } from '../../client/datascience/jupyter/jupyterServerFactory';
 import { JupyterSessionManager } from '../../client/datascience/jupyter/jupyterSessionManager';
 import { JupyterVariables } from '../../client/datascience/jupyter/jupyterVariables';
+import { PlotViewer } from '../../client/datascience/plotting/plotViewer';
+import { PlotViewerProvider } from '../../client/datascience/plotting/plotViewerProvider';
 import { StatusProvider } from '../../client/datascience/statusProvider';
 import { ThemeFinder } from '../../client/datascience/themeFinder';
 import {
@@ -105,15 +110,19 @@ import {
     IDataScienceCommandListener,
     IDataViewer,
     IDataViewerProvider,
-    IHistory,
-    IHistoryProvider,
+    IInteractiveWindow,
+    IInteractiveWindowListener,
+    IInteractiveWindowProvider,
     IJupyterCommandFactory,
     IJupyterExecution,
+    IJupyterPasswordConnect,
     IJupyterSessionManager,
     IJupyterVariables,
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
+    IPlotViewer,
+    IPlotViewerProvider,
     IStatusProvider,
     IThemeFinder
 } from '../../client/datascience/types';
@@ -185,13 +194,17 @@ import {
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
-import { IVsCodeApi, PostOffice } from '../../datascience-ui/react-common/postOffice';
+import { CodeExecutionHelper } from '../../client/terminals/codeExecution/helper';
+import { ICodeExecutionHelper } from '../../client/terminals/types';
+import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
 import { MockCommandManager } from './mockCommandManager';
 import { MockDocumentManager } from './mockDocumentManager';
 import { MockExtensions } from './mockExtensions';
 import { MockJupyterManager, SupportedCommands } from './mockJupyterManager';
+import { MockLanguageServer } from './mockLanguageServer';
+import { MockLanguageServerAnalysisOptions } from './mockLanguageServerAnalysisOptions';
 import { MockLiveShareApi } from './mockLiveShare';
 import { blurWindow, createMessageEvent } from './reactHelpers';
 
@@ -201,6 +214,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     public wrapper: ReactWrapper<any, Readonly<{}>, React.Component> | undefined;
     public wrapperCreatedPromise: Deferred<boolean> | undefined;
     public postMessage: ((ev: MessageEvent) => void) | undefined;
+    // tslint:disable-next-line:no-any
+    private missedMessages : any[] = [];
     private pythonSettings = new class extends PythonSettings {
         public fireChangeEvent() {
             this.changed.fire();
@@ -246,18 +261,42 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.wrapper = undefined;
         }
 
-        PostOffice.resetApi();
+        // Bounce this so that our editor has time to shutdown
+        await sleep(10);
+
+        // Clear out the monaco global services. Some of these services are preventing shutdown.
+        // tslint:disable: no-require-imports
+        const services = require('monaco-editor/esm/vs/editor/standalone/browser/standaloneServices') as any;
+        if (services.StaticServices) {
+            const keys = Object.keys(services.StaticServices);
+            keys.forEach(k => {
+                const service = services.StaticServices[k] as any;
+                if (service && service._value && service._value.dispose) {
+                    if (typeof service._value.dispose === 'function') {
+                        service._value.dispose();
+                    }
+                }
+            });
+        }
+
+        // This file doesn't have an export so we can't force a dispose. Instead it has a 5 second timeout
+        const config = require('monaco-editor/esm/vs/editor/browser/config/configuration') as any;
+        if (config.getCSSBasedConfiguration) {
+            config.getCSSBasedConfiguration().dispose();
+        }
     }
 
     //tslint:disable:max-func-body-length
     public registerDataScienceTypes() {
         this.registerFileSystemTypes();
         this.serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecutionFactory);
-        this.serviceManager.addSingleton<IHistoryProvider>(IHistoryProvider, HistoryProvider);
+        this.serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
         this.serviceManager.addSingleton<IDataViewerProvider>(IDataViewerProvider, DataViewerProvider);
+        this.serviceManager.addSingleton<IPlotViewerProvider>(IPlotViewerProvider, PlotViewerProvider);
         this.serviceManager.addSingleton<ILogger>(ILogger, Logger);
-        this.serviceManager.add<IHistory>(IHistory, History);
+        this.serviceManager.add<IInteractiveWindow>(IInteractiveWindow, InteractiveWindow);
         this.serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
+        this.serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
         this.serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
         this.serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
         this.serviceManager.addSingleton<ILiveShareApi>(ILiveShareApi, MockLiveShareApi);
@@ -272,7 +311,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IPythonInPathCommandProvider>(IPythonInPathCommandProvider, PythonInPathCommandProvider);
         this.serviceManager.addSingleton<IEnvironmentActivationService>(IEnvironmentActivationService, EnvironmentActivationService);
         this.serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
-        this.serviceManager.add<IDataScienceCommandListener>(IDataScienceCommandListener, HistoryCommandListener);
+        this.serviceManager.add<ICodeExecutionHelper>(ICodeExecutionHelper, CodeExecutionHelper);
+        this.serviceManager.add<IDataScienceCommandListener>(IDataScienceCommandListener, InteractiveWindowCommandListener);
         this.serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables);
 
         this.serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
@@ -288,6 +328,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             ITerminalActivationCommandProvider, PipEnvActivationCommandProvider, TerminalActivationProviders.pipenv);
         this.serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);
         this.serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
+        this.serviceManager.addSingleton<ILanguageServer>(ILanguageServer, MockLanguageServer);
+        this.serviceManager.addSingleton<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, MockLanguageServerAnalysisOptions);
+        this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, DotNetIntellisenseProvider);
 
         // Setup our command list
         this.commandManager.registerCommand('setContext', (name: string, value: boolean) => {
@@ -308,6 +351,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.pythonSettings.datascience = {
             allowImportFromNotebook: true,
             jupyterLaunchTimeout: 20000,
+            jupyterLaunchRetries: 3,
             enabled: true,
             jupyterServerURI: 'local',
             notebookFileRoot: 'WORKSPACE',
@@ -323,7 +367,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             sendSelectionToInteractiveWindow: false,
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
-            liveShareConnectionTimeout: 100
+            showJupyterVariableExplorer: true,
+            variableExplorerExclude: 'module;builtin_function_or_method',
+            liveShareConnectionTimeout: 100,
+            autoPreviewNotebooksInInteractivePane: true
         };
 
         const workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration> = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
@@ -444,6 +491,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory);
             this.serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
             this.serviceManager.addSingleton<IJupyterSessionManager>(IJupyterSessionManager, JupyterSessionManager);
+            this.serviceManager.addSingleton<IJupyterPasswordConnect>(IJupyterPasswordConnect, JupyterPasswordConnect);
         }
 
         if (this.serviceManager.get<IPlatformService>(IPlatformService).isWindows) {
@@ -459,6 +507,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));
         appShell.setup(a => a.showSaveDialog(TypeMoq.It.isAny())).returns(() => Promise.resolve(Uri.file('test.ipynb')));
         appShell.setup(a => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
+        appShell.setup(a => a.showInputBox(TypeMoq.It.isAny())).returns(() => Promise.resolve('Python'));
 
         const interpreterManager = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         interpreterManager.initialize();
@@ -488,6 +537,17 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             // Keep track of the current listener. It listens to messages through the vscode api
             this.webPanelListener = listener;
 
+            // Send messages that were already posted but were missed.
+            // During normal operation, the react control will not be created before
+            // the webPanelListener
+            if (this.missedMessages.length && this.webPanelListener) {
+                this.missedMessages.forEach(m => this.webPanelListener ? this.webPanelListener.onMessage(m.type, m.payload) : noop());
+
+                // Note, you might think we should clean up the messages. However since the mount only occurs once, we might
+                // create multiple webpanels with the same mount. We need to resend these messages to
+                // other webpanels that get created with the same mount.
+            }
+
             // Return our dummy web panel
             return webPanel.object;
         });
@@ -501,7 +561,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         });
         webPanel.setup(p => p.show(true));
 
-        // We need to mount the react control before we even create a history object. Otherwise the mount will miss rendering some parts
+        // We need to mount the react control before we even create an interactive window object. Otherwise the mount will miss rendering some parts
         this.mountReactControl(mount);
     }
 
@@ -549,6 +609,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.extraListeners.push(callback);
     }
 
+    public changeJediEnabled(enabled: boolean) {
+        this.pythonSettings.jediEnabled = enabled;
+    }
+
     private findPythonPath(): string {
         try {
             const output = child_process.execFileSync('python', ['-c', 'import sys;print(sys.executable)'], { encoding: 'utf8' });
@@ -561,7 +625,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private postMessageToWebPanel(msg: any) {
         if (this.webPanelListener) {
             this.webPanelListener.onMessage(msg.type, msg.payload);
+        } else {
+            this.missedMessages.push(msg);
         }
+
         if (this.extraListeners.length) {
             this.extraListeners.forEach(e => e(msg.type, msg.payload));
         }
@@ -571,6 +638,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     }
 
     private mountReactControl(mount: () => ReactWrapper<any, Readonly<{}>, React.Component>) {
+        // This is a remount (or first time). Clear out messages that were sent
+        // by the last mount
+        this.missedMessages = [];
+
         // Setup the acquireVsCodeApi. The react control will cache this value when it's mounted.
         const globalAcquireVsCodeApi = (): IVsCodeApi => {
             return {

@@ -4,13 +4,14 @@
 import '../common/extensions';
 
 import { injectable, unmanaged } from 'inversify';
-import { ConfigurationChangeEvent, ViewColumn } from 'vscode';
+import { ConfigurationChangeEvent, ViewColumn, WorkspaceConfiguration } from 'vscode';
 
 import { IWebPanel, IWebPanelMessageListener, IWebPanelProvider, IWorkspaceService } from '../common/application/types';
 import { traceInfo } from '../common/logger';
 import { IConfigurationService, IDisposable } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
-import { CssMessages, DefaultTheme, IGetCssRequest, SharedMessages } from './constants';
+import { DefaultTheme } from './constants';
+import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from './messages';
 import { ICodeCssGenerator, IDataScienceExtraSettings, IThemeFinder } from './types';
 
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
@@ -22,13 +23,13 @@ export class WebViewHost<IMapping> implements IDisposable {
     private messageListener: IWebPanelMessageListener;
     private themeChangeHandler: IDisposable | undefined;
     private settingsChangeHandler: IDisposable | undefined;
-    private currentTheme: string;
+    private themeIsDarkPromise: Deferred<boolean>;
 
     constructor(
         @unmanaged() private configService: IConfigurationService,
         @unmanaged() private provider: IWebPanelProvider,
         @unmanaged() private cssGenerator: ICodeCssGenerator,
-        @unmanaged() private themeFinder: IThemeFinder,
+        @unmanaged() protected themeFinder: IThemeFinder,
         @unmanaged() private workspaceService: IWorkspaceService,
         // tslint:disable-next-line:no-any
         @unmanaged() messageListenerCtor: (callback: (message: string, payload: any) => void, viewChanged: (panel: IWebPanel) => void, disposed: () => void) => IWebPanelMessageListener,
@@ -39,10 +40,8 @@ export class WebViewHost<IMapping> implements IDisposable {
         // Create our message listener for our web panel.
         this.messageListener = messageListenerCtor(this.onMessage.bind(this), this.onViewStateChanged.bind(this), this.dispose.bind(this));
 
-        // Listen for theme changes.
-        const workbench = this.workspaceService.getConfiguration('workbench');
-        this.currentTheme = workbench ? workbench.get<string>('colorTheme', DefaultTheme) : DefaultTheme;
-        this.themeChangeHandler = this.workspaceService.onDidChangeConfiguration(this.onPossibleThemeChange, this);
+        // Listen for settings changes from vscode.
+        this.themeChangeHandler = this.workspaceService.onDidChangeConfiguration(this.onPossibleSettingsChange, this);
 
         // Listen for settings changes
         this.settingsChangeHandler = this.configService.getSettings().onDidChange(this.onDataScienceSettingsChanged.bind(this));
@@ -50,6 +49,10 @@ export class WebViewHost<IMapping> implements IDisposable {
         // Setup our init promise for the web panel. We use this to make sure we're in sync with our
         // react control.
         this.webPanelInit = createDeferred();
+
+        // Setup a promise that will wait until the webview passes back
+        // a message telling us what them is in use
+        this.themeIsDarkPromise = createDeferred<boolean>();
 
         // Load our actual web panel
         this.loadWebPanel();
@@ -82,6 +85,12 @@ export class WebViewHost<IMapping> implements IDisposable {
         }
     }
 
+    public setTitle(newTitle: string) {
+        if (!this.isDisposed && this.webPanel) {
+            this.webPanel.title = newTitle;
+        }
+    }
+
     //tslint:disable-next-line:no-any
     protected onMessage(message: string, payload: any) {
         switch (message) {
@@ -90,7 +99,11 @@ export class WebViewHost<IMapping> implements IDisposable {
                 break;
 
             case CssMessages.GetCssRequest:
-                this.generateCss(payload as IGetCssRequest).ignoreErrors();
+                this.handleCssRequest(payload as IGetCssRequest).ignoreErrors();
+                break;
+
+            case CssMessages.GetMonacoThemeRequest:
+                this.handleMonacoThemeRequest(payload as IGetMonacoThemeRequest).ignoreErrors();
                 break;
 
             default:
@@ -124,18 +137,43 @@ export class WebViewHost<IMapping> implements IDisposable {
     }
 
     protected generateDataScienceExtraSettings() : IDataScienceExtraSettings {
-        const terminal = this.workspaceService.getConfiguration('terminal');
-        const terminalCursor = terminal ? terminal.get<string>('integrated.cursorStyle', 'block') : 'block';
+        const editor = this.workspaceService.getConfiguration('editor');
         const workbench = this.workspaceService.getConfiguration('workbench');
-        const ignoreTheme = this.configService.getSettings().datascience.ignoreVscodeTheme ? true : false;
-        const theme = ignoreTheme || !workbench ? DefaultTheme : workbench.get<string>('colorTheme', DefaultTheme);
+        const theme = !workbench ? DefaultTheme : workbench.get<string>('colorTheme', DefaultTheme);
         return {
             ...this.configService.getSettings().datascience,
             extraSettings: {
-                terminalCursor: terminalCursor,
+                editorCursor: this.getValue(editor, 'cursorStyle', 'line'),
+                editorCursorBlink: this.getValue(editor, 'cursorBlinking', 'blink'),
                 theme: theme
+            },
+            intellisenseOptions: {
+                quickSuggestions: {
+                    other: this.getValue(editor, 'quickSuggestions.other', true),
+                    comments: this.getValue(editor, 'quickSuggestions.comments', false),
+                    strings: this.getValue(editor, 'quickSuggestions.strings', false)
+                },
+                acceptSuggestionOnEnter: this.getValue(editor, 'acceptSuggestionOnEnter', 'on'),
+                quickSuggestionsDelay: this.getValue(editor, 'quickSuggestionsDelay', 10),
+                suggestOnTriggerCharacters: this.getValue(editor, 'suggestOnTriggerCharacters', true),
+                tabCompletion: this.getValue(editor, 'tabCompletion', 'on'),
+                suggestLocalityBonus: this.getValue(editor, 'suggest.localityBonus', true),
+                suggestSelection: this.getValue(editor, 'suggestSelection', 'recentlyUsed'),
+                wordBasedSuggestions: this.getValue(editor, 'wordBasedSuggestions', true),
+                parameterHintsEnabled: this.getValue(editor, 'parameterHints.enabled', true)
             }
         };
+    }
+
+    protected isDark() : Promise<boolean> {
+        return this.themeIsDarkPromise.promise;
+    }
+
+    private getValue<T>(workspaceConfig: WorkspaceConfiguration, section: string, defaultValue: T) : T {
+        if (workspaceConfig) {
+            return workspaceConfig.get(section, defaultValue);
+        }
+        return defaultValue;
     }
 
     private onViewStateChanged = (webPanel: IWebPanel) => {
@@ -149,11 +187,29 @@ export class WebViewHost<IMapping> implements IDisposable {
         }
     }
 
-    private async generateCss(request: IGetCssRequest) : Promise<void> {
+    private async handleCssRequest(request: IGetCssRequest) : Promise<void> {
+        if (!this.themeIsDarkPromise.resolved) {
+            this.themeIsDarkPromise.resolve(request.isDark);
+        } else {
+            this.themeIsDarkPromise = createDeferred<boolean>();
+            this.themeIsDarkPromise.resolve(request.isDark);
+        }
         const settings = this.generateDataScienceExtraSettings();
         const isDark = await this.themeFinder.isThemeDark(settings.extraSettings.theme);
         const css = await this.cssGenerator.generateThemeCss(request.isDark, settings.extraSettings.theme);
         return this.postMessageInternal(CssMessages.GetCssResponse, { css, theme: settings.extraSettings.theme, knownDark: isDark });
+    }
+
+    private async handleMonacoThemeRequest(request: IGetMonacoThemeRequest) : Promise<void> {
+        if (!this.themeIsDarkPromise.resolved) {
+            this.themeIsDarkPromise.resolve(request.isDark);
+        } else {
+            this.themeIsDarkPromise = createDeferred<boolean>();
+            this.themeIsDarkPromise.resolve(request.isDark);
+        }
+        const settings = this.generateDataScienceExtraSettings();
+        const monacoTheme = await this.cssGenerator.generateMonacoTheme(request.isDark, settings.extraSettings.theme);
+        return this.postMessageInternal(CssMessages.GetMonacoThemeResponse, { theme: monacoTheme });
     }
 
     // tslint:disable-next-line:no-any
@@ -164,12 +220,13 @@ export class WebViewHost<IMapping> implements IDisposable {
     }
 
     // Post a message to our webpanel and update our new datascience settings
-    private onPossibleThemeChange = (event: ConfigurationChangeEvent) => {
-        if (event.affectsConfiguration('workbench.colorTheme')) {
+    private onPossibleSettingsChange = (event: ConfigurationChangeEvent) => {
+        if (event.affectsConfiguration('workbench.colorTheme') ||
+            event.affectsConfiguration('editor.cursorStyle') ||
+            event.affectsConfiguration('editor.cursorBlinking')) {
             // See if the theme changed
             const newSettings = this.generateDataScienceExtraSettings();
-            if (newSettings && newSettings.extraSettings.theme !== this.currentTheme) {
-                this.currentTheme = newSettings.extraSettings.theme;
+            if (newSettings) {
                 const dsSettings = JSON.stringify(newSettings);
                 this.postMessageInternal(SharedMessages.UpdateSettings, dsSettings).ignoreErrors();
             }

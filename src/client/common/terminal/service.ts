@@ -58,8 +58,7 @@ export class TerminalService implements ITerminalService, Disposable {
         if (this.terminal) {
             return;
         }
-        const shellPath = this.terminalHelper.getTerminalShellPath();
-        this.terminalShellType = !shellPath || shellPath.length === 0 ? TerminalShellType.other : this.terminalHelper.identifyTerminalShell(shellPath);
+        this.terminalShellType = this.terminalHelper.identifyTerminalShell(this.terminal);
         this.terminal = this.terminalManager.createTerminal({ name: this.title });
 
         // Sometimes the terminal takes some time to start up before it can start accepting input.

@@ -1,9 +1,6 @@
 'use strict';
 
-import {
-    CancellationToken, DocumentSymbol, DocumentSymbolProvider,
-    Location, Range, SymbolInformation, SymbolKind, TextDocument, Uri
-} from 'vscode';
+import { CancellationToken, DocumentSymbol, DocumentSymbolProvider, Location, Range, SymbolInformation, SymbolKind, TextDocument, Uri } from 'vscode';
 import { LanguageClient } from 'vscode-languageclient';
 import { IFileSystem } from '../common/platform/types';
 import { createDeferred, Deferred } from '../common/utils/async';
@@ -16,12 +13,7 @@ import * as proxy from './jediProxy';
 function flattenSymbolTree(tree: DocumentSymbol, uri: Uri, containerName: string = ''): SymbolInformation[] {
     const flattened: SymbolInformation[] = [];
 
-    const range = new Range(
-        tree.range.start.line,
-        tree.range.start.character,
-        tree.range.end.line,
-        tree.range.end.character
-    );
+    const range = new Range(tree.range.start.line, tree.range.start.character, tree.range.end.line, tree.range.end.character);
     // For whatever reason, the values of VS Code's SymbolKind enum
     // are off-by-one relative to the LSP:
     //  https://microsoft.github.io/language-server-protocol/specification#document-symbols-request-leftwards_arrow_with_hook
@@ -57,18 +49,12 @@ function flattenSymbolTree(tree: DocumentSymbol, uri: Uri, containerName: string
  *   https://code.visualstudio.com/docs/extensionAPI/vscode-api#DocumentSymbolProvider
  */
 export class LanguageServerSymbolProvider implements DocumentSymbolProvider {
-    constructor(
-        private readonly languageClient: LanguageClient
-    ) { }
+    constructor(private readonly languageClient: LanguageClient) {}
 
     public async provideDocumentSymbols(document: TextDocument, token: CancellationToken): Promise<SymbolInformation[]> {
         const uri = document.uri;
         const args = { textDocument: { uri: uri.toString() } };
-        const raw = await this.languageClient.sendRequest<DocumentSymbol[]>(
-            'textDocument/documentSymbol',
-            args,
-            token
-        );
+        const raw = await this.languageClient.sendRequest<DocumentSymbol[]>('textDocument/documentSymbol', args, token);
         const symbols: SymbolInformation[] = [];
         for (const tree of raw) {
             const flattened = flattenSymbolTree(tree, uri);
@@ -85,11 +71,11 @@ export class LanguageServerSymbolProvider implements DocumentSymbolProvider {
  *   https://code.visualstudio.com/docs/extensionAPI/vscode-api#DocumentSymbolProvider
  */
 export class JediSymbolProvider implements DocumentSymbolProvider {
-    private debounceRequest: Map<string, { timer: NodeJS.Timer; deferred: Deferred<SymbolInformation[]> }>;
+    private debounceRequest: Map<string, { timer: NodeJS.Timer | number; deferred: Deferred<SymbolInformation[]> }>;
     private readonly fs: IFileSystem;
 
     public constructor(serviceContainer: IServiceContainer, private jediFactory: JediFactory, private readonly debounceTimeoutMs = 500) {
-        this.debounceRequest = new Map<string, { timer: NodeJS.Timer; deferred: Deferred<SymbolInformation[]> }>();
+        this.debounceRequest = new Map<string, { timer: NodeJS.Timer | number; deferred: Deferred<SymbolInformation[]> }>();
         this.fs = serviceContainer.get<IFileSystem>(IFileSystem);
     }
 
@@ -102,12 +88,13 @@ export class JediSymbolProvider implements DocumentSymbolProvider {
         const key = `${document.uri.fsPath}`;
         if (this.debounceRequest.has(key)) {
             const item = this.debounceRequest.get(key)!;
-            clearTimeout(item.timer);
+            // tslint:disable-next-line: no-any
+            clearTimeout(item.timer as any);
             item.deferred.resolve([]);
         }
 
         const deferred = createDeferred<SymbolInformation[]>();
-        const timer = setTimeout(() => {
+        const timer: NodeJS.Timer | number = setTimeout(() => {
             if (token.isCancellationRequested) {
                 return deferred.resolve([]);
             }
@@ -124,11 +111,12 @@ export class JediSymbolProvider implements DocumentSymbolProvider {
                 cmd.source = document.getText();
             }
 
-            this.jediFactory.getJediProxyHandler<proxy.ISymbolResult>(document.uri).sendCommand(cmd, token)
+            this.jediFactory
+                .getJediProxyHandler<proxy.ISymbolResult>(document.uri)
+                .sendCommand(cmd, token)
                 .then(data => this.parseData(document, data))
                 .then(items => deferred.resolve(items))
                 .catch(ex => deferred.reject(ex));
-
         }, this.debounceTimeoutMs);
 
         token.onCancellationRequested(() => {
@@ -170,9 +158,7 @@ export class JediSymbolProvider implements DocumentSymbolProvider {
             const symbols = data.definitions.filter(sym => this.fs.arePathsSame(sym.fileName, document.fileName));
             return symbols.map(sym => {
                 const symbol = sym.kind;
-                const range = new Range(
-                    sym.range.startLine, sym.range.startColumn,
-                    sym.range.endLine, sym.range.endColumn);
+                const range = new Range(sym.range.startLine, sym.range.startColumn, sym.range.endLine, sym.range.endColumn);
                 const uri = Uri.file(sym.fileName);
                 const location = new Location(uri, range);
                 return new SymbolInformation(sym.text, symbol, sym.container, location);

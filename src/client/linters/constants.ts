@@ -17,5 +17,3 @@ export const LINTERID_BY_PRODUCT = new Map<Product, LinterId>([
     [Product.pydocstyle, 'pydocstyle'],
     [Product.pylama, 'pylama']
 ]);
-
-export const PYLINT_CONFIG = '.pylintrc';

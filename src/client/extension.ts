@@ -10,6 +10,8 @@ if ((Reflect as any).metadata === undefined) {
 // Initialize source maps (this must never be moved up nor further down).
 import { initialize } from './sourceMapSupport';
 initialize(require('vscode'));
+// Initialize the logger first.
+require('./common/logger');
 
 const durations: Record<string, number> = {};
 import { StopWatch } from './common/utils/stopWatch';
@@ -52,6 +54,7 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
+    IExperimentsManager,
     IExtensionContext,
     IFeatureDeprecationManager,
     IMemento,
@@ -195,7 +198,7 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
         ]
     });
 
-    if (pythonSettings && pythonSettings.formatting && pythonSettings.formatting.provider !== 'none') {
+    if (pythonSettings && pythonSettings.formatting && pythonSettings.formatting.provider !== 'internalConsole') {
         const formatProvider = new PythonFormattingEditProvider(context, serviceContainer);
         context.subscriptions.push(languages.registerDocumentFormattingEditProvider(PYTHON, formatProvider));
         context.subscriptions.push(languages.registerDocumentRangeFormattingEditProvider(PYTHON, formatProvider));
@@ -281,6 +284,8 @@ function registerServices(context: ExtensionContext, serviceManager: ServiceMana
 }
 
 async function initializeServices(context: ExtensionContext, serviceManager: ServiceManager, serviceContainer: ServiceContainer) {
+    const abExperiments = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+    await abExperiments.activate();
     const selector = serviceContainer.get<IInterpreterSelector>(IInterpreterSelector);
     selector.initialize();
     context.subscriptions.push(selector);
@@ -352,7 +357,7 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
     // be able to partially populate as much as possible instead
     // (through granular try-catch statements).
     const terminalHelper = serviceContainer.get<ITerminalHelper>(ITerminalHelper);
-    const terminalShellType = terminalHelper.identifyTerminalShell(terminalHelper.getTerminalShellPath());
+    const terminalShellType = terminalHelper.identifyTerminalShell();
     const condaLocator = serviceContainer.get<ICondaService>(ICondaService);
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);

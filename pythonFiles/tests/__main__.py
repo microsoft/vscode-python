@@ -11,7 +11,7 @@ import pytest
 TEST_ROOT = os.path.dirname(__file__)
 SRC_ROOT = os.path.dirname(TEST_ROOT)
 PROJECT_ROOT = os.path.dirname(SRC_ROOT)
-DATASCIENCE_ROOT = os.path.join(SRC_ROOT, 'datascience')
+IPYTHON_ROOT = os.path.join(SRC_ROOT, 'ipython')
 TESTING_TOOLS_ROOT = os.path.join(SRC_ROOT, 'testing_tools')
 
 
@@ -30,7 +30,7 @@ def parse_args():
 
 
 def main(pytestargs, markers=None):
-    sys.path.insert(1, DATASCIENCE_ROOT)
+    sys.path.insert(1, IPYTHON_ROOT)
     sys.path.insert(1, TESTING_TOOLS_ROOT)
 
     pytestargs = [

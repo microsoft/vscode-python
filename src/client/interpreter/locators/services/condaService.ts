@@ -250,16 +250,6 @@ export class CondaService implements ICondaService {
         const condaExe = this.platform.isWindows ? 'conda.exe' : 'conda';
         const scriptsDir = this.platform.isWindows ? 'Scripts' : 'bin';
         const interpreterDir = interpreterPath ? path.dirname(interpreterPath) : '';
-        let condaPath = path.join(interpreterDir, condaExe);
-        if (await this.fileSystem.fileExists(condaPath)) {
-            return condaPath;
-        }
-        // Conda path has changed locations, check the new location in the scripts directory after checking
-        // the old location
-        condaPath = path.join(interpreterDir, scriptsDir, condaExe);
-        if (await this.fileSystem.fileExists(condaPath)) {
-            return condaPath;
-        }
 
         // Might be in a situation where this is not the default python env, but rather one running
         // from a virtualenv
@@ -267,7 +257,7 @@ export class CondaService implements ICondaService {
         if (envsPos > 0) {
             // This should be where the original python was run from when the environment was created.
             const originalPath = interpreterDir.slice(0, envsPos);
-            condaPath = path.join(originalPath, condaExe);
+            let condaPath = path.join(originalPath, condaExe);
 
             if (await this.fileSystem.fileExists(condaPath)) {
                 return condaPath;
@@ -278,6 +268,17 @@ export class CondaService implements ICondaService {
             if (await this.fileSystem.fileExists(condaPath)) {
                 return condaPath;
             }
+        }
+
+        let condaPath = path.join(interpreterDir, condaExe);
+        if (await this.fileSystem.fileExists(condaPath)) {
+            return condaPath;
+        }
+        // Conda path has changed locations, check the new location in the scripts directory after checking
+        // the old location
+        condaPath = path.join(interpreterDir, scriptsDir, condaExe);
+        if (await this.fileSystem.fileExists(condaPath)) {
+            return condaPath;
         }
     }
 
