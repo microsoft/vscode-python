@@ -18,7 +18,7 @@ Microsoft Python extension for Visual Studio Code incorporates third party mater
 11.  @nteract/markdown 2.1.4 (https://registry.npmjs.org/@nteract/markdown/-/markdown-2.1.4.tgz)
 12.  @nteract/mathjax 2.1.4 (https://registry.npmjs.org/@nteract/mathjax/-/mathjax-2.1.4.tgz)
 13.  @nteract/octicons 0.4.3 (https://registry.npmjs.org/@nteract/octicons/-/octicons-0.4.3.tgz)
-14.  @nteract/plotly 1.47.1 (https://registry.npmjs.org/@nteract/plotly/-/plotly-1.47.1.tgz)
+14.  @nteract/plotly 1.48.3 (https://registry.npmjs.org/@nteract/plotly/-/plotly-1.48.3.tgz)
 15.  @nteract/transform-dataresource 4.3.5 (https://registry.npmjs.org/@nteract/transform-dataresource/-/transform-dataresource-4.3.5.tgz)
 16.  @nteract/transform-geojson 3.2.3 (https://registry.npmjs.org/@nteract/transform-geojson/-/transform-geojson-3.2.3.tgz)
 17.  @nteract/transform-model-debug 3.2.3 (https://registry.npmjs.org/@nteract/transform-model-debug/-/transform-model-debug-3.2.3.tgz)
@@ -198,7 +198,7 @@ Microsoft Python extension for Visual Studio Code incorporates third party mater
 191. isarray 1.0.0 (https://github.com/juliangruber/isarray/blob/v1.0.0)
 192. isort 4.3.4 (https://github.com/timothycrosley/isort/tree/4.3.4)
 193. isstream 0.1.2 (https://registry.npmjs.org/isstream/-/isstream-0.1.2.tgz)
-194. Jedi 0.12.0 (https://github.com/davidhalter/jedi/tree/v0.12.0)
+194. Jedi 0.13.3 (https://github.com/davidhalter/jedi/tree/v0.13.3)
 195. jquery 3.4.1 (https://registry.npmjs.org/jquery/-/jquery-3.4.1.tgz)
 196. jquery-ui 1.12.1 (https://registry.npmjs.org/jquery-ui/-/jquery-ui-1.12.1.tgz)
 197. js-tokens 3.0.2 (https://registry.npmjs.org/js-tokens/-/js-tokens-3.0.2.tgz)
@@ -267,7 +267,7 @@ Microsoft Python extension for Visual Studio Code incorporates third party mater
 260. os-browserify 0.3.0 (https://registry.npmjs.org/os-browserify/-/os-browserify-0.3.0.tgz)
 261. os-tmpdir 1.0.2 (https://registry.npmjs.org/os-tmpdir/-/os-tmpdir-1.0.2.tgz)
 262. parse-entities 1.2.0 (https://registry.npmjs.org/parse-entities/-/parse-entities-1.2.0.tgz)
-263. parso 0.2.1 (https://github.com/davidhalter/parso/tree/v0.2.1)
+263. parso 0.5.0 (https://github.com/davidhalter/parso/tree/v0.5.0)
 264. path-browserify 0.0.0 (https://registry.npmjs.org/path-browserify/-/path-browserify-0.0.0.tgz)
 265. path-is-absolute 1.0.1 (https://registry.npmjs.org/path-is-absolute/-/path-is-absolute-1.0.1.tgz)
 266. path-parse 1.0.5 (https://github.com/jbgutierrez/path-parse)
@@ -380,7 +380,7 @@ Microsoft Python extension for Visual Studio Code incorporates third party mater
 373. underscore 1.8.3 (https://registry.npmjs.org/underscore/-/underscore-1.8.3.tgz)
 374. unherit 1.1.1 (https://registry.npmjs.org/unherit/-/unherit-1.1.1.tgz)
 375. unicode 10.0.0 (https://registry.npmjs.org/unicode/-/unicode-10.0.0.tgz)
-376. unicode-properties 1.2.2 (https://registry.npmjs.org/unicode-properties/-/unicode-properties-1.2.2.tgz)
+376. unicode-properties 1.1.0 (https://registry.npmjs.org/unicode-properties/-/unicode-properties-1.1.0.tgz)
 377. unicode-trie 0.3.1 (https://registry.npmjs.org/unicode-trie/-/unicode-trie-0.3.1.tgz)
 378. unified 6.2.0 (https://registry.npmjs.org/unified/-/unified-6.2.0.tgz)
 379. uniqid 5.0.3 (https://registry.npmjs.org/uniqid/-/uniqid-5.0.3.tgz)
@@ -831,7 +831,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 =========================================
 END OF @nteract/octicons NOTICES AND INFORMATION
 
-%% @nteract/plotly 1.47.1 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/@nteract/plotly/-/plotly-1.47.1.tgz)
+%% @nteract/plotly 1.48.3 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/@nteract/plotly/-/plotly-1.48.3.tgz)
 =========================================
 BSD 3-Clause License
 
@@ -6111,7 +6111,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 =========================================
 END OF isstream NOTICES AND INFORMATION
 
-%% Jedi 0.12.0 NOTICES AND INFORMATION BEGIN HERE (https://github.com/davidhalter/jedi/tree/v0.12.0)
+%% Jedi 0.13.3 NOTICES AND INFORMATION BEGIN HERE (https://github.com/davidhalter/jedi/tree/v0.13.3)
 =========================================
 All contributions towards Jedi are MIT licensed.
 
@@ -8335,7 +8335,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 =========================================
 END OF parse-entities NOTICES AND INFORMATION
 
-%% parso 0.2.1 NOTICES AND INFORMATION BEGIN HERE (https://github.com/davidhalter/parso/tree/v0.2.1)
+%% parso 0.5.0 NOTICES AND INFORMATION BEGIN HERE (https://github.com/davidhalter/parso/tree/v0.5.0)
 =========================================
 All contributions towards parso are MIT licensed.
 
@@ -12168,7 +12168,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 =========================================
 END OF unicode NOTICES AND INFORMATION
 
-%% unicode-properties 1.2.2 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/unicode-properties/-/unicode-properties-1.2.2.tgz)
+%% unicode-properties 1.1.0 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/unicode-properties/-/unicode-properties-1.1.0.tgz)
 =========================================
 Copyright 2018
 
@@ -12177,7 +12177,6 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 
 =========================================
 END OF unicode-properties NOTICES AND INFORMATION

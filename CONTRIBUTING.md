@@ -193,9 +193,8 @@ the current sprint ends. All
 [P0](https://github.com/Microsoft/vscode-python/labels/P0) issues are expected
 to be fixed in the current sprint, else the next release will be blocked.
 [P1](https://github.com/Microsoft/vscode-python/labels/P1) issues are a
-top-priority in a sprint, but if they are not completed they will not
-block a release. All other issues are considered best-effort for that
-sprint.
+top-priority and we try to close before the next release. All other issues are
+considered best-effort for that sprint.
 
 The extension aims to do a new release every four weeks (two sprints). A
 [release plan](https://github.com/Microsoft/vscode-python/labels/release%20plan)
@@ -204,10 +203,10 @@ person to do (long-term this project aims to automate as much of the
 development process as possible).
 
 All development is actively done in the `master` branch of the
-repository. It is what allows us to have a
+repository. This allows us to have a
 [development build](#development-build) which is expected to be stable at
 all times. Once we reach a release candidate, it becomes
-our [release branch](https://github.com/Microsoft/vscode-python/tree/release).
+our [release branch](https://github.com/microsoft/vscode-python/branches).
 At that point only what is in the release branch will make it into the next
 release.
 
@@ -220,20 +219,19 @@ To help actively track what stage
 are at, various labels are used. The following label types are expected to
 be set on all open issues (otherwise the issue is not considered triaged):
 
-1. `needs`
+1. `needs`/`triage`/`classify`
 1. `feature`
 1. `type`
 
 These labels cover what is blocking the issue from closing, what is affected by
-the issue, and what kind of issue it is. Typically, on new issues, the `needs` label is either `needs verification` or `needs more info`. The `feature` label should be `feature-*` if the issue doesn't fit into any other `feature` label appropriately.
+the issue, and what kind of issue it is. (The `feature` label should be `feature-*` if the issue doesn't fit into any other `feature` label appropriately.)
 
 It is also very important to make the title accurate. People often write very brief, quick titles or ones that describe what they think the problem is. By updating the title to be appropriately descriptive for what _you_ think the issue is, you not only make finding older issues easier, but you also help make sure that you and the original reporter agree on what the issue is.
 
 #### Post-classification
 
-Once an issue has been appropriately classified, there are two keys ways to help out. One is to go through open issues that [`needs verification`](https://github.com/Microsoft/vscode-python/labels/needs%20verification). Issues with this label have not been verified to be an actual problem (e.g. making sure the reported issue is not caused by the user's configuration or machine).
-
-The other way to help is to go through issues that are labeled as [`validate`](https://github.com/Microsoft/vscode-python/labels/validate). These issues are believed to be fixed, but having an independent validation is always appreciated.
+Once an issue has been appropriately classified, there are two keys ways to help out. One is to go through open issues that
+have a merged fix and verify that the fix did in fact work. The other is to try to fix issues marked as `needs PR`.
 
 ### Pull requests
 

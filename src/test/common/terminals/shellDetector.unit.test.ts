@@ -136,11 +136,12 @@ suite('Shell Detector', () => {
             const getTerminalShellPath = sinon.stub(shellDetector, 'getTerminalShellPath');
             const getDefaultPlatformShell = sinon.stub(shellDetector, 'getDefaultPlatformShell');
 
-            identifyShellByTerminalName.withArgs(terminal.name).callsFake(() => expectedShell);
+            identifyShellByTerminalName.callsFake(() => expectedShell);
 
             const shell = shellDetector.identifyTerminalShell(terminal);
 
             expect(identifyShellByTerminalName.calledOnce).to.equal(true, 'identifyShellByTerminalName should be invoked to identify the shell');
+            expect(identifyShellByTerminalName.args[0][0]).to.equal(terminal.name);
             expect(getTerminalShellPath.notCalled).to.equal(true, 'We should not be checking the shell path');
             expect(getDefaultPlatformShell.notCalled).to.equal(true, 'We should not be identifying the default OS shell');
             expect(shell).to.equal(expectedShell);
@@ -156,12 +157,13 @@ suite('Shell Detector', () => {
             const getDefaultPlatformShell = sinon.stub(shellDetector, 'getDefaultPlatformShell');
 
             // We cannot identify shell by the name of the terminal, hence other will be returned.
-            identifyShellByTerminalName.withArgs(terminal.name).callsFake(() => TerminalShellType.other);
+            identifyShellByTerminalName.callsFake(() => TerminalShellType.other);
             getTerminalShellPath.returns(shellPath);
 
             const shell = shellDetector.identifyTerminalShell(terminal);
 
             expect(getTerminalShellPath.calledOnce).to.equal(true, 'We should be checking the shell path');
+            expect(identifyShellByTerminalName.args[0][0]).to.equal(terminal.name);
             expect(getTerminalShellPath.calledAfter(identifyShellByTerminalName)).to.equal(true, 'We should be checking the shell path after checking terminal name');
             expect(getDefaultPlatformShell.calledOnce).to.equal(false, 'We should not be identifying the default OS shell');
             expect(identifyShellByTerminalName.calledOnce).to.equal(true, 'identifyShellByTerminalName should be invoked');
@@ -178,13 +180,14 @@ suite('Shell Detector', () => {
             const getDefaultPlatformShell = sinon.stub(shellDetector, 'getDefaultPlatformShell');
 
             // We cannot identify shell by the name of the terminal, hence other will be returned.
-            identifyShellByTerminalName.withArgs(terminal.name).callsFake(() => TerminalShellType.other);
+            identifyShellByTerminalName.callsFake(() => TerminalShellType.other);
             getTerminalShellPath.returns('some bogus terminal app.app');
             getDefaultPlatformShell.returns(shellPath);
 
             const shell = shellDetector.identifyTerminalShell(terminal);
 
             expect(getTerminalShellPath.calledOnce).to.equal(true, 'We should be checking the shell path');
+            expect(identifyShellByTerminalName.args[0][0]).to.equal(terminal.name);
             expect(getTerminalShellPath.calledAfter(identifyShellByTerminalName)).to.equal(true, 'We should be checking the shell path after checking terminal name');
             expect(getDefaultPlatformShell.calledOnce).to.equal(true, 'We should be identifying the default OS shell');
             expect(getDefaultPlatformShell.calledAfter(getTerminalShellPath)).to.equal(true, 'We should be checking the platform shell path after checking settings');
@@ -206,7 +209,7 @@ suite('Shell Detector', () => {
 
             // Remember, none of the methods should return a valid terminal.
             when(platformService.osType).thenReturn(osType);
-            identifyShellByTerminalName.withArgs(terminal.name).callsFake(() => TerminalShellType.other);
+            identifyShellByTerminalName.callsFake(() => TerminalShellType.other);
             getTerminalShellPath.returns('some bogus terminal app.app');
             getDefaultPlatformShell.returns('nothing here as well');
 
@@ -215,6 +218,7 @@ suite('Shell Detector', () => {
             expect(getTerminalShellPath.calledOnce).to.equal(true, 'We should be checking the shell path');
             expect(getDefaultPlatformShell.calledOnce).to.equal(true, 'We should be identifying the default OS shell');
             expect(identifyShellByTerminalName.calledOnce).to.equal(true, 'identifyShellByTerminalName should be invoked');
+            expect(identifyShellByTerminalName.args[0][0]).to.equal(terminal.name);
             expect(shell).to.equal(expectedDefault);
         });
     });

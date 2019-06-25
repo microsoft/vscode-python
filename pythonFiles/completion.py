@@ -34,7 +34,6 @@ class JediCompletion(object):
 
     def __init__(self):
         self.default_sys_path = sys.path
-        self.environment = jedi.api.environment.Environment(sys.prefix, sys.executable)
         self._input = io.open(sys.stdin.fileno(), encoding='utf-8')
         if (os.path.sep == '/') and (platform.uname()[2].find('Microsoft') > -1):
             # WSL; does not support UNC paths
@@ -563,13 +562,16 @@ class JediCompletion(object):
                     source=request.get('source', None),
                     path=request.get('path', ''),
                     all_scopes=True,
-                    environment=self.environment),
+                    ),
                 request['id'])
 
         script = jedi.Script(
-            source=request.get('source', None), line=request['line'] + 1,
-            column=request['column'], path=request.get('path', ''),
-            sys_path=sys.path, environment=self.environment)
+                source=request.get('source', None),
+                line=request['line'] + 1,
+                column=request['column'],
+                path=request.get('path', ''),
+                sys_path=sys.path,
+                )
 
         if lookup == 'definitions':
             defs = self._get_definitionsx(script.goto_assignments(follow_imports=True), request['id'])

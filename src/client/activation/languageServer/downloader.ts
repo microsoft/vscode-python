@@ -10,7 +10,7 @@ import { IApplicationShell, IWorkspaceService } from '../../common/application/t
 import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
-import { IHttpClient, IOutputChannel, Resource } from '../../common/types';
+import { IOutputChannel, Resource, IFileDownloader } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import { Common, LanguageService } from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -30,7 +30,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
     constructor(
         @inject(IPlatformData) private readonly platformData: IPlatformData,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel,
-        @inject(IHttpClient) private readonly httpClient: IHttpClient,
+        @inject(IFileDownloader) private readonly fileDownloader: IFileDownloader,
         @inject(ILanguageServerFolderService) private readonly lsFolderService: ILanguageServerFolderService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IFileSystem) private readonly fs: IFileSystem,
@@ -99,60 +99,23 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
         }
     }
 
-    protected async showMessageAndOptionallyShowOutput(message: string) {
+    public async showMessageAndOptionallyShowOutput(message: string) {
         const selection = await this.appShell.showErrorMessage(message, Common.openOutputPanel());
         if (selection !== Common.openOutputPanel()) {
             return;
         }
         this.output.show(true);
     }
-    protected async downloadFile(uri: string, title: string): Promise<string> {
-        this.output.append(`Downloading ${uri}... `);
-        const tempFile = await this.fs.createTemporaryFile(downloadFileExtension);
-
-        const deferred = createDeferred();
-        const fileStream = this.fs.createWriteStream(tempFile.filePath);
-        fileStream.on('finish', () => {
-            fileStream.close();
-        }).on('error', (err) => {
-            tempFile.dispose();
-            deferred.reject(err);
+    public async downloadFile(uri: string, title: string): Promise<string> {
+        const downloadOptions = {
+            extension: downloadFileExtension,
+            outputChannel: this.output,
+            progressMessagePrefix: title
+        };
+        return this.fileDownloader.downloadFile(uri, downloadOptions).then(file => {
+            this.output.appendLine(LanguageService.extractionCompletedOutputMessage());
+            return file;
         });
-
-        await window.withProgress({
-            location: ProgressLocation.Window
-        }, async (progress) => {
-            const req = await this.httpClient.downloadFile(uri);
-            req.on('response', (response) => {
-                if (response.statusCode !== 200) {
-                    const error = new Error(`Failed with status ${response.statusCode}, ${response.statusMessage}, Uri ${uri}`);
-                    deferred.reject(error);
-                    throw error;
-                }
-            });
-            const requestProgress = require('request-progress');
-            requestProgress(req)
-                .on('progress', (state: any) => {
-                    // https://www.npmjs.com/package/request-progress
-                    const received = Math.round(state.size.transferred / 1024);
-                    const total = Math.round(state.size.total / 1024);
-                    const percentage = Math.round(100 * state.percent);
-                    progress.report({
-                        message: `${title}${received} of ${total} KB (${percentage}%)`
-                    });
-                })
-                .on('error', (err: any) => {
-                    deferred.reject(err);
-                })
-                .on('end', () => {
-                    this.output.appendLine(LanguageService.extractionCompletedOutputMessage());
-                    deferred.resolve();
-                })
-                .pipe(fileStream);
-            return deferred.promise;
-        });
-
-        return tempFile.filePath;
     }
 
     protected async unpackArchive(destinationFolder: string, tempFilePath: string): Promise<void> {
