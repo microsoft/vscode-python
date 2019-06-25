@@ -55,6 +55,7 @@ export class PythonSettings implements IPythonSettings {
     public analysis!: IAnalysisSettings;
     public autoUpdateLanguageServer: boolean = true;
     public datascience!: IDataScienceSettings;
+    public insidersChannel!: string;
 
     protected readonly changed = new EventEmitter<void>();
     private workspaceRoot: Uri;
@@ -66,7 +67,9 @@ export class PythonSettings implements IPythonSettings {
         return this.changed.event;
     }
 
-    constructor(workspaceFolder: Uri | undefined, private readonly interpreterAutoSelectionService: IInterpreterAutoSeletionProxyService,
+    constructor(
+        workspaceFolder: Uri | undefined,
+        private readonly interpreterAutoSelectionService: IInterpreterAutoSeletionProxyService,
         workspace?: IWorkspaceService) {
         this.workspace = workspace || new WorkspaceService();
         this.workspaceRoot = workspaceFolder ? workspaceFolder : Uri.file(__dirname);
@@ -356,6 +359,8 @@ export class PythonSettings implements IPythonSettings {
         } else {
             this.datascience = dataScienceSettings;
         }
+
+        this.insidersChannel = pythonSettings.get<string>('insidersChannel')!;
     }
 
     public get pythonPath(): string {

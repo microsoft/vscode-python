@@ -2115,6 +2115,17 @@
                     "default": false,
                     "description": "Uncomment shell assignments (#!), line magic (#!%) and cell magic (#!%%) when parsing code cells.",
                     "scope": "resource"
+                },
+                "python.insidersChannel": {
+                    "type": "string",
+                    "default": "Stable",
+                    "description": "Set to \"Insiders\" to automatically download and install the latest Insiders builds of the extension, which include upcoming features and bug fixes.",
+                    "enum": [
+                        "Stable",
+                        "InsidersWeekly",
+                        "InsidersDaily"
+                    ],
+                    "scope": "application"
                 }
             }
         },
