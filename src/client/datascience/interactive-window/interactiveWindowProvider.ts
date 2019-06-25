@@ -13,8 +13,7 @@ import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { Identifiers, LiveShare, LiveShareCommands, Settings } from '../constants';
 import { PostOffice } from '../liveshare/postOffice';
-import { IGatherModelRegistry, IInteractiveWindow, IInteractiveWindowProvider, INotebookServerOptions, IGatherModel } from '../types';
-import { GatherModel } from '../gather/model';
+import { IInteractiveWindow, IInteractiveWindowProvider, INotebookServerOptions } from '../types';
 
 interface ISyncData {
     count: number;
@@ -36,7 +35,6 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         @inject(IAsyncDisposableRegistry) asyncRegistry : IAsyncDisposableRegistry,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IGatherModelRegistry) private gatherModelRegistry: IGatherModelRegistry
         ) {
         asyncRegistry.push(this);
 
@@ -110,14 +108,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         this.disposables.push(handler);
         this.activeInteractiveWindowExecuteHandler = this.activeInteractiveWindow.onExecutedCode(this.onInteractiveWindowExecute);
         this.disposables.push(this.activeInteractiveWindowExecuteHandler);
-        this.createGatherModel();
         await this.activeInteractiveWindow.ready;
-    }
-
-    private createGatherModel() { // TODO: inject exectuion log slicer, dataflow analyzer, gather model, execution logger?
-        // Initialize execution log with dataflow analyzer
-        this.gatherModel = this.serviceContainer.get<IGatherModel>(IGatherModel);
-
     }
 
     private onPeerCountChanged(newCount: number) {

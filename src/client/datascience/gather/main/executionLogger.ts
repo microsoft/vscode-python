@@ -1,7 +1,8 @@
+import { IExecutionLogger } from '../../types';
 import { GatherEventData, GatherModel, GatherModelEvent, IGatherObserver } from '../model';
 import { LabCell } from '../model/cell';
 
-export class ExecutionLogger implements IGatherObserver {
+export class ExecutionLogger implements IGatherObserver, IExecutionLogger {
     private _gatherModel: GatherModel;
     constructor(gatherModel: GatherModel) {
         gatherModel.addObserver(this);
