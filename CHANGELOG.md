@@ -1,6 +1,6 @@
 # Changelog
 
-## 2019.6.0-rc (19 June 2019)
+## 2019.6.0 (25 June 2019)
 
 ### Enhancements
 
