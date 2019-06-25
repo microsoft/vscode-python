@@ -105,6 +105,7 @@
     "Experiments.inGroup": "User belongs to experiment group '{0}'",
     "Interpreters.RefreshingInterpreters": "Refreshing Python Interpreters",
     "Interpreters.LoadingInterpreters": "Loading Python Interpreters",
+    "Logging.CurrentWorkingDirectory": "Current working directory:",
     "Common.doNotShowAgain": "Do not show again",
     "Interpreters.environmentPromptMessage": "We noticed a new virtual environment has been created. Do you want to select it for the workspace folder?",
     "DataScience.restartKernelMessage": "Do you want to restart the IPython kernel? All variables will be lost.",
