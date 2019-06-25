@@ -214,4 +214,44 @@ suite('CellHashProvider Unit Tests', () => {
         assert.equal(hashes[0].hashes[1].endLine, 7, 'Wrong end line');
         assert.equal(hashes[0].hashes[1].executionCount, 2, 'Wrong execution count');
     });
+
+    test('Two files with same cells', () => {
+        const file1 = '#%%\r\nprint("foo")\r\n#%%\r\nprint("bar")\r\n#%%\r\nprint("baz")';
+        const file2 = file1;
+        const code = '#%%\r\nprint("bar")';
+        const thirdCell = '#%%\r\nprint ("bob")\r\nprint("baz")';
+
+        // Create our documents
+        documentManager.addDocument(file1, 'foo.py');
+        documentManager.addDocument(file2, 'bar.py');
+
+        // Add this code
+        hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code, file: 'foo.py', line: 2 });
+        hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code, file: 'bar.py', line: 2 });
+
+        // Add a second cell
+        hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code: thirdCell, file: 'foo.py', line: 4 });
+
+        // Add this code a second time
+        hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code, file: 'foo.py', line: 2 });
+
+        // Execution count should go up, but still only have two cells.
+        const hashes = hashProvider.getHashes();
+        assert.equal(hashes.length, 2, 'Wrong number of hashes');
+        const fooHash = hashes.find(h => h.file === 'foo.py');
+        const barHash = hashes.find(h => h.file === 'bar.py');
+        assert.ok(fooHash, 'No hash for foo.py');
+        assert.ok(barHash, 'No hash for bar.py');
+        assert.equal(fooHash!.hashes.length, 2, 'Not enough hashes found');
+        assert.equal(fooHash!.hashes[0].line, 3, 'Wrong start line');
+        assert.equal(fooHash!.hashes[0].endLine, 4, 'Wrong end line');
+        assert.equal(fooHash!.hashes[0].executionCount, 4, 'Wrong execution count');
+        assert.equal(fooHash!.hashes[1].line, 5, 'Wrong start line');
+        assert.equal(fooHash!.hashes[1].endLine, 7, 'Wrong end line');
+        assert.equal(fooHash!.hashes[1].executionCount, 3, 'Wrong execution count');
+        assert.equal(barHash!.hashes.length, 1, 'Not enough hashes found');
+        assert.equal(barHash!.hashes[0].line, 3, 'Wrong start line');
+        assert.equal(barHash!.hashes[0].endLine, 4, 'Wrong end line');
+        assert.equal(barHash!.hashes[0].executionCount, 2, 'Wrong execution count');
+    });
 });
