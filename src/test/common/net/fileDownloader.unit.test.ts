@@ -78,7 +78,7 @@ class DelayedReadMemoryStream extends Readable {
     }
 }
 
-suite('xFile Downloader', () => {
+suite('File Downloader', () => {
     let fileDownloader: FileDownloader;
     let httpClient: IHttpClient;
     let fs: IFileSystem;
