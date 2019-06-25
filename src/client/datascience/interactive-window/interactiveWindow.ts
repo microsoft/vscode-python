@@ -69,15 +69,9 @@ import {
     InteractiveWindowMessages,
     IRemoteAddCode,
     IShowDataViewer,
-    ISubmitNewCell
+    ISubmitNewCell,
+    SysInfoReason
 } from './interactiveWindowTypes';
-
-export enum SysInfoReason {
-    Start,
-    Restart,
-    Interrupt,
-    New
-}
 
 @injectable()
 export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> implements IInteractiveWindow  {
@@ -1088,7 +1082,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
 
             // For anything but start, tell the other sides of a live share session
             if (reason !== SysInfoReason.Start && sysInfo) {
-                this.shareMessage(InteractiveWindowMessages.AddedSysInfo, { sysInfoCell: sysInfo, id: this.id });
+                this.shareMessage(InteractiveWindowMessages.AddedSysInfo, { type: reason, sysInfoCell: sysInfo, id: this.id });
             }
 
             // For a restart, tell our window to reset
