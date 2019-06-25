@@ -1,5 +1,5 @@
 import { nbformat } from '@jupyterlab/coreutils';
-import { SlicedExecution } from '../../analysis/slice/logSlicer';
+import { SlicedExecution } from '../../slice/logSlicer';
 import { GatherModel } from '../../model';
 import { IGatherCell } from '../../model/cell';
 import { CellSlice } from '../../model/cellslice';

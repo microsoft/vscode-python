@@ -23,15 +23,15 @@ import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../com
 import { IAsyncDisposable, IDataScienceSettings, IDisposable } from '../common/types';
 import { PythonInterpreter } from '../interpreter/contracts';
 import * as ast from './gather/analysis/parse/python/python-parser';
-import { DataflowAnalysisResult, RefSet, IDataflow } from './gather/analysis/slice/dataFlow';
-import { CellExecution, SlicedExecution } from './gather/analysis/slice/logSlicer';
-import { CellProgram, ProgramBuilder, Program } from './gather/analysis/slice/programBuilder';
-import { StringSet } from './gather/analysis/slice/set';
-import { LocationSet } from './gather/analysis/slice/slice';
+import { DataflowAnalysisResult, RefSet, IDataflow } from './gather/slice/dataFlow';
+import { CellExecution, SlicedExecution } from './gather/slice/logSlicer';
+import { CellProgram, ProgramBuilder, Program } from './gather/slice/programBuilder';
+import { StringSet } from './gather/slice/set';
+import { LocationSet } from './gather/slice/slice';
 import { CellOutput, DefSelection, EditorDef, GatherEventData, GatherModelEvent, GatherState, IGatherObserver, OutputSelection, SliceSelection } from './gather/model';
 import { IGatherCell } from './gather/model/cell';
-import { Block, ControlFlowGraph } from './gather/analysis/slice/controlFlow';
-import { SliceConfiguration } from './gather/analysis/slice/sliceConfig';
+import { Block, ControlFlowGraph } from './gather/slice/controlFlow';
+import { SliceConfiguration } from './gather/slice/sliceConfig';
 
 // Main interface
 export const IDataScience = Symbol('IDataScience');
