@@ -52,7 +52,7 @@ suite('Refactor Rename', () => {
                 undefined as any, processServiceFactory.object,
                 configService.object, undefined as any));
         const processLogger = typeMoq.Mock.ofType<IProcessLogger>();
-        processLogger.setup(p => p.logProcess(typeMoq.It.isAny())).returns(() => { return; });
+        processLogger.setup(p => p.logProcess(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny())).returns(() => { return; });
         serviceContainer.setup(s => s.get(typeMoq.It.isValue(IProcessLogger), typeMoq.It.isAny())).returns(() => processLogger.object);
         await initializeTest();
     });

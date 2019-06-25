@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 import { Observable } from 'rxjs/Observable';
-import { Event, EventEmitter } from 'vscode';
 
 import { Cancellation, CancellationError } from '../../client/common/cancellation';
 import {
@@ -10,14 +9,12 @@ import {
     IProcessService,
     ObservableExecutionResult,
     Output,
-    ProcessServiceEventArgs,
     ShellOptions,
     SpawnOptions
 } from '../../client/common/process/types';
 import { noop, sleep } from '../core';
 
 export class MockProcessService implements IProcessService {
-    private readonly onExec = new EventEmitter<ProcessServiceEventArgs>();
     private execResults: {file: string; args: (string | RegExp)[]; result(): Promise<ExecutionResult<string>> }[] = [];
     private execObservableResults: {file: string; args: (string | RegExp)[]; result(): ObservableExecutionResult<string> }[] = [];
     private timeDelay: number | undefined;
@@ -29,10 +26,6 @@ export class MockProcessService implements IProcessService {
         }
 
         return this.defaultObservable([file, ...args]);
-    }
-
-    public get processExecutedEvent(): Event<ProcessServiceEventArgs> {
-        return this.onExec.event;
     }
 
     public async exec(file: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
@@ -70,6 +63,14 @@ export class MockProcessService implements IProcessService {
 
     public setDelay(timeout: number | undefined) {
         this.timeDelay = timeout;
+    }
+
+    public on() {
+        return this;
+    }
+
+    public dispose() {
+        return;
     }
 
     private argsMatch(matchers: (string | RegExp)[], args: string[]): boolean {

@@ -14,6 +14,7 @@ import {
     ExecutionFactoryCreationOptions,
     IBufferDecoder,
     IProcessLogger,
+    IProcessService,
     IProcessServiceFactory,
     IPythonExecutionFactory,
     IPythonExecutionService
@@ -29,9 +30,9 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     }
     public async create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
         const pythonPath = options.pythonPath ? options.pythonPath : this.configService.getSettings(options.resource).pythonPath;
-        const processService = await this.processServiceFactory.create(options.resource);
+        const processService: IProcessService = await this.processServiceFactory.create(options.resource);
         const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
-        processService.processExecutedEvent(processLogger.logProcess, processLogger);
+        processService.on('processExecuted', processLogger.logProcess.bind(processLogger));
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
     }
     public async createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService> {
@@ -42,9 +43,9 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             return this.create({ resource: options.resource, pythonPath: options.interpreter ? options.interpreter.path : undefined });
         }
         const pythonPath = options.interpreter ? options.interpreter.path : this.configService.getSettings(options.resource).pythonPath;
-        const processService = new ProcessService(this.decoder, { ...envVars });
+        const processService: IProcessService = new ProcessService(this.decoder, { ...envVars });
         const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
-        processService.processExecutedEvent(processLogger.logProcess, processLogger);
+        processService.on('processExecuted', processLogger.logProcess.bind(processLogger));
         this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(processService);
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
     }

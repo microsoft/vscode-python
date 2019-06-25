@@ -23,9 +23,9 @@ export class ProcessServiceFactory implements IProcessServiceFactory {
         const customEnvVars = await this.envVarsService.getEnvironmentVariables(resource);
         const decoder = this.serviceContainer.get<IBufferDecoder>(IBufferDecoder);
         const disposableRegistry = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
-        const proc = new ProcessService(decoder, customEnvVars);
+        const proc: IProcessService = new ProcessService(decoder, customEnvVars);
         disposableRegistry.push(proc);
-        proc.processExecutedEvent(this.processLogger.logProcess, this.processLogger);
+        proc.on('processExecuted', this.processLogger.logProcess.bind(this.processLogger));
         return proc;
     }
 }

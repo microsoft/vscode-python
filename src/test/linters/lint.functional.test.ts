@@ -191,7 +191,7 @@ class TestFixture extends BaseTestFixture {
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
         const configService = TypeMoq.Mock.ofType<IConfigurationService>(undefined, TypeMoq.MockBehavior.Strict);
         const processLogger = TypeMoq.Mock.ofType<IProcessLogger>(undefined, TypeMoq.MockBehavior.Strict);
-        processLogger.setup(p => p.logProcess(TypeMoq.It.isAny())).returns(() => { return; });
+        processLogger.setup(p => p.logProcess(TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => { return; });
         serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IProcessLogger), TypeMoq.It.isAny())).returns(() => processLogger.object);
 
         const platformService = new PlatformService();

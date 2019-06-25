@@ -5,7 +5,7 @@ import * as assert from 'assert';
 import { expect } from 'chai';
 import { SemVer } from 'semver';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
-import { Disposable, Uri } from 'vscode';
+import { Uri } from 'vscode';
 
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
@@ -77,10 +77,9 @@ suite('Process - PythonExecutionFactory', () => {
                 procecssFactory = mock(ProcessServiceFactory);
                 configService = mock(ConfigurationService);
                 processLogger = mock(ProcessLogger);
-                when(processLogger.logProcess({file: '', args: [], options: {}})).thenReturn();
+                when(processLogger.logProcess('', [], {})).thenReturn();
                 processService = mock(ProcessService);
-                const disposable = mock(Disposable);
-                when(processService.processExecutedEvent).thenReturn(() => disposable);
+                when(processService.on('processExecuted', () => { return; })).thenReturn(processService);
                 const serviceContainer = mock(ServiceContainer);
                 when(serviceContainer.get<IDisposableRegistry>(IDisposableRegistry)).thenReturn([]);
                 when(serviceContainer.get<IProcessLogger>(IProcessLogger)).thenReturn(processLogger);

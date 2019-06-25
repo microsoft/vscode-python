@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { exec, execSync, spawn } from 'child_process';
+import { EventEmitter } from 'events';
 import { Observable } from 'rxjs/Observable';
-import { Event, EventEmitter } from 'vscode';
 
 import { IDisposable } from '../types';
 import { createDeferred } from '../utils/async';
@@ -14,17 +14,17 @@ import {
     IProcessService,
     ObservableExecutionResult,
     Output,
-    ProcessServiceEventArgs,
     ShellOptions,
     SpawnOptions,
     StdErrError
 } from './types';
 
 // tslint:disable:no-any
-export class ProcessService implements IProcessService, IDisposable {
+export class ProcessService extends EventEmitter implements IProcessService {
     private processesToKill = new Set<IDisposable>();
-    private readonly onProcessExecuted = new EventEmitter<ProcessServiceEventArgs>();
-    constructor(private readonly decoder: IBufferDecoder, private readonly env?: EnvironmentVariables) { }
+    constructor(private readonly decoder: IBufferDecoder, private readonly env?: EnvironmentVariables) {
+        super();
+    }
     public static isAlive(pid: number): boolean {
         try {
             process.kill(pid, 0);
@@ -46,7 +46,7 @@ export class ProcessService implements IProcessService, IDisposable {
         }
     }
     public dispose() {
-        this.onProcessExecuted.dispose();
+        this.removeAllListeners();
         this.processesToKill.forEach(p => {
             try {
                 p.dispose();
@@ -54,10 +54,6 @@ export class ProcessService implements IProcessService, IDisposable {
                 // ignore.
             }
         });
-    }
-
-    public get processExecutedEvent(): Event<ProcessServiceEventArgs> {
-        return this.onProcessExecuted.event;
     }
 
     public execObservable(file: string, args: string[], options: SpawnOptions = {}): ObservableExecutionResult<string> {
@@ -123,7 +119,7 @@ export class ProcessService implements IProcessService, IDisposable {
             });
         });
 
-        this.onProcessExecuted.fire({ file, args, options });
+        this.emit('processExecuted', file, args, options);
 
         return {
             proc,
@@ -185,7 +181,7 @@ export class ProcessService implements IProcessService, IDisposable {
             disposables.forEach(d => d.dispose());
         });
 
-        this.onProcessExecuted.fire({ file, args, options });
+        this.emit('processExecuted', file, args, options);
 
         return deferred.promise;
     }
