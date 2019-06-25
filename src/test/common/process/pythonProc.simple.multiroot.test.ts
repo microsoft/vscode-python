@@ -11,7 +11,7 @@ import { Container } from 'inversify';
 import { EOL } from 'os';
 import * as path from 'path';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { ConfigurationTarget, Disposable, Uri, window } from 'vscode';
+import { ConfigurationTarget, Disposable, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
@@ -123,8 +123,7 @@ suite('PythonExecutableService', () => {
     test('Importing with a valid PYTHONPATH from .env file should succeed', async function () {
         // This test has not been working for many months in Python 2.7 under
         // Windows. Tracked by #2547.
-        const output = window.createOutputChannel('Tests');
-        if (isOs(OSType.Windows) && await isPythonVersion(output, '2.7')) {
+        if (isOs(OSType.Windows) && await isPythonVersion('2.7')) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }

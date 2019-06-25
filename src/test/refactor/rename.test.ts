@@ -8,14 +8,13 @@ import { EOL } from 'os';
 import * as path from 'path';
 import * as typeMoq from 'typemoq';
 import { Range, TextEditorCursorStyle, TextEditorLineNumbersStyle, TextEditorOptions, window, workspace } from 'vscode';
-import { IWorkspaceService } from '../../client/common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import '../../client/common/extensions';
 import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessService } from '../../client/common/process/proc';
 import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../../client/common/process/types';
-import { IConfigurationService, IOutputChannel, IPythonSettings } from '../../client/common/types';
+import { IConfigurationService, IPythonSettings } from '../../client/common/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { RefactorProxy } from '../../client/refactor/proxy';
@@ -32,19 +31,14 @@ suite('Refactor Rename', () => {
     const options: TextEditorOptions = { cursorStyle: TextEditorCursorStyle.Line, insertSpaces: true, lineNumbers: TextEditorLineNumbersStyle.Off, tabSize: 4 };
     let pythonSettings: typeMoq.IMock<IPythonSettings>;
     let serviceContainer: typeMoq.IMock<IServiceContainer>;
-    let outputChannel: typeMoq.IMock<IOutputChannel>;
-    let workspaceService: typeMoq.IMock<IWorkspaceService>;
-
     suiteSetup(initialize);
     setup(async () => {
-        outputChannel = typeMoq.Mock.ofType<IOutputChannel>();
-        workspaceService = typeMoq.Mock.ofType<IWorkspaceService>();
         pythonSettings = typeMoq.Mock.ofType<IPythonSettings>();
         pythonSettings.setup(p => p.pythonPath).returns(() => PYTHON_PATH);
         const configService = typeMoq.Mock.ofType<IConfigurationService>();
         configService.setup(c => c.getSettings(typeMoq.It.isAny())).returns(() => pythonSettings.object);
         const processServiceFactory = typeMoq.Mock.ofType<IProcessServiceFactory>();
-        processServiceFactory.setup(p => p.create(typeMoq.It.isAny())).returns(() => Promise.resolve(new ProcessService(new BufferDecoder(), outputChannel.object, workspaceService.object)));
+        processServiceFactory.setup(p => p.create(typeMoq.It.isAny())).returns(() => Promise.resolve(new ProcessService(new BufferDecoder())));
         const envActivationService = typeMoq.Mock.ofType<IEnvironmentActivationService>();
         envActivationService.setup(e => e.getActivatedEnvironmentVariables(typeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
         serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();

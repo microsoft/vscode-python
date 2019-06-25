@@ -6,15 +6,14 @@ import { IEnvironmentActivationService } from '../../interpreter/activation/type
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { IWorkspaceService } from '../application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../constants';
-import { IConfigurationService, IDisposableRegistry, IOutputChannel } from '../types';
+import { IConfigurationService, IDisposableRegistry } from '../types';
 import { ProcessService } from './proc';
 import { PythonExecutionService } from './pythonProcess';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
     ExecutionFactoryCreationOptions,
     IBufferDecoder,
+    IProcessLogger,
     IProcessServiceFactory,
     IPythonExecutionFactory,
     IPythonExecutionService
@@ -31,6 +30,8 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     public async create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
         const pythonPath = options.pythonPath ? options.pythonPath : this.configService.getSettings(options.resource).pythonPath;
         const processService = await this.processServiceFactory.create(options.resource);
+        const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
+        processService.processExecutedEvent(processLogger.logProcess, processLogger);
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
     }
     public async createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService> {
@@ -41,9 +42,9 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             return this.create({ resource: options.resource, pythonPath: options.interpreter ? options.interpreter.path : undefined });
         }
         const pythonPath = options.interpreter ? options.interpreter.path : this.configService.getSettings(options.resource).pythonPath;
-        const output = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-        const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-        const processService = new ProcessService(this.decoder, output, workspaceService, { ...envVars });
+        const processService = new ProcessService(this.decoder, { ...envVars });
+        const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
+        processService.processExecutedEvent(processLogger.logProcess, processLogger);
         this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(processService);
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
     }

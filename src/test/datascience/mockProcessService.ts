@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { Observable } from 'rxjs/Observable';
+import { Event, EventEmitter } from 'vscode';
 
 import { Cancellation, CancellationError } from '../../client/common/cancellation';
 import {
@@ -9,12 +10,14 @@ import {
     IProcessService,
     ObservableExecutionResult,
     Output,
+    ProcessServiceEvent,
     ShellOptions,
     SpawnOptions
 } from '../../client/common/process/types';
 import { noop, sleep } from '../core';
 
 export class MockProcessService implements IProcessService {
+    private readonly onExec = new EventEmitter<ProcessServiceEvent>();
     private execResults: {file: string; args: (string | RegExp)[]; result(): Promise<ExecutionResult<string>> }[] = [];
     private execObservableResults: {file: string; args: (string | RegExp)[]; result(): ObservableExecutionResult<string> }[] = [];
     private timeDelay: number | undefined;
@@ -26,6 +29,10 @@ export class MockProcessService implements IProcessService {
         }
 
         return this.defaultObservable([file, ...args]);
+    }
+
+    public get processExecutedEvent(): Event<ProcessServiceEvent> {
+        return this.onExec.event;
     }
 
     public async exec(file: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {

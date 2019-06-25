@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import { ChildProcess, ExecOptions, SpawnOptions as ChildProcessSpawnOptions } from 'child_process';
 import { Observable } from 'rxjs/Observable';
-import { CancellationToken, Uri } from 'vscode';
+import { CancellationToken, Event, Uri } from 'vscode';
 
 import { PythonInterpreter } from '../../interpreter/contracts';
 import { ExecutionInfo, Version } from '../types';
@@ -40,7 +40,19 @@ export type ExecutionResult<T extends string | Buffer> = {
     stderr?: T;
 };
 
+export type ProcessServiceEvent = {
+    file: string;
+    args: string[];
+    options: SpawnOptions;
+};
+
+export const IProcessLogger = Symbol('IProcessLogger');
+export interface IProcessLogger {
+    logProcess(event: ProcessServiceEvent): void;
+}
+
 export interface IProcessService {
+    readonly processExecutedEvent: Event<ProcessServiceEvent>;
     execObservable(file: string, args: string[], options?: SpawnOptions): ObservableExecutionResult<string>;
     exec(file: string, args: string[], options?: SpawnOptions): Promise<ExecutionResult<string>>;
     shellExec(command: string, options?: ShellOptions): Promise<ExecutionResult<string>>;

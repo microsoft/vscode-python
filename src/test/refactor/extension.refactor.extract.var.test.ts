@@ -15,7 +15,6 @@ import { MockOutputChannel } from './../mockClasses';
 const EXTENSION_DIR = path.join(__dirname, '..', '..', '..');
 const refactorSourceFile = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'refactoring', 'standAlone', 'refactor.py');
 const refactorTargetFileDir = path.join(__dirname, '..', '..', '..', 'out', 'test', 'pythonFiles', 'refactoring', 'standAlone');
-const output = window.createOutputChannel('Tests');
 
 interface RenameResponse {
     results: [{ diff: string }];
@@ -30,7 +29,6 @@ suite('Variable Extraction', () => {
     suiteSetup(initialize);
     suiteTeardown(() => {
         commands.executeCommand = oldExecuteCommand;
-        output.dispose();
         return closeActiveWindows();
     });
     setup(async () => {
@@ -84,7 +82,7 @@ suite('Variable Extraction', () => {
 
     // tslint:disable-next-line:no-function-expression
     test('Extract Variable', async function () {
-        if (isPythonVersion(output, '3.7')) {
+        if (isPythonVersion('3.7')) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();
         } else {

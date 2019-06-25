@@ -6,27 +6,26 @@
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IServiceContainer } from '../../ioc/types';
-import { IWorkspaceService } from '../application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../constants';
-import { IDisposableRegistry, IOutputChannel } from '../types';
+import { IDisposableRegistry } from '../types';
 import { IEnvironmentVariablesProvider } from '../variables/types';
 import { ProcessService } from './proc';
-import { IBufferDecoder, IProcessService, IProcessServiceFactory } from './types';
+import { IBufferDecoder, IProcessLogger, IProcessService, IProcessServiceFactory } from './types';
 
 @injectable()
 export class ProcessServiceFactory implements IProcessServiceFactory {
     private envVarsService: IEnvironmentVariablesProvider;
+    private processLogger: IProcessLogger;
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.envVarsService = serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
+        this.processLogger = serviceContainer.get<IProcessLogger>(IProcessLogger);
     }
     public async create(resource?: Uri): Promise<IProcessService> {
         const customEnvVars = await this.envVarsService.getEnvironmentVariables(resource);
         const decoder = this.serviceContainer.get<IBufferDecoder>(IBufferDecoder);
         const disposableRegistry = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
-        const output = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-        const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-        const proc = new ProcessService(decoder, output, workspaceService, customEnvVars);
+        const proc = new ProcessService(decoder, customEnvVars);
         disposableRegistry.push(proc);
+        proc.processExecutedEvent(this.processLogger.logProcess, this.processLogger);
         return proc;
     }
 }

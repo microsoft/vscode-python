@@ -2,12 +2,14 @@ import 'rxjs/add/observable/of';
 
 import { EventEmitter } from 'events';
 import { Observable } from 'rxjs/Observable';
+import { Event, EventEmitter as VSCodeEventEmitter } from 'vscode';
 
 import {
     ExecutionResult,
     IProcessService,
     ObservableExecutionResult,
     Output,
+    ProcessServiceEvent,
     ShellOptions,
     SpawnOptions
 } from '../../client/common/process/types';
@@ -19,6 +21,7 @@ type ExecCallback = (result: ExecutionResult<string>) => void;
 export const IOriginalProcessService = Symbol('IProcessService');
 
 export class MockProcessService extends EventEmitter implements IProcessService {
+    private readonly onProcessExecuted = new VSCodeEventEmitter<ProcessServiceEvent>();
     constructor(private procService: IProcessService) {
         super();
     }
@@ -50,6 +53,9 @@ export class MockProcessService extends EventEmitter implements IProcessService 
         } else {
             return this.procService.execObservable(file, args, options);
         }
+    }
+    public get processExecutedEvent(): Event<ProcessServiceEvent> {
+        return this.onProcessExecuted.event;
     }
     public onExec(handler: (file: string, args: string[], options: SpawnOptions, callback: ExecCallback) => void) {
         this.on('exec', handler);

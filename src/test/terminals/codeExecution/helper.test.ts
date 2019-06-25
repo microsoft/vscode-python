@@ -9,13 +9,13 @@ import { EOL } from 'os';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { Range, Selection, TextDocument, TextEditor, TextLine, Uri } from 'vscode';
-import { IApplicationShell, IDocumentManager, IWorkspaceService } from '../../../client/common/application/types';
+import { IApplicationShell, IDocumentManager } from '../../../client/common/application/types';
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../../client/common/constants';
 import '../../../client/common/extensions';
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessService } from '../../../client/common/process/proc';
 import { IProcessService, IProcessServiceFactory } from '../../../client/common/process/types';
-import { IConfigurationService, IOutputChannel, IPythonSettings } from '../../../client/common/types';
+import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
 import { OSType } from '../../../client/common/utils/platform';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -29,9 +29,6 @@ const TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFile
 suite('Terminal - Code Execution Helper', () => {
     let documentManager: TypeMoq.IMock<IDocumentManager>;
     let applicationShell: TypeMoq.IMock<IApplicationShell>;
-    let outputChannel: TypeMoq.IMock<IOutputChannel>;
-    let workspaceService: TypeMoq.IMock<IWorkspaceService>;
-
     let helper: ICodeExecutionHelper;
     let document: TypeMoq.IMock<TextDocument>;
     let editor: TypeMoq.IMock<TextEditor>;
@@ -41,9 +38,6 @@ suite('Terminal - Code Execution Helper', () => {
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         applicationShell = TypeMoq.Mock.ofType<IApplicationShell>();
-        outputChannel = TypeMoq.Mock.ofType<IOutputChannel>();
-        workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
-
         const envVariablesProvider = TypeMoq.Mock.ofType<IEnvironmentVariablesProvider>();
         processService = TypeMoq.Mock.ofType<IProcessService>();
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
@@ -60,8 +54,6 @@ suite('Terminal - Code Execution Helper', () => {
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IApplicationShell), TypeMoq.It.isAny())).returns(() => applicationShell.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IEnvironmentVariablesProvider), TypeMoq.It.isAny())).returns(() => envVariablesProvider.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny())).returns(() => configService.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IProcessServiceFactory), TypeMoq.It.isAny())).returns(() => processServiceFactory.object);
-
         helper = new CodeExecutionHelper(serviceContainer.object);
 
         document = TypeMoq.Mock.ofType<TextDocument>();
@@ -70,7 +62,7 @@ suite('Terminal - Code Execution Helper', () => {
     });
 
     async function ensureBlankLinesAreRemoved(source: string, expectedSource: string) {
-        const actualProcessService = new ProcessService(new BufferDecoder(), outputChannel.object, workspaceService.object);
+        const actualProcessService = new ProcessService(new BufferDecoder());
         processService.setup(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((file, args, options) => {
                 return actualProcessService.exec.apply(actualProcessService, [file, args, options]);
@@ -83,7 +75,7 @@ suite('Terminal - Code Execution Helper', () => {
     test('Ensure blank lines are NOT removed when code is not indented (simple)', async function () {
         // This test has not been working for many months in Python 2.7 under
         // Windows.Tracked by #2544.
-        if (isOs(OSType.Windows) && await isPythonVersion(outputChannel.object, '2.7')) {
+        if (isOs(OSType.Windows) && await isPythonVersion('2.7')) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
@@ -94,7 +86,7 @@ suite('Terminal - Code Execution Helper', () => {
     });
     test('Ensure there are no multiple-CR elements in the normalized code.', async () => {
         const code = ['import sys', '', '', '', 'print(sys.executable)', '', 'print("1234")', '', '', 'print(1)', 'print(2)'];
-        const actualProcessService = new ProcessService(new BufferDecoder(), outputChannel.object, workspaceService.object);
+        const actualProcessService = new ProcessService(new BufferDecoder());
         processService.setup(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((file, args, options) => {
                 return actualProcessService.exec.apply(actualProcessService, [file, args, options]);
@@ -107,7 +99,7 @@ suite('Terminal - Code Execution Helper', () => {
         test(`Ensure blank lines are removed (Sample${fileNameSuffix})`, async function () {
             // This test has not been working for many months in Python 2.7 under
             // Windows.Tracked by #2544.
-            if (isOs(OSType.Windows) && await isPythonVersion(outputChannel.object, '2.7')) {
+            if (isOs(OSType.Windows) && await isPythonVersion('2.7')) {
                 // tslint:disable-next-line:no-invalid-this
                 return this.skip();
             }
@@ -119,7 +111,7 @@ suite('Terminal - Code Execution Helper', () => {
         test(`Ensure last two blank lines are preserved (Sample${fileNameSuffix})`, async function () {
             // This test has not been working for many months in Python 2.7 under
             // Windows.Tracked by #2544.
-            if (isOs(OSType.Windows) && await isPythonVersion(outputChannel.object, '2.7')) {
+            if (isOs(OSType.Windows) && await isPythonVersion('2.7')) {
                 // tslint:disable-next-line:no-invalid-this
                 return this.skip();
             }
@@ -131,7 +123,7 @@ suite('Terminal - Code Execution Helper', () => {
         test(`Ensure last two blank lines are preserved even if we have more than 2 trailing blank lines (Sample${fileNameSuffix})`, async function () {
             // This test has not been working for many months in Python 2.7 under
             // Windows.Tracked by #2544.
-            if (isOs(OSType.Windows) && await isPythonVersion(outputChannel.object, '2.7')) {
+            if (isOs(OSType.Windows) && await isPythonVersion('2.7')) {
                 // tslint:disable-next-line:no-invalid-this
                 return this.skip();
             }
