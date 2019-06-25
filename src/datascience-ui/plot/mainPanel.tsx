@@ -12,6 +12,7 @@ import { RegExpValues } from '../../client/datascience/constants';
 import { IPlotViewerMapping, PlotViewerMessages } from '../../client/datascience/plotting/types';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { StyleInjector } from '../react-common/styleInjector';
+import { getSettings } from '../react-common/settingsReactSide';
 import { SvgList } from '../react-common/svgList';
 import { SvgViewer } from '../react-common/svgViewer';
 
@@ -40,6 +41,7 @@ interface IMainPanelState {
     ids: string[];
     currentImage: number;
     tool: Tool;
+    forceDark?: boolean;
 }
 
 const PanKeyboardSize = 10;
@@ -83,14 +85,16 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     public render = () => {
+        const baseTheme = this.computeBaseTheme();
         return (
             <div className='main-panel' role='group' ref={this.container}>
                 <StyleInjector
                     expectingDark={this.props.baseTheme !== 'vscode-light'}
+                    darkChanged={this.darkChanged}
                     postOffice={this.postOffice} />
-                {this.renderToolbar()}
-                {this.renderThumbnails()}
-                {this.renderPlot()}
+                {this.renderToolbar(baseTheme)}
+                {this.renderThumbnails(baseTheme)}
+                {this.renderPlot(baseTheme)}
             </div>
         );
     }
@@ -107,6 +111,33 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
 
         return false;
+    }
+
+    private darkChanged = (newDark: boolean) => {
+        // update our base theme if allowed. Don't do this
+        // during testing as it will mess up the expected render count.
+        if (!this.props.testMode) {
+            this.setState(
+                {
+                    forceDark: newDark
+                }
+            );
+        }
+    }
+
+    private computeBaseTheme() : string {
+        // If we're ignoring, always light
+        if (getSettings && getSettings().ignoreVscodeTheme) {
+            return 'vscode-light';
+        }
+
+        // Otherwise see if the style injector has figured out
+        // the theme is dark or not
+        if (this.state.forceDark !== undefined) {
+            return this.state.forceDark ? 'vscode-dark' : 'vscode-light';
+        }
+
+        return this.props.baseTheme;
     }
 
     private onKeyDown = (event: KeyboardEvent) => {
@@ -175,19 +206,19 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         });
     }
 
-    private renderThumbnails() {
+    private renderThumbnails(_baseTheme: string) {
         return (
             <SvgList images={this.state.thumbnails} currentImage={this.state.currentImage} imageClicked={this.imageClicked}/>
         );
     }
 
-    private renderToolbar() {
+    private renderToolbar(baseTheme: string) {
         const prev = this.state.currentImage > 0 ? this.prevClicked : undefined;
         const next = this.state.currentImage < this.state.images.length - 1 ? this.nextClicked : undefined;
         const deleteClickHandler = this.state.currentImage !== -1 ? this.deleteClicked : undefined;
         return (
             <Toolbar
-                baseTheme={this.props.baseTheme}
+                baseTheme={baseTheme}
                 changeTool={this.changeTool}
                 exportButtonClicked={this.exportCurrent}
                 copyButtonClicked={this.copyCurrent}
@@ -196,7 +227,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 deleteButtonClicked={deleteClickHandler} />
         );
     }
-    private renderPlot() {
+    private renderPlot(baseTheme: string) {
         // Render current plot
         const currentPlot = this.state.currentImage >= 0 ? this.state.images[this.state.currentImage] : undefined;
         const currentSize = this.state.currentImage >= 0 ? this.state.sizes[this.state.currentImage] : undefined;
@@ -205,7 +236,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         if (currentPlot && currentSize && currentId) {
             return (
                 <SvgViewer
-                    baseTheme={this.props.baseTheme}
+                    baseTheme={baseTheme}
                     svg={currentPlot}
                     id={currentId}
                     size={currentSize}
