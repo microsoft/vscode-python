@@ -131,29 +131,23 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
 
         hashes.forEach(h => {
             // See how this existing cell compares to the change
-            if (!h.deleted) {
-                if (h.endOffset < c.rangeOffset) {
-                    // No change. This cell is entirely before the change
-                } else if (h.startOffset >= c.rangeOffset + c.rangeLength) {
-                    // This cell is after the text that got replaced. Adjust its start/end lines
-                    h.line += lineDiff;
-                    h.endLine += lineDiff;
-                    h.startOffset += offsetDiff;
-                    h.endOffset += offsetDiff;
-                } else {
-                    // Cell intersects. Mark as deleted
-                    h.deleted = true;
-                }
-            // See if this deleted cell suddenly reappeared.
+            if (h.endOffset < c.rangeOffset) {
+                // No change. This cell is entirely before the change
+            } else if (h.startOffset >= c.rangeOffset + c.rangeLength) {
+                // This cell is after the text that got replaced. Adjust its start/end lines
+                h.line += lineDiff;
+                h.endLine += lineDiff;
+                h.startOffset += offsetDiff;
+                h.endOffset += offsetDiff;
+            } else if (!h.deleted) {
+                // Cell intersects. Mark as deleted
+                h.deleted = true;
+                // Leave other aspects alone as they will be updated by other updates
             } else {
-                const index = appliedText.indexOf(h.realCode);
-                if (index >= 0) {
+                // Already deleted and intersects the change. See if the change made
+                // the deletion invalid.
+                if (appliedText.substr(h.startOffset, h.endOffset - h.startOffset) === h.realCode) {
                     h.deleted = false;
-                    h.startOffset = index;
-                    h.endOffset = index + h.realCode.length;
-                    const lineSize = h.endLine - h.line;
-                    h.line = appliedText.substr(0, index).split('\n').length;
-                    h.endLine = h.line + lineSize;
                 }
             }
         });

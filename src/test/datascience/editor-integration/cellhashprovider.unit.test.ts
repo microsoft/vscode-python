@@ -254,4 +254,59 @@ suite('CellHashProvider Unit Tests', () => {
         assert.equal(barHash!.hashes[0].endLine, 4, 'Wrong end line');
         assert.equal(barHash!.hashes[0].executionCount, 2, 'Wrong execution count');
     });
+
+    test('Delete cell with dupes in code, put cell back', () => {
+        const file = '#%%\r\nprint("foo")\r\n#%%\r\nprint("foo")\r\n#%%\r\nprint("bar")\r\n#%%\r\nprint("baz")';
+        const code = '#%%\r\nprint("foo")';
+
+        // Create our document
+        documentManager.addDocument(file, 'foo.py');
+
+        // Add this code
+        hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code, file: 'foo.py', line: 2 });
+
+        // We should have a single hash
+        let hashes = hashProvider.getHashes();
+        assert.equal(hashes.length, 1, 'No hashes found');
+        assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
+        assert.equal(hashes[0].hashes[0].line, 3, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].endLine, 4, 'Wrong end line');
+        assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
+
+        // Modify the code
+        documentManager.changeDocument('foo.py', new Range(new Position(3, 0), new Position(3, 1)), '');
+
+        // Should have zero hashes
+        hashes = hashProvider.getHashes();
+        assert.equal(hashes.length, 0, 'Too many hashes found');
+
+        // Put back the original cell
+        documentManager.changeDocument('foo.py', new Range(new Position(3, 0), new Position(3, 0)), 'p');
+        hashes = hashProvider.getHashes();
+        assert.equal(hashes.length, 1, 'No hashes found');
+        assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
+        assert.equal(hashes[0].hashes[0].line, 3, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].endLine, 4, 'Wrong end line');
+        assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
+
+        // Modify the code
+        documentManager.changeDocument('foo.py', new Range(new Position(3, 0), new Position(3, 1)), '');
+        hashes = hashProvider.getHashes();
+        assert.equal(hashes.length, 0, 'Too many hashes found');
+
+        // Remove the first cell
+        documentManager.changeDocument('foo.py', new Range(new Position(0, 0), new Position(1, 14)), '');
+        hashes = hashProvider.getHashes();
+        assert.equal(hashes.length, 0, 'Too many hashes found');
+
+        // Put back the original cell
+        documentManager.changeDocument('foo.py', new Range(new Position(1, 0), new Position(1, 0)), 'p');
+        hashes = hashProvider.getHashes();
+        assert.equal(hashes.length, 1, 'No hashes found');
+        assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
+        assert.equal(hashes[0].hashes[0].line, 1, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].endLine, 2, 'Wrong end line');
+        assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
+    });
+
 });
