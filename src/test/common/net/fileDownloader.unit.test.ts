@@ -3,12 +3,12 @@
 
 'use strict';
 
+// tslint:disable: no-var-requires no-require-imports max-func-body-length no-any match-default-export-name
 import * as assert from 'assert';
 import { expect } from 'chai';
 import * as fsExtra from 'fs-extra';
 import * as nock from 'nock';
 import * as path from 'path';
-// tslint:disable-next-line: match-default-export-name
 import rewiremock from 'rewiremock';
 import * as sinon from 'sinon';
 import { Readable, Writable } from 'stream';
@@ -24,14 +24,22 @@ import { IFileSystem } from '../../../client/common/platform/types';
 import { IHttpClient } from '../../../client/common/types';
 import { Http } from '../../../client/common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
-import { noop} from '../../core';
-// tslint:disable-next-line: no-var-requires no-require-imports
+import { noop } from '../../core';
+import { MockOutputChannel } from '../../mockClasses';
 const requestProgress = require('request-progress');
+const request = require('request');
 
-// tslint:disable: max-func-body-length no-any
 type ProgressReporterData = { message?: string; increment?: number };
+
+/**
+ * Writable stream that'll throw an error when written to.
+ * (used to mimick errors thrown when writing to a file).
+ *
+ * @class ErroringMemoryStream
+ * @extends {Writable}
+ */
 class ErroringMemoryStream extends Writable {
-    constructor(private readonly errorMessage = 'kaboom') {
+    constructor(private readonly errorMessage: string) {
         super();
     }
     public _write(_chunk: any, _encoding: any, callback: any) {
@@ -39,6 +47,13 @@ class ErroringMemoryStream extends Writable {
         return callback();
     }
 }
+/**
+ * Readable stream that's slow to return data.
+ * (used to mimic slow file downloads).
+ *
+ * @class DelayedReadMemoryStream
+ * @extends {Readable}
+ */
 class DelayedReadMemoryStream extends Readable {
     public get readableLength() {
         return 1024 * 10;
@@ -68,7 +83,6 @@ suite('xFile Downloader', () => {
     let httpClient: IHttpClient;
     let fs: IFileSystem;
     let appShell: IApplicationShell;
-    suiteSetup(() => rewiremock.enable());
     suiteTeardown(() => {
         rewiremock.disable();
         sinon.restore();
@@ -79,34 +93,33 @@ suite('xFile Downloader', () => {
         setup(() => {
             rewiremock.disable();
             httpClient = mock(HttpClient);
-            when(httpClient.downloadFile(anything())).thenCall((uri: string) => {
-                // tslint:disable-next-line: no-require-imports
-                const request = require('request');
-                return request(uri);
-            });
-            fs = new FileSystem(new PlatformService());
             appShell = mock(ApplicationShell);
+            when(httpClient.downloadFile(anything())).thenCall(request);
+            fs = new FileSystem(new PlatformService());
         });
         teardown(() => {
             rewiremock.disable();
             sinon.restore();
         });
         test('File gets downloaded', async () => {
+            // When downloading a uri, point it to package.json file.
             nock('https://python.extension')
                 .get('/package.json')
                 .reply(200, () => fsExtra.createReadStream(packageJsonFile));
             const progressReportStub = sinon.stub();
             const progressReporter: Progress<ProgressReporterData> = { report: progressReportStub };
-            when(appShell.withProgress(anything(), anything())).thenCall((_, cb) => cb(progressReporter));
             const tmpFilePath = await fs.createTemporaryFile('.json');
+            when(appShell.withProgress(anything(), anything())).thenCall((_, cb) => cb(progressReporter));
 
             fileDownloader = new FileDownloader(instance(httpClient), fs, instance(appShell));
             await fileDownloader.downloadFileWithStatusBarProgress(uri, 'hello', tmpFilePath.filePath);
 
+            // Confirm the package.json file gets downloaded
             const expectedFileContents = fsExtra.readFileSync(packageJsonFile).toString();
             assert.equal(fsExtra.readFileSync(tmpFilePath.filePath).toString(), expectedFileContents);
         });
         test('Error is throw for http Status !== 200', async () => {
+            // When downloading a uri, throw status 500 error.
             nock('https://python.extension')
                 .get('/package.json')
                 .reply(500);
@@ -121,6 +134,7 @@ suite('xFile Downloader', () => {
             await expect(promise).to.eventually.be.rejectedWith('Failed with status 500, null, Uri https://python.extension/package.json');
         });
         test('Error is throw if unable to write to the file stream', async () => {
+            // When downloading a uri, point it to package.json file.
             nock('https://python.extension')
                 .get('/package.json')
                 .reply(200, () => fsExtra.createReadStream(packageJsonFile));
@@ -128,31 +142,39 @@ suite('xFile Downloader', () => {
             const progressReporter: Progress<ProgressReporterData> = { report: progressReportStub };
             when(appShell.withProgress(anything(), anything())).thenCall((_, cb) => cb(progressReporter));
 
+            // Use bogus files that cannot be created (on windows, invalid drives, on mac & linux use invalid home directories).
             const invalidFileName = new PlatformService().isWindows ? 'abcd:/bogusFile/one.txt' : '/bogus file path/.txt';
             fileDownloader = new FileDownloader(instance(httpClient), fs, instance(appShell));
             const promise = fileDownloader.downloadFileWithStatusBarProgress(uri, 'hello', invalidFileName);
 
+            // Things should fall over.
             await expect(promise).to.eventually.be.rejected;
         });
         test('Error is throw if file stream throws an error', async () => {
+            // When downloading a uri, point it to package.json file.
             nock('https://python.extension')
                 .get('/package.json')
                 .reply(200, () => fsExtra.createReadStream(packageJsonFile));
             const progressReportStub = sinon.stub();
             const progressReporter: Progress<ProgressReporterData> = { report: progressReportStub };
             when(appShell.withProgress(anything(), anything())).thenCall((_, cb) => cb(progressReporter));
+            // Create a file stream that will throw an error when written to (use ErroringMemoryStream).
             const tmpFilePath = 'bogus file';
             const fileSystem = mock(FileSystem);
-            const fileStream = new ErroringMemoryStream();
+            const fileStream = new ErroringMemoryStream('kaboom from fs');
             when(fileSystem.createWriteStream(tmpFilePath)).thenReturn(fileStream as any);
 
             fileDownloader = new FileDownloader(instance(httpClient), instance(fileSystem), instance(appShell));
             const promise = fileDownloader.downloadFileWithStatusBarProgress(uri, 'hello', tmpFilePath);
 
-            await expect(promise).to.eventually.be.rejectedWith('kaboom');
+            // Confirm error from FS is bubbled up.
+            await expect(promise).to.eventually.be.rejectedWith('kaboom from fs');
         });
         test('Report progress as file gets downloaded', async () => {
             const totalKb = 50;
+            // When downloading a uri, point it to stream that's slow.
+            // We'll return data from this stream slowly, mimicking a slow download.
+            // When the download is slow, we can test progress.
             nock('https://python.extension')
                 .get('/package.json')
                 .reply(200, () => [200, new DelayedReadMemoryStream(1024 * totalKb, 5, 1024 * 10), { 'content-length': 1024 * totalKb }]);
@@ -161,6 +183,7 @@ suite('xFile Downloader', () => {
             when(appShell.withProgress(anything(), anything())).thenCall((_, cb) => cb(progressReporter));
             const tmpFilePath = await fs.createTemporaryFile('.json');
             // Mock request-progress to throttle 1ms, so we can get progress messages.
+            // I.e. display progress every 1ms.
             rewiremock.enable();
             rewiremock('request-progress').with((reqUri: string) => requestProgress(reqUri, { throttle: 1 }));
 
@@ -169,7 +192,7 @@ suite('xFile Downloader', () => {
 
             // Since we are throttling the progress notifications for ever 1ms,
             // and we're delaying downloading by every 10ms, we'll have progress reported for every 1ms.
-            // And we'll have a total of 5kb (based on counter in ReadMemoryStream).
+            // So we'll have progress reported for every 10kb of data downloaded, for a total of 5 times.
             expect(progressReportStub.callCount).to.equal(5);
             expect(progressReportStub.args[0][0].message).to.equal(getProgressMessage(10, 20));
             expect(progressReportStub.args[1][0].message).to.equal(getProgressMessage(20, 40));
@@ -205,6 +228,16 @@ suite('xFile Downloader', () => {
             verify(fs.createTemporaryFile('.pdf')).once();
             assert.equal(file, 'my temp file');
         });
+        test('Display progress message in output channel', async () => {
+            const outputChannel = mock(MockOutputChannel);
+            const tmpFile = { filePath: 'my temp file', dispose: noop };
+            when(fs.createTemporaryFile('.pdf')).thenResolve(tmpFile);
+            fileDownloader = new FileDownloader(instance(httpClient), instance(fs), instance(appShell));
+
+            await fileDownloader.downloadFile('file to download', { progressMessagePrefix: '', extension: '.pdf', outputChannel: outputChannel });
+
+            verify(outputChannel.append(Http.downloadingFile().format('file to download')));
+        });
         test('Display progress when downloading', async () => {
             const tmpFile = { filePath: 'my temp file', dispose: noop };
             when(fs.createTemporaryFile('.pdf')).thenResolve(tmpFile);
@@ -231,89 +264,4 @@ suite('xFile Downloader', () => {
             assert.ok(disposeStub.calledOnce);
         });
     });
-    // suite('Progress Reporter', () => {
-    //     let requestProgress: ProgressReporter;
-    //     const reporter: Progress<ProgressReporterData> = {} as any;
-    //     const request: requestTypes.Request = {} as any;
-    //     const fileStream: WriteStream = {} as any;
-    //     let pipeStub: sinon.SinonStub<[NodeJS.WritableStream, ({ end?: boolean | undefined } | undefined)?], NodeJS.WritableStream>;
-    //     httpClient = mock(HttpClient);
-    //     fs = mock(FileSystem);
-    //     appShell = mock(ApplicationShell);
-    //     suiteSetup(() => pipeStub = sinon.stub(ProgressReporter.prototype, 'pipe'));
-    //     setup(() => {
-    //         fileDownloader = new FileDownloader(httpClient, fs, appShell);
-    //         requestProgress = new ProgressReporter();
-    //         rewiremock('request-progress').with(() => requestProgress);
-    //     });
-    //     teardown(() => pipeStub.restore());
-
-    //     test('Ending progress report will resolve the promise', async () => {
-    //         const promise = fileDownloader.displayDownloadProgress('uri', reporter, request, fileStream, '');
-    //         const deferred = createDeferredFromPromise(promise);
-
-    //         // Promise should not be resolved even after 100ms.
-    //         await sleep(100);
-    //         assert.ok(!deferred.completed);
-
-    //         // Raise end event, then promise should resolve.
-    //         requestProgress.emit('close');
-    //         await sleep(1);
-    //         assert.ok(deferred.completed);
-    //         await expect(promise).to.eventually.be.equal(undefined, 'Incorrect value');
-    //     });
-    //     // test('Ending progress report with error will reject the promise', async () => {
-    //     //     const promise = fileDownloader.displayDownloadProgress('uri', reporter, request, fileStream, '');
-    //     //     const deferred = createDeferredFromPromise(promise);
-
-    //     //     // We need this, else node complains about unhandled rejections.
-    //     //     promise.ignoreErrors();
-    //     //     deferred.promise.ignoreErrors();
-
-    //     //     // Promise should not be resolved even after 100ms.
-    //     //     await sleep(100);
-    //     //     assert.ok(!deferred.completed);
-
-    //     //     // Raise end event, then promise should get rejected.
-    //     //     requestProgress.emit('error', new Error('kaboom'));
-    //     //     await sleep(1);
-    //     //     assert.ok(deferred.completed);
-    //     //     await expect(promise).to.eventually.be.rejectedWith('kaboom');
-    //     // });
-    //     // test('Output from progress should be piped into filestream', async () => {
-    //     //     const promise = fileDownloader.displayDownloadProgress('uri', reporter, request, fileStream, '');
-    //     //     const deferred = createDeferredFromPromise(promise);
-
-    //     //     assert.ok(pipeStub.calledOnceWithExactly(fileStream));
-    //     //     requestProgress.emit('end');
-    //     //     await sleep(1);
-    //     //     assert.ok(deferred.completed);
-    //     //     await expect(deferred.promise).to.eventually.be.equal(undefined, 'Incorrect value');
-    //     // });
-    //     // test('Progress is reported', async () => {
-    //     //     let reportStub: sinon.SinonStub;
-    //     //     reporter.report = reportStub = sinon.stub();
-    //     //     const promise = fileDownloader.displayDownloadProgress('uri', reporter, request, fileStream, 'Hello World');
-
-    //     //     assert.equal(reportStub.callCount, 0);
-
-    //     //     const totalMB = 6;
-    //     //     requestProgress.emit('progress', { size: { transferred: 2 * 1024, total: 1024 * totalMB }, percent: 10 / 100 });
-    //     //     assert.equal(reportStub.callCount, 1);
-    //     //     let message = Http.downloadingFileProgress().format('Hello World', '2', totalMB.toString(), '10');
-    //     //     assert.ok(reportStub.calledOnceWithExactly({ message }));
-
-    //     //     reportStub.reset();
-
-    //     //     requestProgress.emit('progress', { size: { transferred: 5 * 1024, total: 1024 * totalMB }, percent: 90 / 100 });
-    //     //     assert.equal(reportStub.callCount, 1);
-    //     //     message = Http.downloadingFileProgress().format('Hello World', '5', totalMB.toString(), '90');
-    //     //     assert.ok(reportStub.calledOnceWithExactly({ message }));
-
-    //     //     requestProgress.emit('end');
-    //     //     await sleep(1);
-    //     //     await expect(promise).to.eventually.be.equal(undefined, 'Incorrect value');
-    //     // });
-    // });
 });
-

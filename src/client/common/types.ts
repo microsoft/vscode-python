@@ -342,7 +342,22 @@ export type DownloadOptions = {
 }
 
 export const IFileDownloader = Symbol('IFileDownloader');
+/**
+ * File downloader, that'll display progress in the status bar.
+ *
+ * @export
+ * @interface IFileDownloader
+ */
 export interface IFileDownloader {
+    /**
+     * Download file and display progress in statusbar.
+     * Optionnally display progress in the provided output channel.
+     *
+     * @param {string} uri
+     * @param {DownloadOptions} options
+     * @returns {Promise<string>}
+     * @memberof IFileDownloader
+     */
     downloadFile(uri: string, options: DownloadOptions): Promise<string>;
 }
 

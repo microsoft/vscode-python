@@ -54,17 +54,17 @@ export class FileDownloader implements IFileDownloader {
             requestProgress(request)
                 // tslint:disable-next-line: no-any
                 .on('progress', (state: any) => {
-                    // https://www.npmjs.com/package/request-progress
                     const received = Math.round(state.size.transferred / 1024);
                     const total = Math.round(state.size.total / 1024);
                     const percentage = Math.round(100 * state.percent);
-                    progress.report({
-                        message: Http.downloadingFileProgress().format(progressMessagePrefix,
-                            received.toString(), total.toString(), percentage.toString())
-                    });
+                    const message = Http.downloadingFileProgress().format(progressMessagePrefix,
+                        received.toString(), total.toString(), percentage.toString());
+                    progress.report({ message });
                 })
+                // Handle errors from download.
                 .on('error', reject)
                 .pipe(fileStream)
+                // Handle error in writing to fs.
                 .on('error', reject)
                 .on('close', resolve);
         });
