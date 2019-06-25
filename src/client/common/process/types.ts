@@ -40,7 +40,7 @@ export type ExecutionResult<T extends string | Buffer> = {
     stderr?: T;
 };
 
-export type ProcessServiceEvent = {
+export type ProcessServiceEventArgs = {
     file: string;
     args: string[];
     options: SpawnOptions;
@@ -48,11 +48,11 @@ export type ProcessServiceEvent = {
 
 export const IProcessLogger = Symbol('IProcessLogger');
 export interface IProcessLogger {
-    logProcess(event: ProcessServiceEvent): void;
+    logProcess(event: ProcessServiceEventArgs): void;
 }
 
 export interface IProcessService {
-    readonly processExecutedEvent: Event<ProcessServiceEvent>;
+    readonly processExecutedEvent: Event<ProcessServiceEventArgs>;
     execObservable(file: string, args: string[], options?: SpawnOptions): ObservableExecutionResult<string>;
     exec(file: string, args: string[], options?: SpawnOptions): Promise<ExecutionResult<string>>;
     shellExec(command: string, options?: ShellOptions): Promise<ExecutionResult<string>>;

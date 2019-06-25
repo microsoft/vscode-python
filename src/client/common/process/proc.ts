@@ -14,7 +14,7 @@ import {
     IProcessService,
     ObservableExecutionResult,
     Output,
-    ProcessServiceEvent,
+    ProcessServiceEventArgs,
     ShellOptions,
     SpawnOptions,
     StdErrError
@@ -23,7 +23,7 @@ import {
 // tslint:disable:no-any
 export class ProcessService implements IProcessService, IDisposable {
     private processesToKill = new Set<IDisposable>();
-    private readonly onProcessExecuted = new EventEmitter<ProcessServiceEvent>();
+    private readonly onProcessExecuted = new EventEmitter<ProcessServiceEventArgs>();
     constructor(private readonly decoder: IBufferDecoder, private readonly env?: EnvironmentVariables) { }
     public static isAlive(pid: number): boolean {
         try {
@@ -56,7 +56,7 @@ export class ProcessService implements IProcessService, IDisposable {
         });
     }
 
-    public get processExecutedEvent(): Event<ProcessServiceEvent> {
+    public get processExecutedEvent(): Event<ProcessServiceEventArgs> {
         return this.onProcessExecuted.event;
     }
 

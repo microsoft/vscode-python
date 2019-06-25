@@ -10,14 +10,14 @@ import {
     IProcessService,
     ObservableExecutionResult,
     Output,
-    ProcessServiceEvent,
+    ProcessServiceEventArgs,
     ShellOptions,
     SpawnOptions
 } from '../../client/common/process/types';
 import { noop, sleep } from '../core';
 
 export class MockProcessService implements IProcessService {
-    private readonly onExec = new EventEmitter<ProcessServiceEvent>();
+    private readonly onExec = new EventEmitter<ProcessServiceEventArgs>();
     private execResults: {file: string; args: (string | RegExp)[]; result(): Promise<ExecutionResult<string>> }[] = [];
     private execObservableResults: {file: string; args: (string | RegExp)[]; result(): ObservableExecutionResult<string> }[] = [];
     private timeDelay: number | undefined;
@@ -31,7 +31,7 @@ export class MockProcessService implements IProcessService {
         return this.defaultObservable([file, ...args]);
     }
 
-    public get processExecutedEvent(): Event<ProcessServiceEvent> {
+    public get processExecutedEvent(): Event<ProcessServiceEventArgs> {
         return this.onExec.event;
     }
 

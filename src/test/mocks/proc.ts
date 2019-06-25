@@ -9,7 +9,7 @@ import {
     IProcessService,
     ObservableExecutionResult,
     Output,
-    ProcessServiceEvent,
+    ProcessServiceEventArgs,
     ShellOptions,
     SpawnOptions
 } from '../../client/common/process/types';
@@ -21,7 +21,7 @@ type ExecCallback = (result: ExecutionResult<string>) => void;
 export const IOriginalProcessService = Symbol('IProcessService');
 
 export class MockProcessService extends EventEmitter implements IProcessService {
-    private readonly onProcessExecuted = new VSCodeEventEmitter<ProcessServiceEvent>();
+    private readonly onProcessExecuted = new VSCodeEventEmitter<ProcessServiceEventArgs>();
     constructor(private procService: IProcessService) {
         super();
     }
@@ -54,7 +54,7 @@ export class MockProcessService extends EventEmitter implements IProcessService 
             return this.procService.execObservable(file, args, options);
         }
     }
-    public get processExecutedEvent(): Event<ProcessServiceEvent> {
+    public get processExecutedEvent(): Event<ProcessServiceEventArgs> {
         return this.onProcessExecuted.event;
     }
     public onExec(handler: (file: string, args: string[], options: SpawnOptions, callback: ExecCallback) => void) {
