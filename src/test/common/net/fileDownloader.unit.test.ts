@@ -193,7 +193,7 @@ suite('File Downloader', () => {
             await fileDownloader.downloadFileWithStatusBarProgress(uri, 'Downloading-something', tmpFilePath.filePath);
 
             // Since we are throttling the progress notifications for ever 1ms,
-            // and we're delaying downloading by every 10ms, we'll have progress reported for every 1ms.
+            // and we're delaying downloading by every 10ms, we'll have progress reported for every 10ms.
             // So we'll have progress reported for every 10kb of data downloaded, for a total of 5 times.
             expect(progressReportStub.callCount).to.equal(5);
             expect(progressReportStub.args[0][0].message).to.equal(getProgressMessage(10, 20));
