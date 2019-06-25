@@ -49,6 +49,10 @@ export namespace LanguageService {
 
 }
 
+export namespace Http {
+    export const downloadingFile = localize('downloading.file', 'Downloading {0}...');
+    export const downloadingFileProgress = localize('downloading.file.progress', '{0}{1} of {2} KB ({3})');
+}
 export namespace Experiments {
     export const inGroup = localize('Experiments.inGroup', 'User belongs to experiment group \'{0}\'');
 }

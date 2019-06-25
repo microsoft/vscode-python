@@ -3,14 +3,15 @@
 
 'use strict';
 
-import { inject, injectable } from 'inversify';
-import { IHttpClient, IFileDownloader, DownloadOptions } from '../types';
-import { IFileSystem } from '../platform/types';
-import { IApplicationShell } from '../application/types';
-import { createDeferred } from '../utils/async';
-import { ProgressLocation, Progress } from 'vscode';
 import { WriteStream } from 'fs';
+import { inject, injectable } from 'inversify';
 import * as requestTypes from 'request';
+import { Progress, ProgressLocation } from 'vscode';
+import { IApplicationShell } from '../application/types';
+import { IFileSystem } from '../platform/types';
+import { DownloadOptions, IFileDownloader, IHttpClient } from '../types';
+import { Http } from '../utils/localize';
+import { noop } from '../utils/misc';
 
 @injectable()
 export class FileDownloader implements IFileDownloader {
@@ -20,61 +21,52 @@ export class FileDownloader implements IFileDownloader {
     }
     public async downloadFile(uri: string, options: DownloadOptions): Promise<string> {
         if (options.outputChannel) {
-            options.outputChannel.append(`Downloading ${uri}... `);
+            options.outputChannel.append(Http.downloadingFile().format(uri));
         }
         const tempFile = await this.fs.createTemporaryFile(options.extension);
 
-        const deferred = createDeferred();
-        const fileStream = this.fs.createWriteStream(tempFile.filePath);
-        fileStream
-            .on('finish', () => fileStream.close())
-            .on('error', (err) => {
+        await this.downloadFileWithStatusBarProgress(uri, options.progressMessagePrefix, tempFile.filePath)
+            .then(noop, ex => {
                 tempFile.dispose();
-                deferred.reject(err);
+                return Promise.reject(ex);
             });
-
-        await this.appShell.withProgress({ location: ProgressLocation.Window }, async (progress) => {
-            const req = await this.httpClient.downloadFile(uri);
-            req.on('response', (response) => {
-                if (response.statusCode !== 200) {
-                    const error = new Error(`Failed with status ${response.statusCode}, ${response.statusMessage}, Uri ${uri}`);
-                    deferred.reject(error);
-                    throw error;
-                }
-            });
-            // Download.
-            this.displayDownloadProgress(progress, req, fileStream, options.progressMessagePrefix)
-                .then(deferred.resolve.bind(deferred))
-                .catch(deferred.reject.bind(deferred));
-
-            return deferred.promise;
-        });
 
         return tempFile.filePath;
     }
-
-    public async displayDownloadProgress(progress: Progress<{ message?: string; increment?: number }>,
+    public async downloadFileWithStatusBarProgress(uri: string, progressMessage: string, tmpFilePath: string): Promise<void> {
+        await this.appShell.withProgress({ location: ProgressLocation.Window }, async (progress) => {
+            const req = await this.httpClient.downloadFile(uri);
+            const fileStream = this.fs.createWriteStream(tmpFilePath);
+            return this.displayDownloadProgress(uri, progress, req, fileStream, progressMessage);
+        });
+    }
+    public async displayDownloadProgress(uri: string, progress: Progress<{ message?: string; increment?: number }>,
         request: requestTypes.Request,
         fileStream: WriteStream, progressMessagePrefix: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
+            request.on('response', (response) => {
+                if (response.statusCode !== 200) {
+                    reject(new Error(`Failed with status ${response.statusCode}, ${response.statusMessage}, Uri ${uri}`));
+                }
+            });
+            // tslint:disable-next-line: no-require-imports
             const requestProgress = require('request-progress');
             requestProgress(request)
+                // tslint:disable-next-line: no-any
                 .on('progress', (state: any) => {
                     // https://www.npmjs.com/package/request-progress
                     const received = Math.round(state.size.transferred / 1024);
                     const total = Math.round(state.size.total / 1024);
                     const percentage = Math.round(100 * state.percent);
                     progress.report({
-                        message: `${progressMessagePrefix}${received} of ${total} KB (${percentage}%)`
+                        message: Http.downloadingFileProgress().format(progressMessagePrefix,
+                            received.toString(), total.toString(), percentage.toString())
                     });
                 })
-                .on('error', (err: any) => {
-                    reject(err);
-                })
-                .on('end', () => {
-                    resolve();
-                })
-                .pipe(fileStream);
+                .on('error', reject)
+                .pipe(fileStream)
+                .on('error', reject)
+                .on('close', resolve);
         });
     }
 }
