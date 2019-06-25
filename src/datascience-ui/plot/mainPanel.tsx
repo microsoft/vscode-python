@@ -11,8 +11,8 @@ import { createDeferred } from '../../client/common/utils/async';
 import { RegExpValues } from '../../client/datascience/constants';
 import { IPlotViewerMapping, PlotViewerMessages } from '../../client/datascience/plotting/types';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
-import { StyleInjector } from '../react-common/styleInjector';
 import { getSettings } from '../react-common/settingsReactSide';
+import { StyleInjector } from '../react-common/styleInjector';
 import { SvgList } from '../react-common/svgList';
 import { SvgViewer } from '../react-common/svgViewer';
 
