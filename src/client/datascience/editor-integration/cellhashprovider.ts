@@ -7,6 +7,7 @@ import {
     Event,
     EventEmitter,
     Position,
+    Range,
     TextDocument,
     TextDocumentChangeEvent,
     TextDocumentContentChangeEvent
@@ -25,6 +26,7 @@ interface IRangedCellHash extends ICellHash {
     startOffset: number;
     endOffset: number;
     deleted: boolean;
+    realCode: string;
 }
 
 // This class provides hashes for debugging jupyter cells. Call getHashes just before starting debugging to compute all of the
@@ -89,7 +91,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
                 file: e[0],
                 hashes: e[1].filter(h => !h.deleted)
             };
-        });
+        }).filter(e => e.hashes.length > 0);
     }
 
     private onAboutToAddCode(args: IRemoteAddCode) {
@@ -121,8 +123,8 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
 
     private handleContentChange(d: TextDocument, c: TextDocumentContentChangeEvent, hashes: IRangedCellHash[]) {
         // First compute the number of lines that changed
-        const lineDiff = d.getText(c.range).split('\n').length - c.text.split('\n').length;
-        const offsetDiff = c.rangeLength - c.text.length;
+        const lineDiff = c.text.split('\n').length - d.getText(c.range).split('\n').length;
+        const offsetDiff = c.text.length - c.rangeLength;
 
         // Also compute the text of the document with the change applied
         const appliedText = this.applyChange(d, c);
@@ -132,7 +134,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
             if (!h.deleted) {
                 if (h.endOffset < c.rangeOffset) {
                     // No change. This cell is entirely before the change
-                } else if (h.startOffset > c.rangeOffset + c.text.length) {
+                } else if (h.startOffset >= c.rangeOffset + c.rangeLength) {
                     // This cell is after the text that got replaced. Adjust its start/end lines
                     h.line += lineDiff;
                     h.endLine += lineDiff;
@@ -144,11 +146,11 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
                 }
             // See if this deleted cell suddenly reappeared.
             } else {
-                const index = appliedText.indexOf(h.code);
+                const index = appliedText.indexOf(h.realCode);
                 if (index >= 0) {
                     h.deleted = false;
                     h.startOffset = index;
-                    h.endOffset = index + h.code.length;
+                    h.endOffset = index + h.realCode.length;
                     const lineSize = h.endLine - h.line;
                     h.line = appliedText.substr(0, index).split('\n').length;
                     h.endLine = h.line + lineSize;
@@ -169,16 +171,25 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
         // the add code gives us
         const doc = this.documentManager.textDocuments.find(d => d.fileName === file);
         if (doc) {
+            // The code we get is not actually what's in the document. The interactiveWindow massages it somewhat.
+            // We need the real code so that we can match document edits later.
             const split = code.split('\n');
+            const lineCount = split.length;
+            const line = doc.lineAt(startLine);
+            const endLine = doc.lineAt(Math.min(startLine + lineCount - 1, doc.lineCount - 1));
+            const startOffset = doc.offsetAt(new Position(startLine, 0));
+            const endOffset = doc.offsetAt(endLine.rangeIncludingLineBreak.end);
+            const realCode = doc.getText(new Range(line.range.start, endLine.rangeIncludingLineBreak.end));
             const hash : IRangedCellHash = {
                 hash: hashjs.sha1().update(code).digest('hex').substr(0, 12),
-                line: startLine,
-                endLine: startLine + split.length - 1,
+                line: startLine + 1,
+                endLine: startLine + lineCount,
                 executionCount: expectedCount,
-                startOffset: doc.offsetAt(new Position(startLine, 0)),
-                endOffset: doc.offsetAt(new Position(startLine + split.length - 1, split[split.length - 1].length)),
+                startOffset,
+                endOffset,
                 deleted: false,
-                code: code
+                code,
+                realCode
             };
 
             const list = this.hashes.get(file);

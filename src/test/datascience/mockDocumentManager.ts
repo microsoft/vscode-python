@@ -6,6 +6,7 @@ import {
     DecorationRenderOptions,
     Event,
     EventEmitter,
+    Range,
     TextDocument,
     TextDocumentChangeEvent,
     TextDocumentShowOptions,
@@ -20,7 +21,7 @@ import {
 } from 'vscode';
 
 import { IDocumentManager } from '../../client/common/application/types';
-import { createDocument } from './editor-integration/helpers';
+import { MockDocument } from './mockDocument';
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
 
@@ -91,9 +92,27 @@ export class MockDocumentManager implements IDocumentManager {
     }
 
     public addDocument(code: string, file: string) {
-        const mockDoc = createDocument(code, file, 1, TypeMoq.Times.atMost(100), true);
-        mockDoc.setup((x: any) => x.then).returns(() => undefined);
-        this.textDocuments.push(mockDoc.object);
+        const mockDoc = new MockDocument(code, file);
+        this.textDocuments.push(mockDoc);
+    }
+
+    public changeDocument(file: string, range: Range, newText: string) {
+        const doc = this.textDocuments.find(d => d.fileName === file) as MockDocument;
+        if (doc) {
+            const startOffset = doc.offsetAt(range.start);
+            const endOffset = doc.offsetAt(range.end);
+            const c: TextDocumentChangeEvent = {
+                document: doc,
+                contentChanges: [{
+                    range,
+                    rangeOffset: startOffset,
+                    rangeLength: endOffset - startOffset,
+                    text: newText
+                }]
+            };
+            this.didChangeTextDocumentEmitter.fire(c);
+            c.contentChanges.forEach(doc.edit.bind(doc));
+        }
     }
 
     public createTextEditorDecorationType(_options: DecorationRenderOptions) : TextEditorDecorationType {

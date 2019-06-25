@@ -382,8 +382,8 @@ export interface IPlotViewer extends IDisposable {
 }
 
 export interface ICellHash {
-    line: number;
-    endLine: number;
+    line: number;       // 1 based
+    endLine: number;    // 1 based and inclusive
     hash: string;
     executionCount: number;
 }
