@@ -183,7 +183,9 @@ suite('File Downloader', () => {
             when(appShell.withProgress(anything(), anything())).thenCall((_, cb) => cb(progressReporter));
             const tmpFilePath = await fs.createTemporaryFile('.json');
             // Mock request-progress to throttle 1ms, so we can get progress messages.
-            // I.e. display progress every 1ms.
+            // I.e. report progress every 1ms. (however since download is delayed to 10ms,
+            // we'll get progress reported every 10ms. We use 1ms, to ensure its guaranteed
+            // to be reported. Else changing it to 10ms could result in it being reported in 12ms
             rewiremock.enable();
             rewiremock('request-progress').with((reqUri: string) => requestProgress(reqUri, { throttle: 1 }));
 
