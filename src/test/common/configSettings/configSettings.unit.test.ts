@@ -3,6 +3,8 @@
 
 'use strict';
 
+// tslint:disable:no-any
+
 import { expect } from 'chai';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
@@ -46,7 +48,7 @@ suite('Python Settings', () => {
 
     function initializeConfig(sourceSettings: PythonSettings) {
         // string settings
-        for (const name of ['pythonPath', 'venvPath', 'condaPath', 'pipenvPath', 'envFile', 'poetryPath']) {
+        for (const name of ['pythonPath', 'venvPath', 'condaPath', 'pipenvPath', 'envFile', 'poetryPath', 'insidersChannel']) {
             config.setup(c => c.get<string>(name))
                 // tslint:disable-next-line:no-any
                 .returns(() => (sourceSettings as any)[name]);
@@ -104,6 +106,36 @@ suite('Python Settings', () => {
         config.setup(c => c.get<IDataScienceSettings>('dataScience'))
             .returns(() => sourceSettings.datascience);
     }
+
+    function testIfValueIsUpdated(settingName: string, value: any) {
+        test(`${settingName} updated`, () => {
+            (expected as any)[settingName] = value;
+            initializeConfig(expected);
+
+            settings.update(config.object);
+
+            expect((settings as any)[settingName]).to.be.equal((expected as any)[settingName]);
+            config.verifyAll();
+        });
+    }
+
+    suite('String settings', async () => {
+        ['pythonPath', 'venvPath', 'condaPath', 'pipenvPath', 'envFile', 'poetryPath', 'insidersChannel'].forEach(settingName => {
+            testIfValueIsUpdated(settingName, 'stringValue');
+        });
+    });
+
+    suite('Boolean settings', async () => {
+        ['downloadLanguageServer', 'jediEnabled', 'autoUpdateLanguageServer', 'globalModuleInstallation'].forEach(settingName => {
+            testIfValueIsUpdated(settingName, true);
+        });
+    });
+
+    suite('Number settings', async () => {
+        ['jediMemoryLimit'].forEach(settingName => {
+            testIfValueIsUpdated(settingName, 1001);
+        });
+    });
 
     test('condaPath updated', () => {
         expected.pythonPath = 'python3';
