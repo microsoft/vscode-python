@@ -17,7 +17,7 @@ export class ProcessLogger implements IProcessLogger {
         const formattedArgs = args.reduce((accumulator, current, index) => index === 0 ? current : `${accumulator} ${current}`, '');
         const currentWorkingDirectory = this.pathUtils.getDisplayName(options.cwd!);
         const info = [
-            `> ${file} ${formattedArgs}`,
+            `> ${this.pathUtils.getDisplayName(file)} ${formattedArgs}`,
             `${Logging.currentWorkingDirectory()} ${currentWorkingDirectory}`
         ].join('\n');
 
