@@ -63,27 +63,28 @@
 ## Preparation
 
 - [ ] Make sure the [appropriate pull requests](https://github.com/microsoft/vscode-docs/pulls) for the [documentation](https://code.visualstudio.com/docs/python/python-tutorial) -- including the [WOW](https://code.visualstudio.com/docs/languages/python) page -- are ready
-- [ ] Create a branch against `release` for a pull request
-- [ ] Update the version in [`package.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json)
-- [ ] Run `npm install` to make sure [`package-lock.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json) is up-to-date (the only update should be the version number if `package-lock.json` has been kept up-to-date)
-- [ ] Update [`CHANGELOG.md`](https://github.com/Microsoft/vscode-python/blob/master/CHANGELOG.md)
-   - [ ] Update version and date for the release section
-   - [ ] Run [`news`](https://github.com/Microsoft/vscode-python/tree/master/news) and copy-and-paste new entries (typically `python news --final | code-insiders -`; quite possibly nothing new to add)
-- [ ] Update [`ThirdPartyNotices-Distribution.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Distribution.txt) by running [`tpn`](https://github.com/Microsoft/vscode-python/tree/master/tpn) (typically `python tpn --npm package-lock.json --npm-overrides package.datascience-ui.dependencies.json --config tpn/distribution.toml ThirdPartyNotices-Distribution.txt`; quite possible there will be no change)
-- [ ] Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Repository.txt) manually if necessary
-- [ ] Create pull request against `release`
-- [ ] Merge pull request into `release`
+- [ ] final updates to the `release` branch
+   - [ ] Create a branch against `release` for a pull request
+   - [ ] Update the version in [`package.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json)
+   - [ ] Run `npm install` to make sure [`package-lock.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json) is up-to-date (the only update should be the version number if `package-lock.json` has been kept up-to-date)
+   - [ ] Update [`CHANGELOG.md`](https://github.com/Microsoft/vscode-python/blob/master/CHANGELOG.md)
+      - [ ] Update version and date for the release section
+      - [ ] Run [`news`](https://github.com/Microsoft/vscode-python/tree/master/news) and copy-and-paste new entries (typically `python news --final | code-insiders -`; quite possibly nothing new to add)
+   - [ ] Update [`ThirdPartyNotices-Distribution.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Distribution.txt) by running [`tpn`](https://github.com/Microsoft/vscode-python/tree/master/tpn) (typically `python tpn --npm package-lock.json --npm-overrides package.datascience-ui.dependencies.json --config tpn/distribution.toml ThirdPartyNotices-Distribution.txt`; quite possible there will be no change)
+   - [ ] Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Repository.txt) manually if necessary
+   - [ ] Create pull request against `release`
+   - [ ] Merge pull request into `release`
 - [ ] Make sure component governance is happy
 
 ## Release
 
-- [ ] Make sure [CI](https://github.com/Microsoft/vscode-python/blob/master/CONTRIBUTING.md) is passing
-- [ ] Generate the final `.vsix` file
-- [ ] Make sure no extraneous files are being included in the `.vsix` file (make sure to check for hidden files)
-- [ ] Upload the final `.vsix` file to the [marketplace](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+- [ ] Publish the release via Azure DevOps
+   - [ ] Make sure [CI](https://github.com/Microsoft/vscode-python/blob/master/CONTRIBUTING.md) is passing
+   - [ ] Make sure the "Upload" stage on the release page succeeded
+   - [ ] Make sure no extraneous files are being included in the `.vsix` file (make sure to check for hidden files)
+   - [ ] Deploy the "Publish" stage
 - [ ] Publish [documentation changes](https://github.com/Microsoft/vscode-docs/pulls?q=is%3Apr+is%3Aopen+label%3Apython)
 - [ ] Publish the [blog](http://aka.ms/pythonblog) post
-- [ ] Create a [release](https://github.com/Microsoft/vscode-python/releases) on GitHub (which creates an appropriate git tag)
 - [ ] Determine if a hotfix is needed
 - [ ] Merge `release` back into `master`
 
