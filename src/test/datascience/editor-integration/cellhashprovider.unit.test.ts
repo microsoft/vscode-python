@@ -29,7 +29,7 @@ suite('CellHashProvider Unit Tests', () => {
         hashProvider = new CellHashProvider(documentManager, configurationService.object);
     });
 
-     test('Add a cell and edit it', async () => {
+     test('Add a cell and edit it', () => {
         const file = '#%%\r\nprint("foo")\r\n#%%\r\nprint("bar")';
         const code = '#%%\r\nprint("bar")';
         // Create our document
@@ -39,7 +39,7 @@ suite('CellHashProvider Unit Tests', () => {
         hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code, file: 'foo.py', line: 2 });
 
         // We should have a single hash
-        let hashes = await hashProvider.getHashes();
+        let hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
         assert.equal(hashes[0].hashes[0].line, 3, 'Wrong start line');
@@ -51,7 +51,7 @@ suite('CellHashProvider Unit Tests', () => {
 
         // Get our hashes again. The line number should change
         // We should have a single hash
-        hashes = await hashProvider.getHashes();
+        hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
         assert.equal(hashes[0].hashes[0].line, 1, 'Wrong start line');
@@ -60,7 +60,7 @@ suite('CellHashProvider Unit Tests', () => {
 
      });
 
-     test('Add a cell, delete it, and recreate it', async () => {
+     test('Add a cell, delete it, and recreate it', () => {
         const file = '#%%\r\nprint("foo")\r\n#%%\r\nprint("bar")';
         const code = '#%%\r\nprint("bar")';
         // Create our document
@@ -70,7 +70,7 @@ suite('CellHashProvider Unit Tests', () => {
         hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code, file: 'foo.py', line: 2 });
 
         // We should have a single hash
-        let hashes = await hashProvider.getHashes();
+        let hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
         assert.equal(hashes[0].hashes[0].line, 3, 'Wrong start line');
@@ -81,14 +81,14 @@ suite('CellHashProvider Unit Tests', () => {
         documentManager.changeDocument('foo.py', new Range(new Position(3, 0), new Position(3, 0)), 'print ("bob")\r\n');
 
         // Should be no hashes now
-        hashes = await hashProvider.getHashes();
+        hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 0, 'Hash should be gone');
 
         // Undo the last change
         documentManager.changeDocument('foo.py', new Range(new Position(3, 0), new Position(3, 15)), '');
 
         // Hash should reappear
-        hashes = await hashProvider.getHashes();
+        hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
         assert.equal(hashes[0].hashes[0].line, 3, 'Wrong start line');
@@ -96,7 +96,7 @@ suite('CellHashProvider Unit Tests', () => {
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
     });
 
-    test('Delete code below', async () => {
+    test('Delete code below', () => {
         const file = '#%%\r\nprint("foo")\r\n#%%\r\nprint("bar")\r\n#%%\r\nprint("baz")';
         const code = '#%%\r\nprint("bar")';
         // Create our document
@@ -106,7 +106,7 @@ suite('CellHashProvider Unit Tests', () => {
         hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code, file: 'foo.py', line: 2 });
 
         // We should have a single hash
-        let hashes = await hashProvider.getHashes();
+        let hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
         assert.equal(hashes[0].hashes[0].line, 3, 'Wrong start line');
@@ -117,7 +117,7 @@ suite('CellHashProvider Unit Tests', () => {
         documentManager.changeDocument('foo.py', new Range(new Position(5, 0), new Position(5, 0)), 'print ("bob")\r\n');
 
         // Should be the same hashes
-        hashes = await hashProvider.getHashes();
+        hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
         assert.equal(hashes[0].hashes[0].line, 3, 'Wrong start line');
@@ -128,7 +128,7 @@ suite('CellHashProvider Unit Tests', () => {
         documentManager.changeDocument('foo.py', new Range(new Position(0, 0), new Position(1, 14)), '');
 
         // Hash should move
-        hashes = await hashProvider.getHashes();
+        hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
         assert.equal(hashes[0].hashes[0].line, 1, 'Wrong start line');
@@ -136,7 +136,7 @@ suite('CellHashProvider Unit Tests', () => {
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
     });
 
-    test('Modify code after sending twice', async () => {
+    test('Modify code after sending twice', () => {
         const file = '#%%\r\nprint("foo")\r\n#%%\r\nprint("bar")\r\n#%%\r\nprint("baz")';
         const code = '#%%\r\nprint("bar")';
         const thirdCell = '#%%\r\nprint ("bob")\r\nprint("baz")';
@@ -147,7 +147,7 @@ suite('CellHashProvider Unit Tests', () => {
         hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code, file: 'foo.py', line: 2 });
 
         // We should have a single hash
-        let hashes = await hashProvider.getHashes();
+        let hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
         assert.equal(hashes[0].hashes[0].line, 3, 'Wrong start line');
@@ -161,7 +161,7 @@ suite('CellHashProvider Unit Tests', () => {
         hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code: thirdCell, file: 'foo.py', line: 4 });
 
         // Should be two hashes
-        hashes = await hashProvider.getHashes();
+        hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 2, 'Not enough hashes found');
         assert.equal(hashes[0].hashes[0].line, 3, 'Wrong start line');
@@ -175,14 +175,43 @@ suite('CellHashProvider Unit Tests', () => {
         documentManager.changeDocument('foo.py', new Range(new Position(0, 0), new Position(1, 14)), '');
 
         // Hashes should move
-        hashes = await hashProvider.getHashes();
+        hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
-        assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
+        assert.equal(hashes[0].hashes.length, 2, 'Not enough hashes found');
         assert.equal(hashes[0].hashes[0].line, 1, 'Wrong start line');
         assert.equal(hashes[0].hashes[0].endLine, 2, 'Wrong end line');
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
         assert.equal(hashes[0].hashes[1].line, 3, 'Wrong start line');
         assert.equal(hashes[0].hashes[1].endLine, 5, 'Wrong end line');
+        assert.equal(hashes[0].hashes[1].executionCount, 2, 'Wrong execution count');
+    });
+
+    test('Run same cell twice', () => {
+        const file = '#%%\r\nprint("foo")\r\n#%%\r\nprint("bar")\r\n#%%\r\nprint("baz")';
+        const code = '#%%\r\nprint("bar")';
+        const thirdCell = '#%%\r\nprint ("bob")\r\nprint("baz")';
+
+        // Create our document
+        documentManager.addDocument(file, 'foo.py');
+
+        // Add this code
+        hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code, file: 'foo.py', line: 2 });
+
+        // Add a second cell
+        hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code: thirdCell, file: 'foo.py', line: 4 });
+
+        // Add this code a second time
+        hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code, file: 'foo.py', line: 2 });
+
+        // Execution count should go up, but still only have two cells.
+        const hashes = hashProvider.getHashes();
+        assert.equal(hashes.length, 1, 'No hashes found');
+        assert.equal(hashes[0].hashes.length, 2, 'Not enough hashes found');
+        assert.equal(hashes[0].hashes[0].line, 3, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].endLine, 4, 'Wrong end line');
+        assert.equal(hashes[0].hashes[0].executionCount, 3, 'Wrong execution count');
+        assert.equal(hashes[0].hashes[1].line, 5, 'Wrong start line');
+        assert.equal(hashes[0].hashes[1].endLine, 7, 'Wrong end line');
         assert.equal(hashes[0].hashes[1].executionCount, 2, 'Wrong execution count');
     });
 });

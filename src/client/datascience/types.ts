@@ -394,5 +394,5 @@ export interface IFileHashes {
 }
 
 export interface ICellHashProvider {
-    getHashes() : Promise<IFileHashes[]>;
+    getHashes() : IFileHashes[];
 }

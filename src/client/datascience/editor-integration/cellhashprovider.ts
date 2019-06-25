@@ -85,7 +85,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
         }
     }
 
-    public async getHashes(): Promise<IFileHashes[]> {
+    public getHashes(): IFileHashes[] {
         return [...this.hashes.entries()].map(e => {
             return {
                 file: e[0],
@@ -192,19 +192,30 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
                 realCode
             };
 
-            const list = this.hashes.get(file);
+            let list = this.hashes.get(file);
             if (!list) {
-                this.hashes.set(file, [hash]);
-            } else {
-                // Figure out where to stick the hash in the list.
-                // Note: List should always be up to date because we're tracking edits to the files
-                const firstGreatest = list.findIndex(h => h.line > startLine);
-                if (firstGreatest >= 0) {
-                    list.splice(firstGreatest, 0, hash);
-                } else {
-                    list.push(hash);
+                list = [];
+            }
+
+            // Figure out where to put the item in the list
+            let inserted = false;
+            for (let i = 0; i < list.length && !inserted; i += 1) {
+                const pos = list[i];
+                if (hash.line >= pos.line && hash.line <= pos.endLine) {
+                    // Stick right here. This is either the same cell or a cell that overwrote where
+                    // we were.
+                    list.splice(i, 1, hash);
+                    inserted = true;
+                } else if (pos.line > hash.line) {
+                    // This item comes just after the cell we're inserting.
+                    list.splice(i, 0, hash);
+                    inserted = true;
                 }
             }
+            if (!inserted) {
+                list.push(hash);
+            }
+            this.hashes.set(file, list);
         }
     }
 }
