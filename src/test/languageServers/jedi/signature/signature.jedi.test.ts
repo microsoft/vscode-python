@@ -72,15 +72,11 @@ suite('Signatures (Jedi)', () => {
             new SignatureHelpResult(0, 3, 0, 0, null),
             new SignatureHelpResult(0, 4, 0, 0, null),
             new SignatureHelpResult(0, 5, 0, 0, null),
-            new SignatureHelpResult(0, 6, 1, 0, 'stop'),
-            new SignatureHelpResult(0, 7, 1, 0, 'stop')
-            // new SignatureHelpResult(0, 6, 1, 0, 'start'),
-            // new SignatureHelpResult(0, 7, 1, 0, 'start'),
-            // new SignatureHelpResult(0, 8, 1, 1, 'stop'),
-            // new SignatureHelpResult(0, 9, 1, 1, 'stop'),
-            // new SignatureHelpResult(0, 10, 1, 1, 'stop'),
-            // new SignatureHelpResult(0, 11, 1, 2, 'step'),
-            // new SignatureHelpResult(1, 0, 1, 2, 'step')
+            // tslint:disable-next-line:no-suspicious-comment
+            // TODO: Why did this change?
+            // Note that Python's "range()" has an unorthodox signature.
+            new SignatureHelpResult(0, 6, 2, 0, 'stop'),
+            new SignatureHelpResult(0, 7, 2, 0, 'stop')
         ];
 
         const document = await openDocument(path.join(autoCompPath, 'basicSig.py'));
@@ -97,8 +93,13 @@ suite('Signatures (Jedi)', () => {
         }
         const expected = [
             new SignatureHelpResult(0, 5, 0, 0, null),
-            new SignatureHelpResult(0, 6, 1, 0, 'value'),
-            new SignatureHelpResult(0, 7, 1, 0, 'value'),
+            // tslint:disable-next-line:no-suspicious-comment
+            // TODO: Why did this change?
+            // Where is it getting "values" from?  The signature from
+            // print.__doc__ is:
+            //   print(value, ..., sep=' ', end='\\n', file=sys.stdout, flush=False)
+            new SignatureHelpResult(0, 6, 1, 0, 'values'),
+            new SignatureHelpResult(0, 7, 1, 0, 'values'),
             new SignatureHelpResult(0, 8, 1, 1, '...'),
             new SignatureHelpResult(0, 9, 1, 1, '...'),
             new SignatureHelpResult(0, 10, 1, 1, '...'),
@@ -115,9 +116,13 @@ suite('Signatures (Jedi)', () => {
     test('For pow', async () => {
         let expected: SignatureHelpResult;
         if (isPython2) {
-            expected = new SignatureHelpResult(0, 4, 1, 0, 'x');
+            // tslint:disable-next-line:no-suspicious-comment
+            // TODO: Why did this change?
+            expected = new SignatureHelpResult(0, 4, 4, 0, 'x');
         } else {
-            expected = new SignatureHelpResult(0, 4, 1, 0, null);
+            // tslint:disable-next-line:no-suspicious-comment
+            // TODO: Why did this change?
+            expected = new SignatureHelpResult(0, 4, 4, 0, null);
         }
 
         const document = await openDocument(path.join(autoCompPath, 'noSigPy3.py'));

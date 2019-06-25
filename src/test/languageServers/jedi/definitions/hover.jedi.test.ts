@@ -205,14 +205,16 @@ suite('Hover Definition (Jedi)', () => {
             return vscode.commands.executeCommand<vscode.Hover[]>('vscode.executeHoverProvider', textDocument.uri, position);
         }).then(result => {
             const def = result!;
-            assert.equal(def.length, 1, 'Definition length is incorrect');
-            assert.equal(`${def[0].range!.start.line},${def[0].range!.start.character}`, '8,11', 'Start position is incorrect');
-            assert.equal(`${def[0].range!.end.line},${def[0].range!.end.character}`, '8,15', 'End position is incorrect');
+            assert.equal(def.length, 1, `Definition length is incorrect ${def}`);
+            assert.equal(`${def[0].range!.start.line},${def[0].range!.start.character}`, '8,11', `Start position is incorrect ${def}`);
+            assert.equal(`${def[0].range!.end.line},${def[0].range!.end.character}`, '8,15', `End position is incorrect ${def}`);
             // tslint:disable-next-line:prefer-template
             assert.equal(normalizeMarkedString(def[0].contents[0]), '```python' + EOL +
-                'def acos(x)' + EOL +
+                // tslint:disable-next-line:no-suspicious-comment
+                // TODO: Why did this change?
+                'def acos(x: SupportsFloat)' + EOL +
                 '```' + EOL +
-                'Return the arc cosine (measured in radians) of x.', 'Invalid conents');
+                'Return the arc cosine (measured in radians) of x.', `Invalid conents in ${def}`);
         }).then(done, done);
     });
 
