@@ -61,7 +61,8 @@ import {
     INotebookServer,
     InterruptResult,
     IStatusProvider,
-    IThemeFinder
+    IThemeFinder,
+    IExecutionLogSlicer
 } from '../types';
 import { WebViewHost } from '../webViewHost';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
@@ -75,6 +76,7 @@ import {
     IShowDataViewer,
     ISubmitNewCell
 } from './interactiveWindowTypes';
+import { IGatherCell } from '../gather/model/cell';
 
 export enum SysInfoReason {
     Start,
@@ -98,9 +100,6 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
     private id : string;
     private executeEvent: EventEmitter<string> = new EventEmitter<string>();
     private _sliceConfiguration: SliceConfiguration;
-    private executionLog: ExecutionLogSlicer = new ExecutionLogSlicer(
-        new DataflowAnalyzer(this._sliceConfiguration)
-    );
 
     constructor(
         @multiInject(IInteractiveWindowListener) private readonly listeners: IInteractiveWindowListener[],
@@ -124,7 +123,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         @inject(IDataViewerProvider) private dataExplorerProvider: IDataViewerProvider,
         @inject(IJupyterVariables) private jupyterVariables: IJupyterVariables,
         @inject(INotebookImporter) private jupyterImporter: INotebookImporter,
-        @inject(IGatherModel) private gatherModel: IGatherModel
+        @inject(IExecutionLogSlicer) private executionLogSlicer: IExecutionLogSlicer
         ) {
         super(
             configuration,
@@ -784,6 +783,8 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
                 traceInfo(`Finished execution for ${id}`);
 
                 // GATHERTODO: Add recently-executed cell to execution log
+                const gatherCells: IGatherCell[] = this.convertCellsToGatherCells(observable);
+                gatherCells.map((gatherCell) => this.executionLogSlicer.logExecution(gatherCell));
             }
         } catch (err) {
             status.dispose();
@@ -791,6 +792,10 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
             const message = localize.DataScience.executingCodeFailure().format(err);
             this.applicationShell.showErrorMessage(message);
         }
+    }
+
+    private convertCellsToGatherCells(observable: Observable<ICell[]>): IGatherCell[] {
+
     }
 
     private setStatus = (message: string): Disposable => {

@@ -25,7 +25,7 @@ import { PythonInterpreter } from '../interpreter/contracts';
 import * as ast from './gather/analysis/parse/python/python-parser';
 import { DataflowAnalysisResult, RefSet, IDataflow } from './gather/analysis/slice/dataFlow';
 import { CellExecution, SlicedExecution } from './gather/analysis/slice/logSlicer';
-import { CellProgram, ProgramBuilder } from './gather/analysis/slice/programBuilder';
+import { CellProgram, ProgramBuilder, Program } from './gather/analysis/slice/programBuilder';
 import { StringSet } from './gather/analysis/slice/set';
 import { LocationSet } from './gather/analysis/slice/slice';
 import { CellOutput, DefSelection, EditorDef, GatherEventData, GatherModelEvent, GatherState, IGatherObserver, OutputSelection, SliceSelection } from './gather/model';
@@ -275,7 +275,7 @@ export interface IGatherModel {
     deselectAllDefs(): void;
     isDefSelected(def: DefSelection): boolean;
     addSelectedDefSlices(defSelection: DefSelection, ...slices: SlicedExecution[]): void;
-    getSelectedDefSlices(defSelection: DefSelection): SlicedExecution[];
+    getSelectedDefSlices(defSelection: DefSelection): SlicedExecution[] | undefined;
     removeSelectedDefSlices(defSelection: DefSelection): void;
     deselectOutput(output: OutputSelection): void;
     deselectOutputsForCell(cellExecutionEventId: string): void;
@@ -292,13 +292,12 @@ export const IGatherModelRegistry = Symbol('IGatherModelRegistry');
 export interface IGatherModelRegistry {
     addGatherModel(notebookModel: INotebookModel, gatherModel: IGatherModel): boolean;
     getGatherModel(notebookModel: INotebookModel): IGatherModel | null;
-
 }
 
 export const IExecutionLogSlicer = Symbol('IExecutionLogSlicer');
 export interface IExecutionLogSlicer {
-    _executionLog: CellExecution[];
-    _programBuilder: ProgramBuilder;
+    executionLog: CellExecution[];
+    programBuilder: IProgramBuilder;
     cellExecutions: ReadonlyArray<CellExecution>;
     readonly executionLogged: Signal<this, CellExecution>;
     logExecution(cell: IGatherCell): void;
@@ -324,6 +323,21 @@ export interface IControlFlowGraph {
     getPredecessors(block: Block): Block[];
     print(): void;
     getControlDependencies(): IDataflow[];
+}
+
+export const IProgramBuilder = Symbol('IProgramBuilder');
+export interface IProgramBuilder {
+    cellPrograms: CellProgram[];
+    dataflowAnalyzer: IDataflowAnalyzer;
+    add(...cells: IGatherCell[]): void;
+    reset(): void;
+    buildTo(cellExecutionEventId: string): Program;
+    getCellProgram(cell: IGatherCell): CellProgram;
+}
+
+export const IExecutionLogger = Symbol('IExecutionLogger');
+export interface IExecutionLogger {
+    onModelChange(property: GatherModelEvent, eventData: GatherEventData): void;
 }
 
 export interface ISymbolTable {
