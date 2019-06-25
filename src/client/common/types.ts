@@ -336,10 +336,25 @@ export interface ISocketServer extends Disposable {
 }
 
 export type DownloadOptions = {
+    /**
+     * Prefix for progress messages displayed.
+     *
+     * @type {('Downloading ... ' | string)}
+     */
     progressMessagePrefix: 'Downloading ... ' | string;
+    /**
+     * Output panel into which progress information is written.
+     *
+     * @type {IOutputChannel}
+     */
     outputChannel?: IOutputChannel;
+    /**
+     * Extension of file that'll be created when downloading the file.
+     *
+     * @type {('tmp' | string)}
+     */
     extension: 'tmp' | string;
-}
+};
 
 export const IFileDownloader = Symbol('IFileDownloader');
 /**
