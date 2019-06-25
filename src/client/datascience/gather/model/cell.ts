@@ -60,19 +60,19 @@ export interface IGatherCell {
     /**
      * Create a deep copy of the cell.
      */
-    deepCopy: () => IGatherCell;
+    deepCopy(): IGatherCell;
 
     /**
      * Create a new cell from this cell. The new cell will have null execution counts, and a new
      * ID and persistent ID.
      */
-    copyToNewCell: () => IGatherCell;
+    copyToNewCell(): IGatherCell;
 
     /**
      * Serialize this ICell to JSON that can be stored in a notebook file, or which can be used to
      * create a new Jupyter cell.
      */
-    serialize: () => nbformat.ICodeCell;
+    serialize(): nbformat.ICodeCell;
 }
 
 export function instanceOfICell(object: any): object is IGatherCell {
@@ -83,33 +83,33 @@ export function instanceOfICell(object: any): object is IGatherCell {
  * Abstract class for accessing cell data.
  */
 export abstract class AbstractCell implements IGatherCell {
-    abstract is_cell: boolean;
-    abstract id: string;
-    abstract executionCount: number;
-    abstract executionEventId: string;
-    abstract persistentId: string;
-    abstract hasError: boolean;
-    abstract isCode: boolean;
-    abstract text: string;
-    abstract gathered: boolean;
-    abstract outputs: nbformat.IOutput[];
-    abstract deepCopy(): AbstractCell;
+
+    get dirty(): boolean {
+        return this.text !== this.lastExecutedText;
+    }
+    public abstract is_cell: boolean;
+    public abstract id: string;
+    public abstract executionCount: number;
+    public abstract executionEventId: string;
+    public abstract persistentId: string;
+    public abstract hasError: boolean;
+    public abstract isCode: boolean;
+    public abstract text: string;
+    public abstract gathered: boolean;
+    public abstract outputs: nbformat.IOutput[];
 
     /**
      * The cell's text when it was executed, i.e., when the execution count was last changed.
      * This will be undefined if the cell has never been executed.
      */
-    abstract lastExecutedText: string;
-
-    get dirty(): boolean {
-        return this.text !== this.lastExecutedText;
-    }
+    public abstract lastExecutedText: string;
+    public abstract deepCopy(): AbstractCell;
 
     /**
      * This method is called by the logger to sanitize cell data before logging it. This method
      * should elide any sensitive data, like the cell's text.
      */
-    toJSON(): any {
+    public toJSON(): any {
         return {
             id: this.id,
             executionCount: this.executionCount,
@@ -121,7 +121,7 @@ export abstract class AbstractCell implements IGatherCell {
         };
     }
 
-    copyToNewCell(): IGatherCell {
+    public copyToNewCell(): IGatherCell {
         let clonedOutputs = this.outputs.map(output => {
             let clone = JSON.parse(JSON.stringify(output)) as nbformat.IOutput;
             if (nbformat.isExecuteResult(clone)) {
@@ -136,7 +136,7 @@ export abstract class AbstractCell implements IGatherCell {
         });
     }
 
-    serialize(): nbformat.ICodeCell {
+    public serialize(): nbformat.ICodeCell {
         return {
             id: this.id,
             execution_count: this.executionCount,
@@ -156,6 +156,18 @@ export abstract class AbstractCell implements IGatherCell {
  * Static cell data. Provides an interfaces to cell data loaded from a log.
  */
 export class LogCell extends AbstractCell {
+
+    public readonly is_cell: boolean;
+    public readonly id: string;
+    public readonly executionCount: number;
+    public readonly persistentId: string;
+    public readonly executionEventId: string;
+    public readonly hasError: boolean;
+    public readonly isCode: boolean;
+    public readonly text: string;
+    public readonly lastExecutedText: string;
+    public readonly outputs: nbformat.IOutput[];
+    public readonly gathered: boolean;
     constructor(data: { id?: string; executionCount?: number; persistentId?: string; executionEventId?: string; hasError?: boolean; text?: string; outputs?: nbformat.IOutput[] }) {
         super();
         this.is_cell = true;
@@ -170,21 +182,9 @@ export class LogCell extends AbstractCell {
         this.gathered = false;
     }
 
-    deepCopy(): AbstractCell {
+    public deepCopy(): AbstractCell {
         return new LogCell(this);
     }
-
-    readonly is_cell: boolean;
-    readonly id: string;
-    readonly executionCount: number;
-    readonly persistentId: string;
-    readonly executionEventId: string;
-    readonly hasError: boolean;
-    readonly isCode: boolean;
-    readonly text: string;
-    readonly lastExecutedText: string;
-    readonly outputs: nbformat.IOutput[];
-    readonly gathered: boolean;
 }
 
 /**
@@ -192,14 +192,9 @@ export class LogCell extends AbstractCell {
  * lab data to other cells that have been loaded from a log.
  */
 export class LabCell extends AbstractCell {
-    constructor(model: ICodeCellModel) {
-        super();
-        this._model = model;
-        /*
-         * Force the initialization of a persistent ID to make sure it's set before someone tries to clone the cell.
-         */
-        this.persistentId;
-    }
+    public is_cell: boolean = true;
+    public is_outputter_cell: boolean = true;
+    private _model: ICodeCellModel;
 
     get model(): ICodeCellModel {
         return this._model;
@@ -274,15 +269,20 @@ export class LabCell extends AbstractCell {
         return this._model.metadata.get('gathered') as boolean;
     }
 
-    deepCopy(): LabCell {
+    constructor(model: ICodeCellModel) {
+        super();
+        this._model = model;
+        /*
+         * Force the initialization of a persistent ID to make sure it's set before someone tries to clone the cell.
+         */
+        this.persistentId;
+    }
+
+    public deepCopy(): LabCell {
         return new LabCell(new CodeCellModel({ id: this.id, cell: this.model.toJSON() }));
     }
 
-    serialize(): any {
+    public serialize(): any {
         return this._model.toJSON();
     }
-
-    is_cell: boolean = true;
-    is_outputter_cell: boolean = true;
-    private _model: ICodeCellModel;
 }
