@@ -14,7 +14,8 @@ import { Logger } from '../../client/common/logger';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { PathUtils } from '../../client/common/platform/pathUtils';
 import { CurrentProcess } from '../../client/common/process/currentProcess';
-import { IProcessServiceFactory } from '../../client/common/process/types';
+import { ProcessLogger } from '../../client/common/process/logger';
+import { IProcessLogger, IProcessServiceFactory } from '../../client/common/process/types';
 import { TerminalHelper } from '../../client/common/terminal/helper';
 import { ITerminalHelper } from '../../client/common/terminal/types';
 import { IConfigurationService, ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IsWindows, ModuleNamePurpose, Product, ProductType } from '../../client/common/types';
@@ -58,6 +59,7 @@ suite('Installer', () => {
         ioc.serviceManager.addSingleton<ILogger>(ILogger, Logger);
         ioc.serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);
         ioc.serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
+        ioc.serviceManager.addSingleton<IProcessLogger>(IProcessLogger, ProcessLogger);
         ioc.serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
         ioc.serviceManager.addSingleton<IInstallationChannelManager>(IInstallationChannelManager, InstallationChannelManager);
         ioc.serviceManager.addSingletonInstance<ICommandManager>(ICommandManager, TypeMoq.Mock.ofType<ICommandManager>().object);
