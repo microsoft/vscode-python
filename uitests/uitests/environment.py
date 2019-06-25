@@ -174,12 +174,20 @@ def after_scenario(context, scenario):
                 shutil.copytree(source, os.path.join(context.scenario_log_dir, target))
             except Exception:
                 pass
-        # We need user settings as well.
-        os.makedirs(os.path.join(context.scenario_log_dir, "User"), exist_ok=True)
-        shutil.copyfile(
-            os.path.join(context.options.user_dir, "User", "settings.json"),
-            os.path.join(context.scenario_log_dir, "User", "settings.json"),
-        )
+        # We need user settings as well for logs.
+        # When running a test that requires us to test loading VSC for the first time,
+        # (the step is `I open VS Code for the first time`)
+        # then we delete this user settings file (after all this shouldn't exist when loading VSC for first time).
+        # However, if the test fails half way through, then the settings.json will not exist.
+        # Hence check if the file exists.
+        if os.path.exists(
+            os.path.join(context.options.user_dir, "User", "settings.json")
+        ):
+            os.makedirs(os.path.join(context.scenario_log_dir, "User"), exist_ok=True)
+            shutil.copyfile(
+                os.path.join(context.options.user_dir, "User", "settings.json"),
+                os.path.join(context.scenario_log_dir, "User", "settings.json"),
+            )
     # We don't need these logs anymore.
     _exit(context)
     uitests.tools.empty_directory(context.options.logfiles_dir)
