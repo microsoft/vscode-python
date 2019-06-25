@@ -1,6 +1,6 @@
 import * as CodeMirror from 'codemirror';
-import { IRef } from '../analysis/slice/dataFlow';
-import { SlicedExecution } from '../analysis/slice/logSlicer';
+import { IRef } from '../slice/dataFlow';
+import { SlicedExecution } from '../slice/logSlicer';
 import { IGatherCell } from './cell';
 
 /**

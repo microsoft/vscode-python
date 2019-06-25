@@ -1,4 +1,4 @@
-import { LocationSet } from '../analysis/slice/slice';
+import { LocationSet } from '../slice/slice';
 import { IGatherCell } from './cell';
 
 /**
