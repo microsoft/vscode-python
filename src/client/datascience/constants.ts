@@ -124,7 +124,8 @@ export enum Telemetry {
     GetPasswordAttempt = 'DATASCIENCE.GET_PASSWORD_ATTEMPT',
     GetPasswordFailure = 'DATASCIENCE.GET_PASSWORD_FAILURE',
     GetPasswordSuccess = 'DATASCIENCE.GET_PASSWORD_SUCCESS',
-    OpenPlotViewer = 'DATASCIENCE.OPEN_PLOT_VIEWER'
+    OpenPlotViewer = 'DATASCIENCE.OPEN_PLOT_VIEWER',
+    CodeLensAverageAcquisitionTime = 'DATASCIENCE.CODE_LENS_ACQ_TIME'
  }
 
 export namespace HelpLinks {
