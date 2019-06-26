@@ -8,7 +8,6 @@ import {
     EventEmitter,
     Position,
     Range,
-    TextDocument,
     TextDocumentChangeEvent,
     TextDocumentContentChangeEvent
 } from 'vscode';
@@ -130,7 +129,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
         const offsetDiff = c.text.length - c.rangeLength;
 
         // Compute the inclusive offset that is changed by the cell.
-        const endChangedOffset = c.rangeLength <= 0 ? c.rangeOffset : c.rangeOffset + c.rangeLength -1;
+        const endChangedOffset = c.rangeLength <= 0 ? c.rangeOffset : c.rangeOffset + c.rangeLength - 1;
 
         // Also compute the text of the document with the change applied
         const appliedText = this.applyChange(docText, c);
