@@ -116,28 +116,30 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
         // See if the document is in our list of docs to watch
         const perFile = this.hashes.get(e.document.fileName);
         if (perFile) {
-            // Apply the content changes to the file's cells
-            e.contentChanges.forEach(c => this.handleContentChange(e.document, c, perFile));
+            // Apply the content changes to the file's cells.
+            let prevText = e.document.getText();
+            e.contentChanges.forEach(c => {
+                prevText = this.handleContentChange(prevText, c, perFile);
+            });
         }
     }
 
-    private handleContentChange(d: TextDocument, c: TextDocumentContentChangeEvent, hashes: IRangedCellHash[]) {
+    private handleContentChange(docText: string, c: TextDocumentContentChangeEvent, hashes: IRangedCellHash[]) : string {
         // First compute the number of lines that changed
-        const lineDiff = c.text.split('\n').length - d.getText(c.range).split('\n').length;
+        const lineDiff = c.text.split('\n').length - docText.substr(c.rangeOffset, c.rangeLength).split('\n').length;
         const offsetDiff = c.text.length - c.rangeLength;
 
-        // Compute the length that is modified by the cell. If this is an insertion, include
-        // the actual text being added.
-        const minRangeLength = c.rangeLength === 0 ? c.text.length : c.rangeLength;
+        // Compute the inclusive offset that is changed by the cell.
+        const endChangedOffset = c.rangeLength <= 0 ? c.rangeOffset : c.rangeOffset + c.rangeLength -1;
 
         // Also compute the text of the document with the change applied
-        const appliedText = this.applyChange(d, c);
+        const appliedText = this.applyChange(docText, c);
 
         hashes.forEach(h => {
             // See how this existing cell compares to the change
             if (h.endOffset < c.rangeOffset) {
                 // No change. This cell is entirely before the change
-            } else if (h.startOffset >= c.rangeOffset + minRangeLength) {
+            } else if (h.startOffset > endChangedOffset) {
                 // This cell is after the text that got replaced. Adjust its start/end lines
                 h.line += lineDiff;
                 h.endLine += lineDiff;
@@ -148,12 +150,13 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
                 h.deleted = appliedText.substr(h.startOffset, h.endOffset - h.startOffset) !== h.realCode;
             }
         });
+
+        return appliedText;
     }
 
-    private applyChange(d: TextDocument, c: TextDocumentContentChangeEvent) : string {
-        const text = d.getText();
-        const before = text.substr(0, c.rangeOffset);
-        const after = text.substr(c.rangeOffset + c.rangeLength);
+    private applyChange(docText: string, c: TextDocumentContentChangeEvent) : string {
+        const before = docText.substr(0, c.rangeOffset);
+        const after = docText.substr(c.rangeOffset + c.rangeLength);
         return `${before}${c.text}${after}`;
     }
 
