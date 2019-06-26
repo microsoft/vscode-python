@@ -11,8 +11,6 @@ import { Subscriber } from 'rxjs/Subscriber';
 import * as uuid from 'uuid/v4';
 import { Disposable } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-// import { ExecutionLogSlicer } from '../gather/analysis/slice/log-slicer';
-
 import { ILiveShareApi } from '../../common/application/types';
 import { Cancellation, CancellationError } from '../../common/cancellation';
 import { traceInfo, traceWarning } from '../../common/logger';
@@ -24,7 +22,6 @@ import { generateCells } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
 import { concatMultilineString } from '../common';
 import { CodeSnippits, Identifiers } from '../constants';
-// import { DataflowAnalyzer } from '../gather/analysis/slice/data-flow';
 import {
     CellState,
     ICell,
@@ -37,7 +34,6 @@ import {
     INotebookServerLaunchInfo,
     InterruptResult
 } from '../types';
-// import { SliceConfiguration } from '../gather/analysis/slice/slice-config';
 
 class CellSubscriber {
     private deferred: Deferred<CellState> = createDeferred<CellState>();
