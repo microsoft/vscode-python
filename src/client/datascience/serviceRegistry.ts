@@ -2,8 +2,11 @@
 // Licensed under the MIT License.
 'use strict';
 import { IExtensionActivationService } from '../activation/types';
-import { IServiceManager } from '../ioc/types';
+import { StopWatch } from '../common/utils/stopWatch';
+import { ClassType, IServiceManager } from '../ioc/types';
+import { sendTelemetryEvent } from '../telemetry';
 import { CodeCssGenerator } from './codeCssGenerator';
+import { Telemetry } from './constants';
 import { DataViewer } from './data-viewing/dataViewer';
 import { DataViewerProvider } from './data-viewing/dataViewerProvider';
 import { DataScience } from './datascience';
@@ -54,31 +57,42 @@ import {
     IThemeFinder
 } from './types';
 
+// tslint:disable:no-any
+function wrapType(ctor: ClassType<any>) : ClassType<any> {
+    return class extends ctor {
+        constructor(...args: any[]) {
+            const stopWatch = new StopWatch();
+            super(...args);
+            sendTelemetryEvent(Telemetry.ClassConstructionTime, stopWatch.elapsedTime, { class: ctor.name });
+        }
+    };
+}
+
 export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingleton<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider, DataScienceCodeLensProvider);
-    serviceManager.addSingleton<IDataScience>(IDataScience, DataScience);
-    serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecutionFactory);
-    serviceManager.add<IDataScienceCommandListener>(IDataScienceCommandListener, InteractiveWindowCommandListener);
-    serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
-    serviceManager.add<IInteractiveWindow>(IInteractiveWindow, InteractiveWindow);
-    serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
-    serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
-    serviceManager.add<INotebookServer>(INotebookServer, JupyterServerFactory);
-    serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
-    serviceManager.addSingleton<IJupyterPasswordConnect>(IJupyterPasswordConnect, JupyterPasswordConnect);
-    serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
-    serviceManager.addSingleton<IJupyterSessionManager>(IJupyterSessionManager, JupyterSessionManager);
-    serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables);
-    serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
-    serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
-    serviceManager.addSingleton<IThemeFinder>(IThemeFinder, ThemeFinder);
-    serviceManager.addSingleton<IDataViewerProvider>(IDataViewerProvider, DataViewerProvider);
-    serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
-    serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, Decorator);
-    serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, DotNetIntellisenseProvider);
-    serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, JediIntellisenseProvider);
-    serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, LinkProvider);
-    serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, ShowPlotListener);
-    serviceManager.addSingleton<IPlotViewerProvider>(IPlotViewerProvider, PlotViewerProvider);
-    serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);
+    serviceManager.addSingleton<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider, wrapType(DataScienceCodeLensProvider));
+    serviceManager.addSingleton<IDataScience>(IDataScience, wrapType(DataScience));
+    serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, wrapType(JupyterExecutionFactory));
+    serviceManager.add<IDataScienceCommandListener>(IDataScienceCommandListener, wrapType(InteractiveWindowCommandListener));
+    serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, wrapType(InteractiveWindowProvider));
+    serviceManager.add<IInteractiveWindow>(IInteractiveWindow, wrapType(InteractiveWindow));
+    serviceManager.add<INotebookExporter>(INotebookExporter, wrapType(JupyterExporter));
+    serviceManager.add<INotebookImporter>(INotebookImporter, wrapType(JupyterImporter));
+    serviceManager.add<INotebookServer>(INotebookServer, wrapType(JupyterServerFactory));
+    serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, wrapType(CodeCssGenerator));
+    serviceManager.addSingleton<IJupyterPasswordConnect>(IJupyterPasswordConnect, wrapType(JupyterPasswordConnect));
+    serviceManager.addSingleton<IStatusProvider>(IStatusProvider, wrapType(StatusProvider));
+    serviceManager.addSingleton<IJupyterSessionManager>(IJupyterSessionManager, wrapType(JupyterSessionManager));
+    serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, wrapType(JupyterVariables));
+    serviceManager.add<ICodeWatcher>(ICodeWatcher, wrapType(CodeWatcher));
+    serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, wrapType(JupyterCommandFactory));
+    serviceManager.addSingleton<IThemeFinder>(IThemeFinder, wrapType(ThemeFinder));
+    serviceManager.addSingleton<IDataViewerProvider>(IDataViewerProvider, wrapType(DataViewerProvider));
+    serviceManager.add<IDataViewer>(IDataViewer, wrapType(DataViewer));
+    serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, wrapType(Decorator));
+    serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, wrapType(DotNetIntellisenseProvider));
+    serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, wrapType(JediIntellisenseProvider));
+    serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, wrapType(LinkProvider));
+    serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, wrapType(ShowPlotListener));
+    serviceManager.addSingleton<IPlotViewerProvider>(IPlotViewerProvider, wrapType(PlotViewerProvider));
+    serviceManager.add<IPlotViewer>(IPlotViewer, wrapType(PlotViewer));
 }

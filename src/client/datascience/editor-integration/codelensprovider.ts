@@ -6,12 +6,12 @@ import * as vscode from 'vscode';
 
 import { ICommandManager, IDocumentManager } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
-import { IConfigurationService, IDataScienceSettings, IDisposableRegistry, IDisposable } from '../../common/types';
+import { IConfigurationService, IDataScienceSettings, IDisposable, IDisposableRegistry } from '../../common/types';
+import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
+import { sendTelemetryEvent } from '../../telemetry';
 import { EditorContexts, Telemetry } from '../constants';
 import { ICodeWatcher, IDataScienceCodeLensProvider } from '../types';
-import { sendTelemetryEvent } from '../../telemetry/index';
-import { StopWatch } from '../../common/utils/stopWatch';
 
 @injectable()
 export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider, IDisposable {

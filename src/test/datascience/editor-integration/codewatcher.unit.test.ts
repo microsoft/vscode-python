@@ -5,7 +5,7 @@
 // Disable whitespace / multiline as we use that to pass in our fake file strings
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
-import { CancellationTokenSource, CodeLens, Range, Selection, TextEditor } from 'vscode';
+import { CancellationTokenSource, CodeLens, Disposable, Range, Selection, TextEditor } from 'vscode';
 
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../../../client/common/application/types';
 import { PythonSettings } from '../../../client/common/configSettings';
@@ -42,6 +42,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
             this.changed.fire();
         }
     }(undefined, new MockAutoSelectionService());
+    const disposables: Disposable[] = [];
 
     setup(() => {
         tokenSource = new CancellationTokenSource();
@@ -667,7 +668,7 @@ testing2`; // Command tests override getText, so just need the ranges here
         const inputText = '#%% foobar';
         const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce());
         documentManager.setup(d => d.textDocuments).returns(() => [document.object]);
-        const codeLensProvider = new DataScienceCodeLensProvider(serviceContainer.object, documentManager.object, configService.object, commandManager.object);
+        const codeLensProvider = new DataScienceCodeLensProvider(serviceContainer.object, documentManager.object, configService.object, commandManager.object, disposables);
 
         let result = codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
         expect(result, 'result not okay').to.be.ok;

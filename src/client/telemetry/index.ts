@@ -330,6 +330,7 @@ export interface IEventNamePropertyMapping {
     [EventName.WORKSPACE_SYMBOLS_GO_TO]: never | undefined;
     // Data Science
     [Telemetry.AddCellBelow]: never | undefined;
+    [Telemetry.ClassConstructionTime] : { class: string };
     [Telemetry.CodeLensAverageAcquisitionTime] : never | undefined;
     [Telemetry.CollapseAll]: never | undefined;
     [Telemetry.ConnectFailedJupyter]: never | undefined;
