@@ -33,9 +33,7 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { CellMatcher } from '../cellMatcher';
 import { EditorContexts, Identifiers, Telemetry } from '../constants';
 import { ColumnWarningSize } from '../data-viewing/types';
-import { DataflowAnalyzer } from '../gather/analysis/slice/dataFlow';
-import { ExecutionLogSlicer } from '../gather/analysis/slice/logSlicer';
-import { SliceConfiguration } from '../gather/analysis/slice/sliceConfig';
+import { SliceConfiguration } from '../gather/slice/sliceConfig';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import { JupyterKernelPromiseFailedError } from '../jupyter/jupyterKernelPromiseFailedError';
 import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
@@ -123,7 +121,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         @inject(IDataViewerProvider) private dataExplorerProvider: IDataViewerProvider,
         @inject(IJupyterVariables) private jupyterVariables: IJupyterVariables,
         @inject(INotebookImporter) private jupyterImporter: INotebookImporter,
-        @inject(IExecutionLogSlicer) private executionLogSlicer: IExecutionLogSlicer
+        @inject(IGatherModel) private gatherModel: IGatherModel,
         ) {
         super(
             configuration,
@@ -784,7 +782,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
 
                 // GATHERTODO: Add recently-executed cell to execution log
                 const gatherCells: IGatherCell[] = this.convertCellsToGatherCells(observable);
-                gatherCells.map((gatherCell) => this.executionLogSlicer.logExecution(gatherCell));
+                gatherCells.map((gatherCell) => this.gatherModel.executionLog.logExecution(gatherCell));
             }
         } catch (err) {
             status.dispose();
