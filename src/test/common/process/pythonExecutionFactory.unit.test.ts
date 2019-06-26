@@ -79,7 +79,7 @@ suite('Process - PythonExecutionFactory', () => {
                 processLogger = mock(ProcessLogger);
                 when(processLogger.logProcess('', [], {})).thenReturn();
                 processService = mock(ProcessService);
-                when(processService.on('processExecuted', () => { return; })).thenReturn(processService);
+                when(processService.on('exec', () => { return; })).thenReturn(processService);
                 const serviceContainer = mock(ServiceContainer);
                 when(serviceContainer.get<IDisposableRegistry>(IDisposableRegistry)).thenReturn([]);
                 when(serviceContainer.get<IProcessLogger>(IProcessLogger)).thenReturn(processLogger);

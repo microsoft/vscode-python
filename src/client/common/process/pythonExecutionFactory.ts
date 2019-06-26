@@ -32,7 +32,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const pythonPath = options.pythonPath ? options.pythonPath : this.configService.getSettings(options.resource).pythonPath;
         const processService: IProcessService = await this.processServiceFactory.create(options.resource);
         const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
-        processService.on('processExecuted', processLogger.logProcess.bind(processLogger));
+        processService.on('exec', processLogger.logProcess.bind(processLogger));
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
     }
     public async createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService> {
@@ -45,7 +45,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const pythonPath = options.interpreter ? options.interpreter.path : this.configService.getSettings(options.resource).pythonPath;
         const processService: IProcessService = new ProcessService(this.decoder, { ...envVars });
         const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
-        processService.on('processExecuted', processLogger.logProcess.bind(processLogger));
+        processService.on('exec', processLogger.logProcess.bind(processLogger));
         this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(processService);
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
     }

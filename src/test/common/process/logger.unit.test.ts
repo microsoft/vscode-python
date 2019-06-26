@@ -26,7 +26,8 @@ suite('ProcessLogger suite', () => {
     });
 
     setup(() => {
-        outputChannel.setup(o => o.appendLine(TypeMoq.It.isAnyString())).returns((s: string) => outputResult = s);
+        outputResult = '';
+        outputChannel.setup(o => o.appendLine(TypeMoq.It.isAnyString())).returns((s: string) => outputResult += `${s}\n`);
     });
 
     teardown(() => {
@@ -38,10 +39,10 @@ suite('ProcessLogger suite', () => {
         const logger = new ProcessLogger(outputChannel.object, pathUtils);
         logger.logProcess('test', ['--foo', '--bar'], options);
 
-        const expectedResult = `> test --foo --bar\n${Logging.currentWorkingDirectory()} ${options.cwd}`;
+        const expectedResult = `> test --foo --bar\n${Logging.currentWorkingDirectory()} ${options.cwd}\n`;
         expect(outputResult).to.equal(expectedResult, 'Output string is incorrect - String built incorrectly');
 
-        outputChannel.verify(o => o.appendLine(TypeMoq.It.isAnyString()), TypeMoq.Times.once());
+        outputChannel.verify(o => o.appendLine(TypeMoq.It.isAnyString()), TypeMoq.Times.exactly(2));
     });
 
     test('Logger replaces the path/to/home with ~ in the current working directory', async () => {
@@ -49,7 +50,7 @@ suite('ProcessLogger suite', () => {
         const logger = new ProcessLogger(outputChannel.object, pathUtils);
         logger.logProcess('test', ['--foo', '--bar'], options);
 
-        const expectedResult = `> test --foo --bar\n${Logging.currentWorkingDirectory()} ${path.join('~', 'debug', 'path')}`;
+        const expectedResult = `> test --foo --bar\n${Logging.currentWorkingDirectory()} ${path.join('~', 'debug', 'path')}\n`;
         expect(outputResult).to.equal(expectedResult, 'Output string is incorrect: Home directory is not tildified');
     });
 
@@ -58,7 +59,7 @@ suite('ProcessLogger suite', () => {
         const logger = new ProcessLogger(outputChannel.object, pathUtils);
         logger.logProcess(path.join(untildify('~'), 'test'), ['--foo', '--bar'], options);
 
-        const expectedResult = `> ${path.join('~', 'test')} --foo --bar\n${Logging.currentWorkingDirectory()} ${options.cwd}`;
+        const expectedResult = `> ${path.join('~', 'test')} --foo --bar\n${Logging.currentWorkingDirectory()} ${options.cwd}\n`;
         expect(outputResult).to.equal(expectedResult, 'Output string is incorrect: Home directory is not tildified');
     });
 
@@ -66,7 +67,7 @@ suite('ProcessLogger suite', () => {
         const logger = new ProcessLogger(outputChannel.object, pathUtils);
         logger.logProcess(path.join(untildify('~'), 'test'), ['--foo', '--bar']);
 
-        const expectedResult = `> ${path.join('~', 'test')} --foo --bar`;
+        const expectedResult = `> ${path.join('~', 'test')} --foo --bar\n`;
         expect(outputResult).to.equal(expectedResult, 'Output string is incorrect: Working directory line should not be displayed');
     });
 
@@ -75,7 +76,7 @@ suite('ProcessLogger suite', () => {
         const logger = new ProcessLogger(outputChannel.object, pathUtils);
         logger.logProcess(path.join(untildify('~'), 'test'), ['--foo', '--bar'], options);
 
-        const expectedResult = `> ${path.join('~', 'test')} --foo --bar`;
+        const expectedResult = `> ${path.join('~', 'test')} --foo --bar\n`;
         expect(outputResult).to.equal(expectedResult, 'Output string is incorrect: Working directory line should not be displayed');
     });
 });

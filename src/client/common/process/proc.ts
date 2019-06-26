@@ -119,7 +119,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
             });
         });
 
-        this.emit('processExecuted', file, args, options);
+        this.emit('exec', file, args, options);
 
         return {
             proc,
@@ -181,7 +181,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
             disposables.forEach(d => d.dispose());
         });
 
-        this.emit('processExecuted', file, args, options);
+        this.emit('exec', file, args, options);
 
         return deferred.promise;
     }

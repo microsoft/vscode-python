@@ -25,7 +25,6 @@ export class ProcessServiceFactory implements IProcessServiceFactory {
         const disposableRegistry = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         const proc: IProcessService = new ProcessService(decoder, customEnvVars);
         disposableRegistry.push(proc);
-        proc.on('processExecuted', this.processLogger.logProcess.bind(this.processLogger));
-        return proc;
+        return proc.on('exec', this.processLogger.logProcess.bind(this.processLogger));
     }
 }
