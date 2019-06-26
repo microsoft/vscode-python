@@ -64,7 +64,7 @@ export namespace Interpreters {
 }
 
 export namespace Logging {
-    export const currentWorkingDirectory = localize('Logging.CurrentWorkingDirectory', 'Current working directory:');
+    export const currentWorkingDirectory = localize('Logging.CurrentWorkingDirectory', 'cwd:');
 }
 
 export namespace Linters {
