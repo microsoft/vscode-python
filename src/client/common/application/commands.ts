@@ -18,6 +18,9 @@ export type CommandsWithoutArgs = keyof ICommandNameWithoutArgumentTypeMapping;
  * @interface ICommandNameWithoutArgumentTypeMapping
  */
 interface ICommandNameWithoutArgumentTypeMapping {
+    [Commands.SwitchToInsidersDaily]: [];
+    [Commands.SwitchToInsidersWeekly]: [];
+    [Commands.SwitchToStable]: [];
     [Commands.Set_Interpreter]: [];
     [Commands.Set_ShebangInterpreter]: [];
     [Commands.Run_Linter]: [];
