@@ -126,7 +126,22 @@ export enum Telemetry {
     GetPasswordSuccess = 'DATASCIENCE.GET_PASSWORD_SUCCESS',
     OpenPlotViewer = 'DATASCIENCE.OPEN_PLOT_VIEWER',
     CodeLensAverageAcquisitionTime = 'DATASCIENCE.CODE_LENS_ACQ_TIME',
-    ClassConstructionTime = 'DATASCIENCE.CLASS_CONSTRUCTION_TIME'
+    ClassConstructionTime = 'DATASCIENCE.CLASS_CONSTRUCTION_TIME',
+    FindJupyterCommand = 'DATASCIENCE.FIND_JUPYTER_COMMAND',
+    StartJupyterProcess = 'DATASCIENCE.START_JUPYTER_PROCESS',
+    WaitForIdleJupyter = 'DATASCIENCE.WAIT_FOR_IDLE_JUPYTER',
+    HiddenCellTime = 'DATASCIENCE.HIDDEN_EXECUTION_TIME',
+    RestartJupyterTime = 'DATASCIENCE.RESTART_JUPYTER_TIME',
+    InterruptJupyterTime = 'DATASCIENCE.INTERRUPT_JUPYTER_TIME',
+    ExecuteCell = 'DATASCIENCE.EXECUTE_CELL_TIME',
+    ExecuteCellPerceivedCold = 'DATASCIENCE.EXECUTE_CELL_PERCEIVED_COLD',
+    ExecuteCellPerceivedWarm = 'DATASCIENCE.EXECUTE_CELL_PERCEIVED_WARM',
+    WebviewStartup = 'DATASCIENCE.WEBVIEW_STARTUP',
+    VariableExplorerFetchTime = 'DATASCIENCE.VARIABLE_EXPLORER_FETCH_TIME',
+    WebviewStyleUpdate = 'DATASCIENCE.WEBVIEW_STYLE_UPDATE',
+    WebviewMonacoStyleUpdate = 'DATASCIENCE.WEBVIEW_MONACO_STYLE_UPDATE',
+    DataViewerFetchTime = 'DATASCIENCE.DATAVIEWER_FETCH_TIME',
+    FindJupyterKernelSpec = 'DATASCIENCE.FIND_JUPYTER_KERNEL_SPEC'
  }
 
 export namespace HelpLinks {

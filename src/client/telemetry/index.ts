@@ -9,6 +9,7 @@ import TelemetryReporter from 'vscode-extension-telemetry';
 
 import { IWorkspaceService } from '../common/application/types';
 import { EXTENSION_ROOT_DIR, isTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
+import { traceInfo } from '../common/logger';
 import { StopWatch } from '../common/utils/stopWatch';
 import { Telemetry } from '../datascience/constants';
 import { LinterId } from '../linters/types';
@@ -126,6 +127,9 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
         });
     }
     reporter.sendTelemetryEvent((eventName as any) as string, customProperties, measures);
+    if (process.env && process.env.VSC_PYTHON_LOG_TELEMETRY) {
+        traceInfo(`Telemetry Event : ${eventName} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(customProperties)} `);
+    }
 }
 
 // tslint:disable-next-line:no-any function-name
@@ -340,10 +344,16 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ConnectRemoteSelfCertFailedJupyter]: never | undefined;
     [Telemetry.CopySourceCode]: never | undefined;
     [Telemetry.DataScienceSettings]: JSONObject;
+    [Telemetry.DataViewerFetchTime]: never | undefined;
     [Telemetry.DeleteAllCells]: never | undefined;
     [Telemetry.DeleteCell]: never | undefined;
+    [Telemetry.FindJupyterCommand]: {command: string};
+    [Telemetry.FindJupyterKernelSpec]: never | undefined;
     [Telemetry.DisableInteractiveShiftEnter]: never | undefined;
     [Telemetry.EnableInteractiveShiftEnter]: never | undefined;
+    [Telemetry.ExecuteCell]: never | undefined;
+    [Telemetry.ExecuteCellPerceivedCold]: never | undefined;
+    [Telemetry.ExecuteCellPerceivedWarm]: never | undefined;
     [Telemetry.ExpandAll]: never | undefined;
     [Telemetry.ExportNotebook]: never | undefined;
     [Telemetry.ExportPythonFile]: never | undefined;
@@ -352,13 +362,16 @@ export interface IEventNamePropertyMapping {
     [Telemetry.GetPasswordFailure]: never | undefined;
     [Telemetry.GetPasswordSuccess]: never | undefined;
     [Telemetry.GotoSourceCode]: never | undefined;
+    [Telemetry.HiddenCellTime]: never | undefined;
     [Telemetry.ImportNotebook]: { scope: 'command' | 'file' };
     [Telemetry.Interrupt]: never | undefined;
+    [Telemetry.InterruptJupyterTime]: never | undefined;
     [Telemetry.PandasNotInstalled]: never | undefined;
     [Telemetry.PandasTooOld]: never | undefined;
     [Telemetry.OpenPlotViewer]: never | undefined;
     [Telemetry.Redo]: never | undefined;
     [Telemetry.RemoteAddCode]: never | undefined;
+    [Telemetry.RestartJupyterTime]: never | undefined;
     [Telemetry.RestartKernel]: never | undefined;
     [Telemetry.RunAllCells]: never | undefined;
     [Telemetry.RunSelectionOrLine]: never | undefined;
@@ -379,10 +392,16 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ShowDataViewer]: { rows: number | undefined; columns: number | undefined };
     [Telemetry.ShowHistoryPane]: never | undefined;
     [Telemetry.StartJupyter]: never | undefined;
+    [Telemetry.StartJupyterProcess]: never | undefined;
     [Telemetry.SubmitCellThroughInput]: never | undefined;
     [Telemetry.Undo]: never | undefined;
+    [Telemetry.VariableExplorerFetchTime]: never | undefined;
     [Telemetry.VariableExplorerToggled]: { open: boolean };
     [Telemetry.VariableExplorerVariableCount]: { variableCount: number };
+    [Telemetry.WaitForIdleJupyter]: never | undefined;
+    [Telemetry.WebviewMonacoStyleUpdate]: never | undefined;
+    [Telemetry.WebviewStartup]: { type: string };
+    [Telemetry.WebviewStyleUpdate]: never | undefined;
     [EventName.UNITTEST_NAVIGATE_TEST_FILE]: never | undefined;
     [EventName.UNITTEST_NAVIGATE_TEST_FUNCTION]: { focus_code: boolean };
     [EventName.UNITTEST_NAVIGATE_TEST_SUITE]: { focus_code: boolean };

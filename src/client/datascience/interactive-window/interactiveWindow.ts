@@ -28,6 +28,7 @@ import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
+import { StopWatch } from '../../common/utils/stopWatch';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { CellMatcher } from '../cellMatcher';
@@ -81,6 +82,7 @@ export enum SysInfoReason {
 
 @injectable()
 export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> implements IInteractiveWindow  {
+    private static sentExecuteCellTelemetry : boolean = false;
     private disposed: boolean = false;
     private loadPromise: Promise<void>;
     private interpreterChangedDisposable: Disposable;
@@ -93,6 +95,8 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
     private jupyterServer: INotebookServer | undefined;
     private id : string;
     private executeEvent: EventEmitter<string> = new EventEmitter<string>();
+    private variableRequestStopWatch: StopWatch | undefined;
+    private variableRequestPendingCount: number = 0;
 
     constructor(
         @multiInject(IInteractiveWindowListener) private readonly listeners: IInteractiveWindowListener[],
@@ -178,9 +182,9 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         return this.executeEvent.event;
     }
 
-    public addCode(code: string, file: string, line: number, editor?: TextEditor) : Promise<void> {
+    public addCode(code: string, file: string, line: number, editor?: TextEditor, runningStopWatch?: StopWatch) : Promise<void> {
         // Call the internal method.
-        return this.submitCode(code, file, line, undefined, editor);
+        return this.submitCode(code, file, line, undefined, editor, runningStopWatch);
     }
 
     // tslint:disable-next-line: no-any no-empty cyclomatic-complexity max-func-body-length
@@ -693,7 +697,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         }
     }
 
-    private async submitCode(code: string, file: string, line: number, id?: string, _editor?: TextEditor) : Promise<void> {
+    private async submitCode(code: string, file: string, line: number, id?: string, _editor?: TextEditor, runningStopWatch?: StopWatch) : Promise<void> {
         this.logger.logInformation(`Submitting code for ${this.id}`);
 
         // Start a status item
@@ -762,6 +766,9 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
                     () => {
                         // Indicate executing until this cell is done.
                         status.dispose();
+
+                        // Fire a telemetry event if we have a stop watch
+                        this.sendPerceivedCellExecute(runningStopWatch);
                     });
 
                 // Wait for the cell to finish
@@ -773,6 +780,17 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
 
             const message = localize.DataScience.executingCodeFailure().format(err);
             this.applicationShell.showErrorMessage(message);
+        }
+    }
+
+    private sendPerceivedCellExecute(runningStopWatch?: StopWatch) {
+        if (runningStopWatch) {
+            if (!InteractiveWindow.sentExecuteCellTelemetry) {
+                InteractiveWindow.sentExecuteCellTelemetry = true;
+                sendTelemetryEvent(Telemetry.ExecuteCellPerceivedCold, runningStopWatch.elapsedTime);
+            } else {
+                sendTelemetryEvent(Telemetry.ExecuteCellPerceivedWarm, runningStopWatch.elapsedTime);
+            }
         }
     }
 
@@ -1182,6 +1200,8 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
     }
 
     private async requestVariables(requestExecutionCount: number): Promise<void> {
+        this.variableRequestStopWatch = new StopWatch();
+
         // Request our new list of variables
         const vars: IJupyterVariable[] = await this.jupyterVariables.getVariables();
         const variablesResponse: IJupyterVariablesResponse = {executionCount: requestExecutionCount, variables: vars };
@@ -1200,7 +1220,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
                return excludeArray.indexOf(value.type) === -1;
             });
         }
-
+        this.variableRequestPendingCount = variablesResponse.variables.length;
         this.postMessage(InteractiveWindowMessages.GetVariablesResponse, variablesResponse).ignoreErrors();
         sendTelemetryEvent(Telemetry.VariableExplorerVariableCount, undefined, { variableCount: variablesResponse.variables.length });
     }
@@ -1212,6 +1232,16 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
             // Request our variable value
             const varValue: IJupyterVariable = await this.jupyterVariables.getValue(targetVar);
             this.postMessage(InteractiveWindowMessages.GetVariableValueResponse, varValue).ignoreErrors();
+
+            // Send our fetch time if appropriate.
+            if (this.variableRequestPendingCount === 1 && this.variableRequestStopWatch) {
+                this.variableRequestPendingCount -= 1;
+                sendTelemetryEvent(Telemetry.VariableExplorerFetchTime, this.variableRequestStopWatch.elapsedTime);
+                this.variableRequestStopWatch = undefined;
+            } else {
+                this.variableRequestPendingCount = Math.max(0, this.variableRequestPendingCount - 1);
+            }
+
         }
     }
 

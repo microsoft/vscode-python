@@ -5,20 +5,12 @@ import { nbformat } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
 import { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
-import {
-    CancellationToken,
-    CodeLens,
-    CodeLensProvider,
-    Disposable,
-    Event,
-    Range,
-    TextDocument,
-    TextEditor
-} from 'vscode';
+import { CancellationToken, CodeLens, CodeLensProvider, Disposable, Event, Range, TextDocument, TextEditor } from 'vscode';
 
 import { ICommandManager } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
 import { IAsyncDisposable, IDataScienceSettings, IDisposable } from '../common/types';
+import { StopWatch } from '../common/utils/stopWatch';
 import { PythonInterpreter } from '../interpreter/contracts';
 
 // Main interface
@@ -166,7 +158,7 @@ export interface IInteractiveWindow extends Disposable {
     ready: Promise<void>;
     onExecutedCode: Event<string>;
     show() : Promise<void>;
-    addCode(code: string, file: string, line: number, editor?: TextEditor) : Promise<void>;
+    addCode(code: string, file: string, line: number, editor?: TextEditor, runningStopWatch?: StopWatch) : Promise<void>;
     // tslint:disable-next-line:no-any
     startProgress(): void;
     stopProgress(): void;

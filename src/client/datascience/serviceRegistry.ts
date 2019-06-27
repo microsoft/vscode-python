@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { IExtensionActivationService } from '../activation/types';
+import { noop } from '../common/utils/misc';
 import { StopWatch } from '../common/utils/stopWatch';
 import { ClassType, IServiceManager } from '../ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
@@ -63,7 +64,13 @@ function wrapType(ctor: ClassType<any>) : ClassType<any> {
         constructor(...args: any[]) {
             const stopWatch = new StopWatch();
             super(...args);
-            sendTelemetryEvent(Telemetry.ClassConstructionTime, stopWatch.elapsedTime, { class: ctor.name });
+            try {
+                // ctor name is minified. compute from the class definition
+                const className = ctor.toString().match(/\w+/g)![1];
+                sendTelemetryEvent(Telemetry.ClassConstructionTime, stopWatch.elapsedTime, { class: className });
+            } catch {
+                noop();
+            }
         }
     };
 }
