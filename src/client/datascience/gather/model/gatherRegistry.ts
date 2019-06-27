@@ -1,5 +1,5 @@
 import { INotebookModel, INotebookTracker } from '@jupyterlab/notebook';
-import { UUID } from '@phosphor/coreutils';
+import { UUID } from '@phosphor/coreutils/lib/uuid';
 import { log } from 'util';
 import { IGatherModel, IGatherModelRegistry } from '../../types';
 

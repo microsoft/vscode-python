@@ -1,7 +1,7 @@
 import { CodeCellModel, ICodeCellModel } from '@jupyterlab/cells';
 import { nbformat } from '@jupyterlab/coreutils';
 import { IOutputModel } from '@jupyterlab/rendermime';
-import { UUID } from '@phosphor/coreutils';
+import { UUID } from '@phosphor/coreutils/lib/uuid';
 
 /**
  * Generic interface for accessing data about a code cell.
