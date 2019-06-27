@@ -316,14 +316,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.postOffice.sendMessage<M, T>(type, payload);
     }
 
-    private convertSizeToPixels(size: string) : number {
-        let multiplier = 1;
-        if (size.endsWith('pt')) {
-            multiplier = window.devicePixelRatio * 0.8866666;
-        }
-        return parseInt(size, 10) * multiplier;
-    }
-
     private exportCurrent = async () => {
         // In order to export, we need the png and the svg. Generate
         // a png by drawing to a canvas and then turning the canvas into a dataurl.
@@ -332,16 +324,16 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             if (doc) {
                 const canvas = doc.createElement('canvas');
                 if (canvas) {
-                    canvas.width = this.convertSizeToPixels(this.state.sizes[this.state.currentImage].width);
-                    canvas.height = this.convertSizeToPixels(this.state.sizes[this.state.currentImage].height);
                     const ctx = canvas.getContext('2d');
                     if (ctx) {
                         const waitable = createDeferred();
-                        ctx.clearRect(0, 0, canvas.width, canvas.height);
                         const svgBlob = new Blob([this.state.images[this.state.currentImage]], { type: 'image/svg+xml;charset=utf-8' });
                         const img = new Image();
                         const url = window.URL.createObjectURL(svgBlob);
                         img.onload = () => {
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+                            ctx.clearRect(0, 0, canvas.width, canvas.height);
                             ctx.drawImage(img, 0, 0);
                             waitable.resolve();
                         };

@@ -547,10 +547,13 @@ export class JupyterServerBase implements INotebookServer {
                 await this.changeDirectoryIfPossible(this.launchInfo.workingDir);
             }
 
+            const settings = this.configService.getSettings().datascience;
+            const matplobInit = !settings || settings.enablePlotViewer ? CodeSnippits.MatplotLibInitSvg : CodeSnippits.MatplotLibInitPng;
+
             // Force matplotlib to inline and save the default style. We'll use this later if we
             // get a request to update style
             await this.executeSilently(
-                CodeSnippits.MatplotLibInit,
+                matplobInit,
                 cancelToken
             );
         } catch (e) {
