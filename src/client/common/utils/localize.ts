@@ -62,6 +62,11 @@ export namespace Interpreters {
     export const environmentPromptMessage = localize('Interpreters.environmentPromptMessage', 'We noticed a new virtual environment has been created. Do you want to select it for the workspace folder?');
     export const selectInterpreterTip = localize('Interpreters.selectInterpreterTip', 'Tip: you can change the Python interpreter used by the Python extension by clicking on the Python version in the status bar');
 }
+export namespace Insiders {
+    export const reload = localize('Insiders.reload', 'Reload');
+    export const useStable = localize('Insiders.useStable', 'Use Stable');
+    export const promptMessage = localize('Insiders.promptMessage', 'We noticed you are using VS Code Insiders. Reload to use the Insiders build of the extension.');
+}
 
 export namespace Logging {
     export const currentWorkingDirectory = localize('Logging.CurrentWorkingDirectory', 'cwd:');

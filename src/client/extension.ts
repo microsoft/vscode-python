@@ -43,6 +43,7 @@ import { IApplicationShell, ICommandManager, IWorkspaceService } from './common/
 import { Commands, isTestExecution, PYTHON, STANDARD_OUTPUT_CHANNEL } from './common/constants';
 import { registerTypes as registerDotNetTypes } from './common/dotnet/serviceRegistry';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
+import { registerTypes as insidersBuildRegisterTypes } from './common/insidersBuild/serviceRegistry';
 import { traceError } from './common/logger';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
@@ -253,6 +254,7 @@ function registerServices(context: ExtensionContext, serviceManager: ServiceMana
     formattersRegisterTypes(serviceManager);
     platformRegisterTypes(serviceManager);
     installerRegisterTypes(serviceManager);
+    insidersBuildRegisterTypes(serviceManager);
     commonRegisterTerminalTypes(serviceManager);
     dataScienceRegisterTypes(serviceManager);
     debugConfigurationRegisterTypes(serviceManager);
