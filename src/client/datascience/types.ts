@@ -22,15 +22,15 @@ import { ICommandManager } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
 import { IAsyncDisposable, IDataScienceSettings, IDisposable } from '../common/types';
 import { PythonInterpreter } from '../interpreter/contracts';
-import * as ast from './gather/analysis/parse/python/python-parser';
-import { DataflowAnalysisResult, RefSet, IDataflow } from './gather/slice/dataFlow';
-import { CellExecution, SlicedExecution } from './gather/slice/logSlicer';
-import { CellProgram, ProgramBuilder, Program } from './gather/slice/programBuilder';
-import { StringSet } from './gather/slice/set';
-import { LocationSet } from './gather/slice/slice';
 import { CellOutput, DefSelection, EditorDef, GatherEventData, GatherModelEvent, GatherState, IGatherObserver, OutputSelection, SliceSelection } from './gather/model';
 import { IGatherCell } from './gather/model/cell';
+import * as ast from './gather/parse/python/python-parser';
 import { Block, ControlFlowGraph } from './gather/slice/controlFlow';
+import { DataflowAnalysisResult, IDataflow, RefSet } from './gather/slice/dataFlow';
+import { CellExecution, SlicedExecution } from './gather/slice/logSlicer';
+import { CellProgram, Program } from './gather/slice/programBuilder';
+import { StringSet } from './gather/slice/set';
+import { LocationSet } from './gather/slice/slice';
 import { SliceConfiguration } from './gather/slice/sliceConfig';
 
 // Main interface
@@ -366,6 +366,25 @@ export interface ICell {
     type: 'preview' | 'execute';
     data: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell | IMessageCell;
 }
+
+// Map ICell to IGatherCell properties
+/*
+interface IGatherCell {
+    readonly id: string; // ICell.id
+    gathered: boolean; // Obviously this doesn't exist on ICell
+    readonly dirty: boolean; // ICell.state == CellState.editing
+    text: string; // ICell.data.source
+    executionCount: number; // ICell.data.execution_count
+    readonly executionEventId: string; // Gather Jupyter extension generates this with UUID.uuid4()
+    readonly persistentId: string; // Gather Jupyter extension generates this with UUID.uuid4(), Python VSCode ext just uses id, file and line
+    outputs: nbformat.IOutput[]; // ICell.data.outputs
+    hasError: boolean; // ICell.state == CellState.error
+    readonly is_cell: boolean; // Flag used for typechecking in the Jupyter ext. Not sure why we'd need this.
+    deepCopy(): IGatherCell;
+    copyToNewCell(): IGatherCell;
+    serialize(): nbformat.ICodeCell;
+}
+*/
 
 export interface IInteractiveWindowInfo {
     cellCount: number;

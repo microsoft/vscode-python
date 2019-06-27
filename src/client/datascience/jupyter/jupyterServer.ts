@@ -18,15 +18,17 @@ import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, I
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { generateCells } from '../cellFactory';
+import { convertToGatherCell, generateCells } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
 import { concatMultilineString } from '../common';
 import { CodeSnippits, Identifiers } from '../constants';
+import { IGatherCell } from '../gather/model/cell';
 import {
     CellState,
     ICell,
     IConnection,
     IDataScience,
+    IGatherModel,
     IJupyterSession,
     IJupyterSessionManager,
     INotebookCompletion,
@@ -139,7 +141,8 @@ export class JupyterServerBase implements INotebookServer {
         private disposableRegistry: IDisposableRegistry,
         private asyncRegistry: IAsyncDisposableRegistry,
         private configService: IConfigurationService,
-        private sessionManager: IJupyterSessionManager
+        private sessionManager: IJupyterSessionManager,
+        private gatherModel: IGatherModel
     ) {
         this.asyncRegistry.push(this);
     }
@@ -504,6 +507,12 @@ export class JupyterServerBase implements INotebookServer {
                 return this.combineObservables(
                     cells[0].data.cell_type === 'code' ? this.executeCodeObservable(cells[0], silent) : this.executeMarkdownObservable(cells[0]));
             }
+
+            // Add cells we just executed to the execution log
+            cells.map((cell) => {
+                const gatherCell: IGatherCell = convertToGatherCell(cell);
+                this.gatherModel.executionLog.logExecution(gatherCell);
+            });
         }
 
         // Can't run because no session

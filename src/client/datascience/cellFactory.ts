@@ -6,10 +6,12 @@ import '../common/extensions';
 import * as uuid from 'uuid/v4';
 import { Range, TextDocument } from 'vscode';
 
+import { UUID } from '@phosphor/coreutils/lib/uuid';
 import { noop } from '../../test/core';
 import { IDataScienceSettings } from '../common/types';
 import { CellMatcher } from './cellMatcher';
 import { appendLineFeed, generateMarkdownFromCodeLines, parseForComments } from './common';
+import { IGatherCell } from './gather/model/cell';
 import { CellState, ICell } from './types';
 
 function generateCodeCell(code: string[], file: string, line: number, id: string) : ICell {
@@ -45,6 +47,21 @@ function generateMarkdownCell(code: string[], file: string, line: number, id: st
         }
     };
 
+}
+
+export function convertToGatherCell(cell: ICell): IGatherCell {
+    return {
+        id: cell.id,
+        gathered: false, // False by default
+        dirty: false,
+        text: cell.data.source,
+        executionCount: cell.data.execution_count,
+        executionEventId: UUID.uuid4(),
+        persistentId: UUID.uuid4(),
+        outputs: cell.data.outputs,
+        hasError: cell.state === CellState.error,
+        is_cell: true
+    };
 }
 
 export function generateCells(settings: IDataScienceSettings | undefined, code: string, file: string, line: number, splitMarkdown: boolean, id: string) : ICell[] {
@@ -90,6 +107,7 @@ export function hasCells(document: TextDocument, settings?: IDataScienceSettings
     return false;
 }
 
+// Use this to get location?
 export function generateCellRanges(document: TextDocument, settings?: IDataScienceSettings) : {range: Range; title: string}[] {
     // Implmentation of getCells here based on Don's Jupyter extension work
     const matcher = new CellMatcher(settings);
