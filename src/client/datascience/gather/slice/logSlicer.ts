@@ -128,12 +128,14 @@ export class ExecutionLogSlicer implements IExecutionLogSlicer {
         }
 
         const allExecutions = this.executionLog
+            // Get execution logs for this specific cell, using persistent ID
             .filter(execution => execution.cell.persistentId == cell.persistentId)
-            .filter(execution => execution.cell.executionCount != undefined)
+            // We can only gather a cell that's been executed before
+            .filter(execution => !isNil(execution.cell.executionCount))
             .map(execution => {
                 // Build the program up to that cell.
                 const program = this.programBuilder.buildTo(execution.cell.executionEventId);
-                if (program == null) {
+                if (isNil(program)) {
                     return;
                 }
 
@@ -173,12 +175,13 @@ export class ExecutionLogSlicer implements IExecutionLogSlicer {
                 const cellSliceLocations: {
                     [executionEventId: string]: LocationSet;
                 } = {};
+
                 const cellOrder: IGatherCell[] = [];
                 sliceLocations.forEach(location => {
                     const sliceCell = program.lineToCellMap[location.first_line];
                     const sliceCellLines = program.cellToLineMap[sliceCell.executionEventId];
                     const sliceCellStart = Math.min(...sliceCellLines.items);
-                    if (cellOrder.indexOf(sliceCell) == -1) {
+                    if (cellOrder.indexOf(sliceCell) === -1) {
                         cellOrder.push(sliceCell);
                     }
                     const adjustedLocation = {
@@ -195,16 +198,17 @@ export class ExecutionLogSlicer implements IExecutionLogSlicer {
 
                 const cellSlices = cellOrder.map(
                     (sliceCell): CellSlice => {
-                        let executionTime = undefined;
+                        let executionTime;
                         if (cellExecutionTimes[sliceCell.executionEventId]) {
                             executionTime = cellExecutionTimes[sliceCell.executionEventId];
                         }
                         return new CellSlice(sliceCell, cellSliceLocations[sliceCell.executionEventId], executionTime);
                     }
                 );
+
                 return new SlicedExecution(execution.executionTime, cellSlices);
             })
-            .filter(s => s != null && s != undefined);
+            .filter(s => s !== null && s !== undefined);
 
             if (isNil(allExecutions)) { return; }
             return allExecutions;
