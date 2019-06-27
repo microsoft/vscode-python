@@ -28,11 +28,15 @@ def discover(pytestargs=None, hidestdio=False,
         # No tests were discovered.
         pass
     elif ec != 0:
+        print(('equivalent command: {} -m pytest {}'
+               ).format(sys.executable, util.shlex_unsplit(pytestargs)))
         if hidestdio:
             print(stdio.getvalue(), file=sys.stderr)
             sys.stdout.flush()
         raise Exception('pytest discovery failed (exit code {})'.format(ec))
     if not _plugin._started:
+        print(('equivalent command: {} -m pytest {}'
+               ).format(sys.executable, util.shlex_unsplit(pytestargs)))
         if hidestdio:
             print(stdio.getvalue(), file=sys.stderr)
             sys.stdout.flush()
