@@ -84,6 +84,7 @@ export interface INotebookCompletion {
 // Talks to a jupyter ipython kernel to retrieve data for cells
 export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends IAsyncDisposable {
+    gatherModel: IGatherModel;
     connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken) : Promise<void>;
     executeObservable(code: string, file: string, line: number, id: string, silent: boolean) : Observable<ICell[]>;
     execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken, silent?: boolean) : Promise<ICell[]>;
@@ -261,6 +262,7 @@ export interface IGatherModel {
     selectedDefs: ReadonlyArray<DefSelection>;
     selectedOutputs: ReadonlyArray<OutputSelection>;
     selectedSlices: ReadonlyArray<SliceSelection>;
+    chosenSlices: ReadonlyArray<SlicedExecution>;
     addObserver(observer: IGatherObserver) : void;
     notifyObservers(property: GatherModelEvent, eventData?: GatherEventData): void;
     getCellProgram(cell: IGatherCell): CellProgram;
