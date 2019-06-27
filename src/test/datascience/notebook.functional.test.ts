@@ -39,6 +39,7 @@ import {
 } from '../../client/interpreter/contracts';
 import { ICellViewModel } from '../../datascience-ui/history-react/cell';
 import { generateTestState } from '../../datascience-ui/history-react/mainPanelState';
+import { asyncDump } from '../common/asyncDump';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 
@@ -83,6 +84,10 @@ suite('DataScience notebook tests', () => {
         } catch (e) {
             traceError(e);
         }
+    });
+
+    suiteTeardown(() => {
+        asyncDump();
     });
 
     function escapePath(p: string) {
