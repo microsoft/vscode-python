@@ -92,7 +92,9 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
     private onAboutToAddCode(args: IRemoteAddCode) {
         // Make sure this is valid
         if (args && args.code && args.line !== undefined && args.file) {
-            // First make sure not a markdown cell. Those can be ignored. Just get out the first code cell
+            // First make sure not a markdown cell. Those can be ignored. Just get out the first code cell.
+            // Regardless of how many 'code' cells exist in the code sent to us, we'll only ever send one at most.
+            // The code sent to this function is either a cell as defined by #%% or the selected text (which is treated as one cell)
             const cells = generateCells(this.configService.getSettings().datascience, args.code, args.file, args.line, true, args.id);
             const codeCell = cells.find(c => c.data.cell_type === 'code');
             if (codeCell) {
