@@ -33,6 +33,7 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { CellMatcher } from '../cellMatcher';
 import { EditorContexts, Identifiers, Telemetry } from '../constants';
 import { ColumnWarningSize } from '../data-viewing/types';
+import { OutputSelection, SliceSelection } from '../gather/model';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import { JupyterKernelPromiseFailedError } from '../jupyter/jupyterKernelPromiseFailedError';
 import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
@@ -72,6 +73,7 @@ import {
     ISubmitNewCell,
     SysInfoReason
 } from './interactiveWindowTypes';
+import { isNil } from 'lodash';
 
 @injectable()
 export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> implements IInteractiveWindow  {
@@ -776,11 +778,43 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         }
     }
 
-    private gatherCode() {
-        // Received message from MainPanel.tsx
-        // Slice with this.jupyterServer.executionLogSlicer for specific selected defs or outputs
-        // Create a new open editor with the generated script
-        // Give focus
+    // Received message from MainPanel.tsx to perform gather
+    private gatherCode = (outputSelection: OutputSelection) => { // At some point, handle different gather events?
+        if (this.jupyterServer) {
+            const { gatherModel } = this.jupyterServer;
+            const cell = outputSelection.cell;
+
+            // Slice with this.jupyterServer.executionLogSlicer for specific selected defs or outputs
+            const slices = gatherModel.executionLogSlicer.sliceAllExecutions(cell);
+            if (isNil(slices)) { return; }
+            const sliceSelection = {
+                userSelection: outputSelection,
+                slice: slices[slices.length - 1]
+            };
+            gatherModel.selectSlice(sliceSelection);
+            gatherModel.addSelectedOutputSlices(outputSelection, ...slices);
+            gatherModel.addChosenSlices(
+                ...gatherModel.selectedSlices.map((sel: SliceSelection) => sel.slice)
+            );
+            const chosenSlices = gatherModel.chosenSlices;
+            const mergedSlice = chosenSlices[0].merge(...chosenSlices.slice(1));
+
+            // Extract code
+            let content = '';
+            mergedSlice.cellSlices.map((cellSlice) => {
+                content += `${cellSlice.textSlice}\n`;
+            });
+
+            // Create a new open editor with the merged slice
+            this.documentManager.openTextDocument({
+                content,
+                language: 'python' // GATHERTODO: Confirm that this is correct way of specifying language
+            }).then(
+                document => this.documentManager.showTextDocument(document));
+
+            // Reset slices
+            gatherModel.resetChosenSlices();
+        }
     }
 
     private setStatus = (message: string): Disposable => {
