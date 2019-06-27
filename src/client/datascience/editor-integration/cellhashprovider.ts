@@ -66,10 +66,6 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
                 }
                 break;
 
-            case InteractiveWindowMessages.RestartKernel:
-                this.hashes.clear();
-                break;
-
             case InteractiveWindowMessages.AddedSysInfo:
                 if (payload && payload.type) {
                     const reason = payload.type as SysInfoReason;

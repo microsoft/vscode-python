@@ -7,7 +7,7 @@ import { Position, Range } from 'vscode';
 
 import { IConfigurationService, IDataScienceSettings, IPythonSettings } from '../../../client/common/types';
 import { CellHashProvider } from '../../../client/datascience/editor-integration/cellhashprovider';
-import { InteractiveWindowMessages } from '../../../client/datascience/interactive-window/interactiveWindowTypes';
+import { InteractiveWindowMessages, SysInfoReason } from '../../../client/datascience/interactive-window/interactiveWindowTypes';
 import { MockDocumentManager } from '../mockDocumentManager';
 
 // tslint:disable-next-line: max-func-body-length
@@ -473,5 +473,30 @@ suite('CellHashProvider Unit Tests', () => {
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
 
     });
+
+    test('Restart kernel', () => {
+        const file = '#%%\r\nprint("foo")\r\n#%%\r\nprint("bar")';
+        const code = '#%%\r\nprint("bar")';
+        // Create our document
+        documentManager.addDocument(file, 'foo.py');
+
+        // Add this code
+        hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code, file: 'foo.py', line: 2 });
+
+        // We should have a single hash
+        let hashes = hashProvider.getHashes();
+        assert.equal(hashes.length, 1, 'No hashes found');
+        assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
+        assert.equal(hashes[0].hashes[0].line, 3, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].endLine, 4, 'Wrong end line');
+        assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
+
+        // Restart the kernel
+        hashProvider.onMessage(InteractiveWindowMessages.AddedSysInfo, { type: SysInfoReason.Restart });
+
+        hashes = hashProvider.getHashes();
+        assert.equal(hashes.length, 0, 'Restart should have cleared');
+    });
+
 
 });
