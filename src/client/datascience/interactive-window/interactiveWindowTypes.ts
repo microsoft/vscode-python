@@ -56,6 +56,7 @@ export namespace InteractiveWindowMessages {
     export const LoadTmLanguageResponse = 'load_tmlanguage_response';
     export const OpenLink = 'open_link';
     export const ShowPlot = 'show_plot';
+    export const GatherCode = 'gather_code';
 }
 
 // These are the messages that will mirror'd to guest/hosts in
@@ -151,6 +152,12 @@ export interface IAddCell {
     id: string;
 }
 
+export interface IGatherCode {
+    file: string; // Uniquely identify
+    id: string;
+    line: number;
+}
+
 export interface IRemoveCell {
     id: string;
 }
@@ -213,4 +220,5 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.LoadTmLanguageResponse]: string | undefined;
     public [InteractiveWindowMessages.OpenLink]: string | undefined;
     public [InteractiveWindowMessages.ShowPlot]: string | undefined;
+    public [InteractiveWindowMessages.GatherCode]: string | undefined;
 }

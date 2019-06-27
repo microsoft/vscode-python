@@ -413,6 +413,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             submittedText: this.state.submittedText,
             gotoCellCode: this.gotoCellCode,
             copyCellCode: this.copyCellCode,
+            gatherCode: this.gatherCode,
             deleteCell: this.deleteCell,
             skipNextScroll: this.state.skipNextScroll ? true : false,
             monacoTheme: this.state.monacoTheme,
@@ -569,6 +570,16 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return [...slicedUndo, cells];
     }
 
+    private gatherCode = (index: number) => { // Lookup based on IGatherCell persistent ID
+        // Find our cell
+        const cellVM = this.state.cellVMs[index];
+
+        // Do some UI stuff
+
+        // Tell
+        this.sendMessage(InteractiveWindowMessages.GatherCode, );
+    }
+
     private gotoCellCode = (index: number) => {
         // Find our cell
         const cellVM = this.state.cellVMs[index];
@@ -710,11 +721,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 this.sendInfo();
             }
         }
-    }
-
-    // gather button was clicked
-    private gatherScript() {
-        // Send message to history
     }
 
     private getEditCell() : ICellViewModel | undefined {

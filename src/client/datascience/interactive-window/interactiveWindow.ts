@@ -33,7 +33,6 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { CellMatcher } from '../cellMatcher';
 import { EditorContexts, Identifiers, Telemetry } from '../constants';
 import { ColumnWarningSize } from '../data-viewing/types';
-import { SliceConfiguration } from '../gather/slice/sliceConfig';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import { JupyterKernelPromiseFailedError } from '../jupyter/jupyterKernelPromiseFailedError';
 import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
@@ -44,7 +43,6 @@ import {
     ICodeCssGenerator,
     IConnection,
     IDataViewerProvider,
-    IGatherModel,
     IInteractiveWindow,
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
@@ -59,8 +57,7 @@ import {
     INotebookServer,
     InterruptResult,
     IStatusProvider,
-    IThemeFinder,
-    IExecutionLogSlicer
+    IThemeFinder
 } from '../types';
 import { WebViewHost } from '../webViewHost';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
@@ -74,7 +71,6 @@ import {
     IShowDataViewer,
     ISubmitNewCell
 } from './interactiveWindowTypes';
-import { IGatherCell } from '../gather/model/cell';
 
 export enum SysInfoReason {
     Start,
@@ -97,7 +93,6 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
     private jupyterServer: INotebookServer | undefined;
     private id : string;
     private executeEvent: EventEmitter<string> = new EventEmitter<string>();
-    private _sliceConfiguration: SliceConfiguration;
 
     constructor(
         @multiInject(IInteractiveWindowListener) private readonly listeners: IInteractiveWindowListener[],
@@ -120,8 +115,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(IDataViewerProvider) private dataExplorerProvider: IDataViewerProvider,
         @inject(IJupyterVariables) private jupyterVariables: IJupyterVariables,
-        @inject(INotebookImporter) private jupyterImporter: INotebookImporter,
-        @inject(IGatherModel) private gatherModel: IGatherModel,
+        @inject(INotebookImporter) private jupyterImporter: INotebookImporter
         ) {
         super(
             configuration,
@@ -282,8 +276,8 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
                 this.dispatchMessage(message, payload, this.requestOnigasm);
                 break;
 
-            case InteractiveWindowMessages.GatherScript:
-                this.dispatchMessage(message, payload, this.gatherScript);
+            case InteractiveWindowMessages.GatherCode:
+                this.dispatchMessage(message, payload, this.gatherCode);
                 break;
 
             default:
@@ -779,10 +773,6 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
                 // Wait for the cell to finish
                 await finishedAddingCode.promise;
                 traceInfo(`Finished execution for ${id}`);
-
-                // GATHERTODO: Add recently-executed cell to execution log
-                const gatherCells: IGatherCell[] = this.convertCellsToGatherCells(observable);
-                gatherCells.map((gatherCell) => this.gatherModel.executionLog.logExecution(gatherCell));
             }
         } catch (err) {
             status.dispose();
@@ -792,8 +782,11 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         }
     }
 
-    private convertCellsToGatherCells(observable: Observable<ICell[]>): IGatherCell[] {
-
+    private gatherCode() {
+        // Received message from MainPanel.tsx
+        // Slice with this.jupyterServer.executionLogSlicer for specific selected defs or outputs
+        // Create a new open editor with the generated script
+        // Give focus
     }
 
     private setStatus = (message: string): Disposable => {

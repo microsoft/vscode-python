@@ -24,6 +24,7 @@ export interface IContentPanelProps {
     editorOptions: monacoEditor.editor.IEditorOptions;
     gotoCellCode(index: number): void;
     copyCellCode(index: number): void;
+    gatherCode(index: number): void;
     deleteCell(index: number): void;
     onCodeChange(changes: monacoEditor.editor.IModelContentChange[], cellId: string, modelId: string): void;
     onCodeCreated(code: string, file: string, cellId: string, modelId: string): void;
