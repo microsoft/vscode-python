@@ -498,5 +498,20 @@ suite('CellHashProvider Unit Tests', () => {
         assert.equal(hashes.length, 0, 'Restart should have cleared');
     });
 
+    test('More than one cell in range', () => {
+        const file = '#%%\r\nprint("foo")\r\n#%%\r\nprint("bar")';
+        // Create our document
+        documentManager.addDocument(file, 'foo.py');
 
+        // Add this code
+        hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code: file, file: 'foo.py', line: 0 });
+
+        // We should have a single hash
+        const hashes = hashProvider.getHashes();
+        assert.equal(hashes.length, 1, 'No hashes found');
+        assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
+        assert.equal(hashes[0].hashes[0].line, 1, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].endLine, 4, 'Wrong end line');
+        assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
+    });
 });
