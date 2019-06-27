@@ -22,7 +22,7 @@ import { convertToGatherCell, generateCells } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
 import { concatMultilineString } from '../common';
 import { CodeSnippits, Identifiers } from '../constants';
-import { IGatherCell } from '../gather/model/cell';
+import { LabCell } from '../gather/model/cell';
 import {
     CellState,
     ICell,
@@ -501,18 +501,25 @@ export class JupyterServerBase implements INotebookServer {
                 const results: Observable<ICell[]> =  this.combineObservables(
                     this.executeMarkdownObservable(cells[0]),
                     this.executeCodeObservable(cells[1], silent));
+
+                // Add executed code cell to the execution log after code has been executed
+                const gatherCell = (convertToGatherCell(cells[1]) as LabCell).deepCopy();
+                this.gatherModel.executionLogSlicer.logExecution(gatherCell);
+
                 return results;
             } else if (cells.length > 0) {
-                // Either markdown or or code
-                return this.combineObservables(
-                    cells[0].data.cell_type === 'code' ? this.executeCodeObservable(cells[0], silent) : this.executeMarkdownObservable(cells[0]));
-            }
+                // Either markdown or code
+                const isCode: boolean = cells[0].data.cell_type === 'code';
+                const results: Observable<ICell[]> = this.combineObservables(
+                    isCode ? this.executeCodeObservable(cells[0], silent) : this.executeMarkdownObservable(cells[0]));
 
-            // Add cells we just executed to the execution log
-            cells.map((cell) => {
-                const gatherCell: IGatherCell = convertToGatherCell(cell);
-                this.gatherModel.executionLog.logExecution(gatherCell);
-            });
+                    // Add executed code cell to the execution log after code has been executed
+                if (isCode) {
+                    const gatherCell = (convertToGatherCell(cells[1]) as LabCell).deepCopy();
+                    this.gatherModel.executionLogSlicer.logExecution(gatherCell);
+                }
+                return results;
+            }
         }
 
         // Can't run because no session
@@ -564,10 +571,6 @@ export class JupyterServerBase implements INotebookServer {
                 cancelToken
             );
 
-            // Create a log of executed cells
-                // const executionLog = new ExecutionLogSlicer(
-                //     new DataflowAnalyzer()
-                // );
         } catch (e) {
             traceWarning(e);
         }

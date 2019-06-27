@@ -52,7 +52,7 @@ function generateMarkdownCell(code: string[], file: string, line: number, id: st
 export function convertToGatherCell(cell: ICell): IGatherCell {
     return {
         id: cell.id,
-        gathered: false, // False by default
+        gathered: false, // Whether the cell was created by gathering
         dirty: false,
         text: cell.data.source,
         executionCount: cell.data.execution_count,

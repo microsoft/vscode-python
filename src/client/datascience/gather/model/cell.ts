@@ -1,5 +1,6 @@
 import { CodeCellModel, ICodeCellModel } from '@jupyterlab/cells';
-import { nbformat } from '@jupyterlab/coreutils';
+// import { nbformat } from '@jupyterlab/coreutils';
+import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 import { IOutputModel } from '@jupyterlab/rendermime';
 import { UUID } from '@phosphor/coreutils/lib/uuid';
 
@@ -27,9 +28,9 @@ export interface IGatherCell {
     /**
      * The cell's current text.
      */
-    text: string;
+    text: string | string[];
 
-    executionCount: number;
+    executionCount: nbformat.ExecutionCount;
 
     /**
      * A unique ID generated each time a cell is executed. This lets us disambiguate between two
