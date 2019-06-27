@@ -300,7 +300,8 @@ fourth line
                                 TypeMoq.It.isValue(0),
                                 TypeMoq.It.is((ed: TextEditor) => {
                                     return textEditor.object === ed;
-                                }))).verifiable(TypeMoq.Times.once());
+                                }),
+                                TypeMoq.It.isAny())).verifiable(TypeMoq.Times.once());
 
         // Try our RunCell command
         await codeWatcher.runCell(testRange);
@@ -327,6 +328,7 @@ testing2`; // Command tests override getText, so just need the ranges here
         activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(inputText),
                                 TypeMoq.It.isValue('test.py'),
                                 TypeMoq.It.isValue(0),
+                                TypeMoq.It.isAny(),
                                 TypeMoq.It.isAny()
                                 )).verifiable(TypeMoq.Times.once());
 
@@ -361,12 +363,14 @@ testing2`; // Command tests override getText, so just need the ranges here
         activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(testString1),
                                 TypeMoq.It.isValue('test.py'),
                                 TypeMoq.It.isValue(0),
+                                TypeMoq.It.isAny(),
                                 TypeMoq.It.isAny()
                                 )).verifiable(TypeMoq.Times.once());
 
         activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(testString2),
                                 TypeMoq.It.isValue('test.py'),
                                 TypeMoq.It.isValue(2),
+                                TypeMoq.It.isAny(),
                                 TypeMoq.It.isAny()
                                 )).verifiable(TypeMoq.Times.once());
 
@@ -396,7 +400,9 @@ testing2`;
                                 TypeMoq.It.isValue(2),
                                 TypeMoq.It.is((ed: TextEditor) => {
                                     return textEditor.object === ed;
-                                }))).verifiable(TypeMoq.Times.once());
+                                }),
+                                TypeMoq.It.isAny()
+                                )).verifiable(TypeMoq.Times.once());
 
         // For this test we need to set up a document selection point
         textEditor.setup(te => te.selection).returns(() => new Selection(2, 0, 2, 0));
@@ -433,11 +439,17 @@ testing3`;
         // Set up our expected calls to add code
         activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(targetText1),
                                 TypeMoq.It.isValue(fileName),
-                                TypeMoq.It.isValue(2))).verifiable(TypeMoq.Times.once());
+                                TypeMoq.It.isValue(2),
+                                TypeMoq.It.isAny(),
+                                TypeMoq.It.isAny()
+                                )).verifiable(TypeMoq.Times.once());
 
         activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(targetText2),
                                 TypeMoq.It.isValue(fileName),
-                                TypeMoq.It.isValue(4))).verifiable(TypeMoq.Times.once());
+                                TypeMoq.It.isValue(4),
+                                TypeMoq.It.isAny(),
+                                TypeMoq.It.isAny()
+                                )).verifiable(TypeMoq.Times.once());
 
         await codeWatcher.runCellAndAllBelow(2, 0);
 
@@ -471,11 +483,17 @@ testing2`;
         // Set up our expected calls to add code
         activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(targetText1),
                                 TypeMoq.It.isValue(fileName),
-                                TypeMoq.It.isValue(0))).verifiable(TypeMoq.Times.once());
+                                TypeMoq.It.isValue(0),
+                                TypeMoq.It.isAny(),
+                                TypeMoq.It.isAny()
+                                )).verifiable(TypeMoq.Times.once());
 
         activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(targetText2),
                                 TypeMoq.It.isValue(fileName),
-                                TypeMoq.It.isValue(2))).verifiable(TypeMoq.Times.once());
+                                TypeMoq.It.isValue(2),
+                                TypeMoq.It.isAny(),
+                                TypeMoq.It.isAny()
+                                )).verifiable(TypeMoq.Times.once());
 
         await codeWatcher.runAllCellsAbove(4, 0);
 
@@ -505,7 +523,10 @@ testing1`;
         // Set up our expected calls to add code
         activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(targetText),
                                 TypeMoq.It.isValue(fileName),
-                                TypeMoq.It.isValue(0))).verifiable(TypeMoq.Times.once());
+                                TypeMoq.It.isValue(0),
+                                TypeMoq.It.isAny(),
+                                TypeMoq.It.isAny()
+                                )).verifiable(TypeMoq.Times.once());
 
         await codeWatcher.runToLine(2);
 
@@ -530,7 +551,10 @@ print('testing')`;
         interactiveWindowProvider.setup(h => h.getOrCreateActive()).returns(() => Promise.resolve(activeInteractiveWindow.object)).verifiable(TypeMoq.Times.never());
         activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isAny(),
                                 TypeMoq.It.isValue(fileName),
-                                TypeMoq.It.isAnyNumber())).verifiable(TypeMoq.Times.never());
+                                TypeMoq.It.isAnyNumber(),
+                                TypeMoq.It.isAny(),
+                                TypeMoq.It.isAny()
+                                )).verifiable(TypeMoq.Times.never());
 
         await codeWatcher.runToLine(2);
 
@@ -563,7 +587,10 @@ testing3`;
         // Set up our expected calls to add code
         activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(targetText),
                                 TypeMoq.It.isValue(fileName),
-                                TypeMoq.It.isValue(2))).verifiable(TypeMoq.Times.once());
+                                TypeMoq.It.isValue(2),
+                                TypeMoq.It.isAny(),
+                                TypeMoq.It.isAny()
+                                )).verifiable(TypeMoq.Times.once());
 
         // Try our RunCell command with the first selection point
         await codeWatcher.runFromLine(2);
@@ -595,7 +622,9 @@ testing2`;
                                 TypeMoq.It.isValue(3),
                                 TypeMoq.It.is((ed: TextEditor) => {
                                     return textEditor.object === ed;
-                                }))).verifiable(TypeMoq.Times.once());
+                                }),
+                                TypeMoq.It.isAny()
+                                )).verifiable(TypeMoq.Times.once());
 
         // For this test we need to set up a document selection point
         textEditor.setup(te => te.document).returns(() => document.object);
@@ -630,7 +659,9 @@ testing2`; // Command tests override getText, so just need the ranges here
                                 TypeMoq.It.isValue(0),
                                 TypeMoq.It.is((ed: TextEditor) => {
                                     return textEditor.object === ed;
-                                }))).verifiable(TypeMoq.Times.once());
+                                }),
+                                TypeMoq.It.isAny()
+                                )).verifiable(TypeMoq.Times.once());
 
         // For this test we need to set up a document selection point
         const selection = new Selection(0, 0, 0, 0);
