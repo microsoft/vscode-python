@@ -12,7 +12,7 @@ export class ExecutionLogger implements IGatherObserver, IExecutionLogger {
     public onModelChange(property: GatherModelEvent, eventData: GatherEventData) {
         if (property == GatherModelEvent.CELL_EXECUTED) {
             const loggableLabCell = (eventData as LabCell).deepCopy();
-            this._gatherModel.executionLog.logExecution(loggableLabCell);
+            this._gatherModel.executionLogSlicer.logExecution(loggableLabCell);
         }
     }
 

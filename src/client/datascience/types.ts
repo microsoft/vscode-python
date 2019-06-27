@@ -255,7 +255,7 @@ export interface IGatherModel {
     lastExecutedCell: IGatherCell;
     lastDeletedCell: IGatherCell;
     lastEditedCell: IGatherCell;
-    executionLog: IExecutionLogSlicer;
+    executionLogSlicer: IExecutionLogSlicer;
     editorDefs: ReadonlyArray<EditorDef>;
     outputs: ReadonlyArray<CellOutput>;
     selectedDefs: ReadonlyArray<DefSelection>;

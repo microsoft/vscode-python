@@ -1,9 +1,9 @@
 import { DocumentManager } from '@jupyterlab/docmanager';
 import { INotebookTracker } from '@jupyterlab/notebook';
-import { ExecutionLogSlicer } from '../slice/logSlicer';
-import { LocationSet } from '../slice/slice';
+import { IExecutionLogSlicer } from '../../types';
 import { Clipboard, NotebookOpener, ScriptOpener } from '../main/gather-actions';
 import { GatherEventData, GatherModel, GatherModelEvent, GatherState, IGatherObserver } from '../model';
+import { LocationSet } from '../slice/slice';
 import { log } from '../util/log';
 import { DefSelection, OutputSelection } from './selections';
 
@@ -11,12 +11,16 @@ import { DefSelection, OutputSelection } from './selections';
  * Controller for updating the gather model.
  */
 export class GatherController implements IGatherObserver {
+    private _executionSlicer: IExecutionLogSlicer;
+    private _cellClipboard: Clipboard;
+    private _notebookOpener: NotebookOpener;
+    private _scriptOpener: ScriptOpener;
     /**
      * Constructor for gather controller.
      */
     constructor(model: GatherModel, documentManager: DocumentManager, notebooks: INotebookTracker) {
         model.addObserver(this);
-        this._executionSlicer = model.executionLog;
+        this._executionSlicer = model.executionLogSlicer;
         this._cellClipboard = Clipboard.getInstance();
         this._notebookOpener = new NotebookOpener(documentManager, notebooks);
         this._scriptOpener = new ScriptOpener(documentManager, notebooks);
@@ -25,13 +29,13 @@ export class GatherController implements IGatherObserver {
     /**
      * Handle change to the gather model.
      */
-    onModelChange(eventType: GatherModelEvent, eventData: GatherEventData, model: GatherModel) {
+    public onModelChange(eventType: GatherModelEvent, eventData: GatherEventData, model: GatherModel) {
         // If a gather action was requested, do the gather.
         if (eventType == GatherModelEvent.STATE_CHANGED) {
-            let newState = eventData as GatherState;
+            const newState = eventData as GatherState;
             if (newState == GatherState.GATHER_TO_CLIPBOARD || newState == GatherState.GATHER_TO_NOTEBOOK || newState == GatherState.GATHER_TO_SCRIPT) {
-                let slices = model.chosenSlices;
-                let mergedSlice = slices[0].merge(...slices.slice(1));
+                const slices = model.chosenSlices;
+                const mergedSlice = slices[0].merge(...slices.slice(1));
                 if (newState == GatherState.GATHER_TO_CLIPBOARD) {
                     log('Gathering to clipboard', { slice: mergedSlice });
                     this._cellClipboard.copy(mergedSlice, [...model.selectedOutputs]);
@@ -60,10 +64,10 @@ export class GatherController implements IGatherObserver {
 
         // If def is selected, select its slice too.
         if (eventType == GatherModelEvent.DEF_SELECTED) {
-            let defSelection = eventData as DefSelection;
-            let sliceSeeds = new LocationSet(defSelection.editorDef.def.location);
-            let slices = this._executionSlicer.sliceAllExecutions(defSelection.cell, sliceSeeds);
-            let sliceSelection = {
+            const defSelection = eventData as DefSelection;
+            const sliceSeeds = new LocationSet(defSelection.editorDef.def.location);
+            const slices = this._executionSlicer.sliceAllExecutions(defSelection.cell, sliceSeeds);
+            const sliceSelection = {
                 userSelection: defSelection,
                 slice: slices[slices.length - 1]
             };
@@ -73,8 +77,8 @@ export class GatherController implements IGatherObserver {
 
         // If a def is deselected, deselect its slice too.
         if (eventType == GatherModelEvent.DEF_DESELECTED) {
-            let defSelection = eventData as DefSelection;
-            for (let sliceSelection of model.selectedSlices) {
+            const defSelection = eventData as DefSelection;
+            for (const sliceSelection of model.selectedSlices) {
                 if (sliceSelection.userSelection == defSelection) {
                     model.deselectSlice(sliceSelection);
                 }
@@ -84,10 +88,10 @@ export class GatherController implements IGatherObserver {
 
         // If output is selected, select the code that produced it too.
         if (eventType == GatherModelEvent.OUTPUT_SELECTED) {
-            let outputSelection = eventData as OutputSelection;
-            let cell = outputSelection.cell;
-            let slices = this._executionSlicer.sliceAllExecutions(cell);
-            let sliceSelection = {
+            const outputSelection = eventData as OutputSelection;
+            const cell = outputSelection.cell;
+            const slices = this._executionSlicer.sliceAllExecutions(cell);
+            const sliceSelection = {
                 userSelection: outputSelection,
                 slice: slices[slices.length - 1]
             };
@@ -97,8 +101,8 @@ export class GatherController implements IGatherObserver {
 
         // If an output is deselected, deselect its slice too.
         if (eventType == GatherModelEvent.OUTPUT_DESELECTED) {
-            let outputSelection = eventData as OutputSelection;
-            for (let sliceSelection of model.selectedSlices) {
+            const outputSelection = eventData as OutputSelection;
+            for (const sliceSelection of model.selectedSlices) {
                 if (sliceSelection.userSelection == outputSelection) {
                     model.deselectSlice(sliceSelection);
                 }
@@ -106,9 +110,4 @@ export class GatherController implements IGatherObserver {
             model.removeSelectedOutputSlices(outputSelection);
         }
     }
-
-    private _executionSlicer: ExecutionLogSlicer;
-    private _cellClipboard: Clipboard;
-    private _notebookOpener: NotebookOpener;
-    private _scriptOpener: ScriptOpener;
 }

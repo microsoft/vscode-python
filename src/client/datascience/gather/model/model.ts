@@ -50,7 +50,6 @@ export type GatherEventData = GatherState | IGatherCell | EditorDef | DefSelecti
 @injectable()
 export class GatherModel implements IGatherModel {
     private _state: GatherState = GatherState.SELECTING;
-    private _executionLog: IExecutionLogSlicer;
     private _observers: IGatherObserver[] = [];
     private _lastExecutedCell: IGatherCell | undefined;
     private _lastDeletedCell: IGatherCell | undefined;
@@ -65,10 +64,9 @@ export class GatherModel implements IGatherModel {
     private _chosenSlices: SlicedExecution[] = [];
 
     constructor(
-        @inject(IExecutionLogSlicer) executionLog: IExecutionLogSlicer
+        @inject(IExecutionLogSlicer) private _executionLogSlicer: IExecutionLogSlicer
     ) {
-        this._executionLog = executionLog;
-        this._executionLog.executionLogged.connect((_, cellExecution) => {
+        this._executionLogSlicer.executionLogged.connect((_, cellExecution) => {
             this.notifyObservers(GatherModelEvent.CELL_EXECUTION_LOGGED, cellExecution.cell);
         });
     }
@@ -92,12 +90,12 @@ export class GatherModel implements IGatherModel {
     /**
      * Get exeuction history for the notebook.
      */
-    get executionLog(): IExecutionLogSlicer {
-        return this._executionLog;
+    get executionLogSlicer(): IExecutionLogSlicer {
+        return this._executionLogSlicer;
     }
 
     public getCellProgram(cell: IGatherCell): CellProgram {
-        return this._executionLog.getCellProgram(cell);
+        return this._executionLogSlicer.getCellProgram(cell);
     }
 
     /**
