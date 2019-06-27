@@ -511,3 +511,19 @@ export interface IPlotViewer extends IDisposable {
     addPlot(imageHtml: string) : Promise<void>;
     show(): Promise<void>;
 }
+
+export interface ICellHash {
+    line: number;       // 1 based
+    endLine: number;    // 1 based and inclusive
+    hash: string;
+    executionCount: number;
+}
+
+export interface IFileHashes {
+    file: string;
+    hashes: ICellHash[];
+}
+
+export interface ICellHashProvider {
+    getHashes() : IFileHashes[];
+}
