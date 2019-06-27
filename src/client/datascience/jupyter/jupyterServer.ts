@@ -142,7 +142,7 @@ export class JupyterServerBase implements INotebookServer {
         private asyncRegistry: IAsyncDisposableRegistry,
         private configService: IConfigurationService,
         private sessionManager: IJupyterSessionManager,
-        private gatherModel: IGatherModel
+        private _gatherModel: IGatherModel
     ) {
         this.asyncRegistry.push(this);
     }
@@ -388,6 +388,10 @@ export class JupyterServerBase implements INotebookServer {
 
     }
 
+    public get gatherModel() {
+        return this._gatherModel;
+    }
+
     // Return a copy of the connection information that this server used to connect with
     public getConnectionInfo(): IConnection | undefined {
         if (!this.launchInfo) {
@@ -504,7 +508,7 @@ export class JupyterServerBase implements INotebookServer {
 
                 // Add executed code cell to the execution log after code has been executed
                 const gatherCell = (convertToGatherCell(cells[1]) as LabCell).deepCopy();
-                this.gatherModel.executionLogSlicer.logExecution(gatherCell);
+                this._gatherModel.executionLogSlicer.logExecution(gatherCell);
 
                 return results;
             } else if (cells.length > 0) {
@@ -516,7 +520,7 @@ export class JupyterServerBase implements INotebookServer {
                     // Add executed code cell to the execution log after code has been executed
                 if (isCode) {
                     const gatherCell = (convertToGatherCell(cells[1]) as LabCell).deepCopy();
-                    this.gatherModel.executionLogSlicer.logExecution(gatherCell);
+                    this._gatherModel.executionLogSlicer.logExecution(gatherCell);
                 }
                 return results;
             }
