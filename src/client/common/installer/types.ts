@@ -32,3 +32,9 @@ export interface IProductPathService {
     getExecutableNameFromSettings(product: Product, resource?: Uri): string;
     isExecutableAModule(product: Product, resource?: Uri): Boolean;
 }
+export const IExtensionInstaller = Symbol('IExtensionInstaller');
+export interface IExtensionInstaller {
+    installUsingVSIX(pathToVSIX: string): Promise<void>;
+    installStable(): Promise<void>;
+    downloadInsiders(): Promise<string>;
+}

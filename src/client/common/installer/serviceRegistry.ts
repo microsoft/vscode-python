@@ -13,7 +13,8 @@ import { PipInstaller } from './pipInstaller';
 import { PoetryInstaller } from './poetryInstaller';
 import { CTagsProductPathService, DataScienceProductPathService, FormatterProductPathService, LinterProductPathService, RefactoringLibraryProductPathService, TestFrameworkProductPathService } from './productPath';
 import { ProductService } from './productService';
-import { IInstallationChannelManager, IModuleInstaller, IProductPathService, IProductService } from './types';
+import { IInstallationChannelManager, IModuleInstaller, IProductPathService, IProductService, IExtensionInstaller } from './types';
+import { ExtensionInstaller } from './extensionInstaller';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, CondaInstaller);
@@ -21,6 +22,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PipEnvInstaller);
     serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PoetryInstaller);
     serviceManager.addSingleton<IInstallationChannelManager>(IInstallationChannelManager, InstallationChannelManager);
+    serviceManager.addSingleton<IExtensionInstaller>(IExtensionInstaller, ExtensionInstaller);
 
     serviceManager.addSingleton<IProductService>(IProductService, ProductService);
     serviceManager.addSingleton<IProductPathService>(IProductPathService, CTagsProductPathService, ProductType.WorkspaceSymbols);

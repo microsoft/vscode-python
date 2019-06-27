@@ -9,12 +9,13 @@ import { ICommandManager } from '../application/types';
 import { PVSC_EXTENSION_ID, STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { IFileDownloader, IOutputChannel } from '../types';
 import { LanguageService } from '../utils/localize';
+import { IExtensionInstaller } from './types';
 
 const developmentBuildUri = 'https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix';
 const vsixFileExtension = '.vsix';
 
 @injectable()
-export class ExtensionInstaller {
+export class ExtensionInstaller implements IExtensionInstaller {
     constructor(
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel,
         @inject(IFileDownloader) private readonly fileDownloader: IFileDownloader,
