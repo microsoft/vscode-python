@@ -1,18 +1,21 @@
 * InsidersExtensionService implements IExtensionService
     * activate
-        - registerCommand
+        - If hasUserConfiguredChannel or activatedOnce, return
+        - registerCommandsAndHandlers
         - get download channel
         - handleChannel
-    * handleChannel()
+    * handleChannel(channel)
         - If channel rules allows insiders
             - downloadInsiders
             - Installs VSIX
-            - IF USING VSCODE-INSIDERS (?)
-                - Prompts
-        - If channel is stable, install stable
-    * registerCommands()
-    * OnEvent(channel)
-        - handleChannel
+        - If channel rules allows stable
+            - Install stable
+        - if using VSCODE-INSIDERS (?)
+            - Prompts
+        - Make sure we are asking user to reload in case we install
+    * registerCommandsAndHandlers()
+        - OnChannelChange(channel)
+            - handleChannel
 
 * InsidersPrompt
     * notifyUser
@@ -23,6 +26,12 @@
 
 * InsidersDownloadChannelRules implements IInsidersDownloadChannelRules
     * stable
+        - shouldLookForInsidersBuild()
+            - if using VSCODE-INSIDERS and if using default channel configuration
+                - look for insiders
+        - shouldLookForStableBuild()
+            - if using VSCODE-INSIDERS and if using default channel configuration
+                - look for insiders
     * weekly
     * daily
 
@@ -30,6 +39,7 @@
     * getDownloadChannel
     * setDownloadChannel
     * onChannelChange
+    * hasUserConfiguredChannel
 
 * ExtensionInstaller
     * downloadInsiders()
