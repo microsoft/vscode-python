@@ -287,6 +287,20 @@ export class DataScience implements IDataScience {
         }
     }
 
+    private async debugCurrentCell(): Promise<void> {
+        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
+
+        const currentCodeLens = this.getCurrentCodeLens();
+        if (currentCodeLens) {
+            const activeCodeWatcher = this.getCurrentCodeWatcher();
+            if (activeCodeWatcher) {
+                return activeCodeWatcher.debugCurrentCell();
+            }
+        } else {
+            return Promise.resolve();
+        }
+    }
+
     private validateURI = (testURI: string): string | undefined | null => {
         try {
             // tslint:disable-next-line:no-unused-expression
@@ -359,6 +373,8 @@ export class DataScience implements IDataScience {
         disposable = this.commandManager.registerCommand(Commands.RunFileInInteractiveWindows, this.runFileInteractive, this);
         this.disposableRegistry.push(disposable);
         disposable = this.commandManager.registerCommand(Commands.AddCellBelow, this.addCellBelow, this);
+        this.disposableRegistry.push(disposable);
+        disposable = this.commandManager.registerCommand(Commands.DebugCurrentCellPalette, this.debugCurrentCell, this);
         this.disposableRegistry.push(disposable);
         this.commandListeners.forEach((listener: IDataScienceCommandListener) => {
             listener.register(this.commandManager);

@@ -10,7 +10,9 @@ import { IWebPanel, IWebPanelMessageListener, IWebPanelProvider, IWorkspaceServi
 import { traceInfo } from '../common/logger';
 import { IConfigurationService, IDisposable } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
-import { DefaultTheme } from './constants';
+import { StopWatch } from '../common/utils/stopWatch';
+import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
+import { DefaultTheme, Telemetry } from './constants';
 import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from './messages';
 import { ICodeCssGenerator, IDataScienceExtraSettings, IThemeFinder } from './types';
 
@@ -24,6 +26,7 @@ export class WebViewHost<IMapping> implements IDisposable {
     private themeChangeHandler: IDisposable | undefined;
     private settingsChangeHandler: IDisposable | undefined;
     private themeIsDarkPromise: Deferred<boolean>;
+    private startupStopwatch = new StopWatch();
 
     constructor(
         @unmanaged() private configService: IConfigurationService,
@@ -187,6 +190,7 @@ export class WebViewHost<IMapping> implements IDisposable {
         }
     }
 
+    @captureTelemetry(Telemetry.WebviewStyleUpdate)
     private async handleCssRequest(request: IGetCssRequest) : Promise<void> {
         if (!this.themeIsDarkPromise.resolved) {
             this.themeIsDarkPromise.resolve(request.isDark);
@@ -200,6 +204,7 @@ export class WebViewHost<IMapping> implements IDisposable {
         return this.postMessageInternal(CssMessages.GetCssResponse, { css, theme: settings.extraSettings.theme, knownDark: isDark });
     }
 
+    @captureTelemetry(Telemetry.WebviewMonacoStyleUpdate)
     private async handleMonacoThemeRequest(request: IGetMonacoThemeRequest) : Promise<void> {
         if (!this.themeIsDarkPromise.resolved) {
             this.themeIsDarkPromise.resolve(request.isDark);
@@ -215,6 +220,10 @@ export class WebViewHost<IMapping> implements IDisposable {
     // tslint:disable-next-line:no-any
     private webPanelRendered() {
         if (!this.webPanelInit.resolved) {
+            // Send telemetry for startup
+            sendTelemetryEvent(Telemetry.WebviewStartup, this.startupStopwatch.elapsedTime, {type: this.title});
+
+            // Resolve our started promise. This means the webpanel is ready to go.
             this.webPanelInit.resolve();
         }
     }

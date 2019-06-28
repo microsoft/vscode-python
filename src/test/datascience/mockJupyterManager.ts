@@ -100,7 +100,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         this.kernelSpecs.push({name: '0e8519db-0895-416c-96df-fa80131ecea0', dir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0'});
 
         // Setup our default cells that happen for everything
-        this.addCell(CodeSnippits.MatplotLibInit);
+        this.addCell(CodeSnippits.MatplotLibInitSvg);
         this.addCell('matplotlib.style.use(\'dark_background\')');
         this.addCell(`matplotlib.rcParams.update(${Identifiers.MatplotLibDefaultParams})`);
         this.addCell(`%cd "${path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience')}"`);
