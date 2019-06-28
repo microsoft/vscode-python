@@ -185,6 +185,21 @@
                 "category": "Python"
             },
             {
+                "command": "python.switchToStable",
+                "title": "%python.command.python.setInterpreter.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.switchToInsidersDaily",
+                "title": "%python.command.python.switchToInsidersDaily.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.switchToInsidersWeekly",
+                "title": "%python.command.python.switchToInsidersWeekly.title%",
+                "category": "Python"
+            },
+            {
                 "command": "python.updateSparkLibrary",
                 "title": "%python.command.python.updateSparkLibrary.title%",
                 "category": "Python"

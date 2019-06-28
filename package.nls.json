@@ -7,6 +7,9 @@
     "python.command.python.debugtests.title": "Debug All Tests",
     "python.command.python.execInTerminal.title": "Run Python File in Terminal",
     "python.command.python.setInterpreter.title": "Select Interpreter",
+    "python.command.python.switchToStable.title": "Switch to Stable build",
+    "python.command.python.switchToInsidersDaily.title": "Switch to Insiders build (daily)",
+    "python.command.python.switchToInsidersWeekly.title": "Switch to Insiders build (weekly)",
     "python.command.python.updateSparkLibrary.title": "Update Workspace PySpark Libraries",
     "python.command.python.refactorExtractVariable.title": "Extract Variable",
     "python.command.python.refactorExtractMethod.title": "Extract Method",
@@ -288,9 +291,9 @@
     "DataScience.imageListLabel": "Image",
     "DataScience.exportImageFailed": "Error exporting image: {0}",
     "downloading.file": "Downloading {0}...",
-    "downloading.file.progress": "{0}{1} of {2} KB ({3})",
+    "downloading.file.progress": "{0}{1} of {2} KB ({3}%)",
     "DataScience.jupyterDataRateExceeded": "Cannot view variable because data rate exceeded. Please restart your server with a higher data rate limit. For example, --NotebookApp.iopub_data_rate_limit=10000000000.0",
-    "DataScience.addCellBelowCommandTitle" : "Add cell",
-    "DataScience.debugCellCommandTitle" : "Debug cell",
-    "DataScience.variableExplorerDisabledDuringDebugging" : "Variables are not available while debugging."
+    "DataScience.addCellBelowCommandTitle": "Add cell",
+    "DataScience.debugCellCommandTitle": "Debug cell",
+    "DataScience.variableExplorerDisabledDuringDebugging": "Variables are not available while debugging."
 }

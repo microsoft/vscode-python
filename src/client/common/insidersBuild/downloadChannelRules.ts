@@ -5,21 +5,25 @@
 
 import { inject, injectable } from 'inversify';
 import { IApplicationEnvironment } from '../application/types';
+import { IPersistentStateFactory } from '../types';
 import { IInsidersDownloadChannelRule, IInsidersDownloadChannelService } from './types';
 
 const frequencyForDailyInsidersCheck = 1000 * 60 * 60 * 24; // One day.
 const frequencyForWeeklyInsidersCheck = 1000 * 60 * 60 * 24 * 7; // One week.
-let lastLookUpTime = -1;
+const lastLookUpTimeKey = 'INSIDERS_LAST_LOOK_UP_TIME_KEY';
 
 @injectable()
 export class IInsidersDownloadStableChannelRule implements IInsidersDownloadChannelRule {
     constructor(
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
-        @inject(IInsidersDownloadChannelService) private readonly insidersDownloadChannelService: IInsidersDownloadChannelService
+        @inject(IInsidersDownloadChannelService) private readonly insidersDownloadChannelService: IInsidersDownloadChannelService,
+        @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory
     ) { }
     public async shouldLookForInsidersBuild(): Promise<boolean> {
         if (this.appEnvironment.channel === 'insiders' && !this.insidersDownloadChannelService.hasUserConfiguredChannel) {
             // If using VS Code Insiders and channel is using default configuration, use insiders build as default
+            const lastLookUpTime = this.persistentStateFactory.createGlobalPersistentState(lastLookUpTimeKey, -1);
+            await lastLookUpTime.updateValue(Date.now());
             return true;
         }
         return false;
@@ -34,10 +38,12 @@ export class IInsidersDownloadStableChannelRule implements IInsidersDownloadChan
 }
 @injectable()
 export class IInsidersDownloadDailyChannelRule implements IInsidersDownloadChannelRule {
+    constructor(@inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory) { }
     public async shouldLookForInsidersBuild(): Promise<boolean> {
         // If we have not looked for it in the last 24 hours, then look.
-        if (lastLookUpTime === -1 || lastLookUpTime + frequencyForDailyInsidersCheck < Date.now()) {
-            lastLookUpTime = Date.now();
+        const lastLookUpTime = this.persistentStateFactory.createGlobalPersistentState(lastLookUpTimeKey, -1);
+        if (lastLookUpTime.value === -1 || lastLookUpTime.value + frequencyForDailyInsidersCheck < Date.now()) {
+            await lastLookUpTime.updateValue(Date.now());
             return true;
         }
         return false;
@@ -48,10 +54,12 @@ export class IInsidersDownloadDailyChannelRule implements IInsidersDownloadChann
 }
 @injectable()
 export class IInsidersDownloadWeeklyChannelRule implements IInsidersDownloadChannelRule {
+    constructor(@inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory) { }
     public async shouldLookForInsidersBuild(): Promise<boolean> {
         // If we have not looked for it in the last week, then look.
-        if (lastLookUpTime === -1 || lastLookUpTime + frequencyForWeeklyInsidersCheck < Date.now()) {
-            lastLookUpTime = Date.now();
+        const lastLookUpTime = this.persistentStateFactory.createGlobalPersistentState(lastLookUpTimeKey, -1);
+        if (lastLookUpTime.value === -1 || lastLookUpTime.value + frequencyForWeeklyInsidersCheck < Date.now()) {
+            await lastLookUpTime.updateValue(Date.now());
             return true;
         }
         return false;

@@ -28,13 +28,13 @@ export class InsidersExtensionService implements IExtensionActivationService {
     ) { }
 
     public async activate(_resource: Resource) {
-        if (this.activatedOnce || this.insidersDownloadChannelService.hasUserConfiguredChannel) {
+        if (this.activatedOnce) {
             return;
         }
-        this.activatedOnce = true;
         this.registerCommandsAndHandlers();
+        this.activatedOnce = true;
         const downloadChannel = this.insidersDownloadChannelService.getDownloadChannel();
-        await this.handleChannel(downloadChannel);
+        this.handleChannel(downloadChannel).ignoreErrors();
     }
 
     public async handleChannel(downloadChannel: InsidersBuildDownloadChannels): Promise<void> {
@@ -54,7 +54,7 @@ export class InsidersExtensionService implements IExtensionActivationService {
         }
     }
 
-    public registerCommandsAndHandlers() {
+    public registerCommandsAndHandlers(): void {
         this.insidersDownloadChannelService.onDidChannelChange(channel => this.handleChannel(channel), this, this.disposableRegistry);
         this.disposableRegistry.push(this.cmdManager.registerCommand(Commands.SwitchToStable, () => this.insidersDownloadChannelService.setDownloadChannel('Stable'), this));
         this.disposableRegistry.push(this.cmdManager.registerCommand(Commands.SwitchToInsidersDaily, () => this.insidersDownloadChannelService.setDownloadChannel('InsidersDaily'), this));
