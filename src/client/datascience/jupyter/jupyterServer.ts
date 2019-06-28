@@ -245,21 +245,7 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     public executeObservable(code: string, file: string, line: number, id: string, silent: boolean = false): Observable<ICell[]> {
-        // Create an observable and wrap the result so we can time it.
-        const stopWatch = new StopWatch();
-        const result = this.executeObservableImpl(code, file, line, id, silent);
-        return new Observable<ICell[]>(subscriber => {
-            result.subscribe(cells => {
-                subscriber.next(cells);
-            },
-            error => {
-                subscriber.error(error);
-            },
-            () => {
-                subscriber.complete();
-                sendTelemetryEvent(Telemetry.ExecuteCell, stopWatch.elapsedTime);
-            });
-        });
+        return this.executeObservableImpl(code, file, line, id, silent);
     }
 
     public async getSysInfo(): Promise<ICell> {
@@ -514,6 +500,7 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     private executeObservableImpl(code: string, file: string, line: number, id: string, silent?: boolean): Observable<ICell[]> {
+        const stopWatch = new StopWatch();
         // If we have a session, execute the code now.
         if (this.session) {
             // Generate our cells ahead of time
@@ -527,23 +514,53 @@ export class JupyterServerBase implements INotebookServer {
                     this.executeMarkdownObservable(cells[0]),
                     this.executeCodeObservable(cells[1], silent));
 
-                // Add executed code cell to the execution log after code has been executed
-                const gatherCell = (convertToGatherCell(cells[1]) as LabCell).deepCopy();
-                this._gatherModel.executionLogSlicer.logExecution(gatherCell);
+                // Wrap the observable so we can
+                return new Observable<ICell[]>(subscriber => {
+                    results.subscribe(cells => {
+                        subscriber.next(cells);
+                    },
+                    error => {
+                        subscriber.error(error);
+                    },
+                    () => {
+                        subscriber.complete();
 
-                return results;
+                        // Add executed code cell to the execution log after code has been executed
+                        const gatherCell = (convertToGatherCell(cells[1]) as LabCell).deepCopy();
+                        this._gatherModel.executionLogSlicer.logExecution(gatherCell);
+
+                        // Log telemetry
+                        sendTelemetryEvent(Telemetry.ExecuteCell, stopWatch.elapsedTime);
+                    });
+                });
+
             } else if (cells.length > 0) {
                 // Either markdown or code
                 const isCode: boolean = cells[0].data.cell_type === 'code';
                 const results: Observable<ICell[]> = this.combineObservables(
                     isCode ? this.executeCodeObservable(cells[0], silent) : this.executeMarkdownObservable(cells[0]));
 
-                    // Add executed code cell to the execution log after code has been executed
-                if (isCode) {
-                    const gatherCell = (convertToGatherCell(cells[1]) as LabCell).deepCopy();
-                    this._gatherModel.executionLogSlicer.logExecution(gatherCell);
-                }
-                return results;
+                    return new Observable<ICell[]>(
+                    subscriber => {
+                        results.subscribe(cells => {
+                            subscriber.next(cells);
+                        },
+                        error => {
+                            subscriber.error(error);
+                        },
+                        () => {
+                            subscriber.complete();
+
+                            // Add executed code cell to the execution log after code has been executed
+                            if (isCode) {
+                                const gatherCell = (convertToGatherCell(cells[1]) as LabCell).deepCopy();
+                                this._gatherModel.executionLogSlicer.logExecution(gatherCell);
+                            }
+
+                            // Log telemetry
+                            sendTelemetryEvent(Telemetry.ExecuteCell, stopWatch.elapsedTime);
+                        });
+                    });
             }
         }
 
