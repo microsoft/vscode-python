@@ -109,6 +109,7 @@ suite('Python Settings', async () => {
 
     function testIfValueIsUpdated(settingName: string, value: any) {
         test(`${settingName} updated`, async () => {
+            expected.pythonPath = 'python3';
             (expected as any)[settingName] = value;
             initializeConfig(expected);
 
@@ -120,19 +121,19 @@ suite('Python Settings', async () => {
     }
 
     suite('String settings', async () => {
-        ['pythonPath', 'venvPath', 'condaPath', 'pipenvPath', 'envFile', 'poetryPath', 'insidersChannel'].forEach(settingName => {
+        ['pythonPath', 'venvPath', 'condaPath', 'pipenvPath', 'envFile', 'poetryPath', 'insidersChannel'].forEach(async settingName => {
             testIfValueIsUpdated(settingName, 'stringValue');
         });
     });
 
     suite('Boolean settings', async () => {
-        ['downloadLanguageServer', 'jediEnabled', 'autoUpdateLanguageServer', 'globalModuleInstallation'].forEach(settingName => {
+        ['downloadLanguageServer', 'jediEnabled', 'autoUpdateLanguageServer', 'globalModuleInstallation'].forEach(async settingName => {
             testIfValueIsUpdated(settingName, true);
         });
     });
 
     suite('Number settings', async () => {
-        ['jediMemoryLimit'].forEach(settingName => {
+        ['jediMemoryLimit'].forEach(async settingName => {
             testIfValueIsUpdated(settingName, 1001);
         });
     });
