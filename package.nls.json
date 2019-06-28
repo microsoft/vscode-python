@@ -33,6 +33,7 @@
     "python.command.python.datascience.runcellandallbelow.title": "Run Below",
     "python.command.python.datascience.runallcellsabove.palette.title": "Run Cells Above Current Cell",
     "python.command.python.datascience.runcurrentcellandallbelow.palette.title": "Run Current Cell and Below",
+    "python.command.python.datascience.debugcurrentcell.palette.title": "Debug Current Cell",
     "python.command.python.datascience.runtoline.title": "Run To Line in Python Interactive window",
     "python.command.python.datascience.runfromline.title": "Run From Line in Python Interactive window",
     "python.command.python.datascience.runcurrentcell.title": "Run Current Cell",

@@ -6,27 +6,40 @@ import * as vscode from 'vscode';
 
 import { ICommandManager, IDocumentManager } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
-import { IConfigurationService, IDataScienceSettings } from '../../common/types';
+import { IConfigurationService, IDataScienceSettings, IDisposable, IDisposableRegistry } from '../../common/types';
+import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
-import { EditorContexts } from '../constants';
+import { sendTelemetryEvent } from '../../telemetry';
+import { EditorContexts, Telemetry } from '../constants';
 import { ICodeWatcher, IDataScienceCodeLensProvider } from '../types';
 
 @injectable()
-export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider {
+export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider, IDisposable {
+    private totalExecutionTimeInMs : number = 0;
+    private totalGetCodeLensCalls : number = 0;
     private activeCodeWatchers: ICodeWatcher[] = [];
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
                 @inject(IDocumentManager) private documentManager: IDocumentManager,
                 @inject(IConfigurationService) private configuration: IConfigurationService,
-                @inject(ICommandManager) private commandManager: ICommandManager
+                @inject(ICommandManager) private commandManager: ICommandManager,
+                @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
         )
     {
+        disposableRegistry.push(this);
+    }
+
+    public dispose() {
+        // On shutdown send how long on average we spent parsing code lens
+        if (this.totalGetCodeLensCalls > 0) {
+            sendTelemetryEvent(Telemetry.CodeLensAverageAcquisitionTime, this.totalExecutionTimeInMs / this.totalGetCodeLensCalls);
+        }
     }
 
     // CodeLensProvider interface
     // Some implementation based on DonJayamanne's jupyter extension work
     public provideCodeLenses(document: vscode.TextDocument, _token: vscode.CancellationToken): vscode.CodeLens[] {
         // Get the list of code lens for this document.
-        const result = this.getCodeLens(document);
+        const result = this.getCodeLensTimed(document);
 
         // Update the hasCodeCells context at the same time we are asked for codelens as VS code will
         // ask whenever a change occurs.
@@ -39,6 +52,14 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     // IDataScienceCodeLensProvider interface
     public getCodeWatcher(document: vscode.TextDocument): ICodeWatcher | undefined {
         return this.matchWatcher(document.fileName, document.version, this.configuration.getSettings().datascience);
+    }
+
+    private getCodeLensTimed(document: vscode.TextDocument): vscode.CodeLens[] {
+        const stopWatch = new StopWatch();
+        const result = this.getCodeLens(document);
+        this.totalExecutionTimeInMs += stopWatch.elapsedTime;
+        this.totalGetCodeLensCalls += 1;
+        return result;
     }
 
     private getCodeLens(document: vscode.TextDocument): vscode.CodeLens[] {

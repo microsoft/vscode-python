@@ -320,6 +320,7 @@ export interface IDataScienceSettings {
     allowUnauthorizedRemoteConnection?: boolean;
     askForKernelRestart?: boolean;
     enablePlotViewer?: boolean;
+    enableDebugging?: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

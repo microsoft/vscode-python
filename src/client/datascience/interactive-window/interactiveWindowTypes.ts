@@ -74,7 +74,15 @@ export interface ICopyCode {
     source: string;
 }
 
+export enum SysInfoReason {
+    Start,
+    Restart,
+    Interrupt,
+    New
+}
+
 export interface IAddedSysInfo {
+    type: SysInfoReason;
     id: string;
     sysInfoCell: ICell;
 }
