@@ -14,6 +14,7 @@ import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { Identifiers } from '../constants';
 import { ICell, IInteractiveWindowProvider, IJupyterExecution, IJupyterVariable, IJupyterVariables } from '../types';
+import { JupyterDataRateLimitError } from './jupyterDataRateLimitError';
 
 @injectable()
 export class JupyterVariables implements IJupyterVariables {
@@ -142,6 +143,17 @@ export class JupyterVariables implements IJupyterVariables {
             const codeCell = cells[0].data as nbformat.ICodeCell;
             if (codeCell.outputs.length > 0) {
                 const codeCellOutput = codeCell.outputs[0] as nbformat.IOutput;
+                if (codeCellOutput && codeCellOutput.output_type === 'stream' && codeCellOutput.name === 'stderr' && codeCellOutput.hasOwnProperty('text')) {
+                    const resultString = codeCellOutput.text as string;
+                    // See if this the IOPUB data rate limit problem
+                    if (resultString.includes('iopub_data_rate_limit')) {
+                        throw new JupyterDataRateLimitError();
+                    } else {
+                        const error = localize.DataScience.jupyterGetVariablesExecutionError().format(resultString);
+                        traceError(error);
+                        throw new Error(error);
+                    }
+                }
                 if (codeCellOutput && codeCellOutput.output_type === 'stream' && codeCellOutput.hasOwnProperty('text')) {
                     const resultString = codeCellOutput.text as string;
                     return JSON.parse(resultString) as T;

@@ -277,5 +277,6 @@
     "DataScience.imageListLabel": "Image",
     "DataScience.exportImageFailed": "Error exporting image: {0}",
     "downloading.file": "Downloading {0}...",
-    "downloading.file.progress": "{0}{1} of {2} KB ({3})"
+    "downloading.file.progress": "{0}{1} of {2} KB ({3})",
+    "DataScience.jupyterDataRateExceeded": "Cannot view variable, Data rate limit exceeded on server.\r\nTo change this limit, set the config variable `--NotebookApp.iopub_data_rate_limit` when starting your server."
 }
