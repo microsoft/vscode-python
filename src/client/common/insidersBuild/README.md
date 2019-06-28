@@ -49,3 +49,15 @@
 Modify config settings to add new setting
 
 Modify application environment to add if using VSCODE insiders method
+
+Problems:
+- User switches to 'stable' while extension is not active, we should be looking for 'stable' in that case
+- When to prompt user for reload - When Channel is changed midway (but not when 'use stable' option is selected in the prompt)
+
+Expected runs:
+    - Default channel is stable
+    - Download and install insiders
+    - Prompt user to 'reload' to use insiders, or click 'use stable'
+    - Option 1 - 'reload'
+        - Setting gets changed to 'InsidersWeekly' and we reload
+    - Option 2 - 'use stable'

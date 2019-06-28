@@ -41,16 +41,16 @@ export namespace LanguageService {
     export const lsFailedToStart = localize('LanguageService.lsFailedToStart', 'We encountered an issue starting the Language Server. Reverting to the alternative, Jedi. Check the Python output panel for details.');
     export const lsFailedToDownload = localize('LanguageService.lsFailedToDownload', 'We encountered an issue downloading the Language Server. Reverting to the alternative, Jedi. Check the Python output panel for details.');
     export const lsFailedToExtract = localize('LanguageService.lsFailedToExtract', 'We encountered an issue extracting the Language Server. Reverting to the alternative, Jedi. Check the Python output panel for details.');
-    export const downloadFailedOutputMessage = localize('LanguageService.downloadFailedOutputMessage', 'download failed.');
-    export const extractionFailedOutputMessage = localize('LanguageService.extractionFailedOutputMessage', 'extraction failed.');
-    export const extractionCompletedOutputMessage = localize('LanguageService.extractionCompletedOutputMessage', 'complete.');
+    export const downloadFailedOutputMessage = localize('LanguageService.downloadFailedOutputMessage', 'Language server download failed.');
+    export const extractionFailedOutputMessage = localize('LanguageService.extractionFailedOutputMessage', 'Language server extraction failed.');
+    export const extractionCompletedOutputMessage = localize('LanguageService.extractionCompletedOutputMessage', 'Language server dowload complete.');
     export const extractionDoneOutputMessage = localize('LanguageService.extractionDoneOutputMessage', 'done.');
     export const reloadVSCodeIfSeachPathHasChanged = localize('LanguageService.reloadVSCodeIfSeachPathHasChanged', 'Search paths have changed for this Python interpreter. Please reload the extension to ensure that the IntelliSense works correctly.');
 
 }
 
 export namespace Http {
-    export const downloadingFile = localize('downloading.file', 'Downloading {0}...');
+    export const downloadingFile = localize('downloading.file', 'Downloading {0}...\n');
     export const downloadingFileProgress = localize('downloading.file.progress', '{0}{1} of {2} KB ({3}%)');
 }
 export namespace Experiments {
@@ -66,6 +66,8 @@ export namespace Insiders {
     export const reload = localize('Insiders.reload', 'Reload');
     export const useStable = localize('Insiders.useStable', 'Use Stable');
     export const promptMessage = localize('Insiders.promptMessage', 'We noticed you are using VS Code Insiders. Reload to use the Insiders build of the extension.');
+    export const downloadCompletedOutputMessage = localize('Insiders.downloadCompletedOutputMessage', 'Insiders build download complete');
+    export const startingDownloadOutputMessage = localize('Insiders.startingDownloadOutputMessage', 'Starting download for Insiders build.');
 }
 
 export namespace Logging {

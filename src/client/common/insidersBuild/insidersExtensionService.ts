@@ -39,19 +39,13 @@ export class InsidersExtensionService implements IExtensionActivationService {
 
     public async handleChannel(downloadChannel: InsidersBuildDownloadChannels): Promise<void> {
         const channelRule = this.serviceContainer.get<IInsidersDownloadChannelRule>(IInsidersDownloadChannelRule, downloadChannel);
-        const shouldLookForInsiders = await channelRule.shouldLookForInsidersBuild();
-        if (shouldLookForInsiders) {
-            const vsixFilePath = await this.extensionInstaller.downloadInsiders();
-            await this.extensionInstaller.installUsingVSIX(vsixFilePath);
-            await this.fs.deleteFile(vsixFilePath);
-        }
-        const shouldLookForStable = await channelRule.shouldLookForStableBuild();
-        if (shouldLookForStable) {
-            await this.extensionInstaller.installStable();
-        }
-        if (this.appEnvironment.channel === 'insiders') {
-            await this.insidersPrompt.notifyUser();
-        }
+        await this.optionallyInstallInsidersAndNotify(channelRule);
+        await this.optionallyInstallStable(channelRule);
+        // if (onDidChannelChange) {
+        //     // Channel has changed to stable, prompt to reload window
+        //     // To do: Prompt user to reload
+        //     const x = 5;
+        // }
     }
 
     public registerCommandsAndHandlers(): void {
@@ -59,5 +53,24 @@ export class InsidersExtensionService implements IExtensionActivationService {
         this.disposableRegistry.push(this.cmdManager.registerCommand(Commands.SwitchToStable, () => this.insidersDownloadChannelService.setDownloadChannel('Stable'), this));
         this.disposableRegistry.push(this.cmdManager.registerCommand(Commands.SwitchToInsidersDaily, () => this.insidersDownloadChannelService.setDownloadChannel('InsidersDaily'), this));
         this.disposableRegistry.push(this.cmdManager.registerCommand(Commands.SwitchToInsidersWeekly, () => this.insidersDownloadChannelService.setDownloadChannel('InsidersWeekly'), this));
+    }
+
+    private async optionallyInstallInsidersAndNotify(channelRule: IInsidersDownloadChannelRule): Promise<void> {
+        const shouldLookForInsiders = await channelRule.shouldLookForInsidersBuild();
+        if (shouldLookForInsiders) {
+            const vsixFilePath = await this.extensionInstaller.downloadInsiders();
+            await this.extensionInstaller.installUsingVSIX(vsixFilePath);
+            await this.fs.deleteFile(vsixFilePath);
+        }
+        if (this.appEnvironment.channel === 'insiders') {
+            await this.insidersPrompt.notifyUser();
+        }
+    }
+
+    private async optionallyInstallStable(channelRule: IInsidersDownloadChannelRule): Promise<void> {
+        const shouldLookForStable = await channelRule.shouldLookForStableBuild();
+        if (shouldLookForStable) {
+            await this.extensionInstaller.installStable();
+        }
     }
 }

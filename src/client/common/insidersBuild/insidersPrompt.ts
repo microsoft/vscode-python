@@ -24,7 +24,6 @@ export class InsidersPrompt implements IInsidersPrompt {
     ) { }
     public async notifyUser() {
         const notificationPromptEnabled = this.persistentStateFactory.createGlobalPersistentState(insidersPromptStateKey, true);
-        await notificationPromptEnabled.updateValue(true);
         if (!notificationPromptEnabled.value) {
             return;
         }
@@ -37,7 +36,7 @@ export class InsidersPrompt implements IInsidersPrompt {
         }
         await notificationPromptEnabled.updateValue(false);
         if (selection === prompts[0]) {
-            await this.insidersDownloadChannelService.setDownloadChannel(InsidersBuildDownloadChannel.stable, false);
+            await this.insidersDownloadChannelService.setDownloadChannel(InsidersBuildDownloadChannel.stable);
         } else if (selection === prompts[1]) {
             await this.useInsidersAndReload();
         }

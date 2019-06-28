@@ -186,7 +186,7 @@
             },
             {
                 "command": "python.switchToStable",
-                "title": "%python.command.python.setInterpreter.title%",
+                "title": "%python.command.python.switchToStable.title%",
                 "category": "Python"
             },
             {

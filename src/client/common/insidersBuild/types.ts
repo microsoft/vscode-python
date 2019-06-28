@@ -2,8 +2,8 @@ import { Event } from 'vscode';
 
 export const IInsidersDownloadChannelRule = Symbol('IInsidersDownloadChannelRule');
 export interface IInsidersDownloadChannelRule {
-    shouldLookForInsidersBuild(isChannelUsingDefaultConfiguration?: boolean): Promise<boolean>;
-    shouldLookForStableBuild(isChannelUsingDefaultConfiguration?: boolean): Promise<boolean>;
+    shouldLookForInsidersBuild(): Promise<boolean>;
+    shouldLookForStableBuild(): Promise<boolean>;
 }
 
 export const IInsidersDownloadChannelService = Symbol('IInsidersDownloadChannelService');
