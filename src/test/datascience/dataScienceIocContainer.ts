@@ -4,6 +4,7 @@
 //tslint:disable:trailing-comma no-any
 import * as child_process from 'child_process';
 import { ReactWrapper } from 'enzyme';
+import * as fs from 'fs-extra';
 import { interfaces } from 'inversify';
 import * as path from 'path';
 import { SemVer } from 'semver';
@@ -288,6 +289,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         if (config.getCSSBasedConfiguration) {
             config.getCSSBasedConfiguration().dispose();
         }
+
+        fs.removeSync(path.join(EXTENSION_ROOT_DIR, 'test.ipynb'));
     }
 
     //tslint:disable:max-func-body-length
@@ -508,6 +511,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             dispose: () => { return; }
         };
 
+        fs.copyFileSync(path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'dataScience', 'test.ipynb'), path.join(EXTENSION_ROOT_DIR, 'test.ipynb'));
         appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAnyString())).returns((e) => { throw e; });
         appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
         appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));
