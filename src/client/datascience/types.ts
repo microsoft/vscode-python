@@ -5,20 +5,12 @@ import { nbformat } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
 import { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
-import {
-    CancellationToken,
-    CodeLens,
-    CodeLensProvider,
-    Disposable,
-    Event,
-    Range,
-    TextDocument,
-    TextEditor
-} from 'vscode';
+import { CancellationToken, CodeLens, CodeLensProvider, Disposable, Event, Range, TextDocument, TextEditor } from 'vscode';
 
 import { ICommandManager } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
 import { IAsyncDisposable, IDataScienceSettings, IDisposable } from '../common/types';
+import { StopWatch } from '../common/utils/stopWatch';
 import { PythonInterpreter } from '../interpreter/contracts';
 
 // Main interface
@@ -49,15 +41,21 @@ export enum InterruptResult {
     Restarted = 2
 }
 
+// Information needed to attach our debugger instance
+export interface IDebuggerConnectInfo {
+    hostName: string;
+    port: number;
+}
+
 // Information used to launch a notebook server
-export interface INotebookServerLaunchInfo
-{
+export interface INotebookServerLaunchInfo {
     connectionInfo: IConnection;
     currentInterpreter: PythonInterpreter | undefined;
     uri: string | undefined; // Different from the connectionInfo as this is the setting used, not the result
     kernelSpec: IJupyterKernelSpec | undefined;
     workingDir: string | undefined;
     purpose: string | undefined; // Purpose this server is for
+    enableDebugging: boolean | undefined; // If we should enable debugging for this server
 }
 
 export interface INotebookCompletion {
@@ -88,6 +86,7 @@ export interface INotebookServer extends IAsyncDisposable {
 }
 
 export interface INotebookServerOptions {
+    enableDebugging?: boolean;
     uri?: string;
     usingDarkTheme?: boolean;
     useDefaultConfig?: boolean;
@@ -108,6 +107,13 @@ export interface IJupyterExecution extends IAsyncDisposable {
     importNotebook(file: string, template: string | undefined) : Promise<string>;
     getUsableJupyterPython(cancelToken?: CancellationToken) : Promise<PythonInterpreter | undefined>;
     getServer(options?: INotebookServerOptions) : Promise<INotebookServer | undefined>;
+}
+
+export const IJupyterDebugger = Symbol('IJupyterDebugger');
+export interface IJupyterDebugger {
+    enableAttach(server: INotebookServer): Promise<void>;
+    startDebugging(server: INotebookServer): Promise<void>;
+    stopDebugging(server: INotebookServer): Promise<void>;
 }
 
 export interface IJupyterPasswordConnectInfo {
@@ -166,8 +172,8 @@ export interface IInteractiveWindow extends Disposable {
     ready: Promise<void>;
     onExecutedCode: Event<string>;
     show() : Promise<void>;
-    addCode(code: string, file: string, line: number, editor?: TextEditor) : Promise<void>;
-    // tslint:disable-next-line:no-any
+    addCode(code: string, file: string, line: number, editor?: TextEditor, runningStopWatch?: StopWatch) : Promise<void>;
+    debugCode(code: string, file: string, line: number, editor?: TextEditor, runningStopWatch?: StopWatch) : Promise<void>;
     startProgress(): void;
     stopProgress(): void;
     undoCells(): void;
@@ -235,6 +241,7 @@ export interface ICodeWatcher {
     runCellAndAllBelow(startLine: number, startCharacter: number): Promise<void>;
     runFileInteractive(): Promise<void>;
     addEmptyCellToBottom(): Promise<void>;
+    debugCurrentCell(): Promise<void>;
 }
 
 export enum CellState {

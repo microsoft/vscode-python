@@ -13,6 +13,7 @@ import { traceError } from '../../common/logger';
 import { IConfigurationService, IDisposable } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
+import { StopWatch } from '../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { ICodeCssGenerator, IDataViewer, IJupyterVariable, IJupyterVariables, IThemeFinder } from '../types';
@@ -24,6 +25,8 @@ import { DataViewerMessages, IDataViewerMapping, IGetRowsRequest } from './types
 export class DataViewer extends WebViewHost<IDataViewerMapping> implements IDataViewer, IDisposable {
     private disposed: boolean = false;
     private variable : IJupyterVariable | undefined;
+    private rowsTimer: StopWatch | undefined;
+    private pendingRowsCount: number = 0;
 
     constructor(
         @inject(IWebPanelProvider) provider: IWebPanelProvider,
@@ -87,11 +90,15 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
     }
 
     private async prepVariable(variable: IJupyterVariable) : Promise<IJupyterVariable> {
+        this.rowsTimer = new StopWatch();
         const output = await this.variableManager.getDataFrameInfo(variable);
 
         // Log telemetry about number of rows
         try {
             sendTelemetryEvent(Telemetry.ShowDataViewer, 0, {rows: output.rowCount ? output.rowCount : 0, columns: output.columns ? output.columns.length : 0 });
+
+            // Count number of rows to fetch so can send telemetry on how long it took.
+            this.pendingRowsCount = output.rowCount ? output.rowCount : 0;
         } catch {
             noop();
         }
@@ -103,11 +110,14 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
         try {
             if (this.variable && this.variable.rowCount) {
                 const allRows = await this.variableManager.getDataFrameRows(this.variable, 0, this.variable.rowCount);
+                this.pendingRowsCount = 0;
                 return this.postMessage(DataViewerMessages.GetAllRowsResponse, allRows);
             }
         } catch (e) {
             traceError(e);
             this.applicationShell.showErrorMessage(e);
+        } finally {
+            this.sendElapsedTimeTelemetry();
         }
     }
 
@@ -120,6 +130,15 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
         } catch (e) {
             traceError(e);
             this.applicationShell.showErrorMessage(e);
+        } finally {
+            this.pendingRowsCount = Math.min(0, this.pendingRowsCount - request.end);
+            this.sendElapsedTimeTelemetry();
+        }
+    }
+
+    private sendElapsedTimeTelemetry() {
+        if (this.rowsTimer && this.pendingRowsCount === 0) {
+            sendTelemetryEvent(Telemetry.ShowDataViewer, this.rowsTimer.elapsedTime);
         }
     }
 }

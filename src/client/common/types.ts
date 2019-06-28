@@ -319,6 +319,7 @@ export interface IDataScienceSettings {
     autoPreviewNotebooksInInteractivePane?: boolean;
     allowUnauthorizedRemoteConnection?: boolean;
     askForKernelRestart?: boolean;
+    enableDebugging?: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

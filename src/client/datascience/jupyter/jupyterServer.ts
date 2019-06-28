@@ -19,10 +19,12 @@ import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, I
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
+import { StopWatch } from '../../common/utils/stopWatch';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateCells } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
 import { concatMultilineString } from '../common';
-import { CodeSnippits, Identifiers } from '../constants';
+import { CodeSnippits, Identifiers, Telemetry } from '../constants';
 import {
     CellState,
     ICell,
@@ -174,8 +176,10 @@ export class JupyterServerBase implements INotebookServer {
 
             // Wait for it to be ready
             traceInfo(`Waiting for idle ${this.id}`);
+            const stopWatch = new StopWatch();
             const idleTimeout = this.configService.getSettings().datascience.jupyterLaunchTimeout;
             await this.session.waitForIdle(idleTimeout);
+            sendTelemetryEvent(Telemetry.WaitForIdleJupyter, stopWatch.elapsedTime);
 
             traceInfo(`Performing initial setup ${this.id}`);
             // Run our initial setup and plot magics
@@ -239,7 +243,21 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     public executeObservable(code: string, file: string, line: number, id: string, silent: boolean = false): Observable<ICell[]> {
-        return this.executeObservableImpl(code, file, line, id, silent);
+        // Create an observable and wrap the result so we can time it.
+        const stopWatch = new StopWatch();
+        const result = this.executeObservableImpl(code, file, line, id, silent);
+        return new Observable<ICell[]>(subscriber => {
+            result.subscribe(cells => {
+                subscriber.next(cells);
+            },
+            error => {
+                subscriber.error(error);
+            },
+            () => {
+                subscriber.complete();
+                sendTelemetryEvent(Telemetry.ExecuteCell, stopWatch.elapsedTime);
+            });
+        });
     }
 
     public async getSysInfo(): Promise<ICell> {
@@ -275,6 +293,7 @@ export class JupyterServerBase implements INotebookServer {
         };
     }
 
+    @captureTelemetry(Telemetry.RestartJupyterTime)
     public async restartKernel(timeoutMs: number): Promise<void> {
         if (this.session) {
             // Update our start time so we don't keep sending responses
@@ -296,6 +315,7 @@ export class JupyterServerBase implements INotebookServer {
         throw this.getDisposedError();
     }
 
+    @captureTelemetry(Telemetry.InterruptJupyterTime)
     public async interruptKernel(timeoutMs: number): Promise<InterruptResult> {
         if (this.session) {
             // Keep track of our current time. If our start time gets reset, we
@@ -437,6 +457,7 @@ export class JupyterServerBase implements INotebookServer {
         return new Error(localize.DataScience.sessionDisposed());
     }
 
+    @captureTelemetry(Telemetry.HiddenCellTime)
     private executeSilently(code: string, cancelToken?: CancellationToken): Promise<ICell[]> {
         // Create a deferred that we'll fire when we're done
         const deferred = createDeferred<ICell[]>();

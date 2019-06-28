@@ -329,6 +329,11 @@
                 "category": "Python"
             },
             {
+                "command": "python.datascience.debugcurrentcell.palette",
+                "title": "%python.command.python.datascience.debugcurrentcell.palette.title%",
+                "category": "Python"
+            },
+            {
                 "command": "python.datascience.execSelectionInteractive",
                 "title": "%python.command.python.datascience.execSelectionInteractive.title%",
                 "category": "Python"
@@ -613,6 +618,12 @@
                 {
                     "command": "python.datascience.runallcellsabove.palette",
                     "title": "%python.command.python.datascience.runallcellsabove.palette.title%",
+                    "category": "Python",
+                    "when": "python.datascience.hascodecells && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.debugcurrentcell.palette",
+                    "title": "%python.command.python.datascience.debugcurrentcell.palette.title%",
                     "category": "Python",
                     "when": "python.datascience.hascodecells && python.datascience.featureenabled"
                 },
@@ -1325,6 +1336,12 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Allow for connecting the Python Interactive window to a https Jupyter server that does not have valid certificates. This can be a security risk, so only use for known and trusted servers.",
+                    "scope": "resource"
+                },
+                "python.dataScience.enableDebugging": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "When starting a Python Interactive session import and enable the ptvsd debugger in the kernel.",
                     "scope": "resource"
                 },
                 "python.disableInstallationCheck": {
