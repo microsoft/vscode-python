@@ -290,7 +290,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             config.getCSSBasedConfiguration().dispose();
         }
 
-        fs.removeSync(path.join(EXTENSION_ROOT_DIR, 'test.ipynb'));
+        try {
+            fs.removeSync(path.join(EXTENSION_ROOT_DIR, 'test.ipynb'));
+        } catch {
+            noop();
+        }
     }
 
     //tslint:disable:max-func-body-length
