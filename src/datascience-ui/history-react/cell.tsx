@@ -140,7 +140,7 @@ export class Cell extends React.Component<ICellProps> {
     }
 
     private getDeleteString = () => {
-        return getLocString('DataScience.deleteButtonTooltip', 'Remove Cell');
+        return getLocString('DataScience.deleteButtonTooltip', 'Remove cell');
     }
 
     private getGoToCodeString = () => {
