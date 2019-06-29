@@ -61,3 +61,9 @@ Expected runs:
     - Option 1 - 'reload'
         - Setting gets changed to 'InsidersWeekly' and we reload
     - Option 2 - 'use stable'
+
+
+Things to do-
+* didChannelChange boolean
+* fire event everytime even when setting is changed
+* Modify get download channel to use 'InsidersWeekly' as default

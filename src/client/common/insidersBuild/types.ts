@@ -1,17 +1,16 @@
 import { Event } from 'vscode';
+import { Channel } from '../application/types';
 
 export const IInsidersDownloadChannelRule = Symbol('IInsidersDownloadChannelRule');
 export interface IInsidersDownloadChannelRule {
-    shouldLookForInsidersBuild(): Promise<boolean>;
-    shouldLookForStableBuild(): Promise<boolean>;
+    buildToLookFor(didChannelChange?: boolean): Promise<Channel | undefined>;
 }
 
 export const IInsidersDownloadChannelService = Symbol('IInsidersDownloadChannelService');
 export interface IInsidersDownloadChannelService {
     readonly onDidChannelChange: Event<InsidersBuildDownloadChannels>;
-    readonly hasUserConfiguredChannel: boolean;
     getDownloadChannel(): InsidersBuildDownloadChannels;
-    setDownloadChannel(value: InsidersBuildDownloadChannels, fireEvent?: boolean): Promise<void>;
+    setDownloadChannel(value: InsidersBuildDownloadChannels, shouldReload?: boolean): Promise<void>;
 }
 
 export const IInsidersPrompt = Symbol('IInsidersPrompt');

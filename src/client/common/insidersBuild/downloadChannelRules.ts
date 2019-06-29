@@ -4,9 +4,9 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { IApplicationEnvironment } from '../application/types';
+import { Channel } from '../application/types';
 import { IPersistentStateFactory } from '../types';
-import { IInsidersDownloadChannelRule, IInsidersDownloadChannelService } from './types';
+import { IInsidersDownloadChannelRule } from './types';
 
 const frequencyForDailyInsidersCheck = 1000 * 60 * 60 * 24; // One day.
 const frequencyForWeeklyInsidersCheck = 1000 * 60 * 60 * 24 * 7; // One week.
@@ -14,32 +14,33 @@ const lastLookUpTimeKey = 'INSIDERS_LAST_LOOK_UP_TIME_KEY';
 
 @injectable()
 export class IInsidersDownloadStableChannelRule implements IInsidersDownloadChannelRule {
-    constructor(
-        @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
-        @inject(IInsidersDownloadChannelService) private readonly insidersDownloadChannelService: IInsidersDownloadChannelService,
-        @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory
-    ) { }
-    public async shouldLookForInsidersBuild(): Promise<boolean> {
-        if (this.appEnvironment.channel === 'insiders' && !this.insidersDownloadChannelService.hasUserConfiguredChannel) {
-            // If using VS Code Insiders and channel is using default configuration, use insiders build as default
-            const lastLookUpTime = this.persistentStateFactory.createGlobalPersistentState(lastLookUpTimeKey, -1);
-            await lastLookUpTime.updateValue(Date.now());
-            return true;
+    public async buildToLookFor(didChannelChange: boolean = false): Promise<Channel | undefined> {
+        if (await this.shouldLookForInsidersBuild()) {
+            return 'insiders';
         }
+        if (await this.shouldLookForStableBuild(didChannelChange)) {
+            return 'stable';
+        }
+    }
+    public async shouldLookForInsidersBuild(): Promise<boolean> {
         return false;
     }
-    public async shouldLookForStableBuild(): Promise<boolean> {
-        if (this.appEnvironment.channel === 'insiders' && !this.insidersDownloadChannelService.hasUserConfiguredChannel) {
-            // If using VS Code Insiders and channel is using default configuration, do not use stable build
-            return false;
-        }
-        return true;
+    public async shouldLookForStableBuild(didChannelChange: boolean): Promise<boolean> {
+        return didChannelChange;
     }
 }
 @injectable()
 export class IInsidersDownloadDailyChannelRule implements IInsidersDownloadChannelRule {
     constructor(@inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory) { }
-    public async shouldLookForInsidersBuild(): Promise<boolean> {
+    public async buildToLookFor(): Promise<Channel | undefined> {
+        if (await this.shouldLookForInsidersBuild()) {
+            return 'insiders';
+        }
+        if (await this.shouldLookForStableBuild()) {
+            return 'stable';
+        }
+    }
+    private async shouldLookForInsidersBuild(): Promise<boolean> {
         // If we have not looked for it in the last 24 hours, then look.
         const lastLookUpTime = this.persistentStateFactory.createGlobalPersistentState(lastLookUpTimeKey, -1);
         if (lastLookUpTime.value === -1 || lastLookUpTime.value + frequencyForDailyInsidersCheck < Date.now()) {
@@ -48,14 +49,22 @@ export class IInsidersDownloadDailyChannelRule implements IInsidersDownloadChann
         }
         return false;
     }
-    public async shouldLookForStableBuild(): Promise<boolean> {
+    private async shouldLookForStableBuild(): Promise<boolean> {
         return false;
     }
 }
 @injectable()
 export class IInsidersDownloadWeeklyChannelRule implements IInsidersDownloadChannelRule {
     constructor(@inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory) { }
-    public async shouldLookForInsidersBuild(): Promise<boolean> {
+    public async buildToLookFor(): Promise<Channel | undefined> {
+        if (await this.shouldLookForInsidersBuild()) {
+            return 'insiders';
+        }
+        if (await this.shouldLookForStableBuild()) {
+            return 'stable';
+        }
+    }
+    private async shouldLookForInsidersBuild(): Promise<boolean> {
         // If we have not looked for it in the last week, then look.
         const lastLookUpTime = this.persistentStateFactory.createGlobalPersistentState(lastLookUpTimeKey, -1);
         if (lastLookUpTime.value === -1 || lastLookUpTime.value + frequencyForWeeklyInsidersCheck < Date.now()) {
@@ -64,7 +73,7 @@ export class IInsidersDownloadWeeklyChannelRule implements IInsidersDownloadChan
         }
         return false;
     }
-    public async shouldLookForStableBuild(): Promise<boolean> {
+    private async shouldLookForStableBuild(): Promise<boolean> {
         return false;
     }
 }

@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IApplicationShell, ICommandManager } from '../application/types';
-import { IConfigurationService, IPersistentStateFactory } from '../types';
+import { IPersistentStateFactory } from '../types';
 import { Insiders } from '../utils/localize';
 import { noop } from '../utils/misc';
 import { IInsidersDownloadChannelService, IInsidersPrompt, InsidersBuildDownloadChannel } from './types';
@@ -19,7 +19,6 @@ export class InsidersPrompt implements IInsidersPrompt {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IInsidersDownloadChannelService) private readonly insidersDownloadChannelService: IInsidersDownloadChannelService,
         @inject(ICommandManager) private readonly cmdManager: ICommandManager,
-        @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory
     ) { }
     public async notifyUser() {
@@ -36,17 +35,9 @@ export class InsidersPrompt implements IInsidersPrompt {
         }
         await notificationPromptEnabled.updateValue(false);
         if (selection === prompts[0]) {
-            await this.insidersDownloadChannelService.setDownloadChannel(InsidersBuildDownloadChannel.stable);
+            await this.insidersDownloadChannelService.setDownloadChannel(InsidersBuildDownloadChannel.stable, false);
         } else if (selection === prompts[1]) {
-            await this.useInsidersAndReload();
+            this.cmdManager.executeCommand('workbench.action.reloadWindow').then(noop);
         }
-    }
-
-    private async useInsidersAndReload() {
-        const settings = this.configService.getSettings();
-        if (settings.insidersChannel === 'Stable') {
-            await this.insidersDownloadChannelService.setDownloadChannel('InsidersWeekly', false);
-        }
-        this.cmdManager.executeCommand('workbench.action.reloadWindow').then(noop);
     }
 }
