@@ -148,7 +148,7 @@ export class Cell extends React.Component<ICellProps> {
     }
 
     private getCopyBackToSourceString = () => {
-        return getLocString('DataScience.copyBackToSourceTooltip', 'Paste code into file');
+        return getLocString('DataScience.copyBackToSourceButtonTooltip', 'Paste code into file');
     }
 
     private getCell = () => {
