@@ -131,7 +131,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
     serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);
     serviceManager.addSingleton<IImportTracker>(IImportTracker, ImportTracker);
-    serviceManager.addSingleton<IShellDetector>(IShellDetector, TerminalNameShellDetector, 'terminalname');
-    serviceManager.addSingleton<IShellDetector>(IShellDetector, SettingsShellDetector, 'settings');
-    serviceManager.addSingleton<IShellDetector>(IShellDetector, UserEnvironmentShellDetector, 'envVars');
+    serviceManager.addSingleton<IShellDetector>(IShellDetector, TerminalNameShellDetector);
+    serviceManager.addSingleton<IShellDetector>(IShellDetector, SettingsShellDetector);
+    serviceManager.addSingleton<IShellDetector>(IShellDetector, UserEnvironmentShellDetector);
 }

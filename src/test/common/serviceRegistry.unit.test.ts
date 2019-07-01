@@ -93,9 +93,9 @@ suite('Common - Service Registry', () => {
             [IAsyncDisposableRegistry, AsyncDisposableRegistry],
             [IMultiStepInputFactory, MultiStepInputFactory],
             [IImportTracker, ImportTracker],
-            [IShellDetector, TerminalNameShellDetector, 'terminalname'],
-            [IShellDetector, SettingsShellDetector, 'settings'],
-            [IShellDetector, UserEnvironmentShellDetector, 'envVars']
+            [IShellDetector, TerminalNameShellDetector],
+            [IShellDetector, SettingsShellDetector],
+            [IShellDetector, UserEnvironmentShellDetector]
         ].forEach(mapping => {
             if (mapping.length === 2) {
                 serviceManager
