@@ -8,7 +8,6 @@ import { DebugConfiguration } from 'vscode';
 
 import { ICommandManager, IDebugService } from '../../common/application/types';
 import { traceInfo } from '../../common/logger';
-import { IDebugSessionEventHandlers } from '../../debugger/extension/hooks/types';
 import { Identifiers } from '../constants';
 import { CellState, ICell, ICellHashProvider, IDebuggerConnectInfo, IFileHashes, IJupyterDebugger, INotebookServer, ISourceMapRequest } from '../types';
 

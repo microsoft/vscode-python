@@ -103,6 +103,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
 
                 // Skip hash on unknown file though
                 if (args.file !== Identifiers.EmptyFileName) {
+                    // IANHU: I was in the act of fixing this part. It's not strip comments that we want here, we just want to strip out the cell marker as jupyter removes that
                     this.addCellHash(stripComments(concatMultilineString(codeCell.data.source)), codeCell.line, codeCell.file, this.executionCount);
                 }
             }
@@ -170,6 +171,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
             const endLine = doc.lineAt(Math.min(startLine + lineCount - 1, doc.lineCount - 1));
             const startOffset = doc.offsetAt(new Position(startLine, 0));
             const endOffset = doc.offsetAt(endLine.rangeIncludingLineBreak.end);
+            // IANHU: This is mapping to a different line, looks like a base index issue. doc.lineAt is not mapping to the same numbers as we use
             const realCode = doc.getText(new Range(line.range.start, endLine.rangeIncludingLineBreak.end));
             const hash : IRangedCellHash = {
                 hash: hashjs.sha1().update(code).digest('hex').substr(0, 12),
