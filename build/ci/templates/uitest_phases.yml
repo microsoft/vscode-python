@@ -177,7 +177,7 @@ steps:
           VSCODE_CHANNEL: $(VSCodeChannel)
           CI_PYTHON_PATH: $(CI_PYTHON_PATH)
           PYTHON_VERSION: $(PythonVersion)
-      failOnStderr: true
+      failOnStderr: false
       displayName: "Run Tests"
       condition: succeeded()
 
