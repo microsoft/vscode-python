@@ -6,6 +6,7 @@ import '../../common/extensions';
 import { nbformat } from '@jupyterlab/coreutils';
 import * as fs from 'fs-extra';
 import { inject, injectable, multiInject } from 'inversify';
+import * as os from 'os';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { ConfigurationTarget, Event, EventEmitter, Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
@@ -32,7 +33,7 @@ import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { CellMatcher } from '../cellMatcher';
+import { generateCellRanges } from '../cellFactory';
 import { EditorContexts, Identifiers, Telemetry } from '../constants';
 import { ColumnWarningSize } from '../data-viewing/types';
 import { IGatherCell } from '../gather/model/cell';
@@ -470,6 +471,13 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         } catch (e) {
             this.applicationShell.showErrorMessage(e);
         }
+    }
+
+    @captureTelemetry(Telemetry.CopySourceCode, undefined, false)
+    public copyCode(args: ICopyCode) {
+        this.copyCodeInternal(args.source).catch(err => {
+            this.applicationShell.showErrorMessage(err);
+        });
     }
 
     protected async activating() {
@@ -966,34 +974,48 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         }
     }
 
-    @captureTelemetry(Telemetry.CopySourceCode, undefined, false)
-    private copyCode(args: ICopyCode) {
-        this.copyCodeInternal(args.source).catch(err => {
-            this.applicationShell.showErrorMessage(err);
-        });
-    }
-
     private async copyCodeInternal(source: string) {
         let editor = this.documentManager.activeTextEditor;
         if (!editor || editor.document.languageId !== PYTHON_LANGUAGE) {
             // Find the first visible python editor
             const pythonEditors = this.documentManager.visibleTextEditors.filter(
-                e => e.document.languageId === PYTHON_LANGUAGE);
+                e => e.document.languageId === PYTHON_LANGUAGE || e.document.isUntitled);
 
             if (pythonEditors.length > 0) {
                 editor = pythonEditors[0];
             }
         }
-        if (editor && editor.document.languageId === PYTHON_LANGUAGE) {
-            const cellMatcher = new CellMatcher(this.generateDataScienceExtraSettings());
-            const hasCellsAlready = cellMatcher.isCell(editor.document.getText());
-            const line = editor.document.lineCount;
-            const newCode = hasCellsAlready || line <= 0 ? `\n\n#%%\n${source}` : `\n\n${source}`;
+        if (editor && (editor.document.languageId === PYTHON_LANGUAGE || editor.document.isUntitled)) {
+            // Figure out if any cells in this document already.
+            const ranges = generateCellRanges(editor.document, this.generateDataScienceExtraSettings());
+            const hasCellsAlready = ranges.length > 0;
+            const line = editor.selection.start.line;
+            const revealLine = line + 1;
+            let newCode = `${source}${os.EOL}`;
+            if (hasCellsAlready) {
+                // See if inside of a range or not.
+                const matchingRange = ranges.find(r => r.range.start.line <= line && r.range.end.line >= line);
+
+                // If in the middle, wrap the new code
+                if (matchingRange && matchingRange.range.start.line < line && line < editor.document.lineCount - 1) {
+                    newCode = `#%%${os.EOL}${source}${os.EOL}#%%${os.EOL}`;
+                } else {
+                    newCode = `#%%${os.EOL}${source}${os.EOL}`;
+                }
+            } else if (editor.document.lineCount <= 0 || editor.document.isUntitled) {
+                // No lines in the document at all, just insert new code
+                newCode = `#%%${os.EOL}${source}${os.EOL}`;
+            }
+
             await editor.edit((editBuilder) => {
                 editBuilder.insert(new Position(line, 0), newCode);
             });
-            editor.revealRange(new Range(line + 2, 0, line + source.split('\n').length + 3, 0));
-            editor.selection = new Selection(new Position(line + 2, 0), new Position(line + 2, 0));
+            editor.revealRange(new Range(revealLine, 0, revealLine + source.split('\n').length + 3, 0));
+
+            // Move selection to just beyond the text we input so that the next
+            // paste will be right after
+            const selectionLine = line + newCode.split('\n').length - 1;
+            editor.selection = new Selection(new Position(selectionLine, 0), new Position(selectionLine, 0));
         }
     }
 

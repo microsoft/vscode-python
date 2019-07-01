@@ -4,18 +4,21 @@
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import { parse } from 'node-html-parser';
+import * as os from 'os';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { Disposable, TextDocument, TextEditor } from 'vscode';
+import { Disposable, Selection, TextDocument, TextEditor } from 'vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
-import { PYTHON_LANGUAGE } from '../../client/common/constants';
 import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { generateCellsFromDocument } from '../../client/datascience/cellFactory';
 import { concatMultilineString } from '../../client/datascience/common';
 import { EditorContexts } from '../../client/datascience/constants';
-import { InteractiveWindowMessageListener } from '../../client/datascience/interactive-window/interactiveWindowMessageListener';
+import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
+import {
+    InteractiveWindowMessageListener
+} from '../../client/datascience/interactive-window/interactiveWindowMessageListener';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-window/interactiveWindowTypes';
 import { IInteractiveWindow, IInteractiveWindowProvider } from '../../client/datascience/types';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
@@ -43,9 +46,11 @@ import {
     verifyHtmlOnCell,
     verifyLastCellInputState
 } from './interactiveWindowTestHelpers';
+import { MockEditor } from './mockTextEditor';
 import { waitForUpdate } from './reactHelpers';
 
 //import { asyncDump } from '../common/asyncDump';
+import { MockDocumentManager } from './mockDocumentManager';
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 suite('DataScience Interactive Window output tests', () => {
     const disposables: Disposable[] = [];
@@ -469,22 +474,10 @@ for _ in range(50):
 
     runMountedTest('Copy to source input', async (wrapper) => {
         const showedEditor = createDeferred();
-        const textEditors: TextEditor[] = [];
-        const docManager = TypeMoq.Mock.ofType<IDocumentManager>();
-        const visibleEditor = TypeMoq.Mock.ofType<TextEditor>();
-        const dummyDocument = TypeMoq.Mock.ofType<TextDocument>();
-        dummyDocument.setup(d => d.fileName).returns(() => 'foo.py');
-        dummyDocument.setup(d => d.languageId).returns(() => PYTHON_LANGUAGE);
-        dummyDocument.setup(d => d.lineCount).returns(() => 10);
-        dummyDocument.setup(d => d.getText()).returns(() => '# No cells here');
-        visibleEditor.setup(v => v.show()).returns(noop);
-        visibleEditor.setup(v => v.revealRange(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => showedEditor.resolve());
-        visibleEditor.setup(v => v.document).returns(() => dummyDocument.object);
-        visibleEditor.setup(v => v.edit(TypeMoq.It.isAny())).returns(() => Promise.resolve(true));
-        textEditors.push(visibleEditor.object);
-        docManager.setup(a => a.visibleTextEditors).returns(() => textEditors);
-        docManager.setup(a => a.activeTextEditor).returns(() => undefined);
-        ioc.serviceManager.rebindInstance<IDocumentManager>(IDocumentManager, docManager.object);
+        ioc.addDocument('# No cells here', 'foo.py');
+        const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
+        const editor = await docManager.showTextDocument(docManager.textDocuments[0]) as MockEditor;
+        editor.setRevealCallback(() => showedEditor.resolve());
 
         // Create an interactive window so that it listens to the results.
         const interactiveWindow = await getOrCreateInteractiveWindow();
@@ -612,5 +605,18 @@ for _ in range(50):
             assert.equal(svgs.length, 1, 'Wrong number of svgs');
         }
 
+    }, () => { return ioc; });
+
+    runMountedTest('Copy back to source', async (_wrapper) => {
+        ioc.addDocument(`#%%${os.EOL}print("bar")`, 'foo.py');
+        const docManager = ioc.get<IDocumentManager>(IDocumentManager);
+        docManager.showTextDocument(docManager.textDocuments[0]);
+        const window = await getOrCreateInteractiveWindow() as InteractiveWindow;
+        window.copyCode({source: 'print("baz")'});
+        assert.equal(docManager.textDocuments[0].getText(), `#%%${os.EOL}print("baz")${os.EOL}#%%${os.EOL}print("bar")`, 'Text not inserted');
+        const activeEditor = docManager.activeTextEditor as MockEditor;
+        activeEditor.selection = new Selection(1, 2, 1, 2);
+        window.copyCode({source: 'print("baz")'});
+        assert.equal(docManager.textDocuments[0].getText(), `#%%${os.EOL}#%%${os.EOL}print("baz")${os.EOL}#%%${os.EOL}print("baz")${os.EOL}#%%${os.EOL}print("bar")`, 'Text not inserted');
     }, () => { return ioc; });
 });

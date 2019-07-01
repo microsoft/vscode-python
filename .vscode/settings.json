@@ -8,25 +8,41 @@
         "bin": true,
         "**/__pycache__": true,
         "node_modules": true,
-        ".vscode-test": true,
         "**/.mypy_cache/**": true,
         "**/.ropeproject/**": true
     },
     "search.exclude": {
         "out": true, // set this to false to include "out" folder in search results
         "coverage": true,
-        "languageServer*/**": true
+        "languageServer*/**": true,
+        ".vscode-test": true,
+        ".vscode test": true
+    },
+    "[python]": {
+        "editor.formatOnSave": true
+    },
+    "[typescript]": {
+        "editor.formatOnSave": true
     },
     "typescript.tsdk": "./node_modules/typescript/lib", // we want to use the TS server from our node_modules folder to control its version
     "tslint.enable": true,
     "python.linting.enabled": false,
     "python.testing.promptToConfigure": false,
     "python.workspaceSymbols.enabled": false,
-    "python.formatting.provider": "none",
+    "python.formatting.provider": "black",
     "typescript.preferences.quoteStyle": "single",
     "javascript.preferences.quoteStyle": "single",
     "typescriptHero.imports.stringQuoteStyle": "'",
-    "prettier.tslintIntegration": false,
+    "prettier.tslintIntegration": true,
     "prettier.printWidth": 180,
-    "prettier.singleQuote": true
+    "prettier.singleQuote": true,
+    "python.jediEnabled": false,
+    "python.analysis.logLevel": "Trace",
+    "python.analysis.downloadChannel": "beta",
+    "python.unitTest.promptToConfigure": false,
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": false,
+    "python.linting.flake8Enabled": true,
+    "cucumberautocomplete.skipDocStringsFormat": true,
+    "python.linting.flake8Args": ["--max-line-length=120"]
 }

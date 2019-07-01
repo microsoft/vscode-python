@@ -1,0 +1,48 @@
+name: '$(Year:yyyy).$(Month).0.$(BuildID)-nightly-uitest'
+
+trigger: none
+pr: none
+
+
+# Variables that are available for the entire pipeline.
+variables:
+  PythonVersion: '3.7'
+  NodeVersion: '10.5.0'
+  NpmVersion: 'latest'
+  MOCHA_FILE: '$(Build.ArtifactStagingDirectory)/test-junit.xml' # All test files will write their JUnit xml output to this file, clobbering the last time it was written.
+  MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter).
+  VSC_PYTHON_FORCE_LOGGING: true # Enable this to turn on console output for the logger
+  VSC_PYTHON_LOG_FILE: '$(Build.ArtifactStagingDirectory)/pvsc.log'
+
+jobs:
+- template: templates/build_compile_jobs.yml
+
+- template: templates/uitest_jobs.yml
+  parameters:
+    jobs:
+    - test: "Smoke"
+      tags: "--tags=@smoke"
+      # Smoke tests are cheap, so run them against all Python Versions.
+    - test: "Test"
+      tags: "--tags=@testing"
+      # We have python code that is involved in running/discovering tests.
+      # Hence test against all versions, until we have CI running for the Python code.
+      # I.e. when all test dicovery/running is done purely in Python.
+    - test: "Terminal"
+      tags: "--tags=@terminal --tags=~@terminal.pipenv"
+      # No need to run tests against all versions.
+      # This is faster/cheaper, besides activation of terminals is generic enough
+      # not to warrant testing against all versions.
+      ignorePythonVersions: "3.6,3.5"
+    - test: "Debugging"
+      tags: "--tags=@debugging"
+      # No need to run tests against all versions.
+      # This is faster/cheaper, and these are external packages.
+      # We expect them to work (or 3rd party packages to test against all PY versions).
+      ignorePythonVersions: "3.6,3.5"
+    - test: "Jedi_Language_Server"
+      tags: "--tags=@ls"
+      # No need to run tests against all versions.
+      # This is faster/cheaper, and these are external packages.
+      # We expect them to work (or 3rd party packages to test against all PY versions).
+      ignorePythonVersions: "3.6,3.5"

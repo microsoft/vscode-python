@@ -27,6 +27,7 @@
     "exclude": [
         "node_modules",
         ".vscode-test",
+        ".vscode test",
         "src/server/node_modules",
         "src/client/node_modules",
         "src/server/src/typings",

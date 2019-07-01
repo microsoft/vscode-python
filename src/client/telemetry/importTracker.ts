@@ -8,7 +8,7 @@ import * as path from 'path';
 import { TextDocument } from 'vscode';
 
 import { sendTelemetryEvent } from '.';
-import { noop } from '../../test/core';
+import { noop } from '../common/utils/misc';
 import { IDocumentManager } from '../common/application/types';
 import { isTestExecution } from '../common/constants';
 import { EventName } from './constants';

@@ -17,9 +17,21 @@ variables:
   NpmVersion: 'latest'
   MOCHA_FILE: '$(Build.ArtifactStagingDirectory)/test-junit.xml' # All test files will write their JUnit xml output to this file, clobbering the last time it was written.
   MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter).
-  VSC_PYTHON_LOG_FILE: '$(Build.ArtifactStagingDirectory)/vsc.log'
+  VSC_PYTHON_LOG_FILE: '$(Build.ArtifactStagingDirectory)/pvsc.log'
 
 jobs:
+
+- template: templates/build_compile_jobs.yml
+
+- template: templates/uitest_jobs.yml
+  parameters:
+    # In PRs, test only against stable version of VSC.
+    vscodeChannels: ['stable']
+    # In PRs, run smoke tests against 3.7 and 2.7 (excluding others).
+    jobs:
+    - test: "Smoke"
+      tags: "--tags=@smoke"
+      ignorePythonVersions: "3.6,3.5"
 
 - job: 'Nightly'
 
@@ -340,48 +352,6 @@ jobs:
         PythonVersion: '2.7'
         VMImageName: 'macos-10.13'
         TestsToRun: 'testDebugger'
-        NeedsPythonTestReqs: true
-
-      # Smoke tests
-      'Linux-Py3.7 Smoke':
-        PythonVersion: '3.7'
-        VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'testSmoke'
-        NeedsPythonTestReqs: true
-      'Mac-Py3.7 Smoke':
-        PythonVersion: '3.7'
-        VMImageName: 'macos-10.13'
-        TestsToRun: 'testSmoke'
-        NeedsPythonTestReqs: true
-      'Linux-Py3.6 Smoke':
-        PythonVersion: '3.6'
-        VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'testSmoke'
-        NeedsPythonTestReqs: true
-      'Mac-Py3.6 Smoke':
-        PythonVersion: '3.6'
-        VMImageName: 'macos-10.13'
-        TestsToRun: 'testSmoke'
-        NeedsPythonTestReqs: true
-      'Linux-Py3.5 Smoke':
-        PythonVersion: '3.5'
-        VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'testSmoke'
-        NeedsPythonTestReqs: true
-      'Mac-Py3.5 Smoke':
-        PythonVersion: '3.5'
-        VMImageName: 'macos-10.13'
-        TestsToRun: 'testSmoke'
-        NeedsPythonTestReqs: true
-      'Linux-Py2.7 Smoke':
-        PythonVersion: '2.7'
-        VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'testSmoke'
-        NeedsPythonTestReqs: true
-      'Mac-Py2.7 Smoke':
-        PythonVersion: '2.7'
-        VMImageName: 'macos-10.13'
-        TestsToRun: 'testSmoke'
         NeedsPythonTestReqs: true
 
       # Functional tests (not mocked Jupyter)
