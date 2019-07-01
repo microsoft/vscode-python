@@ -145,16 +145,12 @@ export class Cell extends React.Component<ICellProps> {
         return getLocString('DataScience.deleteButtonTooltip', 'Remove cell');
     }
 
-    private getGatherCodeString = () => {
-        return getLocString('DataScience.gatherCodeTooltip', 'Gather code');
-    }
-
     private getGoToCodeString = () => {
         return getLocString('DataScience.gotoCodeButtonTooltip', 'Go to code');
     }
 
     private getCopyBackToSourceString = () => {
-        return getLocString('DataScience.copyBackToSource', 'Paste code into file');
+        return getLocString('DataScience.copyBackToSourceButtonTooltip', 'Paste code into file');
     }
 
     private getCell = () => {
