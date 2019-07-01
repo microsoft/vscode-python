@@ -65,13 +65,13 @@ suite('Shell Detectors', () => {
     test('Test identification of Terminal Shells (base class method)', async () => {
         const shellDetector = new TerminalNameShellDetector();
         shellPathsAndIdentification.forEach((shellType, shellPath) => {
-            expect(shellDetector.identifyShellFromShellPath(shellPath)).to.equal(shellType, `Incorrect Shell Type for path from identifyTerminalFromShellPath, '${shellPath}'`);
+            expect(shellDetector.identifyShellFromShellPath(shellPath)).to.equal(shellType, `Incorrect Shell Type for path '${shellPath}'`);
         });
     });
     test('Identify shell based on name of terminal', async () => {
         const shellDetector = new TerminalNameShellDetector();
         shellPathsAndIdentification.forEach((shellType, shellPath) => {
-            expect(shellDetector.identifyTerminalShell(telemetryProperties, { name: shellPath } as any)).to.equal(shellType, `Incorrect Shell Type from identifyShellByTerminalName, for path '${shellPath}'`);
+            expect(shellDetector.identifyTerminalShell(telemetryProperties, { name: shellPath } as any)).to.equal(shellType, `Incorrect Shell Type for name '${shellPath}'`);
         });
     });
     test('Identify shell based on VSC Settings', async () => {
@@ -79,7 +79,7 @@ suite('Shell Detectors', () => {
         shellPathsAndIdentification.forEach((shellType, shellPath) => {
             // Assume the same paths are stored in user settings, we should still be able to identify the shell.
             shellDetector.getTerminalShellPath = () => shellPath;
-            expect(shellDetector.identifyTerminalShell(telemetryProperties, {} as any)).to.equal(shellType, `Incorrect Shell Type from identifyTerminalFromSettings, for path '${shellPath}'`);
+            expect(shellDetector.identifyTerminalShell(telemetryProperties, {} as any)).to.equal(shellType, `Incorrect Shell Type for path '${shellPath}'`);
         });
     });
     getNamesAndValues<OSType>(OSType).forEach(os => {
@@ -106,7 +106,7 @@ suite('Shell Detectors', () => {
         shellPathsAndIdentification.forEach((shellType, shellPath) => {
             // Assume the same paths are defined in user environment variables, we should still be able to identify the shell.
             shellDetector.getDefaultPlatformShell = () => shellPath;
-            expect(shellDetector.identifyTerminalShell(telemetryProperties, {} as any)).to.equal(shellType, `Incorrect Shell Type from identifyTerminalFromEnv, for path '${shellPath}'`);
+            expect(shellDetector.identifyTerminalShell(telemetryProperties, {} as any)).to.equal(shellType, `Incorrect Shell Type for path '${shellPath}'`);
         });
     });
     test('Default shell on Windows < 10 is cmd.exe', () => {
