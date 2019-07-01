@@ -99,9 +99,8 @@ suite('Common - Service Registry', () => {
         ].forEach(mapping => {
             if (mapping.length === 2) {
                 serviceManager
-                    .setup(s => s.addSingleton(typemoq.It.isValue(mapping[0] as any), typemoq.It.isAny()))
-                    .callback((_, cls) => expect(cls).to.equal(mapping[1]))
-                    .verifiable(typemoq.Times.once());
+                    .setup(s => s.addSingleton(typemoq.It.isValue(mapping[0] as any), typemoq.It.is(value => mapping[1] === value)))
+                    .verifiable(typemoq.Times.atLeastOnce());
             } else {
                 serviceManager
                     .setup(s => s.addSingleton(typemoq.It.isValue(mapping[0] as any), typemoq.It.isAny(), typemoq.It.isValue(mapping[2] as any)))
