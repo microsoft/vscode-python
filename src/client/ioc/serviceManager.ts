@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { Container, injectable, interfaces } from 'inversify';
+import { Container, injectable, interfaces, multiBindToService } from 'inversify';
 
 import { Abstract, ClassType, IServiceManager, Newable } from './types';
 
@@ -21,6 +21,14 @@ export class ServiceManager implements IServiceManager {
     public addFactory<T>(factoryIdentifier: interfaces.ServiceIdentifier<interfaces.Factory<T>>, factoryMethod: interfaces.FactoryCreator<T>): void {
         this.container.bind<interfaces.Factory<T>>(factoryIdentifier).toFactory<T>(factoryMethod);
     }
+
+    // IANHU: Make this more general before checkin use multiBindToService
+    // tslint:disable-next-line:no-any
+    public doubleBind(serviceIdentifier1: symbol, serviceIdentifier2: symbol, constructor: new (...args: any[]) => any): void {
+        this.container.bind(serviceIdentifier1).to(constructor).inSingletonScope();
+        this.container.bind(serviceIdentifier2).toService(serviceIdentifier1);
+    }
+
     // tslint:disable-next-line:no-any
     public addSingleton<T>(serviceIdentifier: identifier<T>, constructor: new (...args: any[]) => T, name?: string | number | symbol | undefined): void {
         if (name) {

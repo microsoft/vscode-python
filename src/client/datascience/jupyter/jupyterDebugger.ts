@@ -8,14 +8,16 @@ import { DebugConfiguration } from 'vscode';
 
 import { ICommandManager, IDebugService } from '../../common/application/types';
 import { traceInfo } from '../../common/logger';
+import { IDebugSessionEventHandlers } from '../../debugger/extension/hooks/types';
 import { Identifiers } from '../constants';
-import { CellState, ICell, IDebuggerConnectInfo, IJupyterDebugger, INotebookServer } from '../types';
+import { CellState, ICell, ICellHashProvider, IDebuggerConnectInfo, IFileHashes, IJupyterDebugger, INotebookServer, ISourceMapRequest } from '../types';
 
 @injectable()
 export class JupyterDebugger implements IJupyterDebugger {
     private connectInfo: IDebuggerConnectInfo | undefined;
 
     constructor(
+            @inject(ICellHashProvider) private hashProvider: ICellHashProvider,
             @inject(ICommandManager) private commandManager: ICommandManager,
             @inject(IDebugService) private debugService: IDebugService
         ) {}
@@ -25,9 +27,9 @@ export class JupyterDebugger implements IJupyterDebugger {
 
         // Current version of ptvsd doesn't support returning the value that we need so you need to install the correct version or use my hardcoded line above
         // tslint:disable-next-line:no-multiline-string
-        //const enableDebuggerResults = await this.executeSilently(server, `import sys\r\nsys.path.append('d:/ptvsd-drop/kdrop/src')\r\nimport os\r\nos.environ["PTVSD_LOG_DIR"] = "d:/note_dbg/logs"\r\nimport ptvsd\r\nptvsd.enable_attach(('localhost', 0))`);
+        const enableDebuggerResults = await this.executeSilently(server, `import sys\r\nsys.path.append('d:/ptvsd-drop/kdrop/src')\r\nimport os\r\nos.environ["PTVSD_LOG_DIR"] = "d:/note_dbg/logs"\r\nimport ptvsd\r\nptvsd.enable_attach(('localhost', 0))`);
         // tslint:disable-next-line:no-multiline-string
-        const enableDebuggerResults = await this.executeSilently(server, `import ptvsd\r\nptvsd.enable_attach(('localhost', 0))`);
+        //const enableDebuggerResults = await this.executeSilently(server, `import ptvsd\r\nptvsd.enable_attach(('localhost', 0))`);
 
         // Save our connection info to this server
         this.connectInfo = this.parseConnectInfo(enableDebuggerResults);
@@ -35,6 +37,7 @@ export class JupyterDebugger implements IJupyterDebugger {
 
     public async startDebugging(server: INotebookServer): Promise<void> {
         traceInfo('start debugging');
+
         if (this.connectInfo) {
             // First connect the VSCode UI
             const config: DebugConfiguration = {
@@ -54,6 +57,9 @@ export class JupyterDebugger implements IJupyterDebugger {
             // Then enable tracing
             // tslint:disable-next-line:no-multiline-string
             await this.executeSilently(server, `from ptvsd import tracing\r\ntracing(True)`);
+
+            // Send our initial set of file mappings
+            await this.updateDebuggerSourceMaps();
         }
     }
 
@@ -65,6 +71,35 @@ export class JupyterDebugger implements IJupyterDebugger {
 
         // Stop our debugging UI session, no await as we just want it stopped
         this.commandManager.executeCommand('workbench.action.debug.stop');
+    }
+
+    private async updateDebuggerSourceMaps(): Promise<void> {
+        // Make sure that we have an active debugging session at this point
+        if (this.debugService.activeDebugSession) {
+            const fileHashes = this.hashProvider.getHashes();
+
+            fileHashes.forEach(async (fileHash) => {
+                // IANHU: Check bad results from this call?
+                // At this point according to the log / Karthik this should already be executed, but the responce here is not SetPydevdSourceMapResponse as expected
+                // ! here as we have already validated activeDebugSession
+                const results = await this.debugService.activeDebugSession!.customRequest('setPydevdSourceMap', this.buildSourceMap(fileHash));
+            });
+        }
+    }
+
+    private buildSourceMap(fileHash: IFileHashes): ISourceMapRequest {
+        const sourceMapRequest: ISourceMapRequest = { source: { path: fileHash.file }, pydevdSourceMaps: [] };
+
+        sourceMapRequest.pydevdSourceMaps = fileHash.hashes.map(cellHash => {
+            return {
+                line: cellHash.line,
+                endLine: cellHash.endLine,
+                runtimeSource: { path: `<ipython-input-${cellHash.executionCount}-${cellHash.hash}>`},
+                runtimeLine: 1
+            };
+        });
+
+        return sourceMapRequest;
     }
 
     private executeSilently(server: INotebookServer, code: string): Promise<ICell[]> {
