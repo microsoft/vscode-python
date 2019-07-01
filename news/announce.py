@@ -152,8 +152,7 @@ def complete_news(version, entry, previous_news):
     title, _, previous_news = previous_news.partition("\n")
     title = title.strip()
     previous_news = previous_news.strip()
-    section_title = (f"## {version} ({datetime.date.today().strftime('%d %B %Y')})"
-                     ).replace("(0", "(")
+    section_title = f"## {version} ({datetime.date.today().strftime('%d %B %Y')})"
     # TODO: Insert the "Thank you!" section (in monthly releases)?
     return f"{title}\n\n{section_title}\n\n{entry.strip()}\n\n\n{previous_news}"
 
