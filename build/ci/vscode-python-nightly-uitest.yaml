@@ -2,7 +2,13 @@ name: '$(Year:yyyy).$(Month).0.$(BuildID)-nightly-uitest'
 
 trigger: none
 pr: none
-
+schedules:
+- cron: "0 0 * * *"
+  displayName: Daily midnight build
+  branches:
+    include:
+    - master
+    - releases/*
 
 # Variables that are available for the entire pipeline.
 variables:
