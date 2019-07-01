@@ -1,19 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable, multiInject, named } from 'inversify';
 import { Terminal, Uri } from 'vscode';
 import { ICondaService, IInterpreterService, InterpreterType, PythonInterpreter } from '../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { ITerminalManager, IWorkspaceService } from '../application/types';
+import { ITerminalManager } from '../application/types';
 import '../extensions';
 import { traceDecorators, traceError } from '../logger';
 import { IPlatformService } from '../platform/types';
-import { IConfigurationService, ICurrentProcess, Resource } from '../types';
+import { IConfigurationService, Resource } from '../types';
 import { OSType } from '../utils/platform';
 import { ShellDetector } from './shellDetector';
-import { ITerminalActivationCommandProvider, ITerminalHelper, TerminalActivationProviders, TerminalShellType } from './types';
+import { IShellDetector, ITerminalActivationCommandProvider, ITerminalHelper, TerminalActivationProviders, TerminalShellType } from './types';
 
 @injectable()
 export class TerminalHelper implements ITerminalHelper {
@@ -28,10 +28,9 @@ export class TerminalHelper implements ITerminalHelper {
         @inject(ITerminalActivationCommandProvider) @named(TerminalActivationProviders.commandPromptAndPowerShell) private readonly commandPromptAndPowerShell: ITerminalActivationCommandProvider,
         @inject(ITerminalActivationCommandProvider) @named(TerminalActivationProviders.pyenv) private readonly pyenv: ITerminalActivationCommandProvider,
         @inject(ITerminalActivationCommandProvider) @named(TerminalActivationProviders.pipenv) private readonly pipenv: ITerminalActivationCommandProvider,
-        @inject(ICurrentProcess) private readonly currentProcess: ICurrentProcess,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
+        @multiInject(IShellDetector) shellDetectors: IShellDetector[]
     ) {
-        this.shellDetector = new ShellDetector(this.platform, this.currentProcess, this.workspace);
+        this.shellDetector = new ShellDetector(this.platform, shellDetectors);
 
     }
     public createTerminal(title?: string): Terminal {

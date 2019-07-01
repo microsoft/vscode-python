@@ -43,7 +43,8 @@ import { PipEnvActivationCommandProvider } from '../../client/common/terminal/en
 import { PyEnvActivationCommandProvider } from '../../client/common/terminal/environmentActivationProviders/pyenvActivationProvider';
 import { TerminalServiceFactory } from '../../client/common/terminal/factory';
 import { TerminalHelper } from '../../client/common/terminal/helper';
-import { ITerminalActivationCommandProvider, ITerminalActivationHandler, ITerminalActivator, ITerminalHelper, ITerminalServiceFactory, TerminalActivationProviders } from '../../client/common/terminal/types';
+import { SettingsShellDetector, TerminalNameShellDetector, UserEnvironmentShellDetector } from '../../client/common/terminal/shellDetectors';
+import { IShellDetector, ITerminalActivationCommandProvider, ITerminalActivationHandler, ITerminalActivator, ITerminalHelper, ITerminalServiceFactory, TerminalActivationProviders } from '../../client/common/terminal/types';
 import { IAsyncDisposableRegistry, IBrowserService, IConfigurationService, ICryptoUtils, ICurrentProcess, IEditorUtils, IExperimentsManager, IExtensions, IFeatureDeprecationManager, IHttpClient, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IRandom } from '../../client/common/types';
 import { IMultiStepInputFactory, MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
 import { Random } from '../../client/common/utils/random';
@@ -91,7 +92,10 @@ suite('Common - Service Registry', () => {
             [IFeatureDeprecationManager, FeatureDeprecationManager],
             [IAsyncDisposableRegistry, AsyncDisposableRegistry],
             [IMultiStepInputFactory, MultiStepInputFactory],
-            [IImportTracker, ImportTracker]
+            [IImportTracker, ImportTracker],
+            [IShellDetector, TerminalNameShellDetector, 'terminalname'],
+            [IShellDetector, SettingsShellDetector, 'settings'],
+            [IShellDetector, UserEnvironmentShellDetector, 'envVars']
         ].forEach(mapping => {
             if (mapping.length === 2) {
                 serviceManager

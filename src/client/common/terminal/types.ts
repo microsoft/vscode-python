@@ -77,3 +77,30 @@ export const ITerminalActivationHandler = Symbol('ITerminalActivationHandler');
 export interface ITerminalActivationHandler {
     handleActivation(terminal: Terminal, resource: Uri | undefined, preserveFocus: boolean, activated: boolean): Promise<void>;
 }
+
+export type ShellIdentificationTelemetry = {
+    failed: boolean;
+    terminalProvided: boolean;
+    shellIdentificationSource: 'terminalName' | 'settings' | 'environment' | 'default';
+    hasCustomShell: undefined | boolean;
+    hasShellInEnv: undefined | boolean;
+};
+
+export const IShellDetector = Symbol('IShellDetector');
+/**
+ * Used to identify a shell.
+ * Each implemenetion will provide a unique way of identifying the shell.
+ *
+ * @export
+ * @interface IShellDetector
+ */
+export interface IShellDetector {
+    /**
+     * Classes with higher priorities will be used first when identifying the shell.
+     *
+     * @type {number}
+     * @memberof IShellDetector
+     */
+    readonly priority: number;
+    identifyTerminalShell(telemetryProperties: ShellIdentificationTelemetry, terminal?: Terminal): TerminalShellType | undefined;
+}
