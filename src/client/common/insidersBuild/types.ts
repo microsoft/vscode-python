@@ -1,9 +1,9 @@
 import { Event } from 'vscode';
-import { Channel } from '../application/types';
+import { IBuildInstaller } from '../installer/types';
 
 export const IInsidersDownloadChannelRule = Symbol('IInsidersDownloadChannelRule');
 export interface IInsidersDownloadChannelRule {
-    buildToLookFor(didChannelChange?: boolean): Promise<Channel | undefined>;
+    getInstallerForBuild(didChannelChange?: boolean): Promise<IBuildInstaller | undefined>;
 }
 
 export const IInsidersDownloadChannelService = Symbol('IInsidersDownloadChannelService');

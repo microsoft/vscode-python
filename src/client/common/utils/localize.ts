@@ -69,6 +69,7 @@ export namespace Insiders {
     export const reloadMessage = localize('Insiders.reloadMessage', 'Please reload the window switching between insiders channels');
     export const downloadCompletedOutputMessage = localize('Insiders.downloadCompletedOutputMessage', 'Insiders build download complete');
     export const startingDownloadOutputMessage = localize('Insiders.startingDownloadOutputMessage', 'Starting download for Insiders build.');
+    export const downloadingInsidersMessage = localize('Insiders.downloadingInsidersMessage', 'Downloading Insiders Extension... ');
 }
 
 export namespace Logging {

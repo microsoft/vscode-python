@@ -8,8 +8,6 @@ import { IExtensionActivationService } from '../../../client/activation/types';
 import { IServiceContainer } from '../../ioc/types';
 import { IApplicationEnvironment, ICommandManager } from '../application/types';
 import { Commands } from '../constants';
-import { IExtensionInstaller } from '../installer/types';
-import { IFileSystem } from '../platform/types';
 import { IDisposable, IDisposableRegistry, Resource } from '../types';
 import { IInsidersDownloadChannelRule, IInsidersDownloadChannelService, IInsidersPrompt, InsidersBuildDownloadChannels } from './types';
 
@@ -19,9 +17,7 @@ export class InsidersExtensionService implements IExtensionActivationService {
     constructor(
         @inject(IInsidersDownloadChannelService) private readonly insidersDownloadChannelService: IInsidersDownloadChannelService,
         @inject(IInsidersPrompt) private readonly insidersPrompt: IInsidersPrompt,
-        @inject(IExtensionInstaller) private readonly extensionInstaller: IExtensionInstaller,
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(ICommandManager) private readonly cmdManager: ICommandManager,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposable[]
@@ -39,20 +35,15 @@ export class InsidersExtensionService implements IExtensionActivationService {
 
     public async handleChannel(downloadChannel: InsidersBuildDownloadChannels, didChannelChange: boolean = false): Promise<void> {
         const channelRule = this.serviceContainer.get<IInsidersDownloadChannelRule>(IInsidersDownloadChannelRule, downloadChannel);
-        const build = await channelRule.buildToLookFor(didChannelChange);
-        if (build === 'insiders') {
-            const vsixFilePath = await this.extensionInstaller.downloadInsiders();
-            await this.extensionInstaller.installUsingVSIX(vsixFilePath);
-            await this.fs.deleteFile(vsixFilePath);
-            if (this.appEnvironment.channel === 'insiders') {
-                await this.insidersPrompt.notifyUser();
-            }
-        } else if (build === 'stable') {
-            await this.extensionInstaller.installStable();
+        const buildInstaller = await channelRule.getInstallerForBuild(didChannelChange);
+        if (!buildInstaller) {
+            return;
         }
-        if (build) {
-            await this.insidersPrompt.promptToReload();
+        await buildInstaller.install();
+        if (downloadChannel !== 'Stable' && this.appEnvironment.channel === 'insiders') {
+            return this.insidersPrompt.notifyUser();
         }
+        await this.insidersPrompt.promptToReload();
     }
 
     private registerCommandsAndHandlers(): void {

@@ -12,7 +12,7 @@ import { Common, Insiders } from '../utils/localize';
 import { noop } from '../utils/misc';
 import { IInsidersDownloadChannelService, IInsidersPrompt, InsidersBuildDownloadChannel } from './types';
 
-const insidersPromptStateKey = 'INSIDERS_PROMPT_STATE_KEY';
+const insidersPromptStateKey = 'INSIDERS_PROMPT_STATE_KEYpppzz';
 @injectable()
 export class InsidersPrompt implements IInsidersPrompt {
     private reloadPromptDisabled: boolean = false;
