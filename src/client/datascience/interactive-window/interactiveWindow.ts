@@ -75,7 +75,6 @@ import {
     ISubmitNewCell,
     SysInfoReason
 } from './interactiveWindowTypes';
-import { trimLastNewline } from 'vscode-debugadapter/lib/logger';
 
 @injectable()
 export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> implements IInteractiveWindow  {
