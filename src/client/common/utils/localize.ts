@@ -207,7 +207,7 @@ export namespace DataScience {
     export const selectedImageListLabel = localize('DataScience.selectedImageListLabel', 'Selected Image');
     export const imageListLabel = localize('DataScience.imageListLabel', 'Image');
     export const exportImageFailed = localize('DataScience.exportImageFailed', 'Error exporting image: {0}');
-    export const jupyterDataRateExceeded = localize('DataScience.jupyterDataRateExceeded', 'Cannot view variable, Data rate limit exceeded on server.\r\nTo change this limit, set the config variable `--NotebookApp.iopub_data_rate_limit` when starting your server.')
+    export const jupyterDataRateExceeded = localize('DataScience.jupyterDataRateExceeded', 'Cannot view variable because your data rate is set too low. Please restart your server with a data rate limit like so `--NotebookApp.iopub_data_rate_limit=10000000000.0`');
 }
 
 export namespace DebugConfigStrings {
