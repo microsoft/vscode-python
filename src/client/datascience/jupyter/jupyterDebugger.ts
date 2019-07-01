@@ -8,9 +8,9 @@ import { DebugConfiguration } from 'vscode';
 
 import { ICommandManager, IDebugService } from '../../common/application/types';
 import { traceInfo } from '../../common/logger';
+import { IConfigurationService } from '../../common/types';
 import { Identifiers } from '../constants';
 import { CellState, ICell, IDebuggerConnectInfo, IJupyterDebugger, INotebookServer } from '../types';
-import { IConfigurationService } from '../../common/types';
 
 @injectable()
 export class JupyterDebugger implements IJupyterDebugger {

@@ -15,6 +15,7 @@ import { CodeLensFactory } from './editor-integration/codeLensFactory';
 import { DataScienceCodeLensProvider } from './editor-integration/codelensprovider';
 import { CodeWatcher } from './editor-integration/codewatcher';
 import { Decorator } from './editor-integration/decorator';
+import { DebugListener } from './interactive-window/debugListener';
 import { DotNetIntellisenseProvider } from './interactive-window/intellisense/dotNetIntellisenseProvider';
 import { JediIntellisenseProvider } from './interactive-window/intellisense/jediIntellisenseProvider';
 import { InteractiveWindow } from './interactive-window/interactiveWindow';
@@ -35,7 +36,6 @@ import { PlotViewer } from './plotting/plotViewer';
 import { PlotViewerProvider } from './plotting/plotViewerProvider';
 import { StatusProvider } from './statusProvider';
 import { ThemeFinder } from './themeFinder';
-import { DebugListener } from './interactive-window/debugListener';
 import {
     ICodeCssGenerator,
     ICodeLensFactory,
