@@ -43,7 +43,7 @@
 # 2. ignorePythonVersions
 #   Comma delimited list of Python versions not to be tested against.
 #   E.g. = 3.7,3.6
-#   Possible values 3.7, 3.6, 3.5, 3.5, 2.7
+#   Possible values 3.7, 3.6, 3.5, 2.7
 #   Any OS provided in this string will not be tested against.
 #
 #   Sample:

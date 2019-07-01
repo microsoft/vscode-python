@@ -6,9 +6,14 @@ Assuming you have created a virtual environment (for Python 3.7),
 installed the `uitests/requirements.txt` dependencies, and activated the virtual environment:
 
 ```shell
+$ # This step `npm run package` is required to ensure the 'ms-python-insiders.vsix' is available locally.
+$ # You could instead just download this and dump into the working directory (much faster).
+$ npm run package # see notes above.
+
+
 $ python uitests download
 $ python uitests install
-$ python uitests test
+$ python uitests test # Use the `-- --tags=@xyz` argument to run specific tests.
 $ python uitests --help # for more information.
 ```
 
@@ -16,7 +21,7 @@ $ python uitests --help # for more information.
 
 -   These are a set of UI tests for the Python Extension in VSC.
 -   The UI is driven using the [selenium webdriver](https://selenium-python.readthedocs.io/).
--   [BDD](https://docs.cucumber.io/bdd/overview/) is used to create the , and executed using [Behave](https://behave.readthedocs.io/en/latest/).
+-   [BDD](https://docs.cucumber.io/bdd/overview/) is used to create the tests, and executed using [Behave](https://behave.readthedocs.io/en/latest/).
 
 ## How does it work?
 
@@ -66,11 +71,21 @@ Here are the steps involved in running the tests:
 ## Caveats
 
 *   VSC UI needs be a top level window for elements to receive focus. Hence when running tests, try not do anything else.
-*   For each test we create a whole new folder and open that in VS Code: - We could use `git reset`, however on Windows, this is flaky if VSC is open. - Deleting files on `Windows` is flaky due to files being in use, etc. - Majority of the issues are around `fs` on `windows` - The easies fix for all of this is simple - create new folders for every test.
+*   For each test we create a whole new folder and open that in VS Code:
+    - We could use `git reset`, however on Windows, this is flaky if VSC is open.
+    - Deleting files on `Windows` is flaky due to files being in use, etc.
+    - Majority of the issues are around `fs` on `windows`
+    - The easies fix for all of this is simple
+    - create new folders for every test.
 *   `chromedriver` only supports arguments that begin with `--`. Hence arguments passed to VSC are limited to those that start with `--`.
-*   `Terminal` output cannot be retrieved using the `driver`. Hence output from terminal cannot be inspected. - Perhaps thi sis possible, but at the time of writinng this I couldn't find a solution. - I believe the `Terminal` in VSC is `SVG` based, hence reading text is out of the question.
+*   `Terminal` output cannot be retrieved using the `driver`. Hence output from terminal cannot be inspected.
+    - Perhaps thi sis possible, but at the time of writinng this I couldn't find a solution.
+    - I believe the `Terminal` in VSC is `SVG` based, hence reading text is out of the question.
 *   Sending characters to an input is slow, the `selenium` send text one character at a time. Hence tests are slow.
-*   Sending text to an editor can be flaky. - Assume we would like to `type` some code into a VSC editor. - As `selenium` sends a character at a time, VSC kicks in and attempts to format/autocomplete code and the like. This interferes with the code being typed out. - Solution: Copy code into clipboard, then pase into editor.
+*   Sending text to an editor can be flaky.
+    - Assume we would like to `type` some code into a VSC editor.
+    - As `selenium` sends a character at a time, VSC kicks in and attempts to format/autocomplete code and the like. This interferes with the code being typed out.
+    - Solution: Copy code into clipboard, then pase into editor.
 *   `Behave` does not generate any HTML reports
     -   Solution, we generate `cucumber` compliant `json` report. Hence the custom formatter in `report.py`.
     -   Using a `cucumber json` report format allows us to use existing tools to generate other HTML reports out of the raw `json` files.
