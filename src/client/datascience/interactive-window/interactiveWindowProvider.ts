@@ -34,7 +34,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IAsyncDisposableRegistry) asyncRegistry : IAsyncDisposableRegistry,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
-        @inject(IConfigurationService) private configService: IConfigurationService,
+        @inject(IConfigurationService) private configService: IConfigurationService
         ) {
         asyncRegistry.push(this);
 
