@@ -10,12 +10,13 @@ export const IInsidersDownloadChannelService = Symbol('IInsidersDownloadChannelS
 export interface IInsidersDownloadChannelService {
     readonly onDidChannelChange: Event<InsidersBuildDownloadChannels>;
     getDownloadChannel(): InsidersBuildDownloadChannels;
-    setDownloadChannel(value: InsidersBuildDownloadChannels, shouldReload?: boolean): Promise<void>;
+    setDownloadChannel(value: InsidersBuildDownloadChannels): Promise<void>;
 }
 
 export const IInsidersPrompt = Symbol('IInsidersPrompt');
 export interface IInsidersPrompt {
     notifyUser(): Promise<void>;
+    promptToReload(): Promise<void>;
 }
 
 export enum InsidersBuildDownloadChannel {

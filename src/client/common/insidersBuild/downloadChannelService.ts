@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { ConfigurationChangeEvent, ConfigurationTarget, Event, EventEmitter, Uri } from 'vscode';
+import { ConfigurationChangeEvent, ConfigurationTarget, Event, EventEmitter } from 'vscode';
 import { IApplicationEnvironment, IWorkspaceService } from '../application/types';
 import { IConfigurationService, IDisposable, IDisposableRegistry, IPythonSettings } from '../types';
 import { IInsidersDownloadChannelService, InsidersBuildDownloadChannels } from './types';
@@ -13,7 +13,6 @@ const insidersChannelSetting: keyof IPythonSettings = 'insidersChannel';
 
 @injectable()
 export class InsidersDownloadChannelService implements IInsidersDownloadChannelService {
-    private shouldReload: boolean = true;
     private readonly _onDidChannelChange: EventEmitter<InsidersBuildDownloadChannels> = new EventEmitter<InsidersBuildDownloadChannels>();
     constructor(
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
@@ -37,10 +36,8 @@ export class InsidersDownloadChannelService implements IInsidersDownloadChannelS
         return settings.globalValue;
     }
 
-    public async setDownloadChannel(value: InsidersBuildDownloadChannels, shouldReload: boolean = false): Promise<void> {
-        this.shouldReload = shouldReload;
+    public async setDownloadChannel(value: InsidersBuildDownloadChannels): Promise<void> {
         await this.configService.updateSetting(insidersChannelSetting, value, undefined, ConfigurationTarget.Global);
-        this._onDidChannelChange.fire(value);
     }
 
     public get onDidChannelChange(): Event<InsidersBuildDownloadChannels> {

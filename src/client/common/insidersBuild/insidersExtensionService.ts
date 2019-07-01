@@ -50,11 +50,9 @@ export class InsidersExtensionService implements IExtensionActivationService {
         } else if (build === 'stable') {
             await this.extensionInstaller.installStable();
         }
-        // if (shouldReload) {
-        //     // Channel has changed to stable, prompt to reload window
-        //     // To do: Prompt user to reload
-        //     const x = 5;
-        // }
+        if (build) {
+            await this.insidersPrompt.promptToReload();
+        }
     }
 
     private registerCommandsAndHandlers(): void {

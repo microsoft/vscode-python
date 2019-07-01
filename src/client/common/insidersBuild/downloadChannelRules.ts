@@ -22,11 +22,11 @@ export class IInsidersDownloadStableChannelRule implements IInsidersDownloadChan
             return 'stable';
         }
     }
-    public async shouldLookForInsidersBuild(): Promise<boolean> {
+    private async shouldLookForInsidersBuild(): Promise<boolean> {
         return false;
     }
-    public async shouldLookForStableBuild(didChannelChange: boolean): Promise<boolean> {
-        return didChannelChange;
+    private async shouldLookForStableBuild(didChannelChangeToStable: boolean): Promise<boolean> {
+        return didChannelChangeToStable;
     }
 }
 @injectable()

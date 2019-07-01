@@ -32,6 +32,7 @@ export namespace Common {
     export const noIWillDoItLater = localize('Common.noIWillDoItLater', 'No, I will do it later');
     export const notNow = localize('Common.notNow', 'Not now');
     export const doNotShowAgain = localize('Common.doNotShowAgain', 'Do not show again');
+    export const reload = localize('Common.reload', 'Reload');
 }
 
 export namespace LanguageService {
@@ -63,9 +64,9 @@ export namespace Interpreters {
     export const selectInterpreterTip = localize('Interpreters.selectInterpreterTip', 'Tip: you can change the Python interpreter used by the Python extension by clicking on the Python version in the status bar');
 }
 export namespace Insiders {
-    export const reload = localize('Insiders.reload', 'Reload');
     export const useStable = localize('Insiders.useStable', 'Use Stable');
     export const promptMessage = localize('Insiders.promptMessage', 'We noticed you are using VS Code Insiders. Reload to use the Insiders build of the extension.');
+    export const reloadMessage = localize('Insiders.reloadMessage', 'Please reload the window switching between insiders channels');
     export const downloadCompletedOutputMessage = localize('Insiders.downloadCompletedOutputMessage', 'Insiders build download complete');
     export const startingDownloadOutputMessage = localize('Insiders.startingDownloadOutputMessage', 'Starting download for Insiders build.');
 }
