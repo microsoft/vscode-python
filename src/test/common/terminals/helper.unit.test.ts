@@ -30,6 +30,7 @@ import {
     ITerminalActivationCommandProvider,
     TerminalShellType
 } from '../../../client/common/terminal/types';
+import { IShellDetector } from '../../../client/common/terminal/types';
 import { IConfigurationService } from '../../../client/common/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { Architecture, OSType } from '../../../client/common/utils/platform';
