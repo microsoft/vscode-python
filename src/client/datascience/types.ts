@@ -267,6 +267,9 @@ export interface IGatherModel {
     editorDefs: ReadonlyArray<EditorDef>;
     outputs: ReadonlyArray<CellOutput>;
     selectedDefs: ReadonlyArray<DefSelection>;
+    /**
+     * Get the list of currently-selected outputs.
+     */
     selectedOutputs: ReadonlyArray<OutputSelection>;
     selectedSlices: ReadonlyArray<SliceSelection>;
     chosenSlices: ReadonlyArray<SlicedExecution>;
@@ -277,19 +280,41 @@ export interface IGatherModel {
     addEditorDef(def: EditorDef): void;
     removeEditorDefsForCell(cellExecutionEventId: string): void;
     clearEditorDefs(): void;
+    /**
+     * Add an output to the list of selected outputs.
+     */
+    selectOutput(output: OutputSelection): void;
+    /**
+     * Remove an output to the list of selected outputs.
+     */
+    deselectOutput(output: OutputSelection): void;
+    /**
+     * Add output to the list of outputs discovered.
+     */
     addOutput(output: CellOutput): void;
+    /**
+     * Clear all outputs.
+     */
     clearOutputs(): void;
+    deselectOutputsForCell(cellExecutionEventId: string): void;
+    deselectAllOutputs(): void;
+    /**
+     * Add a slice to the list of selected slices.
+     */
     selectSlice(slice: SliceSelection): void;
+    /**
+     * Remove a slice from the list of selected slices.
+     */
     deselectSlice(slice: SliceSelection): void;
     deselectAllDefs(): void;
     isDefSelected(def: DefSelection): boolean;
     addSelectedDefSlices(defSelection: DefSelection, ...slices: SlicedExecution[]): void;
     getSelectedDefSlices(defSelection: DefSelection): SlicedExecution[] | undefined;
     removeSelectedDefSlices(defSelection: DefSelection): void;
-    deselectOutput(output: OutputSelection): void;
-    deselectOutputsForCell(cellExecutionEventId: string): void;
-    deselectAllOutputs(): void;
     deselectAll(): void;
+    /**
+     * Store all execution slices for an output selection
+     */
     addSelectedOutputSlices(outputSelection: OutputSelection, ...slices: SlicedExecution[]): void;
     getSelectedOutputSlices(outputSelection: OutputSelection): SlicedExecution[];
     removeSelectedOutputSlices(outputSelection: OutputSelection): void;
