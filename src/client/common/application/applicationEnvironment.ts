@@ -49,6 +49,10 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
         // tslint:disable-next-line:non-literal-require
         return this.packageJson.displayName;
     }
+    public get shell(): string | undefined {
+        // tslint:disable-next-line:no-any
+        return (vscode.env as any).shell;
+    }
     // tslint:disable-next-line:no-any
     public get packageJson(): any {
         // tslint:disable-next-line:non-literal-require no-require-imports

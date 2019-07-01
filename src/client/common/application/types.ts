@@ -847,6 +847,14 @@ export interface IApplicationEnvironment {
      * @memberof IApplicationShell
      */
     readonly userSettingsFile: string | undefined;
+    /**
+     * The detected default shell for the extension host, this is overridden by the
+     * `terminal.integrated.shell` setting for the extension host's platform.
+     *
+     * @type {string}
+     * @memberof IApplicationShell
+     */
+    readonly shell: string | undefined;
 }
 
 export const IWebPanelMessageListener = Symbol('IWebPanelMessageListener');

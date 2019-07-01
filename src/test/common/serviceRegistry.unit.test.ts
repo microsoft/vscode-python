@@ -97,7 +97,8 @@ suite('Common - Service Registry', () => {
             [IImportTracker, ImportTracker],
             [IShellDetector, TerminalNameShellDetector],
             [IShellDetector, SettingsShellDetector],
-            [IShellDetector, UserEnvironmentShellDetector]
+            [IShellDetector, UserEnvironmentShellDetector],
+            [IShellDetector, VSCEnvironmentShellDetector]
         ].forEach(mapping => {
             if (mapping.length === 2) {
                 serviceManager

@@ -47,7 +47,7 @@ export class ShellDetector {
             hasShellInEnv: undefined
         };
 
-        // Sort in order of priority and then identify the shell in terminal.
+        // Sort in order of priority and then identify the shell.
         const shellDetectors = this.shellDetectors.slice();
         shellDetectors.sort((a, b) => a.priority < b.priority ? 1 : 0);
 
