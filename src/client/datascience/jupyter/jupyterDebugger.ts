@@ -84,7 +84,7 @@ export class JupyterDebugger implements IJupyterDebugger {
                 // IANHU: Check bad results from this call?
                 // At this point according to the log / Karthik this should already be executed, but the responce here is not SetPydevdSourceMapResponse as expected
                 // ! here as we have already validated activeDebugSession
-                const results = await this.debugService.activeDebugSession!.customRequest('setPydevdSourceMap', this.buildSourceMap(fileHash));
+                await this.debugService.activeDebugSession!.customRequest('setPydevdSourceMap', this.buildSourceMap(fileHash));
             });
         }
     }
