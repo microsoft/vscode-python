@@ -376,7 +376,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             showJupyterVariableExplorer: true,
             variableExplorerExclude: 'module;builtin_function_or_method',
             liveShareConnectionTimeout: 100,
-            autoPreviewNotebooksInInteractivePane: true
+            autoPreviewNotebooksInInteractivePane: true,
+            enablePlotViewer: true
         };
 
         const workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration> = TypeMoq.Mock.ofType<WorkspaceConfiguration>();

@@ -68,7 +68,8 @@ suite('Theme colors', () => {
             showJupyterVariableExplorer: true,
             variableExplorerExclude: 'module;builtin_function_or_method',
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
-            markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)'
+            markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
+            enablePlotViewer: true
         };
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
         configService.setup(x => x.getSettings(TypeMoq.It.isAny())).returns(() => settings);

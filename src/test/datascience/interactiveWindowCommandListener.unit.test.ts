@@ -147,7 +147,8 @@ suite('Interactive window command listener', async () => {
             variableExplorerExclude: 'module;builtin_function_or_method',
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
-            autoPreviewNotebooksInInteractivePane: true
+            autoPreviewNotebooksInInteractivePane: true,
+            enablePlotViewer: true
         };
 
         when(knownSearchPaths.getSearchPaths()).thenReturn(['/foo/bar']);

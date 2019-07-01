@@ -79,7 +79,8 @@ suite('DataScience Code Watcher Unit Tests', () => {
             variableExplorerExclude: 'module;builtin_function_or_method',
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
-            enableCellCodeLens: true
+            enableCellCodeLens: true,
+            enablePlotViewer: true
         };
 
         // Setup the service container to return code watchers
