@@ -86,7 +86,8 @@ export function createEditableCellVM(executionCount: number) : ICellViewModel {
         inputBlockShow: true,
         inputBlockText: '',
         inputBlockCollapseNeeded: false,
-        inputBlockToggled: noop
+        inputBlockToggled: noop,
+        gathered: false
     };
 }
 
@@ -119,7 +120,8 @@ export function createCellVM(inputCell: ICell, settings: IDataScienceSettings | 
        inputBlockShow: true,
        inputBlockText: inputText,
        inputBlockCollapseNeeded: (inputLinesCount > 1),
-       inputBlockToggled: inputBlockToggled
+       inputBlockToggled: inputBlockToggled,
+       gathered: false
    };
 }
 

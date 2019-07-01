@@ -79,6 +79,7 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
                     codeTheme={this.props.codeTheme}
                     showWatermark={false}
                     editExecutionCount={0}
+                    gatherCode={() => this.props.gatherCode(index)}
                     gotoCode={() => this.props.gotoCellCode(index)}
                     copyCode={() => this.props.copyCellCode(index)}
                     delete={() => this.props.deleteCell(index)}

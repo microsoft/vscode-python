@@ -42,6 +42,7 @@ interface ICellProps {
     monacoTheme: string | undefined;
     editorOptions: monacoEditor.editor.IEditorOptions;
     editExecutionCount: number;
+    gatherCode(): void;
     gotoCode(): void;
     copyCode(): void;
     delete(): void;
@@ -60,6 +61,7 @@ export interface ICellViewModel {
     inputBlockCollapseNeeded: boolean;
     editable: boolean;
     directInput?: boolean;
+    gathered: boolean;
     inputBlockToggled(id: string): void;
 }
 
@@ -140,7 +142,11 @@ export class Cell extends React.Component<ICellProps> {
     }
 
     private getDeleteString = () => {
-        return getLocString('DataScience.deleteButtonTooltip', 'Remove Cell');
+        return getLocString('DataScience.deleteButtonTooltip', 'Remove cell');
+    }
+
+    private getGatherCodeString = () => {
+        return getLocString('DataScience.gatherCodeTooltip', 'Gather code');
     }
 
     private getGoToCodeString = () => {
@@ -184,9 +190,13 @@ export class Cell extends React.Component<ICellProps> {
 
         // Only render if we are allowed to.
         if (shouldRender) {
+            // GATHERTODO: add svg for gather
             return (
                 <div className={cellWrapperClass} role={this.props.role} onClick={this.onMouseClick}>
                     <MenuBar baseTheme={this.props.baseTheme}>
+                        <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.gatherCode} tooltip={this.getGatherCodeString()} hidden={hasNoSource}>
+                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.GatherCode} />
+                        </ImageButton>
                         <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.gotoCode} tooltip={this.getGoToCodeString()} hidden={hasNoSource}>
                             <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.GoToSourceCode} />
                         </ImageButton>

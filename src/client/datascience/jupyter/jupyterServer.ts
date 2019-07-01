@@ -552,7 +552,7 @@ export class JupyterServerBase implements INotebookServer {
                             subscriber.complete();
 
                             // Add executed code cell to the execution log after code has been executed
-                            if (isCode) {
+                            if (isCode) { // Markdown cells can't be executed so we only add code cells to the log
                                 const gatherCell = (convertToGatherCell(cells[1]) as LabCell).deepCopy();
                                 this._gatherModel.executionLogSlicer.logExecution(gatherCell);
                             }
