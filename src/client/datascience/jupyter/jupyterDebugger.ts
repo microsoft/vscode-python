@@ -10,12 +10,14 @@ import { ICommandManager, IDebugService } from '../../common/application/types';
 import { traceInfo } from '../../common/logger';
 import { Identifiers } from '../constants';
 import { CellState, ICell, IDebuggerConnectInfo, IJupyterDebugger, INotebookServer } from '../types';
+import { IConfigurationService } from '../../common/types';
 
 @injectable()
 export class JupyterDebugger implements IJupyterDebugger {
     private connectInfo: IDebuggerConnectInfo | undefined;
 
     constructor(
+            @inject(IConfigurationService) private configService: IConfigurationService,
             @inject(ICommandManager) private commandManager: ICommandManager,
             @inject(IDebugService) private debugService: IDebugService
         ) {}
@@ -23,9 +25,9 @@ export class JupyterDebugger implements IJupyterDebugger {
     public async enableAttach(server: INotebookServer): Promise<void> {
         traceInfo('enable debugger attach');
 
-        // Current version of ptvsd doesn't support returning the value that we need so you need to install the correct version or use my hardcoded line above
+        // Current version of ptvsd doesn't support returning the value that we need so for now we use a setting on disk
         // tslint:disable-next-line:no-multiline-string
-        //const enableDebuggerResults = await this.executeSilently(server, `import sys\r\nsys.path.append('d:/ptvsd-drop/kdrop/src')\r\nimport os\r\nos.environ["PTVSD_LOG_DIR"] = "d:/note_dbg/logs"\r\nimport ptvsd\r\nptvsd.enable_attach(('localhost', 0))`);
+        await this.executeSilently(server, `import sys\r\nsys.path.append('${this.configService.getSettings().datascience.ptvsdDistPath}')`);
         // tslint:disable-next-line:no-multiline-string
         const enableDebuggerResults = await this.executeSilently(server, `import ptvsd\r\nptvsd.enable_attach(('localhost', 0))`);
 

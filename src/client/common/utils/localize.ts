@@ -207,7 +207,10 @@ export namespace DataScience {
     export const selectedImageListLabel = localize('DataScience.selectedImageListLabel', 'Selected Image');
     export const imageListLabel = localize('DataScience.imageListLabel', 'Image');
     export const exportImageFailed = localize('DataScience.exportImageFailed', 'Error exporting image: {0}');
-    export const jupyterDataRateExceeded = localize('DataScience.jupyterDataRateExceeded', 'Cannot view variable because your data rate is set too low. Please restart your server with a data rate limit like so `--NotebookApp.iopub_data_rate_limit=10000000000.0`');
+    export const jupyterDataRateExceeded = localize('DataScience.jupyterDataRateExceeded', 'Cannot view variable because data rate exceeded. Please restart your server with a higher data rate limit. For example, --NotebookApp.iopub_data_rate_limit=10000000000.0');
+    export const addCellBelowCommandTitle = localize('DataScience.addCellBelowCommandTitle', 'Add cell');
+    export const debugCellCommandTitle = localize('DataScience.debugCellCommandTitle', 'Debug cell');
+    export const variableExplorerDisabledDuringDebugging = localize('DataScience.variableExplorerDisabledDuringDebugging', 'Variables are not available while debugging.');
 }
 
 export namespace DebugConfigStrings {

@@ -65,7 +65,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             history: new InputHistory(),
             editCellVM: getSettings && getSettings().allowInput ? createEditableCellVM(1) : undefined,
             editorOptions: this.computeEditorOptions(),
-            currentExecutionCount: 0
+            currentExecutionCount: 0,
+            debugging: false
         };
 
         // Add test state if necessary
@@ -238,6 +239,14 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 }
                 break;
 
+            case InteractiveWindowMessages.StartDebugging:
+                this.setState({debugging: true});
+                break;
+
+            case InteractiveWindowMessages.StopDebugging:
+                this.setState({debugging: false});
+                break;
+
             default:
                 break;
         }
@@ -291,7 +300,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private renderFooterPanel(baseTheme: string) {
         // Skip if the tokenizer isn't finished yet. It needs
         // to finish loading so our code editors work.
-        if (!this.state.tokenizerLoaded || !this.state.editCellVM) {
+        // We also skip rendering if we're in debug mode (for now). We can't run other cells when debugging
+        if (!this.state.tokenizerLoaded || !this.state.editCellVM || this.state.debugging) {
             return null;
         }
 
@@ -445,6 +455,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {
        return {
+        debugging: this.state.debugging,
         busy: this.state.busy,
         showDataExplorer: this.showDataViewer,
         skipDefault: this.props.skipDefault,

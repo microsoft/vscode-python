@@ -232,6 +232,7 @@ export interface ICodeWatcher {
     getCachedSettings() : IDataScienceSettings | undefined;
     runAllCells(): Promise<void>;
     runCell(range: Range): Promise<void>;
+    debugCell(range: Range): Promise<void>;
     runCurrentCell(): Promise<void>;
     runCurrentCellAndAdvance(): Promise<void>;
     runSelectionOrLine(activeEditor: TextEditor | undefined): Promise<void>;
@@ -242,6 +243,11 @@ export interface ICodeWatcher {
     runFileInteractive(): Promise<void>;
     addEmptyCellToBottom(): Promise<void>;
     debugCurrentCell(): Promise<void>;
+}
+
+export const ICodeLensFactory = Symbol('ICodeLensFactory');
+export interface ICodeLensFactory {
+    createCodeLenses(document: TextDocument): CodeLens[];
 }
 
 export enum CellState {

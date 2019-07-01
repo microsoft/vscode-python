@@ -56,6 +56,8 @@ export namespace InteractiveWindowMessages {
     export const LoadTmLanguageResponse = 'load_tmlanguage_response';
     export const OpenLink = 'open_link';
     export const ShowPlot = 'show_plot';
+    export const StartDebugging = 'start_debugging';
+    export const StopDebugging = 'stop_debugging';
 }
 
 // These are the messages that will mirror'd to guest/hosts in
@@ -221,4 +223,6 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.LoadTmLanguageResponse]: string | undefined;
     public [InteractiveWindowMessages.OpenLink]: string | undefined;
     public [InteractiveWindowMessages.ShowPlot]: string | undefined;
+    public [InteractiveWindowMessages.StartDebugging]: never | undefined;
+    public [InteractiveWindowMessages.StopDebugging]: never | undefined;
 }

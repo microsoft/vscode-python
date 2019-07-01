@@ -23,6 +23,7 @@ import './variableExplorerGrid.less';
 interface IVariableExplorerProps {
     baseTheme: string;
     skipDefault?: boolean;
+    debugging: boolean;
     refreshVariables(): void;
     showDataExplorer(targetVariable: string, numberOfColumns: number): void;
     variableExplorerToggled(open: boolean): void;
@@ -136,20 +137,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                         tooltip={getLocString('DataScience.collapseVariableExplorerTooltip', 'Collapse variable explorer')}
                         label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')} />
                     <div className={contentClassName}>
-                        <div id='variable-explorer-data-grid' role='table' aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
-                            <AdazzleReactDataGrid
-                                columns = {this.state.gridColumns.map(c => { return {...defaultColumnProperties, ...c }; })}
-                                rowGetter = {this.getRow}
-                                rowsCount = {this.state.gridRows.length}
-                                minHeight = {this.state.gridHeight}
-                                headerRowHeight = {this.state.fontSize + 9}
-                                rowHeight = {this.state.fontSize + 9}
-                                onRowDoubleClick = {this.rowDoubleClick}
-                                onGridSort = {this.sortRows}
-                                emptyRowsView = {VariableExplorerEmptyRowsView}
-                                rowRenderer = {VariableExplorerRowRenderer}
-                            />
-                        </div>
+                        {this.renderGrid()}
                     </div>
                 </div>
             );
@@ -252,6 +240,31 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             sortDirection,
             gridRows: this.internalSortRows(this.state.gridRows, sortColumn, sortDirection)
         });
+    }
+
+    private renderGrid() {
+        if (this.props.debugging) {
+            return (
+                <span className='span-debug-message'>{getLocString('DataScience.variableExplorerDisabledDuringDebugging', 'Variables are not available while debugging.')}</span>
+            );
+        } else {
+            return (
+                <div id='variable-explorer-data-grid' role='table' aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
+                <AdazzleReactDataGrid
+                    columns = {this.state.gridColumns.map(c => { return {...defaultColumnProperties, ...c }; })}
+                    rowGetter = {this.getRow}
+                    rowsCount = {this.state.gridRows.length}
+                    minHeight = {this.state.gridHeight}
+                    headerRowHeight = {this.state.fontSize + 9}
+                    rowHeight = {this.state.fontSize + 9}
+                    onRowDoubleClick = {this.rowDoubleClick}
+                    onGridSort = {this.sortRows}
+                    emptyRowsView = {VariableExplorerEmptyRowsView}
+                    rowRenderer = {VariableExplorerRowRenderer}
+                />
+            </div>
+            );
+        }
     }
 
     private generateDummyVariables() : IGridRow[] {
