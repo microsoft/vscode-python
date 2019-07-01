@@ -72,20 +72,21 @@ Here are the steps involved in running the tests:
 
 *   VSC UI needs be a top level window for elements to receive focus. Hence when running tests, try not do anything else.
 *   For each test we create a whole new folder and open that in VS Code:
-    - We could use `git reset`, however on Windows, this is flaky if VSC is open.
-    - Deleting files on `Windows` is flaky due to files being in use, etc.
-    - Majority of the issues are around `fs` on `windows`
-    - The easies fix for all of this is simple
-    - create new folders for every test.
+    -   We could use `git reset`, however on Windows, this is flaky if VSC is open.
+    -   Deleting files on `Windows` is flaky due to files being in use, etc.
+    -   Majority of the issues are around `fs` on `windows`
+    -   The easies fix for all of this is simple
+    -   create new folders for every test.
 *   `chromedriver` only supports arguments that begin with `--`. Hence arguments passed to VSC are limited to those that start with `--`.
 *   `Terminal` output cannot be retrieved using the `driver`. Hence output from terminal cannot be inspected.
-    - Perhaps thi sis possible, but at the time of writinng this I couldn't find a solution.
-    - I believe the `Terminal` in VSC is `SVG` based, hence reading text is out of the question.
+    -   Perhaps thi sis possible, but at the time of writinng this I couldn't find a solution.
+    -   I believe the `Terminal` in VSC is `SVG` based, hence reading text is out of the question.
+    -   (This is made possible by writing the command to be executed into `commands.txt`, and letting the bootstrap extension read that file and run the command in the terminal using the VSC API).
 *   Sending characters to an input is slow, the `selenium` send text one character at a time. Hence tests are slow.
 *   Sending text to an editor can be flaky.
-    - Assume we would like to `type` some code into a VSC editor.
-    - As `selenium` sends a character at a time, VSC kicks in and attempts to format/autocomplete code and the like. This interferes with the code being typed out.
-    - Solution: Copy code into clipboard, then pase into editor.
+    -   Assume we would like to `type` some code into a VSC editor.
+    -   As `selenium` sends a character at a time, VSC kicks in and attempts to format/autocomplete code and the like. This interferes with the code being typed out.
+    -   Solution: Copy code into clipboard, then pase into editor.
 *   `Behave` does not generate any HTML reports
     -   Solution, we generate `cucumber` compliant `json` report. Hence the custom formatter in `report.py`.
     -   Using a `cucumber json` report format allows us to use existing tools to generate other HTML reports out of the raw `json` files.
@@ -101,6 +102,7 @@ Here are the steps involved in running the tests:
     -   An even better way, is to use the VSC api to update the settings (via the bootstrap API) or edit the settings file directly through the UI.
     -   Updating settings through the editor (by editing the `settings.json` file directly is not easy, as its not easy to update/remove settings).
     -   Using the API we can easily determine when VSC is aware of the changes (basically when API completes, VSC is aware of the new settings).
+    -   (This is made possible by writing the settings to be updated into `settingsToUpdate.txt`, and letting the bootstrap extension read that file and update the VSC settings using the VSC API).
 
 ## Files & Folders
 
@@ -125,7 +127,7 @@ Here are the steps involved in running the tests:
 
 * For more details please check `build/ci`.
 * We generally try to run all tests against all permutations of OS + Python Version + VSC
-    - I.e. we run tests across permutations of the follows:
+    -   I.e. we run tests across permutations of the follows:
         - OS: Windows, Mac, Linux
         - Python: 2.7, 3.5, 3.6, 3.7
         - VSC: Stable, Insiders
@@ -146,7 +148,8 @@ Here are the steps involved in running the tests:
 ## Miscellaneous
 
 *   Use the debug configuration `Behave Smoke Tests` for debugging.
-*   In order to pass custom arguments to `Behave`, refer to the `CLI` (pass `behave` specific args after `--` in `python uitests test`)
+*   In order to pass custom arguments to `Behave`, refer to the `CLI` (pass `behave` specific args after `--` in `python uitests test`).
+    - E.g. `python uitests test -- --tags=@wip --more-behave-args`
 *   Remember, the automated UI interactions can be faster than normal user interactions.
     - E.g. just because we started debugging (using command `Debug: Start Debugging`), that doesn't mean the debug panel will open immediately. User interactions are slower compared to code execution.
     - Solution, always wait for the UI elements to be available/active. E.g. when you open a file, check whether the corresponding elements are visible.
