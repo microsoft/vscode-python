@@ -28,6 +28,7 @@ import { IToolbarPanelProps, ToolbarPanel } from './toolbarPanel';
 import { VariableExplorer } from './variableExplorer';
 import { IVariablePanelProps, VariablePanel } from './variablePanel';
 
+import { convertToGatherCell } from '/client/datascience/cellFactory';
 import './mainPanel.css';
 
 export interface IMainPanelProps {
@@ -570,14 +571,22 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return [...slicedUndo, cells];
     }
 
-    private gatherCode = (index: number) => { // Lookup based on IGatherCell persistent ID
+    private gatherCode = (index: number) => { // Lookup based on index
         // Find our cell
         const cellVM = this.state.cellVMs[index];
 
-        // Do some UI stuff
+        // Copy the array
+        const cellVMArray: ICellViewModel[] = [...this.state.cellVMs];
+        cellVMArray[index] = this.alterCellVMGatherState(cellVM);
 
-        // Tell
-        this.sendMessage(InteractiveWindowMessages.GatherCode, );
+        this.setState({
+            cellVMs: cellVMArray
+        });
+
+        // Tell interactive window
+        if (this.state.cellVMs[index].gathered) {
+            this.sendMessage(InteractiveWindowMessages.GatherCode, convertToGatherCell(cellVM.cell));
+        }
     }
 
     private gotoCellCode = (index: number) => {
@@ -592,7 +601,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         // Find our cell
         const cellVM = this.state.cellVMs[index];
 
-        // Send a message to the other side to jump to a particular cell
+        // Send a message to the other side to copy a particular cell
         this.sendMessage(InteractiveWindowMessages.CopyCodeCell, { source: extractInputText(cellVM.cell, getSettings()) });
     }
 
@@ -773,6 +782,16 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             skipNextScroll: true,
             cellVMs: newCells
         });
+    }
+
+    // Helper function modeled after alterCellVM to update cellVM gather state
+    private alterCellVMGatherState = (cellVM: ICellViewModel) => {
+        if (cellVM.cell.data.cell_type === 'code') {
+            const newCellVM = { ...cellVM };
+            newCellVM.gathered = !newCellVM.gathered;
+            return newCellVM;
+        }
+        return cellVM;
     }
 
     // Adjust the visibility or collapsed state of a cell

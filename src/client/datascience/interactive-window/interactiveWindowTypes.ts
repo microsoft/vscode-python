@@ -3,6 +3,7 @@
 'use strict';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 
+import { IGatherCell } from '../gather/model/cell';
 import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../messages';
 import { ICell, IInteractiveWindowInfo, IJupyterVariable, IJupyterVariablesResponse } from '../types';
 
@@ -160,12 +161,6 @@ export interface IAddCell {
     id: string;
 }
 
-export interface IGatherCode {
-    file: string; // Uniquely identify
-    id: string;
-    line: number;
-}
-
 export interface IRemoveCell {
     id: string;
 }
@@ -228,5 +223,5 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.LoadTmLanguageResponse]: string | undefined;
     public [InteractiveWindowMessages.OpenLink]: string | undefined;
     public [InteractiveWindowMessages.ShowPlot]: string | undefined;
-    public [InteractiveWindowMessages.GatherCode]: string | undefined;
+    public [InteractiveWindowMessages.GatherCode]: IGatherCell;
 }
