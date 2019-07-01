@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { Terminal } from 'vscode';
 import { IWorkspaceService } from '../application/types';
 import '../extensions';
@@ -52,6 +52,7 @@ detectableShells.set(TerminalShellType.cshell, IS_CSHELL);
 detectableShells.set(TerminalShellType.powershellCore, IS_POWERSHELL_CORE);
 detectableShells.set(TerminalShellType.xonsh, IS_XONSH);
 
+@injectable()
 export abstract class BaseShellDetector implements IShellDetector {
     constructor(public readonly priority: number) { }
     public abstract identifyTerminalShell(telemetryProperties: ShellIdentificationTelemetry, terminal?: Terminal): TerminalShellType | undefined;
@@ -77,6 +78,7 @@ export abstract class BaseShellDetector implements IShellDetector {
  * @class TerminalNameShellDetector
  * @extends {BaseShellDetector}
  */
+@injectable()
 export class TerminalNameShellDetector extends BaseShellDetector {
     constructor() { super(0); }
     public identifyTerminalShell(telemetryProperties: ShellIdentificationTelemetry, terminal?: Terminal): TerminalShellType | undefined {
@@ -102,6 +104,7 @@ export class TerminalNameShellDetector extends BaseShellDetector {
  * @class SettingsShellDetector
  * @extends {BaseShellDetector}
  */
+@injectable()
 export class SettingsShellDetector extends BaseShellDetector {
     constructor(@inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IPlatformService) private readonly platform: IPlatformService) {
@@ -149,6 +152,7 @@ export class SettingsShellDetector extends BaseShellDetector {
  * @class UserEnvironmentShellDetector
  * @extends {BaseShellDetector}
  */
+@injectable()
 export class UserEnvironmentShellDetector extends BaseShellDetector {
     constructor(@inject(ICurrentProcess) private readonly currentProcess: ICurrentProcess,
         @inject(IPlatformService) private readonly platform: IPlatformService) {
