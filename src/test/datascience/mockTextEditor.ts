@@ -16,9 +16,10 @@ import {
     TextEditorRevealType,
     ViewColumn
 } from 'vscode';
+
+import { noop } from '../../client/common/utils/misc';
 import { MockDocument } from './mockDocument';
 import { MockDocumentManager } from './mockDocumentManager';
-import { noop } from '../../client/common/utils/misc';
 
 class MockEditorEdit implements TextEditorEdit {
 

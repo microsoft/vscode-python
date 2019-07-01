@@ -10,7 +10,6 @@ import * as TypeMoq from 'typemoq';
 import { Disposable, Selection, TextDocument, TextEditor } from 'vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
-import { PYTHON_LANGUAGE } from '../../client/common/constants';
 import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { generateCellsFromDocument } from '../../client/datascience/cellFactory';
