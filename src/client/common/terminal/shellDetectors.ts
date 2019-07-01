@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, unmanaged } from 'inversify';
 import { Terminal } from 'vscode';
 import { IWorkspaceService } from '../application/types';
 import '../extensions';
@@ -54,7 +54,7 @@ detectableShells.set(TerminalShellType.xonsh, IS_XONSH);
 
 @injectable()
 export abstract class BaseShellDetector implements IShellDetector {
-    constructor(public readonly priority: number) { }
+    constructor(@unmanaged() public readonly priority: number) { }
     public abstract identifyTerminalShell(telemetryProperties: ShellIdentificationTelemetry, terminal?: Terminal): TerminalShellType | undefined;
     public identifyShellFromShellPath(shellPath: string): TerminalShellType {
         const shell = Array.from(detectableShells.keys())
