@@ -17,6 +17,7 @@ steps:
 
     - bash: cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
       displayName: 'Upload coverage to coveralls'
+      continueOnError: true
       condition: contains(variables['TestsToRun'], 'testUnitTests')
       failOnStderr: false
       # Set necessary env variables for coveralls, as they don't support Azure Devops.

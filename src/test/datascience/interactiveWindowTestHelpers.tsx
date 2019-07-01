@@ -319,7 +319,8 @@ export function defaultDataScienceSettings(): IDataScienceSettings {
         showJupyterVariableExplorer: true,
         variableExplorerExclude: 'module;builtin_function_or_method',
         codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
-        markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)'
+        markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
+        enablePlotViewer: true
     };
 }
 

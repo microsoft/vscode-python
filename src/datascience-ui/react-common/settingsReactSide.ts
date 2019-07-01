@@ -52,6 +52,7 @@ function load() {
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
             showJupyterVariableExplorer: true,
             variableExplorerExclude: 'module;builtin_function_or_method',
+            enablePlotViewer: true,
             extraSettings: {
                 editorCursor: 'line',
                 editorCursorBlink: 'blink',

@@ -101,6 +101,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
 
         // Setup our default cells that happen for everything
         this.addCell(CodeSnippits.MatplotLibInitSvg);
+        this.addCell(CodeSnippits.MatplotLibInitPng);
         this.addCell('matplotlib.style.use(\'dark_background\')');
         this.addCell(`matplotlib.rcParams.update(${Identifiers.MatplotLibDefaultParams})`);
         this.addCell(`%cd "${path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience')}"`);
