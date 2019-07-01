@@ -15,7 +15,7 @@ import {
 import { IDocumentManager } from '../../common/application/types';
 import { IConfigurationService } from '../../common/types';
 import { generateCells } from '../cellFactory';
-import { concatMultilineString } from '../common';
+import { concatMultilineString, stripComments } from '../common';
 import { Identifiers } from '../constants';
 import { InteractiveWindowMessages, IRemoteAddCode, SysInfoReason } from '../interactive-window/interactiveWindowTypes';
 import { ICellHash, ICellHashProvider, IFileHashes, IInteractiveWindowListener } from '../types';
@@ -103,7 +103,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
 
                 // Skip hash on unknown file though
                 if (args.file !== Identifiers.EmptyFileName) {
-                    this.addCellHash(concatMultilineString(codeCell.data.source), codeCell.line, codeCell.file, this.executionCount);
+                    this.addCellHash(stripComments(concatMultilineString(codeCell.data.source)), codeCell.line, codeCell.file, this.executionCount);
                 }
             }
         }

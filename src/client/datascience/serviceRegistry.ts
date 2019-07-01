@@ -12,6 +12,7 @@ import { DataViewer } from './data-viewing/dataViewer';
 import { DataViewerProvider } from './data-viewing/dataViewerProvider';
 import { DataScience } from './datascience';
 import { CodeLensFactory } from './editor-integration/codeLensFactory';
+import { CellHashProvider } from './editor-integration/cellhashprovider';
 import { DataScienceCodeLensProvider } from './editor-integration/codelensprovider';
 import { CodeWatcher } from './editor-integration/codewatcher';
 import { Decorator } from './editor-integration/decorator';
@@ -37,6 +38,7 @@ import { PlotViewerProvider } from './plotting/plotViewerProvider';
 import { StatusProvider } from './statusProvider';
 import { ThemeFinder } from './themeFinder';
 import {
+    ICellHashProvider,
     ICodeCssGenerator,
     ICodeLensFactory,
     ICodeWatcher,
@@ -110,4 +112,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<IPlotViewer>(IPlotViewer, wrapType(PlotViewer));
     serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, wrapType(JupyterDebugger));
     serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, wrapType(CodeLensFactory));
+    //serviceManager.addSingleton<ICellHashProvider>(ICellHashProvider, wrapType(CellHashProvider));
+    serviceManager.doubleBind(ICellHashProvider, IInteractiveWindowListener, wrapType(CellHashProvider));
 }

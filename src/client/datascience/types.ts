@@ -394,6 +394,18 @@ export interface IPlotViewer extends IDisposable {
     show(): Promise<void>;
 }
 
+export interface ISourceMapMapping {
+    line: number;
+    endLine: number;
+    runtimeSource: { path: string };
+    runtimeLine: number;
+}
+
+export interface ISourceMapRequest {
+    source: { path: string };
+    pydevdSourceMaps: ISourceMapMapping[];
+}
+
 export interface ICellHash {
     line: number;       // 1 based
     endLine: number;    // 1 based and inclusive
@@ -406,6 +418,7 @@ export interface IFileHashes {
     hashes: ICellHash[];
 }
 
+export const ICellHashProvider = Symbol('ICellHashProvider');
 export interface ICellHashProvider {
     getHashes() : IFileHashes[];
 }
