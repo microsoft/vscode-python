@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import { parse } from 'semver';
 import * as vscode from 'vscode';
 import { IPlatformService } from '../platform/types';
 import { ICurrentProcess, IPathUtils } from '../types';
@@ -60,5 +61,9 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
     }
     public get channel(): Channel {
         return this.appName.indexOf('Insider') > 0 ? 'insiders' : 'stable';
+    }
+    public get extensionChannel(): Channel {
+        const version = parse(this.packageJson.version)!;
+        return version.prerelease.length > 0 ? 'insiders' : 'stable';
     }
 }

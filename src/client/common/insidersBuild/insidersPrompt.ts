@@ -12,7 +12,7 @@ import { Common, Insiders } from '../utils/localize';
 import { noop } from '../utils/misc';
 import { IInsidersDownloadChannelService, IInsidersPrompt, InsidersBuildDownloadChannel } from './types';
 
-const insidersPromptStateKey = 'INSIDERS_PROMPT_STATE_KEYpppzz';
+const insidersPromptStateKey = 'INSIDERS_PROMPT_STATE_KEY';
 @injectable()
 export class InsidersPrompt implements IInsidersPrompt {
     private reloadPromptDisabled: boolean = false;
@@ -39,6 +39,7 @@ export class InsidersPrompt implements IInsidersPrompt {
         if (selection === prompts[0]) {
             await this.insidersDownloadChannelService.setDownloadChannel(InsidersBuildDownloadChannel.stable);
         } else if (selection === prompts[1]) {
+            await this.insidersDownloadChannelService.setDownloadChannel(InsidersBuildDownloadChannel.weekly);
             this.cmdManager.executeCommand('workbench.action.reloadWindow').then(noop);
         }
     }

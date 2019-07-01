@@ -21,7 +21,7 @@ export class FileDownloader implements IFileDownloader {
     }
     public async downloadFile(uri: string, options: DownloadOptions): Promise<string> {
         if (options.outputChannel) {
-            options.outputChannel.append(Http.downloadingFile().format(uri));
+            options.outputChannel.appendLine(Http.downloadingFile().format(uri));
         }
         const tempFile = await this.fs.createTemporaryFile(options.extension);
 

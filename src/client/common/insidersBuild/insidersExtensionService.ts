@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { IExtensionActivationService } from '../../../client/activation/types';
 import { IServiceContainer } from '../../ioc/types';
-import { IApplicationEnvironment, ICommandManager } from '../application/types';
+import { Channel, IApplicationEnvironment, ICommandManager } from '../application/types';
 import { Commands } from '../constants';
 import { IDisposable, IDisposableRegistry, Resource } from '../types';
 import { IInsidersDownloadChannelRule, IInsidersDownloadChannelService, IInsidersPrompt, InsidersBuildDownloadChannels } from './types';
@@ -20,7 +20,7 @@ export class InsidersExtensionService implements IExtensionActivationService {
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(ICommandManager) private readonly cmdManager: ICommandManager,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(IDisposableRegistry) private disposableRegistry: IDisposable[]
+        @inject(IDisposableRegistry) private disposables: IDisposable[]
     ) { }
 
     public async activate(_resource: Resource) {
@@ -30,7 +30,8 @@ export class InsidersExtensionService implements IExtensionActivationService {
         this.registerCommandsAndHandlers();
         this.activatedOnce = true;
         const downloadChannel = this.insidersDownloadChannelService.getDownloadChannel();
-        this.handleChannel(downloadChannel).ignoreErrors();
+        const extensionChannel: Channel = downloadChannel === 'Stable' ? 'stable' : 'insiders';
+        this.handleChannel(downloadChannel, extensionChannel !== this.appEnvironment.extensionChannel).ignoreErrors();
     }
 
     public async handleChannel(downloadChannel: InsidersBuildDownloadChannels, didChannelChange: boolean = false): Promise<void> {
@@ -47,9 +48,9 @@ export class InsidersExtensionService implements IExtensionActivationService {
     }
 
     private registerCommandsAndHandlers(): void {
-        this.insidersDownloadChannelService.onDidChannelChange(channel => this.handleChannel(channel, true), this, this.disposableRegistry);
-        this.disposableRegistry.push(this.cmdManager.registerCommand(Commands.SwitchToStable, () => this.insidersDownloadChannelService.setDownloadChannel('Stable'), this));
-        this.disposableRegistry.push(this.cmdManager.registerCommand(Commands.SwitchToInsidersDaily, () => this.insidersDownloadChannelService.setDownloadChannel('InsidersDaily'), this));
-        this.disposableRegistry.push(this.cmdManager.registerCommand(Commands.SwitchToInsidersWeekly, () => this.insidersDownloadChannelService.setDownloadChannel('InsidersWeekly'), this));
+        this.disposables.push(this.insidersDownloadChannelService.onDidChannelChange(channel => this.handleChannel(channel, true)));
+        this.disposables.push(this.cmdManager.registerCommand(Commands.SwitchToStable, () => this.insidersDownloadChannelService.setDownloadChannel('Stable')));
+        this.disposables.push(this.cmdManager.registerCommand(Commands.SwitchToInsidersDaily, () => this.insidersDownloadChannelService.setDownloadChannel('InsidersDaily')));
+        this.disposables.push(this.cmdManager.registerCommand(Commands.SwitchToInsidersWeekly, () => this.insidersDownloadChannelService.setDownloadChannel('InsidersWeekly')));
     }
 }

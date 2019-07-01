@@ -10,7 +10,7 @@ import { IInsidersDownloadChannelRule } from './types';
 
 const frequencyForDailyInsidersCheck = 1000 * 60 * 60 * 24; // One day.
 const frequencyForWeeklyInsidersCheck = 1000 * 60 * 60 * 24 * 7; // One week.
-const lastLookUpTimeKey = 'INSIDERS_LAST_LOOK_UP_TIME_KEYpppzz';
+const lastLookUpTimeKey = 'INSIDERS_LAST_LOOK_UP_TIME_KEY';
 
 @injectable()
 export class IInsidersDownloadStableChannelRule implements IInsidersDownloadChannelRule {
@@ -18,11 +18,11 @@ export class IInsidersDownloadStableChannelRule implements IInsidersDownloadChan
         @inject(IBuildInstaller) @named(INSIDERS_INSTALLER) private readonly insidersInstaller: IBuildInstaller,
         @inject(IBuildInstaller) @named(STABLE_INSTALLER) private readonly stableInstaller: IBuildInstaller
     ) { }
-    public async getInstallerForBuild(didChannelChange: boolean = false): Promise<IBuildInstaller | undefined> {
+    public async getInstallerForBuild(didChannelChangeToStable: boolean = false): Promise<IBuildInstaller | undefined> {
         if (await this.shouldLookForInsidersBuild()) {
             return this.insidersInstaller;
         }
-        if (await this.shouldLookForStableBuild(didChannelChange)) {
+        if (await this.shouldLookForStableBuild(didChannelChangeToStable)) {
             return this.stableInstaller;
         }
     }
@@ -36,21 +36,21 @@ export class IInsidersDownloadStableChannelRule implements IInsidersDownloadChan
 @injectable()
 export class IInsidersDownloadDailyChannelRule implements IInsidersDownloadChannelRule {
     constructor(
-        @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
         @inject(IBuildInstaller) @named(INSIDERS_INSTALLER) private readonly insidersInstaller: IBuildInstaller,
-        @inject(IBuildInstaller) @named(STABLE_INSTALLER) private readonly stableInstaller: IBuildInstaller
+        @inject(IBuildInstaller) @named(STABLE_INSTALLER) private readonly stableInstaller: IBuildInstaller,
+        @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory
     ) { }
-    public async getInstallerForBuild(didChannelChange: boolean): Promise<IBuildInstaller | undefined> {
-        if (await this.shouldLookForInsidersBuild(didChannelChange)) {
+    public async getInstallerForBuild(didChannelChangeToInsiders: boolean): Promise<IBuildInstaller | undefined> {
+        if (await this.shouldLookForInsidersBuild(didChannelChangeToInsiders)) {
             return this.insidersInstaller;
         }
         if (await this.shouldLookForStableBuild()) {
             return this.stableInstaller;
         }
     }
-    private async shouldLookForInsidersBuild(didChannelChange: boolean): Promise<boolean> {
+    private async shouldLookForInsidersBuild(didChannelChangeToInsiders: boolean): Promise<boolean> {
         const lastLookUpTime = this.persistentStateFactory.createGlobalPersistentState(lastLookUpTimeKey, -1);
-        if (didChannelChange) {
+        if (didChannelChangeToInsiders) {
             // Channel changed to insiders, look for insiders build
             await lastLookUpTime.updateValue(Date.now());
             return true;
@@ -69,21 +69,21 @@ export class IInsidersDownloadDailyChannelRule implements IInsidersDownloadChann
 @injectable()
 export class IInsidersDownloadWeeklyChannelRule implements IInsidersDownloadChannelRule {
     constructor(
-        @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
         @inject(IBuildInstaller) @named(INSIDERS_INSTALLER) private readonly insidersInstaller: IBuildInstaller,
-        @inject(IBuildInstaller) @named(STABLE_INSTALLER) private readonly stableInstaller: IBuildInstaller
+        @inject(IBuildInstaller) @named(STABLE_INSTALLER) private readonly stableInstaller: IBuildInstaller,
+        @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory
     ) { }
-    public async getInstallerForBuild(didChannelChange: boolean): Promise<IBuildInstaller | undefined> {
-        if (await this.shouldLookForInsidersBuild(didChannelChange)) {
+    public async getInstallerForBuild(didChannelChangeToInsiders: boolean): Promise<IBuildInstaller | undefined> {
+        if (await this.shouldLookForInsidersBuild(didChannelChangeToInsiders)) {
             return this.insidersInstaller;
         }
         if (await this.shouldLookForStableBuild()) {
             return this.stableInstaller;
         }
     }
-    private async shouldLookForInsidersBuild(didChannelChange: boolean): Promise<boolean> {
+    private async shouldLookForInsidersBuild(didChannelChangeToInsiders: boolean): Promise<boolean> {
         const lastLookUpTime = this.persistentStateFactory.createGlobalPersistentState(lastLookUpTimeKey, -1);
-        if (didChannelChange) {
+        if (didChannelChangeToInsiders) {
             // Channel changed to insiders, look for insiders build
             await lastLookUpTime.updateValue(Date.now());
             return true;

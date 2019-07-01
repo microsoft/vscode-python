@@ -22,7 +22,8 @@ import {
     ISortImportSettings,
     ITerminalSettings,
     ITestingSettings,
-    IWorkspaceSymbolSettings
+    IWorkspaceSymbolSettings,
+    Resource
 } from './types';
 import { debounceSync } from './utils/decorators';
 import { SystemVariables } from './variables/systemVariables';
@@ -69,7 +70,7 @@ export class PythonSettings implements IPythonSettings {
     }
 
     constructor(
-        workspaceFolder: Uri | undefined,
+        workspaceFolder: Resource,
         private readonly interpreterAutoSelectionService: IInterpreterAutoSeletionProxyService,
         workspace?: IWorkspaceService) {
         this.workspace = workspace || new WorkspaceService();

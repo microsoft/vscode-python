@@ -856,9 +856,16 @@ export interface IApplicationEnvironment {
      */
     readonly shell: string | undefined;
     /**
-     * Gets the vscode channel.
+     * Gets the vscode channel (whether 'insiders' or 'stable').
      */
     readonly channel: Channel;
+    /**
+     * Gets the extension channel (whether 'insiders' or 'stable').
+     *
+     * @type {string}
+     * @memberof IApplicationShell
+     */
+    readonly extensionChannel: Channel;
 }
 
 export const IWebPanelMessageListener = Symbol('IWebPanelMessageListener');
