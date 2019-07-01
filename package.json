@@ -2348,6 +2348,7 @@
         "chai": "^4.1.2",
         "chai-arrays": "^2.0.0",
         "chai-as-promised": "^7.1.1",
+        "codecov": "^3.5.0",
         "colors": "^1.2.1",
         "copy-webpack-plugin": "^4.6.0",
         "coveralls": "^3.0.4",
