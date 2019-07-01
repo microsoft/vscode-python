@@ -18,6 +18,7 @@ import {
 } from 'vscode';
 import { MockDocument } from './mockDocument';
 import { MockDocumentManager } from './mockDocumentManager';
+import { noop } from '../../client/common/utils/misc';
 
 class MockEditorEdit implements TextEditorEdit {
 
@@ -48,9 +49,11 @@ class MockEditorEdit implements TextEditorEdit {
 export class MockEditor implements TextEditor {
     public selection: Selection;
     public selections: Selection[] = [];
+    private _revealCallback: () => void;
 
     constructor(private _documentManager: MockDocumentManager, private _document: MockDocument) {
         this.selection = new Selection(0, 0, 0, 0);
+        this._revealCallback = noop;
     }
 
     public get document(): TextDocument {
@@ -80,12 +83,16 @@ export class MockEditor implements TextEditor {
         throw new Error('Method not implemented.');
     }
     public revealRange(_range: Range, _revealType?: TextEditorRevealType | undefined): void {
-        throw new Error('Method not implemented.');
+        this._revealCallback();
     }
     public show(_column?: ViewColumn | undefined): void {
         throw new Error('Method not implemented.');
     }
     public hide(): void {
         throw new Error('Method not implemented.');
+    }
+
+    public setRevealCallback(callback: () => void) {
+        this._revealCallback = callback;
     }
 }
