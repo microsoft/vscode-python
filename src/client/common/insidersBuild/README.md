@@ -1,58 +1,5 @@
-* InsidersExtensionService implements IExtensionService
-    * activate
-        - If hasUserConfiguredChannel or activatedOnce, return
-        - registerCommandsAndHandlers
-        - get download channel
-        - handleChannel
-    * handleChannel(channel)
-        - If channel rules allows insiders
-            - downloadInsiders
-            - Installs VSIX
-        - If channel rules allows stable
-            - Install stable
-        - if using VSCODE-INSIDERS (?)
-            - Prompts
-        - Make sure we are asking user to reload in case we install
-    * registerCommandsAndHandlers()
-        - OnChannelChange(channel)
-            - handleChannel
-
-* InsidersPrompt
-    * notifyUser
-        - If user haven't configured a channel, prompt user
-        - Configure channels accordingly
-    * useStable
-        - set download channel to stable
-
-* InsidersDownloadChannelRules implements IInsidersDownloadChannelRules
-    * stable
-        - shouldLookForInsidersBuild()
-            - if using VSCODE-INSIDERS and if using default channel configuration
-                - look for insiders
-        - shouldLookForStableBuild()
-            - if using VSCODE-INSIDERS and if using default channel configuration
-                - look for insiders
-    * weekly
-    * daily
-
-* InsidersDownloadChannelService
-    * getDownloadChannel
-    * setDownloadChannel
-    * onChannelChange
-    * hasUserConfiguredChannel
-
-* ExtensionInstaller
-    * downloadInsiders()
-    * installUsingVSIX
-    * installStable - use PVSC_EXTENSION_ID
-
-Modify config settings to add new setting
-
-Modify application environment to add if using VSCODE insiders method
-
-Problems:
-- User switches to 'stable' while extension is not active, we should be looking for 'stable' in that case
-- When to prompt user for reload - When Channel is changed midway (but not when 'use stable' option is selected in the prompt)
+Note:
+- When to prompt user for reload - When using the prompt, never prompt user to reload after installing, otherwise always prompt user to reload after installing
 
 Expected runs:
     - Default channel is stable
@@ -61,9 +8,7 @@ Expected runs:
     - Option 1 - 'reload'
         - Setting gets changed to 'InsidersWeekly' and we reload
     - Option 2 - 'use stable'
+        - Setting gets changed to 'Stable`, we do not reload
 
-
-Things to do-
-* didChannelChange boolean
-* fire event everytime even when setting is changed
-* Modify get download channel to use 'InsidersWeekly' as default
+Problems:
+    - If user removes the setting from setting.json, currently we will be installing insiders again. The official default value is `Stable`, but the default behavior is insiders. (Is it okay?)
