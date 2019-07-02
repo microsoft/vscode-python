@@ -16,11 +16,16 @@ export class ProcessLogger implements IProcessLogger {
     ) {}
 
     public logProcess(file: string, args: string[], options?: SpawnOptions) {
-        const formattedArgs = args.reduce((accumulator, current, index) => {
-            const formattedArg = this.pathUtils.getDisplayName(current.toCommandArgument());
+        const argsList = args.reduce((accumulator, current, index) => {
+            let formattedArg = this.pathUtils.getDisplayName(current).toCommandArgument();
+            if (current[0] === '\'' || current[0] === '"') {
+                formattedArg = `${current[0]}${this.pathUtils.getDisplayName(current.substr(1))}`;
+            }
+
             return index === 0 ? formattedArg : `${accumulator} ${formattedArg}`;
         }, '');
-        const info = [`> ${this.pathUtils.getDisplayName(file)} ${formattedArgs}`];
+
+        const info = [`> ${this.pathUtils.getDisplayName(file)} ${argsList}`];
         if (options && options.cwd) {
             info.push(`${Logging.currentWorkingDirectory()} ${this.pathUtils.getDisplayName(options.cwd)}`);
         }
