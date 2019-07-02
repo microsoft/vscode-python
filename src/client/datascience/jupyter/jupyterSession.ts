@@ -12,7 +12,6 @@ import {
 } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils';
 import { Slot } from '@phosphor/signaling';
-import * as hashjs from 'hash.js';
 import { Agent as HttpsAgent } from 'https';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter } from 'vscode';
