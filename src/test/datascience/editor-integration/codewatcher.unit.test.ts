@@ -7,7 +7,12 @@ import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, CodeLens, Disposable, Range, Selection, TextEditor } from 'vscode';
 
-import { IApplicationShell, ICommandManager, IDocumentManager } from '../../../client/common/application/types';
+import {
+    IApplicationShell,
+    ICommandManager,
+    IDebugService,
+    IDocumentManager
+} from '../../../client/common/application/types';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, ILogger } from '../../../client/common/types';
@@ -37,6 +42,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
     let serviceContainer : TypeMoq.IMock<IServiceContainer>;
     let helper: TypeMoq.IMock<ICodeExecutionHelper>;
     let tokenSource : CancellationTokenSource;
+    let debugService: TypeMoq.IMock<IDebugService>;
     const contexts : Map<string, boolean> = new Map<string, boolean>();
     const pythonSettings = new class extends PythonSettings {
         public fireChangeEvent() {
@@ -57,6 +63,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
         helper = TypeMoq.Mock.ofType<ICodeExecutionHelper>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
+        debugService = TypeMoq.Mock.ofType<IDebugService>();
 
         // Setup default settings
         pythonSettings.datascience = {
@@ -704,7 +711,7 @@ testing2`; // Command tests override getText, so just need the ranges here
         const inputText = '#%% foobar';
         const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce());
         documentManager.setup(d => d.textDocuments).returns(() => [document.object]);
-        const codeLensProvider = new DataScienceCodeLensProvider(serviceContainer.object, documentManager.object, configService.object, commandManager.object, disposables);
+        const codeLensProvider = new DataScienceCodeLensProvider(serviceContainer.object, documentManager.object, configService.object, commandManager.object, disposables, debugService.object);
 
         let result = codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
         expect(result, 'result not okay').to.be.ok;

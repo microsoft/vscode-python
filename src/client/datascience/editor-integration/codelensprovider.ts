@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 
-import { ICommandManager, IDocumentManager } from '../../common/application/types';
+import { ICommandManager, IDebugService, IDocumentManager } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
 import { IConfigurationService, IDataScienceSettings, IDisposable, IDisposableRegistry } from '../../common/types';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -18,14 +18,18 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     private totalExecutionTimeInMs : number = 0;
     private totalGetCodeLensCalls : number = 0;
     private activeCodeWatchers: ICodeWatcher[] = [];
+    private didChangeCodeLenses: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
                 @inject(IDocumentManager) private documentManager: IDocumentManager,
                 @inject(IConfigurationService) private configuration: IConfigurationService,
                 @inject(ICommandManager) private commandManager: ICommandManager,
-                @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
+                @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
+                @inject(IDebugService) private debugService: IDebugService
         )
     {
         disposableRegistry.push(this);
+        disposableRegistry.push(this.debugService.onDidChangeActiveDebugSession(this.onChangeDebugSession.bind(this)));
+
     }
 
     public dispose() {
@@ -33,6 +37,10 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         if (this.totalGetCodeLensCalls > 0) {
             sendTelemetryEvent(Telemetry.CodeLensAverageAcquisitionTime, this.totalExecutionTimeInMs / this.totalGetCodeLensCalls);
         }
+    }
+
+    public get onDidChangeCodeLenses() : vscode.Event<void> {
+        return this.didChangeCodeLenses.event;
     }
 
     // CodeLensProvider interface
@@ -54,6 +62,10 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         return this.matchWatcher(document.fileName, document.version, this.configuration.getSettings().datascience);
     }
 
+    private onChangeDebugSession(_e: vscode.DebugSession | undefined) {
+        this.didChangeCodeLenses.fire();
+    }
+
     private getCodeLensTimed(document: vscode.TextDocument): vscode.CodeLens[] {
         const stopWatch = new StopWatch();
         const result = this.getCodeLens(document);
@@ -65,7 +77,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     private getCodeLens(document: vscode.TextDocument): vscode.CodeLens[] {
         // Don't provide any code lenses if we have not enabled data science
         const settings = this.configuration.getSettings();
-        if (!settings.datascience.enabled || !settings.datascience.enableCellCodeLens) {
+        if (!settings.datascience.enabled || !settings.datascience.enableCellCodeLens || this.debugService.activeDebugSession) {
             // Clear out any existing code watchers, providecodelenses is called on settings change
             // so we don't need to watch the settings change specifically here
             if (this.activeCodeWatchers.length > 0) {
