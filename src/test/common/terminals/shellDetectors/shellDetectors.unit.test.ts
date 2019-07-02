@@ -53,6 +53,7 @@ suite('Shell Detectors', () => {
         hasShellInEnv: undefined
     };
 
+
     setup(() => {
         platformService = mock(PlatformService);
         workspaceService = mock(WorkspaceService);
