@@ -210,8 +210,7 @@ suite('Hover Definition (Jedi)', () => {
             assert.equal(`${def[0].range!.end.line},${def[0].range!.end.character}`, '8,15', `End position is incorrect ${def}`);
             // tslint:disable-next-line:prefer-template
             assert.equal(normalizeMarkedString(def[0].contents[0]), '```python' + EOL +
-                // tslint:disable-next-line:no-suspicious-comment
-                // TODO: Why did this change?
+                // This is the signature provided by Jedi via completions.py.
                 'def acos(x: SupportsFloat)' + EOL +
                 '```' + EOL +
                 'Return the arc cosine (measured in radians) of x.', `Invalid conents in ${def}`);
