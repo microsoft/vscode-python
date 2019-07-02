@@ -8,7 +8,7 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { IPlatformService } from '../../../client/common/platform/types';
 import { ShellDetector } from '../../../client/common/terminal/shellDetector';
-import { UserEnvironmentShellDetector } from '../../../client/common/terminal/shellDetectors';
+import { UserEnvironmentShellDetector } from '../../../client/common/terminal/shellDetectors/userEnvironmentShellDetector';
 import { TerminalShellType } from '../../../client/common/terminal/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { OSType } from '../../../client/common/utils/platform';

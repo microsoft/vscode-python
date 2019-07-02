@@ -6,14 +6,16 @@
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import { instance, mock, when } from 'ts-mockito';
-import { WorkspaceService } from '../../../client/common/application/workspace';
-import { PlatformService } from '../../../client/common/platform/platformService';
-import { IPlatformService } from '../../../client/common/platform/types';
-import { CurrentProcess } from '../../../client/common/process/currentProcess';
-import { SettingsShellDetector, TerminalNameShellDetector, UserEnvironmentShellDetector } from '../../../client/common/terminal/shellDetectors';
-import { ShellIdentificationTelemetry, TerminalShellType } from '../../../client/common/terminal/types';
-import { getNamesAndValues } from '../../../client/common/utils/enum';
-import { OSType } from '../../../client/common/utils/platform';
+import { WorkspaceService } from '../../../../client/common/application/workspace';
+import { PlatformService } from '../../../../client/common/platform/platformService';
+import { IPlatformService } from '../../../../client/common/platform/types';
+import { CurrentProcess } from '../../../../client/common/process/currentProcess';
+import { SettingsShellDetector } from '../../../../client/common/terminal/shellDetectors/settingsShellDetector';
+import { TerminalNameShellDetector } from '../../../../client/common/terminal/shellDetectors/terminalNameShellDetector';
+import { UserEnvironmentShellDetector } from '../../../../client/common/terminal/shellDetectors/userEnvironmentShellDetector';
+import { ShellIdentificationTelemetry, TerminalShellType } from '../../../../client/common/terminal/types';
+import { getNamesAndValues } from '../../../../client/common/utils/enum';
+import { OSType } from '../../../../client/common/utils/platform';
 
 // tslint:disable:max-func-body-length no-any
 

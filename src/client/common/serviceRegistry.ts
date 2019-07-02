@@ -53,7 +53,9 @@ import { PipEnvActivationCommandProvider } from './terminal/environmentActivatio
 import { PyEnvActivationCommandProvider } from './terminal/environmentActivationProviders/pyenvActivationProvider';
 import { TerminalServiceFactory } from './terminal/factory';
 import { TerminalHelper } from './terminal/helper';
-import { SettingsShellDetector, TerminalNameShellDetector, UserEnvironmentShellDetector } from './terminal/shellDetectors';
+import { SettingsShellDetector } from './terminal/shellDetectors/settingsShellDetector';
+import { TerminalNameShellDetector } from './terminal/shellDetectors/terminalNameShellDetector';
+import { UserEnvironmentShellDetector } from './terminal/shellDetectors/userEnvironmentShellDetector';
 import {
     IShellDetector,
     ITerminalActivationCommandProvider,

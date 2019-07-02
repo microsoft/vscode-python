@@ -64,7 +64,7 @@ import {
     PyEnvActivationCommandProvider
 } from '../../client/common/terminal/environmentActivationProviders/pyenvActivationProvider';
 import { TerminalHelper } from '../../client/common/terminal/helper';
-import { TerminalNameShellDetector } from '../../client/common/terminal/shellDetectors';
+import { TerminalNameShellDetector } from '../../client/common/terminal/shellDetectors/terminalNameShellDetector';
 import {
     IShellDetector,
     ITerminalActivationCommandProvider, ITerminalHelper,
