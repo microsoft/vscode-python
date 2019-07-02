@@ -55,7 +55,7 @@ detectableShells.set(TerminalShellType.xonsh, IS_XONSH);
 @injectable()
 export abstract class BaseShellDetector implements IShellDetector {
     constructor(@unmanaged() public readonly priority: number) { }
-    public abstract identifyTerminalShell(telemetryProperties: ShellIdentificationTelemetry, terminal?: Terminal): TerminalShellType | undefined;
+    public abstract identify(telemetryProperties: ShellIdentificationTelemetry, terminal?: Terminal): TerminalShellType | undefined;
     public identifyShellFromShellPath(shellPath: string): TerminalShellType {
         const shell = Array.from(detectableShells.keys())
             .reduce((matchedShell, shellToDetect) => {
@@ -86,7 +86,7 @@ export abstract class BaseShellDetector implements IShellDetector {
 @injectable()
 export class TerminalNameShellDetector extends BaseShellDetector {
     constructor() { super(0); }
-    public identifyTerminalShell(telemetryProperties: ShellIdentificationTelemetry, terminal?: Terminal): TerminalShellType | undefined {
+    public identify(telemetryProperties: ShellIdentificationTelemetry, terminal?: Terminal): TerminalShellType | undefined {
         if (!terminal) {
             return;
         }
@@ -137,7 +137,7 @@ export class SettingsShellDetector extends BaseShellDetector {
         }
         return shellConfig.get<string>(osSection)!;
     }
-    public identifyTerminalShell(telemetryProperties: ShellIdentificationTelemetry, _terminal?: Terminal): TerminalShellType | undefined {
+    public identify(telemetryProperties: ShellIdentificationTelemetry, _terminal?: Terminal): TerminalShellType | undefined {
         const shellPath = this.getTerminalShellPath();
         telemetryProperties.hasCustomShell = !!shellPath;
         const shell = shellPath ? this.identifyShellFromShellPath(shellPath) : TerminalShellType.other;
@@ -166,7 +166,7 @@ export class UserEnvironmentShellDetector extends BaseShellDetector {
     public getDefaultPlatformShell(): string {
         return getDefaultShell(this.platform, this.currentProcess);
     }
-    public identifyTerminalShell(telemetryProperties: ShellIdentificationTelemetry, _terminal?: Terminal): TerminalShellType | undefined {
+    public identify(telemetryProperties: ShellIdentificationTelemetry, _terminal?: Terminal): TerminalShellType | undefined {
         const shellPath = this.getDefaultPlatformShell();
         telemetryProperties.hasShellInEnv = !!shellPath;
         const shell = this.identifyShellFromShellPath(shellPath);

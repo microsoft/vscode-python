@@ -71,7 +71,7 @@ suite('Shell Detectors', () => {
     test('Identify shell based on name of terminal', async () => {
         const shellDetector = new TerminalNameShellDetector();
         shellPathsAndIdentification.forEach((shellType, shellPath) => {
-            expect(shellDetector.identifyTerminalShell(telemetryProperties, { name: shellPath } as any)).to.equal(shellType, `Incorrect Shell Type for name '${shellPath}'`);
+            expect(shellDetector.identify(telemetryProperties, { name: shellPath } as any)).to.equal(shellType, `Incorrect Shell Type for name '${shellPath}'`);
         });
     });
     test('Identify shell based on VSC Settings', async () => {
@@ -79,7 +79,7 @@ suite('Shell Detectors', () => {
         shellPathsAndIdentification.forEach((shellType, shellPath) => {
             // Assume the same paths are stored in user settings, we should still be able to identify the shell.
             shellDetector.getTerminalShellPath = () => shellPath;
-            expect(shellDetector.identifyTerminalShell(telemetryProperties, {} as any)).to.equal(shellType, `Incorrect Shell Type for path '${shellPath}'`);
+            expect(shellDetector.identify(telemetryProperties, {} as any)).to.equal(shellType, `Incorrect Shell Type for path '${shellPath}'`);
         });
     });
     getNamesAndValues<OSType>(OSType).forEach(os => {
@@ -106,7 +106,7 @@ suite('Shell Detectors', () => {
         shellPathsAndIdentification.forEach((shellType, shellPath) => {
             // Assume the same paths are defined in user environment variables, we should still be able to identify the shell.
             shellDetector.getDefaultPlatformShell = () => shellPath;
-            expect(shellDetector.identifyTerminalShell(telemetryProperties, {} as any)).to.equal(shellType, `Incorrect Shell Type for path '${shellPath}'`);
+            expect(shellDetector.identify(telemetryProperties, {} as any)).to.equal(shellType, `Incorrect Shell Type for path '${shellPath}'`);
         });
     });
     test('Default shell on Windows < 10 is cmd.exe', () => {
