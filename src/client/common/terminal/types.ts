@@ -102,5 +102,5 @@ export interface IShellDetector {
      * @memberof IShellDetector
      */
     readonly priority: number;
-    identifyTerminalShell(telemetryProperties: ShellIdentificationTelemetry, terminal?: Terminal): TerminalShellType | undefined;
+    identify(telemetryProperties: ShellIdentificationTelemetry, terminal?: Terminal): TerminalShellType | undefined;
 }

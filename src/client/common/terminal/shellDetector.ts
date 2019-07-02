@@ -52,7 +52,7 @@ export class ShellDetector {
         shellDetectors.sort((a, b) => a.priority < b.priority ? 1 : 0);
 
         for (const detector of shellDetectors) {
-            shell = detector.identifyTerminalShell(telemetryProperties, terminal);
+            shell = detector.identify(telemetryProperties, terminal);
             if (shell) {
                 break;
             }

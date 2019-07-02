@@ -364,13 +364,13 @@ suite('Terminal Service helpers', () => {
             const terminal = {} as any;
             const expectedShell = TerminalShellType.ksh;
             shellDetectorIdentifyTerminalShell.callThrough();
-            when(mockDetector.identifyTerminalShell(anything(), terminal)).thenReturn(expectedShell);
+            when(mockDetector.identify(anything(), terminal)).thenReturn(expectedShell);
 
             const shell = helper.identifyTerminalShell(terminal);
 
             expect(shell).to.be.equal(expectedShell);
             expect(shellDetectorIdentifyTerminalShell.callCount).to.equal(1);
-            verify(mockDetector.identifyTerminalShell(anything(), terminal)).once();
+            verify(mockDetector.identify(anything(), terminal)).once();
         });
     });
 });

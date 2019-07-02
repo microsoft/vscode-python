@@ -49,26 +49,26 @@ suite('Shell Detector', () => {
             when(platformService.osType).thenReturn(os.value);
             const detector = mock(UserEnvironmentShellDetector);
             const detectedShell = TerminalShellType.xonsh;
-            when(detector.identifyTerminalShell(anything(), anything())).thenReturn(detectedShell);
+            when(detector.identify(anything(), anything())).thenReturn(detectedShell);
             const shellDetector = new ShellDetector(instance(platformService), [instance(detector)]);
 
             const shell = shellDetector.identifyTerminalShell();
 
             expect(shell).to.be.equal(detectedShell);
-            verify(detector.identifyTerminalShell(anything(), undefined)).once();
+            verify(detector.identify(anything(), undefined)).once();
         });
         test(`Use shell provided by detector (when a terminal is provided) ${testSuffix}`, () => {
             when(platformService.osType).thenReturn(os.value);
             const terminal = { name: 'bash' } as any;
             const detector = mock(UserEnvironmentShellDetector);
             const detectedShell = TerminalShellType.xonsh;
-            when(detector.identifyTerminalShell(anything(), anything())).thenReturn(detectedShell);
+            when(detector.identify(anything(), anything())).thenReturn(detectedShell);
             const shellDetector = new ShellDetector(instance(platformService), [instance(detector)]);
 
             const shell = shellDetector.identifyTerminalShell(terminal);
 
             expect(shell).to.be.equal(detectedShell);
-            verify(detector.identifyTerminalShell(anything(), terminal)).once();
+            verify(detector.identify(anything(), terminal)).once();
         });
         test(`Use shell provided by detector with highest priority ${testSuffix}`, () => {
             when(platformService.osType).thenReturn(os.value);
@@ -79,17 +79,17 @@ suite('Shell Detector', () => {
             when(detector1.priority).thenReturn(0);
             when(detector2.priority).thenReturn(2);
             when(detector3.priority).thenReturn(1);
-            when(detector1.identifyTerminalShell(anything(), anything())).thenReturn(TerminalShellType.tcshell);
-            when(detector2.identifyTerminalShell(anything(), anything())).thenReturn(detectedShell);
-            when(detector3.identifyTerminalShell(anything(), anything())).thenReturn(TerminalShellType.fish);
+            when(detector1.identify(anything(), anything())).thenReturn(TerminalShellType.tcshell);
+            when(detector2.identify(anything(), anything())).thenReturn(detectedShell);
+            when(detector3.identify(anything(), anything())).thenReturn(TerminalShellType.fish);
             const shellDetector = new ShellDetector(instance(platformService), [instance(detector1), instance(detector2), instance(detector3)]);
 
             const shell = shellDetector.identifyTerminalShell();
 
             expect(shell).to.be.equal(detectedShell);
-            verify(detector1.identifyTerminalShell(anything(), anything())).never();
-            verify(detector2.identifyTerminalShell(anything(), undefined)).once();
-            verify(detector3.identifyTerminalShell(anything(), anything())).never();
+            verify(detector1.identify(anything(), anything())).never();
+            verify(detector2.identify(anything(), undefined)).once();
+            verify(detector3.identify(anything(), anything())).never();
         });
         test(`Fall back to detectors that can identify a shell ${testSuffix}`, () => {
             when(platformService.osType).thenReturn(os.value);
@@ -102,20 +102,20 @@ suite('Shell Detector', () => {
             when(detector2.priority).thenReturn(2);
             when(detector3.priority).thenReturn(3);
             when(detector4.priority).thenReturn(4);
-            when(detector1.identifyTerminalShell(anything(), anything())).thenReturn(TerminalShellType.ksh);
-            when(detector2.identifyTerminalShell(anything(), anything())).thenReturn(detectedShell);
-            when(detector3.identifyTerminalShell(anything(), anything())).thenReturn(undefined);
-            when(detector4.identifyTerminalShell(anything(), anything())).thenReturn(undefined);
+            when(detector1.identify(anything(), anything())).thenReturn(TerminalShellType.ksh);
+            when(detector2.identify(anything(), anything())).thenReturn(detectedShell);
+            when(detector3.identify(anything(), anything())).thenReturn(undefined);
+            when(detector4.identify(anything(), anything())).thenReturn(undefined);
             const shellDetector = new ShellDetector(instance(platformService), [instance(detector1), instance(detector2),
             instance(detector3), instance(detector4)]);
 
             const shell = shellDetector.identifyTerminalShell();
 
             expect(shell).to.be.equal(detectedShell);
-            verify(detector1.identifyTerminalShell(anything(), anything())).never();
-            verify(detector2.identifyTerminalShell(anything(), undefined)).once();
-            verify(detector3.identifyTerminalShell(anything(), anything())).once();
-            verify(detector4.identifyTerminalShell(anything(), anything())).once();
+            verify(detector1.identify(anything(), anything())).never();
+            verify(detector2.identify(anything(), undefined)).once();
+            verify(detector3.identify(anything(), anything())).once();
+            verify(detector4.identify(anything(), anything())).once();
         });
     });
 });
