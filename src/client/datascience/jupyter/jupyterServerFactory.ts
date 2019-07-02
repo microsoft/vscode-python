@@ -3,7 +3,7 @@
 'use strict';
 import '../../common/extensions';
 
-import { inject, injectable, multiInject } from 'inversify';
+import { inject, injectable, multiInject, optional } from 'inversify';
 import { Observable } from 'rxjs/Observable';
 import { CancellationToken } from 'vscode-jsonrpc';
 
@@ -56,7 +56,7 @@ export class JupyterServerFactory implements INotebookServer {
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IConfigurationService) configService: IConfigurationService,
         @inject(IJupyterSessionManager) sessionManager: IJupyterSessionManager,
-        @multiInject(INotebookExecutionLogger) loggers: INotebookExecutionLogger[]) {
+        @multiInject(INotebookExecutionLogger) @optional() loggers: INotebookExecutionLogger[] | undefined) {
         this.serverFactory = new RoleBasedFactory<IJupyterServerInterface, JupyterServerClassType>(
             liveShare,
             HostJupyterServer,
@@ -68,7 +68,7 @@ export class JupyterServerFactory implements INotebookServer {
             asyncRegistry,
             configService,
             sessionManager,
-            loggers
+            loggers ? loggers : []
         );
     }
 
