@@ -47,22 +47,22 @@ suite('Unit Tests - ManagementService', () => {
         });
 
         test('Execute command if in experiment', async () => {
-            when(experiment.inExperiment(AlwaysDisplayTestExplorerGroups.enabled)).thenReturn(true);
+            when(experiment.inExperiment(AlwaysDisplayTestExplorerGroups.experiment)).thenReturn(true);
 
             await testManagementService.activate(instance(mock(JediSymbolProvider)));
 
             verify(commandManager.executeCommand('setContext', 'testsDiscovered', true)).once();
-            verify(experiment.inExperiment(AlwaysDisplayTestExplorerGroups.enabled)).once();
+            verify(experiment.inExperiment(AlwaysDisplayTestExplorerGroups.experiment)).once();
             verify(experiment.inExperiment(AlwaysDisplayTestExplorerGroups.control)).never();
             verify(experiment.sendTelemetryIfInExperiment(anything())).never();
         });
         test('If not in experiment, check and send Telemetry for control group and do not execute command', async () => {
-            when(experiment.inExperiment(AlwaysDisplayTestExplorerGroups.enabled)).thenReturn(false);
+            when(experiment.inExperiment(AlwaysDisplayTestExplorerGroups.experiment)).thenReturn(false);
 
             await testManagementService.activate(instance(mock(JediSymbolProvider)));
 
             verify(commandManager.executeCommand('setContext', 'testsDiscovered', anything())).never();
-            verify(experiment.inExperiment(AlwaysDisplayTestExplorerGroups.enabled)).once();
+            verify(experiment.inExperiment(AlwaysDisplayTestExplorerGroups.experiment)).once();
             verify(experiment.inExperiment(AlwaysDisplayTestExplorerGroups.control)).never();
             verify(experiment.sendTelemetryIfInExperiment(AlwaysDisplayTestExplorerGroups.control)).once();
         });

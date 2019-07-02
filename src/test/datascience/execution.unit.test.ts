@@ -551,7 +551,8 @@ suite('Jupyter Execution', async () => {
             variableExplorerExclude: 'module;builtin_function_or_method',
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
-            allowLiveShare: false
+            allowLiveShare: false,
+            enablePlotViewer: true
         };
 
         // Service container also needs to generate jupyter servers. However we can't use a mock as that messes up returning

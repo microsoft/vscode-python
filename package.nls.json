@@ -33,6 +33,7 @@
     "python.command.python.datascience.runcellandallbelow.title": "Run Below",
     "python.command.python.datascience.runallcellsabove.palette.title": "Run Cells Above Current Cell",
     "python.command.python.datascience.runcurrentcellandallbelow.palette.title": "Run Current Cell and Below",
+    "python.command.python.datascience.debugcurrentcell.palette.title": "Debug Current Cell",
     "python.command.python.datascience.runtoline.title": "Run To Line in Python Interactive window",
     "python.command.python.datascience.runfromline.title": "Run From Line in Python Interactive window",
     "python.command.python.datascience.runcurrentcell.title": "Run Current Cell",
@@ -134,6 +135,10 @@
     "DataScience.pythonNewHeader": "Started new kernel:",
     "DataScience.executingCodeFailure": "Executing code failed : {0}",
     "DataScience.inputWatermark": "Shift-enter to run",
+    "DataScience.deleteButtonTooltip": "Remove cell",
+    "DataScience.gotoCodeButtonTooltip": "Go to code",
+    "DataScience.copyBackToSourceButtonTooltip": "Paste code into file",
+    "DataScience.plotOpen": "Expand image",
     "Linter.enableLinter": "Enable {0}",
     "Linter.enablePylint": "You have a pylintrc file in your workspace. Do you want to enable pylint?",
     "Linter.replaceWithSelectedLinter": "Multiple linters are enabled in settings. Replace with '{0}'?",
@@ -277,5 +282,6 @@
     "DataScience.imageListLabel": "Image",
     "DataScience.exportImageFailed": "Error exporting image: {0}",
     "downloading.file": "Downloading {0}...",
-    "downloading.file.progress": "{0}{1} of {2} KB ({3})"
+    "downloading.file.progress": "{0}{1} of {2} KB ({3})",
+    "DataScience.jupyterDataRateExceeded": "Cannot view variable because your data rate is set too low. Please restart your server with a data rate limit like so `--NotebookApp.iopub_data_rate_limit=10000000000.0`"
 }

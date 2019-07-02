@@ -19,58 +19,21 @@ variables:
   MOCHA_FILE: '$(Build.ArtifactStagingDirectory)/test-junit.xml' # All test files will write their JUnit xml output to this file, clobbering the last time it was written.
   MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter).
   VSC_PYTHON_FORCE_LOGGING: true # Enable this to turn on console output for the logger
-  VSC_PYTHON_LOG_FILE: '$(Build.ArtifactStagingDirectory)/vsc.log'
+  VSC_PYTHON_LOG_FILE: '$(Build.ArtifactStagingDirectory)/pvsc.log'
 
 jobs:
-- job: Compile
-  variables:
-    Build: false
-  pool:
-    vmImage: "macos-10.13"
-  steps:
-    - template: templates/build.yml
 
-- job: Build
-  variables:
-    Build: true
-  pool:
-    vmImage: "macos-10.13"
-  steps:
-    - template: templates/build.yml
+- template: templates/build_compile_jobs.yml
 
-- job: Smoke
-  dependsOn:
-    - Compile
-    - Build
-
-  strategy:
-    matrix:
-      'Linux-Py3.7':
-        PythonVersion: '3.7'
-        VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'testSmoke'
-        NeedsPythonTestReqs: true
-      'Mac-Py3.7':
-        PythonVersion: '3.7'
-        VMImageName: 'macos-10.13'
-        TestsToRun: 'testSmoke'
-        NeedsPythonTestReqs: true
-      'Linux-Py2.7':
-        PythonVersion: '2.7'
-        VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'testSmoke'
-        NeedsPythonTestReqs: true
-      'Mac-Py2.7':
-        PythonVersion: '2.7'
-        VMImageName: 'macos-10.13'
-        TestsToRun: 'testSmoke'
-        NeedsPythonTestReqs: true
-
-  pool:
-    vmImage: $(VMImageName)
-
-  steps:
-    - template: templates/uitest_phases.yml
+- template: templates/uitest_jobs.yml
+  parameters:
+    # Test only against stable version of VSC.
+    # vscodeChannels: ['stable']
+    # Run only smoke tests against 3.7 and 2.7 (exclude others).
+    jobs:
+    - test: "Smoke"
+      tags: "--tags=@smoke"
+      ignorePythonVersions: "3.6,3.5"
 
 - job: 'CI'
 

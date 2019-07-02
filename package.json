@@ -329,6 +329,11 @@
                 "category": "Python"
             },
             {
+                "command": "python.datascience.debugcurrentcell.palette",
+                "title": "%python.command.python.datascience.debugcurrentcell.palette.title%",
+                "category": "Python"
+            },
+            {
                 "command": "python.datascience.execSelectionInteractive",
                 "title": "%python.command.python.datascience.execSelectionInteractive.title%",
                 "category": "Python"
@@ -613,6 +618,12 @@
                 {
                     "command": "python.datascience.runallcellsabove.palette",
                     "title": "%python.command.python.datascience.runallcellsabove.palette.title%",
+                    "category": "Python",
+                    "when": "python.datascience.hascodecells && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.debugcurrentcell.palette",
+                    "title": "%python.command.python.datascience.debugcurrentcell.palette.title%",
                     "category": "Python",
                     "when": "python.datascience.hascodecells && python.datascience.featureenabled"
                 },
@@ -1325,6 +1336,18 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Allow for connecting the Python Interactive window to a https Jupyter server that does not have valid certificates. This can be a security risk, so only use for known and trusted servers.",
+                    "scope": "resource"
+                },
+                "python.dataScience.enablePlotViewer": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Modify plot output so that it can be expanded into a plot viewer window.",
+                    "scope": "resource"
+                },
+                "python.dataScience.enableDebugging": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "When starting a Python Interactive session import and enable the ptvsd debugger in the kernel.",
                     "scope": "resource"
                 },
                 "python.disableInstallationCheck": {
@@ -2325,27 +2348,35 @@
         "chai": "^4.1.2",
         "chai-arrays": "^2.0.0",
         "chai-as-promised": "^7.1.1",
+        "codecov": "^3.5.0",
         "colors": "^1.2.1",
         "copy-webpack-plugin": "^4.6.0",
         "coveralls": "^3.0.4",
         "cross-spawn": "^6.0.5",
         "css-loader": "^1.0.1",
+        "cucumber-html-reporter": "^4.0.5",
         "decache": "^4.4.0",
         "del": "^3.0.0",
         "download": "^7.0.0",
+        "electron-download": "^4.1.1",
         "enzyme": "^3.7.0",
         "enzyme-adapter-react-16": "^1.6.0",
         "event-stream": "3.3.4",
         "expose-loader": "^0.7.5",
+        "extract-zip": "^1.6.7",
         "file-loader": "^2.0.0",
         "filemanager-webpack-plugin": "^2.0.5",
         "flat": "^4.0.0",
         "gulp": "^4.0.0",
         "gulp-azure-storage": "^0.9.0",
+        "gulp-chmod": "^2.0.0",
         "gulp-filter": "^5.1.0",
+        "gulp-gunzip": "^1.1.0",
         "gulp-rename": "^1.4.0",
         "gulp-sourcemaps": "^2.6.4",
         "gulp-typescript": "^4.0.1",
+        "gulp-untar": "0.0.8",
+        "gulp-vinyl-zip": "^2.1.2",
         "html-webpack-plugin": "^3.2.0",
         "husky": "^1.1.2",
         "immutable": "^4.0.0-rc.12",
@@ -2397,6 +2428,7 @@
         "unicode-properties": "1.1.0",
         "url-loader": "^1.1.2",
         "uuid": "^3.3.2",
+        "vinyl-fs": "^3.0.3",
         "vsce": "^1.59.0",
         "vscode": "^1.1.33",
         "vscode-debugadapter-testsupport": "^1.27.0",

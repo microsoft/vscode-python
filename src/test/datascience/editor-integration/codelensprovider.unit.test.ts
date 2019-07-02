@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as TypeMoq from 'typemoq';
-import { CancellationTokenSource, TextDocument } from 'vscode';
+import { CancellationTokenSource, Disposable, TextDocument } from 'vscode';
 
 import { ICommandManager, IDocumentManager } from '../../../client/common/application/types';
 import { IConfigurationService, IDataScienceSettings, IPythonSettings } from '../../../client/common/types';
@@ -20,6 +20,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
     let documentManager: TypeMoq.IMock<IDocumentManager>;
     let commandManager: TypeMoq.IMock<ICommandManager>;
     let tokenSource : CancellationTokenSource;
+    const disposables: Disposable[] = [];
 
     setup(() => {
         tokenSource = new CancellationTokenSource();
@@ -35,7 +36,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         commandManager.setup(c => c.executeCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve());
 
-        codeLensProvider = new DataScienceCodeLensProvider(serviceContainer.object, documentManager.object, configurationService.object, commandManager.object);
+        codeLensProvider = new DataScienceCodeLensProvider(serviceContainer.object, documentManager.object, configurationService.object, commandManager.object, disposables);
     });
 
     test('Initialize Code Lenses one document', () => {

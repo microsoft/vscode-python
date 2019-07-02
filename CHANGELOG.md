@@ -268,6 +268,22 @@ And finally thanks to the [Python](https://www.python.org/) development team and
 community for creating a fantastic programming language and community to be a
 part of!
 
+## 2019.5.18875 (6 June 2019)
+
+### Fixes
+
+1. Disable quoting of paths sent to the debugger as arguments.
+   ([#5861](https://github.com/microsoft/vscode-python/issues/5861))
+1. Fixes to activation of Conda environments.
+   ([#5929](https://github.com/microsoft/vscode-python/issues/5929))
+
+## 2019.5.18678 (5 June 2019)
+
+### Fixes
+
+1. Fixes to detection of the shell.
+   ([#5916](https://github.com/microsoft/vscode-python/issues/5916))
+
 
 ## 2019.5.18875 (6 June 2019)
 

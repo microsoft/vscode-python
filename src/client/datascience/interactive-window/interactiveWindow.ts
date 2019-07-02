@@ -6,6 +6,7 @@ import '../../common/extensions';
 import { nbformat } from '@jupyterlab/coreutils';
 import * as fs from 'fs-extra';
 import { inject, injectable, multiInject } from 'inversify';
+import * as os from 'os';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { ConfigurationTarget, Event, EventEmitter, Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
@@ -28,9 +29,10 @@ import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
+import { StopWatch } from '../../common/utils/stopWatch';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { CellMatcher } from '../cellMatcher';
+import { generateCellRanges } from '../cellFactory';
 import { EditorContexts, Identifiers, Telemetry } from '../constants';
 import { ColumnWarningSize } from '../data-viewing/types';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
@@ -47,6 +49,7 @@ import {
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
     IInteractiveWindowProvider,
+    IJupyterDebugger,
     IJupyterExecution,
     IJupyterVariable,
     IJupyterVariables,
@@ -69,18 +72,13 @@ import {
     InteractiveWindowMessages,
     IRemoteAddCode,
     IShowDataViewer,
-    ISubmitNewCell
+    ISubmitNewCell,
+    SysInfoReason
 } from './interactiveWindowTypes';
-
-export enum SysInfoReason {
-    Start,
-    Restart,
-    Interrupt,
-    New
-}
 
 @injectable()
 export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> implements IInteractiveWindow  {
+    private static sentExecuteCellTelemetry : boolean = false;
     private disposed: boolean = false;
     private loadPromise: Promise<void>;
     private interpreterChangedDisposable: Disposable;
@@ -93,6 +91,8 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
     private jupyterServer: INotebookServer | undefined;
     private id : string;
     private executeEvent: EventEmitter<string> = new EventEmitter<string>();
+    private variableRequestStopWatch: StopWatch | undefined;
+    private variableRequestPendingCount: number = 0;
 
     constructor(
         @multiInject(IInteractiveWindowListener) private readonly listeners: IInteractiveWindowListener[],
@@ -115,7 +115,8 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(IDataViewerProvider) private dataExplorerProvider: IDataViewerProvider,
         @inject(IJupyterVariables) private jupyterVariables: IJupyterVariables,
-        @inject(INotebookImporter) private jupyterImporter: INotebookImporter
+        @inject(INotebookImporter) private jupyterImporter: INotebookImporter,
+        @inject(IJupyterDebugger) private jupyterDebugger: IJupyterDebugger
         ) {
         super(
             configuration,
@@ -178,9 +179,14 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         return this.executeEvent.event;
     }
 
-    public addCode(code: string, file: string, line: number, editor?: TextEditor) : Promise<void> {
+    public addCode(code: string, file: string, line: number, editor?: TextEditor, runningStopWatch?: StopWatch) : Promise<void> {
         // Call the internal method.
-        return this.submitCode(code, file, line, undefined, editor);
+        return this.submitCode(code, file, line, undefined, editor, runningStopWatch, false);
+    }
+
+    public debugCode(code: string, file: string, line: number, editor?: TextEditor, runningStopWatch?: StopWatch) : Promise<void> {
+        // Call the internal method.
+        return this.submitCode(code, file, line, undefined, editor, runningStopWatch, true);
     }
 
     // tslint:disable-next-line: no-any no-empty cyclomatic-complexity max-func-body-length
@@ -459,6 +465,13 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         }
     }
 
+    @captureTelemetry(Telemetry.CopySourceCode, undefined, false)
+    public copyCode(args: ICopyCode) {
+        this.copyCodeInternal(args.source).catch(err => {
+            this.applicationShell.showErrorMessage(err);
+        });
+    }
+
     protected async activating() {
         // Only activate if the active editor is empty. This means that
         // vscode thinks we are actually supposed to have focus. It would be
@@ -693,7 +706,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         }
     }
 
-    private async submitCode(code: string, file: string, line: number, id?: string, _editor?: TextEditor) : Promise<void> {
+    private async submitCode(code: string, file: string, line: number, id?: string, _editor?: TextEditor, runningStopWatch?: StopWatch, debug?: boolean) : Promise<void> {
         this.logger.logInformation(`Submitting code for ${this.id}`);
 
         // Start a status item
@@ -742,6 +755,11 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
                     await this.jupyterServer.setInitialDirectory(path.dirname(file));
                 }
 
+                if (debug) {
+                    // Attach our debugger
+                    await this.jupyterDebugger.startDebugging(this.jupyterServer);
+                }
+
                 // Attempt to evaluate this cell in the jupyter notebook
                 const observable = this.jupyterServer.executeObservable(code, file, line, id, false);
 
@@ -762,6 +780,9 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
                     () => {
                         // Indicate executing until this cell is done.
                         status.dispose();
+
+                        // Fire a telemetry event if we have a stop watch
+                        this.sendPerceivedCellExecute(runningStopWatch);
                     });
 
                 // Wait for the cell to finish
@@ -773,6 +794,23 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
 
             const message = localize.DataScience.executingCodeFailure().format(err);
             this.applicationShell.showErrorMessage(message);
+        } finally {
+            if (debug) {
+                if (this.jupyterServer) {
+                    await this.jupyterDebugger.stopDebugging(this.jupyterServer);
+                }
+            }
+        }
+    }
+
+    private sendPerceivedCellExecute(runningStopWatch?: StopWatch) {
+        if (runningStopWatch) {
+            if (!InteractiveWindow.sentExecuteCellTelemetry) {
+                InteractiveWindow.sentExecuteCellTelemetry = true;
+                sendTelemetryEvent(Telemetry.ExecuteCellPerceivedCold, runningStopWatch.elapsedTime);
+            } else {
+                sendTelemetryEvent(Telemetry.ExecuteCellPerceivedWarm, runningStopWatch.elapsedTime);
+            }
         }
     }
 
@@ -897,34 +935,48 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         }
     }
 
-    @captureTelemetry(Telemetry.CopySourceCode, undefined, false)
-    private copyCode(args: ICopyCode) {
-        this.copyCodeInternal(args.source).catch(err => {
-            this.applicationShell.showErrorMessage(err);
-        });
-    }
-
     private async copyCodeInternal(source: string) {
         let editor = this.documentManager.activeTextEditor;
         if (!editor || editor.document.languageId !== PYTHON_LANGUAGE) {
             // Find the first visible python editor
             const pythonEditors = this.documentManager.visibleTextEditors.filter(
-                e => e.document.languageId === PYTHON_LANGUAGE);
+                e => e.document.languageId === PYTHON_LANGUAGE || e.document.isUntitled);
 
             if (pythonEditors.length > 0) {
                 editor = pythonEditors[0];
             }
         }
-        if (editor && editor.document.languageId === PYTHON_LANGUAGE) {
-            const cellMatcher = new CellMatcher(this.generateDataScienceExtraSettings());
-            const hasCellsAlready = cellMatcher.isCell(editor.document.getText());
-            const line = editor.document.lineCount;
-            const newCode = hasCellsAlready || line <= 0 ? `\n\n#%%\n${source}` : `\n\n${source}`;
+        if (editor && (editor.document.languageId === PYTHON_LANGUAGE || editor.document.isUntitled)) {
+            // Figure out if any cells in this document already.
+            const ranges = generateCellRanges(editor.document, this.generateDataScienceExtraSettings());
+            const hasCellsAlready = ranges.length > 0;
+            const line = editor.selection.start.line;
+            const revealLine = line + 1;
+            let newCode = `${source}${os.EOL}`;
+            if (hasCellsAlready) {
+                // See if inside of a range or not.
+                const matchingRange = ranges.find(r => r.range.start.line <= line && r.range.end.line >= line);
+
+                // If in the middle, wrap the new code
+                if (matchingRange && matchingRange.range.start.line < line && line < editor.document.lineCount - 1) {
+                    newCode = `#%%${os.EOL}${source}${os.EOL}#%%${os.EOL}`;
+                } else {
+                    newCode = `#%%${os.EOL}${source}${os.EOL}`;
+                }
+            } else if (editor.document.lineCount <= 0 || editor.document.isUntitled) {
+                // No lines in the document at all, just insert new code
+                newCode = `#%%${os.EOL}${source}${os.EOL}`;
+            }
+
             await editor.edit((editBuilder) => {
                 editBuilder.insert(new Position(line, 0), newCode);
             });
-            editor.revealRange(new Range(line + 2, 0, line + source.split('\n').length + 3, 0));
-            editor.selection = new Selection(new Position(line + 2, 0), new Position(line + 2, 0));
+            editor.revealRange(new Range(revealLine, 0, revealLine + source.split('\n').length + 3, 0));
+
+            // Move selection to just beyond the text we input so that the next
+            // paste will be right after
+            const selectionLine = line + newCode.split('\n').length - 1;
+            editor.selection = new Selection(new Position(selectionLine, 0), new Position(selectionLine, 0));
         }
     }
 
@@ -1000,6 +1052,11 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
 
         // Now try to create a notebook server
         this.jupyterServer = await this.jupyterExecution.connectToNotebookServer(options);
+
+        // Enable debugging support if set
+        if (options.enableDebugging && this.jupyterServer) {
+            await this.jupyterDebugger.enableAttach(this.jupyterServer);
+        }
 
         // Before we run any cells, update the dark setting
         if (this.jupyterServer) {
@@ -1088,7 +1145,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
 
             // For anything but start, tell the other sides of a live share session
             if (reason !== SysInfoReason.Start && sysInfo) {
-                this.shareMessage(InteractiveWindowMessages.AddedSysInfo, { sysInfoCell: sysInfo, id: this.id });
+                this.shareMessage(InteractiveWindowMessages.AddedSysInfo, { type: reason, sysInfoCell: sysInfo, id: this.id });
             }
 
             // For a restart, tell our window to reset
@@ -1182,6 +1239,8 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
     }
 
     private async requestVariables(requestExecutionCount: number): Promise<void> {
+        this.variableRequestStopWatch = new StopWatch();
+
         // Request our new list of variables
         const vars: IJupyterVariable[] = await this.jupyterVariables.getVariables();
         const variablesResponse: IJupyterVariablesResponse = {executionCount: requestExecutionCount, variables: vars };
@@ -1200,7 +1259,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
                return excludeArray.indexOf(value.type) === -1;
             });
         }
-
+        this.variableRequestPendingCount = variablesResponse.variables.length;
         this.postMessage(InteractiveWindowMessages.GetVariablesResponse, variablesResponse).ignoreErrors();
         sendTelemetryEvent(Telemetry.VariableExplorerVariableCount, undefined, { variableCount: variablesResponse.variables.length });
     }
@@ -1212,6 +1271,16 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
             // Request our variable value
             const varValue: IJupyterVariable = await this.jupyterVariables.getValue(targetVar);
             this.postMessage(InteractiveWindowMessages.GetVariableValueResponse, varValue).ignoreErrors();
+
+            // Send our fetch time if appropriate.
+            if (this.variableRequestPendingCount === 1 && this.variableRequestStopWatch) {
+                this.variableRequestPendingCount -= 1;
+                sendTelemetryEvent(Telemetry.VariableExplorerFetchTime, this.variableRequestStopWatch.elapsedTime);
+                this.variableRequestStopWatch = undefined;
+            } else {
+                this.variableRequestPendingCount = Math.max(0, this.variableRequestPendingCount - 1);
+            }
+
         }
     }
 

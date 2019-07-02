@@ -22,10 +22,12 @@ import {
 import * as vsls from 'vsls/vscode';
 
 import { ILanguageServer, ILanguageServerAnalysisOptions } from '../../client/activation/types';
+import { DebugService } from '../../client/common/application/debugService';
 import { TerminalManager } from '../../client/common/application/terminalManager';
 import {
     IApplicationShell,
     ICommandManager,
+    IDebugService,
     IDocumentManager,
     ILiveShareApi,
     ILiveShareTestingApi,
@@ -92,6 +94,7 @@ import { InteractiveWindow } from '../../client/datascience/interactive-window/i
 import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterCommand';
+import { JupyterDebugger } from '../../client/datascience/jupyter/jupyterDebugger';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
 import { JupyterImporter } from '../../client/datascience/jupyter/jupyterImporter';
@@ -114,6 +117,7 @@ import {
     IInteractiveWindowListener,
     IInteractiveWindowProvider,
     IJupyterCommandFactory,
+    IJupyterDebugger,
     IJupyterExecution,
     IJupyterPasswordConnect,
     IJupyterSessionManager,
@@ -314,6 +318,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.add<ICodeExecutionHelper>(ICodeExecutionHelper, CodeExecutionHelper);
         this.serviceManager.add<IDataScienceCommandListener>(IDataScienceCommandListener, InteractiveWindowCommandListener);
         this.serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables);
+        this.serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, JupyterDebugger);
 
         this.serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
         this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
@@ -331,6 +336,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<ILanguageServer>(ILanguageServer, MockLanguageServer);
         this.serviceManager.addSingleton<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, MockLanguageServerAnalysisOptions);
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, DotNetIntellisenseProvider);
+        this.serviceManager.addSingleton<IDebugService>(IDebugService, DebugService);
 
         // Setup our command list
         this.commandManager.registerCommand('setContext', (name: string, value: boolean) => {
@@ -370,7 +376,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             showJupyterVariableExplorer: true,
             variableExplorerExclude: 'module;builtin_function_or_method',
             liveShareConnectionTimeout: 100,
-            autoPreviewNotebooksInInteractivePane: true
+            autoPreviewNotebooksInInteractivePane: true,
+            enablePlotViewer: true
         };
 
         const workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration> = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
@@ -502,6 +509,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             dispose: () => { return; }
         };
 
+        window.console.log(`Current directory ${__dirname}`);
         appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAnyString())).returns((e) => { throw e; });
         appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
         appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));

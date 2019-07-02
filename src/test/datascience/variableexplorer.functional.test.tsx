@@ -455,5 +455,11 @@ function verifyRow(rowWrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
 function verifyCell(cellWrapper: ReactWrapper<any, Readonly<{}>, React.Component>, value: string, targetName: string) {
     const cellHTML = parse(cellWrapper.html()) as any;
     // tslint:disable-next-line:no-string-literal
-    expect(cellHTML.firstChild.rawAttributes['value'] as string).to.be.equal(value, `${targetName} has an unexpected value in variable explorer cell`);
+    const rawValue = cellHTML.firstChild.rawAttributes['value'] as string;
+
+    // Eliminate whitespace differences
+    const actualValueNormalized = rawValue.replace(/^\s*|\s(?=\s)|\s*$/g, '');
+    const expectedValueNormalized = value.replace(/^\s*|\s(?=\s)|\s*$/g, '');
+
+    expect(actualValueNormalized).to.be.equal(expectedValueNormalized, `${targetName} has an unexpected value in variable explorer cell`);
 }

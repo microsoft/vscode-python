@@ -11,6 +11,7 @@ import { createDeferred } from '../../client/common/utils/async';
 import { RegExpValues } from '../../client/datascience/constants';
 import { IPlotViewerMapping, PlotViewerMessages } from '../../client/datascience/plotting/types';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
+import { getSettings } from '../react-common/settingsReactSide';
 import { StyleInjector } from '../react-common/styleInjector';
 import { SvgList } from '../react-common/svgList';
 import { SvgViewer } from '../react-common/svgViewer';
@@ -40,6 +41,7 @@ interface IMainPanelState {
     ids: string[];
     currentImage: number;
     tool: Tool;
+    forceDark?: boolean;
 }
 
 const PanKeyboardSize = 10;
@@ -83,14 +85,16 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     public render = () => {
+        const baseTheme = this.computeBaseTheme();
         return (
             <div className='main-panel' role='group' ref={this.container}>
                 <StyleInjector
                     expectingDark={this.props.baseTheme !== 'vscode-light'}
+                    darkChanged={this.darkChanged}
                     postOffice={this.postOffice} />
-                {this.renderToolbar()}
-                {this.renderThumbnails()}
-                {this.renderPlot()}
+                {this.renderToolbar(baseTheme)}
+                {this.renderThumbnails(baseTheme)}
+                {this.renderPlot(baseTheme)}
             </div>
         );
     }
@@ -107,6 +111,33 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
 
         return false;
+    }
+
+    private darkChanged = (newDark: boolean) => {
+        // update our base theme if allowed. Don't do this
+        // during testing as it will mess up the expected render count.
+        if (!this.props.testMode) {
+            this.setState(
+                {
+                    forceDark: newDark
+                }
+            );
+        }
+    }
+
+    private computeBaseTheme() : string {
+        // If we're ignoring, always light
+        if (getSettings && getSettings().ignoreVscodeTheme) {
+            return 'vscode-light';
+        }
+
+        // Otherwise see if the style injector has figured out
+        // the theme is dark or not
+        if (this.state.forceDark !== undefined) {
+            return this.state.forceDark ? 'vscode-dark' : 'vscode-light';
+        }
+
+        return this.props.baseTheme;
     }
 
     private onKeyDown = (event: KeyboardEvent) => {
@@ -175,19 +206,19 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         });
     }
 
-    private renderThumbnails() {
+    private renderThumbnails(_baseTheme: string) {
         return (
             <SvgList images={this.state.thumbnails} currentImage={this.state.currentImage} imageClicked={this.imageClicked}/>
         );
     }
 
-    private renderToolbar() {
+    private renderToolbar(baseTheme: string) {
         const prev = this.state.currentImage > 0 ? this.prevClicked : undefined;
         const next = this.state.currentImage < this.state.images.length - 1 ? this.nextClicked : undefined;
         const deleteClickHandler = this.state.currentImage !== -1 ? this.deleteClicked : undefined;
         return (
             <Toolbar
-                baseTheme={this.props.baseTheme}
+                baseTheme={baseTheme}
                 changeTool={this.changeTool}
                 exportButtonClicked={this.exportCurrent}
                 copyButtonClicked={this.copyCurrent}
@@ -196,7 +227,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 deleteButtonClicked={deleteClickHandler} />
         );
     }
-    private renderPlot() {
+    private renderPlot(baseTheme: string) {
         // Render current plot
         const currentPlot = this.state.currentImage >= 0 ? this.state.images[this.state.currentImage] : undefined;
         const currentSize = this.state.currentImage >= 0 ? this.state.sizes[this.state.currentImage] : undefined;
@@ -205,7 +236,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         if (currentPlot && currentSize && currentId) {
             return (
                 <SvgViewer
-                    baseTheme={this.props.baseTheme}
+                    baseTheme={baseTheme}
                     svg={currentPlot}
                     id={currentId}
                     size={currentSize}
@@ -285,14 +316,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.postOffice.sendMessage<M, T>(type, payload);
     }
 
-    private convertSizeToPixels(size: string) : number {
-        let multiplier = 1;
-        if (size.endsWith('pt')) {
-            multiplier = window.devicePixelRatio * 0.8866666;
-        }
-        return parseInt(size, 10) * multiplier;
-    }
-
     private exportCurrent = async () => {
         // In order to export, we need the png and the svg. Generate
         // a png by drawing to a canvas and then turning the canvas into a dataurl.
@@ -301,16 +324,16 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             if (doc) {
                 const canvas = doc.createElement('canvas');
                 if (canvas) {
-                    canvas.width = this.convertSizeToPixels(this.state.sizes[this.state.currentImage].width);
-                    canvas.height = this.convertSizeToPixels(this.state.sizes[this.state.currentImage].height);
                     const ctx = canvas.getContext('2d');
                     if (ctx) {
                         const waitable = createDeferred();
-                        ctx.clearRect(0, 0, canvas.width, canvas.height);
                         const svgBlob = new Blob([this.state.images[this.state.currentImage]], { type: 'image/svg+xml;charset=utf-8' });
                         const img = new Image();
                         const url = window.URL.createObjectURL(svgBlob);
                         img.onload = () => {
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+                            ctx.clearRect(0, 0, canvas.width, canvas.height);
                             ctx.drawImage(img, 0, 0);
                             waitable.resolve();
                         };
