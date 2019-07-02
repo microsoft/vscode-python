@@ -63,13 +63,13 @@ export namespace Interpreters {
     export const environmentPromptMessage = localize('Interpreters.environmentPromptMessage', 'We noticed a new virtual environment has been created. Do you want to select it for the workspace folder?');
     export const selectInterpreterTip = localize('Interpreters.selectInterpreterTip', 'Tip: you can change the Python interpreter used by the Python extension by clicking on the Python version in the status bar');
 }
-export namespace Insiders {
-    export const useStable = localize('Insiders.useStable', 'Use Stable');
-    export const promptMessage = localize('Insiders.promptMessage', 'We noticed you are using VS Code Insiders. Reload to use the Insiders build of the extension.');
-    export const reloadMessage = localize('Insiders.reloadMessage', 'Please reload the window switching between insiders channels');
-    export const downloadCompletedOutputMessage = localize('Insiders.downloadCompletedOutputMessage', 'Insiders build download complete');
-    export const startingDownloadOutputMessage = localize('Insiders.startingDownloadOutputMessage', 'Starting download for Insiders build.');
-    export const downloadingInsidersMessage = localize('Insiders.downloadingInsidersMessage', 'Downloading Insiders Extension... ');
+export namespace ExtensionChannels {
+    export const useStable = localize('ExtensionChannels.useStable', 'Use Stable');
+    export const promptMessage = localize('ExtensionChannels.promptMessage', 'We noticed you are using Visual Studio Code ExtensionChannels. Reload to use the Insiders build of the extension.');
+    export const reloadMessage = localize('ExtensionChannels.reloadMessage', 'Please reload the window switching between insiders channels');
+    export const downloadCompletedOutputMessage = localize('ExtensionChannels.downloadCompletedOutputMessage', 'Insiders build download complete');
+    export const startingDownloadOutputMessage = localize('ExtensionChannels.startingDownloadOutputMessage', 'Starting download for Insiders build.');
+    export const downloadingInsidersMessage = localize('ExtensionChannels.downloadingInsidersMessage', 'Downloading Insiders Extension... ');
 }
 
 export namespace Logging {

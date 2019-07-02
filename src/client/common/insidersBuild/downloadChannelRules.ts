@@ -4,54 +4,41 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
-import { IBuildInstaller, INSIDERS_INSTALLER, STABLE_INSTALLER } from '../installer/types';
+import { IExtensionBuildInstaller, INSIDERS_INSTALLER, STABLE_INSTALLER } from '../installer/types';
 import { IPersistentStateFactory } from '../types';
-import { IInsidersDownloadChannelRule } from './types';
+import { IExtensionChannelRule } from './types';
 
 const frequencyForDailyInsidersCheck = 1000 * 60 * 60 * 24; // One day.
 const frequencyForWeeklyInsidersCheck = 1000 * 60 * 60 * 24 * 7; // One week.
 const lastLookUpTimeKey = 'INSIDERS_LAST_LOOK_UP_TIME_KEY';
 
 @injectable()
-export class IInsidersDownloadStableChannelRule implements IInsidersDownloadChannelRule {
+export class ExtensionStableChannelRule implements IExtensionChannelRule {
     constructor(
-        @inject(IBuildInstaller) @named(INSIDERS_INSTALLER) private readonly insidersInstaller: IBuildInstaller,
-        @inject(IBuildInstaller) @named(STABLE_INSTALLER) private readonly stableInstaller: IBuildInstaller
+        @inject(IExtensionBuildInstaller) @named(STABLE_INSTALLER) private readonly stableInstaller: IExtensionBuildInstaller
     ) { }
-    public async getInstallerForBuild(didChannelChangeToStable: boolean = false): Promise<IBuildInstaller | undefined> {
-        if (await this.shouldLookForInsidersBuild()) {
-            return this.insidersInstaller;
-        }
-        if (await this.shouldLookForStableBuild(didChannelChangeToStable)) {
+    public async getInstaller(isChannelRuleNew: boolean = false): Promise<IExtensionBuildInstaller | undefined> {
+        if (isChannelRuleNew) {
+            // Channel rule has changed to stable, return stable installer
             return this.stableInstaller;
         }
-    }
-    private async shouldLookForInsidersBuild(): Promise<boolean> {
-        return false;
-    }
-    private async shouldLookForStableBuild(didChannelChangeToStable: boolean): Promise<boolean> {
-        return didChannelChangeToStable;
     }
 }
 @injectable()
-export class IInsidersDownloadDailyChannelRule implements IInsidersDownloadChannelRule {
+export class ExtensionInsidersDailyChannelRule implements IExtensionChannelRule {
     constructor(
-        @inject(IBuildInstaller) @named(INSIDERS_INSTALLER) private readonly insidersInstaller: IBuildInstaller,
-        @inject(IBuildInstaller) @named(STABLE_INSTALLER) private readonly stableInstaller: IBuildInstaller,
+        @inject(IExtensionBuildInstaller) @named(INSIDERS_INSTALLER) private readonly insidersInstaller: IExtensionBuildInstaller,
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory
     ) { }
-    public async getInstallerForBuild(didChannelChangeToInsiders: boolean): Promise<IBuildInstaller | undefined> {
-        if (await this.shouldLookForInsidersBuild(didChannelChangeToInsiders)) {
+    public async getInstaller(isChannelRuleNew: boolean): Promise<IExtensionBuildInstaller | undefined> {
+        if (await this.shouldLookForInsidersBuild(isChannelRuleNew)) {
             return this.insidersInstaller;
         }
-        if (await this.shouldLookForStableBuild()) {
-            return this.stableInstaller;
-        }
     }
-    private async shouldLookForInsidersBuild(didChannelChangeToInsiders: boolean): Promise<boolean> {
+    private async shouldLookForInsidersBuild(isChannelRuleNew: boolean): Promise<boolean> {
         const lastLookUpTime = this.persistentStateFactory.createGlobalPersistentState(lastLookUpTimeKey, -1);
-        if (didChannelChangeToInsiders) {
-            // Channel changed to insiders, look for insiders build
+        if (isChannelRuleNew) {
+            // Channel rule has changed to insiders, look for insiders build
             await lastLookUpTime.updateValue(Date.now());
             return true;
         }
@@ -62,29 +49,22 @@ export class IInsidersDownloadDailyChannelRule implements IInsidersDownloadChann
         }
         return false;
     }
-    private async shouldLookForStableBuild(): Promise<boolean> {
-        return false;
-    }
 }
 @injectable()
-export class IInsidersDownloadWeeklyChannelRule implements IInsidersDownloadChannelRule {
+export class ExtensionInsidersWeeklyChannelRule implements IExtensionChannelRule {
     constructor(
-        @inject(IBuildInstaller) @named(INSIDERS_INSTALLER) private readonly insidersInstaller: IBuildInstaller,
-        @inject(IBuildInstaller) @named(STABLE_INSTALLER) private readonly stableInstaller: IBuildInstaller,
+        @inject(IExtensionBuildInstaller) @named(INSIDERS_INSTALLER) private readonly insidersInstaller: IExtensionBuildInstaller,
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory
     ) { }
-    public async getInstallerForBuild(didChannelChangeToInsiders: boolean): Promise<IBuildInstaller | undefined> {
-        if (await this.shouldLookForInsidersBuild(didChannelChangeToInsiders)) {
+    public async getInstaller(isChannelRuleNew: boolean): Promise<IExtensionBuildInstaller | undefined> {
+        if (await this.shouldLookForInsidersBuild(isChannelRuleNew)) {
             return this.insidersInstaller;
         }
-        if (await this.shouldLookForStableBuild()) {
-            return this.stableInstaller;
-        }
     }
-    private async shouldLookForInsidersBuild(didChannelChangeToInsiders: boolean): Promise<boolean> {
+    private async shouldLookForInsidersBuild(isChannelRuleNew: boolean): Promise<boolean> {
         const lastLookUpTime = this.persistentStateFactory.createGlobalPersistentState(lastLookUpTimeKey, -1);
-        if (didChannelChangeToInsiders) {
-            // Channel changed to insiders, look for insiders build
+        if (isChannelRuleNew) {
+            // Channel rule has changed to insiders, look for insiders build
             await lastLookUpTime.updateValue(Date.now());
             return true;
         }
@@ -93,9 +73,6 @@ export class IInsidersDownloadWeeklyChannelRule implements IInsidersDownloadChan
             await lastLookUpTime.updateValue(Date.now());
             return true;
         }
-        return false;
-    }
-    private async shouldLookForStableBuild(): Promise<boolean> {
         return false;
     }
 }

@@ -7,13 +7,13 @@ import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, ConfigurationTarget, Event, EventEmitter } from 'vscode';
 import { IApplicationEnvironment, IWorkspaceService } from '../application/types';
 import { IConfigurationService, IDisposable, IDisposableRegistry, IPythonSettings } from '../types';
-import { IInsidersDownloadChannelService, InsidersBuildDownloadChannels } from './types';
+import { ExtensionChannels, IExtensionChannelService } from './types';
 
 const insidersChannelSetting: keyof IPythonSettings = 'insidersChannel';
 
 @injectable()
-export class InsidersDownloadChannelService implements IInsidersDownloadChannelService {
-    private readonly _onDidChannelChange: EventEmitter<InsidersBuildDownloadChannels> = new EventEmitter<InsidersBuildDownloadChannels>();
+export class ExtensionChannelService implements IExtensionChannelService {
+    private readonly _onDidChannelChange: EventEmitter<ExtensionChannels> = new EventEmitter<ExtensionChannels>();
     constructor(
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
@@ -22,25 +22,22 @@ export class InsidersDownloadChannelService implements IInsidersDownloadChannelS
     ) {
         disposables.push(this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
     }
-    public getDownloadChannel(): InsidersBuildDownloadChannels {
-        const settings = this.workspaceService.getConfiguration('python').inspect<InsidersBuildDownloadChannels>(insidersChannelSetting);
+    public get channel(): ExtensionChannels {
+        const settings = this.workspaceService.getConfiguration('python').inspect<ExtensionChannels>(insidersChannelSetting);
         if (!settings) {
             throw new Error(`WorkspaceConfiguration.inspect returns 'undefined' for setting 'python.${insidersChannelSetting}'`);
         }
         if (settings.globalValue === undefined) {
-            if (this.appEnvironment.channel === 'insiders') {
-                return 'InsidersWeekly';
-            }
-            return 'Stable';
+            return this.appEnvironment.channel === 'insiders' ? 'InsidersWeekly' : 'Stable';
         }
         return settings.globalValue;
     }
 
-    public async setDownloadChannel(value: InsidersBuildDownloadChannels): Promise<void> {
+    public async updateChannel(value: ExtensionChannels): Promise<void> {
         await this.configService.updateSetting(insidersChannelSetting, value, undefined, ConfigurationTarget.Global);
     }
 
-    public get onDidChannelChange(): Event<InsidersBuildDownloadChannels> {
+    public get onDidChannelChange(): Event<ExtensionChannels> {
         return this._onDidChannelChange.event;
     }
 

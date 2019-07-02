@@ -35,7 +35,7 @@ export interface IProductPathService {
 
 export const INSIDERS_INSTALLER = 'INSIDERS_INSTALLER';
 export const STABLE_INSTALLER = 'STABLE_INSTALLER';
-export const IBuildInstaller = Symbol('IBuildInstaller');
-export interface IBuildInstaller {
+export const IExtensionBuildInstaller = Symbol('IExtensionBuildInstaller');
+export interface IExtensionBuildInstaller {
     install(): Promise<void>;
 }

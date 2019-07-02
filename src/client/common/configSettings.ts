@@ -10,7 +10,7 @@ import { EventName } from '../telemetry/constants';
 import { IWorkspaceService } from './application/types';
 import { WorkspaceService } from './application/workspace';
 import { isTestExecution } from './constants';
-import { InsidersBuildDownloadChannels } from './insidersBuild/types';
+import { ExtensionChannels } from './insidersBuild/types';
 import { IS_WINDOWS } from './platform/constants';
 import {
     IAnalysisSettings,
@@ -57,7 +57,7 @@ export class PythonSettings implements IPythonSettings {
     public analysis!: IAnalysisSettings;
     public autoUpdateLanguageServer: boolean = true;
     public datascience!: IDataScienceSettings;
-    public insidersChannel!: InsidersBuildDownloadChannels;
+    public insidersChannel!: ExtensionChannels;
 
     protected readonly changed = new EventEmitter<void>();
     private workspaceRoot: Uri;
@@ -362,7 +362,7 @@ export class PythonSettings implements IPythonSettings {
             this.datascience = dataScienceSettings;
         }
 
-        this.insidersChannel = pythonSettings.get<InsidersBuildDownloadChannels>('insidersChannel')!;
+        this.insidersChannel = pythonSettings.get<ExtensionChannels>('insidersChannel')!;
     }
 
     public get pythonPath(): string {

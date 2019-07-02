@@ -63,7 +63,7 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
         return this.appName.indexOf('Insider') > 0 ? 'insiders' : 'stable';
     }
     public get extensionChannel(): Channel {
-        const version = parse(this.packageJson.version)!;
-        return version.prerelease.length > 0 ? 'insiders' : 'stable';
+        const version = parse(this.packageJson.version);
+        return !version || version.prerelease.length > 0 ? 'insiders' : 'stable';
     }
 }
