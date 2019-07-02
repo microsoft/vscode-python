@@ -33,6 +33,7 @@ import {
     IJupyterSession,
     IJupyterSessionManager,
     INotebookCompletion,
+    INotebookExecutionLogger,
     INotebookServer,
     INotebookServerLaunchInfo,
     InterruptResult
@@ -142,7 +143,8 @@ export class JupyterServerBase implements INotebookServer {
         private disposableRegistry: IDisposableRegistry,
         private asyncRegistry: IAsyncDisposableRegistry,
         private configService: IConfigurationService,
-        private sessionManager: IJupyterSessionManager
+        private sessionManager: IJupyterSessionManager,
+        private loggers: INotebookExecutionLogger[]
     ) {
         this.asyncRegistry.push(this);
     }
@@ -250,13 +252,13 @@ export class JupyterServerBase implements INotebookServer {
             result.subscribe(cells => {
                 subscriber.next(cells);
             },
-            error => {
-                subscriber.error(error);
-            },
-            () => {
-                subscriber.complete();
-                sendTelemetryEvent(Telemetry.ExecuteCell, stopWatch.elapsedTime);
-            });
+                error => {
+                    subscriber.error(error);
+                },
+                () => {
+                    subscriber.complete();
+                    sendTelemetryEvent(Telemetry.ExecuteCell, stopWatch.elapsedTime);
+                });
         });
     }
 
@@ -398,7 +400,7 @@ export class JupyterServerBase implements INotebookServer {
         return this.connectPromise.promise;
     }
 
-    public async setMatplotLibStyle(useDark: boolean) : Promise<void> {
+    public async setMatplotLibStyle(useDark: boolean): Promise<void> {
         // Reset the matplotlib style based on if dark or not.
         await this.executeSilently(useDark ?
             'matplotlib.style.use(\'dark_background\')' :
@@ -419,7 +421,7 @@ export class JupyterServerBase implements INotebookServer {
         };
     }
 
-    public async getCompletion(cellCode: string, offsetInCode: number, cancelToken?: CancellationToken) : Promise<INotebookCompletion> {
+    public async getCompletion(cellCode: string, offsetInCode: number, cancelToken?: CancellationToken): Promise<INotebookCompletion> {
         if (this.session) {
             const result = await Cancellation.race(() => this.session!.requestComplete({
                 code: cellCode,
@@ -556,7 +558,7 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     // Set up our initial plotting and imports
-    private async initialNotebookSetup(cancelToken?: CancellationToken) : Promise<void> {
+    private async initialNotebookSetup(cancelToken?: CancellationToken): Promise<void> {
         if (this.ranInitialSetup) {
             return;
         }
@@ -613,6 +615,36 @@ export class JupyterServerBase implements INotebookServer {
         });
     }
 
+    private wrapObservable<T>(
+        observable: Observable<T>,
+        silent: boolean,
+        preCall: (args: T, silent: boolean) => void,
+        postCall: (args: T | Error, silent: boolean) => void): Observable<T> {
+        // Wrap in a new observable
+        return new Observable<T>(subscriber => {
+            let pre = false;
+            let lastVal: T | undefined;
+            observable.subscribe(val => {
+                if (!pre) {
+                    pre = true;
+                    preCall(val, silent);
+                }
+                lastVal = val;
+                subscriber.next(val);
+            },
+                e => {
+                    subscriber.error(e);
+                    postCall(e, silent);
+                },
+                () => {
+                    subscriber.complete();
+                    if (lastVal) {
+                        postCall(lastVal, silent);
+                    }
+                });
+        });
+    }
+
     private executeMarkdownObservable = (cell: ICell): Observable<ICell> => {
         // Markdown doesn't need any execution
         return new Observable<ICell>(subscriber => {
@@ -657,7 +689,7 @@ export class JupyterServerBase implements INotebookServer {
                     });
                 }
 
-                const clearState : Map<string, boolean> = new Map<string, boolean>();
+                const clearState: Map<string, boolean> = new Map<string, boolean>();
 
                 // Listen to the reponse messages and update state as we go
                 if (request) {
@@ -717,21 +749,35 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     private executeCodeObservable(cell: ICell, silent?: boolean): Observable<ICell> {
-        return new Observable<ICell>(subscriber => {
-            // Tell our listener. NOTE: have to do this asap so that markdown cells don't get
-            // run before our cells.
-            subscriber.next(cell);
+        // Wrap this observable so we can log pre/post calls. ExecuteCodeObservable is the main
+        // gateway to executing actual code on the jupyter server.
+        return this.wrapObservable(
+            new Observable<ICell>(subscriber => {
+                // Tell our listener. NOTE: have to do this asap so that markdown cells don't get
+                // run before our cells.
+                subscriber.next(cell);
 
-            // Wrap the subscriber and save it. It is now pending and waiting completion.
-            const cellSubscriber = new CellSubscriber(cell, subscriber, (self: CellSubscriber) => {
-                this.pendingCellSubscriptions = this.pendingCellSubscriptions.filter(p => p !== self);
-            });
-            this.pendingCellSubscriptions.push(cellSubscriber);
+                // Wrap the subscriber and save it. It is now pending and waiting completion.
+                const cellSubscriber = new CellSubscriber(cell, subscriber, (self: CellSubscriber) => {
+                    this.pendingCellSubscriptions = this.pendingCellSubscriptions.filter(p => p !== self);
+                });
+                this.pendingCellSubscriptions.push(cellSubscriber);
 
-            // Attempt to change to the current directory. When that finishes
-            // send our real request
-            this.handleCodeRequest(cellSubscriber, silent);
-        });
+                // Attempt to change to the current directory. When that finishes
+                // send our real request
+                this.handleCodeRequest(cellSubscriber, silent);
+            }),
+            silent !== undefined ? silent : false,
+            this.logPreCode.bind(this),
+            this.logPostCode.bind(this));
+    }
+
+    private logPreCode(cell: ICell, silent: boolean) {
+        this.loggers.forEach(l => l.preExecute(cell, silent));
+    }
+
+    private logPostCode(cellOrError: ICell | Error, silent: boolean) {
+        this.loggers.forEach(l => l.postExecute(cellOrError, silent));
     }
 
     private addToCellData = (cell: ICell, output: nbformat.IUnrecognizedOutput | nbformat.IExecuteResult | nbformat.IDisplayData | nbformat.IStream | nbformat.IError, clearState: Map<string, boolean>) => {
