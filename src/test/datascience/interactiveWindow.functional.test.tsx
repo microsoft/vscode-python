@@ -332,7 +332,7 @@ for _ in range(50):
 
         // Make sure goto works
         await waitForMessageResponse(() => goto.simulate('click'));
-        await Promise.race([sleep(100), showedEditor.promise]);
+        await Promise.race([sleep(1000), showedEditor.promise]);
         assert.ok(showedEditor.resolved, 'Goto source is not jumping to editor');
 
         // Make sure delete works
