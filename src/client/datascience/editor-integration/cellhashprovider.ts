@@ -179,8 +179,12 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
             const endOffset = doc.offsetAt(endLine.rangeIncludingLineBreak.end);
 
             // Jupyter always makes sure the code ends with a new line. Add one if necessary.
-            if (!stripped[stripped.length - 1].endsWith('\n')) {
-                stripped.push('\n');
+            const lastLine = stripped[stripped.length - 1];
+            if (!lastLine.endsWith('\n') && lastLine.length > 0) {
+                stripped[stripped.length - 1] = `${lastLine}\n`;
+            } else if (lastLine.length === 0) {
+                // This line should be skipped. Jupyter will ignore it.
+                stripped.splice(stripped.length - 1, 1);
             }
             const hashedCode = stripped.join('');
             const realCode = doc.getText(new Range(line.range.start, endLine.rangeIncludingLineBreak.end));
