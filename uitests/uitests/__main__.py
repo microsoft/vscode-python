@@ -154,11 +154,11 @@ def test(destination, channel, vsix, behave_options, **kwargs):
     # Selenium and other packages write to stderr & so does default logging output.
     # Confused how this can be configured with behave and other libs.
     # Hence just capture exit code from behave and throw error to signal failure to CI.
-    # exit_code = __main__.main(args)
-    exit_code = 123
+    exit_code = __main__.main(args)
     if exit_code > 0:
         sys.stderr.write("Behave tests failed")
         sys.stderr.flush()
+        raise SystemExit(exit_code , "Behave Tests Failed")
     return exit_code
 
 
