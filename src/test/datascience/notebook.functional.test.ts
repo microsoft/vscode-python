@@ -5,6 +5,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 import { assert } from 'chai';
 import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
+import { injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import { Readable, Writable } from 'stream';
@@ -44,7 +45,6 @@ import { generateTestState } from '../../datascience-ui/history-react/mainPanelS
 import { asyncDump } from '../common/asyncDump';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { injectable } from 'inversify';
 
 // tslint:disable:no-any no-multiline-string max-func-body-length no-console max-classes-per-file trailing-comma
 suite('DataScience notebook tests', () => {
