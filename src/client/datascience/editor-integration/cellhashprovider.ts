@@ -189,7 +189,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
                 stripped[stripped.length - 1] = `${lastLine}\n`;
             }
             const hashedCode = stripped.join('');
-            const realCode = doc.getText(new Range(line.range.start, endLine.rangeIncludingLineBreak.end));
+            const realCode = doc.getText(new Range(new Position(startLine, 0), endLine.rangeIncludingLineBreak.end));
 
             const hash : IRangedCellHash = {
                 hash: hashjs.sha1().update(hashedCode).digest('hex').substr(0, 12),

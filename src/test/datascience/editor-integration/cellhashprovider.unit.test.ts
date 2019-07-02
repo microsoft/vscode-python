@@ -46,7 +46,7 @@ suite('CellHashProvider Unit Tests', () => {
         let hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
-        assert.equal(hashes[0].hashes[0].line, 3, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].line, 4, 'Wrong start line');
         assert.equal(hashes[0].hashes[0].endLine, 4, 'Wrong end line');
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
 
@@ -58,7 +58,7 @@ suite('CellHashProvider Unit Tests', () => {
         hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
-        assert.equal(hashes[0].hashes[0].line, 1, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].line, 2, 'Wrong start line');
         assert.equal(hashes[0].hashes[0].endLine, 2, 'Wrong end line');
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
 
@@ -77,7 +77,7 @@ suite('CellHashProvider Unit Tests', () => {
         let hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
-        assert.equal(hashes[0].hashes[0].line, 3, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].line, 4, 'Wrong start line');
         assert.equal(hashes[0].hashes[0].endLine, 4, 'Wrong end line');
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
 
@@ -95,7 +95,7 @@ suite('CellHashProvider Unit Tests', () => {
         hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
-        assert.equal(hashes[0].hashes[0].line, 3, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].line, 4, 'Wrong start line');
         assert.equal(hashes[0].hashes[0].endLine, 4, 'Wrong end line');
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
     });
@@ -113,7 +113,7 @@ suite('CellHashProvider Unit Tests', () => {
         let hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
-        assert.equal(hashes[0].hashes[0].line, 3, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].line, 4, 'Wrong start line');
         assert.equal(hashes[0].hashes[0].endLine, 4, 'Wrong end line');
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
 
@@ -124,7 +124,7 @@ suite('CellHashProvider Unit Tests', () => {
         hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
-        assert.equal(hashes[0].hashes[0].line, 3, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].line, 4, 'Wrong start line');
         assert.equal(hashes[0].hashes[0].endLine, 4, 'Wrong end line');
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
 
@@ -135,7 +135,7 @@ suite('CellHashProvider Unit Tests', () => {
         hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
-        assert.equal(hashes[0].hashes[0].line, 1, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].line, 2, 'Wrong start line');
         assert.equal(hashes[0].hashes[0].endLine, 2, 'Wrong end line');
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
     });
@@ -154,7 +154,7 @@ suite('CellHashProvider Unit Tests', () => {
         let hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
-        assert.equal(hashes[0].hashes[0].line, 3, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].line, 4, 'Wrong start line');
         assert.equal(hashes[0].hashes[0].endLine, 4, 'Wrong end line');
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
 
@@ -168,10 +168,10 @@ suite('CellHashProvider Unit Tests', () => {
         hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 2, 'Not enough hashes found');
-        assert.equal(hashes[0].hashes[0].line, 3, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].line, 4, 'Wrong start line');
         assert.equal(hashes[0].hashes[0].endLine, 4, 'Wrong end line');
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
-        assert.equal(hashes[0].hashes[1].line, 5, 'Wrong start line');
+        assert.equal(hashes[0].hashes[1].line, 6, 'Wrong start line');
         assert.equal(hashes[0].hashes[1].endLine, 7, 'Wrong end line');
         assert.equal(hashes[0].hashes[1].executionCount, 2, 'Wrong execution count');
 
@@ -182,10 +182,10 @@ suite('CellHashProvider Unit Tests', () => {
         hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 2, 'Not enough hashes found');
-        assert.equal(hashes[0].hashes[0].line, 1, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].line, 2, 'Wrong start line');
         assert.equal(hashes[0].hashes[0].endLine, 2, 'Wrong end line');
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
-        assert.equal(hashes[0].hashes[1].line, 3, 'Wrong start line');
+        assert.equal(hashes[0].hashes[1].line, 4, 'Wrong start line');
         assert.equal(hashes[0].hashes[1].endLine, 5, 'Wrong end line');
         assert.equal(hashes[0].hashes[1].executionCount, 2, 'Wrong execution count');
     });
@@ -211,11 +211,11 @@ suite('CellHashProvider Unit Tests', () => {
         const hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 2, 'Not enough hashes found');
-        assert.equal(hashes[0].hashes[0].line, 3, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].line, 4, 'Wrong start line');
         assert.equal(hashes[0].hashes[0].endLine, 4, 'Wrong end line');
         assert.equal(hashes[0].hashes[0].executionCount, 3, 'Wrong execution count');
-        assert.equal(hashes[0].hashes[1].line, 5, 'Wrong start line');
-        assert.equal(hashes[0].hashes[1].endLine, 7, 'Wrong end line');
+        assert.equal(hashes[0].hashes[1].line, 6, 'Wrong start line');
+        assert.equal(hashes[0].hashes[1].endLine, 6, 'Wrong end line');
         assert.equal(hashes[0].hashes[1].executionCount, 2, 'Wrong execution count');
     });
 
@@ -247,14 +247,14 @@ suite('CellHashProvider Unit Tests', () => {
         assert.ok(fooHash, 'No hash for foo.py');
         assert.ok(barHash, 'No hash for bar.py');
         assert.equal(fooHash!.hashes.length, 2, 'Not enough hashes found');
-        assert.equal(fooHash!.hashes[0].line, 3, 'Wrong start line');
+        assert.equal(fooHash!.hashes[0].line, 4, 'Wrong start line');
         assert.equal(fooHash!.hashes[0].endLine, 4, 'Wrong end line');
         assert.equal(fooHash!.hashes[0].executionCount, 4, 'Wrong execution count');
-        assert.equal(fooHash!.hashes[1].line, 5, 'Wrong start line');
-        assert.equal(fooHash!.hashes[1].endLine, 7, 'Wrong end line');
+        assert.equal(fooHash!.hashes[1].line, 6, 'Wrong start line');
+        assert.equal(fooHash!.hashes[1].endLine, 6, 'Wrong end line');
         assert.equal(fooHash!.hashes[1].executionCount, 3, 'Wrong execution count');
         assert.equal(barHash!.hashes.length, 1, 'Not enough hashes found');
-        assert.equal(barHash!.hashes[0].line, 3, 'Wrong start line');
+        assert.equal(barHash!.hashes[0].line, 4, 'Wrong start line');
         assert.equal(barHash!.hashes[0].endLine, 4, 'Wrong end line');
         assert.equal(barHash!.hashes[0].executionCount, 2, 'Wrong execution count');
     });
@@ -273,7 +273,7 @@ suite('CellHashProvider Unit Tests', () => {
         let hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
-        assert.equal(hashes[0].hashes[0].line, 3, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].line, 4, 'Wrong start line');
         assert.equal(hashes[0].hashes[0].endLine, 4, 'Wrong end line');
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
 
@@ -289,7 +289,7 @@ suite('CellHashProvider Unit Tests', () => {
         hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
-        assert.equal(hashes[0].hashes[0].line, 3, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].line, 4, 'Wrong start line');
         assert.equal(hashes[0].hashes[0].endLine, 4, 'Wrong end line');
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
 
@@ -308,7 +308,7 @@ suite('CellHashProvider Unit Tests', () => {
         hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
-        assert.equal(hashes[0].hashes[0].line, 1, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].line, 2, 'Wrong start line');
         assert.equal(hashes[0].hashes[0].endLine, 2, 'Wrong end line');
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
     });
@@ -326,7 +326,7 @@ suite('CellHashProvider Unit Tests', () => {
         const hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
-        assert.equal(hashes[0].hashes[0].line, 3, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].line, 4, 'Wrong start line');
         assert.equal(hashes[0].hashes[0].endLine, 4, 'Wrong end line');
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
 
@@ -370,7 +370,7 @@ suite('CellHashProvider Unit Tests', () => {
         let hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
-        assert.equal(hashes[0].hashes[0].line, 3, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].line, 4, 'Wrong start line');
         assert.equal(hashes[0].hashes[0].endLine, 4, 'Wrong end line');
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
 
@@ -379,7 +379,7 @@ suite('CellHashProvider Unit Tests', () => {
         hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
-        assert.equal(hashes[0].hashes[0].line, 3, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].line, 4, 'Wrong start line');
         assert.equal(hashes[0].hashes[0].endLine, 4, 'Wrong end line');
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
         assert.equal(hashProvider.getHashes().length, 1, 'Cell should be back');
@@ -399,7 +399,7 @@ suite('CellHashProvider Unit Tests', () => {
         let hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
-        assert.equal(hashes[0].hashes[0].line, 3, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].line, 4, 'Wrong start line');
         assert.equal(hashes[0].hashes[0].endLine, 4, 'Wrong end line');
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
 
@@ -413,7 +413,7 @@ suite('CellHashProvider Unit Tests', () => {
         hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
-        assert.equal(hashes[0].hashes[0].line, 3, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].line, 4, 'Wrong start line');
         assert.equal(hashes[0].hashes[0].endLine, 4, 'Wrong end line');
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
     });
@@ -431,7 +431,7 @@ suite('CellHashProvider Unit Tests', () => {
         let hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
-        assert.equal(hashes[0].hashes[0].line, 3, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].line, 4, 'Wrong start line');
         assert.equal(hashes[0].hashes[0].endLine, 4, 'Wrong end line');
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
 
@@ -450,7 +450,7 @@ suite('CellHashProvider Unit Tests', () => {
         hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
-        assert.equal(hashes[0].hashes[0].line, 7, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].line, 8, 'Wrong start line');
         assert.equal(hashes[0].hashes[0].endLine, 8, 'Wrong end line');
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
 
@@ -468,7 +468,7 @@ suite('CellHashProvider Unit Tests', () => {
         hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
-        assert.equal(hashes[0].hashes[0].line, 7, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].line, 8, 'Wrong start line');
         assert.equal(hashes[0].hashes[0].endLine, 8, 'Wrong end line');
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
 
@@ -487,7 +487,7 @@ suite('CellHashProvider Unit Tests', () => {
         let hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
-        assert.equal(hashes[0].hashes[0].line, 3, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].line, 4, 'Wrong start line');
         assert.equal(hashes[0].hashes[0].endLine, 4, 'Wrong end line');
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
 
@@ -510,8 +510,8 @@ suite('CellHashProvider Unit Tests', () => {
         const hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
-        assert.equal(hashes[0].hashes[0].line, 1, 'Wrong start line');
-        assert.equal(hashes[0].hashes[0].endLine, 4, 'Wrong end line');
+        assert.equal(hashes[0].hashes[0].line, 2, 'Wrong start line');
+        assert.equal(hashes[0].hashes[0].endLine, 3, 'Wrong end line');
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
     });
 });
