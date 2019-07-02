@@ -16,7 +16,7 @@ import {
 import { PythonSettings } from '../../../client/common/configSettings';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, ILogger } from '../../../client/common/types';
-import { Commands, EditorContexts } from '../../../client/datascience/constants';
+import { Commands, EditorContexts, DebugCell } from '../../../client/datascience/constants';
 import { CodeLensFactory } from '../../../client/datascience/editor-integration/codeLensFactory';
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
 import { CodeWatcher } from '../../../client/datascience/editor-integration/codewatcher';
@@ -90,6 +90,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
             enableCellCodeLens: true,
             enablePlotViewer: true
         };
+        debugService.setup(d => d.activeDebugSession).returns(() => undefined);
 
         // Setup the service container to return code watchers
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
@@ -144,9 +145,9 @@ suite('DataScience Code Watcher Unit Tests', () => {
 
         const indexAdd = firstCell ? 1 : 2;
         if (codeLenses[startLensIndex + indexAdd].command) {
-            expect(codeLenses[startLensIndex + indexAdd].command!.command).to.be.equal(Commands.RunCellAndAllBelow, 'Run Below code lens command incorrect');
+            expect(codeLenses[startLensIndex + indexAdd].command!.command).to.be.equal(Commands.DebugCell, 'Debug command incorrect');
         }
-        expect(codeLenses[startLensIndex + indexAdd].range).to.be.deep.equal(targetRange, 'Run Below code lens range incorrect');
+        expect(codeLenses[startLensIndex + indexAdd].range).to.be.deep.equal(targetRange, 'Debug code lens range incorrect');
     }
 
     test('Add a file with just a #%% mark to a code watcher', () => {

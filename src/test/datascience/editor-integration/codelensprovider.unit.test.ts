@@ -37,6 +37,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         pythonSettings.setup(p => p.datascience).returns(() => dataScienceSettings.object);
         configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         commandManager.setup(c => c.executeCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve());
+        debugService.setup(d => d.activeDebugSession).returns(() => undefined);
 
         codeLensProvider = new DataScienceCodeLensProvider(serviceContainer.object, documentManager.object, configurationService.object, commandManager.object, disposables, debugService.object);
     });
