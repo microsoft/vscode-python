@@ -65,6 +65,9 @@ export class ShellDetector {
         traceVerbose(`Shell identified as '${shell}'`);
 
         // If we could not identify the shell, use the defaults.
-        return (shell === undefined || shell === TerminalShellType.other) ? defaultOSShells[this.platform.osType] : shell;
+        if (shell === undefined || shell === TerminalShellType.other) {
+            shell = defaultOSShells[this.platform.osType];
+        }
+        return shell;
     }
 }
