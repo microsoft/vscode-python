@@ -27,7 +27,7 @@ suite('ProcessLogger suite', () => {
 
     setup(() => {
         outputResult = '';
-        outputChannel.setup(o => o.appendLine(TypeMoq.It.isAnyString())).returns((s: string) => outputResult += `${s}\n`);
+        outputChannel.setup(o => o.appendLine(TypeMoq.It.isAnyString())).returns((s: string) => (outputResult += `${s}\n`));
     });
 
     teardown(() => {
@@ -35,7 +35,7 @@ suite('ProcessLogger suite', () => {
     });
 
     test('Logger displays the process command, arguments and current working directory in the output channel', async () => {
-        const options = { cwd: path.join('debug', 'path')};
+        const options = { cwd: path.join('debug', 'path') };
         const logger = new ProcessLogger(outputChannel.object, pathUtils);
         logger.logProcess('test', ['--foo', '--bar'], options);
 
@@ -72,7 +72,7 @@ suite('ProcessLogger suite', () => {
     });
 
     test('Logger doesn\'t display the working directory line if there is no cwd key in the options parameter', async () => {
-        const options = { };
+        const options = {};
         const logger = new ProcessLogger(outputChannel.object, pathUtils);
         logger.logProcess(path.join(untildify('~'), 'test'), ['--foo', '--bar'], options);
 
