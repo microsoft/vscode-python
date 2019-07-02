@@ -59,7 +59,12 @@ export abstract class BaseShellDetector implements IShellDetector {
     public identifyShellFromShellPath(shellPath: string): TerminalShellType {
         const shell = Array.from(detectableShells.keys())
             .reduce((matchedShell, shellToDetect) => {
-                if (matchedShell === TerminalShellType.other && detectableShells.get(shellToDetect)!.test(shellPath)) {
+                if (matchedShell === TerminalShellType.other) {
+                    const pat = detectableShells.get(shellToDetect);
+                    if (pat!.test(shellPath)) {
+                        return shellToDetect;
+                    }
+                }
                     return shellToDetect;
                 }
                 return matchedShell;
