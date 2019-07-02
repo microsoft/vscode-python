@@ -88,10 +88,16 @@ import { IEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
 import { DataViewer } from '../../client/datascience/data-viewing/dataViewer';
 import { DataViewerProvider } from '../../client/datascience/data-viewing/dataViewerProvider';
+import { CellHashProvider } from '../../client/datascience/editor-integration/cellhashprovider';
+import { CodeLensFactory } from '../../client/datascience/editor-integration/codeLensFactory';
 import { CodeWatcher } from '../../client/datascience/editor-integration/codewatcher';
-import { DotNetIntellisenseProvider } from '../../client/datascience/interactive-window/intellisense/dotNetIntellisenseProvider';
+import {
+    DotNetIntellisenseProvider
+} from '../../client/datascience/interactive-window/intellisense/dotNetIntellisenseProvider';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
-import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
+import {
+    InteractiveWindowCommandListener
+} from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterCommand';
 import { JupyterDebugger } from '../../client/datascience/jupyter/jupyterDebugger';
@@ -107,7 +113,9 @@ import { PlotViewerProvider } from '../../client/datascience/plotting/plotViewer
 import { StatusProvider } from '../../client/datascience/statusProvider';
 import { ThemeFinder } from '../../client/datascience/themeFinder';
 import {
+    ICellHashProvider,
     ICodeCssGenerator,
+    ICodeLensFactory,
     ICodeWatcher,
     IDataScience,
     IDataScienceCommandListener,
@@ -337,6 +345,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, MockLanguageServerAnalysisOptions);
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, DotNetIntellisenseProvider);
         this.serviceManager.addSingleton<IDebugService>(IDebugService, DebugService);
+        this.serviceManager.addSingleton<ICellHashProvider>(ICellHashProvider, CellHashProvider);
+        this.serviceManager.addBinding<ICellHashProvider, IInteractiveWindowListener>(ICellHashProvider, IInteractiveWindowListener);
+        this.serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory);
 
         // Setup our command list
         this.commandManager.registerCommand('setContext', (name: string, value: boolean) => {
@@ -509,7 +520,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             dispose: () => { return; }
         };
 
-        window.console.log(`Current directory ${__dirname}`);
         appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAnyString())).returns((e) => { throw e; });
         appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
         appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));

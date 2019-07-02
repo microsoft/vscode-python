@@ -61,7 +61,8 @@ export class JupyterDebugger implements IJupyterDebugger {
                 request: 'attach',
                 type: 'python',
                 port: this.connectInfo.port,
-                host: this.connectInfo.hostName
+                host: this.connectInfo.hostName,
+                justMyCode: true
             };
 
             await this.debugService.startDebugging(undefined, config);
