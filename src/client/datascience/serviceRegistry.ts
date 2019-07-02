@@ -11,8 +11,8 @@ import { Telemetry } from './constants';
 import { DataViewer } from './data-viewing/dataViewer';
 import { DataViewerProvider } from './data-viewing/dataViewerProvider';
 import { DataScience } from './datascience';
-import { CodeLensFactory } from './editor-integration/codeLensFactory';
 import { CellHashProvider } from './editor-integration/cellhashprovider';
+import { CodeLensFactory } from './editor-integration/codeLensFactory';
 import { DataScienceCodeLensProvider } from './editor-integration/codelensprovider';
 import { CodeWatcher } from './editor-integration/codewatcher';
 import { Decorator } from './editor-integration/decorator';
@@ -112,6 +112,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<IPlotViewer>(IPlotViewer, wrapType(PlotViewer));
     serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, wrapType(JupyterDebugger));
     serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, wrapType(CodeLensFactory));
-    //serviceManager.addSingleton<ICellHashProvider>(ICellHashProvider, wrapType(CellHashProvider));
-    serviceManager.doubleBind(ICellHashProvider, IInteractiveWindowListener, wrapType(CellHashProvider));
+    serviceManager.addSingleton<ICellHashProvider>(ICellHashProvider, wrapType(CellHashProvider));
+    serviceManager.addBinding(ICellHashProvider, IInteractiveWindowListener);
 }

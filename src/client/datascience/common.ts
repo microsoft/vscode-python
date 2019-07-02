@@ -23,6 +23,13 @@ export function concatMultilineString(str: nbformat.MultilineString): string {
     return str.toString().trim();
 }
 
+export function splitMultilineString(str: nbformat.MultilineString): string[] {
+    if (Array.isArray(str)) {
+        return str as string[];
+    }
+    return str.toString().split('\n');
+}
+
 // Strip out comment lines from code
 export function stripComments(str: string): string {
     let result: string = '';

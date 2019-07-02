@@ -12,6 +12,7 @@ import {
 } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils';
 import { Slot } from '@phosphor/signaling';
+import * as hashjs from 'hash.js';
 import { Agent as HttpsAgent } from 'https';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter } from 'vscode';
@@ -138,6 +139,7 @@ export class JupyterSession implements IJupyterSession {
     }
 
     public requestExecute(content: KernelMessage.IExecuteRequest, disposeOnDone?: boolean, metadata?: JSONObject) : Kernel.IFuture | undefined {
+        traceInfo(`Request for ${hashjs.sha1().update(content.code).digest('hex').substr(0, 12)}`)
         return this.session && this.session.kernel ? this.session.kernel.requestExecute(content, disposeOnDone, metadata) : undefined;
     }
 
