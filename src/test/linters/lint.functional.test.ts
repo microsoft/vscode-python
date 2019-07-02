@@ -246,7 +246,9 @@ class TestFixture extends BaseTestFixture {
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IBufferDecoder), TypeMoq.It.isAny()))
             .returns(() => decoder);
 
-        const procServiceFactory = new ProcessServiceFactory(serviceContainer.object);
+        const processLogger = TypeMoq.Mock.ofType<IProcessLogger>(undefined, TypeMoq.MockBehavior.Strict);
+        const disposableRegistry = TypeMoq.Mock.ofType<IDisposableRegistry>(undefined, TypeMoq.MockBehavior.Strict);
+        const procServiceFactory = new ProcessServiceFactory(envVarsService.object, processLogger.object, decoder, disposableRegistry.object);
 
         return new PythonExecutionFactory(
             serviceContainer.object,
