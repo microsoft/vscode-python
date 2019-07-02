@@ -16,7 +16,7 @@ import {
 import { PythonSettings } from '../../../client/common/configSettings';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, ILogger } from '../../../client/common/types';
-import { Commands, EditorContexts, DebugCell } from '../../../client/datascience/constants';
+import { Commands, EditorContexts } from '../../../client/datascience/constants';
 import { CodeLensFactory } from '../../../client/datascience/editor-integration/codeLensFactory';
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
 import { CodeWatcher } from '../../../client/datascience/editor-integration/codewatcher';

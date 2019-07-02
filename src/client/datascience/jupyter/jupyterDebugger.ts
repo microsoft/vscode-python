@@ -40,7 +40,8 @@ export class JupyterDebugger implements IJupyterDebugger {
     public async enableAttach(server: INotebookServer): Promise<void> {
         traceInfo('enable debugger attach');
 
-        // Current version of ptvsd doesn't support returning the value that we need so for now we use a setting on disk
+        // Current version of ptvsd doesn't support the source map entries, so we need to have a custom copy
+        // on disk somewhere. Append this location to our sys path.
         // tslint:disable-next-line:no-multiline-string
         await this.executeSilently(server, `import sys\r\nsys.path.append('${this.configService.getSettings().datascience.ptvsdDistPath}')`);
         // tslint:disable-next-line:no-multiline-string
