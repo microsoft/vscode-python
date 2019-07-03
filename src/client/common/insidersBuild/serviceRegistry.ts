@@ -6,8 +6,8 @@ import { IExtensionActivationService } from '../../activation/types';
 import { IServiceManager } from '../../ioc/types';
 import { ExtensionInsidersDailyChannelRule, ExtensionInsidersWeeklyChannelRule, ExtensionStableChannelRule } from './downloadChannelRules';
 import { ExtensionChannelService } from './downloadChannelService';
+import { InsidersExtensionPrompt } from './insidersExtensionPrompt';
 import { InsidersExtensionService } from './insidersExtensionService';
-import { InsidersExtensionPrompt } from './insidersPrompt';
 import { ExtensionChannel, IExtensionChannelRule, IExtensionChannelService, IInsiderExtensionPrompt } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {

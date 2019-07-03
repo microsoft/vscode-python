@@ -585,6 +585,24 @@
             ],
             "commandPalette": [
                 {
+                    "command": "python.switchToStable",
+                    "title": "%python.command.python.switchToStable.title%",
+                    "category": "Python",
+                    "when": "config.python.insidersChannel != 'Stable'"
+                },
+                {
+                    "command": "python.switchToInsidersDaily",
+                    "title": "%python.command.python.switchToInsidersDaily.title%",
+                    "category": "Python",
+                    "when": "config.python.insidersChannel != 'InsidersDaily'"
+                },
+                {
+                    "command": "python.switchToInsidersWeekly",
+                    "title": "%python.command.python.switchToInsidersWeekly.title%",
+                    "category": "Python",
+                    "when": "config.python.insidersChannel != 'InsidersWeekly'"
+                },
+                {
                     "command": "python.viewOutput",
                     "title": "%python.command.python.viewOutput.title%",
                     "category": "Python"
