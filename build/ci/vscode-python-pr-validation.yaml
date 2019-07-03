@@ -31,8 +31,38 @@ jobs:
     vscodeChannels: ['stable']
     # In PRs, run smoke tests against 3.7 and 2.7 (excluding others).
     jobs:
+    - test: "Smokex"
+      tags: "--tags=@smoke"
+      ignorePythonVersions: "3.6,3.5"
+
+- template: templates/uitest_jobs.yml
+  parameters:
+    jobs:
     - test: "Smoke"
       tags: "--tags=@smoke"
+      # Smoke tests are cheap, so run them against all Python Versions.
+    - test: "Test"
+      tags: "--tags=@testing"
+      # We have python code that is involved in running/discovering tests.
+      # Hence test against all versions, until we have CI running for the Python code.
+      # I.e. when all test dicovery/running is done purely in Python.
+    - test: "Terminal"
+      tags: "--tags=@terminal --tags=~@terminal.pipenv"
+      # No need to run tests against all versions.
+      # This is faster/cheaper, besides activation of terminals is generic enough
+      # not to warrant testing against all versions.
+      ignorePythonVersions: "3.6,3.5"
+    - test: "Debugging"
+      tags: "--tags=@debugging"
+      # No need to run tests against all versions.
+      # This is faster/cheaper, and these are external packages.
+      # We expect them to work (or 3rd party packages to test against all PY versions).
+      ignorePythonVersions: "3.6,3.5"
+    - test: "Jedi_Language_Server"
+      tags: "--tags=@ls"
+      # No need to run tests against all versions.
+      # This is faster/cheaper, and these are external packages.
+      # We expect them to work (or 3rd party packages to test against all PY versions).
       ignorePythonVersions: "3.6,3.5"
 
 - job: 'PR'
