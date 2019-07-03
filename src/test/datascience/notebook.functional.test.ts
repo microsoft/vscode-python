@@ -1015,14 +1015,11 @@ plt.show()`,
         const outputs: string[] = [];
         @injectable()
         class Logger implements INotebookExecutionLogger {
-            public preExecute(cell: ICell, _silent: boolean): void {
+            public async preExecute(cell: ICell, _silent: boolean): Promise<void> {
                 cellInputs.push(concatMultilineString(cell.data.source));
             }
-            public postExecute(cellOrError: ICell | Error, _silent: boolean): void {
-                if (!(cellOrError instanceof Error)) {
-                    const cell = cellOrError as ICell;
-                    outputs.push(extractDataOutput(cell));
-                }
+            public async postExecute(cell: ICell, _silent: boolean): Promise<void> {
+                outputs.push(extractDataOutput(cell));
             }
         }
         ioc.serviceManager.add<INotebookExecutionLogger>(INotebookExecutionLogger, Logger);
