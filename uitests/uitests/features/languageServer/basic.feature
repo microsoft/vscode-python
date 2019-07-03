@@ -1,4 +1,4 @@
-@ls @smoke
+@ls
 @https://github.com/DonJayamanne/pvscSmokeLS.git
 Feature: Language Server
     Scenario Outline: Check output of 'Python' output panel when starting VS Code with Jedi <jedi_enabled>
@@ -29,7 +29,7 @@ Feature: Language Server
             | enabled          | https://             |
             | disabled         | http://              |
 
-    @autoretry
+    @autoretry @smoke
     Scenario Outline: Navigate to definition of a variable when extension has already been activated with Jedi <jedi_enabled>
         Given the workspace setting "python.jediEnabled" is <jedi_enabled>
         When I reload VS Code

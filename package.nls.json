@@ -34,6 +34,7 @@
     "python.command.python.datascience.runallcellsabove.palette.title": "Run Cells Above Current Cell",
     "python.command.python.datascience.runcurrentcellandallbelow.palette.title": "Run Current Cell and Below",
     "python.command.python.datascience.debugcurrentcell.palette.title": "Debug Current Cell",
+    "python.command.python.datascience.debugcurrentcell.title": "Debug Cell",
     "python.command.python.datascience.runtoline.title": "Run To Line in Python Interactive window",
     "python.command.python.datascience.runfromline.title": "Run From Line in Python Interactive window",
     "python.command.python.datascience.runcurrentcell.title": "Run Current Cell",
@@ -283,5 +284,8 @@
     "DataScience.exportImageFailed": "Error exporting image: {0}",
     "downloading.file": "Downloading {0}...",
     "downloading.file.progress": "{0}{1} of {2} KB ({3})",
-    "DataScience.jupyterDataRateExceeded": "Cannot view variable because your data rate is set too low. Please restart your server with a data rate limit like so `--NotebookApp.iopub_data_rate_limit=10000000000.0`"
+    "DataScience.jupyterDataRateExceeded": "Cannot view variable because data rate exceeded. Please restart your server with a higher data rate limit. For example, --NotebookApp.iopub_data_rate_limit=10000000000.0",
+    "DataScience.addCellBelowCommandTitle" : "Add cell",
+    "DataScience.debugCellCommandTitle" : "Debug cell",
+    "DataScience.variableExplorerDisabledDuringDebugging" : "Variables are not available while debugging."
 }

@@ -83,6 +83,21 @@ def log_exceptions():
     return deco_log_exceptions
 
 
+def trace(f):
+    """Decorator to just log before and after execution of a function."""
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        try:
+            logging.info(f"Before {f.__name__}")
+            return f(*args, **kwargs)
+        finally:
+            elapsed_time = time.time() - start_time
+            elapsed_time = time.strftime("%H:%M:%S", time.gmtime(elapsed_time))
+            logging.info(f"After {f.__name__} ({elapsed_time})")
+    return wrapper
+
+
 def run_command(command, *, cwd=None, silent=False, progress_message=None, env=None):
     """Run the specified command in a subprocess shell with the following options:
     - Pipe output from subprocess into current console.

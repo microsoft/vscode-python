@@ -1054,7 +1054,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         this.jupyterServer = await this.jupyterExecution.connectToNotebookServer(options);
 
         // Enable debugging support if set
-        if (options.enableDebugging && this.jupyterServer) {
+        if (this.jupyterServer) {
             await this.jupyterDebugger.enableAttach(this.jupyterServer);
         }
 

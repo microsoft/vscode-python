@@ -217,6 +217,18 @@ export class DataScience implements IDataScience {
         }
     }
 
+    public async debugCell(file: string, startLine: number, startChar: number, endLine: number, endChar: number): Promise<void> {
+        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
+
+        if (file) {
+            const codeWatcher = this.getCodeWatcher(file);
+
+            if (codeWatcher) {
+                return codeWatcher.debugCell(new vscode.Range(startLine, startChar, endLine, endChar));
+            }
+        }
+    }
+
     @captureTelemetry(Telemetry.SetJupyterURIToLocal)
     private async setJupyterURIToLocal(): Promise<void> {
         await this.configuration.updateSetting('dataScience.jupyterServerURI', Settings.JupyterServerLocalLaunch, undefined, vscode.ConfigurationTarget.Workspace);
@@ -287,7 +299,7 @@ export class DataScience implements IDataScience {
         }
     }
 
-    private async debugCurrentCell(): Promise<void> {
+    private async debugCurrentCellFromCursor(): Promise<void> {
         this.dataScienceSurveyBanner.showBanner().ignoreErrors();
 
         const currentCodeLens = this.getCurrentCodeLens();
@@ -374,7 +386,9 @@ export class DataScience implements IDataScience {
         this.disposableRegistry.push(disposable);
         disposable = this.commandManager.registerCommand(Commands.AddCellBelow, this.addCellBelow, this);
         this.disposableRegistry.push(disposable);
-        disposable = this.commandManager.registerCommand(Commands.DebugCurrentCellPalette, this.debugCurrentCell, this);
+        disposable = this.commandManager.registerCommand(Commands.DebugCell, this.debugCell, this);
+        this.disposableRegistry.push(disposable);
+        disposable = this.commandManager.registerCommand(Commands.DebugCurrentCellPalette, this.debugCurrentCellFromCursor, this);
         this.disposableRegistry.push(disposable);
         this.commandListeners.forEach((listener: IDataScienceCommandListener) => {
             listener.register(this.commandManager);

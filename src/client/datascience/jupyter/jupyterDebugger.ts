@@ -4,28 +4,46 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
-import { DebugConfiguration } from 'vscode';
+import { DebugConfiguration, DebugSessionCustomEvent } from 'vscode';
 
 import { ICommandManager, IDebugService } from '../../common/application/types';
 import { traceInfo } from '../../common/logger';
+import { IConfigurationService } from '../../common/types';
+import { Deferred } from '../../common/utils/async';
 import { Identifiers } from '../constants';
-import { CellState, ICell, IDebuggerConnectInfo, IJupyterDebugger, INotebookServer } from '../types';
+import {
+    CellState,
+    ICell,
+    ICellHashProvider,
+    IDebuggerConnectInfo,
+    IFileHashes,
+    IJupyterDebugger,
+    INotebookServer,
+    ISourceMapRequest
+} from '../types';
 
 @injectable()
 export class JupyterDebugger implements IJupyterDebugger {
     private connectInfo: IDebuggerConnectInfo | undefined;
+    private pendingSourceMapRequest : Deferred<void> | undefined;
+    private pendingSourceMapResponseCount: number = 0;
 
     constructor(
+            @inject(IConfigurationService) private configService: IConfigurationService,
+            @inject(ICellHashProvider) private hashProvider: ICellHashProvider,
             @inject(ICommandManager) private commandManager: ICommandManager,
             @inject(IDebugService) private debugService: IDebugService
-        ) {}
+        ) {
+        this.debugService.onDidReceiveDebugSessionCustomEvent(this.onCustomEvent.bind(this));
+    }
 
     public async enableAttach(server: INotebookServer): Promise<void> {
         traceInfo('enable debugger attach');
 
-        // Current version of ptvsd doesn't support returning the value that we need so you need to install the correct version or use my hardcoded line above
+        // Current version of ptvsd doesn't support the source map entries, so we need to have a custom copy
+        // on disk somewhere. Append this location to our sys path.
         // tslint:disable-next-line:no-multiline-string
-        //const enableDebuggerResults = await this.executeSilently(server, `import sys\r\nsys.path.append('d:/ptvsd-drop/kdrop/src')\r\nimport os\r\nos.environ["PTVSD_LOG_DIR"] = "d:/note_dbg/logs"\r\nimport ptvsd\r\nptvsd.enable_attach(('localhost', 0))`);
+        await this.executeSilently(server, `import sys\r\nsys.path.append('${this.configService.getSettings().datascience.ptvsdDistPath}')`);
         // tslint:disable-next-line:no-multiline-string
         const enableDebuggerResults = await this.executeSilently(server, `import ptvsd\r\nptvsd.enable_attach(('localhost', 0))`);
 
@@ -35,6 +53,7 @@ export class JupyterDebugger implements IJupyterDebugger {
 
     public async startDebugging(server: INotebookServer): Promise<void> {
         traceInfo('start debugging');
+
         if (this.connectInfo) {
             // First connect the VSCode UI
             const config: DebugConfiguration = {
@@ -42,7 +61,8 @@ export class JupyterDebugger implements IJupyterDebugger {
                 request: 'attach',
                 type: 'python',
                 port: this.connectInfo.port,
-                host: this.connectInfo.hostName
+                host: this.connectInfo.hostName,
+                justMyCode: true
             };
 
             await this.debugService.startDebugging(undefined, config);
@@ -50,6 +70,9 @@ export class JupyterDebugger implements IJupyterDebugger {
             // Wait for attach before we turn on tracing and allow the code to run, if the IDE is already attached this is just a no-op
             // tslint:disable-next-line:no-multiline-string
             await this.executeSilently(server, `import ptvsd\r\nptvsd.wait_for_attach()`);
+
+            // Send our initial set of file mappings
+            await this.updateDebuggerSourceMaps();
 
             // Then enable tracing
             // tslint:disable-next-line:no-multiline-string
@@ -65,6 +88,51 @@ export class JupyterDebugger implements IJupyterDebugger {
 
         // Stop our debugging UI session, no await as we just want it stopped
         this.commandManager.executeCommand('workbench.action.debug.stop');
+    }
+
+    private onCustomEvent(e: DebugSessionCustomEvent) {
+        // See if we're waiting for the source map event to finish or not
+        if (this.pendingSourceMapRequest) {
+            switch (e.event){
+                case 'setPydevdSourceMapResponse':
+                    this.pendingSourceMapResponseCount = Math.max(0, this.pendingSourceMapResponseCount - 1);
+                    if (this.pendingSourceMapResponseCount === 0) {
+                        this.pendingSourceMapRequest.resolve();
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+        }
+    }
+
+    private async updateDebuggerSourceMaps(): Promise<void> {
+        // Make sure that we have an active debugging session at this point
+        if (this.debugService.activeDebugSession) {
+            const fileHashes = this.hashProvider.getHashes();
+
+            this.pendingSourceMapResponseCount = fileHashes.length;
+
+            fileHashes.forEach(async (fileHash) => {
+                await this.debugService.activeDebugSession!.customRequest('setPydevdSourceMap', this.buildSourceMap(fileHash));
+            });
+        }
+    }
+
+    private buildSourceMap(fileHash: IFileHashes): ISourceMapRequest {
+        const sourceMapRequest: ISourceMapRequest = { source: { path: fileHash.file }, pydevdSourceMaps: [] };
+
+        sourceMapRequest.pydevdSourceMaps = fileHash.hashes.map(cellHash => {
+            return {
+                line: cellHash.line,
+                endLine: cellHash.endLine,
+                runtimeSource: { path: `<ipython-input-${cellHash.executionCount}-${cellHash.hash}>`},
+                runtimeLine: 1
+            };
+        });
+
+        return sourceMapRequest;
     }
 
     private executeSilently(server: INotebookServer, code: string): Promise<ICell[]> {

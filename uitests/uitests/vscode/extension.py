@@ -6,6 +6,7 @@ import json
 import os.path
 
 from . import core, quick_open, status_bar
+from .selectors import get_selector
 
 _localized_strings = {}
 
@@ -19,7 +20,9 @@ def activate_python_extension(context):
             # So lets wait for 30 seconds.
             core.wait_for_element(
                 context.driver,
-                ".part.statusbar .statusbar-item.left.statusbar-entry a[title='Py2']",
+                get_selector("STATUS_BAR_SELECTOR", context.options.channel).format(
+                    "Py2"
+                ),
                 timeout=30,
             )
             break

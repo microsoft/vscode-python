@@ -2,21 +2,19 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { CodeLens, Command, Position, Range, Selection, TextDocument, TextEditor, TextEditorRevealType } from 'vscode';
+import { CodeLens, Position, Range, Selection, TextDocument, TextEditor, TextEditorRevealType } from 'vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDataScienceSettings, ILogger } from '../../common/types';
-import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry } from '../../telemetry';
 import { ICodeExecutionHelper } from '../../terminals/types';
-import { generateCellRanges } from '../cellFactory';
 import { Commands, Telemetry } from '../constants';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
-import { ICodeWatcher, IInteractiveWindowProvider } from '../types';
+import { ICodeLensFactory, ICodeWatcher, IInteractiveWindowProvider } from '../types';
 
 @injectable()
 export class CodeWatcher implements ICodeWatcher {
@@ -32,7 +30,8 @@ export class CodeWatcher implements ICodeWatcher {
                 @inject(IFileSystem) private fileSystem: IFileSystem,
                 @inject(IConfigurationService) private configService: IConfigurationService,
                 @inject(IDocumentManager) private documentManager : IDocumentManager,
-                @inject(ICodeExecutionHelper) private executionHelper: ICodeExecutionHelper
+                @inject(ICodeExecutionHelper) private executionHelper: ICodeExecutionHelper,
+                @inject(ICodeLensFactory) private codeLensFactory: ICodeLensFactory
         ) {
     }
 
@@ -45,37 +44,9 @@ export class CodeWatcher implements ICodeWatcher {
 
         // Get document cells here. Make a copy of our settings.
         this.cachedSettings = JSON.parse(JSON.stringify(this.configService.getSettings().datascience));
-        const cells = generateCellRanges(document, this.cachedSettings);
 
-        this.codeLenses = [];
-        let firstCell = true;
-        // Be careful here. These arguments will be serialized during liveshare sessions
-        // and so shouldn't reference local objects.
-        cells.forEach(cell => {
-            const cmd: Command = {
-                arguments: [document.fileName, cell.range.start.line, cell.range.start.character, cell.range.end.line, cell.range.end.character],
-                title: localize.DataScience.runCellLensCommandTitle(),
-                command: Commands.RunCell
-            };
-            this.codeLenses.push(new CodeLens(cell.range, cmd));
-            const runAllAboveCmd: Command = {
-                arguments: [document.fileName, cell.range.start.line, cell.range.start.character],
-                title: localize.DataScience.runAllCellsAboveLensCommandTitle(),
-                command: Commands.RunAllCellsAbove
-            };
-            // The first cell should not have a run all above command
-            if (firstCell) {
-                firstCell = false;
-            } else {
-                this.codeLenses.push(new CodeLens(cell.range, runAllAboveCmd));
-            }
-            const runCellAndBelowCmd: Command = {
-                arguments: [document.fileName, cell.range.start.line, cell.range.start.character],
-                title: localize.DataScience.runCellAndAllBelowLensCommandTitle(),
-                command: Commands.RunCellAndAllBelow
-            };
-            this.codeLenses.push(new CodeLens(cell.range, runCellAndBelowCmd));
-        });
+        // Use the factory to generate our new code lenses.
+        this.codeLenses = this.codeLensFactory.createCodeLenses(document);
     }
 
     public getFileName() {
@@ -221,6 +192,16 @@ export class CodeWatcher implements ICodeWatcher {
         // Run the cell clicked. Advance if the cursor is inside this cell and we're allowed to
         const advance = range.contains(this.documentManager.activeTextEditor.selection.start) && this.configService.getSettings().datascience.enableAutoMoveToNextCell;
         return this.runMatchingCell(range, advance);
+    }
+
+    @captureTelemetry(Telemetry.DebugCurrentCell)
+    public debugCell(range: Range) : Promise<void> {
+        if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
+            return Promise.resolve();
+        }
+
+        // Debug the cell clicked.
+        return this.runMatchingCell(range, false, true);
     }
 
     @captureTelemetry(Telemetry.RunCurrentCell)

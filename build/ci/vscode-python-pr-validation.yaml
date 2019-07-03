@@ -68,11 +68,6 @@ jobs:
         VMImageName: 'macos-10.13'
         TestsToRun: 'testSingleWorkspace'
         NeedsPythonTestReqs: true
-      'Mac-Py3.7 Smoke':
-        PythonVersion: '3.7'
-        VMImageName: 'macos-10.13'
-        TestsToRun: 'testSmoke'
-        NeedsPythonTestReqs: true
       'Mac-Py2.7 Unit+Single':
         PythonVersion: '2.7'
         VMImageName: 'macos-10.13'
@@ -87,11 +82,6 @@ jobs:
         PythonVersion: '3.7'
         VMImageName: 'ubuntu-16.04'
         TestsToRun: 'testSingleWorkspace'
-        NeedsPythonTestReqs: true
-      'Linux-Py3.7 Smoke':
-        PythonVersion: '3.7'
-        VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'testSmoke'
         NeedsPythonTestReqs: true
       'Linux-Py2.7 Unit+Single':
         PythonVersion: '2.7'

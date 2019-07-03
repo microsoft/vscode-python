@@ -82,7 +82,6 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         const settings = this.configService.getSettings();
         let serverURI: string | undefined = settings.datascience.jupyterServerURI;
         const useDefaultConfig: boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
-        const enableDebugging: boolean | undefined = settings.datascience.enableDebugging;
 
         // For the local case pass in our URI as undefined, that way connect doesn't have to check the setting
         if (serverURI === Settings.JupyterServerLocalLaunch) {
@@ -90,7 +89,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         }
 
         return {
-            enableDebugging: enableDebugging,
+            enableDebugging: true,
             uri: serverURI,
             useDefaultConfig,
             purpose: Identifiers.HistoryPurpose

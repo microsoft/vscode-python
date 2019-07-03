@@ -41,5 +41,5 @@ suite('Application Diagnostics - Register classes in IOC Container', () => {
         verify(serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, InvalidMacPythonInterpreterService, InvalidMacPythonInterpreterServiceId));
         verify(serviceManager.addSingleton<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory, DiagnosticsCommandFactory));
         verify(serviceManager.addSingleton<IApplicationDiagnostics>(IApplicationDiagnostics, ApplicationDiagnostics));
-    })
+    });
 });

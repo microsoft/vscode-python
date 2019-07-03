@@ -3,7 +3,7 @@
 'use strict';
 import '../../common/extensions';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, multiInject, optional } from 'inversify';
 import { Observable } from 'rxjs/Observable';
 import { CancellationToken } from 'vscode-jsonrpc';
 
@@ -15,6 +15,7 @@ import {
     IDataScience,
     IJupyterSessionManager,
     INotebookCompletion,
+    INotebookExecutionLogger,
     INotebookServer,
     INotebookServerLaunchInfo,
     InterruptResult
@@ -35,7 +36,8 @@ type JupyterServerClassType = {
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         configService: IConfigurationService,
-        sessionManager: IJupyterSessionManager
+        sessionManager: IJupyterSessionManager,
+        loggers: INotebookExecutionLogger[]
     ): IJupyterServerInterface;
 };
 // tslint:enable:callable-types
@@ -53,7 +55,8 @@ export class JupyterServerFactory implements INotebookServer {
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IConfigurationService) configService: IConfigurationService,
-        @inject(IJupyterSessionManager) sessionManager: IJupyterSessionManager) {
+        @inject(IJupyterSessionManager) sessionManager: IJupyterSessionManager,
+        @multiInject(INotebookExecutionLogger) @optional() loggers: INotebookExecutionLogger[] | undefined) {
         this.serverFactory = new RoleBasedFactory<IJupyterServerInterface, JupyterServerClassType>(
             liveShare,
             HostJupyterServer,
@@ -64,7 +67,8 @@ export class JupyterServerFactory implements INotebookServer {
             disposableRegistry,
             asyncRegistry,
             configService,
-            sessionManager
+            sessionManager,
+            loggers ? loggers : []
         );
     }
 
@@ -117,10 +121,10 @@ export class JupyterServerFactory implements INotebookServer {
                     })
                     .catch(e => subscriber.error(e));
             },
-            r => {
-                subscriber.error(r);
-                subscriber.complete();
-            });
+                r => {
+                    subscriber.error(r);
+                    subscriber.complete();
+                });
         });
     }
 
@@ -148,12 +152,12 @@ export class JupyterServerFactory implements INotebookServer {
         return server.waitForConnect();
     }
 
-    public async getSysInfo() : Promise<ICell | undefined> {
+    public async getSysInfo(): Promise<ICell | undefined> {
         const server = await this.serverFactory.get();
         return server.getSysInfo();
     }
 
-    public async getCompletion(cellCode: string, offsetInCode: number, cancelToken?: CancellationToken) : Promise<INotebookCompletion> {
+    public async getCompletion(cellCode: string, offsetInCode: number, cancelToken?: CancellationToken): Promise<INotebookCompletion> {
         const server = await this.serverFactory.get();
         return server.getCompletion(cellCode, offsetInCode, cancelToken);
     }

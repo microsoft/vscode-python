@@ -1,6 +1,7 @@
 @debugging
 Feature: Debugging
-    Scenario: Debugging a python file without creating a launch configuration (with delays)
+    @smoke
+    Scenario: Debugging a python file with breakpoints
         Given a file named ".vscode/launch.json" is created with the following contents
             """
             {
@@ -33,7 +34,7 @@ Feature: Debugging
         When I select the command "Debug: Continue"
         Then the debugger stops
 
-    Scenario: Debugging a python file without creating a launch configuration (with delays)
+    Scenario: Debugging a python file without breakpoints
         Given a file named ".vscode/launch.json" is created with the following contents
             """
             {

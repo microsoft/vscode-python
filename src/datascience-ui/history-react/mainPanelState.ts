@@ -30,6 +30,7 @@ export interface IMainPanelState {
     tokenizerLoaded?: boolean;
     editorOptions: monacoEditor.editor.IEditorOptions;
     currentExecutionCount: number;
+    debugging: boolean;
 }
 
 // tslint:disable-next-line: no-multiline-string
@@ -59,7 +60,8 @@ export function generateTestState(inputBlockToggled : (id: string) => void, file
         rootStyle: darkStyle,
         tokenizerLoaded: true,
         editorOptions: {},
-        currentExecutionCount: 0
+        currentExecutionCount: 0,
+        debugging: false
     };
 }
 

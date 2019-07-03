@@ -34,6 +34,7 @@ export namespace Commands {
     export const RunFileInInteractiveWindows = 'python.datascience.runFileInteractive';
     export const AddCellBelow = 'python.datascience.addcellbelow';
     export const DebugCurrentCellPalette = 'python.datascience.debugcurrentcell.palette';
+    export const DebugCell = 'python.datascience.debugcell';
 }
 
 export namespace EditorContexts {
