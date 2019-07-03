@@ -182,7 +182,7 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
                 action: { indentAction: IndentAction.Indent }
             },
             {
-                beforeText: /^(?!\s+\\)[^#\n]+\\\s*/,
+                beforeText: /^(?!\s+\\)[^#\n]+\\$/,
                 action: { indentAction: IndentAction.Indent }
             },
             {
