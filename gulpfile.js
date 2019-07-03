@@ -115,7 +115,7 @@ gulp.task('compile-webviews', async () =>
 );
 
 gulp.task('webpack', async () => {
-    // Build dependencies.
+    // Build node_modules and DS stuff.
     await buildWebPack('production', []);
     // Run both in parallel, for faster process on CI.
     // Yes, console would print output from both, that's ok, we have a faster CI.
