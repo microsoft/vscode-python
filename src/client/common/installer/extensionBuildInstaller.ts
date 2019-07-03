@@ -18,10 +18,16 @@ const vsixFileExtension = '.vsix';
 
 @injectable()
 export class StableBuildInstaller implements IExtensionBuildInstaller {
-    constructor(@inject(ICommandManager) private readonly cmdManager: ICommandManager) { }
+    constructor(
+        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel,
+        @inject(ICommandManager) private readonly cmdManager: ICommandManager
+    ) { }
+
     @traceDecorators.error('Installing stable build of extension failed')
     public async install(): Promise<void> {
+        this.output.append(ExtensionChannels.installingStableMessage());
         await this.cmdManager.executeCommand('workbench.extensions.installExtension', PVSC_EXTENSION_ID);
+        this.output.appendLine(ExtensionChannels.installationCompleteMessage());
     }
 }
 
@@ -32,12 +38,16 @@ export class InsidersBuildInstaller implements IExtensionBuildInstaller {
         @inject(IFileDownloader) private readonly fileDownloader: IFileDownloader,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(ICommandManager) private readonly cmdManager: ICommandManager) { }
+
     @traceDecorators.error('Installing insiders build of extension failed')
     public async install(): Promise<void> {
         const vsixFilePath = await this.downloadInsiders();
+        this.output.append(ExtensionChannels.installingInsidersMessage());
         await this.cmdManager.executeCommand('workbench.extensions.installExtension', Uri.file(vsixFilePath));
+        this.output.appendLine(ExtensionChannels.installationCompleteMessage());
         await this.fs.deleteFile(vsixFilePath);
     }
+
     @traceDecorators.error('Downloading insiders build of extension failed')
     public async downloadInsiders(): Promise<string> {
         this.output.appendLine(ExtensionChannels.startingDownloadOutputMessage());

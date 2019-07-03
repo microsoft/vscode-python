@@ -5,6 +5,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import { IExtensionBuildInstaller, INSIDERS_INSTALLER, STABLE_INSTALLER } from '../installer/types';
+import { traceDecorators } from '../logger';
 import { IPersistentStateFactory } from '../types';
 import { IExtensionChannelRule } from './types';
 
@@ -14,9 +15,7 @@ const lastLookUpTimeKey = 'INSIDERS_LAST_LOOK_UP_TIME_KEY';
 
 @injectable()
 export class ExtensionStableChannelRule implements IExtensionChannelRule {
-    constructor(
-        @inject(IExtensionBuildInstaller) @named(STABLE_INSTALLER) private readonly stableInstaller: IExtensionBuildInstaller
-    ) { }
+    constructor(@inject(IExtensionBuildInstaller) @named(STABLE_INSTALLER) private readonly stableInstaller: IExtensionBuildInstaller) { }
     public async getInstaller(isChannelRuleNew: boolean = false): Promise<IExtensionBuildInstaller | undefined> {
         if (isChannelRuleNew) {
             // Channel rule has changed to stable, return stable installer
@@ -30,6 +29,7 @@ export class ExtensionInsidersDailyChannelRule implements IExtensionChannelRule 
         @inject(IExtensionBuildInstaller) @named(INSIDERS_INSTALLER) private readonly insidersInstaller: IExtensionBuildInstaller,
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory
     ) { }
+    @traceDecorators.error('Error in getting installer for daily channel rule')
     public async getInstaller(isChannelRuleNew: boolean): Promise<IExtensionBuildInstaller | undefined> {
         if (await this.shouldLookForInsidersBuild(isChannelRuleNew)) {
             return this.insidersInstaller;
@@ -56,6 +56,7 @@ export class ExtensionInsidersWeeklyChannelRule implements IExtensionChannelRule
         @inject(IExtensionBuildInstaller) @named(INSIDERS_INSTALLER) private readonly insidersInstaller: IExtensionBuildInstaller,
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory
     ) { }
+    @traceDecorators.error('Error in getting installer for weekly channel rule')
     public async getInstaller(isChannelRuleNew: boolean): Promise<IExtensionBuildInstaller | undefined> {
         if (await this.shouldLookForInsidersBuild(isChannelRuleNew)) {
             return this.insidersInstaller;

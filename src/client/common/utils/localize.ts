@@ -67,9 +67,12 @@ export namespace ExtensionChannels {
     export const useStable = localize('ExtensionChannels.useStable', 'Use Stable');
     export const promptMessage = localize('ExtensionChannels.promptMessage', 'We noticed you are using Visual Studio Code ExtensionChannels. Reload to use the Insiders build of the extension.');
     export const reloadMessage = localize('ExtensionChannels.reloadMessage', 'Please reload the window switching between insiders channels');
-    export const downloadCompletedOutputMessage = localize('ExtensionChannels.downloadCompletedOutputMessage', 'Insiders build download complete');
+    export const downloadCompletedOutputMessage = localize('ExtensionChannels.downloadCompletedOutputMessage', 'Insiders build download complete.');
     export const startingDownloadOutputMessage = localize('ExtensionChannels.startingDownloadOutputMessage', 'Starting download for Insiders build.');
     export const downloadingInsidersMessage = localize('ExtensionChannels.downloadingInsidersMessage', 'Downloading Insiders Extension... ');
+    export const installingInsidersMessage = localize('ExtensionChannels.installingInsidersMessage', 'Installing Insiders build of extension... ');
+    export const installingStableMessage = localize('ExtensionChannels.installingStableMessage', 'Installing Stable build of extension... ');
+    export const installationCompleteMessage = localize('ExtensionChannels.installationCompleteMessage', 'complete.');
 }
 
 export namespace Logging {

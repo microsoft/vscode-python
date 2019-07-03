@@ -7,6 +7,7 @@ import { inject, injectable } from 'inversify';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IApplicationShell, ICommandManager } from '../application/types';
+import { traceDecorators } from '../logger';
 import { IPersistentStateFactory } from '../types';
 import { Common, ExtensionChannels } from '../utils/localize';
 import { noop } from '../utils/misc';
@@ -22,6 +23,8 @@ export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
         @inject(ICommandManager) private readonly cmdManager: ICommandManager,
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory
     ) { }
+
+    @traceDecorators.error('Error in prompting to install insiders')
     public async notifyToInstallInsider(): Promise<void> {
         const notificationPromptEnabled = this.persistentStateFactory.createGlobalPersistentState(insidersPromptStateKey, true);
         if (!notificationPromptEnabled.value) {
@@ -43,6 +46,8 @@ export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
             this.cmdManager.executeCommand('workbench.action.reloadWindow').then(noop);
         }
     }
+
+    @traceDecorators.error('Error in prompting to reload')
     public async promptToReload(): Promise<void> {
         if (this.reloadPromptDisabled) {
             this.reloadPromptDisabled = false;
