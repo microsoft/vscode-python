@@ -100,12 +100,12 @@ steps:
       inputs:
           versionSpec: 3.7
 
-    - task: Npm@1
-      displayName: "Use NPM $(NpmVersion)"
-      inputs:
-          command: custom
-          verbose: true
-          customCommand: "install -g npm@$(NpmVersion)"
+    # - task: Npm@1
+    #   displayName: "Use NPM $(NpmVersion)"
+    #   inputs:
+    #       command: custom
+    #       verbose: true
+    #       customCommand: "install -g npm@$(NpmVersion)"
 
     - task: 1ESLighthouseEng.PipelineArtifactCaching.RestoreCacheV1.RestoreCache@1
       inputs:
