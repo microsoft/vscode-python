@@ -178,10 +178,6 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     languages.setLanguageConfiguration(PYTHON_LANGUAGE, {
         onEnterRules: [
             {
-                beforeText: /^\s*(?:def|class|for|if|elif|else|while|try|with|finally|except|async)\b.*:\s*/,
-                action: { indentAction: IndentAction.Indent }
-            },
-            {
                 beforeText: /^(?!\s+\\)[^#\n]+\\\s*/,
                 action: { indentAction: IndentAction.Indent }
             },
@@ -195,7 +191,11 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
                 afterText: /\s+$/,
                 action: { indentAction: IndentAction.Outdent }
             }
-        ]
+        ],
+        indentationRules: {
+            increaseIndentPattern: /^\s*(?:def|class|for|if|elif|else|while|try|with|finally|except|async)\b.*:\s*/,
+            decreaseIndentPattern: /^\s*(?:elif|else)\b.*:\s*/
+        }
     });
 
     if (pythonSettings && pythonSettings.formatting && pythonSettings.formatting.provider !== 'internalConsole') {
