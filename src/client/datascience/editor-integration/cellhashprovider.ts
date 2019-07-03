@@ -252,7 +252,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
                 // tslint:disable-next-line: no-any
                 if ((b as any).location) {
                     const sb = b as SourceBreakpoint;
-                    const doc = this.documentManager.textDocuments.find(d => d.uri === sb.location.uri);
+                    const doc = this.documentManager.textDocuments.find(d => d.fileName === sb.location.uri.fsPath);
                     const startOffset = doc ? doc.offsetAt(sb.location.range.start) : 0;
 
                     // Check if this breakpoint is in our current code.
