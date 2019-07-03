@@ -1,8 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { Event, Terminal, Uri } from 'vscode';
 
+'use strict';
+
+import { Event, Terminal, Uri } from 'vscode';
 import { PythonInterpreter } from '../../interpreter/contracts';
+import { IEventNamePropertyMapping } from '../../telemetry/index';
 import { Resource } from '../types';
 
 export enum TerminalActivationProviders {
@@ -78,13 +81,7 @@ export interface ITerminalActivationHandler {
     handleActivation(terminal: Terminal, resource: Uri | undefined, preserveFocus: boolean, activated: boolean): Promise<void>;
 }
 
-export type ShellIdentificationTelemetry = {
-    failed: boolean;
-    terminalProvided: boolean;
-    shellIdentificationSource: 'terminalName' | 'settings' | 'environment' | 'default';
-    hasCustomShell: undefined | boolean;
-    hasShellInEnv: undefined | boolean;
-};
+export type ShellIdentificationTelemetry = IEventNamePropertyMapping['TERMINAL_SHELL_IDENTIFICATION'];
 
 export const IShellDetector = Symbol('IShellDetector');
 /**
