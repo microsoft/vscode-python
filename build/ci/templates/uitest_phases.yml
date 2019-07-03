@@ -107,12 +107,12 @@ steps:
     #       verbose: true
     #       customCommand: "install -g npm@$(NpmVersion)"
 
-    - task: 1ESLighthouseEng.PipelineArtifactCaching.RestoreCacheV1.RestoreCache@1
-      inputs:
-          keyfile: 'package-lock.json'
-          targetfolder: 'node_modules'
-          vstsFeed: '$(ArtifactFeed)'
-          platformIndependent: true
+    # - task: 1ESLighthouseEng.PipelineArtifactCaching.RestoreCacheV1.RestoreCache@1
+    #   inputs:
+    #       keyfile: 'package-lock.json'
+    #       targetfolder: 'node_modules'
+    #       vstsFeed: '$(ArtifactFeed)'
+    #       platformIndependent: true
 
     - task: Npm@1
       displayName: "npm ci"
@@ -120,13 +120,13 @@ steps:
           command: custom
           verbose: true
           customCommand: ci
-      condition: ne(variables['CacheRestored'], 'true')
+    #   condition: ne(variables['CacheRestored'], 'true')
 
-    - task: 1ESLighthouseEng.PipelineArtifactCaching.SaveCacheV1.SaveCache@1
-      inputs:
-          keyfile: 'package-lock.json'
-          targetfolder: 'node_modules'
-          vstsFeed: '$(ArtifactFeed)'
+    # - task: 1ESLighthouseEng.PipelineArtifactCaching.SaveCacheV1.SaveCache@1
+    #   inputs:
+    #       keyfile: 'package-lock.json'
+    #       targetfolder: 'node_modules'
+    #       vstsFeed: '$(ArtifactFeed)'
 
     - bash: |
           echo AVAILABLE DEPENDENCY VERSIONS
