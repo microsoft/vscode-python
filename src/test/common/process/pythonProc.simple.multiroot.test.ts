@@ -21,8 +21,9 @@ import { PathUtils } from '../../../client/common/platform/pathUtils';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { CurrentProcess } from '../../../client/common/process/currentProcess';
+import { ProcessLogger } from '../../../client/common/process/logger';
 import { registerTypes as processRegisterTypes } from '../../../client/common/process/serviceRegistry';
-import { IPythonExecutionFactory, StdErrError } from '../../../client/common/process/types';
+import { IProcessLogger, IPythonExecutionFactory, StdErrError } from '../../../client/common/process/types';
 import {
     IConfigurationService, ICurrentProcess,
     IDisposableRegistry, IPathUtils, IsWindows
@@ -86,6 +87,7 @@ suite('PythonExecutableService', () => {
         serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
         serviceManager.addSingleton<IInterpreterAutoSelectionService>(IInterpreterAutoSelectionService, MockAutoSelectionService);
         serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(IInterpreterAutoSeletionProxyService, MockAutoSelectionService);
+        serviceManager.addSingleton<IProcessLogger>(IProcessLogger, ProcessLogger);
         processRegisterTypes(serviceManager);
         variablesRegisterTypes(serviceManager);
 
