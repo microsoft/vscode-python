@@ -395,7 +395,6 @@ suite('Debugging - Config Resolver Launch', () => {
         const workspacePath = path.join('usr', 'development', 'wksp1');
         const pythonPath = path.join(workspacePath, 'env', 'bin', 'python');
         const pyramidFilePath = path.join(path.dirname(pythonPath), 'lib', 'site_packages', 'pyramid', '__init__.py');
-        const pserveFilePath = path.join(path.dirname(pyramidFilePath), 'scripts', 'pserve.py');
         const args = ['-c', 'import pyramid;print(pyramid.__file__)'];
         const workspaceFolder = createMoqWorkspaceFolder(workspacePath);
         const pythonFile = 'xyz.py';
@@ -412,9 +411,6 @@ suite('Debugging - Config Resolver Launch', () => {
                 .returns(() => Promise.reject('No Module Available'))
                 .verifiable(TypeMoq.Times.exactly(addPyramidDebugOption ? 1 : 0));
         }
-        fileSystem.setup(f => f.fileExists(TypeMoq.It.isValue(pserveFilePath)))
-            .returns(() => Promise.resolve(pyramidExists))
-            .verifiable(TypeMoq.Times.exactly(pyramidExists && addPyramidDebugOption ? 1 : 0));
         appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.exactly(pyramidExists || !addPyramidDebugOption ? 0 : 1));
@@ -422,12 +418,8 @@ suite('Debugging - Config Resolver Launch', () => {
 
         const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, options as any as DebugConfiguration);
         if (shouldWork) {
-            expect(debugConfig).to.have.property('program', pserveFilePath);
-
             expect(debugConfig).to.have.property('debugOptions');
             expect((debugConfig as any).debugOptions).contains(DebugOptions.Jinja);
-        } else {
-            expect(debugConfig!.program).to.be.not.equal(pserveFilePath);
         }
         pythonExecutionService.verifyAll();
         fileSystem.verifyAll();
