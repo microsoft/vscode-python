@@ -106,6 +106,8 @@ durations.codeLoadingTime = stopWatch.elapsedTime;
 const activationDeferred = createDeferred<void>();
 let activatedServiceContainer: ServiceContainer | undefined;
 
+export const MULTILINE_SEPARATOR_INDENT_REGEX = /^(?!\s+\\)[^#\n]+\\$/;
+
 export async function activate(context: ExtensionContext): Promise<IExtensionApi> {
     try {
         return await activateUnsafe(context);
@@ -177,7 +179,7 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
                 action: { indentAction: IndentAction.Indent }
             },
             {
-                beforeText: /^(?!\s+\\)[^#\n]+\\$/,
+                beforeText: MULTILINE_SEPARATOR_INDENT_REGEX,
                 action: { indentAction: IndentAction.Indent }
             },
             {

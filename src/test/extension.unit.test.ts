@@ -6,10 +6,17 @@
 // tslint:disable:no-any
 
 import { expect } from 'chai';
+import * as sinon from 'sinon';
 import { buildApi } from '../client/api';
 import { EXTENSION_ROOT_DIR } from '../client/common/constants';
 
 const expectedPath = `${EXTENSION_ROOT_DIR.fileToCommandArgument()}/pythonFiles/ptvsd_launcher.py`;
+
+// Stub sourceMapSupport.initialize before we import from extension.ts (we don't actually need it)
+// tslint:disable-next-line: no-require-imports no-var-requires
+const sourceMapSupport = require('../client/sourceMapSupport');
+sinon.stub(sourceMapSupport, 'initialize');
+import { MULTILINE_SEPARATOR_INDENT_REGEX } from '../client/extension';
 
 suite('Extension API Debugger', () => {
     test('Test debug launcher args (no-wait)', async () => {
@@ -21,5 +28,18 @@ suite('Extension API Debugger', () => {
         const args = await buildApi(Promise.resolve()).debug.getRemoteLauncherCommand('something', 1234, true);
         const expectedArgs = [expectedPath, '--default', '--host', 'something', '--port', '1234', '--wait'];
         expect(args).to.be.deep.equal(expectedArgs);
+    });
+    test('Multiline separator indent regex should not pick up strings with no multiline separator', async () => {
+        const matches = 'test string'.match(MULTILINE_SEPARATOR_INDENT_REGEX);
+        expect(matches).to.be.equal(null, 'Multiline separator indent regex for regular strings should not have matches');
+    });
+    test('Multiline separator indent regex should not pick up strings with escaped characters', async () => {
+        const matches = '\t test \n'.match(MULTILINE_SEPARATOR_INDENT_REGEX);
+        expect(matches).to.be.equal(null, 'Multiline separator indent regex for strings with escaped characters should not have matches');
+    });
+    test('Multiline separator indent regex should pick up strings ending with a multiline separator', async () => {
+        const matches = 'test \\'.match(MULTILINE_SEPARATOR_INDENT_REGEX);
+        expect(matches).to.not.be.equal(null, 'Multiline separator indent regex for strings with newline separator should have matches');
+        expect(matches!.length).to.equal(1);
     });
 });
