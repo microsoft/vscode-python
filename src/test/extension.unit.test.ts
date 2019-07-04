@@ -30,16 +30,15 @@ suite('Extension API Debugger', () => {
         expect(args).to.be.deep.equal(expectedArgs);
     });
     test('Multiline separator indent regex should not pick up strings with no multiline separator', async () => {
-        const matches = 'test string'.match(MULTILINE_SEPARATOR_INDENT_REGEX);
-        expect(matches).to.be.equal(null, 'Multiline separator indent regex for regular strings should not have matches');
+        const result = MULTILINE_SEPARATOR_INDENT_REGEX.test('a = "test"');
+        expect (result).to.be.equal(false, 'Multiline separator indent regex for regular strings should not have matches');
     });
     test('Multiline separator indent regex should not pick up strings with escaped characters', async () => {
-        const matches = '\t test \n'.match(MULTILINE_SEPARATOR_INDENT_REGEX);
-        expect(matches).to.be.equal(null, 'Multiline separator indent regex for strings with escaped characters should not have matches');
+        const result = MULTILINE_SEPARATOR_INDENT_REGEX.test('a = \'hello \\n\'');
+        expect (result).to.be.equal(false, 'Multiline separator indent regex for strings with escaped characters should not have matches');
     });
     test('Multiline separator indent regex should pick up strings ending with a multiline separator', async () => {
-        const matches = 'test \\'.match(MULTILINE_SEPARATOR_INDENT_REGEX);
-        expect(matches).to.not.be.equal(null, 'Multiline separator indent regex for strings with newline separator should have matches');
-        expect(matches!.length).to.equal(1);
+        const result = MULTILINE_SEPARATOR_INDENT_REGEX.test('a = \'multiline \\');
+        expect (result).to.be.equal(true, 'Multiline separator indent regex for strings with newline separator should have matches');
     });
 });
