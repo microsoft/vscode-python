@@ -8,7 +8,6 @@
 import { expect } from 'chai';
 import * as typemoq from 'typemoq';
 import { DebuggerBanner } from '../../../client/debugger/extension/banner';
-import { ConfigurationProviderUtils } from '../../../client/debugger/extension/configuration/configurationProviderUtils';
 import { PythonDebugConfigurationService } from '../../../client/debugger/extension/configuration/debugConfigurationService';
 import { DjangoLaunchDebugConfigurationProvider } from '../../../client/debugger/extension/configuration/providers/djangoLaunch';
 import { FileLaunchDebugConfigurationProvider } from '../../../client/debugger/extension/configuration/providers/fileLaunch';
@@ -19,7 +18,7 @@ import { PyramidLaunchDebugConfigurationProvider } from '../../../client/debugge
 import { RemoteAttachDebugConfigurationProvider } from '../../../client/debugger/extension/configuration/providers/remoteAttach';
 import { AttachConfigurationResolver } from '../../../client/debugger/extension/configuration/resolvers/attach';
 import { LaunchConfigurationResolver } from '../../../client/debugger/extension/configuration/resolvers/launch';
-import { IConfigurationProviderUtils, IDebugConfigurationProviderFactory, IDebugConfigurationResolver } from '../../../client/debugger/extension/configuration/types';
+import { IDebugConfigurationProviderFactory, IDebugConfigurationResolver } from '../../../client/debugger/extension/configuration/types';
 import { ChildProcessAttachEventHandler } from '../../../client/debugger/extension/hooks/childProcessAttachHandler';
 import { ChildProcessAttachService } from '../../../client/debugger/extension/hooks/childProcessAttachService';
 import { IChildProcessAttachService, IDebugSessionEventHandlers } from '../../../client/debugger/extension/hooks/types';
@@ -33,7 +32,6 @@ suite('Debugging - Service Registry', () => {
 
         [
             [IDebugConfigurationService, PythonDebugConfigurationService],
-            [IConfigurationProviderUtils, ConfigurationProviderUtils],
             [IDebuggerBanner, DebuggerBanner],
             [IChildProcessAttachService, ChildProcessAttachService],
             [IDebugSessionEventHandlers, ChildProcessAttachEventHandler],

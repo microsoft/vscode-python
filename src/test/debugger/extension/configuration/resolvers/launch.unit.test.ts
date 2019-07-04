@@ -17,9 +17,7 @@ import { IFileSystem, IPlatformService } from '../../../../../client/common/plat
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../../../client/common/process/types';
 import { IConfigurationService, ILogger, IPythonSettings } from '../../../../../client/common/types';
 import { DebuggerTypeName } from '../../../../../client/debugger/constants';
-import { ConfigurationProviderUtils } from '../../../../../client/debugger/extension/configuration/configurationProviderUtils';
 import { LaunchConfigurationResolver } from '../../../../../client/debugger/extension/configuration/resolvers/launch';
-import { IConfigurationProviderUtils } from '../../../../../client/debugger/extension/configuration/types';
 import { DebugOptions, LaunchRequestArguments } from '../../../../../client/debugger/types';
 import { IInterpreterHelper } from '../../../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../../../client/ioc/types';
@@ -63,14 +61,11 @@ suite('Debugging - Config Resolver Launch', () => {
             .setup(h => h.validatePythonPath(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(true));
 
-        const configProviderUtils = new ConfigurationProviderUtils(factory.object, fileSystem.object, appShell.object);
-
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPythonExecutionFactory))).returns(() => factory.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService))).returns(() => confgService.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformService.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationProviderUtils))).returns(() => configProviderUtils);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILogger))).returns(() => logger.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterHelper))).returns(() => helper.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDiagnosticsService), TypeMoq.It.isValue(InvalidPythonPathInDebuggerServiceId))).returns(() => diagnosticsService.object);
@@ -83,7 +78,7 @@ suite('Debugging - Config Resolver Launch', () => {
         confgService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
         setupOs(isWindows, isMac, isLinux);
 
-        debugProvider = new LaunchConfigurationResolver(workspaceService.object, documentManager.object, configProviderUtils, diagnosticsService.object, platformService.object, confgService.object);
+        debugProvider = new LaunchConfigurationResolver(workspaceService.object, documentManager.object, diagnosticsService.object, platformService.object, confgService.object);
     }
     function setupActiveEditor(fileName: string | undefined, languageId: string) {
         if (fileName) {
