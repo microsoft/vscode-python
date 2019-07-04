@@ -394,23 +394,12 @@ suite('Debugging - Config Resolver Launch', () => {
     async function testPyramidConfiguration(isWindows: boolean, isLinux: boolean, isMac: boolean, addPyramidDebugOption: boolean = true, pyramidExists = true, shouldWork = true) {
         const workspacePath = path.join('usr', 'development', 'wksp1');
         const pythonPath = path.join(workspacePath, 'env', 'bin', 'python');
-        const pyramidFilePath = path.join(path.dirname(pythonPath), 'lib', 'site_packages', 'pyramid', '__init__.py');
-        const args = ['-c', 'import pyramid;print(pyramid.__file__)'];
         const workspaceFolder = createMoqWorkspaceFolder(workspacePath);
         const pythonFile = 'xyz.py';
 
         setupIoc(pythonPath, undefined, isWindows, isMac, isLinux);
         setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
-        if (pyramidExists) {
-            pythonExecutionService.setup(e => e.exec(TypeMoq.It.isValue(args), TypeMoq.It.isAny()))
-                .returns(() => Promise.resolve({ stdout: pyramidFilePath }))
-                .verifiable(TypeMoq.Times.exactly(addPyramidDebugOption ? 1 : 0));
-        } else {
-            pythonExecutionService.setup(e => e.exec(TypeMoq.It.isValue(args), TypeMoq.It.isAny()))
-                .returns(() => Promise.reject('No Module Available'))
-                .verifiable(TypeMoq.Times.exactly(addPyramidDebugOption ? 1 : 0));
-        }
         appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.exactly(pyramidExists || !addPyramidDebugOption ? 0 : 1));
