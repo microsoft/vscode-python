@@ -112,6 +112,9 @@ durations.codeLoadingTime = stopWatch.elapsedTime;
 const activationDeferred = createDeferred<void>();
 let activatedServiceContainer: ServiceContainer | undefined;
 
+export const INCREASE_INDENT_REGEX = /^\s*(?:def|class|for|if|elif|else|while|try|with|finally|except|async)\b.*:\s*/;
+export const DECREASE_INDENT_REGEX = /^\s*(?:elif|else)\b.*:\s*/;
+
 export async function activate(context: ExtensionContext): Promise<IExtensionApi> {
     try {
         return await activateUnsafe(context);
@@ -193,8 +196,8 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
             }
         ],
         indentationRules: {
-            increaseIndentPattern: /^\s*(?:def|class|for|if|elif|else|while|try|with|finally|except|async)\b.*:\s*/,
-            decreaseIndentPattern: /^\s*(?:elif|else)\b.*:\s*/
+            increaseIndentPattern: INCREASE_INDENT_REGEX,
+            decreaseIndentPattern: DECREASE_INDENT_REGEX
         }
     });
 
