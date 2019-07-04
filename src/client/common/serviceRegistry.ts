@@ -41,6 +41,8 @@ import { PersistentStateFactory } from './persistentState';
 import { IS_WINDOWS } from './platform/constants';
 import { PathUtils } from './platform/pathUtils';
 import { CurrentProcess } from './process/currentProcess';
+import { ProcessLogger } from './process/logger';
+import { IProcessLogger } from './process/types';
 import { TerminalActivator } from './terminal/activator';
 import { PowershellTerminalActivationFailedHandler } from './terminal/activator/powershellFailedHandler';
 import { Bash } from './terminal/environmentActivationProviders/bash';
@@ -94,6 +96,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ICommandManager>(ICommandManager, CommandManager);
     serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
     serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);
+    serviceManager.addSingleton<IProcessLogger>(IProcessLogger, ProcessLogger);
     serviceManager.addSingleton<IDocumentManager>(IDocumentManager, DocumentManager);
     serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);
     serviceManager.addSingleton<IDebugService>(IDebugService, DebugService);

@@ -38,6 +38,7 @@ import { PlotViewerProvider } from './plotting/plotViewerProvider';
 import { StatusProvider } from './statusProvider';
 import { ThemeFinder } from './themeFinder';
 import {
+    ICellHashListener,
     ICellHashProvider,
     ICodeCssGenerator,
     ICodeLensFactory,
@@ -56,6 +57,7 @@ import {
     IJupyterPasswordConnect,
     IJupyterSessionManager,
     IJupyterVariables,
+    INotebookExecutionLogger,
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
@@ -66,7 +68,7 @@ import {
 } from './types';
 
 // tslint:disable:no-any
-function wrapType(ctor: ClassType<any>) : ClassType<any> {
+function wrapType(ctor: ClassType<any>): ClassType<any> {
     return class extends ctor {
         constructor(...args: any[]) {
             const stopWatch = new StopWatch();
@@ -114,4 +116,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, wrapType(CodeLensFactory));
     serviceManager.addSingleton<ICellHashProvider>(ICellHashProvider, wrapType(CellHashProvider));
     serviceManager.addBinding(ICellHashProvider, IInteractiveWindowListener);
+    serviceManager.addBinding(ICellHashProvider, INotebookExecutionLogger);
+    serviceManager.addBinding(IJupyterDebugger, ICellHashListener);
 }

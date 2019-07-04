@@ -51,7 +51,7 @@ def restore_context():
 
     return deco_context
 
-
+@uitests.tools.trace
 @uitests.tools.retry((TimeoutError, WebDriverException), tries=5, delay=5)
 @uitests.tools.log_exceptions()
 def before_all(context):
@@ -61,10 +61,12 @@ def before_all(context):
     _start_and_clear(context, options)
 
 
+@uitests.tools.trace
 def after_all(context):
     _exit(context)
 
 
+@uitests.tools.trace
 def before_feature(context, feature):
     for scenario in feature.scenarios:
         # If we're working on a scenario, then don't retry.
@@ -86,6 +88,7 @@ def before_feature(context, feature):
             patch_scenario_with_autoretry(scenario, max_attempts=2)
 
 
+@uitests.tools.trace
 @uitests.tools.retry((PermissionError, FileNotFoundError), tries=2)
 @uitests.tools.log_exceptions()
 @restore_context()
@@ -141,6 +144,7 @@ def before_scenario(context, scenario):
     _dismiss_one_time_messages(context, retry_count=2)
 
 
+@uitests.tools.trace
 @uitests.tools.log_exceptions()
 @restore_context()
 def after_scenario(context, scenario):
@@ -195,12 +199,14 @@ def after_scenario(context, scenario):
     os.makedirs(context.options.logfiles_dir, exist_ok=True)
 
 
+@uitests.tools.trace
 @uitests.tools.log_exceptions()
 @restore_context()
 def before_step(context, step):
     logging.info("Before step")
 
 
+@uitests.tools.trace
 @uitests.tools.log_exceptions()
 @restore_context()
 def after_step(context, step):
@@ -253,12 +259,14 @@ def after_step(context, step):
             pass
 
 
+@uitests.tools.trace
 @restore_context()
 def _exit(context):
     uitests.vscode.application.exit(context)
     uitests.vscode.application.CONTEXT["driver"] = None
 
 
+@uitests.tools.trace
 def _start_and_clear(context, options):
     # Clear VS Code folders (do not let VSC save state).
     # During tests, this can be done as a step `When I load VSC for the first time`.
@@ -287,6 +295,7 @@ def _start_and_clear(context, options):
         raise
 
 
+@uitests.tools.trace
 def _dismiss_one_time_messages(context, retry_count=100, retry_interval=0.1):
     # Dismiss one time VSC messages.
     # Dismiss one time extension messages.

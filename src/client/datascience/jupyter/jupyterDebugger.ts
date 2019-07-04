@@ -4,17 +4,16 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
-import { DebugConfiguration, DebugSessionCustomEvent } from 'vscode';
+import { DebugConfiguration } from 'vscode';
 
 import { ICommandManager, IDebugService } from '../../common/application/types';
 import { traceInfo } from '../../common/logger';
 import { IConfigurationService } from '../../common/types';
-import { Deferred } from '../../common/utils/async';
 import { Identifiers } from '../constants';
 import {
     CellState,
     ICell,
-    ICellHashProvider,
+    ICellHashListener,
     IDebuggerConnectInfo,
     IFileHashes,
     IJupyterDebugger,
@@ -23,18 +22,13 @@ import {
 } from '../types';
 
 @injectable()
-export class JupyterDebugger implements IJupyterDebugger {
+export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     private connectInfo: IDebuggerConnectInfo | undefined;
-    private pendingSourceMapRequest : Deferred<void> | undefined;
-    private pendingSourceMapResponseCount: number = 0;
-
     constructor(
-            @inject(IConfigurationService) private configService: IConfigurationService,
-            @inject(ICellHashProvider) private hashProvider: ICellHashProvider,
-            @inject(ICommandManager) private commandManager: ICommandManager,
-            @inject(IDebugService) private debugService: IDebugService
-        ) {
-        this.debugService.onDidReceiveDebugSessionCustomEvent(this.onCustomEvent.bind(this));
+        @inject(IConfigurationService) private configService: IConfigurationService,
+        @inject(ICommandManager) private commandManager: ICommandManager,
+        @inject(IDebugService) private debugService: IDebugService
+    ) {
     }
 
     public async enableAttach(server: INotebookServer): Promise<void> {
@@ -49,6 +43,9 @@ export class JupyterDebugger implements IJupyterDebugger {
 
         // Save our connection info to this server
         this.connectInfo = this.parseConnectInfo(enableDebuggerResults);
+
+        // Force the debugger to update its list of breakpoints
+        this.debugService.removeBreakpoints([]);
     }
 
     public async startDebugging(server: INotebookServer): Promise<void> {
@@ -69,14 +66,11 @@ export class JupyterDebugger implements IJupyterDebugger {
 
             // Wait for attach before we turn on tracing and allow the code to run, if the IDE is already attached this is just a no-op
             // tslint:disable-next-line:no-multiline-string
-            await this.executeSilently(server, `import ptvsd\r\nptvsd.wait_for_attach()`);
-
-            // Send our initial set of file mappings
-            await this.updateDebuggerSourceMaps();
+            await this.executeSilently(server, `import ptvsd\nptvsd.wait_for_attach()`);
 
             // Then enable tracing
             // tslint:disable-next-line:no-multiline-string
-            await this.executeSilently(server, `from ptvsd import tracing\r\ntracing(True)`);
+            await this.executeSilently(server, `from ptvsd import tracing\ntracing(True)`);
         }
     }
 
@@ -84,39 +78,18 @@ export class JupyterDebugger implements IJupyterDebugger {
         traceInfo('stop debugging');
         // Disable tracing
         // tslint:disable-next-line:no-multiline-string
-        await this.executeSilently(server, `from ptvsd import tracing\r\ntracing(False)`);
+        await this.executeSilently(server, `from ptvsd import tracing\ntracing(False)`);
 
         // Stop our debugging UI session, no await as we just want it stopped
         this.commandManager.executeCommand('workbench.action.debug.stop');
     }
 
-    private onCustomEvent(e: DebugSessionCustomEvent) {
-        // See if we're waiting for the source map event to finish or not
-        if (this.pendingSourceMapRequest) {
-            switch (e.event){
-                case 'setPydevdSourceMapResponse':
-                    this.pendingSourceMapResponseCount = Math.max(0, this.pendingSourceMapResponseCount - 1);
-                    if (this.pendingSourceMapResponseCount === 0) {
-                        this.pendingSourceMapRequest.resolve();
-                    }
-                    break;
-
-                default:
-                    break;
-            }
-        }
-    }
-
-    private async updateDebuggerSourceMaps(): Promise<void> {
+    public async hashesUpdated(hashes: IFileHashes[]): Promise<void> {
         // Make sure that we have an active debugging session at this point
         if (this.debugService.activeDebugSession) {
-            const fileHashes = this.hashProvider.getHashes();
-
-            this.pendingSourceMapResponseCount = fileHashes.length;
-
-            fileHashes.forEach(async (fileHash) => {
-                await this.debugService.activeDebugSession!.customRequest('setPydevdSourceMap', this.buildSourceMap(fileHash));
-            });
+            await Promise.all(hashes.map((fileHash) => {
+                return this.debugService.activeDebugSession!.customRequest('setPydevdSourceMap', this.buildSourceMap(fileHash));
+            }));
         }
     }
 
@@ -127,8 +100,8 @@ export class JupyterDebugger implements IJupyterDebugger {
             return {
                 line: cellHash.line,
                 endLine: cellHash.endLine,
-                runtimeSource: { path: `<ipython-input-${cellHash.executionCount}-${cellHash.hash}>`},
-                runtimeLine: 1
+                runtimeSource: { path: `<ipython-input-${cellHash.executionCount}-${cellHash.hash}>` },
+                runtimeLine: cellHash.runtimeLine
             };
         });
 

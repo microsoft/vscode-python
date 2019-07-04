@@ -1,4 +1,4 @@
-@debugging @smoke
+@debugging
 Feature: Debugging
     Scenario: Debugging a python file without creating a launch configuration (with delays)
         Given the file ".vscode/launch.json" does not exist

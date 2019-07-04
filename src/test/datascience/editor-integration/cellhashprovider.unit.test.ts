@@ -5,10 +5,24 @@ import { assert } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { Position, Range } from 'vscode';
 
+import { IDebugService } from '../../../client/common/application/types';
 import { IConfigurationService, IDataScienceSettings, IPythonSettings } from '../../../client/common/types';
 import { CellHashProvider } from '../../../client/datascience/editor-integration/cellhashprovider';
-import { InteractiveWindowMessages, SysInfoReason } from '../../../client/datascience/interactive-window/interactiveWindowTypes';
+import {
+    InteractiveWindowMessages,
+    SysInfoReason
+} from '../../../client/datascience/interactive-window/interactiveWindowTypes';
+import { CellState, ICell, ICellHashListener, IFileHashes } from '../../../client/datascience/types';
 import { MockDocumentManager } from '../mockDocumentManager';
+
+class HashListener implements ICellHashListener {
+    public lastHashes: IFileHashes[] = [];
+
+    public async hashesUpdated(hashes: IFileHashes[]): Promise<void> {
+        this.lastHashes = hashes;
+    }
+
+}
 
 // tslint:disable-next-line: max-func-body-length
 suite('CellHashProvider Unit Tests', () => {
@@ -17,30 +31,53 @@ suite('CellHashProvider Unit Tests', () => {
     let configurationService: TypeMoq.IMock<IConfigurationService>;
     let dataScienceSettings: TypeMoq.IMock<IDataScienceSettings>;
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
-
+    let debugService: TypeMoq.IMock<IDebugService>;
+    const hashListener: HashListener = new HashListener();
     setup(() => {
         configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
         dataScienceSettings = TypeMoq.Mock.ofType<IDataScienceSettings>();
+        debugService = TypeMoq.Mock.ofType<IDebugService>();
         dataScienceSettings.setup(d => d.enabled).returns(() => true);
         pythonSettings.setup(p => p.datascience).returns(() => dataScienceSettings.object);
         configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
+        debugService.setup(d => d.activeDebugSession).returns(() => undefined);
         documentManager = new MockDocumentManager();
-        hashProvider = new CellHashProvider(documentManager, configurationService.object);
+        hashProvider = new CellHashProvider(documentManager, configurationService.object, debugService.object, [hashListener]);
     });
 
     function addSingleChange(file: string, range: Range, newText: string) {
         documentManager.changeDocument(file, [{ range, newText }]);
     }
 
-    test('Add a cell and edit it', () => {
+    function sendCode(code: string, line: number, file?: string): Promise<void> {
+        const cell: ICell = {
+            file: file ? file : 'foo.py',
+            line,
+            data: {
+                source: code,
+                cell_type: 'code',
+                metadata: {
+
+                },
+                outputs: [],
+                execution_count: 1
+            },
+            id: '1',
+            type: 'execute',
+            state: CellState.init
+        };
+        return hashProvider.preExecute(cell, false);
+    }
+
+    test('Add a cell and edit it', async () => {
         const file = '#%%\r\nprint("foo")\r\n#%%\r\nprint("bar")';
         const code = '#%%\r\nprint("bar")';
         // Create our document
         documentManager.addDocument(file, 'foo.py');
 
         // Add this code
-        hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code, file: 'foo.py', line: 2 });
+        await sendCode(code, 2);
 
         // We should have a single hash
         let hashes = hashProvider.getHashes();
@@ -64,14 +101,14 @@ suite('CellHashProvider Unit Tests', () => {
 
     });
 
-    test('Add a cell, delete it, and recreate it', () => {
+    test('Add a cell, delete it, and recreate it', async () => {
         const file = '#%%\r\nprint("foo")\r\n#%%\r\nprint("bar")';
         const code = '#%%\r\nprint("bar")';
         // Create our document
         documentManager.addDocument(file, 'foo.py');
 
         // Add this code
-        hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code, file: 'foo.py', line: 2 });
+        await sendCode(code, 2);
 
         // We should have a single hash
         let hashes = hashProvider.getHashes();
@@ -100,14 +137,14 @@ suite('CellHashProvider Unit Tests', () => {
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
     });
 
-    test('Delete code below', () => {
+    test('Delete code below', async () => {
         const file = '#%%\r\nprint("foo")\r\n#%%\r\nprint("bar")\r\n#%%\r\nprint("baz")';
         const code = '#%%\r\nprint("bar")';
         // Create our document
         documentManager.addDocument(file, 'foo.py');
 
         // Add this code
-        hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code, file: 'foo.py', line: 2 });
+        await sendCode(code, 2);
 
         // We should have a single hash
         let hashes = hashProvider.getHashes();
@@ -140,7 +177,7 @@ suite('CellHashProvider Unit Tests', () => {
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
     });
 
-    test('Modify code after sending twice', () => {
+    test('Modify code after sending twice', async () => {
         const file = '#%%\r\nprint("foo")\r\n#%%\r\nprint("bar")\r\n#%%\r\nprint("baz")';
         const code = '#%%\r\nprint("bar")';
         const thirdCell = '#%%\r\nprint ("bob")\r\nprint("baz")';
@@ -148,7 +185,7 @@ suite('CellHashProvider Unit Tests', () => {
         documentManager.addDocument(file, 'foo.py');
 
         // Add this code
-        hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code, file: 'foo.py', line: 2 });
+        await sendCode(code, 2);
 
         // We should have a single hash
         let hashes = hashProvider.getHashes();
@@ -162,7 +199,7 @@ suite('CellHashProvider Unit Tests', () => {
         addSingleChange('foo.py', new Range(new Position(5, 0), new Position(5, 0)), 'print ("bob")\r\n');
 
         // Send the third cell
-        hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code: thirdCell, file: 'foo.py', line: 4 });
+        await sendCode(thirdCell, 4);
 
         // Should be two hashes
         hashes = hashProvider.getHashes();
@@ -190,7 +227,7 @@ suite('CellHashProvider Unit Tests', () => {
         assert.equal(hashes[0].hashes[1].executionCount, 2, 'Wrong execution count');
     });
 
-    test('Run same cell twice', () => {
+    test('Run same cell twice', async () => {
         const file = '#%%\r\nprint("foo")\r\n#%%\r\nprint("bar")\r\n#%%\r\nprint("baz")';
         const code = '#%%\r\nprint("bar")';
         const thirdCell = '#%%\r\nprint ("bob")\r\nprint("baz")';
@@ -199,13 +236,13 @@ suite('CellHashProvider Unit Tests', () => {
         documentManager.addDocument(file, 'foo.py');
 
         // Add this code
-        hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code, file: 'foo.py', line: 2 });
+        await sendCode(code, 2);
 
         // Add a second cell
-        hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code: thirdCell, file: 'foo.py', line: 4 });
+        await sendCode(thirdCell, 4);
 
         // Add this code a second time
-        hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code, file: 'foo.py', line: 2 });
+        await sendCode(code, 2);
 
         // Execution count should go up, but still only have two cells.
         const hashes = hashProvider.getHashes();
@@ -219,7 +256,7 @@ suite('CellHashProvider Unit Tests', () => {
         assert.equal(hashes[0].hashes[1].executionCount, 2, 'Wrong execution count');
     });
 
-    test('Two files with same cells', () => {
+    test('Two files with same cells', async () => {
         const file1 = '#%%\r\nprint("foo")\r\n#%%\r\nprint("bar")\r\n#%%\r\nprint("baz")';
         const file2 = file1;
         const code = '#%%\r\nprint("bar")';
@@ -230,14 +267,14 @@ suite('CellHashProvider Unit Tests', () => {
         documentManager.addDocument(file2, 'bar.py');
 
         // Add this code
-        hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code, file: 'foo.py', line: 2 });
-        hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code, file: 'bar.py', line: 2 });
+        await sendCode(code, 2);
+        await sendCode(code, 2, 'bar.py');
 
         // Add a second cell
-        hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code: thirdCell, file: 'foo.py', line: 4 });
+        await sendCode(thirdCell, 4);
 
         // Add this code a second time
-        hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code, file: 'foo.py', line: 2 });
+        await sendCode(code, 2);
 
         // Execution count should go up, but still only have two cells.
         const hashes = hashProvider.getHashes();
@@ -259,7 +296,7 @@ suite('CellHashProvider Unit Tests', () => {
         assert.equal(barHash!.hashes[0].executionCount, 2, 'Wrong execution count');
     });
 
-    test('Delete cell with dupes in code, put cell back', () => {
+    test('Delete cell with dupes in code, put cell back', async () => {
         const file = '#%%\r\nprint("foo")\r\n#%%\r\nprint("foo")\r\n#%%\r\nprint("bar")\r\n#%%\r\nprint("baz")';
         const code = '#%%\r\nprint("foo")';
 
@@ -267,7 +304,7 @@ suite('CellHashProvider Unit Tests', () => {
         documentManager.addDocument(file, 'foo.py');
 
         // Add this code
-        hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code, file: 'foo.py', line: 2 });
+        await sendCode(code, 2);
 
         // We should have a single hash
         let hashes = hashProvider.getHashes();
@@ -313,14 +350,14 @@ suite('CellHashProvider Unit Tests', () => {
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
     });
 
-    test('Add a cell and edit different parts of it', () => {
+    test('Add a cell and edit different parts of it', async () => {
         const file = '#%%\r\nprint("foo")\r\n#%%\r\nprint("bar")';
         const code = '#%%\r\nprint("bar")';
         // Create our document
         documentManager.addDocument(file, 'foo.py');
 
         // Add this code
-        hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code, file: 'foo.py', line: 2 });
+        await sendCode(code, 2);
 
         // We should have a single hash
         const hashes = hashProvider.getHashes();
@@ -357,14 +394,14 @@ suite('CellHashProvider Unit Tests', () => {
         assert.equal(hashProvider.getHashes().length, 1, 'Cell should be back');
     });
 
-    test('Add a cell and edit it to be exactly the same', () => {
+    test('Add a cell and edit it to be exactly the same', async () => {
         const file = '#%%\r\nprint("foo")\r\n#%%\r\nprint("bar")';
         const code = '#%%\r\nprint("bar")';
         // Create our document
         documentManager.addDocument(file, 'foo.py');
 
         // Add this code
-        hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code, file: 'foo.py', line: 2 });
+        await sendCode(code, 2);
 
         // We should have a single hash
         let hashes = hashProvider.getHashes();
@@ -385,7 +422,7 @@ suite('CellHashProvider Unit Tests', () => {
         assert.equal(hashProvider.getHashes().length, 1, 'Cell should be back');
     });
 
-    test('Add a cell and edit it to not be exactly the same', () => {
+    test('Add a cell and edit it to not be exactly the same', async () => {
         const file = '#%%\r\nprint("foo")\r\n#%%\r\nprint("bar")';
         const file2 = '#%%\r\nprint("fooze")\r\n#%%\r\nprint("bar")';
         const code = '#%%\r\nprint("bar")';
@@ -393,7 +430,7 @@ suite('CellHashProvider Unit Tests', () => {
         documentManager.addDocument(file, 'foo.py');
 
         // Add this code
-        hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code, file: 'foo.py', line: 2 });
+        await sendCode(code, 2);
 
         // We should have a single hash
         let hashes = hashProvider.getHashes();
@@ -418,14 +455,14 @@ suite('CellHashProvider Unit Tests', () => {
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
     });
 
-    test('Apply multiple edits at once', () => {
+    test('Apply multiple edits at once', async () => {
         const file = '#%%\r\nprint("foo")\r\n#%%\r\nprint("bar")';
         const code = '#%%\r\nprint("bar")';
         // Create our document
         documentManager.addDocument(file, 'foo.py');
 
         // Add this code
-        hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code, file: 'foo.py', line: 2 });
+        await sendCode(code, 2);
 
         // We should have a single hash
         let hashes = hashProvider.getHashes();
@@ -437,16 +474,16 @@ suite('CellHashProvider Unit Tests', () => {
 
         // Apply a couple of edits at once
         documentManager.changeDocument('foo.py',
-        [
-            {
-                range: new Range(new Position(0, 0), new Position(0, 0)),
-                newText: '#%%\r\nprint("new cell")\r\n'
-            },
-            {
-                range: new Range(new Position(0, 0), new Position(0, 0)),
-                newText: '#%%\r\nprint("new cell")\r\n'
-            }
-        ]);
+            [
+                {
+                    range: new Range(new Position(0, 0), new Position(0, 0)),
+                    newText: '#%%\r\nprint("new cell")\r\n'
+                },
+                {
+                    range: new Range(new Position(0, 0), new Position(0, 0)),
+                    newText: '#%%\r\nprint("new cell")\r\n'
+                }
+            ]);
         hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
@@ -455,16 +492,16 @@ suite('CellHashProvider Unit Tests', () => {
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
 
         documentManager.changeDocument('foo.py',
-        [
-            {
-                range: new Range(new Position(0, 0), new Position(0, 0)),
-                newText: '#%%\r\nprint("new cell")\r\n'
-            },
-            {
-                range: new Range(new Position(0, 0), new Position(1, 19)),
-                newText: ''
-            }
-        ]);
+            [
+                {
+                    range: new Range(new Position(0, 0), new Position(0, 0)),
+                    newText: '#%%\r\nprint("new cell")\r\n'
+                },
+                {
+                    range: new Range(new Position(0, 0), new Position(1, 19)),
+                    newText: ''
+                }
+            ]);
         hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
@@ -474,14 +511,14 @@ suite('CellHashProvider Unit Tests', () => {
 
     });
 
-    test('Restart kernel', () => {
+    test('Restart kernel', async () => {
         const file = '#%%\r\nprint("foo")\r\n#%%\r\nprint("bar")';
         const code = '#%%\r\nprint("bar")';
         // Create our document
         documentManager.addDocument(file, 'foo.py');
 
         // Add this code
-        hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code, file: 'foo.py', line: 2 });
+        await sendCode(code, 2);
 
         // We should have a single hash
         let hashes = hashProvider.getHashes();
@@ -498,13 +535,13 @@ suite('CellHashProvider Unit Tests', () => {
         assert.equal(hashes.length, 0, 'Restart should have cleared');
     });
 
-    test('More than one cell in range', () => {
+    test('More than one cell in range', async () => {
         const file = '#%%\r\nprint("foo")\r\n#%%\r\nprint("bar")';
         // Create our document
         documentManager.addDocument(file, 'foo.py');
 
         // Add this code
-        hashProvider.onMessage(InteractiveWindowMessages.RemoteAddCode, { code: file, file: 'foo.py', line: 0 });
+        await sendCode(file, 0);
 
         // We should have a single hash
         const hashes = hashProvider.getHashes();

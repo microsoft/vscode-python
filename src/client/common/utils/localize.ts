@@ -63,6 +63,10 @@ export namespace Interpreters {
     export const selectInterpreterTip = localize('Interpreters.selectInterpreterTip', 'Tip: you can change the Python interpreter used by the Python extension by clicking on the Python version in the status bar');
 }
 
+export namespace Logging {
+    export const currentWorkingDirectory = localize('Logging.CurrentWorkingDirectory', 'cwd:');
+}
+
 export namespace Linters {
     export const enableLinter = localize('Linter.enableLinter', 'Enable {0}');
     export const enablePylint = localize('Linter.enablePylint', 'You have a pylintrc file in your workspace. Do you want to enable pylint?');

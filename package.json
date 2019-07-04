@@ -1361,6 +1361,12 @@
                     "description": "Path to ptsvd experimental bits for debugging cells.",
                     "scope": "resource"
                 },
+                "python.dataScience.stopOnFirstLineWhileDebugging": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "When debugging a cell, stop on the first line if no other breakpoints in the current cell.",
+                    "scope": "resource"
+                },
                 "python.disableInstallationCheck": {
                     "type": "boolean",
                     "default": false,
@@ -2220,7 +2226,6 @@
         "testSingleWorkspace": "node ./out/test/testBootstrap.js ./out/test/standardTest.js",
         "testMultiWorkspace": "node ./out/test/testBootstrap.js ./out/test/multiRootTest.js",
         "testPerformance": "node ./out/test/testBootstrap.js ./out/test/performanceTest.js",
-        "testSmoke": "node ./out/test/smokeTest.js",
         "lint-staged": "node gulpfile.js",
         "lint": "tslint src/**/*.ts -t verbose",
         "clean": "gulp clean",

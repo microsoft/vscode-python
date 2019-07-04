@@ -21,7 +21,8 @@ import { PathUtils } from '../../client/common/platform/pathUtils';
 import { PlatformService } from '../../client/common/platform/platformService';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { CurrentProcess } from '../../client/common/process/currentProcess';
-import { IProcessServiceFactory, IPythonExecutionFactory } from '../../client/common/process/types';
+import { ProcessLogger } from '../../client/common/process/logger';
+import { IProcessLogger, IProcessServiceFactory, IPythonExecutionFactory } from '../../client/common/process/types';
 import { TerminalHelper } from '../../client/common/terminal/helper';
 import { ITerminalHelper, ITerminalService, ITerminalServiceFactory } from '../../client/common/terminal/types';
 import { IConfigurationService, ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IPythonSettings, IsWindows } from '../../client/common/types';
@@ -82,6 +83,7 @@ suite('Module Installer', () => {
 
             ioc.serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
             ioc.serviceManager.addSingleton<ILogger>(ILogger, Logger);
+            ioc.serviceManager.addSingleton<IProcessLogger>(IProcessLogger, ProcessLogger);
             ioc.serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);
 
             mockTerminalService = TypeMoq.Mock.ofType<ITerminalService>();

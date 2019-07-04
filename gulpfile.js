@@ -115,9 +115,19 @@ gulp.task('compile-webviews', async () =>
 );
 
 gulp.task('webpack', async () => {
+    // Build node_modules and DS stuff.
     await buildWebPack('production', []);
-    await buildWebPack('extension', ['--config', './build/webpack/webpack.extension.config.js']);
-    await buildWebPack('debugAdapter', ['--config', './build/webpack/webpack.debugadapter.config.js']);
+    // Run both in parallel, for faster process on CI.
+    // Yes, console would print output from both, that's ok, we have a faster CI.
+    // If things fail, we can run locally separately.
+    if (isCI) {
+        const buildExtension = buildWebPack('extension', ['--config', './build/webpack/webpack.extension.config.js']);
+        const buildDebugAdapter = buildWebPack('debugAdapter', ['--config', './build/webpack/webpack.debugadapter.config.js']);
+        await Promise.all([buildExtension, buildDebugAdapter]);
+    } else {
+        await buildWebPack('extension', ['--config', './build/webpack/webpack.extension.config.js']);
+        await buildWebPack('debugAdapter', ['--config', './build/webpack/webpack.debugadapter.config.js']);
+    }
 });
 
 gulp.task('updateBuildNumber', async () => {
@@ -218,7 +228,7 @@ gulp.task('verifyBundle', async () => {
     }
 });
 
-gulp.task('prePublishBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'clean:cleanExceptTests', 'webpack', 'renameSourceMaps'));
+gulp.task('prePublishBundle', gulp.series('webpack', 'renameSourceMaps'));
 gulp.task('prePublishNonBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'compile-webviews'));
 
 gulp.task('installPythonLibs', async () => {

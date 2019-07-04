@@ -4,12 +4,12 @@
 
 import time
 
-from selenium.common import exceptions
 from selenium.webdriver.common.keys import Keys
 
 import uitests.tools
 
 from . import core
+from .selectors import get_selector
 
 QUICK_OPEN = "div.monaco-quick-open-widget"
 QUICK_OPEN_HIDDEN = 'div.monaco-quick-open-widget[aria-hidden="true"]'
@@ -98,7 +98,7 @@ def _open(context, value, **kwargs):
     for _ in range(retry, -1, -1):
         element = core.wait_for_element(
             context.driver,
-            ".part.statusbar .statusbar-item.left.statusbar-entry a[title='Py']",
+            get_selector("STATUS_BAR_SELECTOR", context.options.channel).format("Py"),
             timeout=timeout,
         )
         element.click()
