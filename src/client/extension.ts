@@ -119,7 +119,7 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
         return await activateUnsafe(context);
     } catch (ex) {
         handleError(ex);
-        throw ex; // re-raise
+        throw ex;  // re-raise
     }
 }
 
@@ -377,10 +377,10 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
     const usingUserDefinedInterpreter = hasUserDefinedPythonPath(mainWorkspaceUri, serviceContainer);
     const preferredWorkspaceInterpreter = getPreferredWorkspaceInterpreter(mainWorkspaceUri, serviceContainer);
     const usingGlobalInterpreter = isUsingGlobalInterpreterInWorkspace(settings.pythonPath, serviceContainer);
-    const usingAutoSelectedWorkspaceInterpreter = preferredWorkspaceInterpreter
-        ? settings.pythonPath === getPreferredWorkspaceInterpreter(mainWorkspaceUri, serviceContainer)
-        : false;
-    const hasPython3 = interpreters.filter(item => (item && item.version ? item.version.major === 3 : false)).length > 0;
+    const usingAutoSelectedWorkspaceInterpreter = preferredWorkspaceInterpreter ? settings.pythonPath === getPreferredWorkspaceInterpreter(mainWorkspaceUri, serviceContainer) : false;
+    const hasPython3 = interpreters
+        .filter(item => (item && item.version ? item.version.major === 3 : false))
+        .length > 0;
 
     return {
         condaVersion,
