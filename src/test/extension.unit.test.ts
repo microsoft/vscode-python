@@ -10,7 +10,8 @@ import * as sinon from 'sinon';
 import { buildApi } from '../client/api';
 import { EXTENSION_ROOT_DIR } from '../client/common/constants';
 
-// Stub sourceMapSupport.initialize before we import from extension.ts (we don't actually need it)
+// Stub sourceMapSupport.initialize before we import from extension.ts
+// (it's called at the top of the file but we don't need it here)
 // tslint:disable-next-line: no-require-imports no-var-requires
 const sourceMapSupport = require('../client/sourceMapSupport');
 sinon.stub(sourceMapSupport, 'initialize');
