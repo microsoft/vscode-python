@@ -9,9 +9,9 @@ import { traceDecorators } from '../logger';
 import { IPersistentStateFactory } from '../types';
 import { IExtensionChannelRule } from './types';
 
-const frequencyForDailyInsidersCheck = 1000 * 60 * 60 * 24; // One day.
-const frequencyForWeeklyInsidersCheck = 1000 * 60 * 60 * 24 * 7; // One week.
-const lastLookUpTimeKey = 'INSIDERS_LAST_LOOK_UP_TIME_KEY';
+export const frequencyForDailyInsidersCheck = 1000 * 60 * 60 * 24; // One day.
+export const frequencyForWeeklyInsidersCheck = 1000 * 60 * 60 * 24 * 7; // One week.
+export const lastLookUpTimeKey = 'INSIDERS_LAST_LOOK_UP_TIME_KEYx';
 
 @injectable()
 export class ExtensionStableChannelRule implements IExtensionChannelRule {

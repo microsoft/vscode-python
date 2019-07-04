@@ -7,6 +7,7 @@
 
 import { expect } from 'chai';
 import * as typemoq from 'typemoq';
+import { IExtensionActivationService } from '../../client/activation/types';
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { CommandManager } from '../../client/common/application/commandManager';
@@ -23,6 +24,11 @@ import { CryptoUtils } from '../../client/common/crypto';
 import { EditorUtils } from '../../client/common/editor';
 import { ExperimentsManager } from '../../client/common/experiments';
 import { FeatureDeprecationManager } from '../../client/common/featureDeprecationManager';
+import { ExtensionInsidersDailyChannelRule, ExtensionInsidersWeeklyChannelRule, ExtensionStableChannelRule } from '../../client/common/insidersBuild/downloadChannelRules';
+import { ExtensionChannelService } from '../../client/common/insidersBuild/downloadChannelService';
+import { InsidersExtensionPrompt } from '../../client/common/insidersBuild/insidersExtensionPrompt';
+import { InsidersExtensionService } from '../../client/common/insidersBuild/insidersExtensionService';
+import { ExtensionChannel, IExtensionChannelRule, IExtensionChannelService, IInsiderExtensionPrompt } from '../../client/common/insidersBuild/types';
 import { ProductInstaller } from '../../client/common/installer/productInstaller';
 import { LiveShareApi } from '../../client/common/liveshare/liveshare';
 import { Logger } from '../../client/common/logger';
@@ -99,7 +105,13 @@ suite('Common - Service Registry', () => {
             [IShellDetector, TerminalNameShellDetector],
             [IShellDetector, SettingsShellDetector],
             [IShellDetector, UserEnvironmentShellDetector],
-            [IShellDetector, VSCEnvironmentShellDetector]
+            [IShellDetector, VSCEnvironmentShellDetector],
+            [IInsiderExtensionPrompt, InsidersExtensionPrompt],
+            [IExtensionActivationService, InsidersExtensionService],
+            [IExtensionChannelService, ExtensionChannelService],
+            [IExtensionChannelRule, ExtensionStableChannelRule, ExtensionChannel.stable],
+            [IExtensionChannelRule, ExtensionInsidersDailyChannelRule, ExtensionChannel.daily],
+            [IExtensionChannelRule, ExtensionInsidersWeeklyChannelRule, ExtensionChannel.weekly]
         ].forEach(mapping => {
             if (mapping.length === 2) {
                 serviceManager

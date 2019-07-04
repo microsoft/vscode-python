@@ -42,7 +42,6 @@ import { DebugService } from './common/application/debugService';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from './common/application/types';
 import { Commands, isTestExecution, PYTHON, STANDARD_OUTPUT_CHANNEL } from './common/constants';
 import { registerTypes as registerDotNetTypes } from './common/dotnet/serviceRegistry';
-import { registerTypes as insidersBuildRegisterTypes } from './common/insidersBuild/serviceRegistry';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { traceError } from './common/logger';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
@@ -254,7 +253,6 @@ function registerServices(context: ExtensionContext, serviceManager: ServiceMana
     formattersRegisterTypes(serviceManager);
     platformRegisterTypes(serviceManager);
     installerRegisterTypes(serviceManager);
-    insidersBuildRegisterTypes(serviceManager);
     commonRegisterTerminalTypes(serviceManager);
     dataScienceRegisterTypes(serviceManager);
     debugConfigurationRegisterTypes(serviceManager);
