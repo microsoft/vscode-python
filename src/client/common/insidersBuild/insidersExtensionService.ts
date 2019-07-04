@@ -43,7 +43,7 @@ export class InsidersExtensionService implements IExtensionActivationService {
             return;
         }
         await buildInstaller.install();
-        if (downloadChannel !== 'Stable' && this.appEnvironment.channel === 'insiders') {
+        if (this.insidersPrompt.notificationPromptEnabled.value && downloadChannel !== 'Stable' && this.appEnvironment.channel === 'insiders') {
             return this.insidersPrompt.notifyToInstallInsider();
         }
         await this.insidersPrompt.promptToReload();

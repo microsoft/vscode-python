@@ -8,7 +8,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IApplicationShell, ICommandManager } from '../application/types';
 import { traceDecorators } from '../logger';
-import { IPersistentStateFactory } from '../types';
+import { IPersistentState, IPersistentStateFactory } from '../types';
 import { Common, ExtensionChannels } from '../utils/localize';
 import { noop } from '../utils/misc';
 import { ExtensionChannel, IExtensionChannelService, IInsiderExtensionPrompt } from './types';
@@ -16,28 +16,27 @@ import { ExtensionChannel, IExtensionChannelService, IInsiderExtensionPrompt } f
 const insidersPromptStateKey = 'INSIDERS_PROMPT_STATE_KEY';
 @injectable()
 export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
+    public readonly notificationPromptEnabled: IPersistentState<boolean>;
     private reloadPromptDisabled: boolean = false;
     constructor(
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IExtensionChannelService) private readonly insidersDownloadChannelService: IExtensionChannelService,
         @inject(ICommandManager) private readonly cmdManager: ICommandManager,
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory
-    ) { }
+    ) {
+        this.notificationPromptEnabled = this.persistentStateFactory.createGlobalPersistentState(insidersPromptStateKey, true);
+    }
 
     @traceDecorators.error('Error in prompting to install insiders')
     public async notifyToInstallInsider(): Promise<void> {
-        const notificationPromptEnabled = this.persistentStateFactory.createGlobalPersistentState(insidersPromptStateKey, true);
-        if (!notificationPromptEnabled.value) {
-            return;
-        }
         const prompts = [ExtensionChannels.useStable(), Common.reload()];
         const telemetrySelections: ['Use Stable', 'Reload'] = ['Use Stable', 'Reload'];
         const selection = await this.appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts);
         sendTelemetryEvent(EventName.INSIDERS_PROMPT, undefined, { selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined });
+        await this.notificationPromptEnabled.updateValue(false);
         if (!selection) {
             return;
         }
-        await notificationPromptEnabled.updateValue(false);
         this.reloadPromptDisabled = true;
         if (selection === ExtensionChannels.useStable()) {
             await this.insidersDownloadChannelService.updateChannel(ExtensionChannel.stable);

@@ -1,5 +1,6 @@
 import { Event } from 'vscode';
 import { IExtensionBuildInstaller } from '../installer/types';
+import { IPersistentState } from '../types';
 
 export const IExtensionChannelRule = Symbol('IExtensionChannelRule');
 export interface IExtensionChannelRule {
@@ -20,6 +21,7 @@ export interface IExtensionChannelService {
 
 export const IInsiderExtensionPrompt = Symbol('IInsiderExtensionPrompt');
 export interface IInsiderExtensionPrompt {
+    readonly notificationPromptEnabled: IPersistentState<boolean>;
     notifyToInstallInsider(): Promise<void>;
     promptToReload(): Promise<void>;
 }
