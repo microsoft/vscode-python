@@ -8,7 +8,7 @@ import { ConfigurationChangeEvent, ConfigurationTarget, Event, EventEmitter } fr
 import { IApplicationEnvironment, IWorkspaceService } from '../application/types';
 import { traceDecorators } from '../logger';
 import { IConfigurationService, IDisposable, IDisposableRegistry, IPythonSettings } from '../types';
-import { ExtensionChannels, IExtensionChannelService } from './types';
+import { ExtensionChannel, ExtensionChannels, IExtensionChannelService, IInsiderExtensionPrompt } from './types';
 
 export const insidersChannelSetting: keyof IPythonSettings = 'insidersChannel';
 
@@ -19,6 +19,7 @@ export class ExtensionChannelService implements IExtensionChannelService {
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
+        @inject(IInsiderExtensionPrompt) private readonly insidersPrompt: IInsiderExtensionPrompt,
         @inject(IDisposableRegistry) disposables: IDisposable[]
     ) {
         disposables.push(this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
@@ -29,7 +30,9 @@ export class ExtensionChannelService implements IExtensionChannelService {
             throw new Error(`WorkspaceConfiguration.inspect returns 'undefined' for setting 'python.${insidersChannelSetting}'`);
         }
         if (settings.globalValue === undefined) {
-            return this.appEnvironment.channel === 'insiders' ? 'InsidersWeekly' : 'Stable';
+            // If user has not been notified to install insiders yet, this is the first session
+            const isThisFirstSession = !this.insidersPrompt.hasUserBeenNotified.value;
+            return this.appEnvironment.channel === 'insiders' && isThisFirstSession ? ExtensionChannel.insidersDefaultForTheFirstSession : 'Stable';
         }
         return settings.globalValue;
     }

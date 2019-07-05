@@ -16,7 +16,7 @@ import { ExtensionChannel, IExtensionChannelService, IInsiderExtensionPrompt } f
 const insidersPromptStateKey = 'INSIDERS_PROMPT_STATE_KEY';
 @injectable()
 export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
-    public readonly notificationPromptEnabled: IPersistentState<boolean>;
+    public readonly hasUserBeenNotified: IPersistentState<boolean>;
     private reloadPromptDisabled: boolean = false;
     constructor(
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
@@ -24,7 +24,7 @@ export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
         @inject(ICommandManager) private readonly cmdManager: ICommandManager,
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory
     ) {
-        this.notificationPromptEnabled = this.persistentStateFactory.createGlobalPersistentState(insidersPromptStateKey, true);
+        this.hasUserBeenNotified = this.persistentStateFactory.createGlobalPersistentState(insidersPromptStateKey, false);
     }
 
     @traceDecorators.error('Error in prompting to install insiders')
@@ -33,15 +33,16 @@ export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
         const telemetrySelections: ['Use Stable', 'Reload'] = ['Use Stable', 'Reload'];
         const selection = await this.appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts);
         sendTelemetryEvent(EventName.INSIDERS_PROMPT, undefined, { selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined });
-        await this.notificationPromptEnabled.updateValue(false);
+        await this.hasUserBeenNotified.updateValue(true);
         if (!selection) {
-            return;
+            // Insiders is already installed, but the official default setting is still Stable. Update the setting to be in sync with what is installed.
+            return this.insidersDownloadChannelService.updateChannel(ExtensionChannel.insidersDefaultForTheFirstSession);
         }
         this.reloadPromptDisabled = true;
         if (selection === ExtensionChannels.useStable()) {
             await this.insidersDownloadChannelService.updateChannel(ExtensionChannel.stable);
         } else if (selection === Common.reload()) {
-            await this.insidersDownloadChannelService.updateChannel(ExtensionChannel.weekly);
+            await this.insidersDownloadChannelService.updateChannel(ExtensionChannel.insidersDefaultForTheFirstSession);
             this.cmdManager.executeCommand('workbench.action.reloadWindow').then(noop);
         }
     }

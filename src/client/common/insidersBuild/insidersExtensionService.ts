@@ -16,7 +16,7 @@ import { ExtensionChannels, IExtensionChannelRule, IExtensionChannelService, IIn
 export class InsidersExtensionService implements IExtensionActivationService {
     private activatedOnce: boolean = false;
     constructor(
-        @inject(IExtensionChannelService) private readonly insidersDownloadChannelService: IExtensionChannelService,
+        @inject(IExtensionChannelService) private readonly extensionChannelService: IExtensionChannelService,
         @inject(IInsiderExtensionPrompt) private readonly insidersPrompt: IInsiderExtensionPrompt,
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(ICommandManager) private readonly cmdManager: ICommandManager,
@@ -30,29 +30,31 @@ export class InsidersExtensionService implements IExtensionActivationService {
         }
         this.registerCommandsAndHandlers();
         this.activatedOnce = true;
-        const downloadChannel = this.insidersDownloadChannelService.channel;
-        const extensionChannel: Channel = downloadChannel === 'Stable' ? 'stable' : 'insiders';
-        this.handleChannel(downloadChannel, extensionChannel !== this.appEnvironment.extensionChannel).ignoreErrors();
+        const installChannel = this.extensionChannelService.channel;
+        const newExtensionChannel: Channel = installChannel === 'Stable' ? 'stable' : 'insiders';
+        this.handleChannel(installChannel, newExtensionChannel !== this.appEnvironment.extensionChannel).ignoreErrors();
     }
 
     @traceDecorators.error('Handling channel failed')
-    public async handleChannel(downloadChannel: ExtensionChannels, didChannelChange: boolean = false): Promise<void> {
-        const channelRule = this.serviceContainer.get<IExtensionChannelRule>(IExtensionChannelRule, downloadChannel);
+    public async handleChannel(installChannel: ExtensionChannels, didChannelChange: boolean = false): Promise<void> {
+        const channelRule = this.serviceContainer.get<IExtensionChannelRule>(IExtensionChannelRule, installChannel);
         const buildInstaller = await channelRule.getInstaller(didChannelChange);
         if (!buildInstaller) {
             return;
         }
         await buildInstaller.install();
-        if (this.insidersPrompt.notificationPromptEnabled.value && downloadChannel !== 'Stable' && this.appEnvironment.channel === 'insiders') {
-            return this.insidersPrompt.notifyToInstallInsider();
+        if (this.appEnvironment.channel === 'insiders' && installChannel !== 'Stable' && !this.insidersPrompt.hasUserBeenNotified.value) {
+            // If user is using VS Code Insiders, channel is `Insiders*` and user has not been notified, then notify user
+            await this.insidersPrompt.notifyToInstallInsider();
+        } else if (didChannelChange) {
+            await this.insidersPrompt.promptToReload();
         }
-        await this.insidersPrompt.promptToReload();
     }
 
     private registerCommandsAndHandlers(): void {
-        this.disposables.push(this.insidersDownloadChannelService.onDidChannelChange(channel => this.handleChannel(channel, true)));
-        this.disposables.push(this.cmdManager.registerCommand(Commands.SwitchToStable, () => this.insidersDownloadChannelService.updateChannel('Stable')));
-        this.disposables.push(this.cmdManager.registerCommand(Commands.SwitchToInsidersDaily, () => this.insidersDownloadChannelService.updateChannel('InsidersDaily')));
-        this.disposables.push(this.cmdManager.registerCommand(Commands.SwitchToInsidersWeekly, () => this.insidersDownloadChannelService.updateChannel('InsidersWeekly')));
+        this.disposables.push(this.extensionChannelService.onDidChannelChange(channel => this.handleChannel(channel, true)));
+        this.disposables.push(this.cmdManager.registerCommand(Commands.SwitchToStable, () => this.extensionChannelService.updateChannel('Stable')));
+        this.disposables.push(this.cmdManager.registerCommand(Commands.SwitchToInsidersDaily, () => this.extensionChannelService.updateChannel('InsidersDaily')));
+        this.disposables.push(this.cmdManager.registerCommand(Commands.SwitchToInsidersWeekly, () => this.extensionChannelService.updateChannel('InsidersWeekly')));
     }
 }

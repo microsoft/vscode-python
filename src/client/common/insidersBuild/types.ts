@@ -21,7 +21,11 @@ export interface IExtensionChannelService {
 
 export const IInsiderExtensionPrompt = Symbol('IInsiderExtensionPrompt');
 export interface IInsiderExtensionPrompt {
-    readonly notificationPromptEnabled: IPersistentState<boolean>;
+    /**
+     * Carries boolean `false` for the first session when user has not been notified.
+     * Gets updated to `true` once user has been prompted to install insiders.
+     */
+    readonly hasUserBeenNotified: IPersistentState<boolean>;
     notifyToInstallInsider(): Promise<void>;
     promptToReload(): Promise<void>;
 }
@@ -33,6 +37,9 @@ export enum ExtensionChannel {
     stable = 'Stable',
     weekly = 'InsidersWeekly',
     daily = 'InsidersDaily',
-    defaultForInsiders = 'InsidersWeekly'
+    /**
+     * The default value for insiders for the first session. The default value is `Stable` from the second session onwards
+     */
+    insidersDefaultForTheFirstSession = 'InsidersWeekly'
 }
 export type ExtensionChannels = 'Stable' | 'InsidersWeekly' | 'InsidersDaily';
