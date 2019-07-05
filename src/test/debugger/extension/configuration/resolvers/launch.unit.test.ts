@@ -391,56 +391,20 @@ suite('Debugging - Config Resolver Launch', () => {
     test('Test fixFilePathCase for Mac', async () => {
         await testFixFilePathCase(false, true, false);
     });
-    async function testPyramidConfiguration(isWindows: boolean, isLinux: boolean, isMac: boolean, addPyramidDebugOption: boolean = true, pyramidExists = true, shouldWork = true) {
+    test('Jinja added for Pyramid', async () => {
         const workspacePath = path.join('usr', 'development', 'wksp1');
         const pythonPath = path.join(workspacePath, 'env', 'bin', 'python');
         const workspaceFolder = createMoqWorkspaceFolder(workspacePath);
         const pythonFile = 'xyz.py';
 
-        setupIoc(pythonPath, undefined, isWindows, isMac, isLinux);
+        setupIoc(pythonPath, undefined, false, false, true);
         setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
-        appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(undefined))
-            .verifiable(TypeMoq.Times.exactly(pyramidExists || !addPyramidDebugOption ? 0 : 1));
-        const options = addPyramidDebugOption ? { debugOptions: [DebugOptions.Pyramid], pyramid: true } : {};
+        const options = { debugOptions: [DebugOptions.Pyramid], pyramid: true };
 
         const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, options as any as DebugConfiguration);
-        if (shouldWork) {
-            expect(debugConfig).to.have.property('debugOptions');
-            expect((debugConfig as any).debugOptions).contains(DebugOptions.Jinja);
-        }
-        pythonExecutionService.verifyAll();
-        fileSystem.verifyAll();
-        appShell.verifyAll();
-        logger.verifyAll();
-    }
-    test('Program is set for Pyramid (windows)', async () => {
-        await testPyramidConfiguration(true, false, false);
-    });
-    test('Program is set for Pyramid (Linux)', async () => {
-        await testPyramidConfiguration(false, true, false);
-    });
-    test('Program is set for Pyramid (Mac)', async () => {
-        await testPyramidConfiguration(false, false, true);
-    });
-    test('Program is not set for Pyramid when DebugOption is not set (windows)', async () => {
-        await testPyramidConfiguration(true, false, false, false, false, false);
-    });
-    test('Program is not set for Pyramid when DebugOption is not set (Linux)', async () => {
-        await testPyramidConfiguration(false, true, false, false, false, false);
-    });
-    test('Program is not set for Pyramid when DebugOption is not set (Mac)', async () => {
-        await testPyramidConfiguration(false, false, true, false, false, false);
-    });
-    test('Message is displayed when pyramid script does not exist (windows)', async () => {
-        await testPyramidConfiguration(true, false, false, true, false, false);
-    });
-    test('Message is displayed when pyramid script does not exist (Linux)', async () => {
-        await testPyramidConfiguration(false, true, false, true, false, false);
-    });
-    test('Message is displayed when pyramid script does not exist (Mac)', async () => {
-        await testPyramidConfiguration(false, false, true, true, false, false);
+        expect(debugConfig).to.have.property('debugOptions');
+        expect((debugConfig as any).debugOptions).contains(DebugOptions.Jinja);
     });
     test('Auto detect flask debugging', async () => {
         const pythonPath = `PythonPath_${new Date().toString()}`;
