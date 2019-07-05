@@ -49,9 +49,15 @@ import { RegistryImplementation } from '../../client/common/platform/registry';
 import { IPlatformService, IRegistry } from '../../client/common/platform/types';
 import { CurrentProcess } from '../../client/common/process/currentProcess';
 import { BufferDecoder } from '../../client/common/process/decoder';
+import { ProcessLogger } from '../../client/common/process/logger';
 import { ProcessServiceFactory } from '../../client/common/process/processFactory';
 import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
-import { IBufferDecoder, IProcessServiceFactory, IPythonExecutionFactory } from '../../client/common/process/types';
+import {
+    IBufferDecoder,
+    IProcessLogger,
+    IProcessServiceFactory,
+    IPythonExecutionFactory
+} from '../../client/common/process/types';
 import { Bash } from '../../client/common/terminal/environmentActivationProviders/bash';
 import { CommandPromptAndPowerShell } from '../../client/common/terminal/environmentActivationProviders/commandPrompt';
 import {
@@ -227,7 +233,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     public wrapperCreatedPromise: Deferred<boolean> | undefined;
     public postMessage: ((ev: MessageEvent) => void) | undefined;
     // tslint:disable-next-line:no-any
-    private missedMessages : any[] = [];
+    private missedMessages: any[] = [];
     private pythonSettings = new class extends PythonSettings {
         public fireChangeEvent() {
             this.changed.fire();
@@ -510,6 +516,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
             this.serviceManager.addSingleton<IJupyterSessionManager>(IJupyterSessionManager, JupyterSessionManager);
             this.serviceManager.addSingleton<IJupyterPasswordConnect>(IJupyterPasswordConnect, JupyterPasswordConnect);
+            this.serviceManager.addSingleton<IProcessLogger>(IProcessLogger, ProcessLogger);
         }
 
         if (this.serviceManager.get<IPlatformService>(IPlatformService).isWindows) {
@@ -552,23 +559,23 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         // Setup the webpanel provider so that it returns our dummy web panel. It will have to talk to our global JSDOM window so that the react components can link into it
         webPanelProvider.setup(p => p.create(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAny())).returns(
             (_viewColumn: ViewColumn, listener: IWebPanelMessageListener, _title: string, _script: string, _css: string) => {
-            // Keep track of the current listener. It listens to messages through the vscode api
-            this.webPanelListener = listener;
+                // Keep track of the current listener. It listens to messages through the vscode api
+                this.webPanelListener = listener;
 
-            // Send messages that were already posted but were missed.
-            // During normal operation, the react control will not be created before
-            // the webPanelListener
-            if (this.missedMessages.length && this.webPanelListener) {
-                this.missedMessages.forEach(m => this.webPanelListener ? this.webPanelListener.onMessage(m.type, m.payload) : noop());
+                // Send messages that were already posted but were missed.
+                // During normal operation, the react control will not be created before
+                // the webPanelListener
+                if (this.missedMessages.length && this.webPanelListener) {
+                    this.missedMessages.forEach(m => this.webPanelListener ? this.webPanelListener.onMessage(m.type, m.payload) : noop());
 
-                // Note, you might think we should clean up the messages. However since the mount only occurs once, we might
-                // create multiple webpanels with the same mount. We need to resend these messages to
-                // other webpanels that get created with the same mount.
-            }
+                    // Note, you might think we should clean up the messages. However since the mount only occurs once, we might
+                    // create multiple webpanels with the same mount. We need to resend these messages to
+                    // other webpanels that get created with the same mount.
+                }
 
-            // Return our dummy web panel
-            return webPanel.object;
-        });
+                // Return our dummy web panel
+                return webPanel.object;
+            });
         webPanel.setup(p => p.postMessage(TypeMoq.It.isAny())).callback((m: WebPanelMessage) => {
             const message = createMessageEvent(m);
             if (this.postMessage) {
@@ -605,7 +612,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.pythonSettings.pythonPath = newPath;
         this.pythonSettings.fireChangeEvent();
         this.configChangeEvent.fire({
-            affectsConfiguration(_s: string, _r?: Uri) : boolean {
+            affectsConfiguration(_s: string, _r?: Uri): boolean {
                 return true;
             }
         });
@@ -615,7 +622,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         return this.jupyterMock;
     }
 
-    public get<T>(serviceIdentifier: interfaces.ServiceIdentifier<T>, name?: string | number | symbol) : T {
+    public get<T>(serviceIdentifier: interfaces.ServiceIdentifier<T>, name?: string | number | symbol): T {
         return this.serviceManager.get<T>(serviceIdentifier, name);
     }
 
