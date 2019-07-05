@@ -10,11 +10,11 @@ import { traceDecorators } from '../logger';
 import { IConfigurationService, IDisposable, IDisposableRegistry, IPythonSettings } from '../types';
 import { ExtensionChannels, IExtensionChannelService } from './types';
 
-const insidersChannelSetting: keyof IPythonSettings = 'insidersChannel';
+export const insidersChannelSetting: keyof IPythonSettings = 'insidersChannel';
 
 @injectable()
 export class ExtensionChannelService implements IExtensionChannelService {
-    private readonly _onDidChannelChange: EventEmitter<ExtensionChannels> = new EventEmitter<ExtensionChannels>();
+    public _onDidChannelChange: EventEmitter<ExtensionChannels> = new EventEmitter<ExtensionChannels>();
     constructor(
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
@@ -43,7 +43,7 @@ export class ExtensionChannelService implements IExtensionChannelService {
         return this._onDidChannelChange.event;
     }
 
-    private async onDidChangeConfiguration(event: ConfigurationChangeEvent) {
+    public async onDidChangeConfiguration(event: ConfigurationChangeEvent) {
         if (event.affectsConfiguration(`python.${insidersChannelSetting}`)) {
             const settings = this.configService.getSettings();
             this._onDidChannelChange.fire(settings.insidersChannel);

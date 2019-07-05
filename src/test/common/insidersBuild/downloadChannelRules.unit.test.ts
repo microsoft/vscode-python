@@ -103,7 +103,6 @@ suite('Download channel rules - ExtensionInsidersWeeklyChannelRule', () => {
     let lastLookUpTime: TypeMoq.IMock<IPersistentState<number>>;
     let insidersDailyChannelRule: ExtensionInsidersWeeklyChannelRule;
     setup(() => {
-        // tslint:disable-next-line:no-any
         insidersInstaller = new InsidersBuildInstaller(undefined as any, undefined as any, undefined as any, undefined as any);
         persistentStateFactory = mock(PersistentStateFactory);
         lastLookUpTime = TypeMoq.Mock.ofType<IPersistentState<number>>();
