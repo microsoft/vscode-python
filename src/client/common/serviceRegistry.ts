@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { IHttpClient, IFileDownloader } from '../common/types';
+import { IFileDownloader, IHttpClient } from '../common/types';
 import { IServiceManager } from '../ioc/types';
 import { ImportTracker } from '../telemetry/importTracker';
 import { IImportTracker } from '../telemetry/types';
@@ -34,6 +34,7 @@ import { ProductInstaller } from './installer/productInstaller';
 import { LiveShareApi } from './liveshare/liveshare';
 import { Logger } from './logger';
 import { BrowserService } from './net/browser';
+import { FileDownloader } from './net/fileDownloader';
 import { HttpClient } from './net/httpClient';
 import { NugetService } from './nuget/nugetService';
 import { INugetService } from './nuget/types';
@@ -79,7 +80,6 @@ import {
 } from './types';
 import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStepInput';
 import { Random } from './utils/random';
-import { FileDownloader } from './net/fileDownloader';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);

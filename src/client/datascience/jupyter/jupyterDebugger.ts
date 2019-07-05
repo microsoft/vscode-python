@@ -7,7 +7,7 @@ import * as uuid from 'uuid/v4';
 import { DebugConfiguration } from 'vscode';
 
 import { ICommandManager, IDebugService } from '../../common/application/types';
-import { traceInfo } from '../../common/logger';
+import { traceInfo, traceWarning } from '../../common/logger';
 import { IConfigurationService } from '../../common/types';
 import { Identifiers } from '../constants';
 import {
@@ -66,7 +66,10 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
             // Wait for attach before we turn on tracing and allow the code to run, if the IDE is already attached this is just a no-op
             // tslint:disable-next-line:no-multiline-string
-            await this.executeSilently(server, `import ptvsd\nptvsd.wait_for_attach()`);
+            const importResults = await this.executeSilently(server, `import ptvsd\nptvsd.wait_for_attach()`);
+            if (importResults.length === 0 || importResults[0].state === CellState.error) {
+                traceWarning('PTVSD not found in path.');
+            }
 
             // Then enable tracing
             // tslint:disable-next-line:no-multiline-string
