@@ -6,28 +6,26 @@ import { mount } from 'enzyme';
 import * as React from 'react';
 import * as TypeMoq from 'typemoq';
 import { Disposable, Position, Range, Uri } from 'vscode';
-import { DebugClient } from 'vscode-debugadapter-testsupport';
 import * as vsls from 'vsls/vscode';
 
-import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
+import { IApplicationShell, IDebugService, IDocumentManager } from '../../client/common/application/types';
 import {
     InteractiveWindowMessageListener
 } from '../../client/datascience/interactive-window/interactiveWindowMessageListener';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-window/interactiveWindowTypes';
 import { IInteractiveWindow, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
-import { createDebugAdapter } from '../debugger/utils';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
+import { MockDebuggerService } from './mockDebugService';
 import { MockDocumentManager } from './mockDocumentManager';
 
-//tslint:disable:trailing-comma no-any no-multiline-string
 
 // tslint:disable-next-line:max-func-body-length no-any
 suite('DataScience Debugger tests', () => {
     const disposables: Disposable[] = [];
     let ioc: DataScienceIocContainer;
-    let debugAdapter: DebugClient;
     let lastErrorMessage : string | undefined;
+    let mockDebuggerService : MockDebuggerService | undefined;
 
     suiteSetup(function () {
         // Debugger tests require jupyter to run. Othewrise can't not really testing them
@@ -42,7 +40,7 @@ suite('DataScience Debugger tests', () => {
 
     setup(async () => {
         ioc = createContainer();
-        debugAdapter = await createDebugAdapter();
+        mockDebuggerService = ioc.serviceManager.get<IDebugService>(IDebugService) as MockDebuggerService;
     });
 
     teardown(async () => {
@@ -99,7 +97,7 @@ suite('DataScience Debugger tests', () => {
         return result;
     }
 
-    async function debugCell(code: string, breakpoint?: Range) : Promise<void> {
+    async function debugCell(code: string, _breakpoint?: Range) : Promise<void> {
         // Create a dummy document with just this code
         const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
         docManager.addDocument(code, 'foo.py');
@@ -107,18 +105,9 @@ suite('DataScience Debugger tests', () => {
         // Start the jupyter server
         const history = await getOrCreateInteractiveWindow();
 
-        // Add a breakpoint if necessary
-        if (breakpoint) {
-            await debugAdapter.setBreakpointsRequest({
-                lines: [breakpoint.start.line],
-                breakpoints: [{ line: breakpoint.start.line, column: breakpoint.start.character }],
-                source: { path: 'foo.py' }
-            });
-        }
-
         // Debug this code. We should either hit the breakpoint or stop on entry
         const done = history.debugCode(code, 'foo.py', 0, docManager.activeTextEditor);
-        const result = await Promise.race([done, debugAdapter.waitForEvent('breakpoint')]);
+        const result = await Promise.race([done, mockDebuggerService!.waitForBreakState()]);
         assert.ok(result, 'Debug event did not fire');
         assert.ok(!lastErrorMessage, `Error occurred ${lastErrorMessage}`);
         await done;

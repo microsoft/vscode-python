@@ -22,7 +22,6 @@ import {
 import * as vsls from 'vsls/vscode';
 
 import { ILanguageServer, ILanguageServerAnalysisOptions } from '../../client/activation/types';
-import { DebugService } from '../../client/common/application/debugService';
 import { TerminalManager } from '../../client/common/application/terminalManager';
 import {
     IApplicationShell,
@@ -218,6 +217,7 @@ import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
 import { MockCommandManager } from './mockCommandManager';
+import { MockDebuggerService } from './mockDebugService';
 import { MockDocumentManager } from './mockDocumentManager';
 import { MockExtensions } from './mockExtensions';
 import { MockJupyterManager, SupportedCommands } from './mockJupyterManager';
@@ -350,7 +350,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<ILanguageServer>(ILanguageServer, MockLanguageServer);
         this.serviceManager.addSingleton<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, MockLanguageServerAnalysisOptions);
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, DotNetIntellisenseProvider);
-        this.serviceManager.addSingleton<IDebugService>(IDebugService, DebugService);
+        this.serviceManager.addSingleton<IDebugService>(IDebugService, MockDebuggerService);
         this.serviceManager.addSingleton<ICellHashProvider>(ICellHashProvider, CellHashProvider);
         this.serviceManager.addBinding<ICellHashProvider, IInteractiveWindowListener>(ICellHashProvider, IInteractiveWindowListener);
         this.serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory);

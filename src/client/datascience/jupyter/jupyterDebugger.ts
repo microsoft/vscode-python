@@ -8,6 +8,7 @@ import { DebugConfiguration } from 'vscode';
 
 import { ICommandManager, IDebugService } from '../../common/application/types';
 import { traceInfo, traceWarning } from '../../common/logger';
+import { IPlatformService } from '../../common/platform/types';
 import { IConfigurationService } from '../../common/types';
 import { Identifiers } from '../constants';
 import {
@@ -27,7 +28,8 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     constructor(
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(ICommandManager) private commandManager: ICommandManager,
-        @inject(IDebugService) private debugService: IDebugService
+        @inject(IDebugService) private debugService: IDebugService,
+        @inject(IPlatformService) private platform: IPlatformService
     ) {
     }
 
@@ -37,8 +39,13 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         // Current version of ptvsd doesn't support the source map entries, so we need to have a custom copy
         // on disk somewhere. Append this location to our sys path.
         // tslint:disable-next-line:no-multiline-string
-        const extraPath = this.configService.getSettings().datascience.ptvsdDistPath;
-        await this.executeSilently(server, `import sys\r\nsys.path.append('${extraPath}')`);
+        let extraPath = this.configService.getSettings().datascience.ptvsdDistPath;
+        // Escape windows path chars so they end up in the source escaped
+        if (this.platform.isWindows && extraPath) {
+            extraPath = extraPath.replace('\\', '\\\\');
+        }
+        await this.executeSilently(server, `import sys\r\nsys.path.append('${extraPath}')\r\nsys.path`);
+
         // tslint:disable-next-line:no-multiline-string
         const enableDebuggerResults = await this.executeSilently(server, `import ptvsd\r\nptvsd.enable_attach(('localhost', 0))`);
 
@@ -60,7 +67,8 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                 type: 'python',
                 port: this.connectInfo.port,
                 host: this.connectInfo.hostName,
-                justMyCode: true
+                justMyCode: true,
+                logToFile: true
             };
 
             await this.debugService.startDebugging(undefined, config);
