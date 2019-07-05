@@ -37,7 +37,8 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         // Current version of ptvsd doesn't support the source map entries, so we need to have a custom copy
         // on disk somewhere. Append this location to our sys path.
         // tslint:disable-next-line:no-multiline-string
-        await this.executeSilently(server, `import sys\r\nsys.path.append('${this.configService.getSettings().datascience.ptvsdDistPath}')`);
+        const extraPath = this.configService.getSettings().datascience.ptvsdDistPath;
+        await this.executeSilently(server, `import sys\r\nsys.path.append('${extraPath}')`);
         // tslint:disable-next-line:no-multiline-string
         const enableDebuggerResults = await this.executeSilently(server, `import ptvsd\r\nptvsd.enable_attach(('localhost', 0))`);
 

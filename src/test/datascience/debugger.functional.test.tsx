@@ -16,7 +16,6 @@ import {
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-window/interactiveWindowTypes';
 import { IInteractiveWindow, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
-import { sleep } from '../common';
 import { createDebugAdapter } from '../debugger/utils';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { MockDocumentManager } from './mockDocumentManager';
@@ -119,7 +118,7 @@ suite('DataScience Debugger tests', () => {
 
         // Debug this code. We should either hit the breakpoint or stop on entry
         const done = history.debugCode(code, 'foo.py', 0, docManager.activeTextEditor);
-        const result = await Promise.race([debugAdapter.waitForEvent('breakpoint'), sleep(1000)]);
+        const result = await Promise.race([done, debugAdapter.waitForEvent('breakpoint')]);
         assert.ok(result, 'Debug event did not fire');
         assert.ok(!lastErrorMessage, `Error occurred ${lastErrorMessage}`);
         await done;
