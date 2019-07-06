@@ -220,7 +220,7 @@ def reload(context):
 
 
 def clear_everything(context):
-    """Clears everyting within VS Code, that could interfer with tests.
+    """Clears everything within VS Code, that could interfer with tests.
     E.g. close opened editors, dismiss all messages..
 
     """
@@ -247,7 +247,7 @@ def setup_workspace(context, source_repo=None):
     """
     logging.debug(f"Setting up workspace folder from {source_repo}")
 
-    # On windows, create a new folder everytime.
+    # On windows, create a new folder every time.
     # Deleting/reverting changes doesn't work too well.
     # We get a number of access denied errors (files are in use).
     try:

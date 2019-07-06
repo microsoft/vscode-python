@@ -25,7 +25,7 @@
 # 'testMultiWorkspace'
 # 'testDebugger'
 # 'testFunctional'
-# 'perfomanceTests'
+# 'testPerformance'
 # 'venvTests'
 
 steps:

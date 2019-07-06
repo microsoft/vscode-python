@@ -48,7 +48,7 @@ Here are the steps involved in running the tests:
     -   Each [feature](https://docs.cucumber.io/gherkin/reference/#feature) can have its own set of files in the form of a github repo.
     -   Just add a tag with the path of the github repo url to the `feature`.
     -   When starting the tests for a feature, the repo is downloaded into a new random directory `.vscode test/temp/workspace folder xyz`
-    -   At the begining of every scenario, we repeate the previous step.
+    -   At the beginning of every scenario, we repeate the previous step.
     -   This ensures each scenario starts with a clean workspace folder.
 *   Reports
     -   Test results are stored in the `reports` directory

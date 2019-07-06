@@ -1678,7 +1678,7 @@ part of!
    ([#3350](https://github.com/Microsoft/vscode-python/issues/3350))
 1. Stop running CI tests against the `master` branch of ptvsd.
    ([#3414](https://github.com/Microsoft/vscode-python/issues/3414))
-1. Be more aggresive in searching for a Python environment that can run Jupyter
+1. Be more aggressive in searching for a Python environment that can run Jupyter
    (make sure to cleanup any kernelspecs that are created during this process).
    ([#3433](https://github.com/Microsoft/vscode-python/issues/3433))
 
@@ -2624,7 +2624,7 @@ his help on [our issue tracker](https://github.com/Microsoft/vscode-python)!
    ```
    Additional capabilities:
    * `ptvsd.break_into_debugger()` to break into the attached debugger.
-   * `ptvsd.wait_for_attach(timeout)` to cause the program to wait untill a debugger attaches.
+   * `ptvsd.wait_for_attach(timeout)` to cause the program to wait until a debugger attaches.
    * `ptvsd.is_attached()` to determine whether a debugger is attached to the program.
    ([#907](https://github.com/Microsoft/vscode-python/issues/907))
 
