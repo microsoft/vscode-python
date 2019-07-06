@@ -63,7 +63,7 @@ suite('Hover Definition (Jedi)', () => {
             assert.equal(`${def[0].range!.start.line},${def[0].range!.start.character}`, '1,9', 'Start position is incorrect');
             assert.equal(`${def[0].range!.end.line},${def[0].range!.end.character}`, '1,12', 'End position is incorrect');
             // tslint:disable-next-line:prefer-template
-            assert.equal(normalizeMarkedString(def[0].contents[0]), '```python' + EOL + 'def fun()' + EOL + '```' + EOL + 'This is fun', 'Invalid conents');
+            assert.equal(normalizeMarkedString(def[0].contents[0]), '```python' + EOL + 'def fun()' + EOL + '```' + EOL + 'This is fun', 'Invalid contents');
         }).then(done, done);
     });
 
@@ -84,7 +84,7 @@ suite('Hover Definition (Jedi)', () => {
             // tslint:disable-next-line:prefer-template
             assert.equal(normalizeMarkedString(def[0].contents[0]), '```python' + EOL + 'def bar()' + EOL + '```' + EOL +
                 '说明 - keep this line, it works' + EOL + 'delete following line, it works' +
-                EOL + '如果存在需要等待审批或正在执行的任务，将不刷新页面', 'Invalid conents');
+                EOL + '如果存在需要等待审批或正在执行的任务，将不刷新页面', 'Invalid contents');
         }).then(done, done);
     });
 
@@ -107,7 +107,7 @@ suite('Hover Definition (Jedi)', () => {
                 'def showMessage()' + EOL +
                 '```' + EOL +
                 'Кюм ут жэмпэр пошжим льаборэж, коммюны янтэрэсщэт нам ед, декта игнота ныморэ жят эи. ' + EOL +
-                'Шэа декам экшырки эи, эи зыд эррэм докэндё, векж факэтэ пэрчыквюэрёж ку.', 'Invalid conents');
+                'Шэа декам экшырки эи, эи зыд эррэм докэндё, векж факэтэ пэрчыквюэрёж ку.', 'Invalid contents');
         }).then(done, done);
     });
 
@@ -168,7 +168,7 @@ suite('Hover Definition (Jedi)', () => {
                 'Optionally, implement a getrandbits() method so that randrange()' + EOL +
                 'can cover arbitrarily large ranges.';
 
-            assert.equal(normalizeMarkedString(def[0].contents[0]), documentation, 'Invalid conents');
+            assert.equal(normalizeMarkedString(def[0].contents[0]), documentation, 'Invalid contents');
         }).then(done, done);
     });
 
@@ -190,7 +190,7 @@ suite('Hover Definition (Jedi)', () => {
             assert.equal(normalizeMarkedString(def[0].contents[0]), '```python' + EOL +
                 'def randint(a, b)' + EOL +
                 '```' + EOL +
-                'Return random integer in range [a, b], including both end points.', 'Invalid conents');
+                'Return random integer in range [a, b], including both end points.', 'Invalid contents');
         }).then(done, done);
     });
 
@@ -212,7 +212,7 @@ suite('Hover Definition (Jedi)', () => {
             assert.equal(normalizeMarkedString(def[0].contents[0]), '```python' + EOL +
                 'def acos(x)' + EOL +
                 '```' + EOL +
-                'Return the arc cosine (measured in radians) of x.', 'Invalid conents');
+                'Return the arc cosine (measured in radians) of x.', 'Invalid contents');
         }).then(done, done);
     });
 

@@ -13,7 +13,7 @@ as the collector that collected it.
 Collectors and items are collectively identified as "nodes".  The pytest
 API relies on collector and item objects providing specific methods and
 attributes.  In addition to corresponding base classes, pytest provides
-a number of concrete impementations.
+a number of concrete implementations.
 
 The following are the known pytest node types:
 

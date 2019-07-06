@@ -2,7 +2,7 @@
 # Overview:
 # -----------------------------------------------------------------------------------------------------------------------------
 # Steps to be executed as part of the UI tests.
-# 1. Show all env vars                        - Logging (display environment variabels).
+# 1. Show all env vars                        - Logging (display environment variables).
 # 2. Use Node                                 - Specify and use node version.
 # 3. Setup Python ? for extension             - Version of Python to be used for testing in Extension.
 # 4. Setup CI_PYTHON_PATH for extension       - Export Env variable that'll be used by a seprate step.
@@ -12,10 +12,10 @@
 # 7. npm ci                                   - Install npm packages for some JS scripts used in testing (NOT for extension).
 # 8. Show Dependency Versions                 - Logging.
 # 9. Start xvfb                               - Start in-memory display server (for launching VSC).
-# 10. Restore VSIX                            - VSIX has been built in another Job, download that from artificats.
+# 10. Restore VSIX                            - VSIX has been built in another Job, download that from artifacts.
 # 11. Copy VSIX                               - Copy the VSIX into root directory (test suite expects it to be in root - default setup).
 # 12. Setup pyperclicp dependency             - We use pyperclip to copy text into clipboard buffer (see where this is used in code for info).
-# 13. Download & install UI Test dependencies - Download & Install everything requried for the UI tests.
+# 13. Download & install UI Test dependencies - Download & Install everything required for the UI tests.
 # 14. Run Tests                               - Launch the UI tests in Python
 # 15. Copy Reports
 # 16. Copy Screenshots

@@ -385,7 +385,7 @@ def test_failure():
     1. After manualTestFile.py has been run drop down the Variables section at the top of the Interactive Window
     1. In the Variables list there should be an entry for all variables created. These variables might change as more is added to manualTestFile.py.
     1. Check that variables have expected values. They will be truncated for longer items
-    1. Sort the list ascending and descending by Type. Also sort the list ascending and descenting by Count. Values like (X, Y) use the first X value for Count sort ordering
+    1. Sort the list ascending and descending by Type. Also sort the list ascending and descending by Count. Values like (X, Y) use the first X value for Count sort ordering
     1. Check that list, Series, ndarray, and DataFrame types have a button to "Show variable in data viewer" on the right
     1. In the Interactive Window input box add a new variable. Verify that it is added into the Variable Explorer
 - [ ] Verify Data Explorer

@@ -89,7 +89,7 @@ export class ShellDetector {
             shell = this.identifyShellByTerminalName(terminal.name, telemetryProperties);
         }
 
-        // Step 2. Detemrine shell based on user settings.
+        // Step 2. Determine shell based on user settings.
         if (shell === TerminalShellType.other) {
             shell = this.identifyShellFromSettings(telemetryProperties);
         }

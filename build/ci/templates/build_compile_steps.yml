@@ -99,5 +99,5 @@ steps:
       inputs:
           pathtoPublish: $(Build.ArtifactStagingDirectory)
           artifactName: VSIX
-      displayName: "Publish VSIX to Arifacts"
+      displayName: "Publish VSIX to Artifacts"
       condition: and(succeeded(), eq(variables['build'], 'true'))

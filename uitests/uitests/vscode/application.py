@@ -279,7 +279,7 @@ def setup_workspace(context, source_repo=None):
     # Meaning, we want to glon https://github.com/Microsoft/vscode-python
     # and want the workspace folder to be tree/master/build when cloned.
     if len(source_repo) > len(repo_url):
-        # Exclude trailing `.git` and take everthying after.
+        # Exclude trailing `.git` and take everything after.
         sub_directory = source_repo[len(repo_url[:-4]) + 1 :]
         context.options.workspace_folder = os.path.join(
             context.options.workspace_folder, os.path.sep.join(sub_directory.split("/"))
