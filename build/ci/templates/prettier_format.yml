@@ -1,0 +1,28 @@
+steps:
+    - task: NodeTool@0
+      displayName: "Use Node $(NodeVersion)"
+      inputs:
+          versionSpec: $(NodeVersion)
+
+    - task: Npm@1
+      displayName: "Use NPM $(NpmVersion)"
+      inputs:
+          command: custom
+          verbose: true
+          customCommand: "install -g npm@$(NpmVersion)"
+
+    - task: Npm@1
+      displayName: "npm ci"
+      inputs:
+          command: custom
+          verbose: true
+          customCommand: ci
+  # Check if all files are properly formatted
+  #
+  # Example command line (windows pwsh):
+  # > npm run prettier:check
+    - bash: |
+        npm run prettier:check
+      displayName: 'Prettier formatting check'
+      condition: and(succeeded())
+      failOnStderr: true

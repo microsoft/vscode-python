@@ -17,3 +17,11 @@ jobs:
     vmImage: "macos-latest"
   steps:
     - template: build_compile_steps.yml
+
+- job: Prettier formatting
+  variables:
+    build: false
+  pool:
+    vmImage: "macos-latest"
+  steps:
+    - template: templates/prettier_format.yml
