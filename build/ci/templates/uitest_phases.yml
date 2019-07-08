@@ -143,9 +143,7 @@ steps:
       condition: succeeded()
 
     # Compile
-    - bash: |
-          npm run compile-smoke
-          npm install -g vsce
+    - bash: npm run compile-smoke
       env:
           DISPLAY: :10
           AgentJobName: $(Agent.JobName)

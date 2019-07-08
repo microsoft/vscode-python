@@ -117,9 +117,9 @@ parameters:
 
 jobs:
 - job: UITest
-  dependsOn:
-    - Compile
-    - Build
+#   dependsOn:
+#     - Compile
+#     - Build
   # Remember, some tests can take easily an hour (the `tests` features take just around 1 hour).
   timeoutInMinutes: 90
   # Build our matrix (permutations of all environments & tests).
