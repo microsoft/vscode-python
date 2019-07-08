@@ -4,7 +4,7 @@
 
 // tslint:disable: no-any
 
-import { createHash, HexBase64Latin1Encoding } from 'crypto';
+import { createHash } from 'crypto';
 import { injectable } from 'inversify';
 import { ICryptoUtils, IHashFormat } from './types';
 
@@ -13,8 +13,8 @@ import { ICryptoUtils, IHashFormat } from './types';
  */
 @injectable()
 export class CryptoUtils implements ICryptoUtils {
-    public createHash<E extends keyof IHashFormat>(data: string, encoding: HexBase64Latin1Encoding, hashFormat: E): IHashFormat[E] {
-        const hash = createHash('sha512').update(data).digest(encoding);
-        return hashFormat === 'number' ? parseInt(hash, undefined) : hash as any;
+    public createHash<E extends keyof IHashFormat>(data: string, hashFormat: E): IHashFormat[E] {
+        const hash = createHash('sha512').update(data).digest('hex');
+        return hashFormat === 'number' ? parseInt(hash, 16) : hash as any;
     }
 }
