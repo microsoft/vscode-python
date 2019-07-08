@@ -101,7 +101,6 @@ export namespace DataScience {
     export const notebookCheckForImportNo = localize('DataScience.notebookCheckForImportNo', 'Later');
     export const notebookCheckForImportDontAskAgain = localize('DataScience.notebookCheckForImportDontAskAgain', 'Don\'t Ask Again');
     export const jupyterInstall = localize('DataScience.jupyterAskToInstall', 'Install');
-    export const jupyterInstallError = localize('DataScience.jupyterInstallError', 'There was an error installing Jupyter.');
     export const jupyterNotSupported = localize('DataScience.jupyterNotSupported', 'Jupyter is not installed');
     export const jupyterNotSupportedBecauseOfEnvironment = localize('DataScience.jupyterNotSupportedBecauseOfEnvironment', 'Activating {0} to run Jupyter failed with {1}');
     export const jupyterNbConvertNotSupported = localize('DataScience.jupyterNbConvertNotSupported', 'Jupyter nbconvert is not installed');

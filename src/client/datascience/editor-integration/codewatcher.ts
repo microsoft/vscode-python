@@ -4,21 +4,16 @@
 import { inject, injectable } from 'inversify';
 import { CodeLens, Command, Position, Range, Selection, TextDocument, TextEditor, TextEditorRevealType } from 'vscode';
 
-import { IApplicationShell, IDocumentManager } from '../../common/application/types';
-import { IInstallationChannelManager } from '../../common/installer/types';
+import { IDocumentManager } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDataScienceSettings, ILogger, Product } from '../../common/types';
+import { IConfigurationService, IDataScienceSettings } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
-import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { ICodeExecutionHelper } from '../../terminals/types';
 import { generateCellRanges } from '../cellFactory';
 import { Commands, Telemetry } from '../constants';
-import { JupyterInstallError } from '../jupyter/jupyterInstallError';
-import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
-import { ICodeWatcher, IInteractiveWindowProvider } from '../types';
+import { ICodeWatcher, IDataScienceErrorHandler, IInteractiveWindowProvider } from '../types';
 
 @injectable()
 export class CodeWatcher implements ICodeWatcher {
@@ -28,14 +23,12 @@ export class CodeWatcher implements ICodeWatcher {
     private codeLenses: CodeLens[] = [];
     private cachedSettings: IDataScienceSettings | undefined;
 
-    constructor(@inject(IApplicationShell) private applicationShell: IApplicationShell,
-        @inject(ILogger) private logger: ILogger,
-        @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
+    constructor(@inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(ICodeExecutionHelper) private executionHelper: ICodeExecutionHelper,
-        @inject(IServiceContainer) protected serviceContainer: IServiceContainer
+        @inject(IDataScienceErrorHandler) protected dataScienceErrorHandler: IDataScienceErrorHandler
     ) {
     }
 
@@ -268,7 +261,7 @@ export class CodeWatcher implements ICodeWatcher {
                 await activeInteractiveWindow.addCode(code, file, line, editor, stopWatch);
             }
         } catch (err) {
-            this.handleError(err);
+            this.dataScienceErrorHandler.handleError(err);
         }
     }
 
@@ -318,47 +311,6 @@ export class CodeWatcher implements ICodeWatcher {
             const code = this.document.getText();
             await this.addCode(code, this.getFileName(), 0);
         }
-    }
-
-    // tslint:disable-next-line:no-any
-    private handleError = (err: any) => {
-        if (err instanceof JupyterInstallError) {
-            this.applicationShell.showInformationMessage(
-                localize.DataScience.jupyterNotSupported(),
-                localize.DataScience.jupyterInstall(),
-                localize.DataScience.notebookCheckForImportNo())
-                .then(response => {
-                    if (response === localize.DataScience.jupyterInstall()) {
-                        const channels = this.serviceContainer.get<IInstallationChannelManager>(IInstallationChannelManager);
-                        return channels.getInstallationChannel(Product.jupyter);
-                    } else {
-                        const jupyterError = err as JupyterInstallError;
-
-                        // This is a special error that shows a link to open for more help
-                        this.applicationShell.showErrorMessage(jupyterError.message, jupyterError.actionTitle).then(v => {
-                            // User clicked on the link, open it.
-                            if (v === jupyterError.actionTitle) {
-                                this.applicationShell.openUrl(jupyterError.action);
-                            }
-                        });
-                    }
-                }).then(inst => {
-                    if (inst) {
-                        inst.installModule('jupyter')
-                            .catch(() => this.applicationShell.showErrorMessage(
-                                localize.DataScience.jupyterInstallError(),
-                                localize.DataScience.pythonInteractiveHelpLink()));
-                    }
-                });
-        } else if (err instanceof JupyterSelfCertsError) {
-            // Don't show the message for self cert errors
-            noop();
-        } else if (err.message) {
-            this.applicationShell.showErrorMessage(err.message);
-        } else {
-            this.applicationShell.showErrorMessage(err.toString());
-        }
-        this.logger.logError(err);
     }
 
     // User has picked run and advance on the last cell of a document

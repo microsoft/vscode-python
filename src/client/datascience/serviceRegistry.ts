@@ -14,6 +14,7 @@ import { DataScience } from './datascience';
 import { DataScienceCodeLensProvider } from './editor-integration/codelensprovider';
 import { CodeWatcher } from './editor-integration/codewatcher';
 import { Decorator } from './editor-integration/decorator';
+import { DataScienceErrorHandler } from './errorHandler/errorHandler';
 import { DotNetIntellisenseProvider } from './interactive-window/intellisense/dotNetIntellisenseProvider';
 import { JediIntellisenseProvider } from './interactive-window/intellisense/jediIntellisenseProvider';
 import { InteractiveWindow } from './interactive-window/interactiveWindow';
@@ -40,6 +41,7 @@ import {
     IDataScience,
     IDataScienceCodeLensProvider,
     IDataScienceCommandListener,
+    IDataScienceErrorHandler,
     IDataViewer,
     IDataViewerProvider,
     IInteractiveWindow,
@@ -61,7 +63,7 @@ import {
 } from './types';
 
 // tslint:disable:no-any
-function wrapType(ctor: ClassType<any>) : ClassType<any> {
+function wrapType(ctor: ClassType<any>): ClassType<any> {
     return class extends ctor {
         constructor(...args: any[]) {
             const stopWatch = new StopWatch();
@@ -105,4 +107,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IPlotViewerProvider>(IPlotViewerProvider, wrapType(PlotViewerProvider));
     serviceManager.add<IPlotViewer>(IPlotViewer, wrapType(PlotViewer));
     serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, wrapType(JupyterDebugger));
+    serviceManager.add<IDataScienceErrorHandler>(IDataScienceErrorHandler, wrapType(DataScienceErrorHandler));
 }

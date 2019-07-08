@@ -7,14 +7,14 @@ import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, CodeLens, Disposable, Range, Selection, TextEditor } from 'vscode';
 
-import { IApplicationShell, ICommandManager, IDocumentManager } from '../../../client/common/application/types';
+import { ICommandManager, IDocumentManager } from '../../../client/common/application/types';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { IFileSystem } from '../../../client/common/platform/types';
-import { IConfigurationService, ILogger } from '../../../client/common/types';
+import { IConfigurationService } from '../../../client/common/types';
 import { Commands, EditorContexts } from '../../../client/datascience/constants';
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
 import { CodeWatcher } from '../../../client/datascience/editor-integration/codewatcher';
-import { ICodeWatcher, IInteractiveWindow, IInteractiveWindowProvider } from '../../../client/datascience/types';
+import { IDataScienceErrorHandler, IInteractiveWindow, IInteractiveWindowProvider } from '../../../client/datascience/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { ICodeExecutionHelper } from '../../../client/terminals/types';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
@@ -24,8 +24,6 @@ import { createDocument } from './helpers';
 
 suite('DataScience Code Watcher Unit Tests', () => {
     let codeWatcher: CodeWatcher;
-    let appShell: TypeMoq.IMock<IApplicationShell>;
-    let logger: TypeMoq.IMock<ILogger>;
     let interactiveWindowProvider: TypeMoq.IMock<IInteractiveWindowProvider>;
     let activeInteractiveWindow: TypeMoq.IMock<IInteractiveWindow>;
     let documentManager: TypeMoq.IMock<IDocumentManager>;
@@ -33,6 +31,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
     let textEditor: TypeMoq.IMock<TextEditor>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let configService: TypeMoq.IMock<IConfigurationService>;
+    let dataScienceErrorHandler: TypeMoq.IMock<IDataScienceErrorHandler>;
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let helper: TypeMoq.IMock<ICodeExecutionHelper>;
     let tokenSource: CancellationTokenSource;
@@ -46,8 +45,6 @@ suite('DataScience Code Watcher Unit Tests', () => {
 
     setup(() => {
         tokenSource = new CancellationTokenSource();
-        appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-        logger = TypeMoq.Mock.ofType<ILogger>();
         interactiveWindowProvider = TypeMoq.Mock.ofType<IInteractiveWindowProvider>();
         activeInteractiveWindow = createTypeMoq<IInteractiveWindow>('history');
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
@@ -85,7 +82,9 @@ suite('DataScience Code Watcher Unit Tests', () => {
 
         // Setup the service container to return code watchers
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICodeWatcher))).returns(() => new CodeWatcher(appShell.object, logger.object, interactiveWindowProvider.object, fileSystem.object, configService.object, documentManager.object, helper.object, serviceContainer.object));
+
+        // Setup our error handler
+        dataScienceErrorHandler = TypeMoq.Mock.ofType<IDataScienceErrorHandler>();
 
         // Setup our active history instance
         interactiveWindowProvider.setup(h => h.getOrCreateActive()).returns(() => Promise.resolve(activeInteractiveWindow.object));
@@ -106,7 +105,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
             return Promise.resolve();
         });
 
-        codeWatcher = new CodeWatcher(appShell.object, logger.object, interactiveWindowProvider.object, fileSystem.object, configService.object, documentManager.object, helper.object, serviceContainer.object);
+        codeWatcher = new CodeWatcher(interactiveWindowProvider.object, fileSystem.object, configService.object, documentManager.object, helper.object, dataScienceErrorHandler.object);
     });
 
     function createTypeMoq<T>(tag: string): TypeMoq.IMock<T> {
