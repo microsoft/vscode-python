@@ -3,9 +3,25 @@
 
 'use strict';
 
-export async function sleep(timeout: number) : Promise<number> {
+export async function sleep(timeout: number): Promise<number> {
     return new Promise<number>((resolve) => {
         setTimeout(() => resolve(timeout), timeout);
+    });
+}
+
+export function waitForPromise<T>(promise: Promise<T>, timeout: number): Promise<T> {
+    // Set a timer that will reject the promise
+    return new Promise<T>((resolve, reject) => {
+        const timer = setTimeout(reject, timeout);
+        promise.then(result => {
+            // When the promise resolves, make sure to clear the timer or
+            // the timer may stick around causing tests to wait
+            clearTimeout(timer);
+            resolve(result);
+        }).catch(e => {
+            clearTimeout(timer);
+            reject(e);
+        });
     });
 }
 

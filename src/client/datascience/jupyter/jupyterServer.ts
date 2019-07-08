@@ -16,7 +16,7 @@ import { ILiveShareApi } from '../../common/application/types';
 import { Cancellation, CancellationError } from '../../common/cancellation';
 import { traceInfo, traceWarning } from '../../common/logger';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
-import { createDeferred, Deferred, sleep } from '../../common/utils/async';
+import { createDeferred, Deferred, waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -360,18 +360,11 @@ export class JupyterServerBase implements INotebookServer {
 
             try {
                 // Wait for all of the pending cells to finish or the timeout to fire
-                const result = await Promise.race([finished, restarted.promise, sleep(timeoutMs)]);
+                await waitForPromise(Promise.race([finished, restarted.promise]), timeoutMs);
 
                 // See if we restarted or not
                 if (restarted.completed) {
                     return InterruptResult.Restarted;
-                }
-
-                // See if we timed out or not.
-                if (result === timeoutMs) {
-                    // We timed out. You might think we should stop our pending list, but that's not
-                    // up to us. The cells are still executing. The user has to request a restart or try again
-                    return InterruptResult.TimedOut;
                 }
 
                 // Cancel all other pending cells as we interrupted.
@@ -381,6 +374,12 @@ export class JupyterServerBase implements INotebookServer {
                 return InterruptResult.Success;
 
             } catch (exc) {
+                if (!exc) {
+                    // We timed out. You might think we should stop our pending list, but that's not
+                    // up to us. The cells are still executing. The user has to request a restart or try again
+                    return InterruptResult.TimedOut;
+                }
+
                 // Something failed. See if we restarted or not.
                 if (this.sessionStartTime && (interruptBeginTime < this.sessionStartTime)) {
                     return InterruptResult.Restarted;

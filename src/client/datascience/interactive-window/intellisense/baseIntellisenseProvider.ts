@@ -20,7 +20,7 @@ import { IWorkspaceService } from '../../../common/application/types';
 import { CancellationError } from '../../../common/cancellation';
 import { traceWarning } from '../../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../../common/platform/types';
-import { createDeferred, Deferred, sleep } from '../../../common/utils/async';
+import { createDeferred, Deferred, waitForPromise } from '../../../common/utils/async';
 import { Identifiers, Settings } from '../../constants';
 import { IInteractiveWindowListener, IInteractiveWindowProvider, IJupyterExecution } from '../../types';
 import {
@@ -43,8 +43,8 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
 
     private documentPromise: Deferred<IntellisenseDocument> | undefined;
     private temporaryFile: TemporaryFile | undefined;
-    private postEmitter: EventEmitter<{message: string; payload: any}> = new EventEmitter<{message: string; payload: any}>();
-    private cancellationSources : Map<string, CancellationTokenSource> = new Map<string, CancellationTokenSource>();
+    private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{ message: string; payload: any }>();
+    private cancellationSources: Map<string, CancellationTokenSource> = new Map<string, CancellationTokenSource>();
 
     constructor(
         @unmanaged() private workspaceService: IWorkspaceService,
@@ -60,7 +60,7 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
         }
     }
 
-    public get postMessage(): Event<{message: string; payload: any}> {
+    public get postMessage(): Event<{ message: string; payload: any }> {
         return this.postEmitter.event;
     }
 
@@ -116,7 +116,7 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
         }
     }
 
-    protected getDocument(resource?: Uri) : Promise<IntellisenseDocument> {
+    protected getDocument(resource?: Uri): Promise<IntellisenseDocument> {
         if (!this.documentPromise) {
             this.documentPromise = createDeferred<IntellisenseDocument>();
 
@@ -142,17 +142,17 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
     }
 
     protected abstract get isActive(): boolean;
-    protected abstract provideCompletionItems(position: monacoEditor.Position, context: monacoEditor.languages.CompletionContext, cellId: string, token: CancellationToken) : Promise<monacoEditor.languages.CompletionList>;
-    protected abstract provideHover(position: monacoEditor.Position, cellId: string, token: CancellationToken) : Promise<monacoEditor.languages.Hover>;
-    protected abstract provideSignatureHelp(position: monacoEditor.Position, context: monacoEditor.languages.SignatureHelpContext, cellId: string, token: CancellationToken) : Promise<monacoEditor.languages.SignatureHelp>;
-    protected abstract handleChanges(originalFile: string | undefined, document: IntellisenseDocument, changes: TextDocumentContentChangeEvent[]) : Promise<void>;
+    protected abstract provideCompletionItems(position: monacoEditor.Position, context: monacoEditor.languages.CompletionContext, cellId: string, token: CancellationToken): Promise<monacoEditor.languages.CompletionList>;
+    protected abstract provideHover(position: monacoEditor.Position, cellId: string, token: CancellationToken): Promise<monacoEditor.languages.Hover>;
+    protected abstract provideSignatureHelp(position: monacoEditor.Position, context: monacoEditor.languages.SignatureHelpContext, cellId: string, token: CancellationToken): Promise<monacoEditor.languages.SignatureHelp>;
+    protected abstract handleChanges(originalFile: string | undefined, document: IntellisenseDocument, changes: TextDocumentContentChangeEvent[]): Promise<void>;
 
-    private dispatchMessage<M extends IInteractiveWindowMapping, T extends keyof M>(_message: T, payload: any, handler: (args : M[T]) => void) {
+    private dispatchMessage<M extends IInteractiveWindowMapping, T extends keyof M>(_message: T, payload: any, handler: (args: M[T]) => void) {
         const args = payload as M[T];
         handler.bind(this)(args);
     }
 
-    private postResponse<M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]) : void {
+    private postResponse<M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]): void {
         const response = payload as any;
         if (response && response.id) {
             const cancelSource = this.cancellationSources.get(response.id);
@@ -161,7 +161,7 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
                 this.cancellationSources.delete(response.id);
             }
         }
-        this.postEmitter.fire({message: type.toString(), payload});
+        this.postEmitter.fire({ message: type.toString(), payload });
     }
 
     private handleCancel(request: ICancelIntellisenseRequest) {
@@ -181,11 +181,11 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
         // Combine all of the results together.
         this.postTimedResponse(
             [this.provideCompletionItems(request.position, request.context, request.cellId, cancelSource.token),
-             this.provideJupyterCompletionItems(request.position, request.context, cancelSource.token)],
+            this.provideJupyterCompletionItems(request.position, request.context, cancelSource.token)],
             InteractiveWindowMessages.ProvideCompletionItemsResponse,
             (c) => {
                 const list = this.combineCompletions(c);
-                return {list, requestId: request.requestId};
+                return { list, requestId: request.requestId };
             }
         );
     }
@@ -198,20 +198,20 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
             InteractiveWindowMessages.ProvideHoverResponse,
             (h) => {
                 if (h && h[0]) {
-                    return { hover: h[0]!, requestId: request.requestId};
+                    return { hover: h[0]!, requestId: request.requestId };
                 } else {
                     return { hover: { contents: [] }, requestId: request.requestId };
                 }
             });
     }
 
-    private async provideJupyterCompletionItems(position: monacoEditor.Position, _context: monacoEditor.languages.CompletionContext, cancelToken: CancellationToken) : Promise<monacoEditor.languages.CompletionList> {
+    private async provideJupyterCompletionItems(position: monacoEditor.Position, _context: monacoEditor.languages.CompletionContext, cancelToken: CancellationToken): Promise<monacoEditor.languages.CompletionList> {
         try {
             const activeServer = await this.jupyterExecution.getServer(await this.interactiveWindowProvider.getNotebookOptions());
             const document = await this.getDocument();
             if (activeServer && document) {
                 const code = document.getEditCellContent();
-                const lines = code.splitLines({trim: false, removeEmptyEntries: false});
+                const lines = code.splitLines({ trim: false, removeEmptyEntries: false });
                 const offsetInCode = lines.reduce((a: number, c: string, i: number) => {
                     if (i < position.lineNumber - 1) {
                         return a + c.length + 1;
@@ -226,7 +226,7 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
                     const baseOffset = document.getEditCellOffset();
                     const basePosition = document.positionAt(baseOffset);
                     const startPosition = document.positionAt(jupyterResults.cursor.start + baseOffset);
-                    const endPosition = document.positionAt(jupyterResults.cursor.end  + baseOffset);
+                    const endPosition = document.positionAt(jupyterResults.cursor.end + baseOffset);
                     const range: monacoEditor.IRange = {
                         startLineNumber: startPosition.line + 1 - basePosition.line, // monaco is 1 based
                         startColumn: startPosition.character + 1,
@@ -254,27 +254,18 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
 
     private postTimedResponse<R, M extends IInteractiveWindowMapping, T extends keyof M>(promises: Promise<R>[], message: T, formatResponse: (val: (R | null)[]) => M[T]) {
         // Time all of the promises to make sure they don't take too long
-        const timed = promises.map(p => Promise.race([p, sleep(Settings.IntellisenseTimeout)]));
+        const timed = promises.map(p => waitForPromise(p, Settings.IntellisenseTimeout));
 
         // Wait for all of of the timings.
         const all = Promise.all(timed);
         all.then(r => {
-
-            // Check all of the results. If they timed out, turn into
-            // a null so formatResponse can post the empty result.
-            const nulled = r.map(v => {
-                if (v === Settings.IntellisenseTimeout) {
-                    return null;
-                }
-                return v as R;
-            });
-            this.postResponse(message, formatResponse(nulled));
+            this.postResponse(message, formatResponse(r));
         }).catch(_e => {
             this.postResponse(message, formatResponse([null]));
         });
     }
 
-    private combineCompletions(list: (monacoEditor.languages.CompletionList | null)[]) : monacoEditor.languages.CompletionList {
+    private combineCompletions(list: (monacoEditor.languages.CompletionList | null)[]): monacoEditor.languages.CompletionList {
         // Note to self. We're eliminating duplicates ourselves. The alternative would be to
         // have more than one intellisense provider at the monaco editor level and return jupyter
         // results independently. Maybe we switch to this when jupyter resides on the react side.
@@ -303,9 +294,9 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
             InteractiveWindowMessages.ProvideSignatureHelpResponse,
             (s) => {
                 if (s && s[0]) {
-                    return { signatureHelp: s[0]!, requestId: request.requestId};
+                    return { signatureHelp: s[0]!, requestId: request.requestId };
                 } else {
-                    return {signatureHelp: { signatures: [], activeParameter: 0, activeSignature: 0 }, requestId: request.requestId};
+                    return { signatureHelp: { signatures: [], activeParameter: 0, activeSignature: 0 }, requestId: request.requestId };
                 }
             });
     }

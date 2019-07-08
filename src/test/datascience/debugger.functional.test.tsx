@@ -9,16 +9,18 @@ import { Disposable, Position, Range, Uri } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
 import { IApplicationShell, IDebugService, IDocumentManager } from '../../client/common/application/types';
+import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import {
     InteractiveWindowMessageListener
 } from '../../client/datascience/interactive-window/interactiveWindowMessageListener';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-window/interactiveWindowTypes';
 import { IInteractiveWindow, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
+//import { asyncDump } from '../common/asyncDump';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
+import { getCellResults } from './interactiveWindowTestHelpers';
 import { MockDebuggerService } from './mockDebugService';
 import { MockDocumentManager } from './mockDocumentManager';
-
 
 // tslint:disable-next-line:max-func-body-length no-any
 suite('DataScience Debugger tests', () => {
@@ -54,8 +56,15 @@ suite('DataScience Debugger tests', () => {
                 await promise;
             }
         }
+        if (mockDebuggerService) {
+            mockDebuggerService.dispose();
+        }
         await ioc.dispose();
         lastErrorMessage = undefined;
+    });
+
+    suiteTeardown(() => {
+//        asyncDump();
     });
 
     function createContainer(): DataScienceIocContainer {
@@ -91,6 +100,7 @@ suite('DataScience Debugger tests', () => {
 
         // During testing the MainPanel sends the init message before our interactive window is created.
         // Pretend like it's happening now
+        // tslint:disable-next-line: no-any
         const listener = ((result as any).messageListener) as InteractiveWindowMessageListener;
         listener.onMessage(InteractiveWindowMessages.Started, {});
 
@@ -106,18 +116,23 @@ suite('DataScience Debugger tests', () => {
         const history = await getOrCreateInteractiveWindow();
 
         // Debug this code. We should either hit the breakpoint or stop on entry
-        const done = history.debugCode(code, 'foo.py', 0, docManager.activeTextEditor);
-        const result = await Promise.race([done, mockDebuggerService!.waitForBreakState()]);
-        assert.ok(result, 'Debug event did not fire');
-        assert.ok(!lastErrorMessage, `Error occurred ${lastErrorMessage}`);
-        await done;
+        const results = await getCellResults(ioc.wrapper!, 5, async () => {
+            const breakPromise = createDeferred<void>();
+            disposables.push(mockDebuggerService!.onBreakpointHit(() => breakPromise.resolve()));
+            const done = history.debugCode(code, 'foo.py', 0, docManager.activeTextEditor);
+            await waitForPromise(Promise.race([done, breakPromise.promise]), 60000);
+            assert.ok(breakPromise.resolved, 'Breakpoint event did not fire');
+            assert.ok(!lastErrorMessage, `Error occurred ${lastErrorMessage}`);
+            await mockDebuggerService!.continue();
+        });
+        assert.ok(results, 'No cell results after finishing debugging');
     }
 
-    test('Debug cell with breakpoint', async () => {
+    test('Debug cell without breakpoint', async () => {
         await debugCell('#%%\nprint("bar")');
     });
 
-    test('Debug cell without breakpoint', async () => {
+    test('Debug cell with breakpoint', async () => {
         await debugCell('#%%\nprint("bar")\nprint("baz")', new Range(new Position(2, 0), new Position(2, 0)));
     });
 

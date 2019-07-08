@@ -19,31 +19,68 @@ import {
 } from 'vscode';
 
 import { IDebugService } from '../../client/common/application/types';
-import { IBufferDecoder } from '../../client/common/process/types';
-import { createDeferred, Deferred } from '../../client/common/utils/async';
+import { traceInfo } from '../../client/common/logger';
+import { IDisposable } from '../../client/common/types';
+import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
+import { EXTENSION_ROOT_DIR } from '../../client/constants';
+import { IProtocolParser } from '../../client/debugger/debugAdapter/types';
+
+// tslint:disable:no-any
 
 // For debugging set these environment variables
 // PYDEV_DEBUG=True
 // PTVSD_LOG_DIR=<dir that already exists>
 // PYDEVD_DEBUG_FILE=<dir that exists, but new file allowed>
+class MockDebugSession implements DebugSession {
+    private _name = 'MockDebugSession';
+    constructor(private _id: string, private _configuration: DebugConfiguration, private customRequestHandler: (command: string, args?: any) => Thenable<any>) {
+        noop();
+    }
+    public get id(): string {
+        return this._id;
+    }
+    public get type(): string {
+        return 'python';
+    }
+    public get name(): string {
+        return this._name;
+    }
+    public get workspaceFolder(): WorkspaceFolder | undefined {
+        return undefined;
+    }
+    public get configuration(): DebugConfiguration {
+        return this._configuration;
+    }
+    public customRequest(command: string, args?: any): Thenable<any> {
+        return this.customRequestHandler(command, args);
+    }
+}
 
 //tslint:disable:trailing-comma no-any no-multiline-string
 @injectable()
-export class MockDebuggerService implements IDebugService {
+export class MockDebuggerService implements IDebugService, IDisposable {
     private socket: net.Socket | undefined;
     private session: DebugSession | undefined;
-    private sessionId: string | undefined;
     private sequence: number = 1;
-    private breakStatePromise: Deferred<void> = createDeferred();
+    private breakpointEmitter: EventEmitter<void> = new EventEmitter<void>();
     private sessionChangedEvent: EventEmitter<DebugSession> = new EventEmitter<DebugSession>();
     private sessionStartedEvent: EventEmitter<DebugSession> = new EventEmitter<DebugSession>();
     private sessionTerminatedEvent: EventEmitter<DebugSession> = new EventEmitter<DebugSession>();
     private sessionCustomEvent: EventEmitter<DebugSessionCustomEvent> = new EventEmitter<DebugSessionCustomEvent>();
     private breakpointsChangedEvent: EventEmitter<BreakpointsChangeEvent> = new EventEmitter<BreakpointsChangeEvent>();
 
-    constructor(@inject(IBufferDecoder) private bufferDecoder: IBufferDecoder) {
+    constructor(
+        @inject(IProtocolParser) private protocolParser: IProtocolParser
+    ) {
         noop();
+    }
+
+    public dispose(): void {
+        if (this.socket) {
+            this.socket.end();
+            this.socket = undefined;
+        }
     }
 
     public get activeDebugSession(): DebugSession | undefined {
@@ -57,7 +94,7 @@ export class MockDebuggerService implements IDebugService {
             appendLine(_value: string): void {
                 noop();
             }
-        }
+        };
     }
     public get breakpoints(): Breakpoint[] {
         return [];
@@ -80,35 +117,42 @@ export class MockDebuggerService implements IDebugService {
     public registerDebugConfigurationProvider(_debugType: string, _provider: DebugConfigurationProvider): Disposable {
         throw new Error('Method not implemented.');
     }
-    public startDebugging(folder: WorkspaceFolder | undefined, nameOrConfiguration: string | DebugConfiguration, _parentSession?: DebugSession | undefined): Thenable<boolean> {
+    public startDebugging(_folder: WorkspaceFolder | undefined, nameOrConfiguration: string | DebugConfiguration, _parentSession?: DebugSession | undefined): Thenable<boolean> {
         // Should have a port number. We'll assume during the test it's local
         const config = nameOrConfiguration as DebugConfiguration;
         if (config.port) {
+            this.session = new MockDebugSession(uuid(), config, this.sendCustomRequest.bind(this));
             this.socket = net.createConnection(config.port);
-            this.socket.on('data', this.onReceivedData.bind(this));
-            this.socket.on('error', this.onReceivedError.bind(this));
-            this.socket.on('end', this.onDebuggingStopped.bind(this));
-            this.breakStatePromise = createDeferred();
-            return this.sendStartSequence(config.port, uuid());
+            this.protocolParser.connect(this.socket);
+            this.protocolParser.on('event_stopped', this.onBreakpoint.bind(this));
+            this.protocolParser.on('event_output', this.onOutput.bind(this));
+            this.socket.on('error', this.onError.bind(this));
+            this.socket.on('close', this.onClose.bind(this));
+            return this.sendStartSequence(config.port, this.session.id);
         }
         return Promise.resolve(true);
     }
-    public addBreakpoints(breakpoints: Breakpoint[]): void {
+    public addBreakpoints(_breakpoints: Breakpoint[]): void {
         noop();
     }
-    public removeBreakpoints(breakpoints: Breakpoint[]): void {
+    public removeBreakpoints(_breakpoints: Breakpoint[]): void {
         noop();
     }
-    public async waitForBreakState(): Promise<void> {
-        if (this.breakStatePromise) {
-            return this.breakStatePromise.promise;
-        }
+    public get onBreakpointHit(): Event<void> {
+        return this.breakpointEmitter.event;
+    }
+
+    public continue(): Promise<void> {
+        return this.sendMessage('continue', { threadId: 0 });
+    }
+
+    private sendCustomRequest(command: string, args?: any): Promise<void> {
+        return this.sendMessage(command, args);
     }
 
     private async sendStartSequence(port: number, sessionId: string): Promise<boolean> {
-        this.sessionId = sessionId;
-        await this.sendAttach(port, sessionId);
         await this.sendInitialize();
+        await this.sendAttach(port, sessionId);
         await this.sendConfigurationDone();
         return true;
     }
@@ -127,8 +171,8 @@ export class MockDebuggerService implements IDebugService {
                 logToFile: true,
                 debugOptions: ['RedirectOutput', 'FixFilePathCase', 'WindowsClient', 'ShowReturnValue'],
                 showReturnValue: true,
-                workspaceFolder: 'd:\\Training\\SnakePython',
-                pathMappings: [{ localRoot: 'd:\\Training\\SnakePython', remoteRoot: 'd:\\Training\\SnakePython' }],
+                workspaceFolder: EXTENSION_ROOT_DIR,
+                pathMappings: [{ localRoot: EXTENSION_ROOT_DIR, remoteRoot: EXTENSION_ROOT_DIR }],
                 __sessionId: sessionId
             }
         );
@@ -138,9 +182,9 @@ export class MockDebuggerService implements IDebugService {
         return this.sendMessage('configurationDone');
     }
 
-    private sendInitialize(): Promise<void> {
+    private async sendInitialize(): Promise<void> {
         // Send our initialize request. (Got this by dumping debugAdapter output during real run. Set logToFile to true to generate)
-        return this.sendMessage(
+        await this.sendMessage(
             'initialize',
             {
                 clientID: 'vscode',
@@ -157,7 +201,15 @@ export class MockDebuggerService implements IDebugService {
         );
     }
 
-    private sendMessage(command: string, args?: any): Promise<void> {
+    private async sendMessage(command: string, args?: any): Promise<void> {
+        const response = createDeferred();
+        this.protocolParser.once(`response_${command}`, () => response.resolve());
+        this.socket!.on('error', (err) => response.reject(err));
+        await this.emitMessage(command, args);
+        await response.promise;
+    }
+
+    private emitMessage(command: string, args?: any): Promise<void> {
         return new Promise((resolve, reject) => {
             try {
                 if (this.socket) {
@@ -169,9 +221,8 @@ export class MockDebuggerService implements IDebugService {
                     };
                     this.sequence += 1;
                     const objString = JSON.stringify(obj);
-                    const message = `Content-Length: ${objString.length}\r\n\r\n${objString}\r\n`;
-                    this.socket.write(message, (a: any) => {
-                        window.console.log(JSON.stringify(a));
+                    const message = `Content-Length: ${objString.length}\r\n\r\n${objString}`;
+                    this.socket.write(message, (_a: any) => {
                         resolve();
                     });
                 }
@@ -181,18 +232,22 @@ export class MockDebuggerService implements IDebugService {
         });
     }
 
-    private onReceivedData(data: Buffer) {
-        const dataStr = this.bufferDecoder.decode([data], 'utf-8');
-
-        // Need to wait for attach/initialize responses here.
-        window.console.log(dataStr);
+    private onBreakpoint(_args: any): void {
+        this.breakpointEmitter.fire();
     }
 
-    private onReceivedError(error: any) {
-        window.console.log(error);
+    private onOutput(args: any): void {
+        traceInfo(JSON.stringify(args));
     }
 
-    private onDebuggingStopped() {
-        window.console.log('Debugging stopped ...');
+    private onError(args: any): void {
+        traceInfo(JSON.stringify(args));
+    }
+
+    private onClose(): void {
+        if (this.socket) {
+            this.socket.end();
+            this.socket = undefined;
+        }
     }
 }

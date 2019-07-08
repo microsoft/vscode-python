@@ -195,7 +195,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
             }
 
             // Compute the runtime line and adjust our cell/stripped source for debugging
-            const runtimeLine = this.adjustForDebugging(cell, stripped, startOffset, endOffset);
+            const runtimeLine = this.adjustRuntimeForDebugging(cell, stripped, startOffset, endOffset);
             const hashedCode = stripped.join('');
             const realCode = doc.getText(new Range(new Position(cell.line, 0), endLine.rangeIncludingLineBreak.end));
 
@@ -245,7 +245,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
         }
     }
 
-    private adjustForDebugging(cell: ICell, source: string[], cellStartOffset: number, cellEndOffset: number): number {
+    private adjustRuntimeForDebugging(cell: ICell, source: string[], cellStartOffset: number, cellEndOffset: number): number {
         if (this.debugService.activeDebugSession && this.configService.getSettings().datascience.stopOnFirstLineWhileDebugging) {
             // See if any breakpoints in any cell that's already run or in the cell we're about to run
             const anyExisting = this.debugService.breakpoints.filter(b => {

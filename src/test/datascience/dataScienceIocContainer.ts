@@ -118,6 +118,7 @@ import { PlotViewerProvider } from '../../client/datascience/plotting/plotViewer
 import { StatusProvider } from '../../client/datascience/statusProvider';
 import { ThemeFinder } from '../../client/datascience/themeFinder';
 import {
+    ICellHashListener,
     ICellHashProvider,
     ICodeCssGenerator,
     ICodeLensFactory,
@@ -135,6 +136,7 @@ import {
     IJupyterPasswordConnect,
     IJupyterSessionManager,
     IJupyterVariables,
+    INotebookExecutionLogger,
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
@@ -143,6 +145,8 @@ import {
     IStatusProvider,
     IThemeFinder
 } from '../../client/datascience/types';
+import { ProtocolParser } from '../../client/debugger/debugAdapter/Common/protocolParser';
+import { IProtocolParser } from '../../client/debugger/debugAdapter/types';
 import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { InterpreterComparer } from '../../client/interpreter/configuration/interpreterComparer';
@@ -350,9 +354,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<ILanguageServer>(ILanguageServer, MockLanguageServer);
         this.serviceManager.addSingleton<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, MockLanguageServerAnalysisOptions);
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, DotNetIntellisenseProvider);
+        this.serviceManager.add<IProtocolParser>(IProtocolParser, ProtocolParser);
         this.serviceManager.addSingleton<IDebugService>(IDebugService, MockDebuggerService);
         this.serviceManager.addSingleton<ICellHashProvider>(ICellHashProvider, CellHashProvider);
-        this.serviceManager.addBinding<ICellHashProvider, IInteractiveWindowListener>(ICellHashProvider, IInteractiveWindowListener);
+        this.serviceManager.addBinding(ICellHashProvider, IInteractiveWindowListener);
+        this.serviceManager.addBinding(ICellHashProvider, INotebookExecutionLogger);
+        this.serviceManager.addBinding(IJupyterDebugger, ICellHashListener);
         this.serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory);
 
         // Setup our command list
@@ -395,7 +402,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             liveShareConnectionTimeout: 100,
             autoPreviewNotebooksInInteractivePane: true,
             enablePlotViewer: true,
-            ptvsdDistPath: path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python')
+            ptvsdDistPath: 'F:\\ptvsd\\dist\\ptvsd-4.2.11a5\\ptvsd-4.2.11a5\\src', //path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python')
+            stopOnFirstLineWhileDebugging: true
         };
 
         const workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration> = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
