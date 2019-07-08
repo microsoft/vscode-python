@@ -10,5 +10,17 @@
         "salt": "AlwaysDisplayTestExplorer",
         "min": 0,
         "max": 20
+    },
+    {
+        "name": "ShowPlayIcon - experiment",
+        "salt": "ShowPlayIcon",
+        "min": 80,
+        "max": 100
+    },
+    {
+        "name": "ShowPlayIcon - control",
+        "salt": "ShowPlayIcon",
+        "min": 0,
+        "max": 20
     }
 ]
