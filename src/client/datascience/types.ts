@@ -94,6 +94,12 @@ export interface INotebookServerOptions {
     purpose: string;
 }
 
+export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');
+export interface INotebookExecutionLogger {
+    preExecute(cell: ICell, silent: boolean): void;
+    postExecute(cellOrError: ICell | Error, silent: boolean): void;
+}
+
 export const IJupyterExecution = Symbol('IJupyterExecution');
 export interface IJupyterExecution extends IAsyncDisposable {
     sessionChanged: Event<void>;
@@ -237,6 +243,7 @@ export interface ICodeWatcher {
     getCachedSettings(): IDataScienceSettings | undefined;
     runAllCells(): Promise<void>;
     runCell(range: Range): Promise<void>;
+    debugCell(range: Range): Promise<void>;
     runCurrentCell(): Promise<void>;
     runCurrentCellAndAdvance(): Promise<void>;
     runSelectionOrLine(activeEditor: TextEditor | undefined): Promise<void>;
@@ -247,6 +254,11 @@ export interface ICodeWatcher {
     runFileInteractive(): Promise<void>;
     addEmptyCellToBottom(): Promise<void>;
     debugCurrentCell(): Promise<void>;
+}
+
+export const ICodeLensFactory = Symbol('ICodeLensFactory');
+export interface ICodeLensFactory {
+    createCodeLenses(document: TextDocument): CodeLens[];
 }
 
 export enum CellState {
@@ -393,6 +405,18 @@ export interface IPlotViewer extends IDisposable {
     show(): Promise<void>;
 }
 
+export interface ISourceMapMapping {
+    line: number;
+    endLine: number;
+    runtimeSource: { path: string };
+    runtimeLine: number;
+}
+
+export interface ISourceMapRequest {
+    source: { path: string };
+    pydevdSourceMaps: ISourceMapMapping[];
+}
+
 export interface ICellHash {
     line: number;       // 1 based
     endLine: number;    // 1 based and inclusive
@@ -405,6 +429,7 @@ export interface IFileHashes {
     hashes: ICellHash[];
 }
 
+export const ICellHashProvider = Symbol('ICellHashProvider');
 export interface ICellHashProvider {
     getHashes(): IFileHashes[];
 }

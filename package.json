@@ -314,6 +314,11 @@
                 "category": "Python"
             },
             {
+                "command": "python.datascience.debugcell",
+                "title": "%python.command.python.datascience.debugcell.title%",
+                "category": "Python"
+            },
+            {
                 "command": "python.datascience.runcurrentcelladvance",
                 "title": "%python.command.python.datascience.runcurrentcelladvance.title%",
                 "category": "Python"
@@ -1344,10 +1349,16 @@
                     "description": "Modify plot output so that it can be expanded into a plot viewer window.",
                     "scope": "resource"
                 },
-                "python.dataScience.enableDebugging": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "When starting a Python Interactive session import and enable the ptvsd debugger in the kernel.",
+                "python.dataScience.codeLenses": {
+                    "type": "string",
+                    "default": "python.datascience.runcell,  python.datascience.runallcellsabove, python.datascience.debugcell",
+                    "description": "Set of commands to put as code lens above a cell. Defaults to 'python.datascience.runcell,  python.datascience.runallcellsabove, python.datascience.debugcell'",
+                    "scope": "resource"
+                },
+                "python.dataScience.ptvsdDistPath": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Path to ptsvd experimental bits for debugging cells.",
                     "scope": "resource"
                 },
                 "python.disableInstallationCheck": {

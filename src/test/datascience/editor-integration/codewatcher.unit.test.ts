@@ -6,15 +6,19 @@
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, CodeLens, Disposable, Range, Selection, TextEditor } from 'vscode';
-
-import { ICommandManager, IDocumentManager } from '../../../client/common/application/types';
+import {
+    ICommandManager,
+    IDebugService,
+    IDocumentManager
+} from '../../../client/common/application/types';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService } from '../../../client/common/types';
 import { Commands, EditorContexts } from '../../../client/datascience/constants';
+import { CodeLensFactory } from '../../../client/datascience/editor-integration/codeLensFactory';
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
 import { CodeWatcher } from '../../../client/datascience/editor-integration/codewatcher';
-import { IDataScienceErrorHandler, IInteractiveWindow, IInteractiveWindowProvider } from '../../../client/datascience/types';
+import { ICodeWatcher, IDataScienceErrorHandler, IInteractiveWindow, IInteractiveWindowProvider } from '../../../client/datascience/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { ICodeExecutionHelper } from '../../../client/terminals/types';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
@@ -35,6 +39,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let helper: TypeMoq.IMock<ICodeExecutionHelper>;
     let tokenSource: CancellationTokenSource;
+    let debugService: TypeMoq.IMock<IDebugService>;
     const contexts: Map<string, boolean> = new Map<string, boolean>();
     const pythonSettings = new class extends PythonSettings {
         public fireChangeEvent() {
@@ -53,6 +58,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
         helper = TypeMoq.Mock.ofType<ICodeExecutionHelper>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
+        debugService = TypeMoq.Mock.ofType<IDebugService>();
 
         // Setup default settings
         pythonSettings.datascience = {
@@ -79,9 +85,13 @@ suite('DataScience Code Watcher Unit Tests', () => {
             enableCellCodeLens: true,
             enablePlotViewer: true
         };
+        debugService.setup(d => d.activeDebugSession).returns(() => undefined);
 
         // Setup the service container to return code watchers
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+
+        const codeLensFactory = new CodeLensFactory(configService.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICodeWatcher))).returns(() => new CodeWatcher(interactiveWindowProvider.object, fileSystem.object, configService.object, documentManager.object, helper.object, dataScienceErrorHandler.object, codeLensFactory, serviceContainer.object));
 
         // Setup our error handler
         dataScienceErrorHandler = TypeMoq.Mock.ofType<IDataScienceErrorHandler>();
@@ -105,7 +115,9 @@ suite('DataScience Code Watcher Unit Tests', () => {
             return Promise.resolve();
         });
 
-        codeWatcher = new CodeWatcher(interactiveWindowProvider.object, fileSystem.object, configService.object, documentManager.object, helper.object, dataScienceErrorHandler.object);
+        const codeLens = new CodeLensFactory(configService.object);
+
+        codeWatcher = new CodeWatcher(interactiveWindowProvider.object, fileSystem.object, configService.object, documentManager.object, helper.object, dataScienceErrorHandler.object, codeLens, serviceContainer.object);
     });
 
     function createTypeMoq<T>(tag: string): TypeMoq.IMock<T> {
@@ -132,9 +144,9 @@ suite('DataScience Code Watcher Unit Tests', () => {
 
         const indexAdd = firstCell ? 1 : 2;
         if (codeLenses[startLensIndex + indexAdd].command) {
-            expect(codeLenses[startLensIndex + indexAdd].command!.command).to.be.equal(Commands.RunCellAndAllBelow, 'Run Below code lens command incorrect');
+            expect(codeLenses[startLensIndex + indexAdd].command!.command).to.be.equal(Commands.DebugCell, 'Debug command incorrect');
         }
-        expect(codeLenses[startLensIndex + indexAdd].range).to.be.deep.equal(targetRange, 'Run Below code lens range incorrect');
+        expect(codeLenses[startLensIndex + indexAdd].range).to.be.deep.equal(targetRange, 'Debug code lens range incorrect');
     }
 
     test('Add a file with just a #%% mark to a code watcher', () => {
@@ -699,7 +711,7 @@ testing2`; // Command tests override getText, so just need the ranges here
         const inputText = '#%% foobar';
         const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce());
         documentManager.setup(d => d.textDocuments).returns(() => [document.object]);
-        const codeLensProvider = new DataScienceCodeLensProvider(serviceContainer.object, documentManager.object, configService.object, commandManager.object, disposables);
+        const codeLensProvider = new DataScienceCodeLensProvider(serviceContainer.object, documentManager.object, configService.object, commandManager.object, disposables, debugService.object);
 
         let result = codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
         expect(result, 'result not okay').to.be.ok;

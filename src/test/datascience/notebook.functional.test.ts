@@ -5,6 +5,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 import { assert } from 'chai';
 import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
+import { injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import { Readable, Writable } from 'stream';
@@ -24,9 +25,11 @@ import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyte
 import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/jupyterKernelPromiseFailedError';
 import {
     CellState,
+    ICell,
     IConnection,
     IJupyterExecution,
     IJupyterKernelSpec,
+    INotebookExecutionLogger,
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
@@ -98,23 +101,30 @@ suite('DataScience notebook tests', () => {
         return path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
     }
 
+    function extractDataOutput(cell: ICell): any {
+        assert.equal(cell.data.cell_type, 'code', `Wrong type of cell returned`);
+        const codeCell = cell.data as nbformat.ICodeCell;
+        if (codeCell.outputs.length > 0) {
+            assert.equal(codeCell.outputs.length, 1, 'Cell length not correct');
+            const data = codeCell.outputs[0].data;
+            const error = codeCell.outputs[0].evalue;
+            if (error) {
+                assert.fail(`Unexpected error: ${error}`);
+            }
+            assert.ok(data, `No data object on the cell`);
+            if (data) { // For linter
+                assert.ok(data.hasOwnProperty('text/plain'), `Cell mime type not correct`);
+                assert.ok((data as any)['text/plain'], `Cell mime type not correct`);
+                return (data as any)['text/plain'];
+            }
+        }
+    }
+
     async function verifySimple(jupyterServer: INotebookServer | undefined, code: string, expectedValue: any): Promise<void> {
         const cells = await jupyterServer!.execute(code, path.join(srcDirectory(), 'foo.py'), 2, uuid());
         assert.equal(cells.length, 1, `Wrong number of cells returned`);
-        assert.equal(cells[0].data.cell_type, 'code', `Wrong type of cell returned`);
-        const cell = cells[0].data as nbformat.ICodeCell;
-        assert.equal(cell.outputs.length, 1, `Cell length not correct`);
-        const data = cell.outputs[0].data;
-        const error = cell.outputs[0].evalue;
-        if (error) {
-            assert.fail(`Unexpected error: ${error}`);
-        }
-        assert.ok(data, `No data object on the cell`);
-        if (data) { // For linter
-            assert.ok(data.hasOwnProperty('text/plain'), `Cell mime type not correct`);
-            assert.ok((data as any)['text/plain'], `Cell mime type not correct`);
-            assert.equal((data as any)['text/plain'], expectedValue, 'Cell value does not match');
-        }
+        const data = extractDataOutput(cells[0]);
+        assert.equal(data, expectedValue, 'Cell value does not match');
     }
 
     async function verifyError(jupyterServer: INotebookServer | undefined, code: string, errorString: string): Promise<void> {
@@ -999,5 +1009,31 @@ plt.show()`,
 
         }
     }, new DyingProcess(100));
+
+    runTest('Execution logging', async () => {
+        const cellInputs: string[] = [];
+        const outputs: string[] = [];
+        @injectable()
+        class Logger implements INotebookExecutionLogger {
+            public preExecute(cell: ICell, _silent: boolean): void {
+                cellInputs.push(concatMultilineString(cell.data.source));
+            }
+            public postExecute(cellOrError: ICell | Error, _silent: boolean): void {
+                if (!(cellOrError instanceof Error)) {
+                    const cell = cellOrError as ICell;
+                    outputs.push(extractDataOutput(cell));
+                }
+            }
+        }
+        ioc.serviceManager.add<INotebookExecutionLogger>(INotebookExecutionLogger, Logger);
+        addMockData(`a=1${os.EOL}a`, 1);
+        const server = await createNotebookServer(true);
+        assert.ok(server, 'Server not created in logging case');
+        await server!.execute(`a=1${os.EOL}a`, path.join(srcDirectory(), 'foo.py'), 2, uuid());
+        assert.equal(cellInputs.length, 3, 'Not enough cell inputs');
+        assert.equal(outputs.length, 3, 'Not enough cell inputs');
+        assert.equal(cellInputs[2], 'a=1\na', 'Cell inputs not captured');
+        assert.equal(outputs[2], '1', 'Cell outputs not captured');
+    });
 
 });

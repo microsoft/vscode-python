@@ -28,7 +28,7 @@ jobs:
 - template: templates/uitest_jobs.yml
   parameters:
     # Test only against stable version of VSC.
-    # vscodeChannels: ['stable']
+    vscodeChannels: ['stable']
     # Run only smoke tests against 3.7 and 2.7 (exclude others).
     jobs:
     - test: "Smoke"

@@ -19,6 +19,7 @@ import uitests.vscode.quick_open
 import uitests.vscode.testing
 
 from . import core, quick_input, quick_open
+from .selectors import get_selector
 
 LINE_COLUMN_REGEX = re.compile("Ln (?P<line>\d+), Col (?P<col>\d+)")
 LINE_COLUMN_REGEX_FROM_PY_STATUS_BAR = re.compile("(?P<line>\d+),(?P<col>\d+)")
@@ -173,7 +174,9 @@ def get_current_line(context):
         # Some times VSC does not display the line numbers in the status bar.
         # Got some screenshots from CI where this has happened (for over 10 seconds no line line in statusbar!!!).
         # As a fallback, use another CSS query.
-        selector = ".part.statusbar .statusbar-item.left.statusbar-entry a[title='Py2']"
+        selector = get_selector("STATUS_BAR_SELECTOR", context.options.channel).format(
+            "Py2"
+        )
         element = core.wait_for_element(
             context.driver, selector, retry_count=30, retry_interval=0.1
         )
@@ -231,7 +234,7 @@ def get_current_line(context):
 
 
 def get_current_position(context, **kwargs):
-    selector = 'div.statusbar-item a[title="Go to Line"]'
+    selector = get_selector("GOTO_STATUS_BAR_SELECTOR", context.options.channel)
     element = core.wait_for_element(context.driver, selector, **kwargs)
     match = LINE_COLUMN_REGEX.match(element.text)
     if match is None:

@@ -181,6 +181,19 @@ steps:
       displayName: "Run Tests"
       condition: succeeded()
 
+    # Write exit code to a text file, so we can read it and fail CI in a separate task (fail if file exists).
+    # CI doesn't seem to fail based on exit codes.
+    # We can't fail on writing to stderr either as python logs stuff there & other errors that can be ignored are written there.
+    - bash: |
+          FILE=uitests/uitests/uitest_failed.txt
+          if [[ -f "$FILE" ]];
+          then
+            echo "UI Tests failed"
+            exit 1
+          fi
+      displayName: "Check if UI Tests Passed"
+      condition: succeeded()
+
     # Generate and publis results even if there are failures in previous steps.
     - script: python uitests report
       env:

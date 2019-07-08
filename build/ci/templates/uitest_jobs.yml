@@ -140,7 +140,7 @@ jobs:
                 ${{ format('Win{2}{0}{1}', py.displayName, job.test, channel) }}:
                     PythonVersion: ${{ py.version }}
                     VSCodeChannel: ${{ channel }}
-                    VMImageName: "windows-latest"
+                    VMImageName: "vs2017-win2016"
                     Tags: ${{ format('{0} {1} --tags=~@mac --tags=~@linux', job.tags, py.excludeTags) }}
 
               ${{ if not(contains(coalesce(job.ignoreOperatingSystems, ''), 'linux')) }}:

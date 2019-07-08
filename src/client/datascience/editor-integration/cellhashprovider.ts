@@ -3,19 +3,13 @@
 'use strict';
 import * as hashjs from 'hash.js';
 import { inject, injectable } from 'inversify';
-import {
-    Event,
-    EventEmitter,
-    Position,
-    Range,
-    TextDocumentChangeEvent,
-    TextDocumentContentChangeEvent
-} from 'vscode';
+import { Event, EventEmitter, Position, Range, TextDocumentChangeEvent, TextDocumentContentChangeEvent } from 'vscode';
 
 import { IDocumentManager } from '../../common/application/types';
 import { IConfigurationService } from '../../common/types';
 import { generateCells } from '../cellFactory';
-import { concatMultilineString } from '../common';
+import { CellMatcher } from '../cellMatcher';
+import { splitMultilineString } from '../common';
 import { Identifiers } from '../constants';
 import { InteractiveWindowMessages, IRemoteAddCode, SysInfoReason } from '../interactive-window/interactiveWindowTypes';
 import { ICellHash, ICellHashProvider, IFileHashes, IInteractiveWindowListener } from '../types';
@@ -103,7 +97,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
 
                 // Skip hash on unknown file though
                 if (args.file !== Identifiers.EmptyFileName) {
-                    this.addCellHash(concatMultilineString(codeCell.data.source), codeCell.line, codeCell.file, this.executionCount);
+                    this.addCellHash(splitMultilineString(codeCell.data.source), codeCell.line, codeCell.file, this.executionCount);
                 }
             }
         }
@@ -157,29 +151,55 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
         return `${before}${c.text}${after}`;
     }
 
-    private addCellHash(code: string, startLine: number, file: string, expectedCount: number) {
+    private addCellHash(lines: string[], startLine: number, file: string, expectedCount: number) {
         // Find the text document that matches. We need more information than
         // the add code gives us
         const doc = this.documentManager.textDocuments.find(d => d.fileName === file);
         if (doc) {
-            // The code we get is not actually what's in the document. The interactiveWindow massages it somewhat.
-            // We need the real code so that we can match document edits later.
-            const split = code.split('\n');
-            const lineCount = split.length;
-            const line = doc.lineAt(startLine);
-            const endLine = doc.lineAt(Math.min(startLine + lineCount - 1, doc.lineCount - 1));
+            const cellMatcher = new CellMatcher(this.configService.getSettings().datascience);
+
+            // Compute the code that will really be sent to jupyter
+            const stripped = lines.filter(l => !cellMatcher.isCode(l));
+
+            // Figure out our true 'start' line. This is what we need to tell the debugger is
+            // actually the start of the code as that's what Jupyter will be getting.
+            let trueStartLine = startLine;
+            for (let i = 0; i < stripped.length; i += 1) {
+                if (stripped[i] !== lines[i]) {
+                    trueStartLine += i + 1;
+                    break;
+                }
+            }
+            const line = doc.lineAt(trueStartLine);
+            const endLine = doc.lineAt(Math.min(trueStartLine + stripped.length - 1, doc.lineCount - 1));
+
+            // Use the original values however to track edits. This is what we need
+            // to move around
             const startOffset = doc.offsetAt(new Position(startLine, 0));
             const endOffset = doc.offsetAt(endLine.rangeIncludingLineBreak.end);
-            const realCode = doc.getText(new Range(line.range.start, endLine.rangeIncludingLineBreak.end));
+
+            // Jupyter also removes blank lines at the end.
+            let lastLine = stripped[stripped.length - 1];
+            while (lastLine.length === 0 || lastLine === '\n') {
+                stripped.splice(stripped.length - 1, 1);
+                lastLine = stripped[stripped.length - 1];
+            }
+            // Make sure the last line with actual content ends with a linefeed
+            if (!lastLine.endsWith('\n')) {
+                stripped[stripped.length - 1] = `${lastLine}\n`;
+            }
+            const hashedCode = stripped.join('');
+            const realCode = doc.getText(new Range(new Position(startLine, 0), endLine.rangeIncludingLineBreak.end));
+
             const hash : IRangedCellHash = {
-                hash: hashjs.sha1().update(code).digest('hex').substr(0, 12),
-                line: startLine + 1,
-                endLine: startLine + lineCount,
+                hash: hashjs.sha1().update(hashedCode).digest('hex').substr(0, 12),
+                line: line.lineNumber + 1,
+                endLine: endLine.lineNumber + 1,
                 executionCount: expectedCount,
                 startOffset,
                 endOffset,
                 deleted: false,
-                code,
+                code: hashedCode,
                 realCode
             };
 
