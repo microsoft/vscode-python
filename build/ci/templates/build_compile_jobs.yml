@@ -24,4 +24,4 @@ jobs:
   pool:
     vmImage: "macos-latest"
   steps:
-    - template: templates/prettier_format.yml
+    - template: prettier_format.yml
