@@ -565,7 +565,7 @@
                     "command": "python.execInTerminal",
                     "title": "%python.command.python.execInTerminal.title%",
                     "group": "navigation",
-                    "when": "resourceLangId == python"
+                    "when": "resourceLangId == python && python.showPlayIcon"
                 }
             ],
             "explorer/context": [

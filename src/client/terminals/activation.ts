@@ -5,10 +5,39 @@
 
 import { inject, injectable } from 'inversify';
 import { Terminal } from 'vscode';
-import { ITerminalManager, IWorkspaceService } from '../common/application/types';
+import {
+    ICommandManager, ITerminalManager, IWorkspaceService
+} from '../common/application/types';
+import { ShowPlayIcon } from '../common/experimentGroups';
 import { ITerminalActivator } from '../common/terminal/types';
-import { IDisposable, IDisposableRegistry } from '../common/types';
+import {
+    IDisposable, IDisposableRegistry, IExperimentsManager
+} from '../common/types';
+import { noop } from '../common/utils/misc';
 import { ITerminalAutoActivation } from './types';
+
+// This is called directly when activating the extension.
+export function activate(
+    experiments: IExperimentsManager,
+    commands: ICommandManager,
+    autoActivation: ITerminalAutoActivation
+) {
+    checkExperiments(experiments, commands);
+
+    autoActivation.register();
+}
+
+function checkExperiments(
+    experiments: IExperimentsManager,
+    commands: ICommandManager
+) {
+    if (experiments.inExperiment(ShowPlayIcon.experiment)) {
+        commands.executeCommand('setContext', 'python.showPlayIcon', true)
+            .then(noop, noop);
+    } else {
+        experiments.sendTelemetryIfInExperiment(ShowPlayIcon.control);
+    }
+}
 
 @injectable()
 export class TerminalAutoActivation implements ITerminalAutoActivation {
