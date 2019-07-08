@@ -23,6 +23,5 @@ steps:
   # > npm run prettier:check
     - bash: |
         npm run prettier:check
-      displayName: 'Prettier formatting check'
-      condition: and(succeeded())
+      displayName: "Prettier formatting check"
       failOnStderr: true

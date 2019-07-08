@@ -18,7 +18,7 @@ jobs:
   steps:
     - template: build_compile_steps.yml
 
-- job: Prettier formatting
+- job: Prettier
   variables:
     build: false
   pool:
