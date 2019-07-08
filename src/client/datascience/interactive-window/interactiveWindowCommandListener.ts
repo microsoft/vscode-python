@@ -45,7 +45,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IStatusProvider) private statusProvider: IStatusProvider,
         @inject(INotebookImporter) private jupyterImporter: INotebookImporter,
-        @inject(IDataScienceErrorHandler) protected dataScienceErrorHandler: IDataScienceErrorHandler
+        @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler
     ) {
         // Listen to document open commands. We want to ask the user if they want to import.
         const disposable = this.documentManager.onDidOpenTextDocument(this.onOpenedDocument);

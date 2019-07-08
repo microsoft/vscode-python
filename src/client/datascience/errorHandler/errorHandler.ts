@@ -6,7 +6,6 @@ import { IInstallationChannelManager } from '../../common/installer/types';
 import { ILogger, Product } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { IServiceContainer } from '../../ioc/types';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
 import { IDataScienceErrorHandler } from '../types';
@@ -15,7 +14,7 @@ import { IDataScienceErrorHandler } from '../types';
 export class DataScienceErrorHandler implements IDataScienceErrorHandler {
     constructor(@inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(ILogger) private logger: ILogger,
-        @inject(IServiceContainer) protected serviceContainer: IServiceContainer) {
+        @inject(IInstallationChannelManager) protected channels: IInstallationChannelManager) {
     }
 
     public handleError(err: Error) {
@@ -26,8 +25,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                 localize.DataScience.notebookCheckForImportNo())
                 .then(response => {
                     if (response === localize.DataScience.jupyterInstall()) {
-                        const channels = this.serviceContainer.get<IInstallationChannelManager>(IInstallationChannelManager);
-                        return channels.getInstallationChannel(Product.jupyter);
+                        return this.channels.getInstallationChannel(Product.jupyter);
                     } else {
                         const jupyterError = err as JupyterInstallError;
 
