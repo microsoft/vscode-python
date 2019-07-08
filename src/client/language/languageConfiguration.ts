@@ -9,7 +9,6 @@ export const MULTILINE_SEPARATOR_INDENT_REGEX = /^(?!\s+\\)[^#\n]+\\$/;
 
 export function setLanguageConfiguration() {
     // Enable indentAction
-    // tslint:disable-next-line:no-non-null-assertion
     languages.setLanguageConfiguration(PYTHON_LANGUAGE, {
         onEnterRules: [
             {
