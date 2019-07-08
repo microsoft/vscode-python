@@ -323,6 +323,7 @@ export interface IDataScienceSettings {
     codeLenses?: string;
     ptvsdDistPath?: string;
     stopOnFirstLineWhileDebugging?: boolean;
+    magicCommandsAsComments?: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');
