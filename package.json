@@ -2220,6 +2220,7 @@
         "compile-webviews-watch": "npx npx -n --max_old_space_size=4096 webpack --config webpack.datascience-ui.config.js --watch",
         "dump-datascience-webpack-stats": "npx -n --max_old_space_size=4096 webpack --config webpack.datascience-ui.config.js --profile --json > tmp/ds-stats.json",
         "compile-smoke": "cd src/smoke/src && npm run compile",
+        "compile-smoke:watch": "cd src/smoke/src && npm run compile:watch",
         "compile-webviews": "gulp compile-webviews",
         "compile-webviews-verbose": "npx webpack --config webpack.datascience-ui.config.js",
         "postinstall": "node ./node_modules/vscode/bin/install && node ./build/ci/postInstall.js",
