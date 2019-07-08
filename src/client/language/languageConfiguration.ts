@@ -14,7 +14,7 @@ export function setLanguageConfiguration() {
     languages.setLanguageConfiguration(PYTHON_LANGUAGE, {
         onEnterRules: [
             {
-                beforeText: /^(?!\s+\\)[^#\n]+\\\s*/,
+                beforeText: MULTILINE_SEPARATOR_INDENT_REGEX,
                 action: { indentAction: IndentAction.Indent }
             },
             {
