@@ -177,7 +177,11 @@
             {
                 "command": "python.execInTerminal",
                 "title": "%python.command.python.execInTerminal.title%",
-                "category": "Python"
+                "category": "Python",
+                "icon": {
+                    "light": "resources/light/run-in-terminal.svg",
+                    "dark": "resources/dark/run-in-terminal.svg"
+                }
             },
             {
                 "command": "python.setInterpreter",
@@ -554,6 +558,14 @@
                     "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled",
                     "command": "python.datascience.exportfileandoutputasnotebook",
                     "group": "Python3@3"
+                }
+            ],
+            "editor/title": [
+                {
+                    "command": "python.execInTerminal",
+                    "title": "%python.command.python.execInTerminal.title%",
+                    "group": "navigation",
+                    "when": "resourceLangId == python"
                 }
             ],
             "explorer/context": [
