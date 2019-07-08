@@ -127,20 +127,20 @@ steps:
       displayName: "Start xvfb"
       condition: and(succeeded(), eq(variables['Agent.Os'], 'Linux'), not(variables['SkipXvfb']))
 
-    - task: DownloadBuildArtifacts@0
-      inputs:
-          buildType: "current"
-          artifactName: "VSIX"
-          downloadPath: "$(Build.SourcesDirectory)"
-      displayName: "Restore VSIX"
-      condition: succeeded()
+    # - task: DownloadBuildArtifacts@0
+    #   inputs:
+    #       buildType: "current"
+    #       artifactName: "VSIX"
+    #       downloadPath: "$(Build.SourcesDirectory)"
+    #   displayName: "Restore VSIX"
+    #   condition: succeeded()
 
-    - task: CopyFiles@2
-      inputs:
-          sourceFolder: "$(Build.SourcesDirectory)/VSIX"
-          targetFolder: $(Build.SourcesDirectory)
-      displayName: "Copy VSIX"
-      condition: succeeded()
+    # - task: CopyFiles@2
+    #   inputs:
+    #       sourceFolder: "$(Build.SourcesDirectory)/VSIX"
+    #       targetFolder: $(Build.SourcesDirectory)
+    #   displayName: "Copy VSIX"
+    #   condition: succeeded()
 
     # Compile
     - bash: npm run compile-smoke
