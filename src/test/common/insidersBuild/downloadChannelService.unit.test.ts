@@ -14,8 +14,9 @@ import { IApplicationEnvironment, IWorkspaceService } from '../../../client/comm
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { ExtensionChannelService, insidersChannelSetting } from '../../../client/common/insidersBuild/downloadChannelService';
-import { ExtensionChannels } from '../../../client/common/insidersBuild/types';
-import { IConfigurationService } from '../../../client/common/types';
+import { InsidersExtensionPrompt } from '../../../client/common/insidersBuild/insidersExtensionPrompt';
+import { ExtensionChannels, IInsiderExtensionPrompt } from '../../../client/common/insidersBuild/types';
+import { IConfigurationService, IPersistentState } from '../../../client/common/types';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Download channel service', () => {
@@ -23,18 +24,22 @@ suite('Download channel service', () => {
     let appEnvironment: IApplicationEnvironment;
     let workspaceService: IWorkspaceService;
     let channelService: ExtensionChannelService;
+    let insidersPrompt: IInsiderExtensionPrompt;
+    let hasUserBeenNotifiedState: TypeMoq.IMock<IPersistentState<boolean>>;
     const configChangeEvent = new EventEmitter<ConfigurationChangeEvent>();
     setup(() => {
         configService = mock(ConfigurationService);
         appEnvironment = mock(ApplicationEnvironment);
         workspaceService = mock(WorkspaceService);
+        insidersPrompt = mock(InsidersExtensionPrompt);
         when(workspaceService.onDidChangeConfiguration).thenReturn(configChangeEvent.event);
-        channelService = new ExtensionChannelService(instance(appEnvironment), instance(configService), instance(workspaceService), []);
+        hasUserBeenNotifiedState = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
+        channelService = new ExtensionChannelService(instance(appEnvironment), instance(configService), instance(workspaceService), instance(insidersPrompt), []);
     });
 
     [
         {
-            testName: 'Get channel returns \'InsidersWeekly\' if user is using default setting and is using VS Code Insiders',
+            testName: 'Get channel returns \'InsidersWeekly\' if user is using default setting in the first session and is using VS Code Insiders',
             settings: {},
             vscodeChannel: 'insiders',
             expectedResult: 'InsidersWeekly'
@@ -74,10 +79,37 @@ suite('Download channel service', () => {
             workspaceConfig.setup(c => c.inspect<ExtensionChannels>(insidersChannelSetting))
                 .returns(() => settings as any)
                 .verifiable(TypeMoq.Times.once());
+            when(
+                insidersPrompt.hasUserBeenNotified
+            ).thenReturn(hasUserBeenNotifiedState.object);
+            hasUserBeenNotifiedState
+                .setup(u => u.value)
+                .returns(() => false);
             when(appEnvironment.channel).thenReturn(testParams.vscodeChannel as any);
             expect(channelService.channel).to.equal(testParams.expectedResult);
             workspaceConfig.verifyAll();
         });
+    });
+
+    test('Get channel returns \'Stable\' if user is using default setting and is using VS Code Insiders, but the user has been notified', async () => {
+        const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
+        const settings = {};
+
+        when(
+            workspaceService.getConfiguration('python')
+        ).thenReturn(workspaceConfig.object);
+        workspaceConfig.setup(c => c.inspect<ExtensionChannels>(insidersChannelSetting))
+            .returns(() => settings as any)
+            .verifiable(TypeMoq.Times.once());
+        when(
+            insidersPrompt.hasUserBeenNotified
+        ).thenReturn(hasUserBeenNotifiedState.object);
+        hasUserBeenNotifiedState
+            .setup(u => u.value)
+            .returns(() => true);
+        when(appEnvironment.channel).thenReturn('insiders');
+        expect(channelService.channel).to.equal('Stable');
+        workspaceConfig.verifyAll();
     });
 
     test('Get channel throws error if not setting is found', async () => {
