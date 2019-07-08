@@ -304,7 +304,6 @@ export interface IEventNamePropertyMapping {
     [EventName.PYTHON_LANGUAGE_SERVER_ERROR]: LanguageServerErrorTelemetry;
     [EventName.PYTHON_LANGUAGE_SERVER_EXTRACTED]: LanguageServerVersionTelemetry;
     [EventName.PYTHON_LANGUAGE_SERVER_LIST_BLOB_STORE_PACKAGES]: never | undefined;
-    [EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_NOT_SUPPORTED]: never | undefined;
     [EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED]: LanguageServePlatformSupported;
     [EventName.PYTHON_LANGUAGE_SERVER_READY]: never | undefined;
     [EventName.PYTHON_LANGUAGE_SERVER_STARTUP]: never | undefined;
