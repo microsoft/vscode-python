@@ -323,6 +323,8 @@ export interface IEventNamePropertyMapping {
     [EventName.TERMINAL_CREATE]: TerminalTelemetry;
     [EventName.UNITTEST_DISCOVER]: TestDiscoverytTelemetry;
     [EventName.UNITTEST_DISCOVER_WITH_PYCODE]: never | undefined;
+    [EventName.UNITTEST_NAVIGATE]: { byFile?: boolean; byFunction?: boolean; bySuite?: boolean; focus_code?: boolean };
+    [EventName.UNITTEST_EXPLORER_WORK_SPACE_COUNT]: { count: number };
     [EventName.UNITTEST_RUN]: TestRunTelemetry;
     [EventName.UNITTEST_STOP]: never | undefined;
     [EventName.UNITTEST_DISABLE]: never | undefined;
@@ -401,10 +403,6 @@ export interface IEventNamePropertyMapping {
     [Telemetry.WebviewMonacoStyleUpdate]: never | undefined;
     [Telemetry.WebviewStartup]: { type: string };
     [Telemetry.WebviewStyleUpdate]: never | undefined;
-    [EventName.UNITTEST_NAVIGATE_TEST_FILE]: never | undefined;
-    [EventName.UNITTEST_NAVIGATE_TEST_FUNCTION]: { focus_code: boolean };
-    [EventName.UNITTEST_NAVIGATE_TEST_SUITE]: { focus_code: boolean };
-    [EventName.UNITTEST_EXPLORER_WORK_SPACE_COUNT]: { count: number };
     /*
     Telemetry event sent with details of Jedi Memory usage.
     memory - Memory usage of Process in kb.
