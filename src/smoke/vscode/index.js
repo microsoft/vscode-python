@@ -9,6 +9,7 @@ const fs = require('fs-extra');
 const rootDirectory = path.join(__dirname, '..', '..', '..');
 const tsConfig = path.join(__dirname, 'test', 'smoke', 'tsconfig.json');
 const packageJson = path.join(__dirname, 'test', 'smoke', 'package.json');
+const vscodeSmokeDirector = path.join(__dirname, 'test', 'smoke');
 const packageJsonDirectory = path.dirname(packageJson);
 
 function udpateTsConfig() {
@@ -21,12 +22,14 @@ function udpateTsConfig() {
 
 function updatePackageJson() {
     const json = JSON.parse(fs.readFileSync(packageJson).toString());
-    const sourceDrvierJs = path.join('src', 'vscode', 'driver.js');
-    const sourceDrvierTs = path.join('src', 'vscode', 'driver.d.ts');
-    const outDirVSC = path.relative(packageJsonDirectory, path.join(rootDirectory, 'out', 'smoke', 'vscode', 'vscode'));
+    const sourceDrvierJs = path.join(vscodeSmokeDirector, 'src', 'vscode', 'driver.js');
+    const sourceDrvierTs = path.join(vscodeSmokeDirector, 'src', 'vscode', 'driver.d.ts');
+    const outDirVSC = path.join(rootDirectory, 'out', 'smoke', 'vscode', 'vscode');
     fs.ensureDirSync(outDirVSC);
-    json.scripts['copy-driver'] = `cpx ${sourceDrvierJs} ${outDirVSC} && cpx ${sourceDrvierTs} ${outDirVSC} `;
+    json.scripts['copy-driver'] = '';
+    fs.copyFile(sourceDrvierJs, path.join(outDirVSC, path.basename(sourceDrvierJs)));
     console.log(`Copied file '${sourceDrvierJs}' into ${outDirVSC}`);
+    fs.copyFile(sourceDrvierTs, path.join(outDirVSC, path.basename(sourceDrvierTs)));
     console.log(`Copied file '${sourceDrvierTs}' into ${outDirVSC}`);
     fs.writeFileSync(packageJson, JSON.stringify(json, undefined, 4));
     console.log(`Updated packageJson ${packageJson}`);
