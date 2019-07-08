@@ -15,18 +15,20 @@ import { CellState, ICell } from './types';
 function uncommentMagicCommands(line: string): string {
     // Uncomment lines that are shell assignments (starting with #!),
     // line magic (starting with #!%) or cell magic (starting with #!%%).
-    if (RegExp('^# *!').test(line)) {
+    if (/^#\s!/.test(line)) {
         // If the regex test passes, it's either line or cell magic.
         // Hence, remove the leading # and ! including possible white space.
-        if (RegExp('^# *! *%%?').test(line)) return line.replace(/^# *! */, '')
+        if (/^#\s!\s%%?/.test(line)) {
+            return line.replace(/^#\s!\s/, '');
+        }
         // If the test didn't pass, it's a shell assignment. In this case, only
         // remove leading # including possible white space.
-        return line.replace(/^# */, '')
+        return line.replace(/^#\s/, '');
+    } else {
+        // If it's regular Python code, just return it.
+        return line;
     }
-    // If it's regular Python code, just return it.
-    else return line
 }
-
 
 function generateCodeCell(code: string[], file: string, line: number, id: string, magicCommandsAsComments: boolean) : ICell {
     // Code cells start out with just source and no outputs.
