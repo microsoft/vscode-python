@@ -96,8 +96,8 @@ export interface INotebookServerOptions {
 
 export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');
 export interface INotebookExecutionLogger {
-    preExecute(cell: ICell, silent: boolean): void;
-    postExecute(cellOrError: ICell | Error, silent: boolean): void;
+    preExecute(cell: ICell, silent: boolean): Promise<void>;
+    postExecute(cell: ICell, silent: boolean): Promise<void>;
 }
 
 export const IJupyterExecution = Symbol('IJupyterExecution');
@@ -272,6 +272,7 @@ export interface ICell {
     state: CellState;
     type: 'preview' | 'execute';
     data: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell | IMessageCell;
+    extraLines?: number[];
 }
 
 export interface IInteractiveWindowInfo {
@@ -415,6 +416,7 @@ export interface ISourceMapRequest {
 export interface ICellHash {
     line: number;       // 1 based
     endLine: number;    // 1 based and inclusive
+    runtimeLine: number; // Line in the jupyter source to start at
     hash: string;
     executionCount: number;
 }
@@ -422,6 +424,11 @@ export interface ICellHash {
 export interface IFileHashes {
     file: string;
     hashes: ICellHash[];
+}
+
+export const ICellHashListener = Symbol('ICellHashListener');
+export interface ICellHashListener {
+    hashesUpdated(hashes: IFileHashes[]): Promise<void>;
 }
 
 export const ICellHashProvider = Symbol('ICellHashProvider');

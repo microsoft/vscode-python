@@ -43,7 +43,10 @@ import { PipEnvActivationCommandProvider } from '../../client/common/terminal/en
 import { PyEnvActivationCommandProvider } from '../../client/common/terminal/environmentActivationProviders/pyenvActivationProvider';
 import { TerminalServiceFactory } from '../../client/common/terminal/factory';
 import { TerminalHelper } from '../../client/common/terminal/helper';
-import { ITerminalActivationCommandProvider, ITerminalActivationHandler, ITerminalActivator, ITerminalHelper, ITerminalServiceFactory, TerminalActivationProviders } from '../../client/common/terminal/types';
+import { SettingsShellDetector } from '../../client/common/terminal/shellDetectors/settingsShellDetector';
+import { TerminalNameShellDetector } from '../../client/common/terminal/shellDetectors/terminalNameShellDetector';
+import { UserEnvironmentShellDetector } from '../../client/common/terminal/shellDetectors/userEnvironmentShellDetector';
+import { IShellDetector, ITerminalActivationCommandProvider, ITerminalActivationHandler, ITerminalActivator, ITerminalHelper, ITerminalServiceFactory, TerminalActivationProviders } from '../../client/common/terminal/types';
 import { IAsyncDisposableRegistry, IBrowserService, IConfigurationService, ICryptoUtils, ICurrentProcess, IEditorUtils, IExperimentsManager, IExtensions, IFeatureDeprecationManager, IHttpClient, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IRandom } from '../../client/common/types';
 import { IMultiStepInputFactory, MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
 import { Random } from '../../client/common/utils/random';
@@ -91,13 +94,15 @@ suite('Common - Service Registry', () => {
             [IFeatureDeprecationManager, FeatureDeprecationManager],
             [IAsyncDisposableRegistry, AsyncDisposableRegistry],
             [IMultiStepInputFactory, MultiStepInputFactory],
-            [IImportTracker, ImportTracker]
+            [IImportTracker, ImportTracker],
+            [IShellDetector, TerminalNameShellDetector],
+            [IShellDetector, SettingsShellDetector],
+            [IShellDetector, UserEnvironmentShellDetector]
         ].forEach(mapping => {
             if (mapping.length === 2) {
                 serviceManager
-                    .setup(s => s.addSingleton(typemoq.It.isValue(mapping[0] as any), typemoq.It.isAny()))
-                    .callback((_, cls) => expect(cls).to.equal(mapping[1]))
-                    .verifiable(typemoq.Times.once());
+                    .setup(s => s.addSingleton(typemoq.It.isValue(mapping[0] as any), typemoq.It.is(value => mapping[1] === value)))
+                    .verifiable(typemoq.Times.atLeastOnce());
             } else {
                 serviceManager
                     .setup(s => s.addSingleton(typemoq.It.isValue(mapping[0] as any), typemoq.It.isAny(), typemoq.It.isValue(mapping[2] as any)))

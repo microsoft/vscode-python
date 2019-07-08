@@ -233,12 +233,10 @@ class TestFixture extends BaseTestFixture {
         configService: IConfigurationService
     ): IPythonExecutionFactory {
         const envVarsService = TypeMoq.Mock.ofType<IEnvironmentVariablesProvider>(undefined, TypeMoq.MockBehavior.Strict);
-        envVarsService.setup(e => e.getEnvironmentVariables(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve({}));
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IEnvironmentVariablesProvider), TypeMoq.It.isAny()))
-            .returns(() => envVarsService.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny()))
-            .returns(() => []);
+        envVarsService.setup(e => e.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({}));
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IEnvironmentVariablesProvider), TypeMoq.It.isAny())).returns(() => envVarsService.object);
+        const disposableRegistry: IDisposableRegistry = [];
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny())).returns(() => disposableRegistry);
 
         const envActivationService = TypeMoq.Mock.ofType<IEnvironmentActivationService>(undefined, TypeMoq.MockBehavior.Strict);
 
@@ -246,7 +244,13 @@ class TestFixture extends BaseTestFixture {
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IBufferDecoder), TypeMoq.It.isAny()))
             .returns(() => decoder);
 
-        const procServiceFactory = new ProcessServiceFactory(serviceContainer.object);
+        const processLogger = TypeMoq.Mock.ofType<IProcessLogger>(undefined, TypeMoq.MockBehavior.Strict);
+        processLogger
+            .setup(p => p.logProcess(TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => {
+                return;
+            });
+        const procServiceFactory = new ProcessServiceFactory(envVarsService.object, processLogger.object, decoder, disposableRegistry);
 
         return new PythonExecutionFactory(
             serviceContainer.object,

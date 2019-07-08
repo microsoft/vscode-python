@@ -322,6 +322,7 @@ export interface IDataScienceSettings {
     enablePlotViewer?: boolean;
     codeLenses?: string;
     ptvsdDistPath?: string;
+    stopOnFirstLineWhileDebugging?: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

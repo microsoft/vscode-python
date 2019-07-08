@@ -615,36 +615,6 @@ export class JupyterServerBase implements INotebookServer {
         });
     }
 
-    private wrapObservable<T>(
-        observable: Observable<T>,
-        silent: boolean,
-        preCall: (args: T, silent: boolean) => void,
-        postCall: (args: T | Error, silent: boolean) => void): Observable<T> {
-        // Wrap in a new observable
-        return new Observable<T>(subscriber => {
-            let pre = false;
-            let lastVal: T | undefined;
-            observable.subscribe(val => {
-                if (!pre) {
-                    pre = true;
-                    preCall(val, silent);
-                }
-                lastVal = val;
-                subscriber.next(val);
-            },
-                e => {
-                    subscriber.error(e);
-                    postCall(e, silent);
-                },
-                () => {
-                    subscriber.complete();
-                    if (lastVal) {
-                        postCall(lastVal, silent);
-                    }
-                });
-        });
-    }
-
     private executeMarkdownObservable = (cell: ICell): Observable<ICell> => {
         // Markdown doesn't need any execution
         return new Observable<ICell>(subscriber => {
@@ -749,35 +719,38 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     private executeCodeObservable(cell: ICell, silent?: boolean): Observable<ICell> {
-        // Wrap this observable so we can log pre/post calls. ExecuteCodeObservable is the main
-        // gateway to executing actual code on the jupyter server.
-        return this.wrapObservable(
-            new Observable<ICell>(subscriber => {
-                // Tell our listener. NOTE: have to do this asap so that markdown cells don't get
-                // run before our cells.
-                subscriber.next(cell);
+        return new Observable<ICell>(subscriber => {
+            // Tell our listener. NOTE: have to do this asap so that markdown cells don't get
+            // run before our cells.
+            subscriber.next(cell);
 
+            // Log the pre execution.
+            const isSilent = silent !== undefined ? silent : false;
+            this.logPreCode(cell, isSilent).then(() => {
                 // Wrap the subscriber and save it. It is now pending and waiting completion.
                 const cellSubscriber = new CellSubscriber(cell, subscriber, (self: CellSubscriber) => {
+                    // Subscriber completed, remove from subscriptions.
                     this.pendingCellSubscriptions = this.pendingCellSubscriptions.filter(p => p !== self);
+
+                    // Indicate success or failure
+                    this.logPostCode(cell, isSilent).ignoreErrors();
                 });
                 this.pendingCellSubscriptions.push(cellSubscriber);
 
                 // Attempt to change to the current directory. When that finishes
                 // send our real request
                 this.handleCodeRequest(cellSubscriber, silent);
-            }),
-            silent !== undefined ? silent : false,
-            this.logPreCode.bind(this),
-            this.logPostCode.bind(this));
+            }).ignoreErrors();
+
+        });
     }
 
-    private logPreCode(cell: ICell, silent: boolean) {
-        this.loggers.forEach(l => l.preExecute(cell, silent));
+    private async logPreCode(cell: ICell, silent: boolean): Promise<void> {
+        await Promise.all(this.loggers.map(l => l.preExecute(cell, silent)));
     }
 
-    private logPostCode(cellOrError: ICell | Error, silent: boolean) {
-        this.loggers.forEach(l => l.postExecute(cellOrError, silent));
+    private async logPostCode(cell: ICell, silent: boolean): Promise<void> {
+        await Promise.all(this.loggers.map(l => l.postExecute(cell, silent)));
     }
 
     private addToCellData = (cell: ICell, output: nbformat.IUnrecognizedOutput | nbformat.IExecuteResult | nbformat.IDisplayData | nbformat.IStream | nbformat.IError, clearState: Map<string, boolean>) => {

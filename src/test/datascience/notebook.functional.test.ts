@@ -1015,14 +1015,11 @@ plt.show()`,
         const outputs: string[] = [];
         @injectable()
         class Logger implements INotebookExecutionLogger {
-            public preExecute(cell: ICell, _silent: boolean): void {
+            public async preExecute(cell: ICell, _silent: boolean): Promise<void> {
                 cellInputs.push(concatMultilineString(cell.data.source));
             }
-            public postExecute(cellOrError: ICell | Error, _silent: boolean): void {
-                if (!(cellOrError instanceof Error)) {
-                    const cell = cellOrError as ICell;
-                    outputs.push(extractDataOutput(cell));
-                }
+            public async postExecute(cell: ICell, _silent: boolean): Promise<void> {
+                outputs.push(extractDataOutput(cell));
             }
         }
         ioc.serviceManager.add<INotebookExecutionLogger>(INotebookExecutionLogger, Logger);
@@ -1031,9 +1028,9 @@ plt.show()`,
         assert.ok(server, 'Server not created in logging case');
         await server!.execute(`a=1${os.EOL}a`, path.join(srcDirectory(), 'foo.py'), 2, uuid());
         assert.equal(cellInputs.length, 3, 'Not enough cell inputs');
-        assert.equal(outputs.length, 3, 'Not enough cell inputs');
+        assert.ok(outputs.length >= 1, 'Not enough cell outputs');
         assert.equal(cellInputs[2], 'a=1\na', 'Cell inputs not captured');
-        assert.equal(outputs[2], '1', 'Cell outputs not captured');
+        assert.equal(outputs[outputs.length - 1], '1', 'Cell outputs not captured');
     });
 
 });
