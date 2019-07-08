@@ -15,15 +15,15 @@ import { CellState, ICell } from './types';
 function uncommentMagicCommands(line: string): string {
     // Uncomment lines that are shell assignments (starting with #!),
     // line magic (starting with #!%) or cell magic (starting with #!%%).
-    if (/^#\s!/.test(line)) {
+    if (/^#\s*!/.test(line)) {
         // If the regex test passes, it's either line or cell magic.
         // Hence, remove the leading # and ! including possible white space.
-        if (/^#\s!\s%%?/.test(line)) {
-            return line.replace(/^#\s!\s/, '');
+        if (/^#\s*!\s*%%?/.test(line)) {
+            return line.replace(/^#\s*!\s*/, '');
         }
         // If the test didn't pass, it's a shell assignment. In this case, only
         // remove leading # including possible white space.
-        return line.replace(/^#\s/, '');
+        return line.replace(/^#\s*/, '');
     } else {
         // If it's regular Python code, just return it.
         return line;
