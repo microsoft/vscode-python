@@ -26,15 +26,20 @@ suite('Download channel service', () => {
     let channelService: ExtensionChannelService;
     let insidersPrompt: IInsiderExtensionPrompt;
     let hasUserBeenNotifiedState: TypeMoq.IMock<IPersistentState<boolean>>;
-    const configChangeEvent = new EventEmitter<ConfigurationChangeEvent>();
+    let configChangeEvent: EventEmitter<ConfigurationChangeEvent>;
     setup(() => {
         configService = mock(ConfigurationService);
         appEnvironment = mock(ApplicationEnvironment);
         workspaceService = mock(WorkspaceService);
         insidersPrompt = mock(InsidersExtensionPrompt);
+        configChangeEvent = new EventEmitter<ConfigurationChangeEvent>();
         when(workspaceService.onDidChangeConfiguration).thenReturn(configChangeEvent.event);
         hasUserBeenNotifiedState = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
         channelService = new ExtensionChannelService(instance(appEnvironment), instance(configService), instance(workspaceService), instance(insidersPrompt), []);
+    });
+
+    teardown(() => {
+        configChangeEvent.dispose();
     });
 
     [

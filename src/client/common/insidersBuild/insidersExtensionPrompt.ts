@@ -13,11 +13,11 @@ import { Common, ExtensionChannels } from '../utils/localize';
 import { noop } from '../utils/misc';
 import { ExtensionChannel, IExtensionChannelService, IInsiderExtensionPrompt } from './types';
 
-const insidersPromptStateKey = 'INSIDERS_PROMPT_STATE_KEY';
+export const insidersPromptStateKey = 'INSIDERS_PROMPT_STATE_KEY';
 @injectable()
 export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
     public readonly hasUserBeenNotified: IPersistentState<boolean>;
-    private reloadPromptDisabled: boolean = false;
+    public reloadPromptDisabled: boolean = false;
     constructor(
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IExtensionChannelService) private readonly insidersDownloadChannelService: IExtensionChannelService,
@@ -28,7 +28,7 @@ export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
     }
 
     @traceDecorators.error('Error in prompting to install insiders')
-    public async notifyToInstallInsider(): Promise<void> {
+    public async notifyToInstallInsiders(): Promise<void> {
         const prompts = [ExtensionChannels.useStable(), Common.reload()];
         const telemetrySelections: ['Use Stable', 'Reload'] = ['Use Stable', 'Reload'];
         const selection = await this.appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts);

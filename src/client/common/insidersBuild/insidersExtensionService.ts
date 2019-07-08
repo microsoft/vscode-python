@@ -45,7 +45,7 @@ export class InsidersExtensionService implements IExtensionActivationService {
         await buildInstaller.install();
         if (this.appEnvironment.channel === 'insiders' && installChannel !== 'Stable' && !this.insidersPrompt.hasUserBeenNotified.value) {
             // If user is using VS Code Insiders, channel is `Insiders*` and user has not been notified, then notify user
-            await this.insidersPrompt.notifyToInstallInsider();
+            await this.insidersPrompt.notifyToInstallInsiders();
         } else if (didChannelChange) {
             await this.insidersPrompt.promptToReload();
         }
