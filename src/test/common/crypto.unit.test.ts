@@ -12,11 +12,11 @@ suite('Crypto Utils', async () => {
         crypto = new CryptoUtils();
     });
     test('If hashFormat equals `number`, method createHash() returns a number', async () => {
-        const hash = crypto.createHash('blabla', 'hex', 'number');
+        const hash = crypto.createHash('blabla', 'number');
         assert.typeOf(hash, 'number', 'Type should be a number');
     });
     test('If hashFormat equals `string`, method createHash() returns a string', async () => {
-        const hash = crypto.createHash('blabla', 'hex', 'string');
+        const hash = crypto.createHash('blabla', 'string');
         assert.typeOf(hash, 'string', 'Type should be a string');
     });
 });
