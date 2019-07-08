@@ -6,17 +6,15 @@ import { IndentAction, languages } from 'vscode';
 import { PYTHON_LANGUAGE } from '../common/constants';
 
 export const MULTILINE_SEPARATOR_INDENT_REGEX = /^(?!\s+\\)[^#\n]+\\$/;
+export const INCREASE_INDENT_REGEX = /^\s*(?:def|class|for|if|elif|else|while|try|with|finally|except|async)\b.*:\s*/;
+export const DECREASE_INDENT_REGEX = /^\s*(?:elif|else)\b.*:\s*/;
 
 export function setLanguageConfiguration() {
     // Enable indentAction
     languages.setLanguageConfiguration(PYTHON_LANGUAGE, {
         onEnterRules: [
             {
-                beforeText: /^\s*(?:def|class|for|if|elif|else|while|try|with|finally|except|async)\b.*:\s*/,
-                action: { indentAction: IndentAction.Indent }
-            },
-            {
-                beforeText: MULTILINE_SEPARATOR_INDENT_REGEX,
+                beforeText: /^(?!\s+\\)[^#\n]+\\\s*/,
                 action: { indentAction: IndentAction.Indent }
             },
             {
@@ -29,6 +27,10 @@ export function setLanguageConfiguration() {
                 afterText: /\s+$/,
                 action: { indentAction: IndentAction.Outdent }
             }
-        ]
+        ],
+        indentationRules: {
+            increaseIndentPattern: INCREASE_INDENT_REGEX,
+            decreaseIndentPattern: DECREASE_INDENT_REGEX
+        }
     });
 }
