@@ -6,6 +6,7 @@
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import { instance, mock, when } from 'ts-mockito';
+import { ApplicationEnvironment } from '../../../../client/common/application/applicationEnvironment';
 import { WorkspaceService } from '../../../../client/common/application/workspace';
 import { PlatformService } from '../../../../client/common/platform/platformService';
 import { IPlatformService } from '../../../../client/common/platform/types';
@@ -13,6 +14,7 @@ import { CurrentProcess } from '../../../../client/common/process/currentProcess
 import { SettingsShellDetector } from '../../../../client/common/terminal/shellDetectors/settingsShellDetector';
 import { TerminalNameShellDetector } from '../../../../client/common/terminal/shellDetectors/terminalNameShellDetector';
 import { UserEnvironmentShellDetector } from '../../../../client/common/terminal/shellDetectors/userEnvironmentShellDetector';
+import { VSCEnvironmentShellDetector } from '../../../../client/common/terminal/shellDetectors/vscEnvironmentShellDetector';
 import { ShellIdentificationTelemetry, TerminalShellType } from '../../../../client/common/terminal/types';
 import { getNamesAndValues } from '../../../../client/common/utils/enum';
 import { OSType } from '../../../../client/common/utils/platform';
@@ -78,17 +80,17 @@ suite('Shell Detectors', () => {
             expect(shellDetector.identify(telemetryProperties, { name: shellPath } as any)).to.equal(shellType, `Incorrect Shell Type for name '${shellPath}'`);
         });
 
-        expect(shellDetector.identifyTerminalShell(telemetryProperties, undefined)).to.equal(undefined, 'Should be undefined when there is no temrinal');
+        expect(shellDetector.identify(telemetryProperties, undefined)).to.equal(undefined, 'Should be undefined when there is no temrinal');
     });
     test('Identify shell based on VSC Environment', async () => {
         const shellDetector = new VSCEnvironmentShellDetector(instance(appEnv));
         shellPathsAndIdentification.forEach((shellType, shellPath) => {
             when(appEnv.shell).thenReturn(shellPath);
-            expect(shellDetector.identifyTerminalShell(telemetryProperties, { name: shellPath } as any)).to.equal(shellType, `Incorrect Shell Type from identifyShellByTerminalName, for path '${shellPath}'`);
+            expect(shellDetector.identify(telemetryProperties, { name: shellPath } as any)).to.equal(shellType, `Incorrect Shell Type from identifyShellByTerminalName, for path '${shellPath}'`);
         });
 
         when(appEnv.shell).thenReturn(undefined);
-        expect(shellDetector.identifyTerminalShell(telemetryProperties, undefined)).to.equal(undefined, 'Should be undefined when vscode.env.shell is undefined');
+        expect(shellDetector.identify(telemetryProperties, undefined)).to.equal(undefined, 'Should be undefined when vscode.env.shell is undefined');
     });
     test('Identify shell based on VSC Settings', async () => {
         const shellDetector = new SettingsShellDetector(instance(workspaceService), instance(platformService));
