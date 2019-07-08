@@ -29,21 +29,21 @@ Feature: Test Explorer
             """
         When I wait for the Python extension to activate
         When I select the command "Python: Discover Tests"
-        And I wait for tests discovery to complete
+        And I wait for test discovery to complete
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
-        And I expand all of the test tree nodes
-        Then there are <node_count> nodes in the tree
-        And <node_count> nodes have a status of "Unknown"
-        When I run the test node "test_two_first_suite"
+        And I expand all of the nodes in the test explorer
+        Then there are <node_count> nodes in the test explorer
+        And <node_count> nodes in the test explorer have a status of "Unknown"
+        When I run the node "test_two_first_suite" from the test explorer
         Then the stop icon is visible in the toolbar
-        And 1 node has a status of "Progress"
-        And the node "test_two_first_suite" has a status of "Progress"
+        And 1 node in the test explorer has a status of "Progress"
+        And the node "test_two_first_suite" in the test explorer has a status of "Progress"
         When I wait for tests to complete running
-        Then the node "<test_one_file_label>" has a status of "Success"
-        And the node "TestFirstSuite" has a status of "Success"
-        And the node "test_two_first_suite" has a status of "Success"
-        And 11 nodes have a status of "Unknown"
+        Then the node "<test_one_file_label>" in the test explorer has a status of "Success"
+        And the node "TestFirstSuite" in the test explorer has a status of "Success"
+        And the node "test_two_first_suite" in the test explorer has a status of "Success"
+        And 11 nodes in the test explorer have a status of "Unknown"
 
         Examples:
             | package  | setting_to_enable | node_count | test_one_file_label |
@@ -65,21 +65,21 @@ Feature: Test Explorer
             """
         When I wait for the Python extension to activate
         When I select the command "Python: Discover Tests"
-        And I wait for tests discovery to complete
+        And I wait for test discovery to complete
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
-        And I expand all of the test tree nodes
-        Then there are <node_count> nodes in the tree
-        And <node_count> nodes have a status of "Unknown"
-        When I run the test node "test_three_first_suite"
+        And I expand all of the nodes in the test explorer
+        Then there are <node_count> nodes in the test explorer
+        And <node_count> nodes in the test explorer have a status of "Unknown"
+        When I run the node "test_three_first_suite" from the test explorer
         Then the stop icon is visible in the toolbar
-        And 1 node has a status of "Progress"
-        And the node "test_three_first_suite" has a status of "Progress"
+        And 1 node in the test explorer has a status of "Progress"
+        And the node "test_three_first_suite" in the test explorer has a status of "Progress"
         When I wait for tests to complete running
-        Then the node "<test_one_file_label>" has a status of "Fail"
-        And the node "TestFirstSuite" has a status of "Fail"
-        And the node "test_three_first_suite" has a status of "Fail"
-        And 11 nodes have a status of "Unknown"
+        Then the node "<test_one_file_label>" in the test explorer has a status of "Fail"
+        And the node "TestFirstSuite" in the test explorer has a status of "Fail"
+        And the node "test_three_first_suite" in the test explorer has a status of "Fail"
+        And 11 nodes in the test explorer have a status of "Unknown"
 
         Examples:
             | package  | setting_to_enable | node_count | test_one_file_label |

@@ -1,0 +1,47 @@
+{
+    "version": "2.0.0",
+    "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+    },
+    "tasks": [
+        {
+            "label": "Compile Smoke",
+            "type": "npm",
+            "script": "compile",
+            "isBackground": true,
+            "problemMatcher": [
+                "$tsc-watch",
+                {
+                    "base": "$tslint5",
+                    "fileLocation": "relative"
+                }
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "Smoke Test",
+            "type": "shell",
+            "command": "cd ../../../ && npm run smokeTest -- --tags @wip",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        },
+        {
+            "label": "Smoke Test Report",
+            "type": "shell",
+            "command": "ts-node helpers/report.ts",
+            "problemMatcher": []
+        }
+    ]
+}

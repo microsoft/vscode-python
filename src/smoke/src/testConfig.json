@@ -1,0 +1,184 @@
+{
+    // URL or repository.
+    "testRepositoryUri": "https://github.com/DonJayamanne/smokeTestProject.git",
+    // Root directory where temporary workspace folders will be created.
+    "tempFolder": "/Users/donjayamanne/Desktop/Development/PythonStuff/smoke tests",
+    // If empty, repo will be cloned into temp directory, else will use provided directory.
+    // "workspaceFolder": "/Users/donjayamanne/Desktop/Development/PythonStuff/Blah",
+    // Fully qualified path to screen shots folder (defaults to `screenShots` in current directory).
+    "screenShotsFolder": "/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/src/smokeTest/screenShots",
+    // Fully qualified path to where VS Code is installed.
+    "vscodePath": "/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/.vscode-test/stable/Visual Studio Code.app",
+    "genericPyhtonPath": "python",
+    "environments": [
+        {
+            "tags": "@testing",
+            "type": "other",
+            "name": "PyTest",
+            "pythonVersion": "3.7",
+            "pythonPath": "/Users/donjayamanne/.local/share/virtualenvs/flake8GitHubApp-OUEFoLIB/bin/python",
+            "displayNameParts": [
+                "Python",
+                "3.7"
+            ],
+            "delayForActivation": 5000,
+            "user.settings": {
+                "python.jediEnabled": false
+            },
+            "workspace.settings": {
+                "python.unitTest.unittestEnabled": false,
+                "python.unitTest.nosetestsEnabled": false,
+                "python.unitTest.pyTestEnabled": true
+            }
+        },
+        {
+            "tags": "@testing",
+            "type": "other",
+            "name": "Unittest",
+            "pythonVersion": "3.7",
+            "pythonPath": "/Users/donjayamanne/.local/share/virtualenvs/flake8GitHubApp-OUEFoLIB/bin/python",
+            "displayNameParts": [
+                "Python",
+                "3.7"
+            ],
+            "delayForActivation": 5000,
+            "user.settings": {
+                "python.jediEnabled": false
+            },
+            "workspace.settings": {
+                "python.unitTest.unittestEnabled": true,
+                "python.unitTest.nosetestsEnabled": false,
+                "python.unitTest.pyTestEnabled": false
+            }
+        },
+        {
+            "tags": "@testing",
+            "type": "other",
+            "name": "Nose",
+            "pythonVersion": "3.7",
+            "pythonPath": "/Users/donjayamanne/.local/share/virtualenvs/flake8GitHubApp-OUEFoLIB/bin/python",
+            "displayNameParts": [
+                "Python",
+                "3.7"
+            ],
+            "delayForActivation": 5000,
+            "user.settings": {
+                "python.jediEnabled": false
+            },
+            "workspace.settings": {
+                "python.unitTest.unittestEnabled": false,
+                "python.unitTest.nosetestsEnabled": true,
+                "python.unitTest.pyTestEnabled": false
+            }
+        }
+        // {
+        //     "type": "conda",
+        //     "name": "py3.7",
+        //     "pythonPath": "/Library/Frameworks/Python.framework/Versions/3.7/bin/python3",
+        //     "displayNameParts": [
+        //         "Python",
+        //         "3.7"
+        //     ],
+        //     "delayForActivation": 5000,
+        //     "settings": {
+        //         "python.jediEnabled": false
+        //     }
+        // },
+        // {
+        //     "type": "virtualenv",
+        //     "name": "virtualenv (fishvenv1)",
+        //     "pythonPath": "/Users/donjayamanne/.virtualenvs/fishvenv1/bin/python",
+        //     "displayNameParts": [
+        //         "Python",
+        //         "3.6.5"
+        //     ],
+        //     "delayForActivation": 5000,
+        //     "settings": {
+        //         "python.jediEnabled": false
+        //     }
+        // },
+        // {
+        //     "type": "conda",
+        //     "name": "conda (env-01)",
+        //     "pythonPath": "/Users/donjayamanne/anaconda3/envs/env-01/bin/python",
+        //     "displayNameParts": [
+        //         "Python",
+        //         "3.4",
+        //         "env-01",
+        //         "conda"
+        //     ],
+        //     "delayForActivation": 5000,
+        //     "settings": {
+        //         "python.jediEnabled": false
+        //     }
+        // },
+        // {
+        //     "type": "pipenv",
+        //     "name": "pipenv2",
+        //     "create": true,
+        //     "pipEnvArgs": [
+        //         "--python=python2"
+        //     ],
+        //     "displayNameParts": [
+        //         "Python",
+        //         "pipenv",
+        //         "2."
+        //     ],
+        //     "delayForActivation": 5000,
+        //     "settings": {
+        //         "python.jediEnabled": false
+        //     }
+        // },
+        // {
+        //     "type": "pipenv",
+        //     "name": "pipenv3",
+        //     "create": true,
+        //     "pipEnvArgs": [
+        //         "--python=python3"
+        //     ],
+        //     "displayNameParts": [
+        //         "Python",
+        //         "pipenv",
+        //         "3."
+        //     ],
+        //     "delayForActivation": 5000,
+        //     "settings": {
+        //         "python.jediEnabled": false
+        //     }
+        // },
+        // {
+        //     "type": "venv",
+        //     "name": "venv",
+        //     "create": true,
+        //     "venvBasePythonPath": "python3",
+        //     "venvArgs": [
+        //         "venv"
+        //     ],
+        //     "displayNameParts": [
+        //         "Python",
+        //         "venv"
+        //     ],
+        //     "delayForActivation": 5000,
+        //     "settings": {
+        //         "python.jediEnabled": false
+        //     }
+        // },
+        // {
+        //     "type": "venv",
+        //     "name": "venv with spaces",
+        //     "create": true,
+        //     "venvBasePythonPath": "python3",
+        //     "venvArgs": [
+        //         "venv with space"
+        //     ],
+        //     "displayNameParts": [
+        //         "Python",
+        //         "venv with space"
+        //     ],
+        //     "delayForActivation": 5000,
+        //     "settings": {
+        //         "python.jediEnabled": false
+        //     }
+        // }
+    ]
+}

@@ -2,7 +2,7 @@
 @https://github.com/DonJayamanne/pyvscSmokeTesting/terminal
 Feature: Terminal
     Background: Activted Extension
-        Given the python extension has been activated
+        Given the Python extension has been activated
 
     @smoke
     Scenario: Execute File in Terminal

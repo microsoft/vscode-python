@@ -1,0 +1,34 @@
+// Place your settings in this file to overwrite default and user settings.
+{
+    "files.exclude": {
+        "out": false, // set this to true to hide the "out" folder with the compiled JS files
+        "**/*.pyc": true,
+        ".nyc_output": true,
+        "obj": true,
+        "bin": true,
+        "**/__pycache__": true,
+        "node_modules": true,
+        ".vscode-test": false,
+        "**/.mypy_cache/**": true,
+        "**/.ropeproject/**": true
+    },
+    "search.exclude": {
+        "out": true, // set this to false to include "out" folder in search results
+        "coverage": true,
+        "languageServer*/**": true
+    },
+    "python.linting.enabled": false,
+    "python.testing.promptToConfigure": false,
+    "python.workspaceSymbols.enabled": false,
+    "python.formatting.provider": "none",
+    "typescript.preferences.quoteStyle": "single",
+    "javascript.preferences.quoteStyle": "single",
+    "typescriptHero.imports.stringQuoteStyle": "'",
+    "prettier.tslintIntegration": false,
+    "prettier.printWidth": 180,
+    "prettier.singleQuote": true,
+    "cucumberautocomplete.steps": ["steps/**/*.ts"],
+    "cucumberautocomplete.smartSnippets": true,
+    "cucumberautocomplete.stepsInvariants": true,
+    "cucumberautocomplete.gherkinDefinitionPart": "(Given|When|Then)\\("
+}

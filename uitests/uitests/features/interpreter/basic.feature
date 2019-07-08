@@ -1,7 +1,7 @@
 @terminal
 Feature: Interpreter
     Background: Activted Extension
-        Given the python extension has been activated
+        Given the Python extension has been activated
 
     @mac
     Scenario: Select default Mac 2.7 Interpreter

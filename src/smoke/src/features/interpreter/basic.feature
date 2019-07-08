@@ -1,0 +1,39 @@
+@terminal
+Feature: Interpreter
+    Background: Activted Extension
+        Given the Python extension has been activated
+
+    @mac @python2
+    Scenario: Display message when selecting default Mac 2.7 Interpreter
+        When I select the Python Interpreter containing the text "/usr/bin/python"
+        Then a message containing the text "You have selected the macOS system install of Python" is displayed
+
+    Scenario: Opening VS Code for the first time will display tip about selecting interpreter
+        When I open VS Code for the first time
+        And the Python extension has activated
+        Then a message containing the text "Tip: you can change the Python interpreter used by the Python extension by clicking" is displayed
+
+    Scenario: Re-opening VS Code will display tip about selecting interpreter
+        When I open VS Code for the first time
+        And the Python extension has activated
+        Then a message containing the text "Tip: you can change the Python interpreter used by the Python extension by clicking" is displayed
+        When I reload VS Code
+        And the Python extension has activated
+        Then a message containing the text "Tip: you can change the Python interpreter used by the Python extension by clicking" is displayed
+        When I close VS Code
+        And I start VS Code
+        And the Python extension has activated
+        Then a message containing the text "Tip: you can change the Python interpreter used by the Python extension by clicking" is displayed
+
+    Scenario: Re-opening VS Code will not display tip about selecting interpreter after clicking the 'Got it' button
+        When I open VS Code for the first time
+        And the Python extension has activated
+        Then a message containing the text "Tip: you can change the Python interpreter used by the Python extension by clicking" is displayed
+        When I click the "Got it!" button for the message with the text "Tip: you can change the Python interpreter used by the Python extension by clicking"
+        And I reload VS Code
+        And the Python extension has activated
+        Then a message containing the text "Tip: you can change the Python interpreter used by the Python extension by clicking" is not displayed
+        When I close VS Code
+        And I start VS Code
+        And the Python extension has activated
+        Then a message containing the text "Tip: you can change the Python interpreter used by the Python extension by clicking" is not displayed

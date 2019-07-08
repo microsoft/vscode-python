@@ -14,6 +14,7 @@ npm-debug.log
 **/.mypy_cache/**
 !yarn.lock
 coverage/
+cucumber-report.json
 .vscode-test/**
 .vscode test/**
 .vscode-smoke/**

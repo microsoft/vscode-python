@@ -32,7 +32,7 @@ jobs:
     #     # In PRs, run smoke tests against 3.7 and 2.7 (excluding others).
     #     jobs:
     #     - test: "Smoke"
-    #       tags: "--tags=@smoke"
+    #       tags: "@smoke"
     #       ignorePythonVersions: "3.6,3.5"
 
 - job: 'PR'

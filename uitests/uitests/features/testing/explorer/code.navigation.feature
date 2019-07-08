@@ -27,8 +27,8 @@ Feature: Test Explorer (code nav)
         And I select the command "Python: Discover Tests"
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
-        And I expand all of the test tree nodes
-        And I navigate to the code associated with test node "<node_label>"
+        And I expand all of the nodes in the test explorer
+        And I navigate to the code associated with the test node "<node_label>"
         Then the file "<file>" is opened
         And <optionally_check_line>
 
@@ -54,8 +54,8 @@ Feature: Test Explorer (code nav)
         And I select the command "Python: Discover Tests"
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
-        And I expand all of the test tree nodes
-        When I click node "<node_label>"
+        And I expand all of the nodes in the test explorer
+        When I click the test node with the label "<node_label>"
         Then the file "<file>" is opened
 
         Examples:

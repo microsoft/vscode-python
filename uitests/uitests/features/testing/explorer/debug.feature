@@ -33,10 +33,10 @@ Feature: Test Explorer (debugging)
         And I select the command "Python: Discover Tests"
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
-        And I expand all of the test tree nodes
-        Then there are <node_count> nodes in the tree
-        And <node_count> nodes have a status of "Unknown"
-        When I debug the test node "test_three_first_suite"
+        And I expand all of the nodes in the test explorer
+        Then there are <node_count> nodes in the test explorer
+        And <node_count> nodes in the test explorer have a status of "Unknown"
+        When I debug the node "test_three_first_suite" from the test explorer
         Then the debugger starts
         When I select the command "Debug: Stop"
         Then the debugger stops
@@ -53,13 +53,13 @@ Feature: Test Explorer (debugging)
         And the workspace setting "python.testing.<setting_to_enable>" is enabled
         When I wait for the Python extension to activate
         When I select the command "Python: Discover Tests"
-        And I wait for tests discovery to complete
+        And I wait for test discovery to complete
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
-        And I expand all of the test tree nodes
+        And I expand all of the nodes in the test explorer
         When I add a breakpoint to line 33 in "test_one.py"
         And I add a breakpoint to line 23 in "test_one.py"
-        And I debug the test node "test_three_first_suite"
+        And I debug the node "test_three_first_suite" from the test explorer
         Then the debugger starts
         And the debugger pauses
         And the current stack frame is at line 33 in "test_one.py"
@@ -78,14 +78,14 @@ Feature: Test Explorer (debugging)
         And the workspace setting "python.testing.<setting_to_enable>" is enabled
         When I wait for the Python extension to activate
         When I select the command "Python: Discover Tests"
-        And I wait for tests discovery to complete
+        And I wait for test discovery to complete
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
-        And I expand all of the test tree nodes
+        And I expand all of the nodes in the test explorer
         When I add a breakpoint to line 33 in "test_one.py"
         And I add a breakpoint to line 28 in "test_one.py"
         And I add a breakpoint to line 23 in "test_one.py"
-        And I debug the test node "TestFirstSuite"
+        And I debug the node "TestFirstSuite" from the test explorer
         Then the debugger starts
         And the debugger pauses
         And the current stack frame is at line 23 in "test_one.py"
@@ -110,10 +110,10 @@ Feature: Test Explorer (debugging)
         And the workspace setting "python.testing.<setting_to_enable>" is enabled
         When I wait for the Python extension to activate
         When I select the command "Python: Discover Tests"
-        And I wait for tests discovery to complete
+        And I wait for test discovery to complete
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
-        And I expand all of the test tree nodes
+        And I expand all of the nodes in the test explorer
         When I add a breakpoint to line 23 in "test_one.py"
         And I add a breakpoint to line 38 in "test_one.py"
         And I add a breakpoint to line 23 in "test_two.py"

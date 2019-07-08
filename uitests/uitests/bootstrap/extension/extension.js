@@ -102,6 +102,18 @@ function activate(context) {
         const doc = await vscode.workspace.openTextDocument(file);
         await vscode.window.showTextDocument(doc)
     });
+    // Custom command to stop debug sessions.
+    // Basically we need a way to stop any existing debug sessions.
+    // Using the vsc command, as we can invoke it even if a debugger isn't running.
+    // We can use the command `Debug: Stop` from the command palette only if a debug session is active.
+    // Using this approach we can send a command regardless, easy.
+    vscode.commands.registerCommand('smoketest.stopDebuggingPython', async () => {
+        try {
+            await vscode.commands.executeCommand('workbench.action.debug.stop');
+        } catch {
+            // Do nothing.
+        }
+    });
 }
 
 /**

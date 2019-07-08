@@ -1,7 +1,7 @@
 @terminal
 Feature: Environment Files
     Background: Activted Extension
-        Given the python extension has been activated
+        Given the Python extension has been activated
         Given a file named ".env" is created with the following contents
         """
         MY_FILE_NAME=log1.log

@@ -1,0 +1,24 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "noImplicitAny": false,
+        "removeComments": false,
+        "preserveConstEnums": true,
+        "target": "es2018",
+        "strictNullChecks": true,
+        "noUnusedParameters": false,
+        "noUnusedLocals": true,
+        "outDir": "../../../../../out/smoke/vscode",
+        "sourceMap": true,
+        "lib": [
+            "es6",
+            "es2016",
+            "dom"
+        ],
+        "declaration": true
+    },
+    "exclude": [
+        "node_modules",
+        "../../../../../node_modules"
+    ]
+}

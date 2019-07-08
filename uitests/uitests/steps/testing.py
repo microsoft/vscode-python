@@ -31,41 +31,43 @@ def run_node(context, number):
     uitests.vscode.testing.click_node_action_item(context, number, "Run")
 
 
-@behave.when('I run the test node "{label}"')
+@behave.when('I run the node "{label}" from the test explorer')
 def run_node_by_name(context, label):
     number = uitests.vscode.testing.get_node_number(context, label)
     run_node(context, number)
 
 
-@behave.when("I debug the test node number {number:Number}")
+@behave.when("I debug the node number {number:Number} from the test explorer")
 def debug_node(context, number):
     uitests.vscode.testing.click_node_action_item(context, number, "Debug")
 
 
-@behave.when('I debug the test node "{label}"')
+@behave.when('I debug the node "{label}" from the test explorer')
 def debug_node_by_name(context, label):
     number = uitests.vscode.testing.get_node_number(context, label)
     debug_node(context, number)
 
 
-@behave.when("I navigate to the code associated with test node number {number:Number}")
+@behave.when(
+    "I navigate to the code associated with the test node number {number:Number}"
+)
 def navigate_node(context, number):
     uitests.vscode.testing.click_node_action_item(context, number, "Open")
 
 
-@behave.when('I navigate to the code associated with test node "{label}"')
+@behave.when('I navigate to the code associated with the test node "{label}"')
 def navigate_node_by_name(context, label):
     number = uitests.vscode.testing.get_node_number(context, label)
     navigate_node(context, number)
 
 
-@behave.then("there are {count:Number} nodes in the tree")
+@behave.then("there are {count:Number} nodes in the test explorer")
 def explorer_node_count(context, count):
     total_count = uitests.vscode.testing.get_node_count(context)
     assert total_count == count, f"{total_count} != {count}"
 
 
-@behave.when("I expand all of the test tree nodes")
+@behave.when("I expand all of the nodes in the test explorer")
 def explorer_expand_nodes(context):
     try:
         uitests.vscode.testing.expand_nodes(context)
@@ -82,12 +84,12 @@ def explorer_expand_nodes(context):
     uitests.vscode.testing.expand_nodes(context)
 
 
-@behave.when("I click node number {number:Number}")
+@behave.when("I click the test node with the label number {number:Number}")
 def click_node(context, number):
     uitests.vscode.testing.click_node(context, number)
 
 
-@behave.when('I click node "{label}"')
+@behave.when('I click the test node with the label "{label}"')
 def click_node_by_name(context, label):
     number = uitests.vscode.testing.get_node_number(context, label)
     click_node(context, number)
@@ -99,7 +101,9 @@ def all_unknown(context):
     assert all("status-unknown.svg" in icon.get_attribute("style") for icon in icons)
 
 
-@behave.then('the node number {number:Number} has a status of "{status}"')
+@behave.then(
+    'the node number {number:Number} in the test explorer has a status of "{status}"'
+)
 @uitests.tools.retry(AssertionError)
 def node_status(context, number, status):
     icon = uitests.vscode.testing.get_node_icon(context, number)
@@ -108,7 +112,7 @@ def node_status(context, number, status):
     )
 
 
-@behave.then('the node "{label}" has a status of "{status}"')
+@behave.then('the node "{label}" in the test explorer has a status of "{status}"')
 @uitests.tools.retry(AssertionError)
 def node_status_by_name(context, label, status):
     number = uitests.vscode.testing.get_node_number(context, label)
@@ -121,7 +125,7 @@ def node_count_status(context, number, status):
     check_node_count_status(context, number, status)
 
 
-@behave.then('1 node has a status of "{status}"')
+@behave.then('1 node in the test explorer has a status of "{status}"')
 @uitests.tools.retry(AssertionError)
 def node_one_status(context, status):
     check_node_count_status(context, 1, status)
@@ -168,7 +172,7 @@ def wait_for_run_to_complete(context):
     uitests.vscode.testing.wait_for_stop_hidden(context)
 
 
-@behave.when("I wait for tests discovery to complete")
+@behave.when("I wait for test discovery to complete")
 @uitests.tools.retry(AssertionError)
 def wait_for_discovery_to_complete(context):
     uitests.vscode.testing.wait_for_stop_hidden(context)

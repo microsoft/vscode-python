@@ -1,7 +1,7 @@
 @terminal
 Feature: Statusbar
     Background: Activted Extension
-        Given the python extension has been activated
+        Given the Python extension has been activated
 
     @smoke
     Scenario: Interpreter is displayed in the statusbar

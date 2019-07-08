@@ -1,0 +1,15 @@
+{
+    "name": "code-oss-dev-smoke-test",
+    "version": "0.1.0",
+    "main": "./src/main.js",
+    "scripts": {
+        "compile": "npm run pre-compile && tsc -watch -p ./",
+        "pre-compile": "node ../vscode/index.js && cd ../vscode/test/smoke && npm i && cd ../../../src && npm i",
+        "watch": "concurrently \"npm run watch-driver\" \"npm run watch-driver-definition\" \"tsc --watch\"",
+        "test": "cucumber-js features/* -r source-map-support/register -r ../../../out/smoke/src/steps/**/*.js --format json:reports/cucumber-report.json --format summary",
+        "report": "node out/reports/html.js"
+    },
+    "devDependencies": {
+        "typescript": "^3.5.1"
+    }
+}

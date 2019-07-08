@@ -32,7 +32,7 @@ jobs:
     #     # Run only smoke tests against 3.7 and 2.7 (exclude others).
     #     jobs:
     #     - test: "Smoke"
-    #       tags: "--tags=@smoke"
+    #       tags: "@smoke"
     #       ignorePythonVersions: "3.6,3.5"
 
 - job: 'CI'

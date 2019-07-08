@@ -38,11 +38,11 @@ Feature: Test Explorer
         And the workspace setting "python.testing.<setting_to_enable>" is enabled
         When I wait for the Python extension to activate
         When I select the command "Python: Discover Tests"
-        And I wait for tests discovery to complete
+        And I wait for test discovery to complete
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
-        And I expand all of the test tree nodes
-        Then there are <node_count> nodes in the tree
+        And I expand all of the nodes in the test explorer
+        Then there are <node_count> nodes in the test explorer
 
         Examples:
             | package  | setting_to_enable | node_count |
@@ -55,18 +55,18 @@ Feature: Test Explorer
         And the workspace setting "python.testing.<setting_to_enable>" is enabled
         When I wait for the Python extension to activate
         When I select the command "Python: Discover Tests"
-        And I wait for tests discovery to complete
+        And I wait for test discovery to complete
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
-        And I expand all of the test tree nodes
-        Then there are <node_count> nodes in the tree
+        And I expand all of the nodes in the test explorer
+        Then there are <node_count> nodes in the test explorer
         # Now, add a delay for the discovery of the tests
         Given a file named "tests/test_discovery_delay" is created with the following contents
             """
             10
             """
         When I select the command "Python: Discover Tests"
-        And I wait for tests discovery to complete
+        And I wait for test discovery to complete
         Then all of the test tree nodes have a progress icon
         And the stop icon is visible in the toolbar
         When I stop discovering tests

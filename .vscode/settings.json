@@ -1,13 +1,14 @@
 // Place your settings in this file to overwrite default and user settings.
 {
     "files.exclude": {
-        "out": true, // set this to true to hide the "out" folder with the compiled JS files
+        "out": false, // set this to true to hide the "out" folder with the compiled JS files
         "**/*.pyc": true,
         ".nyc_output": true,
         "obj": true,
         "bin": true,
         "**/__pycache__": true,
-        "node_modules": true,
+        "node_modules": false,
+        ".vscode-test": false,
         "**/.mypy_cache/**": true,
         "**/.ropeproject/**": true
     },
@@ -39,7 +40,7 @@
     "python.jediEnabled": false,
     "python.analysis.logLevel": "Trace",
     "python.analysis.downloadChannel": "beta",
-    "python.unitTest.promptToConfigure": false,
+    "python.testing.promptToConfigure": false,
     "python.linting.enabled": true,
     "python.linting.pylintEnabled": false,
     "python.linting.flake8Enabled": true,

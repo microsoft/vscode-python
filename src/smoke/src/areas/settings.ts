@@ -1,0 +1,151 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
+import * as fs from 'fs-extra';
+import { applyEdits, modify, parse } from 'jsonc-parser';
+import * as path from 'path';
+import { context } from '../application';
+import { noop } from '../helpers';
+import { sleep } from '../helpers/misc';
+import { ConfigurationTarget } from '../types';
+
+// tslint:disable: max-func-body-length no-invalid-template-strings no-http-string no-invalid-this no-multiline-string member-access no-any radix no-shadowed-variable no-unnecessary-callback-wrapper member-ordering no-constant-condition prefer-const no-increment-decrement no-single-line-block-comment prefer-object-spread no-function-expression no-string-literal
+
+// type DebugSetting = 'stopOnEntry';
+const modifyOptions = { formattingOptions: { tabSize: 4, insertSpaces: true } };
+type CrudSetting = {
+    type: 'user' | 'workspaceFolder';
+    remove?: string[];
+    workspaceFolder?: string;
+    update?: { [key: string]: string | number | boolean | void };
+};
+
+export class Settings {
+    public async removeSetting(setting: string, scope: ConfigurationTarget): Promise<void> {
+        const content = await this.getSettingsContent(scope);
+        if (!content) {
+            return;
+        }
+        if (context.app) {
+            const edits = modify(content, [setting], void 0, modifyOptions);
+            await this.saveSettingsContent(applyEdits(content, edits), scope);
+        } else {
+            const type = scope === ConfigurationTarget.Global ? 'user' : 'workspaceFolder';
+            const workspaceFolder = scope === ConfigurationTarget.Global ? undefined : context.options.workspacePathOrFolder;
+            await this.sendCommandToBootstrap({ type, remove: [setting], workspaceFolder });
+        }
+    }
+    public async updateSetting(setting: string, value: string | boolean | number | void, scope: ConfigurationTarget): Promise<void> {
+        let content = await this.getSettingsContent(scope);
+        if (!content) {
+            content = '{}';
+        }
+        if (context.app) {
+            const edits = modify(content, [setting], value, modifyOptions);
+            await this.saveSettingsContent(applyEdits(content, edits), scope);
+        } else {
+            const type = scope === ConfigurationTarget.Global ? 'user' : 'workspaceFolder';
+            const workspaceFolder = scope === ConfigurationTarget.Global ? undefined : context.options.workspacePathOrFolder;
+            await this.sendCommandToBootstrap({ type, update: { [setting]: value }, workspaceFolder });
+        }
+    }
+
+    // public async  updateDebugConfiguration(setting: string, value: string | boolean | number, workspaceFolder: string, _debugConfiugrationIndex: number): Promise<void> {
+    //     const settings = await this.getLaunchJson(workspaceFolder);
+    //     if (settings['configurations'][0][setting] === value) {
+    //         return;
+    //     }
+    //     settings['configurations'][0][setting] = value;
+    //     await this.updateLaunchJson(settings, workspaceFolder);
+    // }
+
+    public async  getSetting<T>(setting: string, scope: ConfigurationTarget): Promise<T | undefined> {
+        const content = await this.getSettingsContent(scope);
+        return content ? this.getJson(content)[setting] as T : undefined;
+    }
+    /**
+     * Let the bootstrap extension update the settings. This way VSC will be aware of it and extensions
+     * will get the right values.If we update the file directly then VSC might not get notified immediately.
+     *   We'll let the bootstrap extension update the settings and delete the original file.
+     * When the file has been deleted we know the settings have been updated and VSC is aware of the updates.
+     *
+     * @private
+     * @param {*} context
+     * @param {*} crud_settings
+     * @memberof Settings
+     */
+    private async sendCommandToBootstrap(crudSettings: CrudSetting) {
+        const instructionsFile = path.join(context.options.extensionsPath, 'settingsToUpdate.txt');
+        const errorFile = path.join(context.options.extensionsPath, 'settingsToUpdate_error.txt');
+        await fs.remove(errorFile).catch(noop);
+        await fs.writeFile(instructionsFile, JSON.stringify(crudSettings, undefined, 4));
+
+        await context.app.workbench.quickopen.runCommand('Smoke: Update Settings');
+        // uitests.vscode.application.capture_screen(context)
+        // Wait for 5 seconds for settings to get updated.
+        // If file has been deleted then yes it has been udpated, else error
+        for (let _ of [1, 2, 3, 4, 5]) {
+            if (await fs.pathExists(instructionsFile)) {
+                await sleep(500);
+                continue;
+            }
+            return;
+        }
+
+        // uitests.vscode.application.capture_screen(context)
+
+        let errorMessage = '';
+        if (await fs.pathExists(errorFile)) {
+            errorMessage += await fs.readFile(errorFile);
+        }
+        if (await fs.pathExists(instructionsFile)) {
+            errorMessage += await fs.readFile(instructionsFile);
+        }
+        throw new Error(`Settings not updated by Bootstrap\n ${errorMessage}`);
+    }
+    // /**
+    //  * We might use this same code to update user settings.
+    //  *
+    //  * @param {string} folder
+    //  * @returns
+    //  */
+    // private async  getJsonFilePath(fileName: string, folder: string) {
+    //     let jsonFile = path.join(folder, fileName);
+    //     if (!(await fs.pathExists(jsonFile))) {
+    //         return path.join(folder, '.vscode', fileName);
+    //     }
+    //     return jsonFile;
+    // }
+
+    private async getSettingsContent(scope: ConfigurationTarget): Promise<string | undefined> {
+        const jsonFile = scope === ConfigurationTarget.Global ? context.options.userSettingsFilePath : path.join(context.options.workspacePathOrFolder, '.vscode', 'settings.json');
+        if (!await fs.pathExists(jsonFile)) {
+            return;
+        }
+        return fs.readFile(jsonFile, 'utf8');
+    }
+
+    private async saveSettingsContent(content: string, scope: ConfigurationTarget): Promise<void> {
+        const jsonFile = scope === ConfigurationTarget.Global ? context.options.userSettingsFilePath : path.join(context.options.workspacePathOrFolder, '.vscode', 'settings.json');
+        await fs.mkdirp(path.dirname(jsonFile)).catch(noop);
+        return fs.writeFile(jsonFile, content, 'utf8');
+    }
+
+    private getJson(content: string): any {
+        return parse(content, undefined, { allowTrailingComma: true, disallowComments: false });
+    }
+
+    // private async updateLaunchJson(settings: object, workspaceFolder: string): Promise<void> {
+    //     const jsonFile = await this.getJsonFilePath('launch.json', workspaceFolder);
+    //     await fs.writeFile(jsonFile, JSON.stringify(settings, undefined, 4));
+    // }
+
+    // private async getLaunchJson(workspaceFolder: string): Promise<{ [key: string]: any }> {
+    //     const jsonFile = await this.getJsonFilePath('launch.json', workspaceFolder);
+    //     const jsonContent = await fs.readFile(jsonFile, 'utf8');
+    //     const json = stripJsonComments(jsonContent);
+    //     return JSON.parse(json);
+    // }
+}

@@ -7,15 +7,11 @@
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
-            "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}"
-            ],
+            "args": ["--extensionDevelopmentPath=${workspaceFolder}"],
             "stopOnEntry": false,
             "smartStep": true,
             "sourceMaps": true,
-            "outFiles": [
-                "${workspaceFolder}/out/**/*"
-            ],
+            "outFiles": ["${workspaceFolder}/out/**/*"],
             "preLaunchTask": "Compile"
         },
         {
@@ -23,16 +19,11 @@
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
-            "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}",
-                "${workspaceFolder}/data"
-            ],
+            "args": ["--extensionDevelopmentPath=${workspaceFolder}", "${workspaceFolder}/data"],
             "stopOnEntry": false,
             "smartStep": true,
             "sourceMaps": true,
-            "outFiles": [
-                "${workspaceFolder}/out/**/*"
-            ],
+            "outFiles": ["${workspaceFolder}/out/**/*"],
             "preLaunchTask": "Compile"
         },
         {
@@ -41,9 +32,7 @@
             "request": "launch",
             "module": "IPython",
             "console": "integratedTerminal",
-            "args": [
-                "${file}"
-            ] // Additional args should be prefixed with a '--' first.
+            "args": ["${file}"] // Additional args should be prefixed with a '--' first.
         },
         {
             "name": "Python: Current File",
@@ -59,13 +48,9 @@
             "program": "${workspaceFolder}/out/client/debugger/debugAdapter/main.js",
             "stopOnEntry": false,
             "smartStep": true,
-            "args": [
-                "--server=4711"
-            ],
+            "args": ["--server=4711"],
             "sourceMaps": true,
-            "outFiles": [
-                "${workspaceFolder}/out/client/**/*.js"
-            ],
+            "outFiles": ["${workspaceFolder}/out/client/**/*.js"],
             "cwd": "${workspaceFolder}",
             "preLaunchTask": "Compile"
         },
@@ -83,9 +68,7 @@
             "stopOnEntry": false,
             "sourceMaps": true,
             "smartStep": true,
-            "outFiles": [
-                "${workspaceFolder}/out/**/*"
-            ],
+            "outFiles": ["${workspaceFolder}/out/**/*"],
             "preLaunchTask": "Compile",
             "env": {
                 "IS_CI_SERVER_TEST_DEBUGGER": "1"
@@ -96,20 +79,13 @@
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
-            "args": [
-                "${workspaceFolder}/src/test",
-                "--disable-extensions",
-                "--extensionDevelopmentPath=${workspaceFolder}",
-                "--extensionTestsPath=${workspaceFolder}/out/test"
-            ],
+            "args": ["${workspaceFolder}/src/test", "--disable-extensions", "--extensionDevelopmentPath=${workspaceFolder}", "--extensionTestsPath=${workspaceFolder}/out/test"],
             "env": {
                 "VSC_PYTHON_CI_TEST_GREP": "" // Modify this to run a subset of the single workspace tests
             },
             "stopOnEntry": false,
             "sourceMaps": true,
-            "outFiles": [
-                "${workspaceFolder}/out/**/*.js"
-            ],
+            "outFiles": ["${workspaceFolder}/out/**/*.js"],
             "preLaunchTask": "Compile"
         },
         {
@@ -126,9 +102,7 @@
             "stopOnEntry": false,
             "sourceMaps": true,
             "smartStep": true,
-            "outFiles": [
-                "${workspaceFolder}/out/**/*"
-            ],
+            "outFiles": ["${workspaceFolder}/out/**/*"],
             "preLaunchTask": "Compile"
         },
         {
@@ -147,9 +121,7 @@
                 //"--grep", "<suite name>",
                 "--timeout=300000"
             ],
-            "outFiles": [
-                "${workspaceFolder}/out/**/*.js"
-            ],
+            "outFiles": ["${workspaceFolder}/out/**/*.js"],
             "preLaunchTask": "Compile"
         },
         {
@@ -168,9 +140,7 @@
                 //"--grep", "<suite name>",
                 "--timeout=300000"
             ],
-            "outFiles": [
-                "${workspaceFolder}/out/**/*.js"
-            ],
+            "outFiles": ["${workspaceFolder}/out/**/*.js"],
             "preLaunchTask": "Compile"
         },
         {
@@ -178,35 +148,43 @@
             "request": "launch",
             "name": "Gulp tasks (helpful for debugging gulpfile.js)",
             "program": "${workspaceFolder}/node_modules/gulp/bin/gulp.js",
-            "args": [
-                "watch"
-            ]
+            "args": ["watch"]
         },
         {
-            "name": "Behave Smoke Tests",
-            "type": "python",
+            "type": "node",
             "request": "launch",
-            "program": "${workspaceFolder}/uitests/__main__.py",
+            // It has been observed that the instance of VSC launched for smoke tests just falls over when debugging from within VSC.
+            // Solution: Launch code in debug mode and attach (yes this works).
+            // Not entirely sure why it works, or why it doesn't work.
+            // Got a solution, hence not investing much more time time trying to identify why debugging is failing.
+            "name": "Smoke Tests (doesn't always work)",
+            "program": "${workspaceFolder}/node_modules/cucumber/bin/cucumber-js",
             "args": [
-                "test",
-                "--",
+                "src/smoke/src/features",
+                "--require-module",
+                "source-map-support/register",
+                "-r",
+                "out/smoke/src/steps/**/*.js",
                 "--format",
-                "progress3",
+                "json:tmp/reports/cucumber-report.json",
+                "--format",
+                "summary",
                 // Change the tag `@wip` to what ever you want to run.
                 // Default is assumed to be somethign that's a work in progress (wip).
                 "--tags=@wip"
-            ],
-            "justMyCode": false,
-            "console": "internalConsole"
+            ]
+        },
+        {
+            "type": "node",
+            "request": "attach",
+            "name": "Attach to Smoke Tests",
+            "port": 1339
         }
     ],
     "compounds": [
         {
             "name": "Extension + Debugger",
-            "configurations": [
-                "Extension",
-                "Debugger as debugServer"
-            ]
+            "configurations": ["Extension", "Debugger as debugServer"]
         }
     ]
 }

@@ -33,23 +33,23 @@ Feature: Test Explorer - Re-run Failed Tests
             """
         When I wait for the Python extension to activate
         When I select the command "Python: Discover Tests"
-        And I wait for tests discovery to complete
+        And I wait for test discovery to complete
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
-        And I expand all of the test tree nodes
-        Then there are <node_count> nodes in the tree
-        And <node_count> nodes have a status of "Unknown"
+        And I expand all of the nodes in the test explorer
+        Then there are <node_count> nodes in the test explorer
+        And <node_count> nodes in the test explorer have a status of "Unknown"
         When I select the command "Python: Run All Tests"
         And I wait for tests to complete running
-        Then the node "<test_one_file_label>" has a status of "Fail"
-        And the node "TestFirstSuite" has a status of "Fail"
-        And the node "test_three_first_suite" has a status of "Fail"
-        And the node "test_two_first_suite" has a status of "Fail"
-        And the node "<test_two_file_label>" has a status of "Fail"
-        And the node "TestThirdSuite" has a status of "Fail"
-        And the node "test_three_third_suite" has a status of "Fail"
-        And the node "test_two_third_suite" has a status of "Fail"
-        And 6 nodes have a status of "Success"
+        Then the node "<test_one_file_label>" in the test explorer has a status of "Fail"
+        And the node "TestFirstSuite" in the test explorer has a status of "Fail"
+        And the node "test_three_first_suite" in the test explorer has a status of "Fail"
+        And the node "test_two_first_suite" in the test explorer has a status of "Fail"
+        And the node "<test_two_file_label>" in the test explorer has a status of "Fail"
+        And the node "TestThirdSuite" in the test explorer has a status of "Fail"
+        And the node "test_three_third_suite" in the test explorer has a status of "Fail"
+        And the node "test_two_third_suite" in the test explorer has a status of "Fail"
+        And 6 nodes in the test explorer have a status of "Success"
         And the run failed tests icon is visible in the toolbar
         Given a file named "tests/test_running_delay" is created with the following contents
             """
@@ -61,7 +61,7 @@ Feature: Test Explorer - Re-run Failed Tests
             """
         When I run failed tests
         And I wait for tests to complete running
-        Then <node_count> nodes have a status of "Success"
+        Then <node_count> nodes in the test explorer have a status of "Success"
 
         Examples:
             | package  | setting_to_enable | node_count | test_one_file_label | test_two_file_label |
@@ -82,23 +82,23 @@ Feature: Test Explorer - Re-run Failed Tests
             """
         When I wait for the Python extension to activate
         When I select the command "Python: Discover Tests"
-        And I wait for tests discovery to complete
+        And I wait for test discovery to complete
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
-        And I expand all of the test tree nodes
-        Then there are <node_count> nodes in the tree
-        And <node_count> nodes have a status of "Unknown"
+        And I expand all of the nodes in the test explorer
+        Then there are <node_count> nodes in the test explorer
+        And <node_count> nodes in the test explorer have a status of "Unknown"
         When I select the command "Python: Run All Tests"
         And I wait for tests to complete running
-        Then the node "<test_one_file_label>" has a status of "Fail"
-        And the node "TestFirstSuite" has a status of "Fail"
-        And the node "test_three_first_suite" has a status of "Fail"
-        And the node "test_two_first_suite" has a status of "Fail"
-        And the node "<test_two_file_label>" has a status of "Fail"
-        And the node "TestThirdSuite" has a status of "Fail"
-        And the node "test_three_third_suite" has a status of "Fail"
-        And the node "test_two_third_suite" has a status of "Fail"
-        And <failed_node_count> nodes have a status of "Success"
+        Then the node "<test_one_file_label>" in the test explorer has a status of "Fail"
+        And the node "TestFirstSuite" in the test explorer has a status of "Fail"
+        And the node "test_three_first_suite" in the test explorer has a status of "Fail"
+        And the node "test_two_first_suite" in the test explorer has a status of "Fail"
+        And the node "<test_two_file_label>" in the test explorer has a status of "Fail"
+        And the node "TestThirdSuite" in the test explorer has a status of "Fail"
+        And the node "test_three_third_suite" in the test explorer has a status of "Fail"
+        And the node "test_two_third_suite" in the test explorer has a status of "Fail"
+        And <failed_node_count> nodes in the test explorer have a status of "Success"
         And the run failed tests icon is visible in the toolbar
         Given a file named "tests/test_running_delay" is created with the following contents
             """
@@ -110,20 +110,20 @@ Feature: Test Explorer - Re-run Failed Tests
             """
         When I run failed tests
         Then the stop icon is visible in the toolbar
-        Then the node "TestFirstSuite" has a status of "Progress"
-        And the node "test_three_first_suite" has a status of "Progress"
-        And the node "test_two_first_suite" has a status of "Progress"
-        And the node "TestThirdSuite" has a status of "Progress"
-        And the node "test_three_third_suite" has a status of "Progress"
-        And the node "test_two_third_suite" has a status of "Progress"
-        And <failed_node_count> nodes have a status of "Progress"
+        Then the node "TestFirstSuite" in the test explorer has a status of "Progress"
+        And the node "test_three_first_suite" in the test explorer has a status of "Progress"
+        And the node "test_two_first_suite" in the test explorer has a status of "Progress"
+        And the node "TestThirdSuite" in the test explorer has a status of "Progress"
+        And the node "test_three_third_suite" in the test explorer has a status of "Progress"
+        And the node "test_two_third_suite" in the test explorer has a status of "Progress"
+        And <failed_node_count> nodes in the test explorer have a status of "Progress"
         When I stop running tests
         And I wait for tests to complete running
         Then the stop icon is not visible in the toolbar
-        And the node "test_three_first_suite" has a status of "Unknown"
-        And the node "test_two_first_suite" has a status of "Unknown"
-        And the node "test_three_third_suite" has a status of "Unknown"
-        And the node "test_two_third_suite" has a status of "Unknown"
+        And the node "test_three_first_suite" in the test explorer has a status of "Unknown"
+        And the node "test_two_first_suite" in the test explorer has a status of "Unknown"
+        And the node "test_three_third_suite" in the test explorer has a status of "Unknown"
+        And the node "test_two_third_suite" in the test explorer has a status of "Unknown"
 
         Examples:
             | package  | setting_to_enable | node_count | failed_node_count | test_one_file_label | test_two_file_label |
