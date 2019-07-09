@@ -184,6 +184,8 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
             if (enableAttachString) {
                 enableAttachString = enableAttachString.trimQuotes();
 
+                // Important: This regex matches the format of the string returned from enable_attach. When
+                // doing enable_attach remotely, make sure to print out a string in the format ('host', port)
                 const debugInfoRegEx = /\('(.*?)', ([0-9]*)\)/;
 
                 const debugInfoMatch = debugInfoRegEx.exec(enableAttachString);
