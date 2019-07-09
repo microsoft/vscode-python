@@ -25,7 +25,7 @@ function updatePackageJson() {
     const sourceDrvierJs = path.join(vscodeSmokeDirector, 'src', 'vscode', 'driver.js');
     const sourceDrvierTs = path.join(vscodeSmokeDirector, 'src', 'vscode', 'driver.d.ts');
     const outDirVSCFullPath = path.join(rootDirectory, 'out', 'smoke', 'vscode', 'vscode');
-    const outDirVSC = process.env.TF_BUILD ? outDirVSCFullPath : path.relative(packageJsonDirectory, outDirVSCFullPath);
+    const outDirVSC = path.relative(packageJsonDirectory, outDirVSCFullPath);
     fs.ensureDirSync(outDirVSC);
     json.scripts['copy-driver'] = `cpx ${sourceDrvierJs} ${outDirVSC} && cpx ${sourceDrvierTs} ${outDirVSC}`;
     console.log(`Full path ${outDirVSCFullPath}`);
