@@ -6,13 +6,15 @@
 // tslint:disable: no-var-requires no-require-imports no-default-export no-console
 
 const gulp = require('gulp');
-const fs = require('fs-extra');
 const vzip = require('gulp-vinyl-zip');
 const vfs = require('vinyl-fs');
 const untar = require('gulp-untar');
 const gunzip = require('gulp-gunzip');
 const chmod = require('gulp-chmod');
 const filter = require('gulp-filter');
+import * as fs from 'fs-extra';
+import * as glob from 'glob';
+import * as path from 'path';
 
 export function unzipVSCode(zipFile: string, targetDir: string) {
     console.log(`Unzip ${zipFile} into ${targetDir}`);
@@ -32,9 +34,10 @@ export async function unzipFile(zipFile: string, targetFolder: string) {
 }
 
 export async function unzipTarGz(zipFile: string, targetFolder: string) {
+    const fileToFixPermissions = ['VSCode-linux-x64/code', 'VSCode-linux-x64/code-insiders', 'VSCode-linux-x64/resources/app/node_modules*/vscode-ripgrep/**/rg'];
     await fs.ensureDir(targetFolder);
-    return new Promise((resolve, reject) => {
-        const gulpFilter = filter(['VSCode-linux-x64/code', 'VSCode-linux-x64/code-insiders', 'VSCode-linux-x64/resources/app/node_modules*/vscode-ripgrep/**/rg'], { restore: true });
+    await new Promise((resolve, reject) => {
+        const gulpFilter = filter(fileToFixPermissions, { restore: true });
         gulp.src(zipFile)
             .pipe(gunzip())
             .pipe(untar())
@@ -45,4 +48,11 @@ export async function unzipTarGz(zipFile: string, targetFolder: string) {
             .on('end', resolve)
             .on('error', reject);
     });
+
+    for (const fileGlob of fileToFixPermissions) {
+        const files = await new Promise<string[]>((resolve, reject) => {
+            glob(path.join(targetFolder, fileGlob), (ex, items) => ex ? reject(ex) : resolve(items));
+        });
+        await Promise.all(files.map(file => fs.chmod(file, '755')));
+    }
 }
