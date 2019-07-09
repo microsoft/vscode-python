@@ -67,8 +67,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                 type: 'python',
                 port: this.connectInfo.port,
                 host: this.connectInfo.hostName,
-                justMyCode: true,
-                logToFile: true
+                justMyCode: true
             };
 
             await this.debugService.startDebugging(undefined, config);

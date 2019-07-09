@@ -19,6 +19,7 @@ import {
     SourceBreakpoint,
     WorkspaceFolder
 } from 'vscode';
+import { DebugProtocol } from 'vscode-debugprotocol';
 
 import { IDebugService } from '../../client/common/application/types';
 import { traceInfo } from '../../client/common/logger';
@@ -27,7 +28,6 @@ import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { IProtocolParser } from '../../client/debugger/debugAdapter/types';
-import { DebugProtocol } from 'vscode-debugprotocol';
 
 // tslint:disable:no-any
 
