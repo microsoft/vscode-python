@@ -35,7 +35,7 @@ export type TestOptions = {
     workspacePathOrFolder: string;
     verbose: boolean;
     pythonPath: string;
-    python3Path: string;
+    // python3Path: string;
 };
 
 /**
@@ -99,8 +99,8 @@ export function getTestOptions(): TestOptions {
         workspacePathOrFolder: path.join(vscodeTestPath, 'workspace folder'),
         tempPath: path.join(vscodeTestPath, 'temp folder'),
         verbose: false, // Verbose logging for VSC smoke test driver.
-        pythonPath: argv.pythonPath || cp.execSync('python -c "import sys;print(sys.executable)"').toString().trim(),
-        python3Path: argv.python3Path || cp.execSync('python3 -c "import sys;print(sys.executable)"').toString().trim()
+        pythonPath: argv.pythonPath || cp.execSync('python -c "import sys;print(sys.executable)"').toString().trim()
+        // python3Path: argv.python3Path || cp.execSync('python3 -c "import sys;print(sys.executable)"').toString().trim()
     };
 
     // Set variables for logging to be enabled within extension.
