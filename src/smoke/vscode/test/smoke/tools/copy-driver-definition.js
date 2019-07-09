@@ -46,5 +46,5 @@ export function connect(outPath: string, handle: string): Promise<{ client: IDis
 
 const srcPath = path.join(path.dirname(__dirname), '..', 'src', 'vscode');
 const outDriverPath = path.join(srcPath, 'driver.d.ts');
-
+console.log(`Create file ${outDriverPath}`);
 fs.writeFileSync(outDriverPath, contents);
