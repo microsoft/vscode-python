@@ -70,9 +70,10 @@ import {
     PyEnvActivationCommandProvider
 } from '../../client/common/terminal/environmentActivationProviders/pyenvActivationProvider';
 import { TerminalHelper } from '../../client/common/terminal/helper';
+import { TerminalNameShellDetector } from '../../client/common/terminal/shellDetectors/terminalNameShellDetector';
 import {
-    ITerminalActivationCommandProvider,
-    ITerminalHelper,
+    IShellDetector,
+    ITerminalActivationCommandProvider, ITerminalHelper,
     TerminalActivationProviders
 } from '../../client/common/terminal/types';
 import {
@@ -354,6 +355,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<ICellHashProvider>(ICellHashProvider, CellHashProvider);
         this.serviceManager.addBinding<ICellHashProvider, IInteractiveWindowListener>(ICellHashProvider, IInteractiveWindowListener);
         this.serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory);
+        this.serviceManager.addSingleton<IShellDetector>(IShellDetector, TerminalNameShellDetector);
 
         // Setup our command list
         this.commandManager.registerCommand('setContext', (name: string, value: boolean) => {

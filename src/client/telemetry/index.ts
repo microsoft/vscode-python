@@ -334,8 +334,8 @@ export interface IEventNamePropertyMapping {
     [EventName.WORKSPACE_SYMBOLS_GO_TO]: never | undefined;
     // Data Science
     [Telemetry.AddCellBelow]: never | undefined;
-    [Telemetry.ClassConstructionTime] : { class: string };
-    [Telemetry.CodeLensAverageAcquisitionTime] : never | undefined;
+    [Telemetry.ClassConstructionTime]: { class: string };
+    [Telemetry.CodeLensAverageAcquisitionTime]: never | undefined;
     [Telemetry.CollapseAll]: never | undefined;
     [Telemetry.ConnectFailedJupyter]: never | undefined;
     [Telemetry.ConnectLocalJupyter]: never | undefined;
@@ -348,7 +348,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.DebugCurrentCell]: never | undefined;
     [Telemetry.DeleteAllCells]: never | undefined;
     [Telemetry.DeleteCell]: never | undefined;
-    [Telemetry.FindJupyterCommand]: {command: string};
+    [Telemetry.FindJupyterCommand]: { command: string };
     [Telemetry.FindJupyterKernelSpec]: never | undefined;
     [Telemetry.DisableInteractiveShiftEnter]: never | undefined;
     [Telemetry.EnableInteractiveShiftEnter]: never | undefined;
@@ -439,7 +439,7 @@ export interface IEventNamePropertyMapping {
     [EventName.TERMINAL_SHELL_IDENTIFICATION]: {
         failed: boolean;
         terminalProvided: boolean;
-        shellIdentificationSource: 'terminalName' | 'settings' | 'environment' | 'default';
+        shellIdentificationSource: 'terminalName' | 'settings' | 'environment' | 'default' | 'vscode';
         hasCustomShell: undefined | boolean;
         hasShellInEnv: undefined | boolean;
     };

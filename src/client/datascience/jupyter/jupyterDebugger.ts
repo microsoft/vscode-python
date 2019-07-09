@@ -76,12 +76,14 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
     public async stopDebugging(server: INotebookServer): Promise<void> {
         traceInfo('stop debugging');
-        // Disable tracing
-        // tslint:disable-next-line:no-multiline-string
-        await this.executeSilently(server, `from ptvsd import tracing\ntracing(False)`);
 
         // Stop our debugging UI session, no await as we just want it stopped
         this.commandManager.executeCommand('workbench.action.debug.stop');
+
+        // Disable tracing after we disconnect because we don't want to step through this
+        // code if the user was in step mode.
+        // tslint:disable-next-line:no-multiline-string
+        await this.executeSilently(server, `from ptvsd import tracing\ntracing(False)`);
     }
 
     public async hashesUpdated(hashes: IFileHashes[]): Promise<void> {
