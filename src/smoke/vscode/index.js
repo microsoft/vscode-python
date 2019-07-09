@@ -29,9 +29,7 @@ function updatePackageJson() {
     fs.ensureDirSync(outDirVSC);
     json.scripts['copy-driver'] = `cpx ${sourceDrvierJs} ${outDirVSC} && cpx ${sourceDrvierTs} ${outDirVSC}`;
     console.log(`Full path ${outDirVSCFullPath}`);
-    // fs.copyFile(sourceDrvierJs, path.join(outDirVSC, path.basename(sourceDrvierJs)));
     console.log(`Copied file '${sourceDrvierJs}' into ${outDirVSC}`);
-    // fs.copyFile(sourceDrvierTs, path.join(outDirVSC, path.basename(sourceDrvierTs)));
     console.log(`Copied file '${sourceDrvierTs}' into ${outDirVSC}`);
     fs.writeFileSync(packageJson, JSON.stringify(json, undefined, 4));
     console.log(`Updated packageJson ${packageJson}`);
