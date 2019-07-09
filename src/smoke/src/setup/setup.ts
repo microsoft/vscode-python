@@ -18,6 +18,8 @@ import { downloadFile } from '../helpers/http';
 import { getExtensionPath as getBootstrapExtensionPath } from './bootstrap';
 import { getVSCodeDirectory, getVSCodeDownloadUrl } from './downloader';
 
+// tslint:disable: no-console
+
 export type TestOptions = {
     quality: Quality;
     waitTime?: number;
@@ -224,9 +226,8 @@ async function downloadVSCode(quality: Quality) {
     await unzipVSCode(targetFile, targetDir);
 }
 async function installExtension(extensionsDir: string, extensionName: string, vsixPath: string) {
-    // tslint:disable-next-line: no-console
-    console.info(`Installing extension ${extensionName}`);
-    await new Promise(resolve => rimraf(path.join(extensionsDir, extensionName), resolve));
+    console.info(`Installing extension ${extensionName} from ${vsixPath}`);
+    await new Promise(resolve => rimraf(path.join(extensionsDir, extensionName), resolve)).catch(noop);
     const tmpDir = await new Promise<string>((resolve, reject) => {
         tmp.dir((ex: Error, dir: string) => {
             if (ex) {
@@ -236,6 +237,7 @@ async function installExtension(extensionsDir: string, extensionName: string, vs
         });
     });
     await unzipFile(vsixPath, tmpDir);
+    console.log(`Copy extension ${path.join(tmpDir, 'extension')} into ${path.join(extensionsDir, extensionName)}`);
     await fs.copy(path.join(tmpDir, 'extension'), path.join(extensionsDir, extensionName));
-    await new Promise(resolve => rimraf(tmpDir, resolve));
+    await new Promise(resolve => rimraf(tmpDir, resolve)).catch(noop);
 }

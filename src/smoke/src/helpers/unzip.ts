@@ -17,12 +17,13 @@ import * as glob from 'glob';
 import * as path from 'path';
 
 export function unzipVSCode(zipFile: string, targetDir: string) {
-    console.log(`Unzip ${zipFile} into ${targetDir}`);
+    console.log(`Unzip VSCode ${zipFile} into ${targetDir}`);
     const fn = (zipFile.indexOf('.gz') > 0 || zipFile.indexOf('.tag') > 0) ? unzipTarGz : unzipFile;
     return fn(zipFile, targetDir);
 }
 
 export async function unzipFile(zipFile: string, targetFolder: string) {
+    console.log(`Unzip (unzipFile) ${zipFile} into ${targetFolder}`);
     await fs.ensureDir(targetFolder);
     return new Promise((resolve, reject) => {
         gulp.src(zipFile)
@@ -34,6 +35,7 @@ export async function unzipFile(zipFile: string, targetFolder: string) {
 }
 
 export async function unzipTarGz(zipFile: string, targetFolder: string) {
+    console.log(`Unzip (unzipTarGz) ${zipFile} into ${targetFolder}`);
     const fileToFixPermissions = ['VSCode-linux-x64/code', 'VSCode-linux-x64/code-insiders', 'VSCode-linux-x64/resources/app/node_modules*/vscode-ripgrep/**/rg'];
     await fs.ensureDir(targetFolder);
     await new Promise((resolve, reject) => {
