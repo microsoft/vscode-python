@@ -77,7 +77,7 @@ Here are the steps involved in running the tests:
     * `screenshots` Screen shots captured during tests
 * `src/smoke/bootstrap` Contains just the bootstrap extension code.
 * `src/smoke/src` Source code for smoke Tests (features, nodejs code, etc).
-* `src/smoke/vscode` Location where all [VS Code smoke tests code](https://github.com/microsoft/vscode/tree/master/test/smoke) is located.
+* `src/smoke/vscode` Our local copy of the (internal) upstream [VS Code smoke tests code](https://github.com/microsoft/vscode/tree/master/test/smoke).
 
 ## CI Integration
 
