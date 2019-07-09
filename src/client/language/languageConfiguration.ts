@@ -6,10 +6,10 @@ import { IndentAction, languages } from 'vscode';
 import { PYTHON_LANGUAGE } from '../common/constants';
 
 export const MULTILINE_SEPARATOR_INDENT_REGEX = /^(?!\s+\\)[^#\n]+\\$/;
-export const INCREASE_INDENT_REGEX = /^\s*(?:async|class|def|elif|else|except|finally|if|for|try|while|with)\b.*:\s*(#.*)?$/;
+export const INCREASE_INDENT_REGEX = /^\s*(?:async|class|def|elif|else|except|finally|for|if|try|while|with)\b.*:\s*(#.*)?$/;
 export const DECREASE_INDENT_REGEX = /^\s*(?:elif|else|except|finally)\b.*:\s*(#.*)?$/;
-export const OUTDENT_SINGLE_KEYWORD_REGEX = /^\s+(break|continue|pass|raise)\b.*(#.*)?$/;
-export const OUTDENT_RETURN_REGEX = /^\s+(return)\b([^\[]|(\[.*\]))*(#.*)?$/;
+export const OUTDENT_SINGLE_KEYWORD_REGEX = /^\s*(break|continue|pass|raise)\b.*(#.*)?$/;
+export const OUTDENT_RETURN_REGEX = /^\s*(return)\b([^\[\(\{})]|([\[\(\{].*[\]\)\}]))*(#.*)?$/;
 
 export function setLanguageConfiguration() {
     // Enable indentAction
