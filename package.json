@@ -2239,9 +2239,9 @@
         "clean": "gulp clean",
         "updateBuildNumber": "gulp updateBuildNumber",
         "verifyBundle": "gulp verifyBundle",
-        "smokeTest": "cucumber-js src/smoke/src/features --require-module source-map-support/register -r out/smoke/src/index.js -r out/smoke/src/steps/**/*.js --format json:./cucumber-report.json --format node_modules/cucumber-pretty --exit",
+        "smokeTest": "cucumber-js src/smoke/src/features --require-module source-map-support/register -r out/smoke/src/index.js -r out/smoke/src/steps/**/*.js --format json:./cucumber-report.json --format node_modules/cucumber-pretty",
         "smokeTest:report": "node out/smoke/src/helpers/report.js",
-        "smokeTest:debug": "node --inspect=1339 --nolazy node_modules/cucumber/bin/cucumber-js src/smoke/src/features --require-module source-map-support/register -r out/smoke/src/index.js -r out/smoke/src/steps/**/*.js --format json:./cucumber-report.json --format node_modules/cucumber-pretty --exit"
+        "smokeTest:debug": "node --inspect=1339 --nolazy node_modules/cucumber/bin/cucumber-js src/smoke/src/features --require-module source-map-support/register -r out/smoke/src/index.js -r out/smoke/src/steps/**/*.js --format json:./cucumber-report.json --format node_modules/cucumber-pretty"
     },
     "dependencies": {
         "@jupyterlab/services": "^3.2.1",
