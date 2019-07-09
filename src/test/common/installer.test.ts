@@ -95,15 +95,14 @@ suite('Installer', () => {
         await checkInstalledDef.promise;
     }
     getNamesAndValues<Product>(Product).forEach(prod => {
-        test(`Ensure isInstalled for Product: '${prod.name}' executes the right command`, async (done) => {
+        test(`Ensure isInstalled for Product: '${prod.name}' executes the right command`, async () => {
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, new MockModuleInstaller('one', false));
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, new MockModuleInstaller('two', true));
             ioc.serviceManager.addSingletonInstance<ITerminalHelper>(ITerminalHelper, instance(mock(TerminalHelper)));
-            if (prod.value === Product.ctags || prod.value === Product.unittest || prod.value === Product.isort) {
+            if (prod.value === Product.ctags || prod.value === Product.unittest || prod.value === Product.isort || prod.value === Product.jupyter) {
                 return;
             }
             await testCheckingIfProductIsInstalled(prod.value);
-            done();
         });
     });
 
