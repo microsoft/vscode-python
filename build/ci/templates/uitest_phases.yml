@@ -14,14 +14,14 @@
 # 9. Start xvfb                               - Start in-memory display server (for launching VSC).
 # 10. Restore VSIX                            - VSIX has been built in another Job, download that from artifacts.
 # 11. Copy VSIX                               - Copy the VSIX into root directory (test suite expects it to be in root - default setup).
-# 13. Compile                                 - Npm compile
-# 14. Run Tests                               - Launch the UI tests in Nodejs
-# 15. Copy Reports
-# 16. Copy Screenshots
-# 17. Copy Extension Logs
-# 18. Copy VSC Logs
-# 19. Upload Reports                          - Upload as artifacts to Azure Devops
-# 20. Test Results                            - Upload test results to Azure Devops
+# 12. Compile                                 - Npm compile
+# 13. Run Tests                               - Launch the UI tests in Nodejs
+# 14. Copy Reports
+# 15. Copy Screenshots
+# 16. Copy Extension Logs
+# 17. Copy VSC Logs
+# 18. Upload Reports                          - Upload as artifacts to Azure Devops
+# 19. Test Results                            - Upload test results to Azure Devops
 # -----------------------------------------------------------------------------------------------------------------------------
 # Variables:
 # -----------------------------------------------------------------------------------------------------------------------------
