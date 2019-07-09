@@ -38,7 +38,7 @@ Here are the steps involved in running the tests:
 * Automate VSC UI
     * Use the VS Code smoke test API to automate the UI.
     * The [BDD](https://docs.cucumber.io/bdd/overview/) tests are written and executed using [cucumberjs](https://github.com/cucumber/cucumber-js).
-*   Workspace folder/files
+* Workspace folder/files
     * Each [feature](https://docs.cucumber.io/gherkin/reference/#feature) can have its own set of files in the form of a github repo.
     * Just add a tag with the path of the github repo url to the `feature`.
     * When starting the tests for a feature, the repo is downloaded into a new random directory `.vscode test/temp/workspace folder xyz`
