@@ -31,7 +31,7 @@ Here are the steps involved in running the tests:
     * Create a folder named `.vscode test` where test specific files will be created (reports, logs, VS Code, etc).
 
 * When launching VSC, we will launch it as a completely stand alone version of VSC.
-    * I.e. even if it is installed on the current machine, we'll download and launch a new instance.
+    * I.E. even if it is installed on the current machine, we'll download and launch a new instance.
     * This new instance will not interfere with currently installed version of VSC.
     * All user settings, etc will be in a separate directory (see `user` folder).
     * VSC will not have any extensions. We are in control of what extensions are installed (see `.vscode test/extensions` folder).
