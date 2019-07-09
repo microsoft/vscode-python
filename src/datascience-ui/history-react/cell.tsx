@@ -506,8 +506,9 @@ export class Cell extends React.Component<ICellProps> {
             // Stream output needs to be wrapped in xmp so it
             // show literally. Otherwise < chars start a new html element.
             const stream = copy as nbformat.IStream;
+            const formatted = concatMultilineString(stream.text);
             copy.data = {
-                'text/html' : `<xmp>${stream.text}</xmp>`
+                'text/html' : `<xmp>${formatted}</xmp>`
             };
 
             // Output may have goofy ascii colorization chars in it. Try
@@ -515,7 +516,7 @@ export class Cell extends React.Component<ICellProps> {
             try {
                 if (!stream.text.includes('<')) {
                     const converter = new ansiToHtml(Cell.getAnsiToHtmlOptions());
-                    const html = converter.toHtml(stream.text);
+                    const html = converter.toHtml(formatted);
                     copy.data = {
                         'text/html': html
                     };

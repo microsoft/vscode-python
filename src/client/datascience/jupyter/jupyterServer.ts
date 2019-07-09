@@ -494,7 +494,7 @@ export class JupyterServerBase implements INotebookServer {
                 outputs.forEach(o => {
                     if (o.output_type === 'stream') {
                         const stream = o as nbformat.IStream;
-                        result = this.trimOutputLineCount(result.concat(formatStreamText(concatMultilineString(stream.text.toString()))));
+                        result = this.trimOutputLineCount(result.concat(formatStreamText(concatMultilineString(stream.text))));
                     } else {
                         const data = o.data;
                         if (data && data.hasOwnProperty('text/plain')) {
