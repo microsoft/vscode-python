@@ -76,7 +76,7 @@ export abstract class BaseInstaller {
     }
 
     public async isInstalled(product: Product, resource?: Uri): Promise<boolean | undefined> {
-        if (product === Product.unittest) {
+        if (product === Product.unittest || product === Product.jupyter) {
             return true;
         }
         // User may have customized the module name or provided the fully qualified path.
