@@ -37,6 +37,6 @@
         ]
     },
     "scripts": {
-        "build": "npx vsce package --out ../bootstrap.vsix"
+        "build": "vsce package --out ../bootstrap.vsix"
     }
 }

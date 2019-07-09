@@ -144,10 +144,14 @@ steps:
 
     # Compile
     - bash: npm run compile-smoke
-      env:
-          DISPLAY: :10
-          AgentJobName: $(Agent.JobName)
       displayName: "Compile"
+      condition: succeeded()
+
+    - bash: |
+          cd ./src/smoke/bootstrap/extension
+          npm install -g vsce
+          npm run build
+      displayName: "Build Bootstrap Extension"
       condition: succeeded()
 
     # Skip @skip tagged tests
