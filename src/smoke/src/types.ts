@@ -48,7 +48,7 @@ export type TestOptions = {
     workspacePathOrFolder: string;
     readonly verbose: boolean;
     readonly pythonPath: string;
-    readonly python3Path: string;
+    // readonly python3Path: string;
 };
 
 export interface IContext {
