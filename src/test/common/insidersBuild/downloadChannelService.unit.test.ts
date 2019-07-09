@@ -13,10 +13,10 @@ import { ApplicationEnvironment } from '../../../client/common/application/appli
 import { IApplicationEnvironment, IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
-import { ExtensionChannelService, insidersChannelSetting } from '../../../client/common/insidersBuild/downloadChannelService';
-import { InsidersExtensionPrompt } from '../../../client/common/insidersBuild/insidersExtensionPrompt';
-import { ExtensionChannels, IInsiderExtensionPrompt } from '../../../client/common/insidersBuild/types';
-import { IConfigurationService, IPersistentState } from '../../../client/common/types';
+import { ExtensionChannelService, insidersChannelSetting, isThisFirstSessionStateKey } from '../../../client/common/insidersBuild/downloadChannelService';
+import { ExtensionChannels } from '../../../client/common/insidersBuild/types';
+import { PersistentStateFactory } from '../../../client/common/persistentState';
+import { IConfigurationService, IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Download channel service', () => {
@@ -24,18 +24,19 @@ suite('Download channel service', () => {
     let appEnvironment: IApplicationEnvironment;
     let workspaceService: IWorkspaceService;
     let channelService: ExtensionChannelService;
-    let insidersPrompt: IInsiderExtensionPrompt;
-    let hasUserBeenNotifiedState: TypeMoq.IMock<IPersistentState<boolean>>;
+    let persistentState: IPersistentStateFactory;
+    let isThisFirstSessionState: TypeMoq.IMock<IPersistentState<boolean>>;
     let configChangeEvent: EventEmitter<ConfigurationChangeEvent>;
     setup(() => {
         configService = mock(ConfigurationService);
         appEnvironment = mock(ApplicationEnvironment);
         workspaceService = mock(WorkspaceService);
-        insidersPrompt = mock(InsidersExtensionPrompt);
         configChangeEvent = new EventEmitter<ConfigurationChangeEvent>();
         when(workspaceService.onDidChangeConfiguration).thenReturn(configChangeEvent.event);
-        hasUserBeenNotifiedState = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
-        channelService = new ExtensionChannelService(instance(appEnvironment), instance(configService), instance(workspaceService), instance(insidersPrompt), []);
+        persistentState = mock(PersistentStateFactory);
+        isThisFirstSessionState = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
+        when(persistentState.createGlobalPersistentState(isThisFirstSessionStateKey, true)).thenReturn(isThisFirstSessionState.object);
+        channelService = new ExtensionChannelService(instance(appEnvironment), instance(configService), instance(workspaceService), instance(persistentState), []);
     });
 
     teardown(() => {
@@ -84,19 +85,19 @@ suite('Download channel service', () => {
             workspaceConfig.setup(c => c.inspect<ExtensionChannels>(insidersChannelSetting))
                 .returns(() => settings as any)
                 .verifiable(TypeMoq.Times.once());
-            when(
-                insidersPrompt.hasUserBeenNotified
-            ).thenReturn(hasUserBeenNotifiedState.object);
-            hasUserBeenNotifiedState
+            isThisFirstSessionState
                 .setup(u => u.value)
-                .returns(() => false);
+                .returns(() => true);
+            isThisFirstSessionState
+                .setup(u => u.updateValue(false))
+                .returns(() => Promise.resolve());
             when(appEnvironment.channel).thenReturn(testParams.vscodeChannel as any);
             expect(channelService.channel).to.equal(testParams.expectedResult);
             workspaceConfig.verifyAll();
         });
     });
 
-    test('Get channel returns \'Stable\' if user is using default setting and is using VS Code Insiders, but the user has been notified', async () => {
+    test('Get channel returns \'Stable\' if user is using default setting and is using VS Code Insiders, but this is not the first session', async () => {
         const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
         const settings = {};
 
@@ -106,12 +107,12 @@ suite('Download channel service', () => {
         workspaceConfig.setup(c => c.inspect<ExtensionChannels>(insidersChannelSetting))
             .returns(() => settings as any)
             .verifiable(TypeMoq.Times.once());
-        when(
-            insidersPrompt.hasUserBeenNotified
-        ).thenReturn(hasUserBeenNotifiedState.object);
-        hasUserBeenNotifiedState
+        isThisFirstSessionState
             .setup(u => u.value)
-            .returns(() => true);
+            .returns(() => false);
+        isThisFirstSessionState
+            .setup(u => u.updateValue(false))
+            .returns(() => Promise.resolve());
         when(appEnvironment.channel).thenReturn('insiders');
         expect(channelService.channel).to.equal('Stable');
         workspaceConfig.verifyAll();

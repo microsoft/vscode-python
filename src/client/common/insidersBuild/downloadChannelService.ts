@@ -7,21 +7,24 @@ import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, ConfigurationTarget, Event, EventEmitter } from 'vscode';
 import { IApplicationEnvironment, IWorkspaceService } from '../application/types';
 import { traceDecorators } from '../logger';
-import { IConfigurationService, IDisposable, IDisposableRegistry, IPythonSettings } from '../types';
-import { ExtensionChannel, ExtensionChannels, IExtensionChannelService, IInsiderExtensionPrompt } from './types';
+import { IConfigurationService, IDisposable, IDisposableRegistry, IPersistentState, IPersistentStateFactory, IPythonSettings } from '../types';
+import { ExtensionChannel, ExtensionChannels, IExtensionChannelService } from './types';
 
 export const insidersChannelSetting: keyof IPythonSettings = 'insidersChannel';
+export const isThisFirstSessionStateKey = 'IS_THIS_FIRST_SESSION_KEY';
 
 @injectable()
 export class ExtensionChannelService implements IExtensionChannelService {
+    public readonly isThisFirstSessionState: IPersistentState<boolean>;
     public _onDidChannelChange: EventEmitter<ExtensionChannels> = new EventEmitter<ExtensionChannels>();
     constructor(
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IInsiderExtensionPrompt) private readonly insidersPrompt: IInsiderExtensionPrompt,
+        @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
         @inject(IDisposableRegistry) disposables: IDisposable[]
     ) {
+        this.isThisFirstSessionState = this.persistentStateFactory.createGlobalPersistentState(isThisFirstSessionStateKey, true);
         disposables.push(this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
     }
     public get channel(): ExtensionChannels {
@@ -30,8 +33,10 @@ export class ExtensionChannelService implements IExtensionChannelService {
             throw new Error(`WorkspaceConfiguration.inspect returns 'undefined' for setting 'python.${insidersChannelSetting}'`);
         }
         if (settings.globalValue === undefined) {
-            // If user has not been notified to install insiders yet, this is the first session
-            const isThisFirstSession = !this.insidersPrompt.hasUserBeenNotified.value;
+            const isThisFirstSession = this.isThisFirstSessionState.value;
+            this.isThisFirstSessionState.updateValue(false);
+            // "Official" VSC default setting value is stable. To keep the official value to be in sync with what is being used,
+            // Use Insiders default as 'InsidersWeekly' only for the first session (insiders gets installed for the first session).
             return this.appEnvironment.channel === 'insiders' && isThisFirstSession ? ExtensionChannel.insidersDefaultForTheFirstSession : 'Stable';
         }
         return settings.globalValue;
