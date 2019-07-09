@@ -20,7 +20,7 @@ $ npm run smokeTest:report # To generate report (output is './vscode test/report
 * The UI is driven using the same infrastructure as used by `VS Code` for their smoke tests.
 * [BDD](https://docs.cucumber.io/bdd/overview/) is used to create the tests, and executed using [cucumberjs](https://github.com/cucumber/cucumber-js).
 
-## How does it work?
+## How to run smoke tests?
 
 Here are the steps involved in running the tests:
 
