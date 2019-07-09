@@ -6,9 +6,9 @@
         "postinstall": "npm run compile",
         "compile": "npm run copy-driver && npm run copy-driver-definition && tsc",
         "watch": "concurrently \"npm run watch-driver\" \"npm run watch-driver-definition\" \"tsc --watch\"",
-        "copy-driver": "",
+        "copy-driver": "echo 1",
         "watch-driver": "cpx src/vscode/driver.js out/vscode -w",
-        "copy-driver-definition": "",
+        "copy-driver-definition": "echo 2",
         "watch-driver-definition": "watch \"node tools/copy-driver-definition.js\" ../../src/vs/platform/driver/node",
         "mocha": "mocha"
     },
