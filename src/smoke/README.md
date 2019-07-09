@@ -35,7 +35,7 @@ Here are the steps involved in running the tests:
     * This new instance will not interfere with currently installed version of VSC.
     * All user settings, etc will be in a separate directory (see `user` folder).
     * VSC will not have any extensions. We are in control of what extensions are installed (see `.vscode test/extensions` folder).
-*   Automate VSC UI
+* Automate VSC UI
     * Use the VS Code smoke test API to automate the UI.
     * The [BDD](https://docs.cucumber.io/bdd/overview/) tests are written and executed using [cucumberjs](https://github.com/cucumber/cucumber-js).
 *   Workspace folder/files
