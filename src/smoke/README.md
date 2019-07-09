@@ -30,6 +30,7 @@ Here are the steps involved in running the tests:
         (configurable using the `--channel=stable | --channel=insider`)
     * Create a folder named `.vscode test` where test specific files will be created (reports, logs, VS Code, etc).
 
+## How does it work?
 * When launching VSC, we will launch it as a completely stand alone version of VSC.
     * I.E. even if it is installed on the current machine, we'll download and launch a new instance.
     * This new instance will not interfere with currently installed version of VSC.
