@@ -153,7 +153,9 @@ steps:
     # Skip @skip tagged tests
     # Always dump to a text file (easier than scrolling and downloading the logs seprately).
     # This way all logs are part of the artificat for each test.
-    - bash: npm run smokeTest -- --channel=$(VSCodeChannel) --tags='$(Tags) and not @skip' --pythonPath=$(CI_PYTHON_PATH) | tee '.vscode test/reports/log.log'
+    - bash: |
+          mkdir -p './.vscode test/reports'
+          npm run smokeTest -- --channel=$(VSCodeChannel) --tags='$(Tags) and not @skip' --pythonPath=$(CI_PYTHON_PATH) | tee '.vscode test/reports/log.log'
       env:
           DISPLAY: :10
           AgentJobName: $(Agent.JobName)
