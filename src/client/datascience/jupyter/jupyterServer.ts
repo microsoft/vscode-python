@@ -23,7 +23,7 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateCells } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
-import { concatMultilineString } from '../common';
+import { concatMultilineString, formatStreamText } from '../common';
 import { CodeSnippits, Identifiers, Telemetry } from '../constants';
 import {
     CellState,
@@ -495,7 +495,7 @@ export class JupyterServerBase implements INotebookServer {
                 outputs.forEach(o => {
                     if (o.output_type === 'stream') {
                         const stream = o as nbformat.IStream;
-                        result = result.concat(stream.text.toString());
+                        result = result.concat(formatStreamText(concatMultilineString(stream.text.toString())));
                     } else {
                         const data = o.data;
                         if (data && data.hasOwnProperty('text/plain')) {
@@ -804,6 +804,7 @@ export class JupyterServerBase implements INotebookServer {
             } else {
                 // tslint:disable-next-line:restrict-plus-operands
                 existing.text = existing.text + msg.content.text;
+                existing.text = formatStreamText(concatMultilineString(existing.text));
             }
 
         } else {
@@ -811,7 +812,7 @@ export class JupyterServerBase implements INotebookServer {
             const output: nbformat.IStream = {
                 output_type: 'stream',
                 name: msg.content.name,
-                text: msg.content.text
+                text: formatStreamText(concatMultilineString(msg.content.text))
             };
             this.addToCellData(cell, output, clearState);
         }
