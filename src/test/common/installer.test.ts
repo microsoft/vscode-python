@@ -95,7 +95,7 @@ suite('Installer', () => {
         await checkInstalledDef.promise;
     }
     getNamesAndValues<Product>(Product).forEach(prod => {
-        test(`Ensure isInstalled for Product: '${prod.name}' executes the right command`, async () => {
+        test(`Ensure isInstalled for Product: '${prod.name}' executes the right command`, async (done) => {
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, new MockModuleInstaller('one', false));
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, new MockModuleInstaller('two', true));
             ioc.serviceManager.addSingletonInstance<ITerminalHelper>(ITerminalHelper, instance(mock(TerminalHelper)));
@@ -103,6 +103,7 @@ suite('Installer', () => {
                 return;
             }
             await testCheckingIfProductIsInstalled(prod.value);
+            done();
         });
     });
 
@@ -122,7 +123,7 @@ suite('Installer', () => {
         await checkInstalledDef.promise;
     }
     getNamesAndValues<Product>(Product).forEach(prod => {
-        test(`Ensure install for Product: '${prod.name}' executes the right command in IModuleInstaller`, async () => {
+        test(`Ensure install for Product: '${prod.name}' executes the right command in IModuleInstaller`, async (done) => {
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, new MockModuleInstaller('one', false));
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, new MockModuleInstaller('two', true));
             ioc.serviceManager.addSingletonInstance<ITerminalHelper>(ITerminalHelper, instance(mock(TerminalHelper)));
@@ -130,6 +131,7 @@ suite('Installer', () => {
                 return;
             }
             await testInstallingProduct(prod.value);
+            done();
         });
     });
 });
