@@ -150,15 +150,16 @@ export class MockDebuggerService implements IDebugService, IDisposable {
     }
 
     public async getStackTrace(): Promise<DebugProtocol.StackTraceResponse | undefined> {
+        const deferred = createDeferred<DebugProtocol.StackTraceResponse>();
         this.protocolParser.once('response_stackTrace', (args: any) => {
-            window.console.log(JSON.stringify(args));
+            deferred.resolve(args as DebugProtocol.StackTraceResponse);
         });
         await this.emitMessage('stackTrace', {
             threadId: 1,
             startFrame: 0,
             levels: 1
         });
-        return undefined;
+        return deferred.promise;
     }
 
     private sendCustomRequest(command: string, args?: any): Promise<void> {

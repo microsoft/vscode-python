@@ -110,16 +110,17 @@ suite('DataScience Debugger tests', () => {
         return result;
     }
 
-    async function debugCell(code: string, breakpoint?: Range) : Promise<void> {
+    async function debugCell(code: string, breakpoint?: Range, breakpointFile?: string) : Promise<void> {
         // Create a dummy document with just this code
         const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
         const fileName = path.join(EXTENSION_ROOT_DIR, 'foo.py');
         docManager.addDocument(code, fileName);
 
         if (breakpoint) {
+            const sourceFile = breakpointFile ? path.join(EXTENSION_ROOT_DIR, breakpointFile) : fileName;
             const sb : SourceBreakpoint = {
                 location: {
-                    uri: Uri.file(fileName),
+                    uri: Uri.file(sourceFile),
                     range: breakpoint
                 },
                 id: uuid(),
@@ -131,6 +132,8 @@ suite('DataScience Debugger tests', () => {
         // Start the jupyter server
         const history = await getOrCreateInteractiveWindow();
 
+        const expectedBreakLine = breakpoint && !breakpointFile ? breakpoint.start.line : 2; // 2 because of the 'breakpoint()' that gets added
+
         // Debug this code. We should either hit the breakpoint or stop on entry
         const results = await getCellResults(ioc.wrapper!, 5, async () => {
             const breakPromise = createDeferred<void>();
@@ -140,6 +143,9 @@ suite('DataScience Debugger tests', () => {
             assert.ok(breakPromise.resolved, 'Breakpoint event did not fire');
             assert.ok(!lastErrorMessage, `Error occurred ${lastErrorMessage}`);
             const stackTrace = await mockDebuggerService!.getStackTrace();
+            assert.ok(stackTrace, 'Stack trace not computable');
+            assert.ok(stackTrace!.body.stackFrames.length >= 1, 'Not enough frames');
+            assert.equal(stackTrace!.body.stackFrames[0].line, expectedBreakLine, 'Stopped on wrong line number');
             // Verify break location
             await mockDebuggerService!.continue();
         });
@@ -151,7 +157,10 @@ suite('DataScience Debugger tests', () => {
     });
 
     test('Debug cell with breakpoint', async () => {
-        await debugCell('#%%\nprint("bar")\nprint("baz")', new Range(new Position(2, 0), new Position(2, 0)));
+        await debugCell('#%%\nprint("bar")\nprint("baz")', new Range(new Position(3, 0), new Position(3, 0)));
     });
 
+    test('Debug cell with breakpoint in another file', async () => {
+        await debugCell('#%%\nprint("bar")\nprint("baz")', new Range(new Position(3, 0), new Position(3, 0)), 'bar.py');
+    });
 });

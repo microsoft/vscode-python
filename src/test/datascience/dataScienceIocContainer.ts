@@ -404,7 +404,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             liveShareConnectionTimeout: 100,
             autoPreviewNotebooksInInteractivePane: true,
             enablePlotViewer: true,
-            ptvsdDistPath: 'F:\\ptvsd\\dist\\ptvsd-4.2.11a5\\ptvsd-4.2.11a5\\src', //path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python')
             stopOnFirstLineWhileDebugging: true
         };
 
