@@ -60,7 +60,7 @@ Here are the steps involved in running the tests:
 * The tests are written using [cucumberjs](https://github.com/cucumber/cucumber-js).
 * VS Code [smoke tests API](https://github.com/microsoft/vscode/tree/master/test/smoke) is used to automate VS Code.
 * `GitHub` repos are used to provide the files to be used for testing in a workspace folder.
-*  reports (`cucumber format`) are converted into HTML using an `npm` script [cucumber-html-reporter](https://www.npmjs.com/package/cucumber-html-reporter).
+* reports (`cucumber format`) are converted into HTML using an `npm` script [cucumber-html-reporter](https://www.npmjs.com/package/cucumber-html-reporter).
 * Test result reports are generated using `junit` format, for Azure Devops.
 
 
