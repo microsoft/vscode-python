@@ -6,8 +6,10 @@ import { IndentAction, languages } from 'vscode';
 import { PYTHON_LANGUAGE } from '../common/constants';
 
 export const MULTILINE_SEPARATOR_INDENT_REGEX = /^(?!\s+\\)[^#\n]+\\$/;
-export const INCREASE_INDENT_REGEX = /^\s*(?:def|class|for|if|elif|else|while|try|with|finally|except|async)\b.*:\s*/;
-export const DECREASE_INDENT_REGEX = /^\s*(?:elif|else)\b.*:\s*/;
+export const INCREASE_INDENT_REGEX = /^\s*(?:async|class|def|elif|else|except|finally|if|for|try|while|with)\b.*:\s*(#.*)?$/;
+export const DECREASE_INDENT_REGEX = /^\s*(?:elif|else|except|finally)\b.*:\s*(#.*)?$/;
+export const OUTDENT_SINGLE_KEYWORD_REGEX = /^\s+(break|continue|pass|raise)\b.*(#.*)?$/;
+export const OUTDENT_RETURN_REGEX = /^\s+(return)\b([^\[]|(\[.*\]))*(#.*)?$/;
 
 export function setLanguageConfiguration() {
     // Enable indentAction
@@ -23,8 +25,12 @@ export function setLanguageConfiguration() {
                 action: { indentAction: IndentAction.None, appendText: '# ' }
             },
             {
-                beforeText: /^\s+(continue|break|return)\b.*/,
-                afterText: /\s+$/,
+                beforeText: OUTDENT_SINGLE_KEYWORD_REGEX,
+                action: { indentAction: IndentAction.Outdent }
+            },
+            {
+                // Outdent the line following he return statement only if there is no dangling open bracket before the cursor.
+                beforeText: OUTDENT_RETURN_REGEX,
                 action: { indentAction: IndentAction.Outdent }
             }
         ],

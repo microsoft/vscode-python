@@ -76,12 +76,12 @@ suite('Language configuration regexes', () => {
         {
             keyword: 'finally',
             line: 'finally:',
-            dedent: false
+            dedent: true
         },
         {
             keyword: 'except',
             line: 'except TestError:',
-            dedent: false
+            dedent: true
         },
         {
             keyword: 'async',
