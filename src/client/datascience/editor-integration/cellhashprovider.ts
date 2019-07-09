@@ -73,6 +73,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
                     const reason = payload.type as SysInfoReason;
                     if (reason !== SysInfoReason.Interrupt) {
                         this.hashes.clear();
+                        this.executionCount = 0;
                     }
                 }
                 break;

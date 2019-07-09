@@ -3,6 +3,7 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import * as net from 'net';
+import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import {
     Breakpoint,
@@ -15,6 +16,7 @@ import {
     Disposable,
     Event,
     EventEmitter,
+    SourceBreakpoint,
     WorkspaceFolder
 } from 'vscode';
 
@@ -25,6 +27,7 @@ import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { IProtocolParser } from '../../client/debugger/debugAdapter/types';
+import { DebugProtocol } from 'vscode-debugprotocol';
 
 // tslint:disable:no-any
 
@@ -69,7 +72,7 @@ export class MockDebuggerService implements IDebugService, IDisposable {
     private sessionTerminatedEvent: EventEmitter<DebugSession> = new EventEmitter<DebugSession>();
     private sessionCustomEvent: EventEmitter<DebugSessionCustomEvent> = new EventEmitter<DebugSessionCustomEvent>();
     private breakpointsChangedEvent: EventEmitter<BreakpointsChangeEvent> = new EventEmitter<BreakpointsChangeEvent>();
-
+    private _breakpoints: Breakpoint[] = [];
     constructor(
         @inject(IProtocolParser) private protocolParser: IProtocolParser
     ) {
@@ -97,7 +100,7 @@ export class MockDebuggerService implements IDebugService, IDisposable {
         };
     }
     public get breakpoints(): Breakpoint[] {
-        return [];
+        return this._breakpoints;
     }
     public get onDidChangeActiveDebugSession(): Event<DebugSession | undefined> {
         return this.sessionChangedEvent.event;
@@ -132,8 +135,8 @@ export class MockDebuggerService implements IDebugService, IDisposable {
         }
         return Promise.resolve(true);
     }
-    public addBreakpoints(_breakpoints: Breakpoint[]): void {
-        noop();
+    public addBreakpoints(breakpoints: Breakpoint[]): void {
+        this._breakpoints = this._breakpoints.concat(breakpoints);
     }
     public removeBreakpoints(_breakpoints: Breakpoint[]): void {
         noop();
@@ -146,6 +149,18 @@ export class MockDebuggerService implements IDebugService, IDisposable {
         return this.sendMessage('continue', { threadId: 0 });
     }
 
+    public async getStackTrace(): Promise<DebugProtocol.StackTraceResponse | undefined> {
+        this.protocolParser.once('response_stackTrace', (args: any) => {
+            window.console.log(JSON.stringify(args));
+        });
+        await this.emitMessage('stackTrace', {
+            threadId: 1,
+            startFrame: 0,
+            levels: 1
+        });
+        return undefined;
+    }
+
     private sendCustomRequest(command: string, args?: any): Promise<void> {
         return this.sendMessage(command, args);
     }
@@ -153,8 +168,26 @@ export class MockDebuggerService implements IDebugService, IDisposable {
     private async sendStartSequence(port: number, sessionId: string): Promise<boolean> {
         await this.sendInitialize();
         await this.sendAttach(port, sessionId);
+        if (this._breakpoints.length > 0) {
+            await this.sendBreakpoints();
+        }
         await this.sendConfigurationDone();
         return true;
+    }
+
+    private sendBreakpoints(): Promise<void> {
+        // Only supporting a single file now
+        const sbs = this._breakpoints.map(b => b as SourceBreakpoint);
+        const file = (sbs[0]).location.uri.fsPath;
+        return this.sendMessage('setBreakpoints', {
+            source: {
+                name: path.basename(file),
+                path: file
+            },
+            lines: sbs.map(sb => sb.location.range.start.line),
+            breakpoints: sbs.map(sb => { return { line: sb.location.range.start.line }; }),
+            sourceModified: true
+        });
     }
 
     private sendAttach(port: number, sessionId: string): Promise<void> {

@@ -3,25 +3,28 @@
 'use strict';
 import * as assert from 'assert';
 import { mount } from 'enzyme';
+import * as path from 'path';
 import * as React from 'react';
 import * as TypeMoq from 'typemoq';
-import { Disposable, Position, Range, Uri } from 'vscode';
+import * as uuid from 'uuid/v4';
+import { Disposable, Position, Range, SourceBreakpoint, Uri } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
 import { IApplicationShell, IDebugService, IDocumentManager } from '../../client/common/application/types';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
+import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import {
     InteractiveWindowMessageListener
 } from '../../client/datascience/interactive-window/interactiveWindowMessageListener';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-window/interactiveWindowTypes';
 import { IInteractiveWindow, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
-//import { asyncDump } from '../common/asyncDump';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { getCellResults } from './interactiveWindowTestHelpers';
 import { MockDebuggerService } from './mockDebugService';
 import { MockDocumentManager } from './mockDocumentManager';
 
+//import { asyncDump } from '../common/asyncDump';
 // tslint:disable-next-line:max-func-body-length no-any
 suite('DataScience Debugger tests', () => {
     const disposables: Disposable[] = [];
@@ -107,10 +110,23 @@ suite('DataScience Debugger tests', () => {
         return result;
     }
 
-    async function debugCell(code: string, _breakpoint?: Range) : Promise<void> {
+    async function debugCell(code: string, breakpoint?: Range) : Promise<void> {
         // Create a dummy document with just this code
         const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
-        docManager.addDocument(code, 'foo.py');
+        const fileName = path.join(EXTENSION_ROOT_DIR, 'foo.py');
+        docManager.addDocument(code, fileName);
+
+        if (breakpoint) {
+            const sb : SourceBreakpoint = {
+                location: {
+                    uri: Uri.file(fileName),
+                    range: breakpoint
+                },
+                id: uuid(),
+                enabled: true
+            };
+            mockDebuggerService!.addBreakpoints([sb]);
+        }
 
         // Start the jupyter server
         const history = await getOrCreateInteractiveWindow();
@@ -119,10 +135,12 @@ suite('DataScience Debugger tests', () => {
         const results = await getCellResults(ioc.wrapper!, 5, async () => {
             const breakPromise = createDeferred<void>();
             disposables.push(mockDebuggerService!.onBreakpointHit(() => breakPromise.resolve()));
-            const done = history.debugCode(code, 'foo.py', 0, docManager.activeTextEditor);
+            const done = history.debugCode(code, fileName, 0, docManager.activeTextEditor);
             await waitForPromise(Promise.race([done, breakPromise.promise]), 60000);
             assert.ok(breakPromise.resolved, 'Breakpoint event did not fire');
             assert.ok(!lastErrorMessage, `Error occurred ${lastErrorMessage}`);
+            const stackTrace = await mockDebuggerService!.getStackTrace();
+            // Verify break location
             await mockDebuggerService!.continue();
         });
         assert.ok(results, 'No cell results after finishing debugging');
