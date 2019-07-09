@@ -146,7 +146,7 @@ export async function initialize(): Promise<TestOptions> {
     const bootstrapExension = await getBootstrapExtensionPath();
     await installExtension(options.extensionsPath, 'ms-python.bootstrap', bootstrapExension);
     await initializeDefaultUserSettings(options, getExtensionSpecificUserSettingsForAllTests());
-
+    console.log('Initialize completed');
     return options;
 }
 
@@ -191,7 +191,8 @@ export async function initializeDefaultUserSettings(opts: TestOptions, additiona
         settingsToAdd['window.newWindowDimensions'] = 'maximized';
     }
 
-    return initializeUserSettings(opts, settingsToAdd);
+    await initializeUserSettings(opts, settingsToAdd);
+    console.log('Initialized user settings');
 }
 async function initializeUserSettings(opts: TestOptions, settings: { [key: string]: {} }) {
     await fs.mkdirp(path.dirname(opts.userSettingsFilePath)).catch(noop);

@@ -169,6 +169,8 @@ export class Application implements IApplication {
     }
 
     public async start(expectWalkthroughPart = true): Promise<any> {
+        // tslint:disable-next-line: no-console
+        console.log('Start VS Code Application');
         await this._start();
         await this.code.waitForElement('.explorer-folders-view');
 
@@ -204,6 +206,8 @@ export class Application implements IApplication {
     }
 
     public async stop(): Promise<any> {
+        // tslint:disable-next-line: no-console
+        console.log('Stop VS Code Application');
         if (this._code) {
             await this._code.exit()
                 .catch(ex => console.error('Failed to exit VS Code', ex));

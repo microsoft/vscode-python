@@ -27,6 +27,7 @@ setDefaultTimeout(maxStepTimeout);
 // Wait for a max of 2 minutes (download VSC, install, activate python extension).
 // All of this takes time when running the first time, hence allow max timeout of 2 minutes.
 BeforeAll({ timeout: maxHookTimeout }, async function () {
+    console.log('Before all');
     const testOptions = await initialize();
     const app = new Application(testOptions);
     await app.start();
