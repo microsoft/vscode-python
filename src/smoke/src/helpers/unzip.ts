@@ -3,7 +3,8 @@
 
 'use strict';
 
-// tslint:disable: no-var-requires no-require-imports
+// tslint:disable: no-var-requires no-require-imports no-default-export no-console
+
 const gulp = require('gulp');
 const fs = require('fs-extra');
 const vzip = require('gulp-vinyl-zip');
@@ -13,8 +14,8 @@ const gunzip = require('gulp-gunzip');
 const chmod = require('gulp-chmod');
 const filter = require('gulp-filter');
 
-// tslint:disable-next-line: no-default-export
 export function unzipVSCode(zipFile: string, targetDir: string) {
+    console.log(`Unzip ${zipFile} into ${targetDir}`);
     const fn = (zipFile.indexOf('.gz') > 0 || zipFile.indexOf('.tag') > 0) ? unzipTarGz : unzipFile;
     return fn(zipFile, targetDir);
 }
