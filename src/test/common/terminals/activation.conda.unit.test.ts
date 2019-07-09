@@ -10,10 +10,8 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Disposable } from 'vscode';
 import { TerminalManager } from '../../../client/common/application/terminalManager';
-import { WorkspaceService } from '../../../client/common/application/workspace';
 import '../../../client/common/extensions';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
-import { CurrentProcess } from '../../../client/common/process/currentProcess';
 import { IProcessService, IProcessServiceFactory } from '../../../client/common/process/types';
 import { Bash } from '../../../client/common/terminal/environmentActivationProviders/bash';
 import { CommandPromptAndPowerShell } from '../../../client/common/terminal/environmentActivationProviders/commandPrompt';
@@ -84,8 +82,7 @@ suite('Terminal Environment Activation conda', () => {
             mock(CommandPromptAndPowerShell),
             mock(PyEnvActivationCommandProvider),
             mock(PipEnvActivationCommandProvider),
-            instance(mock(CurrentProcess)),
-            instance(mock(WorkspaceService))
+            []
         );
     });
     teardown(() => {

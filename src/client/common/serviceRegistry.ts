@@ -53,7 +53,11 @@ import { PipEnvActivationCommandProvider } from './terminal/environmentActivatio
 import { PyEnvActivationCommandProvider } from './terminal/environmentActivationProviders/pyenvActivationProvider';
 import { TerminalServiceFactory } from './terminal/factory';
 import { TerminalHelper } from './terminal/helper';
+import { SettingsShellDetector } from './terminal/shellDetectors/settingsShellDetector';
+import { TerminalNameShellDetector } from './terminal/shellDetectors/terminalNameShellDetector';
+import { UserEnvironmentShellDetector } from './terminal/shellDetectors/userEnvironmentShellDetector';
 import {
+    IShellDetector,
     ITerminalActivationCommandProvider,
     ITerminalActivationHandler,
     ITerminalActivator,
@@ -129,4 +133,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
     serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);
     serviceManager.addSingleton<IImportTracker>(IImportTracker, ImportTracker);
+    serviceManager.addSingleton<IShellDetector>(IShellDetector, TerminalNameShellDetector);
+    serviceManager.addSingleton<IShellDetector>(IShellDetector, SettingsShellDetector);
+    serviceManager.addSingleton<IShellDetector>(IShellDetector, UserEnvironmentShellDetector);
 }
