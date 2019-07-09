@@ -8,18 +8,19 @@
 import * as assert from 'assert';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
-import { instance, mock, verify, when } from 'ts-mockito';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import { Uri } from 'vscode';
+import { EventEmitter, Uri } from 'vscode';
 import { ApplicationEnvironment } from '../../../client/common/application/applicationEnvironment';
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { Channel, IApplicationEnvironment, ICommandManager } from '../../../client/common/application/types';
+import { Commands } from '../../../client/common/constants';
 import { ExtensionChannelService } from '../../../client/common/insidersBuild/downloadChannelService';
 import { InsidersExtensionPrompt } from '../../../client/common/insidersBuild/insidersExtensionPrompt';
 import { InsidersExtensionService } from '../../../client/common/insidersBuild/insidersExtensionService';
 import { ExtensionChannels, IExtensionChannelRule, IExtensionChannelService, IInsiderExtensionPrompt } from '../../../client/common/insidersBuild/types';
 import { IExtensionBuildInstaller } from '../../../client/common/installer/types';
-import { IPersistentState } from '../../../client/common/types';
+import { IDisposable, IPersistentState } from '../../../client/common/types';
 import { createDeferred, createDeferredFromPromise } from '../../../client/common/utils/async';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -288,5 +289,84 @@ suite('Insiders Extension Service - Function choosePromptAndDisplay()', () => {
             }
             verify(appEnvironment.channel).once();
         });
+    });
+});
+
+// tslint:disable-next-line: max-func-body-length
+suite('Insiders Extension Service - Function registerCommandsAndHandlers()', () => {
+    let appEnvironment: IApplicationEnvironment;
+    let serviceContainer: IServiceContainer;
+    let extensionChannelService: IExtensionChannelService;
+    let cmdManager: ICommandManager;
+    let insidersPrompt: IInsiderExtensionPrompt;
+    let channelChangeEvent: EventEmitter<ExtensionChannels>;
+    let handleChannel: sinon.SinonStub<any>;
+    let insidersExtensionService: InsidersExtensionService;
+    setup(() => {
+        extensionChannelService = mock(ExtensionChannelService);
+        appEnvironment = mock(ApplicationEnvironment);
+        cmdManager = mock(CommandManager);
+        serviceContainer = mock(ServiceContainer);
+        insidersPrompt = mock(InsidersExtensionPrompt);
+        channelChangeEvent = new EventEmitter<ExtensionChannels>();
+        handleChannel = sinon.stub(InsidersExtensionService.prototype, 'handleChannel');
+        handleChannel.callsFake(() => Promise.resolve());
+        insidersExtensionService = new InsidersExtensionService(instance(extensionChannelService), instance(insidersPrompt), instance(appEnvironment), instance(cmdManager), instance(serviceContainer), []);
+    });
+
+    teardown(() => {
+        sinon.restore();
+        channelChangeEvent.dispose();
+    });
+
+    test('Ensure commands and handlers get registered, and disposables returned are in the disposable list', async () => {
+        const disposable1 = TypeMoq.Mock.ofType<IDisposable>();
+        const disposable2 = TypeMoq.Mock.ofType<IDisposable>();
+        const disposable3 = TypeMoq.Mock.ofType<IDisposable>();
+        const disposable4 = TypeMoq.Mock.ofType<IDisposable>();
+        when(extensionChannelService.onDidChannelChange).thenReturn(() => disposable1.object);
+        when(cmdManager.registerCommand(Commands.SwitchToStable, anything())).thenReturn(disposable2.object);
+        when(cmdManager.registerCommand(Commands.SwitchToInsidersDaily, anything())).thenReturn(disposable3.object);
+        when(cmdManager.registerCommand(Commands.SwitchToInsidersWeekly, anything())).thenReturn(disposable4.object);
+
+        insidersExtensionService.registerCommandsAndHandlers();
+
+        expect(insidersExtensionService.disposables.length).to.equal(4);
+        verify(extensionChannelService.onDidChannelChange).once();
+        verify(cmdManager.registerCommand(Commands.SwitchToStable, anything())).once();
+        verify(cmdManager.registerCommand(Commands.SwitchToInsidersDaily, anything())).once();
+        verify(cmdManager.registerCommand(Commands.SwitchToInsidersWeekly, anything())).once();
+    });
+
+    test('Ensure commands and handlers get registered with the correct callback handlers', async () => {
+        const disposable1 = TypeMoq.Mock.ofType<IDisposable>();
+        const disposable2 = TypeMoq.Mock.ofType<IDisposable>();
+        const disposable3 = TypeMoq.Mock.ofType<IDisposable>();
+        const disposable4 = TypeMoq.Mock.ofType<IDisposable>();
+        let channelChangedHandler!: Function;
+        let switchToStableHandler!: Function;
+        let switchToInsidersDailyHandler!: Function;
+        let switchToInsidersWeeklyHandler!: Function;
+        when(extensionChannelService.onDidChannelChange).thenReturn(cb => { channelChangedHandler = cb; return disposable1.object; });
+        when(cmdManager.registerCommand(Commands.SwitchToStable, anything())).thenCall((_, cb) => { switchToStableHandler = cb; return disposable2.object; });
+        when(cmdManager.registerCommand(Commands.SwitchToInsidersDaily, anything())).thenCall((_, cb) => { switchToInsidersDailyHandler = cb; return disposable3.object; });
+        when(cmdManager.registerCommand(Commands.SwitchToInsidersWeekly, anything())).thenCall((_, cb) => { switchToInsidersWeeklyHandler = cb; return disposable4.object; });
+
+        insidersExtensionService.registerCommandsAndHandlers();
+
+        channelChangedHandler('Some channel');
+        assert.ok(handleChannel.calledOnce);
+
+        when(extensionChannelService.updateChannel('Stable')).thenResolve();
+        await switchToStableHandler();
+        verify(extensionChannelService.updateChannel('Stable')).once();
+
+        when(extensionChannelService.updateChannel('InsidersDaily')).thenResolve();
+        await switchToInsidersDailyHandler();
+        verify(extensionChannelService.updateChannel('InsidersDaily')).once();
+
+        when(extensionChannelService.updateChannel('InsidersWeekly')).thenResolve();
+        await switchToInsidersWeeklyHandler();
+        verify(extensionChannelService.updateChannel('InsidersWeekly')).once();
     });
 });
