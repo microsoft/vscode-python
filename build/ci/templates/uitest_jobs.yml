@@ -95,22 +95,22 @@ parameters:
       {
           "version": "3.7",
           "displayName": "37",
-          "excludeTags": "@python3.6 and not @python3.5 and not @python2"
+          "excludeTags": "not @python3.6 and not @python3.5 and not @python2"
       },
       {
           "version": "3.6",
           "displayName": "36",
-          "excludeTags": "@python3.7 and not @python3.5 and not @python2"
+          "excludeTags": "not @python3.7 and not @python3.5 and not @python2"
       },
       {
           "version": "3.5",
           "displayName": "35",
-          "excludeTags": "@python3.7 and not @python3.6 and not @python2"
+          "excludeTags": "not @python3.7 and not @python3.6 and not @python2"
       },
       {
           "version": "2.7",
           "displayName": "27",
-          "excludeTags": "@python3.7 and not @python3.5 and not @python3"
+          "excludeTags": "not @python3.7 and not @python3.5 and not @python3"
       }
     ]
 
