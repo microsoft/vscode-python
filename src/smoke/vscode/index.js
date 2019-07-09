@@ -21,18 +21,15 @@ function udpateTsConfig() {
 }
 
 function updatePackageJson() {
-    const json = JSON.parse(fs.readFileSync(packageJson).toString());
-    const sourceDrvierJs = path.join(vscodeSmokeDirector, 'src', 'vscode', 'driver.js');
-    const sourceDrvierTs = path.join(vscodeSmokeDirector, 'src', 'vscode', 'driver.d.ts');
+    const sourceDriverJs = path.join(vscodeSmokeDirector, 'src', 'vscode', 'driver.js');
+    const sourceDriverTs = path.join(vscodeSmokeDirector, 'src', 'vscode', 'driver.d.ts');
     const outDirVSCFullPath = path.join(rootDirectory, 'out', 'smoke', 'vscode', 'vscode');
-    const outDirVSC = path.relative(packageJsonDirectory, outDirVSCFullPath);
-    fs.ensureDirSync(outDirVSC);
-    json.scripts['copy-driver'] = `cpx ${sourceDrvierJs} ${outDirVSC} && cpx ${sourceDrvierTs} ${outDirVSC}`;
+    fs.ensureDirSync(outDirVSCFullPath);
     console.log(`Full path ${outDirVSCFullPath}`);
-    console.log(`Copied file '${sourceDrvierJs}' into ${outDirVSC}`);
-    console.log(`Copied file '${sourceDrvierTs}' into ${outDirVSC}`);
-    fs.writeFileSync(packageJson, JSON.stringify(json, undefined, 4));
-    console.log(`Updated packageJson ${packageJson}`);
+    fs.copyFileSync(sourceDriverJs, path.join(outDirVSCFullPath, path.basename(sourceDriverJs)));
+    console.log(`Copied file '${sourceDriverJs}' into ${sourceDriverJs}`);
+    fs.copyFileSync(sourceDriverTs, path.join(outDirVSCFullPath, path.basename(sourceDriverTs)));
+    console.log(`Copied file '${sourceDriverTs}' into ${sourceDriverJs}`);
 }
 
 udpateTsConfig();
