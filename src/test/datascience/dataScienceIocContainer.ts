@@ -41,6 +41,8 @@ import {
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { PythonSettings } from '../../client/common/configSettings';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
+import { InstallationChannelManager } from '../../client/common/installer/channelManager';
+import { IInstallationChannelManager } from '../../client/common/installer/types';
 import { Logger } from '../../client/common/logger';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
@@ -328,6 +330,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.add<ICodeExecutionHelper>(ICodeExecutionHelper, CodeExecutionHelper);
         this.serviceManager.add<IDataScienceCommandListener>(IDataScienceCommandListener, InteractiveWindowCommandListener);
         this.serviceManager.add<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
+        this.serviceManager.add<IInstallationChannelManager>(IInstallationChannelManager, InstallationChannelManager);
         this.serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables);
         this.serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, JupyterDebugger);
 
