@@ -6,6 +6,7 @@
 
 import { createHash } from 'crypto';
 import { injectable } from 'inversify';
+import { traceError } from './logger';
 import { ICryptoUtils, IHashFormat } from './types';
 
 /**
@@ -15,6 +16,13 @@ import { ICryptoUtils, IHashFormat } from './types';
 export class CryptoUtils implements ICryptoUtils {
     public createHash<E extends keyof IHashFormat>(data: string, hashFormat: E): IHashFormat[E] {
         const hash = createHash('sha512').update(data).digest('hex');
-        return hashFormat === 'number' ? parseInt(hash, 16) : hash as any;
+        if (hashFormat === 'number') {
+            const result = parseInt(hash, 16);
+            if (isNaN(result)) {
+                traceError(`Number hash for data '${data}' is NaN`);
+            }
+            return result as any;
+        }
+        return hash as any;
     }
 }
