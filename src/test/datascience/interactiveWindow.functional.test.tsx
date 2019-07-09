@@ -619,4 +619,15 @@ for _ in range(50):
         window.copyCode({source: 'print("baz")'});
         assert.equal(docManager.textDocuments[0].getText(), `#%%${os.EOL}#%%${os.EOL}print("baz")${os.EOL}#%%${os.EOL}print("baz")${os.EOL}#%%${os.EOL}print("bar")`, 'Text not inserted');
     }, () => { return ioc; });
+
+    runMountedTest('Limit text output', async (wrapper) => {
+        ioc.getSettings().datascience.textOutputLineLimit = 2;
+
+        // Output should be trimmed to just two lines of output
+        const code = `print("hello\\nworld\\nhow\\nare\\nyou")`;
+        addMockData(ioc, code, 'hello\nworld');
+        await addCode(getOrCreateInteractiveWindow, wrapper, code, 4);
+
+        verifyHtmlOnCell(wrapper, '>hello\nworld<', CellPosition.Last);
+    }, () => { return ioc; });
 });

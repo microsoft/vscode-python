@@ -23,7 +23,7 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateCells } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
-import { concatMultilineString, formatStreamText, splitMultilineString } from '../common';
+import { concatMultilineString, formatStreamText } from '../common';
 import { CodeSnippits, Identifiers, Telemetry } from '../constants';
 import {
     CellState,
