@@ -16,9 +16,9 @@ $ npm run smokeTest:report # To generate report (output is './vscode test/report
 
 ## Overview
 
--   These are a set of UI tests for the Python Extension in VSC.
--   The UI is driven using the same infrastructure as used by `VS Code` for their smoke tests.
--   [BDD](https://docs.cucumber.io/bdd/overview/) is used to create the tests, and executed using [cucumberjs](https://github.com/cucumber/cucumber-js).
+* These are a set of UI tests for the Python Extension in VSC.
+* The UI is driven using the same infrastructure as used by `VS Code` for their smoke tests.
+* [BDD](https://docs.cucumber.io/bdd/overview/) is used to create the tests, and executed using [cucumberjs](https://github.com/cucumber/cucumber-js).
 
 ## How does it work?
 
@@ -39,19 +39,19 @@ Here are the steps involved in running the tests:
     * Use the VS Code smoke test API to automate the UI.
     * The [BDD](https://docs.cucumber.io/bdd/overview/) tests are written and executed using [cucumberjs](https://github.com/cucumber/cucumber-js).
 *   Workspace folder/files
-    -   Each [feature](https://docs.cucumber.io/gherkin/reference/#feature) can have its own set of files in the form of a github repo.
-    -   Just add a tag with the path of the github repo url to the `feature`.
-    -   When starting the tests for a feature, the repo is downloaded into a new random directory `.vscode test/temp/workspace folder xyz`
-    -   At the begining of every scenario, we repeate the previous step.
-    -   This ensures each scenario starts with a clean workspace folder.
+    * Each [feature](https://docs.cucumber.io/gherkin/reference/#feature) can have its own set of files in the form of a github repo.
+    * Just add a tag with the path of the github repo url to the `feature`.
+    * When starting the tests for a feature, the repo is downloaded into a new random directory `.vscode test/temp/workspace folder xyz`
+    * At the begining of every scenario, we repeate the previous step.
+    * This ensures each scenario starts with a clean workspace folder.
 *   Reports
-    -   Test results are stored in the `reports` directory
-    -   These `json` (`cucumber format`) report files are converted into HTML using an `npm` script [cucumber-html-reporter](https://www.npmjs.com/package/cucumber-html-reporter).
-    -   For each `scenario` that's executed, we create a corresponding directory in `reports` directory.
-        -   This will contain all screenshots realted to that scenario.
-        -   If the scenario fails, all logs, workspace folder are copied into this directory.
-        -   Thus, when ever a test fails, we have everything related to that test.
-        -   If the scenario passes, this directory is deleted (we don't need them on CI server).
+    * Test results are stored in the `reports` directory
+    * These `json` (`cucumber format`) report files are converted into HTML using an `npm` script [cucumber-html-reporter](https://www.npmjs.com/package/cucumber-html-reporter).
+    * For each `scenario` that's executed, we create a corresponding directory in `reports` directory.
+        * This will contain all screenshots realted to that scenario.
+        * If the scenario fails, all logs, workspace folder are copied into this directory.
+        * Thus, when ever a test fails, we have everything related to that test.
+        * If the scenario passes, this directory is deleted (we don't need them on CI server).
 
 ## Technology
 
@@ -65,25 +65,25 @@ Here are the steps involved in running the tests:
 
 ## Files & Folders
 
-*   The folder `.vsccode-test` in the root directory is where VSC is downloaded, workspace files created, etc.
-    -   `stable` This is VS Code stable is downloaded.
-    -   `insider` This is VS Code insider is downloaded.
-    -   `user` Directory VS Code uses to store user information (settings, etc)
-    -   `extensions` This is where the extensions get installed for the instance of VSC used for testing.
-    -   `workspace folder` Folder opened in VS Code for testing
-    -   `temp` Temporary directory for testing. (sometimes tests will create folders named `workspace folder xyz` to be used as workspace folders used for testing)
-    -   `reports` Location where generated reports are stored.
-    -   `logs` Logs for tests
-    -   `screenshots` Screen shots captured during tests
--   `src/smoke/bootstrap` Contains just the bootstrap extension code.
--   `src/smoke/src` Source code for smoke Tests (features, nodejs code, etc).
--   `src/smoke/vscode` Location where all [VS Code smoke tests code](https://github.com/microsoft/vscode/tree/master/test/smoke) is located.
+* The folder `.vsccode-test` in the root directory is where VSC is downloaded, workspace files created, etc.
+    * `stable` This is VS Code stable is downloaded.
+    * `insider` This is VS Code insider is downloaded.
+    * `user` Directory VS Code uses to store user information (settings, etc)
+    * `extensions` This is where the extensions get installed for the instance of VSC used for testing.
+    * `workspace folder` Folder opened in VS Code for testing
+    * `temp` Temporary directory for testing. (sometimes tests will create folders named `workspace folder xyz` to be used as workspace folders used for testing)
+    * `reports` Location where generated reports are stored.
+    * `logs` Logs for tests
+    * `screenshots` Screen shots captured during tests
+* `src/smoke/bootstrap` Contains just the bootstrap extension code.
+* `src/smoke/src` Source code for smoke Tests (features, nodejs code, etc).
+* `src/smoke/vscode` Location where all [VS Code smoke tests code](https://github.com/microsoft/vscode/tree/master/test/smoke) is located.
 
 ## CI Integration
 
 * For more details please check `build/ci`.
 * We generally try to run all tests against all permutations of OS + Python Version + VSC
-    -   I.e. we run tests across permutations of the follows:
+    * I.e. we run tests across permutations of the follows:
         - OS: Windows, Mac, Linux
         - Python: 2.7, 3.5, 3.6, 3.7
         - VSC: Stable, Insiders
@@ -103,14 +103,21 @@ Here are the steps involved in running the tests:
 
 ## Miscellaneous
 
-*   Use the debug configuration `npm run ` for debugging.
-*   In order to pass custom arguments to `Behave`, refer to the `CLI` (pass `behave` specific args after `--` in `python uitests test`).
-    - E.g. `python uitests test -- --tags=@wip --more-behave-args`
-*   Remember, the automated UI interactions can be faster than normal user interactions.
-    - E.g. just because we started debugging (using command `Debug: Start Debugging`), that doesn't mean the debug panel will open immediately. User interactions are slower compared to code execution.
-    - Solution, always wait for the UI elements to be available/active. E.g. when you open a file, check whether the corresponding elements are visible.
+* For debugging follow these steps:
+    * Run the npm command `smokeTest:debug`
+    * Then attach the debugger using the debug configuration `Attach to Smoke Tests`.
+    * What about regular debugging?
+        * It has been observed that the instance of VSC launched for smoke tests just falls over when debugging from within VSC.
+        * Solution: Launch code in debug mode and attach (yes this works).
+        * Not entirely sure why it works, or why it doesn't work.
+        * Got a solution, hence not investing much more time time trying to identify why debugging is failing.
+* In order to pass custom arguments to `cucumberjs`, refer to the `CLI` (pass `cucumber` specific args after `--` in `npm run smokeTest`).
+    * E.g. `npm run smokeTest -- --tags=@wip --more-cucumberjs-args`
+* Remember, the automated UI interactions can be faster than normal user interactions.
+    * E.g. just because we started debugging (using command `Debug: Start Debugging`), that doesn't mean the debug panel will open immediately. User interactions are slower compared to code execution.
+    * Solution, always wait for the UI elements to be available/active. E.g. when you open a file, check whether the corresponding elements are visible.
 
-## Overview
+## Code Overview
 * Tests are written in nodejs. Why?
     * Short answer - We're using the VS Code Smoke test infrastructure.
     * Previously we wrote tests using `selenium`. However a week after the tests were running, VSC released a new version. This new version of VSC had a version of Electron + Chromium that didn't have a compatible version of `chrome driver`.
