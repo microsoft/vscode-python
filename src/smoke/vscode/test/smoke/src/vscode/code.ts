@@ -105,14 +105,14 @@ async function createDriverHandle(dir?: string): Promise<string> {
         // Found that sometimes, `tmpName` returns a file that does not exist!
         // Just run all UI Tests, eventually this function will return a temp name without creating in disc.
         // Lets try creating the file in a directory or our choice (when using ui tests).
-        // return await new Promise<string>((c, e) => tmpName((err, handlePath) => err ? e(err) : c(handlePath)));
-        let tmpFile = await new Promise<string>((c, e) => tmpName({ dir }, (err, handlePath) => err ? e(err) : c(handlePath)));
-        if (fs.existsSync) {
-            return tmpFile;
-        }
-        tmpFile = path.join(dir || __dirname, new Date().getTime().toString());
-        fs.writeFileSync(tmpFile, '');
-        return tmpFile;
+        return await new Promise<string>((c, e) => tmpName((err, handlePath) => err ? e(err) : c(handlePath)));
+        // let tmpFile = await new Promise<string>((c, e) => tmpName({ dir }, (err, handlePath) => err ? e(err) : c(handlePath)));
+        // if (fs.existsSync) {
+        //     return tmpFile;
+        // }
+        // tmpFile = path.join(dir || __dirname, new Date().getTime().toString());
+        // fs.writeFileSync(tmpFile, '');
+        // return tmpFile;
     }
 }
 
