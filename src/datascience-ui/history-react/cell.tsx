@@ -514,7 +514,7 @@ export class Cell extends React.Component<ICellProps> {
             // Output may have goofy ascii colorization chars in it. Try
             // colorizing if we don't have html that needs <xmp> around it (ex. <type ='string'>)
             try {
-                if (!stream.text.includes('<')) {
+                if (!formatted.includes('<')) {
                     const converter = new ansiToHtml(Cell.getAnsiToHtmlOptions());
                     const html = converter.toHtml(formatted);
                     copy.data = {
