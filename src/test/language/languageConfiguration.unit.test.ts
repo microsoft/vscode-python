@@ -147,68 +147,68 @@ suite('Language configuration regexes', () => {
     [
         {
             type: 'number',
-            value: 3,
+            returnValue: 3,
             hasComment: true,
             match: true
         },
         {
             type: 'boolean',
-            value: 'True',
+            returnValue: 'True',
             hasComment: false,
             match: true
         },
         {
             type: 'string',
-            value: '\'test\'',
+            returnValue: '\'test\'',
             hasComment: false,
             match: true
         },
         {
             type: 'variable name',
-            value: 'hello',
+            returnValue: 'hello',
             hasComment: true,
             match: true
         },
         {
             type: 'closed array',
-            value: '[ 1, 2, 3 ]',
+            returnValue: '[ 1, 2, 3 ]',
             hasComment: true,
             match: true
         },
         {
             type: 'closed dictionary',
-            value: '{ "id": 23, "enabled": True }',
+            returnValue: '{ "id": 23, "enabled": True }',
             hasComment: true,
             match: true
         },
         {
             type: 'closed tuple',
-            value: '( "test", 23, False )',
+            returnValue: '( "test", 23, False )',
             hasComment: false,
             match: true
         },
         {
             type: 'dangling [',
-            value: '[',
+            returnValue: '[',
             hasComment: false,
             match: false
         },
         {
             type: 'dangling {',
-            value: '{',
+            returnValue: '{',
             hasComment: false,
             match: false
         },
         {
             type: 'dangling (',
-            value: '(',
+            returnValue: '(',
             hasComment: true,
             match: false
         }
-    ].forEach(({ type, value, hasComment, match }) => {
+    ].forEach(({ type, returnValue, hasComment, match }) => {
         const testTitle = `Outdent return regex on enter should ${match ? '' : 'not '}pick up lines containing the return statement followed by a ${type}`;
         test(testTitle, () => {
-            const result = OUTDENT_RETURN_REGEX.test(`return ${value} ${hasComment ? '# test comment' : ''}`);
+            const result = OUTDENT_RETURN_REGEX.test(`return ${returnValue} ${hasComment ? '# test comment' : ''}`);
             expect(result).to.be.equal(match, testTitle);
         });
     });

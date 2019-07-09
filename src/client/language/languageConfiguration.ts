@@ -29,7 +29,7 @@ export function setLanguageConfiguration() {
                 action: { indentAction: IndentAction.Outdent }
             },
             {
-                // Outdent the line following he return statement only if there is no dangling open bracket before the cursor.
+                // Outdent the line following the return statement only if there is no dangling open bracket before the cursor.
                 beforeText: OUTDENT_RETURN_REGEX,
                 action: { indentAction: IndentAction.Outdent }
             }
