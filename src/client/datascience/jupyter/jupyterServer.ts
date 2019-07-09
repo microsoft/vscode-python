@@ -16,7 +16,7 @@ import { ILiveShareApi } from '../../common/application/types';
 import { Cancellation, CancellationError } from '../../common/cancellation';
 import { traceInfo, traceWarning } from '../../common/logger';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
-import { createDeferred, Deferred, sleep } from '../../common/utils/async';
+import { createDeferred, Deferred, waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -360,15 +360,14 @@ export class JupyterServerBase implements INotebookServer {
 
             try {
                 // Wait for all of the pending cells to finish or the timeout to fire
-                const result = await Promise.race([finished, restarted.promise, sleep(timeoutMs)]);
+                const result = await waitForPromise(Promise.race([finished, restarted.promise]), timeoutMs);
 
                 // See if we restarted or not
                 if (restarted.completed) {
                     return InterruptResult.Restarted;
                 }
 
-                // See if we timed out or not.
-                if (result === timeoutMs) {
+                if (result === null) {
                     // We timed out. You might think we should stop our pending list, but that's not
                     // up to us. The cells are still executing. The user has to request a restart or try again
                     return InterruptResult.TimedOut;
@@ -723,22 +722,22 @@ export class JupyterServerBase implements INotebookServer {
             // Tell our listener. NOTE: have to do this asap so that markdown cells don't get
             // run before our cells.
             subscriber.next(cell);
+            const isSilent = silent !== undefined ? silent : false;
+
+            // Wrap the subscriber and save it. It is now pending and waiting completion. Have to do this
+            // synchronously so it happens before interruptions.
+            const cellSubscriber = new CellSubscriber(cell, subscriber, (self: CellSubscriber) => {
+                // Subscriber completed, remove from subscriptions.
+                this.pendingCellSubscriptions = this.pendingCellSubscriptions.filter(p => p !== self);
+
+                // Indicate success or failure
+                this.logPostCode(cell, isSilent).ignoreErrors();
+            });
+            this.pendingCellSubscriptions.push(cellSubscriber);
 
             // Log the pre execution.
-            const isSilent = silent !== undefined ? silent : false;
             this.logPreCode(cell, isSilent).then(() => {
-                // Wrap the subscriber and save it. It is now pending and waiting completion.
-                const cellSubscriber = new CellSubscriber(cell, subscriber, (self: CellSubscriber) => {
-                    // Subscriber completed, remove from subscriptions.
-                    this.pendingCellSubscriptions = this.pendingCellSubscriptions.filter(p => p !== self);
-
-                    // Indicate success or failure
-                    this.logPostCode(cell, isSilent).ignoreErrors();
-                });
-                this.pendingCellSubscriptions.push(cellSubscriber);
-
-                // Attempt to change to the current directory. When that finishes
-                // send our real request
+                // Now send our real request. This should call back on the cellsubscriber when it's done.
                 this.handleCodeRequest(cellSubscriber, silent);
             }).ignoreErrors();
 

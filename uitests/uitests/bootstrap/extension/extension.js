@@ -23,7 +23,7 @@ function activate(context) {
 
     context.subscriptions.push(statusBarItem);
     // Always display editor line, column in this statusbar.
-    // Sometimes we cannot detect the line,column of editor (because that item in statubar is not visbible due to lack of realestate).
+    // Sometimes we cannot detect the line,column of editor (because that item in statubar is not visible due to lack of realestate).
     // This will get around that problem.
     vscode.window.onDidChangeTextEditorSelection(e => {
         try {
@@ -74,7 +74,7 @@ function activate(context) {
                 (setting.type === 'workspace' ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.WorkspaceFolder);
 
             if (configTarget === vscode.ConfigurationTarget.WorkspaceFolder && !setting.workspaceFolder) {
-                vscode.window.showErrorMessage('Workspace Folder not defined for udpate/remove of settings');
+                vscode.window.showErrorMessage('Workspace Folder not defined for update/remove of settings');
                 throw new Error('Workspace Folder not defined');
             }
 

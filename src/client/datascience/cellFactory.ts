@@ -12,11 +12,29 @@ import { CellMatcher } from './cellMatcher';
 import { appendLineFeed, generateMarkdownFromCodeLines, parseForComments } from './common';
 import { CellState, ICell } from './types';
 
-function generateCodeCell(code: string[], file: string, line: number, id: string) : ICell {
+function uncommentMagicCommands(line: string): string {
+    // Uncomment lines that are shell assignments (starting with #!),
+    // line magic (starting with #!%) or cell magic (starting with #!%%).
+    if (/^#\s*!/.test(line)) {
+        // If the regex test passes, it's either line or cell magic.
+        // Hence, remove the leading # and ! including possible white space.
+        if (/^#\s*!\s*%%?/.test(line)) {
+            return line.replace(/^#\s*!\s*/, '');
+        }
+        // If the test didn't pass, it's a shell assignment. In this case, only
+        // remove leading # including possible white space.
+        return line.replace(/^#\s*/, '');
+    } else {
+        // If it's regular Python code, just return it.
+        return line;
+    }
+}
+
+function generateCodeCell(code: string[], file: string, line: number, id: string, magicCommandsAsComments: boolean) : ICell {
     // Code cells start out with just source and no outputs.
     return {
         data: {
-            source: appendLineFeed(code),
+            source: appendLineFeed(code, magicCommandsAsComments ? uncommentMagicCommands : undefined),
             cell_type: 'code',
             outputs: [],
             metadata: {},
@@ -52,6 +70,7 @@ export function generateCells(settings: IDataScienceSettings | undefined, code: 
     const split = code.splitLines({trim: false});
     const firstLine = split[0];
     const matcher = new CellMatcher(settings);
+    const { magicCommandsAsComments = false } = settings || {}
     if (matcher.isMarkdown(firstLine)) {
         // We have at least one markdown. We might have to split it if there any lines that don't begin
         // with # or are inside a multiline comment
@@ -66,7 +85,7 @@ export function generateCells(settings: IDataScienceSettings | undefined, code: 
             // Make sure if we split, the second cell has a new id. It's a new submission.
             return [
                 generateMarkdownCell(split.slice(0, firstNonMarkdown), file, line, id),
-                generateCodeCell(split.slice(firstNonMarkdown), file, line + firstNonMarkdown, uuid())
+                generateCodeCell(split.slice(firstNonMarkdown), file, line + firstNonMarkdown, uuid(), magicCommandsAsComments)
             ];
         } else {
             // Just a single markdown cell
@@ -74,7 +93,7 @@ export function generateCells(settings: IDataScienceSettings | undefined, code: 
         }
     } else {
         // Just code
-        return [generateCodeCell(split, file, line, id)];
+        return [generateCodeCell(split, file, line, id, magicCommandsAsComments)];
     }
 }
 

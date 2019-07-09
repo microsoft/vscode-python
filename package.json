@@ -2109,6 +2109,12 @@
                     "default": "${workspaceFolder}/.vscode/tags",
                     "description": "Fully qualified path to tag file (exuberant ctag file), used to provide workspace symbols.",
                     "scope": "resource"
+                },
+                "python.dataScience.magicCommandsAsComments": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Uncomment shell assignments (#!), line magic (#!%) and cell magic (#!%%) when parsing code cells.",
+                    "scope": "resource"
                 }
             }
         },

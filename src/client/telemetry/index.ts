@@ -105,7 +105,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
 
     if (ex && (eventName as any) !== 'ERROR') {
         // When sending `ERROR` telemetry event no need to send custom properties.
-        // Else we have to review all properties everytime as part of GDPR.
+        // Else we have to review all properties every time as part of GDPR.
         // Assume we have 10 events all with their own properties.
         // As we have errors for each event, those properties are treated as new data items.
         // Hence they need to be classified as part of the GDPR process, and thats unnecessary and onerous.

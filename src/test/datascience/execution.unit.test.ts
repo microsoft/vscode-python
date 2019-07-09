@@ -604,7 +604,7 @@ suite('Jupyter Execution', async () => {
         await assert.eventually.equal(execution.isKernelSpecSupported(), true, 'Kernel Spec not supported');
         await assert.eventually.equal(execution.isKernelCreateSupported(), true, 'Kernel Create not supported');
         const usableInterpreter = await execution.getUsableJupyterPython();
-        assert.isOk(usableInterpreter, 'Usable intepreter not found');
+        assert.isOk(usableInterpreter, 'Usable interpreter not found');
         await assert.isFulfilled(execution.connectToNotebookServer(), 'Should be able to start a server');
     }).timeout(10000);
 
@@ -632,7 +632,7 @@ suite('Jupyter Execution', async () => {
         await assert.eventually.equal(execution.isKernelSpecSupported(), true, 'Kernel Spec not supported');
         await assert.eventually.equal(execution.isKernelCreateSupported(), true, 'Kernel Create not supported');
         const usableInterpreter = await execution.getUsableJupyterPython();
-        assert.isOk(usableInterpreter, 'Usable intepreter not found');
+        assert.isOk(usableInterpreter, 'Usable interpreter not found');
         if (usableInterpreter) {
             assert.notEqual(usableInterpreter.path, missingNotebookPython.path);
         }
@@ -643,7 +643,7 @@ suite('Jupyter Execution', async () => {
         when(interpreterService.getActiveInterpreter()).thenResolve(missingKernelPython);
         await assert.eventually.equal(execution.isNotebookSupported(), true, 'Notebook not supported');
         const usableInterpreter = await execution.getUsableJupyterPython();
-        assert.isOk(usableInterpreter, 'Usable intepreter not found');
+        assert.isOk(usableInterpreter, 'Usable interpreter not found');
         if (usableInterpreter) { // Linter
             assert.equal(usableInterpreter.path, missingKernelPython.path);
             assert.equal(usableInterpreter.version!.major, missingKernelPython.version!.major, 'Found interpreter should match on major');
@@ -656,7 +656,7 @@ suite('Jupyter Execution', async () => {
         when(interpreterService.getActiveInterpreter()).thenResolve(missingNotebookPython);
         await assert.eventually.equal(execution.isNotebookSupported(), true, 'Notebook not supported');
         const usableInterpreter = await execution.getUsableJupyterPython();
-        assert.isOk(usableInterpreter, 'Usable intepreter not found');
+        assert.isOk(usableInterpreter, 'Usable interpreter not found');
         if (usableInterpreter) { // Linter
             assert.notEqual(usableInterpreter.path, missingNotebookPython.path);
             assert.notEqual(usableInterpreter.version!.major, missingNotebookPython.version!.major, 'Found interpreter should not match on major');

@@ -10,7 +10,7 @@ import * as TypeMoq from 'typemoq';
 import { Disposable, Selection, TextDocument, TextEditor } from 'vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
-import { createDeferred } from '../../client/common/utils/async';
+import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { generateCellsFromDocument } from '../../client/datascience/cellFactory';
 import { concatMultilineString } from '../../client/datascience/common';
@@ -23,7 +23,6 @@ import { InteractiveWindowMessages } from '../../client/datascience/interactive-
 import { IInteractiveWindow, IInteractiveWindowProvider } from '../../client/datascience/types';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
-import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createDocument } from './editor-integration/helpers';
 import {
@@ -46,11 +45,11 @@ import {
     verifyHtmlOnCell,
     verifyLastCellInputState
 } from './interactiveWindowTestHelpers';
+import { MockDocumentManager } from './mockDocumentManager';
 import { MockEditor } from './mockTextEditor';
 import { waitForUpdate } from './reactHelpers';
 
 //import { asyncDump } from '../common/asyncDump';
-import { MockDocumentManager } from './mockDocumentManager';
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 suite('DataScience Interactive Window output tests', () => {
     const disposables: Disposable[] = [];
@@ -332,7 +331,7 @@ for _ in range(50):
 
         // Make sure goto works
         await waitForMessageResponse(() => goto.simulate('click'));
-        await Promise.race([sleep(1000), showedEditor.promise]);
+        await waitForPromise(showedEditor.promise, 1000);
         assert.ok(showedEditor.resolved, 'Goto source is not jumping to editor');
 
         // Make sure delete works
@@ -377,12 +376,12 @@ for _ in range(50):
             return Promise.resolve();
         });
 
-        assert.equal(afterUndo.length, 1, `Undo should remove cells + ${afterUndo.debug()}`);
+        assert.equal(afterUndo.length, 1, 'Undo should remove cells');
 
         // Then verify we cannot click the button (it should be disabled)
         exportCalled = false;
         const response = waitForMessageResponse(() => exportButton!.simulate('click'));
-        await Promise.race([sleep(10), response]);
+        await waitForPromise(response, 100);
         assert.equal(exportCalled, false, 'Export should not be called when no cells visible');
 
     }, () => { return ioc; });
@@ -443,21 +442,21 @@ for _ in range(50):
         // Now send an undo command. This should change the state, so use our waitForInfo promise instead
         resetWaiting();
         interactiveWindow.undoCells();
-        await Promise.race([deferred.promise, sleep(2000)]);
+        await waitForPromise(deferred.promise, 2000);
         assert.ok(deferred.resolved, 'Never got update to state');
         assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), false, 'Should not have interactive cells after undo as sysinfo is ignored');
         assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), true, 'Should have redoable after undo');
 
         resetWaiting();
         interactiveWindow.redoCells();
-        await Promise.race([deferred.promise, sleep(2000)]);
+        await waitForPromise(deferred.promise, 2000);
         assert.ok(deferred.resolved, 'Never got update to state');
         assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), true, 'Should have interactive cells after redo');
         assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), false, 'Should not have redoable after redo');
 
         resetWaiting();
         interactiveWindow.removeAllCells();
-        await Promise.race([deferred.promise, sleep(2000)]);
+        await waitForPromise(deferred.promise, 2000);
         assert.ok(deferred.resolved, 'Never got update to state');
         assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), false, 'Should not have interactive cells after delete');
     }, () => { return ioc; });
@@ -492,7 +491,7 @@ for _ in range(50):
 
         // Then click the copy to source button
         await waitForMessageResponse(() => copyToSource.simulate('click'));
-        await Promise.race([sleep(100), showedEditor.promise]);
+        await waitForPromise(showedEditor.promise, 100);
         assert.ok(showedEditor.resolved, 'Copy to source is not adding code to the editor');
 
     }, () => { return ioc; });

@@ -7,7 +7,8 @@ import * as uuid from 'uuid/v4';
 import { DebugConfiguration } from 'vscode';
 
 import { ICommandManager, IDebugService } from '../../common/application/types';
-import { traceInfo } from '../../common/logger';
+import { traceInfo, traceWarning } from '../../common/logger';
+import { IPlatformService } from '../../common/platform/types';
 import { IConfigurationService } from '../../common/types';
 import { Identifiers } from '../constants';
 import {
@@ -27,7 +28,8 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     constructor(
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(ICommandManager) private commandManager: ICommandManager,
-        @inject(IDebugService) private debugService: IDebugService
+        @inject(IDebugService) private debugService: IDebugService,
+        @inject(IPlatformService) private platform: IPlatformService
     ) {
     }
 
@@ -37,7 +39,13 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         // Current version of ptvsd doesn't support the source map entries, so we need to have a custom copy
         // on disk somewhere. Append this location to our sys path.
         // tslint:disable-next-line:no-multiline-string
-        await this.executeSilently(server, `import sys\r\nsys.path.append('${this.configService.getSettings().datascience.ptvsdDistPath}')`);
+        let extraPath = this.configService.getSettings().datascience.ptvsdDistPath;
+        // Escape windows path chars so they end up in the source escaped
+        if (this.platform.isWindows && extraPath) {
+            extraPath = extraPath.replace('\\', '\\\\');
+        }
+        await this.executeSilently(server, `import sys\r\nsys.path.append('${extraPath}')\r\nsys.path`);
+
         // tslint:disable-next-line:no-multiline-string
         const enableDebuggerResults = await this.executeSilently(server, `import ptvsd\r\nptvsd.enable_attach(('localhost', 0))`);
 
@@ -60,13 +68,17 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                 port: this.connectInfo.port,
                 host: this.connectInfo.hostName,
                 justMyCode: true
+                // logToFile: true <-- This will log a debug log file to the extension root folder.
             };
 
             await this.debugService.startDebugging(undefined, config);
 
             // Wait for attach before we turn on tracing and allow the code to run, if the IDE is already attached this is just a no-op
             // tslint:disable-next-line:no-multiline-string
-            await this.executeSilently(server, `import ptvsd\nptvsd.wait_for_attach()`);
+            const importResults = await this.executeSilently(server, `import ptvsd\nptvsd.wait_for_attach()`);
+            if (importResults.length === 0 || importResults[0].state === CellState.error) {
+                traceWarning('PTVSD not found in path.');
+            }
 
             // Then enable tracing
             // tslint:disable-next-line:no-multiline-string

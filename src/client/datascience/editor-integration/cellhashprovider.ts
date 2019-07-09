@@ -14,13 +14,22 @@ import {
 } from 'vscode';
 
 import { IDebugService, IDocumentManager } from '../../common/application/types';
+import { traceError } from '../../common/logger';
 import { IConfigurationService } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { CellMatcher } from '../cellMatcher';
 import { splitMultilineString } from '../common';
 import { Identifiers } from '../constants';
 import { InteractiveWindowMessages, SysInfoReason } from '../interactive-window/interactiveWindowTypes';
-import { ICell, ICellHash, ICellHashListener, ICellHashProvider, IFileHashes, IInteractiveWindowListener, INotebookExecutionLogger } from '../types';
+import {
+    ICell,
+    ICellHash,
+    ICellHashListener,
+    ICellHashProvider,
+    IFileHashes,
+    IInteractiveWindowListener,
+    INotebookExecutionLogger
+} from '../types';
 
 interface IRangedCellHash extends ICellHash {
     code: string;
@@ -73,6 +82,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
                     const reason = payload.type as SysInfoReason;
                     if (reason !== SysInfoReason.Interrupt) {
                         this.hashes.clear();
+                        this.executionCount = 0;
                     }
                 }
                 break;
@@ -92,14 +102,19 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
     }
 
     public async preExecute(cell: ICell, silent: boolean): Promise<void> {
-        if (!silent) {
-            // When the user adds new code, we know the execution count is increasing
-            this.executionCount += 1;
+        try {
+            if (!silent) {
+                // When the user adds new code, we know the execution count is increasing
+                this.executionCount += 1;
 
-            // Skip hash on unknown file though
-            if (cell.file !== Identifiers.EmptyFileName) {
-                return this.addCellHash(cell, this.executionCount);
+                // Skip hash on unknown file though
+                if (cell.file !== Identifiers.EmptyFileName) {
+                    await this.addCellHash(cell, this.executionCount);
+                }
             }
+        } catch (exc) {
+            // Don't let exceptions in a preExecute mess up normal operation
+            traceError(exc);
         }
     }
 
@@ -195,7 +210,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
             }
 
             // Compute the runtime line and adjust our cell/stripped source for debugging
-            const runtimeLine = this.adjustForDebugging(cell, stripped, startOffset, endOffset);
+            const runtimeLine = this.adjustRuntimeForDebugging(cell, stripped, startOffset, endOffset);
             const hashedCode = stripped.join('');
             const realCode = doc.getText(new Range(new Position(cell.line, 0), endLine.rangeIncludingLineBreak.end));
 
@@ -245,7 +260,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
         }
     }
 
-    private adjustForDebugging(cell: ICell, source: string[], cellStartOffset: number, cellEndOffset: number): number {
+    private adjustRuntimeForDebugging(cell: ICell, source: string[], cellStartOffset: number, cellEndOffset: number): number {
         if (this.debugService.activeDebugSession && this.configService.getSettings().datascience.stopOnFirstLineWhileDebugging) {
             // See if any breakpoints in any cell that's already run or in the cell we're about to run
             const anyExisting = this.debugService.breakpoints.filter(b => {

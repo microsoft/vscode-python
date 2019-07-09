@@ -18,7 +18,7 @@ import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { traceError, traceInfo } from '../../client/common/logger';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IProcessServiceFactory, Output } from '../../client/common/process/types';
-import { createDeferred } from '../../client/common/utils/async';
+import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { concatMultilineString } from '../../client/datascience/common';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
@@ -614,7 +614,7 @@ suite('DataScience notebook tests', () => {
         const result = await server!.interruptKernel(interruptMs);
 
         // Then we should get our finish unless there was a restart
-        await Promise.race([finishedPromise.promise, sleep(sleepMs)]);
+        await waitForPromise(finishedPromise.promise, sleepMs);
         assert.equal(finishedBefore, false, 'Finished before the interruption');
         assert.equal(error, undefined, 'Error thrown during interrupt');
         assert.ok(finishedPromise.completed ||

@@ -282,4 +282,4 @@ The development build of the extension:
 * Does not get updated with new development builds of the extension (if you want to
   test a newer development build, uninstall the old version of the
   extension and then install the new version)
-* Is built everytime a PR is commited into the [`master` branch](https://github.com/Microsoft/vscode-python).
+* Is built every time a PR is committed into the [`master` branch](https://github.com/Microsoft/vscode-python).

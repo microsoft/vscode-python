@@ -107,7 +107,7 @@ def _send_command_to_bootstrap(context, crud_settings):
     uitests.vscode.quick_open.select_command(context, "Smoke: Update Settings")
     uitests.vscode.application.capture_screen(context)
     # Wait for 5 seconds for settings to get updated.
-    # If file has been deleted then yes it has been udpated, else error
+    # If file has been deleted then yes it has been updated, else error
     for i in range(10):
         if not os.path.exists(instructions_file):
             return

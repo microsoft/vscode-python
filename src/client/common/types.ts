@@ -324,6 +324,7 @@ export interface IDataScienceSettings {
     ptvsdDistPath?: string;
     stopOnFirstLineWhileDebugging?: boolean;
     textOutputLineLimit?: number;
+    magicCommandsAsComments?: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

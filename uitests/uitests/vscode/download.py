@@ -72,7 +72,7 @@ def download_chrome_driver(download_path, channel="stable"):
     electron_version = _get_electron_version("stable")
     dir = os.path.dirname(os.path.realpath(__file__))
     js_file = os.path.join(dir, "..", "js", "chromeDownloader.js")
-    # Use an exising npm package.
+    # Use an existing npm package.
     uitests.tools.run_command(
         ["node", js_file, electron_version, download_path],
         progress_message="Downloading chrome driver",

@@ -22,7 +22,6 @@ import {
 import * as vsls from 'vsls/vscode';
 
 import { ILanguageServer, ILanguageServerAnalysisOptions } from '../../client/activation/types';
-import { DebugService } from '../../client/common/application/debugService';
 import { TerminalManager } from '../../client/common/application/terminalManager';
 import {
     IApplicationShell,
@@ -120,6 +119,7 @@ import { PlotViewerProvider } from '../../client/datascience/plotting/plotViewer
 import { StatusProvider } from '../../client/datascience/statusProvider';
 import { ThemeFinder } from '../../client/datascience/themeFinder';
 import {
+    ICellHashListener,
     ICellHashProvider,
     ICodeCssGenerator,
     ICodeLensFactory,
@@ -137,6 +137,7 @@ import {
     IJupyterPasswordConnect,
     IJupyterSessionManager,
     IJupyterVariables,
+    INotebookExecutionLogger,
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
@@ -145,6 +146,8 @@ import {
     IStatusProvider,
     IThemeFinder
 } from '../../client/datascience/types';
+import { ProtocolParser } from '../../client/debugger/debugAdapter/Common/protocolParser';
+import { IProtocolParser } from '../../client/debugger/debugAdapter/types';
 import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { InterpreterComparer } from '../../client/interpreter/configuration/interpreterComparer';
@@ -219,6 +222,7 @@ import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
 import { MockCommandManager } from './mockCommandManager';
+import { MockDebuggerService } from './mockDebugService';
 import { MockDocumentManager } from './mockDocumentManager';
 import { MockExtensions } from './mockExtensions';
 import { MockJupyterManager, SupportedCommands } from './mockJupyterManager';
@@ -351,9 +355,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<ILanguageServer>(ILanguageServer, MockLanguageServer);
         this.serviceManager.addSingleton<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, MockLanguageServerAnalysisOptions);
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, DotNetIntellisenseProvider);
-        this.serviceManager.addSingleton<IDebugService>(IDebugService, DebugService);
+        this.serviceManager.add<IProtocolParser>(IProtocolParser, ProtocolParser);
+        this.serviceManager.addSingleton<IDebugService>(IDebugService, MockDebuggerService);
         this.serviceManager.addSingleton<ICellHashProvider>(ICellHashProvider, CellHashProvider);
-        this.serviceManager.addBinding<ICellHashProvider, IInteractiveWindowListener>(ICellHashProvider, IInteractiveWindowListener);
+        this.serviceManager.addBinding(ICellHashProvider, IInteractiveWindowListener);
+        this.serviceManager.addBinding(ICellHashProvider, INotebookExecutionLogger);
+        this.serviceManager.addBinding(IJupyterDebugger, ICellHashListener);
         this.serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory);
         this.serviceManager.addSingleton<IShellDetector>(IShellDetector, TerminalNameShellDetector);
 
@@ -396,7 +403,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             variableExplorerExclude: 'module;builtin_function_or_method',
             liveShareConnectionTimeout: 100,
             autoPreviewNotebooksInInteractivePane: true,
-            enablePlotViewer: true
+            enablePlotViewer: true,
+            stopOnFirstLineWhileDebugging: true
         };
 
         const workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration> = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
