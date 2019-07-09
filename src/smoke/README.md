@@ -44,7 +44,7 @@ Here are the steps involved in running the tests:
     * When starting the tests for a feature, the repo is downloaded into a new random directory `.vscode test/temp/workspace folder xyz`
     * At the begining of every scenario, we repeate the previous step.
     * This ensures each scenario starts with a clean workspace folder.
-*   Reports
+* Reports
     * Test results are stored in the `reports` directory
     * These `json` (`cucumber format`) report files are converted into HTML using an `npm` script [cucumber-html-reporter](https://www.npmjs.com/package/cucumber-html-reporter).
     * For each `scenario` that's executed, we create a corresponding directory in `reports` directory.
