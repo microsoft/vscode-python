@@ -3,7 +3,7 @@
 ## Usage
 
 ```shell
-$ # This step `npm run package` is required to ensure the 'ms-python-insiders.vsix' is available locally.
+$ # The step `npm run package` is required to ensure the 'ms-python-insiders.vsix' is available locally.
 $ # You could instead just download this and dump into the working directory (much faster).
 $ # npm run package # see notes above.
 
