@@ -56,6 +56,12 @@ And finally thanks to the [Python](https://www.python.org/) development team and
 community for creating a fantastic programming language and community to be a
 part of!
 
+## 2019.6.1 (9 July 2019)
+
+### Fixes
+
+1. Fixes to A/B testing.
+   ([#6400](https://github.com/microsoft/vscode-python/issues/6400))
 
 ## 2019.6.0 (25 June 2019)
 
