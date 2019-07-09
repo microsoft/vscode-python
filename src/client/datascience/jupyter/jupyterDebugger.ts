@@ -68,6 +68,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                 port: this.connectInfo.port,
                 host: this.connectInfo.hostName,
                 justMyCode: true
+                // logToFile: true <-- This will log a debug log file to the extension root folder.
             };
 
             await this.debugService.startDebugging(undefined, config);
