@@ -34,11 +34,11 @@ export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
         const selection = await this.appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts);
         sendTelemetryEvent(EventName.INSIDERS_PROMPT, undefined, { selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined });
         await this.hasUserBeenNotified.updateValue(true);
+        this.reloadPromptDisabled = true;
         if (!selection) {
             // Insiders is already installed, but the official default setting is still Stable. Update the setting to be in sync with what is installed.
             return this.insidersDownloadChannelService.updateChannel(ExtensionChannel.insidersDefaultForTheFirstSession);
         }
-        this.reloadPromptDisabled = true;
         if (selection === ExtensionChannels.useStable()) {
             await this.insidersDownloadChannelService.updateChannel(ExtensionChannel.stable);
         } else if (selection === Common.reload()) {

@@ -14,14 +14,14 @@ import { ExtensionChannels, IExtensionChannelRule, IExtensionChannelService, IIn
 
 @injectable()
 export class InsidersExtensionService implements IExtensionActivationService {
-    private activatedOnce: boolean = false;
+    public activatedOnce: boolean = false;
     constructor(
         @inject(IExtensionChannelService) private readonly extensionChannelService: IExtensionChannelService,
         @inject(IInsiderExtensionPrompt) private readonly insidersPrompt: IInsiderExtensionPrompt,
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(ICommandManager) private readonly cmdManager: ICommandManager,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(IDisposableRegistry) private disposables: IDisposable[]
+        @inject(IDisposableRegistry) public readonly disposables: IDisposable[]
     ) { }
 
     public async activate(_resource: Resource) {
@@ -43,6 +43,15 @@ export class InsidersExtensionService implements IExtensionActivationService {
             return;
         }
         await buildInstaller.install();
+        await this.choosePromptAndDisplay(installChannel, didChannelChange);
+    }
+
+    /**
+     * Choose between the following prompts and display the right one
+     * * 'Reload prompt' - Ask users to reload on channel change
+     * * 'Notify to install insiders prompt' - Only when using VSC insiders and if they have not been notified before (usually the first session)
+     */
+    public async choosePromptAndDisplay(installChannel: ExtensionChannels, didChannelChange: boolean): Promise<void> {
         if (this.appEnvironment.channel === 'insiders' && installChannel !== 'Stable' && !this.insidersPrompt.hasUserBeenNotified.value) {
             // If user is using VS Code Insiders, channel is `Insiders*` and user has not been notified, then notify user
             await this.insidersPrompt.notifyToInstallInsiders();
@@ -51,7 +60,7 @@ export class InsidersExtensionService implements IExtensionActivationService {
         }
     }
 
-    private registerCommandsAndHandlers(): void {
+    public registerCommandsAndHandlers(): void {
         this.disposables.push(this.extensionChannelService.onDidChannelChange(channel => this.handleChannel(channel, true)));
         this.disposables.push(this.cmdManager.registerCommand(Commands.SwitchToStable, () => this.extensionChannelService.updateChannel('Stable')));
         this.disposables.push(this.cmdManager.registerCommand(Commands.SwitchToInsidersDaily, () => this.extensionChannelService.updateChannel('InsidersDaily')));
