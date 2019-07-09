@@ -11,7 +11,7 @@ import { CondaInstaller } from './condaInstaller';
 import { PipEnvInstaller } from './pipEnvInstaller';
 import { PipInstaller } from './pipInstaller';
 import { PoetryInstaller } from './poetryInstaller';
-import { CTagsProductPathService, FormatterProductPathService, LinterProductPathService, RefactoringLibraryProductPathService, TestFrameworkProductPathService } from './productPath';
+import { CTagsProductPathService, DataScienceProductPathService, FormatterProductPathService, LinterProductPathService, RefactoringLibraryProductPathService, TestFrameworkProductPathService } from './productPath';
 import { ProductService } from './productService';
 import { IInstallationChannelManager, IModuleInstaller, IProductPathService, IProductService } from './types';
 
@@ -28,5 +28,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IProductPathService>(IProductPathService, LinterProductPathService, ProductType.Linter);
     serviceManager.addSingleton<IProductPathService>(IProductPathService, TestFrameworkProductPathService, ProductType.TestFramework);
     serviceManager.addSingleton<IProductPathService>(IProductPathService, RefactoringLibraryProductPathService, ProductType.RefactoringLibrary);
+    serviceManager.addSingleton<IProductPathService>(IProductPathService, DataScienceProductPathService, ProductType.DataScience);
     serviceManager.addSingleton<IWebPanelProvider>(IWebPanelProvider, WebPanelProvider);
 }
