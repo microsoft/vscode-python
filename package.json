@@ -2107,7 +2107,7 @@
                 "python.dataScience.magicCommandsAsComments": {
                     "type": "boolean",
                     "default": false,
-                    "description": "When true, uncomment shell assignments (#!), line magic (#!%) and cell magic (#!%%) when parsing code cells.",
+                    "description": "Uncomment shell assignments (#!), line magic (#!%) and cell magic (#!%%) when parsing code cells.",
                     "scope": "resource"
                 }
             }
