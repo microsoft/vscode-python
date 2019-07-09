@@ -3,7 +3,7 @@
 ## Usage
 
 ```shell
-$ # This step `npm run package` is required to ensure the 'ms-python-insiders.vsix' is available locally.
+$ # The step `npm run package` is required to ensure the 'ms-python-insiders.vsix' is available locally.
 $ # You could instead just download this and dump into the working directory (much faster).
 $ # npm run package # see notes above.
 
@@ -20,7 +20,7 @@ $ npm run smokeTest:report # To generate report (output is './vscode test/report
 * The UI is driven using the same infrastructure as used by `VS Code` for their smoke tests.
 * [BDD](https://docs.cucumber.io/bdd/overview/) is used to create the tests, and executed using [cucumberjs](https://github.com/cucumber/cucumber-js).
 
-## How does it work?
+## How to run smoke tests?
 
 Here are the steps involved in running the tests:
 
@@ -30,25 +30,26 @@ Here are the steps involved in running the tests:
         (configurable using the `--channel=stable | --channel=insider`)
     * Create a folder named `.vscode test` where test specific files will be created (reports, logs, VS Code, etc).
 
-*   When launching VSC, we will launch it as a completely stand alone version of VSC.
-    * I.e. even if it is installed on the current machine, we'll download and launch a new instance.
+## How does it work?
+* When launching VSC, we will launch it as a completely stand alone version of VSC.
+    * I.E. even if it is installed on the current machine, we'll download and launch a new instance.
     * This new instance will not interfere with currently installed version of VSC.
     * All user settings, etc will be in a separate directory (see `user` folder).
     * VSC will not have any extensions. We are in control of what extensions are installed (see `.vscode test/extensions` folder).
-*   Automate VSC UI
+* Automate VSC UI
     * Use the VS Code smoke test API to automate the UI.
     * The [BDD](https://docs.cucumber.io/bdd/overview/) tests are written and executed using [cucumberjs](https://github.com/cucumber/cucumber-js).
-*   Workspace folder/files
+* Workspace folder/files
     * Each [feature](https://docs.cucumber.io/gherkin/reference/#feature) can have its own set of files in the form of a github repo.
     * Just add a tag with the path of the github repo url to the `feature`.
     * When starting the tests for a feature, the repo is downloaded into a new random directory `.vscode test/temp/workspace folder xyz`
-    * At the begining of every scenario, we repeate the previous step.
+    * At the begining of every scenario, we repeat the previous step.
     * This ensures each scenario starts with a clean workspace folder.
-*   Reports
+* Reports
     * Test results are stored in the `reports` directory
     * These `json` (`cucumber format`) report files are converted into HTML using an `npm` script [cucumber-html-reporter](https://www.npmjs.com/package/cucumber-html-reporter).
     * For each `scenario` that's executed, we create a corresponding directory in `reports` directory.
-        * This will contain all screenshots realted to that scenario.
+        * This will contain all screenshots related to that scenario.
         * If the scenario fails, all logs, workspace folder are copied into this directory.
         * Thus, when ever a test fails, we have everything related to that test.
         * If the scenario passes, this directory is deleted (we don't need them on CI server).
@@ -59,7 +60,7 @@ Here are the steps involved in running the tests:
 * The tests are written using [cucumberjs](https://github.com/cucumber/cucumber-js).
 * VS Code [smoke tests API](https://github.com/microsoft/vscode/tree/master/test/smoke) is used to automate VS Code.
 * `GitHub` repos are used to provide the files to be used for testing in a workspace folder.
-*  reports (`cucumber format`) are converted into HTML using an `npm` script [cucumber-html-reporter](https://www.npmjs.com/package/cucumber-html-reporter).
+* reports (`cucumber format`) are converted into HTML using an `npm` script [cucumber-html-reporter](https://www.npmjs.com/package/cucumber-html-reporter).
 * Test result reports are generated using `junit` format, for Azure Devops.
 
 
@@ -77,7 +78,7 @@ Here are the steps involved in running the tests:
     * `screenshots` Screen shots captured during tests
 * `src/smoke/bootstrap` Contains just the bootstrap extension code.
 * `src/smoke/src` Source code for smoke Tests (features, nodejs code, etc).
-* `src/smoke/vscode` Location where all [VS Code smoke tests code](https://github.com/microsoft/vscode/tree/master/test/smoke) is located.
+* `src/smoke/vscode` Our local copy of the (internal) upstream [VS Code smoke tests code](https://github.com/microsoft/vscode/tree/master/test/smoke).
 
 ## CI Integration
 
