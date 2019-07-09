@@ -240,4 +240,5 @@ async function installExtension(extensionsDir: string, extensionName: string, vs
     console.log(`Copy extension ${path.join(tmpDir, 'extension')} into ${path.join(extensionsDir, extensionName)}`);
     await fs.copy(path.join(tmpDir, 'extension'), path.join(extensionsDir, extensionName));
     await new Promise(resolve => rimraf(tmpDir, resolve)).catch(noop);
+    console.log(`Completed installing extension ${extensionName}`);
 }
