@@ -134,21 +134,21 @@ jobs:
                     PythonVersion: ${{ py.version }}
                     VMImageName: "macos-latest"
                     VSCodeChannel: ${{ channel }}
-                    Tags: ${{ format('{0} {1} and not @win and not @linux', job.tags, py.excludeTags) }}
+                    Tags: ${{ format('{0} and {1} and not @win and not @linux', job.tags, py.excludeTags) }}
 
               ${{ if not(contains(coalesce(job.ignoreOperatingSystems, ''), 'win')) }}:
                 ${{ format('Win{2}{0}{1}', py.displayName, job.test, channel) }}:
                     PythonVersion: ${{ py.version }}
                     VSCodeChannel: ${{ channel }}
                     VMImageName: "vs2017-win2016"
-                    Tags: ${{ format('{0} {1} and not @mac and not @linux', job.tags, py.excludeTags) }}
+                    Tags: ${{ format('{0} and {1} and not @mac and not @linux', job.tags, py.excludeTags) }}
 
               ${{ if not(contains(coalesce(job.ignoreOperatingSystems, ''), 'linux')) }}:
                 ${{ format('Linux{2}{0}{1}', py.displayName, job.test, channel) }}:
                     PythonVersion: ${{ py.version }}
                     VSCodeChannel: ${{ channel }}
                     VMImageName: "ubuntu-latest"
-                    Tags: ${{ format('{0} {1} and not @mac and not @win', job.tags, py.excludeTags) }}
+                    Tags: ${{ format('{0} and {1} and not @mac and not @win', job.tags, py.excludeTags) }}
 
   pool:
     vmImage: $(VMImageName)
