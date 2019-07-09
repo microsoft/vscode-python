@@ -23,7 +23,7 @@ export async function getExtensionPath() {
     return new Promise<string>((resolve, reject) => {
         const args = ['vsce', 'package', '--out', extensionPath];
         const result = spawnSync('npx', args, { cwd: path.join(sourceDir, 'extension') });
-        const stdErr = result.stderr.toString().trim();
+        const stdErr = (result || '').stderr.toString().trim();
         if (stdErr.length > 0) {
             return reject(new Error(`Failed to build bootstrap extension. Error: ${result.stderr.toString()}`));
         }
