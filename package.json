@@ -1367,6 +1367,12 @@
                     "description": "When debugging a cell, stop on the first line if no other breakpoints in the current cell.",
                     "scope": "resource"
                 },
+                "python.dataScience.remoteDebuggerPort": {
+                    "type": "number",
+                    "default": -1,
+                    "description": "When debugging a cell, open this port on the remote box. If -1 is specified, a random port between 8889 and 9000 will be attempted.",
+                    "scope": "resource"
+                },
                 "python.disableInstallationCheck": {
                     "type": "boolean",
                     "default": false,

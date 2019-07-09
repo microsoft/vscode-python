@@ -131,7 +131,7 @@ export class JupyterServerBase implements INotebookServer {
     private sessionStartTime: number | undefined;
     private pendingCellSubscriptions: CellSubscriber[] = [];
     private ranInitialSetup = false;
-    private id = uuid();
+    private _id = uuid();
     private connectPromise: Deferred<INotebookServerLaunchInfo> = createDeferred<INotebookServerLaunchInfo>();
     private connectionInfoDisconnectHandler: Disposable | undefined;
     private serverExitCode: number | undefined;
@@ -203,6 +203,10 @@ export class JupyterServerBase implements INotebookServer {
 
     public dispose(): Promise<void> {
         return this.shutdown();
+    }
+
+    public get id(): string {
+        return this._id;
     }
 
     public waitForIdle(timeoutMs: number): Promise<void> {

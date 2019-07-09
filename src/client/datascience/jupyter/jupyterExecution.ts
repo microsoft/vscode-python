@@ -324,6 +324,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             allowUnauthorized,
             baseUrl: `${url.protocol}//${url.host}${url.pathname}`,
             token: `${url.searchParams.get('token')}`,
+            hostName: url.hostname,
             localLaunch: false,
             localProcExitCode: undefined,
             disconnected: (_l) => { return { dispose: noop }; },
@@ -775,7 +776,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return true;
     }
 
-    private async findBestCommandTimed(command: string, cancelToken?: CancellationToken) : Promise<IJupyterCommand | undefined> {
+    private async findBestCommandTimed(command: string, cancelToken?: CancellationToken): Promise<IJupyterCommand | undefined> {
         // Only log telemetry if not already found (meaning the first time)
         let timer: StopWatch | undefined;
         if (!this.commands.hasOwnProperty(command)) {

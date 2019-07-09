@@ -324,6 +324,7 @@ export interface IDataScienceSettings {
     ptvsdDistPath?: string;
     stopOnFirstLineWhileDebugging?: boolean;
     magicCommandsAsComments?: boolean;
+    remoteDebuggerPort?: number;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

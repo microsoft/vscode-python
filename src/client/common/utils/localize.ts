@@ -215,6 +215,11 @@ export namespace DataScience {
     export const addCellBelowCommandTitle = localize('DataScience.addCellBelowCommandTitle', 'Add cell');
     export const debugCellCommandTitle = localize('DataScience.debugCellCommandTitle', 'Debug cell');
     export const variableExplorerDisabledDuringDebugging = localize('DataScience.variableExplorerDisabledDuringDebugging', 'Variables are not available while debugging.');
+    export const jupyterDebuggerNotInstalledError = localize('DataScience.jupyterDebuggerNotInstalledError', 'Pip module ptvsd is required for debugging cells. You will need to install it to debug cells.');
+    export const jupyterDebuggerPortNotAvailableError = localize('DataScience.jupyterDebuggerPortNotAvailableError', 'Port {0} cannot be opened for debugging. Please specify a different port in the remoteDebuggerPort setting.');
+    export const jupyterDebuggerPortBlockedError = localize('DataScience.jupyterDebuggerPortBlockedError', 'Port {0] cannot be connected to for debugging. Please let port {0} through your firewall.');
+    export const jupyterDebuggerPortNotAvailableSearchError = localize('DataScience.jupyterDebuggerPortNotAvailableSearchError', 'Ports in the range 8889-9000 cannot be found for debugging. Please specify a port in the remoteDebuggerPort setting.');
+    export const jupyterDebuggerPortBlockedSearchError = localize('DataScience.jupyterDebuggerPortBlockedSearchError', 'A port cannot be connected to for debugging. Please let ports 8889-9000 through your firewall.');
 }
 
 export namespace DebugConfigStrings {

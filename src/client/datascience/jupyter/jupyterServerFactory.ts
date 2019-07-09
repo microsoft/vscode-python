@@ -5,6 +5,7 @@ import '../../common/extensions';
 
 import { inject, injectable, multiInject, optional } from 'inversify';
 import { Observable } from 'rxjs/Observable';
+import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { ILiveShareApi } from '../../common/application/types';
@@ -47,6 +48,7 @@ export class JupyterServerFactory implements INotebookServer {
     private serverFactory: RoleBasedFactory<IJupyterServerInterface, JupyterServerClassType>;
 
     private launchInfo: INotebookServerLaunchInfo | undefined;
+    private _id: string = uuid();
 
     constructor(
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
@@ -70,6 +72,10 @@ export class JupyterServerFactory implements INotebookServer {
             sessionManager,
             loggers ? loggers : []
         );
+    }
+
+    public get id(): string {
+        return this._id;
     }
 
     public async connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void> {

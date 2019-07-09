@@ -642,7 +642,6 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
             if (this.jupyterServer) {
                 await this.jupyterServer.restartKernel(this.generateDataScienceExtraSettings().jupyterInterruptTimeout);
                 await this.addSysInfo(SysInfoReason.Restart);
-                await this.jupyterDebugger.enableAttach(this.jupyterServer);
 
                 // Compute if dark or not.
                 const knownDark = await this.isDark();
@@ -1054,11 +1053,6 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         // Now try to create a notebook server
         this.jupyterServer = await this.jupyterExecution.connectToNotebookServer(options);
 
-        // Enable debugging support if set
-        if (this.jupyterServer) {
-            await this.jupyterDebugger.enableAttach(this.jupyterServer);
-        }
-
         // Before we run any cells, update the dark setting
         if (this.jupyterServer) {
             await this.jupyterServer.setMatplotLibStyle(knownDark);
@@ -1152,6 +1146,9 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
             // For a restart, tell our window to reset
             if (reason === SysInfoReason.Restart || reason === SysInfoReason.New) {
                 this.postMessage(InteractiveWindowMessages.RestartKernel).ignoreErrors();
+                if (this.jupyterServer) {
+                    this.jupyterDebugger.onRestart(this.jupyterServer);
+                }
             }
 
             this.logger.logInformation(`Sys info for ${this.id} ${reason} complete`);

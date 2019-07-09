@@ -29,6 +29,7 @@ export interface IDataScienceCommandListener {
 export interface IConnection extends Disposable {
     baseUrl: string;
     token: string;
+    hostName: string;
     localLaunch: boolean;
     localProcExitCode: number | undefined;
     disconnected: Event<number>;
@@ -70,6 +71,7 @@ export interface INotebookCompletion {
 // Talks to a jupyter ipython kernel to retrieve data for cells
 export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends IAsyncDisposable {
+    readonly id: string;
     connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void>;
     executeObservable(code: string, file: string, line: number, id: string, silent: boolean): Observable<ICell[]>;
     execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken, silent?: boolean): Promise<ICell[]>;
@@ -117,9 +119,9 @@ export interface IJupyterExecution extends IAsyncDisposable {
 
 export const IJupyterDebugger = Symbol('IJupyterDebugger');
 export interface IJupyterDebugger {
-    enableAttach(server: INotebookServer): Promise<void>;
     startDebugging(server: INotebookServer): Promise<void>;
     stopDebugging(server: INotebookServer): Promise<void>;
+    onRestart(server: INotebookServer): void;
 }
 
 export interface IJupyterPasswordConnectInfo {
