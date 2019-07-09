@@ -130,10 +130,10 @@ export class JupyterSession implements IJupyterSession {
         }
     }
 
-    public interrupt(timeout: number): Promise<void> {
-        return this.session && this.session.kernel ?
-            this.waitForKernelPromise(this.session.kernel.interrupt(), timeout, localize.DataScience.interruptingKernelFailed()) :
-            Promise.resolve();
+    public async interrupt(timeout: number): Promise<void> {
+        if (this.session && this.session.kernel) {
+            await this.waitForKernelPromise(this.session.kernel.interrupt(), timeout, localize.DataScience.interruptingKernelFailed());
+        }
     }
 
     public requestExecute(content: KernelMessage.IExecuteRequest, disposeOnDone?: boolean, metadata?: JSONObject): Kernel.IFuture | undefined {
@@ -246,7 +246,7 @@ export class JupyterSession implements IJupyterSession {
         return ServerConnection.makeSettings(serverSettings);
     }
 
-    private async waitForKernelPromise(kernelPromise: Promise<void>, timeout: number, errorMessage: string): Promise<void> {
+    private async waitForKernelPromise(kernelPromise: Promise<void>, timeout: number, errorMessage: string): Promise<void | null> {
         // Wait for this kernel promise to happen
         try {
             return await waitForPromise(kernelPromise, timeout);
