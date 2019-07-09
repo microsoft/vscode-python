@@ -49,7 +49,7 @@ Here are the steps involved in running the tests:
     * Test results are stored in the `reports` directory
     * These `json` (`cucumber format`) report files are converted into HTML using an `npm` script [cucumber-html-reporter](https://www.npmjs.com/package/cucumber-html-reporter).
     * For each `scenario` that's executed, we create a corresponding directory in `reports` directory.
-        * This will contain all screenshots realted to that scenario.
+        * This will contain all screenshots related to that scenario.
         * If the scenario fails, all logs, workspace folder are copied into this directory.
         * Thus, when ever a test fails, we have everything related to that test.
         * If the scenario passes, this directory is deleted (we don't need them on CI server).
