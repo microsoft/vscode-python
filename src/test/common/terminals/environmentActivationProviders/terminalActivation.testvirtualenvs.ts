@@ -42,6 +42,7 @@ suite('Activation of Environments in Terminal', () => {
     let pythonSettings: any;
     suiteSetup(async () => {
         envPaths = await fs.readJson(envsLocation);
+        console.error(`File contents from ${envsLocation} is ${JSON.stringify(envPaths)}`);
         terminalSettings = vscode.workspace.getConfiguration('terminal', vscode.workspace.workspaceFolders![0].uri);
         pythonSettings = vscode.workspace.getConfiguration('python', vscode.workspace.workspaceFolders![0].uri);
         defaultShell.Windows = terminalSettings.inspect('integrated.shell.windows').globalValue;
