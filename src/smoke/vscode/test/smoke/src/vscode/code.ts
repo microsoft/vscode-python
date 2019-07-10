@@ -274,11 +274,11 @@ export class Code {
             await this.driver.exitApplication();
         } catch (ex) {
             console.log('Failed to exitApplication');
-            // try {
-            //     this.proc.kill();
-            // } catch {
-            //     // We don't care.
-            // }
+            try {
+                this.proc.kill();
+            } catch {
+                // We don't care.
+            }
         }
     }
 
