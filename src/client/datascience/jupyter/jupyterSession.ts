@@ -46,6 +46,7 @@ export class JupyterSession implements IJupyterSession {
     private statusHandler: Slot<Session.ISession, Kernel.Status> | undefined;
     private connected: boolean = false;
     private jupyterPasswordConnect: IJupyterPasswordConnect;
+    private shuttingDownSessions: Promise<void>[] = [];
 
     constructor(
         connInfo: IConnection,
@@ -94,6 +95,8 @@ export class JupyterSession implements IJupyterSession {
     public async restart(_timeout: number): Promise<void> {
         // Just kill the current session and switch to the other
         if (this.restartSessionPromise && this.session && this.sessionManager && this.contentsManager) {
+            traceInfo(`Restarting ${this.session.kernel.id}`);
+
             // Save old state for shutdown
             const oldSession = this.session;
             const oldStatusHandler = this.statusHandler;
@@ -103,6 +106,7 @@ export class JupyterSession implements IJupyterSession {
             if (!this.session) {
                 throw new Error(localize.DataScience.sessionDisposed());
             }
+            traceInfo(`Got new session ${this.session.kernel.id}`);
 
             // Rewire our status changed event.
             this.statusHandler = this.onStatusChanged.bind(this.onStatusChanged);
@@ -110,7 +114,9 @@ export class JupyterSession implements IJupyterSession {
 
             // After switching, start another in case we restart again.
             this.restartSessionPromise = this.createReadySession(oldSession.serverSettings, this.contentsManager);
-            this.shutdownSession(oldSession, oldStatusHandler).ignoreErrors();
+            traceInfo('Started new restart session');
+            this.shuttingDownSessions.push(this.shutdownSession(oldSession, oldStatusHandler));
+            traceInfo('Started shutdown of old session');
         } else {
             throw new Error(localize.DataScience.sessionDisposed());
         }
@@ -360,6 +366,7 @@ export class JupyterSession implements IJupyterSession {
         }
         if (this.session || this.sessionManager) {
             try {
+                await Promise.all(this.shuttingDownSessions);
                 await this.shutdownSession(this.session, this.statusHandler);
                 const restartSession = await this.restartSessionPromise;
                 await this.shutdownSession(restartSession, undefined);
