@@ -895,12 +895,12 @@ export class JupyterServerBase implements INotebookServer {
         }
 
         let foundNewLines = 0;
-        for (let i = 0; i < outputString.length; i += 1) {
+        for (let i = outputString.length - 1; i >= 0; i -= 1) {
             if (outputString[i] === '\n') {
                 foundNewLines = foundNewLines + 1;
 
                 if (foundNewLines >= trimLineCount) {
-                    return outputString.substr(0, i);
+                    return outputString.substr(i + 1);
                 }
             }
         }

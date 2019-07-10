@@ -624,9 +624,9 @@ for _ in range(50):
 
         // Output should be trimmed to just two lines of output
         const code = `print("hello\\nworld\\nhow\\nare\\nyou")`;
-        addMockData(ioc, code, 'hello\nworld');
+        addMockData(ioc, code, 'are\nyou');
         await addCode(getOrCreateInteractiveWindow, wrapper, code, 4);
 
-        verifyHtmlOnCell(wrapper, '>hello\nworld<', CellPosition.Last);
+        verifyHtmlOnCell(wrapper, '>are\nyou<', CellPosition.Last);
     }, () => { return ioc; });
 });
