@@ -218,6 +218,8 @@ export class Application implements IApplication {
             }
             this._code = undefined;
         }
+        // tslint:disable-next-line: no-console
+        console.log('Stopped VS Code Application');
         // For some reason we need to wait, else starting VSC immediately also causes issues.
         await new Promise(c => setTimeout(c, 1000));
     }

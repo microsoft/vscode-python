@@ -168,7 +168,7 @@ export async function spawn(options: SpawnOptions): Promise<Code> {
     const child = cp.spawn(electronPath, args, spawnOptions);
     child.on('error', error => console.error('VS Code process errored', error));
     child.on('close', () => console.error('VS Code process closed'));
-    child.stdout.on('data', data => console.log(data.toString()));
+    // child.stdout.on('data', data => console.log(data.toString()));
     child.stderr.on('data', data => console.error(data.toString()));
     instances.add(child);
     child.once('exit', () => {
@@ -176,7 +176,7 @@ export async function spawn(options: SpawnOptions): Promise<Code> {
         instances.delete(child);
     });
     // Wait and log everything (wait for VSC to start).
-    await new Promise(resolve => setTimeout(resolve, 30_000));
+    await new Promise(resolve => setTimeout(resolve, 10_000));
     console.info(`Attempting to connect to VS Code server on port ${port}`);
     return connect(child, outPath, port, options.logger);
 }
