@@ -12,7 +12,7 @@ import { IDriver, connect as connectDriver, IDisposable, IElement, Thenable } fr
 import { Logger } from '../logger';
 import { ncp } from 'ncp';
 import * as util from 'util';
-import * as getFreePort from 'get-port';
+// import * as getFreePort from 'get-port';
 
 const repoPath = path.join(__dirname, '../../../..');
 
