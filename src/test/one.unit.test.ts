@@ -62,5 +62,5 @@ suite('MYONE', () => {
                 reject(ex);
             }
         });
-    });
+    }).timeout(60_000);
 });
