@@ -94,6 +94,14 @@ jobs:
         TestsToRun: 'testfunctional'
         NeedsPythonTestReqs: true
         NeedsPythonFunctionalReqs: true
+      'Win-Py3.7 Venv':
+        VMImageName: 'vs2017-win2016'
+        PythonVersion: '3.7'
+        TestsToRun: 'venvTests'
+        NeedsPythonTestReqs: true
+        NeedsIPythonReqs: true
+        # This is for the venvTests to use, not needed if you don't run venv tests...
+        PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
 
   pool:
     vmImage: $(VMImageName)
