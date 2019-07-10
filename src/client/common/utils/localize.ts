@@ -100,6 +100,7 @@ export namespace DataScience {
     export const notebookCheckForImportYes = localize('DataScience.notebookCheckForImportYes', 'Import');
     export const notebookCheckForImportNo = localize('DataScience.notebookCheckForImportNo', 'Later');
     export const notebookCheckForImportDontAskAgain = localize('DataScience.notebookCheckForImportDontAskAgain', 'Don\'t Ask Again');
+    export const libraryNotInstalled = localize('DataScience.libraryNotInstalled', 'Data Science library {0} is not installed. Install?');
     export const jupyterInstall = localize('DataScience.jupyterInstall', 'Install');
     export const jupyterNotSupported = localize('DataScience.jupyterNotSupported', 'Jupyter is not installed');
     export const jupyterNotSupportedBecauseOfEnvironment = localize('DataScience.jupyterNotSupportedBecauseOfEnvironment', 'Activating {0} to run Jupyter failed with {1}');

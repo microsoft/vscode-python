@@ -4,6 +4,7 @@ import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
 import { OutputChannel, Uri } from 'vscode';
 import '../../common/extensions';
+import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { LinterId } from '../../linters/types';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -274,7 +275,7 @@ export class RefactoringLibraryInstaller extends BaseInstaller {
 export class DataScienceInstaller extends BaseInstaller {
     protected async promptToInstallImplementation(product: Product, resource?: Uri): Promise<InstallerResponse> {
         const productName = ProductNames.get(product)!;
-        const item = await this.appShell.showErrorMessage(`Data Science library ${productName} is not installed. Install?`, 'Yes', 'No');
+        const item = await this.appShell.showErrorMessage(localize.DataScience.libraryNotInstalled().format(productName), 'Yes', 'No');
         return item === 'Yes' ? this.install(product, resource) : InstallerResponse.Ignore;
     }
 }
