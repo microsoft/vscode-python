@@ -7,11 +7,12 @@ import * as path from 'path';
 import * as cp from 'child_process';
 import * as os from 'os';
 import * as fs from 'fs';
-import { tmpName } from 'tmp';
+// import { tmpName } from 'tmp';
 import { IDriver, connect as connectDriver, IDisposable, IElement, Thenable } from './driver';
 import { Logger } from '../logger';
 import { ncp } from 'ncp';
 import * as util from 'util';
+import * as getFreePort from 'get-port';
 
 const repoPath = path.join(__dirname, '../../../..');
 
@@ -61,12 +62,13 @@ function getBuildOutPath(root: string): string {
     }
 }
 
-async function connect(child: cp.ChildProcess, outPath: string, handlePath: string, logger: Logger): Promise<Code> {
+async function connect(child: cp.ChildProcess, outPath: string, port: number, logger: Logger): Promise<Code> {
     let errCount = 0;
 
     while (true) {
         try {
-            const { client, driver } = await connectDriver(outPath, handlePath);
+            // tslint:disable-next-line: no-any
+            const { client, driver } = await connectDriver(outPath, { host: 'localhost', port } as any);
             return new Code(client, driver, logger, child);
         } catch (err) {
             if (++errCount > 50) {
@@ -97,31 +99,21 @@ export interface SpawnOptions {
     tempPath?: string;
 }
 
-async function createDriverHandle(dir?: string): Promise<string> {
-    if ('win32' === os.platform()) {
-        const name = [...Array(15)].map(() => Math.random().toString(36)[3]).join('');
-        return `\\\\.\\pipe\\${name}`;
-    } else {
-        // Found that sometimes, `tmpName` returns a file that does not exist!
-        // Just run all UI Tests, eventually this function will return a temp name without creating in disc.
-        // Lets try creating the file in a directory or our choice (when using ui tests).
-        return await new Promise<string>((c, e) => tmpName((err, handlePath) => err ? e(err) : c(handlePath)));
-        // let tmpFile = await new Promise<string>((c, e) => tmpName({ dir }, (err, handlePath) => err ? e(err) : c(handlePath)));
-        // if (fs.existsSync) {
-        //     return tmpFile;
-        // }
-        // tmpFile = path.join(dir || __dirname, new Date().getTime().toString());
-        // fs.writeFileSync(tmpFile, '');
-        // return tmpFile;
-    }
-}
+// async function createDriverHandle(dir?: string): Promise<string> {
+//     if ('win32' === os.platform()) {
+//         const name = [...Array(15)].map(() => Math.random().toString(36)[3]).join('');
+//         return `\\\\.\\pipe\\${name}`;
+//     } else {
+//         return await new Promise<string>((c, e) => tmpName((err, handlePath) => err ? e(err) : c(handlePath)));
+//     }
+// }
 
 export async function spawn(options: SpawnOptions): Promise<Code> {
     const codePath = options.codePath;
     const electronPath = codePath ? getBuildElectronPath(codePath) : getDevElectronPath();
     const outPath = codePath ? getBuildOutPath(codePath) : getDevOutPath();
-    const handle = await createDriverHandle(options.tempPath);
-
+    // const handle = await createDriverHandle(options.tempPath);
+    const handle = await getFreePort({ host: 'localhost' });
     const args = [
         ...(options.workspacePath ? [options.workspacePath] : []),
         '--skip-getting-started',
@@ -132,7 +124,7 @@ export async function spawn(options: SpawnOptions): Promise<Code> {
         '--disable-crash-reporter',
         `--extensions-dir=${options.extensionsPath}`,
         `--user-data-dir=${options.userDataDir}`,
-        '--driver', handle
+        '--driver', handle.toString()
     ];
 
     if (options.remote) {
