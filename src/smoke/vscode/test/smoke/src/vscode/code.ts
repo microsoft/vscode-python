@@ -170,7 +170,7 @@ export async function spawn(options: SpawnOptions): Promise<Code> {
     const child = cp.spawn(electronPath, args, spawnOptions);
     child.on('error', error => console.error('VS Code process errored', error));
     child.on('close', () => console.error('VS Code process closed'));
-    // child.stdout.on('data', data => console.log(data.toString()));
+    child.stdout.on('data', data => console.log(data.toString()));
     child.stderr.on('data', data => console.error(data.toString()));
     instances.add(child);
     child.once('exit', () => {
