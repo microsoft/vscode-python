@@ -124,7 +124,7 @@ export async function spawn(options: SpawnOptions): Promise<Code> {
         '--disable-crash-reporter',
         `--extensions-dir=${options.extensionsPath}`,
         `--user-data-dir=${options.userDataDir}`,
-        '--driver', port.toString()
+        `--driver=${port.toString()}`
     ];
 
     if (options.remote) {
@@ -154,7 +154,8 @@ export async function spawn(options: SpawnOptions): Promise<Code> {
     }
 
     if (options.log) {
-        args.push('--log', options.log);
+        // args.push('--log', options.log);
+        args.push(`--log=${options.log}`);
     }
 
     if (options.extraArgs) {
