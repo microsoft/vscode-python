@@ -97,6 +97,7 @@ export class ImportTracker implements IImportTracker {
         }
     }
 
+    @captureTelemetry(EventName.HASHED_PACKAGE_PERF)
     private checkDocument(document: TextDocument) {
         this.pendingDocs.delete(document.fileName);
         const lines = this.getDocumentLines(document);
@@ -117,7 +118,6 @@ export class ImportTracker implements IImportTracker {
         sendTelemetryEvent(EventName.HASHED_PACKAGE_NAME, undefined, { hashedName: hash });
     }
 
-    @captureTelemetry(EventName.HASHED_PACKAGE_PERF)
     private lookForImports(lines: (string | undefined)[]) {
         try {
             for (const s of lines) {
