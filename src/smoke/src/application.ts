@@ -213,6 +213,7 @@ export class Application implements IApplication {
             await this._code.exit()
                 .catch(ex => console.error('Failed to exit VS Code', ex));
             try {
+                console.log('Dispose socket');
                 this._code.dispose();
             } catch (ex) {
                 console.error('Failed to dispose VS Code', ex);

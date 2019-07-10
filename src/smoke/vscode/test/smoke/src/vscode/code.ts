@@ -272,12 +272,13 @@ export class Code {
     async exit(): Promise<void> {
         try {
             await this.driver.exitApplication();
-        } finally {
-            try {
-                this.proc.kill();
-            } catch {
-                // We don't care.
-            }
+        } catch (ex) {
+            console.log('Failed to exitApplication');
+            // try {
+            //     this.proc.kill();
+            // } catch {
+            //     // We don't care.
+            // }
         }
     }
 
