@@ -72,11 +72,13 @@ async function connect(child: cp.ChildProcess, outPath: string, port: number, lo
             return new Code(client, driver, logger, child);
         } catch (err) {
             if (++errCount > 50) {
+                console.error('Failed to connect after 50 attempts');
                 child.kill();
                 throw err;
             }
 
             // retry
+            console.log('Failed to connect, retrying');
             await new Promise(c => setTimeout(c, 100));
         }
     }
@@ -176,7 +178,7 @@ export async function spawn(options: SpawnOptions): Promise<Code> {
         instances.delete(child);
     });
     // Wait and log everything (wait for VSC to start).
-    await new Promise(resolve => setTimeout(resolve, 10_000));
+    await new Promise(resolve => setTimeout(resolve, 30_000));
     console.info(`Attempting to connect to VS Code server on port ${port}`);
     return connect(child, outPath, port, options.logger);
 }
