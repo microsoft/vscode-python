@@ -30,7 +30,7 @@ export class InsidersExtensionService implements IExtensionActivationService {
         }
         this.registerCommandsAndHandlers();
         this.activatedOnce = true;
-        const installChannel = this.extensionChannelService.channel;
+        const installChannel = await this.extensionChannelService.getChannel();
         const newExtensionChannel: Channel = installChannel === 'Stable' ? 'stable' : 'insiders';
         this.handleChannel(installChannel, newExtensionChannel !== this.appEnvironment.extensionChannel).ignoreErrors();
     }

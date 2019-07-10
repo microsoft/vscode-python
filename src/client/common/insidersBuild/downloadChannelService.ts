@@ -27,14 +27,14 @@ export class ExtensionChannelService implements IExtensionChannelService {
         this.isThisFirstSessionState = this.persistentStateFactory.createGlobalPersistentState(isThisFirstSessionStateKey, true);
         disposables.push(this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
     }
-    public get channel(): ExtensionChannels {
+    public async getChannel(): Promise<ExtensionChannels> {
         const settings = this.workspaceService.getConfiguration('python').inspect<ExtensionChannels>(insidersChannelSetting);
         if (!settings) {
             throw new Error(`WorkspaceConfiguration.inspect returns 'undefined' for setting 'python.${insidersChannelSetting}'`);
         }
         if (settings.globalValue === undefined) {
             const isThisFirstSession = this.isThisFirstSessionState.value;
-            this.isThisFirstSessionState.updateValue(false);
+            await this.isThisFirstSessionState.updateValue(false);
             // "Official" VSC default setting value is stable. To keep the official value to be in sync with what is being used,
             // Use Insiders default as 'InsidersWeekly' only for the first session (insiders gets installed for the first session).
             return this.appEnvironment.channel === 'insiders' && isThisFirstSession ? ExtensionChannel.insidersDefaultForTheFirstSession : 'Stable';

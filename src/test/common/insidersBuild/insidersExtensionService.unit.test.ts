@@ -157,11 +157,11 @@ suite('Insiders Extension Service - Activation', () => {
             handleChannel = sinon.stub(InsidersExtensionService.prototype, 'handleChannel');
             handleChannel.callsFake(() => Promise.resolve());
             insidersExtensionService = new InsidersExtensionService(instance(extensionChannelService), instance(insidersPrompt), instance(appEnvironment), instance(cmdManager), instance(serviceContainer), []);
-            when(extensionChannelService.channel).thenReturn(testParams.installChannel);
+            when(extensionChannelService.getChannel()).thenResolve(testParams.installChannel);
             when(appEnvironment.extensionChannel).thenReturn(testParams.extensionChannel);
             await insidersExtensionService.activate(Uri.parse('r'));
             expect(handleChannel.args[0][1]).to.equal(testParams.expectedResult);
-            verify(extensionChannelService.channel).once();
+            verify(extensionChannelService.getChannel()).once();
             verify(appEnvironment.extensionChannel).once();
             expect(insidersExtensionService.activatedOnce).to.equal(true, 'Variable should be set to true');
         });
@@ -172,7 +172,7 @@ suite('Insiders Extension Service - Activation', () => {
         handleChannel = sinon.stub(InsidersExtensionService.prototype, 'handleChannel');
         handleChannel.callsFake(() => handleChannelsDeferred.promise);
         insidersExtensionService = new InsidersExtensionService(instance(extensionChannelService), instance(insidersPrompt), instance(appEnvironment), instance(cmdManager), instance(serviceContainer), []);
-        when(extensionChannelService.channel).thenReturn('InsidersDaily');
+        when(extensionChannelService.getChannel()).thenResolve('InsidersDaily');
         when(appEnvironment.extensionChannel).thenReturn('insiders');
 
         const promise = insidersExtensionService.activate(Uri.parse('r'));
@@ -185,7 +185,7 @@ suite('Insiders Extension Service - Activation', () => {
         handleChannelsDeferred.resolve();
         await sleep(1);
 
-        verify(extensionChannelService.channel).once();
+        verify(extensionChannelService.getChannel()).once();
         verify(appEnvironment.extensionChannel).once();
         expect(insidersExtensionService.activatedOnce).to.equal(true, 'Variable should be set to true');
     });

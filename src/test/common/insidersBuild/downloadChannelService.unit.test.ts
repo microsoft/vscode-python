@@ -92,7 +92,8 @@ suite('Download channel service', () => {
                 .setup(u => u.updateValue(false))
                 .returns(() => Promise.resolve());
             when(appEnvironment.channel).thenReturn(testParams.vscodeChannel as any);
-            expect(channelService.channel).to.equal(testParams.expectedResult);
+            const channel = await channelService.getChannel();
+            expect(channel).to.equal(testParams.expectedResult);
             workspaceConfig.verifyAll();
         });
     });
@@ -114,7 +115,8 @@ suite('Download channel service', () => {
             .setup(u => u.updateValue(false))
             .returns(() => Promise.resolve());
         when(appEnvironment.channel).thenReturn('insiders');
-        expect(channelService.channel).to.equal('Stable');
+        const channel = await channelService.getChannel();
+        expect(channel).to.equal('Stable');
         workspaceConfig.verifyAll();
     });
 
@@ -128,7 +130,7 @@ suite('Download channel service', () => {
         workspaceConfig.setup(c => c.inspect<ExtensionChannels>(insidersChannelSetting))
             .returns(() => settings as any)
             .verifiable(TypeMoq.Times.once());
-        expect(() => channelService.channel).to.throw();
+        await expect(channelService.getChannel()).to.eventually.be.rejected;
         workspaceConfig.verifyAll();
     });
 
