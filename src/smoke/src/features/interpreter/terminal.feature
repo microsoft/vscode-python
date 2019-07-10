@@ -8,8 +8,12 @@ Feature: Terminal
             open('log.log', 'w').write('Hello World')
             """
         And a file named "log.log" does not exist
+        Then take a screenshot
         When I open the file "run in terminal.py"
-        And I select the command "Python: Run Python File in Terminal"
+        Then take a screenshot
+        Then wait for 1 second
+        When I select the command "Python: Run Python File in Terminal"
+        Then take a screenshot
         # Wait for some time, as it could take a while for terminal to get activated.
         # Slow on windows.
         Then a file named "log.log" is created within 10 seconds
