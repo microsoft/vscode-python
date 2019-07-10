@@ -113,7 +113,7 @@ export async function spawn(options: SpawnOptions): Promise<Code> {
     const electronPath = codePath ? getBuildElectronPath(codePath) : getDevElectronPath();
     const outPath = codePath ? getBuildOutPath(codePath) : getDevOutPath();
     // const handle = await createDriverHandle(options.tempPath);
-    const handle = await getFreePort({ host: 'localhost' });
+    const port = await getFreePort({ host: 'localhost', port: 3000 });
     const args = [
         ...(options.workspacePath ? [options.workspacePath] : []),
         '--skip-getting-started',
@@ -124,7 +124,7 @@ export async function spawn(options: SpawnOptions): Promise<Code> {
         '--disable-crash-reporter',
         `--extensions-dir=${options.extensionsPath}`,
         `--user-data-dir=${options.userDataDir}`,
-        '--driver', handle.toString()
+        '--driver', port.toString()
     ];
 
     if (options.remote) {
@@ -168,7 +168,7 @@ export async function spawn(options: SpawnOptions): Promise<Code> {
     instances.add(child);
     child.once('exit', () => instances.delete(child));
 
-    return connect(child, outPath, handle, options.logger);
+    return connect(child, outPath, port, options.logger);
 }
 
 async function poll<T>(
