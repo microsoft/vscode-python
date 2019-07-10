@@ -34,7 +34,7 @@
   - [ ] Right-click
   - [ ] Command
   - [ ] `Shift+Enter`
-  
+
 #### Terminal
 Sample file:
 ```python
@@ -316,7 +316,7 @@ def test_failure():
   - [ ] `Run Test` works
   - [ ] `Debug Test` works
 - [ ] A `Diagnostic` is shown in the problems pane for each failed/skipped test
-  - [ ] The `Diagnostic`s are organized according to the file the test was executed from (not neccesarily the file it was defined in)
+  - [ ] The `Diagnostic`s are organized according to the file the test was executed from (not necessarily the file it was defined in)
   - [ ] The appropriate `DiagnosticRelatedInformation` is shown for each `Diagnostic`
   - [ ] The `DiagnosticRelatedInformation` reflects the traceback for the test
 
@@ -385,7 +385,7 @@ def test_failure():
     1. After manualTestFile.py has been run drop down the Variables section at the top of the Interactive Window
     1. In the Variables list there should be an entry for all variables created. These variables might change as more is added to manualTestFile.py.
     1. Check that variables have expected values. They will be truncated for longer items
-    1. Sort the list ascending and descending by Type. Also sort the list ascending and descenting by Count. Values like (X, Y) use the first X value for Count sort ordering
+    1. Sort the list ascending and descending by Type. Also sort the list ascending and descending by Count. Values like (X, Y) use the first X value for Count sort ordering
     1. Check that list, Series, ndarray, and DataFrame types have a button to "Show variable in data viewer" on the right
     1. In the Interactive Window input box add a new variable. Verify that it is added into the Variable Explorer
 - [ ] Verify Data Explorer
@@ -404,11 +404,11 @@ def test_failure():
 #### P1 Test Scenarios
 - [ ] Connect to a `remote` server
     1. Open up a valid python command prompt that can run `jupyter notebook` (a default Anaconda prompt works well)
-    1. Run `jupyter notebook` to start up a local Jupyter server 
-    1. In the command window that launched Jupyter look for the server / token name like so: http://localhost:8888/?token=bf9eae43641cd75015df9104f814b8763ef0e23ffc73720d 
+    1. Run `jupyter notebook` to start up a local Jupyter server
+    1. In the command window that launched Jupyter look for the server / token name like so: http://localhost:8888/?token=bf9eae43641cd75015df9104f814b8763ef0e23ffc73720d
     1. Run the command `Python: Select Jupyter server URI` then `Type in the URI to connect to a running jupyter server`
     1. Input the server / token name here
-    1. Now run the cells in the manualTestFile.py 
+    1. Now run the cells in the manualTestFile.py
     1. Verify that you see the server name in the initial connection message
     1. Verify the outputs of the cells
 - [ ] Interactive Window commands
@@ -458,7 +458,7 @@ def test_failure():
     1. Also make sure you are set to locally launch Jupyter and not to connect to an existing URI
     1. In addition to your main testing environment install a new python or miniconda install (conda won't work as it has Jupyter by default)
     1. In VS code change the python interpreter to the new install
-    1. Try `Run Cell` 
+    1. Try `Run Cell`
     1. You should get a message that Jupyter was not found and that it is defaulting back to launch on the python instance that has Jupyter
 - [ ] LiveShare Support
     1. Install the LiveShare VSCode Extension
@@ -470,7 +470,7 @@ def test_failure():
     1. Open another window of VSCode
     1. Connect the second instance of VSCode as a Guest to the first Live Share session
     1. After the workspace opens, open the manualTestFile.py on the Guest instance
-    1. On the Guest instance run a cell from the file, both via the codelens and via the command palette `Run Cell` command 
+    1. On the Guest instance run a cell from the file, both via the codelens and via the command palette `Run Cell` command
         - [ ] Verify results
             1. Output should show up on the Guest Interactive Window
             1. Same output should show up in the Host Interactive Window

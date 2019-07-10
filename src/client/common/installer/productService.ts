@@ -28,6 +28,7 @@ export class ProductService implements IProductService {
         this.ProductTypes.set(Product.black, ProductType.Formatter);
         this.ProductTypes.set(Product.yapf, ProductType.Formatter);
         this.ProductTypes.set(Product.rope, ProductType.RefactoringLibrary);
+        this.ProductTypes.set(Product.jupyter, ProductType.DataScience);
     }
     public getProductType(product: Product): ProductType {
         return this.ProductTypes.get(product)!;

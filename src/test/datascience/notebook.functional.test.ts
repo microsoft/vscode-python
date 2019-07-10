@@ -18,7 +18,7 @@ import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { traceError, traceInfo } from '../../client/common/logger';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IProcessServiceFactory, Output } from '../../client/common/process/types';
-import { createDeferred } from '../../client/common/utils/async';
+import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { concatMultilineString } from '../../client/datascience/common';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
@@ -614,7 +614,7 @@ suite('DataScience notebook tests', () => {
         const result = await server!.interruptKernel(interruptMs);
 
         // Then we should get our finish unless there was a restart
-        await Promise.race([finishedPromise.promise, sleep(sleepMs)]);
+        await waitForPromise(finishedPromise.promise, sleepMs);
         assert.equal(finishedBefore, false, 'Finished before the interruption');
         assert.equal(error, undefined, 'Error thrown during interrupt');
         assert.ok(finishedPromise.completed ||
@@ -1015,14 +1015,11 @@ plt.show()`,
         const outputs: string[] = [];
         @injectable()
         class Logger implements INotebookExecutionLogger {
-            public preExecute(cell: ICell, _silent: boolean): void {
+            public async preExecute(cell: ICell, _silent: boolean): Promise<void> {
                 cellInputs.push(concatMultilineString(cell.data.source));
             }
-            public postExecute(cellOrError: ICell | Error, _silent: boolean): void {
-                if (!(cellOrError instanceof Error)) {
-                    const cell = cellOrError as ICell;
-                    outputs.push(extractDataOutput(cell));
-                }
+            public async postExecute(cell: ICell, _silent: boolean): Promise<void> {
+                outputs.push(extractDataOutput(cell));
             }
         }
         ioc.serviceManager.add<INotebookExecutionLogger>(INotebookExecutionLogger, Logger);
@@ -1031,9 +1028,9 @@ plt.show()`,
         assert.ok(server, 'Server not created in logging case');
         await server!.execute(`a=1${os.EOL}a`, path.join(srcDirectory(), 'foo.py'), 2, uuid());
         assert.equal(cellInputs.length, 3, 'Not enough cell inputs');
-        assert.equal(outputs.length, 3, 'Not enough cell inputs');
+        assert.ok(outputs.length >= 1, 'Not enough cell outputs');
         assert.equal(cellInputs[2], 'a=1\na', 'Cell inputs not captured');
-        assert.equal(outputs[2], '1', 'Cell outputs not captured');
+        assert.equal(outputs[outputs.length - 1], '1', 'Cell outputs not captured');
     });
 
 });

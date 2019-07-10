@@ -48,7 +48,7 @@ Here are the steps involved in running the tests:
     -   Each [feature](https://docs.cucumber.io/gherkin/reference/#feature) can have its own set of files in the form of a github repo.
     -   Just add a tag with the path of the github repo url to the `feature`.
     -   When starting the tests for a feature, the repo is downloaded into a new random directory `.vscode test/temp/workspace folder xyz`
-    -   At the begining of every scenario, we repeate the previous step.
+    -   At the beginning of every scenario, we repeate the previous step.
     -   This ensures each scenario starts with a clean workspace folder.
 *   Reports
     -   Test results are stored in the `reports` directory
@@ -92,7 +92,7 @@ Here are the steps involved in running the tests:
     -   Using a `cucumber json` report format allows us to use existing tools to generate other HTML reports out of the raw `json` files.
 *   Sending keyboard commands to VSC (such as `ctrl+p`) is currently not possible (**not known how to**).
     -   `Selenium driver` can only send keyboard commands to a specific `html element`.
-    -   But kyeboard commands such as `ctrl+p` are to be sent to the main window, and this isn't possible/not known.
+    -   But keyboard commands such as `ctrl+p` are to be sent to the main window, and this isn't possible/not known.
         -   Solution: We need to find the `html element` in VSC that will accept keys such as `ctrl+p` and the like.
     -   Fortunately almost everything in VSC can be driven through commands in the `command palette`.
         -   Hence, we have an extension that opens the `command palette`, from there, we use `selenium driver` to select commands.
@@ -121,7 +121,7 @@ Here are the steps involved in running the tests:
 -   `uitests/tests/steps` Location where all `BDD steps` are defined.
 -   `uitests/tests/js` Location with helper `js` files (download chrome driver and generate html reports).
 -   `uitests/tests/vscode` Contains all modules related to `vscode` (driving the UI, downloading, starting, etc).
--   `environment.py` `enviroyment` file for `Behave`.
+-   `environment.py` `environment` file for `Behave`.
 
 ## CI Integration
 

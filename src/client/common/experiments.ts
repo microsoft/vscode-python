@@ -148,7 +148,7 @@ export class ExperimentsManager implements IExperimentsManager {
         if (typeof (this.appEnvironment.machineId) !== 'string') {
             throw new Error('Machine ID should be a string');
         }
-        const hash = this.crypto.createHash(`${this.appEnvironment.machineId}+${salt}`, 'hex', 'number');
+        const hash = this.crypto.createHash(`${this.appEnvironment.machineId}+${salt}`, 'number');
         return hash % 100 >= min && hash % 100 < max;
     }
 

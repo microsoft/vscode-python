@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { HexBase64Latin1Encoding } from 'crypto';
 import { Socket } from 'net';
 import { Request as RequestResult } from 'request';
 import { ConfigurationTarget, DiagnosticSeverity, Disposable, DocumentSymbolProvider, Event, Extension, ExtensionContext, OutputChannel, Uri, WorkspaceEdit } from 'vscode';
@@ -75,7 +74,8 @@ export enum ProductType {
     Formatter = 'Formatter',
     TestFramework = 'TestFramework',
     RefactoringLibrary = 'RefactoringLibrary',
-    WorkspaceSymbols = 'WorkspaceSymbols'
+    WorkspaceSymbols = 'WorkspaceSymbols',
+    DataScience = 'DataScience'
 }
 
 export enum Product {
@@ -95,7 +95,8 @@ export enum Product {
     rope = 14,
     isort = 15,
     black = 16,
-    bandit = 17
+    bandit = 17,
+    jupyter = 18
 }
 
 export enum ModuleNamePurpose {
@@ -322,6 +323,9 @@ export interface IDataScienceSettings {
     enablePlotViewer?: boolean;
     codeLenses?: string;
     ptvsdDistPath?: string;
+    stopOnFirstLineWhileDebugging?: boolean;
+    textOutputLineLimit?: number;
+    magicCommandsAsComments?: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');
@@ -483,10 +487,9 @@ export interface ICryptoUtils {
      * Creates hash using the data and encoding specified
      * @returns hash as number, or string
      * @param data The string to hash
-     * @param encoding Data encoding to use
      * @param hashFormat Return format of the hash, number or string
      */
-    createHash<E extends keyof IHashFormat>(data: string, encoding: HexBase64Latin1Encoding, hashFormat: E): IHashFormat[E];
+    createHash<E extends keyof IHashFormat>(data: string, hashFormat: E): IHashFormat[E];
 }
 
 export const IAsyncDisposableRegistry = Symbol('IAsyncDisposableRegistry');

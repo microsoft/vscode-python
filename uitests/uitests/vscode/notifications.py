@@ -94,7 +94,7 @@ def _get_messages_containing_text(context, message):
         ]
 
     # Get a list of all notifications with the above message
-    # If the message isn't visisble yet, then no need to retry, we'll do that in dismiss.
+    # If the message isn't visible yet, then no need to retry, we'll do that in dismiss.
     elements = core.wait_for_elements(context.driver, selector, find, retry_count=2)
     if any(elements):
         return elements

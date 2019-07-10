@@ -19,8 +19,10 @@ import { captureTelemetry } from '../../telemetry';
 import { CommandSource } from '../../testing/common/constants';
 import { generateCellRanges, generateCellsFromDocument } from '../cellFactory';
 import { Commands, Telemetry } from '../constants';
+import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import {
     IDataScienceCommandListener,
+    IDataScienceErrorHandler,
     IInteractiveWindowProvider,
     IJupyterExecution,
     INotebookExporter,
@@ -41,9 +43,10 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(ILogger) private logger: ILogger,
         @inject(IConfigurationService) private configuration: IConfigurationService,
-        @inject(IStatusProvider) private statusProvider : IStatusProvider,
-        @inject(INotebookImporter) private jupyterImporter : INotebookImporter
-        ) {
+        @inject(IStatusProvider) private statusProvider: IStatusProvider,
+        @inject(INotebookImporter) private jupyterImporter: INotebookImporter,
+        @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler
+    ) {
         // Listen to document open commands. We want to ask the user if they want to import.
         const disposable = this.documentManager.onDidOpenTextDocument(this.onOpenedDocument);
         this.disposableRegistry.push(disposable);
@@ -102,7 +105,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
     }
 
     // tslint:disable:no-any
-    private async listenForErrors(promise: () => Promise<any>) : Promise<any> {
+    private async listenForErrors(promise: () => Promise<any>): Promise<any> {
         let result: any;
         try {
             result = await promise();
@@ -123,7 +126,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         return result;
     }
 
-    private showInformationMessage(message: string, question?: string) : Thenable<string | undefined> {
+    private showInformationMessage(message: string, question?: string): Thenable<string | undefined> {
         if (question) {
             return this.applicationShell.showInformationMessage(message, question);
         } else {
@@ -222,25 +225,26 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                 }
             }
         } else {
-            this.applicationShell.showErrorMessage(localize.DataScience.jupyterNotSupported());
+            this.dataScienceErrorHandler.handleError(
+                new JupyterInstallError(localize.DataScience.jupyterNotSupported(), localize.DataScience.pythonInteractiveHelpLink()));
         }
     }
 
-    private async exportCellsWithOutput(ranges: {range: Range; title: string}[], document: TextDocument, file: string, cancelToken: CancellationToken) : Promise<void> {
+    private async exportCellsWithOutput(ranges: { range: Range; title: string }[], document: TextDocument, file: string, cancelToken: CancellationToken): Promise<void> {
         let server: INotebookServer | undefined;
         try {
             const settings = this.configuration.getSettings();
-            const useDefaultConfig : boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
+            const useDefaultConfig: boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
 
             // Try starting a server. Purpose should be unique so we
             // create a brand new one.
-            server = await this.jupyterExecution.connectToNotebookServer({ useDefaultConfig, purpose: uuid()}, cancelToken);
+            server = await this.jupyterExecution.connectToNotebookServer({ useDefaultConfig, purpose: uuid() }, cancelToken);
 
             // If that works, then execute all of the cells.
             const cells = Array.prototype.concat(... await Promise.all(ranges.map(r => {
-                    const code = document.getText(r.range);
-                    return server ? server.execute(code, document.fileName, r.range.start.line, uuid(), cancelToken) : [];
-                })));
+                const code = document.getText(r.range);
+                return server ? server.execute(code, document.fileName, r.range.start.line, uuid(), cancelToken) : [];
+            })));
 
             // Then save them to the file
             let directoryChange;
@@ -258,7 +262,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         }
     }
 
-    private async showExportDialog() : Promise<string | undefined> {
+    private async showExportDialog(): Promise<string | undefined> {
         const filtersKey = localize.DataScience.exportDialogFilter();
         const filtersObject: { [name: string]: string[] } = {};
         filtersObject[filtersKey] = ['ipynb'];
@@ -347,7 +351,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
 
     private onOpenedDocument = async (document: TextDocument) => {
         // Preview and import the document if necessary.
-        const results  = await Promise.all([this.previewNotebook(document.fileName), this.askForImportDocument(document)]);
+        const results = await Promise.all([this.previewNotebook(document.fileName), this.askForImportDocument(document)]);
 
         // When done, make sure the current document is still the active editor if we did
         // not do an import. Otherwise subsequent opens will cover up the interactive pane.
@@ -356,7 +360,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         }
     }
 
-    private async previewNotebook(fileName: string) : Promise<boolean> {
+    private async previewNotebook(fileName: string): Promise<boolean> {
         if (fileName && fileName.endsWith('.ipynb') && this.autoPreviewNotebooks()) {
             // Get history before putting up status so that we show a busy message when we
             // start the preview.
@@ -373,7 +377,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         return false;
     }
 
-    private async askForImportDocument(document: TextDocument) : Promise<boolean> {
+    private async askForImportDocument(document: TextDocument): Promise<boolean> {
         if (document.fileName.endsWith('.ipynb') && this.canImportFromOpenedFile()) {
             const yes = localize.DataScience.notebookCheckForImportYes();
             const no = localize.DataScience.notebookCheckForImportNo();
@@ -399,18 +403,18 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
     }
 
     @captureTelemetry(Telemetry.ShowHistoryPane, undefined, false)
-    private async showInteractiveWindow() : Promise<void>{
+    private async showInteractiveWindow(): Promise<void> {
         const active = await this.interactiveWindowProvider.getOrCreateActive();
         return active.show();
     }
 
-    private waitForStatus<T>(promise: () => Promise<T>, format: string, file?: string, canceled?: () => void, skipHistory?: boolean) : Promise<T> {
+    private waitForStatus<T>(promise: () => Promise<T>, format: string, file?: string, canceled?: () => void, skipHistory?: boolean): Promise<T> {
         const message = file ? format.format(file) : format;
         return this.statusProvider.waitWithStatus(promise, message, undefined, canceled, skipHistory);
     }
 
     @captureTelemetry(Telemetry.ImportNotebook, { scope: 'command' }, false)
-    private async importNotebook() : Promise<void> {
+    private async importNotebook(): Promise<void> {
         const filtersKey = localize.DataScience.importDialogFilter();
         const filtersObject: { [name: string]: string[] } = {};
         filtersObject[filtersKey] = ['ipynb'];
@@ -434,7 +438,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
     }
 
     @captureTelemetry(Telemetry.ImportNotebook, { scope: 'file' }, false)
-    private async importNotebookOnFile(file: string, preview: boolean) : Promise<void> {
+    private async importNotebookOnFile(file: string, preview: boolean): Promise<void> {
         if (file && file.length > 0) {
             // Preview a file whenever we import if not already previewed
             if (preview) {
@@ -442,14 +446,14 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
             }
 
             await this.waitForStatus(async () => {
-                const contents =  await this.jupyterImporter.importFromFile(file);
+                const contents = await this.jupyterImporter.importFromFile(file);
                 await this.viewDocument(contents);
             }, localize.DataScience.importingFormat(), file);
         }
     }
 
-    private viewDocument = async (contents: string) : Promise<void> => {
-        const doc = await this.documentManager.openTextDocument({language: 'python', content: contents});
+    private viewDocument = async (contents: string): Promise<void> => {
+        const doc = await this.documentManager.openTextDocument({ language: 'python', content: contents });
         const editor = await this.documentManager.showTextDocument(doc, ViewColumn.One);
 
         // Edit the document so that it is dirty (add a space at the end)

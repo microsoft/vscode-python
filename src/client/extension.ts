@@ -25,7 +25,6 @@ import {
     Disposable,
     ExtensionContext,
     extensions,
-    IndentAction,
     languages,
     Memento,
     OutputChannel,
@@ -41,7 +40,7 @@ import { registerTypes as appRegisterTypes } from './application/serviceRegistry
 import { IApplicationDiagnostics } from './application/types';
 import { DebugService } from './common/application/debugService';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from './common/application/types';
-import { Commands, isTestExecution, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from './common/constants';
+import { Commands, isTestExecution, PYTHON, STANDARD_OUTPUT_CHANNEL } from './common/constants';
 import { registerTypes as registerDotNetTypes } from './common/dotnet/serviceRegistry';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { traceError } from './common/logger';
@@ -86,6 +85,7 @@ import { registerTypes as interpretersRegisterTypes } from './interpreter/servic
 import { ServiceContainer } from './ioc/container';
 import { ServiceManager } from './ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from './ioc/types';
+import { setLanguageConfiguration } from './language/languageConfiguration';
 import { LinterCommands } from './linters/linterCommands';
 import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
 import { ILintingEngine } from './linters/types';
@@ -173,30 +173,7 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     const linterProvider = new LinterProvider(context, serviceManager);
     context.subscriptions.push(linterProvider);
 
-    // Enable indentAction
-    // tslint:disable-next-line:no-non-null-assertion
-    languages.setLanguageConfiguration(PYTHON_LANGUAGE, {
-        onEnterRules: [
-            {
-                beforeText: /^\s*(?:def|class|for|if|elif|else|while|try|with|finally|except|async)\b.*:\s*/,
-                action: { indentAction: IndentAction.Indent }
-            },
-            {
-                beforeText: /^(?!\s+\\)[^#\n]+\\\s*/,
-                action: { indentAction: IndentAction.Indent }
-            },
-            {
-                beforeText: /^\s*#.*/,
-                afterText: /.+$/,
-                action: { indentAction: IndentAction.None, appendText: '# ' }
-            },
-            {
-                beforeText: /^\s+(continue|break|return)\b.*/,
-                afterText: /\s+$/,
-                action: { indentAction: IndentAction.Outdent }
-            }
-        ]
-    });
+    setLanguageConfiguration();
 
     if (pythonSettings && pythonSettings.formatting && pythonSettings.formatting.provider !== 'internalConsole') {
         const formatProvider = new PythonFormattingEditProvider(context, serviceContainer);

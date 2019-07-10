@@ -3,14 +3,9 @@
 
 'use strict';
 
-import { CancellationToken, DebugConfiguration, Uri, WorkspaceFolder } from 'vscode';
+import { CancellationToken, DebugConfiguration, WorkspaceFolder } from 'vscode';
 import { DebugConfigurationType, IDebugConfigurationProvider } from '../types';
 
-export const IConfigurationProviderUtils = Symbol('IConfigurationProviderUtils');
-
-export interface IConfigurationProviderUtils {
-    getPyramidStartupScriptFilePath(resource?: Uri): Promise<string | undefined>;
-}
 
 export const IDebugConfigurationResolver = Symbol('IDebugConfigurationResolver');
 export interface IDebugConfigurationResolver<T extends DebugConfiguration> {

@@ -167,7 +167,7 @@ class RopeRefactoring(object):
 
     def _extractVariable(self, filePath, start, end, newName):
         """
-        Extracts a variale
+        Extracts a variable
         """
         project = rope.base.project.Project(WORKSPACE_ROOT, ropefolder=ROPE_PROJECT_FOLDER, save_history=False)
         resourceToRefactor = libutils.path_to_resource(project, filePath)

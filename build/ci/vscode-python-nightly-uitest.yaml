@@ -34,7 +34,7 @@ jobs:
       tags: "--tags=@testing"
       # We have python code that is involved in running/discovering tests.
       # Hence test against all versions, until we have CI running for the Python code.
-      # I.e. when all test dicovery/running is done purely in Python.
+      # I.e. when all test discovery/running is done purely in Python.
     - test: "Terminal"
       tags: "--tags=@terminal --tags=~@terminal.pipenv"
       # No need to run tests against all versions.

@@ -25,7 +25,7 @@
 # 'testMultiWorkspace'
 # 'testDebugger'
 # 'testFunctional'
-# 'perfomanceTests'
+# 'testPerformance'
 # 'venvTests'
 
 steps:
@@ -385,7 +385,7 @@ steps:
   # Run the virtual environment based tests.
   # This set of tests is simply using the `testSingleWorkspace` set of tests, but
   # with the environment variable `TEST_FILES_SUFFIX` set to `testvirtualenvs`, which
-  # got set in the Prepare Venv-Test Environmant task above.
+  # got set in the Prepare Venv-Test Environment task above.
   # **Note**: Azure DevOps tasks set environment variables via a specially formatted
   # string sent to stdout.
   #

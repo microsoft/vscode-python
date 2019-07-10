@@ -12,7 +12,6 @@ import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService } from '../../../../common/types';
 import { DebuggerTypeName } from '../../../constants';
 import { DebugOptions, LaunchRequestArguments } from '../../../types';
-import { IConfigurationProviderUtils } from '../types';
 import { BaseConfigurationResolver } from './base';
 
 @injectable()
@@ -20,7 +19,6 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
     constructor(
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IDocumentManager) documentManager: IDocumentManager,
-        @inject(IConfigurationProviderUtils) private readonly configurationProviderUtils: IConfigurationProviderUtils,
         @inject(IDiagnosticsService) @named(InvalidPythonPathInDebuggerServiceId) private readonly invalidPythonPathInDebuggerService: IInvalidPythonPathInDebuggerService,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
         @inject(IConfigurationService) configurationService: IConfigurationService
@@ -118,9 +116,6 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             && debugOptions.indexOf(DebugOptions.Jinja) === -1
             && debugConfiguration.jinja !== false) {
             this.debugOption(debugOptions, DebugOptions.Jinja);
-        }
-        if (debugConfiguration.pyramid) {
-            debugConfiguration.program = (await this.configurationProviderUtils.getPyramidStartupScriptFilePath(workspaceFolder))!;
         }
         this.sendTelemetry(
             debugConfiguration.request as 'launch' | 'test',

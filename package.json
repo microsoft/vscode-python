@@ -1361,6 +1361,18 @@
                     "description": "Path to ptsvd experimental bits for debugging cells.",
                     "scope": "resource"
                 },
+                "python.dataScience.stopOnFirstLineWhileDebugging": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "When debugging a cell, stop on the first line if no other breakpoints in the current cell.",
+                    "scope": "resource"
+                },
+                "python.dataScience.textOutputLineLimit": {
+                    "type": "number",
+                    "default": 10000,
+                    "description": "Limit the amount of lines in Python Interactive cell text output to this value. 0 to allow any amount of lines.",
+                    "scope": "resource"
+                },
                 "python.disableInstallationCheck": {
                     "type": "boolean",
                     "default": false,
@@ -2096,6 +2108,12 @@
                     "type": "string",
                     "default": "${workspaceFolder}/.vscode/tags",
                     "description": "Fully qualified path to tag file (exuberant ctag file), used to provide workspace symbols.",
+                    "scope": "resource"
+                },
+                "python.dataScience.magicCommandsAsComments": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Uncomment shell assignments (#!), line magic (#!%) and cell magic (#!%%) when parsing code cells.",
                     "scope": "resource"
                 }
             }

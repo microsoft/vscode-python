@@ -7,7 +7,6 @@ import { IExtensionActivationService } from '../../activation/types';
 import { IServiceManager } from '../../ioc/types';
 import { AttachRequestArguments, LaunchRequestArguments } from '../types';
 import { DebuggerBanner } from './banner';
-import { ConfigurationProviderUtils } from './configuration/configurationProviderUtils';
 import { PythonDebugConfigurationService } from './configuration/debugConfigurationService';
 import { LaunchJsonCompletionProvider } from './configuration/launch.json/completionProvider';
 import { LaunchJsonUpdaterService } from './configuration/launch.json/updaterService';
@@ -20,7 +19,7 @@ import { PyramidLaunchDebugConfigurationProvider } from './configuration/provide
 import { RemoteAttachDebugConfigurationProvider } from './configuration/providers/remoteAttach';
 import { AttachConfigurationResolver } from './configuration/resolvers/attach';
 import { LaunchConfigurationResolver } from './configuration/resolvers/launch';
-import { IConfigurationProviderUtils, IDebugConfigurationProviderFactory, IDebugConfigurationResolver } from './configuration/types';
+import { IDebugConfigurationProviderFactory, IDebugConfigurationResolver } from './configuration/types';
 import { ChildProcessAttachEventHandler } from './hooks/childProcessAttachHandler';
 import { ChildProcessAttachService } from './hooks/childProcessAttachService';
 import { IChildProcessAttachService, IDebugSessionEventHandlers } from './hooks/types';
@@ -30,7 +29,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, LaunchJsonCompletionProvider);
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, LaunchJsonUpdaterService);
     serviceManager.addSingleton<IDebugConfigurationService>(IDebugConfigurationService, PythonDebugConfigurationService);
-    serviceManager.addSingleton<IConfigurationProviderUtils>(IConfigurationProviderUtils, ConfigurationProviderUtils);
     serviceManager.addSingleton<IDebuggerBanner>(IDebuggerBanner, DebuggerBanner);
     serviceManager.addSingleton<IChildProcessAttachService>(IChildProcessAttachService, ChildProcessAttachService);
     serviceManager.addSingleton<IDebugSessionEventHandlers>(IDebugSessionEventHandlers, ChildProcessAttachEventHandler);
