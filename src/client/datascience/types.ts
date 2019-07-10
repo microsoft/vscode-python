@@ -42,12 +42,6 @@ export enum InterruptResult {
     Restarted = 2
 }
 
-// Information needed to attach our debugger instance
-export interface IDebuggerConnectInfo {
-    hostName: string;
-    port: number;
-}
-
 // Information used to launch a notebook server
 export interface INotebookServerLaunchInfo {
     connectionInfo: IConnection;

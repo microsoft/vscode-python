@@ -8,10 +8,11 @@ import * as uuid from 'uuid/v4';
 import { DebugConfiguration } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
-import { ICommandManager, IDebugService } from '../../common/application/types';
+import { ICommandManager, IDebugService, IWorkspaceService } from '../../common/application/types';
 import { traceInfo, traceWarning } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { IConfigurationService } from '../../common/types';
+import { createDeferred } from '../../common/utils/async';
 import { concatMultilineString } from '../common';
 import { Identifiers } from '../constants';
 import {
@@ -19,7 +20,6 @@ import {
     ICell,
     ICellHashListener,
     IConnection,
-    IDebuggerConnectInfo,
     IFileHashes,
     IJupyterDebugger,
     INotebookServer,
@@ -32,12 +32,13 @@ import { ILiveShareParticipant } from './liveshare/types';
 
 @injectable()
 export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
-    private connectInfoMap: Map<string, IDebuggerConnectInfo> = new Map<string, IDebuggerConnectInfo>();
+    private configs: Map<string, DebugConfiguration> = new Map<string, DebugConfiguration>();
     constructor(
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDebugService) private debugService: IDebugService,
-        @inject(IPlatformService) private platform: IPlatformService
+        @inject(IPlatformService) private platform: IPlatformService,
+        @inject(IWorkspaceService) private workspace: IWorkspaceService
     ) {
     }
 
@@ -45,20 +46,9 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         traceInfo('start debugging');
 
         // Try to connect to this server
-        const connectInfo = await this.connect(server);
+        const config = await this.connect(server);
 
-        if (connectInfo) {
-            // First connect the VSCode UI
-            const config: DebugConfiguration = {
-                name: 'IPython',
-                request: 'attach',
-                type: 'python',
-                port: connectInfo.port,
-                host: connectInfo.hostName,
-                justMyCode: true
-                // logToFile: true <-- This will log a debug log file to the extension root folder.
-            };
-
+        if (config) {
             await this.debugService.startDebugging(undefined, config);
 
             // Force the debugger to update its list of breakpoints. This is used
@@ -79,8 +69,8 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     }
 
     public async stopDebugging(server: INotebookServer): Promise<void> {
-        const connectInfo = this.connectInfoMap.get(server.id);
-        if (connectInfo) {
+        const config = this.configs.get(server.id);
+        if (config) {
             traceInfo('stop debugging');
 
             // Stop our debugging UI session, no await as we just want it stopped
@@ -94,7 +84,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     }
 
     public onRestart(server: INotebookServer): void {
-        this.connectInfoMap.delete(server.id);
+        this.configs.delete(server.id);
     }
 
     public async hashesUpdated(hashes: IFileHashes[]): Promise<void> {
@@ -106,7 +96,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         }
     }
 
-    private async connect(server: INotebookServer): Promise<IDebuggerConnectInfo | undefined> {
+    private async connect(server: INotebookServer): Promise<DebugConfiguration | undefined> {
         // First check if this is a live share server. Skip debugging attach on the guest
         // tslint:disable-next-line: no-any
         const liveShareParticipant = (server as any) as ILiveShareParticipant;
@@ -115,8 +105,8 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
             return;
         }
 
-        // If we already have connection info, we're already attached, don't do it again.
-        let result = this.connectInfoMap.get(server.id);
+        // If we already have configuration, we're already attached, don't do it again.
+        let result = this.configs.get(server.id);
         if (result) {
             return result;
         }
@@ -152,7 +142,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         }
 
         if (result) {
-            this.connectInfoMap.set(server.id, result);
+            this.configs.set(server.id, result);
         }
 
         return result;
@@ -178,7 +168,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     }
 
     // Pull our connection info out from the cells returned by enable_attach
-    private parseConnectInfo(cells: ICell[]): IDebuggerConnectInfo | undefined {
+    private parseConnectInfo(cells: ICell[], local: boolean): DebugConfiguration | undefined {
         if (cells.length > 0) {
             let enableAttachString = this.extractOutput(cells[0]);
             if (enableAttachString) {
@@ -190,7 +180,27 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
                 const debugInfoMatch = debugInfoRegEx.exec(enableAttachString);
                 if (debugInfoMatch) {
-                    return { hostName: debugInfoMatch[1], port: parseInt(debugInfoMatch[2], 10) };
+                    const localConfig: DebugConfiguration = {
+                        name: 'IPython',
+                        request: 'attach',
+                        type: 'python',
+                        port: parseInt(debugInfoMatch[2], 10),
+                        host: debugInfoMatch[1],
+                        justMyCode: true
+                    };
+                    if (local) {
+                        return localConfig;
+                    } else {
+                        return {
+                            ...localConfig,
+                            pathMappings: [
+                                {
+                                    localRoot: this.workspace.rootPath,
+                                    remoteRoot: '.'
+                                }
+                            ]
+                        };
+                    }
                 }
             }
         }
@@ -215,30 +225,30 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         return undefined;
     }
 
-    private async connectToLocal(server: INotebookServer): Promise<IDebuggerConnectInfo | undefined> {
+    private async connectToLocal(server: INotebookServer): Promise<DebugConfiguration | undefined> {
         // tslint:disable-next-line: no-multiline-string
         const enableDebuggerResults = await this.executeSilently(server, `ptvsd.enable_attach(('localhost', 0))`);
 
         // Save our connection info to this server
-        return this.parseConnectInfo(enableDebuggerResults);
+        return this.parseConnectInfo(enableDebuggerResults, true);
     }
 
-    private async connectToRemote(server: INotebookServer, connectionInfo: IConnection): Promise<IDebuggerConnectInfo | undefined> {
+    private async connectToRemote(server: INotebookServer, connectionInfo: IConnection): Promise<DebugConfiguration | undefined> {
         let portNumber = this.configService.getSettings().datascience.remoteDebuggerPort;
         if (!portNumber) {
             portNumber = -1;
         }
 
         // Loop through a bunch of ports until we find one we can use. Note how we
-        // are connecting to 'localhost' here. That's the location as far as ptvsd is concerned.
+        // are connecting to '0.0.0.0' here. That's the location as far as ptvsd is concerned.
         const attachCode = portNumber !== -1 ?
-            `ptvsd.enable_attach(('localhost', ${portNumber}))` :
+            `ptvsd.enable_attach(('0.0.0.0', ${portNumber}))` :
             // tslint:disable-next-line: no-multiline-string
             `port = 8889
 attached = False
 while not attached and port <= 9000:
     try:
-        ptvsd.enable_attach(('localhost', port))
+        ptvsd.enable_attach(('0.0.0.0', port))
         print("('${connectionInfo.hostName}', " + str(port) + ")")
         attached = True
     except Exception as e:
@@ -247,7 +257,7 @@ while not attached and port <= 9000:
         const enableDebuggerResults = await this.executeSilently(server, attachCode);
 
         // Save our connection info to this server
-        const result = this.parseConnectInfo(enableDebuggerResults);
+        const result = this.parseConnectInfo(enableDebuggerResults, false);
 
         // If that didn't work, throw an error so somebody can open the port
         if (!result) {
@@ -257,9 +267,16 @@ while not attached and port <= 9000:
         // Double check, open a socket? This won't work if we're remote ourselves. Actually the debug adapter runs
         // from the remote machine.
         try {
-            const socket = net.createConnection(result.port, result.hostName);
+            const deferred = createDeferred();
+            const socket = net.createConnection(result.port, result.hostName, () => {
+                deferred.resolve();
+            });
+            socket.on('error', (err) => deferred.reject(err));
+            socket.setTimeout(2000, () => deferred.reject(new Error('Timeout trying to ping remote debugger')));
+            await deferred.promise;
             socket.end();
-        } catch {
+        } catch (exc) {
+            traceWarning(`Cannot connect to remote debugger at ${result.hostName}:${result.port} => ${exc}`);
             // We can't connect. Must be a firewall issue
             throw new JupyterDebuggerPortBlockedError(portNumber);
         }
