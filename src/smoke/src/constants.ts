@@ -13,7 +13,7 @@ export const vscodeTestPath = path.join(extensionRootPath, '.vscode test');
 
 export const extensionActivationTimeout = 30_000;
 export const maxStepTimeout = 120_000;
-export const maxHookTimeout = 120_000;
+export const maxHookTimeout = 240_000;
 
 // Tooltip of the Statusbar created the Bootstrap extension to indicate it has activated.
 export const pyBootstrapTooltip = 'Py';
