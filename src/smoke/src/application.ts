@@ -30,7 +30,7 @@ import { QuickInput } from './areas/quickinput';
 import { Settings } from './areas/settings';
 import { StatusBar } from './areas/statusbar';
 import { TestExplorer } from './areas/testExplorer';
-import { extensionRootPath } from './constants';
+// import { extensionRootPath } from './constants';
 import { noop } from './helpers';
 import { Logger } from './setup/logger';
 import { IApplication, IApplicationOptions, IContext, IWorkbench, TestOptions } from './types';
