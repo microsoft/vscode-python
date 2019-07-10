@@ -51,40 +51,6 @@ steps:
       displayName: "Use Node $(NodeVersion)"
       inputs:
           versionSpec: $(NodeVersion)
-
-    - task: UsePythonVersion@0
-      displayName: "Setup Python $(PythonVersion) for extension"
-      inputs:
-          versionSpec: $(PythonVersion)
-
-    # On Hosted macOS, the agent user doesn't have ownership of Miniconda's installation directory/
-    # We need to take ownership if we want to update conda or install packages globally
-    - bash: sudo chown -R $USER $CONDA
-      displayName: Take ownership of conda installation
-      condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
-
-    - script: |
-          export CI_PYTHON_PATH=`which python`
-          echo '##vso[task.setvariable variable=CI_PYTHON_PATH]'$CI_PYTHON_PATH
-      displayName: "Setup CI_PYTHON_PATH for extension"
-      condition: and(succeeded(), not(eq(variables['agent.os'], 'Windows_NT')))
-
-    - powershell: |
-          $CI_PYTHON_PATH = (get-command  python).path
-          Write-Host "##vso[task.setvariable variable=CI_PYTHON_PATH]$CI_PYTHON_PATH"
-          Write-Host $CI_PYTHON_PATH
-      displayName: "Setup CI_PYTHON_PATH for extension"
-      condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
-
-    # Conda
-    - bash: echo "##vso[task.prependpath]$CONDA/bin"
-      displayName: Add conda to PATH
-      condition: and(succeeded(), not(eq(variables['agent.os'], 'Windows_NT')))
-
-    - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
-      displayName: Add conda to PATH
-      condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
-
     # Some tests need to have both 2.7 & 3.7 available.
     - task: UsePythonVersion@0
       displayName: "Use Python 2.7"
@@ -154,12 +120,47 @@ steps:
       displayName: "Build Bootstrap Extension"
       condition: succeeded()
 
+    # Setup python environment in current path for extension.
+    - task: UsePythonVersion@0
+      displayName: "Setup Python $(PythonVersion) for extension"
+      inputs:
+          versionSpec: $(PythonVersion)
+
+    # On Hosted macOS, the agent user doesn't have ownership of Miniconda's installation directory/
+    # We need to take ownership if we want to update conda or install packages globally
+    - bash: sudo chown -R $USER $CONDA
+      displayName: Take ownership of conda installation
+      condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
+
+    - script: |
+          export CI_PYTHON_PATH=`which python`
+          echo '##vso[task.setvariable variable=CI_PYTHON_PATH]'$CI_PYTHON_PATH
+      displayName: "Setup CI_PYTHON_PATH for extension"
+      condition: and(succeeded(), not(eq(variables['agent.os'], 'Windows_NT')))
+
+    - powershell: |
+          $CI_PYTHON_PATH = (get-command  python).path
+          Write-Host "##vso[task.setvariable variable=CI_PYTHON_PATH]$CI_PYTHON_PATH"
+          Write-Host $CI_PYTHON_PATH
+      displayName: "Setup CI_PYTHON_PATH for extension"
+      condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
+
+    # Conda
+    - bash: echo "##vso[task.prependpath]$CONDA/bin"
+      displayName: Add conda to PATH
+      condition: and(succeeded(), not(eq(variables['agent.os'], 'Windows_NT')))
+
+    - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
+      displayName: Add conda to PATH
+      condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
+
     # Skip @skip tagged tests
     # Always dump to a text file (easier than scrolling and downloading the logs seprately).
     # This way all logs are part of the artificat for each test.
     - bash: |
           mkdir -p './.vscode test/reports'
-          npm run smokeTest -- --channel=$(VSCodeChannel) --tags='$(Tags) and not @skip' --pythonPath=$(CI_PYTHON_PATH) | tee '.vscode test/reports/log.log'
+          # npm run smokeTest -- --channel=$(VSCodeChannel) --tags='$(Tags) and not @skip' --pythonPath=$(CI_PYTHON_PATH) | tee '.vscode test/reports/log.log'
+          npm run smokeTest -- --channel=$(VSCodeChannel) --tags='$(Tags) and not @skip' | tee '.vscode test/reports/log.log'
       env:
           DISPLAY: :10
           AgentJobName: $(Agent.JobName)
