@@ -189,6 +189,7 @@ export class JupyterSession implements IJupyterSession {
             try {
                 session = await this.createSession(serverSettings, contentsManager, cancelToken);
                 await this.waitForIdleOnSession(session, 10000);
+                return session;
             } catch (exc) {
                 if (session) {
                     await this.shutdownSession(session, undefined);
@@ -200,7 +201,7 @@ export class JupyterSession implements IJupyterSession {
                 }
             }
         }
-        return session;
+        return undefined;
     }
 
     private async createSession(serverSettings: ServerConnection.ISettings, contentsManager: ContentsManager, cancelToken?: CancellationToken): Promise<Session.ISession> {
