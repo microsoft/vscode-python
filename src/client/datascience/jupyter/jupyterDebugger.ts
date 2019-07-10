@@ -229,18 +229,20 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
             portNumber = -1;
         }
 
-        // Loop through a bunch of ports until we find one we can use.
+        // Loop through a bunch of ports until we find one we can use. Note how we
+        // are connecting to 'localhost' here. That's the location as far as ptvsd is concerned.
         const attachCode = portNumber !== -1 ?
-            `ptvsd.enable_attach(('${connectionInfo.hostName}', ${portNumber}))` :
+            `ptvsd.enable_attach(('localhost', ${portNumber}))` :
             // tslint:disable-next-line: no-multiline-string
             `port = 8889
 attached = False
 while not attached and port <= 9000:
     try:
-        ptvsd.enable_attach(('${connectionInfo.hostName}', port))
+        ptvsd.enable_attach(('localhost', port))
         print("('${connectionInfo.hostName}', " + str(port) + ")")
         attached = True
     except Exception as e:
+        print("Exception: " + str(e))
         port +=1`;
         const enableDebuggerResults = await this.executeSilently(server, attachCode);
 
