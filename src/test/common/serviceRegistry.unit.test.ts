@@ -46,6 +46,7 @@ import { TerminalHelper } from '../../client/common/terminal/helper';
 import { SettingsShellDetector } from '../../client/common/terminal/shellDetectors/settingsShellDetector';
 import { TerminalNameShellDetector } from '../../client/common/terminal/shellDetectors/terminalNameShellDetector';
 import { UserEnvironmentShellDetector } from '../../client/common/terminal/shellDetectors/userEnvironmentShellDetector';
+import { VSCEnvironmentShellDetector } from '../../client/common/terminal/shellDetectors/vscEnvironmentShellDetector';
 import { IShellDetector, ITerminalActivationCommandProvider, ITerminalActivationHandler, ITerminalActivator, ITerminalHelper, ITerminalServiceFactory, TerminalActivationProviders } from '../../client/common/terminal/types';
 import { IAsyncDisposableRegistry, IBrowserService, IConfigurationService, ICryptoUtils, ICurrentProcess, IEditorUtils, IExperimentsManager, IExtensions, IFeatureDeprecationManager, IHttpClient, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IRandom } from '../../client/common/types';
 import { IMultiStepInputFactory, MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
