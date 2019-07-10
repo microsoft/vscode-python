@@ -334,10 +334,11 @@ export class JupyterSession implements IJupyterSession {
                                 }
                             }
                         }
+                        await waitForPromise(session.shutdown(), 20000);
+                    } else {
+                        // Shutdown may fail if the process has been killed
+                        await waitForPromise(session.shutdown(), 1000);
                     }
-
-                    // Shutdown may fail if the process has been killed
-                    await waitForPromise(session.shutdown(), 1000);
                 } catch {
                     noop();
                 }
