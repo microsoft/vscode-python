@@ -5,7 +5,7 @@
 
 import * as path from 'path';
 import * as cp from 'child_process';
-import * as os from 'os';
+// import * as os from 'os';
 import * as fs from 'fs';
 // import { tmpName } from 'tmp';
 import { IDriver, connect as connectDriver, IDisposable, IElement, Thenable } from './driver';
