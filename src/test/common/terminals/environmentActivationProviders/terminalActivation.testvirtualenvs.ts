@@ -94,23 +94,25 @@ suite('Activation of Environments in Terminal', () => {
     ): Promise<string> {
         const terminal1 = vscode.window.createTerminal();
         await sleep(consoleInitWaitMs);
-        console.log(`Conda Path = ${condaExecutable}`);
+        console.log(`Conda Path = ${condaExecutable} before conda init`);
         terminal1.sendText(`${condaExecutable.fileToCommandArgument()} init > ${logFile}`, true);
         await sleep(consoleInitWaitMs);
         await sleep(consoleInitWaitMs);
         await sleep(consoleInitWaitMs);
         if (fs.pathExistsSync(logFile)) {
+            console.error('Contents of log file as follows');
             console.error(fs.readFileSync(logFile).toString());
             fs.unlinkSync(logFile);
         } else {
             console.error('File not created');
         }
-        console.log(`Conda Path for env listing = ${condaExecutable}`);
+        console.log(`Conda Path for env listing = ${condaExecutable} before conda env list`);
         terminal1.sendText(`${condaExecutable.fileToCommandArgument()} env list > ${logFile}`, true);
         await sleep(consoleInitWaitMs);
         await sleep(consoleInitWaitMs);
         await sleep(consoleInitWaitMs);
         if (fs.pathExistsSync(logFile)) {
+            console.error('Contents of log file as follows');
             console.error(fs.readFileSync(logFile).toString());
             fs.unlinkSync(logFile);
         } else {
