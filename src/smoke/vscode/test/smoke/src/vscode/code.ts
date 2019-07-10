@@ -5,9 +5,9 @@
 
 import * as path from 'path';
 import * as cp from 'child_process';
-// import * as os from 'os';
+import * as os from 'os';
 import * as fs from 'fs';
-// import { tmpName } from 'tmp';
+import { tmpName } from 'tmp';
 import { IDriver, connect as connectDriver, IDisposable, IElement, Thenable } from './driver';
 import { Logger } from '../logger';
 import { ncp } from 'ncp';
@@ -67,11 +67,12 @@ async function connect(child: cp.ChildProcess, outPath: string, port: number, lo
 
     while (true) {
         try {
-            // tslint:disable-next-line: no-any
-            const { client, driver } = await connectDriver(outPath, { host: 'localhost', port } as any);
+            // tslint:disable: no-any
+            // const { client, driver } = await connectDriver(outPath, { host: 'localhost', port } as any);
+            const { client, driver } = await connectDriver(outPath, port.toString() as any);
             return new Code(client, driver, logger, child);
         } catch (err) {
-            if (++errCount > 50) {
+            if (++errCount > 300) {
                 console.error('Failed to connect after 50 attempts');
                 child.kill();
                 throw err;
@@ -101,21 +102,22 @@ export interface SpawnOptions {
     tempPath?: string;
 }
 
-// async function createDriverHandle(dir?: string): Promise<string> {
-//     if ('win32' === os.platform()) {
-//         const name = [...Array(15)].map(() => Math.random().toString(36)[3]).join('');
-//         return `\\\\.\\pipe\\${name}`;
-//     } else {
-//         return await new Promise<string>((c, e) => tmpName((err, handlePath) => err ? e(err) : c(handlePath)));
-//     }
-// }
+async function createDriverHandle(dir?: string): Promise<string> {
+    if ('win32' === os.platform()) {
+        const name = [...Array(15)].map(() => Math.random().toString(36)[3]).join('');
+        return `\\\\.\\pipe\\${name}`;
+    } else {
+        return await new Promise<string>((c, e) => tmpName((err, handlePath) => err ? e(err) : c(handlePath)));
+    }
+}
 
 export async function spawn(options: SpawnOptions): Promise<Code> {
     const codePath = options.codePath;
     const electronPath = codePath ? getBuildElectronPath(codePath) : getDevElectronPath();
     const outPath = codePath ? getBuildOutPath(codePath) : getDevOutPath();
-    // const handle = await createDriverHandle(options.tempPath);
-    const port = await getFreePort({ host: 'localhost', port: 3000 });
+    const handle = await createDriverHandle(options.tempPath);
+    // const port = await getFreePort({ host: 'localhost', port: 3000 });
+    const port = handle as any;
     const args = [
         ...(options.workspacePath ? [options.workspacePath] : []),
         '--skip-getting-started',

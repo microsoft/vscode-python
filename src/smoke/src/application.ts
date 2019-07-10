@@ -257,17 +257,17 @@ export class Application implements IApplication {
         this._attachJsonHook(data);
     }
     private async startApplication(extraArgs: string[] = []): Promise<any> {
-        if (process.platform === 'win32') {
-            console.log('Updating driver.js on Windows');
-            // Listen on localhost no `::`, as that won't work on CI (no permissions to listen on all ips).
-            const quality = this.options.quality === Quality.Stable ? 'stable' : 'insider';
-            const driverPath = path.join(extensionRootPath, `.vscode test/${quality}/resources/app/out/vs/platform/driver/node/driver.js`);
-            console.log(`driver.js path ${driverPath}`);
-            const content = fs.readFileSync(driverPath).toString();
-            const regex = new RegExp('\\.listen\\((\\w),\\(\\)=>');
-            fs.writeFileSync(driverPath, content.replace(regex, '.listen({port:$1, host:\'localhost\'},()=>'));
-            console.log('Updated driver.js on Widows');
-        }
+        // if (process.platform === 'win32') {
+        //     console.log('Updating driver.js on Windows');
+        //     // Listen on localhost no `::`, as that won't work on CI (no permissions to listen on all ips).
+        //     const quality = this.options.quality === Quality.Stable ? 'stable' : 'insider';
+        //     const driverPath = path.join(extensionRootPath, `.vscode test/${quality}/resources/app/out/vs/platform/driver/node/driver.js`);
+        //     console.log(`driver.js path ${driverPath}`);
+        //     const content = fs.readFileSync(driverPath).toString();
+        //     const regex = new RegExp('\\.listen\\((\\w),\\(\\)=>');
+        //     fs.writeFileSync(driverPath, content.replace(regex, '.listen({port:$1, host:\'localhost\'},()=>'));
+        //     console.log('Updated driver.js on Widows');
+        // }
 
         this._code = await spawn({
             codePath: this.options.codePath,
