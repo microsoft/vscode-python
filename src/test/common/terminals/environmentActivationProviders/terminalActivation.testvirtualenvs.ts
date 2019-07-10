@@ -10,7 +10,7 @@ import * as vscode from 'vscode';
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { PlatformService } from '../../../../client/common/platform/platformService';
 import { PYTHON_VIRTUAL_ENVS_LOCATION } from '../../../ciConstants';
-import { PYTHON_PATH, restorePythonPathInWorkspaceRoot, setPythonPathInWorkspaceRoot, updateSetting, waitForCondition } from '../../../common';
+import { restorePythonPathInWorkspaceRoot, setPythonPathInWorkspaceRoot, updateSetting, waitForCondition } from '../../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
 import { sleep } from '../../../core';
 import { initialize, initializeTest } from '../../../initialize';
@@ -123,59 +123,59 @@ suite('Activation of Environments in Terminal', () => {
         return fs.readFile(logFile, 'utf-8');
     }
 
-    /**
-     * Open a terminal and issue a python `pythonFile` command, expecting it to
-     * create a file `logfile`, with timeout limits.
-     *
-     * @param pythonFile The python script to run.
-     * @param logFile The logfile that the python script will produce.
-     * @param consoleInitWaitMs How long to wait for the console to initialize.
-     * @param logFileCreationWaitMs How long to wait for the output file to be produced.
-     */
-    async function openTerminalAndAwaitCommandContent(
-        consoleInitWaitMs: number,
-        pythonFile: string,
-        logFile: string,
-        logFileCreationWaitMs: number
-    ): Promise<string> {
-        const terminal = vscode.window.createTerminal();
-        await sleep(consoleInitWaitMs);
-        terminal.sendText(`python ${pythonFile} ${logFile}`, true);
-        await waitForCondition(() => fs.pathExists(logFile), logFileCreationWaitMs, `${logFile} file not created.`);
+    // /**
+    //  * Open a terminal and issue a python `pythonFile` command, expecting it to
+    //  * create a file `logfile`, with timeout limits.
+    //  *
+    //  * @param pythonFile The python script to run.
+    //  * @param logFile The logfile that the python script will produce.
+    //  * @param consoleInitWaitMs How long to wait for the console to initialize.
+    //  * @param logFileCreationWaitMs How long to wait for the output file to be produced.
+    //  */
+    // async function openTerminalAndAwaitCommandContent(
+    //     consoleInitWaitMs: number,
+    //     pythonFile: string,
+    //     logFile: string,
+    //     logFileCreationWaitMs: number
+    // ): Promise<string> {
+    //     const terminal = vscode.window.createTerminal();
+    //     await sleep(consoleInitWaitMs);
+    //     terminal.sendText(`python ${pythonFile} ${logFile}`, true);
+    //     await waitForCondition(() => fs.pathExists(logFile), logFileCreationWaitMs, `${logFile} file not created.`);
 
-        return fs.readFile(logFile, 'utf-8');
-    }
+    //     return fs.readFile(logFile, 'utf-8');
+    // }
 
-    /**
-     * Turn on `terminal.activateEnvironment`, produce a shell, run a python script
-     * that outputs the path to the active python interpreter.
-     *
-     * Note: asserts that the envPath given matches the envPath returned by the script.
-     *
-     * @param envPath Python environment path to activate in the terminal (via vscode config)
-     */
-    async function testActivation(envPath: string) {
-        await updateSetting('terminal.activateEnvironment', true, vscode.workspace.workspaceFolders![0].uri, vscode.ConfigurationTarget.WorkspaceFolder);
-        await setPythonPathInWorkspaceRoot(envPath);
-        const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
-        expect(fileSystem.arePathsSame(content, envPath)).to.equal(true, 'Environment not activated');
-    }
+    // /**
+    //  * Turn on `terminal.activateEnvironment`, produce a shell, run a python script
+    //  * that outputs the path to the active python interpreter.
+    //  *
+    //  * Note: asserts that the envPath given matches the envPath returned by the script.
+    //  *
+    //  * @param envPath Python environment path to activate in the terminal (via vscode config)
+    //  */
+    // async function testActivation(envPath: string) {
+    //     await updateSetting('terminal.activateEnvironment', true, vscode.workspace.workspaceFolders![0].uri, vscode.ConfigurationTarget.WorkspaceFolder);
+    //     await setPythonPathInWorkspaceRoot(envPath);
+    //     const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
+    //     expect(fileSystem.arePathsSame(content, envPath)).to.equal(true, 'Environment not activated');
+    // }
 
-    test('Should not activate', async () => {
-        await updateSetting('terminal.activateEnvironment', false, vscode.workspace.workspaceFolders![0].uri, vscode.ConfigurationTarget.WorkspaceFolder);
-        const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
-        expect(fileSystem.arePathsSame(content, PYTHON_PATH)).to.equal(false, 'Environment not activated');
-    });
+    // test('Should not activate', async () => {
+    //     await updateSetting('terminal.activateEnvironment', false, vscode.workspace.workspaceFolders![0].uri, vscode.ConfigurationTarget.WorkspaceFolder);
+    //     const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
+    //     expect(fileSystem.arePathsSame(content, PYTHON_PATH)).to.equal(false, 'Environment not activated');
+    // });
 
-    test('Should activate with venv', async () => {
-        await testActivation(envPaths.venvPath);
-    });
-    test('Should activate with pipenv', async () => {
-        await testActivation(envPaths.pipenvPath);
-    });
-    test('Should activate with virtualenv', async () => {
-        await testActivation(envPaths.virtualEnvPath);
-    });
+    // test('Should activate with venv', async () => {
+    //     await testActivation(envPaths.venvPath);
+    // });
+    // test('Should activate with pipenv', async () => {
+    //     await testActivation(envPaths.pipenvPath);
+    // });
+    // test('Should activate with virtualenv', async () => {
+    //     await testActivation(envPaths.virtualEnvPath);
+    // });
     test('Should activate with conda', async () => {
         await terminalSettings.update('integrated.shell.windows', 'C:\\Windows\\System32\\cmd.exe', vscode.ConfigurationTarget.Global);
         await pythonSettings.update('condaPath', envPaths.condaExecPath, vscode.ConfigurationTarget.Workspace);
