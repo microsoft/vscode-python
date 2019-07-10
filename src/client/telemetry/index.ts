@@ -287,6 +287,7 @@ export interface IEventNamePropertyMapping {
     [EventName.GO_TO_OBJECT_DEFINITION]: never | undefined;
     [EventName.HOVER_DEFINITION]: never | undefined;
     [EventName.HASHED_PACKAGE_NAME]: { hashedName: string };
+    [EventName.HASHED_PACKAGE_PERF]: never | undefined;
     [EventName.LINTER_NOT_INSTALLED_PROMPT]: LinterInstallPromptTelemetry;
     [EventName.PYTHON_INSTALL_PACKAGE]: { installer: string };
     [EventName.LINTING]: LintingTelemetry;

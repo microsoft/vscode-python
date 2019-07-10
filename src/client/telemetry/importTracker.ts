@@ -5,7 +5,7 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { TextDocument } from 'vscode';
-import { sendTelemetryEvent } from '.';
+import { captureTelemetry, sendTelemetryEvent } from '.';
 import { IDocumentManager } from '../common/application/types';
 import { isTestExecution } from '../common/constants';
 import '../common/extensions';
@@ -117,6 +117,7 @@ export class ImportTracker implements IImportTracker {
         sendTelemetryEvent(EventName.HASHED_PACKAGE_NAME, undefined, { hashedName: hash });
     }
 
+    @captureTelemetry(EventName.HASHED_PACKAGE_PERF)
     private lookForImports(lines: (string | undefined)[]) {
         try {
             for (const s of lines) {
