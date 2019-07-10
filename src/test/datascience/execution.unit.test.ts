@@ -81,7 +81,7 @@ class MockJupyterServer implements INotebookServer {
         throw new Error('Method not implemented');
     }
 
-    public async getCompletion(_cellCode: string, _offsetInCode: number, _cancelToken?: CancellationToken) : Promise<INotebookCompletion> {
+    public async getCompletion(_cellCode: string, _offsetInCode: number, _cancelToken?: CancellationToken): Promise<INotebookCompletion> {
         throw new Error('Method not implemented');
     }
     public execute(_code: string, _f: string, _line: number): Promise<ICell[]> {
@@ -113,15 +113,15 @@ class MockJupyterServer implements INotebookServer {
         return Promise.resolve();
     }
 
-    public getSysInfo() : Promise<ICell | undefined> {
+    public getSysInfo(): Promise<ICell | undefined> {
         return Promise.resolve(undefined);
     }
 
-    public interruptKernel(_timeout: number) : Promise<InterruptResult> {
+    public interruptKernel(_timeout: number): Promise<InterruptResult> {
         throw new Error('Method not implemented');
     }
 
-    public async dispose() : Promise<void> {
+    public async dispose(): Promise<void> {
         if (this.launchInfo) {
             this.launchInfo.connectionInfo.dispose(); // This should kill the process that's running
             this.launchInfo = undefined;
@@ -145,7 +145,7 @@ class DisposableRegistry implements IDisposableRegistry, IAsyncDisposableRegistr
         this.disposables.push(disposable);
     }
 
-    public dispose = async () : Promise<void> => {
+    public dispose = async (): Promise<void> => {
         for (const disposable of this.disposables) {
             if (!disposable) {
                 continue;
@@ -235,7 +235,7 @@ suite('Jupyter Execution', async () => {
         return cleanupDisposables();
     });
 
-    function cleanupDisposables() : Promise<void> {
+    function cleanupDisposables(): Promise<void> {
         return disposableRegistry.dispose();
     }
 
@@ -326,9 +326,9 @@ suite('Jupyter Execution', async () => {
             .returns(result);
         const withModuleArgs = ['-m', module, ...args];
         service.setup(x => x.exec(
-                TypeMoq.It.is(a => argsMatch(withModuleArgs, a)),
-                TypeMoq.It.isAny()))
-                .returns(result);
+            TypeMoq.It.is(a => argsMatch(withModuleArgs, a)),
+            TypeMoq.It.isAny()))
+            .returns(result);
     }
 
     function setupPythonServiceExecObservable(service: TypeMoq.IMock<IPythonExecutionService>, module: string, args: (string | RegExp)[], stderr: string[], stdout: string[]) {
@@ -548,7 +548,7 @@ suite('Jupyter Execution', async () => {
             errorBackgroundColor: '#FFFFFF',
             sendSelectionToInteractiveWindow: false,
             showJupyterVariableExplorer: true,
-            variableExplorerExclude: 'module;builtin_function_or_method',
+            variableExplorerExclude: 'module;function;builtin_function_or_method',
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
             allowLiveShare: false,
@@ -664,7 +664,7 @@ suite('Jupyter Execution', async () => {
         // Force config change and ask again
         pythonSettings.datascience.searchForJupyter = false;
         const evt = {
-            affectsConfiguration(_m: string) : boolean {
+            affectsConfiguration(_m: string): boolean {
                 return true;
             }
         };

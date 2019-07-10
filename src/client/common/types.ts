@@ -324,6 +324,7 @@ export interface IDataScienceSettings {
     codeLenses?: string;
     ptvsdDistPath?: string;
     stopOnFirstLineWhileDebugging?: boolean;
+    textOutputLineLimit?: number;
     magicCommandsAsComments?: boolean;
 }
 

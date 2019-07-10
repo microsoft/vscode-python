@@ -299,13 +299,11 @@ export interface IEventNamePropertyMapping {
     [EventName.PYTHON_INTERPRETER_DISCOVERY]: InterpreterDiscovery;
     [EventName.PYTHON_INTERPRETER_ACTIVATE_ENVIRONMENT_PROMPT]: { selection: 'Yes' | 'No' | 'Ignore' | undefined };
     [EventName.PYTHON_LANGUAGE_SERVER_SWITCHED]: { change: 'Switch to Jedi from LS' | 'Switch to LS from Jedi' };
-    [EventName.PYTHON_LANGUAGE_SERVER_ANALYSISTIME]: { success: boolean };
     [EventName.PYTHON_LANGUAGE_SERVER_DOWNLOADED]: LanguageServerVersionTelemetry;
     [EventName.PYTHON_LANGUAGE_SERVER_ENABLED]: never | undefined;
     [EventName.PYTHON_LANGUAGE_SERVER_ERROR]: LanguageServerErrorTelemetry;
     [EventName.PYTHON_LANGUAGE_SERVER_EXTRACTED]: LanguageServerVersionTelemetry;
     [EventName.PYTHON_LANGUAGE_SERVER_LIST_BLOB_STORE_PACKAGES]: never | undefined;
-    [EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_NOT_SUPPORTED]: never | undefined;
     [EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED]: LanguageServePlatformSupported;
     [EventName.PYTHON_LANGUAGE_SERVER_READY]: never | undefined;
     [EventName.PYTHON_LANGUAGE_SERVER_STARTUP]: never | undefined;
@@ -325,6 +323,8 @@ export interface IEventNamePropertyMapping {
     [EventName.TERMINAL_CREATE]: TerminalTelemetry;
     [EventName.UNITTEST_DISCOVER]: TestDiscoverytTelemetry;
     [EventName.UNITTEST_DISCOVER_WITH_PYCODE]: never | undefined;
+    [EventName.UNITTEST_NAVIGATE]: { byFile?: boolean; byFunction?: boolean; bySuite?: boolean; focus_code?: boolean };
+    [EventName.UNITTEST_EXPLORER_WORK_SPACE_COUNT]: { count: number };
     [EventName.UNITTEST_RUN]: TestRunTelemetry;
     [EventName.UNITTEST_STOP]: never | undefined;
     [EventName.UNITTEST_DISABLE]: never | undefined;
@@ -403,10 +403,6 @@ export interface IEventNamePropertyMapping {
     [Telemetry.WebviewMonacoStyleUpdate]: never | undefined;
     [Telemetry.WebviewStartup]: { type: string };
     [Telemetry.WebviewStyleUpdate]: never | undefined;
-    [EventName.UNITTEST_NAVIGATE_TEST_FILE]: never | undefined;
-    [EventName.UNITTEST_NAVIGATE_TEST_FUNCTION]: { focus_code: boolean };
-    [EventName.UNITTEST_NAVIGATE_TEST_SUITE]: { focus_code: boolean };
-    [EventName.UNITTEST_EXPLORER_WORK_SPACE_COUNT]: { count: number };
     /*
     Telemetry event sent with details of Jedi Memory usage.
     memory - Memory usage of Process in kb.

@@ -19,14 +19,14 @@ import { MockAutoSelectionService } from '../mocks/autoSelector';
 // tslint:disable:max-func-body-length
 suite('Theme colors', () => {
     let themeFinder: ThemeFinder;
-    let extensions : Extensions;
-    let currentProcess : CurrentProcess;
-    let logger : Logger;
-    let workspaceService : TypeMoq.IMock<IWorkspaceService>;
-    let workspaceConfig : TypeMoq.IMock<WorkspaceConfiguration>;
+    let extensions: Extensions;
+    let currentProcess: CurrentProcess;
+    let logger: Logger;
+    let workspaceService: TypeMoq.IMock<IWorkspaceService>;
+    let workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration>;
     let cssGenerator: CodeCssGenerator;
-    let configService : TypeMoq.IMock<IConfigurationService>;
-    const settings : PythonSettings = new PythonSettings(undefined, new MockAutoSelectionService());
+    let configService: TypeMoq.IMock<IConfigurationService>;
+    const settings: PythonSettings = new PythonSettings(undefined, new MockAutoSelectionService());
 
     setup(() => {
         extensions = new Extensions();
@@ -66,7 +66,7 @@ suite('Theme colors', () => {
             errorBackgroundColor: '#FFFFFF',
             sendSelectionToInteractiveWindow: false,
             showJupyterVariableExplorer: true,
-            variableExplorerExclude: 'module;builtin_function_or_method',
+            variableExplorerExclude: 'module;function;builtin_function_or_method',
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
             enablePlotViewer: true
@@ -99,9 +99,9 @@ suite('Theme colors', () => {
                     return 16;
                 });
                 workspaceConfig.setup(ws => ws.get(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
-                .returns((_s, d) => {
-                    return d;
-                });
+                    .returns((_s, d) => {
+                        return d;
+                    });
                 const theme = await cssGenerator.generateMonacoTheme(isDark, themeName);
                 assert.ok(theme, `Cannot find monaco theme for ${themeName}`);
                 const colors = await cssGenerator.generateThemeCss(isDark, themeName);

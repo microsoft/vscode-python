@@ -11,7 +11,7 @@ import * as React from 'react';
 import JSONTree from 'react-json-tree';
 
 import '../../client/common/extensions';
-import { concatMultilineString, formatStreamText } from '../../client/datascience/common';
+import { concatMultilineString } from '../../client/datascience/common';
 import { Identifiers, RegExpValues } from '../../client/datascience/constants';
 import { CellState, ICell } from '../../client/datascience/types';
 import { noop } from '../../test/core';
@@ -506,8 +506,7 @@ export class Cell extends React.Component<ICellProps> {
             // Stream output needs to be wrapped in xmp so it
             // show literally. Otherwise < chars start a new html element.
             const stream = copy as nbformat.IStream;
-            const multiline = concatMultilineString(stream.text);
-            const formatted = formatStreamText(multiline);
+            const formatted = concatMultilineString(stream.text);
             copy.data = {
                 'text/html' : `<xmp>${formatted}</xmp>`
             };
