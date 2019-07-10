@@ -39,7 +39,7 @@ export class JupyterSession implements IJupyterSession {
     private kernelSpec: IJupyterKernelSpec | undefined;
     private sessionManager: SessionManager | undefined;
     private session: Session.ISession | undefined;
-    private restartSessionPromise: Promise<Session.ISession> | undefined;
+    private restartSessionPromise: Promise<Session.ISession | undefined> | undefined;
     private contentsManager: ContentsManager | undefined;
     private notebookFiles: Contents.IModel[] = [];
     private onRestartedEvent: EventEmitter<void> | undefined;
@@ -87,25 +87,8 @@ export class JupyterSession implements IJupyterSession {
         return this.onRestartedEvent.event;
     }
 
-    public async waitForIdle(timeout: number): Promise<void> {
-        if (this.session && this.session.kernel) {
-            // This function seems to cause CI builds to timeout randomly on
-            // different tests. Waiting for status to go idle doesn't seem to work and
-            // in the past, waiting on the ready promise doesn't work either. Check status with a maximum of 5 seconds
-            const startTime = Date.now();
-            while (this.session &&
-                this.session.kernel &&
-                this.session.kernel.status !== 'idle' &&
-                (Date.now() - startTime < timeout)) {
-                traceInfo(`Waiting for idle: ${this.session.kernel.status}`);
-                await sleep(100);
-            }
-
-            // If we didn't make it out in ten seconds, indicate an error
-            if (!this.session || !this.session.kernel || this.session.kernel.status !== 'idle') {
-                throw new JupyterWaitForIdleError(localize.DataScience.jupyterLaunchTimedOut());
-            }
-        }
+    public waitForIdle(timeout: number): Promise<void> {
+        return this.waitForIdleOnSession(this.session, timeout);
     }
 
     public async restart(_timeout: number): Promise<void> {
@@ -115,15 +98,18 @@ export class JupyterSession implements IJupyterSession {
             const oldSession = this.session;
             const oldStatusHandler = this.statusHandler;
 
-            // Just switch to the other session.
+            // Just switch to the other session. It should already be ready
             this.session = await this.restartSessionPromise;
+            if (!this.session) {
+                throw new Error(localize.DataScience.sessionDisposed());
+            }
 
             // Rewire our status changed event.
             this.statusHandler = this.onStatusChanged.bind(this.onStatusChanged);
             this.session.statusChanged.connect(this.statusHandler);
 
             // After switching, start another in case we restart again.
-            this.restartSessionPromise = this.createSession(oldSession.serverSettings, this.contentsManager);
+            this.restartSessionPromise = this.createReadySession(oldSession.serverSettings, this.contentsManager);
             this.shutdownSession(oldSession, oldStatusHandler).ignoreErrors();
         } else {
             throw new Error(localize.DataScience.sessionDisposed());
@@ -157,7 +143,7 @@ export class JupyterSession implements IJupyterSession {
         this.session = await this.createSession(serverSettings, this.contentsManager, cancelToken);
 
         // Start another session to handle restarts
-        this.restartSessionPromise = this.createSession(serverSettings, this.contentsManager, cancelToken);
+        this.restartSessionPromise = this.createReadySession(serverSettings, this.contentsManager, cancelToken);
 
         // Listen for session status changes
         this.statusHandler = this.onStatusChanged.bind(this.onStatusChanged);
@@ -169,6 +155,52 @@ export class JupyterSession implements IJupyterSession {
 
     public get isConnected(): boolean {
         return this.connected;
+    }
+
+    private async waitForIdleOnSession(session: Session.ISession | undefined, timeout: number): Promise<void> {
+        if (session && session.kernel) {
+            // This function seems to cause CI builds to timeout randomly on
+            // different tests. Waiting for status to go idle doesn't seem to work and
+            // in the past, waiting on the ready promise doesn't work either. Check status with a maximum of 5 seconds
+            const startTime = Date.now();
+            while (session &&
+                session.kernel &&
+                session.kernel.status !== 'idle' &&
+                (Date.now() - startTime < timeout)) {
+                traceInfo(`Waiting for idle: ${session.kernel.status}`);
+                await sleep(100);
+            }
+
+            // If we didn't make it out in ten seconds, indicate an error
+            if (!session || !session.kernel || session.kernel.status !== 'idle') {
+                throw new JupyterWaitForIdleError(localize.DataScience.jupyterLaunchTimedOut());
+            }
+        }
+    }
+
+    private async createReadySession(serverSettings: ServerConnection.ISettings, contentsManager: ContentsManager, cancelToken?: CancellationToken): Promise<Session.ISession | undefined> {
+        // This is the same as a regular session, but it should already be in the idle state when this function returns. This allows the restart session to just be used.
+
+        // Try connecting a bunch of times. This can fail occassionally.
+        let session: Session.ISession | undefined;
+        let tryCount = 0;
+        const maxTries = 3;
+        while (tryCount < maxTries) {
+            try {
+                session = await this.createSession(serverSettings, contentsManager, cancelToken);
+                await this.waitForIdleOnSession(session, 10000);
+            } catch (exc) {
+                if (session) {
+                    await this.shutdownSession(session, undefined);
+                    session = undefined;
+                }
+                // Try 3 times
+                if (exc instanceof JupyterWaitForIdleError && tryCount < maxTries) {
+                    tryCount += 1;
+                }
+            }
+        }
+        return session;
     }
 
     private async createSession(serverSettings: ServerConnection.ISettings, contentsManager: ContentsManager, cancelToken?: CancellationToken): Promise<Session.ISession> {
