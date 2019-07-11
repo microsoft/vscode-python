@@ -3,12 +3,12 @@
 
 'use strict';
 
-import { spawnSync } from 'child_process';
-import * as glob from 'glob';
-import * as path from 'path';
+// import { spawnSync } from 'child_process';
+// import * as glob from 'glob';
+// import * as path from 'path';
 import { QuickOpen as VSCQuickOpen } from '../../../../out/smoke/vscode/areas/quickopen/quickopen';
-import { Code, getBuildElectronPath } from '../../../../out/smoke/vscode/vscode/code';
-import { context } from '../application';
+import { Code } from '../../../../out/smoke/vscode/vscode/code';
+// import { context } from '../application';
 import { Editors } from './editors';
 
 export class QuickOpen extends VSCQuickOpen {
@@ -16,28 +16,29 @@ export class QuickOpen extends VSCQuickOpen {
         super(code, editors);
     }
 
+    // tslint:disable-next-line: no-unnecessary-override
     public async openFile(fileName: string): Promise<void> {
-        const pattern = path.join(context.options.workspacePathOrFolder, '**', fileName);
-        try {
-            const executable = getBuildElectronPath(context.app.testOptions.vscodePath);
-            const fullFilePath = await new Promise<string>((resolve, reject) => glob(pattern, (error, files) => {
-                if (error) {
-                    return reject(error);
-                }
-                switch (files.length) {
-                    case 0:
-                        return reject(new Error(`No files matching the pattern ${pattern}`));
-                    case 1:
-                        return resolve(files[1]);
-                    default:
-                        return reject(new Error(`Too many files matching the pattern ${pattern}, matching files are ${files.join(',')}`));
-                }
-            }));
-            spawnSync(executable, [fullFilePath]);
-        } catch (ex) {
-            context.app.logger.log(`Unable to open file using \'code <full path to filename>\' for pattern '${pattern}'`, ex);
-            // Revert to the old approach.
-            return super.openFile(fileName);
-        }
+        // const pattern = path.join(context.options.workspacePathOrFolder, '**', fileName);
+        // try {
+        //     const executable = getBuildElectronPath(context.app.testOptions.vscodePath);
+        //     const fullFilePath = await new Promise<string>((resolve, reject) => glob(pattern, (error, files) => {
+        //         if (error) {
+        //             return reject(error);
+        //         }
+        //         switch (files.length) {
+        //             case 0:
+        //                 return reject(new Error(`No files matching the pattern ${pattern}`));
+        //             case 1:
+        //                 return resolve(files[1]);
+        //             default:
+        //                 return reject(new Error(`Too many files matching the pattern ${pattern}, matching files are ${files.join(',')}`));
+        //         }
+        //     }));
+        //     spawnSync(executable, [fullFilePath]);
+        // } catch (ex) {
+        //     context.app.logger.log(`Unable to open file using \'code <full path to filename>\' for pattern '${pattern}'`, ex);
+        // Revert to the old approach.
+        return super.openFile(fileName);
+        // }
     }
 }
