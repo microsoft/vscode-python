@@ -44,7 +44,7 @@ suite('ArgumentsHelper tests', () => {
     });
 
     test('getPositionalArguments with unknown arguments with inline `option=value` syntax should return correct positional arguments', () => {
-        const args = ['arg1', '--foo', 'arg2', '--bar=arg3', 'arg4'];
+        const args = ['arg1', '--foo', 'arg2', 'bar=arg3', 'arg4'];
         const optionsWithArguments: string[] = [];
         const optionsWithoutArguments = ['--foo'];
         const result = argumentsHelper.getPositionalArguments(args, optionsWithArguments, optionsWithoutArguments);
