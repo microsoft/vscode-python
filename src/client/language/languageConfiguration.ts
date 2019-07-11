@@ -14,7 +14,7 @@ Here's what it does not cover:
  * there are multiple statements on the line (separated by semicolons)
 Also note that `lambda` is purposefully excluded.
 */
-export const INCREASE_INDENT_REGEX = /^\s*(?:async|class|def|elif|else|except|finally|for|if|try|while|with)\b.*:\s*(#.*)?$/;
+export const INCREASE_INDENT_REGEX = /^\s*(?:(?:async|class|def|elif|except|for|if|while|with)\b.*|else|finally|try))\s*:\s*(#.*)?$/;
 export const DECREASE_INDENT_REGEX = /^\s*(?:else|finally|(?:elif|except)\b.*)\s*:\s*(#.*)?$/;
 export const OUTDENT_SINGLE_KEYWORD_REGEX = /^\s*(break|continue|pass|raise\b.*)\s*(#.*)?$/;
 export const OUTDENT_RETURN_REGEX = /^\s*(return)\b([^\[\(\{})]|([\[\(\{].*[\]\)\}]))*(#.*)?$/;
