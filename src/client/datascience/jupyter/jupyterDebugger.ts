@@ -49,11 +49,18 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         const config = await this.connect(server);
 
         if (config) {
-            await this.debugService.startDebugging(undefined, config);
+            // First check if this is a live share session. Skip debugging attach on the guest
+            // tslint:disable-next-line: no-any
+            const hasRole = (server as any) as ILiveShareHasRole;
+            if (hasRole && hasRole.role && hasRole.role === vsls.Role.Guest) {
+                traceInfo('guest mode attach skipped');
+            } else {
+                await this.debugService.startDebugging(undefined, config);
 
-            // Force the debugger to update its list of breakpoints. This is used
-            // to make sure the breakpoint list is up to date when we send our mappings.
-            this.debugService.removeBreakpoints([]);
+                // Force the debugger to update its list of breakpoints. This is used
+                // to make sure the breakpoint list is up to date when we do code file hashes
+                this.debugService.removeBreakpoints([]);
+            }
 
             // Wait for attach before we turn on tracing and allow the code to run, if the IDE is already attached this is just a no-op
             // tslint:disable-next-line:no-multiline-string
@@ -97,14 +104,6 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     }
 
     private async connect(server: INotebookServer): Promise<DebugConfiguration | undefined> {
-        // First check if this is a live share server. Skip debugging attach on the guest
-        // tslint:disable-next-line: no-any
-        const hasRole = (server as any) as ILiveShareHasRole;
-        if (hasRole && hasRole.role && hasRole.role === vsls.Role.Guest) {
-            traceInfo('guest mode attach skipped');
-            return;
-        }
-
         // If we already have configuration, we're already attached, don't do it again.
         let result = this.configs.get(server.id);
         if (result) {
