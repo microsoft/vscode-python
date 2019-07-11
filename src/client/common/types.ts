@@ -328,6 +328,7 @@ export interface IDataScienceSettings {
     stopOnFirstLineWhileDebugging?: boolean;
     textOutputLineLimit?: number;
     magicCommandsAsComments?: boolean;
+    stopOnError?: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');
