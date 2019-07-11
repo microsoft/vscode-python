@@ -61,7 +61,7 @@ export class ArgumentsHelper implements IArgumentsHelper {
                 this.logger.logWarning(`Unknown command line option passed into args parser for tests '${arg}'. Please report on https://github.com/Microsoft/vscode-python/issues/new`);
                 nonPositionalIndexes.push(index);
                 return;
-            } else if (args.indexOf('=') > 0) {
+            } else if (arg.indexOf('=') > 0) {
                 // Ok this is an unknown option with a value
                 this.logger.logWarning(`Unknown command line option passed into args parser for tests '${arg}'. Please report on https://github.com/Microsoft/vscode-python/issues/new`);
                 nonPositionalIndexes.push(index);
