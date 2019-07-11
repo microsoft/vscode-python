@@ -43,6 +43,16 @@ suite('ArgumentsHelper tests', () => {
         expect(result).to.deep.equal(['arg1', 'arg2', 'arg4']);
     });
 
+    test('getPositionalArguments with unknown arguments with inline `option=value` syntax should return correct positional arguments', () => {
+        const args = ['arg1', '--foo', 'arg2', '--bar=arg3', 'arg4'];
+        const optionsWithArguments: string[] = [];
+        const optionsWithoutArguments = ['--foo'];
+        const result = argumentsHelper.getPositionalArguments(args, optionsWithArguments, optionsWithoutArguments);
+
+        expect(result).to.have.length(3);
+        expect(result).to.deep.equal(['arg1', 'arg2', 'arg4']);
+    });
+
     test('getPositionalArguments with no options parameter should be the same as passing empty arrays', () => {
         const args = ['arg1', '--foo', 'arg2', '--bar', 'arg3', 'arg4'];
         const optionsWithArguments: string[] = [];
