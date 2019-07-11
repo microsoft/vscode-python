@@ -78,6 +78,7 @@ export class TerminalHelper implements ITerminalHelper {
         const data = { failed, hasCommands, interpreterType, terminal: terminalShellType, pythonVersion };
         sendTelemetryEvent(eventName, undefined, data);
     }
+    @traceDecorators.verbose('Get Activation commands')
     protected async getActivationCommands(resource: Resource, interpreter: PythonInterpreter | undefined, terminalShellType: TerminalShellType, providers: ITerminalActivationCommandProvider[]): Promise<string[] | undefined> {
         const settings = this.configurationService.getSettings(resource);
         const activateEnvironment = settings.terminal.activateEnvironment;

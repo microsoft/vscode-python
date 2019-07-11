@@ -77,76 +77,81 @@ suite('Activation of Environments in Terminal', () => {
         await restorePythonPathInWorkspaceRoot();
     }
 
-    /**
-     * Open a terminal and issue `conda init` command, expecting it to initialize conda in the terminal.
-     *
-     * @param pythonFile The python script to run.
-     * @param logFile The logfile that the python script will produce.
-     * @param consoleInitWaitMs How long to wait for the console to initialize.
-     * @param logFileCreationWaitMs How long to wait for the output file to be produced.
-     */
-    async function openTerminalAndAwaitCommandContentForConda(
-        consoleInitWaitMs: number,
-        pythonFile: string,
-        logFile: string,
-        logFileCreationWaitMs: number,
-        condaExecutable: string
-    ): Promise<string> {
-        const terminal1 = vscode.window.createTerminal();
-        await sleep(consoleInitWaitMs);
-        console.log(`Conda Path = ${condaExecutable} before conda init`);
-        terminal1.sendText(`${condaExecutable.fileToCommandArgument()} init 2>&1 | tee ${logFile}`, true);
-        await sleep(consoleInitWaitMs);
-        await sleep(consoleInitWaitMs);
-        await sleep(consoleInitWaitMs);
-        if (fs.pathExistsSync(logFile)) {
-            console.error('Contents of log file as follows');
-            console.error(fs.readFileSync(logFile).toString());
-            fs.unlinkSync(logFile);
-        } else {
-            console.error('File not created');
-        }
-        console.log(`Conda Path for env listing = ${condaExecutable} before conda env list`);
-        terminal1.sendText(`${condaExecutable.fileToCommandArgument()} env list 2>&1 | tee ${logFile}`, true);
-        await sleep(consoleInitWaitMs);
-        await sleep(consoleInitWaitMs);
-        await sleep(consoleInitWaitMs);
-        if (fs.pathExistsSync(logFile)) {
-            console.error('Contents of log file as follows');
-            console.error(fs.readFileSync(logFile).toString());
-            fs.unlinkSync(logFile);
-        } else {
-            console.error('File not created');
-        }
-        const terminal = vscode.window.createTerminal();
-        terminal.sendText(`python ${pythonFile} ${logFile}`, true);
-        await waitForCondition(() => fs.pathExists(logFile), logFileCreationWaitMs, `${logFile} file not created.`);
-
-        return fs.readFile(logFile, 'utf-8');
-    }
-
     // /**
-    //  * Open a terminal and issue a python `pythonFile` command, expecting it to
-    //  * create a file `logfile`, with timeout limits.
+    //  * Open a terminal and issue `conda init` command, expecting it to initialize conda in the terminal.
     //  *
     //  * @param pythonFile The python script to run.
     //  * @param logFile The logfile that the python script will produce.
     //  * @param consoleInitWaitMs How long to wait for the console to initialize.
     //  * @param logFileCreationWaitMs How long to wait for the output file to be produced.
     //  */
-    // async function openTerminalAndAwaitCommandContent(
+    // async function openTerminalAndAwaitCommandContentForConda(
     //     consoleInitWaitMs: number,
     //     pythonFile: string,
     //     logFile: string,
     //     logFileCreationWaitMs: number
+    //     // condaExecutable: string
     // ): Promise<string> {
+    //     // const terminal1 = vscode.window.createTerminal();
+    //     // terminal1.show();
+    //     // await sleep(consoleInitWaitMs);
+    //     // console.log(`Conda Path = ${condaExecutable} before conda init`);
+    //     // terminal1.sendText(`${condaExecutable.fileToCommandArgument()} init 2>&1 | tee ${logFile}`, true);
+    //     // await sleep(consoleInitWaitMs);
+    //     // await sleep(consoleInitWaitMs);
+    //     // await sleep(consoleInitWaitMs);
+    //     // if (fs.pathExistsSync(logFile)) {
+    //     //     console.error('Contents of log file as follows');
+    //     //     console.error(fs.readFileSync(logFile).toString());
+    //     //     fs.unlinkSync(logFile);
+    //     // } else {
+    //     //     console.error('File not created');
+    //     // }
+    //     // console.log(`Conda Path for env listing = ${condaExecutable} before conda env list`);
+    //     // terminal1.sendText(`${condaExecutable.fileToCommandArgument()} env list 2>&1 | tee ${logFile}`, true);
+    //     // await sleep(consoleInitWaitMs);
+    //     // await sleep(consoleInitWaitMs);
+    //     // await sleep(consoleInitWaitMs);
+    //     // if (fs.pathExistsSync(logFile)) {
+    //     //     console.error('Contents of log file as follows');
+    //     //     console.error(fs.readFileSync(logFile).toString());
+    //     //     fs.unlinkSync(logFile);
+    //     // } else {
+    //     //     console.error('File not created');
+    //     // }
     //     const terminal = vscode.window.createTerminal();
+    //     terminal.show();
+    //     // Wait for environment to get activated.
     //     await sleep(consoleInitWaitMs);
     //     terminal.sendText(`python ${pythonFile} ${logFile}`, true);
     //     await waitForCondition(() => fs.pathExists(logFile), logFileCreationWaitMs, `${logFile} file not created.`);
 
     //     return fs.readFile(logFile, 'utf-8');
     // }
+
+    /**
+     * Open a terminal and issue a python `pythonFile` command, expecting it to
+     * create a file `logfile`, with timeout limits.
+     *
+     * @param pythonFile The python script to run.
+     * @param logFile The logfile that the python script will produce.
+     * @param consoleInitWaitMs How long to wait for the console to initialize.
+     * @param logFileCreationWaitMs How long to wait for the output file to be produced.
+     */
+    async function openTerminalAndAwaitCommandContent(
+        consoleInitWaitMs: number,
+        pythonFile: string,
+        logFile: string,
+        logFileCreationWaitMs: number
+    ): Promise<string> {
+        const terminal = vscode.window.createTerminal();
+        terminal.show();
+        await sleep(consoleInitWaitMs);
+        terminal.sendText(`python ${pythonFile} ${logFile}`, true);
+        await waitForCondition(() => fs.pathExists(logFile), logFileCreationWaitMs, `${logFile} file not created.`);
+
+        return fs.readFile(logFile, 'utf-8');
+    }
 
     // /**
     //  * Turn on `terminal.activateEnvironment`, produce a shell, run a python script
@@ -179,13 +184,23 @@ suite('Activation of Environments in Terminal', () => {
     //     await testActivation(envPaths.virtualEnvPath);
     // });
     test('Should activate with conda', async () => {
+        console.log('Should activate with conda');
         await terminalSettings.update('integrated.shell.windows', 'C:\\Windows\\System32\\cmd.exe', vscode.ConfigurationTarget.Global);
-        await pythonSettings.update('condaPath', 'C:\\Miniconda\\Scripts\\conda.exe', vscode.ConfigurationTarget.Workspace);
+        await pythonSettings.update('condaPath', envPaths.condaExecPath, vscode.ConfigurationTarget.Workspace);
 
         await updateSetting('terminal.activateEnvironment', true, vscode.workspace.workspaceFolders![0].uri, vscode.ConfigurationTarget.WorkspaceFolder);
         await setPythonPathInWorkspaceRoot(envPaths.condaPath);
-        const content = await openTerminalAndAwaitCommandContentForConda(waitTimeForActivation, file, outputFile, 5_000, 'C:\\Miniconda\\Scripts\\conda.exe');
+        const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
         expect(fileSystem.arePathsSame(content, envPaths.condaPath)).to.equal(true, 'Environment not activated');
+
+        // await terminalSettings.update('integrated.shell.windows', 'C:\\Windows\\System32\\cmd.exe', vscode.ConfigurationTarget.Global);
+        // await pythonSettings.update('condaPath', "C:\\Users\\dojayama.REDMOND\\AppData\\Local\\Continuum\\anaconda3\\Scripts\\conda.exe", vscode.ConfigurationTarget.Workspace);
+
+        // await updateSetting('terminal.activateEnvironment', true, vscode.workspace.workspaceFolders![0].uri, vscode.ConfigurationTarget.WorkspaceFolder);
+        // await setPythonPathInWorkspaceRoot('C:\\Users\\dojayama.REDMOND\\AppData\\Local\\Continuum\\anaconda3\\envs\\env-test');
+        // await sleep(1000000);
+        // const content = await openTerminalAndAwaitCommandContentForConda(waitTimeForActivation, file, outputFile, 10_000);
+        // expect(fileSystem.arePathsSame(content, 'C:\\Users\\dojayama.REDMOND\\AppData\\Local\\Continuum\\anaconda3\\envs\\env-test')).to.equal(true, 'Environment not activated');
         // await testActivation(envPaths.condaPath);
-    }).timeout(60_000);
+    }).timeout(360_000);
 });

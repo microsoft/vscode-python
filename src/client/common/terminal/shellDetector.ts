@@ -49,7 +49,7 @@ export class ShellDetector {
 
         // Sort in order of priority and then identify the shell in terminal.
         const shellDetectors = this.shellDetectors.slice();
-        shellDetectors.sort((a, b) => a.priority < b.priority ? 1 : 0);
+        shellDetectors.sort((a, b) => a.priority > b.priority ? 1 : 0);
 
         for (const detector of shellDetectors) {
             shell = detector.identify(telemetryProperties, terminal);

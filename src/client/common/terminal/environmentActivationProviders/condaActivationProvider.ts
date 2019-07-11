@@ -6,8 +6,8 @@ import '../../extensions';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
-
 import { ICondaService } from '../../../interpreter/contracts';
+import { traceDecorators, traceVerbose } from '../../logger';
 import { IPlatformService } from '../../platform/types';
 import { IConfigurationService } from '../../types';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../types';
@@ -38,6 +38,7 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
     /**
      * Return the command needed to activate the conda env.
      */
+    @traceDecorators.verbose('Get Activation commands')
     public getActivationCommands(resource: Uri | undefined, targetShell: TerminalShellType): Promise<string[] | undefined> {
         const pythonPath = this.configService.getSettings(resource).pythonPath;
         return this.getActivationCommandsForInterpreter(pythonPath, targetShell);
@@ -47,31 +48,35 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
      * Return the command needed to activate the conda env.
      *
      */
+    @traceDecorators.verbose('Get Activation commands for interpreter')
     public async getActivationCommandsForInterpreter(pythonPath: string, targetShell: TerminalShellType): Promise<string[] | undefined> {
         const envInfo = await this.condaService.getCondaEnvironment(pythonPath);
         if (!envInfo) {
+            traceVerbose(`Unable to get conda env info for Interpreter in ${pythonPath}`);
             return;
         }
 
         // Algorithm differs based on version
+        const versionInfo = await this.condaService.getCondaVersion();
+        // Starting from this version just use `conda activate <env name>`, we expect user to have configured their shell.
+        // Powershell was supported starting with this version, and this is when we expect all shells to be initialized by users.
+        if (versionInfo && versionInfo.major >= CondaRequiredMajor && versionInfo.minor >= CondaRequiredMinorForPowerShell) {
+            traceVerbose('Using default \'conda activate <env name>\' command');
+            return [`conda activate ${envInfo.name.toCommandArgument()}`];
+        }
+
+
         // Old version, just call activate directly.
         // New version, call activate from the same path as our python path, then call it again to activate our environment.
         // -- note that the 'default' conda location won't allow activate to work for the environment sometimes.
-        const versionInfo = await this.condaService.getCondaVersion();
-        if (versionInfo && versionInfo.major >= CondaRequiredMajor) {
-            // Conda added support for powershell in 4.6.
-            if (versionInfo.minor >= CondaRequiredMinorForPowerShell &&
-                (targetShell === TerminalShellType.powershell || targetShell === TerminalShellType.powershellCore)) {
-                return this.getPowershellCommands(envInfo.name);
-            }
-            if (versionInfo.minor >= CondaRequiredMinor) {
-                // New version.
-                const interpreterPath = await this.condaService.getCondaFileFromInterpreter(pythonPath, envInfo.name);
-                if (interpreterPath) {
-                    const activatePath = path.join(path.dirname(interpreterPath), 'activate').fileToCommandArgument();
-                    const firstActivate = this.platform.isWindows ? activatePath : `source ${activatePath}`;
-                    return [firstActivate, `conda activate ${envInfo.name.toCommandArgument()}`];
-                }
+        if (versionInfo && versionInfo.major >= CondaRequiredMajor && versionInfo.minor >= CondaRequiredMinor) {
+            // New version.
+            const interpreterPath = await this.condaService.getCondaFileFromInterpreter(pythonPath, envInfo.name);
+            if (interpreterPath) {
+                const activatePath = path.join(path.dirname(interpreterPath), 'activate').fileToCommandArgument();
+                const firstActivate = this.platform.isWindows ? activatePath : `source ${activatePath}`;
+                traceVerbose('Using multiple activation command steps');
+                return [firstActivate, `conda activate ${envInfo.name.toCommandArgument()}`];
             }
         }
 

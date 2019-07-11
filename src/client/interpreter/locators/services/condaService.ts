@@ -179,9 +179,11 @@ export class CondaService implements ICondaService {
     /**
      * Return (env name, interpreter filename) for the interpreter.
      */
+    @traceDecorators.verbose('Get conda environment name and path')
     public async getCondaEnvironment(interpreterPath: string): Promise<{ name: string; path: string } | undefined> {
         const isCondaEnv = await this.isCondaEnvironment(interpreterPath);
         if (!isCondaEnv) {
+            traceVerbose(`Unable to get conda env name for Interpreter in ${interpreterPath}`);
             return;
         }
         let environments = await this.getCondaEnvironments(false);
@@ -271,17 +273,17 @@ export class CondaService implements ICondaService {
             if (await this.fileSystem.fileExists(condaPath)) {
                 return condaPath;
             }
-        }
-
-        let condaPath = path.join(interpreterDir, condaExe);
-        if (await this.fileSystem.fileExists(condaPath)) {
-            return condaPath;
-        }
-        // Conda path has changed locations, check the new location in the scripts directory after checking
-        // the old location
-        condaPath = path.join(interpreterDir, scriptsDir, condaExe);
-        if (await this.fileSystem.fileExists(condaPath)) {
-            return condaPath;
+        } else {
+            let condaPath = path.join(interpreterDir, condaExe);
+            if (await this.fileSystem.fileExists(condaPath)) {
+                return condaPath;
+            }
+            // Conda path has changed locations, check the new location in the scripts directory after checking
+            // the old location
+            condaPath = path.join(interpreterDir, scriptsDir, condaExe);
+            if (await this.fileSystem.fileExists(condaPath)) {
+                return condaPath;
+            }
         }
     }
 
