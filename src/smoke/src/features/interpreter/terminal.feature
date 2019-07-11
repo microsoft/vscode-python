@@ -1,5 +1,8 @@
 @terminal
 Feature: Terminal
+    Background: Activted Extension
+        Given the Python extension has been activated
+
     @smoke
     Scenario: Execute File in Terminal
         # Use folders and paths with spaces.
