@@ -10,6 +10,7 @@ import { EventName } from '../telemetry/constants';
 import { IWorkspaceService } from './application/types';
 import { WorkspaceService } from './application/workspace';
 import { isTestExecution } from './constants';
+import { ExtensionChannels } from './insidersBuild/types';
 import { IS_WINDOWS } from './platform/constants';
 import {
     IAnalysisSettings,
@@ -21,7 +22,8 @@ import {
     ISortImportSettings,
     ITerminalSettings,
     ITestingSettings,
-    IWorkspaceSymbolSettings
+    IWorkspaceSymbolSettings,
+    Resource
 } from './types';
 import { debounceSync } from './utils/decorators';
 import { SystemVariables } from './variables/systemVariables';
@@ -55,6 +57,7 @@ export class PythonSettings implements IPythonSettings {
     public analysis!: IAnalysisSettings;
     public autoUpdateLanguageServer: boolean = true;
     public datascience!: IDataScienceSettings;
+    public insidersChannel!: ExtensionChannels;
 
     protected readonly changed = new EventEmitter<void>();
     private workspaceRoot: Uri;
@@ -66,7 +69,9 @@ export class PythonSettings implements IPythonSettings {
         return this.changed.event;
     }
 
-    constructor(workspaceFolder: Uri | undefined, private readonly interpreterAutoSelectionService: IInterpreterAutoSeletionProxyService,
+    constructor(
+        workspaceFolder: Resource,
+        private readonly interpreterAutoSelectionService: IInterpreterAutoSeletionProxyService,
         workspace?: IWorkspaceService) {
         this.workspace = workspace || new WorkspaceService();
         this.workspaceRoot = workspaceFolder ? workspaceFolder : Uri.file(__dirname);
@@ -356,6 +361,8 @@ export class PythonSettings implements IPythonSettings {
         } else {
             this.datascience = dataScienceSettings;
         }
+
+        this.insidersChannel = pythonSettings.get<ExtensionChannels>('insidersChannel')!;
     }
 
     public get pythonPath(): string {

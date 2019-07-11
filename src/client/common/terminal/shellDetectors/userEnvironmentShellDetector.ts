@@ -24,7 +24,7 @@ import { BaseShellDetector } from './baseShellDetector';
 export class UserEnvironmentShellDetector extends BaseShellDetector {
     constructor(@inject(ICurrentProcess) private readonly currentProcess: ICurrentProcess,
         @inject(IPlatformService) private readonly platform: IPlatformService) {
-        super(2);
+        super(3);
     }
     public getDefaultPlatformShell(): string {
         return getDefaultShell(this.platform, this.currentProcess);

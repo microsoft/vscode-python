@@ -8,12 +8,13 @@ import { WebPanelProvider } from '../application/webPanelProvider';
 import { ProductType } from '../types';
 import { InstallationChannelManager } from './channelManager';
 import { CondaInstaller } from './condaInstaller';
+import { InsidersBuildInstaller, StableBuildInstaller } from './extensionBuildInstaller';
 import { PipEnvInstaller } from './pipEnvInstaller';
 import { PipInstaller } from './pipInstaller';
 import { PoetryInstaller } from './poetryInstaller';
-import { CTagsProductPathService, DataScienceProductPathService, FormatterProductPathService, LinterProductPathService, RefactoringLibraryProductPathService, TestFrameworkProductPathService } from './productPath';
+import { CTagsProductPathService, FormatterProductPathService, LinterProductPathService, RefactoringLibraryProductPathService, TestFrameworkProductPathService, DataScienceProductPathService } from './productPath';
 import { ProductService } from './productService';
-import { IInstallationChannelManager, IModuleInstaller, IProductPathService, IProductService } from './types';
+import { IExtensionBuildInstaller, IInstallationChannelManager, IModuleInstaller, INSIDERS_INSTALLER, IProductPathService, IProductService, STABLE_INSTALLER } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, CondaInstaller);
@@ -21,6 +22,8 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PipEnvInstaller);
     serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PoetryInstaller);
     serviceManager.addSingleton<IInstallationChannelManager>(IInstallationChannelManager, InstallationChannelManager);
+    serviceManager.addSingleton<IExtensionBuildInstaller>(IExtensionBuildInstaller, StableBuildInstaller, STABLE_INSTALLER);
+    serviceManager.addSingleton<IExtensionBuildInstaller>(IExtensionBuildInstaller, InsidersBuildInstaller, INSIDERS_INSTALLER);
 
     serviceManager.addSingleton<IProductService>(IProductService, ProductService);
     serviceManager.addSingleton<IProductPathService>(IProductPathService, CTagsProductPathService, ProductType.WorkspaceSymbols);

@@ -185,6 +185,21 @@
                 "category": "Python"
             },
             {
+                "command": "python.switchToStable",
+                "title": "%python.command.python.switchToStable.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.switchToInsidersDaily",
+                "title": "%python.command.python.switchToInsidersDaily.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.switchToInsidersWeekly",
+                "title": "%python.command.python.switchToInsidersWeekly.title%",
+                "category": "Python"
+            },
+            {
                 "command": "python.updateSparkLibrary",
                 "title": "%python.command.python.updateSparkLibrary.title%",
                 "category": "Python"
@@ -569,6 +584,24 @@
                 }
             ],
             "commandPalette": [
+                {
+                    "command": "python.switchToStable",
+                    "title": "%python.command.python.switchToStable.title%",
+                    "category": "Python",
+                    "when": "config.python.insidersChannel != 'Stable'"
+                },
+                {
+                    "command": "python.switchToInsidersDaily",
+                    "title": "%python.command.python.switchToInsidersDaily.title%",
+                    "category": "Python",
+                    "when": "config.python.insidersChannel != 'InsidersDaily'"
+                },
+                {
+                    "command": "python.switchToInsidersWeekly",
+                    "title": "%python.command.python.switchToInsidersWeekly.title%",
+                    "category": "Python",
+                    "when": "config.python.insidersChannel != 'InsidersWeekly'"
+                },
                 {
                     "command": "python.viewOutput",
                     "title": "%python.command.python.viewOutput.title%",
@@ -2115,6 +2148,17 @@
                     "default": false,
                     "description": "Uncomment shell assignments (#!), line magic (#!%) and cell magic (#!%%) when parsing code cells.",
                     "scope": "resource"
+                },
+                "python.insidersChannel": {
+                    "type": "string",
+                    "default": "Stable",
+                    "description": "Set to \"Insiders\" to automatically download and install the latest Insiders builds of the extension, which include upcoming features and bug fixes.",
+                    "enum": [
+                        "Stable",
+                        "InsidersWeekly",
+                        "InsidersDaily"
+                    ],
+                    "scope": "application"
                 }
             }
         },

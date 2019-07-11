@@ -238,7 +238,7 @@ suite('File Downloader', () => {
 
             await fileDownloader.downloadFile('file to download', { progressMessagePrefix: '', extension: '.pdf', outputChannel: outputChannel });
 
-            verify(outputChannel.append(Http.downloadingFile().format('file to download')));
+            verify(outputChannel.appendLine(Http.downloadingFile().format('file to download')));
         });
         test('Display progress when downloading', async () => {
             const tmpFile = { filePath: 'my temp file', dispose: noop };

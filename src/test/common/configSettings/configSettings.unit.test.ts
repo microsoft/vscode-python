@@ -3,6 +3,8 @@
 
 'use strict';
 
+// tslint:disable:no-any
+
 import { expect } from 'chai';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
@@ -27,7 +29,7 @@ import { noop } from '../../../client/common/utils/misc';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
 
 // tslint:disable-next-line:max-func-body-length
-suite('Python Settings', () => {
+suite('Python Settings', async () => {
     class CustomPythonSettings extends PythonSettings {
         // tslint:disable-next-line:no-unnecessary-override
         public update(pythonSettings: WorkspaceConfiguration) {
@@ -46,7 +48,7 @@ suite('Python Settings', () => {
 
     function initializeConfig(sourceSettings: PythonSettings) {
         // string settings
-        for (const name of ['pythonPath', 'venvPath', 'condaPath', 'pipenvPath', 'envFile', 'poetryPath']) {
+        for (const name of ['pythonPath', 'venvPath', 'condaPath', 'pipenvPath', 'envFile', 'poetryPath', 'insidersChannel']) {
             config.setup(c => c.get<string>(name))
                 // tslint:disable-next-line:no-any
                 .returns(() => (sourceSettings as any)[name]);
@@ -105,6 +107,37 @@ suite('Python Settings', () => {
             .returns(() => sourceSettings.datascience);
     }
 
+    function testIfValueIsUpdated(settingName: string, value: any) {
+        test(`${settingName} updated`, async () => {
+            expected.pythonPath = 'python3';
+            (expected as any)[settingName] = value;
+            initializeConfig(expected);
+
+            settings.update(config.object);
+
+            expect((settings as any)[settingName]).to.be.equal((expected as any)[settingName]);
+            config.verifyAll();
+        });
+    }
+
+    suite('String settings', async () => {
+        ['pythonPath', 'venvPath', 'condaPath', 'pipenvPath', 'envFile', 'poetryPath', 'insidersChannel'].forEach(async settingName => {
+            testIfValueIsUpdated(settingName, 'stringValue');
+        });
+    });
+
+    suite('Boolean settings', async () => {
+        ['downloadLanguageServer', 'jediEnabled', 'autoUpdateLanguageServer', 'globalModuleInstallation'].forEach(async settingName => {
+            testIfValueIsUpdated(settingName, true);
+        });
+    });
+
+    suite('Number settings', async () => {
+        ['jediMemoryLimit'].forEach(async settingName => {
+            testIfValueIsUpdated(settingName, 1001);
+        });
+    });
+
     test('condaPath updated', () => {
         expected.pythonPath = 'python3';
         expected.condaPath = 'spam';
@@ -119,7 +152,7 @@ suite('Python Settings', () => {
         config.verifyAll();
     });
 
-    test('condaPath (relative to home) updated', () => {
+    test('condaPath (relative to home) updated', async () => {
         expected.pythonPath = 'python3';
         expected.condaPath = path.join('~', 'anaconda3', 'bin', 'conda');
         initializeConfig(expected);

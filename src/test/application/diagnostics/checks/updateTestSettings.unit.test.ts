@@ -25,7 +25,7 @@ suite('Application Diagnostics - Check Test Settings', () => {
     let appEnv: IApplicationEnvironment;
     let storage: IPersistentState<string[]>;
     let workspace: IWorkspaceService;
-    const sandbox = sinon.sandbox.create();
+    const sandbox = sinon.createSandbox();
     setup(() => {
         fs = mock(FileSystem);
         appEnv = mock(ApplicationEnvironment);
