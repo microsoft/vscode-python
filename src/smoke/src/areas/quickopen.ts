@@ -3,12 +3,10 @@
 
 'use strict';
 
-// import { spawnSync } from 'child_process';
-// import * as glob from 'glob';
-// import * as path from 'path';
 import { QuickOpen as VSCQuickOpen } from '../../../../out/smoke/vscode/areas/quickopen/quickopen';
 import { Code } from '../../../../out/smoke/vscode/vscode/code';
-// import { context } from '../application';
+import { context } from '../application';
+import { noop, sleep } from '../helpers';
 import { Editors } from './editors';
 
 export class QuickOpen extends VSCQuickOpen {
@@ -18,27 +16,28 @@ export class QuickOpen extends VSCQuickOpen {
 
     // tslint:disable-next-line: no-unnecessary-override
     public async openFile(fileName: string): Promise<void> {
-        // const pattern = path.join(context.options.workspacePathOrFolder, '**', fileName);
-        // try {
-        //     const executable = getBuildElectronPath(context.app.testOptions.vscodePath);
-        //     const fullFilePath = await new Promise<string>((resolve, reject) => glob(pattern, (error, files) => {
-        //         if (error) {
-        //             return reject(error);
-        //         }
-        //         switch (files.length) {
-        //             case 0:
-        //                 return reject(new Error(`No files matching the pattern ${pattern}`));
-        //             case 1:
-        //                 return resolve(files[1]);
-        //             default:
-        //                 return reject(new Error(`Too many files matching the pattern ${pattern}, matching files are ${files.join(',')}`));
-        //         }
-        //     }));
-        //     spawnSync(executable, [fullFilePath]);
-        // } catch (ex) {
-        //     context.app.logger.log(`Unable to open file using \'code <full path to filename>\' for pattern '${pattern}'`, ex);
-        // Revert to the old approach.
-        return super.openFile(fileName);
-        // }
+        let viewToDisplay: string | undefined = 'View: Show Debug';
+        if (!await context.app.workbench.debug.isVisible()) {
+            if (await context.app.workbench.testExplorer.isVisible()) {
+                viewToDisplay = 'View: Show Test';
+            } else {
+                viewToDisplay = undefined;
+            }
+        }
+        // Ensure the file is visible in the explorer so we can open it.
+        await context.app.workbench.quickopen.runCommand('File: Refresh Explorer');
+        await sleep(500);
+        await context.app.workbench.quickopen.runCommand('File: Focus on Files Explorer');
+        await sleep(500);
+        await context.app.workbench.quickopen.runCommand('File: Refresh Explorer');
+        await sleep(500);
+        try {
+            await super.openFile(fileName);
+        } finally {
+            // Restore the view.
+            if (viewToDisplay) {
+                await this.runCommand(viewToDisplay).catch(noop);
+            }
+        }
     }
 }

@@ -8,7 +8,6 @@ import { expect } from 'chai';
 import { Given, Then, When } from 'cucumber';
 import { context } from '../application';
 import { CucumberRetryMax10Seconds, CucumberRetryMax5Seconds } from '../constants';
-import { sleep } from '../helpers';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const clipboardy = require('clipboardy');
 
@@ -46,18 +45,10 @@ When('I go to line {int}, column {int}', async (line: number, column: number) =>
 });
 
 Given('the file {string} is open', async (file: string) => {
-    await sleep(1000);
-    await context.app.workbench.quickopen.runCommand('File: Refresh Explorer');
-    await context.app.workbench.quickopen.runCommand('File: Focus on Files Explorer');
-    await context.app.workbench.quickopen.runCommand('File: Refresh Explorer');
     await context.app.workbench.quickopen.openFile(file);
 });
 
 When('I open the file {string}', async (file: string) => {
-    await sleep(1000);
-    await context.app.workbench.quickopen.runCommand('File: Refresh Explorer');
-    await context.app.workbench.quickopen.runCommand('File: Focus on Files Explorer');
-    await context.app.workbench.quickopen.runCommand('File: Refresh Explorer');
     await context.app.workbench.quickopen.openFile(file);
 });
 
