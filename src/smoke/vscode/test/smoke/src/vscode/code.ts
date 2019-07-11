@@ -186,7 +186,7 @@ export async function spawn(options: SpawnOptions): Promise<Code> {
         instances.delete(child);
     });
     // Wait and log everything (wait for VSC to start).
-    await new Promise(resolve => setTimeout(resolve, 30_000));
+    // await new Promise(resolve => setTimeout(resolve, 30_000));
     options.logger.log(`Attempting to connect to VS Code server on port ${port}`);
     return connect(child, outPath, port, options.logger);
 }
