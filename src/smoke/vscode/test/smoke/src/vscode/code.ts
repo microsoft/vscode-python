@@ -73,13 +73,13 @@ async function connect(child: cp.ChildProcess, outPath: string, port: number, lo
             return new Code(client, driver, logger, child);
         } catch (err) {
             if (++errCount > 300) {
-                console.error('Failed to connect after 50 attempts');
+                logger.log('Failed to connect after 50 attempts');
                 child.kill();
                 throw err;
             }
 
             // retry
-            console.log('Failed to connect, retrying');
+            logger.log('Failed to connect, retrying');
             await new Promise(c => setTimeout(c, 100));
         }
     }
@@ -168,24 +168,26 @@ export async function spawn(options: SpawnOptions): Promise<Code> {
 
     const spawnOptions: cp.SpawnOptions = {};
 
-    console.info(`Launching VS Code server ${electronPath} with args:\n${args.join(', ')}`);
+    options.logger.log(`Launching VS Code server ${electronPath} with args:\n${args.join(', ')}`);
     const child = cp.spawn(electronPath, args, spawnOptions);
-    child.on('error', error => console.error('VS Code process errored', error));
-    child.on('close', () => console.error('VS Code process closed'));
+    child.on('error', error => options.logger.log('VS Code process errored', error));
+    child.on('close', () => options.logger.log('VS Code process closed'));
+    // On windows, VSC doesn't seem to load properly without this.
     child.stdout.on('data', _data => {
         //Do nothing.
     });
+    // On windows, VSC doesn't seem to load properly without this.
     child.stderr.on('data', _data => {
         //Do nothing.
     });
     instances.add(child);
     child.once('exit', () => {
-        console.log('VS Code process exited');
+        options.logger.log('VS Code process exited');
         instances.delete(child);
     });
     // Wait and log everything (wait for VSC to start).
     await new Promise(resolve => setTimeout(resolve, 30_000));
-    console.info(`Attempting to connect to VS Code server on port ${port}`);
+    options.logger.log(`Attempting to connect to VS Code server on port ${port}`);
     return connect(child, outPath, port, options.logger);
 }
 
@@ -279,7 +281,7 @@ export class Code {
         try {
             await this.driver.exitApplication();
         } catch (ex) {
-            console.log('Failed to exitApplication');
+            this.logger.log('Failed to exitApplication');
             try {
                 this.proc.kill();
             } catch {
