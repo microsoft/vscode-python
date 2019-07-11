@@ -180,11 +180,11 @@ suite('Activation of Environments in Terminal', () => {
     // });
     test('Should activate with conda', async () => {
         await terminalSettings.update('integrated.shell.windows', 'C:\\Windows\\System32\\cmd.exe', vscode.ConfigurationTarget.Global);
-        // await pythonSettings.update('condaPath', envPaths.condaExecPath, vscode.ConfigurationTarget.Workspace);
+        await pythonSettings.update('condaPath', 'C:\\Miniconda\\Scripts\\conda.exe', vscode.ConfigurationTarget.Workspace);
 
         await updateSetting('terminal.activateEnvironment', true, vscode.workspace.workspaceFolders![0].uri, vscode.ConfigurationTarget.WorkspaceFolder);
         await setPythonPathInWorkspaceRoot(envPaths.condaPath);
-        const content = await openTerminalAndAwaitCommandContentForConda(waitTimeForActivation, file, outputFile, 5_000, 'conda');
+        const content = await openTerminalAndAwaitCommandContentForConda(waitTimeForActivation, file, outputFile, 5_000, 'C:\\Miniconda\\Scripts\\conda.exe');
         expect(fileSystem.arePathsSame(content, envPaths.condaPath)).to.equal(true, 'Environment not activated');
         // await testActivation(envPaths.condaPath);
     }).timeout(60_000);
