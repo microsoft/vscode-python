@@ -148,7 +148,19 @@ suite('Activation of Environments in Terminal', () => {
         const terminal = vscode.window.createTerminal();
         terminal.show();
         await sleep(consoleInitWaitMs);
-        terminal.sendText(`${condaExecutable || 'conda'} init`, true);
+        const termLogFile = path.join(__dirname, 'term_log.log');
+        if (process.platform === 'win32') {
+            terminal.sendText(`${condaExecutable || 'conda'} init > ${termLogFile} 2>&1`, true);
+            await sleep(consoleInitWaitMs);
+            await sleep(consoleInitWaitMs);
+            if (fs.pathExistsSync(termLogFile)) {
+                console.log(fs.readFileSync(termLogFile));
+            } else {
+                console.error('Log file does not exist');
+            }
+        } else {
+            terminal.sendText(`${condaExecutable || 'conda'} init`, true);
+        }
         await sleep(consoleInitWaitMs);
         await sleep(consoleInitWaitMs);
         const terminal2 = vscode.window.createTerminal();
