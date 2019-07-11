@@ -37,6 +37,11 @@ function activate(context) {
         const ext = vscode.extensions.getExtension('ms-python.python');
         if (!ext.isActive) {
             await ext.activate();
+            console.log('Bootstrap extension');
+            console.log('ext.exports');
+            console.log(ext.exports);
+            // Wait for extension to complete.
+            await ext.exports.ready;
         }
         statusBarItemActivated.text = 'Py2';
         statusBarItemActivated.tooltip = 'Py2';

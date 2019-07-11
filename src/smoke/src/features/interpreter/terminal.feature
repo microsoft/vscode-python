@@ -1,7 +1,9 @@
 @terminal
 Feature: Terminal
     Background: Activted Extension
+        Then take a screenshot
         Given the Python extension has been activated
+        Then take a screenshot
 
     @smoke
     Scenario: Execute File in Terminal

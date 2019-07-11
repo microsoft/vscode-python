@@ -11,7 +11,7 @@ export const extensionRootPath = path.join(__dirname, '..', '..', '..');
 export const featurePath = path.join(extensionRootPath, 'src', 'smoke', 'src', 'features');
 export const vscodeTestPath = path.join(extensionRootPath, '.vscode test');
 
-export const extensionActivationTimeout = 30_000;
+export const extensionActivationTimeout = 60_000;
 export const maxStepTimeout = 120_000;
 export const maxHookTimeout = 240_000;
 
