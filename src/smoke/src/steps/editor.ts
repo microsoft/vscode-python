@@ -45,10 +45,12 @@ When('I go to line {int}, column {int}', async (line: number, column: number) =>
 });
 
 Given('the file {string} is open', async (file: string) => {
+    await context.app.workbench.quickopen.runCommand('File: Refresh Explorer');
     await context.app.workbench.quickopen.openFile(file);
 });
 
 When('I open the file {string}', async (file: string) => {
+    await context.app.workbench.quickopen.runCommand('File: Refresh Explorer');
     await context.app.workbench.quickopen.openFile(file);
 });
 
