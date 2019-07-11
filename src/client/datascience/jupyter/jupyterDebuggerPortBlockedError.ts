@@ -5,9 +5,9 @@ import '../../common/extensions';
 import * as localize from '../../common/utils/localize';
 
 export class JupyterDebuggerPortBlockedError extends Error {
-    constructor(portNumber: number) {
+    constructor(portNumber: number, rangeBegin: number, rangeEnd: number) {
         super(portNumber === -1 ?
-            localize.DataScience.jupyterDebuggerPortBlockedSearchError() :
+            localize.DataScience.jupyterDebuggerPortBlockedSearchError().format(rangeBegin.toString(), rangeEnd.toString()) :
             localize.DataScience.jupyterDebuggerPortBlockedError().format(portNumber.toString()));
     }
 }

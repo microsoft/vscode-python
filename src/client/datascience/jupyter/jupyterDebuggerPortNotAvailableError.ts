@@ -5,9 +5,9 @@ import '../../common/extensions';
 import * as localize from '../../common/utils/localize';
 
 export class JupyterDebuggerPortNotAvailableError extends Error {
-    constructor(portNumber: number) {
+    constructor(portNumber: number, rangeBegin: number, rangeEnd: number) {
         super(portNumber === -1 ?
-            localize.DataScience.jupyterDebuggerPortNotAvailableSearchError() :
+            localize.DataScience.jupyterDebuggerPortNotAvailableSearchError().format(rangeBegin.toString(), rangeEnd.toString()) :
             localize.DataScience.jupyterDebuggerPortNotAvailableError().format(portNumber.toString()));
     }
 }

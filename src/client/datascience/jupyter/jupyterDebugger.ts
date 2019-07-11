@@ -14,7 +14,7 @@ import { IPlatformService } from '../../common/platform/types';
 import { IConfigurationService } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import { concatMultilineString } from '../common';
-import { Identifiers } from '../constants';
+import { Identifiers, Settings } from '../constants';
 import {
     CellState,
     ICell,
@@ -241,11 +241,12 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         // Loop through a bunch of ports until we find one we can use. Note how we
         // are connecting to '0.0.0.0' here. That's the location as far as ptvsd is concerned.
         const attachCode = portNumber !== -1 ?
-            `ptvsd.enable_attach(('0.0.0.0', ${portNumber}))` :
+            `ptvsd.enable_attach(('0.0.0.0', ${portNumber}))
+print("('${connectionInfo.hostName}', ${portNumber})")` :
             // tslint:disable-next-line: no-multiline-string
-            `port = 8889
+            `port = ${Settings.RemoteDebuggerPortBegin}
 attached = False
-while not attached and port <= 9000:
+while not attached and port <= ${Settings.RemoteDebuggerPortEnd}:
     try:
         ptvsd.enable_attach(('0.0.0.0', port))
         print("('${connectionInfo.hostName}', " + str(port) + ")")
@@ -260,14 +261,14 @@ while not attached and port <= 9000:
 
         // If that didn't work, throw an error so somebody can open the port
         if (!result) {
-            throw new JupyterDebuggerPortNotAvailableError(portNumber);
+            throw new JupyterDebuggerPortNotAvailableError(portNumber, Settings.RemoteDebuggerPortBegin, Settings.RemoteDebuggerPortEnd);
         }
 
         // Double check, open a socket? This won't work if we're remote ourselves. Actually the debug adapter runs
         // from the remote machine.
         try {
             const deferred = createDeferred();
-            const socket = net.createConnection(result.port, result.hostName, () => {
+            const socket = net.createConnection(result.port, result.host, () => {
                 deferred.resolve();
             });
             socket.on('error', (err) => deferred.reject(err));
@@ -275,9 +276,9 @@ while not attached and port <= 9000:
             await deferred.promise;
             socket.end();
         } catch (exc) {
-            traceWarning(`Cannot connect to remote debugger at ${result.hostName}:${result.port} => ${exc}`);
+            traceWarning(`Cannot connect to remote debugger at ${result.host}:${result.port} => ${exc}`);
             // We can't connect. Must be a firewall issue
-            throw new JupyterDebuggerPortBlockedError(portNumber);
+            throw new JupyterDebuggerPortBlockedError(portNumber, Settings.RemoteDebuggerPortBegin, Settings.RemoteDebuggerPortEnd);
         }
 
         return result;
