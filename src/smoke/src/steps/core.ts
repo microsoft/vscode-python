@@ -107,6 +107,7 @@ Then('a file named {string} is created with the following contents', async (file
     await fs.mkdirp(path.dirname(fullFilePath)).catch(noop);
     await fs.writeFile(fullFilePath, contents);
     await context.app.workbench.quickopen.runCommand('File: Refresh Explorer');
+    await context.app.workbench.quickopen.runCommand('File: Refresh Explorer');
 });
 
 When('the file {string} has the following content', async (fileName: string, contents: string) => {
@@ -114,17 +115,23 @@ When('the file {string} has the following content', async (fileName: string, con
     await fs.mkdirp(path.dirname(fullFilePath)).catch(noop);
     await fs.writeFile(fullFilePath, contents);
     await context.app.workbench.quickopen.runCommand('File: Refresh Explorer');
+    await context.app.workbench.quickopen.runCommand('File: Focus on Files Explorer');
+    await context.app.workbench.quickopen.runCommand('File: Refresh Explorer');
 });
 
 Given('a file named {string} does not exist', async (fileName: string) => {
     const fullFilePath = path.join(context.app.workspacePathOrFolder, fileName);
     await fs.unlink(fullFilePath).catch(noop);
     await context.app.workbench.quickopen.runCommand('File: Refresh Explorer');
+    await context.app.workbench.quickopen.runCommand('File: Focus on Files Explorer');
+    await context.app.workbench.quickopen.runCommand('File: Refresh Explorer');
 });
 
 Given('the file {string} does not exist', async (fileName: string) => {
     const fullFilePath = path.join(context.app.workspacePathOrFolder, fileName);
     await fs.unlink(fullFilePath).catch(noop);
+    await context.app.workbench.quickopen.runCommand('File: Refresh Explorer');
+    await context.app.workbench.quickopen.runCommand('File: Focus on Files Explorer');
     await context.app.workbench.quickopen.runCommand('File: Refresh Explorer');
 });
 
