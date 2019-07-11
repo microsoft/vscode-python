@@ -19,7 +19,7 @@ Feature: Terminal
         Then take a screenshot
         # Wait for some time, as it could take a while for terminal to get activated.
         # Slow on windows.
-        Then a file named "log.log" is created within 20 seconds
+        Then a file named "log.log" is created within 30 seconds
 
     Scenario: Execute File within a sub directory in Terminal
         # Use folders and paths with spaces.
