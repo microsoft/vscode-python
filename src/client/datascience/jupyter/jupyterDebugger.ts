@@ -28,7 +28,7 @@ import {
 import { JupyterDebuggerNotInstalledError } from './jupyterDebuggerNotInstalledError';
 import { JupyterDebuggerPortBlockedError } from './jupyterDebuggerPortBlockedError';
 import { JupyterDebuggerPortNotAvailableError } from './jupyterDebuggerPortNotAvailableError';
-import { ILiveShareParticipant } from './liveshare/types';
+import { ILiveShareHasRole } from './liveshare/types';
 
 @injectable()
 export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
@@ -99,8 +99,8 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     private async connect(server: INotebookServer): Promise<DebugConfiguration | undefined> {
         // First check if this is a live share server. Skip debugging attach on the guest
         // tslint:disable-next-line: no-any
-        const liveShareParticipant = (server as any) as ILiveShareParticipant;
-        if (liveShareParticipant && liveShareParticipant.role && liveShareParticipant.role === vsls.Role.Guest) {
+        const hasRole = (server as any) as ILiveShareHasRole;
+        if (hasRole && hasRole.role && hasRole.role === vsls.Role.Guest) {
             traceInfo('guest mode attach skipped');
             return;
         }

@@ -615,7 +615,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
             sendTelemetryEvent(Telemetry.RemoteAddCode);
 
             // Submit this item as new code.
-            this.submitCode(args.code, args.file, args.line, args.id).ignoreErrors();
+            this.submitCode(args.code, args.file, args.line, args.id, undefined, undefined, args.debug).ignoreErrors();
         }
     }
 
@@ -701,7 +701,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
 
             // Activate the other side, and send as if came from a file
             this.interactiveWindowProvider.getOrCreateActive().then(_v => {
-                this.shareMessage(InteractiveWindowMessages.RemoteAddCode, { code: info.code, file: Identifiers.EmptyFileName, line: 0, id: info.id, originator: this.id });
+                this.shareMessage(InteractiveWindowMessages.RemoteAddCode, { code: info.code, file: Identifiers.EmptyFileName, line: 0, id: info.id, originator: this.id, debug: false });
             }).ignoreErrors();
         }
     }
@@ -715,7 +715,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         // Transmit this submission to all other listeners (in a live share session)
         if (!id) {
             id = uuid();
-            this.shareMessage(InteractiveWindowMessages.RemoteAddCode, { code, file, line, id, originator: this.id });
+            this.shareMessage(InteractiveWindowMessages.RemoteAddCode, { code, file, line, id, originator: this.id, debug: debug !== undefined ? debug : false });
         }
 
         // Create a deferred object that will wait until the status is disposed
