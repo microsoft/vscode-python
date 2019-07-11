@@ -7,7 +7,6 @@ import { expect } from 'chai';
 
 import { DECREASE_INDENT_REGEX, INCREASE_INDENT_REGEX, MULTILINE_SEPARATOR_INDENT_REGEX, OUTDENT_ONENTER_REGEX } from '../../client/language/languageConfiguration';
 
-// tslint:disable-next-line: max-func-body-length
 suite('Language configuration regexes', () => {
     test('Multiline separator indent regex should not pick up strings with no multiline separator', async () => {
         const result = MULTILINE_SEPARATOR_INDENT_REGEX.test('a = "test"');
