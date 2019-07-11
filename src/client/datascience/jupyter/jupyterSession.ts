@@ -316,10 +316,14 @@ export class JupyterSession implements IJupyterSession {
     }
 
     private async shutdownSession(session: Session.ISession | undefined, statusHandler: Slot<Session.ISession, Kernel.Status> | undefined): Promise<void> {
-        if (session) {
+        if (session && session.kernel) {
+            const kernelId = session.kernel.id;
+            traceInfo(`shutdownSession ${kernelId} - start`);
             try {
                 if (statusHandler) {
+                    traceInfo(`shutdownSession ${kernelId} - disconnect`);
                     session.statusChanged.disconnect(statusHandler);
+                    traceInfo(`shutdownSession ${kernelId} - disconnect complete`);
                 }
                 try {
                     // When running under a test, mark all futures as done so we
@@ -327,29 +331,34 @@ export class JupyterSession implements IJupyterSession {
                     // https://github.com/jupyterlab/jupyterlab/issues/4252
                     // tslint:disable:no-any
                     if (isTestExecution()) {
-                        if (session && session.kernel) {
-                            const defaultKernel = session.kernel as any;
-                            if (defaultKernel && defaultKernel._futures) {
-                                const futures = defaultKernel._futures as Map<any, any>;
-                                if (futures) {
-                                    futures.forEach(f => {
-                                        if (f._status !== undefined) {
-                                            f._status |= 4;
-                                        }
-                                    });
-                                }
+                        const defaultKernel = session.kernel as any;
+                        if (defaultKernel && defaultKernel._futures) {
+                            traceInfo(`shutdownSession ${kernelId} - fixing futures`);
+                            const futures = defaultKernel._futures as Map<any, any>;
+                            if (futures) {
+                                futures.forEach(f => {
+                                    if (f._status !== undefined) {
+                                        f._status |= 4;
+                                    }
+                                });
                             }
                         }
+                        traceInfo(`shutdownSession ${kernelId} - waiting for shutdown`);
                         await waitForPromise(session.shutdown(), 20000);
+                        traceInfo(`shutdownSession ${kernelId} - shutdown complete`);
                     } else {
+                        traceInfo(`shutdownSession ${kernelId} - waiting for shutdown`);
                         // Shutdown may fail if the process has been killed
                         await waitForPromise(session.shutdown(), 1000);
+                        traceInfo(`shutdownSession ${kernelId} - shutdown complete`);
                     }
                 } catch {
                     noop();
                 }
                 if (session && !session.isDisposed) {
+                    traceInfo(`shutdownSession ${kernelId} - session dispose`);
                     session.dispose();
+                    traceInfo(`shutdownSession ${kernelId} - session dispose complete`);
                 }
             } catch (e) {
                 // Ignore, just trace.
@@ -361,17 +370,23 @@ export class JupyterSession implements IJupyterSession {
     //tslint:disable:cyclomatic-complexity
     private async shutdownSessionAndConnection(): Promise<void> {
         if (this.contentsManager) {
+            traceInfo('ShutdownSessionAndConnection - dispose contents manager');
             this.contentsManager.dispose();
             this.contentsManager = undefined;
         }
         if (this.session || this.sessionManager) {
             try {
+                traceInfo('ShutdownSessionAndConnection - old sessions');
                 await Promise.all(this.shuttingDownSessions);
+                traceInfo('ShutdownSessionAndConnection - current session');
                 await this.shutdownSession(this.session, this.statusHandler);
+                traceInfo('ShutdownSessionAndConnection - get restart session');
                 const restartSession = await this.restartSessionPromise;
+                traceInfo('ShutdownSessionAndConnection - shutdown restart session');
                 await this.shutdownSession(restartSession, undefined);
 
                 if (this.sessionManager && !this.sessionManager.isDisposed) {
+                    traceInfo('ShutdownSessionAndConnection - dispose session manager');
                     this.sessionManager.dispose();
                 }
             } catch {
@@ -385,9 +400,11 @@ export class JupyterSession implements IJupyterSession {
             this.onRestartedEvent.dispose();
         }
         if (this.connInfo) {
+            traceInfo('ShutdownSessionAndConnection - dispose conn info');
             this.connInfo.dispose(); // This should kill the process that's running
             this.connInfo = undefined;
         }
+        traceInfo('ShutdownSessionAndConnection -- complete');
     }
 
 }
