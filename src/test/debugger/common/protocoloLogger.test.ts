@@ -13,7 +13,7 @@ suite('Debugging - Protocol Logger', () => {
     setup(() => {
         protocolLogger = new ProtocolLogger();
     });
-    test('Ensure messages are buffered untill logger is provided', async () => {
+    test('Ensure messages are buffered until logger is provided', async () => {
         const inputStream = new PassThrough();
         const outputStream = new PassThrough();
 

@@ -103,7 +103,7 @@ gulp.task('clean', gulp.parallel('output:clean', 'clean:vsix', 'clean:out'));
 
 gulp.task('checkNativeDependencies', done => {
     if (hasNativeDependencies()) {
-        done(new Error('Native dependencies deteced'));
+        done(new Error('Native dependencies detected'));
     }
     done();
 });

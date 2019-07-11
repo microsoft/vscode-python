@@ -22,9 +22,9 @@ export class TestFunctionCodeNavigator implements ITestCodeNavigator {
         @inject(ITestCollectionStorageService) private readonly storage: ITestCollectionStorageService
     ) { }
     @swallowExceptions('Navigate to test function')
-    @captureTelemetry(EventName.UNITTEST_NAVIGATE_TEST_FUNCTION, undefined, true)
+    @captureTelemetry(EventName.UNITTEST_NAVIGATE, { byFunction: true }, true)  // To measure execution time.
     public async navigateTo(resource: Uri, fn: TestFunction, focus: boolean = true): Promise<void> {
-        sendTelemetryEvent(EventName.UNITTEST_NAVIGATE_TEST_FUNCTION, undefined, { focus_code: focus });
+        sendTelemetryEvent(EventName.UNITTEST_NAVIGATE, undefined, { focus_code: focus, byFunction: true });
         if (this.cancellationToken) {
             this.cancellationToken.cancel();
         }

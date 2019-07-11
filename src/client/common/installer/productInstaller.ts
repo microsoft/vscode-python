@@ -4,6 +4,7 @@ import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
 import { OutputChannel, Uri } from 'vscode';
 import '../../common/extensions';
+import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { LinterId } from '../../linters/types';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -76,7 +77,7 @@ export abstract class BaseInstaller {
     }
 
     public async isInstalled(product: Product, resource?: Uri): Promise<boolean | undefined> {
-        if (product === Product.unittest) {
+        if (product === Product.unittest || product === Product.jupyter) {
             return true;
         }
         // User may have customized the module name or provided the fully qualified path.
@@ -271,6 +272,14 @@ export class RefactoringLibraryInstaller extends BaseInstaller {
     }
 }
 
+export class DataScienceInstaller extends BaseInstaller {
+    protected async promptToInstallImplementation(product: Product, resource?: Uri): Promise<InstallerResponse> {
+        const productName = ProductNames.get(product)!;
+        const item = await this.appShell.showErrorMessage(localize.DataScience.libraryNotInstalled().format(productName), 'Yes', 'No');
+        return item === 'Yes' ? this.install(product, resource) : InstallerResponse.Ignore;
+    }
+}
+
 @injectable()
 export class ProductInstaller implements IInstaller {
     private readonly productService: IProductService;
@@ -307,6 +316,8 @@ export class ProductInstaller implements IInstaller {
                 return new TestFrameworkInstaller(this.serviceContainer, this.outputChannel);
             case ProductType.RefactoringLibrary:
                 return new RefactoringLibraryInstaller(this.serviceContainer, this.outputChannel);
+            case ProductType.DataScience:
+                return new DataScienceInstaller(this.serviceContainer, this.outputChannel);
             default:
                 break;
         }
@@ -333,6 +344,7 @@ function translateProductToModule(product: Product, purpose: ModuleNamePurpose):
         case Product.unittest: return 'unittest';
         case Product.rope: return 'rope';
         case Product.bandit: return 'bandit';
+        case Product.jupyter: return 'jupyter';
         default: {
             throw new Error(`Product ${product} cannot be installed as a Python Module.`);
         }

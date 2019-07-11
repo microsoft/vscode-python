@@ -182,7 +182,7 @@ def get_current_line(context):
         )
         match = LINE_COLUMN_REGEX_FROM_PY_STATUS_BAR.match(element.text)
         if match is None:
-            raise ValueError(f"Unable to detemrine line & column")
+            raise ValueError(f"Unable to determine line & column")
         return int(match.group("line")), int(match.group("col"))
     except Exception:
         uitests.vscode.application.capture_screen_to_file(
@@ -229,7 +229,7 @@ def get_current_line(context):
         core.dispatch_keys(context.driver, Keys.ESCAPE, element=element)
 
     if match is None:
-        raise ValueError(f"Unable to detemrine line from Go to label")
+        raise ValueError(f"Unable to determine line from Go to label")
     return int(match.group("line"))
 
 
@@ -238,7 +238,7 @@ def get_current_position(context, **kwargs):
     element = core.wait_for_element(context.driver, selector, **kwargs)
     match = LINE_COLUMN_REGEX.match(element.text)
     if match is None:
-        raise ValueError(f"Unable to detemrine line & column")
+        raise ValueError(f"Unable to determine line & column")
     return int(match.group("line")), int(match.group("col"))
 
 

@@ -20,7 +20,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import { Cancellation } from '../../common/cancellation';
 import { isTestExecution } from '../../common/constants';
 import { traceInfo, traceWarning } from '../../common/logger';
-import { sleep } from '../../common/utils/async';
+import { sleep, waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import {
@@ -37,13 +37,13 @@ import { createJupyterWebSocket } from './jupyterWebSocket';
 export class JupyterSession implements IJupyterSession {
     private connInfo: IConnection | undefined;
     private kernelSpec: IJupyterKernelSpec | undefined;
-    private sessionManager : SessionManager | undefined;
+    private sessionManager: SessionManager | undefined;
     private session: Session.ISession | undefined;
     private restartSessionPromise: Promise<Session.ISession> | undefined;
     private contentsManager: ContentsManager | undefined;
     private notebookFiles: Contents.IModel[] = [];
-    private onRestartedEvent : EventEmitter<void> | undefined;
-    private statusHandler : Slot<Session.ISession, Kernel.Status> | undefined;
+    private onRestartedEvent: EventEmitter<void> | undefined;
+    private statusHandler: Slot<Session.ISession, Kernel.Status> | undefined;
     private connected: boolean = false;
     private jupyterPasswordConnect: IJupyterPasswordConnect;
 
@@ -51,13 +51,13 @@ export class JupyterSession implements IJupyterSession {
         connInfo: IConnection,
         kernelSpec: IJupyterKernelSpec | undefined,
         jupyterPasswordConnect: IJupyterPasswordConnect
-        ) {
+    ) {
         this.connInfo = connInfo;
         this.kernelSpec = kernelSpec;
         this.jupyterPasswordConnect = jupyterPasswordConnect;
     }
 
-    public dispose() : Promise<void> {
+    public dispose(): Promise<void> {
         return this.shutdown();
     }
 
@@ -68,8 +68,7 @@ export class JupyterSession implements IJupyterSession {
         if (this.notebookFiles.length && this.contentsManager && this.connInfo && !this.connInfo.localLaunch) {
             try {
                 // Make sure we have a session first and it returns something
-                if (this.sessionManager)
-                {
+                if (this.sessionManager) {
                     await this.sessionManager.refreshRunning();
                     await Promise.all(this.notebookFiles.map(f => this.contentsManager!.delete(f.path)));
                     this.notebookFiles = [];
@@ -81,14 +80,14 @@ export class JupyterSession implements IJupyterSession {
         return this.shutdownSessionAndConnection();
     }
 
-    public get onRestarted() : Event<void> {
+    public get onRestarted(): Event<void> {
         if (!this.onRestartedEvent) {
             this.onRestartedEvent = new EventEmitter<void>();
         }
         return this.onRestartedEvent.event;
     }
 
-    public async waitForIdle(timeout: number) : Promise<void> {
+    public async waitForIdle(timeout: number): Promise<void> {
         if (this.session && this.session.kernel) {
             // This function seems to cause CI builds to timeout randomly on
             // different tests. Waiting for status to go idle doesn't seem to work and
@@ -109,7 +108,7 @@ export class JupyterSession implements IJupyterSession {
         }
     }
 
-    public async restart(_timeout: number) : Promise<void> {
+    public async restart(_timeout: number): Promise<void> {
         // Just kill the current session and switch to the other
         if (this.restartSessionPromise && this.session && this.sessionManager && this.contentsManager) {
             // Save old state for shutdown
@@ -131,21 +130,21 @@ export class JupyterSession implements IJupyterSession {
         }
     }
 
-    public interrupt(timeout: number) : Promise<void> {
-        return this.session && this.session.kernel ?
-            this.waitForKernelPromise(this.session.kernel.interrupt(), timeout, localize.DataScience.interruptingKernelFailed()) :
-            Promise.resolve();
+    public async interrupt(timeout: number): Promise<void> {
+        if (this.session && this.session.kernel) {
+            await this.waitForKernelPromise(this.session.kernel.interrupt(), timeout, localize.DataScience.interruptingKernelFailed());
+        }
     }
 
-    public requestExecute(content: KernelMessage.IExecuteRequest, disposeOnDone?: boolean, metadata?: JSONObject) : Kernel.IFuture | undefined {
+    public requestExecute(content: KernelMessage.IExecuteRequest, disposeOnDone?: boolean, metadata?: JSONObject): Kernel.IFuture | undefined {
         return this.session && this.session.kernel ? this.session.kernel.requestExecute(content, disposeOnDone, metadata) : undefined;
     }
 
-    public requestComplete(content: KernelMessage.ICompleteRequest) : Promise<KernelMessage.ICompleteReplyMsg | undefined> {
+    public requestComplete(content: KernelMessage.ICompleteRequest): Promise<KernelMessage.ICompleteReplyMsg | undefined> {
         return this.session && this.session.kernel ? this.session.kernel.requestComplete(content) : Promise.resolve(undefined);
     }
 
-    public async connect(cancelToken?: CancellationToken) : Promise<void> {
+    public async connect(cancelToken?: CancellationToken): Promise<void> {
         if (!this.connInfo) {
             throw new Error(localize.DataScience.sessionDisposed());
         }
@@ -168,17 +167,17 @@ export class JupyterSession implements IJupyterSession {
         this.connected = true;
     }
 
-    public get isConnected() : boolean {
+    public get isConnected(): boolean {
         return this.connected;
     }
 
-    private async createSession(serverSettings: ServerConnection.ISettings, contentsManager: ContentsManager, cancelToken?: CancellationToken) : Promise<Session.ISession> {
+    private async createSession(serverSettings: ServerConnection.ISettings, contentsManager: ContentsManager, cancelToken?: CancellationToken): Promise<Session.ISession> {
 
         // Create a temporary notebook for this session.
-        this.notebookFiles.push(await contentsManager.newUntitled({type: 'notebook'}));
+        this.notebookFiles.push(await contentsManager.newUntitled({ type: 'notebook' }));
 
         // Create our session options using this temporary notebook and our connection info
-        const options : Session.IOptions = {
+        const options: Session.IOptions = {
             path: this.notebookFiles[this.notebookFiles.length - 1].path,
             kernelName: this.kernelSpec ? this.kernelSpec.name : '',
             name: uuid(), // This is crucial to distinguish this session from any other.
@@ -193,12 +192,12 @@ export class JupyterSession implements IJupyterSession {
     }
     private async getServerConnectSettings(connInfo: IConnection): Promise<ServerConnection.ISettings> {
         let serverSettings: Partial<ServerConnection.ISettings> =
-            {
-                baseUrl: connInfo.baseUrl,
-                pageUrl: '',
-                // A web socket is required to allow token authentication
-                wsUrl: connInfo.baseUrl.replace('http', 'ws')
-            };
+        {
+            baseUrl: connInfo.baseUrl,
+            pageUrl: '',
+            // A web socket is required to allow token authentication
+            wsUrl: connInfo.baseUrl.replace('http', 'ws')
+        };
 
         // Agent is allowed to be set on this object, but ts doesn't like it on RequestInit, so any
         // tslint:disable-next-line:no-any
@@ -209,31 +208,31 @@ export class JupyterSession implements IJupyterSession {
 
         // If no token is specified prompt for a password
         if (connInfo.token === '' || connInfo.token === 'null') {
-            serverSettings = {...serverSettings, token: ''};
+            serverSettings = { ...serverSettings, token: '' };
             const pwSettings = await this.jupyterPasswordConnect.getPasswordConnectionInfo(connInfo.baseUrl, connInfo.allowUnauthorized ? true : false);
             if (pwSettings) {
                 cookieString = this.getSessionCookieString(pwSettings);
                 const requestHeaders = { Cookie: cookieString, 'X-XSRFToken': pwSettings.xsrfCookie };
-                requestInit = {...requestInit, headers: requestHeaders};
+                requestInit = { ...requestInit, headers: requestHeaders };
                 requiresWebSocket = true;
             } else {
                 // Failed to get password info, notify the user
                 throw new Error(localize.DataScience.passwordFailure());
             }
         } else {
-            serverSettings = {...serverSettings, token: connInfo.token};
+            serverSettings = { ...serverSettings, token: connInfo.token };
         }
 
         // If this is an https connection and we want to allow unauthorized connections set that option on our agent
         // we don't need to save the agent as the previous behaviour is just to create a temporary default agent when not specified
         if (connInfo.baseUrl.startsWith('https') && connInfo.allowUnauthorized) {
-            const requestAgent = new HttpsAgent({rejectUnauthorized: false});
-            requestInit = {...requestInit, agent: requestAgent};
+            const requestAgent = new HttpsAgent({ rejectUnauthorized: false });
+            requestInit = { ...requestInit, agent: requestAgent };
             requiresWebSocket = true;
             allowUnauthorized = true;
         }
 
-        serverSettings = {...serverSettings, init: requestInit};
+        serverSettings = { ...serverSettings, init: requestInit };
 
         // Only replace the websocket if we need to so we keep our normal local attach clean
         if (requiresWebSocket) {
@@ -241,18 +240,22 @@ export class JupyterSession implements IJupyterSession {
             // See _createSocket here:
             // https://github.com/jupyterlab/jupyterlab/blob/cfc8ebda95e882b4ed2eefd54863bb8cdb0ab763/packages/services/src/kernel/default.ts
             // tslint:disable-next-line:no-any
-            serverSettings = {...serverSettings, WebSocket: createJupyterWebSocket(cookieString, allowUnauthorized) as any};
+            serverSettings = { ...serverSettings, WebSocket: createJupyterWebSocket(cookieString, allowUnauthorized) as any };
         }
 
         return ServerConnection.makeSettings(serverSettings);
     }
 
-    private async waitForKernelPromise(kernelPromise: Promise<void>, timeout: number, errorMessage: string) : Promise<void> {
+    private async waitForKernelPromise(kernelPromise: Promise<void>, timeout: number, errorMessage: string): Promise<void | null> {
         // Wait for this kernel promise to happen
-        const result = await Promise.race([kernelPromise, sleep(timeout)]);
-        if (result === timeout) {
-            // We timed out. Throw a specific exception
-            throw new JupyterKernelPromiseFailedError(errorMessage);
+        try {
+            return await waitForPromise(kernelPromise, timeout);
+        } catch (e) {
+            if (!e) {
+                // We timed out. Throw a specific exception
+                throw new JupyterKernelPromiseFailedError(errorMessage);
+            }
+            throw e;
         }
     }
 
@@ -273,7 +276,7 @@ export class JupyterSession implements IJupyterSession {
         this.kernelSpec = undefined;
     }
 
-    private async shutdownSession(session: Session.ISession | undefined, statusHandler: Slot<Session.ISession, Kernel.Status> | undefined) : Promise<void> {
+    private async shutdownSession(session: Session.ISession | undefined, statusHandler: Slot<Session.ISession, Kernel.Status> | undefined): Promise<void> {
         if (session) {
             try {
                 if (statusHandler) {
@@ -301,7 +304,7 @@ export class JupyterSession implements IJupyterSession {
                     }
 
                     // Shutdown may fail if the process has been killed
-                    await Promise.race([session.shutdown(), sleep(1000)]);
+                    await waitForPromise(session.shutdown(), 1000);
                 } catch {
                     noop();
                 }

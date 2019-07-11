@@ -599,10 +599,10 @@ suite('A/B experiments', () => {
                     expect(() => expManager.isUserInRange(79, 94, 'salt')).to.throw();
                 } else if (testParams.error) {
                     const error = new Error('Kaboom');
-                    when(crypto.createHash(anything(), 'hex', 'number')).thenThrow(error);
+                    when(crypto.createHash(anything(), 'number')).thenThrow(error);
                     expect(() => expManager.isUserInRange(79, 94, 'salt')).to.throw(error);
                 } else {
-                    when(crypto.createHash(anything(), 'hex', 'number')).thenReturn(testParams.hash);
+                    when(crypto.createHash(anything(), 'number')).thenReturn(testParams.hash);
                     expect(expManager.isUserInRange(79, 94, 'salt')).to.equal(testParams.expectedResult, 'Incorrectly identified');
                 }
             });
@@ -636,7 +636,7 @@ suite('A/B experiments', () => {
                 .returns(() => testParams.experimentStorageValue);
             when(appEnvironment.machineId).thenReturn('101');
             if (testParams.hash) {
-                when(crypto.createHash(anything(), 'hex', 'number')).thenReturn(testParams.hash);
+                when(crypto.createHash(anything(), 'number')).thenReturn(testParams.hash);
             }
             expManager.populateUserExperiments();
             assert.deepEqual(expManager.userExperiments, testParams.expectedResult);

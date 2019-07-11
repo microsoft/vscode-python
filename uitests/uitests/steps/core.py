@@ -243,7 +243,7 @@ def log_message(context, message):
 
 @behave.then("take a screenshot")
 def capture_screen(context):
-    """Caprtures a screenshot."""
+    """Captures a screenshot."""
     uitests.vscode.application.capture_screen(context)
 
 

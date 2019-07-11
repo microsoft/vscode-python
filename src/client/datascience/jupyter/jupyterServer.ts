@@ -16,14 +16,14 @@ import { ILiveShareApi } from '../../common/application/types';
 import { Cancellation, CancellationError } from '../../common/cancellation';
 import { traceInfo, traceWarning } from '../../common/logger';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
-import { createDeferred, Deferred, sleep } from '../../common/utils/async';
+import { createDeferred, Deferred, waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateCells } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
-import { concatMultilineString } from '../common';
+import { concatMultilineString, formatStreamText } from '../common';
 import { CodeSnippits, Identifiers, Telemetry } from '../constants';
 import {
     CellState,
@@ -131,7 +131,7 @@ export class JupyterServerBase implements INotebookServer {
     private sessionStartTime: number | undefined;
     private pendingCellSubscriptions: CellSubscriber[] = [];
     private ranInitialSetup = false;
-    private id = uuid();
+    private _id = uuid();
     private connectPromise: Deferred<INotebookServerLaunchInfo> = createDeferred<INotebookServerLaunchInfo>();
     private connectionInfoDisconnectHandler: Disposable | undefined;
     private serverExitCode: number | undefined;
@@ -203,6 +203,10 @@ export class JupyterServerBase implements INotebookServer {
 
     public dispose(): Promise<void> {
         return this.shutdown();
+    }
+
+    public get id(): string {
+        return this._id;
     }
 
     public waitForIdle(timeoutMs: number): Promise<void> {
@@ -360,15 +364,14 @@ export class JupyterServerBase implements INotebookServer {
 
             try {
                 // Wait for all of the pending cells to finish or the timeout to fire
-                const result = await Promise.race([finished, restarted.promise, sleep(timeoutMs)]);
+                const result = await waitForPromise(Promise.race([finished, restarted.promise]), timeoutMs);
 
                 // See if we restarted or not
                 if (restarted.completed) {
                     return InterruptResult.Restarted;
                 }
 
-                // See if we timed out or not.
-                if (result === timeoutMs) {
+                if (result === null) {
                     // We timed out. You might think we should stop our pending list, but that's not
                     // up to us. The cells are still executing. The user has to request a restart or try again
                     return InterruptResult.TimedOut;
@@ -495,12 +498,12 @@ export class JupyterServerBase implements INotebookServer {
                 outputs.forEach(o => {
                     if (o.output_type === 'stream') {
                         const stream = o as nbformat.IStream;
-                        result = result.concat(stream.text.toString());
+                        result = this.trimOutputLineCount(result.concat(formatStreamText(concatMultilineString(stream.text))));
                     } else {
                         const data = o.data;
                         if (data && data.hasOwnProperty('text/plain')) {
                             // tslint:disable-next-line:no-any
-                            result = result.concat((data as any)['text/plain']);
+                            result = this.trimOutputLineCount(result.concat((data as any)['text/plain']));
                         }
                     }
                 });
@@ -723,22 +726,22 @@ export class JupyterServerBase implements INotebookServer {
             // Tell our listener. NOTE: have to do this asap so that markdown cells don't get
             // run before our cells.
             subscriber.next(cell);
+            const isSilent = silent !== undefined ? silent : false;
+
+            // Wrap the subscriber and save it. It is now pending and waiting completion. Have to do this
+            // synchronously so it happens before interruptions.
+            const cellSubscriber = new CellSubscriber(cell, subscriber, (self: CellSubscriber) => {
+                // Subscriber completed, remove from subscriptions.
+                this.pendingCellSubscriptions = this.pendingCellSubscriptions.filter(p => p !== self);
+
+                // Indicate success or failure
+                this.logPostCode(cell, isSilent).ignoreErrors();
+            });
+            this.pendingCellSubscriptions.push(cellSubscriber);
 
             // Log the pre execution.
-            const isSilent = silent !== undefined ? silent : false;
             this.logPreCode(cell, isSilent).then(() => {
-                // Wrap the subscriber and save it. It is now pending and waiting completion.
-                const cellSubscriber = new CellSubscriber(cell, subscriber, (self: CellSubscriber) => {
-                    // Subscriber completed, remove from subscriptions.
-                    this.pendingCellSubscriptions = this.pendingCellSubscriptions.filter(p => p !== self);
-
-                    // Indicate success or failure
-                    this.logPostCode(cell, isSilent).ignoreErrors();
-                });
-                this.pendingCellSubscriptions.push(cellSubscriber);
-
-                // Attempt to change to the current directory. When that finishes
-                // send our real request
+                // Now send our real request. This should call back on the cellsubscriber when it's done.
                 this.handleCodeRequest(cellSubscriber, silent);
             }).ignoreErrors();
 
@@ -774,6 +777,11 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     private handleExecuteResult(msg: KernelMessage.IExecuteResultMsg, clearState: Map<string, boolean>, cell: ICell) {
+        // Check our length on text output
+        if (msg.content.data && msg.content.data.hasOwnProperty('text/plain')) {
+            msg.content.data['text/plain'] = this.trimOutputLineCount(msg.content.data['text/plain'] as string);
+        }
+
         this.addToCellData(
             cell,
             { output_type: 'execute_result', data: msg.content.data, metadata: msg.content.metadata, execution_count: msg.content.execution_count },
@@ -804,6 +812,7 @@ export class JupyterServerBase implements INotebookServer {
             } else {
                 // tslint:disable-next-line:restrict-plus-operands
                 existing.text = existing.text + msg.content.text;
+                existing.text = this.trimOutputLineCount(formatStreamText(concatMultilineString(existing.text)));
             }
 
         } else {
@@ -811,7 +820,7 @@ export class JupyterServerBase implements INotebookServer {
             const output: nbformat.IStream = {
                 output_type: 'stream',
                 name: msg.content.name,
-                text: msg.content.text
+                text: this.trimOutputLineCount(formatStreamText(concatMultilineString(msg.content.text)))
             };
             this.addToCellData(cell, output, clearState);
         }
@@ -878,5 +887,28 @@ export class JupyterServerBase implements INotebookServer {
         };
         this.addToCellData(cell, output, clearState);
         cell.state = CellState.error;
+    }
+
+    // We have a set limit for the number of output text lines that we display by default
+    // trim down strings to that limit, assuming at this point we have compressed down to a single string
+    private trimOutputLineCount(outputString: string): string {
+        const trimLineCount = this.configService.getSettings().datascience.textOutputLineLimit;
+
+        if (!trimLineCount || trimLineCount === 0) {
+            return outputString;
+        }
+
+        let foundNewLines = 0;
+        for (let i = outputString.length - 1; i >= 0; i -= 1) {
+            if (outputString[i] === '\n') {
+                foundNewLines = foundNewLines + 1;
+
+                if (foundNewLines >= trimLineCount) {
+                    return outputString.substr(i + 1);
+                }
+            }
+        }
+
+        return outputString;
     }
 }

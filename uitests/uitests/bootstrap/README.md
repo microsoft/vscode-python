@@ -6,4 +6,4 @@
     * Look for a file that contains the path to the workspace folder that needs to be opened.
     * Next use VSC API to re-load VSC by opening that folder.
 
-* Hacky, but it works, at least untill we know how to pass CLI args when using `selenium`
+* Hacky, but it works, at least until we know how to pass CLI args when using `selenium`

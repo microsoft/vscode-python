@@ -240,14 +240,14 @@ def after_step(context, step):
     if add_screenshot or step.exception is not None:
         try:
             uitests.vscode.application.capture_screen(context)
-            # # We might want folder view in screenshoits as well.
+            # # We might want folder view in screenshots as well.
             # uitests.vscode.quick_open.select_command(context, "View: Show Explorer")
             # uitests.vscode.application.capture_screen(context)
             # # We might want panels without
             # uitests.vscode.notifications.clear()
             # uitests.vscode.application.capture_screen(context)
         except Exception:
-            # Possible vsc has died as part of the exceptiion.
+            # Possible vsc has died as part of the exception.
             # Or we closed it as part of a step.
             pass
 

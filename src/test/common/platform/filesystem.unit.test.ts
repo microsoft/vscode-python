@@ -102,7 +102,7 @@ suite('FileSystem', () => {
                 expect(err).to.equal(undefined, `Failed to write to a temp file, error is ${err}`);
             });
         }, (failReason) => {
-            expect(failReason).to.equal('No errors occured', `Failed to create a temporary file with error ${failReason}`);
+            expect(failReason).to.equal('No errors occurred', `Failed to create a temporary file with error ${failReason}`);
         });
     });
     test('Ensure chmod works against a temporary file', async () => {

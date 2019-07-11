@@ -55,14 +55,14 @@ export class MockJupyterManager implements IJupyterSessionManager {
     private processServiceFactory = this.createTypeMoq<IProcessServiceFactory>('Process Exec Factory');
     private processService: MockProcessService = new MockProcessService();
     private interpreterService = this.createTypeMoq<IInterpreterService>('Interpreter Service');
-    private asyncRegistry : IAsyncDisposableRegistry;
+    private asyncRegistry: IAsyncDisposableRegistry;
     private changedInterpreterEvent: EventEmitter<void> = new EventEmitter<void>();
-    private installedInterpreters : PythonInterpreter[] = [];
+    private installedInterpreters: PythonInterpreter[] = [];
     private pythonServices: MockPythonService[] = [];
     private activeInterpreter: PythonInterpreter | undefined;
     private sessionTimeout: number | undefined;
     private cellDictionary: Record<string, ICell> = {};
-    private kernelSpecs : {name: string; dir: string}[] = [];
+    private kernelSpecs: { name: string; dir: string }[] = [];
     private currentSession: MockJupyterSession | undefined;
 
     constructor(serviceManager: IServiceManager) {
@@ -97,12 +97,12 @@ export class MockJupyterManager implements IJupyterSessionManager {
 
         // Setup our default kernel spec (this is just a dummy value)
         // tslint:disable-next-line:no-octal-literal
-        this.kernelSpecs.push({name: '0e8519db-0895-416c-96df-fa80131ecea0', dir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0'});
+        this.kernelSpecs.push({ name: '0e8519db-0895-416c-96df-fa80131ecea0', dir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0' });
 
         // Setup our default cells that happen for everything
         this.addCell(CodeSnippits.MatplotLibInitSvg);
         this.addCell(CodeSnippits.MatplotLibInitPng);
-        this.addCell(`import sys\r\nsys.path.append('undefined')`);
+        this.addCell(`import sys\r\nsys.path.append('undefined')\r\nsys.path`);
         this.addCell(`import ptvsd\r\nptvsd.enable_attach(('localhost', 0))`);
         this.addCell('matplotlib.style.use(\'dark_background\')');
         this.addCell(`matplotlib.rcParams.update(${Identifiers.MatplotLibDefaultParams})`);
@@ -116,7 +116,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         this.activeInterpreter = interpreter;
     }
 
-    public getCurrentSession() : MockJupyterSession | undefined {
+    public getCurrentSession(): MockJupyterSession | undefined {
         return this.currentSession;
     }
 
@@ -162,7 +162,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         this.addCell(code, result);
     }
 
-    public addContinuousOutputCell(code: string, resultGenerator: (cancelToken: CancellationToken) => Promise<{result: string; haveMore: boolean}>) {
+    public addContinuousOutputCell(code: string, resultGenerator: (cancelToken: CancellationToken) => Promise<{ result: string; haveMore: boolean }>) {
         const cells = generateCells(undefined, code, 'foo.py', 1, true, uuid());
         cells.forEach(c => {
             const key = concatMultilineString(c.data.source).replace(LineFeedRegEx, '');
@@ -220,7 +220,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         this.sessionTimeout = timeout;
     }
 
-    public startNew(connInfo: IConnection, kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken) : Promise<IJupyterSession> {
+    public startNew(connInfo: IConnection, kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken): Promise<IJupyterSession> {
         this.asyncRegistry.push(connInfo);
         if (kernelSpec) {
             this.asyncRegistry.push(kernelSpec);
@@ -236,7 +236,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         }
     }
 
-    public getActiveKernelSpecs(_connection: IConnection) : Promise<IJupyterKernelSpec[]> {
+    public getActiveKernelSpecs(_connection: IConnection): Promise<IJupyterKernelSpec[]> {
         return Promise.resolve([]);
     }
 
@@ -244,12 +244,12 @@ export class MockJupyterManager implements IJupyterSessionManager {
         this.changedInterpreterEvent.fire();
     }
 
-    private createNewSession() : MockJupyterSession {
+    private createNewSession(): MockJupyterSession {
         this.currentSession = new MockJupyterSession(this.cellDictionary, MockJupyterTimeDelay);
         return this.currentSession;
     }
 
-    private createStreamResult(str: string) : nbformat.IStream {
+    private createStreamResult(str: string): nbformat.IStream {
         return {
             output_type: 'stream',
             name: 'stdout',
@@ -259,7 +259,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
 
     private massageCellResult(
         result: undefined | string | number | nbformat.IUnrecognizedOutput | nbformat.IExecuteResult | nbformat.IDisplayData | nbformat.IStream | nbformat.IError,
-        mimeType?: string) :
+        mimeType?: string):
         nbformat.IUnrecognizedOutput | nbformat.IExecuteResult | nbformat.IDisplayData | nbformat.IStream | nbformat.IError {
 
         // See if undefined or string or number
@@ -269,7 +269,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
                 output_type: 'execute_result',
                 execution_count: 1,
                 data: {},
-                metadata : {}
+                metadata: {}
             };
         } else if (typeof result === 'string') {
             const data = {};
@@ -284,8 +284,8 @@ export class MockJupyterManager implements IJupyterSessionManager {
             return {
                 output_type: 'execute_result',
                 execution_count: 1,
-                data: { 'text/plain' : result.toString() },
-                metadata : {}
+                data: { 'text/plain': result.toString() },
+                metadata: {}
             };
         } else {
             return result;
@@ -389,15 +389,15 @@ export class MockJupyterManager implements IJupyterSessionManager {
                 const results = this.kernelSpecs.map(k => {
                     return `  ${k.name}  ${k.dir}`;
                 }).join(os.EOL);
-                return Promise.resolve({stdout: results});
+                return Promise.resolve({ stdout: results });
             });
 
         }
     }
 
-    private addKernelSpec(pythonPath: string) : string {
+    private addKernelSpec(pythonPath: string): string {
         const spec = this.createTempSpec(pythonPath);
-        this.kernelSpecs.push({name: `${this.kernelSpecs.length}Spec`, dir: `${path.dirname(spec)}`});
+        this.kernelSpecs.push({ name: `${this.kernelSpecs.length}Spec`, dir: `${path.dirname(spec)}` });
         return spec;
     }
 
@@ -408,7 +408,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
                 const results = this.kernelSpecs.map(k => {
                     return `  ${k.name}  ${k.dir}`;
                 }).join(os.EOL);
-                return Promise.resolve({stdout: results});
+                return Promise.resolve({ stdout: results });
             });
             this.setupProcessServiceExec(this.processService, workingPython.path, ['-m', 'ipykernel', 'install', '--user', '--name', /\w+-\w+-\w+-\w+-\w+/, '--display-name', `'Python Interactive'`], () => {
                 const spec = this.addKernelSpec(workingPython.path);
@@ -424,7 +424,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
                 const results = this.kernelSpecs.map(k => {
                     return `  ${k.name}  ${k.dir}`;
                 }).join(os.EOL);
-                return Promise.resolve({stdout: results});
+                return Promise.resolve({ stdout: results });
             });
             const getServerInfoPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
             this.setupProcessServiceExec(this.processService, workingPython.path, [getServerInfoPath], () => Promise.resolve({ stdout: 'failure to get server infos' }));
@@ -447,10 +447,10 @@ export class MockJupyterManager implements IJupyterSessionManager {
                 const results = this.kernelSpecs.map(k => {
                     return `  ${k.name}  ${k.dir}`;
                 }).join(os.EOL);
-                return Promise.resolve({stdout: results});
+                return Promise.resolve({ stdout: results });
             });
             this.setupProcessServiceExecObservable(service, jupyterPath, ['kernelspec', 'list'], [], []);
-            this.setupProcessServiceExec(service, jupyterPath, ['kernelspec', '--version'], () =>  Promise.resolve({ stdout: '1.1.1.1' }));
+            this.setupProcessServiceExec(service, jupyterPath, ['kernelspec', '--version'], () => Promise.resolve({ stdout: '1.1.1.1' }));
             this.setupProcessServiceExec(service, 'jupyter', ['kernelspec', '--version'], () => Promise.resolve({ stdout: '1.1.1.1' }));
         } else {
             this.setupProcessServiceExec(service, jupyterPath, ['kernelspec', '--version'], () => Promise.reject());

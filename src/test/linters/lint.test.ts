@@ -8,7 +8,7 @@ import { ConfigurationTarget, Uri } from 'vscode';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { Product } from '../../client/common/installer/productInstaller';
 import {
-    CTagsProductPathService, FormatterProductPathService, LinterProductPathService,
+    CTagsProductPathService, DataScienceProductPathService, FormatterProductPathService, LinterProductPathService,
     RefactoringLibraryProductPathService, TestFrameworkProductPathService
 } from '../../client/common/installer/productPath';
 import { ProductService } from '../../client/common/installer/productService';
@@ -64,6 +64,7 @@ suite('Linting Settings', () => {
         ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, LinterProductPathService, ProductType.Linter);
         ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, TestFrameworkProductPathService, ProductType.TestFramework);
         ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, RefactoringLibraryProductPathService, ProductType.RefactoringLibrary);
+        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, DataScienceProductPathService, ProductType.DataScience);
     }
 
     async function resetSettings(lintingEnabled = true) {
