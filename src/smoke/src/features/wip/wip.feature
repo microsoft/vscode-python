@@ -11,7 +11,7 @@ Feature: Terminal
         Then take a screenshot
         Then wait for 1 second
         Then take a screenshot
-        Then wait for 5 second
+        Then wait for 5 seconds
         Then take a screenshot
-        Then wait for 5 second
+        Then wait for 5 seconds
         Then take a screenshot
