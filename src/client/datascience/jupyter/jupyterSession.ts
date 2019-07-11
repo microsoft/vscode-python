@@ -92,7 +92,7 @@ export class JupyterSession implements IJupyterSession {
         return this.waitForIdleOnSession(this.session, timeout);
     }
 
-    public async restart(_timeout: number): Promise<void> {
+    public async restart(timeout: number): Promise<void> {
         // Just kill the current session and switch to the other
         if (this.restartSessionPromise && this.session && this.sessionManager && this.contentsManager) {
             traceInfo(`Restarting ${this.session.kernel.id}`);
@@ -108,12 +108,15 @@ export class JupyterSession implements IJupyterSession {
             }
             traceInfo(`Got new session ${this.session.kernel.id}`);
 
+            // Wait for idle on this session. It may or may not be ready yet.
+            await this.waitForIdleOnSession(this.session, timeout);
+
             // Rewire our status changed event.
             this.statusHandler = this.onStatusChanged.bind(this.onStatusChanged);
             this.session.statusChanged.connect(this.statusHandler);
 
             // After switching, start another in case we restart again.
-            this.restartSessionPromise = this.createReadySession(oldSession.serverSettings, this.contentsManager);
+            this.restartSessionPromise = this.createSession(oldSession.serverSettings, this.contentsManager);
             traceInfo('Started new restart session');
             this.shuttingDownSessions.push(this.shutdownSession(oldSession, oldStatusHandler));
             traceInfo('Started shutdown of old session');
@@ -149,7 +152,7 @@ export class JupyterSession implements IJupyterSession {
         this.session = await this.createSession(serverSettings, this.contentsManager, cancelToken);
 
         // Start another session to handle restarts
-        this.restartSessionPromise = this.createReadySession(serverSettings, this.contentsManager, cancelToken);
+        this.restartSessionPromise = this.createSession(serverSettings, this.contentsManager, cancelToken);
 
         // Listen for session status changes
         this.statusHandler = this.onStatusChanged.bind(this.onStatusChanged);
@@ -182,32 +185,6 @@ export class JupyterSession implements IJupyterSession {
                 throw new JupyterWaitForIdleError(localize.DataScience.jupyterLaunchTimedOut());
             }
         }
-    }
-
-    private async createReadySession(serverSettings: ServerConnection.ISettings, contentsManager: ContentsManager, cancelToken?: CancellationToken): Promise<Session.ISession | undefined> {
-        // This is the same as a regular session, but it should already be in the idle state when this function returns. This allows the restart session to just be used.
-
-        // Try connecting a bunch of times. This can fail occassionally.
-        let session: Session.ISession | undefined;
-        let tryCount = 0;
-        const maxTries = 3;
-        while (tryCount < maxTries) {
-            try {
-                session = await this.createSession(serverSettings, contentsManager, cancelToken);
-                await this.waitForIdleOnSession(session, 10000);
-                return session;
-            } catch (exc) {
-                if (session) {
-                    await this.shutdownSession(session, undefined);
-                    session = undefined;
-                }
-                // Try 3 times
-                if (exc instanceof JupyterWaitForIdleError && tryCount < maxTries) {
-                    tryCount += 1;
-                }
-            }
-        }
-        return undefined;
     }
 
     private async createSession(serverSettings: ServerConnection.ISettings, contentsManager: ContentsManager, cancelToken?: CancellationToken): Promise<Session.ISession> {
@@ -344,7 +321,7 @@ export class JupyterSession implements IJupyterSession {
                             }
                         }
                         traceInfo(`shutdownSession ${kernelId} - waiting for shutdown`);
-                        await waitForPromise(session.shutdown(), 20000);
+                        await waitForPromise(session.shutdown(), 1000);
                         traceInfo(`shutdownSession ${kernelId} - shutdown complete`);
                     } else {
                         traceInfo(`shutdownSession ${kernelId} - waiting for shutdown`);
