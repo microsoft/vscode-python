@@ -168,7 +168,7 @@ export async function spawn(options: SpawnOptions): Promise<Code> {
 
     const spawnOptions: cp.SpawnOptions = {};
 
-    console.info(`Launching VS Code server ${electronPath} with args:\n${args.join('\n')}`);
+    console.info(`Launching VS Code server ${electronPath} with args:\n${args.join(', ')}`);
     const child = cp.spawn(electronPath, args, spawnOptions);
     child.on('error', error => console.error('VS Code process errored', error));
     child.on('close', () => console.error('VS Code process closed'));
