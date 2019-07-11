@@ -150,6 +150,7 @@ suite('Activation of Environments in Terminal', () => {
         await sleep(consoleInitWaitMs);
         const termLogFile = path.join(__dirname, 'term_log.log');
         if (process.platform === 'win32') {
+            console.log(`Conda Path is ${condaExecutable || 'conda'}`);
             terminal.sendText(`${condaExecutable || 'conda'} init > ${termLogFile} 2>&1`, true);
             await sleep(consoleInitWaitMs);
             await sleep(consoleInitWaitMs);
