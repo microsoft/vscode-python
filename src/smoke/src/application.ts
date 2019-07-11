@@ -171,7 +171,7 @@ export class Application implements IApplication {
 
     public async start(expectWalkthroughPart = true): Promise<any> {
         // tslint:disable-next-line: no-console
-        console.log('Start VS Code Application');
+        this.logger.log('Start VS Code Application');
         await this._start();
         await this.code.waitForElement('.explorer-folders-view');
 
@@ -208,20 +208,20 @@ export class Application implements IApplication {
 
     public async stop(): Promise<any> {
         // tslint:disable-next-line: no-console
-        console.log('Stop VS Code Application');
+        this.logger.log('Stop VS Code Application');
         if (this._code) {
             await this._code.exit()
-                .catch(ex => console.error('Failed to exit VS Code', ex));
+                .catch(ex => this.logger.log('Failed to exit VS Code', ex));
             try {
-                console.log('Dispose socket');
+                this.logger.log('Dispose socket');
                 this._code.dispose();
             } catch (ex) {
-                console.error('Failed to dispose VS Code', ex);
+                this.logger.log('Failed to dispose VS Code', ex);
             }
             this._code = undefined;
         }
         // tslint:disable-next-line: no-console
-        console.log('Stopped VS Code Application');
+        this.logger.log('Stopped VS Code Application');
         // For some reason we need to wait, else starting VSC immediately also causes issues.
         await new Promise(c => setTimeout(c, 1000));
     }
@@ -287,7 +287,7 @@ export class Application implements IApplication {
 
     private async checkWindowReady(): Promise<any> {
         if (!this.code) {
-            console.error('No code instance found');
+            this.logger.log('No code instance found');
             return;
         }
 
