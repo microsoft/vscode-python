@@ -142,12 +142,19 @@ suite('Activation of Environments in Terminal', () => {
         consoleInitWaitMs: number,
         pythonFile: string,
         logFile: string,
-        logFileCreationWaitMs: number
+        logFileCreationWaitMs: number,
+        condaExecutable = 'conda'
     ): Promise<string> {
         const terminal = vscode.window.createTerminal();
         terminal.show();
         await sleep(consoleInitWaitMs);
-        terminal.sendText(`python ${pythonFile} ${logFile}`, true);
+        terminal.sendText(`${condaExecutable || 'conda'} init`, true);
+        await sleep(consoleInitWaitMs);
+        await sleep(consoleInitWaitMs);
+        const terminal2 = vscode.window.createTerminal();
+        terminal2.show();
+        await sleep(consoleInitWaitMs);
+        terminal2.sendText(`python ${pythonFile} ${logFile}`, true);
         await waitForCondition(() => fs.pathExists(logFile), logFileCreationWaitMs, `${logFile} file not created.`);
 
         return fs.readFile(logFile, 'utf-8');
@@ -190,7 +197,7 @@ suite('Activation of Environments in Terminal', () => {
 
         await updateSetting('terminal.activateEnvironment', true, vscode.workspace.workspaceFolders![0].uri, vscode.ConfigurationTarget.WorkspaceFolder);
         await setPythonPathInWorkspaceRoot(envPaths.condaPath);
-        const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
+        const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000, envPaths.condaExecPath);
         expect(fileSystem.arePathsSame(content, envPaths.condaPath)).to.equal(true, 'Environment not activated');
 
         // await terminalSettings.update('integrated.shell.windows', 'C:\\Windows\\System32\\cmd.exe', vscode.ConfigurationTarget.Global);
