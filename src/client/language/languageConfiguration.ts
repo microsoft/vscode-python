@@ -15,12 +15,7 @@ export const MULTILINE_SEPARATOR_INDENT_REGEX = /^(?!\s+\\)[^#\n]+\\$/;
  */
 export const INCREASE_INDENT_REGEX = /^\s*(?:(?:async|class|def|elif|except|for|if|while|with)\b.*|(else|finally|try))\s*:\s*(#.*)?$/;
 export const DECREASE_INDENT_REGEX = /^\s*(?:else|finally|(?:elif|except)\b.*)\s*:\s*(#.*)?$/;
-export const OUTDENT_SINGLE_KEYWORD_REGEX = /^\s*(break|continue|pass|raise\b.*)\s*(#.*)?$/;
-/**
- * Dedent the line following a return statement only if there is no dangling open array, tuple or dictionary before the cursor.
- * A line with a closed array, tuple or dictionary will be dedented correctly.
- */
-export const OUTDENT_RETURN_REGEX = /^\s*(return)\b([^[({]|([[({].*[\])}]))*(#.*)?$/;
+export const OUTDENT_ONENTER_REGEX = /^\s*(?:break|continue|pass|(?:raise|return)\b.*)\s*(#.*)?$/;
 
 export function getLanguageConfiguration() {
     return {
@@ -35,11 +30,7 @@ export function getLanguageConfiguration() {
                 action: { indentAction: IndentAction.None, appendText: '# ' }
             },
             {
-                beforeText: OUTDENT_SINGLE_KEYWORD_REGEX,
-                action: { indentAction: IndentAction.Outdent }
-            },
-            {
-                beforeText: OUTDENT_RETURN_REGEX,
+                beforeText: OUTDENT_ONENTER_REGEX,
                 action: { indentAction: IndentAction.Outdent }
             }
         ],

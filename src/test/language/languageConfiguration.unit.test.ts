@@ -5,13 +5,7 @@
 
 import { expect } from 'chai';
 
-import {
-    DECREASE_INDENT_REGEX,
-    INCREASE_INDENT_REGEX,
-    MULTILINE_SEPARATOR_INDENT_REGEX,
-    OUTDENT_RETURN_REGEX,
-    OUTDENT_SINGLE_KEYWORD_REGEX
-} from '../../client/language/languageConfiguration';
+import { DECREASE_INDENT_REGEX, INCREASE_INDENT_REGEX, MULTILINE_SEPARATOR_INDENT_REGEX, OUTDENT_ONENTER_REGEX } from '../../client/language/languageConfiguration';
 
 // tslint:disable-next-line: max-func-body-length
 suite('Language configuration regexes', () => {
@@ -77,89 +71,19 @@ suite('Language configuration regexes', () => {
         expect(result).to.be.equal(false, 'Decrease indent regex should not pick up lines without keywords');
     });
 
-    ['    break', '\t\t continue', ' pass', 'raise Exception(\'Unknown Exception\''].forEach(example => {
+    ['    break', '\t\t continue', ' pass', 'raise Exception(\'Unknown Exception\'', '   return [ True, False, False ]'].forEach(example => {
         const keyword = example.trim().split(' ')[0];
 
         const testWithoutComments = `Outdent regex for on enter rule should pick up lines containing the ${keyword} keyword`;
         test(testWithoutComments, () => {
-            const result = OUTDENT_SINGLE_KEYWORD_REGEX.test(example);
+            const result = OUTDENT_ONENTER_REGEX.test(example);
             expect(result).to.be.equal(true, testWithoutComments);
         });
 
         const testWithComments = `Outdent regex on enter should pick up lines containing the ${keyword} keyword and ending with comments`;
         test(testWithComments, () => {
-            const result = OUTDENT_SINGLE_KEYWORD_REGEX.test(`${example} # test comment`);
+            const result = OUTDENT_ONENTER_REGEX.test(`${example} # test comment`);
             expect(result).to.be.equal(true, testWithComments);
-        });
-    });
-
-    [
-        {
-            type: 'number',
-            returnValue: 3,
-            hasComment: true
-        },
-        {
-            type: 'boolean',
-            returnValue: 'True',
-            hasComment: false
-        },
-        {
-            type: 'string',
-            returnValue: '\'test\'',
-            hasComment: false
-        },
-        {
-            type: 'variable name',
-            returnValue: 'hello',
-            hasComment: true
-        },
-        {
-            type: 'closed array',
-            returnValue: '[ 1, 2, 3 ]',
-            hasComment: true
-        },
-        {
-            type: 'closed dictionary',
-            returnValue: '{ "id": 23, "enabled": True }',
-            hasComment: true
-        },
-        {
-            type: 'closed tuple',
-            returnValue: '( "test", 23, False )',
-            hasComment: false
-        }
-    ].forEach(({ type, returnValue, hasComment }) => {
-        const testTitle = `Outdent return regex on enter should pick up lines containing the return statement followed by a ${type}`;
-        test(testTitle, () => {
-            const result = OUTDENT_RETURN_REGEX.test(`return ${returnValue} ${hasComment ? '# test comment' : ''}`);
-            expect(result).to.be.equal(true, testTitle);
-        });
-    });
-
-    [
-        {
-            returnValue: '[ 1, 2',
-            hasComment: false,
-            match: false
-        },
-        {
-            returnValue: '{ ',
-            hasComment: false,
-            match: false
-        },
-        {
-            returnValue: '( False',
-            hasComment: true,
-            match: false
-        }
-    ].forEach(({ returnValue, hasComment }) => {
-        const type = returnValue[0];
-
-        const testTitle = `Outdent return regex on enter should not pick up lines containing the return statement followed by a dangling ${type}`;
-        test(testTitle, () => {
-            const result = OUTDENT_RETURN_REGEX.test(`return ${returnValue} ${hasComment ? '# test comment' : ''}`);
-            expect(result).to.be.equal(false, testTitle);
         });
     });
 });
