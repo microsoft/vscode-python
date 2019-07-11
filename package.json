@@ -2259,7 +2259,7 @@
         "jsonc-parser": "^2.0.3",
         "less-plugin-inline-urls": "^1.2.0",
         "line-by-line": "^0.1.6",
-        "lodash": "^4.17.11",
+        "lodash": "^4.17.13",
         "md5": "^2.2.1",
         "minimatch": "^3.0.4",
         "monaco-editor-textmate": "^2.1.1",
