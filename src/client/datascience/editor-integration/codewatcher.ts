@@ -4,17 +4,18 @@
 import { inject, injectable } from 'inversify';
 import { CodeLens, Position, Range, Selection, TextDocument, TextEditor, TextEditorRevealType } from 'vscode';
 
-import { IApplicationShell, IDocumentManager } from '../../common/application/types';
+import { IDocumentManager } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDataScienceSettings, ILogger } from '../../common/types';
-import { noop } from '../../common/utils/misc';
+import { IConfigurationService, IDataScienceSettings } from '../../common/types';
+// import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
+import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { ICodeExecutionHelper } from '../../terminals/types';
 import { Commands, Telemetry } from '../constants';
-import { JupyterInstallError } from '../jupyter/jupyterInstallError';
-import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
-import { ICodeLensFactory, ICodeWatcher, IInteractiveWindowProvider } from '../types';
+// import { JupyterInstallError } from '../jupyter/jupyterInstallError';
+// import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
+import { ICodeLensFactory, ICodeWatcher, IDataScienceErrorHandler, IInteractiveWindowProvider } from '../types';
 
 @injectable()
 export class CodeWatcher implements ICodeWatcher {
@@ -24,15 +25,15 @@ export class CodeWatcher implements ICodeWatcher {
     private codeLenses: CodeLens[] = [];
     private cachedSettings: IDataScienceSettings | undefined;
 
-    constructor(@inject(IApplicationShell) private applicationShell: IApplicationShell,
-                @inject(ILogger) private logger: ILogger,
-                @inject(IInteractiveWindowProvider) private interactiveWindowProvider : IInteractiveWindowProvider,
-                @inject(IFileSystem) private fileSystem: IFileSystem,
-                @inject(IConfigurationService) private configService: IConfigurationService,
-                @inject(IDocumentManager) private documentManager : IDocumentManager,
-                @inject(ICodeExecutionHelper) private executionHelper: ICodeExecutionHelper,
-                @inject(ICodeLensFactory) private codeLensFactory: ICodeLensFactory
-        ) {
+    constructor(@inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
+        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IConfigurationService) private configService: IConfigurationService,
+        @inject(IDocumentManager) private documentManager: IDocumentManager,
+        @inject(ICodeExecutionHelper) private executionHelper: ICodeExecutionHelper,
+        @inject(IDataScienceErrorHandler) protected dataScienceErrorHandler: IDataScienceErrorHandler,
+        @inject(ICodeLensFactory) private codeLensFactory: ICodeLensFactory,
+        @inject(IServiceContainer) protected serviceContainer: IServiceContainer
+    ) {
     }
 
     public setDocument(document: TextDocument) {
@@ -57,7 +58,7 @@ export class CodeWatcher implements ICodeWatcher {
         return this.version;
     }
 
-    public getCachedSettings() : IDataScienceSettings | undefined {
+    public getCachedSettings(): IDataScienceSettings | undefined {
         return this.cachedSettings;
     }
 
@@ -143,13 +144,13 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     @captureTelemetry(Telemetry.RunSelectionOrLine)
-    public async runSelectionOrLine(activeEditor : TextEditor | undefined) {
+    public async runSelectionOrLine(activeEditor: TextEditor | undefined) {
         if (this.document && activeEditor &&
             this.fileSystem.arePathsSame(activeEditor.document.fileName, this.document.fileName)) {
             // Get just the text of the selection or the current line if none
             const codeToExecute = await this.executionHelper.getSelectedTextToExecute(activeEditor);
             if (!codeToExecute) {
-                return ;
+                return;
             }
             const normalizedCode = await this.executionHelper.normalizeLines(codeToExecute!);
             if (!normalizedCode || normalizedCode.trim().length === 0) {
@@ -184,7 +185,7 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     @captureTelemetry(Telemetry.RunCell)
-    public runCell(range: Range) : Promise<void> {
+    public runCell(range: Range): Promise<void> {
         if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
             return Promise.resolve();
         }
@@ -195,7 +196,7 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     @captureTelemetry(Telemetry.DebugCurrentCell)
-    public debugCell(range: Range) : Promise<void> {
+    public debugCell(range: Range): Promise<void> {
         if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
             return Promise.resolve();
         }
@@ -205,7 +206,7 @@ export class CodeWatcher implements ICodeWatcher {
     }
 
     @captureTelemetry(Telemetry.RunCurrentCell)
-    public runCurrentCell() : Promise<void> {
+    public runCurrentCell(): Promise<void> {
         if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
             return Promise.resolve();
         }
@@ -224,7 +225,7 @@ export class CodeWatcher implements ICodeWatcher {
         return this.runMatchingCell(this.documentManager.activeTextEditor.selection, true);
     }
 
-    public async addEmptyCellToBottom() : Promise<void> {
+    public async addEmptyCellToBottom(): Promise<void> {
         const editor = this.documentManager.activeTextEditor;
         if (editor) {
             editor.edit((editBuilder) => {
@@ -236,7 +237,7 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
-    private async addCode(code: string, file: string, line: number, editor?: TextEditor, debug?: boolean) : Promise<void> {
+    private async addCode(code: string, file: string, line: number, editor?: TextEditor, debug?: boolean): Promise<void> {
         try {
             const stopWatch = new StopWatch();
             const activeInteractiveWindow = await this.interactiveWindowProvider.getOrCreateActive();
@@ -246,7 +247,7 @@ export class CodeWatcher implements ICodeWatcher {
                 await activeInteractiveWindow.addCode(code, file, line, editor, stopWatch);
             }
         } catch (err) {
-            this.handleError(err);
+            this.dataScienceErrorHandler.handleError(err);
         }
     }
 
@@ -279,11 +280,11 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
-    private getCurrentCellLens(pos: Position) : CodeLens | undefined {
+    private getCurrentCellLens(pos: Position): CodeLens | undefined {
         return this.codeLenses.find(l => l.range.contains(pos) && l.command !== undefined && l.command.command === Commands.RunCell);
     }
 
-    private getNextCellLens(pos: Position) : CodeLens | undefined {
+    private getNextCellLens(pos: Position): CodeLens | undefined {
         const currentIndex = this.codeLenses.findIndex(l => l.range.contains(pos) && l.command !== undefined && l.command.command === Commands.RunCell);
         if (currentIndex >= 0) {
             return this.codeLenses.find((l: CodeLens, i: number) => l.command !== undefined && l.command.command === Commands.RunCell && i > currentIndex);
@@ -296,29 +297,6 @@ export class CodeWatcher implements ICodeWatcher {
             const code = this.document.getText();
             await this.addCode(code, this.getFileName(), 0);
         }
-    }
-
-    // tslint:disable-next-line:no-any
-    private handleError = (err : any) => {
-        if (err instanceof JupyterInstallError) {
-            const jupyterError = err as JupyterInstallError;
-
-            // This is a special error that shows a link to open for more help
-            this.applicationShell.showErrorMessage(jupyterError.message, jupyterError.actionTitle).then(v => {
-                // User clicked on the link, open it.
-                if (v === jupyterError.actionTitle) {
-                    this.applicationShell.openUrl(jupyterError.action);
-                }
-            });
-        } else if (err instanceof JupyterSelfCertsError) {
-            // Don't show the message for self cert errors
-            noop();
-        } else if (err.message) {
-            this.applicationShell.showErrorMessage(err.message);
-        } else {
-            this.applicationShell.showErrorMessage(err.toString());
-        }
-        this.logger.logError(err);
     }
 
     // User has picked run and advance on the last cell of a document

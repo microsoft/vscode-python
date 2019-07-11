@@ -168,6 +168,11 @@ export interface IInteractiveWindowProvider {
     getNotebookOptions(): Promise<INotebookServerOptions>;
 }
 
+export const IDataScienceErrorHandler = Symbol('IDataScienceErrorHandler');
+export interface IDataScienceErrorHandler {
+    handleError(err: Error): void;
+}
+
 export const IInteractiveWindow = Symbol('IInteractiveWindow');
 export interface IInteractiveWindow extends Disposable {
     closed: Event<IInteractiveWindow>;

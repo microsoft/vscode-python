@@ -40,6 +40,8 @@ import {
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { PythonSettings } from '../../client/common/configSettings';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
+import { InstallationChannelManager } from '../../client/common/installer/channelManager';
+import { IInstallationChannelManager } from '../../client/common/installer/types';
 import { Logger } from '../../client/common/logger';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
@@ -97,6 +99,7 @@ import { DataViewerProvider } from '../../client/datascience/data-viewing/dataVi
 import { CellHashProvider } from '../../client/datascience/editor-integration/cellhashprovider';
 import { CodeLensFactory } from '../../client/datascience/editor-integration/codeLensFactory';
 import { CodeWatcher } from '../../client/datascience/editor-integration/codewatcher';
+import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/errorHandler';
 import {
     DotNetIntellisenseProvider
 } from '../../client/datascience/interactive-window/intellisense/dotNetIntellisenseProvider';
@@ -126,6 +129,7 @@ import {
     ICodeWatcher,
     IDataScience,
     IDataScienceCommandListener,
+    IDataScienceErrorHandler,
     IDataViewer,
     IDataViewerProvider,
     IInteractiveWindow,
@@ -336,6 +340,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
         this.serviceManager.add<ICodeExecutionHelper>(ICodeExecutionHelper, CodeExecutionHelper);
         this.serviceManager.add<IDataScienceCommandListener>(IDataScienceCommandListener, InteractiveWindowCommandListener);
+        this.serviceManager.add<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
+        this.serviceManager.add<IInstallationChannelManager>(IInstallationChannelManager, InstallationChannelManager);
         this.serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables);
         this.serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, JupyterDebugger);
 
@@ -400,7 +406,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
             showJupyterVariableExplorer: true,
-            variableExplorerExclude: 'module;builtin_function_or_method',
+            variableExplorerExclude: 'module;function;builtin_function_or_method',
             liveShareConnectionTimeout: 100,
             autoPreviewNotebooksInInteractivePane: true,
             enablePlotViewer: true,

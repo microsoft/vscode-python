@@ -55,7 +55,8 @@ suite('Module Installer - Invalid Paths', () => {
                     case Product.isort:
                     case Product.ctags:
                     case Product.rope:
-                    case Product.unittest: {
+                    case Product.unittest:
+                    case Product.jupyter: {
                         return;
                     }
                     default: {

@@ -36,6 +36,7 @@ import {
     INotebookServerOptions
 } from '../types';
 import { JupyterConnection, JupyterServerInfo } from './jupyterConnection';
+import { JupyterInstallError } from './jupyterInstallError';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
@@ -204,7 +205,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         // First we find a way to start a notebook server
         const notebookCommand = await this.findBestCommandTimed(JupyterCommands.NotebookCommand);
         if (!notebookCommand) {
-            throw new Error(localize.DataScience.jupyterNotSupported());
+            throw new JupyterInstallError(localize.DataScience.jupyterNotSupported(), localize.DataScience.pythonInteractiveHelpLink());
         }
 
         const args: string[] = [`--NotebookApp.file_to_run=${file}`];
@@ -338,7 +339,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         // First we find a way to start a notebook server
         const notebookCommand = await this.findBestCommandTimed(JupyterCommands.NotebookCommand, cancelToken);
         if (!notebookCommand) {
-            throw new Error(localize.DataScience.jupyterNotSupported());
+            throw new JupyterInstallError(localize.DataScience.jupyterNotSupported(), localize.DataScience.pythonInteractiveHelpLink());
         }
 
         // Now actually launch it
