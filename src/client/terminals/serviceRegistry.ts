@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { IExtensionActivationService } from '../activation/types';
 import { IServiceManager } from '../ioc/types';
-import { TerminalAutoActivation } from './activation';
+import { ExtensionActivationForTerminalActivation, TerminalAutoActivation } from './activation';
 import { CodeExecutionManager } from './codeExecution/codeExecutionManager';
 import { DjangoShellCodeExecutionProvider } from './codeExecution/djangoShellCodeExecution';
 import { CodeExecutionHelper } from './codeExecution/helper';
@@ -17,4 +18,9 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ICodeExecutionService>(ICodeExecutionService, TerminalCodeExecutionProvider, 'standard');
     serviceManager.addSingleton<ICodeExecutionService>(ICodeExecutionService, ReplProvider, 'repl');
     serviceManager.addSingleton<ITerminalAutoActivation>(ITerminalAutoActivation, TerminalAutoActivation);
+
+    serviceManager.addSingleton<IExtensionActivationService>(
+        IExtensionActivationService,
+        ExtensionActivationForTerminalActivation
+    );
 }
