@@ -13,8 +13,8 @@ import { IFileDownloader, IOutputChannel } from '../types';
 import { ExtensionChannels } from '../utils/localize';
 import { IExtensionBuildInstaller } from './types';
 
-const developmentBuildUri = 'https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix';
-const vsixFileExtension = '.vsix';
+export const developmentBuildUri = 'https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix';
+export const vsixFileExtension = '.vsix';
 
 @injectable()
 export class StableBuildInstaller implements IExtensionBuildInstaller {

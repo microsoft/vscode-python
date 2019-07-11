@@ -11,7 +11,7 @@ import { IExtensionChannelRule } from './types';
 
 export const frequencyForDailyInsidersCheck = 1000 * 60 * 60 * 24; // One day.
 export const frequencyForWeeklyInsidersCheck = 1000 * 60 * 60 * 24 * 7; // One week.
-export const lastLookUpTimeKey = 'INSIDERS_LAST_LOOK_UP_TIME_KEYx';
+export const lastLookUpTimeKey = 'INSIDERS_LAST_LOOK_UP_TIME_KEY';
 
 @injectable()
 export class ExtensionStableChannelRule implements IExtensionChannelRule {

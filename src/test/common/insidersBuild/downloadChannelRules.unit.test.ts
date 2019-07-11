@@ -133,27 +133,27 @@ suite('Download channel rules - ExtensionInsidersWeeklyChannelRule', () => {
             lastLookUpTime.verifyAll();
             assert.instanceOf(result, InsidersBuildInstaller, 'Not looking for the correct build');
         });
-        test('Update look up time and return installer for insiders build if looking for insiders after 24 hrs of last lookup time', async () => {
+        test('Update look up time and return installer for insiders build if looking for insiders after one week of last lookup time', async () => {
             lastLookUpTime
                 .setup(l => l.updateValue(TypeMoq.It.isAnyNumber()))
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.once());
             lastLookUpTime
                 .setup(l => l.value)
-                .returns(() => Date.now() - 2 * frequencyForWeeklyInsidersCheck) // Looking after 2 days
+                .returns(() => Date.now() - 2 * frequencyForWeeklyInsidersCheck) // Looking after 2 weeks
                 .verifiable(TypeMoq.Times.atLeastOnce());
             const result = await insidersDailyChannelRule.getInstaller(false);
             lastLookUpTime.verifyAll();
             assert.instanceOf(result, InsidersBuildInstaller, 'Not looking for the correct build');
         });
-        test('Do not update look up time or return any installer if looking for insiders within 24 hrs of last lookup time', async () => {
+        test('Do not update look up time or return any installer if looking for insiders within a week of last lookup time', async () => {
             lastLookUpTime
                 .setup(l => l.updateValue(TypeMoq.It.isAnyNumber()))
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.never());
             lastLookUpTime
                 .setup(l => l.value)
-                .returns(() => Date.now() - frequencyForWeeklyInsidersCheck / 2) // Looking after half a day
+                .returns(() => Date.now() - frequencyForWeeklyInsidersCheck / 2) // Looking after half a week
                 .verifiable(TypeMoq.Times.atLeastOnce());
             const result = await insidersDailyChannelRule.getInstaller(false);
             lastLookUpTime.verifyAll();
