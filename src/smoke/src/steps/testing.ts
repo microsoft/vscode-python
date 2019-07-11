@@ -78,9 +78,7 @@ When('I run failed tests', async () => {
 });
 
 Then('the stop icon is not visible in the toolbar', CucumberRetryMax2Seconds, async () => {
-    const visible = await context.app.workbench.testExplorer.isToolbarIconVisible('Stop')
-        .catch(() => false);
-    expect(visible).to.equal(false, 'Should not be visible');
+    await context.app.workbench.testExplorer.waitForToolbarIconToBeInvisible('Stop');
 });
 When('I click the test node with the label {string}', async (label: string) => {
     const number = await context.app.workbench.testExplorer.getNodeNumber(label);

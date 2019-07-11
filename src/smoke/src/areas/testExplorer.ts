@@ -154,18 +154,22 @@ export class TestExplorer {
         throw new Error(`Unable to find node named '${label}'`);
     }
 
+    @retry(RetryMax20Seconds)
     public async waitForToolbarIconToBeHidden(icon: ToolbarIcon): Promise<void> {
         const selector = `div[id='workbench.parts.sidebar'] .action-item a[title='${iconTitleMapping[icon]}']`;
         await context.app.code.waitForElementToBeHidden(selector, undefined, 10, 1000);
     }
+    @retry(RetryMax20Seconds)
     public async waitForToolbarIconToBeVisible(icon: ToolbarIcon): Promise<void> {
         const selector = `div[id='workbench.parts.sidebar'] .action-item a[title='${iconTitleMapping[icon]}']`;
         await context.app.code.waitForElement(selector);
     }
-    public async isToolbarIconVisible(icon: ToolbarIcon): Promise<boolean> {
+    @retry(RetryMax20Seconds)
+    public async waitForToolbarIconToBeInvisible(icon: ToolbarIcon): Promise<void> {
         const selector = `div[id='workbench.parts.sidebar'] .action-item a[title='${iconTitleMapping[icon]}']`;
-        return context.app.code.waitForElement(selector, (ele) => !!ele, 2)
+        const visible = context.app.code.waitForElement(selector, (ele) => !!ele, 2)
             .then(() => true).catch(() => false);
+        assert.ok(!visible);
     }
     public async clickToolbarIcon(icon: ToolbarIcon): Promise<void> {
         const selector = `div[id='workbench.parts.sidebar'] .action-item a[title='${iconTitleMapping[icon]}']`;

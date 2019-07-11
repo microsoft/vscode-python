@@ -110,3 +110,25 @@ AfterAll({ timeout: maxHookTimeout }, async function () {
         return retryWrapper.bind(this)(opts.retry, fn as AsyncFunction, ...args);
     };
 });
+
+/*
+Capture screenshots after every step.
+*/
+(setDefinitionFunctionWrapper as any)(function (fn: Function) {
+    async function captureScreenshot() {
+        try {
+            const name = `After_${new Date().getTime()}`.replace(/[^a-z0-9\-]/gi, '_');
+            // Ignore errors, as its possible app hasn't started.
+            await context.app.captureScreenshot(name).catch(noop);
+        } catch { noop(); }
+    }
+    return async function (this: {}) {
+        const result = fn.apply(this, [].slice.call(arguments));
+        if (result.then) {
+            return (result as Promise<any>).finally(captureScreenshot);
+        } else {
+            await captureScreenshot();
+            return result;
+        }
+    };
+});
