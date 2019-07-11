@@ -19,7 +19,7 @@ Feature: Terminal
         Then take a screenshot
         # Wait for some time, as it could take a while for terminal to get activated.
         # Slow on windows.
-        Then a file named "log.log" is created within 10 seconds
+        Then a file named "log.log" is created within 20 seconds
 
     Scenario: Execute File within a sub directory in Terminal
         # Use folders and paths with spaces.
@@ -32,7 +32,7 @@ Feature: Terminal
         And I select the command "Python: Run Python File in Terminal"
         # Wait for some time, as it could take a while for terminal to get activated.
         # Slow on windows.
-        Then a file named "log.log" is created within 10 seconds
+        Then a file named "log.log" is created within 20 seconds
 
     Scenario: Execute Selection in Terminal
         # Use folders and paths with spaces.
@@ -46,8 +46,10 @@ Feature: Terminal
         When I open the file "run in terminal.py"
         And I go to line 1
         And I select the command "Python: Run Selection/Line in Python Terminal"
-        Then a file named "log1.log" is created within 10 seconds
+        Then a file named "log1.log" is created within 20 seconds
         And take a screenshot
         When I go to line 2
         And I select the command "Python: Run Selection/Line in Python Terminal"
-        Then a file named "log2.log" is created within 10 seconds
+        # Wait for some time, as it could take a while for terminal to get activated.
+        # Slow on windows.
+        Then a file named "log2.log" is created within 20 seconds

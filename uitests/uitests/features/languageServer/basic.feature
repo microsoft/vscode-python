@@ -11,7 +11,7 @@ Feature: Language Server
 
         Examples:
             | jedi_enabled | time_to_activate | first_text_in_ooutput_panel      | second_text_in_output_panel |
-            | enabled      | 5                | Jedi Python language engine      | Jedi Python language engine |
+            | enabled      | 10               | Jedi Python language engine      | Jedi Python language engine |
             | disabled     | 120              | Microsoft Python language server | Initializing for            |
 
     Scenario Outline: Language Server is downloaded with http.proxyStrictSSL set to true and false
@@ -40,13 +40,13 @@ Feature: Language Server
         When I open the file "my_sample.py"
         And I go to line 3, column 10
         # Wait for intellisense to kick in (sometimes slow in jedi & ls)
-        And I wait for 5 seconds
+        And I wait for 10 seconds
         When I select the command "Go to Definition"
         Then the cursor is on line 1
 
         Examples:
             | jedi_enabled | time_to_activate | first_text_in_ooutput_panel      | second_text_in_output_panel |
-            | enabled      | 5                | Jedi Python language engine      | Jedi Python language engine |
+            | enabled      | 10               | Jedi Python language engine      | Jedi Python language engine |
             | disabled     | 120              | Microsoft Python language server | Initializing for            |
 
     @autoretry
@@ -58,11 +58,11 @@ Feature: Language Server
         And the text "<second_text_in_output_panel>" will be displayed in the output panel within <time_to_activate> seconds
         When I go to line 3, column 10
         # Wait for intellisense to kick in (sometimes slow in jedi & ls)
-        And I wait for 5 seconds
+        And I wait for 10 seconds
         And I select the command "Go to Definition"
         Then the cursor is on line 1
 
         Examples:
             | jedi_enabled | time_to_activate | first_text_in_ooutput_panel      | second_text_in_output_panel |
-            | enabled      | 5                | Jedi Python language engine      | Jedi Python language engine |
+            | enabled      | 10               | Jedi Python language engine      | Jedi Python language engine |
             | disabled     | 120              | Microsoft Python language server | Initializing for            |

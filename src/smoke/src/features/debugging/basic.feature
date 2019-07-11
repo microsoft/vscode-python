@@ -20,7 +20,7 @@ Feature: Debugging
         # This is when VSC displays the toolbar, (but actual debugger may not have started just yet).
         Then the debugger starts
         # Starting the debugger takes a while, (open terminal, activate it, etc)
-        And the debugger will stop within 10 seconds
+        And the debugger will stop within 20 seconds
         And a file named "log.log" will be created
 
     @smoke
@@ -55,7 +55,7 @@ Feature: Debugging
         Then the debugger starts
         Then take a screenshot
         # Starting the debugger takes a while, (open terminal, activate it, etc)
-        And the debugger will stop within 10 seconds
+        And the debugger will stop within 20 seconds
         Then take a screenshot
         And a file named "log.log" will be created
         Then take a screenshot
