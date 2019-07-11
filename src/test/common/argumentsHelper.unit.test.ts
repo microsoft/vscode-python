@@ -11,7 +11,6 @@ import { ServiceContainer } from '../../client/ioc/container';
 import { IServiceContainer } from '../../client/ioc/types';
 import { ArgumentsHelper } from '../../client/testing/common/argumentsHelper';
 
-// tslint:disable-next-line: max-func-body-length
 suite('ArgumentsHelper tests', () => {
     let argumentsHelper: ArgumentsHelper;
 
