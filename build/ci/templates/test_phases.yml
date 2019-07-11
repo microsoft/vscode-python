@@ -394,9 +394,9 @@ steps:
   # Example command line (windows pwsh):
   # > $Env:TEST_FILES_SUFFIX=testvirtualenvs
   # > npm run testSingleWorkspace
-  - bash: echo "##vso[task.prependpath]$CONDA/bin"
+  - powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
     displayName: Add conda to PATH
-    condition: and(succeeded(), not(eq(variables['agent.os'], 'Windows_NT')))
+    condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
 
   - script: |
       cat $PYTHON_VIRTUAL_ENVS_LOCATION
