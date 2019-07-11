@@ -559,6 +559,7 @@ export class JupyterServerBase implements INotebookServer {
     // Set up our initial plotting and imports
     private async initialNotebookSetup(cancelToken?: CancellationToken): Promise<void> {
         if (this.ranInitialSetup) {
+            traceInfo(`Already ran setup for ${this.id}`);
             return;
         }
         this.ranInitialSetup = true;
@@ -566,18 +567,21 @@ export class JupyterServerBase implements INotebookServer {
         try {
             // When we start our notebook initial, change to our workspace or user specified root directory
             if (this.launchInfo && this.launchInfo.workingDir && this.launchInfo.connectionInfo.localLaunch) {
+                traceInfo(`Changing directory for ${this.id}`);
                 await this.changeDirectoryIfPossible(this.launchInfo.workingDir);
             }
 
             const settings = this.configService.getSettings().datascience;
             const matplobInit = !settings || settings.enablePlotViewer ? CodeSnippits.MatplotLibInitSvg : CodeSnippits.MatplotLibInitPng;
 
+            traceInfo(`Initialize matplotlib for ${this.id}`);
             // Force matplotlib to inline and save the default style. We'll use this later if we
             // get a request to update style
             await this.executeSilently(
                 matplobInit,
                 cancelToken
             );
+            traceInfo(`Initial setup complete for ${this.id}`);
         } catch (e) {
             traceWarning(e);
         }
