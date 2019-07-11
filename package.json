@@ -1400,6 +1400,12 @@
                     "description": "When debugging a cell, stop on the first line if no other breakpoints in the current cell.",
                     "scope": "resource"
                 },
+                "python.dataScience.remoteDebuggerPort": {
+                    "type": "number",
+                    "default": -1,
+                    "description": "When debugging a cell, open this port on the remote box. If -1 is specified, a random port between 8889 and 9000 will be attempted.",
+                    "scope": "resource"
+                },
                 "python.dataScience.textOutputLineLimit": {
                     "type": "number",
                     "default": 10000,
@@ -2303,7 +2309,7 @@
         "jsonc-parser": "^2.0.3",
         "less-plugin-inline-urls": "^1.2.0",
         "line-by-line": "^0.1.6",
-        "lodash": "^4.17.11",
+        "lodash": "^4.17.13",
         "md5": "^2.2.1",
         "minimatch": "^3.0.4",
         "monaco-editor-textmate": "^2.1.1",

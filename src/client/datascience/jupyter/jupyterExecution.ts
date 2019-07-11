@@ -325,6 +325,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             allowUnauthorized,
             baseUrl: `${url.protocol}//${url.host}${url.pathname}`,
             token: `${url.searchParams.get('token')}`,
+            hostName: url.hostname,
             localLaunch: false,
             localProcExitCode: undefined,
             disconnected: (_l) => { return { dispose: noop }; },

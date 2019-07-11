@@ -302,5 +302,10 @@
     "DataScience.jupyterDataRateExceeded": "Cannot view variable because data rate exceeded. Please restart your server with a higher data rate limit. For example, --NotebookApp.iopub_data_rate_limit=10000000000.0",
     "DataScience.addCellBelowCommandTitle": "Add cell",
     "DataScience.debugCellCommandTitle": "Debug cell",
-    "DataScience.variableExplorerDisabledDuringDebugging": "Variables are not available while debugging."
+    "DataScience.variableExplorerDisabledDuringDebugging": "Variables are not available while debugging.",
+    "DataScience.jupyterDebuggerNotInstalledError" : "Pip module ptvsd is required for debugging cells. You will need to install it to debug cells.",
+    "DataScience.jupyterDebuggerPortNotAvailableError" : "Port {0} cannot be opened for debugging. Please specify a different port in the remoteDebuggerPort setting.",
+    "DataScience.jupyterDebuggerPortBlockedError" : "Port {0} cannot be connected to for debugging. Please let port {0} through your firewall.",
+    "DataScience.jupyterDebuggerPortNotAvailableSearchError" : "Ports in the range {0}-{1} cannot be found for debugging. Please specify a port in the remoteDebuggerPort setting.",
+    "DataScience.jupyterDebuggerPortBlockedSearchError" : "A port cannot be connected to for debugging. Please let ports {0}-{1} through your firewall."
 }

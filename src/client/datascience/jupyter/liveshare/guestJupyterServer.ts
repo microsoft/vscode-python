@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { Observable } from 'rxjs/Observable';
+import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
@@ -33,7 +34,7 @@ export class GuestJupyterServer
     private launchInfo: INotebookServerLaunchInfo | undefined;
     private responseQueue: ResponseQueue = new ResponseQueue();
     private connectPromise: Deferred<INotebookServerLaunchInfo> = createDeferred<INotebookServerLaunchInfo>();
-
+    private _id = uuid();
     constructor(
         liveShare: ILiveShareApi,
         private dataScience: IDataScience,
@@ -45,6 +46,10 @@ export class GuestJupyterServer
         _loggers: INotebookExecutionLogger[]
     ) {
         super(liveShare);
+    }
+
+    public get id(): string {
+        return this._id;
     }
 
     public async connect(launchInfo: INotebookServerLaunchInfo, _cancelToken?: CancellationToken): Promise<void> {

@@ -615,7 +615,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
             sendTelemetryEvent(Telemetry.RemoteAddCode);
 
             // Submit this item as new code.
-            this.submitCode(args.code, args.file, args.line, args.id).ignoreErrors();
+            this.submitCode(args.code, args.file, args.line, args.id, undefined, undefined, args.debug).ignoreErrors();
         }
     }
 
@@ -642,7 +642,6 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
             if (this.jupyterServer) {
                 await this.jupyterServer.restartKernel(this.generateDataScienceExtraSettings().jupyterInterruptTimeout);
                 await this.addSysInfo(SysInfoReason.Restart);
-                await this.jupyterDebugger.enableAttach(this.jupyterServer);
 
                 // Compute if dark or not.
                 const knownDark = await this.isDark();
@@ -702,7 +701,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
 
             // Activate the other side, and send as if came from a file
             this.interactiveWindowProvider.getOrCreateActive().then(_v => {
-                this.shareMessage(InteractiveWindowMessages.RemoteAddCode, { code: info.code, file: Identifiers.EmptyFileName, line: 0, id: info.id, originator: this.id });
+                this.shareMessage(InteractiveWindowMessages.RemoteAddCode, { code: info.code, file: Identifiers.EmptyFileName, line: 0, id: info.id, originator: this.id, debug: false });
             }).ignoreErrors();
         }
     }
@@ -716,7 +715,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         // Transmit this submission to all other listeners (in a live share session)
         if (!id) {
             id = uuid();
-            this.shareMessage(InteractiveWindowMessages.RemoteAddCode, { code, file, line, id, originator: this.id });
+            this.shareMessage(InteractiveWindowMessages.RemoteAddCode, { code, file, line, id, originator: this.id, debug: debug !== undefined ? debug : false });
         }
 
         // Create a deferred object that will wait until the status is disposed
@@ -1054,11 +1053,6 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         // Now try to create a notebook server
         this.jupyterServer = await this.jupyterExecution.connectToNotebookServer(options);
 
-        // Enable debugging support if set
-        if (this.jupyterServer) {
-            await this.jupyterDebugger.enableAttach(this.jupyterServer);
-        }
-
         // Before we run any cells, update the dark setting
         if (this.jupyterServer) {
             await this.jupyterServer.setMatplotLibStyle(knownDark);
@@ -1152,6 +1146,9 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
             // For a restart, tell our window to reset
             if (reason === SysInfoReason.Restart || reason === SysInfoReason.New) {
                 this.postMessage(InteractiveWindowMessages.RestartKernel).ignoreErrors();
+                if (this.jupyterServer) {
+                    this.jupyterDebugger.onRestart(this.jupyterServer);
+                }
             }
 
             this.logger.logInformation(`Sys info for ${this.id} ${reason} complete`);
