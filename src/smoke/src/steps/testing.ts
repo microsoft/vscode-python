@@ -21,7 +21,7 @@ const statusToIconMapping: Record<TestNodeStatus, string> = {
 };
 
 Then('the test explorer icon will be visible', async () => {
-    await context.app.workbench.testExplorer.isIconVisible();
+    await context.app.workbench.testExplorer.waitUntilIconVisible();
 });
 
 // Surely tests can't take more than 30s to get discovered.
@@ -34,7 +34,7 @@ When('I wait for tests to complete running', async () => {
     await context.app.workbench.testExplorer.waitForTestsToStop();
 });
 
-Then('there are {int} nodes in the test explorer', async (expectedCount: number) => {
+Then('there are {int} nodes in the test explorer', CucumberRetryMax5Seconds, async (expectedCount: number) => {
     const count = await context.app.workbench.testExplorer.getNodeCount();
     expect(count).to.equal(expectedCount);
 });
@@ -47,7 +47,7 @@ async function getNumberOfNodesWithIcon(icon: string): Promise<number> {
     const elements = await context.app.workbench.testExplorer.getNodeIcons();
     return elements.filter(ele => ele.attributes.style.includes(icon)).length;
 }
-Then('{int} nodes in the test explorer have a status of "{word}"', async (count: number, status: TestNodeStatus) => {
+Then('{int} nodes in the test explorer have a status of "{word}"', CucumberRetryMax5Seconds, async (count: number, status: TestNodeStatus) => {
     const nodeCount = await getNumberOfNodesWithIcon(statusToIconMapping[status]);
     expect(nodeCount).to.equal(count);
 });

@@ -50,6 +50,11 @@ export class TestExplorer {
         }
     }
     @retry(RetryMax5Seconds)
+    public async waitUntilIconVisible() {
+        const visible = await this.isIconVisible();
+        assert.ok(visible);
+    }
+    @retry(RetryMax5Seconds)
     public async waitUntilVisible() {
         const visible = await this.isVisible();
         assert.ok(visible);
