@@ -37,16 +37,27 @@ Feature: Debugging
             open("log.log", "w").write("Hello")
             """
         When I wait for the Python extension to activate
+        Then take a screenshot
         # For for some time for all messages to be displayed, then hide all of them.
         Then wait for 10 seconds
+        Then take a screenshot
         And select the command "Notifications: Clear All Notifications"
+        Then take a screenshot
         When I open the file "simple sample.py"
+        Then take a screenshot
         And I select the command "Debug: Start Debugging"
+        Then take a screenshot
         Then the Python Debug Configuration picker is displayed
+        Then take a screenshot
         When I select the debug configuration "Python File"
+        Then take a screenshot
         # This is when VSC displays the toolbar, (but actual debugger may not have started just yet).
         Then the debugger starts
+        Then take a screenshot
         # Starting the debugger takes a while, (open terminal, activate it, etc)
         And the debugger will stop within 10 seconds
+        Then take a screenshot
         And a file named "log.log" will be created
+        Then take a screenshot
         And there are no notifications
+        Then take a screenshot
