@@ -77,24 +77,9 @@ suite('Language configuration regexes', () => {
         expect(result).to.be.equal(false, 'Decrease indent regex should not pick up lines without keywords');
     });
 
-    [
-        {
-            keyword: 'break',
-            example: '    break'
-        },
-        {
-            keyword: 'continue',
-            example: '\t\t continue'
-        },
-        {
-            keyword: 'pass',
-            example: ' pass'
-        },
-        {
-            keyword: 'raise',
-            example: 'raise Exception(\'Unknown Exception\''
-        }
-    ].forEach(({ keyword, example }) => {
+    ['    break', '\t\t continue', ' pass', 'raise Exception(\'Unknown Exception\''].forEach(example => {
+        const keyword = example.trim().split(' ')[0];
+
         const testWithoutComments = `Outdent regex for on enter rule should pick up lines containing the ${keyword} keyword`;
         test(testWithoutComments, () => {
             const result = OUTDENT_SINGLE_KEYWORD_REGEX.test(example);
