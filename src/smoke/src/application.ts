@@ -13,7 +13,6 @@ import { Extensions } from '../../../out/smoke/vscode/areas/extensions/extension
 import { SCM } from '../../../out/smoke/vscode/areas/git/scm';
 import { KeybindingsEditor } from '../../../out/smoke/vscode/areas/preferences/keybindings';
 import { SettingsEditor } from '../../../out/smoke/vscode/areas/preferences/settings';
-import { QuickOpen } from '../../../out/smoke/vscode/areas/quickopen/quickopen';
 import { Search } from '../../../out/smoke/vscode/areas/search/search';
 import { Terminal } from '../../../out/smoke/vscode/areas/terminal/terminal';
 import { Logger as VSCLogger } from '../../../out/smoke/vscode/logger';
@@ -27,6 +26,7 @@ import { Notifications } from './areas/notifications';
 import { Panels } from './areas/panels';
 import { Problems } from './areas/problems';
 import { QuickInput } from './areas/quickinput';
+import { QuickOpen } from './areas/quickopen';
 import { Settings } from './areas/settings';
 import { StatusBar } from './areas/statusbar';
 import { TestExplorer } from './areas/testExplorer';

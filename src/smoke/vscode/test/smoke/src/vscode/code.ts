@@ -32,7 +32,7 @@ function getDevElectronPath(): string {
     }
 }
 
-function getBuildElectronPath(root: string): string {
+export function getBuildElectronPath(root: string): string {
     switch (process.platform) {
         case 'darwin':
             return path.join(root, 'Contents', 'MacOS', 'Electron');

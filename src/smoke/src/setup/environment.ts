@@ -9,7 +9,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { context } from '../application';
 import { isCI } from '../constants';
-import { noop, sleep } from '../helpers';
+import { noop, retryWrapper, sleep } from '../helpers';
 import { getSelector } from '../selectors';
 import { waitForExtensionToActivate } from '../steps/core';
 import { IApplication } from '../types';
@@ -145,8 +145,8 @@ async function cloneGitRepo(repo: { url: string; subDirectory?: string }) {
  */
 export async function resetWorkspace() {
     const repo = getGitRepo(context.scenario.pickle.tags);
-    await createNewWorkspaceFolder();
-    await fs.emptyDir(context.options.workspacePathOrFolder);
+    // Retry 5 times (flaky on windows)
+    await retryWrapper({ count: 5 }, createNewWorkspaceFolder);
     if (repo) {
         await cloneGitRepo(repo);
     }
@@ -154,7 +154,8 @@ export async function resetWorkspace() {
 
 let workspaceFolderCounter = 0;
 export async function createNewWorkspaceFolder() {
-    await fs.emptyDir(context.options.workspacePathOrFolder);
+    await fs.emptyDir(context.options.workspacePathOrFolder).catch(noop);
     context.options.workspacePathOrFolder = path.join(context.options.tempPath, `workspace folder ${workspaceFolderCounter += 1}`);
     await fs.ensureDir(context.options.workspacePathOrFolder).catch(noop);
+    await fs.emptyDir(context.options.workspacePathOrFolder);
 }
