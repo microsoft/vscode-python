@@ -5,6 +5,7 @@
 
 import { spawnSync } from 'child_process';
 import * as glob from 'glob';
+import * as path from 'path';
 import { QuickOpen as VSCQuickOpen } from '../../../../out/smoke/vscode/areas/quickopen/quickopen';
 import { Code, getBuildElectronPath } from '../../../../out/smoke/vscode/vscode/code';
 import { context } from '../application';
@@ -16,9 +17,10 @@ export class QuickOpen extends VSCQuickOpen {
     }
 
     public async openFile(fileName: string): Promise<void> {
+        const pattern = path.join(context.options.workspacePathOrFolder, '**', fileName);
         try {
             const executable = getBuildElectronPath(context.app.testOptions.vscodePath);
-            const fullFilePath = await new Promise<string>((resolve, reject) => glob(fileName, (error, files) => {
+            const fullFilePath = await new Promise<string>((resolve, reject) => glob(pattern, (error, files) => {
                 if (error) {
                     return reject(error);
                 }
@@ -33,7 +35,7 @@ export class QuickOpen extends VSCQuickOpen {
             }));
             spawnSync(executable, [fullFilePath]);
         } catch (ex) {
-            console.error('Unable to open file using \'code <full path to filename>\'', ex);
+            console.error(`Unable to open file using \'code <full path to filename>\' for pattern '${pattern}'`, ex);
             // Revert to the old approach.
             return super.openFile(fileName);
         }
