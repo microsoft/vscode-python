@@ -6,7 +6,7 @@ import { IndentAction } from 'vscode';
 
 export const MULTILINE_SEPARATOR_INDENT_REGEX = /^(?!\s+\\)[^#\n]+\\$/;
 /**
- * This does not handle all cases.  However, it does handle nearly all usage.
+ * This does not handle all cases. However, it does handle nearly all usage.
  * Here's what it does not cover:
  * - the statement is split over multiple lines (and hence the ":" is on a different line)
  * - the code block is inlined (after the ":")
@@ -16,6 +16,10 @@ export const MULTILINE_SEPARATOR_INDENT_REGEX = /^(?!\s+\\)[^#\n]+\\$/;
 export const INCREASE_INDENT_REGEX = /^\s*(?:(?:async|class|def|elif|except|for|if|while|with)\b.*|(else|finally|try))\s*:\s*(#.*)?$/;
 export const DECREASE_INDENT_REGEX = /^\s*(?:else|finally|(?:elif|except)\b.*)\s*:\s*(#.*)?$/;
 export const OUTDENT_SINGLE_KEYWORD_REGEX = /^\s*(break|continue|pass|raise\b.*)\s*(#.*)?$/;
+/**
+ * Dedent the line following a return statement only if there is no dangling open array, tuple or dictionary before the cursor.
+ * A line with a closed array, tuple or dictionary will be dedented correctly.
+ */
 export const OUTDENT_RETURN_REGEX = /^\s*(return)\b([^[({]|([[({].*[\])}]))*(#.*)?$/;
 
 export function getLanguageConfiguration() {
@@ -35,7 +39,6 @@ export function getLanguageConfiguration() {
                 action: { indentAction: IndentAction.Outdent }
             },
             {
-                // Outdent the line following the return statement only if there is no dangling open bracket before the cursor.
                 beforeText: OUTDENT_RETURN_REGEX,
                 action: { indentAction: IndentAction.Outdent }
             }
