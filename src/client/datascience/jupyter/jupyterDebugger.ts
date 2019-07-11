@@ -6,7 +6,7 @@ import { inject, injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
 import { DebugConfiguration } from 'vscode';
 
-import { ICommandManager, IDebugService } from '../../common/application/types';
+import { IApplicationShell, ICommandManager, IDebugService } from '../../common/application/types';
 import { traceInfo, traceWarning } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { IConfigurationService } from '../../common/types';
@@ -22,10 +22,18 @@ import {
     ISourceMapRequest
 } from '../types';
 
+interface IPtvsdVersion {
+    major: number;
+    minor: number;
+    revision: string;
+}
+
 @injectable()
 export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     private connectInfo: IDebuggerConnectInfo | undefined;
+    private requiredPtvsdVersion: IPtvsdVersion = { major: 4, minor: 3, revision: '' };
     constructor(
+        @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDebugService) private debugService: IDebugService,
@@ -58,6 +66,12 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
     public async startDebugging(server: INotebookServer): Promise<void> {
         traceInfo('start debugging');
+
+        const ptvsdVersion = await this.ptvsdCheck(server);
+
+        if (!ptvsdVersion || !this.ptvsdMeetsRequirement(ptvsdVersion)) {
+            await this.promptToInstallPtvsd(server, ptvsdVersion);
+        }
 
         if (this.connectInfo) {
             // First connect the VSCode UI
@@ -124,6 +138,71 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
     private executeSilently(server: INotebookServer, code: string): Promise<ICell[]> {
         return server.execute(code, Identifiers.EmptyFileName, 0, uuid(), undefined, true);
+    }
+
+    // Returns either the version of ptvsd installed or undefined if not installed
+    private async ptvsdCheck(server: INotebookServer): Promise<IPtvsdVersion | undefined> {
+        // tslint:disable-next-line:no-multiline-string
+        const ptvsdVersionResults = await this.executeSilently(server, `import ptvsd\r\nptvsd.__version__`);
+        return this.parsePtvsdVersionInfo(ptvsdVersionResults);
+    }
+
+    private parsePtvsdVersionInfo(cells: ICell[]): IPtvsdVersion | undefined {
+        if (cells.length < 1 || cells[0].state !== CellState.finished) {
+            return undefined;
+        }
+
+        const targetCell = cells[0];
+
+        const outputString = this.extractOutput(targetCell);
+
+        if (outputString) {
+            const packageVersionRegex = /'([0-9]+).([0-9]+).([0-9a-zA-Z]+)/;
+            const packageVersionMatch = packageVersionRegex.exec(outputString);
+
+            if (packageVersionMatch) {
+                return {
+                    major: parseInt(packageVersionMatch[1], 10), minor: parseInt(packageVersionMatch[2], 10), revision: packageVersionMatch[3]
+                };
+            }
+        }
+
+        return undefined;
+    }
+
+    private ptvsdMeetsRequirement(version: IPtvsdVersion): boolean {
+        if (version.major > this.requiredPtvsdVersion.major) {
+            return true;
+        } else if (version.major === this.requiredPtvsdVersion.major && version.minor >= this.requiredPtvsdVersion.minor) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private async promptToInstallPtvsd(server: INotebookServer, oldVersion: IPtvsdVersion | undefined): Promise<void> {
+        // tslint:disable-next-line:messages-must-be-localized
+        const result = await this.appShell.showInformationMessage('Install Ptvsd?', 'Yes', 'No');
+
+        if (result === 'Yes') {
+            await this.installPtvsd(server);
+        }
+    }
+
+    private async installPtvsd(server: INotebookServer): Promise<void> {
+        // tslint:disable-next-line:no-multiline-string
+        const ptvsdInstallResults = await this.executeSilently(server, `!pip install --pre ptvsd`);
+        // IANHU: Need a default timeout here? How long will pip try for?
+
+        if (ptvsdInstallResults.length > 0) {
+            const installResultsString = this.extractOutput(ptvsdInstallResults[0]);
+
+            if (installResultsString && installResultsString.includes('Successfully installed')) {
+                return;
+            }
+        }
+
+        // Any failures and we need to warn that we failed to install
     }
 
     // Pull our connection info out from the cells returned by enable_attach
