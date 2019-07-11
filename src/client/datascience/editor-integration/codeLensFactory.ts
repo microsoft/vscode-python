@@ -37,12 +37,12 @@ export class CodeLensFactory implements ICodeLensFactory {
         return codeLenses;
     }
 
-    private enumerateCommands() : string[] {
+    private enumerateCommands(): string[] {
         const commands = this.configService.getSettings().datascience.codeLenses;
         if (commands) {
             return commands.split(',').map(s => s.trim());
         }
-        return [Commands.RunCurrentCell, Commands.RunAllCellsAbove, Commands.DebugCell];
+        return [Commands.RunCurrentCell, Commands.RunAllCellsAbove, Commands.DebugCell, Commands.AddCellBelow];
     }
 
     private createCodeLens(document: TextDocument, range: Range, commandName: string, isFirst: boolean): CodeLens | undefined {
@@ -114,12 +114,12 @@ export class CodeLensFactory implements ICodeLensFactory {
     }
 
     // tslint:disable-next-line: no-any
-    private generateCodeLens(range: Range, commandName: string, title: string, args?: any[]) : CodeLens {
+    private generateCodeLens(range: Range, commandName: string, title: string, args?: any[]): CodeLens {
         return new CodeLens(range, this.generateCommand(commandName, title, args));
     }
 
     // tslint:disable-next-line: no-any
-    private generateCommand(commandName: string, title: string, args?: any[]) : Command {
+    private generateCommand(commandName: string, title: string, args?: any[]): Command {
         return {
             arguments: args,
             title,

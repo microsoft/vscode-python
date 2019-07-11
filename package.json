@@ -1351,8 +1351,8 @@
                 },
                 "python.dataScience.codeLenses": {
                     "type": "string",
-                    "default": "python.datascience.runcell,  python.datascience.runallcellsabove, python.datascience.debugcell",
-                    "description": "Set of commands to put as code lens above a cell. Defaults to 'python.datascience.runcell,  python.datascience.runallcellsabove, python.datascience.debugcell'",
+                    "default": "python.datascience.runcell,  python.datascience.runallcellsabove, python.datascience.debugcell, python.datascience.addcellbelow",
+                    "description": "Set of commands to put as code lens above a cell. Defaults to 'python.datascience.runcell,  python.datascience.runallcellsabove, python.datascience.debugcell, python.datascience.addcellbelow'",
                     "scope": "resource"
                 },
                 "python.dataScience.ptvsdDistPath": {
