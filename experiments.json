@@ -12,10 +12,16 @@
         "max": 20
     },
     {
-        "name": "ShowPlayIcon - experiment",
-        "salt": "ShowPlayIcon",
+        "name": "ShowPlayIcon - icon 1",
+        "salt": "ShowPlayIcon1",
         "min": 80,
         "max": 100
+    },
+    {
+        "name": "ShowPlayIcon - icon 2",
+        "salt": "ShowPlayIcon2",
+        "min": 60,
+        "max": 80
     },
     {
         "name": "ShowPlayIcon - control",

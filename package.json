@@ -177,10 +177,24 @@
             {
                 "command": "python.execInTerminal",
                 "title": "%python.command.python.execInTerminal.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.execInTerminal-icon1",
+                "title": "%python.command.python.execInTerminal.title%",
                 "category": "Python",
                 "icon": {
-                    "light": "resources/light/run-in-terminal.svg",
-                    "dark": "resources/dark/run-in-terminal.svg"
+                    "light": "resources/light/run-in-terminal-1.svg",
+                    "dark": "resources/dark/run-in-terminal-1.svg"
+                }
+            },
+            {
+                "command": "python.execInTerminal-icon2",
+                "title": "%python.command.python.execInTerminal.title%",
+                "category": "Python",
+                "icon": {
+                    "light": "resources/light/run-in-terminal-2.svg",
+                    "dark": "resources/dark/run-in-terminal-2.svg"
                 }
             },
             {
@@ -562,10 +576,16 @@
             ],
             "editor/title": [
                 {
-                    "command": "python.execInTerminal",
+                    "command": "python.execInTerminal-icon1",
                     "title": "%python.command.python.execInTerminal.title%",
                     "group": "navigation",
-                    "when": "resourceLangId == python && python.showPlayIcon"
+                    "when": "resourceLangId == python && python.showPlayIcon1"
+                },
+                {
+                    "command": "python.execInTerminal-icon2",
+                    "title": "%python.command.python.execInTerminal.title%",
+                    "group": "navigation",
+                    "when": "resourceLangId == python && python.showPlayIcon2"
                 }
             ],
             "explorer/context": [

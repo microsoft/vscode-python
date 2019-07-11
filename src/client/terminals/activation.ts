@@ -35,8 +35,11 @@ function checkExperiments(
     experiments: IExperimentsManager,
     commands: ICommandManager
 ) {
-    if (experiments.inExperiment(ShowPlayIcon.experiment)) {
-        commands.executeCommand('setContext', 'python.showPlayIcon', true)
+    if (experiments.inExperiment(ShowPlayIcon.icon1)) {
+        commands.executeCommand('setContext', 'python.showPlayIcon1', true)
+            .then(noop, noop);
+    } else if (experiments.inExperiment(ShowPlayIcon.icon2)) {
+        commands.executeCommand('setContext', 'python.showPlayIcon2', true)
             .then(noop, noop);
     } else {
         experiments.sendTelemetryIfInExperiment(ShowPlayIcon.control);
