@@ -855,6 +855,17 @@ export interface IApplicationEnvironment {
      * @memberof IApplicationShell
      */
     readonly shell: string | undefined;
+    /**
+     * Gets the vscode channel (whether 'insiders' or 'stable').
+     */
+    readonly channel: Channel;
+    /**
+     * Gets the extension channel (whether 'insiders' or 'stable').
+     *
+     * @type {string}
+     * @memberof IApplicationShell
+     */
+    readonly extensionChannel: Channel;
 }
 
 export const IWebPanelMessageListener = Symbol('IWebPanelMessageListener');
@@ -961,3 +972,5 @@ export interface ILanguageService {
      */
     registerCompletionItemProvider(selector: DocumentSelector, provider: CompletionItemProvider, ...triggerCharacters: string[]): Disposable;
 }
+
+export type Channel = 'stable' | 'insiders';

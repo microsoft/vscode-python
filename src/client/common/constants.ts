@@ -53,6 +53,9 @@ export namespace Commands {
     export const openTestNodeInEditor = 'python.openTestNodeInEditor';
     export const runTestNode = 'python.runTestNode';
     export const debugTestNode = 'python.debugTestNode';
+    export const SwitchToStable = 'python.switchToStable';
+    export const SwitchToInsidersDaily = 'python.switchToInsidersDaily';
+    export const SwitchToInsidersWeekly = 'python.switchToInsidersWeekly';
 }
 export namespace Octicons {
     export const Test_Pass = '$(check)';

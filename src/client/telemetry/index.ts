@@ -287,6 +287,7 @@ export interface IEventNamePropertyMapping {
     [EventName.GO_TO_OBJECT_DEFINITION]: never | undefined;
     [EventName.HOVER_DEFINITION]: never | undefined;
     [EventName.HASHED_PACKAGE_NAME]: { hashedName: string };
+    [EventName.HASHED_PACKAGE_PERF]: never | undefined;
     [EventName.LINTER_NOT_INSTALLED_PROMPT]: LinterInstallPromptTelemetry;
     [EventName.PYTHON_INSTALL_PACKAGE]: { installer: string };
     [EventName.LINTING]: LintingTelemetry;
@@ -298,6 +299,8 @@ export interface IEventNamePropertyMapping {
     [EventName.PYTHON_INTERPRETER_AUTO_SELECTION]: InterpreterAutoSelection;
     [EventName.PYTHON_INTERPRETER_DISCOVERY]: InterpreterDiscovery;
     [EventName.PYTHON_INTERPRETER_ACTIVATE_ENVIRONMENT_PROMPT]: { selection: 'Yes' | 'No' | 'Ignore' | undefined };
+    [EventName.INSIDERS_PROMPT]: { selection: 'Use Stable' | 'Reload' | undefined };
+    [EventName.INSIDERS_RELOAD_PROMPT]: { selection: 'Reload' | undefined };
     [EventName.PYTHON_LANGUAGE_SERVER_SWITCHED]: { change: 'Switch to Jedi from LS' | 'Switch to LS from Jedi' };
     [EventName.PYTHON_LANGUAGE_SERVER_DOWNLOADED]: LanguageServerVersionTelemetry;
     [EventName.PYTHON_LANGUAGE_SERVER_ENABLED]: never | undefined;
