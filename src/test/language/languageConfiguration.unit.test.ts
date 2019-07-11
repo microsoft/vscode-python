@@ -31,75 +31,39 @@ suite('Language configuration regexes', () => {
     });
 
     [
-        {
-            keyword: 'async',
-            example: 'async def test(self):',
-            dedent: false
-        },
-        {
-            keyword: 'class',
-            example: 'class TestClass:',
-            dedent: false
-        },
-        {
-            keyword: 'def',
-            example: 'def foo(self, node, namespace=""):',
-            dedent: false
-        },
-        {
-            keyword: 'elif',
-            example: 'elif x < 5:',
-            dedent: true
-        },
-        {
-            keyword: 'else',
-            example: 'else:',
-            dedent: true
-        },
-        {
-            keyword: 'except',
-            example: 'except TestError:',
-            dedent: true
-        },
-        {
-            keyword: 'finally',
-            example: 'finally:',
-            dedent: true
-        },
-        {
-            keyword: 'for',
-            example: 'for item in items:',
-            dedent: false
-        },
-        {
-            keyword: 'if',
-            example: 'if foo is None:',
-            dedent: false
-        },
-        {
-            keyword: 'try',
-            example: 'try:',
-            dedent: false
-        },
-        {
-            keyword: 'while',
-            example: 'while \'::\' in macaddress:',
-            dedent: false
-        },
-        {
-            keyword: 'with',
-            example: 'with self.test:',
-            dedent: false
-        }
-    ].forEach(({ keyword, example, dedent }) => {
+        'async def test(self):',
+        'class TestClass:',
+        'def foo(self, node, namespace=""):',
+        'for item in items:',
+        'if foo is None:',
+        'try:',
+        'while \'::\' in macaddress:',
+        'with self.test:'
+    ].forEach(example => {
+        const keyword = example.split(' ')[0];
+
         test(`Increase indent regex should pick up lines containing the ${keyword} keyword`, async () => {
             const result = INCREASE_INDENT_REGEX.test(example);
             expect(result).to.be.equal(true, `Increase indent regex should pick up lines containing the ${keyword} keyword`);
         });
 
-        test(`Decrease indent regex should ${dedent ? '' : 'not '}pick up lines containing the ${keyword} keyword`, async () => {
+        test(`Decrease indent regex should not pick up lines containing the ${keyword} keyword`, async () => {
             const result = DECREASE_INDENT_REGEX.test(example);
-            expect(result).to.be.equal(dedent, `Decrease indent regex should ${dedent ? '' : 'not '}pick up lines containing the ${keyword} keyword`);
+            expect(result).to.be.equal(false, `Decrease indent regex should not pick up lines containing the ${keyword} keyword`);
+        });
+    });
+
+    ['elif x < 5:', 'else:', 'except TestError:', 'finally:'].forEach(example => {
+        const keyword = example.split(' ')[0];
+
+        test(`Increase indent regex should pick up lines containing the ${keyword} keyword`, async () => {
+            const result = INCREASE_INDENT_REGEX.test(example);
+            expect(result).to.be.equal(true, `Increase indent regex should pick up lines containing the ${keyword} keyword`);
+        });
+
+        test(`Decrease indent regex should pick up lines containing the ${keyword} keyword`, async () => {
+            const result = DECREASE_INDENT_REGEX.test(example);
+            expect(result).to.be.equal(true, `Decrease indent regex should pick up lines containing the ${keyword} keyword`);
         });
     });
 
@@ -148,68 +112,69 @@ suite('Language configuration regexes', () => {
         {
             type: 'number',
             returnValue: 3,
-            hasComment: true,
-            match: true
+            hasComment: true
         },
         {
             type: 'boolean',
             returnValue: 'True',
-            hasComment: false,
-            match: true
+            hasComment: false
         },
         {
             type: 'string',
             returnValue: '\'test\'',
-            hasComment: false,
-            match: true
+            hasComment: false
         },
         {
             type: 'variable name',
             returnValue: 'hello',
-            hasComment: true,
-            match: true
+            hasComment: true
         },
         {
             type: 'closed array',
             returnValue: '[ 1, 2, 3 ]',
-            hasComment: true,
-            match: true
+            hasComment: true
         },
         {
             type: 'closed dictionary',
             returnValue: '{ "id": 23, "enabled": True }',
-            hasComment: true,
-            match: true
+            hasComment: true
         },
         {
             type: 'closed tuple',
             returnValue: '( "test", 23, False )',
-            hasComment: false,
-            match: true
-        },
+            hasComment: false
+        }
+    ].forEach(({ type, returnValue, hasComment }) => {
+        const testTitle = `Outdent return regex on enter should pick up lines containing the return statement followed by a ${type}`;
+        test(testTitle, () => {
+            const result = OUTDENT_RETURN_REGEX.test(`return ${returnValue} ${hasComment ? '# test comment' : ''}`);
+            expect(result).to.be.equal(true, testTitle);
+        });
+    });
+
+    [
         {
-            type: 'dangling [',
-            returnValue: '[',
+            returnValue: '[ 1, 2',
             hasComment: false,
             match: false
         },
         {
-            type: 'dangling {',
-            returnValue: '{',
+            returnValue: '{ ',
             hasComment: false,
             match: false
         },
         {
-            type: 'dangling (',
-            returnValue: '(',
+            returnValue: '( False',
             hasComment: true,
             match: false
         }
-    ].forEach(({ type, returnValue, hasComment, match }) => {
-        const testTitle = `Outdent return regex on enter should ${match ? '' : 'not '}pick up lines containing the return statement followed by a ${type}`;
+    ].forEach(({ returnValue, hasComment }) => {
+        const type = returnValue[0];
+
+        const testTitle = `Outdent return regex on enter should not pick up lines containing the return statement followed by a dangling ${type}`;
         test(testTitle, () => {
             const result = OUTDENT_RETURN_REGEX.test(`return ${returnValue} ${hasComment ? '# test comment' : ''}`);
-            expect(result).to.be.equal(match, testTitle);
+            expect(result).to.be.equal(false, testTitle);
         });
     });
 });
