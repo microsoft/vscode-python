@@ -54,6 +54,10 @@ export class Editor extends VSCEditor {
 
         // Wait for explorer to get refreshed.
         await sleep(500);
+        await this._commands.runCommand('File: Focus on Files Explorer');
+        await sleep(500);
+        await this._commands.runCommand('File: Refresh Explorer');
+        await sleep(500);
 
         if (commandToRunAfterRefreshingExplorer) {
             await this._commands.runCommand(commandToRunAfterRefreshingExplorer);
