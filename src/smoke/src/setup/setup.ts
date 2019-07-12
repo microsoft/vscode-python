@@ -13,7 +13,7 @@ import { Quality } from '../../../../out/smoke/vscode/application';
 import { context } from '../application';
 import { showCli } from '../cli';
 import { extensionRootPath, isCI, vscodeTestPath } from '../constants';
-import { getOSType, noop, OSType, retryWrapper, unzipFile, unzipVSCode } from '../helpers';
+import { getOSType, noop, OSType, retryWrapper, sleep, unzipFile, unzipVSCode } from '../helpers';
 import { downloadFile } from '../helpers/http';
 import { getSelector } from '../selectors';
 import { getExtensionPath as getBootstrapExtensionPath } from './bootstrap';
@@ -167,7 +167,7 @@ function getExtensionSpecificUserSettingsForAllTests(): { [key: string]: {} } {
         'python.linting.pylintEnabled': false
     };
 }
-export async function initializeDefaultUserSettings(opts: TestOptions, additionalSettings: { [key: string]: {} } = {}) {
+async function initializeDefaultUserSettings(opts: TestOptions, additionalSettings: { [key: string]: {} } = {}) {
     const settingsToAdd: { [key: string]: {} } = {
         'python.pythonPath': opts.pythonPath,
         // We dont need these(avoid VSC from displaying prompts).
@@ -199,6 +199,20 @@ export async function initializeDefaultUserSettings(opts: TestOptions, additiona
 export async function waitForExtensionToActivate(timeoutSeconds: number) {
     await context.app.workbench.quickopen.runCommand('Activate Python Extension');
     await retryWrapper({ timeout: timeoutSeconds * 1000, interval: 100 }, () => context.app.code.waitForElement(getSelector('PyBootstrapActivatedStatusBar')));
+}
+
+export async function openVSCodeForFirstTime() {
+    await context.app.stop();
+    // Wait for 2 seconds before re-starting.
+    // Also delete the downloaded language server.
+    await Promise.all([
+        new Promise(resolve => rimraf(context.app.userDataPath, resolve)),
+        new Promise(resolve => rimraf(path.join(context.app.extensionsPath, '**', 'languageServer.*'), resolve)),
+        sleep(2000)
+    ]);
+    // Restore the user settings.
+    await initializeDefaultUserSettings(context.options);
+    await context.app.start();
 }
 
 async function initializeUserSettings(opts: TestOptions, settings: { [key: string]: {} }) {

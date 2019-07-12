@@ -61,7 +61,7 @@ Then('the cursor is on line {int}', CucumberRetryMax10Seconds, async (lineNumber
 
 // Wait for some time, possible UI hasn't been updated.
 // Its been observed that 2 seconds isn't enough on Mac for Jedi/LS (go to definition).
-Then('auto completion list will contain the item {string}', CucumberRetryMax5Seconds, async (label: string) => {
+Then('auto completion list contains the item {string}', CucumberRetryMax5Seconds, async (label: string) => {
     const elements = await context.app.code.waitForElements(autoCompletionListItemSlector, true);
     const labels = elements.map(element => element.textContent.trim());
     expect(labels).to.contain(label, `Label '${label}' not found in [${labels.join(',')}]`);

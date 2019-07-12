@@ -147,7 +147,7 @@ def create_new_python_file(context):
     uitests.vscode.documents.send_text_to_editor(context, "Untitled-1", context.text)
 
 
-@behave.then("auto completion list will contain the item {label}")
+@behave.then("auto completion list contains the item {label}")
 @uitests.tools.retry(AssertionError)
 def auto_complete_list_contains(context, label):
     """You could either quote the label within " or not."""

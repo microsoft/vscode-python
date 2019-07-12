@@ -7,11 +7,10 @@ import { expect } from 'chai';
 import { Given, Then, When } from 'cucumber';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import * as rimraf from 'rimraf';
 import { context } from '../application';
 import { extensionActivationTimeout } from '../constants';
 import { noop, retryWrapper, sleep } from '../helpers';
-import { initializeDefaultUserSettings, waitForExtensionToActivate } from '../setup/setup';
+import { openVSCodeForFirstTime, waitForExtensionToActivate } from '../setup/setup';
 
 Then('do nothing', noop);
 
@@ -21,19 +20,6 @@ Then('Step {string}', async (_step: string) => {
     noop();
 });
 
-async function openVSCodeForFirstTime() {
-    await context.app.stop();
-    // Wait for 2 seconds before re-starting.
-    // Also delete the downloaded language server.
-    await Promise.all([
-        new Promise(resolve => rimraf(context.app.userDataPath, resolve)),
-        new Promise(resolve => rimraf(path.join(context.app.extensionsPath, '**', 'languageServer.*'), resolve)),
-        sleep(2000)
-    ]);
-    // Restore the user settings.
-    await initializeDefaultUserSettings(context.options);
-    await context.app.start();
-}
 Given('VS Code is opened for the first time', openVSCodeForFirstTime);
 
 When('I open VS Code for the first time', openVSCodeForFirstTime);

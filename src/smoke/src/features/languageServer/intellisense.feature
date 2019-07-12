@@ -14,28 +14,28 @@ Feature: Language Server
         And I wait for <wait_time> seconds
         And I go to line 3, column 13
         And I press ctrl+space
-        Then auto completion list will contain the item "excepthook"
-        And auto completion list will contain the item "exec_prefix"
-        And auto completion list will contain the item "executable"
+        Then auto completion list contains the item "excepthook"
+        And auto completion list contains the item "exec_prefix"
+        And auto completion list contains the item "executable"
         When I go to line 11, column 21
         And I press ctrl+space
-        Then auto completion list will contain the item "age"
+        Then auto completion list contains the item "age"
         When I go to line 12, column 21
         And I press ctrl+space
-        Then auto completion list will contain the item "name"
+        Then auto completion list contains the item "name"
         When I go to line 17, column 10
         And I press ctrl+space
-        Then auto completion list will contain the item "say_something"
+        Then auto completion list contains the item "say_something"
         When I go to line 18, column 10
         And I press ctrl+space
-        Then auto completion list will contain the item "age"
+        Then auto completion list contains the item "age"
         When I go to line 19, column 10
         And I press ctrl+space
-        Then auto completion list will contain the item "name"
+        Then auto completion list contains the item "name"
         When I go to line 17, column 24
         And I press .
-        Then auto completion list will contain the item "capitalize"
-        And auto completion list will contain the item "count"
+        Then auto completion list contains the item "capitalize"
+        And auto completion list contains the item "count"
 
         Examples:
             | jedi_enabled | reload_or_start_vs_for_first_time | time_to_activate | first_text_in_ooutput_panel      | second_text_in_output_panel | wait_time |
@@ -63,9 +63,9 @@ Feature: Language Server
         And I wait for <wait_time> seconds
         And I go to line 3, column 13
         And I press ctrl+space
-        Then auto completion list will contain the item "excepthook"
-        And auto completion list will contain the item "exec_prefix"
-        And auto completion list will contain the item "executable"
+        Then auto completion list contains the item "excepthook"
+        And auto completion list contains the item "exec_prefix"
+        And auto completion list contains the item "executable"
 
         Examples:
             | jedi_enabled | reload_or_start_vs_for_first_time | time_to_activate | first_text_in_ooutput_panel      | second_text_in_output_panel | wait_time |
