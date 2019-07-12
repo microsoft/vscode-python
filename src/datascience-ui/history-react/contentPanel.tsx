@@ -12,7 +12,7 @@ import { getSettings } from '../react-common/settingsReactSide';
 import { Cell, ICellViewModel } from './cell';
 import { InputHistory } from './inputHistory';
 // tslint:disable-next-line:no-require-imports no-var-requires
-const debounce = require('lodash/debounce') as typeof import('lodash/debounce');
+const throttle = require('lodash/throttle') as typeof import('lodash/throttle');
 
 export interface IContentPanelProps {
     baseTheme: string;
@@ -36,7 +36,7 @@ export interface IContentPanelProps {
 export class ContentPanel extends React.Component<IContentPanelProps> {
     private bottomRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private containerRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
-    private debouncedScrollIntoView = debounce(this.scrollIntoView.bind(this), 100);
+    private throttledScrollIntoView = throttle(this.scrollIntoView.bind(this), 100);
     constructor(prop: IContentPanelProps) {
         super(prop);
     }
@@ -105,7 +105,7 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
     private scrollToBottom() {
         if (this.bottomRef.current && !this.props.skipNextScroll && !this.props.testMode && this.containerRef.current) {
             // Make sure to debounce this so it doesn't take up too much time.
-            this.debouncedScrollIntoView();
+            this.throttledScrollIntoView();
         }
     }
 
