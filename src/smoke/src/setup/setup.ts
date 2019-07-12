@@ -13,8 +13,9 @@ import { Quality } from '../../../../out/smoke/vscode/application';
 import { context } from '../application';
 import { showCli } from '../cli';
 import { extensionRootPath, isCI, vscodeTestPath } from '../constants';
-import { getOSType, noop, OSType, unzipFile, unzipVSCode } from '../helpers';
+import { getOSType, noop, OSType, retryWrapper, unzipFile, unzipVSCode } from '../helpers';
 import { downloadFile } from '../helpers/http';
+import { getSelector } from '../selectors';
 import { getExtensionPath as getBootstrapExtensionPath } from './bootstrap';
 import { getVSCodeDirectory, getVSCodeDownloadUrl } from './downloader';
 
@@ -194,6 +195,12 @@ export async function initializeDefaultUserSettings(opts: TestOptions, additiona
     await initializeUserSettings(opts, settingsToAdd);
     console.log('Initialized user settings');
 }
+
+export async function waitForExtensionToActivate(timeoutSeconds: number) {
+    await context.app.workbench.quickopen.runCommand('Activate Python Extension');
+    await retryWrapper({ timeout: timeoutSeconds * 1000, interval: 100 }, () => context.app.code.waitForElement(getSelector('PyBootstrapActivatedStatusBar')));
+}
+
 async function initializeUserSettings(opts: TestOptions, settings: { [key: string]: {} }) {
     await fs.mkdirp(path.dirname(opts.userSettingsFilePath)).catch(noop);
     return fs.writeFile(opts.userSettingsFilePath, JSON.stringify(settings, undefined, 4), 'utf8');

@@ -11,8 +11,7 @@ import * as rimraf from 'rimraf';
 import { context } from '../application';
 import { extensionActivationTimeout } from '../constants';
 import { noop, retryWrapper, sleep } from '../helpers';
-import { getSelector } from '../selectors';
-import { initializeDefaultUserSettings } from '../setup/setup';
+import { initializeDefaultUserSettings, waitForExtensionToActivate } from '../setup/setup';
 
 Then('do nothing', noop);
 
@@ -47,10 +46,6 @@ When('I start VS Code', () => context.app.start());
 
 When('I reload VS Code', () => context.app.reload());
 
-export async function waitForExtensionToActivate(timeoutSeconds: number) {
-    await context.app.workbench.quickopen.runCommand('Activate Python Extension');
-    await retryWrapper({ timeout: timeoutSeconds * 1000, interval: 100 }, () => context.app.code.waitForElement(getSelector('PyBootstrapActivatedStatusBar')));
-}
 When('I wait for a maximum of {int} seconds for the Python extension to get activated', async (seconds: number) => {
     await waitForExtensionToActivate(seconds);
 });

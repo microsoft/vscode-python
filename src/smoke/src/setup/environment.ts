@@ -11,8 +11,8 @@ import { context } from '../application';
 import { isCI } from '../constants';
 import { noop, retryWrapper, sleep } from '../helpers';
 import { getSelector } from '../selectors';
-import { waitForExtensionToActivate } from '../steps/core';
 import { IApplication } from '../types';
+import { waitForExtensionToActivate } from './setup';
 
 /**
  * Dismiss one time messages displayed by VSC and Python Extension.

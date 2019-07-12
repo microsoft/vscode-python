@@ -6,7 +6,7 @@
 import * as assert from 'assert';
 import { IElement } from '../../../../out/smoke/vscode/vscode/driver';
 import { context } from '../application';
-import { RetryMax20Seconds, RetryMax5Seconds, RetryMax5Times } from '../constants';
+import { RetryMax20Seconds, RetryMax5Seconds } from '../constants';
 import { retry, sleep } from '../helpers';
 import '../helpers/extensions';
 
