@@ -372,6 +372,9 @@ export interface IEventNamePropertyMapping {
     [Telemetry.InterruptJupyterTime]: never | undefined;
     [Telemetry.PandasNotInstalled]: never | undefined;
     [Telemetry.PandasTooOld]: never | undefined;
+    [Telemetry.PtvsdInstallFailed]: never | undefined;
+    [Telemetry.PtvsdPromptToInstall]: never | undefined;
+    [Telemetry.PtvsdSuccessfullyInstalled]: never | undefined;
     [Telemetry.OpenPlotViewer]: never | undefined;
     [Telemetry.Redo]: never | undefined;
     [Telemetry.RemoteAddCode]: never | undefined;

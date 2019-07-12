@@ -9,13 +9,14 @@ import { DebugConfiguration } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
 import { IApplicationShell, ICommandManager, IDebugService, IWorkspaceService } from '../../common/application/types';
-import { traceInfo, traceWarning } from '../../common/logger';
+import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { IConfigurationService } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { concatMultilineString } from '../common';
-import { Identifiers, Settings } from '../constants';
+import { Identifiers, Settings, Telemetry } from '../constants';
 import {
     CellState,
     ICell,
@@ -216,6 +217,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         return false;
     }
 
+    @captureTelemetry(Telemetry.PtvsdPromptToInstall)
     private async promptToInstallPtvsd(server: INotebookServer, oldVersion: IPtvsdVersion | undefined): Promise<void> {
         // tslint:disable-next-line:messages-must-be-localized
         const promptMessage = oldVersion ? localize.DataScience.jupyterDebuggerInstallPtvsdUpdate() : localize.DataScience.jupyterDebuggerInstallPtvsdNew();
@@ -232,16 +234,19 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     private async installPtvsd(server: INotebookServer): Promise<void> {
         // tslint:disable-next-line:no-multiline-string
         const ptvsdInstallResults = await this.executeSilently(server, `!pip install --pre ptvsd`);
-        // IANHU: Need a default timeout here? How long will pip try for?
 
         if (ptvsdInstallResults.length > 0) {
             const installResultsString = this.extractOutput(ptvsdInstallResults[0]);
 
             if (installResultsString && installResultsString.includes('Successfully installed')) {
+                sendTelemetryEvent(Telemetry.PtvsdSuccessfullyInstalled);
+                traceInfo('Ptvsd successfully installed');
                 return;
             }
         }
 
+        sendTelemetryEvent(Telemetry.PtvsdInstallFailed);
+        traceError('Failed to install ptvsd');
         // Failed to install ptvsd, throw to exit debugging
         throw new JupyterDebuggerNotInstalledError();
     }
