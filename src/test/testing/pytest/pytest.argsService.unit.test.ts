@@ -95,10 +95,17 @@ suite('ArgsService: pytest', () => {
         expect(knownOptions.withArgs.length).to.not.equal(0);
         expect(knownOptions.withoutArgs.length).to.not.equal(0);
     });
-    test('Test calling ArgumentsService.getOptionValue', () => {
+    test('Test calling ArgumentsService.getOptionValue with the option followed by the value', () => {
         const knownOptionsWithValues = argumentsService.getKnownOptions().withArgs;
         knownOptionsWithValues.forEach(option => {
             const args = ['--foo', '--bar', 'arg1', option, 'value1'];
+            expect(argumentsService.getOptionValue(args, option)).to.deep.equal('value1');
+        });
+    });
+    test('Test calling ArgumentsService.getOptionValue with the inline option syntax', () => {
+        const knownOptionsWithValues = argumentsService.getKnownOptions().withArgs;
+        knownOptionsWithValues.forEach(option => {
+            const args = ['--foo', '--bar', 'arg1', `${option}=value1`];
             expect(argumentsService.getOptionValue(args, option)).to.deep.equal('value1');
         });
     });
