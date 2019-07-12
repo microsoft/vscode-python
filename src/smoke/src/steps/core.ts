@@ -18,10 +18,6 @@ Then('Step {string}', async (_step: string) => {
     noop();
 });
 
-When('I wait for {int} milliseconds', async (ms: number) => {
-    await sleep(ms);
-});
-
 When('I open VS Code for the first time', async () => {
     await context.app.stop();
     // Wait for 2 seconds before re-starting.
@@ -72,23 +68,27 @@ Given('the Python extension has been activated', async () => {
     await waitForExtensionToActivate(extensionActivationTimeout);
 });
 
-When('I wait for {int} seconds', async (seconds: number) => {
+When('I wait for {int} second(s)', async (seconds: number) => {
     await sleep(seconds * 1000);
 });
 
-When('I wait for 1 second', async () => {
-    await sleep(1000);
-});
+// When('I wait for 1 second', async () => {
+//     await sleep(1000);
+// });
 
-Then('wait for {int} milliseconds', async (ms: number) => {
+Then('wait for {int} millisecond(s)', async (ms: number) => {
     await sleep(ms);
 });
 
-Then('wait for 1 second', async () => {
-    await sleep(1000);
+When('I wait for {int} millisecond(s)', async (ms: number) => {
+    await sleep(ms);
 });
 
-Then('wait for {int} seconds', async (seconds: number) => {
+// Then('wait for 1 second', async () => {
+//     await sleep(1000);
+// });
+
+Then('wait for {int} second(s)', async (seconds: number) => {
     await sleep(seconds * 1000);
 });
 

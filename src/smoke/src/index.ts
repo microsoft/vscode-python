@@ -18,8 +18,8 @@ const times: string[] = [];
 const obs = new PerformanceObserver((list) => {
     const entry = list.getEntries()[0]!;
     times.push(`Time for ('${entry.name}') ${entry.duration.toLocaleString()}`);
-    console.log(times[times.length - 1]);
 });
+
 obs.observe({ entryTypes: ['measure'], buffered: false });  //we want to react to full measurements and not individual marks
 
 // type ScenarioTimes = Record<string, { start: string; stop?: string; durations: { before?: number; steps?: number; after?: number; total?: number } }>;
@@ -122,7 +122,7 @@ AfterAll({ timeout: maxHookTimeout }, async function () {
 
     performance.mark('AfterAll-end');
     performance.measure('AfterAll', 'AfterAll-start', 'AfterAll-end');
-    console.log(times.join('\n'));
+    console.log(`\n${times.join('\n')}`);
 });
 
 /*
