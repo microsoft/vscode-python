@@ -3,6 +3,7 @@
 'use strict';
 import './contentPanel.css';
 
+import throttle from 'lodash/throttle';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
 
@@ -11,8 +12,6 @@ import { ErrorBoundary } from '../react-common/errorBoundary';
 import { getSettings } from '../react-common/settingsReactSide';
 import { Cell, ICellViewModel } from './cell';
 import { InputHistory } from './inputHistory';
-// tslint:disable-next-line:no-require-imports no-var-requires
-const throttle = require('lodash/throttle') as typeof import('lodash/throttle');
 
 export interface IContentPanelProps {
     baseTheme: string;

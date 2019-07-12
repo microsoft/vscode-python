@@ -3,12 +3,10 @@
 // Licensed under the MIT License.
 'use strict';
 
+import debounce from 'lodash/debounce';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
 import { IDisposable } from '../../client/common/types';
-
-// tslint:disable-next-line:no-require-imports no-var-requires
-const debounce = require('lodash/debounce') as typeof import('lodash/debounce');
 
 import './monacoEditor.css';
 

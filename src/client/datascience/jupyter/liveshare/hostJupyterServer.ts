@@ -4,7 +4,7 @@
 import '../../../common/extensions';
 
 // tslint:disable-next-line: no-require-imports
-import cloneDeep = require('lodash/cloneDeep');
+import cloneDeep from 'lodash/cloneDeep';
 import * as os from 'os';
 import { Observable } from 'rxjs/Observable';
 import * as vscode from 'vscode';
