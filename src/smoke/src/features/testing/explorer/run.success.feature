@@ -12,22 +12,22 @@ Feature: Test Explorer
                     "-p",
                     "test_*.py"
                 ],
-                "python.testing.unittestEnabled": true,
+                "python.testing.unittestEnabled": false,
                 "python.testing.pytestArgs": ["."],
                 "python.testing.pytestEnabled": false,
                 "python.testing.nosetestArgs": ["."],
                 "python.testing.nosetestsEnabled": false
             }
             """
+        Given the Python extension has been activated
 
     Scenario Outline: When running tests, the nodes will have the progress icon and when completed will have a success status (<package>)
         Given the package "<package>" is installed
-        And the workspace setting "python.testing.<setting_to_enable>" is enabled
         And a file named "tests/test_running_delay" is created with the following contents
             """
             5
             """
-        When I wait for the Python extension to activate
+        And the workspace setting "python.testing.<setting_to_enable>" is enabled
         When I select the command "Python: Discover Tests"
         And I wait for test discovery to complete
         Then the test explorer icon will be visible
@@ -53,7 +53,6 @@ Feature: Test Explorer
 
     Scenario Outline: When running tests, the nodes will have the progress icon and when completed will have a error status (<package>)
         Given the package "<package>" is installed
-        And the workspace setting "python.testing.<setting_to_enable>" is enabled
         And a file named "tests/test_running_delay" is created with the following contents
             """
             5
@@ -62,7 +61,8 @@ Feature: Test Explorer
             """
             [1,2,-1,4,5,6]
             """
-        When I wait for the Python extension to activate
+        And the workspace setting "python.testing.<setting_to_enable>" is enabled
+        # Then I wait for 1000 seconds
         When I select the command "Python: Discover Tests"
         And I wait for test discovery to complete
         Then the test explorer icon will be visible

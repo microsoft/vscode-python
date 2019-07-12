@@ -12,18 +12,18 @@ Feature: Test Explorer
                     "-p",
                     "test_*.py"
                 ],
-                "python.testing.unittestEnabled": true,
+                "python.testing.unittestEnabled": false,
                 "python.testing.pytestArgs": ["."],
                 "python.testing.pytestEnabled": false,
                 "python.testing.nosetestArgs": ["."],
                 "python.testing.nosetestsEnabled": false
             }
             """
+        Given the Python extension has been activated
 
     Scenario Outline: When running tests, the nodes will have the progress icon and clicking stop will stop running (<package>)
         Given the package "<package>" is installed
         And the workspace setting "python.testing.<setting_to_enable>" is enabled
-        When I wait for the Python extension to activate
         When I select the command "Python: Discover Tests"
         And I wait for test discovery to complete
         Then the test explorer icon will be visible

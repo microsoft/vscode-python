@@ -91,7 +91,7 @@ export class TestExplorer {
         }
         // wait at least 1s before selecting nodes and expanding.
         // Its possible the UI is not yet ready.
-        await sleep(1000);
+        await sleep(1500);
         await this.selectFirstNode();
         let nodeNumber = 0;
         while (nodeNumber < maxNodes) {

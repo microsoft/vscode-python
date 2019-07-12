@@ -12,19 +12,19 @@ Feature: Test Explorer (code nav)
                     "-p",
                     "test_*.py"
                 ],
-                "python.testing.unittestEnabled": true,
+                "python.testing.unittestEnabled": false,
                 "python.testing.pytestArgs": ["."],
                 "python.testing.pytestEnabled": false,
                 "python.testing.nosetestArgs": ["."],
                 "python.testing.nosetestsEnabled": false
             }
             """
+        Given the Python extension has been activated
 
     Scenario Outline: When navigating to a test file, suite & test, then open the file and set the cursor at the right line (<package>)
         Given the package "<package>" is installed
         And the workspace setting "python.testing.<setting_to_enable>" is enabled
-        When I wait for the Python extension to activate
-        And I select the command "Python: Discover Tests"
+        When I select the command "Python: Discover Tests"
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the nodes in the test explorer
@@ -50,8 +50,7 @@ Feature: Test Explorer (code nav)
     Scenario Outline: When selecting a node, then open the file (<package>)
         Given the package "<package>" is installed
         And the workspace setting "python.testing.<setting_to_enable>" is enabled
-        When I wait for the Python extension to activate
-        And I select the command "Python: Discover Tests"
+        When I select the command "Python: Discover Tests"
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the nodes in the test explorer

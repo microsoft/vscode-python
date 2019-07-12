@@ -19,12 +19,12 @@ Feature: Test Explorer
                 "python.testing.nosetestsEnabled": false
             }
             """
+        Given the Python extension has been activated
 
     Scenario Outline: Explorer will be displayed when tests are discovered (<package>)
         Given the package "<package>" is installed
         And the workspace setting "python.testing.<setting_to_enable>" is enabled
-        When I wait for the Python extension to activate
-        And I select the command "Python: Discover Tests"
+        When I select the command "Python: Discover Tests"
         Then the test explorer icon will be visible
 
         Examples:
@@ -36,7 +36,6 @@ Feature: Test Explorer
     Scenario Outline: All expected items are displayed in the test explorer (<package>)
         Given the package "<package>" is installed
         And the workspace setting "python.testing.<setting_to_enable>" is enabled
-        When I wait for the Python extension to activate
         When I select the command "Python: Discover Tests"
         And I wait for test discovery to complete
         Then the test explorer icon will be visible
@@ -53,7 +52,6 @@ Feature: Test Explorer
     Scenario Outline: When discovering tests, the nodes will have the progress icon and clicking stop will stop discovery (<package>)
         Given the package "<package>" is installed
         And the workspace setting "python.testing.<setting_to_enable>" is enabled
-        When I wait for the Python extension to activate
         When I select the command "Python: Discover Tests"
         And I wait for test discovery to complete
         Then the test explorer icon will be visible

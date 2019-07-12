@@ -12,26 +12,18 @@ Feature: Test Explorer - Re-run Failed Tests
                     "-p",
                     "test_*.py"
                 ],
-                "python.testing.unittestEnabled": true,
+                "python.testing.unittestEnabled": false,
                 "python.testing.pytestArgs": ["."],
                 "python.testing.pytestEnabled": false,
                 "python.testing.nosetestArgs": ["."],
                 "python.testing.nosetestsEnabled": false
             }
             """
+        Given the Python extension has been activated
 
     Scenario Outline: We are able to re-run a failed tests (<package>)
         Given the package "<package>" is installed
         And the workspace setting "python.testing.<setting_to_enable>" is enabled
-        And a file named "tests/test_running_delay" is created with the following contents
-            """
-            0
-            """
-        And a file named "tests/data.json" is created with the following contents
-            """
-            [1,-1,-1,4,5,6]
-            """
-        When I wait for the Python extension to activate
         When I select the command "Python: Discover Tests"
         And I wait for test discovery to complete
         Then the test explorer icon will be visible
@@ -39,6 +31,14 @@ Feature: Test Explorer - Re-run Failed Tests
         And I expand all of the nodes in the test explorer
         Then there are <node_count> nodes in the test explorer
         And <node_count> nodes in the test explorer have a status of "Unknown"
+        Given a file named "tests/test_running_delay" is created with the following contents
+            """
+            0
+            """
+        And a file named "tests/data.json" is created with the following contents
+            """
+            [1,-1,-1,4,5,6]
+            """
         When I select the command "Python: Run All Tests"
         And I wait for tests to complete running
         Then the node "<test_one_file_label>" in the test explorer has a status of "Fail"
@@ -69,19 +69,9 @@ Feature: Test Explorer - Re-run Failed Tests
             | pytest   | pytestEnabled     | 15         | test_one.py         | test_two.py         |
             | nose     | nosetestsEnabled  | 14         | tests/test_one.py   | tests/test_two.py   |
 
-    @skip
     Scenario Outline: We are able to stop tests after re-running failed tests (<package>)
         Given the package "<package>" is installed
         And the workspace setting "python.testing.<setting_to_enable>" is enabled
-        And a file named "tests/test_running_delay" is created with the following contents
-            """
-            0
-            """
-        And a file named "tests/data.json" is created with the following contents
-            """
-            [1,-1,-1,4,5,6]
-            """
-        When I wait for the Python extension to activate
         When I select the command "Python: Discover Tests"
         And I wait for test discovery to complete
         Then the test explorer icon will be visible
@@ -89,6 +79,14 @@ Feature: Test Explorer - Re-run Failed Tests
         And I expand all of the nodes in the test explorer
         Then there are <node_count> nodes in the test explorer
         And <node_count> nodes in the test explorer have a status of "Unknown"
+        Given a file named "tests/test_running_delay" is created with the following contents
+            """
+            0
+            """
+        And a file named "tests/data.json" is created with the following contents
+            """
+            [1,-1,-1,4,5,6]
+            """
         When I select the command "Python: Run All Tests"
         And I wait for tests to complete running
         Then the node "<test_one_file_label>" in the test explorer has a status of "Fail"
@@ -99,7 +97,7 @@ Feature: Test Explorer - Re-run Failed Tests
         And the node "TestThirdSuite" in the test explorer has a status of "Fail"
         And the node "test_three_third_suite" in the test explorer has a status of "Fail"
         And the node "test_two_third_suite" in the test explorer has a status of "Fail"
-        And <failed_node_count> nodes in the test explorer have a status of "Success"
+        And 6 nodes in the test explorer have a status of "Success"
         And the run failed tests icon is visible in the toolbar
         Given a file named "tests/test_running_delay" is created with the following contents
             """

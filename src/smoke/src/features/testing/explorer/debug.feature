@@ -12,28 +12,29 @@ Feature: Test Explorer (debugging)
                     "-p",
                     "test_*.py"
                 ],
-                "python.testing.unittestEnabled": true,
+                "python.testing.unittestEnabled": false,
                 "python.testing.pytestArgs": ["."],
                 "python.testing.pytestEnabled": false,
                 "python.testing.nosetestArgs": ["."],
                 "python.testing.nosetestsEnabled": false
             }
             """
+        Given the Python extension has been activated
 
     Scenario Outline: When debugging tests, the nodes will have the progress icon and clicking stop will stop the debugger (<package>)
         Given the package "<package>" is installed
         And the workspace setting "python.testing.<setting_to_enable>" is enabled
-        # The number entered in this file will be used in a `time.sleep(?)` statement.
-        # Resulting in delays in running the tests (delay is in the python code in the above repo).
-        And a file named "tests/test_running_delay" is created with the following contents
-            """
-            5
-            """
-        When I wait for the Python extension to activate
-        And I select the command "Python: Discover Tests"
+        When I select the command "Python: Discover Tests"
+        And I wait for test discovery to complete
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the nodes in the test explorer
+        # The number entered in this file will be used in a `time.sleep(?)` statement.
+        # Resulting in delays in running the tests (delay is in the python code in the above repo).
+        Given a file named "tests/test_running_delay" is created with the following contents
+            """
+            5
+            """
         Then there are <node_count> nodes in the test explorer
         And <node_count> nodes in the test explorer have a status of "Unknown"
         When I debug the node "test_three_first_suite" from the test explorer
@@ -50,7 +51,6 @@ Feature: Test Explorer (debugging)
     Scenario Outline: When debugging tests, only the specific function will be debugged (<package>)
         Given the package "<package>" is installed
         And the workspace setting "python.testing.<setting_to_enable>" is enabled
-        When I wait for the Python extension to activate
         When I select the command "Python: Discover Tests"
         And I wait for test discovery to complete
         Then the test explorer icon will be visible
@@ -74,7 +74,6 @@ Feature: Test Explorer (debugging)
     Scenario Outline: When debugging tests, only the specific suite will be debugged (<package>)
         Given the package "<package>" is installed
         And the workspace setting "python.testing.<setting_to_enable>" is enabled
-        When I wait for the Python extension to activate
         When I select the command "Python: Discover Tests"
         And I wait for test discovery to complete
         Then the test explorer icon will be visible
@@ -106,7 +105,6 @@ Feature: Test Explorer (debugging)
     Scenario Outline: When debugging tests, everything will be debugged (<package>)
         Given the package "<package>" is installed
         And the workspace setting "python.testing.<setting_to_enable>" is enabled
-        When I wait for the Python extension to activate
         When I select the command "Python: Discover Tests"
         And I wait for test discovery to complete
         Then the test explorer icon will be visible
