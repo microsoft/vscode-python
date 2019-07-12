@@ -663,7 +663,7 @@ export class JupyterServerBase implements INotebookServer {
                 }
 
                 // Create a trimming function. Only trim user output. Silent output requires the full thing
-                const trimFunc = silent !== undefined && silent ? (s: string) => s : this.trimOutput.bind(this);
+                const trimFunc = silent ? (s: string) => s : this.trimOutput.bind(this);
 
                 const clearState: Map<string, boolean> = new Map<string, boolean>();
 
