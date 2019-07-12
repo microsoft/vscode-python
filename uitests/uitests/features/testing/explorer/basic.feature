@@ -50,7 +50,6 @@ Feature: Test Explorer
             | pytest   | pytestEnabled     | 15         |
             | nose     | nosetestsEnabled  | 14         |
 
-    @wip
     Scenario Outline: When discovering tests, the nodes will have the progress icon and clicking stop will stop discovery (<package>)
         Given the package "<package>" is installed
         And the workspace setting "python.testing.<setting_to_enable>" is enabled
@@ -76,5 +75,5 @@ Feature: Test Explorer
         Examples:
             | package  | setting_to_enable | node_count |
             | unittest | unittestEnabled   | 14         |
-            # | pytest   | pytestEnabled     | 15         |
-            # | nose     | nosetestsEnabled  | 14         |
+            | pytest   | pytestEnabled     | 15         |
+            | nose     | nosetestsEnabled  | 14         |
