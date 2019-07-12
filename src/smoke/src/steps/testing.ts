@@ -92,11 +92,30 @@ When('I debug the node {string} from the test explorer', CucumberRetryMax20Secon
     const counter = this.retryCounter = ((this.retryCounter || 0) + 1);
     console.log(`Start debugging node, counter ${counter}`);
     await context.app.captureScreenshot(`take_a_screenshot_${new Date().getTime().toString()}`);
-    await context.app.workbench.testExplorer.selectActionForNode(label, 'debug', counter * 2);
-    console.log(`Clicked debug ${counter}`);
+
+    await context.app.workbench.testExplorer.selectNodeByLabel(label);
     await context.app.captureScreenshot(`take_a_screenshot_${new Date().getTime().toString()}`);
+    // const nodeNumber = context.app.workbench.testExplorer.getNodeNumber(label);
+    await context.app.code.dispatchKeybinding('tab');
+    await context.app.captureScreenshot(`take_a_screenshot_${new Date().getTime().toString()}`);
+    await context.app.code.dispatchKeybinding('tab');
+    await context.app.captureScreenshot(`take_a_screenshot_${new Date().getTime().toString()}`);
+    await context.app.code.dispatchKeybinding('enter');
+    await context.app.captureScreenshot(`take_a_screenshot_${new Date().getTime().toString()}`);
+    // await context.app.workbench.testExplorer.selectNode()
+    // await context.app.captureScreenshot(`take_a_screenshot_${new Date().getTime().toString()}`);
     await context.app.code.waitForElement('div.debug-toolbar', ele => ele ? !ele.attributes.style.includes('[aria-hidden="true"]') : false, 50);
     console.log(`Debugger started ${counter}`);
+
+
+    // const counter = this.retryCounter = ((this.retryCounter || 0) + 1);
+    // console.log(`Start debugging node, counter ${counter}`);
+    // await context.app.captureScreenshot(`take_a_screenshot_${new Date().getTime().toString()}`);
+    // await context.app.workbench.testExplorer.selectActionForNode(label, 'debug', counter * 2);
+    // console.log(`Clicked debug ${counter}`);
+    // await context.app.captureScreenshot(`take_a_screenshot_${new Date().getTime().toString()}`);
+    // await context.app.code.waitForElement('div.debug-toolbar', ele => ele ? !ele.attributes.style.includes('[aria-hidden="true"]') : false, 50);
+    // console.log(`Debugger started ${counter}`);
 });
 When('I run the node {string} from the test explorer', async (label: string) => {
     await context.app.workbench.testExplorer.selectActionForNode(label, 'run');
