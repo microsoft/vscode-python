@@ -6,7 +6,7 @@
 import { expect } from 'chai';
 import { Then, When } from 'cucumber';
 import { context } from '../application';
-import { CucumberRetryMax2Seconds, CucumberRetryMax5Seconds } from '../constants';
+import { CucumberRetryMax20Seconds, CucumberRetryMax2Seconds, CucumberRetryMax5Seconds } from '../constants';
 
 type TestNodeStatus = 'Unknown' | 'Success' | 'Progress' | 'Skip' | 'Ok' | 'Pass' | 'Fail' | 'Error';
 const statusToIconMapping: Record<TestNodeStatus, string> = {
@@ -87,8 +87,14 @@ When('I click the test node with the label {string}', async (label: string) => {
 When('I navigate to the code associated with the test node {string}', async (label: string) => {
     await context.app.workbench.testExplorer.selectActionForNode(label, 'open');
 });
-When('I debug the node {string} from the test explorer', async (label: string) => {
+// tslint:disable: no-invalid-this no-any restrict-plus-operands no-console
+When('I debug the node {string} from the test explorer', CucumberRetryMax20Seconds, async function (this: any, label: string) {
+    const counter = this.retryCounter = ((this.retryCounter || 0) + 1);
+    console.log(`Start debugging node, counter ${counter}`);
     await context.app.workbench.testExplorer.selectActionForNode(label, 'debug');
+    console.log(`Clicked debug ${counter}`);
+    await context.app.code.waitForElement('div.debug-toolbar', ele => ele ? !ele.attributes.style.includes('[aria-hidden="true"]') : false, 50);
+    console.log(`Debugger started ${counter}`);
 });
 When('I run the node {string} from the test explorer', async (label: string) => {
     await context.app.workbench.testExplorer.selectActionForNode(label, 'run');
