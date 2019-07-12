@@ -12,7 +12,7 @@ Feature: Test Explorer
                     "-p",
                     "test_*.py"
                 ],
-                "python.testing.unittestEnabled": true,
+                "python.testing.unittestEnabled": false,
                 "python.testing.pytestArgs": ["."],
                 "python.testing.pytestEnabled": false,
                 "python.testing.nosetestArgs": ["."],
@@ -25,6 +25,7 @@ Feature: Test Explorer
         Given the package "<package>" is installed
         And the workspace setting "python.testing.<setting_to_enable>" is enabled
         When I select the command "Python: Discover Tests"
+        And I wait for test discovery to complete
         Then the test explorer icon will be visible
 
         Examples:

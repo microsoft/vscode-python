@@ -77,7 +77,7 @@ export class Notifications {
                     await context.app.code.waitAndClick(closeSelector).catch(noop);
 
                     // Wait for message to get clicked and dissappear.
-                    await sleep(500);
+                    await sleep(200);
 
                     // Continue dismissing other messages.
                     return _closeNotifications();

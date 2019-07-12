@@ -25,6 +25,7 @@ Feature: Test Explorer (code nav)
         Given the package "<package>" is installed
         And the workspace setting "python.testing.<setting_to_enable>" is enabled
         When I select the command "Python: Discover Tests"
+        And I wait for test discovery to complete
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the nodes in the test explorer
@@ -51,6 +52,7 @@ Feature: Test Explorer (code nav)
         Given the package "<package>" is installed
         And the workspace setting "python.testing.<setting_to_enable>" is enabled
         When I select the command "Python: Discover Tests"
+        And I wait for test discovery to complete
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the nodes in the test explorer

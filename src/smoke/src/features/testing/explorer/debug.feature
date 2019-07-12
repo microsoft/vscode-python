@@ -33,7 +33,7 @@ Feature: Test Explorer (debugging)
         # Resulting in delays in running the tests (delay is in the python code in the above repo).
         Given a file named "tests/test_running_delay" is created with the following contents
             """
-            5
+            30
             """
         Then there are <node_count> nodes in the test explorer
         And <node_count> nodes in the test explorer have a status of "Unknown"

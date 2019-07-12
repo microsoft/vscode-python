@@ -6,7 +6,7 @@
 import * as assert from 'assert';
 import { IElement } from '../../../../out/smoke/vscode/vscode/driver';
 import { context } from '../application';
-import { RetryMax20Seconds, RetryMax5Seconds } from '../constants';
+import { RetryMax20Seconds, RetryMax5Seconds, RetryMax5Times } from '../constants';
 import { retry, sleep } from '../helpers';
 import '../helpers/extensions';
 
@@ -74,54 +74,69 @@ export class TestExplorer {
             throw new Error(`Node with the label '${label}' not selected`);
         }
         const selector = nodeActionSelector.format(node.number.toString(), actionTitleMapping[action]);
-        await context.app.code.waitAndClick(selector, 2, 2);
+        // await context.app.code.waitAndClick(selector, 2, 2);
+        await context.app.code.waitAndClick(selector);
     }
 
     /**
      * Expand all nodes (max 5 nodes).
      * Remember to wait a little when navigating through the tree.
      * We need to wait for VSC to update the UI.
+     *
+     * Retry as something else might steal focus, or flaky.
+     * We're going to assume that there are at least 3 nodes.
      * @returns
      */
+    @retry(RetryMax5Times)
     public async expandAllNodes() {
         await this.waitUntilVisible();
         // We only want to support <= 15 nodes in testing.
-        if (await this.getNodeCount() === 0) {
+        const initialNodeCount = await this.getNodeCount();
+        if (initialNodeCount === 0) {
             return;
         }
         // wait at least 1s before selecting nodes and expanding.
         // Its possible the UI is not yet ready.
         await sleep(1500);
         await this.selectFirstNode();
-        let nodeNumber = 0;
-        while (nodeNumber < maxNodes) {
-            nodeNumber += 1;
+        try {
+            let nodeNumber = 0;
+            while (nodeNumber < maxNodes) {
+                nodeNumber += 1;
+                const visibleNodes = await this.getNodeCount();
+                let info: { expanded: boolean; hasChildren: boolean; focused: boolean };
+                try {
+                    info = await this.getNodeInfo(nodeNumber);
+                } catch {
+                    return;
+                }
+                if (!info.hasChildren && nodeNumber > visibleNodes) {
+                    return;
+                }
+                if (nodeNumber === 1 && info.expanded && info.hasChildren) {
+                    await context.app.code.dispatchKeybinding('down');
+                    await sleep(delayForUIToUpdate);
+                    continue;
+                }
+                if (!info.expanded && info.hasChildren) {
+                    await context.app.code.dispatchKeybinding('right');
+                    await sleep(delayForUIToUpdate);
+                    await context.app.code.dispatchKeybinding('down');
+                    await sleep(delayForUIToUpdate);
+                    continue;
+                }
+                if (!info.hasChildren) {
+                    await context.app.code.dispatchKeybinding('down');
+                    await sleep(delayForUIToUpdate);
+                    continue;
+                }
+            }
+        } finally {
             const visibleNodes = await this.getNodeCount();
-            let info: { expanded: boolean; hasChildren: boolean; focused: boolean };
-            try {
-                info = await this.getNodeInfo(nodeNumber);
-            } catch {
-                return;
-            }
-            if (!info.hasChildren && nodeNumber > visibleNodes) {
-                return;
-            }
-            if (nodeNumber === 1 && info.expanded && info.hasChildren) {
-                await context.app.code.dispatchKeybinding('down');
-                await sleep(delayForUIToUpdate);
-                continue;
-            }
-            if (!info.expanded && info.hasChildren) {
-                await context.app.code.dispatchKeybinding('right');
-                await sleep(delayForUIToUpdate);
-                await context.app.code.dispatchKeybinding('down');
-                await sleep(delayForUIToUpdate);
-                continue;
-            }
-            if (!info.hasChildren) {
-                await context.app.code.dispatchKeybinding('down');
-                await sleep(delayForUIToUpdate);
-                continue;
+            if (visibleNodes === initialNodeCount) {
+                // Something is wrong, try again.
+                // tslint:disable-next-line: no-unsafe-finally
+                throw new Error('Retry expanding nodes. First iteration did not reveal any new nodes!');
             }
         }
     }
@@ -194,9 +209,13 @@ export class TestExplorer {
      * Remember to wait a little when navigating through the tree.
      * We need to wait for VSC to update the UI.
      *
+     * Retry as something else might steal focus, or flaky.
+     * We're going to assume that there are at least 3 nodes.
+     *
      * @param {number} number
      * @returns {Promise<void>}
      */
+    @retry(RetryMax20Seconds)
     public async selectNode(nodeNumber: number): Promise<void> {
         // We only want to support <= 15 nodes in testing.
         if (await this.getNodeCount() === 0) {
