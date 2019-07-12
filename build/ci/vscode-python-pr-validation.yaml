@@ -23,7 +23,7 @@ variables:
   VSC_PYTHON_LOG_FILE: '$(Build.ArtifactStagingDirectory)/pvsc.log'
 
 jobs:
-- template: templates/build_compile_jobs.yml
+# - template: templates/build_compile_jobs.yml
 
 - template: templates/uitest_jobs.yml
   parameters:
@@ -32,104 +32,104 @@ jobs:
     # In PRs, run smoke tests against 3.7 and 2.7 (excluding others).
     jobs:
     - test: "Smoke"
-      tags: "@smoke"
+      tags: "@wip"
+      ignorePythonVersions: "3.6,3.5"
+    # - test: "Test"
+    #   tags: "@testing"
+    #   # We have python code that is involved in running/discovering tests.
+    #   # Hence test against all versions, until we have CI running for the Python code.
+    #   # I.e. when all test discovery/running is done purely in Python.
+    # - test: "Terminal"
+    #   tags: "@terminal and not @terminal.pipenv"
+    #   # No need to run tests against all versions.
+    #   # This is faster/cheaper, besides activation of terminals is generic enough
+    #   # not to warrant testing against all versions.
     #   ignorePythonVersions: "3.6,3.5"
-    - test: "Test"
-      tags: "@testing"
-      # We have python code that is involved in running/discovering tests.
-      # Hence test against all versions, until we have CI running for the Python code.
-      # I.e. when all test discovery/running is done purely in Python.
-    - test: "Terminal"
-      tags: "@terminal and not @terminal.pipenv"
-      # No need to run tests against all versions.
-      # This is faster/cheaper, besides activation of terminals is generic enough
-      # not to warrant testing against all versions.
-      ignorePythonVersions: "3.6,3.5"
-    - test: "Debugging"
-      tags: "@debugging"
-      # No need to run tests against all versions.
-      # This is faster/cheaper, and these are external packages.
-      # We expect them to work (or 3rd party packages to test against all PY versions).
-      ignorePythonVersions: "3.6,3.5"
-    - test: "Jedi_Language_Server"
-      tags: "@ls"
-      # No need to run tests against all versions.
-      # This is faster/cheaper, and these are external packages.
-      # We expect them to work (or 3rd party packages to test against all PY versions).
-      ignorePythonVersions: "3.6,3.5"
+    # - test: "Debugging"
+    #   tags: "@debugging"
+    #   # No need to run tests against all versions.
+    #   # This is faster/cheaper, and these are external packages.
+    #   # We expect them to work (or 3rd party packages to test against all PY versions).
+    #   ignorePythonVersions: "3.6,3.5"
+    # - test: "Jedi_Language_Server"
+    #   tags: "@ls"
+    #   # No need to run tests against all versions.
+    #   # This is faster/cheaper, and these are external packages.
+    #   # We expect them to work (or 3rd party packages to test against all PY versions).
+    #   ignorePythonVersions: "3.6,3.5"
 
-- job: 'PR'
-  dependsOn: []
-  strategy:
-    matrix:
-      # Each member of this list must contain these values:
-        # VMImageName: '[name]' - the VM image to run the tests on.
-        # TestsToRun: 'testA, testB, ..., testN' - the list of tests to execute, see the list above.
-      # Each member of this list may contain these values:
-        # NeedsPythonTestReqs: [true|false] - install the test-requirements prior to running tests. False if not set.
-        # NeedsPythonFunctionalReqs: [true|false] - install the functional-requirements prior to running tests. False if not set.
-        # PythonVersion: 'M.m' - the Python version to run. DefaultPythonVersion if not set.
-        # NodeVersion: 'x.y.z' - Node version to use. DefaultNodeVersion if not set.
-        # SkipXvfb: [true|false] - skip initialization of xvfb prior to running system tests on Linux. False if not set
-        # UploadBinary: [true|false] - upload test binaries to Azure if true. False if not set.
-      'Win-Py3.7 Unit':
-        VMImageName: 'vs2017-win2016'
-        TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
-        NeedsPythonTestReqs: true
-      'Win-Py2.7 Unit':
-        PythonVersion: '2.7'
-        VMImageName: 'vs2017-win2016'
-        TestsToRun: 'pythonUnitTests'
-        NeedsPythonTestReqs: true
-      'Mac-Py3.7 Unit':
-        PythonVersion: '3.7'
-        VMImageName: 'macos-10.13'
-        TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
-        NeedsPythonTestReqs: true
-      'Mac-Py3.7 Single Workspace':
-        PythonVersion: '3.7'
-        VMImageName: 'macos-10.13'
-        TestsToRun: 'testSingleWorkspace'
-        NeedsPythonTestReqs: true
-      'Mac-Py2.7 Unit+Single':
-        PythonVersion: '2.7'
-        VMImageName: 'macos-10.13'
-        TestsToRun: 'pythonUnitTests, testSingleWorkspace'
-        NeedsPythonTestReqs: true
-      'Linux-Py3.7 Unit':
-        PythonVersion: '3.7'
-        VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
-        NeedsPythonTestReqs: true
-      'Linux-Py3.7 Single Workspace':
-        PythonVersion: '3.7'
-        VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'testSingleWorkspace'
-        NeedsPythonTestReqs: true
-      'Linux-Py2.7 Unit+Single':
-        PythonVersion: '2.7'
-        VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'pythonUnitTests, testSingleWorkspace'
-        NeedsPythonTestReqs: true
-      'Linux-Py3.7 Functional':
-        PythonVersion: '3.7'
-        VMImageName: 'ubuntu-16.04'
-        TestsToRun: 'testfunctional'
-        NeedsPythonTestReqs: true
-        NeedsPythonFunctionalReqs: true
+# - job: 'PR'
+#   dependsOn: []
+#   strategy:
+#     matrix:
+#       # Each member of this list must contain these values:
+#         # VMImageName: '[name]' - the VM image to run the tests on.
+#         # TestsToRun: 'testA, testB, ..., testN' - the list of tests to execute, see the list above.
+#       # Each member of this list may contain these values:
+#         # NeedsPythonTestReqs: [true|false] - install the test-requirements prior to running tests. False if not set.
+#         # NeedsPythonFunctionalReqs: [true|false] - install the functional-requirements prior to running tests. False if not set.
+#         # PythonVersion: 'M.m' - the Python version to run. DefaultPythonVersion if not set.
+#         # NodeVersion: 'x.y.z' - Node version to use. DefaultNodeVersion if not set.
+#         # SkipXvfb: [true|false] - skip initialization of xvfb prior to running system tests on Linux. False if not set
+#         # UploadBinary: [true|false] - upload test binaries to Azure if true. False if not set.
+#       'Win-Py3.7 Unit':
+#         VMImageName: 'vs2017-win2016'
+#         TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
+#         NeedsPythonTestReqs: true
+#       'Win-Py2.7 Unit':
+#         PythonVersion: '2.7'
+#         VMImageName: 'vs2017-win2016'
+#         TestsToRun: 'pythonUnitTests'
+#         NeedsPythonTestReqs: true
+#       'Mac-Py3.7 Unit':
+#         PythonVersion: '3.7'
+#         VMImageName: 'macos-10.13'
+#         TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
+#         NeedsPythonTestReqs: true
+#       'Mac-Py3.7 Single Workspace':
+#         PythonVersion: '3.7'
+#         VMImageName: 'macos-10.13'
+#         TestsToRun: 'testSingleWorkspace'
+#         NeedsPythonTestReqs: true
+#       'Mac-Py2.7 Unit+Single':
+#         PythonVersion: '2.7'
+#         VMImageName: 'macos-10.13'
+#         TestsToRun: 'pythonUnitTests, testSingleWorkspace'
+#         NeedsPythonTestReqs: true
+#       'Linux-Py3.7 Unit':
+#         PythonVersion: '3.7'
+#         VMImageName: 'ubuntu-16.04'
+#         TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
+#         NeedsPythonTestReqs: true
+#       'Linux-Py3.7 Single Workspace':
+#         PythonVersion: '3.7'
+#         VMImageName: 'ubuntu-16.04'
+#         TestsToRun: 'testSingleWorkspace'
+#         NeedsPythonTestReqs: true
+#       'Linux-Py2.7 Unit+Single':
+#         PythonVersion: '2.7'
+#         VMImageName: 'ubuntu-16.04'
+#         TestsToRun: 'pythonUnitTests, testSingleWorkspace'
+#         NeedsPythonTestReqs: true
+#       'Linux-Py3.7 Functional':
+#         PythonVersion: '3.7'
+#         VMImageName: 'ubuntu-16.04'
+#         TestsToRun: 'testfunctional'
+#         NeedsPythonTestReqs: true
+#         NeedsPythonFunctionalReqs: true
 
-  pool:
-    vmImage: $(VMImageName)
+#   pool:
+#     vmImage: $(VMImageName)
 
-  steps:
-    - template: templates/test_phases.yml
+#   steps:
+#     - template: templates/test_phases.yml
 
-- job: Coverage
-  dependsOn:
-    - PR
-  pool:
-    vmImage: "macos-latest"
-  variables:
-    TestsToRun: 'testUnitTests'
-  steps:
-    - template: templates/merge_upload_coverage.yml
+# - job: Coverage
+#   dependsOn:
+#     - PR
+#   pool:
+#     vmImage: "macos-latest"
+#   variables:
+#     TestsToRun: 'testUnitTests'
+#   steps:
+#     - template: templates/merge_upload_coverage.yml
