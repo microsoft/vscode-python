@@ -160,7 +160,7 @@ steps:
     - bash: |
           mkdir -p './.vscode test/reports'
           # npm run smokeTest -- --channel=$(VSCodeChannel) --tags='$(Tags) and not @skip' --pythonPath=$(CI_PYTHON_PATH) | tee '.vscode test/reports/log.log'
-          npm run smokeTest -- --channel=$(VSCodeChannel) --tags='$(Tags) and not @skip' | tee '.vscode test/reports/log.log'
+          npm run smokeTest -- --channel=$(VSCodeChannel) --tags='$(Tags) and not @skip' --exit | tee '.vscode test/reports/log.log'
       env:
           DISPLAY: :10
           AgentJobName: $(Agent.JobName)
