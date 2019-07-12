@@ -221,7 +221,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         const promptMessage = oldVersion ? localize.DataScience.jupyterDebuggerInstallPtvsdUpdate() : localize.DataScience.jupyterDebuggerInstallPtvsdNew();
         const result = await this.appShell.showInformationMessage(promptMessage, localize.DataScience.jupyterDebuggerInstallPtvsdYes(), localize.DataScience.jupyterDebuggerInstallPtvsdNo());
 
-        if (result === 'Yes') {
+        if (result === localize.DataScience.jupyterDebuggerInstallPtvsdYes()) {
             await this.installPtvsd(server);
         } else {
             // If they don't want to install, throw so we exit out of debugging
