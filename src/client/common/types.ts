@@ -393,8 +393,9 @@ export interface IHttpClient {
      * Downloads file from uri as string and parses them into JSON objects
      * @param uri The uri to download the JSON from
      * @param strict Set `false` to allow trailing comma and comments in the JSON, defaults to `true`
+     * @param timeout If timeout is provided, wait for download to complete until timeout, return `null` if download fails to complete
      */
-    getJSON<T>(uri: string, strict?: boolean): Promise<T>;
+    getJSON<T>(uri: string, strict?: boolean, timeout?: number): Promise<T | null>;
 }
 
 export const IExtensionContext = Symbol('ExtensionContext');

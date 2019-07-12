@@ -9,7 +9,7 @@ export async function sleep(timeout: number): Promise<number> {
     });
 }
 
-export function waitForPromise<T>(promise: Promise<T>, timeout: number): Promise<T | null> {
+export async function waitForPromise<T>(promise: Promise<T>, timeout: number): Promise<T | null> {
     // Set a timer that will resolve with null
     return new Promise<T | null>((resolve, reject) => {
         const timer = setTimeout(() => resolve(null), timeout);

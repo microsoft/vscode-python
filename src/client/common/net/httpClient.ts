@@ -10,6 +10,7 @@ import { IHttpClient } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { IWorkspaceService } from '../application/types';
 import { traceError } from '../logger';
+import { waitForPromise } from '../utils/async';
 
 @injectable()
 export class HttpClient implements IHttpClient {
@@ -25,10 +26,31 @@ export class HttpClient implements IHttpClient {
         return request(uri, this.requestOptions);
     }
 
-    public async getJSON<T>(uri: string, strict: boolean = true): Promise<T> {
+    public async getJSON<T>(uri: string, strict: boolean = true, timeout?: number): Promise<T | null> {
+        const body = timeout ?
+            // If timeout is provided, wait for download promise to complete until timeout
+            await waitForPromise(this.getBody(uri), timeout) : await this.getBody(uri);
+        return body === null ? null : this.parseBodyToJSON(body, strict);
+    }
+
+    public async parseBodyToJSON<T>(body: string, strict: boolean): Promise<T> {
+        if (strict) {
+            return JSON.parse(body);
+        } else {
+            // tslint:disable-next-line: prefer-const
+            let errors: ParseError[] = [];
+            const content = parse(body, errors, { allowTrailingComma: true, disallowComments: false }) as T;
+            if (errors.length > 0) {
+                traceError('JSONC parser returned ParseError codes', errors);
+            }
+            return content;
+        }
+    }
+
+    public async getBody(uri: string): Promise<string> {
         // tslint:disable-next-line:no-require-imports
         const request = require('request') as typeof requestTypes;
-        return new Promise<T>((resolve, reject) => {
+        return new Promise<string>((resolve, reject) => {
             request(uri, this.requestOptions, (ex, response, body) => {
                 if (ex) {
                     return reject(ex);
@@ -36,22 +58,7 @@ export class HttpClient implements IHttpClient {
                 if (response.statusCode !== 200) {
                     return reject(new Error(`Failed with status ${response.statusCode}, ${response.statusMessage}, Uri ${uri}`));
                 }
-                try {
-                    if (strict) {
-                        const content = JSON.parse(body) as T;
-                        resolve(content);
-                    } else {
-                        // tslint:disable-next-line: prefer-const
-                        let errors: ParseError[] = [];
-                        const content = parse(body, errors, { allowTrailingComma: true, disallowComments: false }) as T;
-                        if (errors.length > 0) {
-                            traceError('JSONC parser returned ParseError codes', errors);
-                        }
-                        resolve(content);
-                    }
-                } catch (ex) {
-                    return reject(ex);
-                }
+                resolve(body);
             });
         });
     }
