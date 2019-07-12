@@ -96,7 +96,7 @@ export class TestExplorer {
      * We're going to assume that there are at least 3 nodes.
      * @returns
      */
-    @retry(RetryMax5Times)
+    @retry(RetryMax20Seconds)
     public async expandAllNodes() {
         await this.waitUntilVisible();
         // We only want to support <= 15 nodes in testing.
