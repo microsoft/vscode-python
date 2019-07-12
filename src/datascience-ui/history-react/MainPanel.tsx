@@ -235,7 +235,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 // this should be the response from a restart.
                 this.setState({currentExecutionCount: 0});
                 if (this.variableExplorerRef.current && this.variableExplorerRef.current.state.open) {
-                    this.refreshVariables();
+                    this.refreshVariables(0);
                 }
                 break;
 
@@ -847,7 +847,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 // We also need to update our variable explorer when the execution count changes
                 // Use the ref here to maintain var explorer independence
                 if (this.variableExplorerRef.current && this.variableExplorerRef.current.state.open) {
-                    this.refreshVariables();
+                    this.refreshVariables(newExecutionCount);
                 }
             }
 
@@ -956,8 +956,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     // When the variable explorer wants to refresh state (say if it was expanded)
-    private refreshVariables = () => {
-        this.sendMessage(InteractiveWindowMessages.GetVariablesRequest, this.state.currentExecutionCount);
+    private refreshVariables = (newExecutionCount?: number) => {
+        this.sendMessage(InteractiveWindowMessages.GetVariablesRequest, newExecutionCount === undefined ? this.state.currentExecutionCount : newExecutionCount);
     }
 
     // Find the display value for one specific variable
