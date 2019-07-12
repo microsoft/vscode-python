@@ -803,8 +803,8 @@ export class JupyterServerBase implements INotebookServer {
     private handleStreamMesssage(msg: KernelMessage.IStreamMsg, clearState: Map<string, boolean>, cell: ICell) {
         // Might already have a stream message. If so, just add on to it.
         const data: nbformat.ICodeCell = cell.data as nbformat.ICodeCell;
-        const existing = data.outputs.find(o => o.output_type === 'stream' && o.name === msg.content.name);
-        if (existing && existing.name === msg.content.name) {
+        const existing = data.outputs.find(o => o.output_type === 'stream');
+        if (existing) {
             // If clear pending, then don't add.
             if (clearState.get('stream')) {
                 clearState.delete('stream');

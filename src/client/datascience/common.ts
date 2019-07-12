@@ -40,39 +40,41 @@ export function stripComments(str: string): string {
     return result;
 }
 
-export function formatStreamText(str: string): string {
-    // Go through the string, looking for \r's that are not followed by \n. This is
-    // a special case that means replace the string before. This is necessary to
-    // get an html display of this string to behave correctly.
-
-    // Note: According to this:
-    // https://jsperf.com/javascript-concat-vs-join/2.
-    // Concat is way faster than array join for building up a string.
-    let result = '';
-    let previousLinePos = 0;
-    for (let i = 0; i < str.length; i += 1) {
-        if (str[i] === '\r') {
-            // See if this is a line feed. If so, leave alone. This is goofy windows \r\n
-            if (i < str.length - 1 && str[i + 1] === '\n') {
-                // This line is legit, output it and convert to '\n' only.
-                result += str.substr(previousLinePos, (i - previousLinePos));
-                result += '\n';
-                previousLinePos = i + 2;
-                i += 1;
-            } else {
-                // This line should replace the previous one. Skip our \r
-                previousLinePos = i + 1;
-            }
-        } else if (str[i] === '\n') {
-            // This line is legit, output it. (Single linefeed)
-            result += str.substr(previousLinePos, (i - previousLinePos) + 1);
-            previousLinePos = i + 1;
+// Took this from jupyter/notebook
+// https://github.com/jupyter/notebook/blob/b8b66332e2023e83d2ee04f83d8814f567e01a4e/notebook/static/base/js/utils.js
+// Remove chunks that should be overridden by the effect of
+// carriage return characters
+function fixCarriageReturn(txt: string) {
+    txt = txt.replace(/\r+\n/gm, '\n'); // \r followed by \n --> newline
+    while (txt.search(/\r[^$]/g) > -1) {
+        const baseMatch = txt.match(/^(.*)\r+/m);
+        const insertMatch = txt.match(/\r+(.*)$/m);
+        if (baseMatch && insertMatch) {
+            const base = baseMatch[1];
+            let insert = insertMatch[1];
+            insert = insert + base.slice(insert.length, base.length);
+            txt = txt.replace(/\r+.*$/m, '\r').replace(/^.*\r/m, insert);
+        } else {
+            break;
         }
     }
-    result += str.substr(previousLinePos, str.length - previousLinePos);
+    return txt;
+}
 
-    // Remove all backspace chars unless next to a newline
-    return result.replace(/[^\n]\x08/gm, '');
+// Remove characters that are overridden by backspace characters
+function fixBackspace(txt: string) {
+    let tmp = txt;
+    do {
+        txt = tmp;
+        // Cancel out anything-but-newline followed by backspace
+        tmp = txt.replace(/[^\n]\x08/gm, '');
+    } while (tmp.length < txt.length);
+    return txt;
+}
+
+export function formatStreamText(str: string): string {
+    // Do the same thing jupyter is doing
+    return fixCarriageReturn(fixBackspace(str));
 }
 
 export function appendLineFeed(arr: string[], modifier?: (s: string) => string) {
