@@ -88,34 +88,8 @@ When('I navigate to the code associated with the test node {string}', async (lab
     await context.app.workbench.testExplorer.selectActionForNode(label, 'open');
 });
 // tslint:disable: no-invalid-this no-any restrict-plus-operands no-console
-When('I debug the node {string} from the test explorer', CucumberRetryMax20Seconds, async function (this: any, label: string) {
-    const counter = this.retryCounter = ((this.retryCounter || 0) + 1);
-    console.log(`Start debugging node, counter ${counter}`);
-    await context.app.captureScreenshot(`take_a_screenshot_${new Date().getTime().toString()}`);
-
-    await context.app.workbench.testExplorer.selectNodeByLabel(label);
-    await context.app.captureScreenshot(`take_a_screenshot_${new Date().getTime().toString()}`);
-    // const nodeNumber = context.app.workbench.testExplorer.getNodeNumber(label);
-    await context.app.code.dispatchKeybinding('tab');
-    await context.app.captureScreenshot(`take_a_screenshot_${new Date().getTime().toString()}`);
-    await context.app.code.dispatchKeybinding('tab');
-    await context.app.captureScreenshot(`take_a_screenshot_${new Date().getTime().toString()}`);
-    await context.app.code.dispatchKeybinding('enter');
-    await context.app.captureScreenshot(`take_a_screenshot_${new Date().getTime().toString()}`);
-    // await context.app.workbench.testExplorer.selectNode()
-    // await context.app.captureScreenshot(`take_a_screenshot_${new Date().getTime().toString()}`);
-    await context.app.code.waitForElement('div.debug-toolbar', ele => ele ? !ele.attributes.style.includes('[aria-hidden="true"]') : false, 50);
-    console.log(`Debugger started ${counter}`);
-
-
-    // const counter = this.retryCounter = ((this.retryCounter || 0) + 1);
-    // console.log(`Start debugging node, counter ${counter}`);
-    // await context.app.captureScreenshot(`take_a_screenshot_${new Date().getTime().toString()}`);
-    // await context.app.workbench.testExplorer.selectActionForNode(label, 'debug', counter * 2);
-    // console.log(`Clicked debug ${counter}`);
-    // await context.app.captureScreenshot(`take_a_screenshot_${new Date().getTime().toString()}`);
-    // await context.app.code.waitForElement('div.debug-toolbar', ele => ele ? !ele.attributes.style.includes('[aria-hidden="true"]') : false, 50);
-    // console.log(`Debugger started ${counter}`);
+When('I debug the node {string} from the test explorer', async (label: string) => {
+    await context.app.workbench.testExplorer.selectActionForNode(label, 'debug');
 });
 When('I run the node {string} from the test explorer', async (label: string) => {
     await context.app.workbench.testExplorer.selectActionForNode(label, 'run');

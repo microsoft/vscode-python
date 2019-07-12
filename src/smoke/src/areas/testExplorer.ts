@@ -15,13 +15,13 @@ const testActivityBarIconSelector = '.activitybar.left .actions-container a[titl
 const stopIcon = 'div[id=\'workbench.parts.sidebar\'] .action-item a[title=\'Stop\']';
 const delayForUIToUpdate = 100;
 const nodeLabelSelector = 'div[id="workbench.view.extension.test"] div.monaco-tree-row:nth-child({0}) a.label-name';
-const nodeActionSelector = 'div[id="workbench.view.extension.test"] div.monaco-tree-row:nth-child({0}) a.action-label.icon[title="{1}"]';
 type Action = 'run' | 'debug' | 'open';
-const actionTitleMapping: Record<Action, string> = {
-    run: 'Run',
-    debug: 'Debug',
-    open: 'Open'
-};
+// const nodeActionSelector = 'div[id="workbench.view.extension.test"] div.monaco-tree-row:nth-child({0}) a.action-label.icon[title="{1}"]';
+// const actionTitleMapping: Record<Action, string> = {
+//     run: 'Run',
+//     debug: 'Debug',
+//     open: 'Open'
+// };
 type ToolbarIcon = 'Stop' | 'Run Failed Tests';
 const iconTitleMapping: Record<ToolbarIcon, string> = {
     Stop: 'Stop',
@@ -66,16 +66,25 @@ export class TestExplorer {
         // Wait for a max of 10 seconds for test discovery to complete.
         await context.app.code.waitForElementToBeHidden(stopIcon, undefined, 10, 1000);
     }
-    public async selectActionForNode(label: string, action: Action, offset = 0): Promise<void> {
+    public async selectActionForNode(label: string, action: Action): Promise<void> {
         // First select the node to highlight the icons.
         await this.selectNodeByLabel(label);
         const node = await this.getSelectedNode();
         if (!node) {
             throw new Error(`Node with the label '${label}' not selected`);
         }
-        const selector = nodeActionSelector.format(node.number.toString(), actionTitleMapping[action]);
+        // For some reason this doesn't work on CI.
+        // Instead just select the icon by tabbing to it and hit the `Enter` key.
+        // const selector = nodeActionSelector.format(node.number.toString(), actionTitleMapping[action]);
         // await context.app.code.waitAndClick(selector, 2, 2);
-        await context.app.code.waitAndClick(selector, offset, offset);
+
+        const tabCounter = action === 'open' ? 1 : (action === 'debug' ? 2 : 3);
+        for (let counter = 0; counter < tabCounter; counter += 1) {
+            await context.app.code.dispatchKeybinding('tab');
+            await sleep(delayForUIToUpdate);
+        }
+        await context.app.code.dispatchKeybinding('enter');
+        await sleep(delayForUIToUpdate);
     }
 
     /**
