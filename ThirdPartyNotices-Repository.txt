@@ -15,7 +15,7 @@ Microsoft Python extension for Visual Studio Code incorporates third party mater
 12. Sphinx (http://sphinx-doc.org/)
 13. nteract (https://github.com/nteract/nteract)
 14. less-plugin-inline-urls (https://github.com/less/less-plugin-inline-urls/)
-15. jupyter-notebook ()
+15. jupyter-notebook (https://github.com/jupyter/notebook)
 
 
 %%

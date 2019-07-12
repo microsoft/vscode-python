@@ -498,12 +498,12 @@ export class JupyterServerBase implements INotebookServer {
                 outputs.forEach(o => {
                     if (o.output_type === 'stream') {
                         const stream = o as nbformat.IStream;
-                        result = this.trimOutputLineCount(result.concat(formatStreamText(concatMultilineString(stream.text))));
+                        result = this.trimOutput(result.concat(formatStreamText(concatMultilineString(stream.text))));
                     } else {
                         const data = o.data;
                         if (data && data.hasOwnProperty('text/plain')) {
                             // tslint:disable-next-line:no-any
-                            result = this.trimOutputLineCount(result.concat((data as any)['text/plain']));
+                            result = this.trimOutput(result.concat((data as any)['text/plain']));
                         }
                     }
                 });
@@ -779,7 +779,7 @@ export class JupyterServerBase implements INotebookServer {
     private handleExecuteResult(msg: KernelMessage.IExecuteResultMsg, clearState: Map<string, boolean>, cell: ICell) {
         // Check our length on text output
         if (msg.content.data && msg.content.data.hasOwnProperty('text/plain')) {
-            msg.content.data['text/plain'] = this.trimOutputLineCount(msg.content.data['text/plain'] as string);
+            msg.content.data['text/plain'] = this.trimOutput(msg.content.data['text/plain'] as string);
         }
 
         this.addToCellData(
@@ -812,7 +812,7 @@ export class JupyterServerBase implements INotebookServer {
             } else {
                 // tslint:disable-next-line:restrict-plus-operands
                 existing.text = existing.text + msg.content.text;
-                existing.text = this.trimOutputLineCount(formatStreamText(concatMultilineString(existing.text)));
+                existing.text = this.trimOutput(formatStreamText(concatMultilineString(existing.text)));
             }
 
         } else {
@@ -820,7 +820,7 @@ export class JupyterServerBase implements INotebookServer {
             const output: nbformat.IStream = {
                 output_type: 'stream',
                 name: msg.content.name,
-                text: this.trimOutputLineCount(formatStreamText(concatMultilineString(msg.content.text)))
+                text: this.trimOutput(formatStreamText(concatMultilineString(msg.content.text)))
             };
             this.addToCellData(cell, output, clearState);
         }
@@ -889,26 +889,15 @@ export class JupyterServerBase implements INotebookServer {
         cell.state = CellState.error;
     }
 
-    // We have a set limit for the number of output text lines that we display by default
+    // We have a set limit for the number of output text characters that we display by default
     // trim down strings to that limit, assuming at this point we have compressed down to a single string
-    private trimOutputLineCount(outputString: string): string {
-        const trimLineCount = this.configService.getSettings().datascience.textOutputLineLimit;
+    private trimOutput(outputString: string): string {
+        const outputLimit = this.configService.getSettings().datascience.textOutputLimit;
 
-        if (!trimLineCount || trimLineCount === 0) {
+        if (!outputLimit || outputLimit === 0 || outputString.length <= outputLimit) {
             return outputString;
         }
 
-        let foundNewLines = 0;
-        for (let i = outputString.length - 1; i >= 0; i -= 1) {
-            if (outputString[i] === '\n') {
-                foundNewLines = foundNewLines + 1;
-
-                if (foundNewLines >= trimLineCount) {
-                    return outputString.substr(i + 1);
-                }
-            }
-        }
-
-        return outputString;
+        return outputString.substr(outputString.length - outputLimit);
     }
 }

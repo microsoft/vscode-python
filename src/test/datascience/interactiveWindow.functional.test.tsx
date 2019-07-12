@@ -620,7 +620,7 @@ for _ in range(50):
     }, () => { return ioc; });
 
     runMountedTest('Limit text output', async (wrapper) => {
-        ioc.getSettings().datascience.textOutputLineLimit = 2;
+        ioc.getSettings().datascience.textOutputLimit = 7;
 
         // Output should be trimmed to just two lines of output
         const code = `print("hello\\nworld\\nhow\\nare\\nyou")`;
