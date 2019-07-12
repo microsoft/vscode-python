@@ -106,12 +106,7 @@
                 "when": "editorTextFocus && !editorHasSelection && python.datascience.hascodecells && python.datascience.featureenabled"
             },
             {
-                "command": "python.datascience.runcurrentcell",
-                "key": "alt+enter",
-                "when": "editorTextFocus && !editorHasSelection && python.datascience.hascodecells && python.datascience.featureenabled"
-            },
-            {
-                "command": "python.datascience.addcellbelow",
+                "command": "python.datascience.runcurrentcelladvance",
                 "key": "alt+enter",
                 "when": "editorTextFocus && !editorHasSelection && python.datascience.hascodecells && python.datascience.featureenabled"
             }
@@ -1361,8 +1356,8 @@
                 },
                 "python.dataScience.codeLenses": {
                     "type": "string",
-                    "default": "python.datascience.runcell,  python.datascience.runallcellsabove, python.datascience.debugcell, python.datascience.addcellbelow",
-                    "description": "Set of commands to put as code lens above a cell. Defaults to 'python.datascience.runcell,  python.datascience.runallcellsabove, python.datascience.debugcell, python.datascience.addcellbelow'",
+                    "default": "python.datascience.runcell,  python.datascience.runallcellsabove, python.datascience.debugcell",
+                    "description": "Set of commands to put as code lens above a cell. Defaults to 'python.datascience.runcell,  python.datascience.runallcellsabove, python.datascience.debugcell'",
                     "scope": "resource"
                 },
                 "python.dataScience.ptvsdDistPath": {
