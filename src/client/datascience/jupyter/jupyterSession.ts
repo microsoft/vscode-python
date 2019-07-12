@@ -14,13 +14,13 @@ import { JSONObject } from '@phosphor/coreutils';
 import { Slot } from '@phosphor/signaling';
 import { Agent as HttpsAgent } from 'https';
 import * as uuid from 'uuid/v4';
-import { Disposable, Event, EventEmitter } from 'vscode';
+import { Event, EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { Cancellation } from '../../common/cancellation';
 import { isTestExecution } from '../../common/constants';
 import { traceInfo, traceWarning } from '../../common/logger';
-import { createDeferred, sleep, waitForPromise } from '../../common/utils/async';
+import { sleep, waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import {
@@ -92,7 +92,7 @@ export class JupyterSession implements IJupyterSession {
         return this.waitForIdleOnSession(this.session, timeout);
     }
 
-    public async restart(timeout: number): Promise<void> {
+    public async restart(_timeout: number): Promise<void> {
         // Just kill the current session and switch to the other
         if (this.restartSessionPromise && this.session && this.sessionManager && this.contentsManager) {
             traceInfo(`Restarting ${this.session.kernel.id}`);
