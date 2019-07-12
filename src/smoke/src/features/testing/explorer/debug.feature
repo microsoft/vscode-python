@@ -20,7 +20,7 @@ Feature: Test Explorer (debugging)
             }
             """
         Given the Python extension has been activated
-    @wip
+
     Scenario Outline: When debugging tests, the nodes will have the progress icon and clicking stop will stop the debugger (<package>)
         Given the package "<package>" is installed
         And the workspace setting "python.testing.<setting_to_enable>" is enabled
@@ -45,8 +45,8 @@ Feature: Test Explorer (debugging)
         Examples:
             | package  | setting_to_enable | node_count |
             | unittest | unittestEnabled   | 14         |
-            # | pytest   | pytestEnabled     | 15         |
-            # | nose     | nosetestsEnabled  | 14         |
+            | pytest   | pytestEnabled     | 15         |
+            | nose     | nosetestsEnabled  | 14         |
 
     Scenario Outline: When debugging tests, only the specific function will be debugged (<package>)
         Given the package "<package>" is installed
