@@ -24,9 +24,13 @@ export class CodeLensFactory implements ICodeLensFactory {
         const commands = this.enumerateCommands();
         const codeLenses: CodeLens[] = [];
         let firstCell = true;
-        ranges.forEach(range => {
+        let lastCell = false;
+        ranges.forEach((range, index) => {
+            if (index === (ranges.length - 1)) {
+                lastCell = true;
+            }
             commands.forEach(c => {
-                const codeLens = this.createCodeLens(document, range.range, c, firstCell);
+                const codeLens = this.createCodeLens(document, range.range, c, firstCell, lastCell);
                 if (codeLens) {
                     codeLenses.push(codeLens);
                 }
@@ -45,18 +49,20 @@ export class CodeLensFactory implements ICodeLensFactory {
         return [Commands.RunCurrentCell, Commands.RunAllCellsAbove, Commands.DebugCell, Commands.AddCellBelow];
     }
 
-    private createCodeLens(document: TextDocument, range: Range, commandName: string, isFirst: boolean): CodeLens | undefined {
+    private createCodeLens(document: TextDocument, range: Range, commandName: string, isFirst: boolean, isLast: boolean): CodeLens | undefined {
         // We only support specific commands
         // Be careful here. These arguments will be serialized during liveshare sessions
         // and so shouldn't reference local objects.
         switch (commandName) {
             case Commands.AddCellBelow:
-                return this.generateCodeLens(
-                    range,
-                    commandName,
-                    localize.DataScience.addCellBelowCommandTitle(),
-                    [document.fileName, range.start.line]);
-
+                if (isLast) {
+                    return this.generateCodeLens(
+                        range,
+                        commandName,
+                        localize.DataScience.addCellBelowCommandTitle(),
+                        [document.fileName, range.start.line]);
+                }
+                break;
             case Commands.DebugCurrentCellPalette:
                 return this.generateCodeLens(
                     range,

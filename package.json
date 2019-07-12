@@ -104,6 +104,16 @@
                 "command": "python.datascience.runcurrentcell",
                 "key": "ctrl+enter",
                 "when": "editorTextFocus && !editorHasSelection && python.datascience.hascodecells && python.datascience.featureenabled"
+            },
+            {
+                "command": "python.datascience.runcurrentcell",
+                "key": "alt+enter",
+                "when": "editorTextFocus && !editorHasSelection && python.datascience.hascodecells && python.datascience.featureenabled"
+            },
+            {
+                "command": "python.datascience.addcellbelow",
+                "key": "alt+enter",
+                "when": "editorTextFocus && !editorHasSelection && python.datascience.hascodecells && python.datascience.featureenabled"
             }
         ],
         "commands": [
