@@ -222,7 +222,7 @@ for _ in range(50):
         verifyHtmlOnCell(wrapper, matPlotLibResults, CellPosition.Last);
 
         await addCode(getOrCreateInteractiveWindow, wrapper, spinningCursor, 4 + (ioc.mockJupyter ? (cursors.length * 3) : 0));
-        verifyHtmlOnCell(wrapper, '<xmp>', CellPosition.Last);
+        verifyHtmlOnCell(wrapper, '<div>', CellPosition.Last);
     }, () => { return ioc; });
 
     runMountedTest('Undo/redo commands', async (wrapper) => {
