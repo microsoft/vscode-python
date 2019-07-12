@@ -543,7 +543,7 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     private generateRequest = (code: string, silent?: boolean): Kernel.IFuture | undefined => {
-        //this.logger.logInformation(`Executing code in jupyter : ${code}`)
+        traceInfo(`Executing code in jupyter : ${code}`);
         try {
             const cellMatcher = new CellMatcher(this.configService.getSettings().datascience);
             return this.session ? this.session.requestExecute(

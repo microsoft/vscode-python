@@ -14,13 +14,13 @@ import { JSONObject } from '@phosphor/coreutils';
 import { Slot } from '@phosphor/signaling';
 import { Agent as HttpsAgent } from 'https';
 import * as uuid from 'uuid/v4';
-import { Event, EventEmitter, Disposable } from 'vscode';
+import { Disposable, Event, EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { Cancellation } from '../../common/cancellation';
 import { isTestExecution } from '../../common/constants';
 import { traceInfo, traceWarning } from '../../common/logger';
-import { sleep, waitForPromise, createDeferred } from '../../common/utils/async';
+import { createDeferred, sleep, waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import {
