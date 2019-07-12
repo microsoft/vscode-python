@@ -61,6 +61,7 @@ Feature: Test Explorer - Re-run Failed Tests
             """
         When I run failed tests
         And I wait for tests to complete running
+        And I expand all of the nodes in the test explorer
         Then <node_count> nodes in the test explorer have a status of "Success"
 
         Examples:
@@ -109,6 +110,7 @@ Feature: Test Explorer - Re-run Failed Tests
             """
         When I run failed tests
         Then the stop icon is visible in the toolbar
+        And I expand all of the nodes in the test explorer
         Then the node "TestFirstSuite" in the test explorer has a status of "Progress"
         And the node "test_three_first_suite" in the test explorer has a status of "Progress"
         And the node "test_two_first_suite" in the test explorer has a status of "Progress"

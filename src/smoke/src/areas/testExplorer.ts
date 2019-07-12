@@ -6,7 +6,7 @@
 import * as assert from 'assert';
 import { IElement } from '../../../../out/smoke/vscode/vscode/driver';
 import { context } from '../application';
-import { RetryMax20Seconds, RetryMax5Seconds } from '../constants';
+import { RetryMax20Seconds, RetryMax5Seconds, RetryMax10Seconds } from '../constants';
 import { retry, sleep } from '../helpers';
 import '../helpers/extensions';
 
@@ -67,6 +67,7 @@ export class TestExplorer {
         await context.app.code.waitForElementToBeHidden(stopIcon, undefined, 10, 1000);
     }
     public async selectActionForNode(label: string, action: Action): Promise<void> {
+        await this.ensureExplorerIsVisible();
         // First select the node to highlight the icons.
         await this.selectNodeByLabel(label);
         const node = await this.getSelectedNode();
@@ -98,7 +99,7 @@ export class TestExplorer {
      */
     @retry(RetryMax20Seconds)
     public async expandAllNodes() {
-        await this.waitUntilVisible();
+        await this.ensureExplorerIsVisible();
         // We only want to support <= 15 nodes in testing.
         const initialNodeCount = await this.getNodeCount();
         if (initialNodeCount === 0) {
@@ -150,11 +151,13 @@ export class TestExplorer {
         }
     }
     public async getNodeCount(): Promise<number> {
+        await this.ensureExplorerIsVisible();
         const elements = await context.app.code.waitForElements('div[id="workbench.view.extension.test"] .tree-explorer-viewlet-tree-view div.monaco-tree-row', true, undefined);
         return elements.length;
     }
 
     public async selectNodeByLabel(label: string): Promise<void> {
+        await this.ensureExplorerIsVisible();
         if (await this.getNodeCount() === 0) {
             return;
         }
@@ -169,6 +172,7 @@ export class TestExplorer {
         throw new Error(`Unable to find node named '${label}'`);
     }
     public async getNodeNumber(label: string): Promise<number> {
+        await this.ensureExplorerIsVisible();
         if (await this.getNodeCount() === 0) {
             throw new Error('There are no nodes');
         }
@@ -185,34 +189,43 @@ export class TestExplorer {
 
     @retry(RetryMax20Seconds)
     public async waitForToolbarIconToBeHidden(icon: ToolbarIcon): Promise<void> {
+        await this.ensureExplorerIsVisible();
         const selector = `div[id='workbench.parts.sidebar'] .action-item a[title='${iconTitleMapping[icon]}']`;
         await context.app.code.waitForElementToBeHidden(selector, undefined, 10, 1000);
     }
     @retry(RetryMax20Seconds)
     public async waitForToolbarIconToBeVisible(icon: ToolbarIcon): Promise<void> {
+        await this.ensureExplorerIsVisible();
         const selector = `div[id='workbench.parts.sidebar'] .action-item a[title='${iconTitleMapping[icon]}']`;
         await context.app.code.waitForElement(selector);
     }
     @retry(RetryMax20Seconds)
     public async waitForToolbarIconToBeInvisible(icon: ToolbarIcon): Promise<void> {
+        await this.ensureExplorerIsVisible();
         const selector = `div[id='workbench.parts.sidebar'] .action-item a[title='${iconTitleMapping[icon]}']`;
         const visible = await context.app.code.waitForElement(selector, (ele) => !!ele, 2)
             .then(ele => !!ele).catch(() => false);
         assert.ok(!visible);
     }
     public async clickToolbarIcon(icon: ToolbarIcon): Promise<void> {
+        await this.ensureExplorerIsVisible();
         const selector = `div[id='workbench.parts.sidebar'] .action-item a[title='${iconTitleMapping[icon]}']`;
         await context.app.code.waitAndClick(selector);
     }
     public async getNodeIcons(): Promise<IElement[]> {
+        await this.ensureExplorerIsVisible();
         return context.app.code.waitForElements('div[id="workbench.view.extension.test"] .monaco-tree-row .custom-view-tree-node-item-icon', true);
     }
     public async getNodeIcon(nodeNumber: number): Promise<IElement> {
+        await this.ensureExplorerIsVisible();
         return context.app.code.waitForElement(`div[id='workbench.view.extension.test'] .monaco-tree-row:nth-child(${nodeNumber}) .custom-view-tree-node-item-icon`);
     }
     public async clickNode(nodeNumber: number): Promise<void> {
+        await this.ensureExplorerIsVisible();
         await this.selectNode(nodeNumber);
         await context.app.code.waitAndClick(`div[id="workbench.view.extension.test"] div.monaco-tree-row:nth-child(${nodeNumber})`);
+        await this.selectNode(nodeNumber);
+        await context.app.code.dispatchKeybinding('enter');
     }
     /**
      * Remember to wait a little when navigating through the tree.
@@ -226,6 +239,7 @@ export class TestExplorer {
      */
     @retry(RetryMax20Seconds)
     public async selectNode(nodeNumber: number): Promise<void> {
+        await this.ensureExplorerIsVisible();
         // We only want to support <= 15 nodes in testing.
         if (await this.getNodeCount() === 0) {
             return;
@@ -296,7 +310,15 @@ export class TestExplorer {
             number: nodeNumber
         };
     }
-
+    @retry(RetryMax10Seconds)
+    private async ensureExplorerIsVisible() {
+        const visible = await this.isVisible();
+        if (visible) {
+            return;
+        }
+        await context.app.workbench.quickopen.runCommand('View: Show Test');
+        await this.waitUntilVisible();
+    }
     // def expand_nodes(context):
     //     time.sleep(0.1)
     //     start_time = time.time()

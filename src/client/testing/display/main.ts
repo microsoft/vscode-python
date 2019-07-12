@@ -133,7 +133,7 @@ export class TestResultDisplay implements ITestResultDisplay {
         this.statusBar.tooltip = tooltip;
         this.statusBar.show();
         this.clearProgressTicker();
-        this.progressTimeout = setInterval(() => this.updateProgressTicker(), 150);
+        this.progressTimeout = setInterval(() => this.updateProgressTicker(), 1000);
     }
     private updateProgressTicker() {
         const text = `${this.progressPrefix} ${this.ticker[this.discoverCounter % 7]}`;
