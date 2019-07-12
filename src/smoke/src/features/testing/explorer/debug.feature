@@ -45,8 +45,8 @@ Feature: Test Explorer (debugging)
         Examples:
             | package  | setting_to_enable | node_count |
             | unittest | unittestEnabled   | 14         |
-            | pytest   | pytestEnabled     | 15         |
-            | nose     | nosetestsEnabled  | 14         |
+            # | pytest   | pytestEnabled     | 15         |
+            # | nose     | nosetestsEnabled  | 14         |
 
     Scenario Outline: When debugging tests, only the specific function will be debugged (<package>)
         Given the package "<package>" is installed
