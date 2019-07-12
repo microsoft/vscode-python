@@ -7,7 +7,8 @@ import * as assert from 'assert';
 import { expect } from 'chai';
 import { Then } from 'cucumber';
 import { context } from '../application';
-import { retryWrapper } from '../helpers';
+import { CucumberRetryMax20Seconds } from '../constants';
+import { retryWrapper, sleep } from '../helpers';
 
 Then('close notifications', async () => {
     await context.app.workbench.notifications.closeMessages();
@@ -42,7 +43,14 @@ Then('a message containing the text {string} will be displayed within {int} seco
     await notificationDisplayed(message, timeoutSeconds);
 });
 
-Then('a message containing the text {string} is not displayed', async (message: string) => {
+/**
+ * Checks whether a message is not displayed.
+ * If it is, then an assertion error is thrown.
+ *
+ * @param {string} message
+ * @returns
+ */
+async function messageIsNotDisplayed(message: string) {
     const hasMessages = await context.app.workbench.notifications.hasMessages();
     if (!hasMessages) {
         return;
@@ -51,9 +59,16 @@ Then('a message containing the text {string} is not displayed', async (message: 
     if (messages.findIndex(item => item.toLowerCase().indexOf(message.toLowerCase()) >= 0) !== -1) {
         assert.fail(`Message '${message}' found in [${messages.join(',')}]`);
     }
-});
+}
+Then('a message containing the text {string} is not displayed', messageIsNotDisplayed);
 
-Then('I click the {string} button for the message with the text {string}', async (button: string, message: string) => {
+Then('I click the {string} button for the message with the text {string}', CucumberRetryMax20Seconds, async (button: string, message: string) => {
     await notificationDisplayed(message);
     await context.app.workbench.notifications.dismiss([{ buttonText: button, content: message }]);
+    // We might have to retry closing the message as its possible a new message was displayed in the mean time.
+    // In which case closing the message won't work.
+    // Imagine you as a user are about to close a message, then a new message appears! It doesn't work!
+    await messageIsNotDisplayed(message);
+    // Wait for state to get updated (e.g. if we're dismissing one time messages, then this state needs to be persisted).
+    await sleep(500);
 });

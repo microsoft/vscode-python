@@ -14,11 +14,15 @@ import { noop, retryWrapper, sleep } from '../helpers';
 import { getSelector } from '../selectors';
 import { initializeDefaultUserSettings } from '../setup/setup';
 
+Then('do nothing', noop);
+
+Then('wip', noop);
+
 Then('Step {string}', async (_step: string) => {
     noop();
 });
 
-When('I open VS Code for the first time', async () => {
+async function openVSCodeForFirstTime() {
     await context.app.stop();
     // Wait for 2 seconds before re-starting.
     // Also delete the downloaded language server.
@@ -30,23 +34,18 @@ When('I open VS Code for the first time', async () => {
     // Restore the user settings.
     await initializeDefaultUserSettings(context.options);
     await context.app.start();
-});
+}
+Given('VS Code is opened for the first time', openVSCodeForFirstTime);
 
-Given('VS Code is closed', async () => {
-    await context.app.stop();
-});
+When('I open VS Code for the first time', openVSCodeForFirstTime);
 
-When('I close VS Code', async () => {
-    await context.app.stop();
-});
+Given('VS Code is closed', () => context.app.stop());
 
-When('I start VS Code', async () => {
-    await context.app.start();
-});
+When('I close VS Code', () => context.app.stop());
 
-When('I reload VS Code', async () => {
-    await context.app.reload();
-});
+When('I start VS Code', () => context.app.start());
+
+When('I reload VS Code', () => context.app.reload());
 
 export async function waitForExtensionToActivate(timeoutSeconds: number) {
     await context.app.workbench.quickopen.runCommand('Activate Python Extension');
@@ -68,39 +67,21 @@ Given('the Python extension has been activated', async () => {
     await waitForExtensionToActivate(extensionActivationTimeout);
 });
 
-When('I wait for {int} second(s)', async (seconds: number) => {
-    await sleep(seconds * 1000);
-});
+When('I wait for {int} second(s)', async (seconds: number) => sleep(seconds * 1000));
 
-// When('I wait for 1 second', async () => {
-//     await sleep(1000);
-// });
+Then('wait for {int} millisecond(s)', sleep);
 
-Then('wait for {int} millisecond(s)', async (ms: number) => {
-    await sleep(ms);
-});
+When('I wait for {int} millisecond(s)', sleep);
 
-When('I wait for {int} millisecond(s)', async (ms: number) => {
-    await sleep(ms);
-});
-
-// Then('wait for 1 second', async () => {
-//     await sleep(1000);
-// });
-
-Then('wait for {int} second(s)', async (seconds: number) => {
-    await sleep(seconds * 1000);
-});
+Then('wait for {int} second(s)', (seconds: number) => sleep(seconds * 1000));
 
 Then('take a screenshot', async () => {
-    await sleep(500);
+    // await sleep(500);
     await context.app.captureScreenshot(`take_a_screenshot_${new Date().getTime().toString()}`);
 });
 
-Then('log the message {string}', async (message: string) => {
-    // tslint:disable-next-line: no-console
-    console.info(message);
-});
+// tslint:disable-next-line: no-console
+Then('log the message {string}', async (message: string) => console.info(message));
 
 Then('a file named {string} is created with the following contents', async (fileName: string, contents: string) => {
     const fullFilePath = path.join(context.app.workspacePathOrFolder, fileName);
@@ -161,7 +142,3 @@ When('I press {word} {int} times', async (key: string, counter: number) => {
         await context.app.code.dispatchKeybinding(key);
     }
 });
-
-Then('do nothing', noop);
-
-Then('wip', noop);

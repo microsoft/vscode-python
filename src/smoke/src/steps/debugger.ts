@@ -12,15 +12,12 @@ Then('the Python Debug Configuration picker is displayed', async () => {
 When('I select the debug configuration {string}', async (configItem: string) => {
     await context.app.workbench.debug.selectConfiguration(configItem);
 });
-Then('the debugger starts', async () => {
-    await context.app.workbench.debug.waitToStart();
-});
-Then('the debugger pauses', async () => {
-    await context.app.workbench.debug.waitToPause();
-});
-Then('the debugger stops', async () => {
-    await context.app.workbench.debug.waitToStop(5);
-});
+Then('the debugger starts', () => context.app.workbench.debug.waitToStart());
+
+Then('the debugger pauses', () => context.app.workbench.debug.waitToPause());
+
+Then('the debugger stops', () => context.app.workbench.debug.waitToStop(5));
+
 Then('the debugger will stop within {int} seconds', async (timeoutSeconds: number) => {
     await context.app.workbench.debug.waitToStop(timeoutSeconds);
 });

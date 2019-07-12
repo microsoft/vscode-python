@@ -3,13 +3,10 @@
 
 'use strict';
 
-import { expect, use } from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
+import { expect } from 'chai';
 import { Then } from 'cucumber';
 import { context } from '../application';
 import '../helpers/extensions';
-
-use(chaiAsPromised);
 
 Then('the python the status bar contains the text {string}', async (text: string) => {
     const ele = await context.app.workbench.statusbar.getPythonStatusBarElement();

@@ -6,7 +6,7 @@
 import { expect } from 'chai';
 import { Then, When } from 'cucumber';
 import { context } from '../application';
-import { CucumberRetryMax2Seconds, CucumberRetryMax5Seconds } from '../constants';
+import { CucumberRetryMax5Seconds } from '../constants';
 
 type TestNodeStatus = 'Unknown' | 'Success' | 'Progress' | 'Skip' | 'Ok' | 'Pass' | 'Fail' | 'Error';
 const statusToIconMapping: Record<TestNodeStatus, string> = {
@@ -77,7 +77,7 @@ When('I run failed tests', async () => {
     await context.app.workbench.testExplorer.clickToolbarIcon('Run Failed Tests');
 });
 
-Then('the stop icon is not visible in the toolbar', CucumberRetryMax2Seconds, async () => {
+Then('the stop icon is not visible in the toolbar', async () => {
     await context.app.workbench.testExplorer.waitForToolbarIconToBeInvisible('Stop');
 });
 When('I click the test node with the label {string}', async (label: string) => {
@@ -93,6 +93,9 @@ When('I debug the node {string} from the test explorer', async (label: string) =
 });
 When('I run the node {string} from the test explorer', async (label: string) => {
     await context.app.workbench.testExplorer.selectActionForNode(label, 'run');
+});
+When('I expand all of the nodes in the test explorer', async () => {
+    await context.app.workbench.testExplorer.expandAllNodes();
 });
 
 // Given('the test framework is {word}', async (testFramework: string) => {
@@ -264,6 +267,3 @@ When('I run the node {string} from the test explorer', async (label: string) => 
 //     // const ele = eles[0];
 //     // ele.
 // });
-When('I expand all of the nodes in the test explorer', async () => {
-    await context.app.workbench.testExplorer.expandAllNodes();
-});

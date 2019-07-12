@@ -78,7 +78,7 @@ export class TestExplorer {
         // const selector = nodeActionSelector.format(node.number.toString(), actionTitleMapping[action]);
         // await context.app.code.waitAndClick(selector, 2, 2);
 
-        const tabCounter = action === 'open' ? 1 : (action === 'debug' ? 2 : 3);
+        const tabCounter = action === 'run' ? 1 : (action === 'debug' ? 2 : 3);
         for (let counter = 0; counter < tabCounter; counter += 1) {
             await context.app.code.dispatchKeybinding('tab');
             await sleep(delayForUIToUpdate);
