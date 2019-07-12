@@ -7,6 +7,9 @@ import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
 import { IDisposable } from '../../client/common/types';
 
+// tslint:disable-next-line:no-require-imports no-var-requires
+const debounce = require('lodash/debounce') as typeof import('lodash/debounce');
+
 import './monacoEditor.css';
 
 const LINE_HEIGHT = 18;
@@ -26,6 +29,8 @@ export interface IMonacoEditorProps {
 interface IMonacoEditorState {
     editor?: monacoEditor.editor.IStandaloneCodeEditor;
     model: monacoEditor.editor.ITextModel | null;
+    editorWidth: number;
+    editorHeight: number;
 }
 
 // Need this to prevent wiping of the current value on a componentUpdate. react-monaco-editor has that problem.
@@ -41,11 +46,13 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
     private enteredHover: boolean = false;
     private lastOffsetLeft: number | undefined;
     private lastOffsetTop: number | undefined;
+    private debouncedUpdateEditorSize : () => void | undefined;
     constructor(props: IMonacoEditorProps) {
         super(props);
-        this.state = { editor: undefined, model: null };
+        this.state = { editor: undefined, model: null, editorHeight: 0, editorWidth: 0 };
         this.containerRef = React.createRef<HTMLDivElement>();
         this.measureWidthRef = React.createRef<HTMLDivElement>();
+        this.debouncedUpdateEditorSize = debounce(this.updateEditorSize.bind(this), 150);
     }
 
     public componentDidMount = () => {
@@ -181,7 +188,12 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             }
         }
 
-        this.updateEditorSize();
+        if (this.state.editorHeight === 0 || this.state.editorWidth === 0) {
+            this.updateEditorSize();
+        } else {
+            // Debounce the call. This can happen too fast
+            this.debouncedUpdateEditorSize();
+        }
 
         // If this is our first time setting the editor, we might need to dynanically modify the styles
         // that the editor generates for the background colors.
@@ -228,7 +240,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         if (this.resizeTimer) {
             clearTimeout(this.resizeTimer);
         }
-        this.resizeTimer = window.setTimeout(this.updateEditorSize, 0);
+        this.resizeTimer = window.setTimeout(this.updateEditorSize.bind(this), 0);
     }
 
     private startUpdateWidgetPosition = () => {
@@ -236,7 +248,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
     }
 
     private onKeyDown = (e: monacoEditor.IKeyboardEvent) => {
-        if (e.keyCode === monacoEditor.KeyCode.Escape) {
+        if (e.keyCode === monacoEditor.KeyCode.Escape && !this.isSuggesting()) {
             // Shift Escape is special, so it doesn't work as going backwards.
             // For now just support escape to get out of a cell (like Jupyter does)
             const nextElement = this.findTabStop(1);
@@ -292,7 +304,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         }
     }
 
-    private updateEditorSize = () => {
+    private updateEditorSize() {
         if (this.measureWidthRef.current &&
             this.measureWidthRef.current.clientWidth &&
             this.containerRef.current &&
@@ -309,12 +321,16 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             const height = (currLineCount * lineHeight) + 3; // Fudge factor
             const width = this.measureWidthRef.current.clientWidth - this.containerRef.current.parentElement.offsetLeft - 15; // Leave room for the scroll bar in regular cell table
 
-            // For some reason this is flashing. Need to debug the editor code to see if
-            // it draws more than once. Or if we can have React turn off DOM updates
-            this.state.editor.layout({ width: width, height: height });
+            if (this.state.editorHeight !== height || this.state.editorWidth !== width) {
+                this.setState({
+                    editorHeight: height,
+                    editorWidth: width
+                });
+                this.state.editor.layout({width, height});
 
-            // Also need to update our widget positions
-            this.updateWidgetPosition(width);
+                // Also need to update our widget positions
+                this.updateWidgetPosition(width);
+            }
         }
     }
 

@@ -34,7 +34,7 @@ export function splitMultilineString(str: nbformat.MultilineString): string[] {
 export function stripComments(str: string): string {
     let result: string = '';
     parseForComments(
-        str.splitLines({trim: false, removeEmptyEntries: false}),
+        str.splitLines({ trim: false, removeEmptyEntries: false }),
         (_s) => noop,
         (s) => result = result.concat(`${s}\n`));
     return result;
@@ -70,7 +70,9 @@ export function formatStreamText(str: string): string {
         }
     }
     result += str.substr(previousLinePos, str.length - previousLinePos);
-    return result;
+
+    // Remove all backspace chars unless next to a newline
+    return result.replace(/[^\n]\x08/gm, '');
 }
 
 export function appendLineFeed(arr: string[], modifier?: (s: string) => string) {
@@ -91,7 +93,7 @@ export function parseForComments(
     foundCommentLine: (s: string, i: number) => void,
     foundNonCommentLine: (s: string, i: number) => void) {
     // Check for either multiline or single line comments
-    let insideMultilineComment: string | undefined ;
+    let insideMultilineComment: string | undefined;
     let insideMultilineQuote: string | undefined;
     let pos = 0;
     for (const l of lines) {
@@ -108,7 +110,7 @@ export function parseForComments(
                 insideMultilineQuote = undefined;
             }
             foundNonCommentLine(l, pos);
-        // Not inside quote, see if inside a comment
+            // Not inside quote, see if inside a comment
         } else if (insideMultilineComment) {
             if (insideMultilineComment === isMultilineComment) {
                 insideMultilineComment = undefined;
@@ -116,14 +118,14 @@ export function parseForComments(
             if (insideMultilineComment) {
                 foundCommentLine(l, pos);
             }
-        // Not inside either, see if starting a quote
+            // Not inside either, see if starting a quote
         } else if (isMultilineQuote && !isMultilineComment) {
             // Make sure doesn't begin and end on the same line.
             const beginQuote = trim.indexOf(isMultilineQuote);
             const endQuote = trim.lastIndexOf(isMultilineQuote);
             insideMultilineQuote = endQuote !== beginQuote ? undefined : isMultilineQuote;
             foundNonCommentLine(l, pos);
-        // Not starting a quote, might be starting a comment
+            // Not starting a quote, might be starting a comment
         } else if (isMultilineComment) {
             // See if this line ends the comment too or not
             const endIndex = trim.indexOf(isMultilineComment, 3);
