@@ -39,8 +39,8 @@ setDefaultTimeout(maxStepTimeout);
 // Wait for a max of 2 minutes (download VSC, install, activate python extension).
 // All of this takes time when running the first time, hence allow max timeout of 2 minutes.
 BeforeAll({ timeout: maxHookTimeout }, async function () {
+    await new Promise(resolve => setTimeout(resolve, 3000));
     performance.mark('BeforeAll-start');
-    console.log('Before all');
     const testOptions = await initialize();
     const app = new Application(testOptions);
     await app.start();
@@ -116,9 +116,7 @@ AfterAll({ timeout: maxHookTimeout }, async function () {
     performance.mark('AfterAll-start');
     // Possible it has already died.
     await clearWorkspace().catch(noop);
-    await context.app.stop().catch(ex => {
-        console.error('Failed to shutdown gracefully', ex);
-    });
+    await context.app.stop().catch(ex => console.error('Failed to shutdown gracefully', ex));
 
     performance.mark('AfterAll-end');
     performance.measure('AfterAll', 'AfterAll-start', 'AfterAll-end');

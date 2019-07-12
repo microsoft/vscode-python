@@ -147,7 +147,6 @@ export async function initialize(): Promise<TestOptions> {
     const bootstrapExension = await getBootstrapExtensionPath();
     await installExtension(options.extensionsPath, 'ms-python.bootstrap', bootstrapExension);
     await initializeDefaultUserSettings(options, getExtensionSpecificUserSettingsForAllTests());
-    console.log('Initialize completed');
     return options;
 }
 
@@ -193,7 +192,6 @@ async function initializeDefaultUserSettings(opts: TestOptions, additionalSettin
     }
 
     await initializeUserSettings(opts, settingsToAdd);
-    console.log('Initialized user settings');
 }
 
 export async function waitForExtensionToActivate(timeoutSeconds: number) {
@@ -248,8 +246,6 @@ async function downloadVSCode(quality: Quality) {
     await unzipVSCode(targetFile, targetDir);
 }
 async function installExtension(extensionsDir: string, extensionName: string, vsixPath: string) {
-    console.info(`Installing extension ${extensionName} from ${vsixPath}`);
-    console.info(`Deleting ${path.join(extensionsDir, extensionName)}`);
     await new Promise(resolve => rimraf(path.join(extensionsDir, extensionName), resolve)).catch(noop);
     const tmpDir = await new Promise<string>((resolve, reject) => {
         tmp.dir((ex: Error, dir: string) => {
@@ -259,10 +255,7 @@ async function installExtension(extensionsDir: string, extensionName: string, vs
             resolve(dir);
         });
     });
-    console.log(`${vsixPath} exists = ${fs.pathExistsSync(vsixPath)}`);
     await unzipFile(vsixPath, tmpDir);
-    console.log(`Copy extension ${path.join(tmpDir, 'extension')} into ${path.join(extensionsDir, extensionName)}`);
     await fs.copy(path.join(tmpDir, 'extension'), path.join(extensionsDir, extensionName));
     await new Promise(resolve => rimraf(tmpDir, resolve)).catch(noop);
-    console.log(`Completed installing extension ${extensionName}`);
 }
