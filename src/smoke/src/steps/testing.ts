@@ -6,7 +6,7 @@
 import { expect } from 'chai';
 import { Then, When } from 'cucumber';
 import { context } from '../application';
-import { CucumberRetryMax20Seconds, CucumberRetryMax2Seconds, CucumberRetryMax5Seconds } from '../constants';
+import { CucumberRetryMax2Seconds, CucumberRetryMax5Seconds } from '../constants';
 
 type TestNodeStatus = 'Unknown' | 'Success' | 'Progress' | 'Skip' | 'Ok' | 'Pass' | 'Fail' | 'Error';
 const statusToIconMapping: Record<TestNodeStatus, string> = {
