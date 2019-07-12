@@ -63,8 +63,8 @@ async function messageIsNotDisplayed(message: string) {
 Then('a message containing the text {string} is not displayed', messageIsNotDisplayed);
 
 Then('I click the {string} button for the message with the text {string}', CucumberRetryMax20Seconds, async (button: string, message: string) => {
-    await notificationDisplayed(message);
-    await context.app.workbench.notifications.dismiss([{ buttonText: button, content: message }]);
+    await notificationDisplayed(message, 2);
+    await context.app.workbench.notifications.dismiss([{ buttonText: button, content: message }], 2);
     // We might have to retry closing the message as its possible a new message was displayed in the mean time.
     // In which case closing the message won't work.
     // Imagine you as a user are about to close a message, then a new message appears! It doesn't work!
