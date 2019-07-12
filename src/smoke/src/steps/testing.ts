@@ -91,7 +91,7 @@ When('I navigate to the code associated with the test node {string}', async (lab
 When('I debug the node {string} from the test explorer', CucumberRetryMax20Seconds, async function (this: any, label: string) {
     const counter = this.retryCounter = ((this.retryCounter || 0) + 1);
     console.log(`Start debugging node, counter ${counter}`);
-    await context.app.workbench.testExplorer.selectActionForNode(label, 'debug');
+    await context.app.workbench.testExplorer.selectActionForNode(label, 'debug', counter * 2);
     console.log(`Clicked debug ${counter}`);
     await context.app.code.waitForElement('div.debug-toolbar', ele => ele ? !ele.attributes.style.includes('[aria-hidden="true"]') : false, 50);
     console.log(`Debugger started ${counter}`);

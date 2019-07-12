@@ -66,7 +66,7 @@ export class TestExplorer {
         // Wait for a max of 10 seconds for test discovery to complete.
         await context.app.code.waitForElementToBeHidden(stopIcon, undefined, 10, 1000);
     }
-    public async selectActionForNode(label: string, action: Action): Promise<void> {
+    public async selectActionForNode(label: string, action: Action, offset = 0): Promise<void> {
         // First select the node to highlight the icons.
         await this.selectNodeByLabel(label);
         const node = await this.getSelectedNode();
@@ -75,7 +75,7 @@ export class TestExplorer {
         }
         const selector = nodeActionSelector.format(node.number.toString(), actionTitleMapping[action]);
         // await context.app.code.waitAndClick(selector, 2, 2);
-        await context.app.code.waitAndClick(selector);
+        await context.app.code.waitAndClick(selector, offset, offset);
     }
 
     /**
