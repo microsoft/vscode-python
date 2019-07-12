@@ -498,12 +498,12 @@ export class JupyterServerBase implements INotebookServer {
                 outputs.forEach(o => {
                     if (o.output_type === 'stream') {
                         const stream = o as nbformat.IStream;
-                        result = this.trimOutput(result.concat(formatStreamText(concatMultilineString(stream.text))));
+                        result = result.concat(formatStreamText(concatMultilineString(stream.text)));
                     } else {
                         const data = o.data;
                         if (data && data.hasOwnProperty('text/plain')) {
                             // tslint:disable-next-line:no-any
-                            result = this.trimOutput(result.concat((data as any)['text/plain']));
+                            result = result.concat((data as any)['text/plain']);
                         }
                     }
                 });
@@ -662,6 +662,9 @@ export class JupyterServerBase implements INotebookServer {
                     });
                 }
 
+                // Create a trimming function. Only trim user output. Silent output requires the full thing
+                const trimFunc = silent !== undefined && silent ? (s: string) => s : this.trimOutput;
+
                 const clearState: Map<string, boolean> = new Map<string, boolean>();
 
                 // Listen to the reponse messages and update state as we go
@@ -669,13 +672,13 @@ export class JupyterServerBase implements INotebookServer {
                     request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
                         try {
                             if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
-                                this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, clearState, subscriber.cell);
+                                this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, clearState, subscriber.cell, trimFunc);
                             } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
                                 this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, clearState, subscriber.cell);
                             } else if (jupyterLab.KernelMessage.isStatusMsg(msg)) {
                                 this.handleStatusMessage(msg as KernelMessage.IStatusMsg, clearState, subscriber.cell);
                             } else if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
-                                this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, clearState, subscriber.cell);
+                                this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, clearState, subscriber.cell, trimFunc);
                             } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
                                 this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, clearState, subscriber.cell);
                             } else if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg)) {
@@ -776,10 +779,10 @@ export class JupyterServerBase implements INotebookServer {
         }
     }
 
-    private handleExecuteResult(msg: KernelMessage.IExecuteResultMsg, clearState: Map<string, boolean>, cell: ICell) {
+    private handleExecuteResult(msg: KernelMessage.IExecuteResultMsg, clearState: Map<string, boolean>, cell: ICell, trimFunc: (str: string) => string) {
         // Check our length on text output
         if (msg.content.data && msg.content.data.hasOwnProperty('text/plain')) {
-            msg.content.data['text/plain'] = this.trimOutput(msg.content.data['text/plain'] as string);
+            msg.content.data['text/plain'] = trimFunc(msg.content.data['text/plain'] as string);
         }
 
         this.addToCellData(
@@ -800,7 +803,7 @@ export class JupyterServerBase implements INotebookServer {
         }
     }
 
-    private handleStreamMesssage(msg: KernelMessage.IStreamMsg, clearState: Map<string, boolean>, cell: ICell) {
+    private handleStreamMesssage(msg: KernelMessage.IStreamMsg, clearState: Map<string, boolean>, cell: ICell, trimFunc: (str: string) => string) {
         // Might already have a stream message. If so, just add on to it.
         const data: nbformat.ICodeCell = cell.data as nbformat.ICodeCell;
         const existing = data.outputs.find(o => o.output_type === 'stream');
@@ -812,7 +815,7 @@ export class JupyterServerBase implements INotebookServer {
             } else {
                 // tslint:disable-next-line:restrict-plus-operands
                 existing.text = existing.text + msg.content.text;
-                existing.text = this.trimOutput(formatStreamText(concatMultilineString(existing.text)));
+                existing.text = trimFunc(formatStreamText(concatMultilineString(existing.text)));
             }
 
         } else {
@@ -820,7 +823,7 @@ export class JupyterServerBase implements INotebookServer {
             const output: nbformat.IStream = {
                 output_type: 'stream',
                 name: msg.content.name,
-                text: this.trimOutput(formatStreamText(concatMultilineString(msg.content.text)))
+                text: trimFunc(formatStreamText(concatMultilineString(msg.content.text)))
             };
             this.addToCellData(cell, output, clearState);
         }
