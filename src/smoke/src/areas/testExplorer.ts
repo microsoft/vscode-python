@@ -172,8 +172,8 @@ export class TestExplorer {
     @retry(RetryMax20Seconds)
     public async waitForToolbarIconToBeInvisible(icon: ToolbarIcon): Promise<void> {
         const selector = `div[id='workbench.parts.sidebar'] .action-item a[title='${iconTitleMapping[icon]}']`;
-        const visible = context.app.code.waitForElement(selector, (ele) => !!ele, 2)
-            .then(() => true).catch(() => false);
+        const visible = await context.app.code.waitForElement(selector, (ele) => !!ele, 2)
+            .then(ele => !!ele).catch(() => false);
         assert.ok(!visible);
     }
     public async clickToolbarIcon(icon: ToolbarIcon): Promise<void> {
