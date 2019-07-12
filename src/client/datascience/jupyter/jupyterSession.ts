@@ -108,9 +108,6 @@ export class JupyterSession implements IJupyterSession {
             }
             traceInfo(`Got new session ${this.session.kernel.id}`);
 
-            // Wait for idle on this session. It may or may not be ready yet.
-            await this.waitForIdleOnSession(this.session, timeout);
-
             // Rewire our status changed event.
             this.statusHandler = this.onStatusChanged.bind(this.onStatusChanged);
             this.session.statusChanged.connect(this.statusHandler);
@@ -190,24 +187,28 @@ export class JupyterSession implements IJupyterSession {
         }
     }
 
-    private createRestartSession(serverSettings: ServerConnection.ISettings, contentsManager: ContentsManager, cancelToken?: CancellationToken): Promise<Session.ISession> {
-        // Don't do this now as this could interfere with the startup of the other session in use.
-        const deferred = createDeferred<Session.ISession>();
-        let cancelDisposable: Disposable | undefined;
-        const timer = setTimeout(() => {
-            if (cancelDisposable) {
-                cancelDisposable.dispose();
+    private async createRestartSession(serverSettings: ServerConnection.ISettings, contentsManager: ContentsManager, cancelToken?: CancellationToken): Promise<Session.ISession> {
+        let result: Session.ISession | undefined;
+        let tryCount = 0;
+        // tslint:disable-next-line: no-any
+        let exception: any;
+        while (tryCount < 3) {
+            try {
+                result = await this.createSession(serverSettings, contentsManager, cancelToken);
+                await this.waitForIdleOnSession(result, 30000);
+                return result;
+            } catch (exc) {
+                traceInfo(`Error waiting for restart session: ${exc}`);
+                tryCount += 1;
+                if (result) {
+                    // Cleanup later.
+                    this.oldSessions.push(result);
+                }
+                result = undefined;
+                exception = exc;
             }
-            this.createSession(serverSettings, contentsManager, cancelToken).
-                then(s => deferred.resolve(s)).
-                catch(e => deferred.reject(e));
-        }, 10);
-        if (cancelToken) {
-            cancelDisposable = cancelToken.onCancellationRequested(() => {
-                clearTimeout(timer);
-            });
         }
-        return deferred.promise;
+        throw exception;
     }
 
     private async createSession(serverSettings: ServerConnection.ISettings, contentsManager: ContentsManager, cancelToken?: CancellationToken): Promise<Session.ISession> {
