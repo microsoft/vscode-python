@@ -44,13 +44,17 @@ class CellSubscriber {
     private cellRef: ICell;
     private subscriber: Subscriber<ICell>;
     private promiseComplete: (self: CellSubscriber) => void;
-    private startTime: number;
+    private _startTime: number;
 
     constructor(cell: ICell, subscriber: Subscriber<ICell>, promiseComplete: (self: CellSubscriber) => void) {
         this.cellRef = cell;
         this.subscriber = subscriber;
         this.promiseComplete = promiseComplete;
-        this.startTime = Date.now();
+        this._startTime = Date.now();
+    }
+
+    public get startTime(): number {
+        return this._startTime;
     }
 
     public isValid(sessionStartTime: number | undefined) {
@@ -650,6 +654,7 @@ export class JupyterServerBase implements INotebookServer {
             if (this.launchInfo && this.launchInfo.connectionInfo && this.launchInfo.connectionInfo.localProcExitCode) {
                 // Not running, just exit
                 const exitCode = this.launchInfo.connectionInfo.localProcExitCode;
+                traceError(`Jupyter crashed with code ${exitCode}`);
                 subscriber.error(this.sessionStartTime, new Error(localize.DataScience.jupyterServerCrashed().format(exitCode.toString())));
                 subscriber.complete(this.sessionStartTime);
             } else {
@@ -723,6 +728,10 @@ export class JupyterServerBase implements INotebookServer {
                 }
             }
         } else {
+            const sessionDate = new Date(this.sessionStartTime!);
+            const cellDate = new Date(subscriber.startTime);
+            traceInfo(`Session start time is newer than cell : \r\n${sessionDate.toTimeString()}\r\n${cellDate.toTimeString()}`);
+
             // Otherwise just set to an error
             this.handleInterrupted(subscriber.cell);
             subscriber.cell.state = CellState.error;
