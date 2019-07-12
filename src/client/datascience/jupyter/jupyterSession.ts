@@ -14,13 +14,13 @@ import { JSONObject } from '@phosphor/coreutils';
 import { Slot } from '@phosphor/signaling';
 import { Agent as HttpsAgent } from 'https';
 import * as uuid from 'uuid/v4';
-import { Event, EventEmitter } from 'vscode';
+import { Event, EventEmitter, Disposable } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { Cancellation } from '../../common/cancellation';
 import { isTestExecution } from '../../common/constants';
 import { traceInfo, traceWarning } from '../../common/logger';
-import { sleep, waitForPromise } from '../../common/utils/async';
+import { sleep, waitForPromise, createDeferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import {
@@ -116,7 +116,7 @@ export class JupyterSession implements IJupyterSession {
             this.session.statusChanged.connect(this.statusHandler);
 
             // After switching, start another in case we restart again.
-            this.restartSessionPromise = this.createSession(oldSession.serverSettings, this.contentsManager);
+            this.restartSessionPromise = this.createRestartSession(oldSession.serverSettings, this.contentsManager);
             traceInfo('Started new restart session');
             if (oldStatusHandler) {
                 oldSession.statusChanged.disconnect(oldStatusHandler);
@@ -155,7 +155,7 @@ export class JupyterSession implements IJupyterSession {
         this.session = await this.createSession(serverSettings, this.contentsManager, cancelToken);
 
         // Start another session to handle restarts
-        this.restartSessionPromise = this.createSession(serverSettings, this.contentsManager, cancelToken);
+        this.restartSessionPromise = this.createRestartSession(serverSettings, this.contentsManager, cancelToken);
 
         // Listen for session status changes
         this.statusHandler = this.onStatusChanged.bind(this.onStatusChanged);
@@ -188,6 +188,26 @@ export class JupyterSession implements IJupyterSession {
                 throw new JupyterWaitForIdleError(localize.DataScience.jupyterLaunchTimedOut());
             }
         }
+    }
+
+    private createRestartSession(serverSettings: ServerConnection.ISettings, contentsManager: ContentsManager, cancelToken?: CancellationToken): Promise<Session.ISession> {
+        // Don't do this now as this could interfere with the startup of the other session in use.
+        const deferred = createDeferred<Session.ISession>();
+        let cancelDisposable: Disposable | undefined;
+        const timer = setTimeout(() => {
+            if (cancelDisposable) {
+                cancelDisposable.dispose();
+            }
+            this.createSession(serverSettings, contentsManager, cancelToken).
+                then(s => deferred.resolve(s)).
+                catch(e => deferred.reject(e));
+        }, 10);
+        if (cancelToken) {
+            cancelDisposable = cancelToken.onCancellationRequested(() => {
+                clearTimeout(timer);
+            });
+        }
+        return deferred.promise;
     }
 
     private async createSession(serverSettings: ServerConnection.ISettings, contentsManager: ContentsManager, cancelToken?: CancellationToken): Promise<Session.ISession> {
