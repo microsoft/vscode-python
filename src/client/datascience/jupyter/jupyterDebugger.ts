@@ -232,7 +232,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
     private async installPtvsd(server: INotebookServer): Promise<void> {
         // tslint:disable-next-line:no-multiline-string
-        const ptvsdInstallResults = await this.executeSilently(server, `!pip install --pre ptvsd`);
+        const ptvsdInstallResults = await this.executeSilently(server, `!pip install ptvsd==v4.3.0b1`);
 
         if (ptvsdInstallResults.length > 0) {
             const installResultsString = this.extractOutput(ptvsdInstallResults[0]);
