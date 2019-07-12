@@ -219,7 +219,6 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
     @captureTelemetry(Telemetry.PtvsdPromptToInstall)
     private async promptToInstallPtvsd(server: INotebookServer, oldVersion: IPtvsdVersion | undefined): Promise<void> {
-        // tslint:disable-next-line:messages-must-be-localized
         const promptMessage = oldVersion ? localize.DataScience.jupyterDebuggerInstallPtvsdUpdate() : localize.DataScience.jupyterDebuggerInstallPtvsdNew();
         const result = await this.appShell.showInformationMessage(promptMessage, localize.DataScience.jupyterDebuggerInstallPtvsdYes(), localize.DataScience.jupyterDebuggerInstallPtvsdNo());
 
