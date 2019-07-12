@@ -168,7 +168,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         // installed locally by the extension
         const connectionInfo = server.getConnectionInfo();
         if (connectionInfo && connectionInfo.localLaunch) {
-            let localPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'ptvsd');
+            let localPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python');
             if (this.platform.isWindows) {
                 localPath = localPath.replace('\\', '\\\\');
             }
