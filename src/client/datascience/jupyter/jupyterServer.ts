@@ -14,7 +14,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 
 import { ILiveShareApi } from '../../common/application/types';
 import { Cancellation, CancellationError } from '../../common/cancellation';
-import { traceInfo, traceWarning } from '../../common/logger';
+import { traceInfo, traceWarning, traceError } from '../../common/logger';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
 import { createDeferred, Deferred, waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
@@ -535,6 +535,8 @@ export class JupyterServerBase implements INotebookServer {
             }
         }
 
+        traceError('No session during execute observable');
+
         // Can't run because no session
         return new Observable<ICell[]>(subscriber => {
             subscriber.error(this.getDisposedError());
@@ -757,7 +759,9 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     private async logPreCode(cell: ICell, silent: boolean): Promise<void> {
+        traceInfo(`Logging pre code for ${cell.data.source}`)
         await Promise.all(this.loggers.map(l => l.preExecute(cell, silent)));
+        traceInfo(`Finished Logging pre code for ${cell.data.source}`)
     }
 
     private async logPostCode(cell: ICell, silent: boolean): Promise<void> {
