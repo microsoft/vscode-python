@@ -78,6 +78,8 @@ export class ExperimentsManager implements IExperimentsManager {
 
     @swallowExceptions('Failed to activate experiments')
     public async activate(): Promise<void> {
+        // await this.downloadedExperimentsStorage.updateValue(undefined);
+        // await this.isDownloadedStorageValid.updateValue(false);
         if (this.activatedOnce || isTelemetryDisabled(this.workspaceService)) {
             return;
         }
@@ -88,7 +90,7 @@ export class ExperimentsManager implements IExperimentsManager {
             // We need to know whether an experiment influences the logs we observe in github issues, so log the experiment group
             this.output.appendLine(Experiments.inGroup().format(exp.name));
         }
-        this.initializeInBackground().ignoreErrors();
+        this.downloadAndStoreExperiments().ignoreErrors();
     }
 
     @traceDecorators.error('Failed to identify if user is in experiment')
@@ -124,13 +126,17 @@ export class ExperimentsManager implements IExperimentsManager {
 
     /**
      * Downloads experiments and updates storage given previously downloaded experiments are no longer valid
+     * @param timeout If provided, wait for download to complete until timeout, and return `null` if download fails to complete
      */
-    @traceDecorators.error('Failed to initialize experiments')
-    public async initializeInBackground() {
+    @traceDecorators.error('Failed to download experiments')
+    public async downloadAndStoreExperiments(timeout?: number): Promise<void | null> {
         if (this.isDownloadedStorageValid.value) {
             return;
         }
-        const downloadedExperiments = await this.httpClient.getJSON<ABExperiments>(configUri, false);
+        const downloadedExperiments = await this.httpClient.getJSON<ABExperiments>(configUri, false, timeout);
+        if (downloadedExperiments === null) {
+            return null;
+        }
         if (!this.areExperimentsValid(downloadedExperiments)) {
             return;
         }
@@ -167,11 +173,15 @@ export class ExperimentsManager implements IExperimentsManager {
         // Step 1. Update experiment storage using downloaded experiments in the last session if any
         if (Array.isArray(this.downloadedExperimentsStorage.value)) {
             await this.experimentStorage.updateValue(this.downloadedExperimentsStorage.value);
-            await this.downloadedExperimentsStorage.updateValue(undefined);
+            return this.downloadedExperimentsStorage.updateValue(undefined);
+        }
+
+        // Step 2. Do best effort to download the experiments within 2 seconds and use it in the current session only
+        if (await this.doBestEffortToPopulateExperiments() === true) {
             return;
         }
 
-        // Step 2. Update experiment storage using local experiments file if available
+        // Step 3. Update experiment storage using local experiments file if available
         if (!this.experimentStorage.value && (await this.fs.fileExists(configFile))) {
             const content = await this.fs.readFile(configFile);
             try {
@@ -204,5 +214,30 @@ export class ExperimentsManager implements IExperimentsManager {
             }
         }
         return true;
+    }
+
+    /**
+     * Do best effort to download the experiments within 2 seconds and use it in the current session only
+     */
+    public async doBestEffortToPopulateExperiments(): Promise<boolean> {
+        try {
+            const success = await this.downloadAndStoreExperiments(2000) !== null;
+            sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE, undefined, { success });
+            if (success) {
+                // Update experiment storage using downloaded experiments
+                if (Array.isArray(this.downloadedExperimentsStorage.value)) {
+                    await this.experimentStorage.updateValue(this.downloadedExperimentsStorage.value);
+                    await this.downloadedExperimentsStorage.updateValue(undefined);
+                } else {
+                    traceError(`Download storage should be populated, but has value ${this.downloadedExperimentsStorage.value}`);
+                    return false;
+                }
+            }
+            return success;
+        } catch (ex) {
+            sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE, undefined, { error: 'Downloading experiments failed with error' }, ex);
+            traceError('Effort to downlad experiments within 2 seconds failed with error', ex);
+            return false;
+        }
     }
 }

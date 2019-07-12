@@ -311,7 +311,8 @@ export interface IEventNamePropertyMapping {
     [EventName.PYTHON_LANGUAGE_SERVER_READY]: never | undefined;
     [EventName.PYTHON_LANGUAGE_SERVER_STARTUP]: never | undefined;
     [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: any;
-    [EventName.PYTHON_EXPERIMENTS]: { error?: string; expName?: string };
+    [EventName.PYTHON_EXPERIMENTS]: { expName?: string };
+    [EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE]: { success?: boolean; error?: string };
     [EventName.REFACTOR_EXTRACT_FUNCTION]: never | undefined;
     [EventName.REFACTOR_EXTRACT_VAR]: never | undefined;
     [EventName.REFACTOR_RENAME]: never | undefined;
