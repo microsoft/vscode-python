@@ -58,7 +58,7 @@ class CellSubscriber {
     }
 
     public isValid(sessionStartTime: number | undefined) {
-        return sessionStartTime && this.startTime > sessionStartTime;
+        return sessionStartTime && this.startTime >= sessionStartTime;
     }
 
     public next(sessionStartTime: number | undefined) {
