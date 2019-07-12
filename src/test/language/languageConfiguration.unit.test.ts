@@ -70,7 +70,7 @@ suite('Language configuration regexes', () => {
         expect(result).to.be.equal(false, 'Decrease indent regex should not pick up lines without keywords');
     });
 
-    ['    break', '\t\t continue', ' pass', 'raise Exception(\'Unknown Exception\'', '   return [ True, False, False ]'].forEach(example => {
+    ['    break', '\t\t continue', ' pass', 'raise Exception(\'Unknown Exception\'', '    return [ True, False, False ]'].forEach(example => {
         const keyword = example.trim().split(' ')[0];
 
         const testWithoutComments = `Outdent regex for on enter rule should pick up lines containing the ${keyword} keyword`;
