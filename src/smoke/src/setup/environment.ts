@@ -70,7 +70,7 @@ export async function clearWorkspace() {
         // Custom command in our bootstrap extension.
         // We can use the command `Debug: Stop` from the command palette only if a debug session is active.
         // Using this approach we can send a command regardless, easy.
-        'Stop Debugging Python',
+        // 'Stop Debugging Python',
         // Assume we have a max of 2 editors, revert changes and close all of them.
         // Hence execute this command twice.
         'View: Revert and Close Editor',
