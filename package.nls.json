@@ -309,7 +309,7 @@
     "DataScience.jupyterDebuggerPortNotAvailableSearchError" : "Ports in the range {0}-{1} cannot be found for debugging. Please specify a port in the remoteDebuggerPort setting.",
     "DataScience.jupyterDebuggerPortBlockedSearchError" : "A port cannot be connected to for debugging. Please let ports {0}-{1} through your firewall.",
     "DataScience.jupyterDebuggerInstallPtvsdNew" : "Pip module ptvsd is require for debugging cells. Install ptvsd and continue to debug cell?",
-    "DataScience.jupyterDebuggerInstallPtvsdUpdate" : "The version of ptvsd installs does not support debugging cells. Update ptvsd to newest version and continue to debug cell?",
+    "DataScience.jupyterDebuggerInstallPtvsdUpdate" : "The version of ptvsd installed does not support debugging cells. Update ptvsd to newest version and continue to debug cell?",
     "DataScience.jupyterDebuggerInstallPtvsdYes" : "Yes",
     "DataScience.jupyterDebuggerInstallPtvsdNo" : "No"
 }

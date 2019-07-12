@@ -325,10 +325,12 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         // Loop through a bunch of ports until we find one we can use. Note how we
         // are connecting to '0.0.0.0' here. That's the location as far as ptvsd is concerned.
         const attachCode = portNumber !== -1 ?
-            `ptvsd.enable_attach(('0.0.0.0', ${portNumber}))
+            `import ptvsd
+ptvsd.enable_attach(('0.0.0.0', ${portNumber}))
 print("('${connectionInfo.hostName}', ${portNumber})")` :
             // tslint:disable-next-line: no-multiline-string
-            `port = ${Settings.RemoteDebuggerPortBegin}
+            `import ptvsd
+port = ${Settings.RemoteDebuggerPortBegin}
 attached = False
 while not attached and port <= ${Settings.RemoteDebuggerPortEnd}:
     try:
