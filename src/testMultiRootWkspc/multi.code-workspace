@@ -35,7 +35,7 @@
         "python.linting.pydocstyleEnabled": false,
         "python.linting.pylamaEnabled": false,
         "python.linting.pylintEnabled": true,
-        "python.linting.pep8Enabled": false,
+        "python.linting.pycodestyleEnabled": false,
         "python.linting.prospectorEnabled": false,
         "python.workspaceSymbols.enabled": false,
         "python.formatting.provider": "yapf",

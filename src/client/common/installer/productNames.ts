@@ -11,7 +11,7 @@ ProductNames.set(Product.black, 'black');
 ProductNames.set(Product.flake8, 'flake8');
 ProductNames.set(Product.mypy, 'mypy');
 ProductNames.set(Product.nosetest, 'nosetest');
-ProductNames.set(Product.pep8, 'pep8');
+ProductNames.set(Product.pycodestyle, 'pycodestyle');
 ProductNames.set(Product.pylama, 'pylama');
 ProductNames.set(Product.prospector, 'prospector');
 ProductNames.set(Product.pydocstyle, 'pydocstyle');

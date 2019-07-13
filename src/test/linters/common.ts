@@ -31,7 +31,7 @@ import {
     ILogger,
     IMypyCategorySeverity,
     IOutputChannel,
-    IPep8CategorySeverity,
+    IPycodestyleCategorySeverity,
     IPylintCategorySeverity,
     IPythonSettings
 } from '../../client/common/types';
@@ -95,8 +95,8 @@ export class LintingSettings {
     public prospectorArgs: string[];
     public pylintEnabled: boolean;
     public pylintArgs: string[];
-    public pep8Enabled: boolean;
-    public pep8Args: string[];
+    public pycodestyleEnabled: boolean;
+    public pycodestyleArgs: string[];
     public pylamaEnabled: boolean;
     public pylamaArgs: string[];
     public flake8Enabled: boolean;
@@ -106,12 +106,12 @@ export class LintingSettings {
     public lintOnSave: boolean;
     public maxNumberOfProblems: number;
     public pylintCategorySeverity: IPylintCategorySeverity;
-    public pep8CategorySeverity: IPep8CategorySeverity;
+    public pycodestyleCategorySeverity: IPycodestyleCategorySeverity;
     public flake8CategorySeverity: Flake8CategorySeverity;
     public mypyCategorySeverity: IMypyCategorySeverity;
     public prospectorPath: string;
     public pylintPath: string;
-    public pep8Path: string;
+    public pycodestylePath: string;
     public pylamaPath: string;
     public flake8Path: string;
     public pydocstylePath: string;
@@ -152,10 +152,10 @@ export class LintingSettings {
         this.banditPath = 'bandit';
         this.banditArgs = [];
 
-        this.pep8Enabled = false;
-        this.pep8Path = 'pep8';
-        this.pep8Args = [];
-        this.pep8CategorySeverity = {
+        this.pycodestyleEnabled = false;
+        this.pycodestylePath = 'pycodestyle';
+        this.pycodestyleArgs = [];
+        this.pycodestyleCategorySeverity = {
             E: DiagnosticSeverity.Error,
             W: DiagnosticSeverity.Warning
         };
