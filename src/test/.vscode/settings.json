@@ -5,11 +5,8 @@
     "python.testing.nosetestArgs": [],
     "python.testing.pytestArgs": [],
     "python.testing.unittestArgs": [
-        "-v",
-        "-s",
-        ".",
-        "-p",
-        "*test*.py"
+        "-s=./tests",
+        "-p=test_*.py"
     ],
     "python.sortImports.args": [],
     "python.linting.lintOnSave": false,
