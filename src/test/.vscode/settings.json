@@ -5,11 +5,8 @@
     "python.testing.nosetestArgs": [],
     "python.testing.pytestArgs": [],
     "python.testing.unittestArgs": [
-        "-v",
-        "-s",
-        ".",
-        "-p",
-        "*test*.py"
+        "-s=./tests",
+        "-p=test_*.py"
     ],
     "python.sortImports.args": [],
     "python.linting.lintOnSave": false,
@@ -22,7 +19,6 @@
     "python.linting.banditEnabled": false,
     "python.formatting.provider": "yapf",
     "python.linting.pylintUseMinimalCheckers": false,
-    "python.pythonPath": "python"
     // Do not set this to true/false even when LS is the default, else
     // it will result in LS being downloaded on CI and slow down tests significantly.
     // We have other tests on CI for testing downloading of CI with this setting enabled.
