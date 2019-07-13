@@ -1761,7 +1761,8 @@
                     "items": {
                         "type": "string"
                     },
-                    "scope": "resource"
+                    "scope": "resource",
+                    "deprecationMessage": "pep8 has been renamed to pycodestyle. This settng is replaced by python.formating.pycodestyleArgs"
                 },
                 "python.linting.pep8CategorySeverity.E": {
                     "type": "string",
@@ -1773,7 +1774,8 @@
                         "Information",
                         "Warning"
                     ],
-                    "scope": "resource"
+                    "scope": "resource",
+                    "deprecationMessage": "pep8 has been renamed to pycodestyle. This settng is replaced by python.formating.pycodestyleSeverity.E"
                 },
                 "python.linting.pep8CategorySeverity.W": {
                     "type": "string",
@@ -1785,18 +1787,66 @@
                         "Information",
                         "Warning"
                     ],
-                    "scope": "resource"
+                    "scope": "resource",
+                    "deprecationMessage": "pep8 has been renamed to pycodestyle. This settng is replaced by python.formating.pycodestyleSeverity.W"
                 },
                 "python.linting.pep8Enabled": {
                     "type": "boolean",
                     "default": false,
                     "description": "Whether to lint Python files using pep8",
-                    "scope": "resource"
+                    "scope": "resource",
+                    "deprecationMessage": "pep8 has been renamed to pycodestyle. This settng is replaced by python.formating.pycodestyleEnabled"
                 },
                 "python.linting.pep8Path": {
                     "type": "string",
                     "default": "pep8",
                     "description": "Path to pep8, you can use a custom version of pep8 by modifying this setting to include the full path.",
+                    "scope": "resource",
+                    "deprecationMessage": "pep8 has been renamed to pycodestyle. This settng is replaced by python.formating.pycodestylePath"
+                },
+                "python.linting.pycodestyleArgs": {
+                    "type": "array",
+                    "description": "Arguments passed in. Each argument is a separate item in the array.",
+                    "default": [],
+                    "items": {
+                        "type": "string"
+                    },
+                    "scope": "resource"
+                },
+                "python.linting.pycodestyleCategorySeverity.E": {
+                    "type": "string",
+                    "default": "Error",
+                    "description": "Severity of pycodestyle message type 'E'.",
+                    "enum": [
+                        "Hint",
+                        "Error",
+                        "Information",
+                        "Warning"
+                    ],
+                    "scope": "resource"
+                },
+                "python.linting.pycodestyleCategorySeverity.W": {
+                    "type": "string",
+                    "default": "Warning",
+                    "description": "Severity of pycodestyle message type 'W'.",
+                    "enum": [
+                        "Hint",
+                        "Error",
+                        "Information",
+                        "Warning"
+                    ],
+                    "scope": "resource"
+                },
+                "python.linting.pycodestyleEnabled": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Whether to lint Python files using pycodestyle",
+                    "scope": "resource"
+                },
+                "python.linting.pycodestylePath": {
+                    "type": "string",
+                    "default": "pycodestyle",
+                    "description": "Path to pycodestyle, you can use a custom version of pycodestyle by modifying this setting to include the full path.",
                     "scope": "resource"
                 },
                 "python.linting.prospectorArgs": {

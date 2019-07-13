@@ -337,7 +337,7 @@ function translateProductToModule(product: Product, purpose: ModuleNamePurpose):
         case Product.pytest: return 'pytest';
         case Product.autopep8: return 'autopep8';
         case Product.black: return 'black';
-        case Product.pep8: return 'pep8';
+        case Product.pycodestyle: return 'pycodestyle';
         case Product.pydocstyle: return 'pydocstyle';
         case Product.yapf: return 'yapf';
         case Product.flake8: return 'flake8';
