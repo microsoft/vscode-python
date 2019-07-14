@@ -40,7 +40,7 @@ export class JupyterImporter implements INotebookImporter {
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IPlatformService) private readonly platform: IPlatformService
-        ) {
+    ) {
         this.templatePromise = this.createTemplateFile();
     }
 
@@ -56,12 +56,14 @@ export class JupyterImporter implements INotebookImporter {
 
         // Use the jupyter nbconvert functionality to turn the notebook into a python file
         if (await this.jupyterExecution.isImportSupported()) {
-            const fileOutput: string = await this.jupyterExecution.importNotebook(file, template);
-            if (directoryChange) {
-                return this.addDirectoryChange(fileOutput, directoryChange);
-            } else {
-                return fileOutput;
+            let fileOutput: string = await this.jupyterExecution.importNotebook(file, template);
+            if (fileOutput.includes('get_ipython()')) {
+                fileOutput = this.addIPythonImport(fileOutput);
             }
+            if (directoryChange) {
+                fileOutput = this.addDirectoryChange(fileOutput, directoryChange);
+            }
+            return fileOutput;
         }
 
         throw new Error(localize.DataScience.jupyterNbConvertNotSupported());
@@ -69,6 +71,10 @@ export class JupyterImporter implements INotebookImporter {
 
     public dispose = () => {
         this.isDisposed = true;
+    }
+
+    private addIPythonImport = (pythonOutput: string): string => {
+        return CodeSnippits.ImportIPython.concat(pythonOutput);
     }
 
     private addDirectoryChange = (pythonOutput: string, directoryChange: string): string => {
