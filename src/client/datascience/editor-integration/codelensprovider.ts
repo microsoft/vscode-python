@@ -60,10 +60,8 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     }
 
     private onDidCloseTextDocument(_e: vscode.TextDocument) {
-        // This event is triggered when the text document is no longer visible. It may still be open in a different panel and/or hidden. Only delete its codewatcher if it's not visible.
-        const isVisible: boolean = this.documentManager.visibleTextEditors.filter(textEditor => textEditor.document.fileName === _e.fileName).length > 0;
         const index = this.activeCodeWatchers.findIndex(item => item.getFileName() === _e.fileName);
-        if (!isVisible && index >= 0) {
+        if (index >= 0) {
             this.activeCodeWatchers.splice(index, 1);
         }
     }
