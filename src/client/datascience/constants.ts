@@ -144,7 +144,10 @@ export enum Telemetry {
     WebviewStyleUpdate = 'DATASCIENCE.WEBVIEW_STYLE_UPDATE',
     WebviewMonacoStyleUpdate = 'DATASCIENCE.WEBVIEW_MONACO_STYLE_UPDATE',
     DataViewerFetchTime = 'DATASCIENCE.DATAVIEWER_FETCH_TIME',
-    FindJupyterKernelSpec = 'DATASCIENCE.FIND_JUPYTER_KERNEL_SPEC'
+    FindJupyterKernelSpec = 'DATASCIENCE.FIND_JUPYTER_KERNEL_SPEC',
+    PtvsdPromptToInstall = 'DATASCIENCE.PTVSD_PROMPT_TO_INSTALL',
+    PtvsdSuccessfullyInstalled = 'DATASCIENCE.PTVSD_SUCCESSFULLY_INSTALLED',
+    PtvsdInstallFailed = 'DATASCIENCE.PTVSD_INSTALL_FAILED'
 }
 
 export namespace HelpLinks {
@@ -171,6 +174,7 @@ export namespace Identifiers {
 export namespace CodeSnippits {
     export const ChangeDirectory = ['{0}', '{1}', 'import os', 'try:', '\tos.chdir(os.path.join(os.getcwd(), \'{2}\'))', '\tprint(os.getcwd())', 'except:', '\tpass', ''];
     export const ChangeDirectoryCommentIdentifier = '# ms-python.python added'; // Not translated so can compare.
+    export const ImportIPython = '#%%\nfrom IPython import get_ipython\n\n';
     export const MatplotLibInitSvg = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_format = 'svg'`;
     export const MatplotLibInitPng = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_format = 'png'`;
 }

@@ -5,5 +5,3 @@ numpy
 matplotlib
 pandas
 livelossplot
-# This is temporary until these bits are ready
-git+https://s3h4llbub6kmnxk53k53ricbg4n7s6tif3ls6qsywersiroezaea@ptvsd.visualstudio.com/ptvsd-pr/_git/ptvsd-pr@ptvsd_jupyter_cells

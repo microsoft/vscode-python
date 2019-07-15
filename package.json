@@ -1406,10 +1406,10 @@
                     "description": "When debugging a cell, open this port on the remote box. If -1 is specified, a random port between 8889 and 9000 will be attempted.",
                     "scope": "resource"
                 },
-                "python.dataScience.textOutputLineLimit": {
+                "python.dataScience.textOutputLimit": {
                     "type": "number",
-                    "default": 10000,
-                    "description": "Limit the amount of lines in Python Interactive cell text output to this value. 0 to allow any amount of lines.",
+                    "default": 20000,
+                    "description": "Limit the amount of text in Python Interactive cell text output to this value. 0 to allow any amount of characters.",
                     "scope": "resource"
                 },
                 "python.disableInstallationCheck": {
@@ -2296,6 +2296,7 @@
     },
     "dependencies": {
         "@jupyterlab/services": "^3.2.1",
+        "ansi-regex": "^4.1.0",
         "arch": "^2.1.0",
         "azure-storage": "^2.10.1",
         "diff-match-patch": "^1.0.0",
@@ -2368,6 +2369,7 @@
         "@nteract/transform-model-debug": "^3.2.3",
         "@nteract/transform-plotly": "^5.0.0",
         "@nteract/transforms": "^4.4.4",
+        "@types/ansi-regex": "^4.0.0",
         "@types/chai": "^4.1.2",
         "@types/chai-arrays": "^1.0.2",
         "@types/chai-as-promised": "^7.1.0",
