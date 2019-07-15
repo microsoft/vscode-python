@@ -50,13 +50,18 @@ import { BANNER_NAME_DS_SURVEY, BANNER_NAME_INTERACTIVE_SHIFTENTER, BANNER_NAME_
 import { DataScienceSurveyBanner } from '../../client/datascience/dataScienceSurveyBanner';
 import { InteractiveShiftEnterBanner } from '../../client/datascience/shiftEnterBanner';
 import { ServiceManager } from '../../client/ioc/serviceManager';
+import { IServiceManager } from '../../client/ioc/types';
 import { LanguageServerSurveyBanner } from '../../client/languageServices/languageServerSurveyBanner';
 import { ProposeLanguageServerBanner } from '../../client/languageServices/proposeLanguageServerBanner';
 
 suite('Unit Tests - Activation Service Registry', () => {
-    test('Ensure services are registered', async () => {
-        const serviceManager = mock(ServiceManager);
+    let serviceManager: IServiceManager;
 
+    setup(() => {
+        serviceManager = mock(ServiceManager);
+    });
+
+    test('Ensure services are registered', async () => {
         registerTypes(instance(serviceManager));
 
         verify(serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, LanguageServerExtensionActivationService)).once();
