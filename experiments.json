@@ -13,20 +13,20 @@
     },
     {
         "name": "ShowPlayIcon - start",
-        "salt": "ShowPlayIcon1",
-        "min": 80,
-        "max": 100
+        "salt": "ShowPlayIcon",
+        "max": 100,
+        "min": 95
     },
     {
         "name": "ShowPlayIcon - runFile",
-        "salt": "ShowPlayIcon2",
-        "min": 60,
-        "max": 80
+        "salt": "ShowPlayIcon",
+        "max": 95,
+        "min": 90
     },
     {
         "name": "ShowPlayIcon - control",
         "salt": "ShowPlayIcon",
         "min": 0,
-        "max": 20
+        "max": 5
     }
 ]
