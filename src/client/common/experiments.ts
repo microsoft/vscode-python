@@ -235,7 +235,7 @@ export class ExperimentsManager implements IExperimentsManager {
             sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE, undefined, { success });
             return success;
         } catch (ex) {
-            sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE, undefined, { error: 'Downloading experiments failed with error' }, ex);
+            sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE, undefined, { success: false, error: 'Downloading experiments failed with error' }, ex);
             traceError('Effort to downlad experiments within 2 seconds failed with error', ex);
             return false;
         }
