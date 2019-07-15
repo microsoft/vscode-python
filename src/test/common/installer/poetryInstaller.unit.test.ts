@@ -122,4 +122,15 @@ suite('Module Installer - Poetry', () => {
 
         assert.deepEqual(info, { args: ['add', '--dev', 'something'], execPath: 'poetry path' });
     });
+    test('Get executable info when installing black', async () => {
+        const uri = Uri.file(__dirname);
+        const settings = mock(PythonSettings);
+
+        when(configurationService.getSettings(uri)).thenReturn(instance(settings));
+        when(settings.poetryPath).thenReturn('poetry path');
+
+        const info = await poetryInstaller.getExecutionInfo('black', uri);
+
+        assert.deepEqual(info, { args: ['add', '--dev', 'black', '--allow-prereleases'], execPath: 'poetry path' });
+    });
 });

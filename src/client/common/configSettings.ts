@@ -10,6 +10,7 @@ import { EventName } from '../telemetry/constants';
 import { IWorkspaceService } from './application/types';
 import { WorkspaceService } from './application/workspace';
 import { isTestExecution } from './constants';
+import { ExtensionChannels } from './insidersBuild/types';
 import { IS_WINDOWS } from './platform/constants';
 import {
     IAnalysisSettings,
@@ -21,7 +22,8 @@ import {
     ISortImportSettings,
     ITerminalSettings,
     ITestingSettings,
-    IWorkspaceSymbolSettings
+    IWorkspaceSymbolSettings,
+    Resource
 } from './types';
 import { debounceSync } from './utils/decorators';
 import { SystemVariables } from './variables/systemVariables';
@@ -55,6 +57,7 @@ export class PythonSettings implements IPythonSettings {
     public analysis!: IAnalysisSettings;
     public autoUpdateLanguageServer: boolean = true;
     public datascience!: IDataScienceSettings;
+    public insidersChannel!: ExtensionChannels;
 
     protected readonly changed = new EventEmitter<void>();
     private workspaceRoot: Uri;
@@ -66,7 +69,9 @@ export class PythonSettings implements IPythonSettings {
         return this.changed.event;
     }
 
-    constructor(workspaceFolder: Uri | undefined, private readonly interpreterAutoSelectionService: IInterpreterAutoSeletionProxyService,
+    constructor(
+        workspaceFolder: Resource,
+        private readonly interpreterAutoSelectionService: IInterpreterAutoSeletionProxyService,
         workspace?: IWorkspaceService) {
         this.workspace = workspace || new WorkspaceService();
         this.workspaceRoot = workspaceFolder ? workspaceFolder : Uri.file(__dirname);
@@ -304,10 +309,10 @@ export class PythonSettings implements IPythonSettings {
                 // tslint:disable-next-line:prefer-type-cast
                 // tslint:disable-next-line:no-object-literal-type-assertion
                 this.testing = {
-                    nosetestArgs: [], pyTestArgs: [], unittestArgs: [],
+                    nosetestArgs: [], pytestArgs: [], unittestArgs: [],
                     promptToConfigure: true, debugPort: 3000,
-                    nosetestsEnabled: false, pyTestEnabled: false, unittestEnabled: false,
-                    nosetestPath: 'nosetests', pyTestPath: 'pytest', autoTestDiscoverOnSaveEnabled: true
+                    nosetestsEnabled: false, pytestEnabled: false, unittestEnabled: false,
+                    nosetestPath: 'nosetests', pytestPath: 'pytest', autoTestDiscoverOnSaveEnabled: true
                 } as ITestingSettings;
             }
         }
@@ -317,10 +322,10 @@ export class PythonSettings implements IPythonSettings {
             promptToConfigure: true,
             debugPort: 3000,
             nosetestArgs: [], nosetestPath: 'nosetest', nosetestsEnabled: false,
-            pyTestArgs: [], pyTestEnabled: false, pyTestPath: 'pytest',
+            pytestArgs: [], pytestEnabled: false, pytestPath: 'pytest',
             unittestArgs: [], unittestEnabled: false, autoTestDiscoverOnSaveEnabled: true
         };
-        this.testing.pyTestPath = getAbsolutePath(systemVariables.resolveAny(this.testing.pyTestPath), workspaceRoot);
+        this.testing.pytestPath = getAbsolutePath(systemVariables.resolveAny(this.testing.pytestPath), workspaceRoot);
         this.testing.nosetestPath = getAbsolutePath(systemVariables.resolveAny(this.testing.nosetestPath), workspaceRoot);
         if (this.testing.cwd) {
             this.testing.cwd = getAbsolutePath(systemVariables.resolveAny(this.testing.cwd), workspaceRoot);
@@ -328,7 +333,7 @@ export class PythonSettings implements IPythonSettings {
 
         // Resolve any variables found in the test arguments.
         this.testing.nosetestArgs = this.testing.nosetestArgs.map(arg => systemVariables.resolveAny(arg));
-        this.testing.pyTestArgs = this.testing.pyTestArgs.map(arg => systemVariables.resolveAny(arg));
+        this.testing.pytestArgs = this.testing.pytestArgs.map(arg => systemVariables.resolveAny(arg));
         this.testing.unittestArgs = this.testing.unittestArgs.map(arg => systemVariables.resolveAny(arg));
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
@@ -356,6 +361,8 @@ export class PythonSettings implements IPythonSettings {
         } else {
             this.datascience = dataScienceSettings;
         }
+
+        this.insidersChannel = pythonSettings.get<ExtensionChannels>('insidersChannel')!;
     }
 
     public get pythonPath(): string {

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 
 import { IS_WINDOWS } from '../common/platform/constants';
 
@@ -33,6 +32,9 @@ export namespace Commands {
     export const ExportOutputAsNotebook = 'python.datascience.exportoutputasnotebook';
     export const ExecSelectionInInteractiveWindow = 'python.datascience.execSelectionInteractive';
     export const RunFileInInteractiveWindows = 'python.datascience.runFileInteractive';
+    export const AddCellBelow = 'python.datascience.addcellbelow';
+    export const DebugCurrentCellPalette = 'python.datascience.debugcurrentcell.palette';
+    export const DebugCell = 'python.datascience.debugcell';
 }
 
 export namespace EditorContexts {
@@ -52,7 +54,7 @@ export namespace RegExpValues {
     export const KernelSpecOutputRegEx = /^\s*(\S+)\s+(\S+)$/;
     // This next one has to be a string because uglifyJS isn't handling the groups. We use named-js-regexp to parse it
     // instead.
-    export const UrlPatternRegEx = '(?<PREFIX>https?:\\/\\/)((\\(.+\\s+or\\s+(?<IP>.+)\\))|(?<LOCAL>[^\\s]+))(?<REST>:.+)' ;
+    export const UrlPatternRegEx = '(?<PREFIX>https?:\\/\\/)((\\(.+\\s+or\\s+(?<IP>.+)\\))|(?<LOCAL>[^\\s]+))(?<REST>:.+)';
     export interface IUrlPatternGroupType {
         LOCAL: string | undefined;
         PREFIX: string | undefined;
@@ -63,7 +65,13 @@ export namespace RegExpValues {
     export const ExtractPortRegex = /https?:\/\/[^\s]+:(\d+)[^\s]+/;
     export const ConvertToRemoteUri = /(https?:\/\/)([^\s])+(:\d+[^\s]*)/;
     export const ParamsExractorRegEx = /\S+\((.*)\)\s*{/;
-    export const ArgsSplitterRegEx = /([^\s,]+)/g;
+    export const ArgsSplitterRegEx = /([^\s,]+)/;
+    export const ShapeSplitterRegEx = /.*,\s*(\d+).*/;
+    export const SvgHeightRegex = /(\<svg.*height=\")(.*?)\"/;
+    export const SvgWidthRegex = /(\<svg.*width=\")(.*?)\"/;
+    export const SvgSizeTagRegex = /\<svg.*tag=\"sizeTag=\{(.*),\s*(.*)\}\"/;
+    export const StyleTagRegex = /\<style[\s\S]*\<\/style\>/m;
+
 }
 
 export enum Telemetry {
@@ -80,6 +88,7 @@ export enum Telemetry {
     DeleteAllCells = 'DATASCIENCE.DELETE_ALL_CELLS',
     DeleteCell = 'DATASCIENCE.DELETE_CELL',
     GotoSourceCode = 'DATASCIENCE.GOTO_SOURCE',
+    CopySourceCode = 'DATASCIENCE.COPY_SOURCE',
     RestartKernel = 'DATASCIENCE.RESTART_KERNEL',
     ExportNotebook = 'DATASCIENCE.EXPORT_NOTEBOOK',
     Undo = 'DATASCIENCE.UNDO',
@@ -99,6 +108,9 @@ export enum Telemetry {
     ConnectRemoteJupyter = 'DATASCIENCE.CONNECTREMOTEJUPYTER',
     ConnectFailedJupyter = 'DATASCIENCE.CONNECTFAILEDJUPYTER',
     ConnectRemoteFailedJupyter = 'DATASCIENCE.CONNECTREMOTEFAILEDJUPYTER',
+    ConnectRemoteSelfCertFailedJupyter = 'DATASCIENCE.CONNECTREMOTESELFCERTFAILEDJUPYTER',
+    SelfCertsMessageEnabled = 'DATASCIENCE.SELFCERTSMESSAGEENABLED',
+    SelfCertsMessageClose = 'DATASCIENCE.SELFCERTSMESSAGECLOSE',
     RemoteAddCode = 'DATASCIENCE.LIVESHARE.ADDCODE',
     ShiftEnterBannerShown = 'DATASCIENCE.SHIFTENTER_BANNER_SHOWN',
     EnableInteractiveShiftEnter = 'DATASCIENCE.ENABLE_INTERACTIVE_SHIFT_ENTER',
@@ -109,19 +121,42 @@ export enum Telemetry {
     PandasTooOld = 'DATASCIENCE.SHOW_DATA_PANDAS_TOO_OLD',
     DataScienceSettings = 'DATASCIENCE.SETTINGS',
     VariableExplorerToggled = 'DATASCIENCE.VARIABLE_EXPLORER_TOGGLE',
-    VariableExplorerVariableCount = 'DATASCIENCE.VARIABLE_EXPLORER_VARIABLE_COUNT'
- }
+    VariableExplorerVariableCount = 'DATASCIENCE.VARIABLE_EXPLORER_VARIABLE_COUNT',
+    AddCellBelow = 'DATASCIENCE.ADD_CELL_BELOW',
+    GetPasswordAttempt = 'DATASCIENCE.GET_PASSWORD_ATTEMPT',
+    GetPasswordFailure = 'DATASCIENCE.GET_PASSWORD_FAILURE',
+    GetPasswordSuccess = 'DATASCIENCE.GET_PASSWORD_SUCCESS',
+    OpenPlotViewer = 'DATASCIENCE.OPEN_PLOT_VIEWER',
+    DebugCurrentCell = 'DATASCIENCE.DEBUG_CURRENT_CELL',
+    CodeLensAverageAcquisitionTime = 'DATASCIENCE.CODE_LENS_ACQ_TIME',
+    ClassConstructionTime = 'DATASCIENCE.CLASS_CONSTRUCTION_TIME',
+    FindJupyterCommand = 'DATASCIENCE.FIND_JUPYTER_COMMAND',
+    StartJupyterProcess = 'DATASCIENCE.START_JUPYTER_PROCESS',
+    WaitForIdleJupyter = 'DATASCIENCE.WAIT_FOR_IDLE_JUPYTER',
+    HiddenCellTime = 'DATASCIENCE.HIDDEN_EXECUTION_TIME',
+    RestartJupyterTime = 'DATASCIENCE.RESTART_JUPYTER_TIME',
+    InterruptJupyterTime = 'DATASCIENCE.INTERRUPT_JUPYTER_TIME',
+    ExecuteCell = 'DATASCIENCE.EXECUTE_CELL_TIME',
+    ExecuteCellPerceivedCold = 'DATASCIENCE.EXECUTE_CELL_PERCEIVED_COLD',
+    ExecuteCellPerceivedWarm = 'DATASCIENCE.EXECUTE_CELL_PERCEIVED_WARM',
+    WebviewStartup = 'DATASCIENCE.WEBVIEW_STARTUP',
+    VariableExplorerFetchTime = 'DATASCIENCE.VARIABLE_EXPLORER_FETCH_TIME',
+    WebviewStyleUpdate = 'DATASCIENCE.WEBVIEW_STYLE_UPDATE',
+    WebviewMonacoStyleUpdate = 'DATASCIENCE.WEBVIEW_MONACO_STYLE_UPDATE',
+    DataViewerFetchTime = 'DATASCIENCE.DATAVIEWER_FETCH_TIME',
+    FindJupyterKernelSpec = 'DATASCIENCE.FIND_JUPYTER_KERNEL_SPEC'
+}
 
 export namespace HelpLinks {
     export const PythonInteractiveHelpLink = 'https://aka.ms/pyaiinstall';
+    export const JupyterDataRateHelpLink = 'https://aka.ms/AA5ggm0'; // This redirects here: https://jupyter-notebook.readthedocs.io/en/stable/config.html
 }
 
 export namespace Settings {
     export const JupyterServerLocalLaunch = 'local';
-}
-
-export namespace CodeSnippits {
-    export const ChangeDirectory = ['{0}', 'import os', 'try:', '\tos.chdir(os.path.join(os.getcwd(), \'{1}\'))', '\tprint(os.getcwd())', 'except:', '\tpass', ''];
+    export const IntellisenseTimeout = 300;
+    export const RemoteDebuggerPortBegin = 8889;
+    export const RemoteDebuggerPortEnd = 9000;
 }
 
 export namespace Identifiers {
@@ -130,6 +165,14 @@ export namespace Identifiers {
     export const HistoryPurpose = 'history';
     export const MatplotLibDefaultParams = '_VSCode_defaultMatplotlib_Params';
     export const EditCellId = '3D3AB152-ADC1-4501-B813-4B83B49B0C10';
+    export const SvgSizeTag = 'sizeTag={{0}, {1}}';
+}
+
+export namespace CodeSnippits {
+    export const ChangeDirectory = ['{0}', '{1}', 'import os', 'try:', '\tos.chdir(os.path.join(os.getcwd(), \'{2}\'))', '\tprint(os.getcwd())', 'except:', '\tpass', ''];
+    export const ChangeDirectoryCommentIdentifier = '# ms-python.python added'; // Not translated so can compare.
+    export const MatplotLibInitSvg = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_format = 'svg'`;
+    export const MatplotLibInitPng = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_format = 'png'`;
 }
 
 export namespace JupyterCommands {
@@ -145,7 +188,7 @@ export namespace LiveShare {
     export const JupyterServerSharedService = 'jupyterServerSharedService';
     export const CommandBrokerService = 'commmandBrokerService';
     export const WebPanelMessageService = 'webPanelMessageService';
-    export const HistoryProviderService = 'historyProviderService';
+    export const InteractiveWindowProviderService = 'interactiveWindowProviderService';
     export const GuestCheckerService = 'guestCheckerService';
     export const LiveShareBroadcastRequest = 'broadcastRequest';
     export const ResponseLifetime = 15000;
@@ -167,38 +210,8 @@ export namespace LiveShareCommands {
     export const syncRequest = 'synchRequest';
     export const restart = 'restart';
     export const interrupt = 'interrupt';
-    export const historyCreate = 'historyCreate';
-    export const historyCreateSync = 'historyCreateSync';
+    export const interactiveWindowCreate = 'interactiveWindowCreate';
+    export const interactiveWindowCreateSync = 'interactiveWindowCreateSync';
     export const disposeServer = 'disposeServer';
     export const guestCheck = 'guestCheck';
-}
-
-export namespace CssMessages {
-    export const GetCssRequest = 'get_css_request';
-    export const GetCssResponse = 'get_css_response';
-    export const GetMonacoThemeRequest = 'get_monaco_theme_request';
-    export const GetMonacoThemeResponse = 'get_monaco_theme_response';
-}
-
-export namespace SharedMessages {
-    export const UpdateSettings = 'update_settings';
-    export const Started = 'started';
-}
-
-export interface IGetCssRequest {
-    isDark: boolean;
-}
-
-export interface IGetMonacoThemeRequest {
-    isDark: boolean;
-}
-
-export interface IGetCssResponse {
-    css: string;
-    theme: string;
-    knownDark?: boolean;
-}
-
-export interface IGetMonacoThemeResponse {
-    theme: monacoEditor.editor.IStandaloneThemeData;
 }

@@ -70,4 +70,8 @@ export class MockProcessService extends EventEmitter implements IProcessService 
         return valueReturned ? value! : this.procService.shellExec(command, options);
     }
 
+    public dispose() {
+        return;
+    }
+
 }

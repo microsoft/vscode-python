@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../../../client/common/constants';
-import { DebuggerLauncherScriptProvider, NoDebugLauncherScriptProvider, RemoteDebuggerLauncherScriptProvider } from '../../../../client/debugger/debugAdapter/DebugClients/launcherProvider';
+import { DebuggerLauncherScriptProvider, NoDebugLauncherScriptProvider, RemoteDebuggerExternalLauncherScriptProvider } from '../../../../client/debugger/debugAdapter/DebugClients/launcherProvider';
 
 const expectedPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'ptvsd_launcher.py');
 
@@ -21,12 +21,12 @@ suite('Debugger - Launcher Script Provider', () => {
             {
                 testName: 'When path to ptvsd launcher does not contains spaces',
                 path: path.join('path', 'to', 'ptvsd_launcher'),
-                expectedPath: 'path/to/ptvsd_launcher'
+                expectedPath: path.join('path', 'to', 'ptvsd_launcher')
             },
             {
                 testName: 'When path to ptvsd launcher contains spaces',
                 path: path.join('path', 'to', 'ptvsd_launcher', 'with spaces'),
-                expectedPath: '"path/to/ptvsd_launcher/with spaces"'
+                expectedPath: path.join('path', 'to', 'ptvsd_launcher', 'with spaces')
             }
         ];
 
@@ -52,15 +52,33 @@ suite('Debugger - Launcher Script Provider', () => {
                 const expectedArgs = [testParams.expectedPath, '--custom', '--nodebug', '--client', '--host', 'something', '--port', '1234'];
                 expect(args).to.be.deep.equal(expectedArgs);
             });
-            test('Test remote debug launcher args (and do not wait for debugger to attach)', async () => {
-                const args = new RemoteDebuggerLauncherScriptProvider(testParams.path).getLauncherArgs({ host: 'something', port: 1234, waitUntilDebuggerAttaches: false });
-                const expectedArgs = [testParams.expectedPath, '--default', '--host', 'something', '--port', '1234'];
-                expect(args).to.be.deep.equal(expectedArgs);
-            });
-            test('Test remote debug launcher args (and wait for debugger to attach)', async () => {
-                const args = new RemoteDebuggerLauncherScriptProvider(testParams.path).getLauncherArgs({ host: 'something', port: 1234, waitUntilDebuggerAttaches: true });
-                const expectedArgs = [testParams.expectedPath, '--default', '--host', 'something', '--port', '1234', '--wait'];
-                expect(args).to.be.deep.equal(expectedArgs);
+        });
+    });
+
+    suite('External Debug Launcher', () => {
+        [
+            {
+                testName: 'When path to ptvsd launcher does not contains spaces',
+                path: path.join('path', 'to', 'ptvsd_launcher'),
+                expectedPath: 'path/to/ptvsd_launcher'
+            },
+            {
+                testName: 'When path to ptvsd launcher contains spaces',
+                path: path.join('path', 'to', 'ptvsd_launcher', 'with spaces'),
+                expectedPath: '"path/to/ptvsd_launcher/with spaces"'
+            }
+        ].forEach(testParams => {
+            suite(testParams.testName, async () => {
+                test('Test remote debug launcher args (and do not wait for debugger to attach)', async () => {
+                    const args = new RemoteDebuggerExternalLauncherScriptProvider(testParams.path).getLauncherArgs({ host: 'something', port: 1234, waitUntilDebuggerAttaches: false });
+                    const expectedArgs = [testParams.expectedPath, '--default', '--host', 'something', '--port', '1234'];
+                    expect(args).to.be.deep.equal(expectedArgs);
+                });
+                test('Test remote debug launcher args (and wait for debugger to attach)', async () => {
+                    const args = new RemoteDebuggerExternalLauncherScriptProvider(testParams.path).getLauncherArgs({ host: 'something', port: 1234, waitUntilDebuggerAttaches: true });
+                    const expectedArgs = [testParams.expectedPath, '--default', '--host', 'something', '--port', '1234', '--wait'];
+                    expect(args).to.be.deep.equal(expectedArgs);
+                });
             });
         });
     });

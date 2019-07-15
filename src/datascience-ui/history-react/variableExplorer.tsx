@@ -4,25 +4,28 @@
 import './variableExplorer.css';
 
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
 
+import { RegExpValues } from '../../client/datascience/constants';
 import { IJupyterVariable } from '../../client/datascience/types';
 import { getLocString } from '../react-common/locReactSide';
 import { getSettings } from '../react-common/settingsReactSide';
 import { CollapseButton } from './collapseButton';
-import { VariableExplorerButtonCellFormatter } from './variableExplorerButtonCellFormatter';
+import { IButtonCellValue, VariableExplorerButtonCellFormatter } from './variableExplorerButtonCellFormatter';
 import { CellStyle, VariableExplorerCellFormatter } from './variableExplorerCellFormatter';
 import { VariableExplorerEmptyRowsView } from './variableExplorerEmptyRows';
 
 import * as AdazzleReactDataGrid from 'react-data-grid';
+import { VariableExplorerHeaderCellFormatter } from './variableExplorerHeaderCellFormatter';
+import { VariableExplorerRowRenderer } from './variableExplorerRowRenderer';
 
 import './variableExplorerGrid.less';
 
 interface IVariableExplorerProps {
     baseTheme: string;
+    skipDefault?: boolean;
+    debugging: boolean;
     refreshVariables(): void;
-    onHeightChange(): void;
-    showDataExplorer(targetVariable: string): void;
+    showDataExplorer(targetVariable: string, numberOfColumns: number): void;
     variableExplorerToggled(open: boolean): void;
 }
 
@@ -48,7 +51,11 @@ const MaxStringCompare = 400;
 
 interface IGridRow {
     // tslint:disable-next-line:no-any
-    [name: string]: any;
+    name: string;
+    type: string;
+    size: string;
+    value: string | undefined;
+    buttons: IButtonCellValue;
 }
 
 export class VariableExplorer extends React.Component<IVariableExplorerProps, IVariableExplorerState> {
@@ -58,15 +65,51 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     constructor(prop: IVariableExplorerProps) {
         super(prop);
         const columns = [
-            {key: 'name', name: getLocString('DataScience.variableExplorerNameColumn', 'Name'), type: 'string', width: 120, formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.variable} />},
-            {key: 'type', name: getLocString('DataScience.variableExplorerTypeColumn', 'Type'), type: 'string', width: 120},
-            {key: 'size', name: getLocString('DataScience.variableExplorerSizeColumn', 'Count'), type: 'string', width: 120, formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.numeric} />},
-            {key: 'value', name: getLocString('DataScience.variableExplorerValueColumn', 'Value'), type: 'string', width: 300},
-            {key: 'buttons', name: '', type: 'boolean', width: 34, sortable: false, resizable: false, formatter: <VariableExplorerButtonCellFormatter showDataExplorer={this.props.showDataExplorer} baseTheme={this.props.baseTheme} /> }
+            {
+                key: 'name',
+                name: getLocString('DataScience.variableExplorerNameColumn', 'Name'),
+                type: 'string',
+                width: 120,
+                formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.variable} />,
+                headerRenderer: <VariableExplorerHeaderCellFormatter/>
+            },
+            {
+                key: 'type',
+                name: getLocString('DataScience.variableExplorerTypeColumn', 'Type'),
+                type: 'string',
+                width: 120,
+                formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.string} />,
+                headerRenderer: <VariableExplorerHeaderCellFormatter/>
+            },
+            {
+                key: 'size',
+                name: getLocString('DataScience.variableExplorerSizeColumn', 'Count'),
+                type: 'string',
+                width: 120,
+                formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.numeric} />,
+                headerRenderer: <VariableExplorerHeaderCellFormatter/>
+            },
+            {
+                key: 'value',
+                name: getLocString('DataScience.variableExplorerValueColumn', 'Value'),
+                type: 'string',
+                width: 300,
+                formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.string} />,
+                headerRenderer: <VariableExplorerHeaderCellFormatter/>
+            },
+            {
+                key: 'buttons',
+                name: '',
+                type: 'boolean',
+                width: 34,
+                sortable: false,
+                resizable: false,
+                formatter: <VariableExplorerButtonCellFormatter showDataExplorer={this.props.showDataExplorer} baseTheme={this.props.baseTheme} />
+            }
         ];
         this.state = { open: false,
                         gridColumns: columns,
-                        gridRows: [],
+                        gridRows: !this.props.skipDefault ? this.generateDummyVariables() : [],
                         gridHeight: 200,
                         height: 0,
                         fontSize: 14,
@@ -94,19 +137,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                         tooltip={getLocString('DataScience.collapseVariableExplorerTooltip', 'Collapse variable explorer')}
                         label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')} />
                     <div className={contentClassName}>
-                        <div id='variable-explorer-data-grid'>
-                            <AdazzleReactDataGrid
-                                columns = {this.state.gridColumns.map(c => { return {...defaultColumnProperties, ...c }; })}
-                                rowGetter = {this.getRow}
-                                rowsCount = {this.state.gridRows.length}
-                                minHeight = {this.state.gridHeight}
-                                headerRowHeight = {this.state.fontSize + 9}
-                                rowHeight = {this.state.fontSize + 9}
-                                onRowDoubleClick = {this.rowDoubleClick}
-                                onGridSort = {this.sortRows}
-                                emptyRowsView = {VariableExplorerEmptyRowsView}
-                            />
-                        </div>
+                        {this.renderGrid()}
                     </div>
                 </div>
             );
@@ -126,23 +157,23 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                 this.setState({fontSize: newFontSize});
             }
         }
-
-        this.updateHeight();
-    }
-
-    public componentDidUpdate = () => {
-        this.updateHeight();
     }
 
     // New variable data passed in via a ref
-    // Help to keep us independent of main history window state if we choose to break out the variable explorer
+    // Help to keep us independent of main interactive window state if we choose to break out the variable explorer
     public newVariablesData(newVariables: IJupyterVariable[]) {
         const newGridRows = newVariables.map(newVar => {
-            return { buttons: {name: newVar.name, supportsDataExplorer: newVar.supportsDataExplorer},
-             name: newVar.name,
-             type: newVar.type,
-             size: '',
-             value: getLocString('DataScience.variableLoadingValue', 'Loading...')};
+            return {
+                buttons: {
+                    name: newVar.name,
+                    supportsDataExplorer: newVar.supportsDataExplorer,
+                    numberOfColumns: this.getColumnCountFromShape(newVar.shape)
+                },
+                name: newVar.name,
+                type: newVar.type,
+                size: '',
+                value: getLocString('DataScience.variableLoadingValue', 'Loading...')
+            };
         });
 
         this.setState({ gridRows: newGridRows});
@@ -165,7 +196,15 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                     newSize = newVariable.count.toString();
                 }
 
-                const newGridRow = {...newGridRows[i],
+                // Also use the shape to compute the number of columns. Necessary
+                // when showing a data viewer
+                const numberOfColumns = this.getColumnCountFromShape(newVariable.shape);
+
+                const newGridRow: IGridRow = {...newGridRows[i],
+                    buttons: {
+                        ...newGridRows[i].buttons,
+                        numberOfColumns
+                    },
                     value: newVariable.value,
                     size: newSize};
 
@@ -203,6 +242,47 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         });
     }
 
+    private renderGrid() {
+        if (this.props.debugging) {
+            return (
+                <span className='span-debug-message'>{getLocString('DataScience.variableExplorerDisabledDuringDebugging', 'Variables are not available while debugging.')}</span>
+            );
+        } else {
+            return (
+                <div id='variable-explorer-data-grid' role='table' aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
+                <AdazzleReactDataGrid
+                    columns = {this.state.gridColumns.map(c => { return {...defaultColumnProperties, ...c }; })}
+                    rowGetter = {this.getRow}
+                    rowsCount = {this.state.gridRows.length}
+                    minHeight = {this.state.gridHeight}
+                    headerRowHeight = {this.state.fontSize + 9}
+                    rowHeight = {this.state.fontSize + 9}
+                    onRowDoubleClick = {this.rowDoubleClick}
+                    onGridSort = {this.sortRows}
+                    emptyRowsView = {VariableExplorerEmptyRowsView}
+                    rowRenderer = {VariableExplorerRowRenderer}
+                />
+            </div>
+            );
+        }
+    }
+
+    private generateDummyVariables() : IGridRow[] {
+        return [
+            {
+                name: 'foo',
+                value: 'bar',
+                type: 'DataFrame',
+                size: '(100, 100)',
+                buttons: {
+                    supportsDataExplorer: true,
+                    name: 'foo',
+                    numberOfColumns: 100
+                }
+            }
+        ];
+    }
+
     private getColumnType(key: string | number) : string | undefined {
         let column;
         if (typeof key === 'string') {
@@ -220,6 +300,17 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         } else if (column && column.type) {
             return column.type;
         }
+    }
+
+    private getColumnCountFromShape(shape: string | undefined) : number {
+        if (shape) {
+            // Try to match on the second value if there is one
+            const matches = RegExpValues.ShapeSplitterRegEx.exec(shape);
+            if (matches && matches.length > 1) {
+                return parseInt(matches[1], 10);
+            }
+        }
+        return 0;
     }
 
     private internalSortRows = (gridRows: IGridRow[], sortColumn: string | number, sortDirection: string): IGridRow[] => {
@@ -258,7 +349,8 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
 
     // Get the numerical comparison value for a column
     private getComparisonValue(gridRow: IGridRow, sortColumn: string | number): number {
-        return (sortColumn === 'size') ? this.sizeColumnComparisonValue(gridRow) : gridRow[sortColumn];
+        // tslint:disable-next-line: no-any
+        return (sortColumn === 'size') ? this.sizeColumnComparisonValue(gridRow) : (gridRow as any)[sortColumn];
     }
 
     // The size column needs special casing
@@ -287,28 +379,14 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         // On row double click, see if data explorer is supported and open it if it is
         if (row.buttons && row.buttons.supportsDataExplorer !== undefined
             && row.buttons.name && row.buttons.supportsDataExplorer) {
-            this.props.showDataExplorer(row.buttons.name);
+            this.props.showDataExplorer(row.buttons.name, row.buttons.numberOfColumns);
         }
     }
 
-    private updateHeight = () => {
-        // Make sure we check for a new height so we don't get into an update loop
-        const divElement = ReactDOM.findDOMNode(this) as HTMLDivElement;
-
-        if (divElement) {
-            const newHeight = divElement.offsetHeight;
-
-            if (this.state.height !== newHeight) {
-                this.setState({height: newHeight});
-                this.props.onHeightChange();
-            }
-        }
-    }
-
-    private getRow = (index: number) => {
+    private getRow = (index: number) : IGridRow => {
         if (index >= 0 && index < this.state.gridRows.length) {
             return this.state.gridRows[index];
         }
-        return {buttons: '', name: '', type: '', size: '', value: ''};
+        return {buttons: { supportsDataExplorer: false, name: '', numberOfColumns: 0}, name: '', type: '', size: '', value: ''};
     }
 }

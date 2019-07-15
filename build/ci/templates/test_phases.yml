@@ -25,8 +25,7 @@
 # 'testMultiWorkspace'
 # 'testDebugger'
 # 'testFunctional'
-# 'perfomanceTests'
-# 'testSmoke'
+# 'testPerformance'
 # 'venvTests'
 
 steps:
@@ -60,6 +59,26 @@ steps:
     displayName: 'Use Python $(PythonVersion)'
     inputs:
       versionSpec: $(PythonVersion)
+
+  # Install the a version of python that works with sqlite3 until this bug is addressed
+  # https://mseng.visualstudio.com/AzureDevOps/_workitems/edit/1535830
+  #
+  # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
+  - bash: |
+      sudo apt-get install libsqlite3-dev
+      version=$(python -V 2>&1 | grep -Po '(?<=Python )(.+)')
+      wget https://www.python.org/ftp/python/$version/Python-$version.tar.xz
+      tar xvf Python-$version.tar.xz
+      cd Python-$version
+      ./configure --enable-loadable-sqlite-extensions --with-ensurepip=install --prefix=$HOME/py-$version
+      make
+      sudo make install
+      sudo chmod -R 777 $HOME/py-$version
+      export PATH=$HOME/py-$version/bin:$PATH
+      sudo ln -s $HOME/py-$version/bin/python3 $HOME/py-$version/bin/python
+      echo '##vso[task.prependpath]'$HOME/py-$version/bin
+    displayName: 'Setup python to run with sqlite on 3.*'
+    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Linux'), not(eq(variables['PythonVersion'], '2.7')))
 
   # Ensure that npm is upgraded to the necessary version specified in `variables` above.
   # Example command line (windows pwsh):
@@ -110,36 +129,42 @@ steps:
     inputs:
       targets: 'prePublishNonBundle'
 
-  # Run tslint on the project source to ensure that the added code adheres
-  # to the # code standards we are trying to maintain.
-  # Example command line (windows pwsh):
-  # > npx tslint ./src/**/*.ts{,x}
-  - bash: |
-      npx tslint ./src/**/*.ts{,x}
-      #npx gulp hygiene
-    displayName: 'code hygiene'
-    condition: and(succeeded(), contains(variables['TestsToRun'], 'runHygiene'))
-
   # Run the typescript unit tests.
   #
   # This will only run if the string 'testUnitTests' exists in variable `TestsToRun`
   #
   # Example command line (windows pwsh):
-  # > npm run test:unittests
+  # > npm run test:unittests:cover
   - bash: |
-      npm run test:unittests
-    displayName: 'run test:unittest'
+      npm run test:unittests:cover
+    displayName: 'run test:unittests'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testUnitTests'))
 
   # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
   - task: PublishTestResults@2
-    displayName: 'Publish test:unittest results'
+    displayName: 'Publish test:unittests results'
     condition: contains(variables['TestsToRun'], 'testUnitTests')
     inputs:
       testResultsFiles: '$(MOCHA_FILE)'
       testRunTitle: 'unittests-$(Agent.Os)-Py$(pythonVersion)'
       buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
       buildConfiguration: 'UnitTests'
+
+  - task: CopyFiles@2
+    inputs:
+        sourceFolder: "$(Build.SourcesDirectory)/.nyc_output"
+        targetFolder: "$(Build.ArtifactStagingDirectory)/nyc/.nyc_output"
+    displayName: "Copy nyc_output to publish as artificat"
+    condition: contains(variables['TestsToRun'], 'testUnitTests')
+
+  # Upload Code Coverage Results (to be merged later).
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathtoPublish: "$(Build.ArtifactStagingDirectory)/nyc"
+      artifactName: 'coverage-output-$(Agent.Os)'
+    condition: contains(variables['TestsToRun'], 'testUnitTests')
+
+  - template: generate_upload_coverage.yml
 
   # Install the requirements for the Python or the system tests. This includes the supporting libs that
   # we ship in our extension such as PTVSD and Jedi.
@@ -156,6 +181,15 @@ steps:
       python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
     displayName: 'pip install system test requirements'
     condition: and(succeeded(), eq(variables['NeedsPythonTestReqs'], 'true'))
+
+  # Install the additional sqlite requirements
+  #
+  # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
+  - bash: |
+      sudo apt-get install libsqlite3-dev
+      python -m pip install pysqlite
+    displayName: 'Setup python to run with sqlite on 2.7'
+    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Linux'), eq(variables['PythonVersion'], '2.7'))
 
   # Install the requirements for functional tests.
   #
@@ -351,7 +385,7 @@ steps:
   # Run the virtual environment based tests.
   # This set of tests is simply using the `testSingleWorkspace` set of tests, but
   # with the environment variable `TEST_FILES_SUFFIX` set to `testvirtualenvs`, which
-  # got set in the Prepare Venv-Test Environmant task above.
+  # got set in the Prepare Venv-Test Environment task above.
   # **Note**: Azure DevOps tasks set environment variables via a specially formatted
   # string sent to stdout.
   #
@@ -389,15 +423,9 @@ steps:
   #
   # Example command line (windows pwsd):
   # > $Env:CI_PYTHON_PATH=(& python -c 'import sys;print(sys.executable)')
-  - task: PythonScript@0
+  - script: |
+        python -c "from __future__ import print_function;import sys;print('##vso[task.setvariable variable=CI_PYTHON_PATH;]{}'.format(sys.executable))"
     displayName: 'Set CI_PYTHON_PATH'
-    inputs:
-      scriptSource: inline
-      failOnStderr: true
-      script: |
-        from __future__ import print_function
-        import sys
-        print('##vso[task.setvariable variable=CI_PYTHON_PATH;]{}'.format(sys.executable))
 
   # Run the functional tests.
   #
@@ -504,29 +532,8 @@ steps:
     env:
       DISPLAY: :10
 
-  # Run the smoke tests.
-  #
-  # This task only runs if the string 'testSmoke' exists in variable `TestsToRun`.
-  #
-  # Example command line (windows pwsh):
-  # > npm run clean
-  # > npm run updateBuildNumber -- --buildNumber 0.0.0-local
-  # > npm run package
-  # > npx gulp clean:cleanExceptTests
-  # > npm run testSmoke
-  - bash: |
-      npm install -g vsce
-      npm run clean
-      npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID
-      npm run package
-      npx gulp clean:cleanExceptTests
-      npm run testSmoke
-    displayName: 'Run Smoke Tests'
-    condition: and(succeeded(), contains(variables['TestsToRun'], 'testSmoke'))
-    env:
-      DISPLAY: :10
-
   - task: PublishBuildArtifacts@1
     inputs:
       pathtoPublish: $(Build.ArtifactStagingDirectory)
       artifactName: $(Agent.JobName)
+    condition: always()

@@ -11,22 +11,21 @@ import { Container } from 'inversify';
 import { EOL } from 'os';
 import * as path from 'path';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { ConfigurationTarget, Disposable, Uri } from 'vscode';
+import { ConfigurationTarget, Disposable, OutputChannel, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
+import { STANDARD_OUTPUT_CHANNEL } from '../../../client/common/constants';
 import { IS_WINDOWS } from '../../../client/common/platform/constants';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { CurrentProcess } from '../../../client/common/process/currentProcess';
+import { ProcessLogger } from '../../../client/common/process/logger';
 import { registerTypes as processRegisterTypes } from '../../../client/common/process/serviceRegistry';
-import { IPythonExecutionFactory, StdErrError } from '../../../client/common/process/types';
-import {
-    IConfigurationService, ICurrentProcess,
-    IDisposableRegistry, IPathUtils, IsWindows
-} from '../../../client/common/types';
+import { IProcessLogger, IPythonExecutionFactory, StdErrError } from '../../../client/common/process/types';
+import { IConfigurationService, ICurrentProcess, IDisposableRegistry, IOutputChannel, IPathUtils, IsWindows } from '../../../client/common/types';
 import { clearCache } from '../../../client/common/utils/cacheUtils';
 import { OSType } from '../../../client/common/utils/platform';
 import {
@@ -38,11 +37,8 @@ import { IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService 
 import { ServiceContainer } from '../../../client/ioc/container';
 import { ServiceManager } from '../../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../../client/ioc/types';
-import {
-    clearPythonPathInWorkspaceFolder, getExtensionSettings,
-    isOs,
-    isPythonVersion
-} from '../../common';
+import { clearPythonPathInWorkspaceFolder, getExtensionSettings, isOs, isPythonVersion } from '../../common';
+import { MockOutputChannel } from '../../mockClasses';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
 import {
     closeActiveWindows, initialize, initializeTest,
@@ -62,7 +58,7 @@ suite('PythonExecutableService', () => {
     let configService: IConfigurationService;
     let pythonExecFactory: IPythonExecutionFactory;
 
-    suiteSetup(async function () {
+    suiteSetup(async function() {
         if (!IS_MULTI_ROOT_TEST) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
@@ -78,12 +74,15 @@ suite('PythonExecutableService', () => {
         serviceManager.addSingletonInstance<IServiceContainer>(IServiceContainer, serviceContainer);
         serviceManager.addSingletonInstance<Disposable[]>(IDisposableRegistry, []);
         serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
+        const standardOutputChannel = new MockOutputChannel('Python');
+        serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
         serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
         serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
         serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
         serviceManager.addSingleton<IPlatformService>(IPlatformService, PlatformService);
         serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);
         serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
+        serviceManager.addSingleton<IProcessLogger>(IProcessLogger, ProcessLogger);
         serviceManager.addSingleton<IInterpreterAutoSelectionService>(IInterpreterAutoSelectionService, MockAutoSelectionService);
         serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(IInterpreterAutoSeletionProxyService, MockAutoSelectionService);
         processRegisterTypes(serviceManager);

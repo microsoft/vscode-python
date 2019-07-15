@@ -18,7 +18,9 @@ export interface IMonacoEditorProps {
     outermostParentClass: string;
     options: monacoEditor.editor.IEditorConstructionOptions;
     testMode?: boolean;
+    forceBackground?: string;
     editorMounted(editor: monacoEditor.editor.IStandaloneCodeEditor): void;
+    openLink(uri: monacoEditor.Uri): void;
 }
 
 interface IMonacoEditorState {
@@ -76,6 +78,13 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                 model.setEOL(monacoEditor.editor.EndOfLineSequence.LF);
             }
 
+            // Register a link opener so when a user clicks on a link we can navigate to it.
+            // tslint:disable-next-line: no-any
+            const openerService = (editor.getContribution('editor.linkDetector') as any).openerService;
+            if (openerService && openerService.open) {
+                openerService.open = this.props.openLink;
+            }
+
             // Save the editor and the model in our state.
             this.setState({ editor, model });
             if (this.props.theme) {
@@ -89,6 +98,9 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             this.subscriptions.push(editor.onDidChangeModelDecorations(() => {
                 this.windowResized();
             }));
+
+            // List for key down events
+            this.subscriptions.push(editor.onKeyDown(this.onKeyDown));
 
             // Setup our context menu to show up outside. Autocomplete doesn't have this problem so it just works
             this.subscriptions.push(editor.onContextMenu((e) => {
@@ -111,6 +123,12 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
             // Make sure our suggest and hover windows show up on top of other stuff
             this.updateWidgetParent(editor);
+
+            // If we're readonly, monaco is not putting the aria-readonly property on the textarea
+            // We should do that
+            if (this.props.options.readOnly) {
+                this.setAriaReadOnly(editor);
+            }
 
             // Eliminate the find action if possible
             // tslint:disable-next-line: no-any
@@ -147,7 +165,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         }
     }
 
-    public componentDidUpdate(prevProps: IMonacoEditorProps) {
+    public componentDidUpdate(prevProps: IMonacoEditorProps, prevState: IMonacoEditorState) {
         if (this.state.editor) {
             if (prevProps.language !== this.props.language && this.state.model) {
                 monacoEditor.editor.setModelLanguage(this.state.model, this.props.language);
@@ -162,7 +180,14 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                 this.state.model.setValue(this.props.value);
             }
         }
+
         this.updateEditorSize();
+
+        // If this is our first time setting the editor, we might need to dynanically modify the styles
+        // that the editor generates for the background colors.
+        if (!prevState.editor && this.state.editor && this.containerRef.current && this.props.forceBackground) {
+            this.updateBackgroundStyle();
+        }
     }
 
     public render() {
@@ -174,6 +199,31 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         );
     }
 
+    public isSuggesting() : boolean {
+        // This should mean our widgetParent has some height
+        if (this.widgetParent && this.widgetParent.firstChild && this.widgetParent.firstChild.childNodes.length >= 2) {
+            const suggestWidget = this.widgetParent.firstChild.childNodes.item(1) as HTMLDivElement;
+            const signatureHelpWidget = this.widgetParent.firstChild.childNodes.length > 2 ? this.widgetParent.firstChild.childNodes.item(2) as HTMLDivElement : undefined;
+            const suggestVisible = suggestWidget ? suggestWidget.className.includes('visible') : false;
+            const signatureVisible = signatureHelpWidget ? signatureHelpWidget.className.includes('visible') : false;
+            return suggestVisible || signatureVisible;
+        }
+        return false;
+    }
+
+    private setAriaReadOnly(editor: monacoEditor.editor.IStandaloneCodeEditor) {
+        const editorDomNode = editor.getDomNode();
+        if (editorDomNode) {
+            const textArea = editorDomNode.getElementsByTagName('textarea');
+            if (textArea && textArea.length > 0) {
+                const item = textArea.item(0);
+                if (item) {
+                    item.setAttribute('aria-readonly', 'true');
+                }
+            }
+        }
+    }
+
     private windowResized = () => {
         if (this.resizeTimer) {
             clearTimeout(this.resizeTimer);
@@ -183,6 +233,44 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
     private startUpdateWidgetPosition = () => {
         this.updateWidgetPosition();
+    }
+
+    private onKeyDown = (e: monacoEditor.IKeyboardEvent) => {
+        if (e.keyCode === monacoEditor.KeyCode.Escape) {
+            // Shift Escape is special, so it doesn't work as going backwards.
+            // For now just support escape to get out of a cell (like Jupyter does)
+            const nextElement = this.findTabStop(1);
+            if (nextElement) {
+                nextElement.focus();
+            }
+        }
+    }
+
+    private findTabStop(direction: number) : HTMLElement | undefined {
+        if (this.state.editor) {
+            const editorDomNode = this.state.editor.getDomNode();
+            if (editorDomNode) {
+                const textArea = editorDomNode.getElementsByTagName('textarea');
+                const allFocusable = document.querySelectorAll('input, button, select, textarea, a[href]');
+                if (allFocusable && textArea && textArea.length > 0) {
+                    const tabable = Array.prototype.filter.call(allFocusable, (i: HTMLElement) => i.tabIndex >= 0);
+                    const self = tabable.indexOf(textArea.item(0));
+                    return direction >= 0 ? tabable[self + 1] || tabable[0] : tabable[self - 1] || tabable[0];
+                }
+            }
+        }
+    }
+
+    private updateBackgroundStyle = () => {
+        if (this.state.editor && this.containerRef.current && this.props.forceBackground) {
+            const nodes = this.containerRef.current.getElementsByClassName('monaco-editor-background');
+            if (nodes && nodes.length > 0) {
+                const backgroundNode = nodes[0] as HTMLDivElement;
+                if (backgroundNode && backgroundNode.style) {
+                    backgroundNode.style.backgroundColor = this.props.forceBackground;
+                }
+            }
+        }
     }
 
     private updateWidgetPosition(width?: number) {
@@ -282,7 +370,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                         const document = contentWidgets.getRootNode() as HTMLDocument;
 
                         // His first child with the id 'root' should be where we want to parent our overflow widgets
-                        if (document) {
+                        if (document && document.getElementById) {
                             const root = document.getElementById('root');
                             if (root) {
                                 // We need to create a dummy 'monaco-editor' div so that the content widgets get the same styles.

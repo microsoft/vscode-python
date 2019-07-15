@@ -1,22 +1,24 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { getLocString } from '../react-common/locReactSide';
-import { CellButton } from './cellButton';
-import { Image, ImageName } from './image';
-import './variableExplorerButtonCellFormatter.css';
-
 import * as React from 'react';
 
-interface IButtonCellValue {
+import { Image, ImageName } from '../react-common/image';
+import { ImageButton } from '../react-common/imageButton';
+import { getLocString } from '../react-common/locReactSide';
+
+import './variableExplorerButtonCellFormatter.css';
+
+export interface IButtonCellValue {
     supportsDataExplorer: boolean;
     name: string;
+    numberOfColumns: number;
 }
 
 interface IVariableExplorerButtonCellFormatterProps {
     baseTheme: string;
     value?: IButtonCellValue;
-    showDataExplorer(targetVariable: string): void;
+    showDataExplorer(targetVariable: string, numberOfColumns: number): void;
 }
 
 export class VariableExplorerButtonCellFormatter extends React.Component<IVariableExplorerButtonCellFormatterProps> {
@@ -30,9 +32,9 @@ export class VariableExplorerButtonCellFormatter extends React.Component<IVariab
             if (this.props.value.supportsDataExplorer) {
                 return(
                     <div className={className}>
-                        <CellButton baseTheme={this.props.baseTheme} tooltip={getLocString('DataScience.showDataExplorerTooltip', 'Show variable in data viewer.')} onClick={this.onDataExplorerClick}>
-                            <Image baseTheme={this.props.baseTheme} class='cell-button-image' image={ImageName.OpenInNewWindow}/>
-                        </CellButton>
+                        <ImageButton baseTheme={this.props.baseTheme} tooltip={getLocString('DataScience.showDataExplorerTooltip', 'Show variable in data viewer.')} onClick={this.onDataExplorerClick}>
+                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.OpenInNewWindow}/>
+                        </ImageButton>
                     </div>
                 );
             } else {
@@ -44,7 +46,7 @@ export class VariableExplorerButtonCellFormatter extends React.Component<IVariab
 
     private onDataExplorerClick = () => {
         if (this.props.value !== null && this.props.value !== undefined) {
-            this.props.showDataExplorer(this.props.value.name);
+            this.props.showDataExplorer(this.props.value.name, this.props.value.numberOfColumns);
         }
     }
 }

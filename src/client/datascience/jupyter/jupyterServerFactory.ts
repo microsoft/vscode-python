@@ -3,9 +3,11 @@
 'use strict';
 import '../../common/extensions';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, multiInject, optional } from 'inversify';
 import { Observable } from 'rxjs/Observable';
+import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode-jsonrpc';
+import * as vsls from 'vsls/vscode';
 
 import { ILiveShareApi } from '../../common/application/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
@@ -14,6 +16,8 @@ import {
     IConnection,
     IDataScience,
     IJupyterSessionManager,
+    INotebookCompletion,
+    INotebookExecutionLogger,
     INotebookServer,
     INotebookServerLaunchInfo,
     InterruptResult
@@ -21,6 +25,7 @@ import {
 import { GuestJupyterServer } from './liveshare/guestJupyterServer';
 import { HostJupyterServer } from './liveshare/hostJupyterServer';
 import { IRoleBasedObject, RoleBasedFactory } from './liveshare/roleBasedFactory';
+import { ILiveShareHasRole } from './liveshare/types';
 
 interface IJupyterServerInterface extends IRoleBasedObject, INotebookServer {
 
@@ -34,16 +39,18 @@ type JupyterServerClassType = {
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         configService: IConfigurationService,
-        sessionManager: IJupyterSessionManager
+        sessionManager: IJupyterSessionManager,
+        loggers: INotebookExecutionLogger[]
     ): IJupyterServerInterface;
 };
 // tslint:enable:callable-types
 
 @injectable()
-export class JupyterServerFactory implements INotebookServer {
+export class JupyterServerFactory implements INotebookServer, ILiveShareHasRole {
     private serverFactory: RoleBasedFactory<IJupyterServerInterface, JupyterServerClassType>;
 
     private launchInfo: INotebookServerLaunchInfo | undefined;
+    private _id: string = uuid();
 
     constructor(
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
@@ -52,7 +59,8 @@ export class JupyterServerFactory implements INotebookServer {
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IConfigurationService) configService: IConfigurationService,
-        @inject(IJupyterSessionManager) sessionManager: IJupyterSessionManager) {
+        @inject(IJupyterSessionManager) sessionManager: IJupyterSessionManager,
+        @multiInject(INotebookExecutionLogger) @optional() loggers: INotebookExecutionLogger[] | undefined) {
         this.serverFactory = new RoleBasedFactory<IJupyterServerInterface, JupyterServerClassType>(
             liveShare,
             HostJupyterServer,
@@ -63,8 +71,17 @@ export class JupyterServerFactory implements INotebookServer {
             disposableRegistry,
             asyncRegistry,
             configService,
-            sessionManager
+            sessionManager,
+            loggers ? loggers : []
         );
+    }
+
+    public get role(): vsls.Role {
+        return this.serverFactory.role;
+    }
+
+    public get id(): string {
+        return this._id;
     }
 
     public async connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void> {
@@ -116,10 +133,10 @@ export class JupyterServerFactory implements INotebookServer {
                     })
                     .catch(e => subscriber.error(e));
             },
-            r => {
-                subscriber.error(r);
-                subscriber.complete();
-            });
+                r => {
+                    subscriber.error(r);
+                    subscriber.complete();
+                });
         });
     }
 
@@ -147,8 +164,13 @@ export class JupyterServerFactory implements INotebookServer {
         return server.waitForConnect();
     }
 
-    public async getSysInfo() : Promise<ICell | undefined> {
+    public async getSysInfo(): Promise<ICell | undefined> {
         const server = await this.serverFactory.get();
         return server.getSysInfo();
+    }
+
+    public async getCompletion(cellCode: string, offsetInCode: number, cancelToken?: CancellationToken): Promise<INotebookCompletion> {
+        const server = await this.serverFactory.get();
+        return server.getCompletion(cellCode, offsetInCode, cancelToken);
     }
 }

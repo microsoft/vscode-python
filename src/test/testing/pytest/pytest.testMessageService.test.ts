@@ -102,7 +102,7 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
     const configTarget = IS_MULTI_ROOT_TEST ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Workspace;
     suiteSetup(async () => {
         await initialize();
-        await updateSetting('testing.pyTestArgs', [], rootWorkspaceUri, configTarget);
+        await updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget);
     });
     function initializeDI() {
         ioc = new UnitTestIocContainer();
@@ -150,7 +150,7 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
             });
             suiteTeardown(async () => {
                 await ioc.dispose();
-                await updateSetting('testing.pyTestArgs', [], rootWorkspaceUri, configTarget);
+                await updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget);
             });
             scenario.testDetails!.forEach((td) => {
                 suite(td.nameToRun, () => {

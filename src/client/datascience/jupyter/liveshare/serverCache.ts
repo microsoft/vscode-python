@@ -61,6 +61,7 @@ export class ServerCache implements IAsyncDisposable {
 
     public async generateDefaultOptions(options?: INotebookServerOptions): Promise<INotebookServerOptions> {
         return {
+            enableDebugging: options ? options.enableDebugging : false,
             uri: options ? options.uri : undefined,
             useDefaultConfig: options ? options.useDefaultConfig : true, // Default for this is true.
             usingDarkTheme: options ? options.usingDarkTheme : undefined,
@@ -76,9 +77,10 @@ export class ServerCache implements IAsyncDisposable {
             // combine all the values together to make a unique key
             const uri = options.uri ? options.uri : '';
             const useFlag = options.useDefaultConfig ? 'true' : 'false';
+            const debug = options.enableDebugging ? 'true' : 'false';
             // tslint:disable-next-line:no-suspicious-comment
             // TODO: Should there be some separator in the key?
-            return `${options.purpose}${uri}${useFlag}${options.workingDir}`;
+            return `${options.purpose}${uri}${useFlag}${options.workingDir}${debug}`;
         }
     }
 

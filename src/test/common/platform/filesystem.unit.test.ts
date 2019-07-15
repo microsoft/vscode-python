@@ -81,7 +81,8 @@ suite('FileSystem', () => {
         expect(fileContents).to.be.equal(dataToAppend);
     });
     test('Test searching for files', async () => {
-        const files = await fileSystem.search(path.join(__dirname, '*.js'));
+        const searchPattern = `${path.basename(__filename, __filename.substring(__filename.length - 3))}.*`;
+        const files = await fileSystem.search(path.join(__dirname, searchPattern));
         expect(files).to.be.array();
         expect(files.length).to.be.at.least(1);
         const expectedFileName = __filename.replace(/\\/g, '/');
@@ -101,7 +102,7 @@ suite('FileSystem', () => {
                 expect(err).to.equal(undefined, `Failed to write to a temp file, error is ${err}`);
             });
         }, (failReason) => {
-            expect(failReason).to.equal('No errors occured', `Failed to create a temporary file with error ${failReason}`);
+            expect(failReason).to.equal('No errors occurred', `Failed to create a temporary file with error ${failReason}`);
         });
     });
     test('Ensure chmod works against a temporary file', async () => {

@@ -1,5 +1,7 @@
 {
     "compilerOptions": {
+        "baseUrl": ".",
+        "paths": { "*": ["types/*"] },
         "module": "commonjs",
         "target": "es2018",
         "outDir": "out",
@@ -25,6 +27,7 @@
     "exclude": [
         "node_modules",
         ".vscode-test",
+        ".vscode test",
         "src/server/node_modules",
         "src/client/node_modules",
         "src/server/src/typings",

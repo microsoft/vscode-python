@@ -18,6 +18,10 @@ import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 
+// tslint:disable-next-line:no-require-imports no-var-requires
+const untildify: (value: string) => string = require('untildify');
+
+// tslint:disable-next-line: max-func-body-length
 suite('Virtual environments', () => {
     let serviceManager: ServiceManager;
     let serviceContainer: ServiceContainer;
@@ -52,11 +56,16 @@ suite('Virtual environments', () => {
         const pathProvider = new GlobalVirtualEnvironmentsSearchPathProvider(serviceContainer);
 
         const homedir = os.homedir();
-        const folders = ['Envs', '.virtualenvs'];
+        const folders = ['Envs', 'testpath'];
         settings.setup(x => x.venvFolders).returns(() => folders);
         virtualEnvMgr.setup(v => v.getPyEnvRoot(TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
         let paths = await pathProvider.getSearchPaths();
-        let expected = folders.map(item => path.join(homedir, item));
+        let expected = [
+            'envs',
+            '.pyenv',
+            '.direnv',
+            '.virtualenvs',
+            ...folders].map(item => path.join(homedir, item));
 
         virtualEnvMgr.verifyAll();
         expect(paths).to.deep.equal(expected, 'Global search folder list is incorrect.');
@@ -68,6 +77,60 @@ suite('Virtual environments', () => {
         virtualEnvMgr.verifyAll();
         expected = expected.concat(['pyenv_path', path.join('pyenv_path', 'versions')]);
         expect(paths).to.deep.equal(expected, 'pyenv path not resolved correctly.');
+    });
+
+    test('Global search paths with duplicates', async () => {
+        const pathProvider = new GlobalVirtualEnvironmentsSearchPathProvider(serviceContainer);
+
+        const folders = ['.virtualenvs', '.direnv'];
+        settings.setup(x => x.venvFolders).returns(() => folders);
+        const paths = await pathProvider.getSearchPaths();
+
+        expect([...new Set(paths)]).to.deep.equal(paths, 'Duplicates are not removed from the list of global search paths');
+    });
+
+    test('Global search paths with tilde path in the WORKON_HOME environment variable', async () => {
+        const pathProvider = new GlobalVirtualEnvironmentsSearchPathProvider(serviceContainer);
+
+        const homedir = os.homedir();
+        const workonFolder = path.join('~', '.workonFolder');
+        process.setup(p => p.env).returns(() => {
+            return { WORKON_HOME: workonFolder };
+        });
+        settings.setup(x => x.venvFolders).returns(() => []);
+
+        const paths = await pathProvider.getSearchPaths();
+        const expected = [
+            'envs',
+            '.pyenv',
+            '.direnv',
+            '.virtualenvs'
+        ].map(item => path.join(homedir, item));
+        expected.push(untildify(workonFolder));
+
+        expect(paths).to.deep.equal(expected, 'WORKON_HOME environment variable not read.');
+    });
+
+    test('Global search paths with absolute path in the WORKON_HOME environment variable', async () => {
+        const pathProvider = new GlobalVirtualEnvironmentsSearchPathProvider(serviceContainer);
+
+        const homedir = os.homedir();
+        const workonFolder = path.join('path', 'to', '.workonFolder');
+        process.setup(p => p.env).returns(() => {
+            return { WORKON_HOME: workonFolder };
+        });
+        settings.setup(x => x.venvFolders).returns(() => []);
+
+        const paths = await pathProvider.getSearchPaths();
+        const expected = [
+            'envs',
+            '.pyenv',
+            '.direnv',
+            '.virtualenvs'
+        ].map(item => path.join(homedir, item));
+        expected.push(workonFolder);
+
+        expect(paths).to.deep.equal(expected, 'WORKON_HOME environment variable not read.');
     });
 
     test('Workspace search paths', async () => {

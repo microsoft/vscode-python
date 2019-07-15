@@ -7,7 +7,7 @@ import * as os from 'os';
 import * as path from 'path';
 
 import { IWorkspaceService } from '../../common/application/types';
-import { IFileSystem } from '../../common/platform/types';
+import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -38,7 +38,9 @@ export class JupyterImporter implements INotebookImporter {
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
-        @inject(IWorkspaceService) private workspaceService: IWorkspaceService) {
+        @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
+        @inject(IPlatformService) private readonly platform: IPlatformService
+        ) {
         this.templatePromise = this.createTemplateFile();
     }
 
@@ -49,7 +51,7 @@ export class JupyterImporter implements INotebookImporter {
         const settings = this.configuration.getSettings();
         let directoryChange: string | undefined;
         if (settings.datascience.changeDirOnImportExport) {
-            directoryChange = this.calculateDirectoryChange(file);
+            directoryChange = await this.calculateDirectoryChange(file);
         }
 
         // Use the jupyter nbconvert functionality to turn the notebook into a python file
@@ -70,27 +72,39 @@ export class JupyterImporter implements INotebookImporter {
     }
 
     private addDirectoryChange = (pythonOutput: string, directoryChange: string): string => {
-        const newCode = CodeSnippits.ChangeDirectory.join(os.EOL).format(localize.DataScience.importChangeDirectoryComment(), directoryChange);
+        const newCode = CodeSnippits.ChangeDirectory.join(os.EOL).format(localize.DataScience.importChangeDirectoryComment(), CodeSnippits.ChangeDirectoryCommentIdentifier, directoryChange);
         return newCode.concat(pythonOutput);
     }
 
     // When importing a file, calculate if we can create a %cd so that the relative paths work
-    private calculateDirectoryChange = (notebookFile: string): string | undefined => {
+    private async calculateDirectoryChange(notebookFile: string): Promise<string | undefined> {
         let directoryChange: string | undefined;
-        const notebookFilePath = path.dirname(notebookFile);
-        // First see if we have a workspace open, this only works if we have a workspace root to be relative to
-        if (this.workspaceService.hasWorkspaceFolders) {
-            const workspacePath = this.workspaceService.workspaceFolders![0].uri.fsPath;
+        // Make sure we don't already have an import/export comment in the file
+        const contents = await this.fileSystem.readFile(notebookFile);
+        const haveChangeAlready = contents.includes(CodeSnippits.ChangeDirectoryCommentIdentifier);
 
-            // Make sure that we have everything that we need here
-            if (workspacePath && path.isAbsolute(workspacePath) && notebookFilePath && path.isAbsolute(notebookFilePath)) {
-                directoryChange = path.relative(workspacePath, notebookFilePath);
+        if (!haveChangeAlready) {
+            const notebookFilePath = path.dirname(notebookFile);
+            // First see if we have a workspace open, this only works if we have a workspace root to be relative to
+            if (this.workspaceService.hasWorkspaceFolders) {
+                const workspacePath = this.workspaceService.workspaceFolders![0].uri.fsPath;
+
+                // Make sure that we have everything that we need here
+                if (workspacePath && path.isAbsolute(workspacePath) && notebookFilePath && path.isAbsolute(notebookFilePath)) {
+                    directoryChange = path.relative(workspacePath, notebookFilePath);
+                }
             }
         }
 
         // If path.relative can't calculate a relative path, then it just returns the full second path
         // so check here, we only want this if we were able to calculate a relative path, no network shares or drives
         if (directoryChange && !path.isAbsolute(directoryChange)) {
+
+            // Escape windows path chars so they end up in the source escaped
+            if (this.platform.isWindows) {
+                directoryChange = directoryChange.replace('\\', '\\\\');
+            }
+
             return directoryChange;
         } else {
             return undefined;

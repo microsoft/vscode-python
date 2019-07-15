@@ -137,8 +137,7 @@ suite('Debugging - Configuration Provider Django', () => {
             program: 'xyz.py',
             args: [
                 'runserver',
-                '--noreload',
-                '--nothreading'
+                '--noreload'
             ],
             django: true
         };
@@ -161,8 +160,7 @@ suite('Debugging - Configuration Provider Django', () => {
             program: 'hello',
             args: [
                 'runserver',
-                '--noreload',
-                '--nothreading'
+                '--noreload'
             ],
             django: true
         };
@@ -188,8 +186,7 @@ suite('Debugging - Configuration Provider Django', () => {
             program: defaultProgram,
             args: [
                 'runserver',
-                '--noreload',
-                '--nothreading'
+                '--noreload'
             ],
             django: true
         };

@@ -130,6 +130,6 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
             // If we have a value in the setting, then return.
             return true;
         }
-        return deprecatedSetting.values.indexOf(pythonConfig.get(deprecatedSetting.setting)!) >= 0;
+        return deprecatedSetting.values.indexOf(pythonConfig.get<{}>(deprecatedSetting.setting)!) >= 0;
     }
 }

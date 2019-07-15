@@ -26,7 +26,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         @inject(IInterpreterAutoSelectionService) private readonly autoSelection: IInterpreterAutoSelectionService,
         @inject(IApplicationDiagnostics) private readonly appDiagnostics: IApplicationDiagnostics,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
-    ) {}
+    ) { }
 
     public dispose() {
         while (this.disposables.length > 0) {

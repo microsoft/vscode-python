@@ -39,8 +39,7 @@ suite('Debugging - Attach Debugger', () => {
             this.skip();
         }
         this.timeout(30000);
-        const coverageDirectory = path.join(EXTENSION_ROOT_DIR, 'debug_coverage_attach_ptvsd');
-        debugClient = await createDebugAdapter(coverageDirectory);
+        debugClient = await createDebugAdapter();
     });
     teardown(async () => {
         // Wait for a second before starting another test (sometimes, sockets take a while to get closed).
@@ -140,5 +139,7 @@ suite('Debugging - Attach Debugger', () => {
     }
     test('Confirm we are able to attach to a running program', async () => {
         await testAttachingToRemoteProcess(path.dirname(fileToDebug), path.dirname(fileToDebug), IS_WINDOWS);
-    });
+    })
+        // Retry as tests can timeout on server due to connectivity issues.
+        .retries(3);
 });

@@ -16,8 +16,7 @@ export class BaseTerminalActivator implements ITerminalActivator {
         }
         const deferred = createDeferred<boolean>();
         this.activatedTerminals.set(terminal, deferred.promise);
-        const shellPath = this.helper.getTerminalShellPath();
-        const terminalShellType = !shellPath || shellPath.length === 0 ? TerminalShellType.other : this.helper.identifyTerminalShell(shellPath);
+        const terminalShellType = this.helper.identifyTerminalShell(terminal);
 
         const activationCommamnds = await this.helper.getEnvironmentActivationCommands(terminalShellType, resource);
         let activated = false;

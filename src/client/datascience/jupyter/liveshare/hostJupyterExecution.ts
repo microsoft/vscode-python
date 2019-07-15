@@ -71,6 +71,11 @@ export class HostJupyterExecution
         await super.dispose();
         const api = await this.api;
         await this.onDetach(api);
+
+        // Cleanup on dispose. We are going away permanently
+        if (this.serverCache) {
+            await this.serverCache.dispose();
+        }
     }
 
     public async connectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer | undefined> {
@@ -156,6 +161,7 @@ export class HostJupyterExecution
                 return {
                     baseUrl: connectionInfo.baseUrl,
                     token: connectionInfo.token,
+                    hostName: connectionInfo.hostName,
                     localLaunch: false,
                     localProcExitCode: undefined,
                     disconnected: (_l) => { return { dispose: noop }; },

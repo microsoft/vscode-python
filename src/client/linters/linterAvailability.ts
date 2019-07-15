@@ -8,9 +8,8 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../common/application/types';
 import '../common/extensions';
-import { traceDecorators } from '../common/logger';
 import { IFileSystem } from '../common/platform/types';
-import { IConfigurationService, IPersistentStateFactory } from '../common/types';
+import { IConfigurationService, IPersistentStateFactory, Resource } from '../common/types';
 import { Common, Linters } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
@@ -95,12 +94,11 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
      * @param linterProduct Linter to check in the current workspace environment.
      * @param resource Context information for workspace.
      */
-    @traceDecorators.error('Failed to discover if linter pylint is available')
-    public async isLinterAvailable(linterInfo: ILinterInfo, resource?: Uri): Promise<boolean | undefined> {
+    public async isLinterAvailable(linterInfo: ILinterInfo, resource: Resource): Promise<boolean | undefined> {
         if (!this.workspaceService.hasWorkspaceFolders) {
             return false;
         }
-        const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource)! : this.workspaceService.workspaceFolders![0];
+        const workspaceFolder = this.workspaceService.getWorkspaceFolder(resource) || this.workspaceService.workspaceFolders![0];
         let isAvailable = false;
         for (const configName of linterInfo.configFileNames) {
             const configPath = path.join(workspaceFolder.uri.fsPath, configName);

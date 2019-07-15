@@ -2,10 +2,10 @@
     "python.jediEnabled": false,
     "python.formatting.provider": "black",
     "editor.formatOnSave": true,
-    "python.testing.pyTestArgs": [
+    "python.testing.pytestArgs": [
         "."
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.nosetestsEnabled": false,
-    "python.testing.pyTestEnabled": true
+    "python.testing.pytestEnabled": true
 }

@@ -60,8 +60,12 @@ export class PoetryInstaller extends ModuleInstaller implements IModuleInstaller
     }
     protected async getExecutionInfo(moduleName: string, resource?: Uri): Promise<ExecutionInfo> {
         const execPath = this.configurationService.getSettings(resource).poetryPath;
+        const args = ['add', '--dev', moduleName];
+        if (moduleName === 'black') {
+            args.push('--allow-prereleases');
+        }
         return {
-            args: ['add', '--dev', moduleName],
+            args,
             execPath
         };
     }

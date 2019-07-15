@@ -5,9 +5,9 @@
 
 ---
 
-| `release` branch | `master` branch | Nightly CI | 
-|-|-|-|
-| [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/CI?branchName=release)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=88&branchName=release) | [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/CI?branchName=master)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=88&branchName=master) | [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/Nightly%20Build?branchName=master)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=85&branchName=master) | 
+| `release` branch | `master` branch | Nightly CI | coverage (`master` branch) |
+|-|-|-|-|
+| [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/CI?branchName=release)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=88&branchName=release) | [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/CI?branchName=master)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=88&branchName=master) | [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/Nightly%20Build?branchName=master)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=85&branchName=master) | [![Coverage Status](https://coveralls.io/repos/github/microsoft/vscode-python/badge.svg?branch=master)](https://coveralls.io/github/microsoft/vscode-python?branch=master) |
 
 [[Development build](https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix)]
 
@@ -90,23 +90,23 @@ Alter the `launch.json` file in the `"Debug Unit Tests"` section by setting the 
 ### Debugging System Tests
 
 1. Ensure you have disabled breaking into 'Uncaught Exceptions' when running the Unit Tests
-1. For the linters and formatters tests to pass successfully, you will need to have those corresponding Python libraries installed locally
-1. Run the Tests via the `Launch Test` and `Launch Multiroot Tests`  launch options.
+1. For the linters and formatters tests to pass successfully, you will need to have those corresponding Python libraries installed locally by using the `./requirements.txt` and `build/test-requirements.txt` files
+1. Run the tests via `npm run` or the Debugger launch options (you can "Start Without Debugging").
 1. **Note** you will be running tests under the default Python interpreter for the system.
 
 *Change the version of python the tests are executed with by setting the `CI_PYTHON_PATH`.*
 
 Tests will be executed using the system default interpreter (whatever that is for your local machine), unless you explicitly set the `CI_PYTHON_PATH` environment variable. To test against different versions of Python you *must* use this.
 
-In the launch.json file, you can add the following to the `Launch Tests` setting to easily change the interpreter used during testing:
+In the launch.json file, you can add the following to the appropriate configuration you want to run to easily change the interpreter used during testing:
 
 ```js
     "env":{
-        "CI_PYTHON_PATH": "/path/to/interpreter/of/choice/python"
+        "CI_PYTHON_PATH": "/absolute/path/to/interpreter/of/choice/python"
     }
 ```
 
-You can also run them from the command-line (after compiling):
+You can also run the tests from the command-line (after compiling):
 
 ```shell
 npm run testSingleWorkspace  # will launch the VSC UI
@@ -193,9 +193,8 @@ the current sprint ends. All
 [P0](https://github.com/Microsoft/vscode-python/labels/P0) issues are expected
 to be fixed in the current sprint, else the next release will be blocked.
 [P1](https://github.com/Microsoft/vscode-python/labels/P1) issues are a
-top-priority in a sprint, but if they are not completed they will not
-block a release. All other issues are considered best-effort for that
-sprint.
+top-priority and we try to close before the next release. All other issues are
+considered best-effort for that sprint.
 
 The extension aims to do a new release every four weeks (two sprints). A
 [release plan](https://github.com/Microsoft/vscode-python/labels/release%20plan)
@@ -204,10 +203,10 @@ person to do (long-term this project aims to automate as much of the
 development process as possible).
 
 All development is actively done in the `master` branch of the
-repository. It is what allows us to have a
+repository. This allows us to have a
 [development build](#development-build) which is expected to be stable at
 all times. Once we reach a release candidate, it becomes
-our [release branch](https://github.com/Microsoft/vscode-python/tree/release).
+our [release branch](https://github.com/microsoft/vscode-python/branches).
 At that point only what is in the release branch will make it into the next
 release.
 
@@ -220,20 +219,19 @@ To help actively track what stage
 are at, various labels are used. The following label types are expected to
 be set on all open issues (otherwise the issue is not considered triaged):
 
-1. `needs`
+1. `needs`/`triage`/`classify`
 1. `feature`
 1. `type`
 
 These labels cover what is blocking the issue from closing, what is affected by
-the issue, and what kind of issue it is. Typically, on new issues, the `needs` label is either `needs verification` or `needs more info`. The `feature` label should be `feature-*` if the issue doesn't fit into any other `feature` label appropriately.
+the issue, and what kind of issue it is. (The `feature` label should be `feature-*` if the issue doesn't fit into any other `feature` label appropriately.)
 
 It is also very important to make the title accurate. People often write very brief, quick titles or ones that describe what they think the problem is. By updating the title to be appropriately descriptive for what _you_ think the issue is, you not only make finding older issues easier, but you also help make sure that you and the original reporter agree on what the issue is.
 
 #### Post-classification
 
-Once an issue has been appropriately classified, there are two keys ways to help out. One is to go through open issues that [`needs verification`](https://github.com/Microsoft/vscode-python/labels/needs%20verification). Issues with this label have not been verified to be an actual problem (e.g. making sure the reported issue is not caused by the user's configuration or machine).
-
-The other way to help is to go through issues that are labeled as [`validate`](https://github.com/Microsoft/vscode-python/labels/validate). These issues are believed to be fixed, but having an independent validation is always appreciated.
+Once an issue has been appropriately classified, there are two keys ways to help out. One is to go through open issues that
+have a merged fix and verify that the fix did in fact work. The other is to try to fix issues marked as `needs PR`.
 
 ### Pull requests
 
@@ -284,4 +282,4 @@ The development build of the extension:
 * Does not get updated with new development builds of the extension (if you want to
   test a newer development build, uninstall the old version of the
   extension and then install the new version)
-* Is built everytime a PR is commited into the [`master` branch](https://github.com/Microsoft/vscode-python).
+* Is built every time a PR is committed into the [`master` branch](https://github.com/Microsoft/vscode-python).

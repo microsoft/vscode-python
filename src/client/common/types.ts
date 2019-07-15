@@ -3,8 +3,10 @@
 'use strict';
 
 import { Socket } from 'net';
+import { Request as RequestResult } from 'request';
 import { ConfigurationTarget, DiagnosticSeverity, Disposable, DocumentSymbolProvider, Event, Extension, ExtensionContext, OutputChannel, Uri, WorkspaceEdit } from 'vscode';
 import { CommandsWithoutArgs } from './application/commands';
+import { ExtensionChannels } from './insidersBuild/types';
 import { EnvironmentVariables } from './variables/types';
 export const IOutputChannel = Symbol('IOutputChannel');
 export interface IOutputChannel extends OutputChannel { }
@@ -73,7 +75,8 @@ export enum ProductType {
     Formatter = 'Formatter',
     TestFramework = 'TestFramework',
     RefactoringLibrary = 'RefactoringLibrary',
-    WorkspaceSymbols = 'WorkspaceSymbols'
+    WorkspaceSymbols = 'WorkspaceSymbols',
+    DataScience = 'DataScience'
 }
 
 export enum Product {
@@ -93,7 +96,8 @@ export enum Product {
     rope = 14,
     isort = 15,
     black = 16,
-    bandit = 17
+    bandit = 17,
+    jupyter = 18
 }
 
 export enum ModuleNamePurpose {
@@ -148,6 +152,7 @@ export interface IPythonSettings {
     readonly condaPath: string;
     readonly pipenvPath: string;
     readonly poetryPath: string;
+    readonly insidersChannel: ExtensionChannels;
     readonly downloadLanguageServer: boolean;
     readonly jediEnabled: boolean;
     readonly jediPath: string;
@@ -179,9 +184,9 @@ export interface ITestingSettings {
     readonly nosetestsEnabled: boolean;
     nosetestPath: string;
     nosetestArgs: string[];
-    readonly pyTestEnabled: boolean;
-    pyTestPath: string;
-    pyTestArgs: string[];
+    readonly pytestEnabled: boolean;
+    pytestPath: string;
+    pytestArgs: string[];
     readonly unittestEnabled: boolean;
     unittestArgs: string[];
     cwd?: string;
@@ -277,6 +282,7 @@ export interface IAnalysisSettings {
     readonly downloadChannel?: LanguageServerDownloadChannels;
     readonly openFilesOnly: boolean;
     readonly typeshedPaths: string[];
+    readonly cacheFolderPath: string | null;
     readonly errors: string[];
     readonly warnings: string[];
     readonly information: string[];
@@ -311,6 +317,18 @@ export interface IDataScienceSettings {
     liveShareConnectionTimeout?: number;
     decorateCells?: boolean;
     enableCellCodeLens?: boolean;
+    askForLargeDataFrames?: boolean;
+    enableAutoMoveToNextCell?: boolean;
+    autoPreviewNotebooksInInteractivePane?: boolean;
+    allowUnauthorizedRemoteConnection?: boolean;
+    askForKernelRestart?: boolean;
+    enablePlotViewer?: boolean;
+    codeLenses?: string;
+    ptvsdDistPath?: string;
+    stopOnFirstLineWhileDebugging?: boolean;
+    textOutputLineLimit?: number;
+    magicCommandsAsComments?: boolean;
+    remoteDebuggerPort?: number;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');
@@ -325,6 +343,58 @@ export const ISocketServer = Symbol('ISocketServer');
 export interface ISocketServer extends Disposable {
     readonly client: Promise<Socket>;
     Start(options?: { port?: number; host?: string }): Promise<number>;
+}
+
+export type DownloadOptions = {
+    /**
+     * Prefix for progress messages displayed.
+     *
+     * @type {('Downloading ... ' | string)}
+     */
+    progressMessagePrefix: 'Downloading ... ' | string;
+    /**
+     * Output panel into which progress information is written.
+     *
+     * @type {IOutputChannel}
+     */
+    outputChannel?: IOutputChannel;
+    /**
+     * Extension of file that'll be created when downloading the file.
+     *
+     * @type {('tmp' | string)}
+     */
+    extension: 'tmp' | string;
+};
+
+export const IFileDownloader = Symbol('IFileDownloader');
+/**
+ * File downloader, that'll display progress in the status bar.
+ *
+ * @export
+ * @interface IFileDownloader
+ */
+export interface IFileDownloader {
+    /**
+     * Download file and display progress in statusbar.
+     * Optionnally display progress in the provided output channel.
+     *
+     * @param {string} uri
+     * @param {DownloadOptions} options
+     * @returns {Promise<string>}
+     * @memberof IFileDownloader
+     */
+    downloadFile(uri: string, options: DownloadOptions): Promise<string>;
+}
+
+export const IHttpClient = Symbol('IHttpClient');
+export interface IHttpClient {
+    downloadFile(uri: string): Promise<RequestResult>;
+    /**
+     * Downloads file from uri as string and parses them into JSON objects
+     * @param uri The uri to download the JSON from
+     * @param strict Set `false` to allow trailing comma and comments in the JSON, defaults to `true`
+     */
+    getJSON<T>(uri: string, strict?: boolean): Promise<T>;
 }
 
 export const IExtensionContext = Symbol('ExtensionContext');
@@ -403,7 +473,64 @@ export interface IAsyncDisposable {
     dispose(): Promise<void>;
 }
 
+/**
+ * Stores hash formats
+ */
+export interface IHashFormat {
+    'number': number; // If hash format is a number
+    'string': string; // If hash format is a string
+}
+
+/**
+ * Interface used to implement cryptography tools
+ */
+export const ICryptoUtils = Symbol('ICryptoUtils');
+export interface ICryptoUtils {
+    /**
+     * Creates hash using the data and encoding specified
+     * @returns hash as number, or string
+     * @param data The string to hash
+     * @param hashFormat Return format of the hash, number or string
+     */
+    createHash<E extends keyof IHashFormat>(data: string, hashFormat: E): IHashFormat[E];
+}
+
 export const IAsyncDisposableRegistry = Symbol('IAsyncDisposableRegistry');
 export interface IAsyncDisposableRegistry extends IAsyncDisposable {
     push(disposable: IDisposable | IAsyncDisposable): void;
+}
+
+/* ABExperiments field carries the identity, and the range of the experiment,
+ where the experiment is valid for users falling between the number 'min' and 'max'
+ More details: https://en.wikipedia.org/wiki/A/B_testing
+*/
+export type ABExperiments = {
+    name: string; // Name of the experiment
+    salt: string; // Salt string for the experiment
+    min: number;  // Lower limit for the experiment
+    max: number;  // Upper limit for the experiment
+}[];
+
+/**
+ * Interface used to implement AB testing
+ */
+export const IExperimentsManager = Symbol('IExperimentsManager');
+export interface IExperimentsManager {
+    /**
+     * Checks if experiments are enabled, sets required environment to be used for the experiments, logs experiment groups
+     */
+    activate(): Promise<void>;
+
+    /**
+     * Checks if user is in experiment or not
+     * @param experimentName Name of the experiment
+     * @returns `true` if user is in experiment, `false` if user is not in experiment
+     */
+    inExperiment(experimentName: string): boolean;
+
+    /**
+     * Sends experiment telemetry if user is in experiment
+     * @param experimentName Name of the experiment
+     */
+    sendTelemetryIfInExperiment(experimentName: string): void;
 }

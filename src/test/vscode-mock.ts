@@ -19,7 +19,7 @@ const originalLoad = Module._load;
 
 function generateMock<K extends keyof VSCode>(name: K): void {
     const mockedObj = TypeMoq.Mock.ofType<VSCode[K]>();
-    mockedVSCode[name] = mockedObj.object;
+    (mockedVSCode as any)[name] = mockedObj.object;
     mockedVSCodeNamespaces[name] = mockedObj as any;
 }
 

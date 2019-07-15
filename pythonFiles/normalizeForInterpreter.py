@@ -6,6 +6,7 @@ import io
 import operator
 import os
 import sys
+import textwrap
 import token
 import tokenize
 
@@ -80,7 +81,8 @@ def normalize_lines(source):
     error.
 
     """
-    lines = source.splitlines(False)
+    # Ensure to dedent the code (#2837)
+    lines = textwrap.dedent(source).splitlines(False)
     # If we have two blank lines, then add two blank lines.
     # Do not trim the spaces, if we have blank lines with spaces, its possible
     # we have indented code.
@@ -104,7 +106,7 @@ def normalize_lines(source):
         del lines[line_number-1]
 
     # Step 2: Add blank lines between each global statement block.
-    # A consequtive single lines blocks of code will be treated as a single statement,
+    # A consecutive single lines blocks of code will be treated as a single statement,
     # just to ensure we do not unnecessarily add too many blank lines.
     source = '\n'.join(lines)
     tokens = _tokenize(source)

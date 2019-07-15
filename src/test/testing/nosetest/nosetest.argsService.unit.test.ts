@@ -34,7 +34,7 @@ suite('ArgsService: nosetest', () => {
 
     test('Test getting the test folder in nosetest', () => {
         const dir = path.join('a', 'b', 'c');
-        const args = ['anzy', '--one', '--three', dir];
+        const args = ['--one', '--three', dir];
         const testDirs = argumentsService.getTestFolders(args);
         expect(testDirs).to.be.lengthOf(1);
         expect(testDirs[0]).to.equal(dir);
@@ -44,8 +44,9 @@ suite('ArgsService: nosetest', () => {
         const dir2 = path.join('a', 'b', '2');
         const args = ['anzy', '--one', '--three', dir, dir2];
         const testDirs = argumentsService.getTestFolders(args);
-        expect(testDirs).to.be.lengthOf(2);
-        expect(testDirs[0]).to.equal(dir);
-        expect(testDirs[1]).to.equal(dir2);
+        expect(testDirs).to.be.lengthOf(3);
+        expect(testDirs[0]).to.equal('anzy');
+        expect(testDirs[1]).to.equal(dir);
+        expect(testDirs[2]).to.equal(dir2);
     });
 });

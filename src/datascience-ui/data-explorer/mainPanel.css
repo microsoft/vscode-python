@@ -1,22 +1,3 @@
-/*
-  See here for defaults:
-  https://github.com/adazzle/react-data-grid/blob/master/themes
-  
- */
-
-body {
-    background-color: var(--vscode-editor-background);
-}
-
-.background {
-    /* this is simply to eliminate the body style that bootstrap.css forces on us */
-    position: absolute;
-    bottom: 0;
-    top: 0px;
-    left: 0px;
-    right: 0;
-    background-color: var(--vscode-editor-background);
-}
 
 .main-panel {
     position: absolute;
@@ -26,88 +7,7 @@ body {
     right: 0;
     font-size: var(--code-font-size);
     font-family: var(--code-font-family);
-    margin: 10px;
     background-color: var(--vscode-editor-background);
+    overflow: hidden;
 }
 
-.main-panel .form-control {
-    height: auto;
-    padding: 0px;
-    font-size: inherit;
-    font-weight: inherit;
-    line-height: inherit;
-    border-radius: 0px;
-}
-
-.main-panel .react-grid-Toolbar {
-    background-color: var(--vscode-editor-background);
-    border: none;
-    padding-left: 0px;
-    padding-right: 0px;
-}
-
-.main-panel .react-grid-Toolbar .tools {
-    float: left;
-    margin-top: 0;
-    position: relative;
-    padding: 0;
-    margin-top: -6px;
-}
-
-.main-panel .react-grid-Toolbar .btn {
-    background-color: var(--vscode-editor-background);
-    color: var(--vscode-editor-foreground);
-    border-color: var(--vscode-badge-background);
-}
-
-.main-panel .react-grid-Main {
-    background-color: var(--vscode-editor-background);
-    color: var(--vscode-editor-foreground);
-    outline: none;
-}
-
-.main-panel .react-grid-Grid {
-    background-color: var(--vscode-editor-background);
-    color: var(--vscode-editor-foreground);
-    border-color: var(--vscode-editor-inactiveSelectionBackground);
-}
-
-.main-panel .react-grid-Canvas {
-    background-color: var(--vscode-editor-background);
-    color: var(--vscode-editor-foreground);
-}
-
-.main-panel .react-grid-Header {
-    background-color: var(--vscode-debugToolBar-background);
-}
-
-.main-panel .react-grid-HeaderCell {
-    background-color: var(--vscode-debugToolBar-background);
-    color: var(--vscode-editor-foreground);
-    border-right-color: var(--vscode-editor-inactiveSelectionBackground);
-    border-bottom-color: var(--vscode-editor-inactiveSelectionBackground);
-    text-align: left;
-}
-
-.main-panel .react-grid-Cell {
-    background-color: var(--vscode-editor-background);
-    color: var(--vscode-editor-foreground);
-    border-right-color: var(--vscode-editor-inactiveSelectionBackground);
-    border-bottom-color: var(--vscode-editor-inactiveSelectionBackground);
-}
-
-.main-panel .react-grid-Cell:hover {
-    background-color: var(--vscode-editor-selectionBackground);
-}
-
-.main-panel .react-grid-Row:hover {
-    background-color: var(--vscode-editor-selectionBackground);
-}
-
-.main-panel .react-grid-Row:hover .react-grid-Cell {
-    background-color: var(--vscode-editor-selectionBackground);
-}
-
-.main-panel .rdg-selected {
-    visibility: hidden;
-}

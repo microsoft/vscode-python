@@ -7,9 +7,9 @@ import * as path from 'path';
 
 import { IDataScienceSettings } from '../../client/common/types';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
-import { concatMultilineString } from '../../client/datascience/common';
+import { concatMultilineString, splitMultilineString } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
-import { CellState, ICell, ISysInfo } from '../../client/datascience/types';
+import { CellState, ICell, IMessageCell } from '../../client/datascience/types';
 import { noop } from '../../test/core';
 import { ICellViewModel } from './cell';
 import { InputHistory } from './inputHistory';
@@ -18,18 +18,19 @@ export interface IMainPanelState {
     cellVMs: ICellViewModel[];
     editCellVM?: ICellViewModel;
     busy: boolean;
-    skipNextScroll? : boolean;
-    undoStack : ICellViewModel[][];
-    redoStack : ICellViewModel[][];
+    skipNextScroll?: boolean;
+    undoStack: ICellViewModel[][];
+    redoStack: ICellViewModel[][];
     submittedText: boolean;
     history: InputHistory;
-    contentTop: number;
     rootStyle?: string;
     theme?: string;
     forceDark?: boolean;
     monacoTheme?: string;
     tokenizerLoaded?: boolean;
     editorOptions: monacoEditor.editor.IEditorOptions;
+    currentExecutionCount: number;
+    debugging: boolean;
 }
 
 // tslint:disable-next-line: no-multiline-string
@@ -46,24 +47,25 @@ const darkStyle = `
 `;
 
 // This function generates test state when running under a browser instead of inside of
-export function generateTestState(inputBlockToggled : (id: string) => void, filePath: string = '') : IMainPanelState {
+export function generateTestState(inputBlockToggled: (id: string) => void, filePath: string = ''): IMainPanelState {
     return {
-        cellVMs : generateVMs(inputBlockToggled, filePath),
+        cellVMs: generateVMs(inputBlockToggled, filePath),
         editCellVM: createEditableCellVM(1),
         busy: true,
-        skipNextScroll : false,
-        undoStack : [],
-        redoStack : [],
+        skipNextScroll: false,
+        undoStack: [],
+        redoStack: [],
         submittedText: false,
         history: new InputHistory(),
-        contentTop: 24,
         rootStyle: darkStyle,
         tokenizerLoaded: true,
-        editorOptions: {}
+        editorOptions: {},
+        currentExecutionCount: 0,
+        debugging: false
     };
 }
 
-export function createEditableCellVM(executionCount: number) : ICellViewModel {
+export function createEditableCellVM(executionCount: number): ICellViewModel {
     return {
         cell:
         {
@@ -78,7 +80,8 @@ export function createEditableCellVM(executionCount: number) : ICellViewModel {
             id: Identifiers.EditCellId,
             file: Identifiers.EmptyFileName,
             line: 0,
-            state: CellState.editing
+            state: CellState.editing,
+            type: 'execute'
         },
         editable: true,
         inputBlockOpen: true,
@@ -89,74 +92,82 @@ export function createEditableCellVM(executionCount: number) : ICellViewModel {
     };
 }
 
-export function extractInputText(inputCell: ICell, settings: IDataScienceSettings | undefined) : string {
-    let source = inputCell.data.cell_type === 'code' ? inputCell.data.source : [];
+export function extractInputText(inputCell: ICell, settings: IDataScienceSettings | undefined): string {
+    const source = inputCell.data.cell_type === 'code' ? splitMultilineString(inputCell.data.source) : [];
     const matcher = new CellMatcher(settings);
 
     // Eliminate the #%% on the front if it has nothing else on the line
     if (source.length > 0) {
         const title = matcher.exec(source[0].trim());
         if (title !== undefined && title.length <= 0) {
-            source = source.slice(1);
+            source.splice(0, 1);
+        }
+        // Eliminate the lines to hide if we're debugging
+        if (inputCell.extraLines) {
+            inputCell.extraLines.forEach(i => source.splice(i, 1));
+            inputCell.extraLines = undefined;
         }
     }
 
     return concatMultilineString(source);
 }
 
-export function createCellVM(inputCell: ICell, settings: IDataScienceSettings | undefined, inputBlockToggled : (id: string) => void) : ICellViewModel {
+export function createCellVM(inputCell: ICell, settings: IDataScienceSettings | undefined, inputBlockToggled: (id: string) => void): ICellViewModel {
     let inputLinesCount = 0;
     const inputText = inputCell.data.cell_type === 'code' ? extractInputText(inputCell, settings) : '';
     if (inputText) {
         inputLinesCount = inputText.split('\n').length;
     }
 
-   return {
-       cell: inputCell,
-       editable: false,
-       inputBlockOpen: true,
-       inputBlockShow: true,
-       inputBlockText: inputText,
-       inputBlockCollapseNeeded: (inputLinesCount > 1),
-       inputBlockToggled: inputBlockToggled
-   };
+    return {
+        cell: inputCell,
+        editable: false,
+        inputBlockOpen: true,
+        inputBlockShow: true,
+        inputBlockText: inputText,
+        inputBlockCollapseNeeded: (inputLinesCount > 1),
+        inputBlockToggled: inputBlockToggled
+    };
 }
 
-function generateVMs(inputBlockToggled : (id: string) => void, filePath: string) : ICellViewModel [] {
+function generateVMs(inputBlockToggled: (id: string) => void, filePath: string): ICellViewModel[] {
     const cells = generateCells(filePath);
-    return cells.map((cell : ICell) => {
+    return cells.map((cell: ICell) => {
         return createCellVM(cell, undefined, inputBlockToggled);
     });
 }
 
-function generateCells(filePath: string) : ICell[] {
+function generateCells(filePath: string): ICell[] {
     const cellData = generateCellData();
-    return cellData.map((data : nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell | ISysInfo, key : number) => {
+    return cellData.map((data: nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell | IMessageCell, key: number) => {
         return {
-            id : key.toString(),
-            file : path.join(filePath, 'foo.py'),
-            line : 1,
+            id: key.toString(),
+            file: path.join(filePath, 'foo.py'),
+            line: 1,
             state: key === cellData.length - 1 ? CellState.executing : CellState.finished,
-            data : data
+            type: key === 3 ? 'preview' : 'execute',
+            data: data
         };
     });
 }
 
 //tslint:disable:max-func-body-length
-function generateCellData() : (nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell | ISysInfo)[] {
+function generateCellData(): (nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell | IMessageCell)[] {
 
     // Hopefully new entries here can just be copied out of a jupyter notebook (ipynb)
     return [
         {
             // These are special. Sys_info is our own custom cell
-            cell_type: 'sys_info',
-            path: 'c:\\data\\python.exe',
-            version : '3.9.9.9 The Uber Version',
-            notebook_version: '(5, 9, 9)',
+            cell_type: 'messages',
+            messages: [
+                'You have this python data:',
+                'c:\\data\\python.exe',
+                '3.9.9.9 The Uber Version',
+                '(5, 9, 9)',
+                'https:\\localhost\\token?=9343p0843084039483084308430984038403840938409384098304983094803948093848034809384'
+            ],
             source: [],
-            metadata: {},
-            message: 'You have this python data:',
-            connection: 'https:\\localhost\\token?=9343p0843084039483084308430984038403840938409384098304983094803948093848034809384'
+            metadata: {}
         },
         {
             cell_type: 'code',
@@ -169,7 +180,7 @@ function generateCellData() : (nbformat.ICodeCell | nbformat.IMarkdownCell | nbf
             outputs: [
                 {
                     data: {
-// tslint:disable-next-line: no-multiline-string
+                        // tslint:disable-next-line: no-multiline-string
                         'text/html': [`
                             <div style="
                             overflow: auto;
@@ -361,7 +372,7 @@ function generateCellData() : (nbformat.ICodeCell | nbformat.IMarkdownCell | nbf
                         </table>
                         <p>5 rows × 3000 columns</p>
                         </div>`
-                    ]
+                        ]
                     },
                     execution_count: 4,
                     metadata: {},

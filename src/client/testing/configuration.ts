@@ -28,7 +28,7 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
     }
     public async displayTestFrameworkError(wkspace: Uri): Promise<void> {
         const settings = this.configurationService.getSettings(wkspace);
-        let enabledCount = settings.testing.pyTestEnabled ? 1 : 0;
+        let enabledCount = settings.testing.pytestEnabled ? 1 : 0;
         enabledCount += settings.testing.nosetestsEnabled ? 1 : 0;
         enabledCount += settings.testing.unittestEnabled ? 1 : 0;
         if (enabledCount > 1) {
@@ -52,7 +52,7 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
         {
             label: 'pytest',
             product: Product.pytest,
-            description: 'Can run unittest (including trial) and nose test suites out of the box',
+            description: 'pytest framework',
             // tslint:disable-next-line:no-http-string
             detail: 'http://docs.pytest.org/'
         },

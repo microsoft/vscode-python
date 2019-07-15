@@ -88,6 +88,7 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
             }
         }
 
+        // TODO: remove this setting since LS 0.2.92+ is not using it.
         // tslint:disable-next-line:no-string-literal
         properties['DatabasePath'] = path.join(this.context.extensionPath, this.languageServerFolder);
 
@@ -127,6 +128,7 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
                 },
                 searchPaths,
                 typeStubSearchPaths: this.typeshedPaths,
+                cacheFolderPath: this.getCacheFolderPath(),
                 excludeFiles: this.excludedFiles,
                 testEnvironment: isTestExecution(),
                 analysisUpdates: true,
@@ -184,6 +186,11 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
         return settings.analysis.typeshedPaths && settings.analysis.typeshedPaths.length > 0
             ? settings.analysis.typeshedPaths
             : [path.join(this.context.extensionPath, this.languageServerFolder, 'Typeshed')];
+    }
+    protected getCacheFolderPath(): string | null {
+        const settings = this.configuration.getSettings(this.resource);
+        return settings.analysis.cacheFolderPath && settings.analysis.cacheFolderPath.length > 0
+            ? settings.analysis.cacheFolderPath : null;
     }
     protected async onSettingsChangedHandler(e?: ConfigurationChangeEvent): Promise<void> {
         if (e && !e.affectsConfiguration('python', this.resource)) {

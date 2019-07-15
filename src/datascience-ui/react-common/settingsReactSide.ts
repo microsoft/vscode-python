@@ -12,7 +12,7 @@ export declare function getInitialSettings(): any;
 
 let loadedSettings: IDataScienceExtraSettings;
 
-export function getSettings() : IDataScienceExtraSettings {
+export function getSettings(): IDataScienceExtraSettings {
     if (loadedSettings === undefined) {
         load();
     }
@@ -51,9 +51,11 @@ function load() {
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
             showJupyterVariableExplorer: true,
-            variableExplorerExclude: 'module;builtin_function_or_method',
+            variableExplorerExclude: 'module;function;builtin_function_or_method',
+            enablePlotViewer: true,
             extraSettings: {
-                terminalCursor: 'block',
+                editorCursor: 'line',
+                editorCursorBlink: 'blink',
                 theme: 'Default Dark+'
             },
             intellisenseOptions: {

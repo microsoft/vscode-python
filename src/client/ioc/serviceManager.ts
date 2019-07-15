@@ -21,6 +21,12 @@ export class ServiceManager implements IServiceManager {
     public addFactory<T>(factoryIdentifier: interfaces.ServiceIdentifier<interfaces.Factory<T>>, factoryMethod: interfaces.FactoryCreator<T>): void {
         this.container.bind<interfaces.Factory<T>>(factoryIdentifier).toFactory<T>(factoryMethod);
     }
+
+    // tslint:disable-next-line:no-any
+    public addBinding<T1, T2>(serviceIdentifier1: identifier<T1>, serviceIdentifier2: identifier<T2>): void {
+        this.container.bind(serviceIdentifier2).toService(serviceIdentifier1);
+    }
+
     // tslint:disable-next-line:no-any
     public addSingleton<T>(serviceIdentifier: identifier<T>, constructor: new (...args: any[]) => T, name?: string | number | symbol | undefined): void {
         if (name) {

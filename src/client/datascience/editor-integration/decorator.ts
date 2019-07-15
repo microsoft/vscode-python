@@ -12,16 +12,16 @@ import { generateCellRanges } from '../cellFactory';
 
 @injectable()
 export class Decorator implements IExtensionActivationService, IDisposable {
-
     private activeCellTop: vscode.TextEditorDecorationType | undefined;
     private activeCellBottom: vscode.TextEditorDecorationType | undefined;
     private cellSeparatorType: vscode.TextEditorDecorationType | undefined;
-    private timer: NodeJS.Timer | undefined;
+    private timer: NodeJS.Timer | undefined | number;
 
-    constructor(@inject(IDocumentManager) private documentManager: IDocumentManager,
-                @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-                @inject(IConfigurationService) private configuration: IConfigurationService)
-    {
+    constructor(
+        @inject(IDocumentManager) private documentManager: IDocumentManager,
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
+        @inject(IConfigurationService) private configuration: IConfigurationService
+    ) {
         this.computeDecorations();
         disposables.push(this);
         disposables.push(this.configuration.getSettings().onDidChange(this.settingsChanged, this));
@@ -31,7 +31,7 @@ export class Decorator implements IExtensionActivationService, IDisposable {
         this.settingsChanged();
     }
 
-    public activate(_resource: Resource) : Promise<void> {
+    public activate(_resource: Resource): Promise<void> {
         // We don't need to do anything here as we already did all of our work in the
         // constructor.
         return Promise.resolve();
@@ -39,7 +39,8 @@ export class Decorator implements IExtensionActivationService, IDisposable {
 
     public dispose() {
         if (this.timer) {
-            clearTimeout(this.timer);
+            // tslint:disable-next-line: no-any
+            clearTimeout(this.timer as any);
         }
     }
 
@@ -67,7 +68,7 @@ export class Decorator implements IExtensionActivationService, IDisposable {
 
     private triggerUpdate(editor: vscode.TextEditor | undefined) {
         if (this.timer) {
-            clearTimeout(this.timer);
+            clearTimeout(this.timer as any);
         }
         this.timer = setTimeout(() => this.update(editor), 100);
     }
@@ -94,8 +95,7 @@ export class Decorator implements IExtensionActivationService, IDisposable {
     }
 
     private update(editor: vscode.TextEditor | undefined) {
-        if (editor && editor.document && editor.document.languageId === PYTHON_LANGUAGE &&
-            this.activeCellTop && this.cellSeparatorType && this.activeCellBottom) {
+        if (editor && editor.document && editor.document.languageId === PYTHON_LANGUAGE && this.activeCellTop && this.cellSeparatorType && this.activeCellBottom) {
             const settings = this.configuration.getSettings().datascience;
             if (settings.decorateCells && settings.enabled) {
                 // Find all of the cells
