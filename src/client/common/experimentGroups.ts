@@ -10,6 +10,6 @@ export enum AlwaysDisplayTestExplorerGroups {
 // Experiment to check whether to show the "Run Python File in Terminal" icon.
 export enum ShowPlayIcon {
     control = 'ShowPlayIcon - control',
-    icon1 = 'ShowPlayIcon - icon 1',
-    icon2 = 'ShowPlayIcon - icon 2'
+    icon1 = 'ShowPlayIcon - start',
+    icon2 = 'ShowPlayIcon - runFile'
 }

@@ -12,13 +12,13 @@
         "max": 20
     },
     {
-        "name": "ShowPlayIcon - icon 1",
+        "name": "ShowPlayIcon - start",
         "salt": "ShowPlayIcon1",
         "min": 80,
         "max": 100
     },
     {
-        "name": "ShowPlayIcon - icon 2",
+        "name": "ShowPlayIcon - runFile",
         "salt": "ShowPlayIcon2",
         "min": 60,
         "max": 80
