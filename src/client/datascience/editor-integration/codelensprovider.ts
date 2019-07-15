@@ -28,6 +28,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     ) {
         disposableRegistry.push(this);
         disposableRegistry.push(this.debugService.onDidChangeActiveDebugSession(this.onChangeDebugSession.bind(this)));
+        disposableRegistry.push(this.documentManager.onDidCloseTextDocument(this.onDidCloseTextDocument.bind(this)));
 
     }
 
@@ -56,6 +57,15 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
 
     private onChangeDebugSession(_e: vscode.DebugSession | undefined) {
         this.didChangeCodeLenses.fire();
+    }
+
+    private onDidCloseTextDocument(_e: vscode.TextDocument) {
+        // This event is triggered when the text document is no longer visible. It may still be open in a different panel and/or hidden. Only delete its codewatcher if it's not visible.
+        const isVisible: boolean = this.documentManager.visibleTextEditors.filter(textEditor => textEditor.document.fileName === _e.fileName).length > 0;
+        const index = this.activeCodeWatchers.findIndex(item => item.getFileName() === _e.fileName);
+        if (!isVisible && index >= 0) {
+            this.activeCodeWatchers.splice(index, 1);
+        }
     }
 
     private getCodeLensTimed(document: vscode.TextDocument): vscode.CodeLens[] {
