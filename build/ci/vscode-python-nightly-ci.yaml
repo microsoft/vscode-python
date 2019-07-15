@@ -34,7 +34,7 @@ jobs:
 #       ignorePythonVersions: "3.6,3.5"
 
 - job: 'Nightly'
-
+  timeoutInMinutes: 90
   strategy:
     matrix:
       # Each member of this list must contain these values:
