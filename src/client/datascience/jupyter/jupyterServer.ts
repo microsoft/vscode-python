@@ -549,7 +549,7 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     private generateRequest = (code: string, silent?: boolean): Kernel.IFuture | undefined => {
-        traceInfo(`Executing code in jupyter : ${code}`);
+        //traceInfo(`Executing code in jupyter : ${code}`);
         try {
             const cellMatcher = new CellMatcher(this.configService.getSettings().datascience);
             return this.session ? this.session.requestExecute(
@@ -771,9 +771,7 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     private async logPreCode(cell: ICell, silent: boolean): Promise<void> {
-        traceInfo(`Logging pre code for ${cell.data.source}`);
         await Promise.all(this.loggers.map(l => l.preExecute(cell, silent)));
-        traceInfo(`Finished Logging pre code for ${cell.data.source}`);
     }
 
     private async logPostCode(cell: ICell, silent: boolean): Promise<void> {
