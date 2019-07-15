@@ -144,7 +144,10 @@ export enum Telemetry {
     WebviewStyleUpdate = 'DATASCIENCE.WEBVIEW_STYLE_UPDATE',
     WebviewMonacoStyleUpdate = 'DATASCIENCE.WEBVIEW_MONACO_STYLE_UPDATE',
     DataViewerFetchTime = 'DATASCIENCE.DATAVIEWER_FETCH_TIME',
-    FindJupyterKernelSpec = 'DATASCIENCE.FIND_JUPYTER_KERNEL_SPEC'
+    FindJupyterKernelSpec = 'DATASCIENCE.FIND_JUPYTER_KERNEL_SPEC',
+    PtvsdPromptToInstall = 'DATASCIENCE.PTVSD_PROMPT_TO_INSTALL',
+    PtvsdSuccessfullyInstalled = 'DATASCIENCE.PTVSD_SUCCESSFULLY_INSTALLED',
+    PtvsdInstallFailed = 'DATASCIENCE.PTVSD_INSTALL_FAILED'
 }
 
 export namespace HelpLinks {

@@ -34,13 +34,27 @@ export function splitMultilineString(str: nbformat.MultilineString): string[] {
 export function stripComments(str: string): string {
     let result: string = '';
     parseForComments(
-        str.splitLines({trim: false, removeEmptyEntries: false}),
+        str.splitLines({ trim: false, removeEmptyEntries: false }),
         (_s) => noop,
         (s) => result = result.concat(`${s}\n`));
     return result;
 }
 
-export function formatStreamText(str: string): string {
+// Took this from jupyter/notebook
+// https://github.com/jupyter/notebook/blob/b8b66332e2023e83d2ee04f83d8814f567e01a4e/notebook/static/base/js/utils.js
+// Remove characters that are overridden by backspace characters
+function fixBackspace(txt: string) {
+    let tmp = txt;
+    do {
+        txt = tmp;
+        // Cancel out anything-but-newline followed by backspace
+        tmp = txt.replace(/[^\n]\x08/gm, '');
+    } while (tmp.length < txt.length);
+    return txt;
+}
+
+// Using our own version for fixCarriageReturn. The jupyter version seems to not work.
+function fixCarriageReturn(str: string): string {
     // Go through the string, looking for \r's that are not followed by \n. This is
     // a special case that means replace the string before. This is necessary to
     // get an html display of this string to behave correctly.
@@ -73,6 +87,11 @@ export function formatStreamText(str: string): string {
     return result;
 }
 
+export function formatStreamText(str: string): string {
+    // Do the same thing jupyter is doing
+    return fixCarriageReturn(fixBackspace(str));
+}
+
 export function appendLineFeed(arr: string[], modifier?: (s: string) => string) {
     return arr.map((s: string, i: number) => {
         const out = modifier ? modifier(s) : s;
@@ -91,7 +110,7 @@ export function parseForComments(
     foundCommentLine: (s: string, i: number) => void,
     foundNonCommentLine: (s: string, i: number) => void) {
     // Check for either multiline or single line comments
-    let insideMultilineComment: string | undefined ;
+    let insideMultilineComment: string | undefined;
     let insideMultilineQuote: string | undefined;
     let pos = 0;
     for (const l of lines) {
@@ -108,7 +127,7 @@ export function parseForComments(
                 insideMultilineQuote = undefined;
             }
             foundNonCommentLine(l, pos);
-        // Not inside quote, see if inside a comment
+            // Not inside quote, see if inside a comment
         } else if (insideMultilineComment) {
             if (insideMultilineComment === isMultilineComment) {
                 insideMultilineComment = undefined;
@@ -116,14 +135,14 @@ export function parseForComments(
             if (insideMultilineComment) {
                 foundCommentLine(l, pos);
             }
-        // Not inside either, see if starting a quote
+            // Not inside either, see if starting a quote
         } else if (isMultilineQuote && !isMultilineComment) {
             // Make sure doesn't begin and end on the same line.
             const beginQuote = trim.indexOf(isMultilineQuote);
             const endQuote = trim.lastIndexOf(isMultilineQuote);
             insideMultilineQuote = endQuote !== beginQuote ? undefined : isMultilineQuote;
             foundNonCommentLine(l, pos);
-        // Not starting a quote, might be starting a comment
+            // Not starting a quote, might be starting a comment
         } else if (isMultilineComment) {
             // See if this line ends the comment too or not
             const endIndex = trim.indexOf(isMultilineComment, 3);

@@ -188,7 +188,7 @@ def parse_item(item, _normcase, _pathsep):
     # Sort out markers.
     #  See: https://docs.pytest.org/en/latest/reference.html#marks
     markers = set()
-    for marker in item.own_markers:
+    for marker in getattr(item, 'own_markers', []):
         if marker.name == 'parameterize':
             # We've already covered these.
             continue

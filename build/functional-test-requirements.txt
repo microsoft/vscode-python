@@ -5,4 +5,3 @@ numpy
 matplotlib
 pandas
 livelossplot
-# PTVSD can't be listed here as we need the --pre version. See the test_phases.yml for ptvsd install
