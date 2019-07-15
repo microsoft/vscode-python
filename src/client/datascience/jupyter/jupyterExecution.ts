@@ -604,15 +604,20 @@ export class JupyterExecutionBase implements IJupyterExecution {
             return undefined;
         }
 
-        // Create a new process service to use to execute this process
-        const processService = await this.processServiceFactory.create();
+        try {
+            // Create a new process service to use to execute this process
+            const processService = await this.processServiceFactory.create();
 
-        // Ask python for what path it's running at.
-        const output = await processService.exec(baseProcessName, ['-c', 'import sys;print(sys.executable)'], { throwOnStdErr: true });
-        const fullPath = output.stdout.trim();
+            // Ask python for what path it's running at.
+            const output = await processService.exec(baseProcessName, ['-c', 'import sys;print(sys.executable)'], { throwOnStdErr: true });
+            const fullPath = output.stdout.trim();
 
-        // Use this path to get the interpreter details.
-        return this.interpreterService.getInterpreterDetails(fullPath);
+            // Use this path to get the interpreter details.
+            return this.interpreterService.getInterpreterDetails(fullPath);
+        } catch {
+            // Any failure, just assume this path is invalid.
+            return undefined;
+        }
     }
 
     //tslint:disable-next-line:cyclomatic-complexity
