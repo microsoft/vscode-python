@@ -184,8 +184,8 @@
                 "title": "%python.command.python.execInTerminal.title%",
                 "category": "Python",
                 "icon": {
-                    "light": "resources/light/run-in-terminal-1.svg",
-                    "dark": "resources/dark/run-in-terminal-1.svg"
+                    "light": "resources/light/start.svg",
+                    "dark": "resources/dark/start.svg"
                 }
             },
             {
@@ -193,8 +193,8 @@
                 "title": "%python.command.python.execInTerminal.title%",
                 "category": "Python",
                 "icon": {
-                    "light": "resources/light/run-in-terminal-2.svg",
-                    "dark": "resources/dark/run-in-terminal-2.svg"
+                    "light": "resources/light/run-file.svg",
+                    "dark": "resources/dark/run-file.svg"
                 }
             },
             {
