@@ -322,9 +322,7 @@ export class JupyterSession implements IJupyterSession {
             traceInfo(`shutdownSession ${kernelId} - start`);
             try {
                 if (statusHandler) {
-                    traceInfo(`shutdownSession ${kernelId} - disconnect`);
                     session.statusChanged.disconnect(statusHandler);
-                    traceInfo(`shutdownSession ${kernelId} - disconnect complete`);
                 }
                 try {
                     // When running under a test, mark all futures as done so we
@@ -334,7 +332,6 @@ export class JupyterSession implements IJupyterSession {
                     if (isTestExecution()) {
                         const defaultKernel = session.kernel as any;
                         if (defaultKernel && defaultKernel._futures) {
-                            traceInfo(`shutdownSession ${kernelId} - fixing futures`);
                             const futures = defaultKernel._futures as Map<any, any>;
                             if (futures) {
                                 futures.forEach(f => {
@@ -344,27 +341,22 @@ export class JupyterSession implements IJupyterSession {
                                 });
                             }
                         }
-                        traceInfo(`shutdownSession ${kernelId} - waiting for shutdown`);
                         await waitForPromise(session.shutdown(), 1000);
-                        traceInfo(`shutdownSession ${kernelId} - shutdown complete`);
                     } else {
-                        traceInfo(`shutdownSession ${kernelId} - waiting for shutdown`);
                         // Shutdown may fail if the process has been killed
                         await waitForPromise(session.shutdown(), 1000);
-                        traceInfo(`shutdownSession ${kernelId} - shutdown complete`);
                     }
                 } catch {
                     noop();
                 }
                 if (session && !session.isDisposed) {
-                    traceInfo(`shutdownSession ${kernelId} - session dispose`);
                     session.dispose();
-                    traceInfo(`shutdownSession ${kernelId} - session dispose complete`);
                 }
             } catch (e) {
                 // Ignore, just trace.
                 traceWarning(e);
             }
+            traceInfo(`shutdownSession ${kernelId} - shutdown complete`);
         }
     }
 
