@@ -78,9 +78,6 @@ export class ExperimentsManager implements IExperimentsManager {
 
     @swallowExceptions('Failed to activate experiments')
     public async activate(): Promise<void> {
-        await this.downloadedExperimentsStorage.updateValue(undefined);
-        await this.isDownloadedStorageValid.updateValue(false);
-        await this.experimentStorage.updateValue(undefined);
         if (this.activatedOnce || isTelemetryDisabled(this.workspaceService)) {
             return;
         }
