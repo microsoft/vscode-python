@@ -493,7 +493,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             // it will be pointing to the python that ran it. We'll fix that up afterwards
             const name = uuid();
             if (ipykernelCommand) {
-                const result = await ipykernelCommand.exec(['install', '-user', '--name', name, '--display-name', `'${displayName}'`], { throwOnStdErr: true, encoding: 'utf8', token: cancelToken });
+                const result = await ipykernelCommand.exec(['install', '--user', '--name', name, '--display-name', `'${displayName}'`], { throwOnStdErr: true, encoding: 'utf8', token: cancelToken });
 
                 // Result should have our file name.
                 const match = RegExpValues.PyKernelOutputRegEx.exec(result.stdout);
