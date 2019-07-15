@@ -40,7 +40,7 @@ export class ExperimentsManager implements IExperimentsManager {
      */
     public userExperiments: ABExperiments = [];
     /**
-     * Keeps track of the downloaded experiments in the previous sessions
+     * Keeps track of the experiments to be used in the current session
      */
     private experimentStorage: IPersistentState<ABExperiments | undefined>;
     /**
@@ -78,8 +78,9 @@ export class ExperimentsManager implements IExperimentsManager {
 
     @swallowExceptions('Failed to activate experiments')
     public async activate(): Promise<void> {
-        // await this.downloadedExperimentsStorage.updateValue(undefined);
-        // await this.isDownloadedStorageValid.updateValue(false);
+        await this.downloadedExperimentsStorage.updateValue(undefined);
+        await this.isDownloadedStorageValid.updateValue(false);
+        await this.experimentStorage.updateValue(undefined);
         if (this.activatedOnce || isTelemetryDisabled(this.workspaceService)) {
             return;
         }
@@ -140,7 +141,13 @@ export class ExperimentsManager implements IExperimentsManager {
         if (!this.areExperimentsValid(downloadedExperiments)) {
             return;
         }
-        await this.downloadedExperimentsStorage.updateValue(downloadedExperiments);
+        if (timeout) {
+            // If timeout is specified, we intend to use experiments in the current session itself, hence update storage for the current session
+            await this.experimentStorage.updateValue(downloadedExperiments);
+        } else {
+            // Carries experiments to be used from the next session
+            await this.downloadedExperimentsStorage.updateValue(downloadedExperiments);
+        }
         await this.isDownloadedStorageValid.updateValue(true);
     }
 
@@ -159,7 +166,9 @@ export class ExperimentsManager implements IExperimentsManager {
     }
 
     /**
-     * Updates experiment storage using local data if available.
+     * Do best effort to populate experiment storage. Attempt to update experiment storage by,
+     * * Using appropriate local data if available
+     * * Trying to download fresh experiments within 2 seconds to update storage
      * Local data could be:
      * * Experiments downloaded in the last session
      *   - The function makes sure these are used in the current session
@@ -176,13 +185,18 @@ export class ExperimentsManager implements IExperimentsManager {
             return this.downloadedExperimentsStorage.updateValue(undefined);
         }
 
+        if (Array.isArray(this.experimentStorage.value)) {
+            // Experiment storage already contains latest experiments, do not use the following techniques
+            return;
+        }
+
         // Step 2. Do best effort to download the experiments within 2 seconds and use it in the current session only
         if (await this.doBestEffortToPopulateExperiments() === true) {
             return;
         }
 
         // Step 3. Update experiment storage using local experiments file if available
-        if (!this.experimentStorage.value && (await this.fs.fileExists(configFile))) {
+        if (await this.fs.fileExists(configFile)) {
             const content = await this.fs.readFile(configFile);
             try {
                 const experiments = parse(content, [], { allowTrailingComma: true, disallowComments: false });
@@ -192,7 +206,6 @@ export class ExperimentsManager implements IExperimentsManager {
                 await this.experimentStorage.updateValue(experiments);
             } catch (ex) {
                 traceError('Failed to parse experiments configuration file to update storage', ex);
-                return;
             }
         }
     }
@@ -223,16 +236,6 @@ export class ExperimentsManager implements IExperimentsManager {
         try {
             const success = await this.downloadAndStoreExperiments(2000) !== null;
             sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE, undefined, { success });
-            if (success) {
-                // Update experiment storage using downloaded experiments
-                if (Array.isArray(this.downloadedExperimentsStorage.value)) {
-                    await this.experimentStorage.updateValue(this.downloadedExperimentsStorage.value);
-                    await this.downloadedExperimentsStorage.updateValue(undefined);
-                } else {
-                    traceError(`Download storage should be populated, but has value ${this.downloadedExperimentsStorage.value}`);
-                    return false;
-                }
-            }
             return success;
         } catch (ex) {
             sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE, undefined, { error: 'Downloading experiments failed with error' }, ex);

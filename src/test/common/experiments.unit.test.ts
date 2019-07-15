@@ -59,31 +59,24 @@ suite('xA/B experiments', () => {
 
     async function testInitialization(
         downloadError: boolean = false,
-        experimentsDownloaded?: any,
+        experimentsDownloaded: any = [{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }],
         timeout?: number
     ) {
         if (downloadError) {
             when(httpClient.getJSON(configUri, false, timeout)).thenReject(new Error('Kaboom'));
         } else {
-            if (experimentsDownloaded) {
-                when(httpClient.getJSON(configUri, false, timeout)).thenResolve(experimentsDownloaded);
-            } else if (!timeout) {
-                when(httpClient.getJSON(configUri, false, timeout)).thenResolve([{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }]);
-            } else {
-                when(httpClient.getJSON(configUri, false, timeout)).thenResolve(null);
-            }
+            when(httpClient.getJSON(configUri, false, timeout)).thenResolve(experimentsDownloaded);
         }
 
         try {
-            const returnValue = await expManager.downloadAndStoreExperiments();
-            if (timeout) {
+            const returnValue = await expManager.downloadAndStoreExperiments(timeout);
+            if (experimentsDownloaded === null) {
                 expect(returnValue).to.equal(null, 'Return value should be null');
             }
             // tslint:disable-next-line:no-empty
         } catch { }
 
         isDownloadedStorageValid.verifyAll();
-        experimentStorage.verifyAll();
     }
 
     test('Initializing experiments does not download experiments if storage is valid and contains experiments', async () => {
@@ -128,7 +121,7 @@ suite('xA/B experiments', () => {
     test('If downloading experiments fails with error, the storage is left as it is', async () => {
         isDownloadedStorageValid.setup(n => n.value).returns(() => false).verifiable(TypeMoq.Times.once());
         isDownloadedStorageValid.setup(n => n.updateValue(true)).returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.never());
-        downloadedExperimentsStorage.setup(n => n.updateValue(anything())).returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.never());
+        downloadedExperimentsStorage.setup(n => n.updateValue(TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.never());
 
         // downloadError = true
         await testInitialization(true);
@@ -139,12 +132,31 @@ suite('xA/B experiments', () => {
     test('If downloading experiments fails to complete within timeout, return \'null\' and leave the storage as it is', async () => {
         isDownloadedStorageValid.setup(n => n.value).returns(() => false).verifiable(TypeMoq.Times.once());
         isDownloadedStorageValid.setup(n => n.updateValue(true)).returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.never());
-        downloadedExperimentsStorage.setup(n => n.updateValue(anything())).returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.never());
+        downloadedExperimentsStorage.setup(n => n.updateValue(TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.never());
 
-        // Error false, no experiments are returned and timeout is provided
+        // Error false, experiments downloaded returns null and timeout is provided
+        await testInitialization(false, null, 2000);
+
+        verify(httpClient.getJSON(configUri, false, 2000)).once();
+    });
+
+    test('If downloading experiments completes within timeout, update the storage for the current session', async () => {
+        isDownloadedStorageValid.setup(n => n.value).returns(() => false).verifiable(TypeMoq.Times.once());
+        isDownloadedStorageValid.setup(n => n.updateValue(true)).returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.once());
+        downloadedExperimentsStorage
+            .setup(n => n.updateValue(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(undefined))
+            .verifiable(TypeMoq.Times.never());
+        experimentStorage
+            .setup(n => n.updateValue(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(undefined))
+            .verifiable(TypeMoq.Times.once());
+
+        // Error false, experiments downloaded have the default value and timeout is provided
         await testInitialization(false, undefined, 2000);
 
-        verify(httpClient.getJSON(configUri, false, undefined)).once();
+        experimentStorage.verifyAll();
+        verify(httpClient.getJSON(configUri, false, 2000)).once();
     });
 
     test('If the users have opted out of telemetry, then they are opted out of AB testing ', async () => {
@@ -259,6 +271,36 @@ suite('xA/B experiments', () => {
         downloadedExperimentsStorage.verifyAll();
     });
 
+    test('When latest experiments are not available, but experiment storage contains experiments, then experiment storage is not updated', async () => {
+        const doBestEffortToPopulateExperiments = sinon.stub(ExperimentsManager.prototype, 'doBestEffortToPopulateExperiments');
+        doBestEffortToPopulateExperiments.callsFake(() => Promise.resolve(false));
+        expManager = new ExperimentsManager(instance(persistentStateFactory), instance(workspaceService), instance(httpClient), instance(crypto), instance(appEnvironment), output.object, instance(fs));
+
+        downloadedExperimentsStorage
+            .setup(n => n.value)
+            .returns(() => undefined)
+            .verifiable(TypeMoq.Times.once());
+        downloadedExperimentsStorage
+            .setup(n => n.updateValue(undefined))
+            .returns(() => Promise.resolve(undefined))
+            .verifiable(TypeMoq.Times.never());
+
+        experimentStorage
+            .setup(n => n.value)
+            .returns(() => [{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }])
+            .verifiable(TypeMoq.Times.once());
+        experimentStorage
+            .setup(n => n.updateValue(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(undefined))
+            .verifiable(TypeMoq.Times.never());
+
+        await expManager.updateExperimentStorage();
+
+        assert.ok(doBestEffortToPopulateExperiments.notCalled);
+        experimentStorage.verifyAll();
+        downloadedExperimentsStorage.verifyAll();
+    });
+
     test('When best effort to populate experiments succeeds, function updateStorage() returns', async () => {
         const doBestEffortToPopulateExperiments = sinon.stub(ExperimentsManager.prototype, 'doBestEffortToPopulateExperiments');
         doBestEffortToPopulateExperiments.callsFake(() => Promise.resolve(true));
@@ -275,55 +317,12 @@ suite('xA/B experiments', () => {
 
         experimentStorage
             .setup(n => n.value)
-            .returns(() => [{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }])
-            .verifiable(TypeMoq.Times.never());
+            .returns(() => undefined)
+            .verifiable(TypeMoq.Times.once());
 
         await expManager.updateExperimentStorage();
 
         assert.ok(doBestEffortToPopulateExperiments.calledOnce);
-        experimentStorage.verifyAll();
-        downloadedExperimentsStorage.verifyAll();
-    });
-
-    test('When latest experiments are not available, but experiment storage contains experiments, then experiment storage is not updated', async () => {
-        const doBestEffortToPopulateExperiments = sinon.stub(ExperimentsManager.prototype, 'doBestEffortToPopulateExperiments');
-        doBestEffortToPopulateExperiments.callsFake(() => Promise.resolve(false));
-        expManager = new ExperimentsManager(instance(persistentStateFactory), instance(workspaceService), instance(httpClient), instance(crypto), instance(appEnvironment), output.object, instance(fs));
-
-        downloadedExperimentsStorage
-            .setup(n => n.value)
-            .returns(() => undefined)
-            .verifiable(TypeMoq.Times.once());
-        downloadedExperimentsStorage
-            .setup(n => n.updateValue(undefined))
-            .returns(() => Promise.resolve(undefined))
-            .verifiable(TypeMoq.Times.never());
-
-        // tslint:disable-next-line:no-multiline-string
-        const fileContent = `
-        [{ "name": "experiment1", "salt": "salt", "min": 90, "max": 100 }]
-        `;
-
-        when(
-            fs.fileExists(anything())
-        ).thenResolve(true);
-        when(
-            fs.readFile(anything())
-        ).thenResolve(fileContent);
-
-        experimentStorage
-            .setup(n => n.value)
-            .returns(() => [{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }])
-            .verifiable(TypeMoq.Times.once());
-        experimentStorage
-            .setup(n => n.updateValue(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(undefined))
-            .verifiable(TypeMoq.Times.never());
-
-        await expManager.updateExperimentStorage();
-
-        verify(fs.fileExists(anything())).never();
-        verify(fs.readFile(anything())).never();
         experimentStorage.verifyAll();
         downloadedExperimentsStorage.verifyAll();
     });
@@ -714,6 +713,29 @@ suite('xA/B experiments', () => {
             test(testParams.testName, () => {
                 expect(expManager.areExperimentsValid(testParams.experiments as any)).to.equal(testParams.expectedResult);
             });
+        });
+    });
+
+    suite('Function doBestEffortToPopulateExperiments()', async () => {
+        let downloadAndStoreExperiments: sinon.SinonStub<any>;
+        setup(() => {
+            downloadAndStoreExperiments = sinon.stub(ExperimentsManager.prototype, 'downloadAndStoreExperiments');
+            expManager = new ExperimentsManager(instance(persistentStateFactory), instance(workspaceService), instance(httpClient), instance(crypto), instance(appEnvironment), output.object, instance(fs));
+        });
+        test('If attempt to download experiments within timeout suceeds, return true', async () => {
+            downloadAndStoreExperiments.callsFake(() => Promise.resolve());
+            const result = await expManager.doBestEffortToPopulateExperiments();
+            expect(result).to.equal(true, 'Expected value is true');
+        });
+        test('If downloading experiments fails to complete within timeout, return false', async () => {
+            downloadAndStoreExperiments.callsFake(() => Promise.resolve(null));
+            const result = await expManager.doBestEffortToPopulateExperiments();
+            expect(result).to.equal(false, 'Expected value is false');
+        });
+        test('If downloading experiments fails with error, return false', async () => {
+            downloadAndStoreExperiments.callsFake(() => Promise.reject('Kaboom'));
+            const result = await expManager.doBestEffortToPopulateExperiments();
+            expect(result).to.equal(false, 'Expected value is false');
         });
     });
 });
