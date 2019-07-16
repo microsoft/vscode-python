@@ -28,6 +28,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     ) {
         disposableRegistry.push(this);
         disposableRegistry.push(this.debugService.onDidChangeActiveDebugSession(this.onChangeDebugSession.bind(this)));
+        disposableRegistry.push(this.documentManager.onDidCloseTextDocument(this.onDidCloseTextDocument.bind(this)));
 
     }
 
@@ -56,6 +57,13 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
 
     private onChangeDebugSession(_e: vscode.DebugSession | undefined) {
         this.didChangeCodeLenses.fire();
+    }
+
+    private onDidCloseTextDocument(_e: vscode.TextDocument) {
+        const index = this.activeCodeWatchers.findIndex(item => item.getFileName() === _e.fileName);
+        if (index >= 0) {
+            this.activeCodeWatchers.splice(index, 1);
+        }
     }
 
     private getCodeLensTimed(document: vscode.TextDocument): vscode.CodeLens[] {
