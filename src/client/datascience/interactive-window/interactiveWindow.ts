@@ -776,8 +776,10 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
                     (cells: ICell[]) => {
                         this.onAddCodeEvent(cells, undefined);
 
-                        // Any errors will move our result to false
-                        result = result && cells.find(c => c.state === CellState.error) === undefined;
+                        // Any errors will move our result to false (if allowed)
+                        if (this.configuration.getSettings().datascience.stopOnError) {
+                            result = result && cells.find(c => c.state === CellState.error) === undefined;
+                        }
                     },
                     (error) => {
                         status.dispose();

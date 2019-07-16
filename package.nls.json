@@ -311,5 +311,6 @@
     "DataScience.jupyterDebuggerInstallPtvsdNew" : "Pip module ptvsd is required for debugging cells. Install ptvsd and continue to debug cell?",
     "DataScience.jupyterDebuggerInstallPtvsdUpdate" : "The version of ptvsd installed does not support debugging cells. Update ptvsd to newest version and continue to debug cell?",
     "DataScience.jupyterDebuggerInstallPtvsdYes" : "Yes",
-    "DataScience.jupyterDebuggerInstallPtvsdNo" : "No"
+    "DataScience.jupyterDebuggerInstallPtvsdNo" : "No",
+    "DataScience.cellStopOnErrorFormatMessage" : "{0} cells were canceled due to an error in the previous cell."
 }

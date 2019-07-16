@@ -147,8 +147,9 @@ export class CodeWatcher implements ICodeWatcher {
 
         // Run our code lenses from this point to the end, lenses are created in order on document load
         // so we can rely on them being in linear order for this
-        for (const lens of runCellCommands) {
+        for (let pos = index; pos >= 0 && pos < runCellCommands.length; pos += 1) {
             if (leftCount > 0 && this.document) {
+                const lens = runCellCommands[pos];
                 // We have a cell and we are not past or at the stop point
                 leftCount -= 1;
                 const code = this.document.getText(lens.range);
