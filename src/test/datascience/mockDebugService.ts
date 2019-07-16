@@ -73,6 +73,7 @@ export class MockDebuggerService implements IDebugService, IDisposable {
     private sessionCustomEvent: EventEmitter<DebugSessionCustomEvent> = new EventEmitter<DebugSessionCustomEvent>();
     private breakpointsChangedEvent: EventEmitter<BreakpointsChangeEvent> = new EventEmitter<BreakpointsChangeEvent>();
     private _breakpoints: Breakpoint[] = [];
+    private _stoppedThreadId: number | undefined;
     constructor(
         @inject(IProtocolParser) private protocolParser: IProtocolParser
     ) {
@@ -155,7 +156,7 @@ export class MockDebuggerService implements IDebugService, IDisposable {
             deferred.resolve(args as DebugProtocol.StackTraceResponse);
         });
         await this.emitMessage('stackTrace', {
-            threadId: 1,
+            threadId: this._stoppedThreadId ? this._stoppedThreadId : 1,
             startFrame: 0,
             levels: 1
         });
@@ -266,7 +267,11 @@ export class MockDebuggerService implements IDebugService, IDisposable {
         });
     }
 
-    private onBreakpoint(_args: any): void {
+    private onBreakpoint(args: DebugProtocol.StoppedEvent): void {
+        // Save the current thread id. We use this in our stack trace request
+        this._stoppedThreadId = args.body.threadId;
+
+        // Indicate we stopped at a breakpoint
         this.breakpointEmitter.fire();
     }
 

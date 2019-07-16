@@ -11,6 +11,8 @@ import { ErrorBoundary } from '../react-common/errorBoundary';
 import { getSettings } from '../react-common/settingsReactSide';
 import { Cell, ICellViewModel } from './cell';
 import { InputHistory } from './inputHistory';
+// tslint:disable-next-line:no-require-imports no-var-requires
+const throttle = require('lodash/throttle') as typeof import('lodash/throttle');
 
 export interface IContentPanelProps {
     baseTheme: string;
@@ -34,6 +36,7 @@ export interface IContentPanelProps {
 export class ContentPanel extends React.Component<IContentPanelProps> {
     private bottomRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private containerRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
+    private throttledScrollIntoView = throttle(this.scrollIntoView.bind(this), 100);
     constructor(prop: IContentPanelProps) {
         super(prop);
     }
@@ -91,15 +94,18 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
         );
     }
 
-    private scrollToBottom = () => {
+    private scrollIntoView() {
+        // Force auto here as smooth scrolling can be canceled by updates to the window
+        // from elsewhere (and keeping track of these would make this hard to maintain)
+        if (this.bottomRef.current) {
+            this.bottomRef.current.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' });
+        }
+    }
+
+    private scrollToBottom() {
         if (this.bottomRef.current && !this.props.skipNextScroll && !this.props.testMode && this.containerRef.current) {
-            // Force auto here as smooth scrolling can be canceled by updates to the window
-            // from elsewhere (and keeping track of these would make this hard to maintain)
-            setTimeout(() => {
-                if (this.bottomRef.current) {
-                    this.bottomRef.current!.scrollIntoView({behavior: 'auto', block: 'start', inline: 'nearest'});
-                }
-            }, 100);
+            // Make sure to debounce this so it doesn't take up too much time.
+            this.throttledScrollIntoView();
         }
     }
 

@@ -17,8 +17,15 @@ import {
 } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import { Commands } from '../../client/datascience/constants';
-import { ICodeWatcher, IDataScienceCommandListener, IInteractiveWindow, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
+import {
+    ICodeWatcher,
+    IDataScienceCommandListener,
+    IInteractiveWindow,
+    IInteractiveWindowProvider,
+    IJupyterExecution
+} from '../../client/datascience/types';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
+import { asyncDump } from '../common/asyncDump';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createDocument } from './editor-integration/helpers';
 import { addMockData, CellPosition, verifyHtmlOnCell } from './interactiveWindowTestHelpers';
@@ -52,6 +59,10 @@ suite('DataScience LiveShare tests', () => {
         await hostContainer.dispose();
         await guestContainer.dispose();
         lastErrorMessage = undefined;
+    });
+
+    suiteTeardown(() => {
+        asyncDump();
     });
 
     function createContainer(role: vsls.Role): DataScienceIocContainer {

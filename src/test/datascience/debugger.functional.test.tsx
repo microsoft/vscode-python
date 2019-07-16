@@ -11,6 +11,7 @@ import { Disposable, Position, Range, SourceBreakpoint, Uri } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
 import { IApplicationShell, IDebugService, IDocumentManager } from '../../client/common/application/types';
+import { IProcessServiceFactory, Output } from '../../client/common/process/types';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import {
@@ -21,6 +22,7 @@ import { IInteractiveWindow, IInteractiveWindowProvider, IJupyterExecution } fro
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { getCellResults } from './interactiveWindowTestHelpers';
+import { getConnectionInfo, getNotebookCapableInterpreter } from './jupyterHelpers';
 import { MockDebuggerService } from './mockDebugService';
 import { MockDocumentManager } from './mockDocumentManager';
 
@@ -28,7 +30,9 @@ import { MockDocumentManager } from './mockDocumentManager';
 // tslint:disable-next-line:max-func-body-length no-any
 suite('DataScience Debugger tests', () => {
     const disposables: Disposable[] = [];
+    const postDisposables: Disposable[] = [];
     let ioc: DataScienceIocContainer;
+    let processFactory: IProcessServiceFactory;
     let lastErrorMessage : string | undefined;
     let mockDebuggerService : MockDebuggerService | undefined;
 
@@ -46,6 +50,7 @@ suite('DataScience Debugger tests', () => {
     setup(async () => {
         ioc = createContainer();
         mockDebuggerService = ioc.serviceManager.get<IDebugService>(IDebugService) as MockDebuggerService;
+        processFactory = ioc.serviceManager.get<IProcessServiceFactory>(IProcessServiceFactory);
     });
 
     teardown(async () => {
@@ -64,6 +69,16 @@ suite('DataScience Debugger tests', () => {
         }
         await ioc.dispose();
         lastErrorMessage = undefined;
+        for (const disposable of postDisposables) {
+            if (!disposable) {
+                continue;
+            }
+            // tslint:disable-next-line:no-any
+            const promise = disposable.dispose() as Promise<any>;
+            if (promise) {
+                await promise;
+            }
+        }
     });
 
     suiteTeardown(() => {
@@ -150,6 +165,7 @@ suite('DataScience Debugger tests', () => {
             await mockDebuggerService!.continue();
         });
         assert.ok(results, 'No cell results after finishing debugging');
+        await history.dispose();
     }
 
     test('Debug cell without breakpoint', async () => {
@@ -162,5 +178,33 @@ suite('DataScience Debugger tests', () => {
 
     test('Debug cell with breakpoint in another file', async () => {
         await debugCell('#%%\nprint("bar")\nprint("baz")', new Range(new Position(3, 0), new Position(3, 0)), 'bar.py');
+    });
+
+    test('Debug remote', async () => {
+        const python = await getNotebookCapableInterpreter(ioc, processFactory);
+        const procService = await processFactory.create();
+
+        if (procService && python) {
+            const connectionFound = createDeferred();
+            const configFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'serverConfigFiles', 'remoteToken.py');
+            const exeResult = procService.execObservable(python.path, ['-m', 'jupyter', 'notebook', `--config=${configFile}`], { env: process.env, throwOnStdErr: false });
+
+            // Make sure to shutdown after the session goes away. Otherwise the notebook files generated will still be around.
+            postDisposables.push(exeResult);
+
+            exeResult.out.subscribe((output: Output<string>) => {
+                const connectionURL = getConnectionInfo(output.out);
+                if (connectionURL) {
+                    connectionFound.resolve(connectionURL);
+                }
+            });
+
+            const connString = await connectionFound.promise;
+            const uri = connString as string;
+            ioc.getSettings().datascience.jupyterServerURI = uri;
+
+            // Debug with this setting should use the server URI
+            await debugCell('#%%\nprint("bar")');
+        }
     });
 });

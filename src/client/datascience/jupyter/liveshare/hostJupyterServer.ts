@@ -3,6 +3,8 @@
 'use strict';
 import '../../../common/extensions';
 
+// tslint:disable-next-line: no-require-imports
+import cloneDeep = require('lodash/cloneDeep');
 import * as os from 'os';
 import { Observable } from 'rxjs/Observable';
 import * as vscode from 'vscode';
@@ -10,6 +12,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
 import { ILiveShareApi } from '../../../common/application/types';
+import { traceError } from '../../../common/logger';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
@@ -347,16 +350,20 @@ export class HostJupyterServer
         responseQueues: ResponseQueue[]): void {
         const typedResult = ((result as any) as IServerResponse);
         if (typedResult) {
-            // Make a deep copy before we send. Don't want local copies being modified
-            const deepCopy = JSON.parse(JSON.stringify(typedResult));
-            this.waitForService().then(s => {
-                if (s) {
-                    s.notify(LiveShareCommands.serverResponse, guestTranslator(deepCopy));
-                }
-            }).ignoreErrors();
+            try {
+                // Make a deep copy before we send. Don't want local copies being modified
+                const deepCopy = cloneDeep(typedResult);
+                this.waitForService().then(s => {
+                    if (s) {
+                        s.notify(LiveShareCommands.serverResponse, guestTranslator(deepCopy));
+                    }
+                }).ignoreErrors();
 
-            // Need to also save in memory for those guests that are in the middle of starting up
-            responseQueues.forEach(r => r.push(deepCopy));
+                // Need to also save in memory for those guests that are in the middle of starting up
+                responseQueues.forEach(r => r.push(deepCopy));
+            } catch (exc) {
+                traceError(exc);
+            }
         }
     }
 }
