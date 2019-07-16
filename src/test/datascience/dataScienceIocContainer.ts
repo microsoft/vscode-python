@@ -410,7 +410,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             liveShareConnectionTimeout: 100,
             autoPreviewNotebooksInInteractivePane: true,
             enablePlotViewer: true,
-            stopOnFirstLineWhileDebugging: true
+            stopOnFirstLineWhileDebugging: true,
+            stopOnError: true
         };
 
         const workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration> = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
