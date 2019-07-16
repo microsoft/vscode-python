@@ -328,6 +328,7 @@ export interface IDataScienceSettings {
     stopOnFirstLineWhileDebugging?: boolean;
     textOutputLimit?: number;
     magicCommandsAsComments?: boolean;
+    stopOnError?: boolean;
     remoteDebuggerPort?: number;
 }
 

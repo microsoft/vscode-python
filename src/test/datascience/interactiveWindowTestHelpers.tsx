@@ -182,7 +182,7 @@ export async function getCellResults(wrapper: ReactWrapper<any, Readonly<{}>, Re
     return wrapper.find('Cell');
 }
 
-export async function addCode(interactiveWindowProvider: () => Promise<IInteractiveWindow>, wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string, expectedRenderCount: number = 5): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
+export async function addCode(interactiveWindowProvider: () => Promise<IInteractiveWindow>, wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string, expectedRenderCount: number = 5, expectError: boolean = false): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
     // Adding code should cause 5 renders to happen.
     // 1) Input
     // 2) Status ready
@@ -191,7 +191,10 @@ export async function addCode(interactiveWindowProvider: () => Promise<IInteract
     // 5) Status finished
     return getCellResults(wrapper, expectedRenderCount, async () => {
         const history = await interactiveWindowProvider();
-        await history.addCode(code, 'foo.py', 2);
+        const success = await history.addCode(code, 'foo.py', 2);
+        if (expectError) {
+            assert.equal(success, false, `${code} did not produce an error`);
+        }
     });
 }
 

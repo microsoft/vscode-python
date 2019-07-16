@@ -1412,6 +1412,12 @@
                     "description": "Limit the amount of text in Python Interactive cell text output to this value. 0 to allow any amount of characters.",
                     "scope": "resource"
                 },
+                "python.dataScience.stopOnError": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Stop running cells if a cell throws an exception.",
+                    "scope": "resource"
+                },
                 "python.disableInstallationCheck": {
                     "type": "boolean",
                     "default": false,
