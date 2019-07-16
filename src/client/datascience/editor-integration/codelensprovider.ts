@@ -100,9 +100,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         }
 
         // Create a new watcher for this file
-        const newCodeWatcher = this.serviceContainer.get<ICodeWatcher>(ICodeWatcher);
-        newCodeWatcher.setDocument(document);
-        this.activeCodeWatchers.push(newCodeWatcher);
+        const newCodeWatcher = this.createNewCodeWatcher(document);
         return newCodeWatcher.getCodeLenses();
     }
 
@@ -126,12 +124,21 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         // Create a new watcher for this file if we can find a matching document
         const possibleDocuments = this.documentManager.textDocuments.filter(d => d.fileName === fileName);
         if (possibleDocuments && possibleDocuments.length > 0) {
-            const newCodeWatcher = this.serviceContainer.get<ICodeWatcher>(ICodeWatcher);
-            newCodeWatcher.setDocument(possibleDocuments[0]);
-            this.activeCodeWatchers.push(newCodeWatcher);
-            return newCodeWatcher;
+            return this.createNewCodeWatcher(possibleDocuments[0]);
         }
 
         return undefined;
+    }
+
+    private createNewCodeWatcher(document: vscode.TextDocument): ICodeWatcher {
+        const newCodeWatcher = this.serviceContainer.get<ICodeWatcher>(ICodeWatcher);
+        newCodeWatcher.setDocument(document);
+        newCodeWatcher.codeLensUpdated(this.onWatcherUpdated.bind(this));
+        this.activeCodeWatchers.push(newCodeWatcher);
+        return newCodeWatcher;
+    }
+
+    private onWatcherUpdated(): void {
+        this.didChangeCodeLenses.fire();
     }
 }

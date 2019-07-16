@@ -233,6 +233,7 @@ export interface IDataScienceCodeLensProvider extends CodeLensProvider {
 // Wraps the Code Watcher API
 export const ICodeWatcher = Symbol('ICodeWatcher');
 export interface ICodeWatcher {
+    codeLensUpdated: Event<void>;
     setDocument(document: TextDocument): void;
     getFileName(): string;
     getVersion(): number;
@@ -255,6 +256,7 @@ export interface ICodeWatcher {
 
 export const ICodeLensFactory = Symbol('ICodeLensFactory');
 export interface ICodeLensFactory {
+    updateRequired: Event<void>;
     createCodeLenses(document: TextDocument): CodeLens[];
 }
 
@@ -435,5 +437,6 @@ export interface ICellHashListener {
 
 export const ICellHashProvider = Symbol('ICellHashProvider');
 export interface ICellHashProvider {
+    updated: Event<void>;
     getHashes(): IFileHashes[];
 }

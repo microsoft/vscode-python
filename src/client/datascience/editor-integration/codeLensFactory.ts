@@ -2,33 +2,47 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { CodeLens, Command, Range, TextDocument } from 'vscode';
+import { CodeLens, Command, Event, EventEmitter, Range, TextDocument } from 'vscode';
 
 import { traceWarning } from '../../common/logger';
 import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { generateCellRanges } from '../cellFactory';
 import { Commands } from '../constants';
-import { ICodeLensFactory } from '../types';
+import { ICellHashProvider, ICodeLensFactory, IFileHashes } from '../types';
 
 @injectable()
 export class CodeLensFactory implements ICodeLensFactory {
+    private updateEvent: EventEmitter<void> = new EventEmitter<void>();
 
     constructor(
-        @inject(IConfigurationService) private configService: IConfigurationService
+        @inject(IConfigurationService) private configService: IConfigurationService,
+        @inject(ICellHashProvider) private hashProvider: ICellHashProvider
     ) {
+        hashProvider.updated(this.hashesUpdated.bind(this));
+    }
+
+    public hashesUpdated(): void {
+        this.updateEvent.fire();
+    }
+
+    public get updateRequired(): Event<void> {
+        return this.updateEvent.event;
     }
 
     public createCodeLenses(document: TextDocument): CodeLens[] {
         const ranges = generateCellRanges(document, this.configService.getSettings().datascience);
         const commands = this.enumerateCommands();
+        const hashes = this.hashProvider.getHashes();
         const codeLenses: CodeLens[] = [];
         let firstCell = true;
         ranges.forEach(range => {
+            let firstLensOfRange = true;
             commands.forEach(c => {
-                const codeLens = this.createCodeLens(document, range.range, c, firstCell);
+                const codeLens = this.createCodeLens(document, range.range, c, firstCell, firstLensOfRange, hashes);
                 if (codeLens) {
                     codeLenses.push(codeLens);
+                    firstLensOfRange = false;
                 }
             });
             firstCell = false;
@@ -37,7 +51,7 @@ export class CodeLensFactory implements ICodeLensFactory {
         return codeLenses;
     }
 
-    private enumerateCommands() : string[] {
+    private enumerateCommands(): string[] {
         const commands = this.configService.getSettings().datascience.codeLenses;
         if (commands) {
             return commands.split(',').map(s => s.trim());
@@ -45,7 +59,10 @@ export class CodeLensFactory implements ICodeLensFactory {
         return [Commands.RunCurrentCell, Commands.RunAllCellsAbove, Commands.DebugCell];
     }
 
-    private createCodeLens(document: TextDocument, range: Range, commandName: string, isFirst: boolean): CodeLens | undefined {
+    private createCodeLens(document: TextDocument, range: Range, commandName: string, isFirst: boolean, firstLensOfRange: boolean, hashes: IFileHashes[]): CodeLens | undefined {
+        // Wrap the title in a format string if this is the first lens and we have an execution count for the range
+        const formatString = this.computeTitleFormat(document, range, firstLensOfRange, hashes);
+
         // We only support specific commands
         // Be careful here. These arguments will be serialized during liveshare sessions
         // and so shouldn't reference local objects.
@@ -54,20 +71,20 @@ export class CodeLensFactory implements ICodeLensFactory {
                 return this.generateCodeLens(
                     range,
                     commandName,
-                    localize.DataScience.addCellBelowCommandTitle(),
+                    formatString.format(localize.DataScience.addCellBelowCommandTitle()),
                     [document.fileName, range.start.line]);
 
             case Commands.DebugCurrentCellPalette:
                 return this.generateCodeLens(
                     range,
                     Commands.DebugCurrentCellPalette,
-                    localize.DataScience.debugCellCommandTitle());
+                    formatString.format(localize.DataScience.debugCellCommandTitle()));
 
             case Commands.DebugCell:
                 return this.generateCodeLens(
                     range,
                     Commands.DebugCell,
-                    localize.DataScience.debugCellCommandTitle(),
+                    formatString.format(localize.DataScience.debugCellCommandTitle()),
                     [document.fileName, range.start.line, range.start.character, range.end.line, range.end.character]);
 
             case Commands.RunCurrentCell:
@@ -75,7 +92,7 @@ export class CodeLensFactory implements ICodeLensFactory {
                 return this.generateCodeLens(
                     range,
                     Commands.RunCell,
-                    localize.DataScience.runCellLensCommandTitle(),
+                    formatString.format(localize.DataScience.runCellLensCommandTitle()),
                     [document.fileName, range.start.line, range.start.character, range.end.line, range.end.character]);
 
             case Commands.RunAllCells:
@@ -91,7 +108,7 @@ export class CodeLensFactory implements ICodeLensFactory {
                     return this.generateCodeLens(
                         range,
                         Commands.RunAllCellsAbove,
-                        localize.DataScience.runAllCellsAboveLensCommandTitle(),
+                        formatString.format(localize.DataScience.runAllCellsAboveLensCommandTitle()),
                         [document.fileName, range.start.line, range.start.character]);
                 }
                 break;
@@ -101,7 +118,7 @@ export class CodeLensFactory implements ICodeLensFactory {
                 return this.generateCodeLens(
                     range,
                     Commands.RunCellAndAllBelow,
-                    localize.DataScience.runCellAndAllBelowLensCommandTitle(),
+                    formatString.format(localize.DataScience.runCellAndAllBelowLensCommandTitle()),
                     [document.fileName, range.start.line, range.start.character]);
                 break;
 
@@ -113,13 +130,29 @@ export class CodeLensFactory implements ICodeLensFactory {
         return undefined;
     }
 
+    private computeTitleFormat(document: TextDocument, range: Range, firstLensOfRange: boolean, hashes: IFileHashes[]): string {
+        // Only add the execution count on the first code lens and when we have a hash already
+        // for this file.
+        const list = hashes.find(h => h.file === document.fileName);
+        if (list && firstLensOfRange) {
+            // Match just the start of the range. Should be - 2 (1 for 1 based numbers and 1 for skipping the comment at the top)
+            const rangeMatch = list.hashes.find(h => h.line - 2 === range.start.line);
+            if (rangeMatch) {
+                return `[${rangeMatch.executionCount}] {0}`;
+            }
+        }
+
+        // Normal case is to not add anything to the string.
+        return '{0}';
+    }
+
     // tslint:disable-next-line: no-any
-    private generateCodeLens(range: Range, commandName: string, title: string, args?: any[]) : CodeLens {
+    private generateCodeLens(range: Range, commandName: string, title: string, args?: any[]): CodeLens {
         return new CodeLens(range, this.generateCommand(commandName, title, args));
     }
 
     // tslint:disable-next-line: no-any
-    private generateCommand(commandName: string, title: string, args?: any[]) : Command {
+    private generateCommand(commandName: string, title: string, args?: any[]): Command {
         return {
             arguments: args,
             title,

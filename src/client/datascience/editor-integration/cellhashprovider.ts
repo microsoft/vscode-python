@@ -83,6 +83,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
                     if (reason !== SysInfoReason.Interrupt) {
                         this.hashes.clear();
                         this.executionCount = 0;
+                        this.updateEventEmitter.fire();
                     }
                 }
                 break;
@@ -131,6 +132,9 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
             e.contentChanges.forEach(c => {
                 prevText = this.handleContentChange(prevText, c, perFile);
             });
+
+            // Update the code lens
+            this.updateEventEmitter.fire();
         }
     }
 
@@ -256,6 +260,9 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
             if (this.listeners) {
                 const hashes = this.getHashes();
                 await Promise.all(this.listeners.map(l => l.hashesUpdated(hashes)));
+
+                // Then fire our event
+                this.updateEventEmitter.fire();
             }
         }
     }
