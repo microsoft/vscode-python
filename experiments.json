@@ -15,18 +15,18 @@
         "name": "ShowPlayIcon - start",
         "salt": "ShowPlayIcon",
         "max": 100,
-        "min": 95
+        "min": 80
     },
     {
         "name": "ShowPlayIcon - runFile",
         "salt": "ShowPlayIcon",
-        "max": 95,
-        "min": 90
+        "max": 80,
+        "min": 60
     },
     {
         "name": "ShowPlayIcon - control",
         "salt": "ShowPlayIcon",
         "min": 0,
-        "max": 5
+        "max": 20
     }
 ]
