@@ -88,7 +88,7 @@ export class ExperimentsManager implements IExperimentsManager {
             // We need to know whether an experiment influences the logs we observe in github issues, so log the experiment group
             this.output.appendLine(Experiments.inGroup().format(exp.name));
         }
-        this.downloadAndStoreExperiments().ignoreErrors();
+        this.initializeExperiments().ignoreErrors();
     }
 
     @traceDecorators.error('Failed to identify if user is in experiment')
@@ -123,14 +123,27 @@ export class ExperimentsManager implements IExperimentsManager {
     }
 
     /**
-     * Downloads experiments and updates storage given previously downloaded experiments are no longer valid
-     * @param timeout If provided, wait for download to complete until timeout, and return `null` if download fails to complete
+     * Downloads experiments and updates downloaded storage for the next session given previously downloaded experiments are no longer valid
      */
-    @traceDecorators.error('Failed to download experiments')
-    public async downloadAndStoreExperiments(timeout?: number): Promise<void | null> {
+    @traceDecorators.error('Failed to initialize experiments')
+    public async initializeExperiments(): Promise<void | null> {
         if (this.isDownloadedStorageValid.value) {
             return;
         }
+        const downloadedExperiments = (await this.httpClient.getJSON<ABExperiments>(configUri, false))!;
+        if (!this.areExperimentsValid(downloadedExperiments)) {
+            return;
+        }
+        await this.downloadedExperimentsStorage.updateValue(downloadedExperiments);
+        await this.isDownloadedStorageValid.updateValue(true);
+    }
+
+    /**
+     * Downloads experiments within timeout and updates storage for the current session
+     * @param timeout Wait for download to complete until timeout, and return `null` if download fails to complete within timeout
+     */
+    @traceDecorators.error('Failed to download experiments within timeout')
+    public async downloadExperimentsWithinTimeout(timeout: number): Promise<void | null> {
         const downloadedExperiments = await this.httpClient.getJSON<ABExperiments>(configUri, false, timeout);
         if (downloadedExperiments === null) {
             return null;
@@ -138,13 +151,7 @@ export class ExperimentsManager implements IExperimentsManager {
         if (!this.areExperimentsValid(downloadedExperiments)) {
             return;
         }
-        if (timeout) {
-            // If timeout is specified, we intend to use experiments in the current session itself, hence update storage for the current session
-            await this.experimentStorage.updateValue(downloadedExperiments);
-        } else {
-            // Carries experiments to be used from the next session
-            await this.downloadedExperimentsStorage.updateValue(downloadedExperiments);
-        }
+        await this.experimentStorage.updateValue(downloadedExperiments);
         await this.isDownloadedStorageValid.updateValue(true);
     }
 
@@ -227,16 +234,16 @@ export class ExperimentsManager implements IExperimentsManager {
     }
 
     /**
-     * Do best effort to download the experiments within 2 seconds and use it in the current session only
+     * Do best effort to download the experiments within timeout and use it in the current session only
      */
     public async doBestEffortToPopulateExperiments(): Promise<boolean> {
         try {
-            const success = await this.downloadAndStoreExperiments(2000) !== null;
+            const success = await this.downloadExperimentsWithinTimeout(2000) !== null;
             sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE, undefined, { success });
             return success;
         } catch (ex) {
             sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE, undefined, { success: false, error: 'Downloading experiments failed with error' }, ex);
-            traceError('Effort to downlad experiments within 2 seconds failed with error', ex);
+            traceError('Effort to downlad experiments within timeout failed with error', ex);
             return false;
         }
     }
