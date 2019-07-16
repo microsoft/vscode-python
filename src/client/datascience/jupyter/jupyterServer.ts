@@ -652,6 +652,7 @@ export class JupyterServerBase implements INotebookServer {
         }
     }
 
+    // tslint:disable-next-line: max-func-body-length
     private handleCodeRequest = (subscriber: CellSubscriber, silent?: boolean) => {
         // Generate a new request if we still can
         if (subscriber.isValid(this.sessionStartTime)) {
