@@ -7,18 +7,17 @@ import { CodeLens, Position, Range, Selection, TextDocument, TextEditor, TextEdi
 import { IDocumentManager } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDataScienceSettings } from '../../common/types';
-// import * as localize from '../../common/utils/localize';
+import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
-import { captureTelemetry } from '../../telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { ICodeExecutionHelper } from '../../terminals/types';
 import { Commands, Telemetry } from '../constants';
-// import { JupyterInstallError } from '../jupyter/jupyterInstallError';
-// import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
 import { ICodeLensFactory, ICodeWatcher, IDataScienceErrorHandler, IInteractiveWindowProvider } from '../types';
 
 @injectable()
 export class CodeWatcher implements ICodeWatcher {
+    private static sentExecuteCellTelemetry: boolean = false;
     private document?: TextDocument;
     private version: number = -1;
     private fileName: string = '';
@@ -78,24 +77,30 @@ export class CodeWatcher implements ICodeWatcher {
 
     @captureTelemetry(Telemetry.RunAllCells)
     public async runAllCells() {
+        const runCellCommands = this.codeLenses.filter(c => c.command && c.command.command === Commands.RunCell && c.command.arguments && c.command.arguments.length >= 5);
+        let leftCount = runCellCommands.length;
+
         // Run all of our code lenses, they should always be ordered in the file so we can just
         // run them one by one
-        for (const lens of this.codeLenses) {
+        for (const lens of runCellCommands) {
             // Make sure that we have the correct command (RunCell) lenses
-            if (lens.command && lens.command.command === Commands.RunCell && lens.command.arguments && lens.command.arguments.length >= 5) {
-                const range: Range = new Range(lens.command.arguments[1], lens.command.arguments[2], lens.command.arguments[3], lens.command.arguments[4]);
-                if (this.document && range) {
-                    const code = this.document.getText(range);
+            const range: Range = new Range(lens.command!.arguments![1], lens.command!.arguments![2], lens.command!.arguments![3], lens.command!.arguments![4]);
+            if (this.document && range) {
+                const code = this.document.getText(range);
+                leftCount -= 1;
 
-                    // Note: We do a get or create active before all addCode commands to make sure that we either have a history up already
-                    // or if we do not we need to start it up as these commands are all expected to start a new history if needed
-                    await this.addCode(code, this.getFileName(), range.start.line);
+                // Note: We do a get or create active before all addCode commands to make sure that we either have a history up already
+                // or if we do not we need to start it up as these commands are all expected to start a new history if needed
+                const success = await this.addCode(code, this.getFileName(), range.start.line);
+                if (!success) {
+                    await this.addErrorMessage(leftCount);
+                    break;
                 }
             }
         }
 
         // If there are no codelenses, just run all of the code as a single cell
-        if (this.codeLenses.length === 0) {
+        if (runCellCommands.length === 0) {
             return this.runFileInteractiveInternal();
         }
     }
@@ -108,36 +113,50 @@ export class CodeWatcher implements ICodeWatcher {
     // Run all cells up to the cell containing this start line and character
     @captureTelemetry(Telemetry.RunAllCellsAbove)
     public async runAllCellsAbove(stopLine: number, stopCharacter: number) {
+        const runCellCommands = this.codeLenses.filter(c => c.command && c.command.command === Commands.RunCell);
+        let leftCount = runCellCommands.findIndex(c => c.range.start.line >= stopLine && c.range.start.character >= stopCharacter);
+        if (leftCount < 0) {
+            leftCount = runCellCommands.length;
+        }
+
         // Run our code lenses up to this point, lenses are created in order on document load
         // so we can rely on them being in linear order for this
-        for (const lens of this.codeLenses) {
-            const pastStop = (lens.range.start.line >= stopLine && lens.range.start.character >= stopCharacter);
+        for (const lens of runCellCommands) {
             // Make sure we are dealing with run cell based code lenses in case more types are added later
-            if (lens.command && lens.command.command === Commands.RunCell) {
-                if (!pastStop && this.document) {
-                    // We have a cell and we are not past or at the stop point
-                    const code = this.document.getText(lens.range);
-                    await this.addCode(code, this.getFileName(), lens.range.start.line);
-                } else {
-                    // If we get a cell past or at the stop point stop
+            if (leftCount > 0 && this.document) {
+                // We have a cell and we are not past or at the stop point
+                leftCount -= 1;
+                const code = this.document.getText(lens.range);
+                const success = await this.addCode(code, this.getFileName(), lens.range.start.line);
+                if (!success) {
+                    await this.addErrorMessage(leftCount);
                     break;
                 }
+            } else {
+                // If we get a cell past or at the stop point stop
+                break;
             }
         }
     }
 
     @captureTelemetry(Telemetry.RunAllCellsAbove)
     public async runCellAndAllBelow(startLine: number, startCharacter: number) {
+        const runCellCommands = this.codeLenses.filter(c => c.command && c.command.command === Commands.RunCell);
+        const index = runCellCommands.findIndex(c => c.range.start.line >= startLine && c.range.start.character >= startCharacter);
+        let leftCount = index > 0 ? runCellCommands.length - index : runCellCommands.length;
+
         // Run our code lenses from this point to the end, lenses are created in order on document load
         // so we can rely on them being in linear order for this
-        for (const lens of this.codeLenses) {
-            const pastStart = (lens.range.start.line >= startLine && lens.range.start.character >= startCharacter);
-            // Make sure we are dealing with run cell based code lenses in case more types are added later
-            if (lens.command && lens.command.command === Commands.RunCell) {
-                if (pastStart && this.document) {
-                    // We have a cell and we are not past or at the stop point
-                    const code = this.document.getText(lens.range);
-                    await this.addCode(code, this.getFileName(), lens.range.start.line);
+        for (let pos = index; pos >= 0 && pos < runCellCommands.length; pos += 1) {
+            if (leftCount > 0 && this.document) {
+                const lens = runCellCommands[pos];
+                // We have a cell and we are not past or at the stop point
+                leftCount -= 1;
+                const code = this.document.getText(lens.range);
+                const success = await this.addCode(code, this.getFileName(), lens.range.start.line);
+                if (!success) {
+                    await this.addErrorMessage(leftCount);
+                    break;
                 }
             }
         }
@@ -237,17 +256,45 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
-    private async addCode(code: string, file: string, line: number, editor?: TextEditor, debug?: boolean): Promise<void> {
+    private async addCode(code: string, file: string, line: number, editor?: TextEditor, debug?: boolean): Promise<boolean> {
+        let result = false;
         try {
             const stopWatch = new StopWatch();
             const activeInteractiveWindow = await this.interactiveWindowProvider.getOrCreateActive();
             if (debug) {
-                await activeInteractiveWindow.debugCode(code, file, line, editor, stopWatch);
+                result = await activeInteractiveWindow.debugCode(code, file, line, editor);
             } else {
-                await activeInteractiveWindow.addCode(code, file, line, editor, stopWatch);
+                result = await activeInteractiveWindow.addCode(code, file, line, editor);
             }
+            this.sendPerceivedCellExecute(stopWatch);
         } catch (err) {
             this.dataScienceErrorHandler.handleError(err);
+        }
+
+        return result;
+    }
+
+    private async addErrorMessage(leftCount: number): Promise<void> {
+        // Only show an error message if any left
+        if (leftCount > 0) {
+            const message = localize.DataScience.cellStopOnErrorFormatMessage().format(leftCount.toString());
+            try {
+                const activeInteractiveWindow = await this.interactiveWindowProvider.getOrCreateActive();
+                return activeInteractiveWindow.addMessage(message);
+            } catch (err) {
+                this.dataScienceErrorHandler.handleError(err);
+            }
+        }
+    }
+
+    private sendPerceivedCellExecute(runningStopWatch?: StopWatch) {
+        if (runningStopWatch) {
+            if (!CodeWatcher.sentExecuteCellTelemetry) {
+                CodeWatcher.sentExecuteCellTelemetry = true;
+                sendTelemetryEvent(Telemetry.ExecuteCellPerceivedCold, runningStopWatch.elapsedTime);
+            } else {
+                sendTelemetryEvent(Telemetry.ExecuteCellPerceivedWarm, runningStopWatch.elapsedTime);
+            }
         }
     }
 

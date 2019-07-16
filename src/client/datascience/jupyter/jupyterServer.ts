@@ -9,7 +9,7 @@ import * as fs from 'fs-extra';
 import { Observable } from 'rxjs/Observable';
 import { Subscriber } from 'rxjs/Subscriber';
 import * as uuid from 'uuid/v4';
-import { Disposable } from 'vscode';
+import { Disposable, Event, EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { ILiveShareApi } from '../../common/application/types';
@@ -44,6 +44,7 @@ class CellSubscriber {
     private cellRef: ICell;
     private subscriber: Subscriber<ICell>;
     private promiseComplete: (self: CellSubscriber) => void;
+    private canceledEvent: EventEmitter<void> = new EventEmitter<void>();
     private _startTime: number;
 
     constructor(cell: ICell, subscriber: Subscriber<ICell>, promiseComplete: (self: CellSubscriber) => void) {
@@ -55,6 +56,10 @@ class CellSubscriber {
 
     public get startTime(): number {
         return this._startTime;
+    }
+
+    public get onCanceled(): Event<void> {
+        return this.canceledEvent.event;
     }
 
     public isValid(sessionStartTime: number | undefined) {
@@ -100,6 +105,7 @@ class CellSubscriber {
     }
 
     public cancel() {
+        this.canceledEvent.fire();
         if (!this.deferred.completed) {
             this.cellRef.state = CellState.error;
             this.subscriber.next(this.cellRef);
@@ -646,6 +652,7 @@ export class JupyterServerBase implements INotebookServer {
         }
     }
 
+    // tslint:disable-next-line: max-func-body-length
     private handleCodeRequest = (subscriber: CellSubscriber, silent?: boolean) => {
         // Generate a new request if we still can
         if (subscriber.isValid(this.sessionStartTime)) {
@@ -684,6 +691,12 @@ export class JupyterServerBase implements INotebookServer {
 
                 // Listen to the reponse messages and update state as we go
                 if (request) {
+                    // Stop handling the request if the subscriber is canceled.
+                    subscriber.onCanceled(() => {
+                        request.onIOPub = noop;
+                    });
+
+                    // Listen to messages.
                     request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
                         try {
                             if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
@@ -909,6 +922,15 @@ export class JupyterServerBase implements INotebookServer {
         };
         this.addToCellData(cell, output, clearState);
         cell.state = CellState.error;
+
+        // In the error scenario, we want to stop all other pending cells.
+        if (this.configService.getSettings().datascience.stopOnError) {
+            this.pendingCellSubscriptions.forEach(c => {
+                if (c.cell.id !== cell.id) {
+                    c.cancel();
+                }
+            });
+        }
     }
 
     // We have a set limit for the number of output text characters that we display by default

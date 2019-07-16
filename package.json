@@ -1418,6 +1418,12 @@
                     "description": "Whether or not to use the theme's peek color as the background for the input box.",
                     "scope": "resource"
                 },
+                "python.dataScience.stopOnError": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Stop running cells if a cell throws an exception.",
+                    "scope": "resource"
+                },
                 "python.disableInstallationCheck": {
                     "type": "boolean",
                     "default": false,

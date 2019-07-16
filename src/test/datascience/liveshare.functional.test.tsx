@@ -137,7 +137,7 @@ suite('DataScience LiveShare tests', () => {
         return waitForResults(role, async (both: boolean) => {
             if (!both) {
                 const history = await getOrCreateInteractiveWindow(role);
-                return history.addCode(code, 'foo.py', 2);
+                await history.addCode(code, 'foo.py', 2);
             } else {
                 // Add code to the apropriate container
                 const host = await getOrCreateInteractiveWindow(vsls.Role.Host);
@@ -145,9 +145,9 @@ suite('DataScience LiveShare tests', () => {
                 // Make sure guest is still creatable
                 if (isSessionStarted(vsls.Role.Guest)) {
                     const guest = await getOrCreateInteractiveWindow(vsls.Role.Guest);
-                    return (role === vsls.Role.Host ? host.addCode(code, 'foo.py', 2) : guest.addCode(code, 'foo.py', 2));
+                    (role === vsls.Role.Host ? await host.addCode(code, 'foo.py', 2) : await guest.addCode(code, 'foo.py', 2));
                 } else {
-                    return host.addCode(code, 'foo.py', 2);
+                    await host.addCode(code, 'foo.py', 2);
                 }
             }
         }, expectedRenderCount);
