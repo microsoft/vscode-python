@@ -6,6 +6,7 @@ import { Socket } from 'net';
 import { Request as RequestResult } from 'request';
 import { ConfigurationTarget, DiagnosticSeverity, Disposable, DocumentSymbolProvider, Event, Extension, ExtensionContext, OutputChannel, Uri, WorkspaceEdit } from 'vscode';
 import { CommandsWithoutArgs } from './application/commands';
+import { ExtensionChannels } from './insidersBuild/types';
 import { EnvironmentVariables } from './variables/types';
 export const IOutputChannel = Symbol('IOutputChannel');
 export interface IOutputChannel extends OutputChannel { }
@@ -151,6 +152,7 @@ export interface IPythonSettings {
     readonly condaPath: string;
     readonly pipenvPath: string;
     readonly poetryPath: string;
+    readonly insidersChannel: ExtensionChannels;
     readonly downloadLanguageServer: boolean;
     readonly jediEnabled: boolean;
     readonly jediPath: string;
@@ -324,8 +326,11 @@ export interface IDataScienceSettings {
     codeLenses?: string;
     ptvsdDistPath?: string;
     stopOnFirstLineWhileDebugging?: boolean;
-    textOutputLineLimit?: number;
+    textOutputLimit?: number;
     magicCommandsAsComments?: boolean;
+    stopOnError?: boolean;
+    remoteDebuggerPort?: number;
+    colorizeInputBox?: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

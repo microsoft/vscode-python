@@ -9,12 +9,12 @@ import * as fs from 'fs-extra';
 import { Observable } from 'rxjs/Observable';
 import { Subscriber } from 'rxjs/Subscriber';
 import * as uuid from 'uuid/v4';
-import { Disposable } from 'vscode';
+import { Disposable, Event, EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { ILiveShareApi } from '../../common/application/types';
 import { Cancellation, CancellationError } from '../../common/cancellation';
-import { traceInfo, traceWarning } from '../../common/logger';
+import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
 import { createDeferred, Deferred, waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
@@ -44,17 +44,26 @@ class CellSubscriber {
     private cellRef: ICell;
     private subscriber: Subscriber<ICell>;
     private promiseComplete: (self: CellSubscriber) => void;
-    private startTime: number;
+    private canceledEvent: EventEmitter<void> = new EventEmitter<void>();
+    private _startTime: number;
 
     constructor(cell: ICell, subscriber: Subscriber<ICell>, promiseComplete: (self: CellSubscriber) => void) {
         this.cellRef = cell;
         this.subscriber = subscriber;
         this.promiseComplete = promiseComplete;
-        this.startTime = Date.now();
+        this._startTime = Date.now();
+    }
+
+    public get startTime(): number {
+        return this._startTime;
+    }
+
+    public get onCanceled(): Event<void> {
+        return this.canceledEvent.event;
     }
 
     public isValid(sessionStartTime: number | undefined) {
-        return sessionStartTime && this.startTime > sessionStartTime;
+        return sessionStartTime && this.startTime >= sessionStartTime;
     }
 
     public next(sessionStartTime: number | undefined) {
@@ -96,6 +105,7 @@ class CellSubscriber {
     }
 
     public cancel() {
+        this.canceledEvent.fire();
         if (!this.deferred.completed) {
             this.cellRef.state = CellState.error;
             this.subscriber.next(this.cellRef);
@@ -131,7 +141,7 @@ export class JupyterServerBase implements INotebookServer {
     private sessionStartTime: number | undefined;
     private pendingCellSubscriptions: CellSubscriber[] = [];
     private ranInitialSetup = false;
-    private id = uuid();
+    private _id = uuid();
     private connectPromise: Deferred<INotebookServerLaunchInfo> = createDeferred<INotebookServerLaunchInfo>();
     private connectionInfoDisconnectHandler: Disposable | undefined;
     private serverExitCode: number | undefined;
@@ -203,6 +213,10 @@ export class JupyterServerBase implements INotebookServer {
 
     public dispose(): Promise<void> {
         return this.shutdown();
+    }
+
+    public get id(): string {
+        return this._id;
     }
 
     public waitForIdle(timeoutMs: number): Promise<void> {
@@ -301,15 +315,19 @@ export class JupyterServerBase implements INotebookServer {
             // Update our start time so we don't keep sending responses
             this.sessionStartTime = Date.now();
 
+            traceInfo('restartKernel - finishing cells that are outstanding');
             // Complete all pending as an error. We're restarting
             this.finishUncompletedCells();
+            traceInfo('restartKernel - restarting kernel');
 
             // Restart our kernel
             await this.session.restart(timeoutMs);
 
             // Rerun our initial setup for the notebook
             this.ranInitialSetup = false;
+            traceInfo('restartKernel - initialSetup');
             await this.initialNotebookSetup();
+            traceInfo('restartKernel - initialSetup completed');
 
             return;
         }
@@ -494,12 +512,12 @@ export class JupyterServerBase implements INotebookServer {
                 outputs.forEach(o => {
                     if (o.output_type === 'stream') {
                         const stream = o as nbformat.IStream;
-                        result = this.trimOutputLineCount(result.concat(formatStreamText(concatMultilineString(stream.text))));
+                        result = result.concat(formatStreamText(concatMultilineString(stream.text)));
                     } else {
                         const data = o.data;
                         if (data && data.hasOwnProperty('text/plain')) {
                             // tslint:disable-next-line:no-any
-                            result = this.trimOutputLineCount(result.concat((data as any)['text/plain']));
+                            result = result.concat((data as any)['text/plain']);
                         }
                     }
                 });
@@ -527,6 +545,8 @@ export class JupyterServerBase implements INotebookServer {
             }
         }
 
+        traceError('No session during execute observable');
+
         // Can't run because no session
         return new Observable<ICell[]>(subscriber => {
             subscriber.error(this.getDisposedError());
@@ -535,7 +555,7 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     private generateRequest = (code: string, silent?: boolean): Kernel.IFuture | undefined => {
-        //this.logger.logInformation(`Executing code in jupyter : ${code}`)
+        //traceInfo(`Executing code in jupyter : ${code}`);
         try {
             const cellMatcher = new CellMatcher(this.configService.getSettings().datascience);
             return this.session ? this.session.requestExecute(
@@ -559,6 +579,7 @@ export class JupyterServerBase implements INotebookServer {
     // Set up our initial plotting and imports
     private async initialNotebookSetup(cancelToken?: CancellationToken): Promise<void> {
         if (this.ranInitialSetup) {
+            traceInfo(`Already ran setup for ${this.id}`);
             return;
         }
         this.ranInitialSetup = true;
@@ -566,18 +587,21 @@ export class JupyterServerBase implements INotebookServer {
         try {
             // When we start our notebook initial, change to our workspace or user specified root directory
             if (this.launchInfo && this.launchInfo.workingDir && this.launchInfo.connectionInfo.localLaunch) {
+                traceInfo(`Changing directory for ${this.id}`);
                 await this.changeDirectoryIfPossible(this.launchInfo.workingDir);
             }
 
             const settings = this.configService.getSettings().datascience;
             const matplobInit = !settings || settings.enablePlotViewer ? CodeSnippits.MatplotLibInitSvg : CodeSnippits.MatplotLibInitPng;
 
+            traceInfo(`Initialize matplotlib for ${this.id}`);
             // Force matplotlib to inline and save the default style. We'll use this later if we
             // get a request to update style
             await this.executeSilently(
                 matplobInit,
                 cancelToken
             );
+            traceInfo(`Initial setup complete for ${this.id}`);
         } catch (e) {
             traceWarning(e);
         }
@@ -628,6 +652,7 @@ export class JupyterServerBase implements INotebookServer {
         }
     }
 
+    // tslint:disable-next-line: max-func-body-length
     private handleCodeRequest = (subscriber: CellSubscriber, silent?: boolean) => {
         // Generate a new request if we still can
         if (subscriber.isValid(this.sessionStartTime)) {
@@ -636,6 +661,7 @@ export class JupyterServerBase implements INotebookServer {
             if (this.launchInfo && this.launchInfo.connectionInfo && this.launchInfo.connectionInfo.localProcExitCode) {
                 // Not running, just exit
                 const exitCode = this.launchInfo.connectionInfo.localProcExitCode;
+                traceError(`Jupyter crashed with code ${exitCode}`);
                 subscriber.error(this.sessionStartTime, new Error(localize.DataScience.jupyterServerCrashed().format(exitCode.toString())));
                 subscriber.complete(this.sessionStartTime);
             } else {
@@ -658,20 +684,29 @@ export class JupyterServerBase implements INotebookServer {
                     });
                 }
 
+                // Create a trimming function. Only trim user output. Silent output requires the full thing
+                const trimFunc = silent ? (s: string) => s : this.trimOutput.bind(this);
+
                 const clearState: Map<string, boolean> = new Map<string, boolean>();
 
                 // Listen to the reponse messages and update state as we go
                 if (request) {
+                    // Stop handling the request if the subscriber is canceled.
+                    subscriber.onCanceled(() => {
+                        request.onIOPub = noop;
+                    });
+
+                    // Listen to messages.
                     request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
                         try {
                             if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
-                                this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, clearState, subscriber.cell);
+                                this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, clearState, subscriber.cell, trimFunc);
                             } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
                                 this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, clearState, subscriber.cell);
                             } else if (jupyterLab.KernelMessage.isStatusMsg(msg)) {
                                 this.handleStatusMessage(msg as KernelMessage.IStatusMsg, clearState, subscriber.cell);
                             } else if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
-                                this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, clearState, subscriber.cell);
+                                this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, clearState, subscriber.cell, trimFunc);
                             } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
                                 this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, clearState, subscriber.cell);
                             } else if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg)) {
@@ -709,6 +744,10 @@ export class JupyterServerBase implements INotebookServer {
                 }
             }
         } else {
+            const sessionDate = new Date(this.sessionStartTime!);
+            const cellDate = new Date(subscriber.startTime);
+            traceInfo(`Session start time is newer than cell : \r\n${sessionDate.toTimeString()}\r\n${cellDate.toTimeString()}`);
+
             // Otherwise just set to an error
             this.handleInterrupted(subscriber.cell);
             subscriber.cell.state = CellState.error;
@@ -772,10 +811,10 @@ export class JupyterServerBase implements INotebookServer {
         }
     }
 
-    private handleExecuteResult(msg: KernelMessage.IExecuteResultMsg, clearState: Map<string, boolean>, cell: ICell) {
+    private handleExecuteResult(msg: KernelMessage.IExecuteResultMsg, clearState: Map<string, boolean>, cell: ICell, trimFunc: (str: string) => string) {
         // Check our length on text output
         if (msg.content.data && msg.content.data.hasOwnProperty('text/plain')) {
-            msg.content.data['text/plain'] = this.trimOutputLineCount(msg.content.data['text/plain'] as string);
+            msg.content.data['text/plain'] = trimFunc(msg.content.data['text/plain'] as string);
         }
 
         this.addToCellData(
@@ -796,11 +835,11 @@ export class JupyterServerBase implements INotebookServer {
         }
     }
 
-    private handleStreamMesssage(msg: KernelMessage.IStreamMsg, clearState: Map<string, boolean>, cell: ICell) {
+    private handleStreamMesssage(msg: KernelMessage.IStreamMsg, clearState: Map<string, boolean>, cell: ICell, trimFunc: (str: string) => string) {
         // Might already have a stream message. If so, just add on to it.
         const data: nbformat.ICodeCell = cell.data as nbformat.ICodeCell;
         const existing = data.outputs.find(o => o.output_type === 'stream');
-        if (existing && existing.name === msg.content.name) {
+        if (existing) {
             // If clear pending, then don't add.
             if (clearState.get('stream')) {
                 clearState.delete('stream');
@@ -808,7 +847,7 @@ export class JupyterServerBase implements INotebookServer {
             } else {
                 // tslint:disable-next-line:restrict-plus-operands
                 existing.text = existing.text + msg.content.text;
-                existing.text = this.trimOutputLineCount(formatStreamText(concatMultilineString(existing.text)));
+                existing.text = trimFunc(formatStreamText(concatMultilineString(existing.text)));
             }
 
         } else {
@@ -816,7 +855,7 @@ export class JupyterServerBase implements INotebookServer {
             const output: nbformat.IStream = {
                 output_type: 'stream',
                 name: msg.content.name,
-                text: this.trimOutputLineCount(formatStreamText(concatMultilineString(msg.content.text)))
+                text: trimFunc(formatStreamText(concatMultilineString(msg.content.text)))
             };
             this.addToCellData(cell, output, clearState);
         }
@@ -883,28 +922,26 @@ export class JupyterServerBase implements INotebookServer {
         };
         this.addToCellData(cell, output, clearState);
         cell.state = CellState.error;
+
+        // In the error scenario, we want to stop all other pending cells.
+        if (this.configService.getSettings().datascience.stopOnError) {
+            this.pendingCellSubscriptions.forEach(c => {
+                if (c.cell.id !== cell.id) {
+                    c.cancel();
+                }
+            });
+        }
     }
 
-    // We have a set limit for the number of output text lines that we display by default
+    // We have a set limit for the number of output text characters that we display by default
     // trim down strings to that limit, assuming at this point we have compressed down to a single string
-    private trimOutputLineCount(outputString: string): string {
-        const trimLineCount = this.configService.getSettings().datascience.textOutputLineLimit;
+    private trimOutput(outputString: string): string {
+        const outputLimit = this.configService.getSettings().datascience.textOutputLimit;
 
-        if (!trimLineCount || trimLineCount === 0) {
+        if (!outputLimit || outputLimit === 0 || outputString.length <= outputLimit) {
             return outputString;
         }
 
-        let foundNewLines = 0;
-        for (let i = outputString.length - 1; i >= 0; i -= 1) {
-            if (outputString[i] === '\n') {
-                foundNewLines = foundNewLines + 1;
-
-                if (foundNewLines >= trimLineCount) {
-                    return outputString.substr(i + 1);
-                }
-            }
-        }
-
-        return outputString;
+        return outputString.substr(outputString.length - outputLimit);
     }
 }

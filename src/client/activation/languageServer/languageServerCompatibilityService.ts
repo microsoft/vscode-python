@@ -16,7 +16,7 @@ export class LanguageServerCompatibilityService implements ILanguageServerCompat
     public async isSupported(): Promise<boolean> {
         try {
             const supported = await this.dotnetCompatibility.isSupported();
-            sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED, undefined, { supported });
+            sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED, undefined, { supported: supported });
             return supported;
         } catch (ex) {
             traceError('Unable to determine whether LS is supported', ex);

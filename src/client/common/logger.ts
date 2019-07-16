@@ -131,7 +131,7 @@ function initializeConsoleLogger() {
         constructor(options?: any) {
             super(options);
         }
-        public log?(info: { level: string; message: string;[formattedMessage]: string }, next: () => void): any {
+        public log?(info: { level: string; message: string; [formattedMessage]: string }, next: () => void): any {
             setImmediate(() => this.emit('logged', info));
             logToConsole(info.level as any, info[formattedMessage] || info.message);
             if (next) {

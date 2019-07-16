@@ -82,20 +82,15 @@ value = 'hello world'`;
         ];
         verifyVariables(wrapper, targetVariables);
 
-        // Update our exclude list to only exlude strings
-        ioc.getSettings().datascience.variableExplorerExclude = 'str';
+        // Update our exclude list to exclude strings
+        ioc.getSettings().datascience.variableExplorerExclude = `${ioc.getSettings().datascience.variableExplorerExclude};str`;
 
-        // Add another string and check our vars, modules should be shown and str should be hidden
+        // Add another string and check our vars, strings should be hidden
         await addCode(getOrCreateInteractiveWindow, wrapper, basicCode2, 4);
-        await waitForUpdate(wrapper, VariableExplorer, 7);
+        await waitForUpdate(wrapper, VariableExplorer, 2);
 
         targetVariables = [
-            {name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false},
-            {name: 'matplotlib', value: '"<module', supportsDataExplorer: false, type: 'module', size: 54, shape: '', count: 0, truncated: false},
-            {name: 'notebook', value: '"<module', supportsDataExplorer: false, type: 'module', size: 54, shape: '', count: 0, truncated: false},
-            {name: 'np', value: '"<module', supportsDataExplorer: false, type: 'module', size: 54, shape: '', count: 0, truncated: false},
-            {name: 'pd', value: '"<module', supportsDataExplorer: false, type: 'module', size: 54, shape: '', count: 0, truncated: false},
-            {name: 'sys', value: '"<module', supportsDataExplorer: false, type: 'module', size: 54, shape: '', count: 0, truncated: false}
+            {name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false}
         ];
         verifyVariables(wrapper, targetVariables);
     }, () => { return ioc; });

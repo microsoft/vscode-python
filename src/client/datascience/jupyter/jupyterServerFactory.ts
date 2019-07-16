@@ -5,7 +5,9 @@ import '../../common/extensions';
 
 import { inject, injectable, multiInject, optional } from 'inversify';
 import { Observable } from 'rxjs/Observable';
+import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode-jsonrpc';
+import * as vsls from 'vsls/vscode';
 
 import { ILiveShareApi } from '../../common/application/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
@@ -23,6 +25,7 @@ import {
 import { GuestJupyterServer } from './liveshare/guestJupyterServer';
 import { HostJupyterServer } from './liveshare/hostJupyterServer';
 import { IRoleBasedObject, RoleBasedFactory } from './liveshare/roleBasedFactory';
+import { ILiveShareHasRole } from './liveshare/types';
 
 interface IJupyterServerInterface extends IRoleBasedObject, INotebookServer {
 
@@ -43,10 +46,11 @@ type JupyterServerClassType = {
 // tslint:enable:callable-types
 
 @injectable()
-export class JupyterServerFactory implements INotebookServer {
+export class JupyterServerFactory implements INotebookServer, ILiveShareHasRole {
     private serverFactory: RoleBasedFactory<IJupyterServerInterface, JupyterServerClassType>;
 
     private launchInfo: INotebookServerLaunchInfo | undefined;
+    private _id: string = uuid();
 
     constructor(
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
@@ -70,6 +74,14 @@ export class JupyterServerFactory implements INotebookServer {
             sessionManager,
             loggers ? loggers : []
         );
+    }
+
+    public get role(): vsls.Role {
+        return this.serverFactory.role;
+    }
+
+    public get id(): string {
+        return this._id;
     }
 
     public async connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void> {

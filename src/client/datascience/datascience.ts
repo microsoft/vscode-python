@@ -203,7 +203,7 @@ export class DataScience implements IDataScience {
     @captureTelemetry(Telemetry.SelectJupyterURI)
     public async selectJupyterURI(): Promise<void> {
         const quickPickOptions = [localize.DataScience.jupyterSelectURILaunchLocal(), localize.DataScience.jupyterSelectURISpecifyURI()];
-        const selection = await this.appShell.showQuickPick(quickPickOptions);
+        const selection = await this.appShell.showQuickPick(quickPickOptions, { ignoreFocusOut: true });
         switch (selection) {
             case localize.DataScience.jupyterSelectURILaunchLocal():
                 return this.setJupyterURIToLocal();

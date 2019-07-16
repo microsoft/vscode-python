@@ -190,6 +190,21 @@
                 "category": "Python"
             },
             {
+                "command": "python.switchToStable",
+                "title": "%python.command.python.switchToStable.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.switchToInsidersDaily",
+                "title": "%python.command.python.switchToInsidersDaily.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.switchToInsidersWeekly",
+                "title": "%python.command.python.switchToInsidersWeekly.title%",
+                "category": "Python"
+            },
+            {
                 "command": "python.updateSparkLibrary",
                 "title": "%python.command.python.updateSparkLibrary.title%",
                 "category": "Python"
@@ -574,6 +589,24 @@
                 }
             ],
             "commandPalette": [
+                {
+                    "command": "python.switchToStable",
+                    "title": "%python.command.python.switchToStable.title%",
+                    "category": "Python",
+                    "when": "config.python.insidersChannel != 'Stable'"
+                },
+                {
+                    "command": "python.switchToInsidersDaily",
+                    "title": "%python.command.python.switchToInsidersDaily.title%",
+                    "category": "Python",
+                    "when": "config.python.insidersChannel != 'InsidersDaily'"
+                },
+                {
+                    "command": "python.switchToInsidersWeekly",
+                    "title": "%python.command.python.switchToInsidersWeekly.title%",
+                    "category": "Python",
+                    "when": "config.python.insidersChannel != 'InsidersWeekly'"
+                },
                 {
                     "command": "python.viewOutput",
                     "title": "%python.command.python.viewOutput.title%",
@@ -1372,10 +1405,28 @@
                     "description": "When debugging a cell, stop on the first line if no other breakpoints in the current cell.",
                     "scope": "resource"
                 },
-                "python.dataScience.textOutputLineLimit": {
+                "python.dataScience.remoteDebuggerPort": {
                     "type": "number",
-                    "default": 10000,
-                    "description": "Limit the amount of lines in Python Interactive cell text output to this value. 0 to allow any amount of lines.",
+                    "default": -1,
+                    "description": "When debugging a cell, open this port on the remote box. If -1 is specified, a random port between 8889 and 9000 will be attempted.",
+                    "scope": "resource"
+                },
+                "python.dataScience.textOutputLimit": {
+                    "type": "number",
+                    "default": 20000,
+                    "description": "Limit the amount of text in Python Interactive cell text output to this value. 0 to allow any amount of characters.",
+                    "scope": "resource"
+                },
+                "python.dataScience.colorizeInputBox": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Whether or not to use the theme's peek color as the background for the input box.",
+                    "scope": "resource"
+                },
+                "python.dataScience.stopOnError": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Stop running cells if a cell throws an exception.",
                     "scope": "resource"
                 },
                 "python.disableInstallationCheck": {
@@ -2120,6 +2171,17 @@
                     "default": false,
                     "description": "Uncomment shell assignments (#!), line magic (#!%) and cell magic (#!%%) when parsing code cells.",
                     "scope": "resource"
+                },
+                "python.insidersChannel": {
+                    "type": "string",
+                    "default": "Stable",
+                    "description": "Set to \"Insiders\" to automatically download and install the latest Insiders builds of the extension, which include upcoming features and bug fixes.",
+                    "enum": [
+                        "Stable",
+                        "InsidersWeekly",
+                        "InsidersDaily"
+                    ],
+                    "scope": "application"
                 }
             }
         },
@@ -2251,6 +2313,7 @@
     },
     "dependencies": {
         "@jupyterlab/services": "^3.2.1",
+        "ansi-regex": "^4.1.0",
         "arch": "^2.1.0",
         "azure-storage": "^2.10.1",
         "diff-match-patch": "^1.0.0",
@@ -2264,7 +2327,7 @@
         "jsonc-parser": "^2.0.3",
         "less-plugin-inline-urls": "^1.2.0",
         "line-by-line": "^0.1.6",
-        "lodash": "^4.17.11",
+        "lodash": "^4.17.13",
         "md5": "^2.2.1",
         "minimatch": "^3.0.4",
         "monaco-editor-textmate": "^2.1.1",
@@ -2323,6 +2386,7 @@
         "@nteract/transform-model-debug": "^3.2.3",
         "@nteract/transform-plotly": "^5.0.0",
         "@nteract/transforms": "^4.4.4",
+        "@types/ansi-regex": "^4.0.0",
         "@types/chai": "^4.1.2",
         "@types/chai-arrays": "^1.0.2",
         "@types/chai-as-promised": "^7.1.0",
