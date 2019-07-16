@@ -208,10 +208,10 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         return server.execute(code, Identifiers.EmptyFileName, 0, uuid(), undefined, true);
     }
 
-    // Returns either the version of ptvsd installed or undefined if not installed
     private async ptvsdCheck(server: INotebookServer): Promise<IPtvsdVersion | undefined> {
+        // We don't want to actually import ptvsd to check version so run !python instead.
         // tslint:disable-next-line:no-multiline-string
-        const ptvsdVersionResults = await this.executeSilently(server, `import ptvsd\r\nptvsd.__version__`);
+        const ptvsdVersionResults = await this.executeSilently(server, `!python -c "import ptvsd;print(ptvsd.__version__)"`);
         return this.parsePtvsdVersionInfo(ptvsdVersionResults);
     }
 
@@ -226,7 +226,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
         if (outputString) {
             // Pull out the version number, note that we can't use SemVer here as python packages don't follow it
-            const packageVersionRegex = /'([0-9]+).([0-9]+).([0-9a-zA-Z]+)/;
+            const packageVersionRegex = /([0-9]+).([0-9]+).([0-9a-zA-Z]+)/;
             const packageVersionMatch = packageVersionRegex.exec(outputString);
 
             if (packageVersionMatch) {
