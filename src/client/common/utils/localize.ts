@@ -216,6 +216,7 @@ export namespace DataScience {
     export const jupyterDataRateExceeded = localize('DataScience.jupyterDataRateExceeded', 'Cannot view variable because data rate exceeded. Please restart your server with a higher data rate limit. For example, --NotebookApp.iopub_data_rate_limit=10000000000.0');
     export const addCellBelowCommandTitle = localize('DataScience.addCellBelowCommandTitle', 'Add cell');
     export const debugCellCommandTitle = localize('DataScience.debugCellCommandTitle', 'Debug cell');
+    export const runCurrentCellAndAddBelow = localize('DataScience.runCurrentCellAndAddBelow', 'Run current and add cell below');
     export const variableExplorerDisabledDuringDebugging = localize('DataScience.variableExplorerDisabledDuringDebugging', 'Variables are not available while debugging.');
 }
 

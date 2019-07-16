@@ -40,7 +40,7 @@ export class JupyterImporter implements INotebookImporter {
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IPlatformService) private readonly platform: IPlatformService
-        ) {
+    ) {
         this.templatePromise = this.createTemplateFile();
     }
 
@@ -58,9 +58,9 @@ export class JupyterImporter implements INotebookImporter {
         if (await this.jupyterExecution.isImportSupported()) {
             const fileOutput: string = await this.jupyterExecution.importNotebook(file, template);
             if (directoryChange) {
-                return this.addDirectoryChange(fileOutput, directoryChange);
+                return this.addInstructionComments(this.addDirectoryChange(fileOutput, directoryChange));
             } else {
-                return fileOutput;
+                return this.addInstructionComments(fileOutput);
             }
         }
 
@@ -69,6 +69,11 @@ export class JupyterImporter implements INotebookImporter {
 
     public dispose = () => {
         this.isDisposed = true;
+    }
+
+    private addInstructionComments = (pythonOutput: string): string => {
+        const comments = CodeSnippits.InstructionComments;
+        return comments.concat(pythonOutput);
     }
 
     private addDirectoryChange = (pythonOutput: string, directoryChange: string): string => {

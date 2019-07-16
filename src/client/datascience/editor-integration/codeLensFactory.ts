@@ -25,10 +25,7 @@ export class CodeLensFactory implements ICodeLensFactory {
         const codeLenses: CodeLens[] = [];
         let firstCell = true;
 
-        ranges.forEach((range, index) => {
-            if (index === (ranges.length - 1)) {
-                commands.push(Commands.AddCellBelow);
-            }
+        ranges.forEach(range => {
             commands.forEach(c => {
                 const codeLens = this.createCodeLens(document, range.range, c, firstCell);
                 if (codeLens) {
@@ -46,7 +43,7 @@ export class CodeLensFactory implements ICodeLensFactory {
         if (commands) {
             return commands.split(',').map(s => s.trim());
         }
-        return [Commands.RunCurrentCell, Commands.RunAllCellsAbove, Commands.DebugCell, Commands.AddCellBelow];
+        return [Commands.RunCurrentCell, Commands.RunAllCellsAbove, Commands.DebugCell];
     }
 
     private createCodeLens(document: TextDocument, range: Range, commandName: string, isFirst: boolean): CodeLens | undefined {
@@ -54,10 +51,15 @@ export class CodeLensFactory implements ICodeLensFactory {
         // Be careful here. These arguments will be serialized during liveshare sessions
         // and so shouldn't reference local objects.
         switch (commandName) {
+            case Commands.RunCurrentCellAndAddBelow:
+                return this.generateCodeLens(
+                    range,
+                    Commands.RunCurrentCellAndAddBelow,
+                    localize.DataScience.runCurrentCellAndAddBelow());
             case Commands.AddCellBelow:
                 return this.generateCodeLens(
                     range,
-                    commandName,
+                    Commands.AddCellBelow,
                     localize.DataScience.addCellBelowCommandTitle(),
                     [document.fileName, range.start.line]);
             case Commands.DebugCurrentCellPalette:
@@ -98,7 +100,6 @@ export class CodeLensFactory implements ICodeLensFactory {
                         [document.fileName, range.start.line, range.start.character]);
                 }
                 break;
-
             case Commands.RunCellAndAllBelowPalette:
             case Commands.RunCellAndAllBelow:
                 return this.generateCodeLens(
@@ -106,8 +107,6 @@ export class CodeLensFactory implements ICodeLensFactory {
                     Commands.RunCellAndAllBelow,
                     localize.DataScience.runCellAndAllBelowLensCommandTitle(),
                     [document.fileName, range.start.line, range.start.character]);
-                break;
-
             default:
                 traceWarning(`Invalid command for code lens ${commandName}`);
                 break;

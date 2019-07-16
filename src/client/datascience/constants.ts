@@ -35,6 +35,7 @@ export namespace Commands {
     export const AddCellBelow = 'python.datascience.addcellbelow';
     export const DebugCurrentCellPalette = 'python.datascience.debugcurrentcell.palette';
     export const DebugCell = 'python.datascience.debugcell';
+    export const RunCurrentCellAndAddBelow = 'python.datascience.runcurrentcellandaddbelow';
 }
 
 export namespace EditorContexts {
@@ -54,7 +55,7 @@ export namespace RegExpValues {
     export const KernelSpecOutputRegEx = /^\s*(\S+)\s+(\S+)$/;
     // This next one has to be a string because uglifyJS isn't handling the groups. We use named-js-regexp to parse it
     // instead.
-    export const UrlPatternRegEx = '(?<PREFIX>https?:\\/\\/)((\\(.+\\s+or\\s+(?<IP>.+)\\))|(?<LOCAL>[^\\s]+))(?<REST>:.+)' ;
+    export const UrlPatternRegEx = '(?<PREFIX>https?:\\/\\/)((\\(.+\\s+or\\s+(?<IP>.+)\\))|(?<LOCAL>[^\\s]+))(?<REST>:.+)';
     export interface IUrlPatternGroupType {
         LOCAL: string | undefined;
         PREFIX: string | undefined;
@@ -145,7 +146,7 @@ export enum Telemetry {
     WebviewMonacoStyleUpdate = 'DATASCIENCE.WEBVIEW_MONACO_STYLE_UPDATE',
     DataViewerFetchTime = 'DATASCIENCE.DATAVIEWER_FETCH_TIME',
     FindJupyterKernelSpec = 'DATASCIENCE.FIND_JUPYTER_KERNEL_SPEC'
- }
+}
 
 export namespace HelpLinks {
     export const PythonInteractiveHelpLink = 'https://aka.ms/pyaiinstall';
@@ -171,6 +172,7 @@ export namespace CodeSnippits {
     export const ChangeDirectoryCommentIdentifier = '# ms-python.python added'; // Not translated so can compare.
     export const MatplotLibInitSvg = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_format = 'svg'`;
     export const MatplotLibInitPng = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_format = 'png'`;
+    export const InstructionComments = '# to add a new cell type "#%%"\n# to add a new markdown cell type "#%% [markdown]"\n';
 }
 
 export namespace JupyterCommands {

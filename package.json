@@ -106,7 +106,7 @@
                 "when": "editorTextFocus && !editorHasSelection && python.datascience.hascodecells && python.datascience.featureenabled"
             },
             {
-                "command": "python.datascience.runcurrentcelladvance",
+                "command": "python.datascience.runcurrentcellandaddbelow",
                 "key": "alt+enter",
                 "when": "editorTextFocus && !editorHasSelection && python.datascience.hascodecells && python.datascience.featureenabled"
             }

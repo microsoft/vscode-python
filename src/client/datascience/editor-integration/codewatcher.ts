@@ -237,6 +237,40 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
+    public async runCurrentCellAndAddBelow(): Promise<void> {
+        if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
+            return Promise.resolve();
+        }
+
+        const editor = this.documentManager.activeTextEditor;
+        let index = 0;
+
+        if (editor) {
+            editor.edit((editBuilder) => {
+                let lastCell = true;
+
+                for (let i = editor.selection.end.line + 1; i < editor.document.lineCount; i += 1) {
+                    if (editor.document.lineAt(i).text.startsWith('#%%', 0)) {
+                        lastCell = false;
+                        index = i;
+                        editBuilder.insert(new Position(i, 0), '#%%\n\n');
+                        break;
+                    }
+                }
+
+                if (lastCell) {
+                    index = editor.document.lineCount;
+                    editBuilder.insert(new Position(editor.document.lineCount, 0), '\n#%%\n');
+                }
+            });
+        }
+
+        // Run the cell that matches the current cursor position, and then advance to the new cell
+        const newPosition = new Position(index + 1, 0);
+        return this.runMatchingCell(editor.selection, false)
+            .then(() => this.advanceToRange(new Range(newPosition, newPosition)));
+    }
+
     private async addCode(code: string, file: string, line: number, editor?: TextEditor, debug?: boolean): Promise<void> {
         try {
             const stopWatch = new StopWatch();
