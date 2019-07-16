@@ -269,7 +269,7 @@ export class Cell extends React.Component<ICellProps> {
 
     private renderInputs = () => {
         if (this.showInputs()) {
-            const backgroundColor = this.props.cellVM.cell.type === 'preview' ?
+            const backgroundColor = this.props.cellVM.cell.type === 'preview' || (getSettings().colorizeInputBox && this.props.cellVM.editable) ?
                 'var(--override-peek-background, var(--vscode-peekViewEditor-background))'
                 : undefined;
 

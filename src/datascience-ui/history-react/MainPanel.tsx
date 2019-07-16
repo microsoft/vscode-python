@@ -322,7 +322,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                         submitNewCode={this.submitInput}
                         baseTheme={baseTheme}
                         codeTheme={this.props.codeTheme}
-                        showWatermark={!this.state.submittedText}
+                        showWatermark={true}
                         ref={this.saveEditCellRef}
                         gotoCode={noop}
                         copyCode={noop}
