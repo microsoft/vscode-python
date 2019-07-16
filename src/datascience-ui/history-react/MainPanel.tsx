@@ -308,9 +308,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const maxOutputSize = getSettings().maxOutputSize;
         const maxTextSize = maxOutputSize && maxOutputSize < 10000 && maxOutputSize > 0 ? maxOutputSize : undefined;
         const executionCount = this.getInputExecutionCount();
+        const editPanelClass = getSettings().colorizeInputBox ? 'edit-panel-colorized' : 'edit-panel';
 
         return (
-            <div className='edit-panel'>
+            <div className={editPanelClass}>
                 <ErrorBoundary>
                     <Cell
                         editorOptions={this.state.editorOptions}
