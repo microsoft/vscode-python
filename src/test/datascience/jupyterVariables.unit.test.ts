@@ -9,12 +9,12 @@ import * as typemoq from 'typemoq';
 import { IFileSystem } from '../../client/common/platform/types';
 import { Identifiers } from '../../client/datascience/constants';
 import { JupyterVariables } from '../../client/datascience/jupyter/jupyterVariables';
-import { CellState, ICell, IHistoryProvider, IJupyterExecution, IJupyterVariable, INotebookServer } from '../../client/datascience/types';
+import { CellState, ICell, IInteractiveWindowProvider, IJupyterExecution, IJupyterVariable, INotebookServer } from '../../client/datascience/types';
 
 // tslint:disable:no-any max-func-body-length
 suite('JupyterVariables', () => {
     let execution: typemoq.IMock<IJupyterExecution>;
-    let historyProvider: typemoq.IMock<IHistoryProvider>;
+    let interactiveWindowProvider: typemoq.IMock<IInteractiveWindowProvider>;
     let fakeServer: typemoq.IMock<INotebookServer>;
     let jupyterVariables: JupyterVariables;
     let fileSystem: typemoq.IMock<IFileSystem>;
@@ -58,7 +58,7 @@ suite('JupyterVariables', () => {
 
     setup(() => {
         execution = typemoq.Mock.ofType<IJupyterExecution>();
-        historyProvider = typemoq.Mock.ofType<IHistoryProvider>();
+        interactiveWindowProvider = typemoq.Mock.ofType<IInteractiveWindowProvider>();
         // Create our fake notebook server
         fakeServer = createTypeMoq<INotebookServer>('Fake Server');
 
@@ -66,7 +66,7 @@ suite('JupyterVariables', () => {
         fileSystem.setup(fs => fs.readFile(typemoq.It.isAnyString()))
         .returns(() => Promise.resolve('test'));
 
-        jupyterVariables = new JupyterVariables(fileSystem.object, execution.object, historyProvider.object);
+        jupyterVariables = new JupyterVariables(fileSystem.object, execution.object, interactiveWindowProvider.object);
     });
 
     test('getVariables no server', async() => {

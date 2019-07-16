@@ -6,7 +6,7 @@
 // tslint:disable:no-any
 
 import { assert, expect } from 'chai';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { anything, instance, mock, resetCalls, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { WorkspaceConfiguration } from 'vscode';
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
@@ -23,7 +23,7 @@ import { createDeferred, createDeferredFromPromise } from '../../client/common/u
 import { sleep } from '../common';
 
 // tslint:disable-next-line: max-func-body-length
-suite('xA/B experiments', () => {
+suite('A/B experiments', () => {
     let workspaceService: IWorkspaceService;
     let httpClient: IHttpClient;
     let crypto: ICryptoUtils;
@@ -53,15 +53,9 @@ suite('xA/B experiments', () => {
     });
 
     async function testInitialization(
-        settings: { globalValue?: boolean } = {},
         downloadError: boolean = false,
         experimentsDownloaded?: any
     ) {
-        const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-        when(workspaceService.getConfiguration('telemetry')).thenReturn(workspaceConfig.object);
-        workspaceConfig.setup(c => c.inspect<boolean>('enableTelemetry'))
-            .returns(() => settings as any)
-            .verifiable(TypeMoq.Times.once());
         if (downloadError) {
             when(httpClient.getJSON(configUri, false)).thenReject(new Error('Kaboom'));
         } else {
@@ -77,18 +71,9 @@ suite('xA/B experiments', () => {
             // tslint:disable-next-line:no-empty
         } catch { }
 
-        verify(workspaceService.getConfiguration('telemetry')).once();
-        workspaceConfig.verifyAll();
         isDownloadedStorageValid.verifyAll();
         experimentStorage.verifyAll();
     }
-
-    test('If the users have opted out of telemetry, then they are opted out of AB testing ', async () => {
-        isDownloadedStorageValid.setup(n => n.value).returns(() => false).verifiable(TypeMoq.Times.never());
-
-        // settings = { globalValue: false }
-        await testInitialization({ globalValue: false });
-    });
 
     test('Initializing experiments does not download experiments if storage is valid and contains experiments', async () => {
         isDownloadedStorageValid.setup(n => n.value).returns(() => true).verifiable(TypeMoq.Times.once());
@@ -113,8 +98,8 @@ suite('xA/B experiments', () => {
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.never());
 
-        // settings = {}, downloadError = false, experimentsDownloaded = experiments
-        await testInitialization({}, false, experiments);
+        // downloadError = false, experimentsDownloaded = experiments
+        await testInitialization(false, experiments);
 
         verify(httpClient.getJSON(configUri, false)).once();
     });
@@ -134,10 +119,32 @@ suite('xA/B experiments', () => {
         isDownloadedStorageValid.setup(n => n.updateValue(true)).returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.never());
         downloadedExperimentsStorage.setup(n => n.updateValue(anything())).returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.never());
 
-        // settings = {}, downloadError = true
-        await testInitialization({}, true);
+        // downloadError = true
+        await testInitialization(true);
 
         verify(httpClient.getJSON(configUri, false)).once();
+    });
+
+    test('If the users have opted out of telemetry, then they are opted out of AB testing ', async () => {
+        const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
+        const settings = { globalValue: false };
+
+        when(
+            workspaceService.getConfiguration('telemetry')
+        ).thenReturn(workspaceConfig.object);
+        workspaceConfig.setup(c => c.inspect<boolean>('enableTelemetry'))
+            .returns(() => settings as any)
+            .verifiable(TypeMoq.Times.once());
+        downloadedExperimentsStorage
+            .setup(n => n.value)
+            .returns(() => undefined)
+            .verifiable(TypeMoq.Times.never());
+
+        await expManager.activate();
+
+        verify(workspaceService.getConfiguration('telemetry')).once();
+        workspaceConfig.verifyAll();
+        downloadedExperimentsStorage.verifyAll();
     });
 
     test('Ensure experiments can only be activated once', async () => {
@@ -145,38 +152,42 @@ suite('xA/B experiments', () => {
         const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
         const settings = {};
 
+        when(
+            workspaceService.getConfiguration('telemetry')
+        ).thenReturn(workspaceConfig.object);
+        workspaceConfig.setup(c => c.inspect<boolean>('enableTelemetry'))
+            .returns(() => settings as any)
+            .verifiable(TypeMoq.Times.once());
+
         downloadedExperimentsStorage
             .setup(n => n.value)
             .returns(() => undefined)
             .verifiable(TypeMoq.Times.once());
-        when(fs.fileExists(anything())).thenResolve(false);
+        when(
+            fs.fileExists(anything())
+        ).thenResolve(false);
         experimentStorage.setup(n => n.value).returns(() => undefined)
-            .verifiable(TypeMoq.Times.once());
+            .verifiable(TypeMoq.Times.exactly(2));
         isDownloadedStorageValid
             .setup(n => n.value)
             .returns(() => true)
             .verifiable(TypeMoq.Times.once());
-        when(workspaceService.getConfiguration('telemetry')).thenReturn(workspaceConfig.object);
-        workspaceConfig.setup(c => c.inspect<boolean>('enableTelemetry'))
-            .returns(() => settings as any);
 
         // First activation
         await expManager.activate();
 
-        downloadedExperimentsStorage.reset();
-        downloadedExperimentsStorage
-            .setup(n => n.value)
-            .returns(() => undefined)
-            .verifiable(TypeMoq.Times.never());
+        resetCalls(workspaceService);
 
         // Second activation
         await expManager.activate();
 
-        downloadedExperimentsStorage.verifyAll();
+        verify(workspaceService.getConfiguration(anything())).never();
 
+        workspaceConfig.verifyAll();
         verify(fs.fileExists(anything())).once();
         isDownloadedStorageValid.verifyAll();
         experimentStorage.verifyAll();
+        downloadedExperimentsStorage.verifyAll();
     });
 
     test('Ensure experiments are reliably initialized in the background', async () => {
@@ -257,7 +268,46 @@ suite('xA/B experiments', () => {
         downloadedExperimentsStorage.verifyAll();
     });
 
-    test('When no downloaded experiments are available, and if local experiments file is not valid, experiment storage is not updated', async () => {
+    test('When no downloaded experiments are available, and experiment storage contains experiments, then experiment storage is not updated', async () => {
+        downloadedExperimentsStorage
+            .setup(n => n.value)
+            .returns(() => undefined)
+            .verifiable(TypeMoq.Times.once());
+        downloadedExperimentsStorage
+            .setup(n => n.updateValue(undefined))
+            .returns(() => Promise.resolve(undefined))
+            .verifiable(TypeMoq.Times.never());
+
+        // tslint:disable-next-line:no-multiline-string
+        const fileContent = `
+        [{ "name": "experiment1", "salt": "salt", "min": 90, "max": 100 }]
+        `;
+
+        when(
+            fs.fileExists(anything())
+        ).thenResolve(true);
+        when(
+            fs.readFile(anything())
+        ).thenResolve(fileContent);
+
+        experimentStorage
+            .setup(n => n.value)
+            .returns(() => [{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }])
+            .verifiable(TypeMoq.Times.once());
+        experimentStorage
+            .setup(n => n.updateValue(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(undefined))
+            .verifiable(TypeMoq.Times.never());
+
+        await expManager.updateExperimentStorage();
+
+        verify(fs.fileExists(anything())).never();
+        verify(fs.readFile(anything())).never();
+        experimentStorage.verifyAll();
+        downloadedExperimentsStorage.verifyAll();
+    });
+
+    test('When no downloaded experiments are available, experiment storage is empty, but if local experiments file is not valid, experiment storage is not updated', async () => {
         downloadedExperimentsStorage
             .setup(n => n.value)
             .returns(() => undefined)
@@ -280,10 +330,11 @@ suite('xA/B experiments', () => {
         when(
             fs.readFile(anything())
         ).thenResolve(fileContent);
-        when(
-            fs.deleteFile(anything())
-        ).thenResolve(undefined);
 
+        experimentStorage
+            .setup(n => n.value)
+            .returns(() => undefined)
+            .verifiable(TypeMoq.Times.once());
         experimentStorage
             .setup(n => n.updateValue(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.never());
@@ -292,12 +343,11 @@ suite('xA/B experiments', () => {
 
         verify(fs.fileExists(anything())).once();
         verify(fs.readFile(anything())).once();
-        verify(fs.deleteFile(anything())).never();
         experimentStorage.verifyAll();
         downloadedExperimentsStorage.verifyAll();
     });
 
-    test('When no downloaded experiments are available, experiment storage is updated using local experiments file (which is then deleted) given experiments are valid', async () => {
+    test('When no downloaded experiments are available, and experiment storage is empty, then experiment storage is updated using local experiments file given experiments are valid', async () => {
         downloadedExperimentsStorage
             .setup(n => n.value)
             .returns(() => undefined)
@@ -320,10 +370,11 @@ suite('xA/B experiments', () => {
         when(
             fs.readFile(anything())
         ).thenResolve(fileContent);
-        when(
-            fs.deleteFile(anything())
-        ).thenResolve(undefined);
 
+        experimentStorage
+            .setup(n => n.value)
+            .returns(() => undefined)
+            .verifiable(TypeMoq.Times.once());
         experimentStorage
             .setup(n => n.updateValue([{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }]))
             .returns(() => Promise.resolve(undefined)).verifiable(TypeMoq.Times.once());
@@ -332,13 +383,12 @@ suite('xA/B experiments', () => {
 
         verify(fs.fileExists(anything())).once();
         verify(fs.readFile(anything())).once();
-        verify(fs.deleteFile(anything())).once();
         experimentStorage.verifyAll();
         downloadedExperimentsStorage.verifyAll();
     });
 
     // tslint:disable-next-line:max-func-body-length
-    suite('When no downloaded experiments are available, function updateExperimentStorage() stops execution and returns', () => {
+    suite('When no downloaded experiments are available, and experiment storage is empty, then function updateExperimentStorage() stops execution and returns', () => {
         test('If checking the existence of config file fails', async () => {
             downloadedExperimentsStorage
                 .setup(n => n.value)
@@ -356,10 +406,11 @@ suite('xA/B experiments', () => {
             when(
                 fs.readFile(anything())
             ).thenResolve('fileContent');
-            when(
-                fs.deleteFile(anything())
-            ).thenResolve(undefined);
 
+            experimentStorage
+                .setup(n => n.value)
+                .returns(() => undefined)
+                .verifiable(TypeMoq.Times.once());
             experimentStorage
                 .setup(n => n.updateValue(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve(undefined))
@@ -369,7 +420,6 @@ suite('xA/B experiments', () => {
 
             verify(fs.fileExists(anything())).once();
             verify(fs.readFile(anything())).never();
-            verify(fs.deleteFile(anything())).never();
             experimentStorage.verifyAll();
             downloadedExperimentsStorage.verifyAll();
         });
@@ -391,10 +441,11 @@ suite('xA/B experiments', () => {
             when(
                 fs.readFile(anything())
             ).thenThrow(error);
-            when(
-                fs.deleteFile(anything())
-            ).thenResolve(undefined);
 
+            experimentStorage
+                .setup(n => n.value)
+                .returns(() => undefined)
+                .verifiable(TypeMoq.Times.once());
             experimentStorage
                 .setup(n => n.updateValue(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve(undefined))
@@ -404,7 +455,6 @@ suite('xA/B experiments', () => {
 
             verify(fs.fileExists(anything())).once();
             verify(fs.readFile(anything())).once();
-            verify(fs.deleteFile(anything())).never();
             experimentStorage.verifyAll();
             downloadedExperimentsStorage.verifyAll();
         });
@@ -425,10 +475,11 @@ suite('xA/B experiments', () => {
             when(
                 fs.readFile(anything())
             ).thenResolve('fileContent');
-            when(
-                fs.deleteFile(anything())
-            ).thenResolve(undefined);
 
+            experimentStorage
+                .setup(n => n.value)
+                .returns(() => undefined)
+                .verifiable(TypeMoq.Times.once());
             experimentStorage
                 .setup(n => n.updateValue(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve(undefined))
@@ -438,7 +489,6 @@ suite('xA/B experiments', () => {
 
             verify(fs.fileExists(anything())).once();
             verify(fs.readFile(anything())).never();
-            verify(fs.deleteFile(anything())).never();
             experimentStorage.verifyAll();
             downloadedExperimentsStorage.verifyAll();
         });
@@ -466,10 +516,11 @@ suite('xA/B experiments', () => {
             when(
                 fs.readFile(anything())
             ).thenResolve(fileContent);
-            when(
-                fs.deleteFile(anything())
-            ).thenResolve(undefined);
 
+            experimentStorage
+                .setup(n => n.value)
+                .returns(() => undefined)
+                .verifiable(TypeMoq.Times.once());
             experimentStorage
                 .setup(n => n.updateValue(TypeMoq.It.isAny()))
                 .returns(() => Promise.reject(error))
@@ -479,7 +530,6 @@ suite('xA/B experiments', () => {
 
             verify(fs.fileExists(anything())).once();
             verify(fs.readFile(anything())).once();
-            verify(fs.deleteFile(anything())).never();
             experimentStorage.verifyAll();
             downloadedExperimentsStorage.verifyAll();
         });
@@ -549,10 +599,10 @@ suite('xA/B experiments', () => {
                     expect(() => expManager.isUserInRange(79, 94, 'salt')).to.throw();
                 } else if (testParams.error) {
                     const error = new Error('Kaboom');
-                    when(crypto.createHash(anything(), 'hex', 'number')).thenThrow(error);
+                    when(crypto.createHash(anything(), 'number')).thenThrow(error);
                     expect(() => expManager.isUserInRange(79, 94, 'salt')).to.throw(error);
                 } else {
-                    when(crypto.createHash(anything(), 'hex', 'number')).thenReturn(testParams.hash);
+                    when(crypto.createHash(anything(), 'number')).thenReturn(testParams.hash);
                     expect(expManager.isUserInRange(79, 94, 'salt')).to.equal(testParams.expectedResult, 'Incorrectly identified');
                 }
             });
@@ -586,7 +636,7 @@ suite('xA/B experiments', () => {
                 .returns(() => testParams.experimentStorageValue);
             when(appEnvironment.machineId).thenReturn('101');
             if (testParams.hash) {
-                when(crypto.createHash(anything(), 'hex', 'number')).thenReturn(testParams.hash);
+                when(crypto.createHash(anything(), 'number')).thenReturn(testParams.hash);
             }
             expManager.populateUserExperiments();
             assert.deepEqual(expManager.userExperiments, testParams.expectedResult);

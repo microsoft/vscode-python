@@ -2,20 +2,20 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { CodeLens, Command, Position, Range, Selection, TextDocument, TextEditor, TextEditorRevealType } from 'vscode';
+import { CodeLens, Position, Range, Selection, TextDocument, TextEditor, TextEditorRevealType } from 'vscode';
 
-import { IApplicationShell, IDocumentManager } from '../../common/application/types';
+import { IDocumentManager } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDataScienceSettings, ILogger } from '../../common/types';
-import * as localize from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
+import { IConfigurationService, IDataScienceSettings } from '../../common/types';
+// import * as localize from '../../common/utils/localize';
+import { StopWatch } from '../../common/utils/stopWatch';
+import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { ICodeExecutionHelper } from '../../terminals/types';
-import { generateCellRanges } from '../cellFactory';
 import { Commands, Telemetry } from '../constants';
-import { JupyterInstallError } from '../jupyter/jupyterInstallError';
-import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
-import { ICodeWatcher, IHistoryProvider } from '../types';
+// import { JupyterInstallError } from '../jupyter/jupyterInstallError';
+// import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
+import { ICodeLensFactory, ICodeWatcher, IDataScienceErrorHandler, IInteractiveWindowProvider } from '../types';
 
 @injectable()
 export class CodeWatcher implements ICodeWatcher {
@@ -25,14 +25,15 @@ export class CodeWatcher implements ICodeWatcher {
     private codeLenses: CodeLens[] = [];
     private cachedSettings: IDataScienceSettings | undefined;
 
-    constructor(@inject(IApplicationShell) private applicationShell: IApplicationShell,
-                @inject(ILogger) private logger: ILogger,
-                @inject(IHistoryProvider) private historyProvider : IHistoryProvider,
-                @inject(IFileSystem) private fileSystem: IFileSystem,
-                @inject(IConfigurationService) private configService: IConfigurationService,
-                @inject(IDocumentManager) private documentManager : IDocumentManager,
-                @inject(ICodeExecutionHelper) private executionHelper: ICodeExecutionHelper
-        ) {
+    constructor(@inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
+        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IConfigurationService) private configService: IConfigurationService,
+        @inject(IDocumentManager) private documentManager: IDocumentManager,
+        @inject(ICodeExecutionHelper) private executionHelper: ICodeExecutionHelper,
+        @inject(IDataScienceErrorHandler) protected dataScienceErrorHandler: IDataScienceErrorHandler,
+        @inject(ICodeLensFactory) private codeLensFactory: ICodeLensFactory,
+        @inject(IServiceContainer) protected serviceContainer: IServiceContainer
+    ) {
     }
 
     public setDocument(document: TextDocument) {
@@ -44,37 +45,9 @@ export class CodeWatcher implements ICodeWatcher {
 
         // Get document cells here. Make a copy of our settings.
         this.cachedSettings = JSON.parse(JSON.stringify(this.configService.getSettings().datascience));
-        const cells = generateCellRanges(document, this.cachedSettings);
 
-        this.codeLenses = [];
-        let firstCell = true;
-        // Be careful here. These arguments will be serialized during liveshare sessions
-        // and so shouldn't reference local objects.
-        cells.forEach(cell => {
-            const cmd: Command = {
-                arguments: [document.fileName, cell.range.start.line, cell.range.start.character, cell.range.end.line, cell.range.end.character],
-                title: localize.DataScience.runCellLensCommandTitle(),
-                command: Commands.RunCell
-            };
-            this.codeLenses.push(new CodeLens(cell.range, cmd));
-            const runAllAboveCmd: Command = {
-                arguments: [document.fileName, cell.range.start.line, cell.range.start.character],
-                title: localize.DataScience.runAllCellsAboveLensCommandTitle(),
-                command: Commands.RunAllCellsAbove
-            };
-            // The first cell should not have a run all above command
-            if (firstCell) {
-                firstCell = false;
-            } else {
-                this.codeLenses.push(new CodeLens(cell.range, runAllAboveCmd));
-            }
-            const runCellAndBelowCmd: Command = {
-                arguments: [document.fileName, cell.range.start.line, cell.range.start.character],
-                title: localize.DataScience.runCellAndAllBelowLensCommandTitle(),
-                command: Commands.RunCellAndAllBelow
-            };
-            this.codeLenses.push(new CodeLens(cell.range, runCellAndBelowCmd));
-        });
+        // Use the factory to generate our new code lenses.
+        this.codeLenses = this.codeLensFactory.createCodeLenses(document);
     }
 
     public getFileName() {
@@ -85,12 +58,22 @@ export class CodeWatcher implements ICodeWatcher {
         return this.version;
     }
 
-    public getCachedSettings() : IDataScienceSettings | undefined {
+    public getCachedSettings(): IDataScienceSettings | undefined {
         return this.cachedSettings;
     }
 
     public getCodeLenses() {
         return this.codeLenses;
+    }
+
+    @captureTelemetry(Telemetry.DebugCurrentCell)
+    public async debugCurrentCell() {
+        if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
+            return Promise.resolve();
+        }
+
+        // Run the cell that matches the current cursor position.
+        return this.runMatchingCell(this.documentManager.activeTextEditor.selection, false, true);
     }
 
     @captureTelemetry(Telemetry.RunAllCells)
@@ -106,8 +89,7 @@ export class CodeWatcher implements ICodeWatcher {
 
                     // Note: We do a get or create active before all addCode commands to make sure that we either have a history up already
                     // or if we do not we need to start it up as these commands are all expected to start a new history if needed
-                    const activeHistory = await this.historyProvider.getOrCreateActive();
-                    await activeHistory.addCode(code, this.getFileName(), range.start.line);
+                    await this.addCode(code, this.getFileName(), range.start.line);
                 }
             }
         }
@@ -135,8 +117,7 @@ export class CodeWatcher implements ICodeWatcher {
                 if (!pastStop && this.document) {
                     // We have a cell and we are not past or at the stop point
                     const code = this.document.getText(lens.range);
-                    const activeHistory = await this.historyProvider.getOrCreateActive();
-                    await activeHistory.addCode(code, this.getFileName(), lens.range.start.line);
+                    await this.addCode(code, this.getFileName(), lens.range.start.line);
                 } else {
                     // If we get a cell past or at the stop point stop
                     break;
@@ -156,30 +137,26 @@ export class CodeWatcher implements ICodeWatcher {
                 if (pastStart && this.document) {
                     // We have a cell and we are not past or at the stop point
                     const code = this.document.getText(lens.range);
-                    const activeHistory = await this.historyProvider.getOrCreateActive();
-                    await activeHistory.addCode(code, this.getFileName(), lens.range.start.line);
+                    await this.addCode(code, this.getFileName(), lens.range.start.line);
                 }
             }
         }
     }
 
     @captureTelemetry(Telemetry.RunSelectionOrLine)
-    public async runSelectionOrLine(activeEditor : TextEditor | undefined) {
+    public async runSelectionOrLine(activeEditor: TextEditor | undefined) {
         if (this.document && activeEditor &&
             this.fileSystem.arePathsSame(activeEditor.document.fileName, this.document.fileName)) {
-
             // Get just the text of the selection or the current line if none
             const codeToExecute = await this.executionHelper.getSelectedTextToExecute(activeEditor);
             if (!codeToExecute) {
-                return ;
+                return;
             }
             const normalizedCode = await this.executionHelper.normalizeLines(codeToExecute!);
             if (!normalizedCode || normalizedCode.trim().length === 0) {
                 return;
             }
-
-            const activeHistory = await this.historyProvider.getOrCreateActive();
-            await activeHistory.addCode(normalizedCode, this.getFileName(), activeEditor.selection.start.line, activeEditor);
+            await this.addCode(normalizedCode, this.getFileName(), activeEditor.selection.start.line, activeEditor);
         }
     }
 
@@ -190,8 +167,7 @@ export class CodeWatcher implements ICodeWatcher {
             const code = this.document.getText(new Range(0, 0, previousLine.range.end.line, previousLine.range.end.character));
 
             if (code && code.trim().length) {
-                const activeHistory = await this.historyProvider.getOrCreateActive();
-                await activeHistory.addCode(code, this.getFileName(), 0);
+                await this.addCode(code, this.getFileName(), 0);
             }
         }
     }
@@ -203,14 +179,13 @@ export class CodeWatcher implements ICodeWatcher {
             const code = this.document.getText(new Range(targetLine, 0, lastLine.range.end.line, lastLine.range.end.character));
 
             if (code && code.trim().length) {
-                const activeHistory = await this.historyProvider.getOrCreateActive();
-                await activeHistory.addCode(code, this.getFileName(), targetLine);
+                await this.addCode(code, this.getFileName(), targetLine);
             }
         }
     }
 
     @captureTelemetry(Telemetry.RunCell)
-    public runCell(range: Range) : Promise<void> {
+    public runCell(range: Range): Promise<void> {
         if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
             return Promise.resolve();
         }
@@ -220,8 +195,18 @@ export class CodeWatcher implements ICodeWatcher {
         return this.runMatchingCell(range, advance);
     }
 
+    @captureTelemetry(Telemetry.DebugCurrentCell)
+    public debugCell(range: Range): Promise<void> {
+        if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
+            return Promise.resolve();
+        }
+
+        // Debug the cell clicked.
+        return this.runMatchingCell(range, false, true);
+    }
+
     @captureTelemetry(Telemetry.RunCurrentCell)
-    public runCurrentCell() : Promise<void> {
+    public runCurrentCell(): Promise<void> {
         if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
             return Promise.resolve();
         }
@@ -240,7 +225,7 @@ export class CodeWatcher implements ICodeWatcher {
         return this.runMatchingCell(this.documentManager.activeTextEditor.selection, true);
     }
 
-    public async addEmptyCellToBottom() : Promise<void> {
+    public async addEmptyCellToBottom(): Promise<void> {
         const editor = this.documentManager.activeTextEditor;
         if (editor) {
             editor.edit((editBuilder) => {
@@ -252,7 +237,21 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
-    private async runMatchingCell(range: Range, advance?: boolean) {
+    private async addCode(code: string, file: string, line: number, editor?: TextEditor, debug?: boolean): Promise<void> {
+        try {
+            const stopWatch = new StopWatch();
+            const activeInteractiveWindow = await this.interactiveWindowProvider.getOrCreateActive();
+            if (debug) {
+                await activeInteractiveWindow.debugCode(code, file, line, editor, stopWatch);
+            } else {
+                await activeInteractiveWindow.addCode(code, file, line, editor, stopWatch);
+            }
+        } catch (err) {
+            this.dataScienceErrorHandler.handleError(err);
+        }
+    }
+
+    private async runMatchingCell(range: Range, advance?: boolean, debug?: boolean) {
         const currentRunCellLens = this.getCurrentCellLens(range.start);
         const nextRunCellLens = this.getNextCellLens(range.start);
 
@@ -276,22 +275,16 @@ export class CodeWatcher implements ICodeWatcher {
             if (this.document) {
                 // Use that to get our code.
                 const code = this.document.getText(currentRunCellLens.range);
-
-                try {
-                    const activeHistory = await this.historyProvider.getOrCreateActive();
-                    await activeHistory.addCode(code, this.getFileName(), range.start.line, this.documentManager.activeTextEditor);
-                } catch (err) {
-                    this.handleError(err);
-                }
+                await this.addCode(code, this.getFileName(), range.start.line, this.documentManager.activeTextEditor, debug);
             }
         }
     }
 
-    private getCurrentCellLens(pos: Position) : CodeLens | undefined {
+    private getCurrentCellLens(pos: Position): CodeLens | undefined {
         return this.codeLenses.find(l => l.range.contains(pos) && l.command !== undefined && l.command.command === Commands.RunCell);
     }
 
-    private getNextCellLens(pos: Position) : CodeLens | undefined {
+    private getNextCellLens(pos: Position): CodeLens | undefined {
         const currentIndex = this.codeLenses.findIndex(l => l.range.contains(pos) && l.command !== undefined && l.command.command === Commands.RunCell);
         if (currentIndex >= 0) {
             return this.codeLenses.find((l: CodeLens, i: number) => l.command !== undefined && l.command.command === Commands.RunCell && i > currentIndex);
@@ -302,32 +295,8 @@ export class CodeWatcher implements ICodeWatcher {
     private async runFileInteractiveInternal() {
         if (this.document) {
             const code = this.document.getText();
-            const activeHistory = await this.historyProvider.getOrCreateActive();
-            await activeHistory.addCode(code, this.getFileName(), 0);
+            await this.addCode(code, this.getFileName(), 0);
         }
-    }
-
-    // tslint:disable-next-line:no-any
-    private handleError = (err : any) => {
-        if (err instanceof JupyterInstallError) {
-            const jupyterError = err as JupyterInstallError;
-
-            // This is a special error that shows a link to open for more help
-            this.applicationShell.showErrorMessage(jupyterError.message, jupyterError.actionTitle).then(v => {
-                // User clicked on the link, open it.
-                if (v === jupyterError.actionTitle) {
-                    this.applicationShell.openUrl(jupyterError.action);
-                }
-            });
-        } else if (err instanceof JupyterSelfCertsError) {
-            // Don't show the message for self cert errors
-            noop();
-        } else if (err.message) {
-            this.applicationShell.showErrorMessage(err.message);
-        } else {
-            this.applicationShell.showErrorMessage(err.toString());
-        }
-        this.logger.logError(err);
     }
 
     // User has picked run and advance on the last cell of a document

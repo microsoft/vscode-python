@@ -9,6 +9,7 @@ import TelemetryReporter from 'vscode-extension-telemetry';
 
 import { IWorkspaceService } from '../common/application/types';
 import { EXTENSION_ROOT_DIR, isTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
+import { traceInfo } from '../common/logger';
 import { StopWatch } from '../common/utils/stopWatch';
 import { Telemetry } from '../datascience/constants';
 import { LinterId } from '../linters/types';
@@ -104,7 +105,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
 
     if (ex && (eventName as any) !== 'ERROR') {
         // When sending `ERROR` telemetry event no need to send custom properties.
-        // Else we have to review all properties everytime as part of GDPR.
+        // Else we have to review all properties every time as part of GDPR.
         // Assume we have 10 events all with their own properties.
         // As we have errors for each event, those properties are treated as new data items.
         // Hence they need to be classified as part of the GDPR process, and thats unnecessary and onerous.
@@ -126,6 +127,9 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
         });
     }
     reporter.sendTelemetryEvent((eventName as any) as string, customProperties, measures);
+    if (process.env && process.env.VSC_PYTHON_LOG_TELEMETRY) {
+        traceInfo(`Telemetry Event : ${eventName} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(customProperties)} `);
+    }
 }
 
 // tslint:disable-next-line:no-any function-name
@@ -283,6 +287,7 @@ export interface IEventNamePropertyMapping {
     [EventName.GO_TO_OBJECT_DEFINITION]: never | undefined;
     [EventName.HOVER_DEFINITION]: never | undefined;
     [EventName.HASHED_PACKAGE_NAME]: { hashedName: string };
+    [EventName.HASHED_PACKAGE_PERF]: never | undefined;
     [EventName.LINTER_NOT_INSTALLED_PROMPT]: LinterInstallPromptTelemetry;
     [EventName.PYTHON_INSTALL_PACKAGE]: { installer: string };
     [EventName.LINTING]: LintingTelemetry;
@@ -294,14 +299,14 @@ export interface IEventNamePropertyMapping {
     [EventName.PYTHON_INTERPRETER_AUTO_SELECTION]: InterpreterAutoSelection;
     [EventName.PYTHON_INTERPRETER_DISCOVERY]: InterpreterDiscovery;
     [EventName.PYTHON_INTERPRETER_ACTIVATE_ENVIRONMENT_PROMPT]: { selection: 'Yes' | 'No' | 'Ignore' | undefined };
+    [EventName.INSIDERS_PROMPT]: { selection: 'Use Stable' | 'Reload' | undefined };
+    [EventName.INSIDERS_RELOAD_PROMPT]: { selection: 'Reload' | undefined };
     [EventName.PYTHON_LANGUAGE_SERVER_SWITCHED]: { change: 'Switch to Jedi from LS' | 'Switch to LS from Jedi' };
-    [EventName.PYTHON_LANGUAGE_SERVER_ANALYSISTIME]: { success: boolean };
     [EventName.PYTHON_LANGUAGE_SERVER_DOWNLOADED]: LanguageServerVersionTelemetry;
     [EventName.PYTHON_LANGUAGE_SERVER_ENABLED]: never | undefined;
     [EventName.PYTHON_LANGUAGE_SERVER_ERROR]: LanguageServerErrorTelemetry;
     [EventName.PYTHON_LANGUAGE_SERVER_EXTRACTED]: LanguageServerVersionTelemetry;
     [EventName.PYTHON_LANGUAGE_SERVER_LIST_BLOB_STORE_PACKAGES]: never | undefined;
-    [EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_NOT_SUPPORTED]: never | undefined;
     [EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED]: LanguageServePlatformSupported;
     [EventName.PYTHON_LANGUAGE_SERVER_READY]: never | undefined;
     [EventName.PYTHON_LANGUAGE_SERVER_STARTUP]: never | undefined;
@@ -321,6 +326,8 @@ export interface IEventNamePropertyMapping {
     [EventName.TERMINAL_CREATE]: TerminalTelemetry;
     [EventName.UNITTEST_DISCOVER]: TestDiscoverytTelemetry;
     [EventName.UNITTEST_DISCOVER_WITH_PYCODE]: never | undefined;
+    [EventName.UNITTEST_NAVIGATE]: { byFile?: boolean; byFunction?: boolean; bySuite?: boolean; focus_code?: boolean };
+    [EventName.UNITTEST_EXPLORER_WORK_SPACE_COUNT]: { count: number };
     [EventName.UNITTEST_RUN]: TestRunTelemetry;
     [EventName.UNITTEST_STOP]: never | undefined;
     [EventName.UNITTEST_DISABLE]: never | undefined;
@@ -330,6 +337,8 @@ export interface IEventNamePropertyMapping {
     [EventName.WORKSPACE_SYMBOLS_GO_TO]: never | undefined;
     // Data Science
     [Telemetry.AddCellBelow]: never | undefined;
+    [Telemetry.ClassConstructionTime]: { class: string };
+    [Telemetry.CodeLensAverageAcquisitionTime]: never | undefined;
     [Telemetry.CollapseAll]: never | undefined;
     [Telemetry.ConnectFailedJupyter]: never | undefined;
     [Telemetry.ConnectLocalJupyter]: never | undefined;
@@ -338,10 +347,17 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ConnectRemoteSelfCertFailedJupyter]: never | undefined;
     [Telemetry.CopySourceCode]: never | undefined;
     [Telemetry.DataScienceSettings]: JSONObject;
+    [Telemetry.DataViewerFetchTime]: never | undefined;
+    [Telemetry.DebugCurrentCell]: never | undefined;
     [Telemetry.DeleteAllCells]: never | undefined;
     [Telemetry.DeleteCell]: never | undefined;
+    [Telemetry.FindJupyterCommand]: { command: string };
+    [Telemetry.FindJupyterKernelSpec]: never | undefined;
     [Telemetry.DisableInteractiveShiftEnter]: never | undefined;
     [Telemetry.EnableInteractiveShiftEnter]: never | undefined;
+    [Telemetry.ExecuteCell]: never | undefined;
+    [Telemetry.ExecuteCellPerceivedCold]: never | undefined;
+    [Telemetry.ExecuteCellPerceivedWarm]: never | undefined;
     [Telemetry.ExpandAll]: never | undefined;
     [Telemetry.ExportNotebook]: never | undefined;
     [Telemetry.ExportPythonFile]: never | undefined;
@@ -350,13 +366,19 @@ export interface IEventNamePropertyMapping {
     [Telemetry.GetPasswordFailure]: never | undefined;
     [Telemetry.GetPasswordSuccess]: never | undefined;
     [Telemetry.GotoSourceCode]: never | undefined;
+    [Telemetry.HiddenCellTime]: never | undefined;
     [Telemetry.ImportNotebook]: { scope: 'command' | 'file' };
     [Telemetry.Interrupt]: never | undefined;
+    [Telemetry.InterruptJupyterTime]: never | undefined;
     [Telemetry.PandasNotInstalled]: never | undefined;
     [Telemetry.PandasTooOld]: never | undefined;
+    [Telemetry.PtvsdInstallFailed]: never | undefined;
+    [Telemetry.PtvsdPromptToInstall]: never | undefined;
+    [Telemetry.PtvsdSuccessfullyInstalled]: never | undefined;
     [Telemetry.OpenPlotViewer]: never | undefined;
     [Telemetry.Redo]: never | undefined;
     [Telemetry.RemoteAddCode]: never | undefined;
+    [Telemetry.RestartJupyterTime]: never | undefined;
     [Telemetry.RestartKernel]: never | undefined;
     [Telemetry.RunAllCells]: never | undefined;
     [Telemetry.RunSelectionOrLine]: never | undefined;
@@ -377,14 +399,16 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ShowDataViewer]: { rows: number | undefined; columns: number | undefined };
     [Telemetry.ShowHistoryPane]: never | undefined;
     [Telemetry.StartJupyter]: never | undefined;
+    [Telemetry.StartJupyterProcess]: never | undefined;
     [Telemetry.SubmitCellThroughInput]: never | undefined;
     [Telemetry.Undo]: never | undefined;
+    [Telemetry.VariableExplorerFetchTime]: never | undefined;
     [Telemetry.VariableExplorerToggled]: { open: boolean };
     [Telemetry.VariableExplorerVariableCount]: { variableCount: number };
-    [EventName.UNITTEST_NAVIGATE_TEST_FILE]: never | undefined;
-    [EventName.UNITTEST_NAVIGATE_TEST_FUNCTION]: { focus_code: boolean };
-    [EventName.UNITTEST_NAVIGATE_TEST_SUITE]: { focus_code: boolean };
-    [EventName.UNITTEST_EXPLORER_WORK_SPACE_COUNT]: { count: number };
+    [Telemetry.WaitForIdleJupyter]: never | undefined;
+    [Telemetry.WebviewMonacoStyleUpdate]: never | undefined;
+    [Telemetry.WebviewStartup]: { type: string };
+    [Telemetry.WebviewStyleUpdate]: never | undefined;
     /*
     Telemetry event sent with details of Jedi Memory usage.
     memory - Memory usage of Process in kb.
@@ -417,7 +441,7 @@ export interface IEventNamePropertyMapping {
     [EventName.TERMINAL_SHELL_IDENTIFICATION]: {
         failed: boolean;
         terminalProvided: boolean;
-        shellIdentificationSource: 'terminalName' | 'settings' | 'environment' | 'default';
+        shellIdentificationSource: 'terminalName' | 'settings' | 'environment' | 'default' | 'vscode';
         hasCustomShell: undefined | boolean;
         hasShellInEnv: undefined | boolean;
     };

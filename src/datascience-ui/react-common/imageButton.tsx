@@ -25,11 +25,11 @@ export class ImageButton extends React.Component<IImageButtonProps> {
 
         return (
             <button role='button' aria-pressed='false' disabled={this.props.disabled} aria-disabled={ariaDisabled} title={this.props.tooltip} aria-label={this.props.tooltip} className={classNames} onClick={this.props.onClick}>
-                <div className={innerFilter} >
-                    <div className='image-button-child'>
+                <span className={innerFilter} >
+                    <span className='image-button-child'>
                         {this.props.children}
-                    </div>
-                </div>
+                    </span>
+                </span>
             </button>
         );
     }

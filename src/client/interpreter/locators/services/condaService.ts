@@ -4,7 +4,7 @@ import { compare, parse, SemVer } from 'semver';
 import { ConfigurationChangeEvent, Uri } from 'vscode';
 
 import { IWorkspaceService } from '../../../common/application/types';
-import { Logger } from '../../../common/logger';
+import { Logger, traceDecorators, traceVerbose } from '../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../common/process/types';
 import { IConfigurationService, IDisposableRegistry, ILogger, IPersistentStateFactory } from '../../../common/types';
@@ -210,6 +210,7 @@ export class CondaService implements ICondaService {
     /**
      * Return the list of conda envs (by name, interpreter filename).
      */
+    @traceDecorators.verbose('Get Conda environments')
     public async getCondaEnvironments(ignoreCache: boolean): Promise<({ name: string; path: string }[]) | undefined> {
         // Global cache.
         // tslint:disable-next-line:no-any
@@ -222,6 +223,7 @@ export class CondaService implements ICondaService {
             const condaFile = await this.getCondaFile();
             const processService = await this.processServiceFactory.create();
             const envInfo = await processService.exec(condaFile, ['env', 'list']).then(output => output.stdout);
+            traceVerbose(`Conda Env List ${envInfo}}`);
             const environments = this.condaHelper.parseCondaEnvironmentNames(envInfo);
             await globalPersistence.updateValue({ data: environments });
             return environments;
@@ -246,6 +248,7 @@ export class CondaService implements ICondaService {
     /**
      * Get the conda exe from the path to an interpreter's python. This might be different than the globally registered conda.exe
      */
+    @traceDecorators.verbose('Get Conda File from interpreter')
     public async getCondaFileFromInterpreter(interpreterPath?: string, envName?: string): Promise<string | undefined> {
         const condaExe = this.platform.isWindows ? 'conda.exe' : 'conda';
         const scriptsDir = this.platform.isWindows ? 'Scripts' : 'bin';

@@ -5,11 +5,12 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import { parse } from 'semver';
 import * as vscode from 'vscode';
 import { IPlatformService } from '../platform/types';
 import { ICurrentProcess, IPathUtils } from '../types';
 import { OSType } from '../utils/platform';
-import { IApplicationEnvironment } from './types';
+import { Channel, IApplicationEnvironment } from './types';
 
 @injectable()
 export class ApplicationEnvironment implements IApplicationEnvironment {
@@ -18,7 +19,7 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
         @inject(ICurrentProcess) private readonly process: ICurrentProcess) { }
 
     public get userSettingsFile(): string | undefined {
-        const vscodeFolderName = vscode.env.appName.indexOf('Insider') > 0 ? 'Code - Insiders' : 'Code';
+        const vscodeFolderName = this.channel === 'insiders' ? 'Code - Insiders' : 'Code';
         switch (this.platform.osType) {
             case OSType.OSX:
                 return path.join(this.pathUtils.home, 'Library', 'Application Support', vscodeFolderName, 'User', 'settings.json');
@@ -49,9 +50,20 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
         // tslint:disable-next-line:non-literal-require
         return this.packageJson.displayName;
     }
+    public get shell(): string | undefined {
+        // tslint:disable-next-line:no-any
+        return (vscode.env as any).shell;
+    }
     // tslint:disable-next-line:no-any
     public get packageJson(): any {
         // tslint:disable-next-line:non-literal-require no-require-imports
         return require('../../../../package.json');
+    }
+    public get channel(): Channel {
+        return this.appName.indexOf('Insider') > 0 ? 'insiders' : 'stable';
+    }
+    public get extensionChannel(): Channel {
+        const version = parse(this.packageJson.version);
+        return !version || version.prerelease.length > 0 ? 'insiders' : 'stable';
     }
 }

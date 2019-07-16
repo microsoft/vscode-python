@@ -4,6 +4,7 @@
 
 import { nbformat } from '@jupyterlab/coreutils';
 import { JSONObject } from '@phosphor/coreutils';
+import ansiRegex from 'ansi-regex';
 import ansiToHtml from 'ansi-to-html';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
@@ -11,7 +12,7 @@ import * as React from 'react';
 import JSONTree from 'react-json-tree';
 
 import '../../client/common/extensions';
-import { concatMultilineString, formatStreamText } from '../../client/datascience/common';
+import { concatMultilineString } from '../../client/datascience/common';
 import { Identifiers, RegExpValues } from '../../client/datascience/constants';
 import { CellState, ICell } from '../../client/datascience/types';
 import { noop } from '../../test/core';
@@ -140,7 +141,7 @@ export class Cell extends React.Component<ICellProps> {
     }
 
     private getDeleteString = () => {
-        return getLocString('DataScience.deleteButtonTooltip', 'Remove Cell');
+        return getLocString('DataScience.deleteButtonTooltip', 'Remove cell');
     }
 
     private getGoToCodeString = () => {
@@ -148,7 +149,7 @@ export class Cell extends React.Component<ICellProps> {
     }
 
     private getCopyBackToSourceString = () => {
-        return getLocString('DataScience.copyBackToSource', 'Paste code into file');
+        return getLocString('DataScience.copyBackToSourceButtonTooltip', 'Paste code into file');
     }
 
     private getCell = () => {
@@ -506,16 +507,15 @@ export class Cell extends React.Component<ICellProps> {
             // Stream output needs to be wrapped in xmp so it
             // show literally. Otherwise < chars start a new html element.
             const stream = copy as nbformat.IStream;
-            const multiline = concatMultilineString(stream.text);
-            const formatted = formatStreamText(multiline);
+            const formatted = concatMultilineString(stream.text);
             copy.data = {
-                'text/html' : `<xmp>${formatted}</xmp>`
+                'text/html' : formatted.includes('<') ? `<xmp>${formatted}</xmp>` : `<div>${formatted}</div>`
             };
 
             // Output may have goofy ascii colorization chars in it. Try
             // colorizing if we don't have html that needs <xmp> around it (ex. <type ='string'>)
             try {
-                if (!formatted.includes('<')) {
+                if (ansiRegex().test(formatted)) {
                     const converter = new ansiToHtml(Cell.getAnsiToHtmlOptions());
                     const html = converter.toHtml(formatted);
                     copy.data = {

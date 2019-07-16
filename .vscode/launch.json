@@ -3,12 +3,29 @@
     "version": "0.1.0",
     "configurations": [
         {
+            "name": "Extension",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}"
+            ],
+            "stopOnEntry": false,
+            "smartStep": true,
+            "sourceMaps": true,
+            "outFiles": [
+                "${workspaceFolder}/out/**/*"
+            ],
+            "preLaunchTask": "Compile"
+        },
+        {
             "name": "Extension inside container",
             "type": "extensionHost",
             "request": "launch",
             "runtimeExecutable": "${execPath}",
             "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}", "${workspaceFolder}/data"
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "${workspaceFolder}/data"
             ],
             "stopOnEntry": false,
             "smartStep": true,
@@ -24,7 +41,9 @@
             "request": "launch",
             "module": "IPython",
             "console": "integratedTerminal",
-            "args": ["${file}"] // Additional args should be prefixed with a '--' first.
+            "args": [
+                "${file}"
+            ] // Additional args should be prefixed with a '--' first.
         },
         {
             "name": "Python: Current File",
@@ -32,22 +51,6 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal"
-        },
-        {
-            "name": "Extension",
-            "type": "extensionHost",
-            "request": "launch",
-            "runtimeExecutable": "${execPath}",
-            "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}"
-            ],
-            "stopOnEntry": false,
-            "smartStep": true,
-            "sourceMaps": true,
-            "outFiles": [
-                "${workspaceFolder}/out/**/*"
-            ],
-            "preLaunchTask": "Compile"
         },
         {
             "name": "Debugger as debugServer",
@@ -178,6 +181,23 @@
             "args": [
                 "watch"
             ]
+        },
+        {
+            "name": "Behave Smoke Tests",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/uitests/__main__.py",
+            "args": [
+                "test",
+                "--",
+                "--format",
+                "progress3",
+                // Change the tag `@wip` to what ever you want to run.
+                // Default is assumed to be somethign that's a work in progress (wip).
+                "--tags=@wip"
+            ],
+            "justMyCode": false,
+            "console": "internalConsole"
         }
     ],
     "compounds": [

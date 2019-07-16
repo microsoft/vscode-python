@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { Observable } from 'rxjs/Observable';
+import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
@@ -18,6 +19,7 @@ import {
     IDataScience,
     IJupyterSessionManager,
     INotebookCompletion,
+    INotebookExecutionLogger,
     INotebookServer,
     INotebookServerLaunchInfo,
     InterruptResult
@@ -29,10 +31,10 @@ import { IExecuteObservableResponse, ILiveShareParticipant, IServerResponse } fr
 export class GuestJupyterServer
     extends LiveShareParticipantGuest(LiveShareParticipantDefault, LiveShare.JupyterServerSharedService)
     implements INotebookServer, ILiveShareParticipant {
-    private launchInfo : INotebookServerLaunchInfo | undefined;
-    private responseQueue : ResponseQueue = new ResponseQueue();
+    private launchInfo: INotebookServerLaunchInfo | undefined;
+    private responseQueue: ResponseQueue = new ResponseQueue();
     private connectPromise: Deferred<INotebookServerLaunchInfo> = createDeferred<INotebookServerLaunchInfo>();
-
+    private _id = uuid();
     constructor(
         liveShare: ILiveShareApi,
         private dataScience: IDataScience,
@@ -40,9 +42,14 @@ export class GuestJupyterServer
         private disposableRegistry: IDisposableRegistry,
         _asyncRegistry: IAsyncDisposableRegistry,
         private configService: IConfigurationService,
-        _sessionManager: IJupyterSessionManager
+        _sessionManager: IJupyterSessionManager,
+        _loggers: INotebookExecutionLogger[]
     ) {
         super(liveShare);
+    }
+
+    public get id(): string {
+        return this._id;
     }
 
     public async connect(launchInfo: INotebookServerLaunchInfo, _cancelToken?: CancellationToken): Promise<void> {
@@ -139,7 +146,7 @@ export class GuestJupyterServer
         return this.connectPromise.promise;
     }
 
-    public async waitForServiceName() : Promise<string> {
+    public async waitForServiceName(): Promise<string> {
         // First wait for connect to occur
         const launchInfo = await this.waitForConnect();
 
@@ -152,7 +159,7 @@ export class GuestJupyterServer
         return `${LiveShare.JupyterServerSharedService}${launchInfo.purpose}`;
     }
 
-    public async getSysInfo() : Promise<ICell | undefined> {
+    public async getSysInfo(): Promise<ICell | undefined> {
         // This is a special case. Ask the shared server
         const service = await this.waitForService();
         if (service) {
@@ -161,7 +168,7 @@ export class GuestJupyterServer
         }
     }
 
-    public async getCompletion(_cellCode: string, _offsetInCode: number, _cancelToken?: CancellationToken) : Promise<INotebookCompletion> {
+    public async getCompletion(_cellCode: string, _offsetInCode: number, _cancelToken?: CancellationToken): Promise<INotebookCompletion> {
         return Promise.resolve({
             matches: [],
             cursor: {
@@ -172,7 +179,7 @@ export class GuestJupyterServer
         });
     }
 
-    public async onAttach(api: vsls.LiveShare | null) : Promise<void> {
+    public async onAttach(api: vsls.LiveShare | null): Promise<void> {
         await super.onAttach(api);
 
         if (api) {
@@ -204,7 +211,7 @@ export class GuestJupyterServer
     }
 
     // tslint:disable-next-line:no-any
-    private async sendRequest(command: string, args: any[]) : Promise<any> {
+    private async sendRequest(command: string, args: any[]): Promise<any> {
         const service = await this.waitForService();
         if (service) {
             return service.request(command, args);

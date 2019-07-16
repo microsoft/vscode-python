@@ -217,6 +217,18 @@ export class DataScience implements IDataScience {
         }
     }
 
+    public async debugCell(file: string, startLine: number, startChar: number, endLine: number, endChar: number): Promise<void> {
+        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
+
+        if (file) {
+            const codeWatcher = this.getCodeWatcher(file);
+
+            if (codeWatcher) {
+                return codeWatcher.debugCell(new vscode.Range(startLine, startChar, endLine, endChar));
+            }
+        }
+    }
+
     @captureTelemetry(Telemetry.SetJupyterURIToLocal)
     private async setJupyterURIToLocal(): Promise<void> {
         await this.configuration.updateSetting('dataScience.jupyterServerURI', Settings.JupyterServerLocalLaunch, undefined, vscode.ConfigurationTarget.Workspace);
@@ -281,6 +293,20 @@ export class DataScience implements IDataScience {
             const activeCodeWatcher = this.getCurrentCodeWatcher();
             if (activeCodeWatcher) {
                 return activeCodeWatcher.runCellAndAllBelow(currentCodeLens.range.start.line, currentCodeLens.range.start.character);
+            }
+        } else {
+            return Promise.resolve();
+        }
+    }
+
+    private async debugCurrentCellFromCursor(): Promise<void> {
+        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
+
+        const currentCodeLens = this.getCurrentCodeLens();
+        if (currentCodeLens) {
+            const activeCodeWatcher = this.getCurrentCodeWatcher();
+            if (activeCodeWatcher) {
+                return activeCodeWatcher.debugCurrentCell();
             }
         } else {
             return Promise.resolve();
@@ -359,6 +385,10 @@ export class DataScience implements IDataScience {
         disposable = this.commandManager.registerCommand(Commands.RunFileInInteractiveWindows, this.runFileInteractive, this);
         this.disposableRegistry.push(disposable);
         disposable = this.commandManager.registerCommand(Commands.AddCellBelow, this.addCellBelow, this);
+        this.disposableRegistry.push(disposable);
+        disposable = this.commandManager.registerCommand(Commands.DebugCell, this.debugCell, this);
+        this.disposableRegistry.push(disposable);
+        disposable = this.commandManager.registerCommand(Commands.DebugCurrentCellPalette, this.debugCurrentCellFromCursor, this);
         this.disposableRegistry.push(disposable);
         this.commandListeners.forEach((listener: IDataScienceCommandListener) => {
             listener.register(this.commandManager);

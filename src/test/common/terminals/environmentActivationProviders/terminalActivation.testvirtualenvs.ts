@@ -129,9 +129,9 @@ suite('Activation of Environments in Terminal', () => {
     test('Should activate with virtualenv', async () => {
         await testActivation(envPaths.virtualEnvPath);
     });
-    test('Should activate with conda', async () => {
-        await terminalSettings.update('integrated.shell.windows', 'C:\\Windows\\System32\\cmd.exe', vscode.ConfigurationTarget.Global);
-        await pythonSettings.update('condaPath', envPaths.condaExecPath, vscode.ConfigurationTarget.Workspace);
-        await testActivation(envPaths.condaPath);
-    });
+    // test('Should activate with conda', async () => {
+    //     await terminalSettings.update('integrated.shell.windows', 'C:\\Windows\\System32\\cmd.exe', vscode.ConfigurationTarget.Global);
+    //     await pythonSettings.update('condaPath', envPaths.condaExecPath, vscode.ConfigurationTarget.Workspace);
+    //     await testActivation(envPaths.condaPath);
+    // });
 });

@@ -4,23 +4,25 @@
 'use strict';
 
 import { expect } from 'chai';
+import * as path from 'path';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import { Uri, WorkspaceConfiguration } from 'vscode';
-import {
-    IApplicationShell, IWorkspaceService
-} from '../../client/common/application/types';
+import { Uri, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
+import { ApplicationShell } from '../../client/common/application/applicationShell';
+import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
+import { WorkspaceService } from '../../client/common/application/workspace';
+import { ConfigurationService } from '../../client/common/configuration/service';
+import { PersistentStateFactory } from '../../client/common/persistentState';
+import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../client/common/platform/types';
-import {
-    IConfigurationService, IPersistentState, IPersistentStateFactory, IPythonSettings, Product
-} from '../../client/common/types';
+import { IConfigurationService, IPersistentState, IPersistentStateFactory, IPythonSettings, Product } from '../../client/common/types';
 import { Common, Linters } from '../../client/common/utils/localize';
 import { AvailableLinterActivator } from '../../client/linters/linterAvailability';
 import { LinterInfo } from '../../client/linters/linterInfo';
-import { IAvailableLinterActivator } from '../../client/linters/types';
+import { IAvailableLinterActivator, ILinterInfo } from '../../client/linters/types';
 
-// tslint:disable-next-line:max-func-body-length
+// tslint:disable:max-func-body-length no-any
 suite('Linter Availability Provider tests', () => {
-
     test('Availability feature is disabled when global default for jediEnabled=true.', async () => {
         // set expectations
         const jediEnabledValue = true;
@@ -413,7 +415,7 @@ suite('Linter Availability Provider tests', () => {
 
         // perform test
         const availabilityProvider = new AvailableLinterActivator(appShellMock.object, fsMock.object, workspaceServiceMock.object, configServiceMock.object, factoryMock.object);
-        const result = await availabilityProvider.isLinterAvailable(linterInfo);
+        const result = await availabilityProvider.isLinterAvailable(linterInfo, undefined);
 
         expect(result).to.equal(expectedResult, 'Expected promptToConfigureAvailableLinter to return true because the configuration was updated.');
         fsMock.verifyAll();
@@ -431,11 +433,124 @@ suite('Linter Availability Provider tests', () => {
 
         // perform test
         const availabilityProvider = new AvailableLinterActivator(appShellMock.object, fsMock.object, workspaceServiceMock.object, configServiceMock.object, factoryMock.object);
-        const result = await availabilityProvider.isLinterAvailable(linterInfo);
+        const result = await availabilityProvider.isLinterAvailable(linterInfo, undefined);
 
         expect(result).to.equal(expectedResult, 'Expected promptToConfigureAvailableLinter to return true because the configuration was updated.');
         fsMock.verifyAll();
         workspaceServiceMock.verifyAll();
+    });
+
+    suite('Linter Availability', () => {
+        let availabilityProvider: AvailableLinterActivator;
+        let workspaceService: IWorkspaceService;
+        let fs: IFileSystem;
+        const defaultWorkspace: WorkspaceFolder = { uri: Uri.file(path.join('a', 'b', 'default')), name: 'default', index: 0 };
+        const resource = Uri.file(__dirname);
+        setup(() => {
+            workspaceService = mock(WorkspaceService);
+            fs = mock(FileSystem);
+
+            availabilityProvider = new AvailableLinterActivator(instance(mock(ApplicationShell)),
+                instance(fs), instance(workspaceService), instance(mock(ConfigurationService)),
+                instance(mock(PersistentStateFactory)));
+        });
+        test('No linters when there are no workspaces', async () => {
+            when(workspaceService.hasWorkspaceFolders).thenReturn(false);
+            const linterInfo = {} as any as ILinterInfo;
+            const available = await availabilityProvider.isLinterAvailable(linterInfo, undefined);
+
+            expect(available).to.equal(false, 'Should be false');
+        });
+
+        [
+            undefined, { uri: Uri.file(path.join('c', 'd', 'resource')), name: 'another', index: 10 }
+        ].forEach(workspaceFolderRelatedToResource => {
+            const testSuffix = workspaceFolderRelatedToResource ? '(has a corresponding workspace)' : '(use default workspace)';
+            // If there's a workspace, then access default workspace.
+            const workspaceFolder = workspaceFolderRelatedToResource || defaultWorkspace;
+            test(`No linters when there are no config files ${testSuffix}`, async () => {
+                when(workspaceService.hasWorkspaceFolders).thenReturn(true);
+                const linterInfo = { configFileNames: [] } as any as ILinterInfo;
+                when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolderRelatedToResource);
+                when(workspaceService.workspaceFolders).thenReturn([defaultWorkspace]);
+                const available = await availabilityProvider.isLinterAvailable(linterInfo, resource);
+
+                expect(available).to.equal(false, 'Should be false');
+                verify(workspaceService.getWorkspaceFolder(resource)).once();
+                verify(fs.fileExists(anything())).never();
+                // If there's a workspace, then access default workspace.
+                if (workspaceFolderRelatedToResource) {
+                    verify(workspaceService.workspaceFolders).never();
+                } else {
+                    verify(workspaceService.workspaceFolders).once();
+                }
+            });
+            test(`No linters when there none of the config files exist ${testSuffix}`, async () => {
+                when(workspaceService.hasWorkspaceFolders).thenReturn(true);
+                const linterInfo = { configFileNames: ['1', '2'] } as any as ILinterInfo;
+                when(fs.fileExists(anything())).thenResolve(false);
+                when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolderRelatedToResource);
+                when(workspaceService.workspaceFolders).thenReturn([defaultWorkspace]);
+
+                const available = await availabilityProvider.isLinterAvailable(linterInfo, resource);
+
+                expect(available).to.equal(false, 'Should be false');
+                verify(workspaceService.getWorkspaceFolder(resource)).once();
+                verify(fs.fileExists(anything())).twice();
+                verify(fs.fileExists(path.join(workspaceFolder.uri.fsPath, '1'))).once();
+                verify(fs.fileExists(path.join(workspaceFolder.uri.fsPath, '2'))).once();
+                if (workspaceFolderRelatedToResource) {
+                    verify(workspaceService.workspaceFolders).never();
+                } else {
+                    verify(workspaceService.workspaceFolders).once();
+                }
+            });
+            test(`Linters exist when all of the config files exist ${testSuffix}`, async () => {
+                when(workspaceService.hasWorkspaceFolders).thenReturn(true);
+                const linterInfo = { configFileNames: ['1', '2'] } as any as ILinterInfo;
+                when(fs.fileExists(anything())).thenResolve(true);
+                when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolderRelatedToResource);
+                when(workspaceService.workspaceFolders).thenReturn([defaultWorkspace]);
+
+                const available = await availabilityProvider.isLinterAvailable(linterInfo, resource);
+
+                expect(available).to.equal(true, 'Should be true');
+                verify(workspaceService.getWorkspaceFolder(resource)).once();
+                verify(fs.fileExists(anything())).once();
+                verify(fs.fileExists(path.join(workspaceFolder.uri.fsPath, '1'))).once();
+                // Check only the first file, if that exists, no point checking the rest.
+                verify(fs.fileExists(path.join(workspaceFolder.uri.fsPath, '2'))).never();
+                if (workspaceFolderRelatedToResource) {
+                    verify(workspaceService.workspaceFolders).never();
+                } else {
+                    verify(workspaceService.workspaceFolders).once();
+                }
+            });
+            test(`Linters exist when one of the config files exist ${testSuffix}`, async () => {
+                when(workspaceService.hasWorkspaceFolders).thenReturn(true);
+                const linterInfo = { configFileNames: ['1', '2', '3'] } as any as ILinterInfo;
+                when(fs.fileExists(path.join(workspaceFolder.uri.fsPath, '1'))).thenResolve(false);
+                when(fs.fileExists(path.join(workspaceFolder.uri.fsPath, '2'))).thenResolve(true);
+                when(fs.fileExists(path.join(workspaceFolder.uri.fsPath, '3'))).thenResolve(false);
+                when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolderRelatedToResource);
+                when(workspaceService.workspaceFolders).thenReturn([defaultWorkspace]);
+
+                const available = await availabilityProvider.isLinterAvailable(linterInfo, resource);
+
+                expect(available).to.equal(true, 'Should be true');
+                verify(workspaceService.getWorkspaceFolder(resource)).once();
+                verify(fs.fileExists(anything())).twice();
+                verify(fs.fileExists(path.join(workspaceFolder.uri.fsPath, '1'))).once();
+                verify(fs.fileExists(path.join(workspaceFolder.uri.fsPath, '2'))).once();
+                // Check only the second file, if that exists, no point checking the rest.
+                verify(fs.fileExists(path.join(workspaceFolder.uri.fsPath, '3'))).never();
+                if (workspaceFolderRelatedToResource) {
+                    verify(workspaceService.workspaceFolders).never();
+                } else {
+                    verify(workspaceService.workspaceFolders).once();
+                }
+            });
+        });
     });
 });
 

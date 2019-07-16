@@ -13,7 +13,9 @@ Options:
 """
 import asyncio
 import json
+import os
 import pathlib
+import re
 import sys
 import textwrap
 
@@ -54,6 +56,32 @@ async def handle_index(module, raw_path, config_projects, cached_projects, overr
     return projects, stale, failures
 
 
+def _fix_toml(text, comments):
+    lines = text.split(os.linesep)
+    for i, line in enumerate(lines):
+        for orig in comments:
+            if line != orig:
+                continue
+            line += comments[orig]
+        if "\\n" in line:
+            line = line.replace('\\"', '"')
+            line = line.replace('"', '"""\n', 1)
+            line = line[::-1].replace('"', '"""', 1)[::-1]
+            line = line.replace("\\n", "\n")
+        lines[i] = line
+    return os.linesep.join(lines)
+
+
+def _find_trailing_comments(text):
+    for line in text.splitlines():
+        m = re.match(r".*?( +#[^#]*)$", line)
+        if not m:
+            continue
+        line, _, _ = line.rpartition('#')
+        comment, = m.groups()
+        yield line.rstrip(), comment
+
+
 def main(tpn_path, *, config_path, npm_path=None, npm_overrides=None, pypi_path=None):
     tpn_path = pathlib.Path(tpn_path)
     config_path = pathlib.Path(config_path)
@@ -89,6 +117,7 @@ def main(tpn_path, *, config_path, npm_path=None, npm_overrides=None, pypi_path=
         print("*" * 20)  # Make failure stand out more.
         for name, details in failures.items():
             print(f"{name!r} {details.version} @ {details.url}: {details.error}")
+            print(f"NPM URL: {details.npm}")
             print(textwrap.dedent(f"""
             [[project]]
             name = "{name}"
@@ -96,11 +125,31 @@ def main(tpn_path, *, config_path, npm_path=None, npm_overrides=None, pypi_path=
             url = "{details.url}"
             purpose = "{details.purpose or "XXX"}"
             license = \"\"\"
-            XXX
+            (TODO)
             \"\"\"
             """))
+            config_data["project"].append({
+                'name': name,
+                'version': details.version,
+                'url': details.url,
+                'purpose': details.purpose or "(TODO)",
+                'license': "(TODO)\n",
+                })
         print()
         print(f"Could not find a license for {len(failures)} projects")
+        print(f"Update {config_path} by filling in the license there for each (look for TODO)")
+
+    comments = dict(_find_trailing_comments(
+        config_path.read_text(encoding="utf-8")))
+
+    # Normalize the format and sort.
+    config_data["project"] = sorted(config_data["project"], key=lambda p: p["name"])
+    text = _fix_toml(
+            toml.dumps(config_data),
+            comments,
+            )
+    config_path.write_text(text, encoding="utf-8")
+
     if stale or failures:
         sys.exit(1)
     else:

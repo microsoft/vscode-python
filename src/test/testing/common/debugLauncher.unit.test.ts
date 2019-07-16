@@ -26,9 +26,6 @@ import { DebuggerTypeName } from '../../../client/debugger/constants';
 import {
     LaunchConfigurationResolver
 } from '../../../client/debugger/extension/configuration/resolvers/launch';
-import {
-    IConfigurationProviderUtils
-} from '../../../client/debugger/extension/configuration/types';
 import { DebugOptions } from '../../../client/debugger/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { DebugLauncher } from '../../../client/testing/common/debugLauncher';
@@ -99,7 +96,6 @@ suite('Unit Tests - Debug Launcher', () => {
         return new LaunchConfigurationResolver(
             workspaceService.object,
             TypeMoq.Mock.ofType<IDocumentManager>(undefined, TypeMoq.MockBehavior.Strict).object,
-            TypeMoq.Mock.ofType<IConfigurationProviderUtils>(undefined, TypeMoq.MockBehavior.Strict).object,
             validator.object,
             platformService.object,
             configService

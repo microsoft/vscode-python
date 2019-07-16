@@ -78,7 +78,7 @@ export class ExperimentsManager implements IExperimentsManager {
 
     @swallowExceptions('Failed to activate experiments')
     public async activate(): Promise<void> {
-        if (this.activatedOnce) {
+        if (this.activatedOnce || isTelemetryDisabled(this.workspaceService)) {
             return;
         }
         this.activatedOnce = true;
@@ -91,6 +91,7 @@ export class ExperimentsManager implements IExperimentsManager {
         this.initializeInBackground().ignoreErrors();
     }
 
+    @traceDecorators.error('Failed to identify if user is in experiment')
     public inExperiment(experimentName: string): boolean {
         this.sendTelemetryIfInExperiment(experimentName);
         return this.userExperiments.find(exp => exp.name === experimentName) ? true : false;
@@ -114,6 +115,7 @@ export class ExperimentsManager implements IExperimentsManager {
         }
     }
 
+    @traceDecorators.error('Failed to send telemetry when user is in experiment')
     public sendTelemetryIfInExperiment(experimentName: string): void {
         if (this.userExperiments.find(exp => exp.name === experimentName)) {
             sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS, undefined, { expName: experimentName });
@@ -121,13 +123,11 @@ export class ExperimentsManager implements IExperimentsManager {
     }
 
     /**
-     * Downloads experiments and updates storage given following conditions are met
-     * * Telemetry is not disabled
-     * * Previously downloaded experiments are no longer valid
+     * Downloads experiments and updates storage given previously downloaded experiments are no longer valid
      */
     @traceDecorators.error('Failed to initialize experiments')
     public async initializeInBackground() {
-        if (isTelemetryDisabled(this.workspaceService) || this.isDownloadedStorageValid.value) {
+        if (this.isDownloadedStorageValid.value) {
             return;
         }
         const downloadedExperiments = await this.httpClient.getJSON<ABExperiments>(configUri, false);
@@ -148,7 +148,7 @@ export class ExperimentsManager implements IExperimentsManager {
         if (typeof (this.appEnvironment.machineId) !== 'string') {
             throw new Error('Machine ID should be a string');
         }
-        const hash = this.crypto.createHash(`${this.appEnvironment.machineId}+${salt}`, 'hex', 'number');
+        const hash = this.crypto.createHash(`${this.appEnvironment.machineId}+${salt}`, 'number');
         return hash % 100 >= min && hash % 100 < max;
     }
 
@@ -158,7 +158,7 @@ export class ExperimentsManager implements IExperimentsManager {
      * * Experiments downloaded in the last session
      *   - The function makes sure these are used in the current session
      * * A default experiments file shipped with the extension
-     *   - Note this file is only used the first time the extension loads, and then is deleted.
+     *   - Note this file is only used when experiment storage is empty, which is usually the case the first time the extension loads.
      *   - We have this local file to ensure that experiments are used in the first session itself,
      *     as about 40% of the users never come back for the second session.
      */
@@ -172,7 +172,7 @@ export class ExperimentsManager implements IExperimentsManager {
         }
 
         // Step 2. Update experiment storage using local experiments file if available
-        if (await this.fs.fileExists(configFile)) {
+        if (!this.experimentStorage.value && (await this.fs.fileExists(configFile))) {
             const content = await this.fs.readFile(configFile);
             try {
                 const experiments = parse(content, [], { allowTrailingComma: true, disallowComments: false });
@@ -184,7 +184,6 @@ export class ExperimentsManager implements IExperimentsManager {
                 traceError('Failed to parse experiments configuration file to update storage', ex);
                 return;
             }
-            await this.fs.deleteFile(configFile);
         }
     }
 

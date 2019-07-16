@@ -13,7 +13,7 @@ as the collector that collected it.
 Collectors and items are collectively identified as "nodes".  The pytest
 API relies on collector and item objects providing specific methods and
 attributes.  In addition to corresponding base classes, pytest provides
-a number of concrete impementations.
+a number of concrete implementations.
 
 The following are the known pytest node types:
 
@@ -188,7 +188,7 @@ def parse_item(item, _normcase, _pathsep):
     # Sort out markers.
     #  See: https://docs.pytest.org/en/latest/reference.html#marks
     markers = set()
-    for marker in item.own_markers:
+    for marker in getattr(item, 'own_markers', []):
         if marker.name == 'parameterize':
             # We've already covered these.
             continue

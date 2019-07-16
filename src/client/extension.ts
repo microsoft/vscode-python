@@ -25,7 +25,6 @@ import {
     Disposable,
     ExtensionContext,
     extensions,
-    IndentAction,
     languages,
     Memento,
     OutputChannel,
@@ -86,6 +85,7 @@ import { registerTypes as interpretersRegisterTypes } from './interpreter/servic
 import { ServiceContainer } from './ioc/container';
 import { ServiceManager } from './ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from './ioc/types';
+import { getLanguageConfiguration } from './language/languageConfiguration';
 import { LinterCommands } from './linters/linterCommands';
 import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
 import { ILintingEngine } from './linters/types';
@@ -173,30 +173,7 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     const linterProvider = new LinterProvider(context, serviceManager);
     context.subscriptions.push(linterProvider);
 
-    // Enable indentAction
-    // tslint:disable-next-line:no-non-null-assertion
-    languages.setLanguageConfiguration(PYTHON_LANGUAGE, {
-        onEnterRules: [
-            {
-                beforeText: /^\s*(?:def|class|for|if|elif|else|while|try|with|finally|except|async)\b.*:\s*/,
-                action: { indentAction: IndentAction.Indent }
-            },
-            {
-                beforeText: /^(?!\s+\\)[^#\n]+\\\s*/,
-                action: { indentAction: IndentAction.Indent }
-            },
-            {
-                beforeText: /^\s*#.*/,
-                afterText: /.+$/,
-                action: { indentAction: IndentAction.None, appendText: '# ' }
-            },
-            {
-                beforeText: /^\s+(continue|break|return)\b.*/,
-                afterText: /\s+$/,
-                action: { indentAction: IndentAction.Outdent }
-            }
-        ]
-    });
+    languages.setLanguageConfiguration(PYTHON_LANGUAGE, getLanguageConfiguration());
 
     if (pythonSettings && pythonSettings.formatting && pythonSettings.formatting.provider !== 'internalConsole') {
         const formatProvider = new PythonFormattingEditProvider(context, serviceContainer);

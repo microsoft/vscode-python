@@ -3,6 +3,7 @@
 'use strict';
 import * as React from 'react';
 import { SvgLoader } from 'react-svgmt';
+import { getLocString } from '../react-common/locReactSide';
 
 import './svgList.css';
 
@@ -30,11 +31,14 @@ export class SvgList extends React.Component<ISvgListProps> {
     private renderImages() {
         return this.props.images.map((image, index) => {
             const className = index === this.props.currentImage ? 'svg-list-item svg-list-item-selected' : 'svg-list-item';
+            const ariaLabel = index === this.props.currentImage ? getLocString('DataScience.selectedImageListLabel', 'Selected Image') : getLocString('DataScience.selectedImageLabel', 'Image');
+            const ariaPressed =  index === this.props.currentImage ? 'true' : 'false';
             const clickHandler = () => this.props.imageClicked(index);
+            const keyDownHandler = (e: React.KeyboardEvent<HTMLDivElement>) => this.onKeyDown(e, index);
             return (
                 // See the comments here: https://github.com/Microsoft/tslint-microsoft-contrib/issues/676
                 // tslint:disable-next-line: react-this-binding-issue
-                <div className={className} role='button' onClick={clickHandler} key={index}>
+                <div className={className} tabIndex={0} role='button' aria-label={ariaLabel} aria-pressed={ariaPressed} onClick={clickHandler} onKeyDown={keyDownHandler} key={index}>
                     <div className='svg-list-item-image'>
                         <SvgLoader svgXML={image}>
                         </SvgLoader>
@@ -42,5 +46,12 @@ export class SvgList extends React.Component<ISvgListProps> {
                 </div>
             );
         });
+    }
+
+    private onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>, index: number) => {
+        // Enter and Space commit an action the same as a click does
+        if (event.key === 'Enter' || event.key === ' ') {
+            this.props.imageClicked(index);
+        }
     }
 }

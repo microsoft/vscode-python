@@ -17,6 +17,7 @@
     "@nteract/transform-vdom",
     "@nteract/transforms",
     "anser",
+    "ansi-regex",
     "ansi-to-html",
     "ansi-to-react",
     "babel-polyfill",

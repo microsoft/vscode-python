@@ -81,6 +81,10 @@ async function startSocketServer() {
                 const code = parseInt(data.substring(0, 1), 10);
                 end(code).catch(noop);
             });
+            socket.on('error', ex => {
+                // Just log it, no need to do anything else.
+                console.error(ex);
+            });
         });
 
         server.listen({ host: '127.0.0.1', port: 0 }, async () => {
@@ -89,6 +93,10 @@ async function startSocketServer() {
             await deletePortFile();
             await fs.writeFile(portFile, port.toString());
             resolve();
+        });
+        server.on('error', ex => {
+            // Just log it, no need to do anything else.
+            console.error(ex);
         });
     });
 }

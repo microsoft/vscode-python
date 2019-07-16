@@ -62,6 +62,11 @@ class MockJupyterServer implements INotebookServer {
     private launchInfo: INotebookServerLaunchInfo | undefined;
     private kernelSpec: IJupyterKernelSpec | undefined;
     private notebookFile: TemporaryFile | undefined;
+    private _id = uuid();
+
+    public get id(): string {
+        return this._id;
+    }
     public connect(launchInfo: INotebookServerLaunchInfo): Promise<void> {
         if (launchInfo && launchInfo.connectionInfo && launchInfo.kernelSpec) {
             this.launchInfo = launchInfo;
@@ -81,7 +86,7 @@ class MockJupyterServer implements INotebookServer {
         throw new Error('Method not implemented');
     }
 
-    public async getCompletion(_cellCode: string, _offsetInCode: number, _cancelToken?: CancellationToken) : Promise<INotebookCompletion> {
+    public async getCompletion(_cellCode: string, _offsetInCode: number, _cancelToken?: CancellationToken): Promise<INotebookCompletion> {
         throw new Error('Method not implemented');
     }
     public execute(_code: string, _f: string, _line: number): Promise<ICell[]> {
@@ -113,15 +118,15 @@ class MockJupyterServer implements INotebookServer {
         return Promise.resolve();
     }
 
-    public getSysInfo() : Promise<ICell | undefined> {
+    public getSysInfo(): Promise<ICell | undefined> {
         return Promise.resolve(undefined);
     }
 
-    public interruptKernel(_timeout: number) : Promise<InterruptResult> {
+    public interruptKernel(_timeout: number): Promise<InterruptResult> {
         throw new Error('Method not implemented');
     }
 
-    public async dispose() : Promise<void> {
+    public async dispose(): Promise<void> {
         if (this.launchInfo) {
             this.launchInfo.connectionInfo.dispose(); // This should kill the process that's running
             this.launchInfo = undefined;
@@ -145,7 +150,7 @@ class DisposableRegistry implements IDisposableRegistry, IAsyncDisposableRegistr
         this.disposables.push(disposable);
     }
 
-    public dispose = async () : Promise<void> => {
+    public dispose = async (): Promise<void> => {
         for (const disposable of this.disposables) {
             if (!disposable) {
                 continue;
@@ -235,7 +240,7 @@ suite('Jupyter Execution', async () => {
         return cleanupDisposables();
     });
 
-    function cleanupDisposables() : Promise<void> {
+    function cleanupDisposables(): Promise<void> {
         return disposableRegistry.dispose();
     }
 
@@ -326,9 +331,9 @@ suite('Jupyter Execution', async () => {
             .returns(result);
         const withModuleArgs = ['-m', module, ...args];
         service.setup(x => x.exec(
-                TypeMoq.It.is(a => argsMatch(withModuleArgs, a)),
-                TypeMoq.It.isAny()))
-                .returns(result);
+            TypeMoq.It.is(a => argsMatch(withModuleArgs, a)),
+            TypeMoq.It.isAny()))
+            .returns(result);
     }
 
     function setupPythonServiceExecObservable(service: TypeMoq.IMock<IPythonExecutionService>, module: string, args: (string | RegExp)[], stderr: string[], stdout: string[]) {
@@ -548,10 +553,11 @@ suite('Jupyter Execution', async () => {
             errorBackgroundColor: '#FFFFFF',
             sendSelectionToInteractiveWindow: false,
             showJupyterVariableExplorer: true,
-            variableExplorerExclude: 'module;builtin_function_or_method',
+            variableExplorerExclude: 'module;function;builtin_function_or_method',
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
-            allowLiveShare: false
+            allowLiveShare: false,
+            enablePlotViewer: true
         };
 
         // Service container also needs to generate jupyter servers. However we can't use a mock as that messes up returning
@@ -603,7 +609,7 @@ suite('Jupyter Execution', async () => {
         await assert.eventually.equal(execution.isKernelSpecSupported(), true, 'Kernel Spec not supported');
         await assert.eventually.equal(execution.isKernelCreateSupported(), true, 'Kernel Create not supported');
         const usableInterpreter = await execution.getUsableJupyterPython();
-        assert.isOk(usableInterpreter, 'Usable intepreter not found');
+        assert.isOk(usableInterpreter, 'Usable interpreter not found');
         await assert.isFulfilled(execution.connectToNotebookServer(), 'Should be able to start a server');
     }).timeout(10000);
 
@@ -631,7 +637,7 @@ suite('Jupyter Execution', async () => {
         await assert.eventually.equal(execution.isKernelSpecSupported(), true, 'Kernel Spec not supported');
         await assert.eventually.equal(execution.isKernelCreateSupported(), true, 'Kernel Create not supported');
         const usableInterpreter = await execution.getUsableJupyterPython();
-        assert.isOk(usableInterpreter, 'Usable intepreter not found');
+        assert.isOk(usableInterpreter, 'Usable interpreter not found');
         if (usableInterpreter) {
             assert.notEqual(usableInterpreter.path, missingNotebookPython.path);
         }
@@ -642,7 +648,7 @@ suite('Jupyter Execution', async () => {
         when(interpreterService.getActiveInterpreter()).thenResolve(missingKernelPython);
         await assert.eventually.equal(execution.isNotebookSupported(), true, 'Notebook not supported');
         const usableInterpreter = await execution.getUsableJupyterPython();
-        assert.isOk(usableInterpreter, 'Usable intepreter not found');
+        assert.isOk(usableInterpreter, 'Usable interpreter not found');
         if (usableInterpreter) { // Linter
             assert.equal(usableInterpreter.path, missingKernelPython.path);
             assert.equal(usableInterpreter.version!.major, missingKernelPython.version!.major, 'Found interpreter should match on major');
@@ -655,7 +661,7 @@ suite('Jupyter Execution', async () => {
         when(interpreterService.getActiveInterpreter()).thenResolve(missingNotebookPython);
         await assert.eventually.equal(execution.isNotebookSupported(), true, 'Notebook not supported');
         const usableInterpreter = await execution.getUsableJupyterPython();
-        assert.isOk(usableInterpreter, 'Usable intepreter not found');
+        assert.isOk(usableInterpreter, 'Usable interpreter not found');
         if (usableInterpreter) { // Linter
             assert.notEqual(usableInterpreter.path, missingNotebookPython.path);
             assert.notEqual(usableInterpreter.version!.major, missingNotebookPython.version!.major, 'Found interpreter should not match on major');
@@ -663,7 +669,7 @@ suite('Jupyter Execution', async () => {
         // Force config change and ask again
         pythonSettings.datascience.searchForJupyter = false;
         const evt = {
-            affectsConfiguration(_m: string) : boolean {
+            affectsConfiguration(_m: string): boolean {
                 return true;
             }
         };

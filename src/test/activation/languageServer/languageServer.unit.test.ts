@@ -92,7 +92,7 @@ suite('Language Server - LanguageServer', () => {
         server.start(uri, options).ignoreErrors();
 
         // Even though server has started request should not yet be sent out.
-        // Not untill language client has initialized.
+        // Not until language client has initialized.
         expect(() => server.loadExtension(loadExtensionArgs)).not.throw();
         client.verify(c => c.sendRequest(typemoq.It.isAny(), typemoq.It.isAny()), typemoq.Times.never());
 
@@ -148,7 +148,7 @@ suite('Language Server - LanguageServer', () => {
         const promise = server.start(uri, options);
 
         // Even though server has started request should not yet be sent out.
-        // Not untill language client has initialized.
+        // Not until language client has initialized.
         expect(() => server.loadExtension(loadExtensionArgs)).not.throw();
         client.verify(c => c.sendRequest(typemoq.It.isAny(), typemoq.It.isAny()), typemoq.Times.never());
 

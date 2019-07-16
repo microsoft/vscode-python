@@ -25,8 +25,7 @@
 # 'testMultiWorkspace'
 # 'testDebugger'
 # 'testFunctional'
-# 'perfomanceTests'
-# 'testSmoke'
+# 'testPerformance'
 # 'venvTests'
 
 steps:
@@ -151,14 +150,21 @@ steps:
       buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
       buildConfiguration: 'UnitTests'
 
-  # Publish Code Coverage Results
-  - task: PublishCodeCoverageResults@1
-    displayName: 'Publish test:unittests coverage results'
-    condition: contains(variables['TestsToRun'], 'testUnitTests')
+  - task: CopyFiles@2
     inputs:
-      codeCoverageTool: 'cobertura'
-      summaryFileLocation: "$(System.DefaultWorkingDirectory)/coverage/cobertura-coverage.xml"
-      reportDirectory: "$(System.DefaultWorkingDirectory)/coverage"
+        sourceFolder: "$(Build.SourcesDirectory)/.nyc_output"
+        targetFolder: "$(Build.ArtifactStagingDirectory)/nyc/.nyc_output"
+    displayName: "Copy nyc_output to publish as artificat"
+    condition: contains(variables['TestsToRun'], 'testUnitTests')
+
+  # Upload Code Coverage Results (to be merged later).
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathtoPublish: "$(Build.ArtifactStagingDirectory)/nyc"
+      artifactName: 'coverage-output-$(Agent.Os)'
+    condition: contains(variables['TestsToRun'], 'testUnitTests')
+
+  - template: generate_upload_coverage.yml
 
   # Install the requirements for the Python or the system tests. This includes the supporting libs that
   # we ship in our extension such as PTVSD and Jedi.
@@ -197,6 +203,7 @@ steps:
       python -m pip install -U pip
       python -m pip install numpy
       python -m pip install --upgrade -r ./build/functional-test-requirements.txt
+      python -m pip install --upgrade --pre ptvsd
     displayName: 'pip install functional requirements'
     condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'))
 
@@ -379,7 +386,7 @@ steps:
   # Run the virtual environment based tests.
   # This set of tests is simply using the `testSingleWorkspace` set of tests, but
   # with the environment variable `TEST_FILES_SUFFIX` set to `testvirtualenvs`, which
-  # got set in the Prepare Venv-Test Environmant task above.
+  # got set in the Prepare Venv-Test Environment task above.
   # **Note**: Azure DevOps tasks set environment variables via a specially formatted
   # string sent to stdout.
   #
@@ -523,28 +530,6 @@ steps:
       npm run testPerformance
     displayName: 'Run Performance Tests'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testPerformance'))
-    env:
-      DISPLAY: :10
-
-  # Run the smoke tests.
-  #
-  # This task only runs if the string 'testSmoke' exists in variable `TestsToRun`.
-  #
-  # Example command line (windows pwsh):
-  # > npm run clean
-  # > npm run updateBuildNumber -- --buildNumber 0.0.0-local
-  # > npm run package
-  # > npx gulp clean:cleanExceptTests
-  # > npm run testSmoke
-  - bash: |
-      npm install -g vsce
-      npm run clean
-      npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID
-      npm run package
-      npx gulp clean:cleanExceptTests
-      npm run testSmoke
-    displayName: 'Run Smoke Tests'
-    condition: and(succeeded(), contains(variables['TestsToRun'], 'testSmoke'))
     env:
       DISPLAY: :10
 

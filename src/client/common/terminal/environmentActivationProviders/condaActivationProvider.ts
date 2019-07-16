@@ -15,6 +15,7 @@ import { ITerminalActivationCommandProvider, TerminalShellType } from '../types'
 // Version number of conda that requires we call activate with 'conda activate' instead of just 'activate'
 const CondaRequiredMajor = 4;
 const CondaRequiredMinor = 4;
+const CondaRequiredMinorForPowerShell = 6;
 
 /**
  * Support conda env activation (in the terminal).
@@ -25,7 +26,7 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         @inject(ICondaService) private readonly condaService: ICondaService,
         @inject(IPlatformService) private platform: IPlatformService,
         @inject(IConfigurationService) private configService: IConfigurationService
-    ) {}
+    ) { }
 
     /**
      * Is the given shell supported for activating a conda env?
@@ -57,13 +58,20 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         // New version, call activate from the same path as our python path, then call it again to activate our environment.
         // -- note that the 'default' conda location won't allow activate to work for the environment sometimes.
         const versionInfo = await this.condaService.getCondaVersion();
-        if (versionInfo && (versionInfo.major > CondaRequiredMajor || (versionInfo.major === CondaRequiredMajor && versionInfo.minor >= CondaRequiredMinor))) {
-            // New version.
-            const interpreterPath = await this.condaService.getCondaFileFromInterpreter(pythonPath, envInfo.name);
-            if (interpreterPath) {
-                const activatePath = path.join(path.dirname(interpreterPath), 'activate').fileToCommandArgument();
-                const firstActivate = this.platform.isWindows ? activatePath : `source ${activatePath}`;
-                return [firstActivate, `conda activate ${envInfo.name.toCommandArgument()}`];
+        if (versionInfo && versionInfo.major >= CondaRequiredMajor) {
+            // Conda added support for powershell in 4.6.
+            if (versionInfo.minor >= CondaRequiredMinorForPowerShell &&
+                (targetShell === TerminalShellType.powershell || targetShell === TerminalShellType.powershellCore)) {
+                return this.getPowershellCommands(envInfo.name);
+            }
+            if (versionInfo.minor >= CondaRequiredMinor) {
+                // New version.
+                const interpreterPath = await this.condaService.getCondaFileFromInterpreter(pythonPath, envInfo.name);
+                if (interpreterPath) {
+                    const activatePath = path.join(path.dirname(interpreterPath), 'activate').fileToCommandArgument();
+                    const firstActivate = this.platform.isWindows ? activatePath : `source ${activatePath}`;
+                    return [firstActivate, `conda activate ${envInfo.name.toCommandArgument()}`];
+                }
             }
         }
 

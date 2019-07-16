@@ -8,6 +8,7 @@ import { CancellationToken, Uri, WorkspaceFolder } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../../../common/application/types';
 import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService } from '../../../../common/types';
+import { SystemVariables } from '../../../../common/variables/systemVariables';
 import { AttachRequestArguments, DebugOptions } from '../../../types';
 import { BaseConfigurationResolver } from './base';
 
@@ -94,18 +95,33 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
         }
         // If attaching to local host, then always map local root and remote roots.
         if (workspaceFolder && debugConfiguration.host &&
-            debugConfiguration.pathMappings!.length === 0 &&
             ['LOCALHOST', '127.0.0.1', '::1'].indexOf(debugConfiguration.host.toUpperCase()) >= 0) {
-            // If on Windows, lowercase the drive letter for path mappings.
-            let localRoot = workspaceFolder.fsPath;
-            if (this.platformService.isWindows && localRoot.match(/^[A-Z]:/)) {
-                localRoot = `${localRoot[0].toLowerCase()}${localRoot.substr(1)}`;
-            }
-
-            debugConfiguration.pathMappings!.push({
-                localRoot,
-                remoteRoot: workspaceFolder.fsPath
-            });
+                let configPathMappings;
+                if (debugConfiguration.pathMappings!.length === 0) {
+                    configPathMappings = [{
+                        localRoot: workspaceFolder.fsPath,
+                        remoteRoot: workspaceFolder.fsPath
+                    }];
+                } else {
+                    // Expand ${workspaceFolder} variable first if necessary.
+                    const systemVariables = new SystemVariables(workspaceFolder.fsPath);
+                    configPathMappings = debugConfiguration.pathMappings.map(({ localRoot: mappedLocalRoot, remoteRoot }) => ({
+                        localRoot: systemVariables.resolveAny(mappedLocalRoot),
+                        remoteRoot
+                    }));
+                }
+                // If on Windows, lowercase the drive letter for path mappings.
+                let pathMappings = configPathMappings;
+                if (this.platformService.isWindows) {
+                    pathMappings = configPathMappings.map(({ localRoot: windowsLocalRoot, remoteRoot }) => {
+                        let localRoot = windowsLocalRoot;
+                        if (windowsLocalRoot.match(/^[A-Z]:/)) {
+                            localRoot = `${windowsLocalRoot[0].toLowerCase()}${windowsLocalRoot.substr(1)}`;
+                        }
+                        return { localRoot, remoteRoot };
+                    });
+                }
+                debugConfiguration.pathMappings = pathMappings;
         }
         this.sendTelemetry('attach', debugConfiguration);
     }

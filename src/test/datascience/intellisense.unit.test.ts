@@ -11,9 +11,9 @@ import { PythonSettings } from '../../client/common/configSettings';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IConfigurationService } from '../../client/common/types';
 import { Identifiers } from '../../client/datascience/constants';
-import { HistoryMessages, IHistoryMapping } from '../../client/datascience/history/historyTypes';
-import { DotNetIntellisenseProvider } from '../../client/datascience/history/intellisense/dotNetIntellisenseProvider';
-import { IHistoryListener, IHistoryProvider, IJupyterExecution } from '../../client/datascience/types';
+import { DotNetIntellisenseProvider } from '../../client/datascience/interactive-window/intellisense/dotNetIntellisenseProvider';
+import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../../client/datascience/interactive-window/interactiveWindowTypes';
+import { IInteractiveWindowListener, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { MockLanguageClient } from './mockLanguageClient';
 
@@ -21,14 +21,14 @@ import { MockLanguageClient } from './mockLanguageClient';
 
 // tslint:disable-next-line: max-func-body-length
 suite('DataScience Intellisense Unit Tests', () => {
-    let intellisenseProvider: IHistoryListener;
+    let intellisenseProvider: IInteractiveWindowListener;
     let languageServer: TypeMoq.IMock<ILanguageServer>;
     let analysisOptions: TypeMoq.IMock<ILanguageServerAnalysisOptions>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let configService: TypeMoq.IMock<IConfigurationService>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let jupyterExecution: TypeMoq.IMock<IJupyterExecution>;
-    let historyProvider: TypeMoq.IMock<IHistoryProvider>;
+    let interactiveWindowProvider: TypeMoq.IMock<IInteractiveWindowProvider>;
     const pythonSettings = new class extends PythonSettings {
         public fireChangeEvent() {
             this.changed.fire();
@@ -45,7 +45,7 @@ suite('DataScience Intellisense Unit Tests', () => {
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         jupyterExecution = TypeMoq.Mock.ofType<IJupyterExecution>();
-        historyProvider = TypeMoq.Mock.ofType<IHistoryProvider>();
+        interactiveWindowProvider = TypeMoq.Mock.ofType<IInteractiveWindowProvider>();
 
         pythonSettings.jediEnabled = false;
         languageServer.setup(l => l.start(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve());
@@ -61,17 +61,17 @@ suite('DataScience Intellisense Unit Tests', () => {
             configService.object,
             fileSystem.object,
             jupyterExecution.object,
-            historyProvider.object);
+            interactiveWindowProvider.object);
     });
 
-    function sendMessage<M extends IHistoryMapping, T extends keyof M>(type: T, payload?: M[T]) : Promise<void> {
+    function sendMessage<M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]) : Promise<void> {
         const result = languageClient.waitForNotification();
         intellisenseProvider.onMessage(type.toString(), payload);
         return result;
     }
 
     function addCell(code: string, id: string) : Promise<void> {
-        return sendMessage(HistoryMessages.AddCell, { fullText: code, currentText: code, file: 'foo.py', id });
+        return sendMessage(InteractiveWindowMessages.AddCell, { fullText: code, currentText: code, file: 'foo.py', id });
     }
 
     function updateCell(newCode: string, oldCode: string, id: string) : Promise<void> {
@@ -87,7 +87,7 @@ suite('DataScience Intellisense Unit Tests', () => {
             rangeLength: oldCode.length,
             text: newCode
         };
-        return sendMessage(HistoryMessages.EditCell, { changes: [change], id});
+        return sendMessage(InteractiveWindowMessages.EditCell, { changes: [change], id});
     }
 
     function addCode(code: string, line: number, pos: number, offset: number) : Promise<void> {
@@ -105,7 +105,7 @@ suite('DataScience Intellisense Unit Tests', () => {
             rangeLength: 0,
             text: code
         };
-        return sendMessage(HistoryMessages.EditCell, { changes: [change], id: Identifiers.EditCellId});
+        return sendMessage(InteractiveWindowMessages.EditCell, { changes: [change], id: Identifiers.EditCellId});
     }
 
     function removeCode(line: number, startPos: number, endPos: number, length: number) : Promise<void> {
@@ -123,16 +123,16 @@ suite('DataScience Intellisense Unit Tests', () => {
             rangeLength: length,
             text: ''
         };
-        return sendMessage(HistoryMessages.EditCell, { changes: [change], id: Identifiers.EditCellId});
+        return sendMessage(InteractiveWindowMessages.EditCell, { changes: [change], id: Identifiers.EditCellId});
     }
 
     function removeCell(id: string) : Promise<void> {
-        sendMessage(HistoryMessages.RemoveCell, { id }).ignoreErrors();
+        sendMessage(InteractiveWindowMessages.RemoveCell, { id }).ignoreErrors();
         return Promise.resolve();
     }
 
     function removeAllCells() : Promise<void> {
-        sendMessage(HistoryMessages.DeleteAllCells).ignoreErrors();
+        sendMessage(InteractiveWindowMessages.DeleteAllCells).ignoreErrors();
         return Promise.resolve();
     }
 

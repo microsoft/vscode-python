@@ -29,11 +29,16 @@ export const nodeModulesToExternalize = [
     'node-stream-zip',
     'xml2js',
     'vsls/vscode',
+    'pdfkit',
+    'crypto-js',
+    'fontkit',
+    'linebreak',
+    'png-js'
 ];
 
 export const nodeModulesToReplacePaths = [
     ...nodeModulesToExternalize
-]
+];
 
 export function getDefaultPlugins(name: 'extension' | 'debugger' | 'dependencies' | 'datascience-ui') {
     const plugins = [];
