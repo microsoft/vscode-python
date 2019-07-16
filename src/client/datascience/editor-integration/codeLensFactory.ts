@@ -26,7 +26,7 @@ export class CodeLensFactory implements ICodeLensFactory {
         let firstCell = true;
         ranges.forEach(range => {
             commands.forEach(c => {
-                const codeLens = this.createCodeLens(document, range.range, c, firstCell);
+                const codeLens = this.createCodeLens(document, range, c, firstCell);
                 if (codeLens) {
                     codeLenses.push(codeLens);
                 }
@@ -37,7 +37,7 @@ export class CodeLensFactory implements ICodeLensFactory {
         return codeLenses;
     }
 
-    private enumerateCommands() : string[] {
+    private enumerateCommands(): string[] {
         const commands = this.configService.getSettings().datascience.codeLenses;
         if (commands) {
             return commands.split(',').map(s => s.trim());
@@ -45,10 +45,11 @@ export class CodeLensFactory implements ICodeLensFactory {
         return [Commands.RunCurrentCell, Commands.RunAllCellsAbove, Commands.DebugCell];
     }
 
-    private createCodeLens(document: TextDocument, range: Range, commandName: string, isFirst: boolean): CodeLens | undefined {
+    private createCodeLens(document: TextDocument, cellRange: { range: Range; cell_type: string }, commandName: string, isFirst: boolean): CodeLens | undefined {
         // We only support specific commands
         // Be careful here. These arguments will be serialized during liveshare sessions
         // and so shouldn't reference local objects.
+        const { range, cell_type } = cellRange;
         switch (commandName) {
             case Commands.AddCellBelow:
                 return this.generateCodeLens(
@@ -64,6 +65,8 @@ export class CodeLensFactory implements ICodeLensFactory {
                     localize.DataScience.debugCellCommandTitle());
 
             case Commands.DebugCell:
+                // If it's not a code cell (e.g. markdown), don't add the "Debug cell" action.
+                if (cell_type !== 'code') { break; }
                 return this.generateCodeLens(
                     range,
                     Commands.DebugCell,
@@ -103,7 +106,6 @@ export class CodeLensFactory implements ICodeLensFactory {
                     Commands.RunCellAndAllBelow,
                     localize.DataScience.runCellAndAllBelowLensCommandTitle(),
                     [document.fileName, range.start.line, range.start.character]);
-                break;
 
             default:
                 traceWarning(`Invalid command for code lens ${commandName}`);

@@ -109,14 +109,13 @@ export function hasCells(document: TextDocument, settings?: IDataScienceSettings
     return false;
 }
 
-export function generateCellRanges(document: TextDocument, settings?: IDataScienceSettings) : {range: Range; title: string}[] {
+export function generateCellRanges(document: TextDocument, settings?: IDataScienceSettings): { range: Range; title: string; cell_type: string }[] {
     // Implmentation of getCells here based on Don's Jupyter extension work
     const matcher = new CellMatcher(settings);
-    const cells : {range: Range; title: string}[] = [];
+    const cells : { range: Range; title: string; cell_type: string }[] = [];
     for (let index = 0; index < document.lineCount; index += 1) {
         const line = document.lineAt(index);
         if (matcher.isCell(line.text)) {
-
             if (cells.length > 0) {
                 const previousCell = cells[cells.length - 1];
                 previousCell.range = new Range(previousCell.range.start, document.lineAt(index - 1).range.end);
@@ -126,7 +125,8 @@ export function generateCellRanges(document: TextDocument, settings?: IDataScien
             if (results !== undefined) {
                 cells.push({
                     range: line.range,
-                    title: results
+                    title: results,
+                    cell_type: matcher.getCellType(line.text)
                 });
             }
         }
