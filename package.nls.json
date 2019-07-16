@@ -148,7 +148,7 @@
     "DataScience.pythonRestartHeader": "Restarted kernel:",
     "DataScience.pythonNewHeader": "Started new kernel:",
     "DataScience.executingCodeFailure": "Executing code failed : {0}",
-    "DataScience.inputWatermark": "Shift-enter to run",
+    "DataScience.inputWatermark": "Type code here and press shift-enter to run",
     "DataScience.deleteButtonTooltip": "Remove cell",
     "DataScience.gotoCodeButtonTooltip": "Go to code",
     "DataScience.copyBackToSourceButtonTooltip": "Paste code into file",

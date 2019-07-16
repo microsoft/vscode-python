@@ -203,7 +203,6 @@ steps:
       python -m pip install -U pip
       python -m pip install numpy
       python -m pip install --upgrade -r ./build/functional-test-requirements.txt
-      python -m pip install --upgrade --pre ptvsd
     displayName: 'pip install functional requirements'
     condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'))
 
