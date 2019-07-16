@@ -78,7 +78,6 @@ import {
 
 @injectable()
 export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> implements IInteractiveWindow {
-    private static sentExecuteCellTelemetry: boolean = false;
     private disposed: boolean = false;
     private loadPromise: Promise<void>;
     private interpreterChangedDisposable: Disposable;
@@ -179,14 +178,19 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         return this.executeEvent.event;
     }
 
-    public addCode(code: string, file: string, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<void> {
-        // Call the internal method.
-        return this.submitCode(code, file, line, undefined, editor, runningStopWatch, false);
+    public addMessage(message: string): Promise<void> {
+        this.addMessageImpl(message, 'execute');
+        return Promise.resolve();
     }
 
-    public debugCode(code: string, file: string, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<void> {
+    public addCode(code: string, file: string, line: number, editor?: TextEditor): Promise<boolean> {
         // Call the internal method.
-        return this.submitCode(code, file, line, undefined, editor, runningStopWatch, true);
+        return this.submitCode(code, file, line, undefined, editor, false);
+    }
+
+    public debugCode(code: string, file: string, line: number, editor?: TextEditor): Promise<boolean> {
+        // Call the internal method.
+        return this.submitCode(code, file, line, undefined, editor, true);
     }
 
     // tslint:disable-next-line: no-any no-empty cyclomatic-complexity max-func-body-length
@@ -503,7 +507,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         }
     }
 
-    private addMessage(message: string, type: 'preview' | 'execute'): void {
+    private addMessageImpl(message: string, type: 'preview' | 'execute'): void {
         const cell: ICell = {
             id: uuid(),
             file: Identifiers.EmptyFileName,
@@ -524,12 +528,12 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
 
     private addPreviewHeader(file: string): void {
         const message = localize.DataScience.previewHeader().format(file);
-        this.addMessage(message, 'preview');
+        this.addMessageImpl(message, 'preview');
     }
 
     private addPreviewFooter(file: string): void {
         const message = localize.DataScience.previewFooter().format(file);
-        this.addMessage(message, 'preview');
+        this.addMessageImpl(message, 'preview');
     }
 
     private async checkPandas(): Promise<boolean> {
@@ -615,7 +619,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
             sendTelemetryEvent(Telemetry.RemoteAddCode);
 
             // Submit this item as new code.
-            this.submitCode(args.code, args.file, args.line, args.id, undefined, undefined, args.debug).ignoreErrors();
+            this.submitCode(args.code, args.file, args.line, args.id, undefined, args.debug).ignoreErrors();
         }
     }
 
@@ -706,8 +710,9 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         }
     }
 
-    private async submitCode(code: string, file: string, line: number, id?: string, _editor?: TextEditor, runningStopWatch?: StopWatch, debug?: boolean): Promise<void> {
+    private async submitCode(code: string, file: string, line: number, id?: string, _editor?: TextEditor, debug?: boolean): Promise<boolean> {
         this.logger.logInformation(`Submitting code for ${this.id}`);
+        let result = true;
 
         // Start a status item
         const status = this.setStatus(localize.DataScience.executingCode());
@@ -770,6 +775,11 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
                 observable.subscribe(
                     (cells: ICell[]) => {
                         this.onAddCodeEvent(cells, undefined);
+
+                        // Any errors will move our result to false (if allowed)
+                        if (this.configuration.getSettings().datascience.stopOnError) {
+                            result = result && cells.find(c => c.state === CellState.error) === undefined;
+                        }
                     },
                     (error) => {
                         status.dispose();
@@ -780,9 +790,6 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
                     () => {
                         // Indicate executing until this cell is done.
                         status.dispose();
-
-                        // Fire a telemetry event if we have a stop watch
-                        this.sendPerceivedCellExecute(runningStopWatch);
                     });
 
                 // Wait for the cell to finish
@@ -801,17 +808,8 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
                 }
             }
         }
-    }
 
-    private sendPerceivedCellExecute(runningStopWatch?: StopWatch) {
-        if (runningStopWatch) {
-            if (!InteractiveWindow.sentExecuteCellTelemetry) {
-                InteractiveWindow.sentExecuteCellTelemetry = true;
-                sendTelemetryEvent(Telemetry.ExecuteCellPerceivedCold, runningStopWatch.elapsedTime);
-            } else {
-                sendTelemetryEvent(Telemetry.ExecuteCellPerceivedWarm, runningStopWatch.elapsedTime);
-            }
-        }
+        return result;
     }
 
     private setStatus = (message: string): Disposable => {

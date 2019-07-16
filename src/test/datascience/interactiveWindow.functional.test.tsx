@@ -212,7 +212,7 @@ for _ in range(50):
             return Promise.resolve({ result: result, haveMore: loops > 0 });
         });
 
-        await addCode(getOrCreateInteractiveWindow, wrapper, badPanda, 4);
+        await addCode(getOrCreateInteractiveWindow, wrapper, badPanda, 4, true);
         verifyHtmlOnCell(wrapper, `has no attribute 'read'`, CellPosition.Last);
 
         await addCode(getOrCreateInteractiveWindow, wrapper, goodPanda);
