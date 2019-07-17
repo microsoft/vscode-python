@@ -3,7 +3,7 @@
 import { inject, injectable } from 'inversify';
 import { IApplicationShell } from '../../common/application/types';
 import { IInstallationChannelManager } from '../../common/installer/types';
-import { ILogger, Product } from '../../common/types';
+import { ILogger } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
@@ -25,7 +25,20 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                 localize.DataScience.notebookCheckForImportNo())
                 .then(response => {
                     if (response === localize.DataScience.jupyterInstall()) {
-                        return this.channels.getInstallationChannel(Product.jupyter);
+                        return this.channels.getInstallationChannels()
+                            .then(installers => {
+                                if (installers) {
+                                    const installer = installers.find(ins => ins.displayName === 'Conda');
+
+                                    if (installer) {
+                                        installer.installModule('jupyter')
+                                            .catch(e => this.applicationShell.showErrorMessage(e.message, localize.DataScience.pythonInteractiveHelpLink()));
+                                    } else if (installers[0]) {
+                                        installers[0].installModule('jupyter')
+                                            .catch(e => this.applicationShell.showErrorMessage(e.message, localize.DataScience.pythonInteractiveHelpLink()));
+                                    }
+                                }
+                            });
                     } else {
                         const jupyterError = err as JupyterInstallError;
 
@@ -36,11 +49,6 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                                 this.applicationShell.openUrl(jupyterError.action);
                             }
                         });
-                    }
-                }).then(installer => {
-                    if (installer) {
-                        installer.installModule('jupyter')
-                            .catch(e => this.applicationShell.showErrorMessage(e.message, localize.DataScience.pythonInteractiveHelpLink()));
                     }
                 });
         } else if (err instanceof JupyterSelfCertsError) {
