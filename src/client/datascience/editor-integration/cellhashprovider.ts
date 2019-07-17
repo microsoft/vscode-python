@@ -105,12 +105,20 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
     public async preExecute(cell: ICell, silent: boolean): Promise<void> {
         try {
             if (!silent) {
-                // When the user adds new code, we know the execution count is increasing
-                this.executionCount += 1;
+                const cellMatcher = new CellMatcher(this.configService.getSettings().datascience);
 
-                // Skip hash on unknown file though
-                if (cell.file !== Identifiers.EmptyFileName) {
-                    await this.addCellHash(cell, this.executionCount);
+                // Don't log empty cells
+                const lines = splitMultilineString(cell.data.source);
+                const stripped = lines.filter(l => !cellMatcher.isCode(l));
+
+                if (stripped.length > 0 && stripped.find(s => s.length > 0)) {
+                    // When the user adds new code, we know the execution count is increasing
+                    this.executionCount += 1;
+
+                    // Skip hash on unknown file though
+                    if (cell.file !== Identifiers.EmptyFileName) {
+                        await this.addCellHash(cell, this.executionCount);
+                    }
                 }
             }
         } catch (exc) {
@@ -128,26 +136,20 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
         const perFile = this.hashes.get(e.document.fileName);
         if (perFile) {
             // Apply the content changes to the file's cells.
-            let prevText = e.document.getText();
+            const docText = e.document.getText();
             e.contentChanges.forEach(c => {
-                prevText = this.handleContentChange(prevText, c, perFile);
+                this.handleContentChange(docText, c, perFile);
             });
-
-            // Update the code lens
-            this.updateEventEmitter.fire();
         }
     }
 
-    private handleContentChange(docText: string, c: TextDocumentContentChangeEvent, hashes: IRangedCellHash[]): string {
+    private handleContentChange(docText: string, c: TextDocumentContentChangeEvent, hashes: IRangedCellHash[]) {
         // First compute the number of lines that changed
-        const lineDiff = c.text.split('\n').length - docText.substr(c.rangeOffset, c.rangeLength).split('\n').length;
+        const lineDiff = c.range.start.line - c.range.end.line + c.text.split('\n').length - 1;
         const offsetDiff = c.text.length - c.rangeLength;
 
         // Compute the inclusive offset that is changed by the cell.
         const endChangedOffset = c.rangeLength <= 0 ? c.rangeOffset : c.rangeOffset + c.rangeLength - 1;
-
-        // Also compute the text of the document with the change applied
-        const appliedText = this.applyChange(docText, c);
 
         hashes.forEach(h => {
             // See how this existing cell compares to the change
@@ -161,17 +163,9 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
                 h.endOffset += offsetDiff;
             } else {
                 // Cell intersects. Mark as deleted if not exactly the same (user could type over the exact same values)
-                h.deleted = appliedText.substr(h.startOffset, h.endOffset - h.startOffset) !== h.realCode;
+                h.deleted = docText.substr(h.startOffset, h.endOffset - h.startOffset) !== h.realCode;
             }
         });
-
-        return appliedText;
-    }
-
-    private applyChange(docText: string, c: TextDocumentContentChangeEvent): string {
-        const before = docText.substr(0, c.rangeOffset);
-        const after = docText.substr(c.rangeOffset + c.rangeLength);
-        return `${before}${c.text}${after}`;
     }
 
     private async addCellHash(cell: ICell, expectedCount: number): Promise<void> {
@@ -209,7 +203,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
                 lastLine = stripped[stripped.length - 1];
             }
             // Make sure the last line with actual content ends with a linefeed
-            if (!lastLine.endsWith('\n')) {
+            if (!lastLine.endsWith('\n') && lastLine.length > 0) {
                 stripped[stripped.length - 1] = `${lastLine}\n`;
             }
 
@@ -228,7 +222,8 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
                 deleted: false,
                 code: hashedCode,
                 realCode,
-                runtimeLine
+                runtimeLine,
+                id: cell.id
             };
 
             let list = this.hashes.get(cell.file);

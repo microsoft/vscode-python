@@ -463,6 +463,11 @@
                 "command": "python.datascience.addcellbelow",
                 "title": "%python.command.python.datascience.addcellbelow.title%",
                 "category": "Python"
+            },
+            {
+                "command": "python.datascience.scrolltocell",
+                "title": "%python.command.python.datascience.scrolltocell.title%",
+                "category": "Python"
             }
         ],
         "menus": {

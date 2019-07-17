@@ -346,7 +346,7 @@ export class CodeWatcher implements ICodeWatcher {
             if (this.document) {
                 // Use that to get our code.
                 const code = this.document.getText(currentRunCellLens.range);
-                await this.addCode(code, this.getFileName(), range.start.line, this.documentManager.activeTextEditor, debug);
+                await this.addCode(code, this.getFileName(), currentRunCellLens.range.start.line, this.documentManager.activeTextEditor, debug);
             }
         }
     }

@@ -60,6 +60,7 @@
     "python.command.python.datascience.expandallcells.title": "Expand all Python Interactive cells",
     "python.command.python.datascience.collapseallcells.title": "Collapse all Python Interactive cells",
     "python.command.python.datascience.addcellbelow.title": "Add empty cell to file",
+    "python.command.python.datascience.scrolltocell.title": "Scroll cell into view",
     "python.snippet.launch.standard.label": "Python: Current File",
     "python.snippet.launch.module.label": "Python: Module",
     "python.snippet.launch.module.default": "enter-your-module-name",

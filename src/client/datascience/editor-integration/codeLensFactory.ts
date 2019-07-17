@@ -7,19 +7,46 @@ import { CodeLens, Command, Event, EventEmitter, Range, TextDocument } from 'vsc
 import { traceWarning } from '../../common/logger';
 import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
+import { noop } from '../../common/utils/misc';
 import { generateCellRanges } from '../cellFactory';
 import { Commands } from '../constants';
-import { ICellHashProvider, ICodeLensFactory, IFileHashes } from '../types';
+import { InteractiveWindowMessages } from '../interactive-window/interactiveWindowTypes';
+import { ICell, ICellHashProvider, ICodeLensFactory, IFileHashes, IInteractiveWindowListener } from '../types';
 
 @injectable()
-export class CodeLensFactory implements ICodeLensFactory {
+export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowListener {
     private updateEvent: EventEmitter<void> = new EventEmitter<void>();
+    // tslint:disable-next-line: no-any
+    private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{ message: string; payload: any }>();
+    private visibleCells: ICell[] = [];
 
     constructor(
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(ICellHashProvider) private hashProvider: ICellHashProvider
     ) {
         hashProvider.updated(this.hashesUpdated.bind(this));
+    }
+
+    public dispose(): void {
+        noop();
+    }
+
+    // tslint:disable-next-line: no-any
+    public get postMessage(): Event<{ message: string; payload: any }> {
+        return this.postEmitter.event;
+    }
+
+    // tslint:disable-next-line: no-any
+    public onMessage(message: string, payload?: any) {
+        switch (message) {
+            case InteractiveWindowMessages.SendInfo:
+                this.visibleCells = payload.visibleCells;
+                this.updateEvent.fire();
+                break;
+
+            default:
+                break;
+        }
     }
 
     public hashesUpdated(): void {
@@ -37,14 +64,13 @@ export class CodeLensFactory implements ICodeLensFactory {
         const codeLenses: CodeLens[] = [];
         let firstCell = true;
         ranges.forEach(range => {
-            let firstLensOfRange = true;
             commands.forEach(c => {
-                const codeLens = this.createCodeLens(document, range.range, c, firstCell, firstLensOfRange, hashes);
+                const codeLens = this.createCodeLens(document, range.range, c, firstCell);
                 if (codeLens) {
                     codeLenses.push(codeLens);
-                    firstLensOfRange = false;
                 }
             });
+            this.addExecutionCount(codeLenses, document, range.range, hashes, this.visibleCells);
             firstCell = false;
         });
 
@@ -59,10 +85,7 @@ export class CodeLensFactory implements ICodeLensFactory {
         return [Commands.RunCurrentCell, Commands.RunAllCellsAbove, Commands.DebugCell];
     }
 
-    private createCodeLens(document: TextDocument, range: Range, commandName: string, isFirst: boolean, firstLensOfRange: boolean, hashes: IFileHashes[]): CodeLens | undefined {
-        // Wrap the title in a format string if this is the first lens and we have an execution count for the range
-        const formatString = this.computeTitleFormat(document, range, firstLensOfRange, hashes);
-
+    private createCodeLens(document: TextDocument, range: Range, commandName: string, isFirst: boolean): CodeLens | undefined {
         // We only support specific commands
         // Be careful here. These arguments will be serialized during liveshare sessions
         // and so shouldn't reference local objects.
@@ -71,20 +94,20 @@ export class CodeLensFactory implements ICodeLensFactory {
                 return this.generateCodeLens(
                     range,
                     commandName,
-                    formatString.format(localize.DataScience.addCellBelowCommandTitle()),
+                    localize.DataScience.addCellBelowCommandTitle(),
                     [document.fileName, range.start.line]);
 
             case Commands.DebugCurrentCellPalette:
                 return this.generateCodeLens(
                     range,
                     Commands.DebugCurrentCellPalette,
-                    formatString.format(localize.DataScience.debugCellCommandTitle()));
+                    localize.DataScience.debugCellCommandTitle());
 
             case Commands.DebugCell:
                 return this.generateCodeLens(
                     range,
                     Commands.DebugCell,
-                    formatString.format(localize.DataScience.debugCellCommandTitle()),
+                    localize.DataScience.debugCellCommandTitle(),
                     [document.fileName, range.start.line, range.start.character, range.end.line, range.end.character]);
 
             case Commands.RunCurrentCell:
@@ -92,7 +115,7 @@ export class CodeLensFactory implements ICodeLensFactory {
                 return this.generateCodeLens(
                     range,
                     Commands.RunCell,
-                    formatString.format(localize.DataScience.runCellLensCommandTitle()),
+                    localize.DataScience.runCellLensCommandTitle(),
                     [document.fileName, range.start.line, range.start.character, range.end.line, range.end.character]);
 
             case Commands.RunAllCells:
@@ -108,7 +131,7 @@ export class CodeLensFactory implements ICodeLensFactory {
                     return this.generateCodeLens(
                         range,
                         Commands.RunAllCellsAbove,
-                        formatString.format(localize.DataScience.runAllCellsAboveLensCommandTitle()),
+                        localize.DataScience.runAllCellsAboveLensCommandTitle(),
                         [document.fileName, range.start.line, range.start.character]);
                 }
                 break;
@@ -118,7 +141,7 @@ export class CodeLensFactory implements ICodeLensFactory {
                 return this.generateCodeLens(
                     range,
                     Commands.RunCellAndAllBelow,
-                    formatString.format(localize.DataScience.runCellAndAllBelowLensCommandTitle()),
+                    localize.DataScience.runCellAndAllBelowLensCommandTitle(),
                     [document.fileName, range.start.line, range.start.character]);
                 break;
 
@@ -130,20 +153,23 @@ export class CodeLensFactory implements ICodeLensFactory {
         return undefined;
     }
 
-    private computeTitleFormat(_document: TextDocument, _range: Range, _firstLensOfRange: boolean, _hashes: IFileHashes[]): string {
-        // // Only add the execution count on the first code lens and when we have a hash already
-        // // for this file.
-        // const list = hashes.find(h => h.file === document.fileName);
-        // if (list && firstLensOfRange) {
-        //     // Match just the start of the range. Should be - 2 (1 for 1 based numbers and 1 for skipping the comment at the top)
-        //     const rangeMatch = list.hashes.find(h => h.line - 2 === range.start.line);
-        //     if (rangeMatch) {
-        //         return `[${rangeMatch.executionCount}] {0}`;
-        //     }
-        // }
-
-        // Normal case is to not add anything to the string.
-        return '{0}';
+    private addExecutionCount(codeLens: CodeLens[], document: TextDocument, range: Range, hashes: IFileHashes[], visibleCells: ICell[]) {
+        const list = hashes.find(h => h.file === document.fileName);
+        if (list) {
+            // Match just the start of the range. Should be - 2 (1 for 1 based numbers and 1 for skipping the comment at the top)
+            const rangeMatches = list.hashes.filter(h => h.line - 2 === range.start.line);
+            if (rangeMatches && rangeMatches.length) {
+                const rangeMatch = rangeMatches[rangeMatches.length - 1];
+                const cellMatch = visibleCells.find(c => c.data.execution_count === rangeMatch.executionCount && c.id === rangeMatch.id);
+                if (cellMatch) {
+                    codeLens.push(this.generateCodeLens(
+                        range,
+                        Commands.ScrollToCell,
+                        localize.DataScience.scrollToCellTitleFormatMessage().format(rangeMatch.executionCount.toString()),
+                        [document.fileName, rangeMatch.id]));
+                }
+            }
+        }
     }
 
     // tslint:disable-next-line: no-any

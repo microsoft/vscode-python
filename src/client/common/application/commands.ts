@@ -54,6 +54,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.CollapseAllCells]: [];
     [DSCommands.ExportOutputAsNotebook]: [];
     [DSCommands.AddCellBelow]: [];
+    [DSCommands.ScrollToCell]: [string, string];
 }
 
 /**
