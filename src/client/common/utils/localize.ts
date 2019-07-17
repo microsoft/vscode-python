@@ -240,7 +240,7 @@ export namespace DataScience {
     export const jupyterDebuggerInstallPtvsdYes = localize('DataScience.jupyterDebuggerInstallPtvsdYes', 'Yes');
     export const jupyterDebuggerInstallPtvsdNo = localize('DataScience.jupyterDebuggerInstallPtvsdNo', 'No');
     export const cellStopOnErrorFormatMessage = localize('DataScience.cellStopOnErrorFormatMessage', '{0} cells were canceled due to an error in the previous cell.');
-    export const instructionComments = localize('DataScience.instructionComments', '# to add a new cell type "#%%"\n# to add a new markdown cell type "#%% [markdown]"\n');
+    export const instructionComments = localize('DataScience.instructionComments', '# To add a new cell, type "#%%"\n# To add a new markdown cell, type "#%% [markdown]"\n');
 }
 
 export namespace DebugConfigStrings {

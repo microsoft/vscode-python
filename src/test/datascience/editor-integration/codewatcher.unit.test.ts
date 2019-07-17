@@ -716,7 +716,7 @@ testing2`; // Command tests override getText, so just need the ranges here
         let result = codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
         expect(result, 'result not okay').to.be.ok;
         let codeLens = result as CodeLens[];
-        expect(codeLens.length).to.equal(3, 'Code lens wrong length');
+        expect(codeLens.length).to.equal(2, 'Code lens wrong length');
 
         expect(contexts.get(EditorContexts.HasCodeCells)).to.be.equal(true, 'Code cells context not set');
 
