@@ -2,8 +2,9 @@
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
 import { IApplicationShell } from '../../common/application/types';
+import { ProductNames } from '../../common/installer/productNames';
 import { IInstallationChannelManager } from '../../common/installer/types';
-import { ILogger } from '../../common/types';
+import { ILogger, Product } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
@@ -28,13 +29,15 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                         return this.channels.getInstallationChannels()
                             .then(installers => {
                                 if (installers) {
+                                    // If Conda is available, always pick it as the user must have a Conda Environment
                                     const installer = installers.find(ins => ins.displayName === 'Conda');
+                                    const name = ProductNames.get(Product.jupyter);
 
-                                    if (installer) {
-                                        installer.installModule('jupyter')
+                                    if (installer && name) {
+                                        installer.installModule(name)
                                             .catch(e => this.applicationShell.showErrorMessage(e.message, localize.DataScience.pythonInteractiveHelpLink()));
-                                    } else if (installers[0]) {
-                                        installers[0].installModule('jupyter')
+                                    } else if (installers[0] && name) {
+                                        installers[0].installModule(name)
                                             .catch(e => this.applicationShell.showErrorMessage(e.message, localize.DataScience.pythonInteractiveHelpLink()));
                                     }
                                 }
