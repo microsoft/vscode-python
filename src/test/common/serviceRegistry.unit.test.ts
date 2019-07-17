@@ -109,7 +109,7 @@ suite('Common - Service Registry', () => {
             [IInsiderExtensionPrompt, InsidersExtensionPrompt],
             [IExtensionActivationService, InsidersExtensionService],
             [IExtensionChannelService, ExtensionChannelService],
-            [IExtensionChannelRule, ExtensionStableChannelRule, ExtensionChannel.stable],
+            [IExtensionChannelRule, ExtensionStableChannelRule, ExtensionChannel.default],
             [IExtensionChannelRule, ExtensionInsidersDailyChannelRule, ExtensionChannel.daily],
             [IExtensionChannelRule, ExtensionInsidersWeeklyChannelRule, ExtensionChannel.weekly]
         ].forEach(mapping => {
