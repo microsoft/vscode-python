@@ -1412,6 +1412,12 @@
                     "description": "Limit the amount of text in Python Interactive cell text output to this value. 0 to allow any amount of characters.",
                     "scope": "resource"
                 },
+                "python.dataScience.colorizeInputBox": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Whether or not to use the theme's peek color as the background for the input box.",
+                    "scope": "resource"
+                },
                 "python.dataScience.stopOnError": {
                     "type": "boolean",
                     "default": true,

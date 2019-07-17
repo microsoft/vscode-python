@@ -330,6 +330,7 @@ export interface IDataScienceSettings {
     magicCommandsAsComments?: boolean;
     stopOnError?: boolean;
     remoteDebuggerPort?: number;
+    colorizeInputBox?: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

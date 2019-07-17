@@ -197,7 +197,8 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
         // If this is our first time setting the editor, we might need to dynanically modify the styles
         // that the editor generates for the background colors.
-        if (!prevState.editor && this.state.editor && this.containerRef.current && this.props.forceBackground) {
+        if ((!prevState.editor && this.state.editor && this.containerRef.current && this.props.forceBackground) ||
+            (prevProps.forceBackground !== this.props.forceBackground)) {
             this.updateBackgroundStyle();
         }
     }
@@ -274,12 +275,12 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
     }
 
     private updateBackgroundStyle = () => {
-        if (this.state.editor && this.containerRef.current && this.props.forceBackground) {
+        if (this.state.editor && this.containerRef.current) {
             const nodes = this.containerRef.current.getElementsByClassName('monaco-editor-background');
             if (nodes && nodes.length > 0) {
                 const backgroundNode = nodes[0] as HTMLDivElement;
                 if (backgroundNode && backgroundNode.style) {
-                    backgroundNode.style.backgroundColor = this.props.forceBackground;
+                    backgroundNode.style.backgroundColor = this.props.forceBackground ? this.props.forceBackground : 'transparent';
                 }
             }
         }

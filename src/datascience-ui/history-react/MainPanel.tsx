@@ -308,9 +308,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const maxOutputSize = getSettings().maxOutputSize;
         const maxTextSize = maxOutputSize && maxOutputSize < 10000 && maxOutputSize > 0 ? maxOutputSize : undefined;
         const executionCount = this.getInputExecutionCount();
+        const editPanelClass = getSettings().colorizeInputBox ? 'edit-panel-colorized' : 'edit-panel';
 
         return (
-            <div className='edit-panel'>
+            <div className={editPanelClass}>
                 <ErrorBoundary>
                     <Cell
                         editorOptions={this.state.editorOptions}
@@ -322,7 +323,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                         submitNewCode={this.submitInput}
                         baseTheme={baseTheme}
                         codeTheme={this.props.codeTheme}
-                        showWatermark={!this.state.submittedText}
+                        showWatermark={true}
                         ref={this.saveEditCellRef}
                         gotoCode={noop}
                         copyCode={noop}

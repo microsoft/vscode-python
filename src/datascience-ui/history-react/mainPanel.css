@@ -50,14 +50,24 @@ body, html {
 }
 
 .invisible {
-    visibility: hidden; 
+    visibility: hidden;
 }
 
 .edit-panel {
     min-height:50px;
     padding: 10px 0px 10px 0px;
     width: 100%;
-    border-top-color: var(--override-widget-background, var(--vscode-editorGroupHeader-tabsBackground));
+    border-top-color: var(--override-badge-background, var(--vscode-badge-background));
     border-top-style: solid;
-    border-top-width: 1px;
+    border-top-width: 2px;
+}
+
+.edit-panel-colorized {
+    min-height:50px;
+    padding: 10px 0px 10px 0px;
+    width: 100%;
+    border-top-color: var(--override-badge-background, var(--vscode-badge-background));
+    border-top-style: solid;
+    border-top-width: 2px;
+    background-color: var(--override-peek-background, var(--vscode-peekViewEditor-background));
 }
