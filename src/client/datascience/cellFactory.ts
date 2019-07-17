@@ -70,7 +70,7 @@ export function generateCells(settings: IDataScienceSettings | undefined, code: 
     const split = code.splitLines({trim: false});
     const firstLine = split[0];
     const matcher = new CellMatcher(settings);
-    const { magicCommandsAsComments = false } = settings || {}
+    const { magicCommandsAsComments = false } = settings || {};
     if (matcher.isMarkdown(firstLine)) {
         // We have at least one markdown. We might have to split it if there any lines that don't begin
         // with # or are inside a multiline comment

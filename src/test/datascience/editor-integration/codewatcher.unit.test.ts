@@ -249,7 +249,7 @@ fourth line
 
         // Verify code lenses
         const codeLenses = codeWatcher.getCodeLenses();
-        expect(codeLenses.length).to.be.equal(8, 'Incorrect count of code lenses');
+        expect(codeLenses.length).to.be.equal(7, 'Incorrect count of code lenses');
 
         verifyCodeLensesAtPosition(codeLenses, 0, new Range(3, 0, 5, 0), true);
         verifyCodeLensesAtPosition(codeLenses, 2, new Range(6, 0, 8, 0));
@@ -287,7 +287,7 @@ fourth line
 
         // Verify code lenses
         const codeLenses = codeWatcher.getCodeLenses();
-        expect(codeLenses.length).to.be.equal(8, 'Incorrect count of code lenses');
+        expect(codeLenses.length).to.be.equal(7, 'Incorrect count of code lenses');
 
         verifyCodeLensesAtPosition(codeLenses, 0, new Range(3, 0, 5, 0), true);
         verifyCodeLensesAtPosition(codeLenses, 2, new Range(6, 0, 8, 0));
