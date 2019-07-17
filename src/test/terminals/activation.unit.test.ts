@@ -4,9 +4,11 @@
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { ICommandManager } from '../../client/common/application/types';
+import { ShowPlayIcon } from '../../client/common/experimentGroups';
 import { IExperimentsManager } from '../../client/common/types';
+import { noop } from '../../client/common/utils/misc';
 import {
-    ExtensionActivationForTerminalActivation
+    checkExperiments, ExtensionActivationForTerminalActivation
 } from '../../client/terminals/activation';
 
 suite('Terminal - Activation', () => {
@@ -39,6 +41,58 @@ suite('Terminal - Activation', () => {
 
         // tslint:disable-next-line:no-unused-expression chai-vague-errors
         expect(called).to.be.true;
+        verifyAll();
+    });
+
+    // checkExperiments
+
+    test('checkExperiments() - default', () => {
+        experiments.setup(e => e.inExperiment(ShowPlayIcon.icon1))
+            .returns(() => false)
+            .verifiable(TypeMoq.Times.once());
+        experiments.setup(e => e.inExperiment(ShowPlayIcon.icon2))
+            .returns(() => false)
+            .verifiable(TypeMoq.Times.once());
+        experiments.setup(e => e.sendTelemetryIfInExperiment(ShowPlayIcon.control))
+            .verifiable(TypeMoq.Times.once());
+
+        checkExperiments(experiments.object, commands.object);
+
+        verifyAll();
+    });
+
+    test('checkExperiments() - icon 1', () => {
+        experiments.setup(e => e.inExperiment(ShowPlayIcon.icon1))
+            .returns(() => true)
+            .verifiable(TypeMoq.Times.once());
+        const cmdResult = TypeMoq.Mock.ofType<Thenable<undefined>>(undefined, TypeMoq.MockBehavior.Strict);
+        cmdResult.setup(c => c.then(noop, noop))
+            .verifiable(TypeMoq.Times.once());
+        commands.setup(c => c.executeCommand('setContext', 'python.showPlayIcon1', true))
+            .returns(() => cmdResult.object)
+            .verifiable(TypeMoq.Times.once());
+
+        checkExperiments(experiments.object, commands.object);
+
+        verifyAll();
+    });
+
+    test('checkExperiments() - icon 2', () => {
+        experiments.setup(e => e.inExperiment(ShowPlayIcon.icon1))
+            .returns(() => false)
+            .verifiable(TypeMoq.Times.once());
+        experiments.setup(e => e.inExperiment(ShowPlayIcon.icon2))
+            .returns(() => true)
+            .verifiable(TypeMoq.Times.once());
+        const cmdResult = TypeMoq.Mock.ofType<Thenable<undefined>>(undefined, TypeMoq.MockBehavior.Strict);
+        cmdResult.setup(c => c.then(noop, noop))
+            .verifiable(TypeMoq.Times.once());
+        commands.setup(c => c.executeCommand('setContext', 'python.showPlayIcon2', true))
+            .returns(() => cmdResult.object)
+            .verifiable(TypeMoq.Times.once());
+
+        checkExperiments(experiments.object, commands.object);
+
         verifyAll();
     });
 });

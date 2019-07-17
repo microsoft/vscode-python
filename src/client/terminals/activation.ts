@@ -6,6 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { Terminal } from 'vscode';
 import { IExtensionActivationService } from '../activation/types';
+import { ICommandNameArgumentTypeMapping } from '../common/application/commands';
 import {
     ICommandManager, ITerminalManager, IWorkspaceService
 } from '../common/application/types';
@@ -37,9 +38,18 @@ export class ExtensionActivationForTerminalActivation implements IExtensionActiv
     }
 }
 
-function checkExperiments(
-    experiments: IExperimentsManager,
-    commands: ICommandManager
+interface IExperiments {
+    inExperiment(experimentName: string): boolean;
+    sendTelemetryIfInExperiment(experimentName: string): void;
+}
+
+interface ICommands {
+    executeCommand<T, E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(command: E, ...rest: U): Thenable<T | undefined>;
+}
+
+export function checkExperiments(
+    experiments: IExperiments,
+    commands: ICommands
 ) {
     if (experiments.inExperiment(ShowPlayIcon.icon1)) {
         commands.executeCommand('setContext', 'python.showPlayIcon1', true)
