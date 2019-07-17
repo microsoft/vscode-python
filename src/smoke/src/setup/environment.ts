@@ -66,6 +66,8 @@ export async function clearWorkspace() {
     if (!context.app.isRunning) {
         return;
     }
+    // console.log('start');
+    // await sleep(10000);
     const commands = [
         // Custom command in our bootstrap extension.
         // We can use the command `Debug: Stop` from the command palette only if a debug session is active.

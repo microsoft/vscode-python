@@ -64,7 +64,7 @@ Then('take a screenshot', async () => {
 // tslint:disable-next-line: no-console
 Then('log the message {string}', async (message: string) => console.info(message));
 
-Then('a file named {string} is created with the following contents', async (fileName: string, contents: string) => {
+Then('a file named {string} is created with the following content', async (fileName: string, contents: string) => {
     const fullFilePath = path.join(context.app.workspacePathOrFolder, fileName);
     await fs.mkdirp(path.dirname(fullFilePath)).catch(noop);
     await fs.writeFile(fullFilePath, contents);

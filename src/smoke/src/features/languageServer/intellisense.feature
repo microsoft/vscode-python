@@ -52,7 +52,7 @@ Feature: Language Server
         And I select the command "Python: Show Output"
         Then the text "<first_text_in_ooutput_panel>" will be displayed in the output panel within <time_to_activate> seconds
         And the text "<second_text_in_output_panel>" will be displayed in the output panel within <time_to_activate> seconds
-        When I create a new file with the following contents
+        When I create a new file with the following content
             """
             import sys
 

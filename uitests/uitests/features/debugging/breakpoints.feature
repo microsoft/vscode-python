@@ -2,7 +2,7 @@
 Feature: Debugging
     @smoke
     Scenario: Debugging a python file with breakpoints
-        Given a file named ".vscode/launch.json" is created with the following contents
+        Given a file named ".vscode/launch.json" is created with the following content
             """
             {
                 "version": "0.2.0",
@@ -17,7 +17,7 @@ Feature: Debugging
                 ]
             }
             """
-        And a file named "simple sample.py" is created with the following contents
+        And a file named "simple sample.py" is created with the following content
             """
             open("log.log", "w").write("Hello")
             """
@@ -35,7 +35,7 @@ Feature: Debugging
         Then the debugger stops
 
     Scenario: Debugging a python file without breakpoints
-        Given a file named ".vscode/launch.json" is created with the following contents
+        Given a file named ".vscode/launch.json" is created with the following content
             """
             {
                 "version": "0.2.0",
@@ -51,7 +51,7 @@ Feature: Debugging
                 ]
             }
             """
-        And a file named "simple sample.py" is created with the following contents
+        And a file named "simple sample.py" is created with the following content
             """
             open("log.log", "w").write("Hello")
             """

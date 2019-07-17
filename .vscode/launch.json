@@ -150,35 +150,21 @@
             "program": "${workspaceFolder}/node_modules/gulp/bin/gulp.js",
             "args": ["watch"]
         },
-        // {
-        //     "type": "node",
-        //     "request": "launch",
-        //     // It has been observed that the instance of VSC launched for smoke tests just falls over when debugging from within VSC.
-        //     // Solution: Launch code in debug mode and attach (yes this works).
-        //     // Not entirely sure why it works, or why it doesn't work.
-        //     // Got a solution, hence not investing much more time time trying to identify why debugging is failing.
-        //     "name": "Smoke Tests (doesn't always work)",
-        //     "program": "${workspaceFolder}/node_modules/cucumber/bin/cucumber-js",
-        //     "args": [
-        //         "src/smoke/src/features",
-        //         "--require-module",
-        //         "source-map-support/register",
-        //         "-r",
-        //         "out/smoke/src/steps/**/*.js",
-        //         "--format",
-        //         "json:tmp/reports/cucumber-report.json",
-        //         "--format",
-        //         "summary",
-        //         // Change the tag `@wip` to what ever you want to run.
-        //         // Default is assumed to be somethign that's a work in progress (wip).
-        //         "--tags=@wip"
-        //     ]
-        // },
         {
             "type": "node",
-            "request": "attach",
-            "name": "Attach to Smoke Tests",
-            "port": 1339
+            "request": "launch",
+            "name": "UI Tests",
+            "program": "${workspaceFolder}/out/uitests/src/index.js",
+            "sourceMaps": true,
+            "outFiles": ["${workspaceFolder}/out/**/*.js"],
+            "args": [
+                "test",
+                "--",
+                // Change the tag `@wip` to what ever you want to run.
+                // Default is assumed to be somethign that's a work in progress (wip).
+                "--tags=@wip"
+            ],
+            "skipFiles": ["<node_internals>/**"]
         }
     ],
     "compounds": [

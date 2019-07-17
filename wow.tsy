@@ -1,0 +1,85 @@
+// import * as puppeteer from 'puppeteer';
+// import { URI } from 'vscode-uri';
+
+// let page!: puppeteer.Page;
+// let pages!: puppeteer.Page[];
+
+// async function start() {
+//     const electronPath = '/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/.vscode test/stable/Visual Studio Code.app/Contents/MacOS/Electron';
+//     const userPath = '/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/.vscode test/user';
+//     const extensionsPath = '/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/.vscode test/extensions';
+//     const browser = await puppeteer.launch({
+//         executablePath: electronPath, args: [
+//             `--user-data-dir=${userPath}`,
+//             `--extensions-dir=${extensionsPath}`,
+//             '--skip-getting-started',
+//             '--skip-release-notes',
+//             '--sticky-quickopen',
+//             '--disable-telemetry',
+//             '--disable-updates',
+//             '--disable-crash-reporter',
+//             '--no-sandbox',
+//             '--no-first-run',
+//             '--disable-dev-shm-usage',
+//             '--disable-setuid-sandbox',
+//             `--folder-uri=${URI.file(process.cwd())}`
+//         ],
+//         headless: false,
+//         // defaultViewport: { width: 1500, height: 1000 },
+//         devtools: true,
+//         defaultViewport: null,
+//         ignoreDefaultArgs: true
+//     });
+//     // console.log(browser);
+//     await new Promise(resolve => setTimeout(resolve, 5000));
+//     pages = await browser.pages();
+//     page = pages[0];
+//     // const eles = await page.$$('.action-label.explore');
+//     // console.log((await eles[0].getProperty('title')));
+//     await open();
+//     // console.log(pages);
+//     // console.log(browser);
+// }
+
+// async function open() {
+//     const ele = await page.$('.part.statusbar *[title=\'Py\']');
+//     ele!.click();
+//     await new Promise(resolve => setTimeout(resolve, 1000));
+//     page.type('div.monaco-quick-open-widget .quick-open-input input', '> View: Close All Editors');
+//     // const ele1 = await page.$('div.monaco-quick-open-widget .quick-open-input input');
+//     // console.log(ele1);
+//     // ele1!.type('> View: Close All Editors');
+//     await new Promise(resolve => setTimeout(resolve, 1000));
+//     // page.keyboard.press('A');
+//     // page.keyboard.press('B');
+//     page.keyboard.press('Enter');
+
+//     // await new Promise(resolve => setTimeout(resolve, 5000));
+//     // console.log('Start sending keys');
+
+//     // await new Promise(resolve => setTimeout(resolve, 1000));
+
+//     // for (let i = 0; i < 100; i += 1) {
+//     //     await page.keyboard.down('Control');
+//     //     await page.keyboard.down('Shift');
+//     //     await page.keyboard.press('p')
+//     //     await page.keyboard.up('Shift');
+//     //     await page.keyboard.up('Control');
+
+//     //     await new Promise(resolve => setTimeout(resolve, 500));
+
+//     //     await page.keyboard.down('Control');
+//     //     await page.keyboard.down('Shift');
+//     //     await page.keyboard.press('KeyP')
+//     //     await page.keyboard.up('Shift');
+//     //     await page.keyboard.up('Control');
+
+
+//     //     console.log('Send tab');
+//     //     await page.keyboard.press('Tab');
+//     //     await new Promise(resolve => setTimeout(resolve, 500));
+//     // }
+
+// }
+
+// start().catch(console.error);

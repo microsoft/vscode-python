@@ -2,7 +2,7 @@
 @https://github.com/DonJayamanne/pyvscSmokeTesting/testing
 Feature: Test Explorer
     Background: Activted Extension
-        Given a file named ".vscode/settings.json" is created with the following contents
+        Given a file named ".vscode/settings.json" is created with the following content
             """
             {
                 "python.testing.unittestArgs": [

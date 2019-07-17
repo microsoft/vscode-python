@@ -2,7 +2,7 @@
 Feature: Debugging
     Scenario: Debugging a python file without creating a launch configuration (with delays)
         Given the file ".vscode/launch.json" does not exist
-        And a file named "simple sample.py" is created with the following contents
+        And a file named "simple sample.py" is created with the following content
             """
             # Add a minor delay for tests to confirm debugger has started
             import time
@@ -23,7 +23,7 @@ Feature: Debugging
 
     Scenario: Debugging a python file without creating a launch configuration (hello world)
         Given the file ".vscode/launch.json" does not exist
-        And a file named "simple sample.py" is created with the following contents
+        And a file named "simple sample.py" is created with the following content
             """
             print("Hello World")
             open("log.log", "w").write("Hello")

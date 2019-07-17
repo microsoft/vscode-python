@@ -2,7 +2,7 @@
 @https://github.com/DonJayamanne/pyvscSmokeTesting/testing
 Feature: Test Explorer
     Background: Activted Extension
-        Given a file named ".vscode/settings.json" is created with the following contents
+        Given a file named ".vscode/settings.json" is created with the following content
             """
             {
                 "python.testing.unittestArgs": [
@@ -61,7 +61,7 @@ Feature: Test Explorer
         And I expand all of the nodes in the test explorer
         Then there are <node_count> nodes in the test explorer
         # Now, add a delay for the discovery of the tests
-        Given a file named "tests/test_discovery_delay" is created with the following contents
+        Given a file named "tests/test_discovery_delay" is created with the following content
             """
             10
             """

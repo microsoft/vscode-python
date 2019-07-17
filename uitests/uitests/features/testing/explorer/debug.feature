@@ -2,7 +2,7 @@
 @https://github.com/DonJayamanne/pyvscSmokeTesting/testing
 Feature: Test Explorer (debugging)
     Background: Activted Extension
-        Given a file named ".vscode/settings.json" is created with the following contents
+        Given a file named ".vscode/settings.json" is created with the following content
             """
             {
                 "python.testing.unittestArgs": [
@@ -25,7 +25,7 @@ Feature: Test Explorer (debugging)
         And the workspace setting "python.testing.<setting_to_enable>" is enabled
         # The number entered in this file will be used in a `time.sleep(?)` statement.
         # Resulting in delays in running the tests (delay is in the python code in the above repo).
-        And a file named "tests/test_running_delay" is created with the following contents
+        And a file named "tests/test_running_delay" is created with the following content
             """
             5
             """

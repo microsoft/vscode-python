@@ -2,7 +2,7 @@
 @https://github.com/DonJayamanne/pyvscSmokeTesting/testing
 Feature: Test Explorer
     Background: Activted Extension
-        Given a file named ".vscode/settings.json" is created with the following contents
+        Given a file named ".vscode/settings.json" is created with the following content
             """
             {
                 "python.testing.unittestArgs": [
@@ -23,7 +23,7 @@ Feature: Test Explorer
     Scenario Outline: When running tests, the nodes will have the progress icon and when completed will have a success status (<package>)
         Given the package "<package>" is installed
         And the workspace setting "python.testing.<setting_to_enable>" is enabled
-        And a file named "tests/test_running_delay" is created with the following contents
+        And a file named "tests/test_running_delay" is created with the following content
             """
             5
             """
@@ -55,11 +55,11 @@ Feature: Test Explorer
     Scenario Outline: When running tests, the nodes will have the progress icon and when completed will have a error status (<package>)
         Given the package "<package>" is installed
         And the workspace setting "python.testing.<setting_to_enable>" is enabled
-        And a file named "tests/test_running_delay" is created with the following contents
+        And a file named "tests/test_running_delay" is created with the following content
             """
             5
             """
-        And a file named "tests/data.json" is created with the following contents
+        And a file named "tests/data.json" is created with the following content
             """
             [1,2,-1,4,5,6]
             """

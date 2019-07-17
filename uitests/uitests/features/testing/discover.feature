@@ -30,7 +30,7 @@ Feature: Testing
             | nose    | nosetestsEnabled  | nosetest is not installed |
 
     Scenario Outline: Display message if there are no tests (<package>)
-        Given a file named ".vscode/settings.json" is created with the following contents
+        Given a file named ".vscode/settings.json" is created with the following content
             """
             {
             "python.testing.<args_setting>": <args>,

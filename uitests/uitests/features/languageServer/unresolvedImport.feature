@@ -1,7 +1,7 @@
 @ls
 Feature: Language Server
     Background: Unresolved imports
-        Given a file named "sample.py" is created with the following contents
+        Given a file named "sample.py" is created with the following content
         """
         import requests
         """

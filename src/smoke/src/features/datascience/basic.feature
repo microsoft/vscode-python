@@ -27,7 +27,7 @@
 #         Given the package "jupyter" is installed
 #         And a file named "log.log" does not exist
 #         When I wait for the Python extension to activate
-#         When I create an untitled Python file with the following contents
+#         When I create an untitled Python file with the following content
 #             """
 #             open("log.log", "w").write("Hello")
 #             """

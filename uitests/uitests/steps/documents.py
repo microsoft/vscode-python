@@ -9,7 +9,7 @@ import uitests.tools
 import uitests.vscode.documents
 
 
-@behave.given('a file named "{name}" is created with the following contents')
+@behave.given('a file named "{name}" is created with the following content')
 def given_file_create(context, name):
     uitests.vscode.documents.create_file_with_contents(context, name, context.text)
 
@@ -19,7 +19,7 @@ def when_file_with_content(context, name):
     uitests.vscode.documents.create_file_with_contents(context, name, context.text)
 
 
-@behave.when("I create a new file with the following contents")
+@behave.when("I create a new file with the following content")
 def when_new_file_with_content(context):
     uitests.vscode.documents.create_new_untitled_file_with_contents(
         context, context.text
@@ -128,7 +128,7 @@ def then_open_file(context, name):
     uitests.vscode.documents.open_file(context, name)
 
 
-@behave.when("I create an untitled Python file with the following contents")
+@behave.when("I create an untitled Python file with the following content")
 def create_untitled_python_file(context):
     create_new_python_file(context)
 
@@ -141,7 +141,7 @@ def change_language(context, language):
     )
 
 
-@behave.when("I create an new Python file with the following contents")
+@behave.when("I create an new Python file with the following content")
 def create_new_python_file(context):
     uitests.vscode.documents.create_new_untitled_file(context)
     uitests.vscode.documents.send_text_to_editor(context, "Untitled-1", context.text)

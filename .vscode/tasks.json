@@ -25,6 +25,23 @@
             }
         },
         {
+            "label": "Compile UI Tests",
+            "type": "npm",
+            "script": "compile-uitests:watch",
+            "isBackground": true,
+            "problemMatcher": [
+                "$tsc-watch",
+                {
+                    "base": "$tslint5",
+                    "fileLocation": "relative"
+                }
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
             "label": "Compile Web Views",
             "type": "npm",
             "script": "compile-webviews-watch",

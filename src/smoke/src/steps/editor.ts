@@ -21,7 +21,7 @@ When('I create a new file', async () => {
 // Sending text to the editor is the same as manually typging code.
 // This can cause issues, e.g. vsc will auto complete brackets, etc...
 // Easiest option, paste the text into the editor.
-When('I create a new file with the following contents', async (contents: string) => {
+When('I create a new file with the following content', async (contents: string) => {
     await context.app.workbench.editors.newUntitledFile();
     await clipboardy.write(contents);
     await context.app.workbench.quickopen.runCommand('Paste');

@@ -2,7 +2,7 @@
 @https://github.com/DonJayamanne/pyvscSmokeTesting/testing
 Feature: Test Explorer - Re-run Failed Tests
     Background: Activted Extension
-        Given a file named ".vscode/settings.json" is created with the following contents
+        Given a file named ".vscode/settings.json" is created with the following content
             """
             {
                 "python.testing.unittestArgs": [
@@ -23,11 +23,11 @@ Feature: Test Explorer - Re-run Failed Tests
     Scenario Outline: We are able to re-run a failed tests (<package>)
         Given the package "<package>" is installed
         And the workspace setting "python.testing.<setting_to_enable>" is enabled
-        And a file named "tests/test_running_delay" is created with the following contents
+        And a file named "tests/test_running_delay" is created with the following content
             """
             0
             """
-        And a file named "tests/data.json" is created with the following contents
+        And a file named "tests/data.json" is created with the following content
             """
             [1,-1,-1,4,5,6]
             """
@@ -51,11 +51,11 @@ Feature: Test Explorer - Re-run Failed Tests
         And the node "test_two_third_suite" in the test explorer has a status of "Fail"
         And 6 nodes in the test explorer have a status of "Success"
         And the run failed tests icon is visible in the toolbar
-        Given a file named "tests/test_running_delay" is created with the following contents
+        Given a file named "tests/test_running_delay" is created with the following content
             """
             1
             """
-        And a file named "tests/data.json" is created with the following contents
+        And a file named "tests/data.json" is created with the following content
             """
             [1,2,3,4,5,6]
             """
@@ -72,11 +72,11 @@ Feature: Test Explorer - Re-run Failed Tests
     Scenario Outline: We are able to stop tests after re-running failed tests (<package>)
         Given the package "<package>" is installed
         And the workspace setting "python.testing.<setting_to_enable>" is enabled
-        And a file named "tests/test_running_delay" is created with the following contents
+        And a file named "tests/test_running_delay" is created with the following content
             """
             0
             """
-        And a file named "tests/data.json" is created with the following contents
+        And a file named "tests/data.json" is created with the following content
             """
             [1,-1,-1,4,5,6]
             """
@@ -100,11 +100,11 @@ Feature: Test Explorer - Re-run Failed Tests
         And the node "test_two_third_suite" in the test explorer has a status of "Fail"
         And <failed_node_count> nodes in the test explorer have a status of "Success"
         And the run failed tests icon is visible in the toolbar
-        Given a file named "tests/test_running_delay" is created with the following contents
+        Given a file named "tests/test_running_delay" is created with the following content
             """
             100
             """
-        And a file named "tests/data.json" is created with the following contents
+        And a file named "tests/data.json" is created with the following content
             """
             [1,2,3,4,5,6]
             """
