@@ -204,7 +204,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
 
             // Jupyter also removes blank lines at the end.
             let lastLine = stripped[stripped.length - 1];
-            while (lastLine.length === 0 || lastLine === '\n') {
+            while (lastLine && (lastLine.length === 0 || lastLine === '\n')) {
                 stripped.splice(stripped.length - 1, 1);
                 lastLine = stripped[stripped.length - 1];
             }

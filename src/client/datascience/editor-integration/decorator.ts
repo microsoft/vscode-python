@@ -68,6 +68,7 @@ export class Decorator implements IExtensionActivationService, IDisposable {
 
     private triggerUpdate(editor: vscode.TextEditor | undefined) {
         if (this.timer) {
+            // tslint:disable-next-line: no-any
             clearTimeout(this.timer as any);
         }
         this.timer = setTimeout(() => this.update(editor), 100);

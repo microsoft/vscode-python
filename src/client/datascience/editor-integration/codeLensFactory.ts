@@ -130,17 +130,17 @@ export class CodeLensFactory implements ICodeLensFactory {
         return undefined;
     }
 
-    private computeTitleFormat(document: TextDocument, range: Range, firstLensOfRange: boolean, hashes: IFileHashes[]): string {
-        // Only add the execution count on the first code lens and when we have a hash already
-        // for this file.
-        const list = hashes.find(h => h.file === document.fileName);
-        if (list && firstLensOfRange) {
-            // Match just the start of the range. Should be - 2 (1 for 1 based numbers and 1 for skipping the comment at the top)
-            const rangeMatch = list.hashes.find(h => h.line - 2 === range.start.line);
-            if (rangeMatch) {
-                return `[${rangeMatch.executionCount}] {0}`;
-            }
-        }
+    private computeTitleFormat(_document: TextDocument, _range: Range, _firstLensOfRange: boolean, _hashes: IFileHashes[]): string {
+        // // Only add the execution count on the first code lens and when we have a hash already
+        // // for this file.
+        // const list = hashes.find(h => h.file === document.fileName);
+        // if (list && firstLensOfRange) {
+        //     // Match just the start of the range. Should be - 2 (1 for 1 based numbers and 1 for skipping the comment at the top)
+        //     const rangeMatch = list.hashes.find(h => h.line - 2 === range.start.line);
+        //     if (rangeMatch) {
+        //         return `[${rangeMatch.executionCount}] {0}`;
+        //     }
+        // }
 
         // Normal case is to not add anything to the string.
         return '{0}';

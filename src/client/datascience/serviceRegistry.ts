@@ -16,6 +16,7 @@ import { CodeLensFactory } from './editor-integration/codeLensFactory';
 import { DataScienceCodeLensProvider } from './editor-integration/codelensprovider';
 import { CodeWatcher } from './editor-integration/codewatcher';
 import { Decorator } from './editor-integration/decorator';
+import { ExecutionCountDecorator } from './editor-integration/executionCountDecorator';
 import { DataScienceErrorHandler } from './errorHandler/errorHandler';
 import { DebugListener } from './interactive-window/debugListener';
 import { DotNetIntellisenseProvider } from './interactive-window/intellisense/dotNetIntellisenseProvider';
@@ -107,6 +108,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDataViewerProvider>(IDataViewerProvider, wrapType(DataViewerProvider));
     serviceManager.add<IDataViewer>(IDataViewer, wrapType(DataViewer));
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, wrapType(Decorator));
+    serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, wrapType(ExecutionCountDecorator));
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, wrapType(DotNetIntellisenseProvider));
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, wrapType(JediIntellisenseProvider));
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, wrapType(LinkProvider));
