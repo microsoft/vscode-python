@@ -74,7 +74,7 @@ export class JupyterImporter implements INotebookImporter {
     }
 
     private addInstructionComments = (pythonOutput: string): string => {
-        const comments = CodeSnippits.InstructionComments;
+        const comments = localize.DataScience.instructionComments();
         return comments.concat(pythonOutput);
     }
 

@@ -178,7 +178,6 @@ export namespace CodeSnippits {
     export const ImportIPython = '#%%\nfrom IPython import get_ipython\n\n';
     export const MatplotLibInitSvg = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_format = 'svg'`;
     export const MatplotLibInitPng = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_format = 'png'`;
-    export const InstructionComments = '# to add a new cell type "#%%"\n# to add a new markdown cell type "#%% [markdown]"\n';
 }
 
 export namespace JupyterCommands {

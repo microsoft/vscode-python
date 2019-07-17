@@ -12,6 +12,7 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { ICodeExecutionHelper } from '../../terminals/types';
+import { CellMatcher } from '../cellMatcher';
 import { Commands, Telemetry } from '../constants';
 import { ICodeLensFactory, ICodeWatcher, IDataScienceErrorHandler, IInteractiveWindowProvider } from '../types';
 
@@ -262,6 +263,7 @@ export class CodeWatcher implements ICodeWatcher {
         }
 
         const editor = this.documentManager.activeTextEditor;
+        const cellMatcher = new CellMatcher();
         let index = 0;
 
         if (editor) {
@@ -269,7 +271,7 @@ export class CodeWatcher implements ICodeWatcher {
                 let lastCell = true;
 
                 for (let i = editor.selection.end.line + 1; i < editor.document.lineCount; i += 1) {
-                    if (editor.document.lineAt(i).text.startsWith('#%%', 0)) {
+                    if (cellMatcher.isCell(editor.document.lineAt(i).text)) {
                         lastCell = false;
                         index = i;
                         editBuilder.insert(new Position(i, 0), '#%%\n\n');
