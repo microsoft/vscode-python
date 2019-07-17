@@ -16,6 +16,7 @@ import { EXTENSION_ROOT_DIR, STANDARD_OUTPUT_CHANNEL } from './constants';
 import { traceDecorators, traceError } from './logger';
 import { IFileSystem } from './platform/types';
 import { ABExperiments, ICryptoUtils, IExperimentsManager, IOutputChannel, IPersistentState, IPersistentStateFactory } from './types';
+import { sleep } from './utils/async';
 import { swallowExceptions } from './utils/decorators';
 import { Experiments } from './utils/localize';
 
@@ -29,6 +30,7 @@ export const downloadedExperimentStorageKey = 'DOWNLOADED_EXPERIMENTS_STORAGE_KE
  */
 const configFile = path.join(EXTENSION_ROOT_DIR, 'experiments.json');
 export const configUri = 'https://raw.githubusercontent.com/microsoft/vscode-python/master/experiments.json';
+export const EXPERIMENTS_EFFORT_TIMEOUT_MS = 2000;
 
 /**
  * Manages and stores experiments, implements the AB testing functionality
@@ -88,7 +90,7 @@ export class ExperimentsManager implements IExperimentsManager {
             // We need to know whether an experiment influences the logs we observe in github issues, so log the experiment group
             this.output.appendLine(Experiments.inGroup().format(exp.name));
         }
-        this.initializeExperiments().ignoreErrors();
+        this.initializeInBackground().ignoreErrors();
     }
 
     @traceDecorators.error('Failed to identify if user is in experiment')
@@ -126,32 +128,24 @@ export class ExperimentsManager implements IExperimentsManager {
      * Downloads experiments and updates downloaded storage for the next session given previously downloaded experiments are no longer valid
      */
     @traceDecorators.error('Failed to initialize experiments')
-    public async initializeExperiments(): Promise<void | null> {
+    public async initializeInBackground(): Promise<void> {
         if (this.isDownloadedStorageValid.value) {
             return;
         }
-        const downloadedExperiments = (await this.httpClient.getJSON<ABExperiments>(configUri, false))!;
-        if (!this.areExperimentsValid(downloadedExperiments)) {
-            return;
-        }
-        await this.downloadedExperimentsStorage.updateValue(downloadedExperiments);
-        await this.isDownloadedStorageValid.updateValue(true);
+        await this.downloadAndStoreExperiments();
     }
 
     /**
-     * Downloads experiments within timeout and updates storage for the current session
-     * @param timeout Wait for download to complete until timeout, and return `null` if download fails to complete within timeout
+     * Downloads experiments and updates storage
+     * @param storage The storage to store the experiments in. By default, downloaded storage for the next session is used.
      */
-    @traceDecorators.error('Failed to download experiments within timeout')
-    public async downloadExperimentsWithinTimeout(timeout: number): Promise<void | null> {
-        const downloadedExperiments = await this.httpClient.getJSON<ABExperiments>(configUri, false, timeout);
-        if (downloadedExperiments === null) {
-            return null;
-        }
+    @traceDecorators.error('Failed to download and store experiments')
+    public async downloadAndStoreExperiments(storage: IPersistentState<ABExperiments | undefined> = this.downloadedExperimentsStorage): Promise<void> {
+        const downloadedExperiments = await this.httpClient.getJSON<ABExperiments>(configUri, false);
         if (!this.areExperimentsValid(downloadedExperiments)) {
             return;
         }
-        await this.experimentStorage.updateValue(downloadedExperiments);
+        await storage.updateValue(downloadedExperiments);
         await this.isDownloadedStorageValid.updateValue(true);
     }
 
@@ -194,7 +188,7 @@ export class ExperimentsManager implements IExperimentsManager {
             return;
         }
 
-        // Step 2. Do best effort to download the experiments within 2 seconds and use it in the current session only
+        // Step 2. Do best effort to download the experiments within timeout and use it in the current session only
         if (await this.doBestEffortToPopulateExperiments() === true) {
             return;
         }
@@ -238,12 +232,18 @@ export class ExperimentsManager implements IExperimentsManager {
      */
     public async doBestEffortToPopulateExperiments(): Promise<boolean> {
         try {
-            const success = await this.downloadExperimentsWithinTimeout(2000) !== null;
+            const success = await Promise.race([
+                // Download and store experiments in the storage for the current session
+                this.downloadAndStoreExperiments(this.experimentStorage),
+                sleep(EXPERIMENTS_EFFORT_TIMEOUT_MS).then(() => {
+                    return null;
+                })
+            ]) !== null;
             sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE, undefined, { success });
             return success;
         } catch (ex) {
             sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE, undefined, { success: false, error: 'Downloading experiments failed with error' }, ex);
-            traceError('Effort to downlad experiments within timeout failed with error', ex);
+            traceError('Effort to download experiments within timeout failed with error', ex);
             return false;
         }
     }

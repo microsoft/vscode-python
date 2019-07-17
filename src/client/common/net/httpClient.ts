@@ -10,7 +10,6 @@ import { IHttpClient } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { IWorkspaceService } from '../application/types';
 import { traceError } from '../logger';
-import { waitForPromise } from '../utils/async';
 
 @injectable()
 export class HttpClient implements IHttpClient {
@@ -26,11 +25,9 @@ export class HttpClient implements IHttpClient {
         return request(uri, this.requestOptions);
     }
 
-    public async getJSON<T>(uri: string, strict: boolean = true, timeout?: number): Promise<T | null> {
-        const body = timeout ?
-            // If timeout is provided, wait for download promise to complete until timeout
-            await waitForPromise(this.getBody(uri), timeout) : await this.getBody(uri);
-        return body === null ? null : this.parseBodyToJSON(body, strict);
+    public async getJSON<T>(uri: string, strict: boolean = true): Promise<T> {
+        const body = await this.getBody(uri);
+        return this.parseBodyToJSON(body, strict);
     }
 
     public async parseBodyToJSON<T>(body: string, strict: boolean): Promise<T> {
