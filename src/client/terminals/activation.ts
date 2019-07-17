@@ -19,12 +19,21 @@ import { ITerminalAutoActivation } from './types';
 
 @injectable()
 export class ExtensionActivationForTerminalActivation implements IExtensionActivationService {
+    private check: () => void;
     constructor(
-        @inject(IExperimentsManager) private experiments: IExperimentsManager,
-        @inject(ICommandManager) private commands: ICommandManager
-    ) { }
+        @inject(IExperimentsManager) experiments: IExperimentsManager,
+        @inject(ICommandManager) commands: ICommandManager,
+        check?: () => void
+    ) {
+        if (check === undefined) {
+            check = () => {
+                checkExperiments(experiments, commands);
+            };
+        }
+        this.check = check;
+    }
     public async activate(_resource: Resource): Promise<void> {
-        checkExperiments(this.experiments, this.commands);
+        this.check();
     }
 }
 
