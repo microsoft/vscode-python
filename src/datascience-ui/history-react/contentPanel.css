@@ -8,16 +8,8 @@
 }
 
 .flash {
-    -webkit-animation-name: flash-animation;
-    -webkit-animation-duration: 1.0s;
-
     animation-name: flash-animation;
     animation-duration: 1.0s;
-}
-
-@-webkit-keyframes flash-animation {
-    from { background: var(--override-peek-background, var(--vscode-peekViewEditor-background));; }
-    to   { background: default; }
 }
 
 @keyframes flash-animation {
