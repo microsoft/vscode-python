@@ -5,7 +5,7 @@
 
 'use strict';
 
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable, named, optional } from 'inversify';
 import { parse } from 'jsonc-parser';
 import * as path from 'path';
 import { IHttpClient } from '../common/types';
@@ -71,7 +71,8 @@ export class ExperimentsManager implements IExperimentsManager {
         @inject(ICryptoUtils) private readonly crypto: ICryptoUtils,
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel,
-        @inject(IFileSystem) private readonly fs: IFileSystem
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @optional() private experimentEffortTimeout: number = EXPERIMENTS_EFFORT_TIMEOUT_MS
     ) {
         this.isDownloadedStorageValid = this.persistentStateFactory.createGlobalPersistentState<boolean>(isDownloadedStorageValidKey, false, EXPIRY_DURATION_MS);
         this.experimentStorage = this.persistentStateFactory.createGlobalPersistentState<ABExperiments | undefined>(experimentStorageKey, undefined);
@@ -235,7 +236,7 @@ export class ExperimentsManager implements IExperimentsManager {
             const success = await Promise.race([
                 // Download and store experiments in the storage for the current session
                 this.downloadAndStoreExperiments(this.experimentStorage),
-                sleep(EXPERIMENTS_EFFORT_TIMEOUT_MS).then(() => {
+                sleep(this.experimentEffortTimeout).then(() => {
                     return null;
                 })
             ]) !== null;
