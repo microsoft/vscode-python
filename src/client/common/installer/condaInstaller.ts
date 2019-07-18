@@ -27,7 +27,7 @@ export class CondaInstaller extends ModuleInstaller implements IModuleInstaller 
     }
 
     public get priority(): number {
-        return 0;
+        return 1;
     }
 
     /**

@@ -30,14 +30,11 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                             .then(installers => {
                                 if (installers) {
                                     // If Conda is available, always pick it as the user must have a Conda Environment
-                                    const installer = installers.find(ins => ins.displayName === 'Conda');
+                                    const installer = installers.reduce((prev, current) => (prev.priority > current.priority) ? prev : current);
                                     const name = ProductNames.get(Product.jupyter);
 
                                     if (installer && name) {
                                         installer.installModule(name)
-                                            .catch(e => this.applicationShell.showErrorMessage(e.message, localize.DataScience.pythonInteractiveHelpLink()));
-                                    } else if (installers[0] && name) {
-                                        installers[0].installModule(name)
                                             .catch(e => this.applicationShell.showErrorMessage(e.message, localize.DataScience.pythonInteractiveHelpLink()));
                                     }
                                 }
