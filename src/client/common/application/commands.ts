@@ -54,7 +54,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.CollapseAllCells]: [];
     [DSCommands.ExportOutputAsNotebook]: [];
     [DSCommands.AddCellBelow]: [];
-    [DSCommands.ScrollToCell]: [string, string];
 }
 
 /**
@@ -114,4 +113,5 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.RunFileInInteractiveWindows]: [string];
     [DSCommands.DebugCell]: [string, number, number, number, number];
     [DSCommands.RunCurrentCellAndAddBelow]: [string];
+    [DSCommands.ScrollToCell]: [string, string];
 }

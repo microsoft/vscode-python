@@ -315,5 +315,6 @@
     "DataScience.jupyterDebuggerInstallPtvsdYes" : "Yes",
     "DataScience.jupyterDebuggerInstallPtvsdNo" : "No",
     "DataScience.cellStopOnErrorFormatMessage" : "{0} cells were canceled due to an error in the previous cell.",
-    "DataScience.instructionComments": "# To add a new cell, type '#%%'\n# To add a new markdown cell, type '#%% [markdown]'\n"
+    "DataScience.instructionComments": "# To add a new cell, type '#%%'\n# To add a new markdown cell, type '#%% [markdown]'\n",
+    "DataScience.scrollToCellTitleFormatMessage" : "Goto [{0}]"
 }

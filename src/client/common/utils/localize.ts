@@ -242,105 +242,105 @@ export namespace DataScience {
     export const cellStopOnErrorFormatMessage = localize('DataScience.cellStopOnErrorFormatMessage', '{0} cells were canceled due to an error in the previous cell.');
     export const scrollToCellTitleFormatMessage = localize('DataScience.scrollToCellTitleFormatMessage', 'Goto [{0}]');
     export const instructionComments = localize('DataScience.instructionComments', '# To add a new cell, type "#%%"\n# To add a new markdown cell, type "#%% [markdown]"\n');
+}
 
-
-rt namespace DebugConfigStrings {
-    rt const selectConfiguration = {
-    title: localize('debug.selectConfigurationTitle'),
-    placeholder: localize('debug.selectConfigurationPlaceholder')
-    };
-export const launchJsonCompletions = {
-    label: localize('debug.launchJsonConfigurationsCompletionLabel'),
-        ription: localize('debug.launchJsonConfigurationsCompletionDescription')
-
-
-    rt namespace file {
-        rt const snippet = {
-        name: localize('python.snippet.launch.standard.label')
-    };
-    // tslint:disable-next-line:no-shadowed-variable
+export namespace DebugConfigStrings {
     export const selectConfiguration = {
-        label: localize('debug.debugFileConfigurationLabel'),
-        description: localize('debug.debugFileConfigurationDescription')
-
-
-    rt namespace module {
-    export const snippet = {
-        name: localize('python.snippet.launch.module.label'),
-        default: localize('python.snippet.launch.module.default')
+        title: localize('debug.selectConfigurationTitle'),
+        placeholder: localize('debug.selectConfigurationPlaceholder')
     };
-    // tslint:disable-next-line:no-shadowed-variable
-        rt const selectConfiguration = {
-        label: localize('debug.debugModuleConfigurationLabel'),
-        description: localize('debug.debugModuleConfigurationDescription')
-
-    export const enterModule = {
-        title: localize('debug.moduleEnterModuleTitle'),
-        prompt: localize('debug.moduleEnterModulePrompt'),
-        default: localize('debug.moduleEnterModuleDefault'),
-        invalid: localize('debug.moduleEnterModuleInvalidNameError')
+    export const launchJsonCompletions = {
+        label: localize('debug.launchJsonConfigurationsCompletionLabel'),
+        description: localize('debug.launchJsonConfigurationsCompletionDescription')
     };
 
-    rt namespace attach {
-        rt const snippet = {
-        name: localize('python.snippet.launch.attach.label')
-    };
-    // tslint:disable-next-line:no-shadowed-variable
-        rt const selectConfiguration = {
-        label: localize('debug.remoteAttachConfigurationLabel'),
-        description: localize('debug.remoteAttachConfigurationDescription')
-    };
-    export const enterRemoteHost = {
-        title: localize('debug.attachRemoteHostTitle'),
-        prompt: localize('debug.attachRemoteHostPrompt'),
-        invalid: localize('debug.attachRemoteHostValidationError')
-    };
-    export const enterRemotePort = {
-        title: localize('debug.attachRemotePortTitle'),
-        prompt: localize('debug.attachRemotePortPrompt'),
-        invalid: localize('debug.attachRemotePortValidationError')
-    };
-
-    rt namespace django {
-        rt const snippet = {
-        name: localize('python.snippet.launch.django.label')
-    };
-    // tslint:disable-next-line:no-shadowed-variable
-        rt const selectConfiguration = {
-        label: localize('debug.debugDjangoConfigurationLabel'),
-        description: localize('debug.debugDjangoConfigurationDescription')
-    };
-    export const enterManagePyPath = {
-        title: localize('debug.djangoEnterManagePyPathTitle'),
-        prompt: localize('debug.djangoEnterManagePyPathPrompt'),
-        invalid: localize('debug.djangoEnterManagePyPathInvalidFilePathError')
-    };
-
-    rt namespace flask {
-        rt const snippet = {
-        name: localize('python.snippet.launch.flask.label')
-    };
-    // tslint:disable-next-line:no-shadowed-variable
-        rt const selectConfiguration = {
-        label: localize('debug.debugFlaskConfigurationLabel'),
-        description: localize('debug.debugFlaskConfigurationDescription')
-    };
-    export const enterAppPathOrNamePath = {
-        title: localize('debug.flaskEnterAppPathOrNamePathTitle'),
-        prompt: localize('debug.flaskEnterAppPathOrNamePathPrompt'),
-        invalid: localize('debug.flaskEnterAppPathOrNamePathInvalidNameError')
-    };
-
-    rt namespace pyramid {
-        rt const snippet = {
-        name: localize('python.snippet.launch.pyramid.label')
-    };
-    // tslint:disable-next-line:no-shadowed-variable
-        rt const selectConfiguration = {
-        label: localize('debug.debugPyramidConfigurationLabel'),
-        description: localize('debug.debugPyramidConfigurationDescription')
-    };
-    export const enterDevelopmentIniPath = {
+    export namespace file {
+        export const snippet = {
+            name: localize('python.snippet.launch.standard.label')
+        };
+        // tslint:disable-next-line:no-shadowed-variable
+        export const selectConfiguration = {
+            label: localize('debug.debugFileConfigurationLabel'),
+            description: localize('debug.debugFileConfigurationDescription')
+        };
+    }
+    export namespace module {
+        export const snippet = {
+            name: localize('python.snippet.launch.module.label'),
+            default: localize('python.snippet.launch.module.default')
+        };
+        // tslint:disable-next-line:no-shadowed-variable
+        export const selectConfiguration = {
+            label: localize('debug.debugModuleConfigurationLabel'),
+            description: localize('debug.debugModuleConfigurationDescription')
+        };
+        export const enterModule = {
+            title: localize('debug.moduleEnterModuleTitle'),
+            prompt: localize('debug.moduleEnterModulePrompt'),
+            default: localize('debug.moduleEnterModuleDefault'),
+            invalid: localize('debug.moduleEnterModuleInvalidNameError')
+        };
+    }
+    export namespace attach {
+        export const snippet = {
+            name: localize('python.snippet.launch.attach.label')
+        };
+        // tslint:disable-next-line:no-shadowed-variable
+        export const selectConfiguration = {
+            label: localize('debug.remoteAttachConfigurationLabel'),
+            description: localize('debug.remoteAttachConfigurationDescription')
+        };
+        export const enterRemoteHost = {
+            title: localize('debug.attachRemoteHostTitle'),
+            prompt: localize('debug.attachRemoteHostPrompt'),
+            invalid: localize('debug.attachRemoteHostValidationError')
+        };
+        export const enterRemotePort = {
+            title: localize('debug.attachRemotePortTitle'),
+            prompt: localize('debug.attachRemotePortPrompt'),
+            invalid: localize('debug.attachRemotePortValidationError')
+        };
+    }
+    export namespace django {
+        export const snippet = {
+            name: localize('python.snippet.launch.django.label')
+        };
+        // tslint:disable-next-line:no-shadowed-variable
+        export const selectConfiguration = {
+            label: localize('debug.debugDjangoConfigurationLabel'),
+            description: localize('debug.debugDjangoConfigurationDescription')
+        };
+        export const enterManagePyPath = {
+            title: localize('debug.djangoEnterManagePyPathTitle'),
+            prompt: localize('debug.djangoEnterManagePyPathPrompt'),
+            invalid: localize('debug.djangoEnterManagePyPathInvalidFilePathError')
+        };
+    }
+    export namespace flask {
+        export const snippet = {
+            name: localize('python.snippet.launch.flask.label')
+        };
+        // tslint:disable-next-line:no-shadowed-variable
+        export const selectConfiguration = {
+            label: localize('debug.debugFlaskConfigurationLabel'),
+            description: localize('debug.debugFlaskConfigurationDescription')
+        };
+        export const enterAppPathOrNamePath = {
+            title: localize('debug.flaskEnterAppPathOrNamePathTitle'),
+            prompt: localize('debug.flaskEnterAppPathOrNamePathPrompt'),
+            invalid: localize('debug.flaskEnterAppPathOrNamePathInvalidNameError')
+        };
+    }
+    export namespace pyramid {
+        export const snippet = {
+            name: localize('python.snippet.launch.pyramid.label')
+        };
+        // tslint:disable-next-line:no-shadowed-variable
+        export const selectConfiguration = {
+            label: localize('debug.debugPyramidConfigurationLabel'),
+            description: localize('debug.debugPyramidConfigurationDescription')
+        };
+        export const enterDevelopmentIniPath = {
             title: localize('debug.pyramidEnterDevelopmentIniPathTitle'),
             prompt: localize('debug.pyramidEnterDevelopmentIniPathPrompt'),
             invalid: localize('debug.pyramidEnterDevelopmentIniPathInvalidFilePathError')
