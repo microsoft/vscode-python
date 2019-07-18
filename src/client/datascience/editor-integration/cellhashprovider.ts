@@ -161,8 +161,20 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
                 h.endLine += lineDiff;
                 h.startOffset += offsetDiff;
                 h.endOffset += offsetDiff;
+            } else if (h.startOffset === endChangedOffset) {
+                // Cell intersects but exactly, might be a replacement or an insertion
+                if (h.deleted || c.rangeLength > 0 || lineDiff === 0) {
+                    // Replacement
+                    h.deleted = docText.substr(h.startOffset, h.endOffset - h.startOffset) !== h.realCode;
+                } else {
+                    // Insertion
+                    h.line += lineDiff;
+                    h.endLine += lineDiff;
+                    h.startOffset += offsetDiff;
+                    h.endOffset += offsetDiff;
+                }
             } else {
-                // Cell intersects. Mark as deleted if not exactly the same (user could type over the exact same values)
+                // Intersection, delete if necessary
                 h.deleted = docText.substr(h.startOffset, h.endOffset - h.startOffset) !== h.realCode;
             }
         });

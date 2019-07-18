@@ -63,7 +63,7 @@ export class MockJupyterSession implements IJupyterSession {
         }
 
         // Create a new dummy request
-        this.executionCount += content.store_history ? 1 : 0;
+        this.executionCount += content.store_history && content.code.trim().length > 0 ? 1 : 0;
         const tokenSource = new CancellationTokenSource();
         const request = new MockJupyterRequest(cell, this.timedelay, this.executionCount, tokenSource.token);
         this.outstandingRequestTokenSources.push(tokenSource);

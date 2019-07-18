@@ -145,6 +145,15 @@ suite('DataScience gotocell tests', () => {
         return visibleCells.length;
     }
 
+    function verifyNoGoto(startLine: number) {
+        // See what code lens we have for the document
+        const codeLenses = getCodeLenses();
+
+        // There should be one with the ScrollTo command
+        const scrollTo = codeLenses.find(c => c.command && c.command.command === Commands.ScrollToCell && c.range.start.line === startLine);
+        assert.equal(scrollTo, undefined, 'Goto cell code lens should not be found');
+    }
+
     function verifyGoto(count: string, startLine: number) {
         // See what code lens we have for the document
         const codeLenses = getCodeLenses();
@@ -210,7 +219,7 @@ suite('DataScience gotocell tests', () => {
             },
             {
                 code: `#%%\n`,
-                result: ''
+                result: undefined
             }
         ], filePath);
 
@@ -234,5 +243,18 @@ suite('DataScience gotocell tests', () => {
 
         // verify we have an execute (start should have moved though)
         verifyGoto('1', 0);
+
+        // Run the last cell. It should not generate a code lens as it has no code
+        await executeCell(2, server!);
+        verifyNoGoto(6);
+
+        // Put back the cell we deleted
+        addSingleChange(new Range(new Position(0, 0), new Position(0, 0)), '#%%\na=1\na\n');
+
+        // Our 2nd execute should show up again
+        verifyGoto('2', 0);
+
+        // Our 1st execute should have moved
+        verifyGoto('1', 3);
     });
 });
