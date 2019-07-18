@@ -21,6 +21,7 @@ import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { ICodeExecutionHelper } from '../../terminals/types';
+import { CellMatcher } from '../cellMatcher';
 import { Commands, Telemetry } from '../constants';
 import { ICodeLensFactory, ICodeWatcher, IDataScienceErrorHandler, IInteractiveWindowProvider } from '../types';
 
@@ -270,6 +271,41 @@ export class CodeWatcher implements ICodeWatcher {
             const newPosition = new Position(editor.document.lineCount + 3, 0); // +3 to account for the added spaces and to position after the new mark
             return this.advanceToRange(new Range(newPosition, newPosition));
         }
+    }
+
+    public async runCurrentCellAndAddBelow(): Promise<void> {
+        if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
+            return Promise.resolve();
+        }
+
+        const editor = this.documentManager.activeTextEditor;
+        const cellMatcher = new CellMatcher();
+        let index = 0;
+
+        if (editor) {
+            editor.edit((editBuilder) => {
+                let lastCell = true;
+
+                for (let i = editor.selection.end.line + 1; i < editor.document.lineCount; i += 1) {
+                    if (cellMatcher.isCell(editor.document.lineAt(i).text)) {
+                        lastCell = false;
+                        index = i;
+                        editBuilder.insert(new Position(i, 0), '#%%\n\n');
+                        break;
+                    }
+                }
+
+                if (lastCell) {
+                    index = editor.document.lineCount;
+                    editBuilder.insert(new Position(editor.document.lineCount, 0), '\n#%%\n');
+                }
+            });
+        }
+
+        // Run the cell that matches the current cursor position, and then advance to the new cell
+        const newPosition = new Position(index + 1, 0);
+        return this.runMatchingCell(editor.selection, false)
+            .then(() => this.advanceToRange(new Range(newPosition, newPosition)));
     }
 
     private onCodeLensFactoryUpdated(): void {
