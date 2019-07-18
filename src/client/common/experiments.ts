@@ -235,11 +235,9 @@ export class ExperimentsManager implements IExperimentsManager {
         try {
             const success = await Promise.race([
                 // Download and store experiments in the storage for the current session
-                this.downloadAndStoreExperiments(this.experimentStorage),
-                sleep(this.experimentEffortTimeout).then(() => {
-                    return null;
-                })
-            ]) !== null;
+                this.downloadAndStoreExperiments(this.experimentStorage).then(() => true),
+                sleep(this.experimentEffortTimeout).then(() => false)
+            ]);
             sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE, undefined, { success });
             return success;
         } catch (ex) {
