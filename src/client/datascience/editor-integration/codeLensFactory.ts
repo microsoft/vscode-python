@@ -24,6 +24,7 @@ export class CodeLensFactory implements ICodeLensFactory {
         const commands = this.enumerateCommands();
         const codeLenses: CodeLens[] = [];
         let firstCell = true;
+
         ranges.forEach(range => {
             commands.forEach(c => {
                 const codeLens = this.createCodeLens(document, range, c, firstCell);
@@ -51,13 +52,17 @@ export class CodeLensFactory implements ICodeLensFactory {
         // and so shouldn't reference local objects.
         const { range, cell_type } = cellRange;
         switch (commandName) {
+            case Commands.RunCurrentCellAndAddBelow:
+                return this.generateCodeLens(
+                    range,
+                    Commands.RunCurrentCellAndAddBelow,
+                    localize.DataScience.runCurrentCellAndAddBelow());
             case Commands.AddCellBelow:
                 return this.generateCodeLens(
                     range,
-                    commandName,
+                    Commands.AddCellBelow,
                     localize.DataScience.addCellBelowCommandTitle(),
                     [document.fileName, range.start.line]);
-
             case Commands.DebugCurrentCellPalette:
                 return this.generateCodeLens(
                     range,
@@ -98,7 +103,6 @@ export class CodeLensFactory implements ICodeLensFactory {
                         [document.fileName, range.start.line, range.start.character]);
                 }
                 break;
-
             case Commands.RunCellAndAllBelowPalette:
             case Commands.RunCellAndAllBelow:
                 return this.generateCodeLens(
@@ -116,12 +120,12 @@ export class CodeLensFactory implements ICodeLensFactory {
     }
 
     // tslint:disable-next-line: no-any
-    private generateCodeLens(range: Range, commandName: string, title: string, args?: any[]) : CodeLens {
+    private generateCodeLens(range: Range, commandName: string, title: string, args?: any[]): CodeLens {
         return new CodeLens(range, this.generateCommand(commandName, title, args));
     }
 
     // tslint:disable-next-line: no-any
-    private generateCommand(commandName: string, title: string, args?: any[]) : Command {
+    private generateCommand(commandName: string, title: string, args?: any[]): Command {
         return {
             arguments: args,
             title,

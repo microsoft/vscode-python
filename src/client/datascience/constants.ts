@@ -35,6 +35,7 @@ export namespace Commands {
     export const AddCellBelow = 'python.datascience.addcellbelow';
     export const DebugCurrentCellPalette = 'python.datascience.debugcurrentcell.palette';
     export const DebugCell = 'python.datascience.debugcell';
+    export const RunCurrentCellAndAddBelow = 'python.datascience.runcurrentcellandaddbelow';
 }
 
 export namespace EditorContexts {

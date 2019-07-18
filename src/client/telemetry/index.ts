@@ -411,12 +411,12 @@ export interface IEventNamePropertyMapping {
     [Telemetry.WebviewStyleUpdate]: never | undefined;
     /*
     Telemetry event sent with details of Jedi Memory usage.
-    memory - Memory usage of Process in kb.
+    mem_use - Memory usage of Process in kb.
     limit - Upper bound for memory usage of Jedi process.
     isUserDefinedLimit - Whether the user has configfured the upper bound limit.
     restart - Whether to restart the Jedi Process (i.e. memory > limit).
     */
-    [EventName.JEDI_MEMORY]: { memory: number; limit: number; isUserDefinedLimit: boolean; restart: boolean };
+    [EventName.JEDI_MEMORY]: { mem_use: number; limit: number; isUserDefinedLimit: boolean; restart: boolean };
     /*
     Telemetry event sent to provide information on whether we have successfully identify the type of shell used.
     This information is useful in determining how well we identify shells on users machines.

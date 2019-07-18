@@ -9,12 +9,12 @@ import * as fs from 'fs-extra';
 import { Observable } from 'rxjs/Observable';
 import { Subscriber } from 'rxjs/Subscriber';
 import * as uuid from 'uuid/v4';
-import { Disposable } from 'vscode';
+import { Disposable, Event, EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { ILiveShareApi } from '../../common/application/types';
 import { Cancellation, CancellationError } from '../../common/cancellation';
-import { traceInfo, traceWarning } from '../../common/logger';
+import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
 import { createDeferred, Deferred, waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
@@ -44,17 +44,26 @@ class CellSubscriber {
     private cellRef: ICell;
     private subscriber: Subscriber<ICell>;
     private promiseComplete: (self: CellSubscriber) => void;
-    private startTime: number;
+    private canceledEvent: EventEmitter<void> = new EventEmitter<void>();
+    private _startTime: number;
 
     constructor(cell: ICell, subscriber: Subscriber<ICell>, promiseComplete: (self: CellSubscriber) => void) {
         this.cellRef = cell;
         this.subscriber = subscriber;
         this.promiseComplete = promiseComplete;
-        this.startTime = Date.now();
+        this._startTime = Date.now();
+    }
+
+    public get startTime(): number {
+        return this._startTime;
+    }
+
+    public get onCanceled(): Event<void> {
+        return this.canceledEvent.event;
     }
 
     public isValid(sessionStartTime: number | undefined) {
-        return sessionStartTime && this.startTime > sessionStartTime;
+        return sessionStartTime && this.startTime >= sessionStartTime;
     }
 
     public next(sessionStartTime: number | undefined) {
@@ -96,6 +105,7 @@ class CellSubscriber {
     }
 
     public cancel() {
+        this.canceledEvent.fire();
         if (!this.deferred.completed) {
             this.cellRef.state = CellState.error;
             this.subscriber.next(this.cellRef);
@@ -305,15 +315,19 @@ export class JupyterServerBase implements INotebookServer {
             // Update our start time so we don't keep sending responses
             this.sessionStartTime = Date.now();
 
+            traceInfo('restartKernel - finishing cells that are outstanding');
             // Complete all pending as an error. We're restarting
             this.finishUncompletedCells();
+            traceInfo('restartKernel - restarting kernel');
 
             // Restart our kernel
             await this.session.restart(timeoutMs);
 
             // Rerun our initial setup for the notebook
             this.ranInitialSetup = false;
+            traceInfo('restartKernel - initialSetup');
             await this.initialNotebookSetup();
+            traceInfo('restartKernel - initialSetup completed');
 
             return;
         }
@@ -531,6 +545,8 @@ export class JupyterServerBase implements INotebookServer {
             }
         }
 
+        traceError('No session during execute observable');
+
         // Can't run because no session
         return new Observable<ICell[]>(subscriber => {
             subscriber.error(this.getDisposedError());
@@ -539,7 +555,7 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     private generateRequest = (code: string, silent?: boolean): Kernel.IFuture | undefined => {
-        //this.logger.logInformation(`Executing code in jupyter : ${code}`)
+        //traceInfo(`Executing code in jupyter : ${code}`);
         try {
             const cellMatcher = new CellMatcher(this.configService.getSettings().datascience);
             return this.session ? this.session.requestExecute(
@@ -563,6 +579,7 @@ export class JupyterServerBase implements INotebookServer {
     // Set up our initial plotting and imports
     private async initialNotebookSetup(cancelToken?: CancellationToken): Promise<void> {
         if (this.ranInitialSetup) {
+            traceInfo(`Already ran setup for ${this.id}`);
             return;
         }
         this.ranInitialSetup = true;
@@ -570,18 +587,21 @@ export class JupyterServerBase implements INotebookServer {
         try {
             // When we start our notebook initial, change to our workspace or user specified root directory
             if (this.launchInfo && this.launchInfo.workingDir && this.launchInfo.connectionInfo.localLaunch) {
+                traceInfo(`Changing directory for ${this.id}`);
                 await this.changeDirectoryIfPossible(this.launchInfo.workingDir);
             }
 
             const settings = this.configService.getSettings().datascience;
             const matplobInit = !settings || settings.enablePlotViewer ? CodeSnippits.MatplotLibInitSvg : CodeSnippits.MatplotLibInitPng;
 
+            traceInfo(`Initialize matplotlib for ${this.id}`);
             // Force matplotlib to inline and save the default style. We'll use this later if we
             // get a request to update style
             await this.executeSilently(
                 matplobInit,
                 cancelToken
             );
+            traceInfo(`Initial setup complete for ${this.id}`);
         } catch (e) {
             traceWarning(e);
         }
@@ -632,6 +652,7 @@ export class JupyterServerBase implements INotebookServer {
         }
     }
 
+    // tslint:disable-next-line: max-func-body-length
     private handleCodeRequest = (subscriber: CellSubscriber, silent?: boolean) => {
         // Generate a new request if we still can
         if (subscriber.isValid(this.sessionStartTime)) {
@@ -640,6 +661,7 @@ export class JupyterServerBase implements INotebookServer {
             if (this.launchInfo && this.launchInfo.connectionInfo && this.launchInfo.connectionInfo.localProcExitCode) {
                 // Not running, just exit
                 const exitCode = this.launchInfo.connectionInfo.localProcExitCode;
+                traceError(`Jupyter crashed with code ${exitCode}`);
                 subscriber.error(this.sessionStartTime, new Error(localize.DataScience.jupyterServerCrashed().format(exitCode.toString())));
                 subscriber.complete(this.sessionStartTime);
             } else {
@@ -669,6 +691,12 @@ export class JupyterServerBase implements INotebookServer {
 
                 // Listen to the reponse messages and update state as we go
                 if (request) {
+                    // Stop handling the request if the subscriber is canceled.
+                    subscriber.onCanceled(() => {
+                        request.onIOPub = noop;
+                    });
+
+                    // Listen to messages.
                     request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
                         try {
                             if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
@@ -716,6 +744,10 @@ export class JupyterServerBase implements INotebookServer {
                 }
             }
         } else {
+            const sessionDate = new Date(this.sessionStartTime!);
+            const cellDate = new Date(subscriber.startTime);
+            traceInfo(`Session start time is newer than cell : \r\n${sessionDate.toTimeString()}\r\n${cellDate.toTimeString()}`);
+
             // Otherwise just set to an error
             this.handleInterrupted(subscriber.cell);
             subscriber.cell.state = CellState.error;
@@ -890,6 +922,15 @@ export class JupyterServerBase implements INotebookServer {
         };
         this.addToCellData(cell, output, clearState);
         cell.state = CellState.error;
+
+        // In the error scenario, we want to stop all other pending cells.
+        if (this.configService.getSettings().datascience.stopOnError) {
+            this.pendingCellSubscriptions.forEach(c => {
+                if (c.cell.id !== cell.id) {
+                    c.cancel();
+                }
+            });
+        }
     }
 
     // We have a set limit for the number of output text characters that we display by default

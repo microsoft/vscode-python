@@ -17,8 +17,15 @@ import {
 } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import { Commands } from '../../client/datascience/constants';
-import { ICodeWatcher, IDataScienceCommandListener, IInteractiveWindow, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
+import {
+    ICodeWatcher,
+    IDataScienceCommandListener,
+    IInteractiveWindow,
+    IInteractiveWindowProvider,
+    IJupyterExecution
+} from '../../client/datascience/types';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
+import { asyncDump } from '../common/asyncDump';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createDocument } from './editor-integration/helpers';
 import { addMockData, CellPosition, verifyHtmlOnCell } from './interactiveWindowTestHelpers';
@@ -52,6 +59,10 @@ suite('DataScience LiveShare tests', () => {
         await hostContainer.dispose();
         await guestContainer.dispose();
         lastErrorMessage = undefined;
+    });
+
+    suiteTeardown(() => {
+        asyncDump();
     });
 
     function createContainer(role: vsls.Role): DataScienceIocContainer {
@@ -126,7 +137,7 @@ suite('DataScience LiveShare tests', () => {
         return waitForResults(role, async (both: boolean) => {
             if (!both) {
                 const history = await getOrCreateInteractiveWindow(role);
-                return history.addCode(code, 'foo.py', 2);
+                await history.addCode(code, 'foo.py', 2);
             } else {
                 // Add code to the apropriate container
                 const host = await getOrCreateInteractiveWindow(vsls.Role.Host);
@@ -134,9 +145,9 @@ suite('DataScience LiveShare tests', () => {
                 // Make sure guest is still creatable
                 if (isSessionStarted(vsls.Role.Guest)) {
                     const guest = await getOrCreateInteractiveWindow(vsls.Role.Guest);
-                    return (role === vsls.Role.Host ? host.addCode(code, 'foo.py', 2) : guest.addCode(code, 'foo.py', 2));
+                    (role === vsls.Role.Host ? await host.addCode(code, 'foo.py', 2) : await guest.addCode(code, 'foo.py', 2));
                 } else {
-                    return host.addCode(code, 'foo.py', 2);
+                    await host.addCode(code, 'foo.py', 2);
                 }
             }
         }, expectedRenderCount);

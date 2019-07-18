@@ -328,7 +328,9 @@ export interface IDataScienceSettings {
     stopOnFirstLineWhileDebugging?: boolean;
     textOutputLimit?: number;
     magicCommandsAsComments?: boolean;
+    stopOnError?: boolean;
     remoteDebuggerPort?: number;
+    colorizeInputBox?: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

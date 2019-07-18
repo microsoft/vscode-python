@@ -486,7 +486,7 @@ suite('DataScience notebook tests', () => {
             await verifyError(server, 'a', `name 'a' is not defined`);
 
         } catch (exc) {
-            assert.ok(exc instanceof JupyterKernelPromiseFailedError, 'Restarting did not timeout correctly');
+            assert.ok(exc instanceof JupyterKernelPromiseFailedError, `Restarting did not timeout correctly for ${exc}`);
         }
 
     });

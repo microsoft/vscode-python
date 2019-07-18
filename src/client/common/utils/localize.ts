@@ -181,7 +181,7 @@ export namespace DataScience {
     export const pythonInterruptFailedHeader = localize('DataScience.pythonInterruptFailedHeader', 'Keyboard interrupt crashed the kernel. Kernel restarted.');
     export const sysInfoURILabel = localize('DataScience.sysInfoURILabel', 'Jupyter Server URI: ');
     export const executingCodeFailure = localize('DataScience.executingCodeFailure', 'Executing code failed : {0}');
-    export const inputWatermark = localize('DataScience.inputWatermark', 'Shift-enter to run');
+    export const inputWatermark = localize('DataScience.inputWatermark', 'Type code here and press shift-enter to run');
     export const liveShareConnectFailure = localize('DataScience.liveShareConnectFailure', 'Cannot connect to host jupyter session. URI not found.');
     export const liveShareCannotSpawnNotebooks = localize('DataScience.liveShareCannotSpawnNotebooks', 'Spawning jupyter notebooks is not supported over a live share connection');
     export const liveShareCannotImportNotebooks = localize('DataScience.liveShareCannotImportNotebooks', 'Importing notebooks is not currently supported over a live share connection');
@@ -228,6 +228,7 @@ export namespace DataScience {
     export const jupyterDataRateExceeded = localize('DataScience.jupyterDataRateExceeded', 'Cannot view variable because data rate exceeded. Please restart your server with a higher data rate limit. For example, --NotebookApp.iopub_data_rate_limit=10000000000.0');
     export const addCellBelowCommandTitle = localize('DataScience.addCellBelowCommandTitle', 'Add cell');
     export const debugCellCommandTitle = localize('DataScience.debugCellCommandTitle', 'Debug cell');
+    export const runCurrentCellAndAddBelow = localize('DataScience.runCurrentCellAndAddBelow', 'Run current and add cell below');
     export const variableExplorerDisabledDuringDebugging = localize('DataScience.variableExplorerDisabledDuringDebugging', 'Variables are not available while debugging.');
     export const jupyterDebuggerNotInstalledError = localize('DataScience.jupyterDebuggerNotInstalledError', 'Pip module ptvsd is required for debugging cells. You will need to install it to debug cells.');
     export const jupyterDebuggerPortNotAvailableError = localize('DataScience.jupyterDebuggerPortNotAvailableError', 'Port {0} cannot be opened for debugging. Please specify a different port in the remoteDebuggerPort setting.');
@@ -238,6 +239,8 @@ export namespace DataScience {
     export const jupyterDebuggerInstallPtvsdUpdate = localize('DataScience.jupyterDebuggerInstallPtvsdUpdate', 'The version of ptvsd installed does not support debugging cells. Update ptvsd to newest version and continue to debug cell?');
     export const jupyterDebuggerInstallPtvsdYes = localize('DataScience.jupyterDebuggerInstallPtvsdYes', 'Yes');
     export const jupyterDebuggerInstallPtvsdNo = localize('DataScience.jupyterDebuggerInstallPtvsdNo', 'No');
+    export const cellStopOnErrorFormatMessage = localize('DataScience.cellStopOnErrorFormatMessage', '{0} cells were canceled due to an error in the previous cell.');
+    export const instructionComments = localize('DataScience.instructionComments', '# To add a new cell, type "#%%"\n# To add a new markdown cell, type "#%% [markdown]"\n');
 }
 
 export namespace DebugConfigStrings {

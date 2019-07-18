@@ -104,6 +104,11 @@
                 "command": "python.datascience.runcurrentcell",
                 "key": "ctrl+enter",
                 "when": "editorTextFocus && !editorHasSelection && python.datascience.hascodecells && python.datascience.featureenabled"
+            },
+            {
+                "command": "python.datascience.runcurrentcellandaddbelow",
+                "key": "alt+enter",
+                "when": "editorTextFocus && !editorHasSelection && python.datascience.hascodecells && python.datascience.featureenabled"
             }
         ],
         "commands": [
@@ -1410,6 +1415,18 @@
                     "type": "number",
                     "default": 20000,
                     "description": "Limit the amount of text in Python Interactive cell text output to this value. 0 to allow any amount of characters.",
+                    "scope": "resource"
+                },
+                "python.dataScience.colorizeInputBox": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Whether or not to use the theme's peek color as the background for the input box.",
+                    "scope": "resource"
+                },
+                "python.dataScience.stopOnError": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Stop running cells if a cell throws an exception.",
                     "scope": "resource"
                 },
                 "python.disableInstallationCheck": {

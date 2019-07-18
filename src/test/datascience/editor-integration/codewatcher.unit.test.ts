@@ -315,7 +315,7 @@ fourth line
             TypeMoq.It.is((ed: TextEditor) => {
                 return textEditor.object === ed;
             }),
-            TypeMoq.It.isAny())).verifiable(TypeMoq.Times.once());
+            TypeMoq.It.isAny())).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
 
         // Try our RunCell command
         await codeWatcher.runCell(testRange);
@@ -344,7 +344,7 @@ testing2`; // Command tests override getText, so just need the ranges here
             TypeMoq.It.isValue(0),
             TypeMoq.It.isAny(),
             TypeMoq.It.isAny()
-        )).verifiable(TypeMoq.Times.once());
+        )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
 
         await codeWatcher.runFileInteractive();
 
@@ -379,14 +379,14 @@ testing2`; // Command tests override getText, so just need the ranges here
             TypeMoq.It.isValue(0),
             TypeMoq.It.isAny(),
             TypeMoq.It.isAny()
-        )).verifiable(TypeMoq.Times.once());
+        )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
 
         activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(testString2),
             TypeMoq.It.isValue('test.py'),
             TypeMoq.It.isValue(2),
             TypeMoq.It.isAny(),
             TypeMoq.It.isAny()
-        )).verifiable(TypeMoq.Times.once());
+        )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
 
         await codeWatcher.runAllCells();
 
@@ -416,7 +416,7 @@ testing2`;
                 return textEditor.object === ed;
             }),
             TypeMoq.It.isAny()
-        )).verifiable(TypeMoq.Times.once());
+        )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
 
         // For this test we need to set up a document selection point
         textEditor.setup(te => te.selection).returns(() => new Selection(2, 0, 2, 0));
@@ -456,14 +456,14 @@ testing3`;
             TypeMoq.It.isValue(2),
             TypeMoq.It.isAny(),
             TypeMoq.It.isAny()
-        )).verifiable(TypeMoq.Times.once());
+        )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
 
         activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(targetText2),
             TypeMoq.It.isValue(fileName),
             TypeMoq.It.isValue(4),
             TypeMoq.It.isAny(),
             TypeMoq.It.isAny()
-        )).verifiable(TypeMoq.Times.once());
+        )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
 
         await codeWatcher.runCellAndAllBelow(2, 0);
 
@@ -500,14 +500,14 @@ testing2`;
             TypeMoq.It.isValue(0),
             TypeMoq.It.isAny(),
             TypeMoq.It.isAny()
-        )).verifiable(TypeMoq.Times.once());
+        )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
 
         activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(targetText2),
             TypeMoq.It.isValue(fileName),
             TypeMoq.It.isValue(2),
             TypeMoq.It.isAny(),
             TypeMoq.It.isAny()
-        )).verifiable(TypeMoq.Times.once());
+        )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
 
         await codeWatcher.runAllCellsAbove(4, 0);
 
@@ -540,7 +540,7 @@ testing1`;
             TypeMoq.It.isValue(0),
             TypeMoq.It.isAny(),
             TypeMoq.It.isAny()
-        )).verifiable(TypeMoq.Times.once());
+        )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
 
         await codeWatcher.runToLine(2);
 
@@ -568,7 +568,7 @@ print('testing')`;
             TypeMoq.It.isAnyNumber(),
             TypeMoq.It.isAny(),
             TypeMoq.It.isAny()
-        )).verifiable(TypeMoq.Times.never());
+        )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.never());
 
         await codeWatcher.runToLine(2);
 
@@ -604,7 +604,7 @@ testing3`;
             TypeMoq.It.isValue(2),
             TypeMoq.It.isAny(),
             TypeMoq.It.isAny()
-        )).verifiable(TypeMoq.Times.once());
+        )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
 
         // Try our RunCell command with the first selection point
         await codeWatcher.runFromLine(2);
@@ -638,7 +638,7 @@ testing2`;
                 return textEditor.object === ed;
             }),
             TypeMoq.It.isAny()
-        )).verifiable(TypeMoq.Times.once());
+        )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
 
         // For this test we need to set up a document selection point
         textEditor.setup(te => te.document).returns(() => document.object);
@@ -675,7 +675,7 @@ testing2`; // Command tests override getText, so just need the ranges here
                 return textEditor.object === ed;
             }),
             TypeMoq.It.isAny()
-        )).verifiable(TypeMoq.Times.once());
+        )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
 
         // For this test we need to set up a document selection point
         const selection = new Selection(0, 0, 0, 0);
@@ -737,5 +737,91 @@ testing2`; // Command tests override getText, so just need the ranges here
         expect(result, 'result not okay').to.be.ok;
         codeLens = result as CodeLens[];
         expect(codeLens.length).to.equal(2, 'Code lens wrong length');
+    });
+
+    test('Test the RunAllCellsAbove command with an error', async () => {
+        const fileName = 'test.py';
+        const version = 1;
+        const inputText =
+            `#%%
+testing1
+#%%
+testing2
+#%%
+testing3`;
+        const targetText1 =
+            `#%%
+testing1`;
+
+        const targetText2 =
+            `#%%
+testing2`;
+
+        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
+
+        codeWatcher.setDocument(document.object);
+
+        // Set up our expected calls to add code
+        activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(targetText1),
+            TypeMoq.It.isValue(fileName),
+            TypeMoq.It.isValue(0),
+            TypeMoq.It.isAny(),
+            TypeMoq.It.isAny()
+        )).returns(() => Promise.resolve(false)).verifiable(TypeMoq.Times.once());
+
+        activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(targetText2),
+            TypeMoq.It.isValue(fileName),
+            TypeMoq.It.isValue(2),
+            TypeMoq.It.isAny(),
+            TypeMoq.It.isAny()
+        )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.never());
+
+        await codeWatcher.runAllCellsAbove(4, 0);
+
+        // Verify function calls
+        activeInteractiveWindow.verifyAll();
+        document.verifyAll();
+    });
+
+    test('Test the RunAllCells command with an error', async () => {
+        const fileName = 'test.py';
+        const version = 1;
+        const inputText =
+            `#%%
+testing1
+#%%
+testing2`; // Command tests override getText, so just need the ranges here
+        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce());
+
+        // Specify our range and text here
+        const testRange1 = new Range(0, 0, 1, 8);
+        const testString1 = 'testing1';
+        document.setup(doc => doc.getText(testRange1)).returns(() => testString1).verifiable(TypeMoq.Times.once());
+        const testRange2 = new Range(2, 0, 3, 8);
+        const testString2 = 'testing2';
+        document.setup(doc => doc.getText(testRange2)).returns(() => testString2).verifiable(TypeMoq.Times.never());
+
+        codeWatcher.setDocument(document.object);
+
+        // Set up our expected calls to add code
+        activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(testString1),
+            TypeMoq.It.isValue('test.py'),
+            TypeMoq.It.isValue(0),
+            TypeMoq.It.isAny(),
+            TypeMoq.It.isAny()
+        )).returns(() => Promise.resolve(false)).verifiable(TypeMoq.Times.once());
+
+        activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(testString2),
+            TypeMoq.It.isValue('test.py'),
+            TypeMoq.It.isValue(2),
+            TypeMoq.It.isAny(),
+            TypeMoq.It.isAny()
+        )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.never());
+
+        await codeWatcher.runAllCells();
+
+        // Verify function calls
+        activeInteractiveWindow.verifyAll();
+        document.verifyAll();
     });
 });
