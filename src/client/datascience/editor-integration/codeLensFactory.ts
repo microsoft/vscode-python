@@ -60,7 +60,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
     public createCodeLenses(document: TextDocument): CodeLens[] {
         const ranges = generateCellRanges(document, this.configService.getSettings().datascience);
         const commands = this.enumerateCommands();
-        const hashes = this.hashProvider.getHashes();
+        const hashes = this.configService.getSettings().datascience.addGotoCodeLenses ? this.hashProvider.getHashes() : [];
         const codeLenses: CodeLens[] = [];
         let firstCell = true;
         ranges.forEach(range => {
