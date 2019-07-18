@@ -14,7 +14,7 @@ import {
 } from 'vscode';
 
 import { IDebugService, IDocumentManager } from '../../common/application/types';
-import { traceError } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
 import { IConfigurationService } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { CellMatcher } from '../cellMatcher';
@@ -237,6 +237,8 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
                 runtimeLine,
                 id: cell.id
             };
+
+            traceInfo(`Adding hash for ${expectedCount} = ${hash.hash} with ${stripped.length} lines`);
 
             let list = this.hashes.get(cell.file);
             if (!list) {
