@@ -111,7 +111,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
                 const lines = splitMultilineString(cell.data.source);
                 const stripped = lines.filter(l => !cellMatcher.isCode(l));
 
-                if (stripped.length > 0 && stripped.find(s => s.length > 0)) {
+                if (stripped.length > 0 && stripped.find(s => s.trim().length > 0)) {
                     // When the user adds new code, we know the execution count is increasing
                     this.executionCount += 1;
 
