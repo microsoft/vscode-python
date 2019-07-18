@@ -40,22 +40,22 @@ suite('Shell Detector', () => {
             const callOrder: string[] = [];
             const nameDetectorIdentify = sandbox.stub(TerminalNameShellDetector.prototype, 'identify');
             nameDetectorIdentify.callsFake(() => {
-                callOrder.push('name');
+                callOrder.push('calledFirst');
                 return undefined;
             });
             const vscEnvDetectorIdentify = sandbox.stub(VSCEnvironmentShellDetector.prototype, 'identify');
             vscEnvDetectorIdentify.callsFake(() => {
-                callOrder.push('vsc');
+                callOrder.push('calledSecond');
                 return undefined;
             });
             const userEnvDetectorIdentify = sandbox.stub(UserEnvironmentShellDetector.prototype, 'identify');
             userEnvDetectorIdentify.callsFake(() => {
-                callOrder.push('env');
+                callOrder.push('calledLast');
                 return undefined;
             });
             const settingsDetectorIdentify = sandbox.stub(SettingsShellDetector.prototype, 'identify');
             settingsDetectorIdentify.callsFake(() => {
-                callOrder.push('setting');
+                callOrder.push('calledThird');
                 return undefined;
             });
 
@@ -69,7 +69,7 @@ suite('Shell Detector', () => {
 
             shellDetector.identifyTerminalShell();
 
-            expect(callOrder).to.deep.equal(['name', 'vsc', 'setting', 'env']);
+            expect(callOrder).to.deep.equal(['calledFirst', 'calledSecond', 'calledThird', 'calledLast']);
         });
         test(`Use default shell based on OS if there are no shell detectors ${testSuffix}`, () => {
             when(platformService.osType).thenReturn(os.value);
