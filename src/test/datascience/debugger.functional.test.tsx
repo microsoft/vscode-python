@@ -42,8 +42,8 @@ suite('DataScience Debugger tests', () => {
 
         // Currently these test fail on Mac / Python 3.7 so disable for that
         // https://github.com/microsoft/ptvsd/issues/1587
-        const isMac = process.env ? (process.env.VMImageName !== undefined && process.env.VMImageName === 'macos-10.13') : false;
-        const py37 = process.env ? (process.env.PythonVersion !== undefined && process.env.PythonVersion === '3.7') : false;
+        const isMac = process.env ? (process.env.VMIMAGENAME !== undefined && process.env.VMIMAGENAME === 'macos-10.13') : false;
+        const py37 = process.env ? (process.env.PYTHONVERSION !== undefined && process.env.PYTHONVERSION === '3.7') : false;
 
         if (isMac && py37) {
             // tslint:disable-next-line:no-console
