@@ -61,7 +61,6 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
      * @type {(string | undefined)}
      * @memberof ApplicationEnvironment
      */
-    @swallowExceptions('Failed to get shell from VS Code API')
     @traceDecorators.error('Failed to get shell from VS Code API')
     public get shell(): string | undefined {
         // tslint:disable-next-line:no-any
