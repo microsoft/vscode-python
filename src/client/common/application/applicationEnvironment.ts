@@ -7,8 +7,10 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { parse } from 'semver';
 import * as vscode from 'vscode';
+import { traceDecorators } from '../logger';
 import { IPlatformService } from '../platform/types';
 import { ICurrentProcess, IPathUtils } from '../types';
+import { swallowExceptions } from '../utils/decorators';
 import { OSType } from '../utils/platform';
 import { Channel, IApplicationEnvironment } from './types';
 
@@ -50,6 +52,17 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
         // tslint:disable-next-line:non-literal-require
         return this.packageJson.displayName;
     }
+    /**
+     * At the time of writing this API, the vscode.env.shell isn't officially released in stable version of VS Code.
+     * Using this in stable version seems to throw errors in VSC with messages being displayed to the user about use of
+     * unstable API.
+     * Solution - log and suppress the errors.
+     * @readonly
+     * @type {(string | undefined)}
+     * @memberof ApplicationEnvironment
+     */
+    @swallowExceptions('Failed to get shell from VS Code API')
+    @traceDecorators.error('Failed to get shell from VS Code API')
     public get shell(): string | undefined {
         // tslint:disable-next-line:no-any
         return (vscode.env as any).shell;
