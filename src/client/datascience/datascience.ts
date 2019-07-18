@@ -256,6 +256,17 @@ export class DataScience implements IDataScience {
         }
     }
 
+    private async runCurrentCellAndAddBelow(): Promise<void> {
+        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
+
+        const activeCodeWatcher = this.getCurrentCodeWatcher();
+        if (activeCodeWatcher) {
+            return activeCodeWatcher.runCurrentCellAndAddBelow();
+        } else {
+            return Promise.resolve();
+        }
+    }
+
     private getCurrentCodeLens(): vscode.CodeLens | undefined {
         const activeEditor = this.documentManager.activeTextEditor;
         const activeCodeWatcher = this.getCurrentCodeWatcher();
@@ -385,6 +396,8 @@ export class DataScience implements IDataScience {
         disposable = this.commandManager.registerCommand(Commands.RunFileInInteractiveWindows, this.runFileInteractive, this);
         this.disposableRegistry.push(disposable);
         disposable = this.commandManager.registerCommand(Commands.AddCellBelow, this.addCellBelow, this);
+        this.disposableRegistry.push(disposable);
+        disposable = this.commandManager.registerCommand(Commands.RunCurrentCellAndAddBelow, this.runCurrentCellAndAddBelow, this);
         this.disposableRegistry.push(disposable);
         disposable = this.commandManager.registerCommand(Commands.DebugCell, this.debugCell, this);
         this.disposableRegistry.push(disposable);

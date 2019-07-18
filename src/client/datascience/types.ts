@@ -250,6 +250,7 @@ export interface ICodeWatcher {
     runCellAndAllBelow(startLine: number, startCharacter: number): Promise<void>;
     runFileInteractive(): Promise<void>;
     addEmptyCellToBottom(): Promise<void>;
+    runCurrentCellAndAddBelow(): Promise<void>;
     debugCurrentCell(): Promise<void>;
 }
 

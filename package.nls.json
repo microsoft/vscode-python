@@ -302,6 +302,7 @@
     "DataScience.jupyterDataRateExceeded": "Cannot view variable because data rate exceeded. Please restart your server with a higher data rate limit. For example, --NotebookApp.iopub_data_rate_limit=10000000000.0",
     "DataScience.addCellBelowCommandTitle": "Add cell",
     "DataScience.debugCellCommandTitle": "Debug cell",
+    "DataScience.runCurrentCellAndAddBelow":"Run current and add cell below",
     "DataScience.variableExplorerDisabledDuringDebugging": "Variables are not available while debugging.",
     "DataScience.jupyterDebuggerNotInstalledError" : "Pip module ptvsd is required for debugging cells. You will need to install it to debug cells.",
     "DataScience.jupyterDebuggerPortNotAvailableError" : "Port {0} cannot be opened for debugging. Please specify a different port in the remoteDebuggerPort setting.",
@@ -312,5 +313,6 @@
     "DataScience.jupyterDebuggerInstallPtvsdUpdate" : "The version of ptvsd installed does not support debugging cells. Update ptvsd to newest version and continue to debug cell?",
     "DataScience.jupyterDebuggerInstallPtvsdYes" : "Yes",
     "DataScience.jupyterDebuggerInstallPtvsdNo" : "No",
-    "DataScience.cellStopOnErrorFormatMessage" : "{0} cells were canceled due to an error in the previous cell."
+    "DataScience.cellStopOnErrorFormatMessage" : "{0} cells were canceled due to an error in the previous cell.",
+    "DataScience.instructionComments": "# To add a new cell, type '#%%'\n# To add a new markdown cell, type '#%% [markdown]'\n"
 }
