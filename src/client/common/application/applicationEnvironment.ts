@@ -65,7 +65,7 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
             // tslint:disable-next-line:no-any
             return (vscode.env as any).shell;
         } catch (error) {
-            traceError('Unable to determine shell using VS Code API.', ex);
+            traceError('Unable to determine shell using VS Code API.', error);
         }
     }
     // tslint:disable-next-line:no-any
