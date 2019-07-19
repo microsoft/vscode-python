@@ -53,7 +53,7 @@ export namespace Commands {
     export const openTestNodeInEditor = 'python.openTestNodeInEditor';
     export const runTestNode = 'python.runTestNode';
     export const debugTestNode = 'python.debugTestNode';
-    export const SwitchToDefault = 'python.switchToDefaultChannel';
+    export const SwitchOffInsidersChannel = 'python.switchOffInsidersChannel';
     export const SwitchToInsidersDaily = 'python.switchToDailyChannel';
     export const SwitchToInsidersWeekly = 'python.switchToWeeklyChannel';
 }

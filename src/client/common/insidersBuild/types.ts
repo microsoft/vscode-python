@@ -33,8 +33,8 @@ export interface IInsiderExtensionPrompt {
  * Note the values in this enum must belong to `ExtensionChannels` type
  */
 export enum ExtensionChannel {
-    default = 'default',
+    off = 'off',
     weekly = 'weekly',
     daily = 'daily'
 }
-export type ExtensionChannels = 'default' | 'weekly' | 'daily';
+export type ExtensionChannels = 'off' | 'weekly' | 'daily';

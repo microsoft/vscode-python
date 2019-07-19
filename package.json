@@ -190,8 +190,8 @@
                 "category": "Python"
             },
             {
-                "command": "python.switchToDefaultChannel",
-                "title": "%python.command.python.switchToDefaultChannel.title%",
+                "command": "python.switchOffInsidersChannel",
+                "title": "%python.command.python.switchOffInsidersChannel.title%",
                 "category": "Python"
             },
             {
@@ -595,8 +595,8 @@
             ],
             "commandPalette": [
                 {
-                    "command": "python.switchToDefaultChannel",
-                    "title": "%python.command.python.switchToDefaultChannel.title%",
+                    "command": "python.switchOffInsidersChannel",
+                    "title": "%python.command.python.switchOffInsidersChannel.title%",
                     "category": "Python",
                     "when": "config.python.insidersChannel != 'default'"
                 },
@@ -2185,10 +2185,10 @@
                 },
                 "python.insidersChannel": {
                     "type": "string",
-                    "default": "default",
-                    "description": "Set to \"weekly\" or \"daily\" to automatically download and install the latest Insiders builds of the extension, which include upcoming features and bug fixes.",
+                    "default": "off",
+                    "description": "Set to \"weekly\" or \"daily\" to automatically download and install the latest Insiders builds of the python extension, which include upcoming features and bug fixes.",
                     "enum": [
-                        "default",
+                        "off",
                         "weekly",
                         "daily"
                     ],
