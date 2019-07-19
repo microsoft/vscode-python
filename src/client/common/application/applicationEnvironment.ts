@@ -7,10 +7,9 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { parse } from 'semver';
 import * as vscode from 'vscode';
-import { traceDecorators } from '../logger';
+import { traceError } from '../logger';
 import { IPlatformService } from '../platform/types';
 import { ICurrentProcess, IPathUtils } from '../types';
-import { swallowExceptions } from '../utils/decorators';
 import { OSType } from '../utils/platform';
 import { Channel, IApplicationEnvironment } from './types';
 
@@ -61,11 +60,13 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
      * @type {(string | undefined)}
      * @memberof ApplicationEnvironment
      */
-    @swallowExceptions('Failed to get shell from VS Code API')
-    @traceDecorators.error('Failed to get shell from VS Code API')
     public get shell(): string | undefined {
-        // tslint:disable-next-line:no-any
-        return (vscode.env as any).shell;
+        try {
+            // tslint:disable-next-line:no-any
+            return (vscode.env as any).shell;
+        } catch (error) {
+            traceError('Unable to determine shell using VS Code API.', ex);
+        }
     }
     // tslint:disable-next-line:no-any
     public get packageJson(): any {
