@@ -196,7 +196,7 @@ import pandas as pd
 myComplex = complex(1, 1)
 myInt = 99999999
 myFloat = 9999.9999
-mynpArray = np.array([1, 2, 3])
+mynpArray = np.array([1.0, 2.0, 3.0])
 myDataframe = pd.DataFrame(mynpArray)
 mySeries = myDataframe[0]
 myTuple = 1,2,3,4,5,6,7,8,9
@@ -215,17 +215,17 @@ myTuple = 1,2,3,4,5,6,7,8,9
             {name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false},
             {name: 'myComplex', value: '(1+1j)', supportsDataExplorer: false, type: 'complex', size: 54, shape: '', count: 0, truncated: false},
             {name: 'myDataframe', value: `0
-0 1
-1 2
-2 3`, supportsDataExplorer: true, type: 'DataFrame', size: 54, shape: '', count: 0, truncated: false},
+0 1.0
+1 2.0
+2 3.0`, supportsDataExplorer: true, type: 'DataFrame', size: 54, shape: '', count: 0, truncated: false},
             {name: 'myFloat', value: '9999.9999', supportsDataExplorer: false, type: 'float', size: 58, shape: '', count: 0, truncated: false},
             {name: 'myInt', value: '99999999', supportsDataExplorer: false, type: 'int', size: 56, shape: '', count: 0, truncated: false},
-            {name: 'mynpArray', value: 'array([1, 2, 3])', supportsDataExplorer: true, type: 'ndarray', size: 54, shape: '', count: 0, truncated: false},
+            {name: 'mynpArray', value: 'array([1., 2., 3.])', supportsDataExplorer: true, type: 'ndarray', size: 54, shape: '', count: 0, truncated: false},
             // tslint:disable:no-trailing-whitespace
-            {name: 'mySeries', value: `0 1
-1 2
-2 3
-Name: 0, dtype: int32`, supportsDataExplorer: true, type: 'Series', size: 54, shape: '', count: 0, truncated: false},
+            {name: 'mySeries', value: `0 1.0
+1 2.0
+2 3.0
+Name: 0, dtype: float64`, supportsDataExplorer: true, type: 'Series', size: 54, shape: '', count: 0, truncated: false},
             {name: 'myTuple', value: '(1, 2, 3, 4, 5, 6, 7, 8, 9)', supportsDataExplorer: false, type: 'tuple', size: 54, shape: '', count: 0, truncated: false}
         ];
         verifyVariables(wrapper, targetVariables);
