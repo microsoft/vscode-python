@@ -88,8 +88,14 @@ export class JupyterSession implements IJupyterSession {
         return this.onRestartedEvent.event;
     }
 
-    public waitForIdle(timeout: number): Promise<void> {
-        return this.waitForIdleOnSession(this.session, timeout);
+    public async waitForIdle(timeout: number): Promise<void> {
+        // Wait for idle on this session
+        await this.waitForIdleOnSession(this.session, timeout);
+
+        // Once we know that works, start the restart session if not already started
+        if (!this.restartSessionPromise && this.session && this.contentsManager) {
+            this.restartSessionPromise = this.createRestartSession(this.session.serverSettings, this.contentsManager);
+        }
     }
 
     public async restart(_timeout: number): Promise<void> {
@@ -150,9 +156,6 @@ export class JupyterSession implements IJupyterSession {
 
         // Start a new session
         this.session = await this.createSession(serverSettings, this.contentsManager, cancelToken);
-
-        // Start another session to handle restarts
-        this.restartSessionPromise = this.createRestartSession(serverSettings, this.contentsManager, cancelToken);
 
         // Listen for session status changes
         this.statusHandler = this.onStatusChanged.bind(this.onStatusChanged);
@@ -377,9 +380,11 @@ export class JupyterSession implements IJupyterSession {
                 traceInfo('ShutdownSessionAndConnection - current session');
                 await this.shutdownSession(this.session, this.statusHandler);
                 traceInfo('ShutdownSessionAndConnection - get restart session');
-                const restartSession = await this.restartSessionPromise;
-                traceInfo('ShutdownSessionAndConnection - shutdown restart session');
-                await this.shutdownSession(restartSession, undefined);
+                if (this.restartSessionPromise) {
+                    const restartSession = await this.restartSessionPromise;
+                    traceInfo('ShutdownSessionAndConnection - shutdown restart session');
+                    await this.shutdownSession(restartSession, undefined);
+                }
 
                 if (this.sessionManager && !this.sessionManager.isDisposed) {
                     traceInfo('ShutdownSessionAndConnection - dispose session manager');
