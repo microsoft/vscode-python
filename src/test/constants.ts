@@ -17,10 +17,15 @@ function isMultitrootTest() {
     if (IS_SMOKE_TEST || IS_PERF_TEST) {
         return false;
     }
-    // tslint:disable-next-line:no-require-imports
-    const vscode = require('vscode');
-    const workspace = vscode.workspace;
-    return Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 1;
+    try {
+        // tslint:disable-next-line:no-require-imports
+        const vscode = require('vscode');
+        const workspace = vscode.workspace;
+        return Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 1;
+    } catch {
+        // being accessed, when VS Code hasn't been launched.
+        return '';
+    }
 }
 
 export const EXTENSION_ROOT_DIR_FOR_TESTS = path.join(__dirname, '..', '..');
