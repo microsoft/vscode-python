@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:no-console no-require-imports no-var-requires
+// tslint:disable:no-console
 
 import * as path from 'path';
 import { runTests } from 'vscode-test';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from './constants';
-
 
 const workspacePath = path.join(__dirname, '..', '..', 'src', 'testMultiRootWkspc', 'multi.code-workspace');
 process.env.IS_CI_SERVER_TEST_DEBUGGER = '1';

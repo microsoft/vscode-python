@@ -1,4 +1,4 @@
-// tslint:disable:no-console no-require-imports no-var-requires
+// tslint:disable:no-console
 
 import * as path from 'path';
 import { runTests } from 'vscode-test';
