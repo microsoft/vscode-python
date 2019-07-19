@@ -6,7 +6,6 @@ import { Uri } from 'vscode';
 import { ICondaService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ExecutionInfo, IConfigurationService } from '../types';
-import { Installer, InstallerNames } from './installerNames';
 import { ModuleInstaller } from './moduleInstaller';
 import { IModuleInstaller } from './types';
 
@@ -23,9 +22,12 @@ export class CondaInstaller extends ModuleInstaller implements IModuleInstaller 
         super(serviceContainer);
     }
 
+    public get name(): string {
+        return 'Conda';
+    }
+
     public get displayName() {
-        const name = InstallerNames.get(Installer.CondaInstaller);
-        return name ? name : 'Conda';
+        return 'Conda';
     }
 
     public get priority(): number {
