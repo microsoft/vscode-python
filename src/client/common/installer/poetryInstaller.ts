@@ -12,6 +12,7 @@ import { traceError } from '../logger';
 import { IFileSystem } from '../platform/types';
 import { IProcessServiceFactory } from '../process/types';
 import { ExecutionInfo, IConfigurationService } from '../types';
+import { Installer, InstallerNames } from './installerNames';
 import { ModuleInstaller } from './moduleInstaller';
 import { IModuleInstaller } from './types';
 export const poetryName = 'poetry';
@@ -21,7 +22,8 @@ const poetryFile = 'poetry.lock';
 export class PoetryInstaller extends ModuleInstaller implements IModuleInstaller {
 
     public get displayName() {
-        return poetryName;
+        const name = InstallerNames.get(Installer.PoetryInstaller);
+        return name ? name : poetryName;
     }
     public get priority(): number {
         return 10;

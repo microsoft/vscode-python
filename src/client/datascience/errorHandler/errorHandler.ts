@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
 import { IApplicationShell } from '../../common/application/types';
+import { Installer, InstallerNames } from '../../common/installer/installerNames';
 import { ProductNames } from '../../common/installer/productNames';
 import { IInstallationChannelManager } from '../../common/installer/types';
 import { ILogger, Product } from '../../common/types';
@@ -30,11 +31,14 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                             .then(installers => {
                                 if (installers) {
                                     // If Conda is available, always pick it as the user must have a Conda Environment
-                                    const installer = installers.reduce((prev, current) => (prev.priority > current.priority) ? prev : current);
-                                    const name = ProductNames.get(Product.jupyter);
+                                    const installer = installers.find(ins => ins.displayName === InstallerNames.get(Installer.CondaInstaller));
+                                    const product = ProductNames.get(Product.jupyter);
 
-                                    if (installer && name) {
-                                        installer.installModule(name)
+                                    if (installer && product) {
+                                        installer.installModule(product)
+                                            .catch(e => this.applicationShell.showErrorMessage(e.message, localize.DataScience.pythonInteractiveHelpLink()));
+                                    } else if (installers[0] && product) {
+                                        installers[0].installModule(product)
                                             .catch(e => this.applicationShell.showErrorMessage(e.message, localize.DataScience.pythonInteractiveHelpLink()));
                                     }
                                 }

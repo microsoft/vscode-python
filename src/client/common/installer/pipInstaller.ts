@@ -7,13 +7,15 @@ import { IServiceContainer } from '../../ioc/types';
 import { IWorkspaceService } from '../application/types';
 import { IPythonExecutionFactory } from '../process/types';
 import { ExecutionInfo } from '../types';
+import { Installer, InstallerNames } from './installerNames';
 import { ModuleInstaller } from './moduleInstaller';
 import { IModuleInstaller } from './types';
 
 @injectable()
 export class PipInstaller extends ModuleInstaller implements IModuleInstaller {
     public get displayName() {
-        return 'Pip';
+        const name = InstallerNames.get(Installer.PipInstaller);
+        return name ? name : 'Pip';
     }
     public get priority(): number {
         return 0;

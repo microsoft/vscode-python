@@ -6,6 +6,7 @@ import { Uri } from 'vscode';
 import { IInterpreterLocatorService, PIPENV_SERVICE } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ExecutionInfo } from '../types';
+import { Installer, InstallerNames } from './installerNames';
 import { ModuleInstaller } from './moduleInstaller';
 import { IModuleInstaller } from './types';
 
@@ -16,7 +17,8 @@ export class PipEnvInstaller extends ModuleInstaller implements IModuleInstaller
     private readonly pipenv: IInterpreterLocatorService;
 
     public get displayName() {
-        return pipenvName;
+        const name = InstallerNames.get(Installer.PipEnvInstaller);
+        return name ? name : pipenvName;
     }
     public get priority(): number {
         return 10;
