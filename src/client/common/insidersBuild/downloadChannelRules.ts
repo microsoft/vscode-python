@@ -13,7 +13,7 @@ export const frequencyForWeeklyInsidersCheck = 1000 * 60 * 60 * 24 * 7; // One w
 export const lastLookUpTimeKey = 'INSIDERS_LAST_LOOK_UP_TIME_KEY';
 
 @injectable()
-export class ExtensionStableChannelRule implements IExtensionChannelRule {
+export class ExtensionInsidersOffChannelRule implements IExtensionChannelRule {
     public async shouldLookForInsidersBuild(): Promise<boolean> {
         return false;
     }

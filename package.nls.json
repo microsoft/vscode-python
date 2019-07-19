@@ -7,7 +7,7 @@
     "python.command.python.debugtests.title": "Debug All Tests",
     "python.command.python.execInTerminal.title": "Run Python File in Terminal",
     "python.command.python.setInterpreter.title": "Select Interpreter",
-    "python.command.python.switchToDefaultChannel.title": "Switch to Default channel",
+    "python.command.python.switchOffInsidersChannel.title": "Switch to Default channel",
     "python.command.python.switchToDailyChannel.title": "Switch to Insiders daily channel",
     "python.command.python.switchToWeeklyChannel.title": "Switch to Insiders weekly channel",
     "python.command.python.updateSparkLibrary.title": "Update Workspace PySpark Libraries",

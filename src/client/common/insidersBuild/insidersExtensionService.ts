@@ -56,15 +56,15 @@ export class InsidersExtensionService implements IExtensionActivationService {
     public async handleEdgeCases(installChannel: ExtensionChannels): Promise<void> {
         if (this.appEnvironment.channel === 'insiders' && !this.insidersPrompt.hasUserBeenNotified.value && this.extensionChannelService.isChannelUsingDefaultConfiguration) {
             await this.insidersPrompt.notifyToInstallInsiders();
-        } else if (installChannel !== 'default' && this.appEnvironment.extensionChannel === 'stable') {
-            // Install channel is set to "weekly" or "daily" but stable version of extension is installed. Change channel to "default" to use the installed version
-            await this.extensionChannelService.updateChannel('default');
+        } else if (installChannel !== 'off' && this.appEnvironment.extensionChannel === 'stable') {
+            // Install channel is set to "weekly" or "daily" but stable version of extension is installed. Switch channel to "off" to use the installed version
+            await this.extensionChannelService.updateChannel('off');
         }
     }
 
     public registerCommandsAndHandlers(): void {
         this.disposables.push(this.extensionChannelService.onDidChannelChange(channel => this.handleChannel(channel, true)));
-        this.disposables.push(this.cmdManager.registerCommand(Commands.SwitchToDefault, () => this.extensionChannelService.updateChannel('default')));
+        this.disposables.push(this.cmdManager.registerCommand(Commands.SwitchOffInsidersChannel, () => this.extensionChannelService.updateChannel('off')));
         this.disposables.push(this.cmdManager.registerCommand(Commands.SwitchToInsidersDaily, () => this.extensionChannelService.updateChannel('daily')));
         this.disposables.push(this.cmdManager.registerCommand(Commands.SwitchToInsidersWeekly, () => this.extensionChannelService.updateChannel('weekly')));
     }

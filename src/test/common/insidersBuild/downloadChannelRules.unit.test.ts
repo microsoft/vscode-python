@@ -8,17 +8,17 @@
 import { assert, expect } from 'chai';
 import { instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import { ExtensionInsidersDailyChannelRule, ExtensionInsidersWeeklyChannelRule, ExtensionStableChannelRule, frequencyForDailyInsidersCheck, frequencyForWeeklyInsidersCheck, lastLookUpTimeKey } from '../../../client/common/insidersBuild/downloadChannelRules';
+import { ExtensionInsidersDailyChannelRule, ExtensionInsidersWeeklyChannelRule, ExtensionInsidersOffChannelRule, frequencyForDailyInsidersCheck, frequencyForWeeklyInsidersCheck, lastLookUpTimeKey } from '../../../client/common/insidersBuild/downloadChannelRules';
 import { InsidersBuildInstaller, StableBuildInstaller } from '../../../client/common/installer/extensionBuildInstaller';
 import { PersistentStateFactory } from '../../../client/common/persistentState';
 import { IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
 
-suite('Download channel rules - ExtensionStableChannelRule', () => {
+suite('Download channel rules - ExtensionInsidersOffChannelRule', () => {
     let stableInstaller: StableBuildInstaller;
-    let stableChannelRule: ExtensionStableChannelRule;
+    let stableChannelRule: ExtensionInsidersOffChannelRule;
     setup(() => {
         stableInstaller = new StableBuildInstaller(undefined as any, undefined as any);
-        stableChannelRule = new ExtensionStableChannelRule(stableInstaller);
+        stableChannelRule = new ExtensionInsidersOffChannelRule(stableInstaller);
     });
 
     test('If insiders channel rule is new, return installer for stable build', async () => {

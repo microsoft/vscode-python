@@ -325,7 +325,7 @@ suite('Insiders Extension Service - Function registerCommandsAndHandlers()', () 
         const disposable3 = TypeMoq.Mock.ofType<IDisposable>();
         const disposable4 = TypeMoq.Mock.ofType<IDisposable>();
         when(extensionChannelService.onDidChannelChange).thenReturn(() => disposable1.object);
-        when(cmdManager.registerCommand(Commands.SwitchToDefault, anything())).thenReturn(disposable2.object);
+        when(cmdManager.registerCommand(Commands.SwitchOffInsidersChannel, anything())).thenReturn(disposable2.object);
         when(cmdManager.registerCommand(Commands.SwitchToInsidersDaily, anything())).thenReturn(disposable3.object);
         when(cmdManager.registerCommand(Commands.SwitchToInsidersWeekly, anything())).thenReturn(disposable4.object);
 
@@ -333,7 +333,7 @@ suite('Insiders Extension Service - Function registerCommandsAndHandlers()', () 
 
         expect(insidersExtensionService.disposables.length).to.equal(4);
         verify(extensionChannelService.onDidChannelChange).once();
-        verify(cmdManager.registerCommand(Commands.SwitchToDefault, anything())).once();
+        verify(cmdManager.registerCommand(Commands.SwitchOffInsidersChannel, anything())).once();
         verify(cmdManager.registerCommand(Commands.SwitchToInsidersDaily, anything())).once();
         verify(cmdManager.registerCommand(Commands.SwitchToInsidersWeekly, anything())).once();
     });
@@ -348,7 +348,7 @@ suite('Insiders Extension Service - Function registerCommandsAndHandlers()', () 
         let switchToInsidersDailyHandler!: Function;
         let switchToInsidersWeeklyHandler!: Function;
         when(extensionChannelService.onDidChannelChange).thenReturn(cb => { channelChangedHandler = cb; return disposable1.object; });
-        when(cmdManager.registerCommand(Commands.SwitchToDefault, anything())).thenCall((_, cb) => { switchToStableHandler = cb; return disposable2.object; });
+        when(cmdManager.registerCommand(Commands.SwitchOffInsidersChannel, anything())).thenCall((_, cb) => { switchToStableHandler = cb; return disposable2.object; });
         when(cmdManager.registerCommand(Commands.SwitchToInsidersDaily, anything())).thenCall((_, cb) => { switchToInsidersDailyHandler = cb; return disposable3.object; });
         when(cmdManager.registerCommand(Commands.SwitchToInsidersWeekly, anything())).thenCall((_, cb) => { switchToInsidersWeeklyHandler = cb; return disposable4.object; });
 
