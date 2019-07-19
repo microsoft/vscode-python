@@ -46,6 +46,5 @@
     "cucumberautocomplete.skipDocStringsFormat": true,
     "python.linting.flake8Args": [
         "--max-line-length=120"
-    ],
-    "python.pythonPath": "python"
+    ]
 }
