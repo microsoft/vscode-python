@@ -2,14 +2,23 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { CodeLens, Position, Range, Selection, TextDocument, TextEditor, TextEditorRevealType } from 'vscode';
+import {
+    CodeLens,
+    Event,
+    EventEmitter,
+    Position,
+    Range,
+    Selection,
+    TextDocument,
+    TextEditor,
+    TextEditorRevealType
+} from 'vscode';
 
 import { IDocumentManager } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDataScienceSettings } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
-import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { ICodeExecutionHelper } from '../../terminals/types';
 import { CellMatcher } from '../cellMatcher';
@@ -24,6 +33,7 @@ export class CodeWatcher implements ICodeWatcher {
     private fileName: string = '';
     private codeLenses: CodeLens[] = [];
     private cachedSettings: IDataScienceSettings | undefined;
+    private codeLensUpdatedEvent: EventEmitter<void> = new EventEmitter<void>();
 
     constructor(@inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(IFileSystem) private fileSystem: IFileSystem,
@@ -31,8 +41,7 @@ export class CodeWatcher implements ICodeWatcher {
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(ICodeExecutionHelper) private executionHelper: ICodeExecutionHelper,
         @inject(IDataScienceErrorHandler) protected dataScienceErrorHandler: IDataScienceErrorHandler,
-        @inject(ICodeLensFactory) private codeLensFactory: ICodeLensFactory,
-        @inject(IServiceContainer) protected serviceContainer: IServiceContainer
+        @inject(ICodeLensFactory) private codeLensFactory: ICodeLensFactory
     ) {
     }
 
@@ -48,6 +57,13 @@ export class CodeWatcher implements ICodeWatcher {
 
         // Use the factory to generate our new code lenses.
         this.codeLenses = this.codeLensFactory.createCodeLenses(document);
+
+        // Listen for changes
+        this.codeLensFactory.updateRequired(this.onCodeLensFactoryUpdated.bind(this));
+    }
+
+    public get codeLensUpdated(): Event<void> {
+        return this.codeLensUpdatedEvent.event;
     }
 
     public getFileName() {
@@ -292,6 +308,14 @@ export class CodeWatcher implements ICodeWatcher {
             .then(() => this.advanceToRange(new Range(newPosition, newPosition)));
     }
 
+    private onCodeLensFactoryUpdated(): void {
+        // Update our code lenses.
+        if (this.document) {
+            this.codeLenses = this.codeLensFactory.createCodeLenses(this.document);
+        }
+        this.codeLensUpdatedEvent.fire();
+    }
+
     private async addCode(code: string, file: string, line: number, editor?: TextEditor, debug?: boolean): Promise<boolean> {
         let result = false;
         try {
@@ -358,7 +382,7 @@ export class CodeWatcher implements ICodeWatcher {
             if (this.document) {
                 // Use that to get our code.
                 const code = this.document.getText(currentRunCellLens.range);
-                await this.addCode(code, this.getFileName(), range.start.line, this.documentManager.activeTextEditor, debug);
+                await this.addCode(code, this.getFileName(), currentRunCellLens.range.start.line, this.documentManager.activeTextEditor, debug);
             }
         }
     }

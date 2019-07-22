@@ -3,13 +3,13 @@
 
 'use strict';
 
-export async function sleep(timeout: number): Promise<number> {
-    return new Promise<number>((resolve) => {
-        setTimeout(() => resolve(timeout), timeout);
+export async function sleep(timeout: number): Promise<void> {
+    return new Promise<void>((resolve) => {
+        setTimeout(resolve, timeout);
     });
 }
 
-export function waitForPromise<T>(promise: Promise<T>, timeout: number): Promise<T | null> {
+export async function waitForPromise<T>(promise: Promise<T>, timeout: number): Promise<T | null> {
     // Set a timer that will resolve with null
     return new Promise<T | null>((resolve, reject) => {
         const timer = setTimeout(() => resolve(null), timeout);

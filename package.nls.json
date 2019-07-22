@@ -60,6 +60,7 @@
     "python.command.python.datascience.expandallcells.title": "Expand all Python Interactive cells",
     "python.command.python.datascience.collapseallcells.title": "Collapse all Python Interactive cells",
     "python.command.python.datascience.addcellbelow.title": "Add empty cell to file",
+    "python.command.python.datascience.scrolltocell.title": "Scroll cell into view",
     "python.snippet.launch.standard.label": "Python: Current File",
     "python.snippet.launch.module.label": "Python: Module",
     "python.snippet.launch.module.default": "enter-your-module-name",
@@ -314,5 +315,6 @@
     "DataScience.jupyterDebuggerInstallPtvsdYes" : "Yes",
     "DataScience.jupyterDebuggerInstallPtvsdNo" : "No",
     "DataScience.cellStopOnErrorFormatMessage" : "{0} cells were canceled due to an error in the previous cell.",
-    "DataScience.instructionComments": "# To add a new cell, type '#%%'\n# To add a new markdown cell, type '#%% [markdown]'\n"
+    "DataScience.instructionComments": "# To add a new cell, type '#%%'\n# To add a new markdown cell, type '#%% [markdown]'\n",
+    "DataScience.scrollToCellTitleFormatMessage" : "Go to [{0}]"
 }

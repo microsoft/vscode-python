@@ -30,7 +30,7 @@ function uncommentMagicCommands(line: string): string {
     }
 }
 
-function generateCodeCell(code: string[], file: string, line: number, id: string, magicCommandsAsComments: boolean) : ICell {
+function generateCodeCell(code: string[], file: string, line: number, id: string, magicCommandsAsComments: boolean): ICell {
     // Code cells start out with just source and no outputs.
     return {
         data: {
@@ -49,7 +49,7 @@ function generateCodeCell(code: string[], file: string, line: number, id: string
 
 }
 
-function generateMarkdownCell(code: string[], file: string, line: number, id: string) : ICell {
+function generateMarkdownCell(code: string[], file: string, line: number, id: string): ICell {
     return {
         id: id,
         file: file,
@@ -65,9 +65,9 @@ function generateMarkdownCell(code: string[], file: string, line: number, id: st
 
 }
 
-export function generateCells(settings: IDataScienceSettings | undefined, code: string, file: string, line: number, splitMarkdown: boolean, id: string) : ICell[] {
+export function generateCells(settings: IDataScienceSettings | undefined, code: string, file: string, line: number, splitMarkdown: boolean, id: string): ICell[] {
     // Determine if we have a markdown cell/ markdown and code cell combined/ or just a code cell
-    const split = code.splitLines({trim: false});
+    const split = code.splitLines({ trim: false });
     const firstLine = split[0];
     const matcher = new CellMatcher(settings);
     const { magicCommandsAsComments = false } = settings || {};
@@ -97,7 +97,7 @@ export function generateCells(settings: IDataScienceSettings | undefined, code: 
     }
 }
 
-export function hasCells(document: TextDocument, settings?: IDataScienceSettings) : boolean {
+export function hasCells(document: TextDocument, settings?: IDataScienceSettings): boolean {
     const matcher = new CellMatcher(settings);
     for (let index = 0; index < document.lineCount; index += 1) {
         const line = document.lineAt(index);
@@ -141,7 +141,7 @@ export function generateCellRanges(document: TextDocument, settings?: IDataScien
     return cells;
 }
 
-export function generateCellsFromDocument(document: TextDocument, settings?: IDataScienceSettings) : ICell[] {
+export function generateCellsFromDocument(document: TextDocument, settings?: IDataScienceSettings): ICell[] {
     // Get our ranges. They'll determine our cells
     const ranges = generateCellRanges(document, settings);
 

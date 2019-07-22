@@ -113,4 +113,5 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.RunFileInInteractiveWindows]: [string];
     [DSCommands.DebugCell]: [string, number, number, number, number];
     [DSCommands.RunCurrentCellAndAddBelow]: [string];
+    [DSCommands.ScrollToCell]: [string, string];
 }

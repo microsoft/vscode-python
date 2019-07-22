@@ -39,6 +39,19 @@ suite('DataScience Debugger tests', () => {
     suiteSetup(function () {
         // Debugger tests require jupyter to run. Othewrise can't not really testing them
         const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
+
+        // Currently these test fail on Mac / Python 3.7 so disable for that
+        // https://github.com/microsoft/ptvsd/issues/1587
+        const isMac = process.env ? (process.env.VMIMAGENAME !== undefined && process.env.VMIMAGENAME === 'macos-10.13') : false;
+        const py37 = process.env ? (process.env.PYTHONVERSION !== undefined && process.env.PYTHONVERSION === '3.7') : false;
+
+        if (isMac && py37) {
+            // tslint:disable-next-line:no-console
+            console.log('Skipping debugger tests on mac / py3.7 for debugger issue');
+            // tslint:disable-next-line:no-invalid-this
+            this.skip();
+        }
+
         if (!isRollingBuild) {
             // tslint:disable-next-line:no-console
             console.log('Skipping Debugger tests. Requires python environment');

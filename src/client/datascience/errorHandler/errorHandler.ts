@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
 import { IApplicationShell } from '../../common/application/types';
+import { ProductNames } from '../../common/installer/productNames';
 import { IInstallationChannelManager } from '../../common/installer/types';
 import { ILogger, Product } from '../../common/types';
 import * as localize from '../../common/utils/localize';
@@ -25,7 +26,22 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                 localize.DataScience.notebookCheckForImportNo())
                 .then(response => {
                     if (response === localize.DataScience.jupyterInstall()) {
-                        return this.channels.getInstallationChannel(Product.jupyter);
+                        return this.channels.getInstallationChannels()
+                            .then(installers => {
+                                if (installers) {
+                                    // If Conda is available, always pick it as the user must have a Conda Environment
+                                    const installer = installers.find(ins => ins.name === 'Conda');
+                                    const product = ProductNames.get(Product.jupyter);
+
+                                    if (installer && product) {
+                                        installer.installModule(product)
+                                            .catch(e => this.applicationShell.showErrorMessage(e.message, localize.DataScience.pythonInteractiveHelpLink()));
+                                    } else if (installers[0] && product) {
+                                        installers[0].installModule(product)
+                                            .catch(e => this.applicationShell.showErrorMessage(e.message, localize.DataScience.pythonInteractiveHelpLink()));
+                                    }
+                                }
+                            });
                     } else {
                         const jupyterError = err as JupyterInstallError;
 
@@ -36,11 +52,6 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                                 this.applicationShell.openUrl(jupyterError.action);
                             }
                         });
-                    }
-                }).then(installer => {
-                    if (installer) {
-                        installer.installModule('jupyter')
-                            .catch(e => this.applicationShell.showErrorMessage(e.message, localize.DataScience.pythonInteractiveHelpLink()));
                     }
                 });
         } else if (err instanceof JupyterSelfCertsError) {

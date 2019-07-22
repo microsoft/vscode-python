@@ -468,6 +468,11 @@
                 "command": "python.datascience.addcellbelow",
                 "title": "%python.command.python.datascience.addcellbelow.title%",
                 "category": "Python"
+            },
+            {
+                "command": "python.datascience.scrolltocell",
+                "title": "%python.command.python.datascience.scrolltocell.title%",
+                "category": "Python"
             }
         ],
         "menus": {
@@ -1427,6 +1432,12 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Stop running cells if a cell throws an exception.",
+                    "scope": "resource"
+                },
+                "python.dataScience.addGotoCodeLenses": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "After running a cell, add a 'Goto' code lens on the cell. Note, disabling all code lenses disables this code lens as well.",
                     "scope": "resource"
                 },
                 "python.disableInstallationCheck": {

@@ -5,7 +5,7 @@
 
 'use strict';
 
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable, named, optional } from 'inversify';
 import { parse } from 'jsonc-parser';
 import * as path from 'path';
 import { IHttpClient } from '../common/types';
@@ -16,6 +16,7 @@ import { EXTENSION_ROOT_DIR, STANDARD_OUTPUT_CHANNEL } from './constants';
 import { traceDecorators, traceError } from './logger';
 import { IFileSystem } from './platform/types';
 import { ABExperiments, ICryptoUtils, IExperimentsManager, IOutputChannel, IPersistentState, IPersistentStateFactory } from './types';
+import { sleep } from './utils/async';
 import { swallowExceptions } from './utils/decorators';
 import { Experiments } from './utils/localize';
 
@@ -29,6 +30,7 @@ export const downloadedExperimentStorageKey = 'DOWNLOADED_EXPERIMENTS_STORAGE_KE
  */
 const configFile = path.join(EXTENSION_ROOT_DIR, 'experiments.json');
 export const configUri = 'https://raw.githubusercontent.com/microsoft/vscode-python/master/experiments.json';
+export const EXPERIMENTS_EFFORT_TIMEOUT_MS = 2000;
 
 /**
  * Manages and stores experiments, implements the AB testing functionality
@@ -40,7 +42,7 @@ export class ExperimentsManager implements IExperimentsManager {
      */
     public userExperiments: ABExperiments = [];
     /**
-     * Keeps track of the downloaded experiments in the previous sessions
+     * Keeps track of the experiments to be used in the current session
      */
     private experimentStorage: IPersistentState<ABExperiments | undefined>;
     /**
@@ -69,7 +71,8 @@ export class ExperimentsManager implements IExperimentsManager {
         @inject(ICryptoUtils) private readonly crypto: ICryptoUtils,
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel,
-        @inject(IFileSystem) private readonly fs: IFileSystem
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @optional() private experimentEffortTimeout: number = EXPERIMENTS_EFFORT_TIMEOUT_MS
     ) {
         this.isDownloadedStorageValid = this.persistentStateFactory.createGlobalPersistentState<boolean>(isDownloadedStorageValidKey, false, EXPIRY_DURATION_MS);
         this.experimentStorage = this.persistentStateFactory.createGlobalPersistentState<ABExperiments | undefined>(experimentStorageKey, undefined);
@@ -123,18 +126,27 @@ export class ExperimentsManager implements IExperimentsManager {
     }
 
     /**
-     * Downloads experiments and updates storage given previously downloaded experiments are no longer valid
+     * Downloads experiments and updates downloaded storage for the next session given previously downloaded experiments are no longer valid
      */
     @traceDecorators.error('Failed to initialize experiments')
-    public async initializeInBackground() {
+    public async initializeInBackground(): Promise<void> {
         if (this.isDownloadedStorageValid.value) {
             return;
         }
+        await this.downloadAndStoreExperiments();
+    }
+
+    /**
+     * Downloads experiments and updates storage
+     * @param storage The storage to store the experiments in. By default, downloaded storage for the next session is used.
+     */
+    @traceDecorators.error('Failed to download and store experiments')
+    public async downloadAndStoreExperiments(storage: IPersistentState<ABExperiments | undefined> = this.downloadedExperimentsStorage): Promise<void> {
         const downloadedExperiments = await this.httpClient.getJSON<ABExperiments>(configUri, false);
         if (!this.areExperimentsValid(downloadedExperiments)) {
             return;
         }
-        await this.downloadedExperimentsStorage.updateValue(downloadedExperiments);
+        await storage.updateValue(downloadedExperiments);
         await this.isDownloadedStorageValid.updateValue(true);
     }
 
@@ -153,7 +165,9 @@ export class ExperimentsManager implements IExperimentsManager {
     }
 
     /**
-     * Updates experiment storage using local data if available.
+     * Do best effort to populate experiment storage. Attempt to update experiment storage by,
+     * * Using appropriate local data if available
+     * * Trying to download fresh experiments within 2 seconds to update storage
      * Local data could be:
      * * Experiments downloaded in the last session
      *   - The function makes sure these are used in the current session
@@ -167,12 +181,21 @@ export class ExperimentsManager implements IExperimentsManager {
         // Step 1. Update experiment storage using downloaded experiments in the last session if any
         if (Array.isArray(this.downloadedExperimentsStorage.value)) {
             await this.experimentStorage.updateValue(this.downloadedExperimentsStorage.value);
-            await this.downloadedExperimentsStorage.updateValue(undefined);
+            return this.downloadedExperimentsStorage.updateValue(undefined);
+        }
+
+        if (Array.isArray(this.experimentStorage.value)) {
+            // Experiment storage already contains latest experiments, do not use the following techniques
             return;
         }
 
-        // Step 2. Update experiment storage using local experiments file if available
-        if (!this.experimentStorage.value && (await this.fs.fileExists(configFile))) {
+        // Step 2. Do best effort to download the experiments within timeout and use it in the current session only
+        if (await this.doBestEffortToPopulateExperiments() === true) {
+            return;
+        }
+
+        // Step 3. Update experiment storage using local experiments file if available
+        if (await this.fs.fileExists(configFile)) {
             const content = await this.fs.readFile(configFile);
             try {
                 const experiments = parse(content, [], { allowTrailingComma: true, disallowComments: false });
@@ -182,7 +205,6 @@ export class ExperimentsManager implements IExperimentsManager {
                 await this.experimentStorage.updateValue(experiments);
             } catch (ex) {
                 traceError('Failed to parse experiments configuration file to update storage', ex);
-                return;
             }
         }
     }
@@ -204,5 +226,24 @@ export class ExperimentsManager implements IExperimentsManager {
             }
         }
         return true;
+    }
+
+    /**
+     * Do best effort to download the experiments within timeout and use it in the current session only
+     */
+    public async doBestEffortToPopulateExperiments(): Promise<boolean> {
+        try {
+            const success = await Promise.race([
+                // Download and store experiments in the storage for the current session
+                this.downloadAndStoreExperiments(this.experimentStorage).then(() => true),
+                sleep(this.experimentEffortTimeout).then(() => false)
+            ]);
+            sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE, undefined, { success });
+            return success;
+        } catch (ex) {
+            sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE, undefined, { success: false, error: 'Downloading experiments failed with error' }, ex);
+            traceError('Effort to download experiments within timeout failed with error', ex);
+            return false;
+        }
     }
 }

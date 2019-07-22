@@ -311,7 +311,25 @@ export interface IEventNamePropertyMapping {
     [EventName.PYTHON_LANGUAGE_SERVER_READY]: never | undefined;
     [EventName.PYTHON_LANGUAGE_SERVER_STARTUP]: never | undefined;
     [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: any;
-    [EventName.PYTHON_EXPERIMENTS]: { error?: string; expName?: string };
+    [EventName.PYTHON_EXPERIMENTS]: {
+        /**
+         * Name of the experiment group the user is in
+         * @type {string}
+         */
+        expName?: string;
+    };
+    [EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE]: {
+        /**
+         * Carries `true` if downloading experiments successfully finishes within timeout, `false` otherwise
+         * @type {boolean}
+         */
+        success?: boolean;
+        /**
+         * Carries an error string if downloading experiments fails with error
+         * @type {string}
+         */
+        error?: string;
+    };
     [EventName.REFACTOR_EXTRACT_FUNCTION]: never | undefined;
     [EventName.REFACTOR_EXTRACT_VAR]: never | undefined;
     [EventName.REFACTOR_RENAME]: never | undefined;
@@ -390,6 +408,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RunToLine]: never | undefined;
     [Telemetry.RunFileInteractive]: never | undefined;
     [Telemetry.RunFromLine]: never | undefined;
+    [Telemetry.ScrolledToCell]: never | undefined;
     [Telemetry.SelfCertsMessageClose]: never | undefined;
     [Telemetry.SelfCertsMessageEnabled]: never | undefined;
     [Telemetry.SelectJupyterURI]: never | undefined;

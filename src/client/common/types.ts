@@ -331,6 +331,7 @@ export interface IDataScienceSettings {
     stopOnError?: boolean;
     remoteDebuggerPort?: number;
     colorizeInputBox?: boolean;
+    addGotoCodeLenses?: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

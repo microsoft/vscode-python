@@ -476,6 +476,11 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         });
     }
 
+    @captureTelemetry(Telemetry.ScrolledToCell)
+    public scrollToCell(id: string): void {
+        this.postMessage(InteractiveWindowMessages.ScrollToCell, { id }).ignoreErrors();
+    }
+
     protected async activating() {
         // Only activate if the active editor is empty. This means that
         // vscode thinks we are actually supposed to have focus. It would be

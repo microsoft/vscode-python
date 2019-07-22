@@ -36,6 +36,7 @@ export namespace Commands {
     export const DebugCurrentCellPalette = 'python.datascience.debugcurrentcell.palette';
     export const DebugCell = 'python.datascience.debugcell';
     export const RunCurrentCellAndAddBelow = 'python.datascience.runcurrentcellandaddbelow';
+    export const ScrollToCell = 'python.datascience.scrolltocell';
 }
 
 export namespace EditorContexts {
@@ -148,7 +149,8 @@ export enum Telemetry {
     FindJupyterKernelSpec = 'DATASCIENCE.FIND_JUPYTER_KERNEL_SPEC',
     PtvsdPromptToInstall = 'DATASCIENCE.PTVSD_PROMPT_TO_INSTALL',
     PtvsdSuccessfullyInstalled = 'DATASCIENCE.PTVSD_SUCCESSFULLY_INSTALLED',
-    PtvsdInstallFailed = 'DATASCIENCE.PTVSD_INSTALL_FAILED'
+    PtvsdInstallFailed = 'DATASCIENCE.PTVSD_INSTALL_FAILED',
+    ScrolledToCell = 'DATASCIENCE.SCROLLED_TO_CELL'
 }
 
 export namespace HelpLinks {
