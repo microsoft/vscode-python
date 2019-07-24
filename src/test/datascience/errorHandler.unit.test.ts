@@ -17,6 +17,22 @@ class MockErrorHandler implements IDataScienceErrorHandler {
         if (err instanceof JupyterInstallError) {
             const installers = await this.channels.getInstallationChannels();
             if (installers) {
+                if (typeof Array.prototype.find !== 'function') {
+                    Array.prototype.find = function (iterator: any) {
+                        const list = Object(this);
+                        const length = list.length >>> 0;
+                        const thisArg = arguments[1];
+                        let value;
+
+                        for (let i = 0; i < length; i += 1) {
+                            value = list[i];
+                            if (iterator.call(thisArg, value, i, list)) {
+                                return value;
+                            }
+                        }
+                        return undefined;
+                    };
+                }
                 // If Conda is available, always pick it as the user must have a Conda Environment
                 const installer = installers.find(ins => ins.name === 'Conda');
                 const product = ProductNames.get(Product.jupyter);
