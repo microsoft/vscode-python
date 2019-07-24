@@ -84,7 +84,7 @@ if __name__ == "__main__":
         default="37",
     )
     args = parser.parse_args()
-    result = install_ptvsd_wheels(args.version, args.local)
+    result = install_ptvsd_wheels(args.version)
     if result["status"] != 0:
         raise Exception(
             f"There is a problem at the {result['step']} step for the {result['platform']} wheel: {result['exception']}"
