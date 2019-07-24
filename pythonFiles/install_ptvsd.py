@@ -18,7 +18,7 @@ PLATFORMS = {
 }
 
 
-def install_ptvsd_wheels(version, local):
+def install_ptvsd_wheels(version):
     def delete_folder(path):
         if os.path.exists(path) and os.path.isdir(path):
             shutil.rmtree(path)
