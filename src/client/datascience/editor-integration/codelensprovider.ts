@@ -59,8 +59,8 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         this.didChangeCodeLenses.fire();
     }
 
-    private onDidCloseTextDocument(_e: vscode.TextDocument) {
-        const index = this.activeCodeWatchers.findIndex(item => item.getFileName() === _e.fileName);
+    private onDidCloseTextDocument(e: vscode.TextDocument) {
+        const index = this.activeCodeWatchers.findIndex(item => item.getFileName() === e.fileName);
         if (index >= 0) {
             this.activeCodeWatchers.splice(index, 1);
         }
