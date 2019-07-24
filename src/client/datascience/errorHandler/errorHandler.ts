@@ -18,7 +18,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
         @inject(IInstallationChannelManager) protected channels: IInstallationChannelManager) {
     }
 
-    public handleError(err: Error) {
+    public async handleError(err: Error): Promise<void> {
         if (err instanceof JupyterInstallError) {
             this.applicationShell.showInformationMessage(
                 localize.DataScience.jupyterNotSupported(),

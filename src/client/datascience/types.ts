@@ -170,7 +170,7 @@ export interface IInteractiveWindowProvider {
 
 export const IDataScienceErrorHandler = Symbol('IDataScienceErrorHandler');
 export interface IDataScienceErrorHandler {
-    handleError(err: Error): void;
+    handleError(err: Error): Promise<void>;
 }
 
 export const IInteractiveWindow = Symbol('IInteractiveWindow');

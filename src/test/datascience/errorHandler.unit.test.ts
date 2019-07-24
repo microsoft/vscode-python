@@ -25,7 +25,7 @@ suite('DataScience Error Handler Unit Tests', () => {
     });
     const message = 'Test error message.';
 
-    test('Default error', () => {
+    test('Default error', async () => {
         applicationShell.setup(app => app.showErrorMessage(typemoq.It.isAny()))
             .returns(() => Promise.resolve(message))
             .verifiable(typemoq.Times.once());
@@ -34,28 +34,23 @@ suite('DataScience Error Handler Unit Tests', () => {
             .verifiable(typemoq.Times.once());
 
         const err = new Error(message);
-        dataScienceErrorHandler.handleError(err);
+        await dataScienceErrorHandler.handleError(err);
 
         applicationShell.verifyAll();
         logger.verifyAll();
     });
 
-    test('Jupyter Self Certificates Error', () => {
-        applicationShell.setup(app => app.showErrorMessage(typemoq.It.isAny()))
-            .returns(() => Promise.resolve(message))
-            .verifiable(typemoq.Times.never());
-
+    test('Jupyter Self Certificates Error', async () => {
         logger.setup(log => log.logError(typemoq.It.isAny()))
             .verifiable(typemoq.Times.once());
 
         const err = new JupyterSelfCertsError(message);
-        dataScienceErrorHandler.handleError(err);
+        await dataScienceErrorHandler.handleError(err);
 
-        applicationShell.verifyAll();
         logger.verifyAll();
     });
 
-    test('Jupyter Install Error', () => {
+    test('Jupyter Install Error', async () => {
         applicationShell.setup(app => app.showInformationMessage(typemoq.It.isAny(),
             typemoq.It.isValue(localize.DataScience.jupyterInstall()),
             typemoq.It.isValue(localize.DataScience.notebookCheckForImportNo())))
@@ -87,7 +82,7 @@ suite('DataScience Error Handler Unit Tests', () => {
             .verifiable(typemoq.Times.once());
 
         const err = new JupyterInstallError(message, 'test.com');
-        dataScienceErrorHandler.handleError(err);
+        await dataScienceErrorHandler.handleError(err);
 
         applicationShell.verifyAll();
         logger.verifyAll();
