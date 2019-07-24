@@ -9,6 +9,7 @@ import subprocess
 import sys
 
 ROOT_FOLDER_PATH = os.path.join(".", "pythonFiles", "lib")
+# Mapping between folder platform names and wheel platform tags.
 PLATFORMS = {
     "win-32": "win32",
     "win-64": "win_amd64",
@@ -51,13 +52,12 @@ def install_ptvsd_wheels(version):
             [sys.executable, "-m", "pip", "install", f"--target={dest}", wheel]
         )
 
-    # mapping between folder platform names and wheel platform names
     for folder in PLATFORMS:
-        # remove the platform folder and its content if it exists
+        # Remove the platform folder and its content if it exists.
         dirpath = os.path.join(ROOT_FOLDER_PATH, f"python-{folder}-{version}")
         delete_folder(dirpath)
 
-        # download and install the appropriate PTVSD wheel
+        # Download and install the appropriate PTVSD wheel.
         try:
             step = "mkdir"
             os.makedirs(dirpath)
