@@ -15,21 +15,19 @@ class MockErrorHandler implements IDataScienceErrorHandler {
 
     public async handleError(err: Error): Promise<string> {
         if (err instanceof JupyterInstallError) {
-            return this.channels.getInstallationChannels()
-                .then(installers => {
-                    if (installers) {
-                        // If Conda is available, always pick it as the user must have a Conda Environment
-                        const installer = installers.find(ins => ins.name === 'Conda');
-                        const product = ProductNames.get(Product.jupyter);
+            const installers = await this.channels.getInstallationChannels();
+            if (installers) {
+                // If Conda is available, always pick it as the user must have a Conda Environment
+                const installer = installers.find(ins => ins.name === 'Conda');
+                const product = ProductNames.get(Product.jupyter);
 
-                        if (installer && product) {
-                            return 'installing';
-                        } else if (installers[0] && product) {
-                            return 'installing';
-                        }
-                    }
-                    return 'error';
-                });
+                if (installer && product) {
+                    return 'installing';
+                } else if (installers[0] && product) {
+                    return 'installing';
+                }
+            }
+            return 'error';
         } else if (err instanceof JupyterSelfCertsError) {
             return 'noop';
         } else if (err.message) {
