@@ -5,7 +5,6 @@ import { expect } from 'chai';
 import { mock } from 'ts-mockito';
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
 import { ProductNames } from '../../client/common/installer/productNames';
-import { IModuleInstaller } from '../../client/common/installer/types';
 import { Product } from '../../client/common/types';
 import { JupyterInstallError } from '../../client/datascience/jupyter/jupyterInstallError';
 import { JupyterSelfCertsError } from '../../client/datascience/jupyter/jupyterSelfCertsError';
@@ -18,11 +17,13 @@ class MockErrorHandler implements IDataScienceErrorHandler {
         if (err instanceof JupyterInstallError) {
             const installers = await this.channels.getInstallationChannels();
             if (installers) {
-                function isConda(ins: IModuleInstaller) {
-                    return (ins.name === 'Conda');
-                }
                 // If Conda is available, always pick it as the user must have a Conda Environment
-                const installer = installers.find(isConda);
+                let installer;
+                installers.forEach(ins => {
+                    if (ins.name === 'Conda') {
+                        installer = ins;
+                    }
+                });
                 const product = ProductNames.get(Product.jupyter);
 
                 if (installer && product) {
