@@ -44,16 +44,19 @@ suite('DataScience Error Handler Unit Tests', () => {
     const dataScienceErrorHandler = new MockErrorHandler();
     const message = 'Test error message.';
 
-    test('Default error', () => {
+    test('Default error', async () => {
         const err = new Error(message);
-        expect(dataScienceErrorHandler.handleError(err)).to.be.equal(message);
+        const result = await dataScienceErrorHandler.handleError(err);
+        expect(result).to.be.equal(message);
     });
-    test('Jupyter Self Certificates Error', () => {
+    test('Jupyter Self Certificates Error', async () => {
         const err = new JupyterSelfCertsError(message);
-        expect(dataScienceErrorHandler.handleError(err)).to.be.equal('noop');
+        const result = await dataScienceErrorHandler.handleError(err);
+        expect(result).to.be.equal('noop');
     });
-    test('Jupyter Install Error', () => {
+    test('Jupyter Install Error', async () => {
         const err = new JupyterInstallError(message, 'test.com');
-        expect(dataScienceErrorHandler.handleError(err)).to.be.equal('installing');
+        const result = await dataScienceErrorHandler.handleError(err);
+        expect(result).to.be.equal('installing');
     });
 });
