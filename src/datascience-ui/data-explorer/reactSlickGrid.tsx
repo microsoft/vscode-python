@@ -3,15 +3,19 @@
 // Licensed under the MIT License.
 'use strict';
 
+//import * as $ from 'jquery';
+//import * as $ from 'slickgrid/lib/jquery-1.11.2.min.js';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { MaxStringCompare } from '../../client/datascience/data-viewing/types';
 import { measureText } from '../react-common/textMeasure';
 import { ReactSlickGridFilterBox } from './reactSlickGridFilterBox';
+import { createSlickGrid } from './slickGridExtend';
 
 // Slickgrid requires jquery to be defined. Globally. So we do some hacks here.
 // tslint:disable-next-line: no-var-requires no-require-imports
-require('expose-loader?jQuery!slickgrid/lib/jquery-1.11.2.min');
+const myJQ = require('expose-loader?jQuery!slickgrid/lib/jquery-1.11.2.min');
+//import * as $ = require('expose-loader?jQuery!slickgrid/lib/jquery-1.11.2.min');
 // tslint:disable-next-line: no-var-requires no-require-imports
 require('expose-loader?jQuery.fn.drag!slickgrid/lib/jquery.event.drag-2.3.0');
 
@@ -135,6 +139,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         this.props.rowsAdded.subscribe(this.addedRows);
     }
 
+    // tslint:disable-next-line:max-func-body-length
     public componentDidMount = () => {
         window.addEventListener('resize', this.windowResized);
 
@@ -150,9 +155,11 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 asyncEditorLoading: true,
                 editable: false,
                 enableCellNavigation: true,
+                //enableCellNavigation: false,
                 showHeaderRow: true,
                 enableColumnReorder: false,
-                explicitInitialization: true,
+                //explicitInitialization: true,
+                explicitInitialization: false,
                 viewportClass: 'react-grid',
                 rowHeight: fontSize + RowHeightAdjustment
             };
@@ -172,6 +179,15 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 columns,
                 options
             );
+            //const grid = new ExtendGrid<ISlickRow>(
+                //this.containerRef.current,
+                //this.dataView,
+                //columns,
+                //options
+            //);
+            //const newable = createSlickGrid<ISlickRow>();
+            //const grid = new newable(this.containerRef.current, this.dataView, columns, options);
+            ////const grid = newable.call(undefined, this.containerRef.current, this.dataView, columns, options);
             grid.registerPlugin(new Slick.AutoTooltips({ enableForCells: true, enableForHeaderCells: true}));
 
             // Setup our dataview
@@ -192,6 +208,66 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
             // Setup the filter render
             grid.onHeaderRowCellRendered.subscribe(this.renderFilterCell);
+
+            grid.onHeaderCellRendered.subscribe((_e, args) => {
+                let testing = 1;
+                testing = testing + 1;
+                args.node.tabIndex = 0;
+            });
+
+            grid.onKeyDown.subscribe((event, args) => {
+                const anyED: any = event as any;
+                //if (anyED.keyCode === 9) {
+                    //anyED.preventDefault();
+                    //anyED.stopPropagation();
+                    //anyED.stopImmediatePropagation();
+                //}
+                if (anyED.keyCode === 37) {
+                   //this.gridNavigate('left');
+                   //grid.internalNavigate();
+                } else if (anyED.keyCode === 38) {
+                   //this.gridNavigate('up');
+                   //grid.internalNavigate();
+                } else if (anyED.keyCode === 39) {
+                   //this.gridNavigate('right');
+                   //grid.internalNavigate();
+                } else if (anyED.keyCode === 40) {
+                   //this.gridNavigate('down');
+                   //grid.internalNavigate();
+                }
+            });
+
+            const canvasElement = grid.getCanvasNode();
+            myJQ(canvasElement).unbind('keydown');
+            myJQ(canvasElement).off('keydown');
+            //$(canvasElement).unbind('keydown');
+            //$(canvasElement).off('keydown');
+            myJQ(canvasElement).on('keydown', this.handleKeyDown);
+
+            if (this.containerRef && this.containerRef.current) {
+                const gridCont = myJQ('.react-grid-container');
+                const firstFocus = myJQ('.react-grid-container').children().first();
+                const lastFocus = myJQ('.react-grid-container').children().last();
+                myJQ(firstFocus).unbind('keydown');
+                myJQ(lastFocus).unbind('keydown');
+                myJQ(firstFocus).off('keydown');
+                myJQ(lastFocus).off('keydown');
+                firstFocus.off('keydown');
+                lastFocus.off('keydown');
+                firstFocus.add(lastFocus).off('keydown');
+                myJQ(firstFocus).on('keydown', this.handleKeyDown);
+                myJQ(lastFocus).on('keydown', this.handleKeyDown);
+                //const gridCont = $('.react-grid-container');
+                //const firstFocus = $('.react-grid-container').children().first();
+                //const lastFocus = $('.react-grid-container').children().last();
+                //$(firstFocus).unbind('keydown');
+                //$(lastFocus).unbind('keydown');
+                //$(firstFocus).off('keydown');
+                //$(lastFocus).off('keydown');
+                //firstFocus.off('keydown');
+                //lastFocus.off('keydown');
+                //firstFocus.add(lastFocus).off('keydown');
+            }
 
             // Setup the sorting
             grid.onSort.subscribe(this.sort);
@@ -246,10 +322,10 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
         return (
             <div className='outer-container'>
-                <button className='react-grid-filter-button' title={this.props.filterRowsTooltip} onClick={this.clickFilterButton}>
+                <button className='react-grid-filter-button' tabIndex={0} title={this.props.filterRowsTooltip} onClick={this.clickFilterButton}>
                     <span>{this.props.filterRowsText}</span>
                 </button>
-                <div className='react-grid-container' style={style} ref={this.containerRef}>
+                <div className='react-grid-container' role='table' style={style} ref={this.containerRef}>
                 </div>
                 <div className='react-grid-measure' ref={this.measureRef}/>
             </div>
@@ -263,6 +339,87 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         args.grid.invalidateAllRows();
         args.grid.render();
     }
+
+    private handleKeyDown(e: any): void {
+        alert('in it to win it');
+    }
+
+    //private gridNavigate(dir: string) {
+    //}
+
+    //private gridNavigate(dir: string) {
+        //if (this.state.grid) {
+            //const localGrid: any = this.state.grid as any;
+
+            //const options : Slick.GridOptions<Slick.SlickData> = {
+                //asyncEditorLoading: true,
+                //editable: false,
+                //enableCellNavigation: true,
+                ////enableCellNavigation: false,
+                //showHeaderRow: true,
+                //enableColumnReorder: false,
+                //explicitInitialization: true,
+                //viewportClass: 'react-grid'
+            //};
+            ////this.state.grid.setOptions(options);
+            //localGrid.setOptions(options, true);
+            //this.state.grid.navigateDown();
+            //const options2 : Slick.GridOptions<Slick.SlickData> = {
+                //asyncEditorLoading: true,
+                //editable: false,
+                ////enableCellNavigation: true,
+                //enableCellNavigation: false,
+                //showHeaderRow: true,
+                //enableColumnReorder: false,
+                //explicitInitialization: true,
+                //viewportClass: 'react-grid'
+            //};
+            //localGrid.setOptions(options2, true);
+            ////localGrid.setFocus();
+
+            ////localGrid.navigateDown();
+            ////localGrid.navigate('down');
+            ////if (!this.state.grid.activeCellNode && dir !== 'prev' && dir !== 'next') {
+                ////return false;
+            ////}
+
+            ////if (!getEditorLock().commitCurrentEdit()) {
+                ////return true;
+            ////}
+            ////setFocus();
+
+            ////const tabbingDirections = {
+                ////up: -1,
+                ////down: 1,
+                ////left: -1,
+                ////right: 1,
+                ////prev: -1,
+                ////next: 1
+            ////};
+            ////tabbingDirection = tabbingDirections[dir];
+
+            ////var stepFunctions = {
+                ////"up": gotoUp,
+                ////"down": gotoDown,
+                ////"left": gotoLeft,
+                ////"right": gotoRight,
+                ////"prev": gotoPrev,
+                ////"next": gotoNext
+            ////};
+            ////var stepFn = stepFunctions[dir];
+            ////var pos = stepFn(activeRow, activeCell, activePosX);
+            ////if (pos) {
+                ////var isAddNewRow = (pos.row == getDataLength());
+                ////scrollCellIntoView(pos.row, pos.cell, !isAddNewRow);
+                ////setActiveCellInternal(getCellNode(pos.row, pos.cell));
+                ////activePosX = pos.posX;
+                ////return true;
+            ////} else {
+                ////setActiveCellInternal(getCellNode(activeRow, activeCell));
+                ////return false;
+            ////}
+        //}
+    //}
 
     private updateCssStyles = () => {
         if (this.state.grid && this.containerRef.current) {

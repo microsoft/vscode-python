@@ -39,12 +39,13 @@
     "python.jediEnabled": false,
     "python.analysis.logLevel": "Trace",
     "python.analysis.downloadChannel": "beta",
-    "python.unitTest.promptToConfigure": false,
+    "python.testing.promptToConfigure": false,
     "python.linting.enabled": true,
     "python.linting.pylintEnabled": false,
     "python.linting.flake8Enabled": true,
     "cucumberautocomplete.skipDocStringsFormat": true,
     "python.linting.flake8Args": [
         "--max-line-length=120"
-    ]
+    ],
+    "python.pythonPath": "C:\\Notebook6Env\\Scripts\\python.exe"
 }
