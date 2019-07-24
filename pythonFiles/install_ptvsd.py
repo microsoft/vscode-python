@@ -60,7 +60,7 @@ def install_ptvsd_wheels(version):
         # download and install the appropriate PTVSD wheel
         try:
             step = "mkdir"
-            os.mkdir(dirpath)
+            os.makedirs(dirpath)
 
             step = "download"
             download_wheel(PLATFORMS[folder], dirpath)
