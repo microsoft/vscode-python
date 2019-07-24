@@ -3,7 +3,6 @@
 
 import argparse
 import glob
-import logging
 import os
 import shutil
 import subprocess
@@ -17,7 +16,6 @@ PLATFORMS = {
     "linux-64": "manylinux1_x86_64",
     "mac-64": "macosx_10_13_x86_64",
 }
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 
 def install_ptvsd_wheels(version, local):
@@ -88,7 +86,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     result = install_ptvsd_wheels(args.version, args.local)
     if result["status"] != 0:
-        logging.info(
+        raise Exception(
             f"There is a problem at the {result['step']} step for the {result['platform']} wheel: {result['exception']}"
         )
 
