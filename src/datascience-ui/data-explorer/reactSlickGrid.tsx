@@ -358,7 +358,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
         if (handled) {
             // Don't let the parent / browser do stuff if we handle it
-            // otherwise we'll both move the cell selection and scroll the window 
+            // otherwise we'll both move the cell selection and scroll the window
             // with up and down keys
             e.stopPropagation();
             e.preventDefault();
