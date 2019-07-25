@@ -29,7 +29,7 @@ export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
     @traceDecorators.error('Error in prompting to install insiders')
     public async notifyToInstallInsiders(): Promise<void> {
         const prompts = [ExtensionChannels.yesWeekly(), ExtensionChannels.yesDaily(), DataScienceSurveyBanner.bannerLabelNo()];
-        const telemetrySelections: ['Use Stable', 'Reload'] = ['Use Stable', 'Reload'];
+        const telemetrySelections: ['Yes, weekly', 'Yes, daily', 'No, thanks'] = ['Yes, weekly', 'Yes, daily', 'No, thanks'];
         const selection = await this.appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts);
         sendTelemetryEvent(EventName.INSIDERS_PROMPT, undefined, { selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined });
         await this.hasUserBeenNotified.updateValue(true);

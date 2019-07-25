@@ -5,7 +5,6 @@
 
 // tslint:disable:no-any
 
-import { expect } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
@@ -16,7 +15,7 @@ import { InsidersExtensionPrompt, insidersPromptStateKey } from '../../../client
 import { ExtensionChannel, IExtensionChannelService } from '../../../client/common/insidersBuild/types';
 import { PersistentStateFactory } from '../../../client/common/persistentState';
 import { IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
-import { Common, ExtensionChannels } from '../../../client/common/utils/localize';
+import { Common, DataScienceSurveyBanner, ExtensionChannels } from '../../../client/common/utils/localize';
 
 // tslint:disable-next-line: max-func-body-length
 suite('Insiders Extension prompt', () => {
@@ -36,16 +35,16 @@ suite('Insiders Extension prompt', () => {
         insidersPrompt = new InsidersExtensionPrompt(instance(appShell), instance(extensionChannelService), instance(cmdManager), instance(persistentState));
     });
 
-    test('Channel is set to stable and reload prompt is disabled if \'Use Stable\' option is selected', async () => {
-        const prompts = [ExtensionChannels.useStable(), Common.reload()];
+    test('Channel is set to \'daily\' if \'Yes, daily\' option is selected', async () => {
+        const prompts = [ExtensionChannels.yesWeekly(), ExtensionChannels.yesDaily(), DataScienceSurveyBanner.bannerLabelNo()];
         when(
             appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)
-        ).thenResolve(ExtensionChannels.useStable() as any);
+        ).thenResolve(ExtensionChannels.yesDaily() as any);
         when(
             cmdManager.executeCommand('workbench.action.reloadWindow')
         ).thenResolve();
         when(
-            extensionChannelService.updateChannel(ExtensionChannel.stable)
+            extensionChannelService.updateChannel(ExtensionChannel.daily)
         ).thenResolve();
         hasUserBeenNotifiedState
             .setup(u => u.updateValue(true))
@@ -53,22 +52,21 @@ suite('Insiders Extension prompt', () => {
             .verifiable(TypeMoq.Times.once());
         await insidersPrompt.notifyToInstallInsiders();
         verify(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).once();
-        verify(extensionChannelService.updateChannel(ExtensionChannel.stable)).once();
+        verify(extensionChannelService.updateChannel(ExtensionChannel.daily)).once();
         hasUserBeenNotifiedState.verifyAll();
-        expect(insidersPrompt.reloadPromptDisabled).to.equal(true, 'Reload prompt should be disabled');
         verify(cmdManager.executeCommand('workbench.action.reloadWindow')).never();
     });
 
-    test('Channel is set to \'InsidersWeekly\', reload prompt is disabled and reload command is invoked if \'Reload\' option is selected', async () => {
-        const prompts = [ExtensionChannels.useStable(), Common.reload()];
+    test('Channel is set to \'weekly\' if \'Yes, weekly\' option is selected', async () => {
+        const prompts = [ExtensionChannels.yesWeekly(), ExtensionChannels.yesDaily(), DataScienceSurveyBanner.bannerLabelNo()];
         when(
             appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)
-        ).thenResolve(Common.reload() as any);
-        when(
-            extensionChannelService.updateChannel(ExtensionChannel.insidersDefaultForTheFirstSession)
-        ).thenResolve();
+        ).thenResolve(ExtensionChannels.yesWeekly() as any);
         when(
             cmdManager.executeCommand('workbench.action.reloadWindow')
+        ).thenResolve();
+        when(
+            extensionChannelService.updateChannel(ExtensionChannel.weekly)
         ).thenResolve();
         hasUserBeenNotifiedState
             .setup(u => u.updateValue(true))
@@ -76,22 +74,21 @@ suite('Insiders Extension prompt', () => {
             .verifiable(TypeMoq.Times.once());
         await insidersPrompt.notifyToInstallInsiders();
         verify(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).once();
-        verify(extensionChannelService.updateChannel(ExtensionChannel.insidersDefaultForTheFirstSession)).once();
-        verify(cmdManager.executeCommand('workbench.action.reloadWindow')).once();
+        verify(extensionChannelService.updateChannel(ExtensionChannel.weekly)).once();
         hasUserBeenNotifiedState.verifyAll();
-        expect(insidersPrompt.reloadPromptDisabled).to.equal(true, 'Reload prompt should be disabled');
+        verify(cmdManager.executeCommand('workbench.action.reloadWindow')).never();
     });
 
-    test('Channel is set to \'InsidersWeekly\', if no option is selected', async () => {
-        const prompts = [ExtensionChannels.useStable(), Common.reload()];
+    test('No channel is set if \'No, thanks\' option is selected', async () => {
+        const prompts = [ExtensionChannels.yesWeekly(), ExtensionChannels.yesDaily(), DataScienceSurveyBanner.bannerLabelNo()];
         when(
             appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)
-        ).thenResolve(undefined);
-        when(
-            extensionChannelService.updateChannel(ExtensionChannel.insidersDefaultForTheFirstSession)
-        ).thenResolve();
+        ).thenResolve(DataScienceSurveyBanner.bannerLabelNo() as any);
         when(
             cmdManager.executeCommand('workbench.action.reloadWindow')
+        ).thenResolve();
+        when(
+            extensionChannelService.updateChannel(anything())
         ).thenResolve();
         hasUserBeenNotifiedState
             .setup(u => u.updateValue(true))
@@ -99,49 +96,54 @@ suite('Insiders Extension prompt', () => {
             .verifiable(TypeMoq.Times.once());
         await insidersPrompt.notifyToInstallInsiders();
         verify(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).once();
-        verify(extensionChannelService.updateChannel(ExtensionChannel.insidersDefaultForTheFirstSession)).once();
-        verify(cmdManager.executeCommand('workbench.action.reloadWindow')).never();
+        verify(extensionChannelService.updateChannel(anything())).never();
         hasUserBeenNotifiedState.verifyAll();
-        expect(insidersPrompt.reloadPromptDisabled).to.equal(true, 'Reload prompt should be disabled');
+        verify(cmdManager.executeCommand('workbench.action.reloadWindow')).never();
+    });
+
+    test('No channel is set if no option is selected', async () => {
+        const prompts = [ExtensionChannels.yesWeekly(), ExtensionChannels.yesDaily(), DataScienceSurveyBanner.bannerLabelNo()];
+        when(
+            appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)
+        ).thenResolve(undefined as any);
+        when(
+            cmdManager.executeCommand('workbench.action.reloadWindow')
+        ).thenResolve();
+        when(
+            extensionChannelService.updateChannel(anything())
+        ).thenResolve();
+        hasUserBeenNotifiedState
+            .setup(u => u.updateValue(true))
+            .returns(() => Promise.resolve(undefined))
+            .verifiable(TypeMoq.Times.once());
+        await insidersPrompt.notifyToInstallInsiders();
+        verify(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).once();
+        verify(extensionChannelService.updateChannel(anything())).never();
+        hasUserBeenNotifiedState.verifyAll();
+        verify(cmdManager.executeCommand('workbench.action.reloadWindow')).never();
     });
 
     test('Do not do anything if no option is selected in the reload prompt', async () => {
         when(
-            appShell.showInformationMessage(ExtensionChannels.reloadMessage(), Common.reload())
+            appShell.showInformationMessage(ExtensionChannels.reloadToUseInsidersMessage(), Common.reload())
         ).thenResolve(undefined);
         when(
             cmdManager.executeCommand('workbench.action.reloadWindow')
         ).thenResolve();
         await insidersPrompt.promptToReload();
-        verify(appShell.showInformationMessage(ExtensionChannels.reloadMessage(), Common.reload())).once();
+        verify(appShell.showInformationMessage(ExtensionChannels.reloadToUseInsidersMessage(), Common.reload())).once();
         verify(cmdManager.executeCommand('workbench.action.reloadWindow')).never();
-        expect(insidersPrompt.reloadPromptDisabled).to.equal(false, 'Reload prompt should not be disabled');
     });
 
     test('Reload windows if \'Reload\' option is selected in the reload prompt', async () => {
         when(
-            appShell.showInformationMessage(ExtensionChannels.reloadMessage(), Common.reload())
+            appShell.showInformationMessage(ExtensionChannels.reloadToUseInsidersMessage(), Common.reload())
         ).thenResolve(Common.reload() as any);
         when(
             cmdManager.executeCommand('workbench.action.reloadWindow')
         ).thenResolve();
         await insidersPrompt.promptToReload();
-        verify(appShell.showInformationMessage(ExtensionChannels.reloadMessage(), Common.reload())).once();
+        verify(appShell.showInformationMessage(ExtensionChannels.reloadToUseInsidersMessage(), Common.reload())).once();
         verify(cmdManager.executeCommand('workbench.action.reloadWindow')).once();
-        expect(insidersPrompt.reloadPromptDisabled).to.equal(false, 'Reload prompt should not be disabled');
-    });
-
-    test('Do not show prompt if prompt is disabled', async () => {
-        when(
-            appShell.showInformationMessage(anything(), anything())
-        ).thenResolve(Common.reload() as any);
-        when(
-            cmdManager.executeCommand('workbench.action.reloadWindow')
-        ).thenResolve();
-        insidersPrompt.reloadPromptDisabled = true;
-        await insidersPrompt.promptToReload();
-        verify(appShell.showInformationMessage(anything(), anything())).never();
-        verify(cmdManager.executeCommand('workbench.action.reloadWindow')).never();
-        expect(insidersPrompt.reloadPromptDisabled).to.equal(false, 'Reload prompt should not be disabled');
     });
 });
