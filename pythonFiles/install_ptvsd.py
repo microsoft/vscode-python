@@ -8,16 +8,6 @@ import shutil
 import subprocess
 import sys
 
-ROOT_FOLDER_PATH = os.path.join(".", "pythonFiles", "lib")
-# Mapping between folder platform names and wheel platform tags.
-PLATFORMS = {
-    "win-32": "win32",
-    "win-64": "win_amd64",
-    "linux-32": "manylinux1_i686",
-    "linux-64": "manylinux1_x86_64",
-    "mac-64": "macosx_10_13_x86_64",
-}
-
 
 def install_ptvsd_wheels(version):
     """Downlad and install PTVSD wheels for a specific Python version and a list of platforms."""
@@ -58,9 +48,23 @@ def install_ptvsd_wheels(version):
             [sys.executable, "-m", "pip", "install", f"--target={dest}", wheel]
         )
 
-    for folder in PLATFORMS:
+    # Mapping between folder platform names and wheel platform tags.
+    platforms = {
+        "win-32": "win32",
+        "win-64": "win_amd64",
+        "linux-32": "manylinux1_i686",
+        "linux-64": "manylinux1_x86_64",
+        "mac-64": "macosx_10_13_x86_64",
+    }
+
+    for folder in platforms:
         # Remove the platform folder and its content if it exists.
-        dirpath = os.path.join(ROOT_FOLDER_PATH, f"python-{folder}-{version}")
+        dirpath = os.path.join(
+            os.path.dirname(__file__),
+            "pythonFiles",
+            "lib",
+            f"python-{folder}-{version}",
+        )
         delete_folder(dirpath)
 
         # Download and install the appropriate PTVSD wheel.
@@ -69,7 +73,7 @@ def install_ptvsd_wheels(version):
             os.makedirs(dirpath)
 
             step = "download"
-            download_wheel(PLATFORMS[folder], dirpath)
+            download_wheel(platforms[folder], dirpath)
 
             step = "install"
             wheel = get_wheel_name(dirpath)
