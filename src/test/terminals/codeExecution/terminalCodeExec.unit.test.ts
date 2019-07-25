@@ -184,7 +184,7 @@ suite('Terminal - Code Execution', () => {
                 await ensureWeDoNotSetCurrentDirectoryBeforeExecutingFileInSameDirectory(true);
             });
 
-            async function ensureWeDoNotSetCurrentDirectoryBeforeExecutingFileNotInSameDirectory(isWindows: boolean): Promise<void> {
+            async function ensureWeSetCurrentDirectoryBeforeExecutingFileNotInSameDirectory(isWindows: boolean): Promise<void> {
                 const file = Uri.file(path.join('c', 'path', 'to', 'file with spaces in path', 'one.py'));
                 terminalSettings.setup(t => t.executeInFileDir).returns(() => true);
                 workspace.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => undefined);
@@ -194,13 +194,13 @@ suite('Terminal - Code Execution', () => {
 
                 await executor.executeFile(file);
 
-                terminalService.verify(async t => t.sendText(TypeMoq.It.isAny()), TypeMoq.Times.never());
+                terminalService.verify(async t => t.sendText(TypeMoq.It.isAny()), TypeMoq.Times.once());
             }
-            test('Ensure we do not set current directory before executing file if file is not in a workspace (non windows)', async () => {
-                await ensureWeDoNotSetCurrentDirectoryBeforeExecutingFileNotInSameDirectory(false);
+            test('Ensure we set current directory before executing file if file is not in a workspace (non windows)', async () => {
+                await ensureWeSetCurrentDirectoryBeforeExecutingFileNotInSameDirectory(false);
             });
-            test('Ensure we do not set current directory before executing file if file is not in a workspace (windows)', async () => {
-                await ensureWeDoNotSetCurrentDirectoryBeforeExecutingFileNotInSameDirectory(true);
+            test('Ensure we set current directory before executing file if file is not in a workspace (windows)', async () => {
+                await ensureWeSetCurrentDirectoryBeforeExecutingFileNotInSameDirectory(true);
             });
 
             async function testFileExecution(isWindows: boolean, pythonPath: string, terminalArgs: string[], file: Uri): Promise<void> {

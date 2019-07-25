@@ -85,7 +85,7 @@ export class MockDocumentManager implements IDocumentManager {
         this.textDocuments.push(mockDoc);
     }
 
-    public changeDocument(file: string, changes: {range: Range; newText: string}[]) {
+    public changeDocument(file: string, changes: { range: Range; newText: string }[]) {
         const doc = this.textDocuments.find(d => d.fileName === file) as MockDocument;
         if (doc) {
             const contentChanges = changes.map(c => {
@@ -102,16 +102,17 @@ export class MockDocumentManager implements IDocumentManager {
                 document: doc,
                 contentChanges
             };
-            this.didChangeTextDocumentEmitter.fire(ev);
+            // Changes are applied to the doc before it's sent.
             ev.contentChanges.forEach(doc.edit.bind(doc));
+            this.didChangeTextDocumentEmitter.fire(ev);
         }
     }
 
-    public createTextEditorDecorationType(_options: DecorationRenderOptions) : TextEditorDecorationType {
+    public createTextEditorDecorationType(_options: DecorationRenderOptions): TextEditorDecorationType {
         throw new Error('Method not implemented');
     }
 
-    private get lastDocument() : TextDocument {
+    private get lastDocument(): TextDocument {
         if (this.textDocuments.length > 0) {
             return this.textDocuments[this.textDocuments.length - 1];
         }

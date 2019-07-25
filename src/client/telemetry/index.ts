@@ -311,7 +311,25 @@ export interface IEventNamePropertyMapping {
     [EventName.PYTHON_LANGUAGE_SERVER_READY]: never | undefined;
     [EventName.PYTHON_LANGUAGE_SERVER_STARTUP]: never | undefined;
     [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: any;
-    [EventName.PYTHON_EXPERIMENTS]: { error?: string; expName?: string };
+    [EventName.PYTHON_EXPERIMENTS]: {
+        /**
+         * Name of the experiment group the user is in
+         * @type {string}
+         */
+        expName?: string;
+    };
+    [EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE]: {
+        /**
+         * Carries `true` if downloading experiments successfully finishes within timeout, `false` otherwise
+         * @type {boolean}
+         */
+        success?: boolean;
+        /**
+         * Carries an error string if downloading experiments fails with error
+         * @type {string}
+         */
+        error?: string;
+    };
     [EventName.REFACTOR_EXTRACT_FUNCTION]: never | undefined;
     [EventName.REFACTOR_EXTRACT_VAR]: never | undefined;
     [EventName.REFACTOR_RENAME]: never | undefined;
@@ -390,6 +408,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RunToLine]: never | undefined;
     [Telemetry.RunFileInteractive]: never | undefined;
     [Telemetry.RunFromLine]: never | undefined;
+    [Telemetry.ScrolledToCell]: never | undefined;
     [Telemetry.SelfCertsMessageClose]: never | undefined;
     [Telemetry.SelfCertsMessageEnabled]: never | undefined;
     [Telemetry.SelectJupyterURI]: never | undefined;
@@ -411,12 +430,12 @@ export interface IEventNamePropertyMapping {
     [Telemetry.WebviewStyleUpdate]: never | undefined;
     /*
     Telemetry event sent with details of Jedi Memory usage.
-    memory - Memory usage of Process in kb.
+    mem_use - Memory usage of Process in kb.
     limit - Upper bound for memory usage of Jedi process.
     isUserDefinedLimit - Whether the user has configfured the upper bound limit.
     restart - Whether to restart the Jedi Process (i.e. memory > limit).
     */
-    [EventName.JEDI_MEMORY]: { memory: number; limit: number; isUserDefinedLimit: boolean; restart: boolean };
+    [EventName.JEDI_MEMORY]: { mem_use: number; limit: number; isUserDefinedLimit: boolean; restart: boolean };
     /*
     Telemetry event sent to provide information on whether we have successfully identify the type of shell used.
     This information is useful in determining how well we identify shells on users machines.

@@ -88,7 +88,7 @@ suite('CellHashProvider Unit Tests', () => {
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
 
         // Edit the first cell, removing it
-        addSingleChange('foo.py', new Range(new Position(0, 0), new Position(1, 14)), '');
+        addSingleChange('foo.py', new Range(new Position(0, 0), new Position(2, 0)), '');
 
         // Get our hashes again. The line number should change
         // We should have a single hash
@@ -126,7 +126,7 @@ suite('CellHashProvider Unit Tests', () => {
         assert.equal(hashes.length, 0, 'Hash should be gone');
 
         // Undo the last change
-        addSingleChange('foo.py', new Range(new Position(3, 0), new Position(3, 15)), '');
+        addSingleChange('foo.py', new Range(new Position(3, 0), new Position(4, 0)), '');
 
         // Hash should reappear
         hashes = hashProvider.getHashes();
@@ -166,7 +166,7 @@ suite('CellHashProvider Unit Tests', () => {
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
 
         // Delete the first cell
-        addSingleChange('foo.py', new Range(new Position(0, 0), new Position(1, 14)), '');
+        addSingleChange('foo.py', new Range(new Position(0, 0), new Position(2, 0)), '');
 
         // Hash should move
         hashes = hashProvider.getHashes();
@@ -213,7 +213,7 @@ suite('CellHashProvider Unit Tests', () => {
         assert.equal(hashes[0].hashes[1].executionCount, 2, 'Wrong execution count');
 
         // Delete the first cell
-        addSingleChange('foo.py', new Range(new Position(0, 0), new Position(1, 14)), '');
+        addSingleChange('foo.py', new Range(new Position(0, 0), new Position(2, 0)), '');
 
         // Hashes should move
         hashes = hashProvider.getHashes();
@@ -336,7 +336,7 @@ suite('CellHashProvider Unit Tests', () => {
         assert.equal(hashes.length, 0, 'Too many hashes found');
 
         // Remove the first cell
-        addSingleChange('foo.py', new Range(new Position(0, 0), new Position(1, 14)), '');
+        addSingleChange('foo.py', new Range(new Position(0, 0), new Position(2, 0)), '');
         hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 0, 'Too many hashes found');
 
@@ -412,7 +412,7 @@ suite('CellHashProvider Unit Tests', () => {
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
 
         // Replace with the same cell
-        addSingleChange('foo.py', new Range(new Position(0, 0), new Position(3, 14)), file);
+        addSingleChange('foo.py', new Range(new Position(0, 0), new Position(4, 0)), file);
         hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
@@ -441,12 +441,12 @@ suite('CellHashProvider Unit Tests', () => {
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
 
         // Replace with the new code
-        addSingleChange('foo.py', new Range(new Position(0, 0), new Position(3, 14)), file2);
+        addSingleChange('foo.py', new Range(new Position(0, 0), new Position(4, 0)), file2);
         hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 0, 'Hashes should be gone');
 
         // Put back old code
-        addSingleChange('foo.py', new Range(new Position(0, 0), new Position(3, 14)), file);
+        addSingleChange('foo.py', new Range(new Position(0, 0), new Position(4, 0)), file);
         hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
@@ -498,7 +498,7 @@ suite('CellHashProvider Unit Tests', () => {
                     newText: '#%%\r\nprint("new cell")\r\n'
                 },
                 {
-                    range: new Range(new Position(0, 0), new Position(1, 19)),
+                    range: new Range(new Position(0, 0), new Position(2, 0)),
                     newText: ''
                 }
             ]);

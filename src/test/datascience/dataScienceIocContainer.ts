@@ -74,7 +74,8 @@ import { TerminalHelper } from '../../client/common/terminal/helper';
 import { TerminalNameShellDetector } from '../../client/common/terminal/shellDetectors/terminalNameShellDetector';
 import {
     IShellDetector,
-    ITerminalActivationCommandProvider, ITerminalHelper,
+    ITerminalActivationCommandProvider,
+    ITerminalHelper,
     TerminalActivationProviders
 } from '../../client/common/terminal/types';
 import {
@@ -98,6 +99,7 @@ import { DataViewer } from '../../client/datascience/data-viewing/dataViewer';
 import { DataViewerProvider } from '../../client/datascience/data-viewing/dataViewerProvider';
 import { CellHashProvider } from '../../client/datascience/editor-integration/cellhashprovider';
 import { CodeLensFactory } from '../../client/datascience/editor-integration/codeLensFactory';
+import { DataScienceCodeLensProvider } from '../../client/datascience/editor-integration/codelensprovider';
 import { CodeWatcher } from '../../client/datascience/editor-integration/codewatcher';
 import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/errorHandler';
 import {
@@ -128,6 +130,7 @@ import {
     ICodeLensFactory,
     ICodeWatcher,
     IDataScience,
+    IDataScienceCodeLensProvider,
     IDataScienceCommandListener,
     IDataScienceErrorHandler,
     IDataViewer,
@@ -338,6 +341,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IPythonInPathCommandProvider>(IPythonInPathCommandProvider, PythonInPathCommandProvider);
         this.serviceManager.addSingleton<IEnvironmentActivationService>(IEnvironmentActivationService, EnvironmentActivationService);
         this.serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
+        this.serviceManager.add<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider, DataScienceCodeLensProvider);
         this.serviceManager.add<ICodeExecutionHelper>(ICodeExecutionHelper, CodeExecutionHelper);
         this.serviceManager.add<IDataScienceCommandListener>(IDataScienceCommandListener, InteractiveWindowCommandListener);
         this.serviceManager.add<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
@@ -411,7 +415,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             autoPreviewNotebooksInInteractivePane: true,
             enablePlotViewer: true,
             stopOnFirstLineWhileDebugging: true,
-            stopOnError: true
+            stopOnError: true,
+            addGotoCodeLenses: true,
+            enableCellCodeLens: true
         };
 
         const workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration> = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
