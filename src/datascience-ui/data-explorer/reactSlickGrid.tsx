@@ -156,7 +156,6 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 enableCellNavigation: true,
                 showHeaderRow: true,
                 enableColumnReorder: false,
-                //explicitInitialization: true,
                 explicitInitialization: false,
                 viewportClass: 'react-grid',
                 rowHeight: fontSize + RowHeightAdjustment
@@ -208,7 +207,6 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             // public navigations functions, but we don't want the slickgrid keyhander
             // to eat tab keys and prevent us from tabbing to input boxes or column headers
             const canvasElement = grid.getCanvasNode();
-            slickgridJQ(canvasElement).unbind('keydown');
             slickgridJQ(canvasElement).off('keydown');
 
             if (this.containerRef && this.containerRef.current) {
@@ -295,6 +293,8 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         args.grid.render();
     }
 
+    // If the slickgrid gets focus and nothing is selected select the first item
+    // so that you can keyboard navigate from there
     private slickgridFocus = (_e: any): void => {
         if (this.state.grid) {
             if (!this.state.grid.getActiveCell()) {
@@ -364,36 +364,6 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             e.preventDefault();
         }
     }
-
-    //private slickgridHandleKeyDown = (e: KeyboardEvent): void => {
-        //if (this.state.grid) {
-            //if (e.keyCode === 37) {
-                //this.state.grid.navigateLeft();
-                //e.stopPropagation();
-                //e.preventDefault();
-            //} else if (e.keyCode === 38) {
-                //this.state.grid.navigateUp();
-                //e.stopPropagation();
-                //e.preventDefault();
-            //} else if (e.keyCode === 39) {
-                //this.state.grid.navigateRight();
-                //e.stopPropagation();
-                //e.preventDefault();
-            //} else if (e.keyCode === 40) {
-                //this.state.grid.navigateDown();
-                //e.stopPropagation();
-                //e.preventDefault();
-            //} else if (e.keyCode === 33) {
-                //this.state.grid.navigatePageUp();
-                //e.stopPropagation();
-                //e.preventDefault();
-            //} else if (e.keyCode === 34) {
-                //this.state.grid.navigatePageDown();
-                //e.stopPropagation();
-                //e.preventDefault();
-            //}
-        //}
-    //}
 
     private updateCssStyles = () => {
         if (this.state.grid && this.containerRef.current) {

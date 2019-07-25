@@ -166,7 +166,6 @@
                 "--recursive",
                 "--colors",
                 //"--grep", "<suite name>",
-                "--grep", "Remote",
                 "--timeout=300000"
             ],
             "outFiles": [

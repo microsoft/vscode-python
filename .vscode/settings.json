@@ -27,7 +27,7 @@
     "typescript.tsdk": "./node_modules/typescript/lib", // we want to use the TS server from our node_modules folder to control its version
     "tslint.enable": true,
     "python.linting.enabled": false,
-    "python.testing.promptToConfigure": false,
+    "python.unitTest.promptToConfigure": false,
     "python.workspaceSymbols.enabled": false,
     "python.formatting.provider": "black",
     "typescript.preferences.quoteStyle": "single",
@@ -46,6 +46,5 @@
     "cucumberautocomplete.skipDocStringsFormat": true,
     "python.linting.flake8Args": [
         "--max-line-length=120"
-    ],
-    "python.pythonPath": "C:\\Notebook6Env\\Scripts\\python.exe"
+    ]
 }
