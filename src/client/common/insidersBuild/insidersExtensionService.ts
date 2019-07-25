@@ -49,9 +49,9 @@ export class InsidersExtensionService implements IExtensionActivationService {
     }
 
     /**
-     * Choose between the following prompts and display the right one
+     * Choose what to do in miscellaneous situations
      * * 'Notify to install insiders prompt' - Only when using VSC insiders and if they have not been notified before (usually the first session)
-     * * 'Discrepency prompt'
+     * * 'Resolve discrepency' - When install channel is not in sync with what is installed.
      */
     public async handleEdgeCases(installChannel: ExtensionChannels): Promise<void> {
         if (this.appEnvironment.channel === 'insiders' && !this.insidersPrompt.hasUserBeenNotified.value && this.extensionChannelService.isChannelUsingDefaultConfiguration) {
