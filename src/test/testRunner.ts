@@ -15,7 +15,7 @@ import { initialize } from './initialize';
 // Since we are not running in a tty environment, we just implement the method statically.
 const tty = require('tty');
 if (!tty.getWindowSize) {
-    tty.getWindowSize = function(): number[] {
+    tty.getWindowSize = function (): number[] {
         return [80, 75];
     };
 }
@@ -78,8 +78,6 @@ export async function run(): Promise<void> {
     // Run the tests.
     await new Promise<void>((resolve, reject) => {
         glob(`**/**.${testFilesGlob}.js`, { ignore: ['**/**.unit.test.js', '**/**.functional.test.js'], cwd: testsRoot }, (error, files) => {
-            console.error(`Files include ${files}`);
-            console.error('Error', error);
             if (error) {
                 return reject(error);
             }

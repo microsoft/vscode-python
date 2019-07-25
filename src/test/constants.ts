@@ -26,7 +26,7 @@ function isMultitrootTest() {
         return Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 1;
     } catch {
         // being accessed, when VS Code hasn't been launched.
-        return '';
+        return false;
     }
 }
 
