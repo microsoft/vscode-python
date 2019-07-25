@@ -242,7 +242,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             myJQ(canvasElement).off('keydown');
             //$(canvasElement).unbind('keydown');
             //$(canvasElement).off('keydown');
-            myJQ(canvasElement).on('keydown', this.handleKeyDown);
+            //myJQ(canvasElement).on('keydown', this.handleKeyDown);
 
             if (this.containerRef && this.containerRef.current) {
                 const gridCont = myJQ('.react-grid-container');
@@ -255,8 +255,10 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 firstFocus.off('keydown');
                 lastFocus.off('keydown');
                 firstFocus.add(lastFocus).off('keydown');
-                myJQ(firstFocus).on('keydown', this.handleKeyDown);
-                myJQ(lastFocus).on('keydown', this.handleKeyDown);
+                myJQ(firstFocus).removeAttr('tabindex');
+                myJQ(lastFocus).removeAttr('tabindex');
+                //myJQ(firstFocus).on('keydown', this.handleKeyDown);
+                //myJQ(lastFocus).on('keydown', this.handleKeyDown);
                 //const gridCont = $('.react-grid-container');
                 //const firstFocus = $('.react-grid-container').children().first();
                 //const lastFocus = $('.react-grid-container').children().last();
@@ -267,6 +269,11 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 //firstFocus.off('keydown');
                 //lastFocus.off('keydown');
                 //firstFocus.add(lastFocus).off('keydown');
+
+                // Set our key handling on the actual grid viewport
+                myJQ('.react-grid').on('keydown', this.handleKeyDown);
+                myJQ('.react-grid').attr('role', 'grid');
+                myJQ('.react-grid').on('focus', this.gridFocus);
             }
 
             // Setup the sorting
@@ -325,7 +332,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 <button className='react-grid-filter-button' tabIndex={0} title={this.props.filterRowsTooltip} onClick={this.clickFilterButton}>
                     <span>{this.props.filterRowsText}</span>
                 </button>
-                <div className='react-grid-container' role='table' style={style} ref={this.containerRef}>
+                <div className='react-grid-container' style={style} ref={this.containerRef}>
                 </div>
                 <div className='react-grid-measure' ref={this.measureRef}/>
             </div>
@@ -340,8 +347,26 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         args.grid.render();
     }
 
-    private handleKeyDown(e: any): void {
-        alert('in it to win it');
+    private gridFocus = (e: any): void => {
+        if (this.state.grid) {
+            if (!this.state.grid.getActiveCell()) {
+                this.state.grid.setActiveCell(0, 0);
+            }
+        }
+    }
+
+    private handleKeyDown = (e: KeyboardEvent): void => {
+        if (this.state.grid) {
+            if (e.keyCode === 37) {
+                this.state.grid.navigateLeft();
+            } else if (e.keyCode === 38) {
+                this.state.grid.navigateUp();
+            } else if (e.keyCode === 39) {
+                this.state.grid.navigateRight();
+            } else if (e.keyCode === 40) {
+                this.state.grid.navigateDown();
+            }
+        }
     }
 
     //private gridNavigate(dir: string) {
