@@ -3,19 +3,18 @@
 // Licensed under the MIT License.
 'use strict';
 
-//import * as $ from 'jquery';
-//import * as $ from 'slickgrid/lib/jquery-1.11.2.min.js';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { MaxStringCompare } from '../../client/datascience/data-viewing/types';
 import { measureText } from '../react-common/textMeasure';
 import { ReactSlickGridFilterBox } from './reactSlickGridFilterBox';
-import { createSlickGrid } from './slickGridExtend';
 
 // Slickgrid requires jquery to be defined. Globally. So we do some hacks here.
+// We need to manipulate the grid with the same jquery that it uses
+// use slickgridJQ instead of the usual $ to make it clear that we need that JQ and not
+// the one currently in node-modules
 // tslint:disable-next-line: no-var-requires no-require-imports
-const myJQ = require('expose-loader?jQuery!slickgrid/lib/jquery-1.11.2.min');
-//import * as $ = require('expose-loader?jQuery!slickgrid/lib/jquery-1.11.2.min');
+const slickgridJQ = require('expose-loader?jQuery!slickgrid/lib/jquery-1.11.2.min');
 // tslint:disable-next-line: no-var-requires no-require-imports
 require('expose-loader?jQuery.fn.drag!slickgrid/lib/jquery.event.drag-2.3.0');
 
@@ -155,7 +154,6 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 asyncEditorLoading: true,
                 editable: false,
                 enableCellNavigation: true,
-                //enableCellNavigation: false,
                 showHeaderRow: true,
                 enableColumnReorder: false,
                 //explicitInitialization: true,
@@ -179,15 +177,6 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 columns,
                 options
             );
-            //const grid = new ExtendGrid<ISlickRow>(
-                //this.containerRef.current,
-                //this.dataView,
-                //columns,
-                //options
-            //);
-            //const newable = createSlickGrid<ISlickRow>();
-            //const grid = new newable(this.containerRef.current, this.dataView, columns, options);
-            ////const grid = newable.call(undefined, this.containerRef.current, this.dataView, columns, options);
             grid.registerPlugin(new Slick.AutoTooltips({ enableForCells: true, enableForHeaderCells: true}));
 
             // Setup our dataview
@@ -210,70 +199,29 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             grid.onHeaderRowCellRendered.subscribe(this.renderFilterCell);
 
             grid.onHeaderCellRendered.subscribe((_e, args) => {
-                let testing = 1;
-                testing = testing + 1;
+                // Add a tab index onto our header cell
                 args.node.tabIndex = 0;
             });
 
-            grid.onKeyDown.subscribe((event, args) => {
-                const anyED: any = event as any;
-                //if (anyED.keyCode === 9) {
-                    //anyED.preventDefault();
-                    //anyED.stopPropagation();
-                    //anyED.stopImmediatePropagation();
-                //}
-                if (anyED.keyCode === 37) {
-                   //this.gridNavigate('left');
-                   //grid.internalNavigate();
-                } else if (anyED.keyCode === 38) {
-                   //this.gridNavigate('up');
-                   //grid.internalNavigate();
-                } else if (anyED.keyCode === 39) {
-                   //this.gridNavigate('right');
-                   //grid.internalNavigate();
-                } else if (anyED.keyCode === 40) {
-                   //this.gridNavigate('down');
-                   //grid.internalNavigate();
-                }
-            });
-
+            // Unbind the slickgrid key handler from the canvas code
+            // We want to keep EnableCellNavigation on so that we can use the slickgrid
+            // public navigations functions, but we don't want the slickgrid keyhander
+            // to eat tab keys and prevent us from tabbing to input boxes or column headers
             const canvasElement = grid.getCanvasNode();
-            myJQ(canvasElement).unbind('keydown');
-            myJQ(canvasElement).off('keydown');
-            //$(canvasElement).unbind('keydown');
-            //$(canvasElement).off('keydown');
-            //myJQ(canvasElement).on('keydown', this.handleKeyDown);
+            slickgridJQ(canvasElement).unbind('keydown');
+            slickgridJQ(canvasElement).off('keydown');
 
             if (this.containerRef && this.containerRef.current) {
-                const gridCont = myJQ('.react-grid-container');
-                const firstFocus = myJQ('.react-grid-container').children().first();
-                const lastFocus = myJQ('.react-grid-container').children().last();
-                myJQ(firstFocus).unbind('keydown');
-                myJQ(lastFocus).unbind('keydown');
-                myJQ(firstFocus).off('keydown');
-                myJQ(lastFocus).off('keydown');
-                firstFocus.off('keydown');
-                lastFocus.off('keydown');
-                firstFocus.add(lastFocus).off('keydown');
-                myJQ(firstFocus).removeAttr('tabindex');
-                myJQ(lastFocus).removeAttr('tabindex');
-                //myJQ(firstFocus).on('keydown', this.handleKeyDown);
-                //myJQ(lastFocus).on('keydown', this.handleKeyDown);
-                //const gridCont = $('.react-grid-container');
-                //const firstFocus = $('.react-grid-container').children().first();
-                //const lastFocus = $('.react-grid-container').children().last();
-                //$(firstFocus).unbind('keydown');
-                //$(lastFocus).unbind('keydown');
-                //$(firstFocus).off('keydown');
-                //$(lastFocus).off('keydown');
-                //firstFocus.off('keydown');
-                //lastFocus.off('keydown');
-                //firstFocus.add(lastFocus).off('keydown');
+                // slickgrid creates empty focus sink div elements that capture tab input we don't want that
+                // so unhook their key handlers and remove their tabindex
+                const firstFocus = slickgridJQ('.react-grid-container').children().first();
+                const lastFocus = slickgridJQ('.react-grid-container').children().last();
+                slickgridJQ(firstFocus).off('keydown').removeAttr('tabindex');
+                slickgridJQ(lastFocus).off('keydown').removeAttr('tabindex');
 
                 // Set our key handling on the actual grid viewport
-                myJQ('.react-grid').on('keydown', this.handleKeyDown);
-                myJQ('.react-grid').attr('role', 'grid');
-                myJQ('.react-grid').on('focus', this.gridFocus);
+                slickgridJQ('.react-grid').on('keydown', this.slickgridHandleKeyDown).attr('role', 'grid').on('focusin', this.slickgridFocus);
+                slickgridJQ('.grid-canvas').on('keydown', this.slickgridHandleKeyDown);
             }
 
             // Setup the sorting
@@ -347,7 +295,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         args.grid.render();
     }
 
-    private gridFocus = (e: any): void => {
+    private slickgridFocus = (_e: any): void => {
         if (this.state.grid) {
             if (!this.state.grid.getActiveCell()) {
                 this.state.grid.setActiveCell(0, 0);
@@ -355,94 +303,95 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         }
     }
 
-    private handleKeyDown = (e: KeyboardEvent): void => {
+    private slickgridHandleKeyDown = (e: KeyboardEvent): void => {
+        let handled: boolean = false;
+
+        // Defined here:
+        // https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/Grid_Role#Keyboard_interactions
+
         if (this.state.grid) {
-            if (e.keyCode === 37) {
-                this.state.grid.navigateLeft();
-            } else if (e.keyCode === 38) {
-                this.state.grid.navigateUp();
-            } else if (e.keyCode === 39) {
-                this.state.grid.navigateRight();
-            } else if (e.keyCode === 40) {
-                this.state.grid.navigateDown();
+            // The slickgrid version of jquery populates keyCode not code, so use the numerical values here
+            switch (e.keyCode) {
+                // LeftArrow
+                case 37:
+                    this.state.grid.navigateLeft();
+                    handled = true;
+                    break;
+                // UpArrow
+                case 38:
+                    this.state.grid.navigateUp();
+                    handled = true;
+                    break;
+                // RightArrow
+                case 39:
+                    this.state.grid.navigateRight();
+                    handled = true;
+                    break;
+                // DownArrow
+                case 40:
+                    this.state.grid.navigateDown();
+                    handled = true;
+                    break;
+                // PageUp
+                case 33:
+                    this.state.grid.navigatePageUp();
+                    handled = true;
+                    break;
+                // PageDown
+                case 34:
+                    this.state.grid.navigatePageDown();
+                    handled = true;
+                    break;
+                // End
+                case 35:
+                    e.ctrlKey ? this.state.grid.navigateBottom() : this.state.grid.navigateRowEnd();
+                    handled = true;
+                    break;
+                // Home
+                case 36:
+                    e.ctrlKey ? this.state.grid.navigateTop() : this.state.grid.navigateRowStart();
+                    handled = true;
+                    break;
+                default:
             }
+        }
+
+        if (handled) {
+            // Don't let the parent / browser do stuff if we handle it
+            // otherwise we'll both move the cell selection and scroll the window 
+            // with up and down keys
+            e.stopPropagation();
+            e.preventDefault();
         }
     }
 
-    //private gridNavigate(dir: string) {
-    //}
-
-    //private gridNavigate(dir: string) {
+    //private slickgridHandleKeyDown = (e: KeyboardEvent): void => {
         //if (this.state.grid) {
-            //const localGrid: any = this.state.grid as any;
-
-            //const options : Slick.GridOptions<Slick.SlickData> = {
-                //asyncEditorLoading: true,
-                //editable: false,
-                //enableCellNavigation: true,
-                ////enableCellNavigation: false,
-                //showHeaderRow: true,
-                //enableColumnReorder: false,
-                //explicitInitialization: true,
-                //viewportClass: 'react-grid'
-            //};
-            ////this.state.grid.setOptions(options);
-            //localGrid.setOptions(options, true);
-            //this.state.grid.navigateDown();
-            //const options2 : Slick.GridOptions<Slick.SlickData> = {
-                //asyncEditorLoading: true,
-                //editable: false,
-                ////enableCellNavigation: true,
-                //enableCellNavigation: false,
-                //showHeaderRow: true,
-                //enableColumnReorder: false,
-                //explicitInitialization: true,
-                //viewportClass: 'react-grid'
-            //};
-            //localGrid.setOptions(options2, true);
-            ////localGrid.setFocus();
-
-            ////localGrid.navigateDown();
-            ////localGrid.navigate('down');
-            ////if (!this.state.grid.activeCellNode && dir !== 'prev' && dir !== 'next') {
-                ////return false;
-            ////}
-
-            ////if (!getEditorLock().commitCurrentEdit()) {
-                ////return true;
-            ////}
-            ////setFocus();
-
-            ////const tabbingDirections = {
-                ////up: -1,
-                ////down: 1,
-                ////left: -1,
-                ////right: 1,
-                ////prev: -1,
-                ////next: 1
-            ////};
-            ////tabbingDirection = tabbingDirections[dir];
-
-            ////var stepFunctions = {
-                ////"up": gotoUp,
-                ////"down": gotoDown,
-                ////"left": gotoLeft,
-                ////"right": gotoRight,
-                ////"prev": gotoPrev,
-                ////"next": gotoNext
-            ////};
-            ////var stepFn = stepFunctions[dir];
-            ////var pos = stepFn(activeRow, activeCell, activePosX);
-            ////if (pos) {
-                ////var isAddNewRow = (pos.row == getDataLength());
-                ////scrollCellIntoView(pos.row, pos.cell, !isAddNewRow);
-                ////setActiveCellInternal(getCellNode(pos.row, pos.cell));
-                ////activePosX = pos.posX;
-                ////return true;
-            ////} else {
-                ////setActiveCellInternal(getCellNode(activeRow, activeCell));
-                ////return false;
-            ////}
+            //if (e.keyCode === 37) {
+                //this.state.grid.navigateLeft();
+                //e.stopPropagation();
+                //e.preventDefault();
+            //} else if (e.keyCode === 38) {
+                //this.state.grid.navigateUp();
+                //e.stopPropagation();
+                //e.preventDefault();
+            //} else if (e.keyCode === 39) {
+                //this.state.grid.navigateRight();
+                //e.stopPropagation();
+                //e.preventDefault();
+            //} else if (e.keyCode === 40) {
+                //this.state.grid.navigateDown();
+                //e.stopPropagation();
+                //e.preventDefault();
+            //} else if (e.keyCode === 33) {
+                //this.state.grid.navigatePageUp();
+                //e.stopPropagation();
+                //e.preventDefault();
+            //} else if (e.keyCode === 34) {
+                //this.state.grid.navigatePageDown();
+                //e.stopPropagation();
+                //e.preventDefault();
+            //}
         //}
     //}
 

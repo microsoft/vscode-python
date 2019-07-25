@@ -44,7 +44,8 @@
 } 
 
 .react-grid-cell.active {
-    background-color: magenta;
+    background-color: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
 }
 
 /* Some overrides necessary to get the colors we want */
