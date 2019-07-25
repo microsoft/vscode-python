@@ -70,7 +70,7 @@ suite('Insiders Extension Service - Handle channel', () => {
         const channelRule = TypeMoq.Mock.ofType<IExtensionChannelRule>();
         when(serviceContainer.get<IExtensionChannelRule>(IExtensionChannelRule, 'weekly')).thenReturn(channelRule.object);
         channelRule
-            .setup(c => c.shouldLookForInsidersBuild())
+            .setup(c => c.shouldLookForInsidersBuild(false))
             .returns(() => Promise.resolve(true))
             .verifiable(TypeMoq.Times.once());
         when(
