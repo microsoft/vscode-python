@@ -3,8 +3,10 @@
 
 import os
 import os.path
+import platform
 import sys
 import traceback
+from .install_ptvsd import get_folder_tag
 
 useCustomPtvsd = sys.argv[1] == '--custom'
 ptvsdArgs = sys.argv[:]
@@ -12,7 +14,12 @@ ptvsdArgs.pop(1)
 
 # Load the debugger package
 try:
-    ptvs_lib_path = os.path.join(os.path.dirname(__file__), 'lib', 'python')
+    folder_name = (
+        f"python-{get_folder_tag()}-37"
+        if platform.python_version()[:3] == "3.7"
+        else "python"
+    )
+    ptvs_lib_path = os.path.join(os.path.dirname(__file__), "lib", folder_name)
     if useCustomPtvsd:
         sys.path.append(ptvs_lib_path)
     else:

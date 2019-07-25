@@ -4,12 +4,13 @@
 import argparse
 import glob
 import os
+import platform
 import shutil
 import subprocess
 import sys
 
 
-def install_ptvsd_wheels(version):
+def install_ptvsd_wheels(version, platforms):
     """Downlad and install PTVSD wheels for a specific Python version and a list of platforms."""
 
     def delete_folder(path):
@@ -17,7 +18,7 @@ def install_ptvsd_wheels(version):
         if os.path.exists(path) and os.path.isdir(path):
             shutil.rmtree(path)
 
-    def download_wheel(platform, dest):
+    def download_wheel(wheel_platform, dest):
         """Download a PTVSD wheel and save it in its platform-specific folder."""
         subprocess.call(
             [
@@ -29,7 +30,7 @@ def install_ptvsd_wheels(version):
                 "-d",
                 dest,
                 "--platform",
-                platform,
+                wheel_platform,
                 "--no-deps",
             ]
         )
@@ -47,15 +48,6 @@ def install_ptvsd_wheels(version):
         subprocess.call(
             [sys.executable, "-m", "pip", "install", f"--target={dest}", wheel]
         )
-
-    # Mapping between folder platform names and wheel platform tags.
-    platforms = {
-        "win-32": "win32",
-        "win-64": "win_amd64",
-        "linux-32": "manylinux1_i686",
-        "linux-64": "manylinux1_x86_64",
-        "mac-64": "macosx_10_13_x86_64",
-    }
 
     for folder in platforms:
         # Remove the platform folder and its content if it exists.
@@ -83,9 +75,54 @@ def install_ptvsd_wheels(version):
     return {"status": 0}
 
 
+def get_folder_tag():
+    """Get the PTVSD folder tag for the current Python interpreter (format is <os>-<arch>)."""
+
+    def get_architecture(system):
+        """Detect the bitness of the current Python interpreter."""
+        if system == "Darwin":
+            return 64
+        else:
+            architecture = platform.architecture()[0]
+            return architecture[:2]
+
+    system = platform.system()
+    if system == "Darwin":
+        folder_name = "mac"
+    elif system == "Windows":
+        folder_name = "win"
+    else:
+        folder_name = "linux"
+    return f"{folder_name}-{get_architecture(system)}"
+
+
+def get_platforms(local):
+    """Get the platforms of the PTVSD wheels to download and install."""
+    # Mapping between folder platform names and wheel platform tags.
+    platforms = {
+        "win-32": "win32",
+        "win-64": "win_amd64",
+        "linux-32": "manylinux1_i686",
+        "linux-64": "manylinux1_x86_64",
+        "mac-64": "macosx_10_13_x86_64",
+    }
+
+    if local == False:
+        return platforms
+    else:
+        folder_name = get_folder_tag()
+        return {folder_name: platforms[folder_name]}
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Download and install all PTVSD wheels for a given Python version."
+    )
+    parser.add_argument(
+        "--local",
+        dest="local",
+        help="only install the wheel that corresponds to the local OS and architecture",
+        action="store_true",
     )
     parser.add_argument(
         "--python-version",
@@ -94,7 +131,12 @@ if __name__ == "__main__":
         default="37",
     )
     args = parser.parse_args()
-    result = install_ptvsd_wheels(args.version)
+
+    platforms = get_platforms(args.local)
+    if len(platforms) == 0:
+        raise Exception(f"No matching platforms")
+
+    result = install_ptvsd_wheels(args.version, platforms)
     if result["status"] != 0:
         raise Exception(
             f"There is a problem at the {result['step']} step for the {result['platform']} wheel: {result['exception']}"
