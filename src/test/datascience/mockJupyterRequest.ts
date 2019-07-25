@@ -17,7 +17,7 @@ interface IMessageResult {
 }
 
 interface IMessageProducer {
-    produceNextMessage() : Promise<IMessageResult>;
+    produceNextMessage(): Promise<IMessageResult>;
 }
 
 class SimpleMessageProducer implements IMessageProducer {
@@ -31,14 +31,14 @@ class SimpleMessageProducer implements IMessageProducer {
         this.channel = channel;
     }
 
-    public produceNextMessage() : Promise<IMessageResult> {
+    public produceNextMessage(): Promise<IMessageResult> {
         return new Promise<IMessageResult>((resolve, _reject) => {
             const message = this.generateMessage(this.type, this.result, this.channel);
-            resolve({message: message, haveMore: false});
+            resolve({ message: message, haveMore: false });
         });
     }
 
-    protected generateMessage(msgType: string, result: any, _channel: string = 'iopub') : KernelMessage.IIOPubMessage {
+    protected generateMessage(msgType: string, result: any, _channel: string = 'iopub'): KernelMessage.IIOPubMessage {
         return {
             channel: 'iopub',
             header: {
@@ -69,12 +69,12 @@ class OutputMessageProducer extends SimpleMessageProducer {
         this.cancelToken = cancelToken;
     }
 
-    public async produceNextMessage() : Promise<IMessageResult> {
+    public async produceNextMessage(): Promise<IMessageResult> {
         // Special case the 'generator' cell that returns a function
         // to generate output.
         if (this.output.output_type === 'generator') {
             const resultEntry = <any>this.output.resultGenerator;
-            const resultGenerator = resultEntry as (t: CancellationToken) => Promise<{result: nbformat.IStream; haveMore: boolean}>;
+            const resultGenerator = resultEntry as (t: CancellationToken) => Promise<{ result: nbformat.IStream; haveMore: boolean }>;
             if (resultGenerator) {
                 const streamResult = await resultGenerator(this.cancelToken);
                 return {
@@ -136,7 +136,7 @@ export class MockJupyterRequest implements Kernel.IFuture {
         this.executeRequest(delay);
     }
 
-    public get done() : Promise<KernelMessage.IShellMessage> {
+    public get done(): Promise<KernelMessage.IShellMessage> {
         return this.deferred.promise;
     }
     public registerMessageHook(_hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void {
@@ -163,14 +163,14 @@ export class MockJupyterRequest implements Kernel.IFuture {
 
         // Create message producers for output first.
         const outputs = this.cell.data.outputs as nbformat.IOutput[];
-        const outputProducers = outputs.map(o => new OutputMessageProducer(o, this.cancelToken));
+        const outputProducers = outputs.map(o => new OutputMessageProducer({ ...o, execution_count: this.executionCount }, this.cancelToken));
 
         // Then combine those into an array of producers for the rest of the messages
         const producers = [
-            new SimpleMessageProducer('status', { execution_state: 'busy'}),
+            new SimpleMessageProducer('status', { execution_state: 'busy' }),
             new SimpleMessageProducer('execute_input', { code: concatMultilineString(this.cell.data.source), execution_count: this.executionCount }),
             ...outputProducers,
-            new SimpleMessageProducer('status', { execution_state: 'idle'})
+            new SimpleMessageProducer('status', { execution_state: 'idle' })
         ];
 
         // Then send these until we're done
@@ -202,7 +202,7 @@ export class MockJupyterRequest implements Kernel.IFuture {
             }, delay);
         } else {
             // No more messages, create a simple producer for our shell message
-            const shellProducer = new SimpleMessageProducer('done', {status: 'success'}, 'shell');
+            const shellProducer = new SimpleMessageProducer('done', { status: 'success' }, 'shell');
             shellProducer.produceNextMessage().then((r) => {
                 this.deferred.resolve(<any>r.message as KernelMessage.IShellMessage);
             }).ignoreErrors();

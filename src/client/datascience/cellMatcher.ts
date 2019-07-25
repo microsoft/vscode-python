@@ -32,6 +32,10 @@ export class CellMatcher {
         return this.codeMatchRegEx.test(code);
     }
 
+    public getCellType(code: string) : string {
+        return this.isMarkdown(code) ? 'markdown' : 'code';
+    }
+
     public stripMarkers(code: string) : string {
         const lines = code.splitLines({trim: false, removeEmptyEntries: false});
         return lines.filter(l => !this.isCode(l) && !this.isMarkdown(l)).join('\n');

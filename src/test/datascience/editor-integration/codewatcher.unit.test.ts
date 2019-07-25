@@ -6,11 +6,8 @@
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, CodeLens, Disposable, Range, Selection, TextEditor } from 'vscode';
-import {
-    ICommandManager,
-    IDebugService,
-    IDocumentManager
-} from '../../../client/common/application/types';
+
+import { ICommandManager, IDebugService, IDocumentManager } from '../../../client/common/application/types';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService } from '../../../client/common/types';
@@ -18,7 +15,13 @@ import { Commands, EditorContexts } from '../../../client/datascience/constants'
 import { CodeLensFactory } from '../../../client/datascience/editor-integration/codeLensFactory';
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
 import { CodeWatcher } from '../../../client/datascience/editor-integration/codewatcher';
-import { ICodeWatcher, IDataScienceErrorHandler, IInteractiveWindow, IInteractiveWindowProvider } from '../../../client/datascience/types';
+import {
+    ICellHashProvider,
+    ICodeWatcher,
+    IDataScienceErrorHandler,
+    IInteractiveWindow,
+    IInteractiveWindowProvider
+} from '../../../client/datascience/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { ICodeExecutionHelper } from '../../../client/terminals/types';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
@@ -40,6 +43,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
     let helper: TypeMoq.IMock<ICodeExecutionHelper>;
     let tokenSource: CancellationTokenSource;
     let debugService: TypeMoq.IMock<IDebugService>;
+    let cellHashProvider: TypeMoq.IMock<ICellHashProvider>;
     const contexts: Map<string, boolean> = new Map<string, boolean>();
     const pythonSettings = new class extends PythonSettings {
         public fireChangeEvent() {
@@ -59,6 +63,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
         helper = TypeMoq.Mock.ofType<ICodeExecutionHelper>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
         debugService = TypeMoq.Mock.ofType<IDebugService>();
+        cellHashProvider = TypeMoq.Mock.ofType<ICellHashProvider>();
 
         // Setup default settings
         pythonSettings.datascience = {
@@ -90,8 +95,8 @@ suite('DataScience Code Watcher Unit Tests', () => {
         // Setup the service container to return code watchers
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
 
-        const codeLensFactory = new CodeLensFactory(configService.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICodeWatcher))).returns(() => new CodeWatcher(interactiveWindowProvider.object, fileSystem.object, configService.object, documentManager.object, helper.object, dataScienceErrorHandler.object, codeLensFactory, serviceContainer.object));
+        const codeLensFactory = new CodeLensFactory(configService.object, cellHashProvider.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICodeWatcher))).returns(() => new CodeWatcher(interactiveWindowProvider.object, fileSystem.object, configService.object, documentManager.object, helper.object, dataScienceErrorHandler.object, codeLensFactory));
 
         // Setup our error handler
         dataScienceErrorHandler = TypeMoq.Mock.ofType<IDataScienceErrorHandler>();
@@ -115,9 +120,9 @@ suite('DataScience Code Watcher Unit Tests', () => {
             return Promise.resolve();
         });
 
-        const codeLens = new CodeLensFactory(configService.object);
+        const codeLens = new CodeLensFactory(configService.object, cellHashProvider.object);
 
-        codeWatcher = new CodeWatcher(interactiveWindowProvider.object, fileSystem.object, configService.object, documentManager.object, helper.object, dataScienceErrorHandler.object, codeLens, serviceContainer.object);
+        codeWatcher = new CodeWatcher(interactiveWindowProvider.object, fileSystem.object, configService.object, documentManager.object, helper.object, dataScienceErrorHandler.object, codeLens);
     });
 
     function createTypeMoq<T>(tag: string): TypeMoq.IMock<T> {
@@ -129,7 +134,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
         return result;
     }
 
-    function verifyCodeLensesAtPosition(codeLenses: CodeLens[], startLensIndex: number, targetRange: Range, firstCell: boolean = false) {
+    function verifyCodeLensesAtPosition(codeLenses: CodeLens[], startLensIndex: number, targetRange: Range, firstCell: boolean = false, markdownCell: boolean = false) {
         if (codeLenses[startLensIndex].command) {
             expect(codeLenses[startLensIndex].command!.command).to.be.equal(Commands.RunCell, 'Run Cell code lens command incorrect');
         }
@@ -142,11 +147,13 @@ suite('DataScience Code Watcher Unit Tests', () => {
             expect(codeLenses[startLensIndex + 1].range).to.be.deep.equal(targetRange, 'Run Above code lens range incorrect');
         }
 
-        const indexAdd = firstCell ? 1 : 2;
-        if (codeLenses[startLensIndex + indexAdd].command) {
-            expect(codeLenses[startLensIndex + indexAdd].command!.command).to.be.equal(Commands.DebugCell, 'Debug command incorrect');
+        if (!markdownCell) {
+            const indexAdd = firstCell ? 1 : 2;
+            if (codeLenses[startLensIndex + indexAdd].command) {
+                expect(codeLenses[startLensIndex + indexAdd].command!.command).to.be.equal(Commands.DebugCell, 'Debug command incorrect');
+            }
+            expect(codeLenses[startLensIndex + indexAdd].range).to.be.deep.equal(targetRange, 'Debug code lens range incorrect');
         }
-        expect(codeLenses[startLensIndex + indexAdd].range).to.be.deep.equal(targetRange, 'Debug code lens range incorrect');
     }
 
     test('Add a file with just a #%% mark to a code watcher', () => {
@@ -249,11 +256,11 @@ fourth line
 
         // Verify code lenses
         const codeLenses = codeWatcher.getCodeLenses();
-        expect(codeLenses.length).to.be.equal(8, 'Incorrect count of code lenses');
+        expect(codeLenses.length).to.be.equal(7, 'Incorrect count of code lenses');
 
         verifyCodeLensesAtPosition(codeLenses, 0, new Range(3, 0, 5, 0), true);
         verifyCodeLensesAtPosition(codeLenses, 2, new Range(6, 0, 8, 0));
-        verifyCodeLensesAtPosition(codeLenses, 5, new Range(9, 0, 10, 12));
+        verifyCodeLensesAtPosition(codeLenses, 5, new Range(9, 0, 10, 12), false, true);
 
         // Verify function calls
         document.verifyAll();
@@ -287,11 +294,11 @@ fourth line
 
         // Verify code lenses
         const codeLenses = codeWatcher.getCodeLenses();
-        expect(codeLenses.length).to.be.equal(8, 'Incorrect count of code lenses');
+        expect(codeLenses.length).to.be.equal(7, 'Incorrect count of code lenses');
 
         verifyCodeLensesAtPosition(codeLenses, 0, new Range(3, 0, 5, 0), true);
         verifyCodeLensesAtPosition(codeLenses, 2, new Range(6, 0, 8, 0));
-        verifyCodeLensesAtPosition(codeLenses, 5, new Range(9, 0, 10, 12));
+        verifyCodeLensesAtPosition(codeLenses, 5, new Range(9, 0, 10, 12), false, true);
 
         // Verify function calls
         document.verifyAll();

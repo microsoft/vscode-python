@@ -285,7 +285,7 @@ export class JediProxy implements Disposable {
                 if (result && result.memory) {
                     restartJedi = result.memory > limit * 1024 * 1024;
                     const props = {
-                        memory: result.memory,
+                        mem_use: result.memory,
                         limit: limit * 1024 * 1024,
                         isUserDefinedLimit: limit !== 1024,
                         restart: restartJedi

@@ -211,7 +211,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     private async ptvsdCheck(server: INotebookServer): Promise<IPtvsdVersion | undefined> {
         // We don't want to actually import ptvsd to check version so run !python instead.
         // tslint:disable-next-line:no-multiline-string
-        const ptvsdVersionResults = await this.executeSilently(server, `!python -c "import ptvsd;print(ptvsd.__version__)"`);
+        const ptvsdVersionResults = await this.executeSilently(server, `import sys\r\n!{sys.executable} -c "import ptvsd;print(ptvsd.__version__)"`);
         return this.parsePtvsdVersionInfo(ptvsdVersionResults);
     }
 
@@ -265,7 +265,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
     private async installPtvsd(server: INotebookServer): Promise<void> {
         // tslint:disable-next-line:no-multiline-string
-        const ptvsdInstallResults = await this.executeSilently(server, `!pip install ptvsd==v4.3.0b1`);
+        const ptvsdInstallResults = await this.executeSilently(server, `import sys\r\n!{sys.executable} -m pip install ptvsd==v4.3.0b1`);
 
         if (ptvsdInstallResults.length > 0) {
             const installResultsString = this.extractOutput(ptvsdInstallResults[0]);

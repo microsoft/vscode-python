@@ -2,16 +2,26 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { CodeLens, Position, Range, Selection, TextDocument, TextEditor, TextEditorRevealType } from 'vscode';
+import {
+    CodeLens,
+    Event,
+    EventEmitter,
+    Position,
+    Range,
+    Selection,
+    TextDocument,
+    TextEditor,
+    TextEditorRevealType
+} from 'vscode';
 
 import { IDocumentManager } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDataScienceSettings } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
-import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { ICodeExecutionHelper } from '../../terminals/types';
+import { CellMatcher } from '../cellMatcher';
 import { Commands, Telemetry } from '../constants';
 import { ICodeLensFactory, ICodeWatcher, IDataScienceErrorHandler, IInteractiveWindowProvider } from '../types';
 
@@ -23,6 +33,7 @@ export class CodeWatcher implements ICodeWatcher {
     private fileName: string = '';
     private codeLenses: CodeLens[] = [];
     private cachedSettings: IDataScienceSettings | undefined;
+    private codeLensUpdatedEvent: EventEmitter<void> = new EventEmitter<void>();
 
     constructor(@inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(IFileSystem) private fileSystem: IFileSystem,
@@ -30,8 +41,7 @@ export class CodeWatcher implements ICodeWatcher {
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(ICodeExecutionHelper) private executionHelper: ICodeExecutionHelper,
         @inject(IDataScienceErrorHandler) protected dataScienceErrorHandler: IDataScienceErrorHandler,
-        @inject(ICodeLensFactory) private codeLensFactory: ICodeLensFactory,
-        @inject(IServiceContainer) protected serviceContainer: IServiceContainer
+        @inject(ICodeLensFactory) private codeLensFactory: ICodeLensFactory
     ) {
     }
 
@@ -47,6 +57,13 @@ export class CodeWatcher implements ICodeWatcher {
 
         // Use the factory to generate our new code lenses.
         this.codeLenses = this.codeLensFactory.createCodeLenses(document);
+
+        // Listen for changes
+        this.codeLensFactory.updateRequired(this.onCodeLensFactoryUpdated.bind(this));
+    }
+
+    public get codeLensUpdated(): Event<void> {
+        return this.codeLensUpdatedEvent.event;
     }
 
     public getFileName() {
@@ -256,6 +273,49 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
+    public async runCurrentCellAndAddBelow(): Promise<void> {
+        if (!this.documentManager.activeTextEditor || !this.documentManager.activeTextEditor.document) {
+            return Promise.resolve();
+        }
+
+        const editor = this.documentManager.activeTextEditor;
+        const cellMatcher = new CellMatcher();
+        let index = 0;
+
+        if (editor) {
+            editor.edit((editBuilder) => {
+                let lastCell = true;
+
+                for (let i = editor.selection.end.line + 1; i < editor.document.lineCount; i += 1) {
+                    if (cellMatcher.isCell(editor.document.lineAt(i).text)) {
+                        lastCell = false;
+                        index = i;
+                        editBuilder.insert(new Position(i, 0), '#%%\n\n');
+                        break;
+                    }
+                }
+
+                if (lastCell) {
+                    index = editor.document.lineCount;
+                    editBuilder.insert(new Position(editor.document.lineCount, 0), '\n#%%\n');
+                }
+            });
+        }
+
+        // Run the cell that matches the current cursor position, and then advance to the new cell
+        const newPosition = new Position(index + 1, 0);
+        return this.runMatchingCell(editor.selection, false)
+            .then(() => this.advanceToRange(new Range(newPosition, newPosition)));
+    }
+
+    private onCodeLensFactoryUpdated(): void {
+        // Update our code lenses.
+        if (this.document) {
+            this.codeLenses = this.codeLensFactory.createCodeLenses(this.document);
+        }
+        this.codeLensUpdatedEvent.fire();
+    }
+
     private async addCode(code: string, file: string, line: number, editor?: TextEditor, debug?: boolean): Promise<boolean> {
         let result = false;
         try {
@@ -268,7 +328,7 @@ export class CodeWatcher implements ICodeWatcher {
             }
             this.sendPerceivedCellExecute(stopWatch);
         } catch (err) {
-            this.dataScienceErrorHandler.handleError(err);
+            this.dataScienceErrorHandler.handleError(err).ignoreErrors();
         }
 
         return result;
@@ -282,7 +342,7 @@ export class CodeWatcher implements ICodeWatcher {
                 const activeInteractiveWindow = await this.interactiveWindowProvider.getOrCreateActive();
                 return activeInteractiveWindow.addMessage(message);
             } catch (err) {
-                this.dataScienceErrorHandler.handleError(err);
+                this.dataScienceErrorHandler.handleError(err).ignoreErrors();
             }
         }
     }
@@ -322,7 +382,7 @@ export class CodeWatcher implements ICodeWatcher {
             if (this.document) {
                 // Use that to get our code.
                 const code = this.document.getText(currentRunCellLens.range);
-                await this.addCode(code, this.getFileName(), range.start.line, this.documentManager.activeTextEditor, debug);
+                await this.addCode(code, this.getFileName(), currentRunCellLens.range.start.line, this.documentManager.activeTextEditor, debug);
             }
         }
     }

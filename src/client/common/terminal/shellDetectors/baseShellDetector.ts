@@ -13,6 +13,7 @@ import { IShellDetector, ShellIdentificationTelemetry, TerminalShellType } from 
 /*
 When identifying the shell use the following algorithm:
 * 1. Identify shell based on the name of the terminal (if there is one already opened and used).
+* 2. Identify shell based on the api provided by VSC.
 * 2. Identify shell based on the settings in VSC.
 * 3. Identify shell based on users environment variables.
 * 4. Use default shells (bash for mac and linux, cmd for windows).

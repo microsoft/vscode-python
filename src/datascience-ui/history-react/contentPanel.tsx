@@ -36,6 +36,7 @@ export interface IContentPanelProps {
 export class ContentPanel extends React.Component<IContentPanelProps> {
     private bottomRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private containerRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
+    private cellRefs: Map<string, React.RefObject<HTMLDivElement>> = new Map<string, React.RefObject<HTMLDivElement>>();
     private throttledScrollIntoView = throttle(this.scrollIntoView.bind(this), 100);
     constructor(prop: IContentPanelProps) {
         super(prop);
@@ -62,35 +63,55 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
         );
     }
 
+    public scrollToCell(cellId: string) {
+        const ref = this.cellRefs.get(cellId);
+        if (ref && ref.current) {
+            ref.current.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' });
+            ref.current.classList.add('flash');
+            setTimeout(() => {
+                if (ref.current) {
+                    ref.current.classList.remove('flash');
+                }
+            }, 1000);
+        }
+    }
+
     private renderCells = () => {
         const maxOutputSize = getSettings().maxOutputSize;
         const maxTextSize = maxOutputSize && maxOutputSize < 10000 && maxOutputSize > 0 ? maxOutputSize : undefined;
         const baseTheme = getSettings().ignoreVscodeTheme ? 'vscode-light' : this.props.baseTheme;
-        return this.props.cellVMs.map((cellVM: ICellViewModel, index: number) =>
-            <ErrorBoundary key={index}>
-                <Cell
-                    role='listitem'
-                    editorOptions={this.props.editorOptions}
-                    history={undefined}
-                    maxTextSize={maxTextSize}
-                    autoFocus={false}
-                    testMode={this.props.testMode}
-                    cellVM={cellVM}
-                    submitNewCode={noop}
-                    baseTheme={baseTheme}
-                    codeTheme={this.props.codeTheme}
-                    showWatermark={false}
-                    editExecutionCount={0}
-                    gotoCode={() => this.props.gotoCellCode(index)}
-                    copyCode={() => this.props.copyCellCode(index)}
-                    delete={() => this.props.deleteCell(index)}
-                    onCodeChange={this.props.onCodeChange}
-                    onCodeCreated={this.props.onCodeCreated}
-                    monacoTheme={this.props.monacoTheme}
-                    openLink={this.props.openLink}
-                    expandImage={this.props.expandImage}
-                    />
-            </ErrorBoundary>
+
+        return this.props.cellVMs.map((cellVM: ICellViewModel, index: number) => {
+            const ref = React.createRef<HTMLDivElement>();
+            this.cellRefs.set(cellVM.cell.id, ref);
+            return (
+                <div key={index} id={cellVM.cell.id} ref={ref}>
+                    <ErrorBoundary key={index}>
+                        <Cell
+                            role='listitem'
+                            editorOptions={this.props.editorOptions}
+                            history={undefined}
+                            maxTextSize={maxTextSize}
+                            autoFocus={false}
+                            testMode={this.props.testMode}
+                            cellVM={cellVM}
+                            submitNewCode={noop}
+                            baseTheme={baseTheme}
+                            codeTheme={this.props.codeTheme}
+                            showWatermark={false}
+                            editExecutionCount={0}
+                            gotoCode={() => this.props.gotoCellCode(index)}
+                            copyCode={() => this.props.copyCellCode(index)}
+                            delete={() => this.props.deleteCell(index)}
+                            onCodeChange={this.props.onCodeChange}
+                            onCodeCreated={this.props.onCodeCreated}
+                            monacoTheme={this.props.monacoTheme}
+                            openLink={this.props.openLink}
+                            expandImage={this.props.expandImage}
+                        />
+                    </ErrorBoundary>
+                </div>);
+        }
         );
     }
 
