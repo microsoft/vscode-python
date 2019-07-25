@@ -61,18 +61,14 @@ def install_ptvsd_wheels(version, platforms):
 
         # Download and install the appropriate PTVSD wheel.
         try:
-            step = "mkdir"
             os.makedirs(dirpath)
 
-            step = "download"
             download_wheel(platforms[folder], dirpath)
 
-            step = "install"
             wheel = get_wheel_name(dirpath)
             install_wheel(wheel, dirpath)
         except Exception as ex:
-            return {"status": -1, "platform": folder, "step": step, "exception": ex}
-    return {"status": 0}
+            raise ex
 
 
 def get_folder_tag():
@@ -136,9 +132,5 @@ if __name__ == "__main__":
     if len(platforms) == 0:
         raise Exception(f"No matching platforms")
 
-    result = install_ptvsd_wheels(args.version, platforms)
-    if result["status"] != 0:
-        raise Exception(
-            f"There is a problem at the {result['step']} step for the {result['platform']} wheel: {result['exception']}"
-        )
+    install_ptvsd_wheels(args.version, platforms)
 
