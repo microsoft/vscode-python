@@ -20,11 +20,15 @@ PLATFORMS = {
 
 
 def install_ptvsd_wheels(version):
+    """Downlad and install PTVSD wheels for a specific Python version and a list of platforms."""
+
     def delete_folder(path):
+        """Delete a folder at a given path."""
         if os.path.exists(path) and os.path.isdir(path):
             shutil.rmtree(path)
 
     def download_wheel(platform, dest):
+        """Download a PTVSD wheel and save it in its platform-specific folder."""
         subprocess.call(
             [
                 sys.executable,
@@ -41,6 +45,7 @@ def install_ptvsd_wheels(version):
         )
 
     def get_wheel_name(folder):
+        """Retrieve the file name of the PTVSD wheel that was just downloaded."""
         wheel = [w for w in glob.glob(os.path.join(folder, "*.whl"), recursive=False)]
         if len(wheel) == 1:
             return wheel[0]
@@ -48,6 +53,7 @@ def install_ptvsd_wheels(version):
             raise Exception(f"The content of {folder} is incorrect")
 
     def install_wheel(wheel, dest):
+        """Install a PTVSD wheel in its platform-specific folder."""
         subprocess.call(
             [sys.executable, "-m", "pip", "install", f"--target={dest}", wheel]
         )
