@@ -6,6 +6,7 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { MaxStringCompare } from '../../client/datascience/data-viewing/types';
+import { KeyCodes } from '../react-common/constants';
 import { measureText } from '../react-common/textMeasure';
 import { ReactSlickGridFilterBox } from './reactSlickGridFilterBox';
 
@@ -312,43 +313,35 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         if (this.state.grid) {
             // The slickgrid version of jquery populates keyCode not code, so use the numerical values here
             switch (e.keyCode) {
-                // LeftArrow
-                case 37:
+                case KeyCodes.LeftArrow:
                     this.state.grid.navigateLeft();
                     handled = true;
                     break;
-                // UpArrow
-                case 38:
+                case KeyCodes.UpArrow:
                     this.state.grid.navigateUp();
                     handled = true;
                     break;
-                // RightArrow
-                case 39:
+                case KeyCodes.RightArrow:
                     this.state.grid.navigateRight();
                     handled = true;
                     break;
-                // DownArrow
-                case 40:
+                case KeyCodes.DownArrow:
                     this.state.grid.navigateDown();
                     handled = true;
                     break;
-                // PageUp
-                case 33:
+                case KeyCodes.PageUp:
                     this.state.grid.navigatePageUp();
                     handled = true;
                     break;
-                // PageDown
-                case 34:
+                case KeyCodes.PageDown:
                     this.state.grid.navigatePageDown();
                     handled = true;
                     break;
-                // End
-                case 35:
+                case KeyCodes.End:
                     e.ctrlKey ? this.state.grid.navigateBottom() : this.state.grid.navigateRowEnd();
                     handled = true;
                     break;
-                // Home
-                case 36:
+                case KeyCodes.Home:
                     e.ctrlKey ? this.state.grid.navigateTop() : this.state.grid.navigateRowStart();
                     handled = true;
                     break;
