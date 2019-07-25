@@ -17,7 +17,7 @@ import { ExtensionChannels } from '../../../client/common/insidersBuild/types';
 import { IConfigurationService } from '../../../client/common/types';
 
 // tslint:disable-next-line:max-func-body-length
-suite('xDownload channel service', () => {
+suite('Download channel service', () => {
     let configService: IConfigurationService;
     let workspaceService: IWorkspaceService;
     let channelService: ExtensionChannelService;
@@ -52,10 +52,14 @@ suite('xDownload channel service', () => {
         }
     ].forEach(testParams => {
         test(testParams.testName, async () => {
-
             when(
                 configService.getSettings()
             ).thenReturn({ insidersChannel: testParams.settings as ExtensionChannels } as any);
+            const result = channelService.getChannel();
+            expect(result).to.equal(testParams.expectedResult);
+            verify(
+                configService.getSettings()
+            ).once();
         });
     });
 

@@ -22,7 +22,7 @@ export class ExtensionChannelService implements IExtensionChannelService {
     ) {
         disposables.push(this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
     }
-    public async getChannel(): Promise<ExtensionChannels> {
+    public getChannel(): ExtensionChannels {
         const settings = this.configService.getSettings();
         return settings.insidersChannel;
     }

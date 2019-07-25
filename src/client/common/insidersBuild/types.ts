@@ -14,7 +14,7 @@ export const IExtensionChannelService = Symbol('IExtensionChannelService');
 export interface IExtensionChannelService {
     readonly onDidChannelChange: Event<ExtensionChannels>;
     readonly isChannelUsingDefaultConfiguration: boolean;
-    getChannel(): Promise<ExtensionChannels>;
+    getChannel(): ExtensionChannels;
     updateChannel(value: ExtensionChannels): Promise<void>;
 }
 

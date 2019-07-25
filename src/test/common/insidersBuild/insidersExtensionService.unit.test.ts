@@ -132,7 +132,7 @@ suite('Insiders Extension Service - Activation', () => {
         handleChannel = sinon.stub(InsidersExtensionService.prototype, 'handleChannel');
         handleChannel.callsFake(() => Promise.resolve());
         insidersExtensionService = new InsidersExtensionService(instance(extensionChannelService), instance(insidersPrompt), instance(appEnvironment), instance(cmdManager), instance(serviceContainer), instance(insidersInstaller), []);
-        when(extensionChannelService.getChannel()).thenResolve('daily');
+        when(extensionChannelService.getChannel()).thenReturn('daily');
 
         await insidersExtensionService.activate(Uri.parse('r'));
 
@@ -149,7 +149,7 @@ suite('Insiders Extension Service - Activation', () => {
         handleChannel = sinon.stub(InsidersExtensionService.prototype, 'handleChannel');
         handleChannel.callsFake(() => handleChannelsDeferred.promise);
         insidersExtensionService = new InsidersExtensionService(instance(extensionChannelService), instance(insidersPrompt), instance(appEnvironment), instance(cmdManager), instance(serviceContainer), instance(insidersInstaller), []);
-        when(extensionChannelService.getChannel()).thenResolve('daily');
+        when(extensionChannelService.getChannel()).thenReturn('daily');
 
         const promise = insidersExtensionService.activate(Uri.parse('r'));
         const deferred = createDeferredFromPromise(promise);
