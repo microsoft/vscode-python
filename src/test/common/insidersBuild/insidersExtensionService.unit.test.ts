@@ -19,6 +19,7 @@ import { ExtensionChannelService } from '../../../client/common/insidersBuild/do
 import { InsidersExtensionPrompt } from '../../../client/common/insidersBuild/insidersExtensionPrompt';
 import { InsidersExtensionService } from '../../../client/common/insidersBuild/insidersExtensionService';
 import { ExtensionChannels, IExtensionChannelRule, IExtensionChannelService, IInsiderExtensionPrompt } from '../../../client/common/insidersBuild/types';
+import { InsidersBuildInstaller } from '../../../client/common/installer/extensionBuildInstaller';
 import { IExtensionBuildInstaller } from '../../../client/common/installer/types';
 import { IDisposable, IPersistentState } from '../../../client/common/types';
 import { createDeferred, createDeferredFromPromise } from '../../../client/common/utils/async';
@@ -32,7 +33,7 @@ suite('Insiders Extension Service - Handle channel', () => {
     let extensionChannelService: IExtensionChannelService;
     let cmdManager: ICommandManager;
     let insidersPrompt: IInsiderExtensionPrompt;
-    let choosePromptAndDisplay: sinon.SinonStub<any>;
+    let insidersInstaller: IExtensionBuildInstaller;
     let insidersExtensionService: InsidersExtensionService;
     setup(() => {
         extensionChannelService = mock(ExtensionChannelService);
@@ -40,46 +41,52 @@ suite('Insiders Extension Service - Handle channel', () => {
         cmdManager = mock(CommandManager);
         serviceContainer = mock(ServiceContainer);
         insidersPrompt = mock(InsidersExtensionPrompt);
-        choosePromptAndDisplay = sinon.stub(InsidersExtensionService.prototype, 'choosePromptAndDisplay');
-        choosePromptAndDisplay.callsFake(() => Promise.resolve());
-        insidersExtensionService = new InsidersExtensionService(instance(extensionChannelService), instance(insidersPrompt), instance(appEnvironment), instance(cmdManager), instance(serviceContainer), []);
+        insidersInstaller = mock(InsidersBuildInstaller);
+        insidersExtensionService = new InsidersExtensionService(instance(extensionChannelService), instance(insidersPrompt), instance(appEnvironment), instance(cmdManager), instance(serviceContainer), instance(insidersInstaller), []);
     });
 
     teardown(() => {
         sinon.restore();
     });
 
-    test('If no build installer is returned, handling channel does not do anything and simply returns', async () => {
+    test('If insiders is not be installed, handling channel does not do anything and simply returns', async () => {
         const channelRule = TypeMoq.Mock.ofType<IExtensionChannelRule>();
-        when(serviceContainer.get<IExtensionChannelRule>(IExtensionChannelRule, 'Stable')).thenReturn(channelRule.object);
+        when(serviceContainer.get<IExtensionChannelRule>(IExtensionChannelRule, 'off')).thenReturn(channelRule.object);
         channelRule
-            .setup(c => c.getInstaller(false))
-            .returns(() => Promise.resolve(undefined))
+            .setup(c => c.shouldLookForInsidersBuild(false))
+            .returns(() => Promise.resolve(false))
             .verifiable(TypeMoq.Times.once());
-        await insidersExtensionService.handleChannel('Stable');
+        when(
+            insidersInstaller.install()
+        ).thenResolve(undefined);
+        await insidersExtensionService.handleChannel('off');
+        verify(
+            insidersInstaller.install()
+        ).never();
         channelRule.verifyAll();
-        assert.ok(choosePromptAndDisplay.notCalled);
     });
 
-    test('If build installer is returned, handling channel installs the build and prompts user', async () => {
+    test('If insiders is required to be installed, handling channel installs the build and prompts user', async () => {
         const channelRule = TypeMoq.Mock.ofType<IExtensionChannelRule>();
-        const buildInstaller = TypeMoq.Mock.ofType<IExtensionBuildInstaller>();
-        buildInstaller.setup(b => (b as any).then).returns(() => undefined);
-        when(serviceContainer.get<IExtensionChannelRule>(IExtensionChannelRule, 'Stable')).thenReturn(channelRule.object);
+        when(serviceContainer.get<IExtensionChannelRule>(IExtensionChannelRule, 'weekly')).thenReturn(channelRule.object);
         channelRule
-            .setup(c => c.getInstaller(false))
-            .returns(() => Promise.resolve(buildInstaller.object))
+            .setup(c => c.shouldLookForInsidersBuild())
+            .returns(() => Promise.resolve(true))
             .verifiable(TypeMoq.Times.once());
-        buildInstaller
-            .setup(b => b.install())
-            .returns(() => Promise.resolve())
-            .verifiable(TypeMoq.Times.once());
-        await insidersExtensionService.handleChannel('Stable');
+        when(
+            insidersInstaller.install()
+        ).thenResolve(undefined);
+        when(
+            insidersPrompt.promptToReload()
+        ).thenResolve(undefined);
+        await insidersExtensionService.handleChannel('weekly');
+        verify(
+            insidersInstaller.install()
+        ).once();
+        verify(
+            insidersPrompt.promptToReload()
+        ).once();
         channelRule.verifyAll();
-        buildInstaller.verifyAll();
-        expect(choosePromptAndDisplay.args[0][0]).to.equal('Stable');
-        expect(choosePromptAndDisplay.args[0][1]).to.equal(false, 'Should be false');
-        assert.ok(choosePromptAndDisplay.calledOnce);
     });
 });
 
@@ -92,13 +99,18 @@ suite('Insiders Extension Service - Activation', () => {
     let insidersPrompt: IInsiderExtensionPrompt;
     let registerCommandsAndHandlers: sinon.SinonStub<any>;
     let handleChannel: sinon.SinonStub<any>;
+    let handleEdgeCases: sinon.SinonStub<any>;
+    let insidersInstaller: IExtensionBuildInstaller;
     let insidersExtensionService: InsidersExtensionService;
     setup(() => {
         extensionChannelService = mock(ExtensionChannelService);
+        insidersInstaller = mock(InsidersBuildInstaller);
         appEnvironment = mock(ApplicationEnvironment);
         cmdManager = mock(CommandManager);
         serviceContainer = mock(ServiceContainer);
         insidersPrompt = mock(InsidersExtensionPrompt);
+        handleEdgeCases = sinon.stub(InsidersExtensionService.prototype, 'handleEdgeCases');
+        handleEdgeCases.callsFake(() => Promise.resolve());
         registerCommandsAndHandlers = sinon.stub(InsidersExtensionService.prototype, 'registerCommandsAndHandlers');
         registerCommandsAndHandlers.callsFake(() => Promise.resolve());
     });
@@ -110,70 +122,34 @@ suite('Insiders Extension Service - Activation', () => {
     test('If service has been activated once, simply return', async () => {
         handleChannel = sinon.stub(InsidersExtensionService.prototype, 'handleChannel');
         handleChannel.callsFake(() => Promise.resolve());
-        insidersExtensionService = new InsidersExtensionService(instance(extensionChannelService), instance(insidersPrompt), instance(appEnvironment), instance(cmdManager), instance(serviceContainer), []);
+        insidersExtensionService = new InsidersExtensionService(instance(extensionChannelService), instance(insidersPrompt), instance(appEnvironment), instance(cmdManager), instance(serviceContainer), instance(insidersInstaller), []);
         insidersExtensionService.activatedOnce = true;
         await insidersExtensionService.activate(Uri.parse('r'));
         assert.ok(registerCommandsAndHandlers.notCalled);
     });
 
-    const testsForActivation: {
-        installChannel: ExtensionChannels;
-        extensionChannel: Channel;
-        expectedResult: boolean;
-    }[] =
-        [
-            {
-                installChannel: 'Stable',
-                extensionChannel: 'stable',
-                expectedResult: false
-            },
-            {
-                installChannel: 'Stable',
-                extensionChannel: 'insiders',
-                expectedResult: true
-            },
-            {
-                installChannel: 'InsidersDaily',
-                extensionChannel: 'stable',
-                expectedResult: true
-            }, {
-                installChannel: 'InsidersDaily',
-                extensionChannel: 'insiders',
-                expectedResult: false
-            }, {
-                installChannel: 'InsidersWeekly',
-                extensionChannel: 'stable',
-                expectedResult: true
-            }, {
-                installChannel: 'InsidersWeekly',
-                extensionChannel: 'insiders',
-                expectedResult: false
-            }
-        ];
+    test('Execution goes as expected if there are no errors', async () => {
+        handleChannel = sinon.stub(InsidersExtensionService.prototype, 'handleChannel');
+        handleChannel.callsFake(() => Promise.resolve());
+        insidersExtensionService = new InsidersExtensionService(instance(extensionChannelService), instance(insidersPrompt), instance(appEnvironment), instance(cmdManager), instance(serviceContainer), instance(insidersInstaller), []);
+        when(extensionChannelService.getChannel()).thenResolve('daily');
 
-    testsForActivation.forEach(testParams => {
-        const testName = `Handle channel is passed with didChannelChange argument = '${testParams.expectedResult}' when installChannel = '${testParams.installChannel}' and extensionChannel = '${testParams.extensionChannel}'`;
-        test(testName, async () => {
-            handleChannel = sinon.stub(InsidersExtensionService.prototype, 'handleChannel');
-            handleChannel.callsFake(() => Promise.resolve());
-            insidersExtensionService = new InsidersExtensionService(instance(extensionChannelService), instance(insidersPrompt), instance(appEnvironment), instance(cmdManager), instance(serviceContainer), []);
-            when(extensionChannelService.getChannel()).thenResolve(testParams.installChannel);
-            when(appEnvironment.extensionChannel).thenReturn(testParams.extensionChannel);
-            await insidersExtensionService.activate(Uri.parse('r'));
-            expect(handleChannel.args[0][1]).to.equal(testParams.expectedResult);
-            verify(extensionChannelService.getChannel()).once();
-            verify(appEnvironment.extensionChannel).once();
-            expect(insidersExtensionService.activatedOnce).to.equal(true, 'Variable should be set to true');
-        });
+        await insidersExtensionService.activate(Uri.parse('r'));
+
+        verify(extensionChannelService.getChannel()).once();
+        expect(insidersExtensionService.activatedOnce).to.equal(true, 'Variable should be set to true');
+        assert.ok(registerCommandsAndHandlers.calledOnce);
+        assert.ok(handleEdgeCases.calledOnce);
+        assert.ok(handleChannel.calledOnce);
+        expect(handleChannel.args[0][0]).to.equal('daily');
     });
 
     test('Ensure channels are reliably handled in the background', async () => {
         const handleChannelsDeferred = createDeferred<void>();
         handleChannel = sinon.stub(InsidersExtensionService.prototype, 'handleChannel');
         handleChannel.callsFake(() => handleChannelsDeferred.promise);
-        insidersExtensionService = new InsidersExtensionService(instance(extensionChannelService), instance(insidersPrompt), instance(appEnvironment), instance(cmdManager), instance(serviceContainer), []);
-        when(extensionChannelService.getChannel()).thenResolve('InsidersDaily');
-        when(appEnvironment.extensionChannel).thenReturn('insiders');
+        insidersExtensionService = new InsidersExtensionService(instance(extensionChannelService), instance(insidersPrompt), instance(appEnvironment), instance(cmdManager), instance(serviceContainer), instance(insidersInstaller), []);
+        when(extensionChannelService.getChannel()).thenResolve('daily');
 
         const promise = insidersExtensionService.activate(Uri.parse('r'));
         const deferred = createDeferredFromPromise(promise);
@@ -185,14 +161,16 @@ suite('Insiders Extension Service - Activation', () => {
         handleChannelsDeferred.resolve();
         await sleep(1);
 
-        verify(extensionChannelService.getChannel()).once();
-        verify(appEnvironment.extensionChannel).once();
         expect(insidersExtensionService.activatedOnce).to.equal(true, 'Variable should be set to true');
+        assert.ok(registerCommandsAndHandlers.calledOnce);
+        assert.ok(handleEdgeCases.calledOnce);
+        assert.ok(handleChannel.calledOnce);
+        expect(handleChannel.args[0][0]).to.equal('daily');
     });
 });
 
 // tslint:disable-next-line: max-func-body-length
-suite('Insiders Extension Service - Function choosePromptAndDisplay()', () => {
+suite('Insiders Extension Service - Function handleEdgeCases()', () => {
     let appEnvironment: IApplicationEnvironment;
     let serviceContainer: IServiceContainer;
     let extensionChannelService: IExtensionChannelService;
@@ -200,15 +178,17 @@ suite('Insiders Extension Service - Function choosePromptAndDisplay()', () => {
     let insidersPrompt: IInsiderExtensionPrompt;
     let hasUserBeenNotifiedState: TypeMoq.IMock<IPersistentState<boolean>>;
     let insidersExtensionService: InsidersExtensionService;
+    let insidersInstaller: IExtensionBuildInstaller;
     setup(() => {
         extensionChannelService = mock(ExtensionChannelService);
+        insidersInstaller = mock(InsidersBuildInstaller);
         appEnvironment = mock(ApplicationEnvironment);
         cmdManager = mock(CommandManager);
         serviceContainer = mock(ServiceContainer);
         insidersPrompt = mock(InsidersExtensionPrompt);
         hasUserBeenNotifiedState = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
         when(insidersPrompt.hasUserBeenNotified).thenReturn(hasUserBeenNotifiedState.object);
-        insidersExtensionService = new InsidersExtensionService(instance(extensionChannelService), instance(insidersPrompt), instance(appEnvironment), instance(cmdManager), instance(serviceContainer), []);
+        insidersExtensionService = new InsidersExtensionService(instance(extensionChannelService), instance(insidersPrompt), instance(appEnvironment), instance(cmdManager), instance(serviceContainer), instance(insidersInstaller), []);
     });
 
     teardown(() => {
@@ -217,52 +197,52 @@ suite('Insiders Extension Service - Function choosePromptAndDisplay()', () => {
 
     const testsForChoosePromptAndDisplay: {
         vscodeChannel: Channel;
-        promptToDisplay: 'Reload Prompt' | 'Insiders Install Prompt' | undefined;
-        didChannelChange?: boolean;
         hasUserBeenNotified?: boolean;
         installChannel?: ExtensionChannels;
+        isChannelUsingDefaultConfiguration?: boolean
+        operation: 'Set channel to off' | 'Insiders Install Prompt' | undefined;
     }[] =
         [
             {
                 vscodeChannel: 'stable',
-                didChannelChange: true,
+                isChannelUsingDefaultConfiguration: true,
                 promptToDisplay: 'Reload Prompt'
             },
             {
                 vscodeChannel: 'stable',
-                didChannelChange: false,
+                isChannelUsingDefaultConfiguration: false,
                 promptToDisplay: undefined
             },
             {
                 vscodeChannel: 'insiders',
-                installChannel: 'Stable',
-                didChannelChange: true,
+                installChannel: 'off',
+                isChannelUsingDefaultConfiguration: true,
                 promptToDisplay: 'Reload Prompt'
             },
             {
                 vscodeChannel: 'insiders',
-                installChannel: 'Stable',
-                didChannelChange: false,
+                installChannel: 'off',
+                isChannelUsingDefaultConfiguration: false,
                 promptToDisplay: undefined
             },
             {
                 vscodeChannel: 'insiders',
-                installChannel: 'InsidersWeekly',
+                installChannel: 'weekly',
                 hasUserBeenNotified: false,
                 promptToDisplay: 'Insiders Install Prompt'
             },
             {
                 vscodeChannel: 'insiders',
-                installChannel: 'InsidersWeekly',
+                installChannel: 'weekly',
                 hasUserBeenNotified: true,
-                didChannelChange: true,
+                isChannelUsingDefaultConfiguration: true,
                 promptToDisplay: 'Reload Prompt'
             },
             {
                 vscodeChannel: 'insiders',
-                installChannel: 'InsidersWeekly',
+                installChannel: 'weekly',
                 hasUserBeenNotified: true,
-                didChannelChange: false,
+                isChannelUsingDefaultConfiguration: false,
                 promptToDisplay: undefined
             }
         ];
@@ -276,7 +256,7 @@ suite('Insiders Extension Service - Function choosePromptAndDisplay()', () => {
             when(appEnvironment.channel).thenReturn(testParams.vscodeChannel);
             when(insidersPrompt.notifyToInstallInsiders()).thenResolve();
             when(insidersPrompt.promptToReload()).thenResolve();
-            await insidersExtensionService.choosePromptAndDisplay(testParams.installChannel !== undefined ? testParams.installChannel : 'Stable', testParams.didChannelChange !== undefined ? testParams.didChannelChange : false);
+            await insidersExtensionService.handleEdgeCases(testParams.installChannel !== undefined ? testParams.installChannel : 'off', testParams.didChannelChange !== undefined ? testParams.didChannelChange : false);
             if (testParams.promptToDisplay === 'Reload Prompt') {
                 verify(insidersPrompt.promptToReload()).once();
                 verify(insidersPrompt.notifyToInstallInsiders()).never();
@@ -327,7 +307,7 @@ suite('Insiders Extension Service - Function registerCommandsAndHandlers()', () 
         when(extensionChannelService.onDidChannelChange).thenReturn(() => disposable1.object);
         when(cmdManager.registerCommand(Commands.SwitchOffInsidersChannel, anything())).thenReturn(disposable2.object);
         when(cmdManager.registerCommand(Commands.SwitchToInsidersDaily, anything())).thenReturn(disposable3.object);
-        when(cmdManager.registerCommand(Commands.SwitchToInsidersWeekly, anything())).thenReturn(disposable4.object);
+        when(cmdManager.registerCommand(Commands.SwitchToweekly, anything())).thenReturn(disposable4.object);
 
         insidersExtensionService.registerCommandsAndHandlers();
 
@@ -335,7 +315,7 @@ suite('Insiders Extension Service - Function registerCommandsAndHandlers()', () 
         verify(extensionChannelService.onDidChannelChange).once();
         verify(cmdManager.registerCommand(Commands.SwitchOffInsidersChannel, anything())).once();
         verify(cmdManager.registerCommand(Commands.SwitchToInsidersDaily, anything())).once();
-        verify(cmdManager.registerCommand(Commands.SwitchToInsidersWeekly, anything())).once();
+        verify(cmdManager.registerCommand(Commands.SwitchToweekly, anything())).once();
     });
 
     test('Ensure commands and handlers get registered with the correct callback handlers', async () => {
@@ -344,29 +324,29 @@ suite('Insiders Extension Service - Function registerCommandsAndHandlers()', () 
         const disposable3 = TypeMoq.Mock.ofType<IDisposable>();
         const disposable4 = TypeMoq.Mock.ofType<IDisposable>();
         let channelChangedHandler!: Function;
-        let switchToStableHandler!: Function;
+        let switchTooffHandler!: Function;
         let switchToInsidersDailyHandler!: Function;
-        let switchToInsidersWeeklyHandler!: Function;
+        let switchToweeklyHandler!: Function;
         when(extensionChannelService.onDidChannelChange).thenReturn(cb => { channelChangedHandler = cb; return disposable1.object; });
-        when(cmdManager.registerCommand(Commands.SwitchOffInsidersChannel, anything())).thenCall((_, cb) => { switchToStableHandler = cb; return disposable2.object; });
+        when(cmdManager.registerCommand(Commands.SwitchOffInsidersChannel, anything())).thenCall((_, cb) => { switchTooffHandler = cb; return disposable2.object; });
         when(cmdManager.registerCommand(Commands.SwitchToInsidersDaily, anything())).thenCall((_, cb) => { switchToInsidersDailyHandler = cb; return disposable3.object; });
-        when(cmdManager.registerCommand(Commands.SwitchToInsidersWeekly, anything())).thenCall((_, cb) => { switchToInsidersWeeklyHandler = cb; return disposable4.object; });
+        when(cmdManager.registerCommand(Commands.SwitchToweekly, anything())).thenCall((_, cb) => { switchToweeklyHandler = cb; return disposable4.object; });
 
         insidersExtensionService.registerCommandsAndHandlers();
 
         channelChangedHandler('Some channel');
         assert.ok(handleChannel.calledOnce);
 
-        when(extensionChannelService.updateChannel('Stable')).thenResolve();
-        await switchToStableHandler();
-        verify(extensionChannelService.updateChannel('Stable')).once();
+        when(extensionChannelService.updateChannel('off')).thenResolve();
+        await switchTooffHandler();
+        verify(extensionChannelService.updateChannel('off')).once();
 
         when(extensionChannelService.updateChannel('InsidersDaily')).thenResolve();
         await switchToInsidersDailyHandler();
         verify(extensionChannelService.updateChannel('InsidersDaily')).once();
 
-        when(extensionChannelService.updateChannel('InsidersWeekly')).thenResolve();
-        await switchToInsidersWeeklyHandler();
-        verify(extensionChannelService.updateChannel('InsidersWeekly')).once();
+        when(extensionChannelService.updateChannel('weekly')).thenResolve();
+        await switchToweeklyHandler();
+        verify(extensionChannelService.updateChannel('weekly')).once();
     });
 });
