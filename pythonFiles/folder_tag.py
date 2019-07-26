@@ -22,4 +22,4 @@ def get_folder_tag():
         folder_name = "win"
     else:
         folder_name = "linux"
-    return f"{folder_name}-{get_architecture(system)}"
+    return "{}-{}".format(folder_name, get_architecture(system))
