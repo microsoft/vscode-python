@@ -58,7 +58,6 @@ def install_ptvsd_wheels(version):
     }
 
     for folder in platforms:
-        # Remove the platform folder and its content if it exists.
         dirpath = os.path.join(
             os.path.dirname(__file__),
             "..",
@@ -67,13 +66,12 @@ def install_ptvsd_wheels(version):
             "lib",
             f"python-{folder}-{version}",
         )
+        # Remove the platform folder and its content if it exists.
         delete_folder(dirpath)
 
         # Download and install the appropriate PTVSD wheel.
         os.makedirs(dirpath)
-
         download_wheel(platforms[folder], dirpath)
-
         wheel = get_wheel_name(dirpath)
         install_wheel(wheel, dirpath)
 
