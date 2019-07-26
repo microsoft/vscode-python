@@ -33,6 +33,9 @@ export interface IInsiderExtensionPrompt {
  * Note the values in this enum must belong to `ExtensionChannels` type
  */
 export enum ExtensionChannel {
+    /**
+     * "off" setting is defined as a no op, which means user keeps using the extension they are using
+     */
     off = 'off',
     weekly = 'weekly',
     daily = 'daily'

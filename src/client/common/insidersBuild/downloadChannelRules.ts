@@ -12,6 +12,14 @@ export const frequencyForDailyInsidersCheck = 1000 * 60 * 60 * 24; // One day.
 export const frequencyForWeeklyInsidersCheck = 1000 * 60 * 60 * 24 * 7; // One week.
 export const lastLookUpTimeKey = 'INSIDERS_LAST_LOOK_UP_TIME_KEY';
 
+/**
+ * Determines if we should install insiders when install channel is set of "off".
+ * "off" setting is defined as a no op, which means we should not be looking for insiders.
+ *
+ * @export
+ * @class ExtensionInsidersOffChannelRule
+ * @implements {IExtensionChannelRule}
+ */
 @injectable()
 export class ExtensionInsidersOffChannelRule implements IExtensionChannelRule {
     public async shouldLookForInsidersBuild(): Promise<boolean> {
