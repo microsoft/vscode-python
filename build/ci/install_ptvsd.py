@@ -72,8 +72,7 @@ if __name__ == "__main__":
         "--python-version",
         dest="version",
         help='the Python interpreter version to use for wheel and "Requires-Python" compatibility checks (default: 3.7)',
-        default="37",
+        default="3.7",
     )
     args = parser.parse_args()
     install_ptvsd_wheels(args.version)
-
