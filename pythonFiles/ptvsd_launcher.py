@@ -16,6 +16,8 @@ ptvsdArgs.pop(1)
 
 # Load the debugger package
 try:
+    # Build the PTVSD wheel path and point to it if it exists,
+    # fallback to what's installed with requirements.txt.
     platform_version = platform.python_version()[0:3:2]
     wheel_folder_name = os.path.join(
         os.path.dirname(__file__),
