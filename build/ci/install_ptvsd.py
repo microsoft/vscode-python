@@ -12,50 +12,6 @@ import sys
 def install_ptvsd_wheels(version):
     """Download and install PTVSD wheels for a specific Python version and a list of platforms."""
 
-    def delete_folder(path):
-        """Delete a folder at a given path."""
-        if os.path.isdir(path):
-            shutil.rmtree(path)
-
-    def download_wheel(platform, dest):
-        """Download a PTVSD wheel and save it in its platform-specific folder."""
-        with open(
-            os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "requirements.txt"), "r"
-        ) as req:
-            lines = req.readlines()
-        for line in lines:
-            if line.startswith("ptvsd"):
-                ptvsd_version = line[len("ptvsd=="):-1]
-                break
-        subprocess.call(
-            [
-                sys.executable,
-                "-m",
-                "pip",
-                "download",
-                f"ptvsd=={ptvsd_version}",
-                "-d",
-                dest,
-                "--platform",
-                platform,
-                "--no-deps",
-            ]
-        )
-
-    def get_wheel_name(folder):
-        """Retrieve the file name of the PTVSD wheel that was just downloaded."""
-        wheel = [w for w in glob.glob(os.path.join(folder, "*.whl"), recursive=False)]
-        if len(wheel) == 1:
-            return wheel[0]
-        else:
-            raise ValueError(f"The content of {folder} is incorrect")
-
-    def install_wheel(wheel, dest):
-        """Install a PTVSD wheel in its platform-specific folder."""
-        subprocess.call(
-            [sys.executable, "-m", "pip", "install", f"--target={dest}", wheel]
-        )
-
     # Mapping between folder platform names and wheel platform tags.
     platforms = {
         "win-32": "win32",
@@ -65,23 +21,48 @@ def install_ptvsd_wheels(version):
         "mac-64": "macosx_10_13_x86_64",
     }
 
+    root_dirname = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
     for folder in platforms:
         dirpath = os.path.join(
-            os.path.dirname(__file__),
-            "..",
-            "..",
-            "pythonFiles",
-            "lib",
-            f"python-{folder}-{version}",
+            root_dirname, "pythonFiles", "lib", f"python-{folder}-{version}"
         )
         # Remove the platform folder and its content if it exists, then create it.
-        delete_folder(dirpath)
+        if os.path.isdir(dirpath):
+            shutil.rmtree(dirpath)
         os.makedirs(dirpath)
 
         # Download and install the appropriate PTVSD wheel.
-        download_wheel(platforms[folder], dirpath)
-        wheel = get_wheel_name(dirpath)
-        install_wheel(wheel, dirpath)
+        with open(
+            os.path.join(root_dirname, "requirements.txt"), "r", encoding="utf-8"
+        ) as requirements:
+            ptvsd_prefix = "ptvsd=="
+            for line in requirements:
+                if line.startswith(ptvsd_prefix):
+                    ptvsd_version = line[len(ptvsd_prefix) :].strip()
+                    break
+        subprocess.call(
+            [
+                sys.executable,
+                "-m",
+                "pip",
+                "download",
+                f"ptvsd=={ptvsd_version}",
+                "-d",
+                dirpath,
+                "--platform",
+                platforms[folder],
+                "--no-deps",
+            ]
+        )
+
+        wheel = [w for w in glob.glob(os.path.join(dirpath, "*.whl"), recursive=False)]
+        if len(wheel) == 1:
+            wheel = wheel[0]
+        else:
+            raise ValueError(f"The content of {dirpath} is incorrect")
+        subprocess.call(
+            [sys.executable, "-m", "pip", "install", f"--target={dirpath}", wheel]
+        )
 
 
 if __name__ == "__main__":
