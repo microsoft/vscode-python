@@ -7,7 +7,7 @@ import platform
 import sys
 import traceback
 
-sys.path.append(os.path.join("..", "build", "ci", "install_ptvsd"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "build", "ci"))
 from install_ptvsd import get_folder_tag
 
 useCustomPtvsd = sys.argv[1] == "--custom"
@@ -16,12 +16,18 @@ ptvsdArgs.pop(1)
 
 # Load the debugger package
 try:
-    folder_name = (
-        f"python-{get_folder_tag()}-37"
-        if platform.python_version()[:3] == "3.7"
-        else "python"
+    platform_version = platform.python_version()[0:3:2]
+    wheel_folder_name = os.path.join(
+        os.path.dirname(__file__),
+        "lib",
+        f"python-{get_folder_tag()}-{platform_version}",
     )
-    ptvs_lib_path = os.path.join(os.path.dirname(__file__), "lib", folder_name)
+
+    ptvs_lib_path = (
+        wheel_folder_name
+        if os.path.exists(wheel_folder_name)
+        else os.path.join(os.path.dirname(__file__), "lib", "python")
+    )
     if useCustomPtvsd:
         sys.path.append(ptvs_lib_path)
     else:
