@@ -265,7 +265,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
     private async installPtvsd(server: INotebookServer): Promise<void> {
         // tslint:disable-next-line:no-multiline-string
-        const ptvsdInstallResults = await this.executeSilently(server, `import sys\r\n!{sys.executable} -m pip install ptvsd==v4.3.0b1`);
+        const ptvsdInstallResults = await this.executeSilently(server, `import sys\r\n!{sys.executable} -m pip install -U ptvsd`);
 
         if (ptvsdInstallResults.length > 0) {
             const installResultsString = this.extractOutput(ptvsdInstallResults[0]);
