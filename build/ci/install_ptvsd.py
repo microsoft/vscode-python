@@ -55,11 +55,10 @@ def install_ptvsd_wheels(version):
             ]
         )
 
-        wheel = [w for w in glob.glob(os.path.join(dirpath, "*.whl"), recursive=False)]
-        if len(wheel) == 1:
-            wheel = wheel[0]
-        else:
-            raise ValueError(f"The content of {dirpath} is incorrect")
+        try:
+            wheel = glob.glob(os.path.join(dirpath, "*.whl"), recursive=False)[0]
+        except IndexError:
+            raise IndexError(f"{dirpath!r} contains no '.whl' files")
         subprocess.call(
             [sys.executable, "-m", "pip", "install", f"--target={dirpath}", wheel]
         )
