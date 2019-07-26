@@ -22,13 +22,21 @@ def install_ptvsd_wheels(version, platforms):
 
     def download_wheel(wheel_platform, dest):
         """Download a PTVSD wheel and save it in its platform-specific folder."""
+        with open(
+            os.path.join(os.path.dirname(__file__), "..", "..", "requirements.txt"), "r"
+        ) as req:
+            lines = req.readlines()
+        for line in lines:
+            if line.startswith("ptvsd"):
+                ptvsd_version = line[7:-1]
+                break
         subprocess.call(
             [
                 sys.executable,
                 "-m",
                 "pip",
                 "download",
-                "ptvsd==4.2.10",
+                f"ptvsd=={ptvsd_version}",
                 "-d",
                 dest,
                 "--platform",
