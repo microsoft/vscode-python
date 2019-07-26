@@ -7,8 +7,7 @@ import platform
 import sys
 import traceback
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", "build", "ci"))
-from install_ptvsd import get_folder_tag
+from folder_tag import get_folder_tag
 
 useCustomPtvsd = sys.argv[1] == "--custom"
 ptvsdArgs = sys.argv[:]

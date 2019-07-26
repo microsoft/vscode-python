@@ -4,10 +4,12 @@
 import argparse
 import glob
 import os
-import platform
 import shutil
 import subprocess
 import sys
+
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", "..", "pythonFiles"))
+from folder_tag import get_folder_tag
 
 
 def install_ptvsd_wheels(version, platforms):
@@ -68,27 +70,6 @@ def install_ptvsd_wheels(version, platforms):
         install_wheel(wheel, dirpath)
 
 
-def get_folder_tag():
-    """Get the PTVSD folder tag for the current Python interpreter (format is <os>-<arch>)."""
-
-    def get_architecture(system):
-        """Detect the bitness of the current Python interpreter."""
-        if system == "Darwin":
-            return 64
-        else:
-            architecture = platform.architecture()[0]
-            return architecture[:2]
-
-    system = platform.system()
-    if system == "Darwin":
-        folder_name = "mac"
-    elif system == "Windows":
-        folder_name = "win"
-    else:
-        folder_name = "linux"
-    return f"{folder_name}-{get_architecture(system)}"
-
-
 def get_platforms(local):
     """Get the platforms of the PTVSD wheels to download and install."""
     # Mapping between folder platform names and wheel platform tags.
@@ -130,4 +111,3 @@ if __name__ == "__main__":
         raise Exception(f"No matching platforms")
 
     install_ptvsd_wheels(args.version, platforms)
-
