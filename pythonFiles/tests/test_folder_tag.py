@@ -24,7 +24,7 @@ def test_folder(monkeypatch, os, arch, expected):
         return os
 
     def mock_arch():
-        return (f"{arch}bit", "")
+        return ("{}bit".format(arch), "")
 
     monkeypatch.setattr(platform, "system", mock_os)
     monkeypatch.setattr(platform, "architecture", mock_arch)
