@@ -10,7 +10,7 @@ import sys
 
 
 def install_ptvsd_wheels(version):
-    """Downlad and install PTVSD wheels for a specific Python version and a list of platforms."""
+    """Download and install PTVSD wheels for a specific Python version and a list of platforms."""
 
     def delete_folder(path):
         """Delete a folder at a given path."""
