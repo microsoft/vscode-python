@@ -26,7 +26,7 @@ def install_ptvsd_wheels(version, platforms):
                 "-m",
                 "pip",
                 "download",
-                "ptvsd",
+                "ptvsd==4.2.10",
                 "-d",
                 dest,
                 "--platform",
@@ -50,25 +50,22 @@ def install_ptvsd_wheels(version, platforms):
         )
 
     for folder in platforms:
-        # Remove the platform folder and its content if it exists.
         dirpath = os.path.join(
             os.path.dirname(__file__),
+            "..",
+            "..",
             "pythonFiles",
             "lib",
             f"python-{folder}-{version}",
         )
+        # Remove the platform folder and its content if it exists, then create it.
         delete_folder(dirpath)
+        os.makedirs(dirpath)
 
         # Download and install the appropriate PTVSD wheel.
-        try:
-            os.makedirs(dirpath)
-
-            download_wheel(platforms[folder], dirpath)
-
-            wheel = get_wheel_name(dirpath)
-            install_wheel(wheel, dirpath)
-        except Exception as ex:
-            raise ex
+        download_wheel(platforms[folder], dirpath)
+        wheel = get_wheel_name(dirpath)
+        install_wheel(wheel, dirpath)
 
 
 def get_folder_tag():
