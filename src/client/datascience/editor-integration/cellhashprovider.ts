@@ -208,9 +208,9 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
             const startOffset = doc.offsetAt(new Position(cell.line, 0));
             const endOffset = doc.offsetAt(endLine.rangeIncludingLineBreak.end);
 
-            // Jupyter also removes blank lines at the end.
+            // Jupyter also removes blank lines at the end. Make sure only one
             let lastLine = stripped[stripped.length - 1];
-            while (lastLine && (lastLine.length === 0 || lastLine === '\n')) {
+            while (lastLine !== undefined && (lastLine.length === 0 || lastLine === '\n')) {
                 stripped.splice(stripped.length - 1, 1);
                 lastLine = stripped[stripped.length - 1];
             }
