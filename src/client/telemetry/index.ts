@@ -12,12 +12,12 @@ import { EXTENSION_ROOT_DIR, isTestExecution, PVSC_EXTENSION_ID } from '../commo
 import { traceInfo } from '../common/logger';
 import { StopWatch } from '../common/utils/stopWatch';
 import { Telemetry } from '../datascience/constants';
+import { ConsoleType } from '../debugger/types';
 import { LinterId } from '../linters/types';
 import { EventName } from './constants';
 import {
     CodeExecutionTelemetry,
     DebuggerConfigurationPromtpsTelemetry,
-    DebuggerTelemetry,
     DiagnosticsAction,
     DiagnosticsMessages,
     EditorLoadTelemetry,
@@ -270,7 +270,127 @@ function getCallsite(frame: stackTrace.StackFrame) {
 export interface IEventNamePropertyMapping {
     [EventName.COMPLETION]: never | undefined;
     [EventName.COMPLETION_ADD_BRACKETS]: { enabled: boolean };
-    [EventName.DEBUGGER]: DebuggerTelemetry;
+    /**
+     * Telemetry captured when staring the debugger.
+     */
+    [EventName.DEBUGGER]: {
+        /**
+         * Trigger for starting the debugger.
+         * - `launch`: Launch/start new code and debug it.
+         * - `attach`: Attach to an exiting python process (remote debugging).
+         * - `test`: Debugging python tests.
+         *
+         * @type {('launch' | 'attach' | 'test')}
+         */
+        trigger: 'launch' | 'attach' | 'test';
+        /**
+         * Type of console used.
+         *  -`internalConsole`: Use VS Code debug console (no shells/terminals).
+         * - `integratedTerminal`: Use VS Code terminal.
+         * - `externalTerminal`: Use an External terminal.
+         *
+         * @type {ConsoleType}
+         */
+        console?: ConsoleType;
+        /**
+         * Whether user has defined environment variables.
+         * Could have been defined in launch.json or the env file (defined in `settings.json`).
+         * Default `env file` is `.env` in the workspace folder.
+         *
+         * @type {boolean}
+         */
+        hasEnvVars: boolean;
+        /**
+         * Whether there are any CLI arguments that need to be passed into the program being debugged.
+         *
+         * @type {boolean}
+         */
+        hasArgs: boolean;
+        /**
+         * Whether the user is debugging `django`.
+         *
+         * @type {boolean}
+         */
+        django: boolean;
+        /**
+         * Whether the user is debugging `flask`.
+         *
+         * @type {boolean}
+         */
+        flask: boolean;
+        /**
+         * Whether the user is debugging `jinja` templates.
+         *
+         * @type {boolean}
+         */
+        jinja: boolean;
+        /**
+         * Whether user is attaching to a local python program (attach scenario).
+         *
+         * @type {boolean}
+         */
+        isLocalhost: boolean;
+        /**
+         * Whether debugging a module.
+         *
+         * @type {boolean}
+         */
+        isModule: boolean;
+        /**
+         * Whether debugging with `sudo`.
+         *
+         * @type {boolean}
+         */
+        isSudo: boolean;
+        /**
+         * Whether required to stop upon entry.
+         *
+         * @type {boolean}
+         */
+        stopOnEntry: boolean;
+        /**
+         * Whether required to display return types in debugger.
+         *
+         * @type {boolean}
+         */
+        showReturnValue: boolean;
+        /**
+         * Whether debugging `pyramid`.
+         *
+         * @type {boolean}
+         */
+        pyramid: boolean;
+        /**
+         * Whether debugging a subprocess.
+         *
+         * @type {boolean}
+         */
+        subProcess: boolean;
+        /**
+         * Whether debugging `watson`.
+         *
+         * @type {boolean}
+         */
+        watson: boolean;
+        /**
+         * Whether degbugging `pyspark`.
+         *
+         * @type {boolean}
+         */
+        pyspark: boolean;
+        /**
+         * Whether using `gevent` when deugging.
+         *
+         * @type {boolean}
+         */
+        gevent: boolean;
+        /**
+         * Whether debugging `scrapy`.
+         *
+         * @type {boolean}
+         */
+        scrapy: boolean;
+    };
     [EventName.DEBUGGER_ATTACH_TO_CHILD_PROCESS]: never | undefined;
     [EventName.DEBUGGER_CONFIGURATION_PROMPTS]: DebuggerConfigurationPromtpsTelemetry;
     [EventName.DEBUGGER_CONFIGURATION_PROMPTS_IN_LAUNCH_JSON]: never | undefined;
