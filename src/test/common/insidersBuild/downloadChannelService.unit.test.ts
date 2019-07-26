@@ -15,6 +15,8 @@ import { ConfigurationService } from '../../../client/common/configuration/servi
 import { ExtensionChannelService, insidersChannelSetting } from '../../../client/common/insidersBuild/downloadChannelService';
 import { ExtensionChannels } from '../../../client/common/insidersBuild/types';
 import { IConfigurationService } from '../../../client/common/types';
+import { createDeferred } from '../../../client/common/utils/async';
+import { sleep } from '../../../test/common';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Download channel service', () => {
@@ -171,5 +173,17 @@ suite('Download channel service', () => {
         verify(
             configService.getSettings()
         ).never();
+    });
+
+    test('Ensure on channel change captures the fired event with the correct arguments', async () => {
+        const deferred = createDeferred<true>();
+        const settings = { insidersChannel: 'off' };
+        channelService.onDidChannelChange(channel => {
+            expect(channel).to.equal(settings.insidersChannel);
+            deferred.resolve(true);
+        });
+        channelService._onDidChannelChange.fire(settings.insidersChannel as any);
+        const eventCaptured = await Promise.race([deferred.promise, sleep(1000).then(() => false)]);
+        expect(eventCaptured).to.equal(true, 'Event should be captured');
     });
 });
