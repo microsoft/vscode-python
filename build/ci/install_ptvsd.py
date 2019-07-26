@@ -20,12 +20,12 @@ def install_ptvsd_wheels(version):
     def download_wheel(platform, dest):
         """Download a PTVSD wheel and save it in its platform-specific folder."""
         with open(
-            os.path.join(os.path.dirname(__file__), "..", "..", "requirements.txt"), "r"
+            os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "requirements.txt"), "r"
         ) as req:
             lines = req.readlines()
         for line in lines:
             if line.startswith("ptvsd"):
-                ptvsd_version = line[7:-1]
+                ptvsd_version = line[len("ptvsd=="):-1]
                 break
         subprocess.call(
             [
@@ -48,7 +48,7 @@ def install_ptvsd_wheels(version):
         if len(wheel) == 1:
             return wheel[0]
         else:
-            raise Exception(f"The content of {folder} is incorrect")
+            raise ValueError(f"The content of {folder} is incorrect")
 
     def install_wheel(wheel, dest):
         """Install a PTVSD wheel in its platform-specific folder."""
