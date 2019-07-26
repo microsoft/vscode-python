@@ -14,7 +14,7 @@ def install_ptvsd_wheels(version):
 
     def delete_folder(path):
         """Delete a folder at a given path."""
-        if os.path.exists(path) and os.path.isdir(path):
+        if os.path.isdir(path):
             shutil.rmtree(path)
 
     def download_wheel(platform, dest):
