@@ -21,7 +21,7 @@ def install_ptvsd_wheels(version):
         "mac-64": "macosx_10_13_x86_64",
     }
 
-    root_dirname = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    root_dirname = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     for folder in platforms:
         dirpath = os.path.join(
             root_dirname, "pythonFiles", "lib", f"python-{folder}-{version}"
