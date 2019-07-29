@@ -7,20 +7,26 @@ import { parse } from 'node-html-parser';
 import * as os from 'os';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { Disposable, Selection, TextDocument, TextEditor } from 'vscode';
+import { CodeLens, Disposable, Position, Range, Selection, TextDocument, TextEditor } from 'vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
+import { PythonSettings } from '../../client/common/configSettings';
+import { IFileSystem } from '../../client/common/platform/types';
+import { IConfigurationService } from '../../client/common/types';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { generateCellsFromDocument } from '../../client/datascience/cellFactory';
 import { concatMultilineString } from '../../client/datascience/common';
 import { EditorContexts } from '../../client/datascience/constants';
+import { CodeWatcher } from '../../client/datascience/editor-integration/codewatcher';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import {
     InteractiveWindowMessageListener
 } from '../../client/datascience/interactive-window/interactiveWindowMessageListener';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-window/interactiveWindowTypes';
-import { IInteractiveWindow, IInteractiveWindowProvider } from '../../client/datascience/types';
+import { ICodeLensFactory, IDataScienceErrorHandler, IInteractiveWindow, IInteractiveWindowProvider } from '../../client/datascience/types';
+import { InterpreterAutoSeletionProxyService } from '../../client/interpreter/autoSelection/proxy';
+import { ICodeExecutionHelper } from '../../client/terminals/types';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
@@ -45,6 +51,7 @@ import {
     verifyHtmlOnCell,
     verifyLastCellInputState
 } from './interactiveWindowTestHelpers';
+import { MockDocument } from './mockDocument';
 import { MockDocumentManager } from './mockDocumentManager';
 import { MockEditor } from './mockTextEditor';
 import { waitForUpdate } from './reactHelpers';
@@ -103,6 +110,75 @@ suite('DataScience Interactive Window output tests', () => {
 
         verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
     }, () => { return ioc; });
+
+    test('Jupyter not installed', async () => {
+        const interactiveWindowProvider = TypeMoq.Mock.ofType<IInteractiveWindowProvider>();
+        const fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
+        const configService = TypeMoq.Mock.ofType<IConfigurationService>();
+        const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
+        const executionHelper = TypeMoq.Mock.ofType<ICodeExecutionHelper>();
+        const errorHandler = TypeMoq.Mock.ofType<IDataScienceErrorHandler>();
+        const codeLensFactory = TypeMoq.Mock.ofType<ICodeLensFactory>();
+
+        interactiveWindowProvider.setup(winProv => winProv.getOrCreateActive())
+            .returns(() => Promise.resolve(getOrCreateInteractiveWindow()))
+            .verifiable(TypeMoq.Times.once());
+
+        const settings = new PythonSettings(undefined, new InterpreterAutoSeletionProxyService([] as any));
+        settings.datascience = {
+            allowImportFromNotebook: true,
+            enabled: true,
+            jupyterInterruptTimeout: 0,
+            jupyterLaunchRetries: 0,
+            jupyterLaunchTimeout: 0,
+            jupyterServerURI: '',
+            searchForJupyter: true,
+            useDefaultConfigForJupyter: true,
+            notebookFileRoot: 'string',
+            changeDirOnImportExport: true,
+            allowInput: true,
+            showCellInputCode: true,
+            collapseCellInputCodeByDefault: true,
+            maxOutputSize: 0,
+            sendSelectionToInteractiveWindow: true,
+            markdownRegularExpression: '',
+            codeRegularExpression: '',
+            errorBackgroundColor: '#FF0000'
+        };
+
+        configService.setup(conf => conf.getSettings())
+            .returns(() => settings)
+            .verifiable(TypeMoq.Times.once());
+
+        errorHandler.setup(han => han.handleError(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve())
+            .verifiable(TypeMoq.Times.once());
+
+        const pos = new Position(0, 0);
+        codeLensFactory.setup(code => code.createCodeLenses(TypeMoq.It.isAny()))
+            .returns(() => [new CodeLens(new Range(pos, pos))])
+            .verifiable(TypeMoq.Times.once());
+
+        ioc.serviceManager.rebindInstance<IDocumentManager>(IDocumentManager, documentManager.object);
+
+        const document = new MockDocument('a=1\na', 'test.py');
+        const codeWatcher = new CodeWatcher(
+            interactiveWindowProvider.object,
+            fileSystem.object,
+            configService.object,
+            documentManager.object,
+            executionHelper.object,
+            errorHandler.object,
+            codeLensFactory.object);
+
+        codeWatcher.setDocument(document);
+        await codeWatcher.runAllCells();
+
+        interactiveWindowProvider.verifyAll();
+        configService.verifyAll();
+        errorHandler.verifyAll();
+        codeLensFactory.verifyAll();
+    });
 
     runMountedTest('Hide inputs', async (wrapper) => {
         initialDataScienceSettings({ ...defaultDataScienceSettings(), showCellInputCode: false });
