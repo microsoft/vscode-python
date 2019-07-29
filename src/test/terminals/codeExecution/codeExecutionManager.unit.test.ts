@@ -62,15 +62,7 @@ suite('Terminal - Code Execution Manager', () => {
 
         executionManager.registerCommands();
 
-        const sorted = registered.sort((c1, c2) => {
-            if (c1 > c2) {
-                return 1;
-            }
-            if (c1 < c2) {
-                return -1;
-            }
-            return 0;
-        });
+        const sorted = registered.sort();
         expect(sorted).to.deep.equal([
             Commands.Exec_In_Terminal,
             Commands.Exec_In_Terminal_Icon_1,
