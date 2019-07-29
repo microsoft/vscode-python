@@ -246,7 +246,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         if (this.state.open) {
             if (this.props.debugging) {
                 return (
-                    <span className='span-debug-message'>{getLocString('DataScience.variableExplorerDisabledDuringDebugging', 'Variables are not available while debugging.')}</span>
+                    <span className='span-debug-message'>{getLocString('DataScience.variableExplorerDisabledDuringDebugging', 'Please see the Debug Side Bar\'s VARIABLES section.')}</span>
                 );
             } else {
                 return (

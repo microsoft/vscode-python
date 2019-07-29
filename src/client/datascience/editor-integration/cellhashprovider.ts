@@ -1,17 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { nbformat } from '@jupyterlab/coreutils';
 import * as hashjs from 'hash.js';
 import { inject, injectable, multiInject, optional } from 'inversify';
-import {
-    Event,
-    EventEmitter,
-    Position,
-    Range,
-    SourceBreakpoint,
-    TextDocumentChangeEvent,
-    TextDocumentContentChangeEvent
-} from 'vscode';
+import { Event, EventEmitter, Position, Range, TextDocumentChangeEvent, TextDocumentContentChangeEvent } from 'vscode';
 
 import { IDebugService, IDocumentManager } from '../../common/application/types';
 import { traceError, traceInfo } from '../../common/logger';
@@ -105,12 +98,8 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
     public async preExecute(cell: ICell, silent: boolean): Promise<void> {
         try {
             if (!silent) {
-                const cellMatcher = new CellMatcher(this.configService.getSettings().datascience);
-
                 // Don't log empty cells
-                const lines = splitMultilineString(cell.data.source);
-                const stripped = lines.filter(l => !cellMatcher.isCode(l));
-
+                const stripped = this.extractExecutableLines(cell.data.source);
                 if (stripped.length > 0 && stripped.find(s => s.trim().length > 0)) {
                     // When the user adds new code, we know the execution count is increasing
                     this.executionCount += 1;
@@ -141,6 +130,16 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
                 this.handleContentChange(docText, c, perFile);
             });
         }
+    }
+
+    private extractExecutableLines(code: nbformat.MultilineString): string[] {
+        const cellMatcher = new CellMatcher(this.configService.getSettings().datascience);
+        const lines = splitMultilineString(code);
+        // Only strip this off the first line. Otherwise we want the markers in the code.
+        if (lines.length > 0 && (cellMatcher.isCode(lines[0]) || cellMatcher.isMarkdown(lines[0]))) {
+            return lines.slice(1);
+        }
+        return lines;
     }
 
     private handleContentChange(docText: string, c: TextDocumentContentChangeEvent, hashes: IRangedCellHash[]) {
@@ -185,11 +184,9 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
         // the add code gives us
         const doc = this.documentManager.textDocuments.find(d => d.fileName === cell.file);
         if (doc) {
-            const cellMatcher = new CellMatcher(this.configService.getSettings().datascience);
-
             // Compute the code that will really be sent to jupyter
             const lines = splitMultilineString(cell.data.source);
-            const stripped = lines.filter(l => !cellMatcher.isCode(l));
+            const stripped = this.extractExecutableLines(cell.data.source);
 
             // Figure out our true 'start' line. This is what we need to tell the debugger is
             // actually the start of the code as that's what Jupyter will be getting.
@@ -276,34 +273,15 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
         }
     }
 
-    private adjustRuntimeForDebugging(cell: ICell, source: string[], cellStartOffset: number, cellEndOffset: number): number {
+    private adjustRuntimeForDebugging(cell: ICell, source: string[], _cellStartOffset: number, _cellEndOffset: number): number {
         if (this.debugService.activeDebugSession && this.configService.getSettings().datascience.stopOnFirstLineWhileDebugging) {
-            // See if any breakpoints in any cell that's already run or in the cell we're about to run
-            const anyExisting = this.debugService.breakpoints.filter(b => {
-                // tslint:disable-next-line: no-any
-                if ((b as any).location) {
-                    const sb = b as SourceBreakpoint;
-                    const sbFile = sb.location.uri.fsPath;
-                    if (sbFile === cell.file) {
-                        const doc = this.documentManager.textDocuments.find(d => d.fileName === sb.location.uri.fsPath);
-                        const startOffset = doc ? doc.offsetAt(sb.location.range.start) : -1;
+            // Inject the breakpoint line
+            source.splice(0, 0, 'breakpoint()\n');
+            cell.data.source = source;
+            cell.extraLines = [0];
 
-                        // Check if this breakpoint is in our current code.
-                        if (startOffset >= cellStartOffset && startOffset <= cellEndOffset) {
-                            return true;
-                        }
-                    }
-                }
-            });
-            if (!anyExisting || anyExisting.length <= 0) {
-                // There are no matching breakpoints, We need to inject a breakpoint into our cell
-                source.splice(0, 0, 'breakpoint()\n');
-                cell.data.source = source;
-                cell.extraLines = [0];
-
-                // Start on the second line
-                return 2;
-            }
+            // Start on the second line
+            return 2;
         }
         // No breakpoint necessary, start on the first line
         return 1;

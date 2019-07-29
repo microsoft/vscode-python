@@ -182,14 +182,18 @@ suite('DataScience Debugger tests', () => {
     }
 
     test('Debug cell without breakpoint', async () => {
+        ioc.getSettings().datascience.stopOnFirstLineWhileDebugging = true;
+
         await debugCell('#%%\nprint("bar")');
     });
 
     test('Debug cell with breakpoint', async () => {
+        ioc.getSettings().datascience.stopOnFirstLineWhileDebugging = false;
         await debugCell('#%%\nprint("bar")\nprint("baz")\n\n\n', new Range(new Position(3, 0), new Position(3, 0)));
     });
 
     test('Debug cell with breakpoint in another file', async () => {
+        ioc.getSettings().datascience.stopOnFirstLineWhileDebugging = true;
         await debugCell('#%%\nprint("bar")\nprint("baz")', new Range(new Position(3, 0), new Position(3, 0)), 'bar.py');
     });
 

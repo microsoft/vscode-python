@@ -96,6 +96,20 @@ export class DataScience implements IDataScience {
         }
     }
 
+    public async debugFileInteractive(file: string): Promise<void> {
+        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
+
+        let codeWatcher = this.getCodeWatcher(file);
+        if (!codeWatcher) {
+            codeWatcher = this.getCurrentCodeWatcher();
+        }
+        if (codeWatcher) {
+            return codeWatcher.debugFileInteractive();
+        } else {
+            return Promise.resolve();
+        }
+    }
+
     public async runAllCells(file: string): Promise<void> {
         this.dataScienceSurveyBanner.showBanner().ignoreErrors();
 
@@ -394,6 +408,8 @@ export class DataScience implements IDataScience {
         disposable = this.commandManager.registerCommand(Commands.RunFromLine, this.runFromLine, this);
         this.disposableRegistry.push(disposable);
         disposable = this.commandManager.registerCommand(Commands.RunFileInInteractiveWindows, this.runFileInteractive, this);
+        this.disposableRegistry.push(disposable);
+        disposable = this.commandManager.registerCommand(Commands.DebugFileInInteractiveWindows, this.debugFileInteractive, this);
         this.disposableRegistry.push(disposable);
         disposable = this.commandManager.registerCommand(Commands.AddCellBelow, this.addCellBelow, this);
         this.disposableRegistry.push(disposable);
