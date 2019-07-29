@@ -1,15 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { ICommandManager } from '../../client/common/application/types';
 import { ShowPlayIcon } from '../../client/common/experimentGroups';
 import { IExperimentsManager } from '../../client/common/types';
 import { noop } from '../../client/common/utils/misc';
-import {
-    checkExperiments, ExtensionActivationForTerminalActivation
-} from '../../client/terminals/activation';
+import { checkExperiments } from '../../client/terminals/activation';
 
 suite('Terminal - Activation', () => {
     let experiments: TypeMoq.IMock<IExperimentsManager>;
@@ -23,26 +20,6 @@ suite('Terminal - Activation', () => {
         experiments.verifyAll();
         commands.verifyAll();
     }
-
-    test('ExtensionActivationForTerminalActivation.activate() calls checkExperiments()', async () => {
-        let called = false;
-        function check() {
-            // tslint:disable-next-line:no-unused-expression chai-vague-errors
-            expect(called).to.be.false;
-            called = true;
-        }
-        const activation = new ExtensionActivationForTerminalActivation(
-            experiments.object,
-            commands.object,
-            check
-        );
-
-        await activation.activate(undefined);
-
-        // tslint:disable-next-line:no-unused-expression chai-vague-errors
-        expect(called).to.be.true;
-        verifyAll();
-    });
 
     // checkExperiments
 
