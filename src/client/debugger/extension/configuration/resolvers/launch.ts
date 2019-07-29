@@ -9,21 +9,32 @@ import { InvalidPythonPathInDebuggerServiceId } from '../../../../application/di
 import { IDiagnosticsService, IInvalidPythonPathInDebuggerService } from '../../../../application/diagnostics/types';
 import { IDocumentManager, IWorkspaceService } from '../../../../common/application/types';
 import { IPlatformService } from '../../../../common/platform/types';
-import { IConfigurationService } from '../../../../common/types';
+import { IConfigurationService, IPathUtils, ICurrentProcess } from '../../../../common/types';
 import { DebuggerTypeName } from '../../../constants';
 import { DebugOptions, LaunchRequestArguments } from '../../../types';
 import { BaseConfigurationResolver } from './base';
+import { IEnvironmentVariablesService } from '../../../../common/variables/types';
+import { getEnvironmentVariables } from './helper';
 
 @injectable()
 export class LaunchConfigurationResolver extends BaseConfigurationResolver<LaunchRequestArguments> {
+    private pathUtils: IPathUtils;
+    private currentProcess: ICurrentProcess;
+    private envParser: IEnvironmentVariablesService;
     constructor(
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IDocumentManager) documentManager: IDocumentManager,
         @inject(IDiagnosticsService) @named(InvalidPythonPathInDebuggerServiceId) private readonly invalidPythonPathInDebuggerService: IInvalidPythonPathInDebuggerService,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
-        @inject(IConfigurationService) configurationService: IConfigurationService
+        @inject(IConfigurationService) configurationService: IConfigurationService,
+        @inject(IEnvironmentVariablesService) envParser: IEnvironmentVariablesService,
+        @inject(IPathUtils) pathUtils: IPathUtils,
+        @inject(ICurrentProcess) currentProcess: ICurrentProcess,
     ) {
         super(workspaceService, documentManager, configurationService);
+        this.envParser = envParser;
+        this.pathUtils = pathUtils;
+        this.currentProcess = currentProcess;
     }
     public async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: LaunchRequestArguments, _token?: CancellationToken): Promise<LaunchRequestArguments | undefined> {
         const workspaceFolder = this.getWorkspaceFolder(folder);
@@ -63,6 +74,10 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             const settings = this.configurationService.getSettings(workspaceFolder);
             debugConfiguration.envFile = settings.envFile;
         }
+        // Extract environment variables from .env file in the vscode context and
+        // set the "env" debug configuration argument. This expansion should be
+        // done here before handing of the environment settings to the debug adapter
+        debugConfiguration.env = await getEnvironmentVariables(this.envParser, this.pathUtils, this.currentProcess, debugConfiguration);
         if (typeof debugConfiguration.stopOnEntry !== 'boolean') {
             debugConfiguration.stopOnEntry = false;
         }
