@@ -10,7 +10,7 @@ import { IConfigurationService, IDataScienceSettings, IDisposable, IDisposableRe
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
-import { EditorContexts, Telemetry } from '../constants';
+import { CodeLensCommands, Commands, EditorContexts, Telemetry } from '../constants';
 import { ICodeWatcher, IDataScienceCodeLensProvider } from '../types';
 
 @injectable()
@@ -80,7 +80,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
 
         // Don't provide any code lenses if we have not enabled data science
         const settings = this.configuration.getSettings();
-        if (!settings.datascience.enabled || !settings.datascience.enableCellCodeLens || this.debugService.activeDebugSession) {
+        if (!settings.datascience.enabled || !settings.datascience.enableCellCodeLens) {
             // Clear out any existing code watchers, providecodelenses is called on settings change
             // so we don't need to watch the settings change specifically here
             if (this.activeCodeWatchers.length > 0) {
@@ -89,7 +89,29 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
             return [];
         }
 
-        return result;
+        return this.adjustDebuggingLenses(result);
+    }
+
+    private adjustDebuggingLenses(lenses: vscode.CodeLens[]): vscode.CodeLens[] {
+        const debugCellList = CodeLensCommands.DebuggerCommands;
+
+        if (this.debugService.activeDebugSession) {
+            return lenses.filter(lens => {
+                if (lens.command) {
+                    return debugCellList.includes(lens.command.command);
+                }
+
+                return false;
+            });
+        } else {
+            return lenses.filter(lens => {
+                if (lens.command) {
+                    return !(debugCellList.includes(lens.command.command));
+                }
+
+                return false;
+            });
+        }
     }
 
     private getCodeLens(document: vscode.TextDocument): vscode.CodeLens[] {

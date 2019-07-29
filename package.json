@@ -339,6 +339,21 @@
                 "category": "Python"
             },
             {
+                "command": "python.datascience.debugstepover",
+                "title": "%python.command.python.datascience.debugstepover.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.debugstop",
+                "title": "%python.command.python.datascience.debugstop.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.debugcontinue",
+                "title": "%python.command.python.datascience.debugcontinue.title%",
+                "category": "Python"
+            },
+            {
                 "command": "python.datascience.runcurrentcelladvance",
                 "title": "%python.command.python.datascience.runcurrentcelladvance.title%",
                 "category": "Python"
@@ -1396,6 +1411,12 @@
                     "type": "string",
                     "default": "python.datascience.runcell,  python.datascience.runallcellsabove, python.datascience.debugcell",
                     "description": "Set of commands to put as code lens above a cell. Defaults to 'python.datascience.runcell,  python.datascience.runallcellsabove, python.datascience.debugcell'",
+                    "scope": "resource"
+                },
+                "python.dataScience.debugCodeLenses": {
+                    "type": "string",
+                    "default": "python.datascience.debugcontinue, python.datascience.debugstop, python.datascience.debugstepover",
+                    "description": "Set of debug commands to put as code lens above a cell while debugging.",
                     "scope": "resource"
                 },
                 "python.dataScience.ptvsdDistPath": {
