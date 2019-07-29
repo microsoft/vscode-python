@@ -11,13 +11,15 @@ export function createJupyterWebSocket(cookieString?: string, allowUnauthorized?
             let co: WebSocketWS.ClientOptions = {};
 
             if (allowUnauthorized) {
-                co = {...co, rejectUnauthorized: false};
+                co = { ...co, rejectUnauthorized: false };
             }
 
             if (cookieString) {
-                co = {...co, headers: {
-                    Cookie: cookieString
-                }};
+                co = {
+                    ...co, headers: {
+                        Cookie: cookieString
+                    }
+                };
             }
 
             super(url, protocols, co);

@@ -186,7 +186,7 @@ suite('DataScience Debugger tests', () => {
     });
 
     test('Debug cell with breakpoint', async () => {
-        await debugCell('#%%\nprint("bar")\nprint("baz")', new Range(new Position(3, 0), new Position(3, 0)));
+        await debugCell('#%%\nprint("bar")\nprint("baz")\n\n\n', new Range(new Position(3, 0), new Position(3, 0)));
     });
 
     test('Debug cell with breakpoint in another file', async () => {

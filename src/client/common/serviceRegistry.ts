@@ -31,7 +31,7 @@ import { CryptoUtils } from './crypto';
 import { EditorUtils } from './editor';
 import { ExperimentsManager } from './experiments';
 import { FeatureDeprecationManager } from './featureDeprecationManager';
-import { ExtensionInsidersDailyChannelRule, ExtensionInsidersWeeklyChannelRule, ExtensionStableChannelRule } from './insidersBuild/downloadChannelRules';
+import { ExtensionInsidersDailyChannelRule, ExtensionInsidersOffChannelRule, ExtensionInsidersWeeklyChannelRule } from './insidersBuild/downloadChannelRules';
 import { ExtensionChannelService } from './insidersBuild/downloadChannelService';
 import { InsidersExtensionPrompt } from './insidersBuild/insidersExtensionPrompt';
 import { InsidersExtensionService } from './insidersBuild/insidersExtensionService';
@@ -147,7 +147,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInsiderExtensionPrompt>(IInsiderExtensionPrompt, InsidersExtensionPrompt);
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, InsidersExtensionService);
     serviceManager.addSingleton<IExtensionChannelService>(IExtensionChannelService, ExtensionChannelService);
-    serviceManager.addSingleton<IExtensionChannelRule>(IExtensionChannelRule, ExtensionStableChannelRule, ExtensionChannel.stable);
+    serviceManager.addSingleton<IExtensionChannelRule>(IExtensionChannelRule, ExtensionInsidersOffChannelRule, ExtensionChannel.off);
     serviceManager.addSingleton<IExtensionChannelRule>(IExtensionChannelRule, ExtensionInsidersDailyChannelRule, ExtensionChannel.daily);
     serviceManager.addSingleton<IExtensionChannelRule>(IExtensionChannelRule, ExtensionInsidersWeeklyChannelRule, ExtensionChannel.weekly);
 }

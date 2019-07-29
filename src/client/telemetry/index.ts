@@ -299,7 +299,16 @@ export interface IEventNamePropertyMapping {
     [EventName.PYTHON_INTERPRETER_AUTO_SELECTION]: InterpreterAutoSelection;
     [EventName.PYTHON_INTERPRETER_DISCOVERY]: InterpreterDiscovery;
     [EventName.PYTHON_INTERPRETER_ACTIVATE_ENVIRONMENT_PROMPT]: { selection: 'Yes' | 'No' | 'Ignore' | undefined };
-    [EventName.INSIDERS_PROMPT]: { selection: 'Use Stable' | 'Reload' | undefined };
+    [EventName.INSIDERS_PROMPT]: {
+        /**
+         * @type {'Yes, weekly'} When user selects to use "weekly" as extension channel in insiders prompt
+         * @type {'Yes, daily'} When user selects to use "daily" as extension channel in insiders prompt
+         * @type {'No, thanks'} When user decides to keep using the same extension channel as before
+         *
+         * @type {('Yes, weekly' | 'Yes, daily' | 'No, thanks' | undefined)}
+         */
+        selection: 'Yes, weekly' | 'Yes, daily' | 'No, thanks' | undefined;
+    };
     [EventName.INSIDERS_RELOAD_PROMPT]: { selection: 'Reload' | undefined };
     [EventName.PYTHON_LANGUAGE_SERVER_SWITCHED]: { change: 'Switch to Jedi from LS' | 'Switch to LS from Jedi' };
     [EventName.PYTHON_LANGUAGE_SERVER_DOWNLOADED]: LanguageServerVersionTelemetry;

@@ -409,7 +409,7 @@ export interface IExtensions {
      * All extensions currently known to the system.
      */
     // tslint:disable-next-line:no-any
-    readonly all: Extension<any>[];
+    readonly all: readonly Extension<any>[];
 
     /**
      * Get an extension by its full identifier in the form of: `publisher.name`.

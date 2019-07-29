@@ -24,10 +24,6 @@
     margin:8px 4px;
 }
 
-.react-grid-filter-button:focus {
-    outline: none;
-}
- 
 .react-grid-header-cell {
     padding: 0px 4px;
     background-color: var(--vscode-debugToolBar-background);
@@ -46,6 +42,11 @@
     border-right-style: solid;
     box-sizing: border-box;
 } 
+
+.react-grid-cell.active {
+    background-color: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+}
 
 /* Some overrides necessary to get the colors we want */
 .slick-headerrow-column {
