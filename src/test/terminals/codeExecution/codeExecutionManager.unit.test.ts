@@ -52,7 +52,7 @@ suite('Terminal - Code Execution Manager', () => {
 
     test('Ensure commands are registered', async () => {
         const registered: string[] = [];
-        commandManager.setup(c => c.registerCommand as any)
+        commandManager.setup(c => c.registerCommand)
             .returns(() => {
                 return (command: string, _callback: (...args: any[]) => any, _thisArg?: any) => {
                     registered.push(command);
