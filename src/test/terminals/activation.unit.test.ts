@@ -6,7 +6,9 @@ import { ICommandManager } from '../../client/common/application/types';
 import { ShowPlayIcon } from '../../client/common/experimentGroups';
 import { IExperimentsManager } from '../../client/common/types';
 import { noop } from '../../client/common/utils/misc';
-import { checkExperiments } from '../../client/terminals/activation';
+import {
+    ExtensionActivationForTerminalActivation
+} from '../../client/terminals/activation';
 
 suite('Terminal - Activation', () => {
     let experiments: TypeMoq.IMock<IExperimentsManager>;
@@ -32,8 +34,12 @@ suite('Terminal - Activation', () => {
             .verifiable(TypeMoq.Times.once());
         experiments.setup(e => e.sendTelemetryIfInExperiment(ShowPlayIcon.control))
             .verifiable(TypeMoq.Times.once());
+        const activation = new ExtensionActivationForTerminalActivation(
+            experiments.object,
+            commands.object
+        );
 
-        checkExperiments(experiments.object, commands.object);
+        activation.checkExperiments();
 
         verifyAll();
     });
@@ -48,8 +54,12 @@ suite('Terminal - Activation', () => {
         commands.setup(c => c.executeCommand('setContext', 'python.showPlayIcon1', true))
             .returns(() => cmdResult.object)
             .verifiable(TypeMoq.Times.once());
+        const activation = new ExtensionActivationForTerminalActivation(
+            experiments.object,
+            commands.object
+        );
 
-        checkExperiments(experiments.object, commands.object);
+        activation.checkExperiments();
 
         verifyAll();
     });
@@ -67,8 +77,12 @@ suite('Terminal - Activation', () => {
         commands.setup(c => c.executeCommand('setContext', 'python.showPlayIcon2', true))
             .returns(() => cmdResult.object)
             .verifiable(TypeMoq.Times.once());
+        const activation = new ExtensionActivationForTerminalActivation(
+            experiments.object,
+            commands.object
+        );
 
-        checkExperiments(experiments.object, commands.object);
+        activation.checkExperiments();
 
         verifyAll();
     });

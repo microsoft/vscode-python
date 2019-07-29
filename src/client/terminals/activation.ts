@@ -6,7 +6,6 @@
 import { inject, injectable } from 'inversify';
 import { Terminal } from 'vscode';
 import { IExtensionActivationService } from '../activation/types';
-import { ICommandNameArgumentTypeMapping } from '../common/application/commands';
 import {
     ICommandManager, ITerminalManager, IWorkspaceService
 } from '../common/application/types';
@@ -25,31 +24,21 @@ export class ExtensionActivationForTerminalActivation implements IExtensionActiv
         @inject(ICommandManager) private commands: ICommandManager
     ) { }
     public async activate(_resource: Resource): Promise<void> {
-        checkExperiments(this.experiments, this.commands);
+        this.checkExperiments();
     }
-}
 
-interface IExperiments {
-    inExperiment(experimentName: string): boolean;
-    sendTelemetryIfInExperiment(experimentName: string): void;
-}
+    // Nothing after this point is part of the IExtensionActivationService interface.
 
-interface ICommands {
-    executeCommand<T, E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(command: E, ...rest: U): Thenable<T | undefined>;
-}
-
-export function checkExperiments(
-    experiments: IExperiments,
-    commands: ICommands
-) {
-    if (experiments.inExperiment(ShowPlayIcon.icon1)) {
-        commands.executeCommand('setContext', 'python.showPlayIcon1', true)
-            .then(noop, noop);
-    } else if (experiments.inExperiment(ShowPlayIcon.icon2)) {
-        commands.executeCommand('setContext', 'python.showPlayIcon2', true)
-            .then(noop, noop);
-    } else {
-        experiments.sendTelemetryIfInExperiment(ShowPlayIcon.control);
+    public checkExperiments() {
+        if (this.experiments.inExperiment(ShowPlayIcon.icon1)) {
+            this.commands.executeCommand('setContext', 'python.showPlayIcon1', true)
+                .then(noop, noop);
+        } else if (this.experiments.inExperiment(ShowPlayIcon.icon2)) {
+            this.commands.executeCommand('setContext', 'python.showPlayIcon2', true)
+                .then(noop, noop);
+        } else {
+            this.experiments.sendTelemetryIfInExperiment(ShowPlayIcon.control);
+        }
     }
 }
 
