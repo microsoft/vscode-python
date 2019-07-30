@@ -8,6 +8,7 @@ import * as uuid from 'uuid/v4';
 import {
     Breakpoint,
     BreakpointsChangeEvent,
+    DebugAdapterTrackerFactory,
     DebugConfiguration,
     DebugConfigurationProvider,
     DebugConsole,
@@ -119,6 +120,9 @@ export class MockDebuggerService implements IDebugService, IDisposable {
         return this.breakpointsChangedEvent.event;
     }
     public registerDebugConfigurationProvider(_debugType: string, _provider: DebugConfigurationProvider): Disposable {
+        throw new Error('Method not implemented.');
+    }
+    public registerDebugAdapterTrackerFactory(_debugType: string, _provider: DebugAdapterTrackerFactory): Disposable {
         throw new Error('Method not implemented.');
     }
     public startDebugging(_folder: WorkspaceFolder | undefined, nameOrConfiguration: string | DebugConfiguration, _parentSession?: DebugSession | undefined): Thenable<boolean> {
