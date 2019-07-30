@@ -24,7 +24,7 @@
    ([#6367](https://github.com/Microsoft/vscode-python/issues/6367))
 1. Support hitting breakpoints in actual source code for interactive window debugging.
    ([#6376](https://github.com/Microsoft/vscode-python/issues/6376))
-1. Give the option to install ptvsd if user is missing it and tries to debug
+1. Give the option to install ptvsd if user is missing it and tries to debug.
    ([#6378](https://github.com/Microsoft/vscode-python/issues/6378))
 1. Add support for remote debugging of jupyter cells.
    ([#6379](https://github.com/Microsoft/vscode-python/issues/6379))
