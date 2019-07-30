@@ -115,7 +115,7 @@
    ([#6728](https://github.com/Microsoft/vscode-python/issues/6728))
 1. In order to debug without '#%%' defined in a file, support a Debug Entire File.
    ([#6730](https://github.com/Microsoft/vscode-python/issues/6730))
-1. Add support for Run Below back.
+1. Add support for "Run Below" back.
    ([#6737](https://github.com/Microsoft/vscode-python/issues/6737))
 1. Fix the 'Variables not available while debugging' message to be more descriptive.
    ([#6740](https://github.com/Microsoft/vscode-python/issues/6740))
