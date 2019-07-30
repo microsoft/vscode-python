@@ -3,6 +3,8 @@
 // tslint:disable:no-object-literal-type-assertion
 
 import { CancellationToken, CancellationTokenSource, CodeLens, CodeLensProvider, DocumentSymbolProvider, Event, EventEmitter, Position, Range, SymbolInformation, SymbolKind, TextDocument, Uri, workspace } from 'vscode';
+import { FileSystem } from '../../../client/common/platform/fileSystem';
+import { PlatformService } from '../../../client/common/platform/platformService';
 import * as constants from '../../common/constants';
 import { CommandSource } from '../common/constants';
 import { ITestCollectionStorageService, TestFile, TestFunction, TestStatus, TestsToRun, TestSuite } from '../common/types';
@@ -61,7 +63,8 @@ export class TestFileCodeLensProvider implements CodeLensProvider {
         if (!tests) {
             return [];
         }
-        const file = tests.testFiles.find(item => item.fullPath === document.uri.fsPath);
+        const fileSystem = new FileSystem(new PlatformService());
+        const file = tests.testFiles.find(item => fileSystem.arePathsSame(item.fullPath, document.uri.fsPath));
         if (!file) {
             return [];
         }

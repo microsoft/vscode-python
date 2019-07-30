@@ -35,7 +35,7 @@ export class TestDiscoveredTestParser implements ITestDiscoveredTestParser {
         // If the root is the workspace folder, then ignore that.
         for (const data of discoveredTests) {
             const rootFolder = {
-                name: data.root, folders: [], time: 0,
+                name: workspace.uri.fsPath, folders: [], time: 0,
                 testFiles: [], resource: resource, nameToRun: data.rootid
             };
             tests.rootTestFolders.push(rootFolder);
