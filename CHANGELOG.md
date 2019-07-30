@@ -30,7 +30,7 @@
    ([#6379](https://github.com/Microsoft/vscode-python/issues/6379))
 1. Make the input box more visible to new users.
    ([#6381](https://github.com/Microsoft/vscode-python/issues/6381))
-1. Add feature flag `python.dataScience.magicCommandsAsComments` so linters and other tools can work with them
+1. Add feature flag `python.dataScience.magicCommandsAsComments` so linters and other tools can work with them.
    (thanks [Janosh Riebesell](https://github.com/janosh))
    ([#6408](https://github.com/Microsoft/vscode-python/issues/6408))
 1. Support break on enter for debugging a cell.
