@@ -154,7 +154,7 @@
    ([#6451](https://github.com/Microsoft/vscode-python/issues/6451))
 1. Removed npm package `vscode`, and added to use `vscode-test` and `@types/vscode` (see [here](https://code.visualstudio.com/updates/v1_36#_splitting-vscode-package-into-typesvscode-and-vscodetest) for more info).
    ([#6456](https://github.com/Microsoft/vscode-python/issues/6456))
-1. Fix variable explorer exclude test to be less strict
+1. Fix the variable explorer exclude test to be less strict.
    ([#6525](https://github.com/Microsoft/vscode-python/issues/6525))
 1. Merge ArgumentsHelper unit tests into one file.
    ([#6583](https://github.com/Microsoft/vscode-python/issues/6583))
