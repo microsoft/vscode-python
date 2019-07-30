@@ -162,7 +162,7 @@
    ([#6625](https://github.com/Microsoft/vscode-python/issues/6625))
 1. Unit Tests for DataScience Error Handler.
    ([#6670](https://github.com/Microsoft/vscode-python/issues/6670))
-1. Fix DataExplorer tests after accessibility fixes
+1. Fix DataExplorer tests after accessibility fixes.
    ([#6711](https://github.com/Microsoft/vscode-python/issues/6711))
 1. Bump version of [PTVSD](https://pypi.org/project/ptvsd/) to 4.3.0.
    ([#6771](https://github.com/Microsoft/vscode-python/issues/6771))
