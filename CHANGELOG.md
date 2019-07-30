@@ -58,7 +58,7 @@
    ([#5879](https://github.com/Microsoft/vscode-python/issues/5879))
 1. Prompt to insall test framework only if test frame is not already installed.
    ([#5919](https://github.com/Microsoft/vscode-python/issues/5919))
-1. Trim stream text output at the server to prevent sending massive strings of overwritten data
+1. Trim stream text output at the server to prevent sending massive strings of overwritten data.
    ([#6001](https://github.com/Microsoft/vscode-python/issues/6001))
 1. Detect `shell` in Visual Studio Code using the Visual Studio Code API.
    ([#6050](https://github.com/Microsoft/vscode-python/issues/6050))
