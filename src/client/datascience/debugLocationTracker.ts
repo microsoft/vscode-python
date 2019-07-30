@@ -2,31 +2,36 @@
 // Licensed under the MIT License.
 'use strict';
 import { injectable } from 'inversify';
-import { DebugSession } from 'vscode';
+import { DebugSession, Event, EventEmitter } from 'vscode';
 
-import { traceInfo } from '../common/logger';
+//import { traceInfo } from '../common/logger';
 import { IDebugLocation, IDebugLocationTracker } from './types';
 
 @injectable()
 export class DebugLocationTracker implements IDebugLocationTracker {
     private waitingForStackTrace: boolean = false;
-    private debugLocation: IDebugLocation | undefined;
+    private _debugLocation: IDebugLocation | undefined;
+    private debugLocationUpdatedEvent: EventEmitter<void> = new EventEmitter<void>();
 
     public setDebugSession(_targetSession: DebugSession) {
-        this.debugLocation = undefined;
+        this.DebugLocation = undefined;
         this.waitingForStackTrace = false;
     }
 
+    public get debugLocationUpdated(): Event<void> {
+        return this.debugLocationUpdatedEvent.event;
+    }
+
     public getDebugLocation(): IDebugLocation | undefined {
-        return this.debugLocation;
+        return this._debugLocation;
     }
 
     // tslint:disable-next-line:no-any
     public onDidSendMessage(message: any) {
-        traceInfo('******** Debugger Message');
-        traceInfo(message.command);
-        traceInfo(message.type);
-        traceInfo(JSON.stringify(message.body));
+        //traceInfo('******** Debugger Message');
+        //traceInfo(message.command);
+        //traceInfo(message.type);
+        //traceInfo(JSON.stringify(message.body));
 
         if (this.isStopEvent(message)) {
             this.waitingForStackTrace = true;
@@ -36,14 +41,24 @@ export class DebugLocationTracker implements IDebugLocationTracker {
         if (this.waitingForStackTrace) {
             const debugLoc = this.getStackTrace(message);
             if (debugLoc) {
-                this.debugLocation = debugLoc;
+                this.DebugLocation = debugLoc;
                 this.waitingForStackTrace = false;
             }
         }
 
         if (this.isContinueEvent(message)) {
-            this.debugLocation = undefined;
+            this.DebugLocation = undefined;
             this.waitingForStackTrace = false;
+        }
+    }
+
+    // Set our new location and fire our debug event
+    private set DebugLocation(newLocation: IDebugLocation | undefined) {
+        const oldLocation = this._debugLocation;
+        this._debugLocation = newLocation;
+
+        if (this._debugLocation !== oldLocation) {
+            this.debugLocationUpdatedEvent.fire();
         }
     }
 
@@ -64,7 +79,8 @@ export class DebugLocationTracker implements IDebugLocationTracker {
             if (message.body.stackFrames.length > 0) {
                 const lineNumber = message.body.stackFrames[0].line;
                 const fileName = message.body.stackFrames[0].source.path;
-                return { lineNumber, fileName };
+                const column = message.body.stackFrames[0].column;
+                return { lineNumber, fileName, column };
             }
         }
 

@@ -452,10 +452,12 @@ export interface IDebugLocationTrackerFactory extends DebugAdapterTrackerFactory
 export interface IDebugLocation {
     fileName: string;
     lineNumber: number;
+    column: number;
 }
 
 export const IDebugLocationTracker = Symbol('IDebugLocationTracker');
 export interface IDebugLocationTracker extends DebugAdapterTracker {
+    debugLocationUpdated: Event<void>;
     setDebugSession(targetSession: DebugSession): void;
     getDebugLocation(): IDebugLocation | undefined;
 }
