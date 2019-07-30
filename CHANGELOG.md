@@ -84,7 +84,7 @@
    ([#6348](https://github.com/Microsoft/vscode-python/issues/6348))
 1. Linux can pick the wrong kernel to use when starting the interactive window.
    ([#6375](https://github.com/Microsoft/vscode-python/issues/6375))
-1. Add missing keys for data science interactive window button tooltips in package.nls.json
+1. Add missing keys for data science interactive window button tooltips in `package.nls.json`.
    ([#6386](https://github.com/Microsoft/vscode-python/issues/6386))
 1. Fix overwriting of cwd in the path list when discovering tests.
    ([#6417](https://github.com/Microsoft/vscode-python/issues/6417))
