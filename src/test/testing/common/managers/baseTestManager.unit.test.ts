@@ -37,7 +37,7 @@ import { noop } from '../../../core';
 import { MockOutputChannel } from '../../../mockClasses';
 
 // tslint:disable: max-func-body-length
-suite('xUnit Tests - Base Test Manager', () => {
+suite('Unit Tests - Base Test Manager', () => {
     [
         { name: 'nose', class: NoseTestManager },
         { name: 'pytest', class: PyTestTestManager },
@@ -145,6 +145,23 @@ suite('xUnit Tests - Base Test Manager', () => {
                 await testManager.discoverTests(CommandSource.ui, true, false, true).catch(noop);
 
                 verify(installer.isInstalled(anything(), anything())).never();
+                verify(installer.promptToInstall(anything(), anything())).never();
+            });
+            test('When failing to discover tests do not prompt to install test framework if installed', async function () {
+                if (item.name === 'unittest') {
+                    // tslint:disable-next-line: no-invalid-this
+                    return this.skip();
+                }
+
+                when(testDiscoveryService.discoverTests(anything())).thenReject(new ModuleNotInstalledError('Kaboom'));
+                when(installer.isInstalled(anything(), anything())).thenResolve(true);
+                when(installer.promptToInstall(anything(), anything())).thenResolve();
+
+                // We don't care about failures in running code
+                // Just test our expectations, ignore everything else.
+                await testManager.discoverTests(CommandSource.ui, true, false, true).catch(noop);
+
+                verify(installer.isInstalled(anything(), anything())).once();
                 verify(installer.promptToInstall(anything(), anything())).never();
             });
         });
