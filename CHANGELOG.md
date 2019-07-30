@@ -99,7 +99,7 @@
    ([#6526](https://github.com/Microsoft/vscode-python/issues/6526))
 1. Import get_ipython at the start of each imported jupyter notebook if there are line magics in the file
    ([#6574](https://github.com/Microsoft/vscode-python/issues/6574))
-1. Fix problem where we retrieved and rendered old codelenses for multiple imports of jupyter notebooks if cells in the resultant import file were executed without saving the file to disk
+1. Fix a problem where we retrieved and rendered old codelenses for multiple imports of jupyter notebooks if cells in the resultant import file were executed without saving the file to disk.
    ([#6582](https://github.com/Microsoft/vscode-python/issues/6582))
 1. Ptvsd install for jupyter debugging should check version without actually importing into the jupyter kernel
    ([#6592](https://github.com/Microsoft/vscode-python/issues/6592))
