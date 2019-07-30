@@ -17,7 +17,7 @@ import { TestFileCodeLensProvider } from '../../../client/testing/codeLenses/tes
 import { ITestCollectionStorageService } from '../../../client/testing/common/types';
 
 // tslint:disable-next-line: max-func-body-length
-suite('xCode lenses - Test files', () => {
+suite('Code lenses - Test files', () => {
     let testCollectionStorage: typemoq.IMock<ITestCollectionStorageService>;
     let workspaceService: typemoq.IMock<IWorkspaceService>;
     let fileSystem: typemoq.IMock<IFileSystem>;

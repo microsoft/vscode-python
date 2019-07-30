@@ -55,15 +55,6 @@ export class TestDiscoveredTestParser implements ITestDiscoveredTestParser {
 
         return tests;
     }
-
-    public findRoot(raw: string, roots: string[]): string | undefined {
-        for (const root of roots) {
-            if (this.fileSystem.arePathsSame(raw, root)) {
-                return root;
-            }
-        }
-        return undefined;
-    }
     /**
      * Not the best solution to use `case statements`, but it keeps the code simple and easy to read in one place.
      * Could go with separate classes for each type and use stratergies, but that just ends up a class for
@@ -77,7 +68,7 @@ export class TestDiscoveredTestParser implements ITestDiscoveredTestParser {
      * @param {Tests} tests
      * @memberof TestsDiscovery
      */
-    protected buildChildren(rootFolder: TestFolder, parent: TestDataItem, discoveredTests: DiscoveredTests, tests: Tests) {
+    public buildChildren(rootFolder: TestFolder, parent: TestDataItem, discoveredTests: DiscoveredTests, tests: Tests) {
         const parentType = getTestType(parent);
         switch (parentType) {
             case TestType.testFolder: {
@@ -211,6 +202,17 @@ export class TestDiscoveredTestParser implements ITestDiscoveredTestParser {
         parentFunction.asSuite.functions.push(...functions);
         parent.functions.push(...functions);
         tests.testFunctions.push(...functions.map(func => createFlattenedParameterizedFunction(tests, func, parent)));
+    }
+
+    /**
+     * Returns the vscode recognized file paths which matches the pytest data test root
+     */
+    private findRoot(raw: string, roots: string[]): string | undefined {
+        for (const root of roots) {
+            if (this.fileSystem.arePathsSame(raw, root)) {
+                return root;
+            }
+        }
     }
 }
 
