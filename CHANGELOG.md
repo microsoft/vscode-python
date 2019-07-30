@@ -10,7 +10,7 @@
    ([#5321](https://github.com/Microsoft/vscode-python/issues/5321))
 1. Hook up ptvsd debugger to Jupyter UI.
    ([#5900](https://github.com/Microsoft/vscode-python/issues/5900))
-1. Improved keyboard and screen reader support for the data explorer
+1. Improved keyboard and screen reader support for the data explorer.
    ([#6019](https://github.com/Microsoft/vscode-python/issues/6019))
 1. Provide code mapping service for debugging cells.
    ([#6318](https://github.com/Microsoft/vscode-python/issues/6318))
