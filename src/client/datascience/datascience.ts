@@ -230,7 +230,7 @@ export class DataScience implements IDataScience {
         }
     }
 
-    // IANHU: Telemetry?
+    @captureTelemetry(Telemetry.DebugStepOver)
     public async debugStepOver(): Promise<void> {
         this.dataScienceSurveyBanner.showBanner().ignoreErrors();
 
@@ -240,6 +240,7 @@ export class DataScience implements IDataScience {
         }
     }
 
+    @captureTelemetry(Telemetry.DebugStop)
     public async debugStop(): Promise<void> {
         this.dataScienceSurveyBanner.showBanner().ignoreErrors();
 
@@ -249,6 +250,7 @@ export class DataScience implements IDataScience {
         }
     }
 
+    @captureTelemetry(Telemetry.DebugContinue)
     public async debugContinue(): Promise<void> {
         this.dataScienceSurveyBanner.showBanner().ignoreErrors();
 

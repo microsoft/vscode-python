@@ -99,16 +99,17 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         return this.adjustDebuggingLenses(document, result);
     }
 
+    // Adjust what code lenses are visible or not given debug mode and debug context location
     private adjustDebuggingLenses(document: vscode.TextDocument, lenses: vscode.CodeLens[]): vscode.CodeLens[] {
         const debugCellList = CodeLensCommands.DebuggerCommands;
 
         if (this.debugService.activeDebugSession) {
-            const debugLocation = this.debugLocationTracker.getDebugLocation();
+            const debugLocation = this.debugLocationTracker.debugLocation;
 
             if (debugLocation && this.fileSystem.arePathsSame(debugLocation.fileName, document.uri.fsPath)) {
                 // We are in the given debug file, so only return the code lens that contains the given line
                 const activeLenses = lenses.filter(lens => {
-                    // IANHU: Verify the -1
+                    // -1 for difference between file system one based and debugger zero based
                     const pos = new vscode.Position(debugLocation.lineNumber - 1, debugLocation.column - 1);
                     return lens.range.contains(pos);
                 });

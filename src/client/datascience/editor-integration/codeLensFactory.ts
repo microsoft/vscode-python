@@ -80,12 +80,15 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
 
     private enumerateCommands(): string[] {
         let fullCommandList: string[];
+        // Add our non-debug commands
         const commands = this.configService.getSettings().datascience.codeLenses;
         if (commands) {
             fullCommandList = commands.split(',').map(s => s.trim());
         } else {
             fullCommandList = CodeLensCommands.DefaultDesignLenses;
         }
+
+        // Add our debug commands
         const debugCommands = this.configService.getSettings().datascience.debugCodeLenses;
         if (debugCommands) {
             fullCommandList = fullCommandList.concat(debugCommands.split(',').map(s => s.trim()));

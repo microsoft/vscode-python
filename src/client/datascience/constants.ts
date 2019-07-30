@@ -162,7 +162,10 @@ export enum Telemetry {
     PtvsdPromptToInstall = 'DATASCIENCE.PTVSD_PROMPT_TO_INSTALL',
     PtvsdSuccessfullyInstalled = 'DATASCIENCE.PTVSD_SUCCESSFULLY_INSTALLED',
     PtvsdInstallFailed = 'DATASCIENCE.PTVSD_INSTALL_FAILED',
-    ScrolledToCell = 'DATASCIENCE.SCROLLED_TO_CELL'
+    ScrolledToCell = 'DATASCIENCE.SCROLLED_TO_CELL',
+    DebugStepOver = 'DATASCIENCE.DEBUG_STEP_OVER',
+    DebugContinue = 'DATASCIENCE.DEBUG_CONTINUE',
+    DebugStop = 'DATASCIENCE.DEBUG_STOP'
 }
 
 export namespace HelpLinks {

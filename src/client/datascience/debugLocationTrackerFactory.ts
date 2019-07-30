@@ -8,6 +8,7 @@ import { IDebugService } from '../common/application/types';
 import { IDisposableRegistry } from '../common/types';
 import { IDebugLocationTracker, IDebugLocationTrackerFactory } from './types';
 
+// Hook up our IDebugLocationTracker to python debugging sessions
 @injectable()
 export class DebugLocationTrackerFactory implements IDebugLocationTrackerFactory {
     constructor(

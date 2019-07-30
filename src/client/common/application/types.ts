@@ -765,7 +765,13 @@ export interface IDebugService {
      */
     registerDebugConfigurationProvider(debugType: string, provider: DebugConfigurationProvider): Disposable;
 
-    // IANHU: Fill in the comment
+    /**
+     * Register a debug adapter tracker factory for the given debug type.
+     *
+     * @param debugType The debug type for which the factory is registered or '*' for matching all debug types.
+     * @param factory The [debug adapter tracker factory](#DebugAdapterTrackerFactory) to register.
+     * @return A [disposable](#Disposable) that unregisters this factory when being disposed.
+     */
     registerDebugAdapterTrackerFactory(debugType: string, factory: DebugAdapterTrackerFactory): Disposable;
 
     /**

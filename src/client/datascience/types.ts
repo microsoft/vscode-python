@@ -458,6 +458,6 @@ export interface IDebugLocation {
 export const IDebugLocationTracker = Symbol('IDebugLocationTracker');
 export interface IDebugLocationTracker extends DebugAdapterTracker {
     debugLocationUpdated: Event<void>;
+    debugLocation: IDebugLocation | undefined;
     setDebugSession(targetSession: DebugSession): void;
-    getDebugLocation(): IDebugLocation | undefined;
 }

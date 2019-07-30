@@ -4,9 +4,9 @@
 import { injectable } from 'inversify';
 import { DebugSession, Event, EventEmitter } from 'vscode';
 
-//import { traceInfo } from '../common/logger';
 import { IDebugLocation, IDebugLocationTracker } from './types';
 
+// When a python debugging session is active keep track of the current debug location
 @injectable()
 export class DebugLocationTracker implements IDebugLocationTracker {
     private waitingForStackTrace: boolean = false;
@@ -22,23 +22,25 @@ export class DebugLocationTracker implements IDebugLocationTracker {
         return this.debugLocationUpdatedEvent.event;
     }
 
-    public getDebugLocation(): IDebugLocation | undefined {
+    public get debugLocation(): IDebugLocation | undefined {
         return this._debugLocation;
     }
 
     // tslint:disable-next-line:no-any
     public onDidSendMessage(message: any) {
-        //traceInfo('******** Debugger Message');
-        //traceInfo(message.command);
-        //traceInfo(message.type);
-        //traceInfo(JSON.stringify(message.body));
-
         if (this.isStopEvent(message)) {
+            // Some type of stop, wait to see our next stack trace to find our location
             this.waitingForStackTrace = true;
         }
 
-        // IANHU: Else if?
+        if (this.isContinueEvent(message)) {
+            // Running, clear the location
+            this.DebugLocation = undefined;
+            this.waitingForStackTrace = false;
+        }
+
         if (this.waitingForStackTrace) {
+            // If we are waiting for a stack track, check our messages for one
             const debugLoc = this.getStackTrace(message);
             if (debugLoc) {
                 this.DebugLocation = debugLoc;
@@ -46,10 +48,6 @@ export class DebugLocationTracker implements IDebugLocationTracker {
             }
         }
 
-        if (this.isContinueEvent(message)) {
-            this.DebugLocation = undefined;
-            this.waitingForStackTrace = false;
-        }
     }
 
     // Set our new location and fire our debug event
@@ -65,7 +63,7 @@ export class DebugLocationTracker implements IDebugLocationTracker {
     // tslint:disable-next-line:no-any
     private isStopEvent(message: any) {
         if (message.type === 'event') {
-            if (message.event === 'stop' || message.event === 'stopped') {
+            if (message.event === 'stopped') {
                 return true;
             }
         }
