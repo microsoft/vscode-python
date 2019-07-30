@@ -21,9 +21,9 @@ import {
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import '../../../client/common/extensions';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
-import { IConfigurationService, IPythonSettings, ITestingSettings, IPathUtils, ICurrentProcess } from '../../../client/common/types';
-import { DebuggerTypeName } from '../../../client/debugger/constants';
+import { IConfigurationService, ICurrentProcess, IPathUtils, IPythonSettings, ITestingSettings } from '../../../client/common/types';
 import { IEnvironmentVariablesService } from '../../../client/common/variables/types';
+import { DebuggerTypeName } from '../../../client/debugger/constants';
 import {
     LaunchConfigurationResolver
 } from '../../../client/debugger/extension/configuration/resolvers/launch';

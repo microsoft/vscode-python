@@ -3,10 +3,9 @@
 
 'use strict';
 
-
-import { IPathUtils, ICurrentProcess } from '../../../../common/types';
+import { ICurrentProcess, IPathUtils } from '../../../../common/types';
+import { EnvironmentVariables, IEnvironmentVariablesService } from '../../../../common/variables/types';
 import { LaunchRequestArguments } from '../../../types';
-import { IEnvironmentVariablesService, EnvironmentVariables } from '../../../../common/variables/types';
 
 export async function getEnvironmentVariables(
     envParser: IEnvironmentVariablesService,

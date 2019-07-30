@@ -9,11 +9,11 @@ import { InvalidPythonPathInDebuggerServiceId } from '../../../../application/di
 import { IDiagnosticsService, IInvalidPythonPathInDebuggerService } from '../../../../application/diagnostics/types';
 import { IDocumentManager, IWorkspaceService } from '../../../../common/application/types';
 import { IPlatformService } from '../../../../common/platform/types';
-import { IConfigurationService, IPathUtils, ICurrentProcess } from '../../../../common/types';
+import { IConfigurationService, ICurrentProcess, IPathUtils } from '../../../../common/types';
+import { IEnvironmentVariablesService } from '../../../../common/variables/types';
 import { DebuggerTypeName } from '../../../constants';
 import { DebugOptions, LaunchRequestArguments } from '../../../types';
 import { BaseConfigurationResolver } from './base';
-import { IEnvironmentVariablesService } from '../../../../common/variables/types';
 import { getEnvironmentVariables } from './helper';
 
 @injectable()
@@ -29,7 +29,7 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         @inject(IConfigurationService) configurationService: IConfigurationService,
         @inject(IEnvironmentVariablesService) envParser: IEnvironmentVariablesService,
         @inject(IPathUtils) pathUtils: IPathUtils,
-        @inject(ICurrentProcess) currentProcess: ICurrentProcess,
+        @inject(ICurrentProcess) currentProcess: ICurrentProcess
     ) {
         super(workspaceService, documentManager, configurationService);
         this.envParser = envParser;

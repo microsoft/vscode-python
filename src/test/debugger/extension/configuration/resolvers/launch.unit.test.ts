@@ -14,8 +14,8 @@ import { IDocumentManager, IWorkspaceService } from '../../../../../client/commo
 import { PYTHON_LANGUAGE } from '../../../../../client/common/constants';
 import { IPlatformService } from '../../../../../client/common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../../../client/common/process/types';
+import { IConfigurationService, ICurrentProcess, IPathUtils, IPythonSettings } from '../../../../../client/common/types';
 import { IEnvironmentVariablesService } from '../../../../../client/common/variables/types';
-import { IConfigurationService, IPythonSettings, IPathUtils, ICurrentProcess } from '../../../../../client/common/types';
 import { DebuggerTypeName } from '../../../../../client/debugger/constants';
 import { LaunchConfigurationResolver } from '../../../../../client/debugger/extension/configuration/resolvers/launch';
 import { DebugOptions, LaunchRequestArguments } from '../../../../../client/debugger/types';
@@ -57,7 +57,6 @@ suite('Debugging - Config Resolver Launch', () => {
         diagnosticsService
             .setup(h => h.validatePythonPath(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(true));
-
 
         const settings = TypeMoq.Mock.ofType<IPythonSettings>();
         settings.setup(s => s.pythonPath).returns(() => pythonPath);
