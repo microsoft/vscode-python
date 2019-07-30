@@ -10,7 +10,7 @@ import { IConfigurationService, IDataScienceSettings, IDisposable, IDisposableRe
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
-import { CodeLensCommands, Commands, EditorContexts, Telemetry } from '../constants';
+import { CodeLensCommands, EditorContexts, Telemetry } from '../constants';
 import { ICodeWatcher, IDataScienceCodeLensProvider } from '../types';
 
 @injectable()

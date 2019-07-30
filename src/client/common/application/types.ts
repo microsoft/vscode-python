@@ -7,6 +7,7 @@ import {
     CancellationToken,
     CompletionItemProvider,
     ConfigurationChangeEvent,
+    DebugAdapterTrackerFactory,
     DebugConfiguration,
     DebugConfigurationProvider,
     DebugConsole,
@@ -763,6 +764,9 @@ export interface IDebugService {
      * @return A [disposable](#Disposable) that unregisters this provider when being disposed.
      */
     registerDebugConfigurationProvider(debugType: string, provider: DebugConfigurationProvider): Disposable;
+
+    // IANHU: Fill in the comment
+    registerDebugAdapterTrackerFactory(debugType: string, factory: DebugAdapterTrackerFactory): Disposable;
 
     /**
      * Start debugging by using either a named launch or named compound configuration,
