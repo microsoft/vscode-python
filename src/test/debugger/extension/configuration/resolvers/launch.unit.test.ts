@@ -14,9 +14,9 @@ import { IDocumentManager, IWorkspaceService } from '../../../../../client/commo
 import { PYTHON_LANGUAGE } from '../../../../../client/common/constants';
 import { IPlatformService } from '../../../../../client/common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../../../client/common/process/types';
-import { IConfigurationService, ICurrentProcess, IPathUtils, IPythonSettings } from '../../../../../client/common/types';
-import { IEnvironmentVariablesService } from '../../../../../client/common/variables/types';
+import { IConfigurationService, IPythonSettings } from '../../../../../client/common/types';
 import { DebuggerTypeName } from '../../../../../client/debugger/constants';
+import { IDebugEnvironmentVariablesService } from '../../../../../client/debugger/extension/configuration/resolvers/helper';
 import { LaunchConfigurationResolver } from '../../../../../client/debugger/extension/configuration/resolvers/launch';
 import { DebugOptions, LaunchRequestArguments } from '../../../../../client/debugger/types';
 import { IInterpreterHelper } from '../../../../../client/interpreter/contracts';
@@ -29,9 +29,7 @@ suite('Debugging - Config Resolver Launch', () => {
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let documentManager: TypeMoq.IMock<IDocumentManager>;
     let diagnosticsService: TypeMoq.IMock<IInvalidPythonPathInDebuggerService>;
-    let pathUtils: TypeMoq.IMock<IPathUtils>;
-    let currentProcess: TypeMoq.IMock<ICurrentProcess>;
-    let envParser: TypeMoq.IMock<IEnvironmentVariablesService>;
+    let debugEnvHelper: TypeMoq.IMock<IDebugEnvironmentVariablesService>;
     function createMoqWorkspaceFolder(folderPath: string) {
         const folder = TypeMoq.Mock.ofType<WorkspaceFolder>();
         folder.setup(f => f.uri).returns(() => Uri.file(folderPath));
@@ -44,9 +42,7 @@ suite('Debugging - Config Resolver Launch', () => {
 
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         diagnosticsService = TypeMoq.Mock.ofType<IInvalidPythonPathInDebuggerService>();
-        pathUtils = TypeMoq.Mock.ofType<IPathUtils>();
-        currentProcess = TypeMoq.Mock.ofType<ICurrentProcess>();
-        envParser = TypeMoq.Mock.ofType<IEnvironmentVariablesService>();
+        debugEnvHelper = TypeMoq.Mock.ofType<IDebugEnvironmentVariablesService>();
 
         pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
         helper = TypeMoq.Mock.ofType<IInterpreterHelper>();
@@ -72,9 +68,7 @@ suite('Debugging - Config Resolver Launch', () => {
             diagnosticsService.object,
             platformService.object,
             confgService.object,
-            envParser.object,
-            pathUtils.object,
-            currentProcess.object);
+            debugEnvHelper.object);
     }
     function setupActiveEditor(fileName: string | undefined, languageId: string) {
         if (fileName) {

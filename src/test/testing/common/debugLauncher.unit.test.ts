@@ -21,9 +21,9 @@ import {
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import '../../../client/common/extensions';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
-import { IConfigurationService, ICurrentProcess, IPathUtils, IPythonSettings, ITestingSettings } from '../../../client/common/types';
-import { IEnvironmentVariablesService } from '../../../client/common/variables/types';
+import { IConfigurationService, IPythonSettings, ITestingSettings } from '../../../client/common/types';
 import { DebuggerTypeName } from '../../../client/debugger/constants';
+import { IDebugEnvironmentVariablesService } from '../../../client/debugger/extension/configuration/resolvers/helper';
 import {
     LaunchConfigurationResolver
 } from '../../../client/debugger/extension/configuration/resolvers/launch';
@@ -45,9 +45,7 @@ suite('Unit Tests - Debug Launcher', () => {
     let platformService: TypeMoq.IMock<IPlatformService>;
     let filesystem: TypeMoq.IMock<IFileSystem>;
     let settings: TypeMoq.IMock<IPythonSettings>;
-    let pathUtils: TypeMoq.IMock<IPathUtils>;
-    let currentProcess: TypeMoq.IMock<ICurrentProcess>;
-    let envParser: TypeMoq.IMock<IEnvironmentVariablesService>;
+    let debugEnvHelper: TypeMoq.IMock<IDebugEnvironmentVariablesService>;
     let hasWorkspaceFolders: boolean;
     setup(async () => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
@@ -93,17 +91,9 @@ suite('Unit Tests - Debug Launcher', () => {
             getNewResolver(configService.object)
         );
 
-        pathUtils = TypeMoq.Mock.ofType<IPathUtils>();
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPathUtils)))
-            .returns(() => pathUtils.object);
-
-        currentProcess = TypeMoq.Mock.ofType<ICurrentProcess>();
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICurrentProcess)))
-            .returns(() => currentProcess.object);
-
-        envParser = TypeMoq.Mock.ofType<IEnvironmentVariablesService>();
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IEnvironmentVariablesService)))
-            .returns(() => envParser.object);
+        debugEnvHelper = TypeMoq.Mock.ofType<IDebugEnvironmentVariablesService>();
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDebugEnvironmentVariablesService)))
+            .returns(() => debugEnvHelper.object);
     });
     function getNewResolver(configService: IConfigurationService) {
         const validator = TypeMoq.Mock.ofType<IInvalidPythonPathInDebuggerService>(undefined, TypeMoq.MockBehavior.Strict);
@@ -115,9 +105,7 @@ suite('Unit Tests - Debug Launcher', () => {
             validator.object,
             platformService.object,
             configService,
-            envParser.object,
-            pathUtils.object,
-            currentProcess.object
+            debugEnvHelper.object
         );
     }
     function setupDebugManager(
