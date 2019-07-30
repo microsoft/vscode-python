@@ -27,6 +27,7 @@ suite('Services - Discovered test parser', () => {
     });
 
     test('Parse returns empty tests if resource does not belong to workspace', () => {
+        // That is, getWorkspaceFolder() returns undefined.
         const expectedTests: Tests = {
             rootTestFolders: [],
             summary: { errors: 0, failures: 0, passed: 0, skipped: 0 },
@@ -88,14 +89,6 @@ suite('Services - Discovered test parser', () => {
     });
 
     test('Parse returns expected tests if some of data roots matches with workspace root', () => {
-        const expectedTests: Tests = {
-            rootTestFolders: [],
-            summary: { errors: 0, failures: 0, passed: 0, skipped: 0 },
-            testFiles: [],
-            testFolders: [],
-            testFunctions: [],
-            testSuites: []
-        };
         const discoveredTests = [
             {
                 root: 'path/to/testDataRoot1',
@@ -108,12 +101,24 @@ suite('Services - Discovered test parser', () => {
         ];
         const workspaceUri = Uri.file('path/to/workspace');
         const workspace = { uri: workspaceUri };
-        const rootFolder1 = {
-            name: workspace.uri.fsPath, folders: [], time: 0,
-            testFiles: [], resource: workspaceUri, nameToRun: 'rootId1'
+        const expectedTests: Tests = {
+            rootTestFolders: [
+                {
+                    name: workspace.uri.fsPath, folders: [], time: 0,
+                    testFiles: [], resource: workspaceUri, nameToRun: 'rootId1'
+                }
+            ],
+            summary: { errors: 0, failures: 0, passed: 0, skipped: 0 },
+            testFiles: [],
+            testFolders: [
+                {
+                    name: workspace.uri.fsPath, folders: [], time: 0,
+                    testFiles: [], resource: workspaceUri, nameToRun: 'rootId1'
+                }
+            ],
+            testFunctions: [],
+            testSuites: []
         };
-        expectedTests.rootTestFolders.push(rootFolder1);
-        expectedTests.testFolders.push(rootFolder1);
         const buildChildren = sinon.stub(TestDiscoveredTestParser.prototype, 'buildChildren');
         buildChildren.callsFake(() => undefined);
         workspaceService
