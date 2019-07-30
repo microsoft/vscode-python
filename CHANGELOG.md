@@ -1,6 +1,6 @@
 # Changelog
 
-## 2019.7.0-rc (30 July 2019)
+## 2019.8.0-rc (30 July 2019)
 
 ### Enhancements
 
