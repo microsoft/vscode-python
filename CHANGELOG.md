@@ -158,7 +158,7 @@
    ([#6525](https://github.com/Microsoft/vscode-python/issues/6525))
 1. Merge ArgumentsHelper unit tests into one file.
    ([#6583](https://github.com/Microsoft/vscode-python/issues/6583))
-1. Fix jupyter remote tests to respect new notebook 6.0 output format
+1. Fix jupyter remote tests to respect new notebook 6.0 output format.
    ([#6625](https://github.com/Microsoft/vscode-python/issues/6625))
 1. Unit Tests for DataScience Error Handler.
    ([#6670](https://github.com/Microsoft/vscode-python/issues/6670))
