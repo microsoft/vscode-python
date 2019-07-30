@@ -171,11 +171,10 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
                 handleDiagnostics: (uri: Uri, diagnostics: Diagnostic[], next: HandleDiagnosticsSignature) => {
                     // Skip sending if this is a special file.
                     const filePath = uri.fsPath;
-                    const baseName = path.basename(filePath);
-                    if (baseName && baseName.startsWith(HiddenFilePrefix)) {
-                        return;
+                    const baseName = filePath ? path.basename(filePath) : undefined;
+                    if (!baseName || !baseName.startsWith(HiddenFilePrefix)) {
+                        next(uri, diagnostics);
                     }
-                    next(uri, diagnostics);
                 }
             }
         };
