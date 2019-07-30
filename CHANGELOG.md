@@ -6,7 +6,7 @@
 
 1. Added ability to auto update Insiders build of extension.
    ([#2772](https://github.com/Microsoft/vscode-python/issues/2772))
-1. Add an icon for the "Run Python File in Terminal" command.'
+1. Add an icon for the "Run Python File in Terminal" command.
    ([#5321](https://github.com/Microsoft/vscode-python/issues/5321))
 1. Hook up ptvsd debugger to jupyter UI
    ([#5900](https://github.com/Microsoft/vscode-python/issues/5900))
