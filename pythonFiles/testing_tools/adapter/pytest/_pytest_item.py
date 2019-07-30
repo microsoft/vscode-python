@@ -151,16 +151,10 @@ def parse_item(item, _normcase, _pathsep):
     # This can result from importing a test function from another module.
 
     # Figure out the file.
-    relfile = fileid
-    fspath = _normcase(str(item.fspath))
-    if not fspath.endswith(relfile[1:]):
-        raise should_never_reach_here(
-            item,
-            fspath,
-            relfile,
-            )
-    testroot = fspath[:-len(relfile) + 1]
-    location, fullname = _get_location(item, relfile, _normcase, _pathsep)
+    testroot, relfile = _split_fspath(str(item.fspath), fileid, item,
+                                      _normcase)
+    location, fullname = _get_location(item, testroot, relfile,
+                                       _normcase, _pathsep)
     if kind == 'function':
         if testfunc and fullname != testfunc + parameterized:
             raise should_never_reach_here(
@@ -218,18 +212,55 @@ def parse_item(item, _normcase, _pathsep):
     return test, parents
 
 
-def _get_location(item, relfile, _normcase, _pathsep):
+def _split_fspath(fspath, fileid, item, _normcase):
+    """Return (testroot, relfile) for the given fspath.
+
+    "relfile" will match "fileid".
+    """
+    # "fileid" comes from nodeid, is always normcased, and is always
+    # relative to the testroot (with a "./" prefix.
+    _relsuffix = fileid[1:]  # Drop (only) the "." prefix.
+    if not _normcase(fspath).endswith(_relsuffix):
+        raise should_never_reach_here(
+            item,
+            fspath,
+            fileid,
+            )
+    testroot = fspath[:-len(fileid) + 1]  # Ignore the "./" prefix.
+    relfile = '.' + fspath[-len(fileid) + 1:]  # Keep the pathsep.
+    return testroot, relfile
+
+
+def _get_location(item, testroot, relfile, _normcase, _pathsep):
     """Return (loc str, fullname) for the given item."""
     srcfile, lineno, fullname = item.location
-    srcfile = _normcase(srcfile)
-    if srcfile in (relfile, relfile[len(_pathsep) + 1:]):
+    if _matches_relfile(srcfile, testroot, relfile, _normcase, _pathsep):
         srcfile = relfile
     else:
         # pytest supports discovery of tests imported from other
         # modules.  This is reflected by a different filename
         # in item.location.
-        srcfile, lineno = _find_location(
-                srcfile, lineno, relfile, item.function, _pathsep)
+
+        if _is_legacy_wrapper(srcfile, _pathsep):
+            srcfile = relfile
+            unwrapped = _unwrap_decorator(item.function)
+            if unwrapped is None:
+                # It was an invalid legacy wrapper so we just say
+                # "somewhere in relfile".
+                lineno = None
+            else:
+                _srcfile, lineno = unwrapped
+                if not _matches_relfile(_srcfile, testroot, relfile, _normcase, _pathsep):
+                    # For legacy wrappers we really expect the wrapped
+                    # function to be in relfile.  So here we ignore any
+                    # other file and just say "somewhere in relfile".
+                    lineno = None
+            if lineno is None:
+                lineno = -1  # i.e. "unknown"
+        elif _matches_relfile(srcfile, testroot, relfile, _normcase, _pathsep):
+            srcfile = relfile
+        # Otherwise we just return the info from item.location as-is.
+
         if not srcfile.startswith('.' + _pathsep):
             srcfile = '.' + _pathsep + srcfile
     # from pytest, line numbers are 0-based
@@ -237,24 +268,58 @@ def _get_location(item, relfile, _normcase, _pathsep):
     return location, fullname
 
 
-def _find_location(srcfile, lineno, relfile, func, _pathsep):
-    """Return (filename, lno) for the given location info."""
-    if sys.version_info > (3,):
-        return srcfile, lineno
-    if (_pathsep + 'unittest' + _pathsep + 'case.py') not in srcfile:
-        return srcfile, lineno
+def _matches_relfile(srcfile, testroot, relfile, _normcase, _pathsep):
+    """Return True if "srcfile" matches the given relfile."""
+    srcfile = _normcase(srcfile)
+    relfile = _normcase(relfile)
+    if srcfile == relfile:
+        return True
+    elif srcfile == relfile[len(_pathsep) + 1:]:
+        return True
+    elif srcfile == testroot + relfile[1:]:
+        return True
+    else:
+        return False
 
-    # Unwrap the decorator (e.g. unittest.skip).
-    srcfile = relfile
-    lineno = -1
+
+def _is_legacy_wrapper(srcfile, _pathsep, _pyversion=sys.version_info):
+    """Return True if the test might be wrapped.
+
+    In Python 2 unittest's decorators (e.g. unittest.skip) do not wrap
+    properly, so we must manually unwrap them.
+    """
+    if _pyversion > (3,):
+        return False
+    if (_pathsep + 'unittest' + _pathsep + 'case.py') not in srcfile:
+        return False
+    return True
+
+
+def _unwrap_decorator(func):
+    """Return (filename, lineno) for the func the given func wraps.
+
+    If the wrapped func cannot be identified then return None.  Likewise
+    for the wrapped filename.  "lineno" is None if it cannot be found
+    but the filename could.
+    """
     try:
         func = func.__closure__[0].cell_contents
     except (IndexError, AttributeError):
-        return srcfile, lineno
+        return None
     else:
-        if callable(func) and func.__code__.co_filename.endswith(relfile[1:]):
-            lineno = func.__code__.co_firstlineno - 1
-    return srcfile, lineno
+        if not callable(func):
+            return None
+        try:
+            filename = func.__code__.co_filename
+        except AttributeError:
+            return None
+        else:
+            try:
+                lineno = func.__code__.co_firstlineno - 1
+            except AttributeError:
+                return (filename, None)
+            else:
+                return filename, lineno
 
 
 def _parse_node_id(testid, kind, _pathsep, _normcase):

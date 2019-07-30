@@ -826,11 +826,11 @@ class CollectorTests(unittest.TestCase):
                     name='test_spam',
                     path=TestPath(
                         root=testroot,
-                        relfile=r'.\x\y\z\test_eggs.py',
+                        relfile=r'.\X\Y\Z\test_eggs.py',
                         func='SpamTests.test_spam',
                         sub=None,
                         ),
-                    source=r'.\x\y\z\test_eggs.py:{}'.format(13),
+                    source=r'.\X\Y\Z\test_eggs.py:{}'.format(13),
                     markers=None,
                     parentid=r'.\x\y\z\test_eggs.py::SpamTests',
                     ),
