@@ -64,7 +64,7 @@
    ([#6050](https://github.com/Microsoft/vscode-python/issues/6050))
 1. Make long running output not crash the extension host. Also improve perf of streaming.
    ([#6222](https://github.com/Microsoft/vscode-python/issues/6222))
-1. Opting out of telemetry correctly opts out of A/B testing
+1. Opting out of telemetry correctly opts out of A/B testing.
    ([#6270](https://github.com/Microsoft/vscode-python/issues/6270))
 1. Add error messages if data_rate_limit is exceeded on remote (or local) connection.
    ([#6273](https://github.com/Microsoft/vscode-python/issues/6273))
