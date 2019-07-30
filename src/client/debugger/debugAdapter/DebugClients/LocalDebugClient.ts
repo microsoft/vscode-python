@@ -74,7 +74,7 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
                 pythonPath = this.args.pythonPath;
             }
             const args = this.buildLaunchArguments(processCwd, dbgServer.port);
-            const envVars = this.args.env ? { ...this.args.env! } : {};
+            const envVars = this.args.env ? { ...this.args.env } : {};
             switch (this.args.console) {
                 case 'externalTerminal':
                 case 'integratedTerminal': {
