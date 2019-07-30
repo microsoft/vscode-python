@@ -37,7 +37,7 @@
    ([#6449](https://github.com/Microsoft/vscode-python/issues/6449))
 1. instead of asking the user to select an installer, we now autodetect the environment being used, and use that installer.
    ([#6569](https://github.com/Microsoft/vscode-python/issues/6569))
-1. Remove "Debug cell" action from data science code lenses for markdown cells
+1. Remove "Debug cell" action from data science code lenses for markdown cells.
    (thanks [Janosh Riebesell](https://github.com/janosh))
    ([#6588](https://github.com/Microsoft/vscode-python/issues/6588))
 
