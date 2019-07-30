@@ -449,8 +449,13 @@ export const IDebugLocationTrackerFactory = Symbol('IDebugLocationTrackerFactory
 export interface IDebugLocationTrackerFactory extends DebugAdapterTrackerFactory {
 }
 
+export interface IDebugLocation {
+    fileName: string;
+    lineNumber: number;
+}
+
 export const IDebugLocationTracker = Symbol('IDebugLocationTracker');
 export interface IDebugLocationTracker extends DebugAdapterTracker {
     setDebugSession(targetSession: DebugSession): void;
-    getDebugLocation(): number;
+    getDebugLocation(): IDebugLocation | undefined;
 }
