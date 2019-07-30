@@ -88,7 +88,8 @@
    ([#6386](https://github.com/Microsoft/vscode-python/issues/6386))
 1. Fix overwriting of cwd in the path list when discovering tests.
    ([#6417](https://github.com/Microsoft/vscode-python/issues/6417))
-1. Fixes a bug in pytest test discovery.  Patch by Rainer Dreyer.
+1. Fixes a bug in pytest test discovery.
+    (thanks Rainer Dreyer)
    ([#6463](https://github.com/Microsoft/vscode-python/issues/6463))
 1. Fix debugging to work on restarting the jupyter kernel.
    ([#6502](https://github.com/Microsoft/vscode-python/issues/6502))
