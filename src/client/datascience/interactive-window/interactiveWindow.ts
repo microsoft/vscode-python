@@ -201,8 +201,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
             // If that worked, we have to open the new document. It should be
             // the new entry in the list
             if (saved) {
-                const afterSave = [...this.documentManager.textDocuments];
-                const diff = afterSave.filter(f => beforeSave.indexOf(f) === -1);
+                const diff = this.documentManager.textDocuments.filter(f => beforeSave.indexOf(f) === -1);
                 if (diff && diff.length > 0) {
                     file = diff[0].fileName;
 
