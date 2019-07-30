@@ -8,7 +8,7 @@
    ([#2772](https://github.com/Microsoft/vscode-python/issues/2772))
 1. Add an icon for the "Run Python File in Terminal" command.
    ([#5321](https://github.com/Microsoft/vscode-python/issues/5321))
-1. Hook up ptvsd debugger to jupyter UI
+1. Hook up ptvsd debugger to Jupyter UI.
    ([#5900](https://github.com/Microsoft/vscode-python/issues/5900))
 1. Improved keyboard and screen reader support for the data explorer
    ([#6019](https://github.com/Microsoft/vscode-python/issues/6019))
