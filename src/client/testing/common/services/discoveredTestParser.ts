@@ -8,6 +8,7 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import { traceError } from '../../../common/logger';
+import { IFileSystem } from '../../../common/platform/types';
 import { TestDataItem } from '../../types';
 import { getParentFile, getParentSuite, getTestType } from '../testUtils';
 import { FlattenedTestFunction, FlattenedTestSuite, SubtestParent, TestFile, TestFolder, TestFunction, Tests, TestSuite, TestType } from '../types';
@@ -15,7 +16,10 @@ import { DiscoveredTests, ITestDiscoveredTestParser, TestContainer, TestItem } f
 
 @injectable()
 export class TestDiscoveredTestParser implements ITestDiscoveredTestParser {
-    constructor(@inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService) { }
+    constructor(
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
+        @inject(IFileSystem) private readonly fileSystem: IFileSystem
+    ) { }
     public parse(resource: Uri, discoveredTests: DiscoveredTests[]): Tests {
         const tests: Tests = {
             rootTestFolders: [],
@@ -34,6 +38,12 @@ export class TestDiscoveredTestParser implements ITestDiscoveredTestParser {
 
         // If the root is the workspace folder, then ignore that.
         for (const data of discoveredTests) {
+            // For now we only check the current workspace.
+            const root = this.findRoot(data.root, [workspace.uri.fsPath]);
+            if (!root) {
+                // For now we only support tests from the workspace.
+                continue;
+            }
             const rootFolder = {
                 name: workspace.uri.fsPath, folders: [], time: 0,
                 testFiles: [], resource: resource, nameToRun: data.rootid
@@ -44,6 +54,15 @@ export class TestDiscoveredTestParser implements ITestDiscoveredTestParser {
         }
 
         return tests;
+    }
+
+    public findRoot(raw: string, roots: string[]): string | undefined {
+        for (const root of roots) {
+            if (this.fileSystem.arePathsSame(raw, root)) {
+                return root;
+            }
+        }
+        return undefined;
     }
     /**
      * Not the best solution to use `case statements`, but it keeps the code simple and easy to read in one place.
