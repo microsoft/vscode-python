@@ -43,7 +43,7 @@
 
 ### Fixes
 
-1. Fix executeInFileDir doesn't work when file is not in a workspace
+1. Fix `executeInFileDir` for when a file is not in a workspace.
    (thanks [Bet4](https://github.com/bet4it/))
    ([#1062](https://github.com/Microsoft/vscode-python/issues/1062))
 1. Fix indentation after string literals containing escaped characters.
