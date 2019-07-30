@@ -139,7 +139,7 @@
    ([#6013](https://github.com/Microsoft/vscode-python/issues/6013))
 1. Add unit tests for `client/activation/serviceRegistry.ts`.
    ([#6163](https://github.com/Microsoft/vscode-python/issues/6163))
-1. Remove test.ipynb from root folder.
+1. Remove `test.ipynb` from the root folder.
    ([#6212](https://github.com/Microsoft/vscode-python/issues/6212))
 1. Fail the `smoke tests` CI job when the smoke tests fail.
    ([#6253](https://github.com/Microsoft/vscode-python/issues/6253))
