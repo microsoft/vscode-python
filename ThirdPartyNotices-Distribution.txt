@@ -37,7 +37,7 @@ Microsoft Python extension for Visual Studio Code incorporates third party mater
 30.  amdefine 1.0.1 (https://registry.npmjs.org/amdefine/-/amdefine-1.0.1.tgz)
 31.  angular.io (for RxJS 5.5) (https://angular.io/)
 32.  anser 1.4.7 (https://registry.npmjs.org/anser/-/anser-1.4.7.tgz)
-33.  ansi-regex 2.1.1 (https://registry.npmjs.org/ansi-regex/-/ansi-regex-2.1.1.tgz)
+33.  ansi-regex 4.1.0 (https://registry.npmjs.org/ansi-regex/-/ansi-regex-4.1.0.tgz)
 34.  ansi-styles 2.2.1 (https://registry.npmjs.org/ansi-styles/-/ansi-styles-2.2.1.tgz)
 35.  ansi-to-html 0.6.7 (https://registry.npmjs.org/ansi-to-html/-/ansi-to-html-0.6.7.tgz)
 36.  ansi-to-react 3.3.3 (https://registry.npmjs.org/ansi-to-react/-/ansi-to-react-3.3.3.tgz)
@@ -52,7 +52,7 @@ Microsoft Python extension for Visual Studio Code incorporates third party mater
 45.  asynckit 0.4.0 (https://registry.npmjs.org/asynckit/-/asynckit-0.4.0.tgz)
 46.  aws-sign2 0.7.0 (https://registry.npmjs.org/aws-sign2/-/aws-sign2-0.7.0.tgz)
 47.  aws4 1.7.0 (https://registry.npmjs.org/aws4/-/aws4-1.7.0.tgz)
-48.  azure-storage 2.10.1 (https://registry.npmjs.org/azure-storage/-/azure-storage-2.10.1.tgz)
+48.  azure-storage 2.10.3 (https://registry.npmjs.org/azure-storage/-/azure-storage-2.10.3.tgz)
 49.  babel-code-frame 6.26.0 (https://github.com/babel/babel/tree/v6.26.0/packages/babel-code-frame)
 50.  babel-polyfill 6.26.0 (https://registry.npmjs.org/babel-polyfill/-/babel-polyfill-6.26.0.tgz)
 51.  babel-runtime 6.26.0 (https://registry.npmjs.org/babel-runtime/-/babel-runtime-6.26.0.tgz)
@@ -150,7 +150,7 @@ Microsoft Python extension for Visual Studio Code incorporates third party mater
 143. esprima 2.7.3 (https://registry.npmjs.org/esprima/-/esprima-2.7.3.tgz)
 144. estraverse 1.9.3 (https://registry.npmjs.org/estraverse/-/estraverse-1.9.3.tgz)
 145. esutils 2.0.2 (https://registry.npmjs.org/esutils/-/esutils-2.0.2.tgz)
-146. extend 3.0.1 (https://registry.npmjs.org/extend/-/extend-3.0.1.tgz)
+146. extend 3.0.2 (https://registry.npmjs.org/extend/-/extend-3.0.2.tgz)
 147. extsprintf 1.3.0 (https://registry.npmjs.org/extsprintf/-/extsprintf-1.3.0.tgz)
 148. falafel 2.1.0 (https://registry.npmjs.org/falafel/-/falafel-2.1.0.tgz)
 149. fast-deep-equal 1.1.0 (https://registry.npmjs.org/fast-deep-equal/-/fast-deep-equal-1.1.0.tgz)
@@ -224,7 +224,7 @@ Microsoft Python extension for Visual Studio Code incorporates third party mater
 217. line-by-line 0.1.6 (https://registry.npmjs.org/line-by-line/-/line-by-line-0.1.6.tgz)
 218. linear-layout-vector 0.0.1 (https://registry.npmjs.org/linear-layout-vector/-/linear-layout-vector-0.0.1.tgz)
 219. linebreak 0.3.0 (https://registry.npmjs.org/linebreak/-/linebreak-0.3.0.tgz)
-220. lodash 4.17.11 (https://registry.npmjs.org/lodash/-/lodash-4.17.11.tgz)
+220. lodash 4.17.13 (https://registry.npmjs.org/lodash/-/lodash-4.17.13.tgz)
 221. lodash.clonedeep 4.5.0 (https://registry.npmjs.org/lodash.clonedeep/-/lodash.clonedeep-4.5.0.tgz)
 222. lodash.curry 4.1.1 (https://registry.npmjs.org/lodash.curry/-/lodash.curry-4.1.1.tgz)
 223. lodash.flatten 4.4.0 (https://registry.npmjs.org/lodash.flatten/-/lodash.flatten-4.4.0.tgz)
@@ -282,150 +282,149 @@ Microsoft Python extension for Visual Studio Code incorporates third party mater
 275. process-nextick-args 1.0.7 (https://registry.npmjs.org/process-nextick-args/-/process-nextick-args-1.0.7.tgz)
 276. prop-types 15.6.2 (https://registry.npmjs.org/prop-types/-/prop-types-15.6.2.tgz)
 277. pseudomap 1.0.2 (https://registry.npmjs.org/pseudomap/-/pseudomap-1.0.2.tgz)
-278. psl 1.1.29 (https://github.com/wrangr/psl/tree/v1.1.29)
-279. ptvsd 4.2.4 (https://github.com/Microsoft/ptvsd/tree/v4.2.4)
-280. punycode 1.4.1 (https://registry.npmjs.org/punycode/-/punycode-1.4.1.tgz)
-281. pure-color 1.3.0 (https://registry.npmjs.org/pure-color/-/pure-color-1.3.0.tgz)
-282. py2app (for PyDev.Debugger) (https://bitbucket.org/ronaldoussoren/py2app)
-283. PyDev.Debugger (for ptvsd 4) (https://pypi.org/project/pydevd/)
-284. qs 6.5.2 (https://registry.npmjs.org/qs/-/qs-6.5.2.tgz)
-285. querystringify 2.0.0 (https://registry.npmjs.org/querystringify/-/querystringify-2.0.0.tgz)
-286. quote-stream 1.0.2 (https://registry.npmjs.org/quote-stream/-/quote-stream-1.0.2.tgz)
-287. raf 3.4.0 (https://registry.npmjs.org/raf/-/raf-3.4.0.tgz)
-288. react 16.5.2 (https://registry.npmjs.org/react/-/react-16.5.2.tgz)
-289. react-annotation 1.3.1 (https://registry.npmjs.org/react-annotation/-/react-annotation-1.3.1.tgz)
-290. react-base16-styling 0.5.3 (https://registry.npmjs.org/react-base16-styling/-/react-base16-styling-0.5.3.tgz)
-291. react-color 2.14.1 (https://registry.npmjs.org/react-color/-/react-color-2.14.1.tgz)
-292. react-data-grid 6.0.2-0 (https://registry.npmjs.org/react-data-grid/-/react-data-grid-6.0.2-0.tgz)
-293. react-dom 16.5.2 (https://registry.npmjs.org/react-dom/-/react-dom-16.5.2.tgz)
-294. react-hot-loader 4.3.11 (https://registry.npmjs.org/react-hot-loader/-/react-hot-loader-4.3.11.tgz)
-295. react-json-tree 0.11.0 (https://registry.npmjs.org/react-json-tree/-/react-json-tree-0.11.0.tgz)
-296. react-lifecycles-compat 3.0.4 (https://registry.npmjs.org/react-lifecycles-compat/-/react-lifecycles-compat-3.0.4.tgz)
-297. react-markdown 3.6.0 (https://registry.npmjs.org/react-markdown/-/react-markdown-3.6.0.tgz)
-298. react-motion 0.5.2 (https://registry.npmjs.org/react-motion/-/react-motion-0.5.2.tgz)
-299. react-move 2.9.1 (https://registry.npmjs.org/react-move/-/react-move-2.9.1.tgz)
-300. react-svg-pan-zoom 3.1.0 (https://registry.npmjs.org/react-svg-pan-zoom/-/react-svg-pan-zoom-3.1.0.tgz)
-301. react-svgmt 1.1.8 (https://registry.npmjs.org/react-svgmt/-/react-svgmt-1.1.8.tgz)
-302. react-table 6.8.6 (https://registry.npmjs.org/react-table/-/react-table-6.8.6.tgz)
-303. react-table-hoc-fixed-columns 1.0.1 (https://registry.npmjs.org/react-table-hoc-fixed-columns/-/react-table-hoc-fixed-columns-1.0.1.tgz)
-304. react-virtualized 9.21.1 (https://registry.npmjs.org/react-virtualized/-/react-virtualized-9.21.1.tgz)
-305. reactcss 1.2.3 (https://registry.npmjs.org/reactcss/-/reactcss-1.2.3.tgz)
-306. readable-stream 2.0.6 (https://registry.npmjs.org/readable-stream/-/readable-stream-2.0.6.tgz)
-307. reflect-metadata 0.1.12 (https://registry.npmjs.org/reflect-metadata/-/reflect-metadata-0.1.12.tgz)
-308. remark-parse 5.0.0 (https://registry.npmjs.org/remark-parse/-/remark-parse-5.0.0.tgz)
-309. repeat-string 1.6.1 (https://registry.npmjs.org/repeat-string/-/repeat-string-1.6.1.tgz)
-310. request 2.87.0 (https://registry.npmjs.org/request/-/request-2.87.0.tgz)
-311. request-progress 3.0.0 (https://registry.npmjs.org/request-progress/-/request-progress-3.0.0.tgz)
-312. requires-port 1.0.0 (https://registry.npmjs.org/requires-port/-/requires-port-1.0.0.tgz)
-313. resolve 1.7.1 (https://registry.npmjs.org/resolve/-/resolve-1.7.1.tgz)
-314. restructure 0.5.4 (https://registry.npmjs.org/restructure/-/restructure-0.5.4.tgz)
-315. roughjs-es5 0.1.0 (https://registry.npmjs.org/roughjs-es5/-/roughjs-es5-0.1.0.tgz)
-316. rxjs 5.5.9 (https://registry.npmjs.org/rxjs/-/rxjs-5.5.9.tgz)
-317. safe-buffer 5.1.2 (https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.1.2.tgz)
-318. safer-buffer 2.1.2 (https://registry.npmjs.org/safer-buffer/-/safer-buffer-2.1.2.tgz)
-319. sax 1.2.4 (https://registry.npmjs.org/sax/-/sax-1.2.4.tgz)
-320. schedule 0.5.0 (https://registry.npmjs.org/schedule/-/schedule-0.5.0.tgz)
-321. semiotic 1.15.1 (https://registry.npmjs.org/semiotic/-/semiotic-1.15.1.tgz)
-322. semiotic-mark 0.3.0 (https://registry.npmjs.org/semiotic-mark/-/semiotic-mark-0.3.0.tgz)
-323. semver 5.5.0 (https://registry.npmjs.org/semver/-/semver-5.5.0.tgz)
-324. setImmediate (for RxJS 5.5) (https://github.com/YuzuJS/setImmediate)
-325. setimmediate 1.0.5 (https://registry.npmjs.org/setimmediate/-/setimmediate-1.0.5.tgz)
-326. shallow-copy 0.0.1 (https://registry.npmjs.org/shallow-copy/-/shallow-copy-0.0.1.tgz)
-327. simple-swizzle 0.2.2 (https://registry.npmjs.org/simple-swizzle/-/simple-swizzle-0.2.2.tgz)
-328. sizzle (for lodash 4.17) (https://sizzlejs.com/)
-329. slickgrid 2.4.7 (https://registry.npmjs.org/slickgrid/-/slickgrid-2.4.7.tgz)
-330. sprintf-js 1.0.3 (https://registry.npmjs.org/sprintf-js/-/sprintf-js-1.0.3.tgz)
-331. sshpk 1.14.1 (https://registry.npmjs.org/sshpk/-/sshpk-1.14.1.tgz)
-332. stack-trace 0.0.10 (https://registry.npmjs.org/stack-trace/-/stack-trace-0.0.10.tgz)
-333. state-toggle 1.0.1 (https://registry.npmjs.org/state-toggle/-/state-toggle-1.0.1.tgz)
-334. static-eval 2.0.2 (https://registry.npmjs.org/static-eval/-/static-eval-2.0.2.tgz)
-335. string-hash 1.1.3 (https://registry.npmjs.org/string-hash/-/string-hash-1.1.3.tgz)
-336. string_decoder 0.10.31 (https://registry.npmjs.org/string_decoder/-/string_decoder-0.10.31.tgz)
-337. strip-ansi 5.2.0 (https://registry.npmjs.org/strip-ansi/-/strip-ansi-5.2.0.tgz)
-338. strip-json-comments 2.0.1 (https://registry.npmjs.org/strip-json-comments/-/strip-json-comments-2.0.1.tgz)
-339. style-loader 0.23.1 (https://registry.npmjs.org/style-loader/-/style-loader-0.23.1.tgz)
-340. styled-jsx 3.1.0 (https://registry.npmjs.org/styled-jsx/-/styled-jsx-3.1.0.tgz)
-341. stylis-rule-sheet 0.0.10 (https://registry.npmjs.org/stylis-rule-sheet/-/stylis-rule-sheet-0.0.10.tgz)
-342. sudo-prompt 8.2.0 (https://registry.npmjs.org/sudo-prompt/-/sudo-prompt-8.2.0.tgz)
-343. supports-color 2.0.0 (https://registry.npmjs.org/supports-color/-/supports-color-2.0.0.tgz)
-344. svg-inline-react 3.1.0 (https://registry.npmjs.org/svg-inline-react/-/svg-inline-react-3.1.0.tgz)
-345. svg-path-bounding-box 1.0.4 (https://registry.npmjs.org/svg-path-bounding-box/-/svg-path-bounding-box-1.0.4.tgz)
-346. svg-to-pdfkit 0.1.7 (https://registry.npmjs.org/svg-to-pdfkit/-/svg-to-pdfkit-0.1.7.tgz)
-347. svgpath 2.2.1 (https://registry.npmjs.org/svgpath/-/svgpath-2.2.1.tgz)
-348. symbol-observable 1.0.1 (https://registry.npmjs.org/symbol-observable/-/symbol-observable-1.0.1.tgz)
-349. text-hex 1.0.0 (https://registry.npmjs.org/text-hex/-/text-hex-1.0.0.tgz)
-350. throttleit 1.0.0 (https://github.com/component/throttle/tree/1.0.0)
-351. through 2.3.8 (https://registry.npmjs.org/through/-/through-2.3.8.tgz)
-352. through2 2.0.3 (https://registry.npmjs.org/through2/-/through2-2.0.3.tgz)
-353. timers-browserify 2.0.10 (https://registry.npmjs.org/timers-browserify/-/timers-browserify-2.0.10.tgz)
-354. tiny-inflate 1.0.2 (https://registry.npmjs.org/tiny-inflate/-/tiny-inflate-1.0.2.tgz)
-355. tinycolor2 1.4.1 (https://registry.npmjs.org/tinycolor2/-/tinycolor2-1.4.1.tgz)
-356. tinyqueue 1.2.3 (https://registry.npmjs.org/tinyqueue/-/tinyqueue-1.2.3.tgz)
-357. tmp 0.0.29 (https://registry.npmjs.org/tmp/-/tmp-0.0.29.tgz)
-358. tough-cookie 2.3.4 (https://registry.npmjs.org/tough-cookie/-/tough-cookie-2.3.4.tgz)
-359. transformation-matrix 2.0.3 (https://registry.npmjs.org/transformation-matrix/-/transformation-matrix-2.0.3.tgz)
-360. tree-kill 1.2.0 (https://github.com/pkrumins/node-tree-kill)
-361. trim 0.0.1 (https://registry.npmjs.org/trim/-/trim-0.0.1.tgz)
-362. trim-trailing-lines 1.1.1 (https://registry.npmjs.org/trim-trailing-lines/-/trim-trailing-lines-1.1.1.tgz)
-363. triple-beam 1.3.0 (https://registry.npmjs.org/triple-beam/-/triple-beam-1.3.0.tgz)
-364. trough 1.0.3 (https://registry.npmjs.org/trough/-/trough-1.0.3.tgz)
-365. tslib 1.9.1 (https://registry.npmjs.org/tslib/-/tslib-1.9.1.tgz)
-366. tslint 5.14.0 (https://registry.npmjs.org/tslint/-/tslint-5.14.0.tgz)
-367. tunnel-agent 0.6.0 (https://registry.npmjs.org/tunnel-agent/-/tunnel-agent-0.6.0.tgz)
-368. tweetnacl 0.14.5 (https://registry.npmjs.org/tweetnacl/-/tweetnacl-0.14.5.tgz)
-369. type-check 0.3.2 (https://registry.npmjs.org/type-check/-/type-check-0.3.2.tgz)
-370. typedarray 0.0.6 (https://registry.npmjs.org/typedarray/-/typedarray-0.0.6.tgz)
-371. typescript-char 0.0.0 (https://github.com/mason-lang/typescript-char)
-372. uint64be 1.0.1 (https://registry.npmjs.org/uint64be/-/uint64be-1.0.1.tgz)
-373. underscore 1.8.3 (https://registry.npmjs.org/underscore/-/underscore-1.8.3.tgz)
-374. unherit 1.1.1 (https://registry.npmjs.org/unherit/-/unherit-1.1.1.tgz)
-375. unicode 10.0.0 (https://registry.npmjs.org/unicode/-/unicode-10.0.0.tgz)
-376. unicode-properties 1.1.0 (https://registry.npmjs.org/unicode-properties/-/unicode-properties-1.1.0.tgz)
-377. unicode-trie 0.3.1 (https://registry.npmjs.org/unicode-trie/-/unicode-trie-0.3.1.tgz)
-378. unified 6.2.0 (https://registry.npmjs.org/unified/-/unified-6.2.0.tgz)
-379. uniqid 5.0.3 (https://registry.npmjs.org/uniqid/-/uniqid-5.0.3.tgz)
-380. unist-util-is 2.1.2 (https://registry.npmjs.org/unist-util-is/-/unist-util-is-2.1.2.tgz)
-381. unist-util-remove-position 1.1.2 (https://registry.npmjs.org/unist-util-remove-position/-/unist-util-remove-position-1.1.2.tgz)
-382. unist-util-stringify-position 1.1.2 (https://registry.npmjs.org/unist-util-stringify-position/-/unist-util-stringify-position-1.1.2.tgz)
-383. unist-util-visit 1.4.0 (https://registry.npmjs.org/unist-util-visit/-/unist-util-visit-1.4.0.tgz)
-384. unist-util-visit-parents 1.1.2 (https://registry.npmjs.org/unist-util-visit-parents/-/unist-util-visit-parents-1.1.2.tgz)
-385. universalify 0.1.1 (https://registry.npmjs.org/universalify/-/universalify-0.1.1.tgz)
-386. untangle (for ptvsd 4) (https://pypi.org/project/untangle/)
-387. untildify 3.0.2 (https://registry.npmjs.org/untildify/-/untildify-3.0.2.tgz)
-388. url-parse 1.4.3 (https://registry.npmjs.org/url-parse/-/url-parse-1.4.3.tgz)
-389. util 0.10.4 (https://registry.npmjs.org/util/-/util-0.10.4.tgz)
-390. util-deprecate 1.0.2 (https://registry.npmjs.org/util-deprecate/-/util-deprecate-1.0.2.tgz)
-391. uuid 3.3.2 (https://registry.npmjs.org/uuid/-/uuid-3.3.2.tgz)
-392. validator 9.4.1 (https://registry.npmjs.org/validator/-/validator-9.4.1.tgz)
-393. verror 1.10.0 (https://registry.npmjs.org/verror/-/verror-1.10.0.tgz)
-394. vfile 2.3.0 (https://registry.npmjs.org/vfile/-/vfile-2.3.0.tgz)
-395. vfile-location 2.0.3 (https://registry.npmjs.org/vfile-location/-/vfile-location-2.0.3.tgz)
-396. vfile-message 1.0.1 (https://registry.npmjs.org/vfile-message/-/vfile-message-1.0.1.tgz)
-397. viz-annotation 0.0.1-3 (https://registry.npmjs.org/viz-annotation/-/viz-annotation-0.0.1-3.tgz)
-398. vlq 0.2.3 (https://registry.npmjs.org/vlq/-/vlq-0.2.3.tgz)
-399. vscode-debugadapter 1.28.0 (https://registry.npmjs.org/vscode-debugadapter/-/vscode-debugadapter-1.28.0.tgz)
-400. vscode-debugprotocol 1.28.0 (https://registry.npmjs.org/vscode-debugprotocol/-/vscode-debugprotocol-1.28.0.tgz)
-401. vscode-extension-telemetry 0.1.0 (https://registry.npmjs.org/vscode-extension-telemetry/-/vscode-extension-telemetry-0.1.0.tgz)
-402. vscode-jsonrpc 4.0.0 (https://registry.npmjs.org/vscode-jsonrpc/-/vscode-jsonrpc-4.0.0.tgz)
-403. vscode-languageclient 5.2.1 (https://registry.npmjs.org/vscode-languageclient/-/vscode-languageclient-5.2.1.tgz)
-404. vscode-languageserver 5.2.1 (https://registry.npmjs.org/vscode-languageserver/-/vscode-languageserver-5.2.1.tgz)
-405. vscode-languageserver-protocol 3.14.1 (https://registry.npmjs.org/vscode-languageserver-protocol/-/vscode-languageserver-protocol-3.14.1.tgz)
-406. vscode-languageserver-types 3.14.0 (https://registry.npmjs.org/vscode-languageserver-types/-/vscode-languageserver-types-3.14.0.tgz)
-407. vscode-uri 1.0.1 (https://registry.npmjs.org/vscode-uri/-/vscode-uri-1.0.1.tgz)
-408. vsls 0.3.1291 (https://registry.npmjs.org/vsls/-/vsls-0.3.1291.tgz)
-409. webpack (for lodash 4) (https://webpack.js.org/)
-410. winreg 1.2.4 (https://github.com/fresc81/node-winreg/tree/v1.2.4)
-411. winston 3.2.1 (https://registry.npmjs.org/winston/-/winston-3.2.1.tgz)
-412. winston-transport 4.3.0 (https://registry.npmjs.org/winston-transport/-/winston-transport-4.3.0.tgz)
-413. wordwrap 1.0.0 (https://registry.npmjs.org/wordwrap/-/wordwrap-1.0.0.tgz)
-414. wrappy 1.0.2 (https://registry.npmjs.org/wrappy/-/wrappy-1.0.2.tgz)
-415. ws 6.2.1 (https://registry.npmjs.org/ws/-/ws-6.2.1.tgz)
-416. x-is-string 0.1.0 (https://registry.npmjs.org/x-is-string/-/x-is-string-0.1.0.tgz)
-417. xml2js 0.4.19 (https://registry.npmjs.org/xml2js/-/xml2js-0.4.19.tgz)
-418. xmlbuilder 9.0.7 (https://registry.npmjs.org/xmlbuilder/-/xmlbuilder-9.0.7.tgz)
-419. xtend 4.0.1 (https://registry.npmjs.org/xtend/-/xtend-4.0.1.tgz)
-420. yallist 2.1.2 (https://registry.npmjs.org/yallist/-/yallist-2.1.2.tgz)
-421. zone.js 0.7.6 (https://registry.npmjs.org/zone.js/-/zone.js-0.7.6.tgz)
+278. ptvsd 4.2.4 (https://github.com/Microsoft/ptvsd/tree/v4.2.4)
+279. punycode 1.4.1 (https://registry.npmjs.org/punycode/-/punycode-1.4.1.tgz)
+280. pure-color 1.3.0 (https://registry.npmjs.org/pure-color/-/pure-color-1.3.0.tgz)
+281. py2app (for PyDev.Debugger) (https://bitbucket.org/ronaldoussoren/py2app)
+282. PyDev.Debugger (for ptvsd 4) (https://pypi.org/project/pydevd/)
+283. qs 6.5.2 (https://registry.npmjs.org/qs/-/qs-6.5.2.tgz)
+284. querystringify 2.0.0 (https://registry.npmjs.org/querystringify/-/querystringify-2.0.0.tgz)
+285. quote-stream 1.0.2 (https://registry.npmjs.org/quote-stream/-/quote-stream-1.0.2.tgz)
+286. raf 3.4.0 (https://registry.npmjs.org/raf/-/raf-3.4.0.tgz)
+287. react 16.5.2 (https://registry.npmjs.org/react/-/react-16.5.2.tgz)
+288. react-annotation 1.3.1 (https://registry.npmjs.org/react-annotation/-/react-annotation-1.3.1.tgz)
+289. react-base16-styling 0.5.3 (https://registry.npmjs.org/react-base16-styling/-/react-base16-styling-0.5.3.tgz)
+290. react-color 2.14.1 (https://registry.npmjs.org/react-color/-/react-color-2.14.1.tgz)
+291. react-data-grid 6.0.2-0 (https://registry.npmjs.org/react-data-grid/-/react-data-grid-6.0.2-0.tgz)
+292. react-dom 16.5.2 (https://registry.npmjs.org/react-dom/-/react-dom-16.5.2.tgz)
+293. react-hot-loader 4.3.11 (https://registry.npmjs.org/react-hot-loader/-/react-hot-loader-4.3.11.tgz)
+294. react-json-tree 0.11.0 (https://registry.npmjs.org/react-json-tree/-/react-json-tree-0.11.0.tgz)
+295. react-lifecycles-compat 3.0.4 (https://registry.npmjs.org/react-lifecycles-compat/-/react-lifecycles-compat-3.0.4.tgz)
+296. react-markdown 3.6.0 (https://registry.npmjs.org/react-markdown/-/react-markdown-3.6.0.tgz)
+297. react-motion 0.5.2 (https://registry.npmjs.org/react-motion/-/react-motion-0.5.2.tgz)
+298. react-move 2.9.1 (https://registry.npmjs.org/react-move/-/react-move-2.9.1.tgz)
+299. react-svg-pan-zoom 3.1.0 (https://registry.npmjs.org/react-svg-pan-zoom/-/react-svg-pan-zoom-3.1.0.tgz)
+300. react-svgmt 1.1.8 (https://registry.npmjs.org/react-svgmt/-/react-svgmt-1.1.8.tgz)
+301. react-table 6.8.6 (https://registry.npmjs.org/react-table/-/react-table-6.8.6.tgz)
+302. react-table-hoc-fixed-columns 1.0.1 (https://registry.npmjs.org/react-table-hoc-fixed-columns/-/react-table-hoc-fixed-columns-1.0.1.tgz)
+303. react-virtualized 9.21.1 (https://registry.npmjs.org/react-virtualized/-/react-virtualized-9.21.1.tgz)
+304. reactcss 1.2.3 (https://registry.npmjs.org/reactcss/-/reactcss-1.2.3.tgz)
+305. readable-stream 2.0.6 (https://registry.npmjs.org/readable-stream/-/readable-stream-2.0.6.tgz)
+306. reflect-metadata 0.1.12 (https://registry.npmjs.org/reflect-metadata/-/reflect-metadata-0.1.12.tgz)
+307. remark-parse 5.0.0 (https://registry.npmjs.org/remark-parse/-/remark-parse-5.0.0.tgz)
+308. repeat-string 1.6.1 (https://registry.npmjs.org/repeat-string/-/repeat-string-1.6.1.tgz)
+309. request 2.87.0 (https://registry.npmjs.org/request/-/request-2.87.0.tgz)
+310. request-progress 3.0.0 (https://registry.npmjs.org/request-progress/-/request-progress-3.0.0.tgz)
+311. requires-port 1.0.0 (https://registry.npmjs.org/requires-port/-/requires-port-1.0.0.tgz)
+312. resolve 1.7.1 (https://registry.npmjs.org/resolve/-/resolve-1.7.1.tgz)
+313. restructure 0.5.4 (https://registry.npmjs.org/restructure/-/restructure-0.5.4.tgz)
+314. roughjs-es5 0.1.0 (https://registry.npmjs.org/roughjs-es5/-/roughjs-es5-0.1.0.tgz)
+315. rxjs 5.5.9 (https://registry.npmjs.org/rxjs/-/rxjs-5.5.9.tgz)
+316. safe-buffer 5.1.2 (https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.1.2.tgz)
+317. safer-buffer 2.1.2 (https://registry.npmjs.org/safer-buffer/-/safer-buffer-2.1.2.tgz)
+318. sax 1.2.4 (https://registry.npmjs.org/sax/-/sax-1.2.4.tgz)
+319. schedule 0.5.0 (https://registry.npmjs.org/schedule/-/schedule-0.5.0.tgz)
+320. semiotic 1.15.1 (https://registry.npmjs.org/semiotic/-/semiotic-1.15.1.tgz)
+321. semiotic-mark 0.3.0 (https://registry.npmjs.org/semiotic-mark/-/semiotic-mark-0.3.0.tgz)
+322. semver 5.5.0 (https://registry.npmjs.org/semver/-/semver-5.5.0.tgz)
+323. setImmediate (for RxJS 5.5) (https://github.com/YuzuJS/setImmediate)
+324. setimmediate 1.0.5 (https://registry.npmjs.org/setimmediate/-/setimmediate-1.0.5.tgz)
+325. shallow-copy 0.0.1 (https://registry.npmjs.org/shallow-copy/-/shallow-copy-0.0.1.tgz)
+326. simple-swizzle 0.2.2 (https://registry.npmjs.org/simple-swizzle/-/simple-swizzle-0.2.2.tgz)
+327. sizzle (for lodash 4.17) (https://sizzlejs.com/)
+328. slickgrid 2.4.7 (https://registry.npmjs.org/slickgrid/-/slickgrid-2.4.7.tgz)
+329. sprintf-js 1.0.3 (https://registry.npmjs.org/sprintf-js/-/sprintf-js-1.0.3.tgz)
+330. sshpk 1.14.1 (https://registry.npmjs.org/sshpk/-/sshpk-1.14.1.tgz)
+331. stack-trace 0.0.10 (https://registry.npmjs.org/stack-trace/-/stack-trace-0.0.10.tgz)
+332. state-toggle 1.0.1 (https://registry.npmjs.org/state-toggle/-/state-toggle-1.0.1.tgz)
+333. static-eval 2.0.2 (https://registry.npmjs.org/static-eval/-/static-eval-2.0.2.tgz)
+334. string-hash 1.1.3 (https://registry.npmjs.org/string-hash/-/string-hash-1.1.3.tgz)
+335. string_decoder 0.10.31 (https://registry.npmjs.org/string_decoder/-/string_decoder-0.10.31.tgz)
+336. strip-ansi 5.2.0 (https://registry.npmjs.org/strip-ansi/-/strip-ansi-5.2.0.tgz)
+337. strip-json-comments 2.0.1 (https://registry.npmjs.org/strip-json-comments/-/strip-json-comments-2.0.1.tgz)
+338. style-loader 0.23.1 (https://registry.npmjs.org/style-loader/-/style-loader-0.23.1.tgz)
+339. styled-jsx 3.1.0 (https://registry.npmjs.org/styled-jsx/-/styled-jsx-3.1.0.tgz)
+340. stylis-rule-sheet 0.0.10 (https://registry.npmjs.org/stylis-rule-sheet/-/stylis-rule-sheet-0.0.10.tgz)
+341. sudo-prompt 8.2.0 (https://registry.npmjs.org/sudo-prompt/-/sudo-prompt-8.2.0.tgz)
+342. supports-color 2.0.0 (https://registry.npmjs.org/supports-color/-/supports-color-2.0.0.tgz)
+343. svg-inline-react 3.1.0 (https://registry.npmjs.org/svg-inline-react/-/svg-inline-react-3.1.0.tgz)
+344. svg-path-bounding-box 1.0.4 (https://registry.npmjs.org/svg-path-bounding-box/-/svg-path-bounding-box-1.0.4.tgz)
+345. svg-to-pdfkit 0.1.7 (https://registry.npmjs.org/svg-to-pdfkit/-/svg-to-pdfkit-0.1.7.tgz)
+346. svgpath 2.2.1 (https://registry.npmjs.org/svgpath/-/svgpath-2.2.1.tgz)
+347. symbol-observable 1.0.1 (https://registry.npmjs.org/symbol-observable/-/symbol-observable-1.0.1.tgz)
+348. text-hex 1.0.0 (https://registry.npmjs.org/text-hex/-/text-hex-1.0.0.tgz)
+349. throttleit 1.0.0 (https://github.com/component/throttle/tree/1.0.0)
+350. through 2.3.8 (https://registry.npmjs.org/through/-/through-2.3.8.tgz)
+351. through2 2.0.3 (https://registry.npmjs.org/through2/-/through2-2.0.3.tgz)
+352. timers-browserify 2.0.10 (https://registry.npmjs.org/timers-browserify/-/timers-browserify-2.0.10.tgz)
+353. tiny-inflate 1.0.2 (https://registry.npmjs.org/tiny-inflate/-/tiny-inflate-1.0.2.tgz)
+354. tinycolor2 1.4.1 (https://registry.npmjs.org/tinycolor2/-/tinycolor2-1.4.1.tgz)
+355. tinyqueue 1.2.3 (https://registry.npmjs.org/tinyqueue/-/tinyqueue-1.2.3.tgz)
+356. tmp 0.0.29 (https://registry.npmjs.org/tmp/-/tmp-0.0.29.tgz)
+357. tough-cookie 2.3.4 (https://registry.npmjs.org/tough-cookie/-/tough-cookie-2.3.4.tgz)
+358. transformation-matrix 2.0.3 (https://registry.npmjs.org/transformation-matrix/-/transformation-matrix-2.0.3.tgz)
+359. tree-kill 1.2.0 (https://github.com/pkrumins/node-tree-kill)
+360. trim 0.0.1 (https://registry.npmjs.org/trim/-/trim-0.0.1.tgz)
+361. trim-trailing-lines 1.1.1 (https://registry.npmjs.org/trim-trailing-lines/-/trim-trailing-lines-1.1.1.tgz)
+362. triple-beam 1.3.0 (https://registry.npmjs.org/triple-beam/-/triple-beam-1.3.0.tgz)
+363. trough 1.0.3 (https://registry.npmjs.org/trough/-/trough-1.0.3.tgz)
+364. tslib 1.9.1 (https://registry.npmjs.org/tslib/-/tslib-1.9.1.tgz)
+365. tslint 5.14.0 (https://registry.npmjs.org/tslint/-/tslint-5.14.0.tgz)
+366. tunnel-agent 0.6.0 (https://registry.npmjs.org/tunnel-agent/-/tunnel-agent-0.6.0.tgz)
+367. tweetnacl 0.14.5 (https://registry.npmjs.org/tweetnacl/-/tweetnacl-0.14.5.tgz)
+368. type-check 0.3.2 (https://registry.npmjs.org/type-check/-/type-check-0.3.2.tgz)
+369. typedarray 0.0.6 (https://registry.npmjs.org/typedarray/-/typedarray-0.0.6.tgz)
+370. typescript-char 0.0.0 (https://github.com/mason-lang/typescript-char)
+371. uint64be 1.0.1 (https://registry.npmjs.org/uint64be/-/uint64be-1.0.1.tgz)
+372. underscore 1.8.3 (https://registry.npmjs.org/underscore/-/underscore-1.8.3.tgz)
+373. unherit 1.1.1 (https://registry.npmjs.org/unherit/-/unherit-1.1.1.tgz)
+374. unicode 10.0.0 (https://registry.npmjs.org/unicode/-/unicode-10.0.0.tgz)
+375. unicode-properties 1.1.0 (https://registry.npmjs.org/unicode-properties/-/unicode-properties-1.1.0.tgz)
+376. unicode-trie 0.3.1 (https://registry.npmjs.org/unicode-trie/-/unicode-trie-0.3.1.tgz)
+377. unified 6.2.0 (https://registry.npmjs.org/unified/-/unified-6.2.0.tgz)
+378. uniqid 5.0.3 (https://registry.npmjs.org/uniqid/-/uniqid-5.0.3.tgz)
+379. unist-util-is 2.1.2 (https://registry.npmjs.org/unist-util-is/-/unist-util-is-2.1.2.tgz)
+380. unist-util-remove-position 1.1.2 (https://registry.npmjs.org/unist-util-remove-position/-/unist-util-remove-position-1.1.2.tgz)
+381. unist-util-stringify-position 1.1.2 (https://registry.npmjs.org/unist-util-stringify-position/-/unist-util-stringify-position-1.1.2.tgz)
+382. unist-util-visit 1.4.0 (https://registry.npmjs.org/unist-util-visit/-/unist-util-visit-1.4.0.tgz)
+383. unist-util-visit-parents 1.1.2 (https://registry.npmjs.org/unist-util-visit-parents/-/unist-util-visit-parents-1.1.2.tgz)
+384. universalify 0.1.1 (https://registry.npmjs.org/universalify/-/universalify-0.1.1.tgz)
+385. untangle (for ptvsd 4) (https://pypi.org/project/untangle/)
+386. untildify 3.0.2 (https://registry.npmjs.org/untildify/-/untildify-3.0.2.tgz)
+387. url-parse 1.4.3 (https://registry.npmjs.org/url-parse/-/url-parse-1.4.3.tgz)
+388. util 0.10.4 (https://registry.npmjs.org/util/-/util-0.10.4.tgz)
+389. util-deprecate 1.0.2 (https://registry.npmjs.org/util-deprecate/-/util-deprecate-1.0.2.tgz)
+390. uuid 3.3.2 (https://registry.npmjs.org/uuid/-/uuid-3.3.2.tgz)
+391. validator 9.4.1 (https://registry.npmjs.org/validator/-/validator-9.4.1.tgz)
+392. verror 1.10.0 (https://registry.npmjs.org/verror/-/verror-1.10.0.tgz)
+393. vfile 2.3.0 (https://registry.npmjs.org/vfile/-/vfile-2.3.0.tgz)
+394. vfile-location 2.0.3 (https://registry.npmjs.org/vfile-location/-/vfile-location-2.0.3.tgz)
+395. vfile-message 1.0.1 (https://registry.npmjs.org/vfile-message/-/vfile-message-1.0.1.tgz)
+396. viz-annotation 0.0.1-3 (https://registry.npmjs.org/viz-annotation/-/viz-annotation-0.0.1-3.tgz)
+397. vlq 0.2.3 (https://registry.npmjs.org/vlq/-/vlq-0.2.3.tgz)
+398. vscode-debugadapter 1.28.0 (https://registry.npmjs.org/vscode-debugadapter/-/vscode-debugadapter-1.28.0.tgz)
+399. vscode-debugprotocol 1.28.0 (https://registry.npmjs.org/vscode-debugprotocol/-/vscode-debugprotocol-1.28.0.tgz)
+400. vscode-extension-telemetry 0.1.0 (https://registry.npmjs.org/vscode-extension-telemetry/-/vscode-extension-telemetry-0.1.0.tgz)
+401. vscode-jsonrpc 4.0.0 (https://registry.npmjs.org/vscode-jsonrpc/-/vscode-jsonrpc-4.0.0.tgz)
+402. vscode-languageclient 5.2.1 (https://registry.npmjs.org/vscode-languageclient/-/vscode-languageclient-5.2.1.tgz)
+403. vscode-languageserver 5.2.1 (https://registry.npmjs.org/vscode-languageserver/-/vscode-languageserver-5.2.1.tgz)
+404. vscode-languageserver-protocol 3.14.1 (https://registry.npmjs.org/vscode-languageserver-protocol/-/vscode-languageserver-protocol-3.14.1.tgz)
+405. vscode-languageserver-types 3.14.0 (https://registry.npmjs.org/vscode-languageserver-types/-/vscode-languageserver-types-3.14.0.tgz)
+406. vscode-uri 1.0.1 (https://registry.npmjs.org/vscode-uri/-/vscode-uri-1.0.1.tgz)
+407. vsls 0.3.1291 (https://registry.npmjs.org/vsls/-/vsls-0.3.1291.tgz)
+408. webpack (for lodash 4) (https://webpack.js.org/)
+409. winreg 1.2.4 (https://github.com/fresc81/node-winreg/tree/v1.2.4)
+410. winston 3.2.1 (https://registry.npmjs.org/winston/-/winston-3.2.1.tgz)
+411. winston-transport 4.3.0 (https://registry.npmjs.org/winston-transport/-/winston-transport-4.3.0.tgz)
+412. wordwrap 1.0.0 (https://registry.npmjs.org/wordwrap/-/wordwrap-1.0.0.tgz)
+413. wrappy 1.0.2 (https://registry.npmjs.org/wrappy/-/wrappy-1.0.2.tgz)
+414. ws 6.2.1 (https://registry.npmjs.org/ws/-/ws-6.2.1.tgz)
+415. x-is-string 0.1.0 (https://registry.npmjs.org/x-is-string/-/x-is-string-0.1.0.tgz)
+416. xml2js 0.4.19 (https://registry.npmjs.org/xml2js/-/xml2js-0.4.19.tgz)
+417. xmlbuilder 9.0.7 (https://registry.npmjs.org/xmlbuilder/-/xmlbuilder-9.0.7.tgz)
+418. xtend 4.0.1 (https://registry.npmjs.org/xtend/-/xtend-4.0.1.tgz)
+419. yallist 2.1.2 (https://registry.npmjs.org/yallist/-/yallist-2.1.2.tgz)
+420. zone.js 0.7.6 (https://registry.npmjs.org/zone.js/-/zone.js-0.7.6.tgz)
 
 
 %% @babel/runtime 7.4.4 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/@babel/runtime/-/runtime-7.4.4.tgz)
@@ -1450,29 +1449,17 @@ SOFTWARE.
 =========================================
 END OF anser NOTICES AND INFORMATION
 
-%% ansi-regex 2.1.1 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/ansi-regex/-/ansi-regex-2.1.1.tgz)
+%% ansi-regex 4.1.0 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/ansi-regex/-/ansi-regex-4.1.0.tgz)
 =========================================
-The MIT License (MIT)
+MIT License
 
 Copyright (c) Sindre Sorhus <sindresorhus@gmail.com> (sindresorhus.com)
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 =========================================
 END OF ansi-regex NOTICES AND INFORMATION
@@ -1862,7 +1849,7 @@ SOFTWARE.
 =========================================
 END OF aws4 NOTICES AND INFORMATION
 
-%% azure-storage 2.10.1 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/azure-storage/-/azure-storage-2.10.1.tgz)
+%% azure-storage 2.10.3 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/azure-storage/-/azure-storage-2.10.3.tgz)
 =========================================
                                  Apache License
                            Version 2.0, January 2004
@@ -4823,7 +4810,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 =========================================
 END OF esutils NOTICES AND INFORMATION
 
-%% extend 3.0.1 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/extend/-/extend-3.0.1.tgz)
+%% extend 3.0.2 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/extend/-/extend-3.0.2.tgz)
 =========================================
 The MIT License (MIT)
 
@@ -6953,9 +6940,9 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 =========================================
 END OF linebreak NOTICES AND INFORMATION
 
-%% lodash 4.17.11 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/lodash/-/lodash-4.17.11.tgz)
+%% lodash 4.17.13 NOTICES AND INFORMATION BEGIN HERE (https://registry.npmjs.org/lodash/-/lodash-4.17.13.tgz)
 =========================================
-Copyright JS Foundation and other contributors <https://js.foundation/>
+Copyright OpenJS Foundation and other contributors <https://openjsf.org/>
 
 Based on Underscore.js, copyright Jeremy Ashkenas,
 DocumentCloud and Investigative Reporters & Editors <http://underscorejs.org/>
@@ -8768,33 +8755,6 @@ IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 =========================================
 END OF pseudomap NOTICES AND INFORMATION
-
-%% psl 1.1.29 NOTICES AND INFORMATION BEGIN HERE (https://github.com/wrangr/psl/tree/v1.1.29)
-=========================================
-The MIT License (MIT)
-
-Copyright (c) 2017 Lupo Montero <lupomontero@gmail.com>
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-
-=========================================
-END OF psl NOTICES AND INFORMATION
 
 %% ptvsd 4.2.4 NOTICES AND INFORMATION BEGIN HERE (https://github.com/Microsoft/ptvsd/tree/v4.2.4)
 =========================================
