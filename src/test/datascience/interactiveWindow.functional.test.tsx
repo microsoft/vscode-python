@@ -180,7 +180,7 @@ df.head()`;
 df = pd.read_csv("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
 df.head()`;
         const matPlotLib = 'import matplotlib.pyplot as plt\r\nimport numpy as np\r\nx = np.linspace(0,20,100)\r\nplt.plot(x, np.sin(x))\r\nplt.show()';
-        const matPlotLibResults = 'svg';
+        const matPlotLibResults = 'img';
         const spinningCursor = `import sys
 import time
 
@@ -599,9 +599,9 @@ for _ in range(50):
             const outHtml = output.html();
 
             const root = parse(outHtml) as any;
-            const svgs = root.querySelectorAll('svg') as HTMLElement[];
-            assert.ok(svgs, 'No svgs found');
-            assert.equal(svgs.length, 1, 'Wrong number of svgs');
+            const png = root.querySelectorAll('img') as HTMLElement[];
+            assert.ok(png, 'No pngs found');
+            assert.equal(png.length, 1, 'Wrong number of pngs');
         }
 
     }, () => { return ioc; });
