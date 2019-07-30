@@ -28,6 +28,7 @@ import { MockDebuggerService } from './mockDebugService';
 import { MockDocumentManager } from './mockDocumentManager';
 
 //import { asyncDump } from '../common/asyncDump';
+import { MockDocument } from './mockDocument';
 // tslint:disable-next-line:max-func-body-length no-any
 suite('DataScience Debugger tests', () => {
     const disposables: Disposable[] = [];
@@ -240,4 +241,42 @@ suite('DataScience Debugger tests', () => {
             await debugCell('#%%\nprint("bar")', undefined, undefined, true);
         }
     });
+
+    test('Debug temporary file', async () => {
+        ioc.getSettings().datascience.stopOnFirstLineWhileDebugging = true;
+        const code = '#%%\nprint("bar")';
+
+        // Create a dummy document with just this code
+        const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
+        const fileName = 'Untitled-1';
+        docManager.addDocument(code, fileName);
+        const mockDoc = docManager.textDocuments[0] as MockDocument;
+        mockDoc.forceUntitled();
+
+        // Start the jupyter server
+        const history = await getOrCreateInteractiveWindow();
+        const expectedBreakLine = 2; // 2 because of the 'breakpoint()' that gets added
+
+        // Debug this code. We should either hit the breakpoint or stop on entry
+        const resultPromise = getCellResults(ioc.wrapper!, 5, async () => {
+            const breakPromise = createDeferred<void>();
+            disposables.push(mockDebuggerService!.onBreakpointHit(() => breakPromise.resolve()));
+            const done = history.debugCode(code, fileName, 0, docManager.activeTextEditor);
+            await waitForPromise(Promise.race([done, breakPromise.promise]), 60000);
+            assert.ok(breakPromise.resolved, 'Breakpoint event did not fire');
+            assert.ok(!lastErrorMessage, `Error occurred ${lastErrorMessage}`);
+            const stackTrace = await mockDebuggerService!.getStackTrace();
+            assert.ok(stackTrace, 'Stack trace not computable');
+            assert.ok(stackTrace!.body.stackFrames.length >= 1, 'Not enough frames');
+            assert.equal(stackTrace!.body.stackFrames[0].line, expectedBreakLine, 'Stopped on wrong line number');
+            assert.equal(stackTrace!.body.stackFrames[0].source!.path, path.join(EXTENSION_ROOT_DIR, 'baz.py'), 'Stopped on wrong file name. Name should have been saved');
+            // Verify break location
+            await mockDebuggerService!.continue();
+        });
+
+        const cellResults = await resultPromise;
+        assert.ok(cellResults, 'No cell results after finishing debugging');
+        await history.dispose();
+    });
+
 });

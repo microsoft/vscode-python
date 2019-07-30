@@ -55,11 +55,20 @@ export class MockDocument implements TextDocument {
     private _version: number = 0;
     private _lines: MockLine[] = [];
     private _contents: string = '';
+    private _isUntitled = false;
+    private _isDirty = false;
+    private _onSave: (doc: TextDocument) => Promise<boolean>;
 
-    constructor(contents: string, fileName: string) {
+    constructor(contents: string, fileName: string, onSave: (doc: TextDocument) => Promise<boolean>) {
         this._uri = Uri.file(fileName);
         this._contents = contents;
         this._lines = this.createLines();
+        this._onSave = onSave;
+    }
+
+    public forceUntitled(): void {
+        this._isUntitled = true;
+        this._isDirty = true;
     }
 
     public get uri(): Uri {
@@ -70,7 +79,7 @@ export class MockDocument implements TextDocument {
     }
 
     public get isUntitled(): boolean {
-        return true;
+        return this._isUntitled;
     }
     public get languageId(): string {
         return 'python';
@@ -79,13 +88,13 @@ export class MockDocument implements TextDocument {
         return this._version;
     }
     public get isDirty(): boolean {
-        return true;
+        return this._isDirty;
     }
     public get isClosed(): boolean {
         return false;
     }
     public save(): Thenable<boolean> {
-        return Promise.resolve(true);
+        return this._onSave(this);
     }
     public get eol(): EndOfLine {
         return EndOfLine.LF;
