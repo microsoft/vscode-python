@@ -20,12 +20,12 @@ import {
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-window/interactiveWindowTypes';
 import { IInteractiveWindow, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
+import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { getCellResults } from './interactiveWindowTestHelpers';
 import { getConnectionInfo, getNotebookCapableInterpreter } from './jupyterHelpers';
 import { MockDebuggerService } from './mockDebugService';
 import { MockDocumentManager } from './mockDocumentManager';
-import { noop } from '../core';
 
 //import { asyncDump } from '../common/asyncDump';
 // tslint:disable-next-line:max-func-body-length no-any
