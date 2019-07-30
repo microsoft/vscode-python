@@ -86,14 +86,14 @@ suite('Unit Tests - Debug Launcher', () => {
         settings.setup(p => p.testing)
             .returns(() => unitTestSettings.object);
 
+        debugEnvHelper = TypeMoq.Mock.ofType<IDebugEnvironmentVariablesService>(undefined, TypeMoq.MockBehavior.Strict);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDebugEnvironmentVariablesService)))
+            .returns(() => debugEnvHelper.object);
+
         debugLauncher = new DebugLauncher(
             serviceContainer.object,
             getNewResolver(configService.object)
         );
-
-        debugEnvHelper = TypeMoq.Mock.ofType<IDebugEnvironmentVariablesService>();
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDebugEnvironmentVariablesService)))
-            .returns(() => debugEnvHelper.object);
     });
     function getNewResolver(configService: IConfigurationService) {
         const validator = TypeMoq.Mock.ofType<IInvalidPythonPathInDebuggerService>(undefined, TypeMoq.MockBehavior.Strict);
@@ -122,6 +122,9 @@ suite('Unit Tests - Debug Launcher', () => {
         const args = expected.args;
         const debugArgs = testProvider === 'unittest' ? args.filter((item: string) => item !== '--debug') : args;
         expected.args = debugArgs;
+
+        debugEnvHelper.setup(d => d.getEnvironmentVariables(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(expected.env));
 
         //debugService.setup(d => d.startDebugging(TypeMoq.It.isValue(workspaceFolder), TypeMoq.It.isValue(expected)))
         debugService.setup(d => d.startDebugging(TypeMoq.It.isValue(workspaceFolder), TypeMoq.It.isValue(expected)))

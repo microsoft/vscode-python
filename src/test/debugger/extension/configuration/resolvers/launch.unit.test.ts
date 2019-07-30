@@ -61,6 +61,7 @@ suite('Debugging - Config Resolver Launch', () => {
         }
         confgService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
         setupOs(isWindows, isMac, isLinux);
+        debugEnvHelper.setup(x => x.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({}));
 
         debugProvider = new LaunchConfigurationResolver(
             workspaceService.object,
