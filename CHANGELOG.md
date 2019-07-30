@@ -78,7 +78,7 @@
    ([#6336](https://github.com/Microsoft/vscode-python/issues/6336))
 1. Update telemetry property name for Jedi memory usage.
    ([#6339](https://github.com/Microsoft/vscode-python/issues/6339))
-1. Fix png scaling on non standard DPI. Add 'enablePlotViewer' setting to allow user to render pngs instead of svg files.
+1. Fix png scaling on non standard DPI. Add 'enablePlotViewer' setting to allow user to render PNGs instead of SVG files.
    ([#6344](https://github.com/Microsoft/vscode-python/issues/6344))
 1. Do best effort to download the experiments and use it in the very first session only
    ([#6348](https://github.com/Microsoft/vscode-python/issues/6348))
