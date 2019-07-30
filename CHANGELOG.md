@@ -167,6 +167,10 @@
    ([#6711](https://github.com/Microsoft/vscode-python/issues/6711))
 1. Bump version of [PTVSD](https://pypi.org/project/ptvsd/) to 4.3.0.
    ([#6771](https://github.com/Microsoft/vscode-python/issues/6771))
+    * Support for Jupyter debugging
+    * Support for ipython cells
+    * API to enable and disable tracing via ptvsd.tracing
+    * ptvsd.enable_attach accepts address=('localhost', 0) and returns server port
 
 ### Thanks
 
