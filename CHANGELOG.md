@@ -105,7 +105,7 @@
    ([#6592](https://github.com/Microsoft/vscode-python/issues/6592))
 1. Fix pandas version parsing to handle strings.
    ([#6595](https://github.com/Microsoft/vscode-python/issues/6595))
-1. Unpin the version of ptvsd in the install and add -U
+1. Unpin the version of ptvsd in the install and add `-U`.
    ([#6718](https://github.com/Microsoft/vscode-python/issues/6718))
 1. Fix stepping when more than one blank line at the end of a cell.
    ([#6719](https://github.com/Microsoft/vscode-python/issues/6719))
