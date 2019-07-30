@@ -324,7 +324,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
             }
         });
         this.disposableRegistry.push(handler);
-        this.disposableRegistry.push(activateCodeLenses(event, symbolProvider, testCollectionStorage, this.serviceContainer));
+        this.disposableRegistry.push(activateCodeLenses(event, symbolProvider, testCollectionStorage));
     }
 
     @captureTelemetry(EventName.UNITTEST_CONFIGURE, undefined, false)

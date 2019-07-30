@@ -8,7 +8,6 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import { traceError } from '../../../common/logger';
-import { IFileSystem } from '../../../common/platform/types';
 import { TestDataItem } from '../../types';
 import { getParentFile, getParentSuite, getTestType } from '../testUtils';
 import { FlattenedTestFunction, FlattenedTestSuite, SubtestParent, TestFile, TestFolder, TestFunction, Tests, TestSuite, TestType } from '../types';
@@ -16,10 +15,7 @@ import { DiscoveredTests, ITestDiscoveredTestParser, TestContainer, TestItem } f
 
 @injectable()
 export class TestDiscoveredTestParser implements ITestDiscoveredTestParser {
-    constructor(
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IFileSystem) private readonly fileSystem: IFileSystem
-    ) { }
+    constructor(@inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService) { }
     public parse(resource: Uri, discoveredTests: DiscoveredTests[]): Tests {
         const tests: Tests = {
             rootTestFolders: [],
@@ -38,14 +34,8 @@ export class TestDiscoveredTestParser implements ITestDiscoveredTestParser {
 
         // If the root is the workspace folder, then ignore that.
         for (const data of discoveredTests) {
-            // For now we only check the current workspace.
-            const root = this.findRoot(data.root, [workspace.uri.fsPath]);
-            if (!root) {
-                // For now we only support tests from the workspace.
-                continue;
-            }
             const rootFolder = {
-                name: root, folders: [], time: 0,
+                name: data.root, folders: [], time: 0,
                 testFiles: [], resource: resource, nameToRun: data.rootid
             };
             tests.rootTestFolders.push(rootFolder);
@@ -68,7 +58,7 @@ export class TestDiscoveredTestParser implements ITestDiscoveredTestParser {
      * @param {Tests} tests
      * @memberof TestsDiscovery
      */
-    public buildChildren(rootFolder: TestFolder, parent: TestDataItem, discoveredTests: DiscoveredTests, tests: Tests) {
+    protected buildChildren(rootFolder: TestFolder, parent: TestDataItem, discoveredTests: DiscoveredTests, tests: Tests) {
         const parentType = getTestType(parent);
         switch (parentType) {
             case TestType.testFolder: {
@@ -202,17 +192,6 @@ export class TestDiscoveredTestParser implements ITestDiscoveredTestParser {
         parentFunction.asSuite.functions.push(...functions);
         parent.functions.push(...functions);
         tests.testFunctions.push(...functions.map(func => createFlattenedParameterizedFunction(tests, func, parent)));
-    }
-
-    /**
-     * Returns the vscode recognized file paths which matches the pytest data test root
-     */
-    private findRoot(raw: string, roots: string[]): string | undefined {
-        for (const root of roots) {
-            if (this.fileSystem.arePathsSame(raw, root)) {
-                return root;
-            }
-        }
     }
 }
 

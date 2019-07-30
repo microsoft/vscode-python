@@ -2,10 +2,7 @@
 
 // tslint:disable:no-object-literal-type-assertion
 
-import { CancellationToken, CancellationTokenSource, CodeLens, CodeLensProvider, DocumentSymbolProvider, Event, EventEmitter, Position, Range, SymbolInformation, SymbolKind, TextDocument, Uri } from 'vscode';
-import { IWorkspaceService } from '../../../client/common/application/types';
-import { IFileSystem } from '../../../client/common/platform/types';
-import { IServiceContainer } from '../../../client/ioc/types';
+import { CancellationToken, CancellationTokenSource, CodeLens, CodeLensProvider, DocumentSymbolProvider, Event, EventEmitter, Position, Range, SymbolInformation, SymbolKind, TextDocument, Uri, workspace } from 'vscode';
 import * as constants from '../../common/constants';
 import { CommandSource } from '../common/constants';
 import { ITestCollectionStorageService, TestFile, TestFunction, TestStatus, TestsToRun, TestSuite } from '../common/types';
@@ -16,15 +13,10 @@ type FunctionsAndSuites = {
 };
 
 export class TestFileCodeLensProvider implements CodeLensProvider {
-    private workspaceService: IWorkspaceService;
-    private fileSystem: IFileSystem;
     // tslint:disable-next-line:variable-name
     constructor(private _onDidChange: EventEmitter<void>,
         private symbolProvider: DocumentSymbolProvider,
-        private testCollectionStorage: ITestCollectionStorageService,
-        serviceContainer: IServiceContainer) {
-        this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-        this.fileSystem = serviceContainer.get<IFileSystem>(IFileSystem);
+        private testCollectionStorage: ITestCollectionStorageService) {
     }
 
     get onDidChangeCodeLenses(): Event<void> {
@@ -32,7 +24,7 @@ export class TestFileCodeLensProvider implements CodeLensProvider {
     }
 
     public async provideCodeLenses(document: TextDocument, token: CancellationToken) {
-        const wkspace = this.workspaceService.getWorkspaceFolder(document.uri);
+        const wkspace = workspace.getWorkspaceFolder(document.uri);
         if (!wkspace) {
             return [];
         }
@@ -60,20 +52,16 @@ export class TestFileCodeLensProvider implements CodeLensProvider {
         return Promise.resolve(codeLens);
     }
 
-    public getTestFileWhichNeedsCodeLens(document: TextDocument): TestFile | undefined {
-        const wkspace = this.workspaceService.getWorkspaceFolder(document.uri);
+    private async getCodeLenses(document: TextDocument, token: CancellationToken, symbolProvider: DocumentSymbolProvider) {
+        const wkspace = workspace.getWorkspaceFolder(document.uri);
         if (!wkspace) {
-            return;
+            return [];
         }
         const tests = this.testCollectionStorage.getTests(wkspace.uri);
         if (!tests) {
-            return;
+            return [];
         }
-        return tests.testFiles.find(item => this.fileSystem.arePathsSame(item.fullPath, document.uri.fsPath));
-    }
-
-    private async getCodeLenses(document: TextDocument, token: CancellationToken, symbolProvider: DocumentSymbolProvider) {
-        const file = this.getTestFileWhichNeedsCodeLens(document);
+        const file = tests.testFiles.find(item => item.fullPath === document.uri.fsPath);
         if (!file) {
             return [];
         }
