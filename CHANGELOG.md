@@ -26,7 +26,7 @@
    ([#6376](https://github.com/Microsoft/vscode-python/issues/6376))
 1. Give the option to install ptvsd if user is missing it and tries to debug.
    ([#6378](https://github.com/Microsoft/vscode-python/issues/6378))
-1. Add support for remote debugging of jupyter cells.
+1. Add support for remote debugging of Jupyter cells.
    ([#6379](https://github.com/Microsoft/vscode-python/issues/6379))
 1. Make the input box more visible to new users.
    ([#6381](https://github.com/Microsoft/vscode-python/issues/6381))
