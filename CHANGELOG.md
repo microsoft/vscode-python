@@ -171,6 +171,7 @@
     * Support for ipython cells
     * API to enable and disable tracing via ptvsd.tracing
     * ptvsd.enable_attach accepts address=('localhost', 0) and returns server port
+    * Known issue: Unable to find threadStateIndex for the current thread. curPyThread ([#11587](https://github.com/microsoft/ptvsd/issues/1587))
 
 ### Thanks
 
