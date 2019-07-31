@@ -14,6 +14,7 @@ if ((Reflect as any).metadata === undefined) {
 import * as glob from 'glob';
 import * as Mocha from 'mocha';
 import * as path from 'path';
+import { traceError } from '../client/common/logger';
 import { IS_CI_SERVER_TEST_DEBUGGER, MOCHA_REPORTER_JUNIT } from './ciConstants';
 import { IS_MULTI_ROOT_TEST, IS_SMOKE_TEST, MAX_EXTENSION_ACTIVATION_TIME, TEST_RETRYCOUNT, TEST_TIMEOUT } from './constants';
 import { initialize } from './initialize';
@@ -36,7 +37,7 @@ process.on('unhandledRejection', (ex: string | Error, _a) => {
             message.push(ex.stack);
         }
     }
-    console.error(`Unhandled Promise Rejection with the message ${message.join(', ')}`);
+    traceError(`Unhandled Promise Rejection with the message ${message.join(', ')}`);
 });
 
 /**
