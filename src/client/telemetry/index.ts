@@ -8,7 +8,7 @@ import * as stackTrace from 'stack-trace';
 import TelemetryReporter from 'vscode-extension-telemetry';
 
 import { IWorkspaceService } from '../common/application/types';
-import { EXTENSION_ROOT_DIR, isTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
+import { AppinsightsKey, EXTENSION_ROOT_DIR, isTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
 import { traceInfo } from '../common/logger';
 import { StopWatch } from '../common/utils/stopWatch';
 import { Telemetry } from '../datascience/constants';
@@ -79,12 +79,10 @@ function getTelemetryReporter() {
     const extension = extensions.getExtension(extensionId)!;
     // tslint:disable-next-line:no-unsafe-any
     const extensionVersion = extension.packageJSON.version;
-    // tslint:disable-next-line:no-unsafe-any
-    const aiKey = extension.packageJSON.contributes.debuggers[0].aiKey;
 
     // tslint:disable-next-line:no-require-imports
     const reporter = require('vscode-extension-telemetry').default as typeof TelemetryReporter;
-    return (telemetryReporter = new reporter(extensionId, extensionVersion, aiKey));
+    return (telemetryReporter = new reporter(extensionId, extensionVersion, AppinsightsKey));
 }
 
 export function clearTelemetryReporter() {

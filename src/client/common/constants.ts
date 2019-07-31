@@ -10,6 +10,7 @@ export const PYTHON_ALLFILES = [
 ];
 
 export const PVSC_EXTENSION_ID = 'ms-python.python';
+export const AppinsightsKey = 'AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217';
 
 export namespace Commands {
     export const Set_Interpreter = 'python.setInterpreter';
