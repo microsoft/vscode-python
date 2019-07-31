@@ -8,7 +8,7 @@
         "lib": [
             "es6",
             "es2018",
-            "dom",
+            "dom"
         ],
         "jsx": "react",
         "sourceMap": true,
@@ -32,6 +32,6 @@
         "src/client/node_modules",
         "src/server/src/typings",
         "src/client/src/typings",
-        "build",
+        "build"
     ]
 }
