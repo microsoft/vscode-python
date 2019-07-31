@@ -18,6 +18,7 @@ import { CodeWatcher } from './editor-integration/codewatcher';
 import { Decorator } from './editor-integration/decorator';
 import { DataScienceErrorHandler } from './errorHandler/errorHandler';
 import { GatherExecution } from './gather/gather';
+import { GatherListener } from './gather/gatherListener';
 import { DebugListener } from './interactive-window/debugListener';
 import { DotNetIntellisenseProvider } from './interactive-window/intellisense/dotNetIntellisenseProvider';
 import { JediIntellisenseProvider } from './interactive-window/intellisense/jediIntellisenseProvider';
@@ -114,16 +115,17 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, wrapType(LinkProvider));
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, wrapType(ShowPlotListener));
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, wrapType(DebugListener));
+    serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, wrapType(GatherListener));
     serviceManager.addSingleton<IPlotViewerProvider>(IPlotViewerProvider, wrapType(PlotViewerProvider));
     serviceManager.add<IPlotViewer>(IPlotViewer, wrapType(PlotViewer));
     serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, wrapType(JupyterDebugger));
     serviceManager.add<IDataScienceErrorHandler>(IDataScienceErrorHandler, wrapType(DataScienceErrorHandler));
     serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, wrapType(CodeLensFactory));
     serviceManager.addSingleton<ICellHashProvider>(ICellHashProvider, wrapType(CellHashProvider));
+    serviceManager.addSingleton<IGatherExecution>(IGatherExecution, wrapType(GatherExecution));
     serviceManager.addBinding(ICellHashProvider, IInteractiveWindowListener);
     serviceManager.addBinding(ICellHashProvider, INotebookExecutionLogger);
     serviceManager.addBinding(IJupyterDebugger, ICellHashListener);
-    serviceManager.addSingleton<IGatherExecution>(IGatherExecution, wrapType(GatherExecution));
     serviceManager.addBinding(IGatherExecution, INotebookExecutionLogger);
     serviceManager.addBinding(ICodeLensFactory, IInteractiveWindowListener);
 }

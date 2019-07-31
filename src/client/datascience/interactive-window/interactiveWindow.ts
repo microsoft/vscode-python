@@ -45,7 +45,6 @@ import {
     ICodeCssGenerator,
     IConnection,
     IDataViewerProvider,
-    IGatherExecution,
     IInteractiveWindow,
     IInteractiveWindowInfo,
     IInteractiveWindowListener,
@@ -115,8 +114,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         @inject(IDataViewerProvider) private dataExplorerProvider: IDataViewerProvider,
         @inject(IJupyterVariables) private jupyterVariables: IJupyterVariables,
         @inject(INotebookImporter) private jupyterImporter: INotebookImporter,
-        @inject(IJupyterDebugger) private jupyterDebugger: IJupyterDebugger,
-        @inject(IGatherExecution) private gatherExecution: IGatherExecution
+        @inject(IJupyterDebugger) private jupyterDebugger: IJupyterDebugger
     ) {
         super(
             configuration,
@@ -314,10 +312,6 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
                 this.dispatchMessage(message, payload, this.requestOnigasm);
                 break;
 
-            case InteractiveWindowMessages.GatherCode:
-                this.dispatchMessage(message, payload, this.gatherCode);
-                break;
-
             default:
                 break;
         }
@@ -506,12 +500,6 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
     @captureTelemetry(Telemetry.CopySourceCode, undefined, false)
     public copyCode(args: ICopyCode) {
         this.copyCodeInternal(args.source).catch(err => {
-            this.applicationShell.showErrorMessage(err);
-        });
-    }
-
-    public gatherCode(args: ICell) {
-        this.gatherCodeInternal(args).catch(err => {
             this.applicationShell.showErrorMessage(err);
         });
     }
@@ -855,40 +843,6 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
 
         return result;
     }
-
-    private gatherCodeInternal = async (cell: ICell) => {
-        if (this.jupyterServer) {
-            const slicedProgram = this.gatherExecution.gatherCode(cell);
-
-            // Don't want to open the gathered code on top of the interactive window
-            let viewColumn: ViewColumn | undefined;
-            const fileNameMatch = this.documentManager.visibleTextEditors.filter(textEditor => textEditor.document.fileName === cell.file);
-            const definedVisibleEditors = this.documentManager.visibleTextEditors.filter(textEditor => textEditor.viewColumn !== undefined);
-            if (this.documentManager.visibleTextEditors.length > 0 && fileNameMatch.length > 0) {
-                // Original file is visible
-                viewColumn = fileNameMatch[0].viewColumn;
-            } else if (this.documentManager.visibleTextEditors.length > 0 && definedVisibleEditors.length > 0) {
-                // There is a visible text editor, just not the original file. Make sure viewColumn isn't undefined
-                viewColumn = definedVisibleEditors[0].viewColumn;
-            } else {
-                // Only one panel open and interactive window is occupying it, or original file is open but hidden
-                viewColumn = ViewColumn.Beside;
-            }
-
-            // Create a new open editor with the returned program in the right panel
-            const doc = await this.documentManager.openTextDocument({
-                content: slicedProgram,
-                language: PYTHON_LANGUAGE
-            });
-            const editor = await this.documentManager.showTextDocument(doc, viewColumn);
-
-            // Edit the document so that it is dirty (add a space at the end)
-            editor.edit((editBuilder) => {
-                editBuilder.insert(new Position(editor.document.lineCount, 0), '\n');
-            });
-        }
-    }
-
     private setStatus = (message: string): Disposable => {
         const result = this.statusProvider.set(message);
         this.potentiallyUnfinishedStatus.push(result);
