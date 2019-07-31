@@ -4,8 +4,10 @@ import { CellSlice } from '@msrvida/python-program-analysis/lib/cellslice';
 import { ExecutionLogSlicer } from '@msrvida/python-program-analysis/lib/log-slicer';
 
 import { inject, injectable } from 'inversify';
+import { IApplicationShell } from '../../common/application/types';
 import { traceInfo } from '../../common/logger';
-import { IConfigurationService } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry } from '../../common/types';
+import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { CellMatcher } from '../cellMatcher';
 import { concatMultilineString } from '../common';
@@ -21,12 +23,21 @@ export class GatherExecution implements IGatherExecution, INotebookExecutionLogg
     private _enabled: boolean;
 
     constructor(
-        @inject(IConfigurationService) private configService: IConfigurationService
+        @inject(IConfigurationService) private configService: IConfigurationService,
+        @inject(IApplicationShell) private applicationShell: IApplicationShell,
+        @inject(IDisposableRegistry) private disposables: IDisposableRegistry
+
     ) {
         this._enabled = this.configService.getSettings().datascience.enableGather;
+
         const rules = this.configService.getSettings().datascience.gatherRules;
         this.dataflowAnalyzer = new DataflowAnalyzer(rules);
         this._executionSlicer = new ExecutionLogSlicer(this.dataflowAnalyzer);
+
+        if (this.enabled) {
+            this.disposables.push(this.configService.getSettings().onDidChange(e => this.updateEnableGather(e)));
+        }
+
         traceInfo('Gathering tools have been activated');
     }
 
@@ -80,6 +91,13 @@ export class GatherExecution implements IGatherExecution, INotebookExecutionLogg
 
     public set enabled(enabled: boolean) {
         this._enabled = enabled;
+    }
+
+    public updateEnableGather(_e: void) {
+        if (this.enabled !== this.configService.getSettings().datascience.enableGather) {
+            this.enabled = this.configService.getSettings().datascience.enableGather;
+            this.applicationShell.showInformationMessage(localize.DataScience.reloadRequired());
+        }
     }
 
     // Update DataflowAnalyzer's slice configuration. Is called onDidChangeConfiguration

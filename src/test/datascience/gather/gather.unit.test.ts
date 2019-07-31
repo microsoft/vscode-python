@@ -4,16 +4,13 @@
 
 import * as assert from 'assert';
 import * as TypeMoq from 'typemoq';
-import { IConfigurationService, IDataScienceSettings, IPythonSettings } from '../../../client/common/types';
+import { IApplicationShell } from '../../../client/common/application/types';
+import { IConfigurationService, IDataScienceSettings, IDisposableRegistry, IPythonSettings } from '../../../client/common/types';
 import { GatherExecution } from '../../../client/datascience/gather/gather';
 import { ICell as IVscCell } from '../../../client/datascience/types';
 
 // tslint:disable-next-line: max-func-body-length
 suite('DataScience code gathering unit tests', () => {
-    let configurationService: TypeMoq.IMock<IConfigurationService>;
-    let gatherExecution: GatherExecution;
-    let dataScienceSettings: TypeMoq.IMock<IDataScienceSettings>;
-    let pythonSettings: TypeMoq.IMock<IPythonSettings>;
     const codeCells: IVscCell[] = [
         {
             id: '72ce5eda-e03a-454b-bfdf-7d53c4bfa91f',
@@ -87,9 +84,12 @@ suite('DataScience code gathering unit tests', () => {
         }
     ];
 
-    configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
-    pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
-    dataScienceSettings = TypeMoq.Mock.ofType<IDataScienceSettings>();
+    const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
+    const disposableRegistry = TypeMoq.Mock.ofType<IDisposableRegistry>();
+    const configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
+    const pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
+    const gatherExecution = new GatherExecution(configurationService.object, appShell.object, disposableRegistry.object);
+    const dataScienceSettings = TypeMoq.Mock.ofType<IDataScienceSettings>();
     const gatherRules = [
         {
             objectName: 'df',
@@ -127,7 +127,7 @@ suite('DataScience code gathering unit tests', () => {
     dataScienceSettings.setup(d => d.enabled).returns(() => true);
     pythonSettings.setup(p => p.datascience).returns(() => dataScienceSettings.object);
     configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
-    gatherExecution = new GatherExecution(configurationService.object);
+    appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
 
     afterEach('Clear execution log', async () => {
         gatherExecution.executionSlicer.reset();

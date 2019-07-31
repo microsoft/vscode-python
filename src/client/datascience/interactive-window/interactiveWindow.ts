@@ -79,7 +79,6 @@ import {
 
 @injectable()
 export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> implements IInteractiveWindow {
-    public configurationChangedDisposable: Disposable;
     private disposed: boolean = false;
     private loadPromise: Promise<void>;
     private interpreterChangedDisposable: Disposable;
@@ -135,7 +134,6 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
 
         // Sign up for configuration changes
         this.interpreterChangedDisposable = this.interpreterService.onDidChangeInterpreter(this.onInterpreterChanged);
-        this.configurationChangedDisposable = this.configuration.getSettings().onDidChange(this.onGatherConfigurationChange);
 
         // Create our event emitter
         this.closedEvent = new EventEmitter<IInteractiveWindow>();
@@ -856,18 +854,6 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         }
 
         return result;
-    }
-
-    // Tell user to reload the window when feature flag is updated
-    private onGatherConfigurationChange = () => {
-        if (this.jupyterServer && this.gatherExecution.enabled !== this.configuration.getSettings().datascience.enableGather) {
-            this.applicationShell.showInformationMessage(localize.DataScience.reloadRequired());
-            // this.applicationShell.showWarningMessage(localize.DataScience.reloadRequired());
-            this.gatherExecution.enabled = this.configuration.getSettings().datascience.enableGather;
-
-            // Not sure if safe to change slice config rules halfway through execution
-            // this.gatherExecution.updateGatherRules();
-        }
     }
 
     private gatherCodeInternal = async (cell: ICell) => {
