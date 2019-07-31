@@ -79,7 +79,7 @@ export class MockDocumentManager implements IDocumentManager {
     public openTextDocument(_options?: { language?: string; content?: string }): Thenable<TextDocument>;
     public openTextDocument(_options?: any): Thenable<TextDocument> {
         if (_options && _options.content) {
-            const doc = new MockDocument(_options.content, 'Untitled-1');
+            const doc = new MockDocument(_options.content, 'Untitled-1', this.saveDocument);
             this.textDocuments.push(doc);
         }
         return Promise.resolve(this.lastDocument);
