@@ -5,11 +5,13 @@ import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import * as pdfkit from 'pdfkit';
 import { Event, EventEmitter, ViewColumn } from 'vscode';
 
+import { traceInfo } from '../../../client/common/logger';
+import { createDeferred } from '../../../client/common/utils/async';
 import { IApplicationShell, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
+import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposable } from '../../common/types';
 import * as localize from '../../common/utils/localize';
@@ -113,7 +115,7 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
     }
 
     private async exportPlot(payload: IExportPlotRequest) : Promise<void> {
-
+        traceInfo('exporting plot...');
         const filtersObject: Record<string, string[]> = {};
         filtersObject[localize.DataScience.pdfFilter()] = ['pdf'];
         filtersObject[localize.DataScience.pngFilter()] = ['png'];
@@ -124,30 +126,47 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
             saveLabel: localize.DataScience.exportPlotTitle(),
             filters: filtersObject
         });
-        if (file) {
-            const ext = path.extname(file.fsPath);
-            switch (ext.toLowerCase()) {
-                case '.pdf':
-                    // tslint:disable-next-line: no-require-imports
-                    const SVGtoPDF = require('svg-to-pdfkit');
-                    const doc = new pdfkit();
-                    SVGtoPDF(doc, payload.svg, 0, 0);
-                    doc.pipe(this.fileSystem.createWriteStream(file.fsPath));
-                    doc.end();
-                    break;
+        try {
+            if (file) {
+                const ext = path.extname(file.fsPath);
+                switch (ext.toLowerCase()) {
+                    case '.pdf':
+                        traceInfo('Attempting pdf write...');
+                        // Import here since pdfkit is so huge.
+                        // tslint:disable-next-line: no-require-imports
+                        const SVGtoPDF = require('svg-to-pdfkit');
+                        const deferred = createDeferred<void>();
+                        // tslint:disable-next-line: no-require-imports
+                        const pdfkit = require('pdfkit');
+                        const doc = new pdfkit();
+                        const ws = this.fileSystem.createWriteStream(file.fsPath);
+                        traceInfo(`Writing pdf to ${file.fsPath}`);
+                        ws.on('finish', () => deferred.resolve);
+                        SVGtoPDF(doc, payload.svg, 0, 0);
+                        doc.pipe(ws);
+                        doc.end();
+                        traceInfo(`Finishing pdf to ${file.fsPath}`);
+                        await deferred.promise;
+                        traceInfo(`Completed pdf to ${file.fsPath}`);
+                        break;
 
-                case '.png':
-                    const buffer = new Buffer(payload.png.replace('data:image/png;base64', ''), 'base64');
-                    await this.fileSystem.writeFile(file.fsPath, buffer);
-                    break;
+                    case '.png':
+                        const buffer = new Buffer(payload.png.replace('data:image/png;base64', ''), 'base64');
+                        await this.fileSystem.writeFile(file.fsPath, buffer);
+                        break;
 
-                default:
-                case '.svg':
-                    // This is the easy one:
-                    await this.fileSystem.writeFile(file.fsPath, payload.svg);
-                    break;
+                    default:
+                    case '.svg':
+                        // This is the easy one:
+                        await this.fileSystem.writeFile(file.fsPath, payload.svg);
+                        break;
+                }
+
             }
 
+        } catch (e) {
+            traceError(e);
+            this.applicationShell.showErrorMessage(localize.DataScience.exportImageFailed().format(e));
         }
     }
 

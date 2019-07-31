@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, and more.",
-    "version": "2019.6.0-rc",
+    "version": "2019.6.1",
     "languageServerVersion": "0.2.82",
     "publisher": "ms-python",
     "author": {
@@ -2336,6 +2336,7 @@
         "event-stream": "3.3.4",
         "expose-loader": "^0.7.5",
         "file-loader": "^2.0.0",
+        "filemanager-webpack-plugin": "^2.0.5",
         "flat": "^4.0.0",
         "gulp": "^4.0.0",
         "gulp-azure-storage": "^0.9.0",

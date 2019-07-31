@@ -1,6 +1,13 @@
 # Changelog
 
-## 2019.6.0-rc (19 June 2019)
+## 2019.6.1 (9 July 2019)
+
+### Fixes
+
+1. Fixes to A/B testing.
+   ([#6400](https://github.com/microsoft/vscode-python/issues/6400))
+
+## 2019.6.0 (25 June 2019)
 
 ### Enhancements
 
@@ -124,6 +131,12 @@
    ([#5983](https://github.com/Microsoft/vscode-python/issues/5983))
 1. Account for files being opened in Visual Studio Code that do not belong to a workspace.
    ([#6624](https://github.com/Microsoft/vscode-python/issues/6624))
+1. Accessibility pass on plot viewer
+   ([#6020](https://github.com/Microsoft/vscode-python/issues/6020))
+1. Allow for both password and self cert server to work together
+   ([#6265](https://github.com/Microsoft/vscode-python/issues/6265))
+1. Fix pdf export in release bits.
+   ([#6277](https://github.com/Microsoft/vscode-python/issues/6277))
 
 ### Code Health
 

@@ -4,8 +4,9 @@
 
 // tslint:disable: no-any
 
-import { createHash, HexBase64Latin1Encoding } from 'crypto';
+import { createHash } from 'crypto';
 import { injectable } from 'inversify';
+import { traceError } from './logger';
 import { ICryptoUtils, IHashFormat } from './types';
 
 /**
@@ -13,8 +14,15 @@ import { ICryptoUtils, IHashFormat } from './types';
  */
 @injectable()
 export class CryptoUtils implements ICryptoUtils {
-    public createHash<E extends keyof IHashFormat>(data: string, encoding: HexBase64Latin1Encoding, hashFormat: E): IHashFormat[E] {
-        const hash = createHash('sha512').update(data).digest(encoding);
-        return hashFormat === 'number' ? parseInt(hash, undefined) : hash as any;
+    public createHash<E extends keyof IHashFormat>(data: string, hashFormat: E): IHashFormat[E] {
+        const hash = createHash('sha512').update(data).digest('hex');
+        if (hashFormat === 'number') {
+            const result = parseInt(hash, 16);
+            if (isNaN(result)) {
+                traceError(`Number hash for data '${data}' is NaN`);
+            }
+            return result as any;
+        }
+        return hash as any;
     }
 }
