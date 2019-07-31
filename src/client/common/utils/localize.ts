@@ -156,6 +156,7 @@ export namespace DataScience {
     export const undo = localize('DataScience.undo', 'Undo');
     export const redo = localize('DataScience.redo', 'Redo');
     export const clearAll = localize('DataScience.clearAll', 'Remove all cells');
+    export const reloadRequired = localize('DataScience.reloadRequired', 'Please reload the window for new settings to take effect');
     export const pythonVersionHeader = localize('DataScience.pythonVersionHeader', 'Python Version:');
     export const pythonRestartHeader = localize('DataScience.pythonRestartHeader', 'Restarted Kernel:');
     export const pythonNewHeader = localize('DataScience.pythonNewHeader', 'Started new kernel:');

@@ -544,6 +544,7 @@ suite('Jupyter Execution', async () => {
             notebookFileRoot: 'WORKSPACE',
             changeDirOnImportExport: true,
             useDefaultConfigForJupyter: true,
+            enableGather: true,
             jupyterInterruptTimeout: 10000,
             searchForJupyter: !skipSearch,
             showCellInputCode: true,

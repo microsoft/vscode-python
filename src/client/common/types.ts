@@ -312,6 +312,7 @@ export interface IDataScienceSettings {
     showCellInputCode: boolean;
     collapseCellInputCodeByDefault: boolean;
     maxOutputSize: number;
+    enableGather: boolean;
     gatherRules?: IGatherRule[];
     sendSelectionToInteractiveWindow: boolean;
     markdownRegularExpression: string;

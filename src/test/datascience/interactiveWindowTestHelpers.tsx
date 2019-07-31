@@ -307,6 +307,7 @@ export function defaultDataScienceSettings(): IDataScienceSettings {
         jupyterLaunchTimeout: 10,
         jupyterLaunchRetries: 3,
         enabled: true,
+        enableGather: true,
         jupyterServerURI: 'local',
         notebookFileRoot: 'WORKSPACE',
         changeDirOnImportExport: true,

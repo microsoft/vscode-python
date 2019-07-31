@@ -67,7 +67,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             editCellVM: getSettings && getSettings().allowInput ? createEditableCellVM(1) : undefined,
             editorOptions: this.computeEditorOptions(),
             currentExecutionCount: 0,
-            debugging: false
+            debugging: false,
+            enableGather: getSettings && getSettings().enableGather
         };
 
         // Add test state if necessary
@@ -345,6 +346,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                         monacoTheme={this.state.monacoTheme}
                         openLink={this.openLink}
                         expandImage={noop}
+                        enableGather={false}
                     />
                 </ErrorBoundary>
             </div>
@@ -442,7 +444,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             onCodeChange: this.codeChange,
             openLink: this.openLink,
             expandImage: this.showPlot,
-            gatherCode: this.gatherCode
+            gatherCode: this.gatherCode,
+            enableGather: this.state.enableGather
         };
     }
     private getToolbarProps = (baseTheme: string): IToolbarPanelProps => {

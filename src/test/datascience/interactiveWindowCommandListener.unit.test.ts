@@ -141,6 +141,7 @@ suite('Interactive window command listener', async () => {
             searchForJupyter: true,
             showCellInputCode: true,
             collapseCellInputCodeByDefault: true,
+            enableGather: true,
             allowInput: true,
             maxOutputSize: 400,
             errorBackgroundColor: '#FFFFFF',

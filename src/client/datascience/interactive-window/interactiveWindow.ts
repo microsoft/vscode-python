@@ -135,7 +135,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
 
         // Sign up for configuration changes
         this.interpreterChangedDisposable = this.interpreterService.onDidChangeInterpreter(this.onInterpreterChanged);
-        this.configurationChangedDisposable = workspaceService.onDidChangeConfiguration(this.onConfigurationChange);
+        this.configurationChangedDisposable = this.configuration.getSettings().onDidChange(this.onGatherConfigurationChange);
 
         // Create our event emitter
         this.closedEvent = new EventEmitter<IInteractiveWindow>();
@@ -858,12 +858,16 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         return result;
     }
 
-    // We allow users to edit the default gather slicing rules via settings.json. We need to update this whenever
-    // settings.json is changed.
-    private onConfigurationChange() {
-        //     if (this.jupyterServer) {
-        //         this.gatherExecution.updateGatherRules();
-        //     }
+    // Tell user to reload the window when feature flag is updated
+    private onGatherConfigurationChange = () => {
+        if (this.jupyterServer && this.gatherExecution.enabled !== this.configuration.getSettings().datascience.enableGather) {
+            this.applicationShell.showInformationMessage(localize.DataScience.reloadRequired());
+            // this.applicationShell.showWarningMessage(localize.DataScience.reloadRequired());
+            this.gatherExecution.enabled = this.configuration.getSettings().datascience.enableGather;
+
+            // Not sure if safe to change slice config rules halfway through execution
+            // this.gatherExecution.updateGatherRules();
+        }
     }
 
     private gatherCodeInternal = async (cell: ICell) => {

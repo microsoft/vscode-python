@@ -98,6 +98,7 @@ export interface INotebookExecutionLogger {
 
 export const IGatherExecution = Symbol('IGatherExecution');
 export interface IGatherExecution {
+    enabled: boolean;
     updateGatherRules(): void;
     gatherCode(vscCell: ICell): string;
 }

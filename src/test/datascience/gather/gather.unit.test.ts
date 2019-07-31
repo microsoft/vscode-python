@@ -129,6 +129,10 @@ suite('DataScience code gathering unit tests', () => {
     configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
     gatherExecution = new GatherExecution(configurationService.object);
 
+    afterEach('Clear execution log', async () => {
+        gatherExecution.executionSlicer.reset();
+    });
+
     test('Logs a cell execution', async () => {
         let count = 0;
         for (const c of codeCells) {
@@ -138,7 +142,10 @@ suite('DataScience code gathering unit tests', () => {
         }
     });
 
-    test('Gathers program slices for a cell', () => {
+    test('Gathers program slices for a cell', async () => {
+        for (const c of codeCells) {
+            await gatherExecution.postExecute(c, false);
+        }
         const cell: IVscCell = codeCells[codeCells.length - 1];
         const program = gatherExecution.gatherCode(cell);
         const expectedProgram = `# This file contains the minimal amount of code required to produce the code cell you gathered.\n#%%\nfrom bokeh.plotting import show, figure, output_notebook\n\n#%%\nx = [1,2,3,4,5]\ny = [21,9,15,17,4]\n\n#%%\np=figure(title='demo',x_axis_label='x',y_axis_label='y')\n\n#%%\np.line(x,y,line_width=2)\n\n#%%\nshow(p)\n`;

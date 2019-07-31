@@ -7,6 +7,7 @@ import { inject, injectable } from 'inversify';
 import { traceInfo } from '../../common/logger';
 import { IConfigurationService } from '../../common/types';
 import { noop } from '../../common/utils/misc';
+import { CellMatcher } from '../cellMatcher';
 import { concatMultilineString } from '../common';
 import { CellState, ICell as IVscCell, IGatherExecution, INotebookExecutionLogger } from '../types';
 
@@ -17,12 +18,14 @@ import { CellState, ICell as IVscCell, IGatherExecution, INotebookExecutionLogge
 export class GatherExecution implements IGatherExecution, INotebookExecutionLogger {
     private _executionSlicer: ExecutionLogSlicer;
     private dataflowAnalyzer: DataflowAnalyzer;
+    private _enabled: boolean;
 
     constructor(
         @inject(IConfigurationService) private configService: IConfigurationService
     ) {
+        this._enabled = this.configService.getSettings().datascience.enableGather;
         const rules = this.configService.getSettings().datascience.gatherRules;
-        this.dataflowAnalyzer = new DataflowAnalyzer(rules); // Pass in a sliceConfiguration object, or not
+        this.dataflowAnalyzer = new DataflowAnalyzer(rules);
         this._executionSlicer = new ExecutionLogSlicer(this.dataflowAnalyzer);
         traceInfo('Gathering tools have been activated');
     }
@@ -33,13 +36,19 @@ export class GatherExecution implements IGatherExecution, INotebookExecutionLogg
     }
 
     public async postExecute(vscCell: IVscCell, _silent: boolean): Promise<void> {
-        // Don't log if vscCell.data.source is an empty string. Original Jupyter extension also does this.
-        if (vscCell.data.source !== '') {
-            // Convert IVscCell to IGatherCell
-            const cell = convertVscToGatherCell(vscCell) as LabCell;
+        if (this.enabled) {
+            // Don't log if vscCell.data.source is an empty string. Original Jupyter extension also does this.
+            if (vscCell.data.source !== '') {
+                // Strip first line marker. We can't do this at JupyterServer.executeCodeObservable because it messes up hashing
+                const cellMatcher = new CellMatcher(this.configService.getSettings().datascience);
+                vscCell.data.source = cellMatcher.stripFirstMarker(concatMultilineString(vscCell.data.source));
 
-            // Call internal logging method
-            this._executionSlicer.logExecution(cell);
+                // Convert IVscCell to IGatherCell
+                const cell = convertVscToGatherCell(vscCell) as LabCell;
+
+                // Call internal logging method
+                this._executionSlicer.logExecution(cell);
+            }
         }
     }
 
@@ -63,6 +72,14 @@ export class GatherExecution implements IGatherExecution, INotebookExecutionLogg
 
     public get executionSlicer() {
         return this._executionSlicer;
+    }
+
+    public get enabled() {
+        return this._enabled;
+    }
+
+    public set enabled(enabled: boolean) {
+        this._enabled = enabled;
     }
 
     // Update DataflowAnalyzer's slice configuration. Is called onDidChangeConfiguration
@@ -91,9 +108,13 @@ function convertVscToGatherCell(cell: IVscCell): ICell | undefined {
             id: cell.id,
             gathered: false,
             dirty: false,
-            text: concatMultilineString(cell.data.source),
-            executionCount: cell.data.execution_count, // Each cell is run exactly once in the history window
+            text: cell.data.source,
+
+            // This may need to change for native notebook support since in the original Gather code this refers to the number of times that this same cell was executed
+            executionCount: cell.data.execution_count,
             executionEventId: cell.id, // This is unique for now, so feed it in
+
+            // This may need to change for native notebook support, since this is intended to persist in the metadata for a notebook that is saved and then re-loaded
             persistentId: cell.id,
             outputs: cell.data.outputs,
             hasError: cell.state === CellState.error,
