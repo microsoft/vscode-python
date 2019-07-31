@@ -5,24 +5,23 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
-import { IServiceContainer } from '../../ioc/types';
 import { IDisposableRegistry } from '../types';
 import { IEnvironmentVariablesProvider } from '../variables/types';
 import { ProcessService } from './proc';
-import { IBufferDecoder, IProcessService, IProcessServiceFactory } from './types';
+import { IBufferDecoder, IProcessLogger, IProcessService, IProcessServiceFactory } from './types';
 
 @injectable()
 export class ProcessServiceFactory implements IProcessServiceFactory {
-    private envVarsService: IEnvironmentVariablesProvider;
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
-        this.envVarsService = serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
-    }
+    constructor(
+        @inject(IEnvironmentVariablesProvider) private readonly envVarsService: IEnvironmentVariablesProvider,
+        @inject(IProcessLogger) private readonly processLogger: IProcessLogger,
+        @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
+        @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry
+    ) {}
     public async create(resource?: Uri): Promise<IProcessService> {
         const customEnvVars = await this.envVarsService.getEnvironmentVariables(resource);
-        const decoder = this.serviceContainer.get<IBufferDecoder>(IBufferDecoder);
-        const disposableRegistry = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
-        const proc = new ProcessService(decoder, customEnvVars);
-        disposableRegistry.push(proc);
-        return proc;
+        const proc: IProcessService = new ProcessService(this.decoder, customEnvVars);
+        this.disposableRegistry.push(proc);
+        return proc.on('exec', this.processLogger.logProcess.bind(this.processLogger));
     }
 }

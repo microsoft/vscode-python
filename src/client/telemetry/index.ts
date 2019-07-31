@@ -9,14 +9,15 @@ import TelemetryReporter from 'vscode-extension-telemetry';
 
 import { IWorkspaceService } from '../common/application/types';
 import { EXTENSION_ROOT_DIR, isTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
+import { traceInfo } from '../common/logger';
 import { StopWatch } from '../common/utils/stopWatch';
 import { Telemetry } from '../datascience/constants';
+import { ConsoleType } from '../debugger/types';
 import { LinterId } from '../linters/types';
 import { EventName } from './constants';
 import {
     CodeExecutionTelemetry,
     DebuggerConfigurationPromtpsTelemetry,
-    DebuggerTelemetry,
     DiagnosticsAction,
     DiagnosticsMessages,
     EditorLoadTelemetry,
@@ -104,7 +105,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
 
     if (ex && (eventName as any) !== 'ERROR') {
         // When sending `ERROR` telemetry event no need to send custom properties.
-        // Else we have to review all properties everytime as part of GDPR.
+        // Else we have to review all properties every time as part of GDPR.
         // Assume we have 10 events all with their own properties.
         // As we have errors for each event, those properties are treated as new data items.
         // Hence they need to be classified as part of the GDPR process, and thats unnecessary and onerous.
@@ -126,6 +127,9 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
         });
     }
     reporter.sendTelemetryEvent((eventName as any) as string, customProperties, measures);
+    if (process.env && process.env.VSC_PYTHON_LOG_TELEMETRY) {
+        traceInfo(`Telemetry Event : ${eventName} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(customProperties)} `);
+    }
 }
 
 // tslint:disable-next-line:no-any function-name
@@ -266,7 +270,127 @@ function getCallsite(frame: stackTrace.StackFrame) {
 export interface IEventNamePropertyMapping {
     [EventName.COMPLETION]: never | undefined;
     [EventName.COMPLETION_ADD_BRACKETS]: { enabled: boolean };
-    [EventName.DEBUGGER]: DebuggerTelemetry;
+    /**
+     * Telemetry captured when staring the debugger.
+     */
+    [EventName.DEBUGGER]: {
+        /**
+         * Trigger for starting the debugger.
+         * - `launch`: Launch/start new code and debug it.
+         * - `attach`: Attach to an exiting python process (remote debugging).
+         * - `test`: Debugging python tests.
+         *
+         * @type {('launch' | 'attach' | 'test')}
+         */
+        trigger: 'launch' | 'attach' | 'test';
+        /**
+         * Type of console used.
+         *  -`internalConsole`: Use VS Code debug console (no shells/terminals).
+         * - `integratedTerminal`: Use VS Code terminal.
+         * - `externalTerminal`: Use an External terminal.
+         *
+         * @type {ConsoleType}
+         */
+        console?: ConsoleType;
+        /**
+         * Whether user has defined environment variables.
+         * Could have been defined in launch.json or the env file (defined in `settings.json`).
+         * Default `env file` is `.env` in the workspace folder.
+         *
+         * @type {boolean}
+         */
+        hasEnvVars: boolean;
+        /**
+         * Whether there are any CLI arguments that need to be passed into the program being debugged.
+         *
+         * @type {boolean}
+         */
+        hasArgs: boolean;
+        /**
+         * Whether the user is debugging `django`.
+         *
+         * @type {boolean}
+         */
+        django: boolean;
+        /**
+         * Whether the user is debugging `flask`.
+         *
+         * @type {boolean}
+         */
+        flask: boolean;
+        /**
+         * Whether the user is debugging `jinja` templates.
+         *
+         * @type {boolean}
+         */
+        jinja: boolean;
+        /**
+         * Whether user is attaching to a local python program (attach scenario).
+         *
+         * @type {boolean}
+         */
+        isLocalhost: boolean;
+        /**
+         * Whether debugging a module.
+         *
+         * @type {boolean}
+         */
+        isModule: boolean;
+        /**
+         * Whether debugging with `sudo`.
+         *
+         * @type {boolean}
+         */
+        isSudo: boolean;
+        /**
+         * Whether required to stop upon entry.
+         *
+         * @type {boolean}
+         */
+        stopOnEntry: boolean;
+        /**
+         * Whether required to display return types in debugger.
+         *
+         * @type {boolean}
+         */
+        showReturnValue: boolean;
+        /**
+         * Whether debugging `pyramid`.
+         *
+         * @type {boolean}
+         */
+        pyramid: boolean;
+        /**
+         * Whether debugging a subprocess.
+         *
+         * @type {boolean}
+         */
+        subProcess: boolean;
+        /**
+         * Whether debugging `watson`.
+         *
+         * @type {boolean}
+         */
+        watson: boolean;
+        /**
+         * Whether degbugging `pyspark`.
+         *
+         * @type {boolean}
+         */
+        pyspark: boolean;
+        /**
+         * Whether using `gevent` when deugging.
+         *
+         * @type {boolean}
+         */
+        gevent: boolean;
+        /**
+         * Whether debugging `scrapy`.
+         *
+         * @type {boolean}
+         */
+        scrapy: boolean;
+    };
     [EventName.DEBUGGER_ATTACH_TO_CHILD_PROCESS]: never | undefined;
     [EventName.DEBUGGER_CONFIGURATION_PROMPTS]: DebuggerConfigurationPromtpsTelemetry;
     [EventName.DEBUGGER_CONFIGURATION_PROMPTS_IN_LAUNCH_JSON]: never | undefined;
@@ -283,6 +407,7 @@ export interface IEventNamePropertyMapping {
     [EventName.GO_TO_OBJECT_DEFINITION]: never | undefined;
     [EventName.HOVER_DEFINITION]: never | undefined;
     [EventName.HASHED_PACKAGE_NAME]: { hashedName: string };
+    [EventName.HASHED_PACKAGE_PERF]: never | undefined;
     [EventName.LINTER_NOT_INSTALLED_PROMPT]: LinterInstallPromptTelemetry;
     [EventName.PYTHON_INSTALL_PACKAGE]: { installer: string };
     [EventName.LINTING]: LintingTelemetry;
@@ -294,19 +419,46 @@ export interface IEventNamePropertyMapping {
     [EventName.PYTHON_INTERPRETER_AUTO_SELECTION]: InterpreterAutoSelection;
     [EventName.PYTHON_INTERPRETER_DISCOVERY]: InterpreterDiscovery;
     [EventName.PYTHON_INTERPRETER_ACTIVATE_ENVIRONMENT_PROMPT]: { selection: 'Yes' | 'No' | 'Ignore' | undefined };
+    [EventName.INSIDERS_PROMPT]: {
+        /**
+         * @type {'Yes, weekly'} When user selects to use "weekly" as extension channel in insiders prompt
+         * @type {'Yes, daily'} When user selects to use "daily" as extension channel in insiders prompt
+         * @type {'No, thanks'} When user decides to keep using the same extension channel as before
+         *
+         * @type {('Yes, weekly' | 'Yes, daily' | 'No, thanks' | undefined)}
+         */
+        selection: 'Yes, weekly' | 'Yes, daily' | 'No, thanks' | undefined;
+    };
+    [EventName.INSIDERS_RELOAD_PROMPT]: { selection: 'Reload' | undefined };
     [EventName.PYTHON_LANGUAGE_SERVER_SWITCHED]: { change: 'Switch to Jedi from LS' | 'Switch to LS from Jedi' };
-    [EventName.PYTHON_LANGUAGE_SERVER_ANALYSISTIME]: { success: boolean };
     [EventName.PYTHON_LANGUAGE_SERVER_DOWNLOADED]: LanguageServerVersionTelemetry;
     [EventName.PYTHON_LANGUAGE_SERVER_ENABLED]: never | undefined;
     [EventName.PYTHON_LANGUAGE_SERVER_ERROR]: LanguageServerErrorTelemetry;
     [EventName.PYTHON_LANGUAGE_SERVER_EXTRACTED]: LanguageServerVersionTelemetry;
     [EventName.PYTHON_LANGUAGE_SERVER_LIST_BLOB_STORE_PACKAGES]: never | undefined;
-    [EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_NOT_SUPPORTED]: never | undefined;
     [EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED]: LanguageServePlatformSupported;
     [EventName.PYTHON_LANGUAGE_SERVER_READY]: never | undefined;
     [EventName.PYTHON_LANGUAGE_SERVER_STARTUP]: never | undefined;
     [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: any;
-    [EventName.PYTHON_EXPERIMENTS]: { error?: string; expName?: string };
+    [EventName.PYTHON_EXPERIMENTS]: {
+        /**
+         * Name of the experiment group the user is in
+         * @type {string}
+         */
+        expName?: string;
+    };
+    [EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE]: {
+        /**
+         * Carries `true` if downloading experiments successfully finishes within timeout, `false` otherwise
+         * @type {boolean}
+         */
+        success?: boolean;
+        /**
+         * Carries an error string if downloading experiments fails with error
+         * @type {string}
+         */
+        error?: string;
+    };
     [EventName.REFACTOR_EXTRACT_FUNCTION]: never | undefined;
     [EventName.REFACTOR_EXTRACT_VAR]: never | undefined;
     [EventName.REFACTOR_RENAME]: never | undefined;
@@ -321,6 +473,8 @@ export interface IEventNamePropertyMapping {
     [EventName.TERMINAL_CREATE]: TerminalTelemetry;
     [EventName.UNITTEST_DISCOVER]: TestDiscoverytTelemetry;
     [EventName.UNITTEST_DISCOVER_WITH_PYCODE]: never | undefined;
+    [EventName.UNITTEST_NAVIGATE]: { byFile?: boolean; byFunction?: boolean; bySuite?: boolean; focus_code?: boolean };
+    [EventName.UNITTEST_EXPLORER_WORK_SPACE_COUNT]: { count: number };
     [EventName.UNITTEST_RUN]: TestRunTelemetry;
     [EventName.UNITTEST_STOP]: never | undefined;
     [EventName.UNITTEST_DISABLE]: never | undefined;
@@ -330,6 +484,8 @@ export interface IEventNamePropertyMapping {
     [EventName.WORKSPACE_SYMBOLS_GO_TO]: never | undefined;
     // Data Science
     [Telemetry.AddCellBelow]: never | undefined;
+    [Telemetry.ClassConstructionTime]: { class: string };
+    [Telemetry.CodeLensAverageAcquisitionTime]: never | undefined;
     [Telemetry.CollapseAll]: never | undefined;
     [Telemetry.ConnectFailedJupyter]: never | undefined;
     [Telemetry.ConnectLocalJupyter]: never | undefined;
@@ -338,10 +494,18 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ConnectRemoteSelfCertFailedJupyter]: never | undefined;
     [Telemetry.CopySourceCode]: never | undefined;
     [Telemetry.DataScienceSettings]: JSONObject;
+    [Telemetry.DataViewerFetchTime]: never | undefined;
+    [Telemetry.DebugCurrentCell]: never | undefined;
+    [Telemetry.DebugFileInteractive]: never | undefined;
     [Telemetry.DeleteAllCells]: never | undefined;
     [Telemetry.DeleteCell]: never | undefined;
+    [Telemetry.FindJupyterCommand]: { command: string };
+    [Telemetry.FindJupyterKernelSpec]: never | undefined;
     [Telemetry.DisableInteractiveShiftEnter]: never | undefined;
     [Telemetry.EnableInteractiveShiftEnter]: never | undefined;
+    [Telemetry.ExecuteCell]: never | undefined;
+    [Telemetry.ExecuteCellPerceivedCold]: never | undefined;
+    [Telemetry.ExecuteCellPerceivedWarm]: never | undefined;
     [Telemetry.ExpandAll]: never | undefined;
     [Telemetry.ExportNotebook]: never | undefined;
     [Telemetry.ExportPythonFile]: never | undefined;
@@ -350,13 +514,19 @@ export interface IEventNamePropertyMapping {
     [Telemetry.GetPasswordFailure]: never | undefined;
     [Telemetry.GetPasswordSuccess]: never | undefined;
     [Telemetry.GotoSourceCode]: never | undefined;
+    [Telemetry.HiddenCellTime]: never | undefined;
     [Telemetry.ImportNotebook]: { scope: 'command' | 'file' };
     [Telemetry.Interrupt]: never | undefined;
+    [Telemetry.InterruptJupyterTime]: never | undefined;
     [Telemetry.PandasNotInstalled]: never | undefined;
     [Telemetry.PandasTooOld]: never | undefined;
+    [Telemetry.PtvsdInstallFailed]: never | undefined;
+    [Telemetry.PtvsdPromptToInstall]: never | undefined;
+    [Telemetry.PtvsdSuccessfullyInstalled]: never | undefined;
     [Telemetry.OpenPlotViewer]: never | undefined;
     [Telemetry.Redo]: never | undefined;
     [Telemetry.RemoteAddCode]: never | undefined;
+    [Telemetry.RestartJupyterTime]: never | undefined;
     [Telemetry.RestartKernel]: never | undefined;
     [Telemetry.RunAllCells]: never | undefined;
     [Telemetry.RunSelectionOrLine]: never | undefined;
@@ -368,6 +538,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RunToLine]: never | undefined;
     [Telemetry.RunFileInteractive]: never | undefined;
     [Telemetry.RunFromLine]: never | undefined;
+    [Telemetry.ScrolledToCell]: never | undefined;
     [Telemetry.SelfCertsMessageClose]: never | undefined;
     [Telemetry.SelfCertsMessageEnabled]: never | undefined;
     [Telemetry.SelectJupyterURI]: never | undefined;
@@ -377,22 +548,24 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ShowDataViewer]: { rows: number | undefined; columns: number | undefined };
     [Telemetry.ShowHistoryPane]: never | undefined;
     [Telemetry.StartJupyter]: never | undefined;
+    [Telemetry.StartJupyterProcess]: never | undefined;
     [Telemetry.SubmitCellThroughInput]: never | undefined;
     [Telemetry.Undo]: never | undefined;
+    [Telemetry.VariableExplorerFetchTime]: never | undefined;
     [Telemetry.VariableExplorerToggled]: { open: boolean };
     [Telemetry.VariableExplorerVariableCount]: { variableCount: number };
-    [EventName.UNITTEST_NAVIGATE_TEST_FILE]: never | undefined;
-    [EventName.UNITTEST_NAVIGATE_TEST_FUNCTION]: { focus_code: boolean };
-    [EventName.UNITTEST_NAVIGATE_TEST_SUITE]: { focus_code: boolean };
-    [EventName.UNITTEST_EXPLORER_WORK_SPACE_COUNT]: { count: number };
+    [Telemetry.WaitForIdleJupyter]: never | undefined;
+    [Telemetry.WebviewMonacoStyleUpdate]: never | undefined;
+    [Telemetry.WebviewStartup]: { type: string };
+    [Telemetry.WebviewStyleUpdate]: never | undefined;
     /*
     Telemetry event sent with details of Jedi Memory usage.
-    memory - Memory usage of Process in kb.
+    mem_use - Memory usage of Process in kb.
     limit - Upper bound for memory usage of Jedi process.
     isUserDefinedLimit - Whether the user has configfured the upper bound limit.
     restart - Whether to restart the Jedi Process (i.e. memory > limit).
     */
-    [EventName.JEDI_MEMORY]: { memory: number; limit: number; isUserDefinedLimit: boolean; restart: boolean };
+    [EventName.JEDI_MEMORY]: { mem_use: number; limit: number; isUserDefinedLimit: boolean; restart: boolean };
     /*
     Telemetry event sent to provide information on whether we have successfully identify the type of shell used.
     This information is useful in determining how well we identify shells on users machines.
@@ -417,7 +590,7 @@ export interface IEventNamePropertyMapping {
     [EventName.TERMINAL_SHELL_IDENTIFICATION]: {
         failed: boolean;
         terminalProvided: boolean;
-        shellIdentificationSource: 'terminalName' | 'settings' | 'environment' | 'default';
+        shellIdentificationSource: 'terminalName' | 'settings' | 'environment' | 'default' | 'vscode';
         hasCustomShell: undefined | boolean;
         hasShellInEnv: undefined | boolean;
     };

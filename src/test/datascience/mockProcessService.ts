@@ -65,6 +65,14 @@ export class MockProcessService implements IProcessService {
         this.timeDelay = timeout;
     }
 
+    public on() {
+        return this;
+    }
+
+    public dispose() {
+        return;
+    }
+
     private argsMatch(matchers: (string | RegExp)[], args: string[]): boolean {
         if (matchers.length === args.length) {
             return args.every((s, i) => {

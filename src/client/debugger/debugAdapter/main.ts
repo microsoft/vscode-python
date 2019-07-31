@@ -462,20 +462,20 @@ class DebugManager implements Disposable {
         }
 
         // When VS Code sends a disconnect request, PTVSD replies back with a response.
-        // Wait for sometime, untill the messages are sent out (remember, we're just intercepting streams here).
+        // Wait for sometime, until the messages are sent out (remember, we're just intercepting streams here).
         setTimeout(this.shutdown, 500);
     }
     private onEventTerminated = async () => {
         logger.verbose('onEventTerminated');
         this.terminatedEventSent = true;
-        // Wait for sometime, untill the messages are sent out (remember, we're just intercepting streams here).
+        // Wait for sometime, until the messages are sent out (remember, we're just intercepting streams here).
         setTimeout(this.shutdown, 300);
     }
     private onResponseDisconnect = async () => {
         this.disconnectResponseSent = true;
         logger.verbose('onResponseDisconnect');
         // When VS Code sends a disconnect request, PTVSD replies back with a response, but its upto us to kill the process.
-        // Wait for sometime, untill the messages are sent out (remember, we're just intercepting streams here).
+        // Wait for sometime, until the messages are sent out (remember, we're just intercepting streams here).
         // Also its possible PTVSD might run to completion.
         setTimeout(this.shutdown, 100);
     }

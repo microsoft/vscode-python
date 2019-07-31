@@ -6,6 +6,7 @@ import { Socket } from 'net';
 import { Request as RequestResult } from 'request';
 import { ConfigurationTarget, DiagnosticSeverity, Disposable, DocumentSymbolProvider, Event, Extension, ExtensionContext, OutputChannel, Uri, WorkspaceEdit } from 'vscode';
 import { CommandsWithoutArgs } from './application/commands';
+import { ExtensionChannels } from './insidersBuild/types';
 import { EnvironmentVariables } from './variables/types';
 export const IOutputChannel = Symbol('IOutputChannel');
 export interface IOutputChannel extends OutputChannel { }
@@ -74,7 +75,8 @@ export enum ProductType {
     Formatter = 'Formatter',
     TestFramework = 'TestFramework',
     RefactoringLibrary = 'RefactoringLibrary',
-    WorkspaceSymbols = 'WorkspaceSymbols'
+    WorkspaceSymbols = 'WorkspaceSymbols',
+    DataScience = 'DataScience'
 }
 
 export enum Product {
@@ -94,7 +96,8 @@ export enum Product {
     rope = 14,
     isort = 15,
     black = 16,
-    bandit = 17
+    bandit = 17,
+    jupyter = 18
 }
 
 export enum ModuleNamePurpose {
@@ -149,6 +152,7 @@ export interface IPythonSettings {
     readonly condaPath: string;
     readonly pipenvPath: string;
     readonly poetryPath: string;
+    readonly insidersChannel: ExtensionChannels;
     readonly downloadLanguageServer: boolean;
     readonly jediEnabled: boolean;
     readonly jediPath: string;
@@ -318,6 +322,16 @@ export interface IDataScienceSettings {
     autoPreviewNotebooksInInteractivePane?: boolean;
     allowUnauthorizedRemoteConnection?: boolean;
     askForKernelRestart?: boolean;
+    enablePlotViewer?: boolean;
+    codeLenses?: string;
+    ptvsdDistPath?: string;
+    stopOnFirstLineWhileDebugging?: boolean;
+    textOutputLimit?: number;
+    magicCommandsAsComments?: boolean;
+    stopOnError?: boolean;
+    remoteDebuggerPort?: number;
+    colorizeInputBox?: boolean;
+    addGotoCodeLenses?: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');
@@ -332,6 +346,47 @@ export const ISocketServer = Symbol('ISocketServer');
 export interface ISocketServer extends Disposable {
     readonly client: Promise<Socket>;
     Start(options?: { port?: number; host?: string }): Promise<number>;
+}
+
+export type DownloadOptions = {
+    /**
+     * Prefix for progress messages displayed.
+     *
+     * @type {('Downloading ... ' | string)}
+     */
+    progressMessagePrefix: 'Downloading ... ' | string;
+    /**
+     * Output panel into which progress information is written.
+     *
+     * @type {IOutputChannel}
+     */
+    outputChannel?: IOutputChannel;
+    /**
+     * Extension of file that'll be created when downloading the file.
+     *
+     * @type {('tmp' | string)}
+     */
+    extension: 'tmp' | string;
+};
+
+export const IFileDownloader = Symbol('IFileDownloader');
+/**
+ * File downloader, that'll display progress in the status bar.
+ *
+ * @export
+ * @interface IFileDownloader
+ */
+export interface IFileDownloader {
+    /**
+     * Download file and display progress in statusbar.
+     * Optionnally display progress in the provided output channel.
+     *
+     * @param {string} uri
+     * @param {DownloadOptions} options
+     * @returns {Promise<string>}
+     * @memberof IFileDownloader
+     */
+    downloadFile(uri: string, options: DownloadOptions): Promise<string>;
 }
 
 export const IHttpClient = Symbol('IHttpClient');
@@ -354,7 +409,7 @@ export interface IExtensions {
      * All extensions currently known to the system.
      */
     // tslint:disable-next-line:no-any
-    readonly all: Extension<any>[];
+    readonly all: readonly Extension<any>[];
 
     /**
      * Get an extension by its full identifier in the form of: `publisher.name`.

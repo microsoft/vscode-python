@@ -5,7 +5,7 @@ import { Observable } from 'rxjs/Observable';
 import { CancellationToken, Uri } from 'vscode';
 
 import { PythonInterpreter } from '../../interpreter/contracts';
-import { ExecutionInfo, Version } from '../types';
+import { ExecutionInfo, IDisposable, Version } from '../types';
 import { Architecture } from '../utils/platform';
 import { EnvironmentVariables } from '../variables/types';
 
@@ -40,10 +40,16 @@ export type ExecutionResult<T extends string | Buffer> = {
     stderr?: T;
 };
 
-export interface IProcessService {
+export const IProcessLogger = Symbol('IProcessLogger');
+export interface IProcessLogger {
+    logProcess(file: string, ars: string[], options?: SpawnOptions): void;
+}
+
+export interface IProcessService extends IDisposable {
     execObservable(file: string, args: string[], options?: SpawnOptions): ObservableExecutionResult<string>;
     exec(file: string, args: string[], options?: SpawnOptions): Promise<ExecutionResult<string>>;
     shellExec(command: string, options?: ShellOptions): Promise<ExecutionResult<string>>;
+    on(event: 'exec', listener: (file: string, args: string[], options?: SpawnOptions) => void): this;
 }
 
 export const IProcessServiceFactory = Symbol('IProcessServiceFactory');

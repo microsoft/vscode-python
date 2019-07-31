@@ -134,6 +134,7 @@ suite('Debugging - Configuration Provider Pyramid', () => {
             name: DebugConfigStrings.pyramid.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
+            module: "pyramid.scripts.pserve",
             args: [
                 'xyz.ini'
             ],
@@ -156,6 +157,7 @@ suite('Debugging - Configuration Provider Pyramid', () => {
             name: DebugConfigStrings.pyramid.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
+            module: "pyramid.scripts.pserve",
             args: [
                 'hello'
             ],
@@ -181,6 +183,7 @@ suite('Debugging - Configuration Provider Pyramid', () => {
             name: DebugConfigStrings.pyramid.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
+            module: "pyramid.scripts.pserve",
             args: [
                 defaultIni
             ],

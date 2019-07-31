@@ -25,6 +25,7 @@
     },
     "exclude": [
         ".vscode-test",
+        ".vscode test",
         "src/test",
         "src/server",
         "src/client",

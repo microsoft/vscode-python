@@ -12,6 +12,10 @@ import { IModuleInstaller } from './types';
 
 @injectable()
 export class PipInstaller extends ModuleInstaller implements IModuleInstaller {
+    public get name(): string {
+        return 'Pip';
+    }
+
     public get displayName() {
         return 'Pip';
     }

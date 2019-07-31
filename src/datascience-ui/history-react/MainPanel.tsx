@@ -45,6 +45,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private mainPanel: HTMLDivElement | null = null;
     private variableExplorerRef: React.RefObject<VariableExplorer>;
     private styleInjectorRef: React.RefObject<StyleInjector>;
+    private contentPanelRef: React.RefObject<ContentPanel>;
     private postOffice: PostOffice = new PostOffice();
     private intellisenseProvider: IntellisenseProvider;
     private onigasmPromise: Deferred<ArrayBuffer> | undefined;
@@ -65,7 +66,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             history: new InputHistory(),
             editCellVM: getSettings && getSettings().allowInput ? createEditableCellVM(1) : undefined,
             editorOptions: this.computeEditorOptions(),
-            currentExecutionCount: 0
+            currentExecutionCount: 0,
+            debugging: false
         };
 
         // Add test state if necessary
@@ -78,6 +80,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         // Create the ref to hold our style injector
         this.styleInjectorRef = React.createRef<StyleInjector>();
+
+        // Create the ref to hold our content panel
+        this.contentPanelRef = React.createRef<ContentPanel>();
 
         // Setup the completion provider for monaco. We only need one
         this.intellisenseProvider = new IntellisenseProvider(this.postOffice, this.getCellId);
@@ -155,7 +160,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         );
     }
 
-    // tslint:disable-next-line:no-any cyclomatic-complexity
+    // tslint:disable-next-line:no-any cyclomatic-complexity max-func-body-length
     public handleMessage = (msg: string, payload?: any) => {
         switch (msg) {
             case InteractiveWindowMessages.StartCell:
@@ -234,7 +239,21 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 // this should be the response from a restart.
                 this.setState({currentExecutionCount: 0});
                 if (this.variableExplorerRef.current && this.variableExplorerRef.current.state.open) {
-                    this.refreshVariables();
+                    this.refreshVariables(0);
+                }
+                break;
+
+            case InteractiveWindowMessages.StartDebugging:
+                this.setState({debugging: true});
+                break;
+
+            case InteractiveWindowMessages.StopDebugging:
+                this.setState({debugging: false});
+                break;
+
+            case InteractiveWindowMessages.ScrollToCell:
+                if (this.contentPanelRef && this.contentPanelRef.current) {
+                    this.contentPanelRef.current.scrollToCell(payload.id);
                 }
                 break;
 
@@ -285,22 +304,24 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         // Otherwise render our cells.
         const contentProps = this.getContentProps(baseTheme);
-        return <ContentPanel {...contentProps} />;
+        return <ContentPanel {...contentProps} ref={this.contentPanelRef} />;
     }
 
     private renderFooterPanel(baseTheme: string) {
         // Skip if the tokenizer isn't finished yet. It needs
         // to finish loading so our code editors work.
-        if (!this.state.tokenizerLoaded || !this.state.editCellVM) {
+        // We also skip rendering if we're in debug mode (for now). We can't run other cells when debugging
+        if (!this.state.tokenizerLoaded || !this.state.editCellVM || this.state.debugging) {
             return null;
         }
 
         const maxOutputSize = getSettings().maxOutputSize;
         const maxTextSize = maxOutputSize && maxOutputSize < 10000 && maxOutputSize > 0 ? maxOutputSize : undefined;
         const executionCount = this.getInputExecutionCount();
+        const editPanelClass = getSettings().colorizeInputBox ? 'edit-panel-colorized' : 'edit-panel';
 
         return (
-            <div className='edit-panel'>
+            <div className={editPanelClass}>
                 <ErrorBoundary>
                     <Cell
                         editorOptions={this.state.editorOptions}
@@ -312,7 +333,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                         submitNewCode={this.submitInput}
                         baseTheme={baseTheme}
                         codeTheme={this.props.codeTheme}
-                        showWatermark={!this.state.submittedText}
+                        showWatermark={true}
                         ref={this.saveEditCellRef}
                         gotoCode={noop}
                         copyCode={noop}
@@ -445,6 +466,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {
        return {
+        debugging: this.state.debugging,
         busy: this.state.busy,
         showDataExplorer: this.showDataViewer,
         skipDefault: this.props.skipDefault,
@@ -593,13 +615,15 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
 
         // Update our state
+        const newVMs = this.state.cellVMs.filter((_c : ICellViewModel, i: number) => {
+            return i !== index;
+        });
         this.setState({
-            cellVMs: this.state.cellVMs.filter((_c : ICellViewModel, i: number) => {
-                return i !== index;
-            }),
+            cellVMs: newVMs,
             undoStack : this.pushStack(this.state.undoStack, this.state.cellVMs),
             skipNextScroll: true
         });
+        this.sendInfo(newVMs);
     }
 
     private collapseAll = () => {
@@ -627,7 +651,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         });
 
         // Tell other side, we changed our number of cells
-        this.sendInfo();
+        this.sendInfo([]);
     }
 
     private redo = () => {
@@ -644,7 +668,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         });
 
         // Tell other side, we changed our number of cells
-        this.sendInfo();
+        this.sendInfo(cells);
     }
 
     private undo = () => {
@@ -661,7 +685,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         });
 
         // Tell other side, we changed our number of cells
-        this.sendInfo();
+        this.sendInfo(cells);
     }
 
     private restartKernel = () => {
@@ -707,7 +731,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 });
 
                 // Tell other side, we changed our number of cells
-                this.sendInfo();
+                this.sendInfo(newList);
             }
         }
     }
@@ -811,11 +835,13 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return cellVM;
     }
 
-    private sendInfo = () => {
+    private sendInfo = (cellVMs: ICellViewModel[]) => {
+        const visibleCells = cellVMs.filter(vm => !vm.editable).map(vm => vm.cell);
         const info : IInteractiveWindowInfo = {
-            cellCount: this.getNonEditCellVMs().length,
+            cellCount: visibleCells.length,
             undoCount: this.state.undoStack.length,
-            redoCount: this.state.redoStack.length
+            redoCount: this.state.redoStack.length,
+            visibleCells: visibleCells
         };
         this.sendMessage(InteractiveWindowMessages.SendInfo, info);
     }
@@ -827,26 +853,27 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                    c.cell.file === cell.file;
             });
         if (index >= 0) {
-            // Update this cell
-            this.state.cellVMs[index].cell = cell;
-
             // This means the cell existed already so it was actual executed code.
             // Use its execution count to update our execution count.
             const newExecutionCount = cell.data.execution_count ?
                 Math.max(this.state.currentExecutionCount, parseInt(cell.data.execution_count.toString(), 10)) :
                 this.state.currentExecutionCount;
             if (newExecutionCount !== this.state.currentExecutionCount) {
-                this.setState({ currentExecutionCount: newExecutionCount });
-
                 // We also need to update our variable explorer when the execution count changes
                 // Use the ref here to maintain var explorer independence
                 if (this.variableExplorerRef.current && this.variableExplorerRef.current.state.open) {
-                    this.refreshVariables();
+                    this.refreshVariables(newExecutionCount);
                 }
-            } else {
-                // Force an update anyway as we did change something
-                this.forceUpdate();
             }
+
+            // Update our state but only the cell vms.
+            const newVMs = [...this.state.cellVMs];
+            newVMs[index].cell = cell;
+            this.setState({
+                cellVMs : newVMs,
+                currentExecutionCount : newExecutionCount
+            });
+
         } else if (allowAdd) {
             // This is an entirely new cell (it may have started out as finished)
             this.addCell(cell);
@@ -863,6 +890,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             const cell = payload as ICell;
             if (cell && this.isCellSupported(cell)) {
                 this.updateOrAdd(cell, true);
+
+                // Update info as we have a finished cell now.
+                this.sendInfo(this.state.cellVMs);
             }
         }
     }
@@ -944,8 +974,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     // When the variable explorer wants to refresh state (say if it was expanded)
-    private refreshVariables = () => {
-        this.sendMessage(InteractiveWindowMessages.GetVariablesRequest, this.state.currentExecutionCount);
+    private refreshVariables = (newExecutionCount?: number) => {
+        this.sendMessage(InteractiveWindowMessages.GetVariablesRequest, newExecutionCount === undefined ? this.state.currentExecutionCount : newExecutionCount);
     }
 
     // Find the display value for one specific variable

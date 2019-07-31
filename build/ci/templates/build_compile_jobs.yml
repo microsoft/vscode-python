@@ -1,0 +1,19 @@
+# Overview:
+# Generic jobs template to compile and build extension
+
+jobs:
+- job: Compile
+  variables:
+    build: false
+  pool:
+    vmImage: "macos-latest"
+  steps:
+    - template: build_compile_steps.yml
+
+- job: Build
+  variables:
+    build: true
+  pool:
+    vmImage: "macos-latest"
+  steps:
+    - template: build_compile_steps.yml

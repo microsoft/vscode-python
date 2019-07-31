@@ -9,6 +9,8 @@
 .gitmodules
 .huskyrc.json
 .npmrc
+.nvmrc
+.nycrc
 .travis.yml
 CODE_OF_CONDUCT.md
 CODING_STANDARDS.md
@@ -21,6 +23,7 @@ package-lock.json
 packageExtension.cmd
 pvsc-dev-ext.py
 PYTHON_INTERACTIVE_TROUBLESHOOTING.md
+test.ipynb
 travis*.log
 tsconfig*.json
 tsfmt.json
@@ -31,6 +34,7 @@ vscode-python-signing.*
 webpack.config.js
 webpack.datascience-*.config.js
 
+.devcontainer/**
 .github/**
 .mocha-reporter/**
 .nvm/**
@@ -38,12 +42,14 @@ webpack.datascience-*.config.js
 .venv/**
 .vscode/**
 .vscode-test/**
+.vscode test/**
 languageServer/**
 languageServer.*/**
 bin/**
 build/**
 BuildOutput/**
 coverage/**
+data/**
 debug_coverage*/**
 images/**/*.gif
 images/**/*.png
@@ -70,3 +76,4 @@ tmp/**
 tpn/**
 typings/**
 types/**
+uitests/**

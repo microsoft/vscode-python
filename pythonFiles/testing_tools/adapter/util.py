@@ -59,3 +59,34 @@ def group_attr_names(attrnames):
             group = 'other'
         grouped[group].append(name)
     return grouped
+
+
+def shlex_unsplit(argv):
+    """Return the shell-safe string for the given arguments.
+
+    This effectively the equivalent of reversing shlex.split().
+    """
+    argv = [_quote_arg(a) for a in argv]
+    return ' '.join(argv)
+
+
+try:
+    from shlex import quote as _quote_arg
+except ImportError:
+    def _quote_arg(arg):
+        parts = None
+        for i, c in enumerate(arg):
+            if c.isspace():
+                pass
+            elif c == '"':
+                pass
+            elif c == "'":
+                c = "'\"'\"'"
+            else:
+                continue
+            if parts is None:
+                parts = list(arg)
+            parts[i] = c
+        if parts is not None:
+            arg = "'" + ''.join(parts) + "'"
+        return arg

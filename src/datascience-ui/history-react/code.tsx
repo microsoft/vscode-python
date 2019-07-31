@@ -122,7 +122,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
     }
 
     private getWatermarkString = () : string => {
-        return getLocString('DataScience.inputWatermark', 'Shift-enter to run');
+        return getLocString('DataScience.inputWatermark', 'Type code here and press shift-enter to run');
     }
 
     private editorDidMount = (editor: monacoEditor.editor.IStandaloneCodeEditor) => {
@@ -147,8 +147,8 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         if (this.state.model) {
             this.props.onChange(e.changes, this.state.model.id);
         }
-        if (!this.props.readOnly) {
-            this.setState({allowWatermark: false});
+        if (!this.props.readOnly && this.state.model) {
+            this.setState({allowWatermark:  this.state.model.getValueLength() === 0});
         }
     }
 

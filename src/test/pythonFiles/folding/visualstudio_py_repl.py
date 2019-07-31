@@ -213,7 +213,7 @@ class ReplBackend(object):
                 except timeout_exc_types:
                     r, w, x = select.select([], [], [self.conn], 0)
                     if x:
-                        # an exception event has occured on the socket...
+                        # an exception event has occurred on the socket...
                         raise
                     continue
 

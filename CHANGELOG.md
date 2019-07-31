@@ -1,5 +1,229 @@
 # Changelog
 
+## 2019.8.0-rc (30 July 2019)
+
+### Enhancements
+
+1. Added ability to auto update Insiders build of extension.
+   ([#2772](https://github.com/Microsoft/vscode-python/issues/2772))
+1. Add an icon for the "Run Python File in Terminal" command.
+   ([#5321](https://github.com/Microsoft/vscode-python/issues/5321))
+1. Hook up ptvsd debugger to Jupyter UI.
+   ([#5900](https://github.com/Microsoft/vscode-python/issues/5900))
+1. Improved keyboard and screen reader support for the data explorer.
+   ([#6019](https://github.com/Microsoft/vscode-python/issues/6019))
+1. Provide code mapping service for debugging cells.
+   ([#6318](https://github.com/Microsoft/vscode-python/issues/6318))
+1. Change copy back to code button in the interactive window to insert wherever the current selection is.
+   ([#6350](https://github.com/Microsoft/vscode-python/issues/6350))
+1. Add new 'goto cell' code lens on every cell that is run from a file.
+   ([#6359](https://github.com/Microsoft/vscode-python/issues/6359))
+1. Allow for cancelling all cells when an error occurs. Backed by 'stopOnError' setting.
+   ([#6366](https://github.com/Microsoft/vscode-python/issues/6366))
+1. Added Code Lens and Snippet to add new cell.
+   ([#6367](https://github.com/Microsoft/vscode-python/issues/6367))
+1. Support hitting breakpoints in actual source code for interactive window debugging.
+   ([#6376](https://github.com/Microsoft/vscode-python/issues/6376))
+1. Give the option to install ptvsd if user is missing it and tries to debug.
+   ([#6378](https://github.com/Microsoft/vscode-python/issues/6378))
+1. Add support for remote debugging of Jupyter cells.
+   ([#6379](https://github.com/Microsoft/vscode-python/issues/6379))
+1. Make the input box more visible to new users.
+   ([#6381](https://github.com/Microsoft/vscode-python/issues/6381))
+1. Add feature flag `python.dataScience.magicCommandsAsComments` so linters and other tools can work with them.
+   (thanks [Janosh Riebesell](https://github.com/janosh))
+   ([#6408](https://github.com/Microsoft/vscode-python/issues/6408))
+1. Support break on enter for debugging a cell.
+   ([#6449](https://github.com/Microsoft/vscode-python/issues/6449))
+1. instead of asking the user to select an installer, we now autodetect the environment being used, and use that installer.
+   ([#6569](https://github.com/Microsoft/vscode-python/issues/6569))
+1. Remove "Debug cell" action from data science code lenses for markdown cells.
+   (thanks [Janosh Riebesell](https://github.com/janosh))
+   ([#6588](https://github.com/Microsoft/vscode-python/issues/6588))
+
+### Fixes
+
+1. Fix `executeInFileDir` for when a file is not in a workspace.
+   (thanks [Bet4](https://github.com/bet4it/))
+   ([#1062](https://github.com/Microsoft/vscode-python/issues/1062))
+1. Fix indentation after string literals containing escaped characters.
+   ([#4241](https://github.com/Microsoft/vscode-python/issues/4241))
+1. The extension will now prompt to auto install jupyter in case its not found.
+   ([#5682](https://github.com/Microsoft/vscode-python/issues/5682))
+1. Append `--allow-prereleases` to black installation command so pipenv can properly resolve it.
+   ([#5756](https://github.com/Microsoft/vscode-python/issues/5756))
+1. Remove existing positional arguments when running single pytest tests.
+   ([#5757](https://github.com/Microsoft/vscode-python/issues/5757))
+1. Fix shift+enter to work when code lens are turned off.
+   ([#5879](https://github.com/Microsoft/vscode-python/issues/5879))
+1. Prompt to insall test framework only if test frame is not already installed.
+   ([#5919](https://github.com/Microsoft/vscode-python/issues/5919))
+1. Trim stream text output at the server to prevent sending massive strings of overwritten data.
+   ([#6001](https://github.com/Microsoft/vscode-python/issues/6001))
+1. Detect `shell` in Visual Studio Code using the Visual Studio Code API.
+   ([#6050](https://github.com/Microsoft/vscode-python/issues/6050))
+1. Make long running output not crash the extension host. Also improve perf of streaming.
+   ([#6222](https://github.com/Microsoft/vscode-python/issues/6222))
+1. Opting out of telemetry correctly opts out of A/B testing.
+   ([#6270](https://github.com/Microsoft/vscode-python/issues/6270))
+1. Add error messages if data_rate_limit is exceeded on remote (or local) connection.
+   ([#6273](https://github.com/Microsoft/vscode-python/issues/6273))
+1. Add pytest-xdist's -n option to the list of supported pytest options.
+   ([#6293](https://github.com/Microsoft/vscode-python/issues/6293))
+1. Simplify the import regex to minimize performance overhead.
+   ([#6319](https://github.com/Microsoft/vscode-python/issues/6319))
+1. Clarify regexes used for decreasing indentation.
+   ([#6333](https://github.com/Microsoft/vscode-python/issues/6333))
+1. Add new plot viewer button images and fix button colors in different themes.
+   ([#6336](https://github.com/Microsoft/vscode-python/issues/6336))
+1. Update telemetry property name for Jedi memory usage.
+   ([#6339](https://github.com/Microsoft/vscode-python/issues/6339))
+1. Fix png scaling on non standard DPI. Add 'enablePlotViewer' setting to allow user to render PNGs instead of SVG files.
+   ([#6344](https://github.com/Microsoft/vscode-python/issues/6344))
+1. Do best effort to download the experiments and use it in the very first session only.
+   ([#6348](https://github.com/Microsoft/vscode-python/issues/6348))
+1. Linux can pick the wrong kernel to use when starting the interactive window.
+   ([#6375](https://github.com/Microsoft/vscode-python/issues/6375))
+1. Add missing keys for data science interactive window button tooltips in `package.nls.json`.
+   ([#6386](https://github.com/Microsoft/vscode-python/issues/6386))
+1. Fix overwriting of cwd in the path list when discovering tests.
+   ([#6417](https://github.com/Microsoft/vscode-python/issues/6417))
+1. Fixes a bug in pytest test discovery.
+    (thanks Rainer Dreyer)
+   ([#6463](https://github.com/Microsoft/vscode-python/issues/6463))
+1. Fix debugging to work on restarting the jupyter kernel.
+   ([#6502](https://github.com/Microsoft/vscode-python/issues/6502))
+1. Escape key in the interactive window moves to the delete button when auto complete is open. Escape should only move when no autocomplete is open.
+   ([#6507](https://github.com/Microsoft/vscode-python/issues/6507))
+1. Render plots as png, but save an svg for exporting/image viewing. Speeds up plot rendering.
+   ([#6526](https://github.com/Microsoft/vscode-python/issues/6526))
+1. Import get_ipython at the start of each imported jupyter notebook if there are line magics in the file
+   ([#6574](https://github.com/Microsoft/vscode-python/issues/6574))
+1. Fix a problem where we retrieved and rendered old codelenses for multiple imports of jupyter notebooks if cells in the resultant import file were executed without saving the file to disk.
+   ([#6582](https://github.com/Microsoft/vscode-python/issues/6582))
+1. PTVSD install for jupyter debugging should check version without actually importing into the jupyter kernel.
+   ([#6592](https://github.com/Microsoft/vscode-python/issues/6592))
+1. Fix pandas version parsing to handle strings.
+   ([#6595](https://github.com/Microsoft/vscode-python/issues/6595))
+1. Unpin the version of ptvsd in the install and add `-U`.
+   ([#6718](https://github.com/Microsoft/vscode-python/issues/6718))
+1. Fix stepping when more than one blank line at the end of a cell.
+   ([#6719](https://github.com/Microsoft/vscode-python/issues/6719))
+1. Render plots as png, but save an svg for exporting/image viewing. Speeds up plot rendering.
+   ([#6724](https://github.com/Microsoft/vscode-python/issues/6724))
+1. Fix random occurrences of output not concatenating correctly in the interactive window.
+   ([#6728](https://github.com/Microsoft/vscode-python/issues/6728))
+1. In order to debug without '#%%' defined in a file, support a Debug Entire File.
+   ([#6730](https://github.com/Microsoft/vscode-python/issues/6730))
+1. Add support for "Run Below" back.
+   ([#6737](https://github.com/Microsoft/vscode-python/issues/6737))
+1. Fix the 'Variables not available while debugging' message to be more descriptive.
+   ([#6740](https://github.com/Microsoft/vscode-python/issues/6740))
+1. Make breakpoints on enter always be the case unless 'stopOnFirstLineWhileDebugging' is set.
+   ([#6743](https://github.com/Microsoft/vscode-python/issues/6743))
+1. Remove Debug Cell and Run Cell from the command palette. They should both be 'Debug Current Cell' and 'Run Current Cell'
+   ([#6754](https://github.com/Microsoft/vscode-python/issues/6754))
+
+### Code Health
+
+1. Log processes executed behind the scenes in the extension output panel.
+   ([#1131](https://github.com/Microsoft/vscode-python/issues/1131))
+1. Specify `pyramid.scripts.pserve` when creating a debug configuration for Pyramid
+   apps instead of trying to calculate the location of the `pserve` command.
+   ([#2427](https://github.com/Microsoft/vscode-python/issues/2427))
+1. UI Tests using [selenium](https://selenium-python.readthedocs.io/index.html) & [behave](https://behave.readthedocs.io/en/latest/).
+   ([#4692](https://github.com/Microsoft/vscode-python/issues/4692))
+1. Upload coverage reports to [coveralls](https://coveralls.io/github/microsoft/vscode-python).
+   ([#5999](https://github.com/Microsoft/vscode-python/issues/5999))
+1. Upgrade Jedi to version 0.13.3.
+   ([#6013](https://github.com/Microsoft/vscode-python/issues/6013))
+1. Add unit tests for `client/activation/serviceRegistry.ts`.
+   ([#6163](https://github.com/Microsoft/vscode-python/issues/6163))
+1. Remove `test.ipynb` from the root folder.
+   ([#6212](https://github.com/Microsoft/vscode-python/issues/6212))
+1. Fail the `smoke tests` CI job when the smoke tests fail.
+   ([#6253](https://github.com/Microsoft/vscode-python/issues/6253))
+1. Add a bunch of perf measurements to telemetry.
+   ([#6283](https://github.com/Microsoft/vscode-python/issues/6283))
+1. Retry failing debugger test (retry due to intermittent issues on `Azure Pipelines`).
+   ([#6322](https://github.com/Microsoft/vscode-python/issues/6322))
+1. Update version of `isort` to `4.3.21`.
+   ([#6369](https://github.com/Microsoft/vscode-python/issues/6369))
+1. Functional test for debugging jupyter cells.
+   ([#6377](https://github.com/Microsoft/vscode-python/issues/6377))
+1. Consolidate telemetry.
+   ([#6451](https://github.com/Microsoft/vscode-python/issues/6451))
+1. Removed npm package `vscode`, and added to use `vscode-test` and `@types/vscode` (see [here](https://code.visualstudio.com/updates/v1_36#_splitting-vscode-package-into-typesvscode-and-vscodetest) for more info).
+   ([#6456](https://github.com/Microsoft/vscode-python/issues/6456))
+1. Fix the variable explorer exclude test to be less strict.
+   ([#6525](https://github.com/Microsoft/vscode-python/issues/6525))
+1. Merge ArgumentsHelper unit tests into one file.
+   ([#6583](https://github.com/Microsoft/vscode-python/issues/6583))
+1. Fix jupyter remote tests to respect new notebook 6.0 output format.
+   ([#6625](https://github.com/Microsoft/vscode-python/issues/6625))
+1. Unit Tests for DataScience Error Handler.
+   ([#6670](https://github.com/Microsoft/vscode-python/issues/6670))
+1. Fix DataExplorer tests after accessibility fixes.
+   ([#6711](https://github.com/Microsoft/vscode-python/issues/6711))
+1. Bump version of [PTVSD](https://pypi.org/project/ptvsd/) to 4.3.0.
+   ([#6771](https://github.com/Microsoft/vscode-python/issues/6771))
+    * Support for Jupyter debugging
+    * Support for ipython cells
+    * API to enable and disable tracing via ptvsd.tracing
+    * ptvsd.enable_attach accepts address=('localhost', 0) and returns server port
+    * Known issue: Unable to find threadStateIndex for the current thread. curPyThread ([#11587](https://github.com/microsoft/ptvsd/issues/1587))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+- [isort](https://pypi.org/project/isort/)
+- [jedi](https://pypi.org/project/jedi/)
+  and [parso](https://pypi.org/project/parso/)
+- [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+- [ptvsd](https://pypi.org/project/ptvsd/)
+- [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+- [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+- Debugging support:
+  [Django](https://pypi.org/project/Django/),
+  [Flask](https://pypi.org/project/Flask/),
+  [gevent](https://pypi.org/project/gevent/),
+  [Jinja](https://pypi.org/project/Jinja/),
+  [Pyramid](https://pypi.org/project/pyramid/),
+  [PySpark](https://pypi.org/project/pyspark/),
+  [Scrapy](https://pypi.org/project/Scrapy/),
+  [Watson](https://pypi.org/project/Watson/)
+- Formatting:
+  [autopep8](https://pypi.org/project/autopep8/),
+  [black](https://pypi.org/project/black/),
+  [yapf](https://pypi.org/project/yapf/)
+- Interpreter support:
+  [conda](https://conda.io/),
+  [direnv](https://direnv.net/),
+  [pipenv](https://pypi.org/project/pipenv/),
+  [pyenv](https://github.com/pyenv/pyenv),
+  [venv](https://docs.python.org/3/library/venv.html#module-venv),
+  [virtualenv](https://pypi.org/project/virtualenv/)
+- Linting:
+  [bandit](https://pypi.org/project/bandit/),
+  [flake8](https://pypi.org/project/flake8/),
+  [mypy](https://pypi.org/project/mypy/),
+  [prospector](https://pypi.org/project/prospector/),
+  [pylint](https://pypi.org/project/pylint/),
+  [pydocstyle](https://pypi.org/project/pydocstyle/),
+  [pylama](https://pypi.org/project/pylama/)
+- Testing:
+  [nose](https://pypi.org/project/nose/),
+  [pytest](https://pypi.org/project/pytest/),
+  [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
 ## 2019.6.1 (9 July 2019)
 
 ### Fixes
@@ -235,11 +459,27 @@ part of!
    ([#5916](https://github.com/microsoft/vscode-python/issues/5916))
 
 
+## 2019.5.18875 (6 June 2019)
+
+### Fixes
+
+1. Disable quoting of paths sent to the debugger as arguments.
+   ([#5861](https://github.com/microsoft/vscode-python/issues/5861))
+1. Fixes to activation of Conda environments.
+   ([#5929](https://github.com/microsoft/vscode-python/issues/5929))
+
+## 2019.5.18678 (5 June 2019)
+
+### Fixes
+
+1. Fixes to detection of the shell.
+   ([#5916](https://github.com/microsoft/vscode-python/issues/5916))
+
 ## 2019.5.18426 (4 June 2019)
 
 ### Fixes
 
-1. Changes to identificaction of `shell` for the activation of environments in the terminal.
+1. Changes to identification of `shell` for the activation of environments in the terminal.
    ([#5743](https://github.com/microsoft/vscode-python/issues/5743))
 
 ## 2019.5.17517 (30 May 2019)
@@ -701,7 +941,7 @@ part of!
 ### Fixes
 
 1. Update ptvsd to [4.2.7](https://github.com/Microsoft/ptvsd/releases/tag/v4.2.7).
-    * Fix issues related to debugging Django templagtes.
+    * Fix issues related to debugging Django templates.
 1. Update the Python language server to 0.2.47.
 
 ### Code Health
@@ -716,7 +956,7 @@ part of!
 
 1. Fix regression preventing the expansion of variables in the watch window and the debug console.
    ([#5035](https://github.com/Microsoft/vscode-python/issues/5035))
-1. Display survey banner (again) for Language Server when using current Lanaguage Server.
+1. Display survey banner (again) for Language Server when using current Language Server.
    ([#5064](https://github.com/Microsoft/vscode-python/issues/5064))
 1. Update ptvsd to [4.2.6](https://github.com/Microsoft/ptvsd/releases/tag/v4.2.6).
    ([#5083](https://github.com/Microsoft/vscode-python/issues/5083))
@@ -824,7 +1064,7 @@ part of!
    ([#4743](https://github.com/Microsoft/vscode-python/issues/4743))
 1. Perform case insensitive comparison of Python Environment paths
    ([#4797](https://github.com/Microsoft/vscode-python/issues/4797))
-1. Ensure `Jedi` uses the currently selected intepreter.
+1. Ensure `Jedi` uses the currently selected interpreter.
    (thanks [Selim Belhaouane](https://github.com/selimb))
    ([#4687](https://github.com/Microsoft/vscode-python/issues/4687))
 1. Multiline comments with text on the first line break Python Interactive window execution.
@@ -1057,7 +1297,7 @@ part of!
    ([#4371](https://github.com/Microsoft/vscode-python/issues/4371))
 1. Update ptvsd to [4.2.4](https://github.com/Microsoft/ptvsd/releases/tag/v4.2.4).
    ([#4457](https://github.com/Microsoft/vscode-python/issues/4457))
-   * Validate brekpoint targets.
+   * Validate breakpoint targets.
    * Properly exclude certain files from showing up in the debugger.
 
 ### Fixes
@@ -1595,7 +1835,7 @@ part of!
 
 ### Code Health
 
-1. Added basic integration tests for the new Lanaguage Server.
+1. Added basic integration tests for the new Language Server.
    ([#2041](https://github.com/Microsoft/vscode-python/issues/2041))
 1. Add smoke tests for the extension.
    ([#3021](https://github.com/Microsoft/vscode-python/issues/3021))
@@ -1612,7 +1852,7 @@ part of!
    ([#3350](https://github.com/Microsoft/vscode-python/issues/3350))
 1. Stop running CI tests against the `master` branch of ptvsd.
    ([#3414](https://github.com/Microsoft/vscode-python/issues/3414))
-1. Be more aggresive in searching for a Python environment that can run Jupyter
+1. Be more aggressive in searching for a Python environment that can run Jupyter
    (make sure to cleanup any kernelspecs that are created during this process).
    ([#3433](https://github.com/Microsoft/vscode-python/issues/3433))
 
@@ -2093,7 +2333,7 @@ part of!
    ([#2266](https://github.com/Microsoft/vscode-python/issues/2266))
 1. Deprecate command `Python: Build Workspace Symbols` when using the language server.
    ([#2267](https://github.com/Microsoft/vscode-python/issues/2267))
-1. Pin version of `pylint` to `3.6.3` to allow ensure `pylint` gets installed on Travis with Pytnon2.7.
+1. Pin version of `pylint` to `3.6.3` to allow ensure `pylint` gets installed on Travis with Python2.7.
    ([#2305](https://github.com/Microsoft/vscode-python/issues/2305))
 1. Remove some of the debugger tests and fix some minor debugger issues.
    ([#2307](https://github.com/Microsoft/vscode-python/issues/2307))
@@ -2296,7 +2536,7 @@ part of!
    ([#1064](https://github.com/Microsoft/vscode-python/issues/1064))
 1. Improvements to the logic used to parse the arguments passed into the test frameworks.
    ([#1070](https://github.com/Microsoft/vscode-python/issues/1070))
-1. Ensure navigation to definitons follows imports and is transparent to decoration.
+1. Ensure navigation to definitions follows imports and is transparent to decoration.
    (thanks [Peter Law](https://github.com/PeterJCLaw))
    ([#1638](https://github.com/Microsoft/vscode-python/issues/1638))
 1. Fix for intellisense failing when using the new `Outline` feature.
@@ -2439,7 +2679,7 @@ nearly as feature-rich and useful as it is.
    ([#452](https://github.com/Microsoft/vscode-python/issues/452))
 1. Ensure empty paths do not get added into `sys.path` by the Jedi language server. (this was fixed in the previous release in [#1471](https://github.com/Microsoft/vscode-python/pull/1471))
    ([#677](https://github.com/Microsoft/vscode-python/issues/677))
-1. Resolves rename refactor issue that remvoes the last line of the source file when the line is being refactored and source does not end with an EOL.
+1. Resolves rename refactor issue that removes the last line of the source file when the line is being refactored and source does not end with an EOL.
    ([#695](https://github.com/Microsoft/vscode-python/issues/695))
 1. Ensure the prompt to install missing packages is not displayed more than once.
    ([#980](https://github.com/Microsoft/vscode-python/issues/980))
@@ -2496,7 +2736,7 @@ nearly as feature-rich and useful as it is.
    ([#1794](https://github.com/Microsoft/vscode-python/issues/1794))
 1. Fix failing Prospector unit tests and add more tests for linters (with and without workspaces).
    ([#1836](https://github.com/Microsoft/vscode-python/issues/1836))
-1. Ensure `Outline` view doesn't overload the language server with too many requets, while user is editing text in the editor.
+1. Ensure `Outline` view doesn't overload the language server with too many requests, while user is editing text in the editor.
    ([#1856](https://github.com/Microsoft/vscode-python/issues/1856))
 
 
@@ -2546,7 +2786,7 @@ his help on [our issue tracker](https://github.com/Microsoft/vscode-python)!
    ([#1395](https://github.com/Microsoft/vscode-python/issues/1395))
 1. Intergrate Jedi 0.12. See https://github.com/davidhalter/jedi/issues/1063#issuecomment-381417297 for details.
    ([#1400](https://github.com/Microsoft/vscode-python/issues/1400))
-1. Enable Jinja template debugging as a default behaivour when using the Watson debug configuration for debugging of Watson applications.
+1. Enable Jinja template debugging as a default behaviour when using the Watson debug configuration for debugging of Watson applications.
    ([#1480](https://github.com/Microsoft/vscode-python/issues/1480))
 1. Enable Jinja template debugging as a default behavior when debugging Pyramid applications.
    ([#1492](https://github.com/Microsoft/vscode-python/issues/1492))
@@ -2558,7 +2798,7 @@ his help on [our issue tracker](https://github.com/Microsoft/vscode-python)!
    ```
    Additional capabilities:
    * `ptvsd.break_into_debugger()` to break into the attached debugger.
-   * `ptvsd.wait_for_attach(timeout)` to cause the program to wait untill a debugger attaches.
+   * `ptvsd.wait_for_attach(timeout)` to cause the program to wait until a debugger attaches.
    * `ptvsd.is_attached()` to determine whether a debugger is attached to the program.
    ([#907](https://github.com/Microsoft/vscode-python/issues/907))
 
@@ -2572,7 +2812,7 @@ his help on [our issue tracker](https://github.com/Microsoft/vscode-python)!
    ([#1072](https://github.com/Microsoft/vscode-python/issues/1072))
 1. Reverted change that ended up considering symlinked interpreters as duplicate interpreter.
    ([#1192](https://github.com/Microsoft/vscode-python/issues/1192))
-1. Display errors returned by the PipEnv command when identifying the corresonding environment.
+1. Display errors returned by the PipEnv command when identifying the corresponding environment.
    ([#1254](https://github.com/Microsoft/vscode-python/issues/1254))
 1. When `editor.formatOnType` is on, don't add a space for `*args` or `**kwargs`
    ([#1257](https://github.com/Microsoft/vscode-python/issues/1257))
@@ -2671,9 +2911,9 @@ his help on [our issue tracker](https://github.com/Microsoft/vscode-python)!
  ([#526](https://github.com/Microsoft/vscode-python/issues/526))
 1. Disable the display of errors messages when rediscovering of tests fail in response to changes to files, e.g. don't show a message if there's a syntax error in the test code.
  ([#704](https://github.com/Microsoft/vscode-python/issues/704))
-1. Bundle python depedencies (PTVSD package) in the extension for the experimental debugger.
+1. Bundle python dependencies (PTVSD package) in the extension for the experimental debugger.
  ([#741](https://github.com/Microsoft/vscode-python/issues/741))
-1. Add support for expermental debugger when debugging Python Unit Tests.
+1. Add support for experimental  debugger when debugging Python Unit Tests.
  ([#906](https://github.com/Microsoft/vscode-python/issues/906))
 1. Support `Debug Console` as a `console` option for the Experimental Debugger.
  ([#950](https://github.com/Microsoft/vscode-python/issues/950))
@@ -3041,10 +3281,10 @@ the following people who contributed code:
 * Provide a warning about known issues with having pyenv.cfg whilst debugging [#913](https://github.com/DonJayamanne/pythonVSCode/issues/913)
 * Create .vscode directory if not found [#1043](https://github.com/DonJayamanne/pythonVSCode/issues/1043)
 * Highlighted text due to linter errors is off by one column [#965](https://github.com/DonJayamanne/pythonVSCode/issues/965), [#970](https://github.com/DonJayamanne/pythonVSCode/pull/970)
-* Added preminary support for WSL Bash and Cygwin [#1049](https://github.com/DonJayamanne/pythonVSCode/pull/1049)
+* Added preliminary support for WSL Bash and Cygwin [#1049](https://github.com/DonJayamanne/pythonVSCode/pull/1049)
 * Ability to configure the linter severity levels [#941](https://github.com/DonJayamanne/pythonVSCode/pull/941), [#895](https://github.com/DonJayamanne/pythonVSCode/issues/895)
 * Fixes to unit tests [#1051](https://github.com/DonJayamanne/pythonVSCode/pull/1051), [#1050](https://github.com/DonJayamanne/pythonVSCode/pull/1050)
-* Outdent lines following `contibue`, `break` and `return` [#1050](https://github.com/DonJayamanne/pythonVSCode/pull/1050)
+* Outdent lines following `continue`, `break` and `return` [#1050](https://github.com/DonJayamanne/pythonVSCode/pull/1050)
 * Change location of cache for Jedi files [#1035](https://github.com/DonJayamanne/pythonVSCode/pull/1035)
 * Fixes to the way directories are searched for Python interpreters [#569](https://github.com/DonJayamanne/pythonVSCode/issues/569), [#1040](https://github.com/DonJayamanne/pythonVSCode/pull/1040)
 * Handle outputs from Python packages that interfere with the way autocompletion is handled [#602](https://github.com/DonJayamanne/pythonVSCode/issues/602)
@@ -3142,7 +3382,7 @@ the following people who contributed code:
 * Adding support for debug snippets [#660](https://github.com/DonJayamanne/pythonVSCode/issues/660)
 * Ability to run a selected text in a Django shell [#652](https://github.com/DonJayamanne/pythonVSCode/issues/652)
 * Adding support for the use of a customized 'isort' for sorting of imports [#632](https://github.com/DonJayamanne/pythonVSCode/pull/632)
-* Debuger auto-detecting python interpreter from the path provided [#688](https://github.com/DonJayamanne/pythonVSCode/issues/688)
+* Debugger auto-detecting python interpreter from the path provided [#688](https://github.com/DonJayamanne/pythonVSCode/issues/688)
 * Showing symbol type on hover [#657](https://github.com/DonJayamanne/pythonVSCode/pull/657)
 * Fixes to running Python file when terminal uses Powershell [#651](https://github.com/DonJayamanne/pythonVSCode/issues/651)
 * Fixes to linter issues when displaying Git diff view for Python files [#665](https://github.com/DonJayamanne/pythonVSCode/issues/665)
@@ -3212,7 +3452,7 @@ the following people who contributed code:
 * Linting python files when they are opened [#462](https://github.com/DonJayamanne/pythonVSCode/issues/462)
 * Fixes to unit tests discovery [#307](https://github.com/DonJayamanne/pythonVSCode/issues/307),
 [#459](https://github.com/DonJayamanne/pythonVSCode/issues/459)
-* Fixes to intelliense [#438](https://github.com/DonJayamanne/pythonVSCode/issues/438),
+* Fixes to intellisense [#438](https://github.com/DonJayamanne/pythonVSCode/issues/438),
 [#433](https://github.com/DonJayamanne/pythonVSCode/issues/433),
 [#457](https://github.com/DonJayamanne/pythonVSCode/issues/457),
 [#436](https://github.com/DonJayamanne/pythonVSCode/issues/436),
@@ -3300,7 +3540,7 @@ the following people who contributed code:
 * Displaying errors in variable explorer when debugging [#271](https://github.com/DonJayamanne/pythonVSCode/issues/271)
 * Ability to debug applications as sudo [#224](https://github.com/DonJayamanne/pythonVSCode/issues/224)
 * Fixed debugger crashes [#263](https://github.com/DonJayamanne/pythonVSCode/issues/263)
-* Asynchronour display of unit tests [#190](https://github.com/DonJayamanne/pythonVSCode/issues/190)
+* Asynchronous display of unit tests [#190](https://github.com/DonJayamanne/pythonVSCode/issues/190)
 * Fixed issues when using relative paths in ```settings.json``` [#276](https://github.com/DonJayamanne/pythonVSCode/issues/276)
 * Fixes issue of hardcoding interpreter command arguments [#256](https://github.com/DonJayamanne/pythonVSCode/issues/256)
 * Fixes resolving of remote paths when debugging remote applications [#252](https://github.com/DonJayamanne/pythonVSCode/issues/252)
@@ -3407,7 +3647,7 @@ the following people who contributed code:
 * Added support to configure the output window for linting, formatting and unit test messages [#112](https://github.com/DonJayamanne/pythonVSCode/issues/112)
 
 ## Version 0.3.5
-* Fixed printing of unicode characters when evaulating expressions [#73](https://github.com/DonJayamanne/pythonVSCode/issues/73)
+* Fixed printing of unicode characters when evaluating expressions [#73](https://github.com/DonJayamanne/pythonVSCode/issues/73)
 
 ## Version 0.3.4
 * Updated snippets
