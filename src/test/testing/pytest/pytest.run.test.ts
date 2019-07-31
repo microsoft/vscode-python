@@ -169,7 +169,7 @@ function getIssueCountFromRelevantTestDetails(testDetails: ITestDetails[], skipp
  * @param diagnostics The array of Diagnostics for a file.
  * @param testFunc The FlattenedTestFunction to find the Diagnostic for.
  */
-function getDiagnosticForTestFunc(diagnostics: vscode.Diagnostic[], testFunc: FlattenedTestFunction): vscode.Diagnostic {
+function getDiagnosticForTestFunc(diagnostics: readonly vscode.Diagnostic[], testFunc: FlattenedTestFunction): vscode.Diagnostic {
     return diagnostics.find(diag => {
         return testFunc.testFunction.nameToRun === diag.code;
     })!;
@@ -375,7 +375,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
             let factory: ITestManagerFactory;
             let testManager: ITestManager;
             let results: Tests;
-            let diagnostics: vscode.Diagnostic[];
+            let diagnostics: readonly vscode.Diagnostic[];
             suiteSetup(async () => {
                 await initializeTest();
                 initializeDI();

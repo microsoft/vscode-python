@@ -1,10 +1,25 @@
-import { ICurrentProcess, IPathUtils } from '../../../common/types';
-import { EnvironmentVariables, IEnvironmentVariablesService } from '../../../common/variables/types';
-import { LaunchRequestArguments } from '../../types';
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 
-export class DebugClientHelper {
-    constructor(private envParser: IEnvironmentVariablesService, private pathUtils: IPathUtils,
-        private process: ICurrentProcess) { }
+'use strict';
+
+import { inject, injectable } from 'inversify';
+import { ICurrentProcess, IPathUtils } from '../../../../common/types';
+import { EnvironmentVariables, IEnvironmentVariablesService } from '../../../../common/variables/types';
+import { LaunchRequestArguments } from '../../../types';
+
+export const IDebugEnvironmentVariablesService = Symbol('IDebugEnvironmentVariablesService');
+export interface IDebugEnvironmentVariablesService {
+    getEnvironmentVariables(args: LaunchRequestArguments): Promise<EnvironmentVariables>;
+}
+
+@injectable()
+export class DebugEnvironmentVariablesHelper implements IDebugEnvironmentVariablesService {
+    constructor(
+        @inject(IEnvironmentVariablesService) private envParser: IEnvironmentVariablesService,
+        @inject(IPathUtils) private pathUtils: IPathUtils,
+        @inject(ICurrentProcess) private process: ICurrentProcess
+    ) { }
     public async getEnvironmentVariables(args: LaunchRequestArguments): Promise<EnvironmentVariables> {
         const pathVariableName = this.pathUtils.getPathVariableName();
 

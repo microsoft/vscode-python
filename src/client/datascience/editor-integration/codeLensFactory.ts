@@ -141,6 +141,12 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
                         Commands.RunAllCellsAbove,
                         localize.DataScience.runAllCellsAboveLensCommandTitle(),
                         [document.fileName, range.start.line, range.start.character]);
+                } else {
+                    return this.generateCodeLens(
+                        range,
+                        Commands.RunCellAndAllBelow,
+                        localize.DataScience.runCellAndAllBelowLensCommandTitle(),
+                        [document.fileName, range.start.line, range.start.character]);
                 }
                 break;
             case Commands.RunCellAndAllBelowPalette:

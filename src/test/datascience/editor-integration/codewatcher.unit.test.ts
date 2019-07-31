@@ -148,7 +148,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
         }
 
         if (!markdownCell) {
-            const indexAdd = firstCell ? 1 : 2;
+            const indexAdd = 2;
             if (codeLenses[startLensIndex + indexAdd].command) {
                 expect(codeLenses[startLensIndex + indexAdd].command!.command).to.be.equal(Commands.DebugCell, 'Debug command incorrect');
             }
@@ -170,7 +170,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
 
         // Verify code lenses
         const codeLenses = codeWatcher.getCodeLenses();
-        expect(codeLenses.length).to.be.equal(2, 'Incorrect count of code lenses');
+        expect(codeLenses.length).to.be.equal(3, 'Incorrect count of code lenses');
         verifyCodeLensesAtPosition(codeLenses, 0, new Range(0, 0, 0, 3), true);
 
         // Verify function calls
@@ -219,10 +219,10 @@ fourth line`;
 
         // Verify code lenses
         const codeLenses = codeWatcher.getCodeLenses();
-        expect(codeLenses.length).to.be.equal(5, 'Incorrect count of code lenses');
+        expect(codeLenses.length).to.be.equal(6, 'Incorrect count of code lenses');
 
         verifyCodeLensesAtPosition(codeLenses, 0, new Range(3, 0, 5, 0), true);
-        verifyCodeLensesAtPosition(codeLenses, 2, new Range(6, 0, 7, 11));
+        verifyCodeLensesAtPosition(codeLenses, 3, new Range(6, 0, 7, 11));
 
         // Verify function calls
         document.verifyAll();
@@ -256,11 +256,11 @@ fourth line
 
         // Verify code lenses
         const codeLenses = codeWatcher.getCodeLenses();
-        expect(codeLenses.length).to.be.equal(7, 'Incorrect count of code lenses');
+        expect(codeLenses.length).to.be.equal(8, 'Incorrect count of code lenses');
 
         verifyCodeLensesAtPosition(codeLenses, 0, new Range(3, 0, 5, 0), true);
-        verifyCodeLensesAtPosition(codeLenses, 2, new Range(6, 0, 8, 0));
-        verifyCodeLensesAtPosition(codeLenses, 5, new Range(9, 0, 10, 12), false, true);
+        verifyCodeLensesAtPosition(codeLenses, 3, new Range(6, 0, 8, 0));
+        verifyCodeLensesAtPosition(codeLenses, 6, new Range(9, 0, 10, 12), false, true);
 
         // Verify function calls
         document.verifyAll();
@@ -294,11 +294,11 @@ fourth line
 
         // Verify code lenses
         const codeLenses = codeWatcher.getCodeLenses();
-        expect(codeLenses.length).to.be.equal(7, 'Incorrect count of code lenses');
+        expect(codeLenses.length).to.be.equal(8, 'Incorrect count of code lenses');
 
         verifyCodeLensesAtPosition(codeLenses, 0, new Range(3, 0, 5, 0), true);
-        verifyCodeLensesAtPosition(codeLenses, 2, new Range(6, 0, 8, 0));
-        verifyCodeLensesAtPosition(codeLenses, 5, new Range(9, 0, 10, 12), false, true);
+        verifyCodeLensesAtPosition(codeLenses, 3, new Range(6, 0, 8, 0));
+        verifyCodeLensesAtPosition(codeLenses, 6, new Range(9, 0, 10, 12), false, true);
 
         // Verify function calls
         document.verifyAll();
@@ -723,7 +723,7 @@ testing2`; // Command tests override getText, so just need the ranges here
         let result = codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
         expect(result, 'result not okay').to.be.ok;
         let codeLens = result as CodeLens[];
-        expect(codeLens.length).to.equal(2, 'Code lens wrong length');
+        expect(codeLens.length).to.equal(3, 'Code lens wrong length');
 
         expect(contexts.get(EditorContexts.HasCodeCells)).to.be.equal(true, 'Code cells context not set');
 
@@ -741,7 +741,7 @@ testing2`; // Command tests override getText, so just need the ranges here
         result = codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
         expect(result, 'result not okay').to.be.ok;
         codeLens = result as CodeLens[];
-        expect(codeLens.length).to.equal(2, 'Code lens wrong length');
+        expect(codeLens.length).to.equal(3, 'Code lens wrong length');
     });
 
     test('Test the RunAllCellsAbove command with an error', async () => {

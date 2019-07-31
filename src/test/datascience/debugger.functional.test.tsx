@@ -20,6 +20,7 @@ import {
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-window/interactiveWindowTypes';
 import { IInteractiveWindow, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
+import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { getCellResults } from './interactiveWindowTestHelpers';
 import { getConnectionInfo, getNotebookCapableInterpreter } from './jupyterHelpers';
@@ -27,6 +28,7 @@ import { MockDebuggerService } from './mockDebugService';
 import { MockDocumentManager } from './mockDocumentManager';
 
 //import { asyncDump } from '../common/asyncDump';
+import { MockDocument } from './mockDocument';
 // tslint:disable-next-line:max-func-body-length no-any
 suite('DataScience Debugger tests', () => {
     const disposables: Disposable[] = [];
@@ -138,7 +140,7 @@ suite('DataScience Debugger tests', () => {
         return result;
     }
 
-    async function debugCell(code: string, breakpoint?: Range, breakpointFile?: string) : Promise<void> {
+    async function debugCell(code: string, breakpoint?: Range, breakpointFile?: string, expectError?: boolean) : Promise<void> {
         // Create a dummy document with just this code
         const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
         const fileName = path.join(EXTENSION_ROOT_DIR, 'foo.py');
@@ -163,33 +165,52 @@ suite('DataScience Debugger tests', () => {
         const expectedBreakLine = breakpoint && !breakpointFile ? breakpoint.start.line : 2; // 2 because of the 'breakpoint()' that gets added
 
         // Debug this code. We should either hit the breakpoint or stop on entry
-        const results = await getCellResults(ioc.wrapper!, 5, async () => {
+        const resultPromise = getCellResults(ioc.wrapper!, 5, async () => {
             const breakPromise = createDeferred<void>();
             disposables.push(mockDebuggerService!.onBreakpointHit(() => breakPromise.resolve()));
             const done = history.debugCode(code, fileName, 0, docManager.activeTextEditor);
             await waitForPromise(Promise.race([done, breakPromise.promise]), 60000);
-            assert.ok(breakPromise.resolved, 'Breakpoint event did not fire');
-            assert.ok(!lastErrorMessage, `Error occurred ${lastErrorMessage}`);
-            const stackTrace = await mockDebuggerService!.getStackTrace();
-            assert.ok(stackTrace, 'Stack trace not computable');
-            assert.ok(stackTrace!.body.stackFrames.length >= 1, 'Not enough frames');
-            assert.equal(stackTrace!.body.stackFrames[0].line, expectedBreakLine, 'Stopped on wrong line number');
-            // Verify break location
-            await mockDebuggerService!.continue();
+            if (expectError) {
+                assert.ok(lastErrorMessage, 'Error did not occur when expected');
+                throw Error('Exiting cell results');
+            } else {
+                assert.ok(breakPromise.resolved, 'Breakpoint event did not fire');
+                assert.ok(!lastErrorMessage, `Error occurred ${lastErrorMessage}`);
+                const stackTrace = await mockDebuggerService!.getStackTrace();
+                assert.ok(stackTrace, 'Stack trace not computable');
+                assert.ok(stackTrace!.body.stackFrames.length >= 1, 'Not enough frames');
+                assert.equal(stackTrace!.body.stackFrames[0].line, expectedBreakLine, 'Stopped on wrong line number');
+                // Verify break location
+                await mockDebuggerService!.continue();
+            }
         });
-        assert.ok(results, 'No cell results after finishing debugging');
+
+        if (!expectError) {
+            const cellResults = await resultPromise;
+            assert.ok(cellResults, 'No cell results after finishing debugging');
+        } else {
+            try {
+                await resultPromise;
+            } catch {
+                noop();
+            }
+        }
         await history.dispose();
     }
 
     test('Debug cell without breakpoint', async () => {
+        ioc.getSettings().datascience.stopOnFirstLineWhileDebugging = true;
+
         await debugCell('#%%\nprint("bar")');
     });
 
     test('Debug cell with breakpoint', async () => {
-        await debugCell('#%%\nprint("bar")\nprint("baz")', new Range(new Position(3, 0), new Position(3, 0)));
+        ioc.getSettings().datascience.stopOnFirstLineWhileDebugging = false;
+        await debugCell('#%%\nprint("bar")\nprint("baz")\n\n\n', new Range(new Position(3, 0), new Position(3, 0)));
     });
 
     test('Debug cell with breakpoint in another file', async () => {
+        ioc.getSettings().datascience.stopOnFirstLineWhileDebugging = true;
         await debugCell('#%%\nprint("bar")\nprint("baz")', new Range(new Position(3, 0), new Position(3, 0)), 'bar.py');
     });
 
@@ -217,7 +238,45 @@ suite('DataScience Debugger tests', () => {
             ioc.getSettings().datascience.jupyterServerURI = uri;
 
             // Debug with this setting should use the server URI
-            await debugCell('#%%\nprint("bar")');
+            await debugCell('#%%\nprint("bar")', undefined, undefined, true);
         }
     });
+
+    test('Debug temporary file', async () => {
+        ioc.getSettings().datascience.stopOnFirstLineWhileDebugging = true;
+        const code = '#%%\nprint("bar")';
+
+        // Create a dummy document with just this code
+        const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
+        const fileName = 'Untitled-1';
+        docManager.addDocument(code, fileName);
+        const mockDoc = docManager.textDocuments[0] as MockDocument;
+        mockDoc.forceUntitled();
+
+        // Start the jupyter server
+        const history = await getOrCreateInteractiveWindow();
+        const expectedBreakLine = 2; // 2 because of the 'breakpoint()' that gets added
+
+        // Debug this code. We should either hit the breakpoint or stop on entry
+        const resultPromise = getCellResults(ioc.wrapper!, 5, async () => {
+            const breakPromise = createDeferred<void>();
+            disposables.push(mockDebuggerService!.onBreakpointHit(() => breakPromise.resolve()));
+            const done = history.debugCode(code, fileName, 0, docManager.activeTextEditor);
+            await waitForPromise(Promise.race([done, breakPromise.promise]), 60000);
+            assert.ok(breakPromise.resolved, 'Breakpoint event did not fire');
+            assert.ok(!lastErrorMessage, `Error occurred ${lastErrorMessage}`);
+            const stackTrace = await mockDebuggerService!.getStackTrace();
+            assert.ok(stackTrace, 'Stack trace not computable');
+            assert.ok(stackTrace!.body.stackFrames.length >= 1, 'Not enough frames');
+            assert.equal(stackTrace!.body.stackFrames[0].line, expectedBreakLine, 'Stopped on wrong line number');
+            assert.equal(stackTrace!.body.stackFrames[0].source!.path, path.join(EXTENSION_ROOT_DIR, 'baz.py'), 'Stopped on wrong file name. Name should have been saved');
+            // Verify break location
+            await mockDebuggerService!.continue();
+        });
+
+        const cellResults = await resultPromise;
+        assert.ok(cellResults, 'No cell results after finishing debugging');
+        await history.dispose();
+    });
+
 });

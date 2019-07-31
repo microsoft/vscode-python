@@ -9,34 +9,27 @@ import { expect } from 'chai';
 import { instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationChangeEvent, ConfigurationTarget, EventEmitter, WorkspaceConfiguration } from 'vscode';
-import { ApplicationEnvironment } from '../../../client/common/application/applicationEnvironment';
-import { IApplicationEnvironment, IWorkspaceService } from '../../../client/common/application/types';
+import { IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
-import { ExtensionChannelService, insidersChannelSetting, isThisFirstSessionStateKey } from '../../../client/common/insidersBuild/downloadChannelService';
+import { ExtensionChannelService, insidersChannelSetting } from '../../../client/common/insidersBuild/downloadChannelService';
 import { ExtensionChannels } from '../../../client/common/insidersBuild/types';
-import { PersistentStateFactory } from '../../../client/common/persistentState';
-import { IConfigurationService, IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
+import { IConfigurationService } from '../../../client/common/types';
+import { createDeferred } from '../../../client/common/utils/async';
+import { sleep } from '../../../test/common';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Download channel service', () => {
     let configService: IConfigurationService;
-    let appEnvironment: IApplicationEnvironment;
     let workspaceService: IWorkspaceService;
     let channelService: ExtensionChannelService;
-    let persistentState: IPersistentStateFactory;
-    let isThisFirstSessionState: TypeMoq.IMock<IPersistentState<boolean>>;
     let configChangeEvent: EventEmitter<ConfigurationChangeEvent>;
     setup(() => {
         configService = mock(ConfigurationService);
-        appEnvironment = mock(ApplicationEnvironment);
         workspaceService = mock(WorkspaceService);
         configChangeEvent = new EventEmitter<ConfigurationChangeEvent>();
         when(workspaceService.onDidChangeConfiguration).thenReturn(configChangeEvent.event);
-        persistentState = mock(PersistentStateFactory);
-        isThisFirstSessionState = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
-        when(persistentState.createGlobalPersistentState(isThisFirstSessionStateKey, true)).thenReturn(isThisFirstSessionState.object);
-        channelService = new ExtensionChannelService(instance(appEnvironment), instance(configService), instance(workspaceService), instance(persistentState), []);
+        channelService = new ExtensionChannelService(instance(configService), instance(workspaceService), []);
     });
 
     teardown(() => {
@@ -45,62 +38,36 @@ suite('Download channel service', () => {
 
     [
         {
-            testName: 'Get channel returns \'InsidersWeekly\' if user is using default setting in the first session and is using VS Code Insiders',
-            settings: {},
-            vscodeChannel: 'insiders',
-            expectedResult: 'InsidersWeekly'
+            testName: 'Get channel returns \'off\' if settings value is set to \'off\'',
+            settings: 'off',
+            expectedResult: 'off'
         },
         {
-            testName: 'Get channel returns \'Stable\' if user is using default setting and is using VS Code Stable',
-            settings: {},
-            vscodeChannel: 'stable',
-            expectedResult: 'Stable'
+            testName: 'Get channel returns \'weekly\' if settings value is set to \'weekly\'',
+            settings: 'weekly',
+            expectedResult: 'weekly'
         },
         {
-            testName: 'Get channel returns \'Stable\' if settings value is set to \'Stable\'',
-            settings: { globalValue: 'Stable' },
-            vscodeChannel: 'insiders',
-            expectedResult: 'Stable'
-        },
-        {
-            testName: 'Get channel returns \'InsidersWeekly\' if settings value is set to \'InsidersWeekly\'',
-            settings: { globalValue: 'InsidersWeekly' },
-            vscodeChannel: 'insiders',
-            expectedResult: 'InsidersWeekly'
-        },
-        {
-            testName: 'Get channel returns \'InsidersDaily\' if settings value is set to \'InsidersDaily\'',
-            settings: { globalValue: 'InsidersDaily' },
-            vscodeChannel: 'insiders',
-            expectedResult: 'InsidersDaily'
+            testName: 'Get channel returns \'daily\' if settings value is set to \'daily\'',
+            settings: 'daily',
+            expectedResult: 'daily'
         }
     ].forEach(testParams => {
         test(testParams.testName, async () => {
-            const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-            const settings = testParams.settings;
-
             when(
-                workspaceService.getConfiguration('python')
-            ).thenReturn(workspaceConfig.object);
-            workspaceConfig.setup(c => c.inspect<ExtensionChannels>(insidersChannelSetting))
-                .returns(() => settings as any)
-                .verifiable(TypeMoq.Times.once());
-            isThisFirstSessionState
-                .setup(u => u.value)
-                .returns(() => true);
-            isThisFirstSessionState
-                .setup(u => u.updateValue(false))
-                .returns(() => Promise.resolve());
-            when(appEnvironment.channel).thenReturn(testParams.vscodeChannel as any);
-            const channel = await channelService.getChannel();
-            expect(channel).to.equal(testParams.expectedResult);
-            workspaceConfig.verifyAll();
+                configService.getSettings()
+            ).thenReturn({ insidersChannel: testParams.settings as ExtensionChannels } as any);
+            const result = channelService.getChannel();
+            expect(result).to.equal(testParams.expectedResult);
+            verify(
+                configService.getSettings()
+            ).once();
         });
     });
 
-    test('Get channel returns \'Stable\' if user is using default setting and is using VS Code Insiders, but this is not the first session', async () => {
+    test('Function isChannelUsingDefaultConfiguration() returns false if setting is set', async () => {
         const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-        const settings = {};
+        const settings = { globalValue: 'off' };
 
         when(
             workspaceService.getConfiguration('python')
@@ -108,19 +75,25 @@ suite('Download channel service', () => {
         workspaceConfig.setup(c => c.inspect<ExtensionChannels>(insidersChannelSetting))
             .returns(() => settings as any)
             .verifiable(TypeMoq.Times.once());
-        isThisFirstSessionState
-            .setup(u => u.value)
-            .returns(() => false);
-        isThisFirstSessionState
-            .setup(u => u.updateValue(false))
-            .returns(() => Promise.resolve());
-        when(appEnvironment.channel).thenReturn('insiders');
-        const channel = await channelService.getChannel();
-        expect(channel).to.equal('Stable');
+        expect(channelService.isChannelUsingDefaultConfiguration).to.equal(false, 'Incorrect value');
         workspaceConfig.verifyAll();
     });
 
-    test('Get channel throws error if not setting is found', async () => {
+    test('Function isChannelUsingDefaultConfiguration() returns true if setting is not set', async () => {
+        const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
+        const settings = { globalValue: undefined };
+
+        when(
+            workspaceService.getConfiguration('python')
+        ).thenReturn(workspaceConfig.object);
+        workspaceConfig.setup(c => c.inspect<ExtensionChannels>(insidersChannelSetting))
+            .returns(() => settings as any)
+            .verifiable(TypeMoq.Times.once());
+        expect(channelService.isChannelUsingDefaultConfiguration).to.equal(true, 'Incorrect value');
+        workspaceConfig.verifyAll();
+    });
+
+    test('Function isChannelUsingDefaultConfiguration() throws error if not setting is found', async () => {
         const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
         const settings = undefined;
 
@@ -130,7 +103,7 @@ suite('Download channel service', () => {
         workspaceConfig.setup(c => c.inspect<ExtensionChannels>(insidersChannelSetting))
             .returns(() => settings as any)
             .verifiable(TypeMoq.Times.once());
-        await expect(channelService.getChannel()).to.eventually.be.rejected;
+        expect(() => channelService.isChannelUsingDefaultConfiguration).to.throw();
         workspaceConfig.verifyAll();
     });
 
@@ -157,7 +130,7 @@ suite('Download channel service', () => {
     test('If insidersChannelSetting is changed, an event is fired', async () => {
         const _onDidChannelChange = TypeMoq.Mock.ofType<EventEmitter<ExtensionChannels>>();
         const event = TypeMoq.Mock.ofType<ConfigurationChangeEvent>();
-        const settings = { insidersChannel: 'Stable' };
+        const settings = { insidersChannel: 'off' };
         event
             .setup(e => e.affectsConfiguration(`python.${insidersChannelSetting}`))
             .returns(() => true)
@@ -181,7 +154,7 @@ suite('Download channel service', () => {
     test('If some other setting changed, no event is fired', async () => {
         const _onDidChannelChange = TypeMoq.Mock.ofType<EventEmitter<ExtensionChannels>>();
         const event = TypeMoq.Mock.ofType<ConfigurationChangeEvent>();
-        const settings = { insidersChannel: 'Stable' };
+        const settings = { insidersChannel: 'off' };
         event
             .setup(e => e.affectsConfiguration(`python.${insidersChannelSetting}`))
             .returns(() => false)
@@ -200,5 +173,17 @@ suite('Download channel service', () => {
         verify(
             configService.getSettings()
         ).never();
+    });
+
+    test('Ensure on channel change captures the fired event with the correct arguments', async () => {
+        const deferred = createDeferred<true>();
+        const settings = { insidersChannel: 'off' };
+        channelService.onDidChannelChange(channel => {
+            expect(channel).to.equal(settings.insidersChannel);
+            deferred.resolve(true);
+        });
+        channelService._onDidChannelChange.fire(settings.insidersChannel as any);
+        const eventCaptured = await Promise.race([deferred.promise, sleep(1000).then(() => false)]);
+        expect(eventCaptured).to.equal(true, 'Event should be captured');
     });
 });

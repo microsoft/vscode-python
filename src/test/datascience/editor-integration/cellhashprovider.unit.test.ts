@@ -548,7 +548,7 @@ suite('CellHashProvider Unit Tests', () => {
         assert.equal(hashes.length, 1, 'No hashes found');
         assert.equal(hashes[0].hashes.length, 1, 'Not enough hashes found');
         assert.equal(hashes[0].hashes[0].line, 2, 'Wrong start line');
-        assert.equal(hashes[0].hashes[0].endLine, 3, 'Wrong end line');
+        assert.equal(hashes[0].hashes[0].endLine, 4, 'Wrong end line');
         assert.equal(hashes[0].hashes[0].executionCount, 1, 'Wrong execution count');
     });
 });
