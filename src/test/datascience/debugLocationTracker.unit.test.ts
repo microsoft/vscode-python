@@ -42,6 +42,7 @@ function makeContinueMessage(): any {
 
 function makeStackTraceMessage(): any {
     return {
+        type: 'response',
         command: 'stackTrace',
         body: {
             stackFrames: [

@@ -3,6 +3,7 @@
 'use strict';
 import { injectable } from 'inversify';
 import { DebugSession, Event, EventEmitter } from 'vscode';
+import { DebugProtocol } from 'vscode-debugprotocol';
 
 import { IDebugLocation, IDebugLocationTracker } from './types';
 
@@ -27,7 +28,7 @@ export class DebugLocationTracker implements IDebugLocationTracker {
     }
 
     // tslint:disable-next-line:no-any
-    public onDidSendMessage(message: any) {
+    public onDidSendMessage(message: DebugProtocol.ProtocolMessage) {
         if (this.isStopEvent(message)) {
             // Some type of stop, wait to see our next stack trace to find our location
             this.waitingForStackTrace = true;
@@ -61,9 +62,10 @@ export class DebugLocationTracker implements IDebugLocationTracker {
     }
 
     // tslint:disable-next-line:no-any
-    private isStopEvent(message: any) {
+    private isStopEvent(message: DebugProtocol.ProtocolMessage) {
         if (message.type === 'event') {
-            if (message.event === 'stopped') {
+            const eventMessage = message as DebugProtocol.Event;
+            if (eventMessage.event === 'stopped') {
                 return true;
             }
         }
@@ -72,13 +74,17 @@ export class DebugLocationTracker implements IDebugLocationTracker {
     }
 
     // tslint:disable-next-line:no-any
-    private getStackTrace(message: any): IDebugLocation | undefined {
-        if (message.command === 'stackTrace') {
-            if (message.body.stackFrames.length > 0) {
-                const lineNumber = message.body.stackFrames[0].line;
-                const fileName = message.body.stackFrames[0].source.path;
-                const column = message.body.stackFrames[0].column;
-                return { lineNumber, fileName, column };
+    private getStackTrace(message: DebugProtocol.ProtocolMessage): IDebugLocation | undefined {
+        if (message.type === 'response') {
+            const responseMessage = message as DebugProtocol.Response;
+            if (responseMessage.command === 'stackTrace') {
+                const messageBody = responseMessage.body;
+                if (messageBody.stackFrames.length > 0) {
+                    const lineNumber = messageBody.stackFrames[0].line;
+                    const fileName = messageBody.stackFrames[0].source.path;
+                    const column = messageBody.stackFrames[0].column;
+                    return { lineNumber, fileName, column };
+                }
             }
         }
 
@@ -86,9 +92,17 @@ export class DebugLocationTracker implements IDebugLocationTracker {
     }
 
     // tslint:disable-next-line:no-any
-    private isContinueEvent(message: any): boolean {
-        if ((message.type === 'event' && message.event === 'continue') || (message.command === 'continue' && message.type === 'response')) {
-            return true;
+    private isContinueEvent(message: DebugProtocol.ProtocolMessage): boolean {
+        if (message.type === 'event') {
+            const eventMessage = message as DebugProtocol.Event;
+            if (eventMessage.event === 'continue') {
+                return true;
+            }
+        } else if (message.type === 'response') {
+            const responseMessage = message as DebugProtocol.Response;
+            if (responseMessage.command === 'continue') {
+                return true;
+            }
         }
 
         return false;
