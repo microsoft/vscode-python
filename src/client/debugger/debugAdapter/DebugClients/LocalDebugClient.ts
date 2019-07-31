@@ -3,7 +3,11 @@ import * as path from 'path';
 import { DebugSession, OutputEvent } from 'vscode-debugadapter';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { open } from '../../../common/open';
+import { IS_WINDOWS } from '../../../common/platform/constants';
+import { PathUtils } from '../../../common/platform/pathUtils';
+import { CurrentProcess } from '../../../common/process/currentProcess';
 import { noop } from '../../../common/utils/misc';
+import { EnvironmentVariablesService } from '../../../common/variables/environment';
 import { IServiceContainer } from '../../../ioc/types';
 import { LaunchRequestArguments } from '../../types';
 import { IDebugServer } from '../Common/Contracts';
@@ -11,6 +15,7 @@ import { BaseDebugServer } from '../DebugServers/BaseDebugServer';
 import { LocalDebugServerV2 } from '../DebugServers/LocalDebugServerV2';
 import { ILocalDebugLauncherScriptProvider } from '../types';
 import { DebugClient, DebugType } from './DebugClient';
+import { DebugClientHelper } from './helper';
 
 enum DebugServerStatus {
     Unknown = 1,
@@ -62,6 +67,11 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
     }
     // tslint:disable-next-line:max-func-body-length member-ordering no-any
     public async LaunchApplicationToDebug(dbgServer: IDebugServer): Promise<any> {
+        const pathUtils = new PathUtils(IS_WINDOWS);
+        const currentProcess = new CurrentProcess();
+        const environmentVariablesService = new EnvironmentVariablesService(pathUtils);
+        const helper = new DebugClientHelper(environmentVariablesService, pathUtils, currentProcess);
+        const environmentVariables = await helper.getEnvironmentVariables(this.args);
         // tslint:disable-next-line:max-func-body-length cyclomatic-complexity no-any
         return new Promise<any>((resolve, reject) => {
             const fileDir = this.args && this.args.program ? path.dirname(this.args.program) : '';
@@ -74,16 +84,15 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
                 pythonPath = this.args.pythonPath;
             }
             const args = this.buildLaunchArguments(processCwd, dbgServer.port);
-            const envVars = this.args.env ? { ...this.args.env } : {};
             switch (this.args.console) {
                 case 'externalTerminal':
                 case 'integratedTerminal': {
                     const isSudo = Array.isArray(this.args.debugOptions) && this.args.debugOptions.some(opt => opt === 'Sudo');
-                    this.launchExternalTerminal(isSudo, processCwd, pythonPath, args, envVars).then(resolve).catch(reject);
+                    this.launchExternalTerminal(isSudo, processCwd, pythonPath, args, environmentVariables).then(resolve).catch(reject);
                     break;
                 }
                 default: {
-                    this.pyProc = spawn(pythonPath, args, { cwd: processCwd, env: envVars });
+                    this.pyProc = spawn(pythonPath, args, { cwd: processCwd, env: environmentVariables });
                     this.handleProcessOutput(this.pyProc!, reject);
 
                     // Here we wait for the application to connect to the socket server.
