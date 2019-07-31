@@ -8,6 +8,7 @@ import * as uuid from 'uuid/v4';
 import {
     Breakpoint,
     BreakpointsChangeEvent,
+    DebugAdapterTracker,
     DebugAdapterTrackerFactory,
     DebugConfiguration,
     DebugConfigurationProvider,
@@ -68,6 +69,8 @@ export class MockDebuggerService implements IDebugService, IDisposable {
     private session: DebugSession | undefined;
     private sequence: number = 1;
     private breakpointEmitter: EventEmitter<void> = new EventEmitter<void>();
+    private debugAdapterTrackerFactory: DebugAdapterTrackerFactory | undefined;
+    private debugAdapterTracker: DebugAdapterTracker | undefined;
     private sessionChangedEvent: EventEmitter<DebugSession> = new EventEmitter<DebugSession>();
     private sessionStartedEvent: EventEmitter<DebugSession> = new EventEmitter<DebugSession>();
     private sessionTerminatedEvent: EventEmitter<DebugSession> = new EventEmitter<DebugSession>();
@@ -123,16 +126,24 @@ export class MockDebuggerService implements IDebugService, IDisposable {
         throw new Error('Method not implemented.');
     }
     public registerDebugAdapterTrackerFactory(_debugType: string, _provider: DebugAdapterTrackerFactory): Disposable {
-        throw new Error('Method not implemented.');
+        this.debugAdapterTrackerFactory = _provider;
+        return { dispose: () => { noop(); } };
     }
+
     public startDebugging(_folder: WorkspaceFolder | undefined, nameOrConfiguration: string | DebugConfiguration, _parentSession?: DebugSession | undefined): Thenable<boolean> {
         // Should have a port number. We'll assume during the test it's local
         const config = nameOrConfiguration as DebugConfiguration;
         if (config.port) {
             this.session = new MockDebugSession(uuid(), config, this.sendCustomRequest.bind(this));
+
+            if (this.debugAdapterTrackerFactory) {
+                this.debugAdapterTracker = this.debugAdapterTrackerFactory.createDebugAdapterTracker(this.session) as DebugAdapterTracker;
+            }
+
             this.socket = net.createConnection(config.port);
             this.protocolParser.connect(this.socket);
             this.protocolParser.on('event_stopped', this.onBreakpoint.bind(this));
+            //this.protocolParser.on('event_continue', this.onContinue.bind(this));
             this.protocolParser.on('event_output', this.onOutput.bind(this));
             this.socket.on('error', this.onError.bind(this));
             this.socket.on('close', this.onClose.bind(this));
@@ -150,13 +161,20 @@ export class MockDebuggerService implements IDebugService, IDisposable {
         return this.breakpointEmitter.event;
     }
 
-    public continue(): Promise<void> {
-        return this.sendMessage('continue', { threadId: 0 });
+    public async continue(): Promise<void> {
+        //return this.sendMessage('continue', { threadId: 0 });
+        await this.sendMessage('continue', { threadId: 0 });
+        if (this.debugAdapterTracker && this.debugAdapterTracker.onDidSendMessage) {
+            this.debugAdapterTracker.onDidSendMessage({ type: 'event', event: 'continue' });
+        }
     }
 
     public async getStackTrace(): Promise<DebugProtocol.StackTraceResponse | undefined> {
         const deferred = createDeferred<DebugProtocol.StackTraceResponse>();
         this.protocolParser.once('response_stackTrace', (args: any) => {
+            if (this.debugAdapterTracker && this.debugAdapterTracker.onDidSendMessage) {
+                this.debugAdapterTracker.onDidSendMessage(args as DebugProtocol.StackTraceResponse);
+            }
             deferred.resolve(args as DebugProtocol.StackTraceResponse);
         });
         await this.emitMessage('stackTrace', {
@@ -166,6 +184,37 @@ export class MockDebuggerService implements IDebugService, IDisposable {
         });
         return deferred.promise;
     }
+
+    // Combine this, don't copy
+    //private emitEventMessage(event: string): Promise<void> {
+    //return new Promise((resolve, reject) => {
+    //try {
+    //if (this.socket) {
+    //const obj = {
+    //event,
+    //type: 'event',
+    //seq: this.sequence
+    //};
+    //this.sequence += 1;
+    //const objString = JSON.stringify(obj);
+    //const message = `Content-Length: ${objString.length}\r\n\r\n${objString}`;
+    //this.socket.write(message, (_a: any) => {
+    //if (this.debugAdapterTracker && this.debugAdapterTracker.onDidSendMessage) {
+    //this.debugAdapterTracker.onDidSendMessage(obj);
+    //}
+    //resolve();
+    //});
+    //}
+    //} catch (e) {
+    //reject(e);
+    //}
+    //});
+    //}
+
+    //private sendStop(): Promise<void> {
+    ////return this.sendMessage(
+    ////'stopped'
+    //}
 
     private sendCustomRequest(command: string, args?: any): Promise<void> {
         return this.sendMessage(command, args);
@@ -262,6 +311,9 @@ export class MockDebuggerService implements IDebugService, IDisposable {
                     const objString = JSON.stringify(obj);
                     const message = `Content-Length: ${objString.length}\r\n\r\n${objString}`;
                     this.socket.write(message, (_a: any) => {
+                        if (this.debugAdapterTracker && this.debugAdapterTracker.onDidSendMessage) {
+                            this.debugAdapterTracker.onDidSendMessage(obj);
+                        }
                         resolve();
                     });
                 }
@@ -275,9 +327,19 @@ export class MockDebuggerService implements IDebugService, IDisposable {
         // Save the current thread id. We use this in our stack trace request
         this._stoppedThreadId = args.body.threadId;
 
+        if (this.debugAdapterTracker && this.debugAdapterTracker.onDidSendMessage) {
+            this.debugAdapterTracker.onDidSendMessage(args);
+        }
+
         // Indicate we stopped at a breakpoint
         this.breakpointEmitter.fire();
     }
+
+    //private onContinue(args: DebugProtocol.ContinuedEvent): void {
+    //if (this.debugAdapterTracker && this.debugAdapterTracker.onDidSendMessage) {
+    //this.debugAdapterTracker.onDidSendMessage(args);
+    //}
+    //}
 
     private onOutput(args: any): void {
         traceInfo(JSON.stringify(args));

@@ -7,7 +7,8 @@ import * as path from 'path';
 import * as React from 'react';
 import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
-import { Disposable, Position, Range, SourceBreakpoint, Uri } from 'vscode';
+import { CodeLens, Disposable, Position, Range, SourceBreakpoint, Uri } from 'vscode';
+import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
 import { IApplicationShell, IDebugService, IDocumentManager } from '../../client/common/application/types';
@@ -18,7 +19,7 @@ import {
     InteractiveWindowMessageListener
 } from '../../client/datascience/interactive-window/interactiveWindowMessageListener';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-window/interactiveWindowTypes';
-import { IInteractiveWindow, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
+import { IDataScienceCodeLensProvider, IDebugLocationTrackerFactory, IInteractiveWindow, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
 import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
 import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
@@ -124,6 +125,7 @@ suite('DataScience Debugger tests', () => {
         // This is necessary to get the appropriate live share services up and running.
         result.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
         result.get<IJupyterExecution>(IJupyterExecution);
+        result.get<IDebugLocationTrackerFactory>(IDebugLocationTrackerFactory);
         return result;
     }
 
@@ -180,8 +182,17 @@ suite('DataScience Debugger tests', () => {
                 assert.ok(stackTrace, 'Stack trace not computable');
                 assert.ok(stackTrace!.body.stackFrames.length >= 1, 'Not enough frames');
                 assert.equal(stackTrace!.body.stackFrames[0].line, expectedBreakLine, 'Stopped on wrong line number');
+
+                //const codeLenses = getCodeLenses();
+                verifyCodeLenses(expectedBreakLine);
+
                 // Verify break location
                 await mockDebuggerService!.continue();
+
+                verifyCodeLenses(undefined);
+                //const codeLenses2 = getCodeLenses();
+
+                const testing = 'test';
             }
         });
 
@@ -197,6 +208,39 @@ suite('DataScience Debugger tests', () => {
         }
         await history.dispose();
     }
+
+    function verifyCodeLenses(expectedBreakLine: number | undefined) {
+        // We should have three debug code lenses which should all contain the break line
+        const codeLenses = getCodeLenses();
+
+        if (expectedBreakLine) {
+            assert.equal(codeLenses.length, 3, 'Incorrect number of debug code lenses stop');
+            codeLenses.forEach(codeLens => {
+                assert.ok(codeLens.range.contains(new Position(expectedBreakLine - 1, 0)));
+            });
+        } else {
+            assert.equal(codeLenses.length, 0, 'Incorrect number of debug code lenses continue');
+        }
+    }
+
+    // Move to helper?
+    function getCodeLenses(): CodeLens[] {
+        const documentManager = ioc.serviceManager.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
+        const codeLensProvider = ioc.serviceManager.get<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider);
+        const doc = documentManager.textDocuments[0];
+        const result = codeLensProvider.provideCodeLenses(doc, CancellationToken.None);
+        // tslint:disable-next-line:no-any
+        if ((result as any).length) {
+            return result as CodeLens[];
+        }
+        return [];
+    }
+
+    test('IANHU', async () => {
+        ioc.getSettings().datascience.stopOnFirstLineWhileDebugging = true;
+
+        await debugCell('#%%\nprint("bar")');
+    });
 
     test('Debug cell without breakpoint', async () => {
         ioc.getSettings().datascience.stopOnFirstLineWhileDebugging = true;
