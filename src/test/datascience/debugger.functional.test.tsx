@@ -183,16 +183,12 @@ suite('DataScience Debugger tests', () => {
                 assert.ok(stackTrace!.body.stackFrames.length >= 1, 'Not enough frames');
                 assert.equal(stackTrace!.body.stackFrames[0].line, expectedBreakLine, 'Stopped on wrong line number');
 
-                //const codeLenses = getCodeLenses();
                 verifyCodeLenses(expectedBreakLine);
 
                 // Verify break location
                 await mockDebuggerService!.continue();
 
                 verifyCodeLenses(undefined);
-                //const codeLenses2 = getCodeLenses();
-
-                const testing = 'test';
             }
         });
 
@@ -223,7 +219,6 @@ suite('DataScience Debugger tests', () => {
         }
     }
 
-    // Move to helper?
     function getCodeLenses(): CodeLens[] {
         const documentManager = ioc.serviceManager.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
         const codeLensProvider = ioc.serviceManager.get<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider);
@@ -235,12 +230,6 @@ suite('DataScience Debugger tests', () => {
         }
         return [];
     }
-
-    test('IANHU', async () => {
-        ioc.getSettings().datascience.stopOnFirstLineWhileDebugging = true;
-
-        await debugCell('#%%\nprint("bar")');
-    });
 
     test('Debug cell without breakpoint', async () => {
         ioc.getSettings().datascience.stopOnFirstLineWhileDebugging = true;

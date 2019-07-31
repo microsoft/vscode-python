@@ -136,6 +136,7 @@ export class MockDebuggerService implements IDebugService, IDisposable {
         if (config.port) {
             this.session = new MockDebugSession(uuid(), config, this.sendCustomRequest.bind(this));
 
+            // Create our debug adapter tracker at session start
             if (this.debugAdapterTrackerFactory) {
                 this.debugAdapterTracker = this.debugAdapterTrackerFactory.createDebugAdapterTracker(this.session) as DebugAdapterTracker;
             }
@@ -143,7 +144,6 @@ export class MockDebuggerService implements IDebugService, IDisposable {
             this.socket = net.createConnection(config.port);
             this.protocolParser.connect(this.socket);
             this.protocolParser.on('event_stopped', this.onBreakpoint.bind(this));
-            //this.protocolParser.on('event_continue', this.onContinue.bind(this));
             this.protocolParser.on('event_output', this.onOutput.bind(this));
             this.socket.on('error', this.onError.bind(this));
             this.socket.on('close', this.onClose.bind(this));
@@ -162,7 +162,6 @@ export class MockDebuggerService implements IDebugService, IDisposable {
     }
 
     public async continue(): Promise<void> {
-        //return this.sendMessage('continue', { threadId: 0 });
         await this.sendMessage('continue', { threadId: 0 });
         if (this.debugAdapterTracker && this.debugAdapterTracker.onDidSendMessage) {
             this.debugAdapterTracker.onDidSendMessage({ type: 'event', event: 'continue' });
@@ -184,37 +183,6 @@ export class MockDebuggerService implements IDebugService, IDisposable {
         });
         return deferred.promise;
     }
-
-    // Combine this, don't copy
-    //private emitEventMessage(event: string): Promise<void> {
-    //return new Promise((resolve, reject) => {
-    //try {
-    //if (this.socket) {
-    //const obj = {
-    //event,
-    //type: 'event',
-    //seq: this.sequence
-    //};
-    //this.sequence += 1;
-    //const objString = JSON.stringify(obj);
-    //const message = `Content-Length: ${objString.length}\r\n\r\n${objString}`;
-    //this.socket.write(message, (_a: any) => {
-    //if (this.debugAdapterTracker && this.debugAdapterTracker.onDidSendMessage) {
-    //this.debugAdapterTracker.onDidSendMessage(obj);
-    //}
-    //resolve();
-    //});
-    //}
-    //} catch (e) {
-    //reject(e);
-    //}
-    //});
-    //}
-
-    //private sendStop(): Promise<void> {
-    ////return this.sendMessage(
-    ////'stopped'
-    //}
 
     private sendCustomRequest(command: string, args?: any): Promise<void> {
         return this.sendMessage(command, args);
@@ -334,12 +302,6 @@ export class MockDebuggerService implements IDebugService, IDisposable {
         // Indicate we stopped at a breakpoint
         this.breakpointEmitter.fire();
     }
-
-    //private onContinue(args: DebugProtocol.ContinuedEvent): void {
-    //if (this.debugAdapterTracker && this.debugAdapterTracker.onDidSendMessage) {
-    //this.debugAdapterTracker.onDidSendMessage(args);
-    //}
-    //}
 
     private onOutput(args: any): void {
         traceInfo(JSON.stringify(args));
