@@ -156,6 +156,20 @@ suite('DataScience Code Watcher Unit Tests', () => {
                 expect(codeLenses[startLensIndex + indexAdd].command!.command).to.be.equal(Commands.DebugCell, 'Debug command incorrect');
             }
             expect(codeLenses[startLensIndex + indexAdd].range).to.be.deep.equal(targetRange, 'Debug code lens range incorrect');
+
+            // Debugger mode commands
+            if (codeLenses[startLensIndex + indexAdd + 1].command) {
+                expect(codeLenses[startLensIndex + indexAdd + 1].command!.command).to.be.equal(Commands.DebugContinue, 'Debug command incorrect');
+            }
+            expect(codeLenses[startLensIndex + indexAdd + 1].range).to.be.deep.equal(targetRange, 'Debug code lens range incorrect');
+            if (codeLenses[startLensIndex + indexAdd + 2].command) {
+                expect(codeLenses[startLensIndex + indexAdd + 2].command!.command).to.be.equal(Commands.DebugStop, 'Debug command incorrect');
+            }
+            expect(codeLenses[startLensIndex + indexAdd + 2].range).to.be.deep.equal(targetRange, 'Debug code lens range incorrect');
+            if (codeLenses[startLensIndex + indexAdd + 3].command) {
+                expect(codeLenses[startLensIndex + indexAdd + 3].command!.command).to.be.equal(Commands.DebugStepOver, 'Debug command incorrect');
+            }
+            expect(codeLenses[startLensIndex + indexAdd + 3].range).to.be.deep.equal(targetRange, 'Debug code lens range incorrect');
         }
     }
 
@@ -173,7 +187,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
 
         // Verify code lenses
         const codeLenses = codeWatcher.getCodeLenses();
-        expect(codeLenses.length).to.be.equal(2, 'Incorrect count of code lenses');
+        expect(codeLenses.length).to.be.equal(5, 'Incorrect count of code lenses');
         verifyCodeLensesAtPosition(codeLenses, 0, new Range(0, 0, 0, 3), true);
 
         // Verify function calls
@@ -222,10 +236,10 @@ fourth line`;
 
         // Verify code lenses
         const codeLenses = codeWatcher.getCodeLenses();
-        expect(codeLenses.length).to.be.equal(5, 'Incorrect count of code lenses');
+        expect(codeLenses.length).to.be.equal(11, 'Incorrect count of code lenses');
 
         verifyCodeLensesAtPosition(codeLenses, 0, new Range(3, 0, 5, 0), true);
-        verifyCodeLensesAtPosition(codeLenses, 2, new Range(6, 0, 7, 11));
+        verifyCodeLensesAtPosition(codeLenses, 5, new Range(6, 0, 7, 11));
 
         // Verify function calls
         document.verifyAll();
@@ -259,11 +273,11 @@ fourth line
 
         // Verify code lenses
         const codeLenses = codeWatcher.getCodeLenses();
-        expect(codeLenses.length).to.be.equal(7, 'Incorrect count of code lenses');
+        expect(codeLenses.length).to.be.equal(13, 'Incorrect count of code lenses');
 
         verifyCodeLensesAtPosition(codeLenses, 0, new Range(3, 0, 5, 0), true);
-        verifyCodeLensesAtPosition(codeLenses, 2, new Range(6, 0, 8, 0));
-        verifyCodeLensesAtPosition(codeLenses, 5, new Range(9, 0, 10, 12), false, true);
+        verifyCodeLensesAtPosition(codeLenses, 5, new Range(6, 0, 8, 0));
+        verifyCodeLensesAtPosition(codeLenses, 11, new Range(9, 0, 10, 12), false, true);
 
         // Verify function calls
         document.verifyAll();
@@ -297,11 +311,11 @@ fourth line
 
         // Verify code lenses
         const codeLenses = codeWatcher.getCodeLenses();
-        expect(codeLenses.length).to.be.equal(7, 'Incorrect count of code lenses');
+        expect(codeLenses.length).to.be.equal(13, 'Incorrect count of code lenses');
 
         verifyCodeLensesAtPosition(codeLenses, 0, new Range(3, 0, 5, 0), true);
-        verifyCodeLensesAtPosition(codeLenses, 2, new Range(6, 0, 8, 0));
-        verifyCodeLensesAtPosition(codeLenses, 5, new Range(9, 0, 10, 12), false, true);
+        verifyCodeLensesAtPosition(codeLenses, 5, new Range(6, 0, 8, 0));
+        verifyCodeLensesAtPosition(codeLenses, 11, new Range(9, 0, 10, 12), false, true);
 
         // Verify function calls
         document.verifyAll();
