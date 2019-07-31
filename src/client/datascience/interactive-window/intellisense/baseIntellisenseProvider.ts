@@ -16,6 +16,7 @@ import {
     Uri
 } from 'vscode';
 
+import { HiddenFileFormatString } from '../../../../client/constants';
 import { IWorkspaceService } from '../../../common/application/types';
 import { CancellationError } from '../../../common/cancellation';
 import { traceWarning } from '../../../common/logger';
@@ -123,7 +124,7 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
             // Create our dummy document. Compute a file path for it.
             if (this.workspaceService.rootPath || resource) {
                 const dir = resource ? path.dirname(resource.fsPath) : this.workspaceService.rootPath!;
-                const dummyFilePath = path.join(dir, `History_${uuid().replace(/-/g, '')}.py`);
+                const dummyFilePath = path.join(dir, HiddenFileFormatString.format(uuid().replace(/-/g, '')));
                 this.documentPromise.resolve(new IntellisenseDocument(dummyFilePath));
             } else {
                 this.fileSystem.createTemporaryFile('.py')

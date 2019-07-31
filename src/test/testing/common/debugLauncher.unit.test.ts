@@ -23,7 +23,6 @@ import '../../../client/common/extensions';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { IConfigurationService, IPythonSettings, ITestingSettings } from '../../../client/common/types';
 import { DebuggerTypeName } from '../../../client/debugger/constants';
-import { IDebugEnvironmentVariablesService } from '../../../client/debugger/extension/configuration/resolvers/helper';
 import {
     LaunchConfigurationResolver
 } from '../../../client/debugger/extension/configuration/resolvers/launch';
@@ -45,7 +44,6 @@ suite('Unit Tests - Debug Launcher', () => {
     let platformService: TypeMoq.IMock<IPlatformService>;
     let filesystem: TypeMoq.IMock<IFileSystem>;
     let settings: TypeMoq.IMock<IPythonSettings>;
-    let debugEnvHelper: TypeMoq.IMock<IDebugEnvironmentVariablesService>;
     let hasWorkspaceFolders: boolean;
     setup(async () => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
@@ -86,10 +84,6 @@ suite('Unit Tests - Debug Launcher', () => {
         settings.setup(p => p.testing)
             .returns(() => unitTestSettings.object);
 
-        debugEnvHelper = TypeMoq.Mock.ofType<IDebugEnvironmentVariablesService>(undefined, TypeMoq.MockBehavior.Strict);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDebugEnvironmentVariablesService)))
-            .returns(() => debugEnvHelper.object);
-
         debugLauncher = new DebugLauncher(
             serviceContainer.object,
             getNewResolver(configService.object)
@@ -104,8 +98,7 @@ suite('Unit Tests - Debug Launcher', () => {
             TypeMoq.Mock.ofType<IDocumentManager>(undefined, TypeMoq.MockBehavior.Strict).object,
             validator.object,
             platformService.object,
-            configService,
-            debugEnvHelper.object
+            configService
         );
     }
     function setupDebugManager(
@@ -122,9 +115,6 @@ suite('Unit Tests - Debug Launcher', () => {
         const args = expected.args;
         const debugArgs = testProvider === 'unittest' ? args.filter((item: string) => item !== '--debug') : args;
         expected.args = debugArgs;
-
-        debugEnvHelper.setup(d => d.getEnvironmentVariables(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(expected.env));
 
         //debugService.setup(d => d.startDebugging(TypeMoq.It.isValue(workspaceFolder), TypeMoq.It.isValue(expected)))
         debugService.setup(d => d.startDebugging(TypeMoq.It.isValue(workspaceFolder), TypeMoq.It.isValue(expected)))

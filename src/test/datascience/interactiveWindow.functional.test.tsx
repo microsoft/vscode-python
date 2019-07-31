@@ -525,7 +525,7 @@ for _ in range(50):
         // Try a 3rd time with some new input
         addMockData(ioc, 'print("hello")', 'hello');
         await enterInput(wrapper, 'print("hello")');
-        verifyHtmlOnCell(wrapper, '>hello</', CellPosition.Last);
+        verifyHtmlOnCell(wrapper, 'hello', CellPosition.Last);
     }, () => { return ioc; });
 
     runMountedTest('Restart with session failure', async (wrapper) => {
@@ -620,13 +620,13 @@ for _ in range(50):
     }, () => { return ioc; });
 
     runMountedTest('Limit text output', async (wrapper) => {
-        ioc.getSettings().datascience.textOutputLimit = 7;
+        ioc.getSettings().datascience.textOutputLimit = 8;
 
         // Output should be trimmed to just two lines of output
         const code = `print("hello\\nworld\\nhow\\nare\\nyou")`;
-        addMockData(ioc, code, 'are\nyou');
+        addMockData(ioc, code, 'are\nyou\n');
         await addCode(getOrCreateInteractiveWindow, wrapper, code, 4);
 
-        verifyHtmlOnCell(wrapper, '>are\nyou<', CellPosition.Last);
+        verifyHtmlOnCell(wrapper, '>are\nyou', CellPosition.Last);
     }, () => { return ioc; });
 });

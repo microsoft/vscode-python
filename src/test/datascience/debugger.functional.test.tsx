@@ -232,18 +232,12 @@ suite('DataScience Debugger tests', () => {
     }
 
     test('Debug cell without breakpoint', async () => {
-        ioc.getSettings().datascience.stopOnFirstLineWhileDebugging = true;
-
         await debugCell('#%%\nprint("bar")');
     });
 
-    test('Debug cell with breakpoint', async () => {
-        ioc.getSettings().datascience.stopOnFirstLineWhileDebugging = false;
-        await debugCell('#%%\nprint("bar")\nprint("baz")\n\n\n', new Range(new Position(3, 0), new Position(3, 0)));
-    });
+    // Debugging with a breakpoint requires the file to actually exist on disk.
 
     test('Debug cell with breakpoint in another file', async () => {
-        ioc.getSettings().datascience.stopOnFirstLineWhileDebugging = true;
         await debugCell('#%%\nprint("bar")\nprint("baz")', new Range(new Position(3, 0), new Position(3, 0)), 'bar.py');
     });
 
@@ -276,7 +270,6 @@ suite('DataScience Debugger tests', () => {
     });
 
     test('Debug temporary file', async () => {
-        ioc.getSettings().datascience.stopOnFirstLineWhileDebugging = true;
         const code = '#%%\nprint("bar")';
 
         // Create a dummy document with just this code
@@ -302,7 +295,7 @@ suite('DataScience Debugger tests', () => {
             assert.ok(stackTrace, 'Stack trace not computable');
             assert.ok(stackTrace!.body.stackFrames.length >= 1, 'Not enough frames');
             assert.equal(stackTrace!.body.stackFrames[0].line, expectedBreakLine, 'Stopped on wrong line number');
-            assert.equal(stackTrace!.body.stackFrames[0].source!.path, path.join(EXTENSION_ROOT_DIR, 'baz.py'), 'Stopped on wrong file name. Name should have been saved');
+            assert.ok(stackTrace!.body.stackFrames[0].source!.path!.includes('baz.py'), 'Stopped on wrong file name. Name should have been saved');
             // Verify break location
             await mockDebuggerService!.continue();
         });
