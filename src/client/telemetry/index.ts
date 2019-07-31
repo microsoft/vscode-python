@@ -247,7 +247,9 @@ function getStackTrace(ex: Error): string {
             trace += '\n\tat <anonymous>';
         }
     }
-    return trace.trim();
+    // Ensure we always use `/` as path seperators.
+    // This way stack traces (with relative paths) comming from different OS will always look the same.
+    return trace.trim().replace(/\\/g, '/');
 }
 
 function getCallsite(frame: stackTrace.StackFrame) {
