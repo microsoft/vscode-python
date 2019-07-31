@@ -9,7 +9,7 @@ import * as path from 'path';
 import * as shortid from 'shortid';
 import { ICurrentProcess, IPathUtils } from '../../client/common/types';
 import { IEnvironmentVariablesService } from '../../client/common/variables/types';
-import { DebugEnvironmentVariablesHelper, IDebugEnvironmentVariablesService } from '../../client/debugger/extension/configuration/resolvers/helper';
+import { DebugClientHelper } from '../../client/debugger/debugAdapter/DebugClients/helper';
 import { ConsoleType, LaunchRequestArguments } from '../../client/debugger/types';
 import { isOs, OSType } from '../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
@@ -19,7 +19,7 @@ use(chaiAsPromised);
 
 suite('Resolving Environment Variables when Debugging', () => {
     let ioc: UnitTestIocContainer;
-    let debugEnvParser: IDebugEnvironmentVariablesService;
+    let helper: DebugClientHelper;
     let pathVariableName: string;
     let mockProcess: ICurrentProcess;
 
@@ -37,7 +37,7 @@ suite('Resolving Environment Variables when Debugging', () => {
         const envParser = ioc.serviceContainer.get<IEnvironmentVariablesService>(IEnvironmentVariablesService);
         const pathUtils = ioc.serviceContainer.get<IPathUtils>(IPathUtils);
         mockProcess = ioc.serviceContainer.get<ICurrentProcess>(ICurrentProcess);
-        debugEnvParser = new DebugEnvironmentVariablesHelper(envParser, pathUtils, mockProcess);
+        helper = new DebugClientHelper(envParser, pathUtils, mockProcess);
         pathVariableName = pathUtils.getPathVariableName();
     });
     suiteTeardown(closeActiveWindows);
@@ -60,7 +60,7 @@ suite('Resolving Environment Variables when Debugging', () => {
             // tslint:disable-next-line:no-any
         } as any as LaunchRequestArguments;
 
-        const envVars = await debugEnvParser.getEnvironmentVariables(args);
+        const envVars = await helper.getEnvironmentVariables(args);
         expect(envVars).not.be.undefined;
         expect(Object.keys(envVars)).lengthOf(expectedNumberOfVariables, 'Incorrect number of variables');
         expect(envVars).to.have.property('PYTHONUNBUFFERED', '1', 'Property not found');
@@ -97,7 +97,7 @@ suite('Resolving Environment Variables when Debugging', () => {
             // tslint:disable-next-line:no-any
         } as any as LaunchRequestArguments;
 
-        const envVars = await debugEnvParser.getEnvironmentVariables(args);
+        const envVars = await helper.getEnvironmentVariables(args);
 
         // tslint:disable-next-line:no-unused-expression chai-vague-errors
         expect(envVars).not.be.undefined;
@@ -154,7 +154,7 @@ suite('Resolving Environment Variables when Debugging', () => {
             console, env
         } as any as LaunchRequestArguments;
 
-        const envVars = await debugEnvParser.getEnvironmentVariables(args);
+        const envVars = await helper.getEnvironmentVariables(args);
         expect(envVars).not.be.undefined;
         expect(Object.keys(envVars)).lengthOf(expectedNumberOfVariables, 'Incorrect number of variables');
         expect(envVars).to.have.property('PYTHONPATH');
