@@ -188,9 +188,38 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         return this.submitCode(code, file, line, undefined, editor, false);
     }
 
-    public debugCode(code: string, file: string, line: number, editor?: TextEditor): Promise<boolean> {
-        // Call the internal method.
-        return this.submitCode(code, file, line, undefined, editor, true);
+    public async debugCode(code: string, file: string, line: number, editor?: TextEditor): Promise<boolean> {
+        let saved = true;
+        // Make sure the file is saved before debugging
+        const doc = this.documentManager.textDocuments.find(d => d.fileName === file);
+        if (doc && doc.isUntitled) {
+            // Before we start, get the list of documents
+            const beforeSave = [...this.documentManager.textDocuments];
+
+            saved = await doc.save();
+
+            // If that worked, we have to open the new document. It should be
+            // the new entry in the list
+            if (saved) {
+                const diff = this.documentManager.textDocuments.filter(f => beforeSave.indexOf(f) === -1);
+                if (diff && diff.length > 0) {
+                    file = diff[0].fileName;
+
+                    // Open the new document
+                    await this.documentManager.openTextDocument(file);
+
+                    // Change the editor to the new file
+                    editor = this.documentManager.visibleTextEditors.find(e => e.document.fileName === file);
+                }
+            }
+        }
+
+        // Call the internal method if we were able to save
+        if (saved) {
+            return this.submitCode(code, file, line, undefined, editor, true);
+        }
+
+        return false;
     }
 
     // tslint:disable-next-line: no-any no-empty cyclomatic-complexity max-func-body-length

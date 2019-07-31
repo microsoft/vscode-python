@@ -3,7 +3,6 @@
 'use strict';
 //tslint:disable:max-func-body-length match-default-export-name no-any no-multiline-string no-trailing-whitespace
 import { expect } from 'chai';
-import * as typemoq from 'typemoq';
 
 import { DebugLocationTracker } from '../../client/datascience/debugLocationTracker';
 import { IDebugLocation } from '../../client/datascience/types';

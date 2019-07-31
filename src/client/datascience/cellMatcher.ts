@@ -8,10 +8,10 @@ import { noop } from '../common/utils/misc';
 import { RegExpValues } from './constants';
 
 export class CellMatcher {
-    private codeMatchRegEx : RegExp;
-    private markdownMatchRegEx : RegExp;
+    private codeMatchRegEx: RegExp;
+    private markdownMatchRegEx: RegExp;
     private codeExecRegEx: RegExp;
-    private markdownExecRegEx : RegExp;
+    private markdownExecRegEx: RegExp;
 
     constructor(settings?: IDataScienceSettings) {
         this.codeMatchRegEx = this.createRegExp(settings ? settings.codeRegularExpression : undefined, RegExpValues.PythonCellMarker);
@@ -20,28 +20,33 @@ export class CellMatcher {
         this.markdownExecRegEx = new RegExp(`${this.markdownMatchRegEx.source}(.*)`);
     }
 
-    public isCell(code: string) : boolean {
+    public isCell(code: string): boolean {
         return this.codeMatchRegEx.test(code) || this.markdownMatchRegEx.test(code);
     }
 
-    public isMarkdown(code: string) : boolean {
+    public isMarkdown(code: string): boolean {
         return this.markdownMatchRegEx.test(code);
     }
 
-    public isCode(code: string) : boolean {
+    public isCode(code: string): boolean {
         return this.codeMatchRegEx.test(code);
     }
 
-    public getCellType(code: string) : string {
+    public getCellType(code: string): string {
         return this.isMarkdown(code) ? 'markdown' : 'code';
     }
 
-    public stripMarkers(code: string) : string {
-        const lines = code.splitLines({trim: false, removeEmptyEntries: false});
-        return lines.filter(l => !this.isCode(l) && !this.isMarkdown(l)).join('\n');
+    public stripFirstMarker(code: string): string {
+        const lines = code.splitLines({ trim: false, removeEmptyEntries: false });
+
+        // Only strip this off the first line. Otherwise we want the markers in the code.
+        if (lines.length > 0 && (this.isCode(lines[0]) || this.isMarkdown(lines[0]))) {
+            return lines.slice(1).join('\n');
+        }
+        return code;
     }
 
-    public exec(code: string) : string | undefined {
+    public exec(code: string): string | undefined {
         let result: RegExpExecArray | null = null;
         if (this.codeMatchRegEx.test(code)) {
             this.codeExecRegEx.lastIndex = -1;
@@ -56,7 +61,7 @@ export class CellMatcher {
         return undefined;
     }
 
-    private createRegExp(potential: string | undefined, backup: RegExp) : RegExp {
+    private createRegExp(potential: string | undefined, backup: RegExp): RegExp {
         try {
             if (potential) {
                 return new RegExp(potential);

@@ -118,13 +118,18 @@ export class CodeWatcher implements ICodeWatcher {
 
         // If there are no codelenses, just run all of the code as a single cell
         if (runCellCommands.length === 0) {
-            return this.runFileInteractiveInternal();
+            return this.runFileInteractiveInternal(false);
         }
     }
 
     @captureTelemetry(Telemetry.RunFileInteractive)
     public async runFileInteractive() {
-        return this.runFileInteractiveInternal();
+        return this.runFileInteractiveInternal(false);
+    }
+
+    @captureTelemetry(Telemetry.DebugFileInteractive)
+    public async debugFileInteractive() {
+        return this.runFileInteractiveInternal(true);
     }
 
     // Run all cells up to the cell containing this start line and character
@@ -399,10 +404,10 @@ export class CodeWatcher implements ICodeWatcher {
         return undefined;
     }
 
-    private async runFileInteractiveInternal() {
+    private async runFileInteractiveInternal(debug: boolean) {
         if (this.document) {
             const code = this.document.getText();
-            await this.addCode(code, this.getFileName(), 0);
+            await this.addCode(code, this.getFileName(), 0, undefined, debug);
         }
     }
 

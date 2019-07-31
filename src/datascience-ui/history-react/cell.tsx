@@ -8,12 +8,10 @@ import ansiRegex from 'ansi-regex';
 import ansiToHtml from 'ansi-to-html';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
-// tslint:disable-next-line:match-default-export-name import-name
-import JSONTree from 'react-json-tree';
 
 import '../../client/common/extensions';
 import { concatMultilineString } from '../../client/datascience/common';
-import { Identifiers, RegExpValues } from '../../client/datascience/constants';
+import { Identifiers } from '../../client/datascience/constants';
 import { CellState, ICell } from '../../client/datascience/types';
 import { noop } from '../../test/core';
 import { Image, ImageName } from '../react-common/image';
@@ -28,6 +26,8 @@ import { InputHistory } from './inputHistory';
 import { MenuBar } from './menuBar';
 import { displayOrder, richestMimetype, transforms } from './transforms';
 
+// tslint:disable-next-line: no-require-imports
+import cloneDeep = require('lodash/cloneDeep');
 import './cell.css';
 
 interface ICellProps {
@@ -64,15 +64,25 @@ export interface ICellViewModel {
     inputBlockToggled(id: string): void;
 }
 
+interface ICellOutput {
+    mimeType: string;
+    data: nbformat.MultilineString | JSONObject;
+    renderWithScrollbars: boolean;
+    isText: boolean;
+    isError: boolean;
+    extraButton: JSX.Element | null; // Extra button for plot viewing is stored here
+    doubleClick(): void; // Double click handler for plot viewing is stored here
+}
+// tslint:disable: react-this-binding-issue
 export class Cell extends React.Component<ICellProps> {
     private code: Code | undefined;
 
     constructor(prop: ICellProps) {
         super(prop);
-        this.state = {focused: this.props.autoFocus};
+        this.state = { focused: this.props.autoFocus };
     }
 
-    private static getAnsiToHtmlOptions() : { fg: string; bg: string; colors: string [] } {
+    private static getAnsiToHtmlOptions(): { fg: string; bg: string; colors: string[] } {
         // Here's the default colors for ansiToHtml. We need to use the
         // colors from our current theme.
         // const colors = {
@@ -118,7 +128,7 @@ export class Cell extends React.Component<ICellProps> {
     }
     public render() {
         if (this.props.cellVM.cell.data.cell_type === 'messages') {
-            return <InformationMessages messages={this.props.cellVM.cell.data.messages} type={this.props.cellVM.cell.type}/>;
+            return <InformationMessages messages={this.props.cellVM.cell.data.messages} type={this.props.cellVM.cell.type} />;
         } else {
             return this.renderNormalCell();
         }
@@ -222,11 +232,11 @@ export class Cell extends React.Component<ICellProps> {
         }
     }
 
-    private showInputs = () : boolean => {
+    private showInputs = (): boolean => {
         return (this.isCodeCell() && (this.props.cellVM.inputBlockShow || this.props.cellVM.editable));
     }
 
-    private getRenderableInputCode = () : string => {
+    private getRenderableInputCode = (): string => {
         if (this.props.cellVM.editable) {
             return '';
         }
@@ -292,7 +302,7 @@ export class Cell extends React.Component<ICellProps> {
                         monacoTheme={this.props.monacoTheme}
                         openLink={this.props.openLink}
                         forceBackgroundColor={backgroundColor}
-                        />
+                    />
                 </div>
             );
         } else {
@@ -332,131 +342,161 @@ export class Cell extends React.Component<ICellProps> {
     private renderCodeOutputs = () => {
         if (this.isCodeCell() && this.hasOutput()) {
             // Render the outputs
-            return this.getCodeCell().outputs.map((output: nbformat.IOutput, index: number) => {
-                return this.renderOutput(output, index);
-            });
+            return this.renderOutputs(this.getCodeCell().outputs);
         }
 
         return [];
     }
 
-    private renderMarkdown = (markdown : nbformat.IMarkdownCell) => {
+    private renderMarkdown = (markdown: nbformat.IMarkdownCell) => {
         // React-markdown expects that the source is a string
         const source = concatMultilineString(markdown.source);
         const Transform = transforms['text/markdown'];
 
-        return [<Transform key={0} data={source}/>];
+        return [<Transform key={0} data={source} />];
     }
 
-    private renderWithTransform = (mimetype: string, output : nbformat.IOutput, index : number, renderWithScrollbars: boolean, isText: boolean, isError: boolean) => {
+    // tslint:disable-next-line: max-func-body-length
+    private transformOutput(output: nbformat.IOutput): ICellOutput {
+        // First make a copy of the outputs.
+        const copy = cloneDeep(output);
 
-        // If we found a mimetype, use the transform
-        if (mimetype) {
+        let isText = false;
+        let isError = false;
+        let mimeType = 'text/plain';
+        let renderWithScrollbars = false;
+        let extraButton: JSX.Element | null = null;
 
-            // Get the matching React.Component for that mimetype
-            const Transform = transforms[mimetype];
+        // Special case for json. Just turn into a string
+        if (copy.data && copy.data.hasOwnProperty('application/json')) {
+            copy.data = JSON.stringify(copy.data);
+            renderWithScrollbars = true;
+            isText = true;
+        } else if (copy.output_type === 'stream') {
+            // Stream output needs to be wrapped in xmp so it
+            // show literally. Otherwise < chars start a new html element.
+            mimeType = 'text/html';
+            isText = true;
+            isError = false;
+            renderWithScrollbars = true;
+            const stream = copy as nbformat.IStream;
+            const formatted = concatMultilineString(stream.text);
+            copy.data = {
+                'text/html': formatted.includes('<') ? `<xmp>${formatted}</xmp>` : `<div>${formatted}</div>`
+            };
 
-            if (typeof mimetype !== 'string') {
-                return <div key={index}>{this.getUnknownMimeTypeFormatString().format(mimetype)}</div>;
-            }
-
+            // Output may have goofy ascii colorization chars in it. Try
+            // colorizing if we don't have html that needs <xmp> around it (ex. <type ='string'>)
             try {
-                // Massage our data to make sure it displays well
-                if (output.data) {
-                    let extraButton = null;
-                    const mimeBundle = output.data as nbformat.IMimeBundle;
-                    let data: nbformat.MultilineString | JSONObject = mimeBundle[mimetype];
-                    switch (mimetype) {
-                        case 'text/plain':
-                            // Data needs to be contiguous for us to display it.
-                            data = concatMultilineString(data as nbformat.MultilineString);
-                            renderWithScrollbars = true;
-                            isText = true;
-                            break;
+                if (ansiRegex().test(formatted)) {
+                    const converter = new ansiToHtml(Cell.getAnsiToHtmlOptions());
+                    const html = converter.toHtml(formatted);
+                    copy.data = {
+                        'text/html': html
+                    };
+                }
+            } catch {
+                noop();
+            }
+        } else if (copy.output_type === 'error') {
+            mimeType = 'text/html';
+            isText = true;
+            isError = true;
+            renderWithScrollbars = true;
+            const error = copy as nbformat.IError;
+            try {
+                const converter = new ansiToHtml(Cell.getAnsiToHtmlOptions());
+                const trace = converter.toHtml(error.traceback.join('\n'));
+                copy.data = {
+                    'text/html': trace
+                };
+            } catch {
+                // This can fail during unit tests, just use the raw data
+                copy.data = {
+                    'text/html': error.evalue
+                };
+            }
+        } else if (copy.data) {
+            // Compute the mime type
+            mimeType = richestMimetype(copy.data, displayOrder, transforms);
+        }
 
-                        case 'image/svg+xml':
-                            // Jupyter adds a universal selector style that messes
-                            // up all of our other styles. Remove it.
-                            const html = concatMultilineString(data as nbformat.MultilineString);
-                            data = html.replace(RegExpValues.StyleTagRegex, '');
+        // Then parse the mime type
+        try {
+            const mimeBundle = copy.data as nbformat.IMimeBundle;
+            let data: nbformat.MultilineString | JSONObject = mimeBundle[mimeType];
 
-                            // Also change the width to 100% so it scales correctly. We need to save the
-                            // width/height for the plot window though
-                            let sizeTag = '';
-                            const widthMatch = RegExpValues.SvgWidthRegex.exec(data);
-                            const heightMatch = RegExpValues.SvgHeightRegex.exec(data);
-                            if (widthMatch && heightMatch && widthMatch.length > 2 && heightMatch.length > 2) {
-                                // SvgHeightRegex and SvgWidthRegex match both the <svg.* and the width entry, so
-                                // pick the second group
-                                const width = widthMatch[2];
-                                const height = heightMatch[2];
-                                sizeTag = Identifiers.SvgSizeTag.format(width, height);
-                            }
-                            data = data.replace(RegExpValues.SvgWidthRegex, `$1100%" tag="${sizeTag}"`);
-
-                            // Also add an extra button to open this image.
-                            // Note: This affects the plotOpenClick. We have to skip the svg on this extraButton there
-                            extraButton = (
-                                <div className='plot-open-button'>
-                                    <ImageButton baseTheme={this.props.baseTheme} tooltip={getLocString('DataScience.plotOpen', 'Expand image')} onClick={this.plotOpenClick}>
-                                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.OpenInNewWindow} />
-                                    </ImageButton>
-                                </div>
-                            );
-                            break;
-
-                        default:
-                            break;
-                    }
-
-                    // Create a default set of properties
-                    const style: React.CSSProperties = {
+            switch (mimeType) {
+                case 'text/plain':
+                    return {
+                        mimeType,
+                        data: concatMultilineString(data as nbformat.MultilineString),
+                        isText,
+                        isError,
+                        renderWithScrollbars,
+                        extraButton,
+                        doubleClick: noop
                     };
 
-                    // Create a scrollbar style if necessary
-                    if (renderWithScrollbars && this.props.maxTextSize) {
-                        style.overflowX = 'auto';
-                        style.overflowY = 'auto';
-                        style.maxHeight = `${this.props.maxTextSize}px`;
+                case 'image/svg+xml':
+                case 'image/png':
+                    // There should be two mime bundles. Well if enablePlotViewer is turned on. See if we have both
+                    const svg = mimeBundle['image/svg+xml'];
+                    const png = mimeBundle['image/png'];
+                    let doubleClick: () => void = noop;
+                    if (svg && png) {
+                        // Save the svg in the extra button.
+                        const openClick = () => {
+                            this.props.expandImage(svg.toString());
+                        };
+                        extraButton = (
+                            <div className='plot-open-button'>
+                                <ImageButton baseTheme={this.props.baseTheme} tooltip={getLocString('DataScience.plotOpen', 'Expand image')} onClick={openClick}>
+                                    <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.OpenInNewWindow} />
+                                </ImageButton>
+                            </div>
+                        );
+
+                        // Switch the data to the png
+                        data = png;
+                        mimeType = 'image/png';
+
+                        // Switch double click to do the same thing as the extra button
+                        doubleClick = openClick;
                     }
 
-                    let className = isText ? 'cell-output-text' : 'cell-output-html';
-                    className = isError ? `${className} cell-output-error` : className;
+                    // return the image
+                    return {
+                        mimeType,
+                        data,
+                        isText,
+                        isError,
+                        renderWithScrollbars,
+                        extraButton,
+                        doubleClick
+                    };
 
-                    return (
-                        <div role='group' onDoubleClick={this.doubleClick} onClick={this.click} className={className} key={index} style={style}>
-                            {extraButton}
-                            <Transform data={data} />
-                        </div>
-                    );
-                }
-            } catch (ex) {
-                window.console.log('Error in rendering');
-                window.console.log(ex);
-                return <div></div>;
+                default:
+                    return {
+                        mimeType,
+                        data,
+                        isText,
+                        isError,
+                        renderWithScrollbars,
+                        extraButton,
+                        doubleClick: noop
+                    };
             }
-        }
-
-        return <div></div>;
-    }
-
-    private doubleClick = (event: React.MouseEvent<HTMLDivElement>) => {
-        // Extract the svg image from whatever was clicked
-        // tslint:disable-next-line: no-any
-        const svgChild = event.target as any;
-        if (svgChild && svgChild.ownerSVGElement) {
-            const svg = svgChild.ownerSVGElement as SVGElement;
-            this.props.expandImage(svg.outerHTML);
-        }
-    }
-
-    private plotOpenClick = (event?: React.MouseEvent<HTMLButtonElement>) => {
-        const divChild = event && event.currentTarget;
-        if (divChild && divChild.parentElement && divChild.parentElement.parentElement) {
-            const svgs = divChild.parentElement.parentElement.getElementsByTagName('svg');
-            if (svgs && svgs.length > 1) { // First svg should be the button itself. See the code above where we bind to this function.
-                this.props.expandImage(svgs[1].outerHTML);
-            }
+        } catch (e) {
+            return {
+                data: e.toString(),
+                isText: true,
+                isError: false,
+                extraButton: null,
+                renderWithScrollbars: false,
+                mimeType: 'text/plain',
+                doubleClick: noop
+            };
         }
     }
 
@@ -478,91 +518,48 @@ export class Cell extends React.Component<ICellProps> {
     }
 
     // tslint:disable-next-line: max-func-body-length
-    private renderOutput = (output : nbformat.IOutput, index: number) => {
-        // Borrowed this from Don's Jupyter extension
+    private renderOutputs(outputs: nbformat.IOutput[]): JSX.Element[] {
+        return outputs.map(this.renderOutput);
+    }
 
-        // First make sure we have the mime data
-        if (!output) {
-          return <div key={index}/>;
-        }
-
-        // Make a copy of our data so we don't modify our cell
-        const copy = {...output};
-
-        // Special case for json
-        if (copy.data && copy.data.hasOwnProperty('application/json')) {
-          return <JSONTree key={index} data={copy.data} />;
-        }
-
-        // Only for text and error ouptut do we add scrollbars
-        let addScrollbars = false;
-        let isText = false;
-        let isError = false;
-
-        // Stream and error output need to be converted
-        if (copy.output_type === 'stream') {
-            addScrollbars = true;
-            isText = true;
-
-            // Stream output needs to be wrapped in xmp so it
-            // show literally. Otherwise < chars start a new html element.
-            const stream = copy as nbformat.IStream;
-            const formatted = concatMultilineString(stream.text);
-            copy.data = {
-                'text/html' : formatted.includes('<') ? `<xmp>${formatted}</xmp>` : `<div>${formatted}</div>`
-            };
-
-            // Output may have goofy ascii colorization chars in it. Try
-            // colorizing if we don't have html that needs <xmp> around it (ex. <type ='string'>)
-            try {
-                if (ansiRegex().test(formatted)) {
-                    const converter = new ansiToHtml(Cell.getAnsiToHtmlOptions());
-                    const html = converter.toHtml(formatted);
-                    copy.data = {
-                        'text/html': html
-                    };
-                }
-            } catch {
-                noop();
-            }
-
-        } else if (copy.output_type === 'error') {
-            addScrollbars = true;
-            isText = true;
-            isError = true;
-            const error = copy as nbformat.IError;
-            try {
-                const converter = new ansiToHtml(Cell.getAnsiToHtmlOptions());
-                const trace = converter.toHtml(error.traceback.join('\n'));
-                copy.data = {
-                    'text/html': trace
-                };
-            } catch {
-                // This can fail during unit tests, just use the raw data
-                copy.data = {
-                    'text/html': error.evalue
-                };
-
-            }
-        }
-
-        // Jupyter style MIME bundle
-
-        // Find out which mimetype is the richest
-        let mimetype: string = richestMimetype(copy.data, displayOrder, transforms);
+    private renderOutput = (output: nbformat.IOutput, index: number): JSX.Element => {
+        const transformed = this.transformOutput(output);
+        let mimetype = transformed.mimeType;
 
         // If that worked, use the transform
         if (mimetype) {
-            return this.renderWithTransform(mimetype, copy, index, addScrollbars, isText, isError);
+            // Get the matching React.Component for that mimetype
+            const Transform = transforms[mimetype];
+
+            // Create a default set of properties
+            const style: React.CSSProperties = {
+            };
+
+            // Create a scrollbar style if necessary
+            if (transformed.renderWithScrollbars && this.props.maxTextSize) {
+                style.overflowX = 'auto';
+                style.overflowY = 'auto';
+                style.maxHeight = `${this.props.maxTextSize}px`;
+            }
+
+            let className = transformed.isText ? 'cell-output-text' : 'cell-output-html';
+            className = transformed.isError ? `${className} cell-output-error` : className;
+
+            return (
+                <div role='group' key={index} onDoubleClick={transformed.doubleClick} onClick={this.click} className={className} style={style}>
+                    {transformed.extraButton}
+                    <Transform data={transformed.data} />
+                </div>
+            );
         }
 
-        if (copy.data) {
-            const keys = Object.keys(copy.data);
+        if (output.data) {
+            const keys = Object.keys(output.data);
             mimetype = keys.length > 0 ? keys[0] : 'unknown';
         } else {
             mimetype = 'unknown';
         }
-        const str : string = this.getUnknownMimeTypeFormatString().format(mimetype);
+        const str: string = this.getUnknownMimeTypeFormatString().format(mimetype);
         return <div key={index}>{str}</div>;
     }
 }

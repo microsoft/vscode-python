@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import * as path from 'path';
 import {
     DecorationRenderOptions,
     Event,
@@ -20,8 +21,10 @@ import {
 } from 'vscode';
 
 import { IDocumentManager } from '../../client/common/application/types';
+import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { MockDocument } from './mockDocument';
 import { MockEditor } from './mockTextEditor';
+
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
 
 export class MockDocumentManager implements IDocumentManager {
@@ -81,7 +84,7 @@ export class MockDocumentManager implements IDocumentManager {
     }
 
     public addDocument(code: string, file: string) {
-        const mockDoc = new MockDocument(code, file);
+        const mockDoc = new MockDocument(code, file, this.saveDocument);
         this.textDocuments.push(mockDoc);
     }
 
@@ -117,5 +120,11 @@ export class MockDocumentManager implements IDocumentManager {
             return this.textDocuments[this.textDocuments.length - 1];
         }
         throw new Error('No documents in MockDocumentManager');
+    }
+
+    private saveDocument = (doc: TextDocument): Promise<boolean> => {
+        // Create a new document with the contents of the doc passed in
+        this.addDocument(doc.getText(), path.join(EXTENSION_ROOT_DIR, 'baz.py'));
+        return Promise.resolve(true);
     }
 }

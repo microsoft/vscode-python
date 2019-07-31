@@ -24,7 +24,7 @@ import { CryptoUtils } from '../../client/common/crypto';
 import { EditorUtils } from '../../client/common/editor';
 import { ExperimentsManager } from '../../client/common/experiments';
 import { FeatureDeprecationManager } from '../../client/common/featureDeprecationManager';
-import { ExtensionInsidersDailyChannelRule, ExtensionInsidersWeeklyChannelRule, ExtensionStableChannelRule } from '../../client/common/insidersBuild/downloadChannelRules';
+import { ExtensionInsidersDailyChannelRule, ExtensionInsidersOffChannelRule, ExtensionInsidersWeeklyChannelRule } from '../../client/common/insidersBuild/downloadChannelRules';
 import { ExtensionChannelService } from '../../client/common/insidersBuild/downloadChannelService';
 import { InsidersExtensionPrompt } from '../../client/common/insidersBuild/insidersExtensionPrompt';
 import { InsidersExtensionService } from '../../client/common/insidersBuild/insidersExtensionService';
@@ -109,7 +109,7 @@ suite('Common - Service Registry', () => {
             [IInsiderExtensionPrompt, InsidersExtensionPrompt],
             [IExtensionActivationService, InsidersExtensionService],
             [IExtensionChannelService, ExtensionChannelService],
-            [IExtensionChannelRule, ExtensionStableChannelRule, ExtensionChannel.stable],
+            [IExtensionChannelRule, ExtensionInsidersOffChannelRule, ExtensionChannel.off],
             [IExtensionChannelRule, ExtensionInsidersDailyChannelRule, ExtensionChannel.daily],
             [IExtensionChannelRule, ExtensionInsidersWeeklyChannelRule, ExtensionChannel.weekly]
         ].forEach(mapping => {

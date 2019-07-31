@@ -32,6 +32,7 @@ export namespace Commands {
     export const ExportOutputAsNotebook = 'python.datascience.exportoutputasnotebook';
     export const ExecSelectionInInteractiveWindow = 'python.datascience.execSelectionInteractive';
     export const RunFileInInteractiveWindows = 'python.datascience.runFileInteractive';
+    export const DebugFileInInteractiveWindows = 'python.datascience.debugFileInteractive';
     export const AddCellBelow = 'python.datascience.addcellbelow';
     export const DebugCurrentCellPalette = 'python.datascience.debugcurrentcell.palette';
     export const DebugCell = 'python.datascience.debugcell';
@@ -131,6 +132,7 @@ export enum Telemetry {
     DisableInteractiveShiftEnter = 'DATASCIENCE.DISABLE_INTERACTIVE_SHIFT_ENTER',
     ShowDataViewer = 'DATASCIENCE.SHOW_DATA_EXPLORER',
     RunFileInteractive = 'DATASCIENCE.RUN_FILE_INTERACTIVE',
+    DebugFileInteractive = 'DATASCIENCE.DEBUG_FILE_INTERACTIVE',
     PandasNotInstalled = 'DATASCIENCE.SHOW_DATA_NO_PANDAS',
     PandasTooOld = 'DATASCIENCE.SHOW_DATA_PANDAS_TOO_OLD',
     DataScienceSettings = 'DATASCIENCE.SETTINGS',
@@ -193,8 +195,8 @@ export namespace CodeSnippits {
     export const ChangeDirectory = ['{0}', '{1}', 'import os', 'try:', '\tos.chdir(os.path.join(os.getcwd(), \'{2}\'))', '\tprint(os.getcwd())', 'except:', '\tpass', ''];
     export const ChangeDirectoryCommentIdentifier = '# ms-python.python added'; // Not translated so can compare.
     export const ImportIPython = '#%%\nfrom IPython import get_ipython\n\n';
-    export const MatplotLibInitSvg = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_format = 'svg'`;
-    export const MatplotLibInitPng = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_format = 'png'`;
+    export const MatplotLibInitSvg = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_formats = 'svg', 'png'`;
+    export const MatplotLibInitPng = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_formats = 'png'`;
 }
 
 export namespace JupyterCommands {

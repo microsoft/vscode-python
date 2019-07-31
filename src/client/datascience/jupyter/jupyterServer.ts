@@ -561,7 +561,7 @@ export class JupyterServerBase implements INotebookServer {
             return this.session ? this.session.requestExecute(
                 {
                     // Remove the cell marker if we have one.
-                    code: cellMatcher.stripMarkers(code),
+                    code: cellMatcher.stripFirstMarker(code),
                     stop_on_error: false,
                     allow_stdin: false,
                     store_history: !silent // Silent actually means don't output anything. Store_history is what affects execution_count

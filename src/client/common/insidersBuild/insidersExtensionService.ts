@@ -3,11 +3,12 @@
 
 'use strict';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import { IExtensionActivationService } from '../../../client/activation/types';
 import { IServiceContainer } from '../../ioc/types';
-import { Channel, IApplicationEnvironment, ICommandManager } from '../application/types';
+import { IApplicationEnvironment, ICommandManager } from '../application/types';
 import { Commands } from '../constants';
+import { IExtensionBuildInstaller, INSIDERS_INSTALLER } from '../installer/types';
 import { traceDecorators } from '../logger';
 import { IDisposable, IDisposableRegistry, Resource } from '../types';
 import { ExtensionChannels, IExtensionChannelRule, IExtensionChannelService, IInsiderExtensionPrompt } from './types';
@@ -21,6 +22,7 @@ export class InsidersExtensionService implements IExtensionActivationService {
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(ICommandManager) private readonly cmdManager: ICommandManager,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
+        @inject(IExtensionBuildInstaller) @named(INSIDERS_INSTALLER) private readonly insidersInstaller: IExtensionBuildInstaller,
         @inject(IDisposableRegistry) public readonly disposables: IDisposable[]
     ) { }
 
@@ -30,40 +32,40 @@ export class InsidersExtensionService implements IExtensionActivationService {
         }
         this.registerCommandsAndHandlers();
         this.activatedOnce = true;
-        const installChannel = await this.extensionChannelService.getChannel();
-        const newExtensionChannel: Channel = installChannel === 'Stable' ? 'stable' : 'insiders';
-        this.handleChannel(installChannel, newExtensionChannel !== this.appEnvironment.extensionChannel).ignoreErrors();
+        const installChannel = this.extensionChannelService.getChannel();
+        await this.handleEdgeCases(installChannel);
+        this.handleChannel(installChannel).ignoreErrors();
     }
 
     @traceDecorators.error('Handling channel failed')
     public async handleChannel(installChannel: ExtensionChannels, didChannelChange: boolean = false): Promise<void> {
         const channelRule = this.serviceContainer.get<IExtensionChannelRule>(IExtensionChannelRule, installChannel);
-        const buildInstaller = await channelRule.getInstaller(didChannelChange);
-        if (!buildInstaller) {
+        const shouldInstall = await channelRule.shouldLookForInsidersBuild(didChannelChange);
+        if (!shouldInstall) {
             return;
         }
-        await buildInstaller.install();
-        await this.choosePromptAndDisplay(installChannel, didChannelChange);
+        await this.insidersInstaller.install();
+        await this.insidersPrompt.promptToReload();
     }
 
     /**
-     * Choose between the following prompts and display the right one
-     * * 'Reload prompt' - Ask users to reload on channel change
+     * Choose what to do in miscellaneous situations
      * * 'Notify to install insiders prompt' - Only when using VSC insiders and if they have not been notified before (usually the first session)
+     * * 'Resolve discrepency' - When install channel is not in sync with what is installed.
      */
-    public async choosePromptAndDisplay(installChannel: ExtensionChannels, didChannelChange: boolean): Promise<void> {
-        if (this.appEnvironment.channel === 'insiders' && installChannel !== 'Stable' && !this.insidersPrompt.hasUserBeenNotified.value) {
-            // If user is using VS Code Insiders, channel is `Insiders*` and user has not been notified, then notify user
+    public async handleEdgeCases(installChannel: ExtensionChannels): Promise<void> {
+        if (this.appEnvironment.channel === 'insiders' && !this.insidersPrompt.hasUserBeenNotified.value && this.extensionChannelService.isChannelUsingDefaultConfiguration) {
             await this.insidersPrompt.notifyToInstallInsiders();
-        } else if (didChannelChange) {
-            await this.insidersPrompt.promptToReload();
+        } else if (installChannel !== 'off' && this.appEnvironment.extensionChannel === 'stable') {
+            // Install channel is set to "weekly" or "daily" but stable version of extension is installed. Switch channel to "off" to use the installed version
+            await this.extensionChannelService.updateChannel('off');
         }
     }
 
     public registerCommandsAndHandlers(): void {
         this.disposables.push(this.extensionChannelService.onDidChannelChange(channel => this.handleChannel(channel, true)));
-        this.disposables.push(this.cmdManager.registerCommand(Commands.SwitchToStable, () => this.extensionChannelService.updateChannel('Stable')));
-        this.disposables.push(this.cmdManager.registerCommand(Commands.SwitchToInsidersDaily, () => this.extensionChannelService.updateChannel('InsidersDaily')));
-        this.disposables.push(this.cmdManager.registerCommand(Commands.SwitchToInsidersWeekly, () => this.extensionChannelService.updateChannel('InsidersWeekly')));
+        this.disposables.push(this.cmdManager.registerCommand(Commands.SwitchOffInsidersChannel, () => this.extensionChannelService.updateChannel('off')));
+        this.disposables.push(this.cmdManager.registerCommand(Commands.SwitchToInsidersDaily, () => this.extensionChannelService.updateChannel('daily')));
+        this.disposables.push(this.cmdManager.registerCommand(Commands.SwitchToInsidersWeekly, () => this.extensionChannelService.updateChannel('weekly')));
     }
 }

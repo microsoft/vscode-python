@@ -185,23 +185,41 @@
                 "category": "Python"
             },
             {
+                "command": "python.execInTerminal-icon1",
+                "title": "%python.command.python.execInTerminal.title%",
+                "category": "Python",
+                "icon": {
+                    "light": "resources/light/start.svg",
+                    "dark": "resources/dark/start.svg"
+                }
+            },
+            {
+                "command": "python.execInTerminal-icon2",
+                "title": "%python.command.python.execInTerminal.title%",
+                "category": "Python",
+                "icon": {
+                    "light": "resources/light/run-file.svg",
+                    "dark": "resources/dark/run-file.svg"
+                }
+            },
+            {
                 "command": "python.setInterpreter",
                 "title": "%python.command.python.setInterpreter.title%",
                 "category": "Python"
             },
             {
-                "command": "python.switchToStable",
-                "title": "%python.command.python.switchToStable.title%",
+                "command": "python.switchOffInsidersChannel",
+                "title": "%python.command.python.switchOffInsidersChannel.title%",
                 "category": "Python"
             },
             {
-                "command": "python.switchToInsidersDaily",
-                "title": "%python.command.python.switchToInsidersDaily.title%",
+                "command": "python.switchToDailyChannel",
+                "title": "%python.command.python.switchToDailyChannel.title%",
                 "category": "Python"
             },
             {
-                "command": "python.switchToInsidersWeekly",
-                "title": "%python.command.python.switchToInsidersWeekly.title%",
+                "command": "python.switchToWeeklyChannel",
+                "title": "%python.command.python.switchToWeeklyChannel.title%",
                 "category": "Python"
             },
             {
@@ -386,6 +404,11 @@
             {
                 "command": "python.datascience.runFileInteractive",
                 "title": "%python.command.python.datascience.runFileInteractive.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.debugFileInteractive",
+                "title": "%python.command.python.datascience.debugFileInteractive.title%",
                 "category": "Python"
             },
             {
@@ -581,6 +604,20 @@
                     "group": "Python3@3"
                 }
             ],
+            "editor/title": [
+                {
+                    "command": "python.execInTerminal-icon1",
+                    "title": "%python.command.python.execInTerminal.title%",
+                    "group": "navigation",
+                    "when": "resourceLangId == python && python.showPlayIcon1"
+                },
+                {
+                    "command": "python.execInTerminal-icon2",
+                    "title": "%python.command.python.execInTerminal.title%",
+                    "group": "navigation",
+                    "when": "resourceLangId == python && python.showPlayIcon2"
+                }
+            ],
             "explorer/context": [
                 {
                     "when": "resourceLangId == python && !busyTests",
@@ -610,22 +647,22 @@
             ],
             "commandPalette": [
                 {
-                    "command": "python.switchToStable",
-                    "title": "%python.command.python.switchToStable.title%",
+                    "command": "python.switchOffInsidersChannel",
+                    "title": "%python.command.python.switchOffInsidersChannel.title%",
                     "category": "Python",
-                    "when": "config.python.insidersChannel != 'Stable'"
+                    "when": "config.python.insidersChannel != 'default'"
                 },
                 {
-                    "command": "python.switchToInsidersDaily",
-                    "title": "%python.command.python.switchToInsidersDaily.title%",
+                    "command": "python.switchToDailyChannel",
+                    "title": "%python.command.python.switchToDailyChannel.title%",
                     "category": "Python",
-                    "when": "config.python.insidersChannel != 'InsidersDaily'"
+                    "when": "config.python.insidersChannel != 'daily'"
                 },
                 {
-                    "command": "python.switchToInsidersWeekly",
-                    "title": "%python.command.python.switchToInsidersWeekly.title%",
+                    "command": "python.switchToWeeklyChannel",
+                    "title": "%python.command.python.switchToWeeklyChannel.title%",
                     "category": "Python",
-                    "when": "config.python.insidersChannel != 'InsidersWeekly'"
+                    "when": "config.python.insidersChannel != 'weekly'"
                 },
                 {
                     "command": "python.viewOutput",
@@ -703,14 +740,14 @@
                     "when": "python.datascience.featureenabled"
                 },
                 {
-                    "command": "python.datascience.runcell",
-                    "title": "%python.command.python.datascience.runcell.title%",
+                    "command": "python.datascience.runFileInteractive",
+                    "title": "%python.command.python.datascience.runFileInteractive.title%",
                     "category": "Python",
                     "when": "python.datascience.featureenabled"
                 },
                 {
-                    "command": "python.datascience.runFileInteractive",
-                    "title": "%python.command.python.datascience.runFileInteractive.title%",
+                    "command": "python.datascience.debugFileInteractive",
+                    "title": "%python.command.python.datascience.debugFileInteractive.title%",
                     "category": "Python",
                     "when": "python.datascience.featureenabled"
                 },
@@ -1428,7 +1465,7 @@
                 "python.dataScience.stopOnFirstLineWhileDebugging": {
                     "type": "boolean",
                     "default": true,
-                    "description": "When debugging a cell, stop on the first line if no other breakpoints in the current cell.",
+                    "description": "When debugging a cell, stop on the first line.",
                     "scope": "resource"
                 },
                 "python.dataScience.remoteDebuggerPort": {
@@ -2206,12 +2243,12 @@
                 },
                 "python.insidersChannel": {
                     "type": "string",
-                    "default": "Stable",
-                    "description": "Set to \"Insiders\" to automatically download and install the latest Insiders builds of the extension, which include upcoming features and bug fixes.",
+                    "default": "off",
+                    "description": "Set to \"weekly\" or \"daily\" to automatically download and install the latest Insiders builds of the python extension, which include upcoming features and bug fixes.",
                     "enum": [
-                        "Stable",
-                        "InsidersWeekly",
-                        "InsidersDaily"
+                        "off",
+                        "weekly",
+                        "daily"
                     ],
                     "scope": "application"
                 }
