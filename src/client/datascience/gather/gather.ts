@@ -4,10 +4,12 @@ import { CellSlice } from '@msrvida/python-program-analysis/lib/cellslice';
 import { ExecutionLogSlicer } from '@msrvida/python-program-analysis/lib/log-slicer';
 
 import { inject, injectable } from 'inversify';
-import { IApplicationShell } from '../../common/application/types';
+import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import { traceInfo } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import * as localize from '../../common/utils/localize';
+// tslint:disable-next-line: no-duplicate-imports
+import { Common } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { CellMatcher } from '../cellMatcher';
 import { concatMultilineString } from '../common';
@@ -25,7 +27,8 @@ export class GatherExecution implements IGatherExecution, INotebookExecutionLogg
     constructor(
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
-        @inject(IDisposableRegistry) private disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
+        @inject(ICommandManager) private commandManager: ICommandManager
 
     ) {
         this._enabled = this.configService.getSettings().datascience.enableGather;
@@ -93,16 +96,17 @@ export class GatherExecution implements IGatherExecution, INotebookExecutionLogg
         this._enabled = enabled;
     }
 
-    public updateEnableGather(_e: void) {
+    public async updateEnableGather(_e: void) {
         if (this.enabled !== this.configService.getSettings().datascience.enableGather) {
             this.enabled = this.configService.getSettings().datascience.enableGather;
-            this.applicationShell.showInformationMessage(localize.DataScience.reloadRequired());
+            const item = await this.applicationShell.showInformationMessage(localize.DataScience.reloadRequired(), Common.reload());
+            if (!item) {
+                return;
+            }
+            if (item === 'Reload') {
+                this.commandManager.executeCommand('workbench.action.reloadWindow');
+            }
         }
-    }
-
-    // Update DataflowAnalyzer's slice configuration. Is called onDidChangeConfiguration
-    public updateGatherRules() {
-        //     this.dataflowAnalyzer._sliceConfiguration = this.configService.getSettings().datascience.gatherRules;
     }
 }
 
