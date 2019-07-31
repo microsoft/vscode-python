@@ -332,6 +332,7 @@ export interface IDataScienceSettings {
     askForKernelRestart?: boolean;
     enablePlotViewer?: boolean;
     codeLenses?: string;
+    debugCodeLenses?: string;
     ptvsdDistPath?: string;
     stopOnFirstLineWhileDebugging?: boolean;
     textOutputLimit?: number;

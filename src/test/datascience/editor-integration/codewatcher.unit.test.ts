@@ -19,6 +19,7 @@ import {
     ICellHashProvider,
     ICodeWatcher,
     IDataScienceErrorHandler,
+    IDebugLocationTracker,
     IInteractiveWindow,
     IInteractiveWindowProvider
 } from '../../../client/datascience/types';
@@ -43,6 +44,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
     let helper: TypeMoq.IMock<ICodeExecutionHelper>;
     let tokenSource: CancellationTokenSource;
     let debugService: TypeMoq.IMock<IDebugService>;
+    let debugLocationTracker: TypeMoq.IMock<IDebugLocationTracker>;
     let cellHashProvider: TypeMoq.IMock<ICellHashProvider>;
     const contexts: Map<string, boolean> = new Map<string, boolean>();
     const pythonSettings = new class extends PythonSettings {
@@ -60,6 +62,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
         textEditor = TypeMoq.Mock.ofType<TextEditor>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
+        debugLocationTracker = TypeMoq.Mock.ofType<IDebugLocationTracker>();
         helper = TypeMoq.Mock.ofType<ICodeExecutionHelper>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
         debugService = TypeMoq.Mock.ofType<IDebugService>();
@@ -154,6 +157,20 @@ suite('DataScience Code Watcher Unit Tests', () => {
                 expect(codeLenses[startLensIndex + indexAdd].command!.command).to.be.equal(Commands.DebugCell, 'Debug command incorrect');
             }
             expect(codeLenses[startLensIndex + indexAdd].range).to.be.deep.equal(targetRange, 'Debug code lens range incorrect');
+
+            // Debugger mode commands
+            if (codeLenses[startLensIndex + indexAdd + 1].command) {
+                expect(codeLenses[startLensIndex + indexAdd + 1].command!.command).to.be.equal(Commands.DebugContinue, 'Debug command incorrect');
+            }
+            expect(codeLenses[startLensIndex + indexAdd + 1].range).to.be.deep.equal(targetRange, 'Debug code lens range incorrect');
+            if (codeLenses[startLensIndex + indexAdd + 2].command) {
+                expect(codeLenses[startLensIndex + indexAdd + 2].command!.command).to.be.equal(Commands.DebugStop, 'Debug command incorrect');
+            }
+            expect(codeLenses[startLensIndex + indexAdd + 2].range).to.be.deep.equal(targetRange, 'Debug code lens range incorrect');
+            if (codeLenses[startLensIndex + indexAdd + 3].command) {
+                expect(codeLenses[startLensIndex + indexAdd + 3].command!.command).to.be.equal(Commands.DebugStepOver, 'Debug command incorrect');
+            }
+            expect(codeLenses[startLensIndex + indexAdd + 3].range).to.be.deep.equal(targetRange, 'Debug code lens range incorrect');
         }
     }
 
@@ -171,7 +188,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
 
         // Verify code lenses
         const codeLenses = codeWatcher.getCodeLenses();
-        expect(codeLenses.length).to.be.equal(3, 'Incorrect count of code lenses');
+        expect(codeLenses.length).to.be.equal(6, 'Incorrect count of code lenses');
         verifyCodeLensesAtPosition(codeLenses, 0, new Range(0, 0, 0, 3), true);
 
         // Verify function calls
@@ -220,10 +237,10 @@ fourth line`;
 
         // Verify code lenses
         const codeLenses = codeWatcher.getCodeLenses();
-        expect(codeLenses.length).to.be.equal(6, 'Incorrect count of code lenses');
+        expect(codeLenses.length).to.be.equal(12, 'Incorrect count of code lenses');
 
         verifyCodeLensesAtPosition(codeLenses, 0, new Range(3, 0, 5, 0), true);
-        verifyCodeLensesAtPosition(codeLenses, 3, new Range(6, 0, 7, 11));
+        verifyCodeLensesAtPosition(codeLenses, 6, new Range(6, 0, 7, 11));
 
         // Verify function calls
         document.verifyAll();
@@ -257,11 +274,11 @@ fourth line
 
         // Verify code lenses
         const codeLenses = codeWatcher.getCodeLenses();
-        expect(codeLenses.length).to.be.equal(8, 'Incorrect count of code lenses');
+        expect(codeLenses.length).to.be.equal(14, 'Incorrect count of code lenses');
 
         verifyCodeLensesAtPosition(codeLenses, 0, new Range(3, 0, 5, 0), true);
-        verifyCodeLensesAtPosition(codeLenses, 3, new Range(6, 0, 8, 0));
-        verifyCodeLensesAtPosition(codeLenses, 6, new Range(9, 0, 10, 12), false, true);
+        verifyCodeLensesAtPosition(codeLenses, 6, new Range(6, 0, 8, 0));
+        verifyCodeLensesAtPosition(codeLenses, 12, new Range(9, 0, 10, 12), false, true);
 
         // Verify function calls
         document.verifyAll();
@@ -295,11 +312,11 @@ fourth line
 
         // Verify code lenses
         const codeLenses = codeWatcher.getCodeLenses();
-        expect(codeLenses.length).to.be.equal(8, 'Incorrect count of code lenses');
+        expect(codeLenses.length).to.be.equal(14, 'Incorrect count of code lenses');
 
         verifyCodeLensesAtPosition(codeLenses, 0, new Range(3, 0, 5, 0), true);
-        verifyCodeLensesAtPosition(codeLenses, 3, new Range(6, 0, 8, 0));
-        verifyCodeLensesAtPosition(codeLenses, 6, new Range(9, 0, 10, 12), false, true);
+        verifyCodeLensesAtPosition(codeLenses, 6, new Range(6, 0, 8, 0));
+        verifyCodeLensesAtPosition(codeLenses, 12, new Range(9, 0, 10, 12), false, true);
 
         // Verify function calls
         document.verifyAll();
@@ -719,7 +736,7 @@ testing2`; // Command tests override getText, so just need the ranges here
         const inputText = '#%% foobar';
         const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce());
         documentManager.setup(d => d.textDocuments).returns(() => [document.object]);
-        const codeLensProvider = new DataScienceCodeLensProvider(serviceContainer.object, documentManager.object, configService.object, commandManager.object, disposables, debugService.object);
+        const codeLensProvider = new DataScienceCodeLensProvider(serviceContainer.object, debugLocationTracker.object, documentManager.object, configService.object, commandManager.object, disposables, debugService.object, fileSystem.object);
 
         let result = codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
         expect(result, 'result not okay').to.be.ok;

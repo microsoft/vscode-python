@@ -5,7 +5,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
 import { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
-import { CancellationToken, CodeLens, CodeLensProvider, Disposable, Event, Range, TextDocument, TextEditor } from 'vscode';
+import { CancellationToken, CodeLens, CodeLensProvider, DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, Disposable, Event, Range, TextDocument, TextEditor } from 'vscode';
 
 import { ICommandManager } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
@@ -450,4 +450,21 @@ export const ICellHashProvider = Symbol('ICellHashProvider');
 export interface ICellHashProvider {
     updated: Event<void>;
     getHashes(): IFileHashes[];
+}
+
+export const IDebugLocationTrackerFactory = Symbol('IDebugLocationTrackerFactory');
+export interface IDebugLocationTrackerFactory extends DebugAdapterTrackerFactory {
+}
+
+export interface IDebugLocation {
+    fileName: string;
+    lineNumber: number;
+    column: number;
+}
+
+export const IDebugLocationTracker = Symbol('IDebugLocationTracker');
+export interface IDebugLocationTracker extends DebugAdapterTracker {
+    debugLocationUpdated: Event<void>;
+    debugLocation: IDebugLocation | undefined;
+    setDebugSession(targetSession: DebugSession): void;
 }

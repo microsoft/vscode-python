@@ -6,12 +6,13 @@ import * as vscode from 'vscode';
 
 import { ICommandManager, IDebugService, IDocumentManager } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
+import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDataScienceSettings, IDisposable, IDisposableRegistry } from '../../common/types';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
-import { EditorContexts, Telemetry } from '../constants';
-import { ICodeWatcher, IDataScienceCodeLensProvider } from '../types';
+import { CodeLensCommands, EditorContexts, Telemetry } from '../constants';
+import { ICodeWatcher, IDataScienceCodeLensProvider, IDebugLocationTracker } from '../types';
 
 @injectable()
 export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider, IDisposable {
@@ -20,16 +21,18 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     private activeCodeWatchers: ICodeWatcher[] = [];
     private didChangeCodeLenses: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
+        @inject(IDebugLocationTracker) private debugLocationTracker: IDebugLocationTracker,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
-        @inject(IDebugService) private debugService: IDebugService
+        @inject(IDebugService) private debugService: IDebugService,
+        @inject(IFileSystem) private fileSystem: IFileSystem
     ) {
         disposableRegistry.push(this);
         disposableRegistry.push(this.debugService.onDidChangeActiveDebugSession(this.onChangeDebugSession.bind(this)));
         disposableRegistry.push(this.documentManager.onDidCloseTextDocument(this.onDidCloseTextDocument.bind(this)));
-
+        disposableRegistry.push(this.debugLocationTracker.debugLocationUpdated(this.onDebugLocationUpdated.bind(this)));
     }
 
     public dispose() {
@@ -53,6 +56,10 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     // IDataScienceCodeLensProvider interface
     public getCodeWatcher(document: vscode.TextDocument): ICodeWatcher | undefined {
         return this.matchWatcher(document.fileName, document.version, this.configuration.getSettings().datascience);
+    }
+
+    private onDebugLocationUpdated() {
+        this.didChangeCodeLenses.fire();
     }
 
     private onChangeDebugSession(_e: vscode.DebugSession | undefined) {
@@ -80,7 +87,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
 
         // Don't provide any code lenses if we have not enabled data science
         const settings = this.configuration.getSettings();
-        if (!settings.datascience.enabled || !settings.datascience.enableCellCodeLens || this.debugService.activeDebugSession) {
+        if (!settings.datascience.enabled || !settings.datascience.enableCellCodeLens) {
             // Clear out any existing code watchers, providecodelenses is called on settings change
             // so we don't need to watch the settings change specifically here
             if (this.activeCodeWatchers.length > 0) {
@@ -89,7 +96,42 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
             return [];
         }
 
-        return result;
+        return this.adjustDebuggingLenses(document, result);
+    }
+
+    // Adjust what code lenses are visible or not given debug mode and debug context location
+    private adjustDebuggingLenses(document: vscode.TextDocument, lenses: vscode.CodeLens[]): vscode.CodeLens[] {
+        const debugCellList = CodeLensCommands.DebuggerCommands;
+
+        if (this.debugService.activeDebugSession) {
+            const debugLocation = this.debugLocationTracker.debugLocation;
+
+            if (debugLocation && this.fileSystem.arePathsSame(debugLocation.fileName, document.uri.fsPath)) {
+                // We are in the given debug file, so only return the code lens that contains the given line
+                const activeLenses = lenses.filter(lens => {
+                    // -1 for difference between file system one based and debugger zero based
+                    const pos = new vscode.Position(debugLocation.lineNumber - 1, debugLocation.column - 1);
+                    return lens.range.contains(pos);
+                });
+
+                return activeLenses.filter(lens => {
+                    if (lens.command) {
+                        return debugCellList.includes(lens.command.command);
+                    }
+                    return false;
+                });
+            }
+        } else {
+            return lenses.filter(lens => {
+                if (lens.command) {
+                    return !(debugCellList.includes(lens.command.command));
+                }
+                return false;
+            });
+        }
+
+        // Fall through case to return nothing
+        return [];
     }
 
     private getCodeLens(document: vscode.TextDocument): vscode.CodeLens[] {

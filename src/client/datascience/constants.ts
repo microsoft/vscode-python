@@ -36,8 +36,20 @@ export namespace Commands {
     export const AddCellBelow = 'python.datascience.addcellbelow';
     export const DebugCurrentCellPalette = 'python.datascience.debugcurrentcell.palette';
     export const DebugCell = 'python.datascience.debugcell';
+    export const DebugStepOver = 'python.datascience.debugstepover';
+    export const DebugContinue = 'python.datascience.debugcontinue';
+    export const DebugStop = 'python.datascience.debugstop';
     export const RunCurrentCellAndAddBelow = 'python.datascience.runcurrentcellandaddbelow';
     export const ScrollToCell = 'python.datascience.scrolltocell';
+}
+
+export namespace CodeLensCommands {
+    // If not specified in the options this is the default set of commands in our design time code lenses
+    export const DefaultDesignLenses = [Commands.RunCurrentCell, Commands.RunAllCellsAbove, Commands.DebugCell];
+    // If not specified in the options this is the default set of commands in our debug time code lenses
+    export const DefaultDebuggingLenses = [Commands.DebugContinue, Commands.DebugStop, Commands.DebugStepOver];
+    // These are the commands that are allowed at debug time
+    export const DebuggerCommands = [Commands.DebugContinue, Commands.DebugStop, Commands.DebugStepOver];
 }
 
 export namespace EditorContexts {
@@ -152,7 +164,10 @@ export enum Telemetry {
     PtvsdPromptToInstall = 'DATASCIENCE.PTVSD_PROMPT_TO_INSTALL',
     PtvsdSuccessfullyInstalled = 'DATASCIENCE.PTVSD_SUCCESSFULLY_INSTALLED',
     PtvsdInstallFailed = 'DATASCIENCE.PTVSD_INSTALL_FAILED',
-    ScrolledToCell = 'DATASCIENCE.SCROLLED_TO_CELL'
+    ScrolledToCell = 'DATASCIENCE.SCROLLED_TO_CELL',
+    DebugStepOver = 'DATASCIENCE.DEBUG_STEP_OVER',
+    DebugContinue = 'DATASCIENCE.DEBUG_CONTINUE',
+    DebugStop = 'DATASCIENCE.DEBUG_STOP'
 }
 
 export namespace HelpLinks {

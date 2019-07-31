@@ -7,6 +7,7 @@ import {
     CancellationToken,
     CompletionItemProvider,
     ConfigurationChangeEvent,
+    DebugAdapterTrackerFactory,
     DebugConfiguration,
     DebugConfigurationProvider,
     DebugConsole,
@@ -763,6 +764,15 @@ export interface IDebugService {
      * @return A [disposable](#Disposable) that unregisters this provider when being disposed.
      */
     registerDebugConfigurationProvider(debugType: string, provider: DebugConfigurationProvider): Disposable;
+
+    /**
+     * Register a debug adapter tracker factory for the given debug type.
+     *
+     * @param debugType The debug type for which the factory is registered or '*' for matching all debug types.
+     * @param factory The [debug adapter tracker factory](#DebugAdapterTrackerFactory) to register.
+     * @return A [disposable](#Disposable) that unregisters this factory when being disposed.
+     */
+    registerDebugAdapterTrackerFactory(debugType: string, factory: DebugAdapterTrackerFactory): Disposable;
 
     /**
      * Start debugging by using either a named launch or named compound configuration,

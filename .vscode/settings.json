@@ -7,7 +7,6 @@
         "obj": true,
         "bin": true,
         "**/__pycache__": true,
-        "node_modules": true,
         "**/.mypy_cache/**": true,
         "**/.ropeproject/**": true
     },

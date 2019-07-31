@@ -495,7 +495,10 @@ export interface IEventNamePropertyMapping {
     [Telemetry.CopySourceCode]: never | undefined;
     [Telemetry.DataScienceSettings]: JSONObject;
     [Telemetry.DataViewerFetchTime]: never | undefined;
+    [Telemetry.DebugContinue]: never | undefined;
     [Telemetry.DebugCurrentCell]: never | undefined;
+    [Telemetry.DebugStepOver]: never | undefined;
+    [Telemetry.DebugStop]: never | undefined;
     [Telemetry.DebugFileInteractive]: never | undefined;
     [Telemetry.DeleteAllCells]: never | undefined;
     [Telemetry.DeleteCell]: never | undefined;

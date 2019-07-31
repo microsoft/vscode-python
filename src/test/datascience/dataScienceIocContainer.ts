@@ -97,6 +97,8 @@ import { IEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
 import { DataViewer } from '../../client/datascience/data-viewing/dataViewer';
 import { DataViewerProvider } from '../../client/datascience/data-viewing/dataViewerProvider';
+import { DebugLocationTracker } from '../../client/datascience/debugLocationTracker';
+import { DebugLocationTrackerFactory } from '../../client/datascience/debugLocationTrackerFactory';
 import { CellHashProvider } from '../../client/datascience/editor-integration/cellhashprovider';
 import { CodeLensFactory } from '../../client/datascience/editor-integration/codeLensFactory';
 import { DataScienceCodeLensProvider } from '../../client/datascience/editor-integration/codelensprovider';
@@ -137,6 +139,8 @@ import {
     IDataScienceErrorHandler,
     IDataViewer,
     IDataViewerProvider,
+    IDebugLocationTracker,
+    IDebugLocationTrackerFactory,
     IGatherExecution,
     IInteractiveWindow,
     IInteractiveWindowListener,
@@ -351,6 +355,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.add<IInstallationChannelManager>(IInstallationChannelManager, InstallationChannelManager);
         this.serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables);
         this.serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, JupyterDebugger);
+        this.serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTracker);
+        this.serviceManager.addSingleton<IDebugLocationTrackerFactory>(IDebugLocationTrackerFactory, DebugLocationTrackerFactory);
 
         this.serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
         this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(

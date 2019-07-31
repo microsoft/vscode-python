@@ -9,7 +9,7 @@ import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { generateCellRanges } from '../cellFactory';
-import { Commands } from '../constants';
+import { CodeLensCommands, Commands } from '../constants';
 import { InteractiveWindowMessages } from '../interactive-window/interactiveWindowTypes';
 import { ICell, ICellHashProvider, ICodeLensFactory, IFileHashes, IInteractiveWindowListener } from '../types';
 
@@ -79,11 +79,24 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
     }
 
     private enumerateCommands(): string[] {
+        let fullCommandList: string[];
+        // Add our non-debug commands
         const commands = this.configService.getSettings().datascience.codeLenses;
         if (commands) {
-            return commands.split(',').map(s => s.trim());
+            fullCommandList = commands.split(',').map(s => s.trim());
+        } else {
+            fullCommandList = CodeLensCommands.DefaultDesignLenses;
         }
-        return [Commands.RunCurrentCell, Commands.RunAllCellsAbove, Commands.DebugCell];
+
+        // Add our debug commands
+        const debugCommands = this.configService.getSettings().datascience.debugCodeLenses;
+        if (debugCommands) {
+            fullCommandList = fullCommandList.concat(debugCommands.split(',').map(s => s.trim()));
+        } else {
+            fullCommandList = fullCommandList.concat(CodeLensCommands.DefaultDebuggingLenses);
+        }
+
+        return fullCommandList;
     }
 
     private createCodeLens(document: TextDocument, cellRange: { range: Range; cell_type: string }, commandName: string, isFirst: boolean): CodeLens | undefined {
@@ -117,6 +130,30 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
                     Commands.DebugCell,
                     localize.DataScience.debugCellCommandTitle(),
                     [document.fileName, range.start.line, range.start.character, range.end.line, range.end.character]);
+
+            case Commands.DebugStepOver:
+                // Only code cells get debug actions
+                if (cell_type !== 'code') { break; }
+                return this.generateCodeLens(
+                    range,
+                    Commands.DebugStepOver,
+                    localize.DataScience.debugStepOverCommandTitle());
+
+            case Commands.DebugContinue:
+                // Only code cells get debug actions
+                if (cell_type !== 'code') { break; }
+                return this.generateCodeLens(
+                    range,
+                    Commands.DebugContinue,
+                    localize.DataScience.debugContinueCommandTitle());
+
+            case Commands.DebugStop:
+                // Only code cells get debug actions
+                if (cell_type !== 'code') { break; }
+                return this.generateCodeLens(
+                    range,
+                    Commands.DebugStop,
+                    localize.DataScience.debugStopCommandTitle());
 
             case Commands.RunCurrentCell:
             case Commands.RunCell:

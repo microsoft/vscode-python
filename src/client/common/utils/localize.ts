@@ -230,6 +230,9 @@ export namespace DataScience {
     export const jupyterDataRateExceeded = localize('DataScience.jupyterDataRateExceeded', 'Cannot view variable because data rate exceeded. Please restart your server with a higher data rate limit. For example, --NotebookApp.iopub_data_rate_limit=10000000000.0');
     export const addCellBelowCommandTitle = localize('DataScience.addCellBelowCommandTitle', 'Add cell');
     export const debugCellCommandTitle = localize('DataScience.debugCellCommandTitle', 'Debug cell');
+    export const debugStepOverCommandTitle = localize('DataScience.debugStepOverCommandTitle', 'Step over');
+    export const debugContinueCommandTitle = localize('DataScience.debugContinueCommandTitle', 'Continue');
+    export const debugStopCommandTitle = localize('DataScience.debugStopCommandTitle', 'Stop');
     export const runCurrentCellAndAddBelow = localize('DataScience.runCurrentCellAndAddBelow', 'Run current and add cell below');
     export const variableExplorerDisabledDuringDebugging = localize('DataScience.variableExplorerDisabledDuringDebugging', 'Please see the Debug Side Bar\'s VARIABLES section.');
     export const jupyterDebuggerNotInstalledError = localize('DataScience.jupyterDebuggerNotInstalledError', 'Pip module ptvsd is required for debugging cells. You will need to install it to debug cells.');
