@@ -16,7 +16,7 @@ import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { MockDocumentManager } from './mockDocumentManager';
 
-suite('DataScience Functional Tests', () => {
+suite('DataScience Error Handler Functional Tests', () => {
     const ioc = createContainer();
 
     function createContainer(): DataScienceIocContainer {
