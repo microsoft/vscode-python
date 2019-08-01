@@ -96,6 +96,7 @@
     "DataScience.importDialogTitle": "Import Jupyter Notebook",
     "DataScience.importDialogFilter": "Jupyter Notebooks",
     "DataScience.notebookCheckForImportYes": "Import",
+    "DataScience.reloadRequired": "Please reload the window for new settings to take effect.",
     "DataScience.notebookCheckForImportNo": "Later",
     "DataScience.notebookCheckForImportDontAskAgain": "Don't Ask Again",
     "DataScience.notebookCheckForImportTitle": "Do you want to import the Jupyter Notebook into Python code?",
