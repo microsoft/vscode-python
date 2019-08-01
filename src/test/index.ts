@@ -36,6 +36,7 @@ process.on('unhandledRejection', (ex: string | Error, _a) => {
             message.push(ex.stack);
         }
     }
+    // tslint:disable-next-line: no-console
     console.log(`Unhandled Promise Rejection with the message ${message.join(', ')}`);
 });
 
