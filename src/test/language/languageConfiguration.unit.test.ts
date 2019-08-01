@@ -5,9 +5,17 @@
 
 import { expect } from 'chai';
 
-import { DECREASE_INDENT_REGEX, INCREASE_INDENT_REGEX, MULTILINE_SEPARATOR_INDENT_REGEX, OUTDENT_ONENTER_REGEX } from '../../client/language/languageConfiguration';
+import {
+    getLanguageConfiguration
+} from '../../client/language/languageConfiguration';
 
 suite('Language configuration regexes', () => {
+    const cfg = getLanguageConfiguration();
+    const DECREASE_INDENT_REGEX = cfg.indentationRules.decreaseIndentPattern;
+    const INCREASE_INDENT_REGEX = cfg.indentationRules.increaseIndentPattern;
+    const MULTILINE_SEPARATOR_INDENT_REGEX = cfg.onEnterRules[0].beforeText;
+    const OUTDENT_ONENTER_REGEX = cfg.onEnterRules[2].beforeText;
+
     test('Multiline separator indent regex should not pick up strings with no multiline separator', async () => {
         const result = MULTILINE_SEPARATOR_INDENT_REGEX.test('a = "test"');
         expect(result).to.be.equal(false, 'Multiline separator indent regex for regular strings should not have matches');
