@@ -2449,9 +2449,10 @@
         "verifyBundle": "gulp verifyBundle"
     },
     "dependencies": {
-        "@msrvida/python-program-analysis": "0.0.5",
         "@jupyterlab/services": "^3.2.1",
+        "@msrvida/python-program-analysis": "0.0.5",
         "ansi-regex": "^4.1.0",
+        "applicationinsights-native-metrics": "0.0.5",
         "arch": "^2.1.0",
         "azure-storage": "^2.10.1",
         "diff-match-patch": "^1.0.0",
