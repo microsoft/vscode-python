@@ -3,13 +3,23 @@
 'use strict';
 
 import { IndentAction } from 'vscode';
+import { verboseRegExp } from '../common/utils/regexp';
 
+// tslint:disable:no-multiline-string
+
+// tslint:disable-next-line:max-func-body-length
 export function getLanguageConfiguration() {
     return {
         onEnterRules: [
             // multi-line separator
             {
-                beforeText: /^(?!\s+\\)[^#\n]+\\$/,
+                beforeText: verboseRegExp(`
+                    ^
+                    (?! \\s+ \\\\ )
+                    [^#\n]+
+                    \\\\
+                    $
+                `),
                 action: {
                     indentAction: IndentAction.Indent
                 }
@@ -25,7 +35,20 @@ export function getLanguageConfiguration() {
             },
             // outdent on enter
             {
-                beforeText: /^\s*(?:break|continue|pass|(?:raise|return)\b.*)\s*(#.*)?$/,
+                beforeText: verboseRegExp(`
+                    ^
+                    \\s*
+                    (?:
+                        break |
+                        continue |
+                        pass |
+                        raise \\b .* |
+                        return \\b .*
+                    )
+                    \\s*
+                    ( [#] .* )?
+                    $
+                `),
                 action: {
                     indentAction: IndentAction.Outdent
                 }
@@ -40,8 +63,54 @@ export function getLanguageConfiguration() {
              * - there are multiple statements on the line (separated by semicolons)
              * Also note that `lambda` is purposefully excluded.
              */
-            increaseIndentPattern: /^\s*(?:(?:async|class|def|elif|except|for|if|while|with)\b.*|(else|finally|try))\s*:\s*(#.*)?$/,
-            decreaseIndentPattern: /^\s*(?:else|finally|(?:elif|except)\b.*)\s*:\s*(#.*)?$/
+            increaseIndentPattern: verboseRegExp(`
+                ^
+                \\s*
+                (?:
+                    (?:
+                        (?:
+                            async |
+                            class |
+                            def |
+                            elif |
+                            except |
+                            for |
+                            if |
+                            while |
+                            with
+                        )
+                        \\b .*
+                    ) |
+                    (
+                        else |
+                        finally |
+                        try
+                    )
+                )
+                \\s*
+                [:]
+                \\s*
+                ( [#] .* )?
+                $
+            `),
+            decreaseIndentPattern: verboseRegExp(`
+                ^
+                \\s*
+                (?:
+                    else |
+                    finally |
+                    (?:
+                        elif |
+                        except
+                    )
+                    \\b .*
+                )
+                \\s*
+                [:]
+                \\s*
+                ( [#] .* )?
+                $
+            `)
         }
     };
 }
