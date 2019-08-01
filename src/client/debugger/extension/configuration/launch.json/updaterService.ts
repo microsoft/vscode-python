@@ -95,7 +95,7 @@ export class LaunchJsonUpdaterServiceHelper {
         const configuration = parse(document.getText(), [], { allowTrailingComma: true, disallowComments: false }) as { configurations: [] };
         return !configuration || !Array.isArray(configuration.configurations) || configuration.configurations.length === 0;
     }
-    private isCommaImmediatelyBeforeCursor(document: TextDocument, position: Position) {
+    public isCommaImmediatelyBeforeCursor(document: TextDocument, position: Position) {
         const line = document.lineAt(position.line);
         // Get text from start of line until the cursor.
         const currentLine = document.getText(new Range(line.range.start, position));
