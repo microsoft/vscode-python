@@ -1509,7 +1509,7 @@
                 "python.dataScience.enableGather": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Enable code gathering for single cells in the interactive window.",
+                    "description": "Enable code gathering for single cells in the interactive window (experimental).",
                     "scope": "resource"
                 },
                 "python.dataScience.codeLenses": {
