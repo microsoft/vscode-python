@@ -6,6 +6,7 @@
 import { inject, injectable, optional } from 'inversify';
 import { IApplicationShell } from '../common/application/types';
 import '../common/extensions';
+import { traceDecorators } from '../common/logger';
 import {
     IBrowserService, IPersistentStateFactory
 } from '../common/types';
@@ -41,6 +42,7 @@ export class ExtensionSurveyPrompt implements IExtensionSurvey {
         setTimeout(() => this.showSurvey().ignoreErrors(), this.waitTime);
     }
 
+    @traceDecorators.error('Failed to check whether to display prompt for extension survey')
     public shouldShowBanner(): boolean {
         const doNotShowSurveyAgain = this.persistentState.createWorkspacePersistentState(extensionSurveyStateKeys.doNotShowAgain, false);
         if (doNotShowSurveyAgain.value) {
@@ -58,6 +60,7 @@ export class ExtensionSurveyPrompt implements IExtensionSurvey {
         return true;
     }
 
+    @traceDecorators.error('Failed to display prompt for extension survey')
     public async showSurvey() {
         const prompts = [LanguageService.bannerLabelYes(), ExtensionSurveyBanner.maybeLater(), Common.doNotShowAgain()];
         const telemetrySelections: ['Yes', 'Maybe later', 'Do not show again'] = ['Yes', 'Maybe later', 'Do not show again'];
@@ -70,7 +73,7 @@ export class ExtensionSurveyPrompt implements IExtensionSurvey {
             this.launchSurvey();
             // Disable survey for a few weeks
             await this.persistentState.createWorkspacePersistentState(extensionSurveyStateKeys.disableSurveyForTime, false, timeToDisableSurveyFor).updateValue(true);
-        } else if (selection === prompts[1]) {
+        } else if (selection === prompts[2]) {
             // Never show the survey again
             await this.persistentState.createWorkspacePersistentState(extensionSurveyStateKeys.doNotShowAgain, false).updateValue(true);
         }
