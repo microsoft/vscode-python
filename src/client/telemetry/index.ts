@@ -459,6 +459,12 @@ export interface IEventNamePropertyMapping {
          */
         error?: string;
     };
+    [EventName.EXTENSION_SURVEY_PROMPT]: {
+        /**
+         * Carries the selection of user when they are asked to take the extension survey
+         */
+        selection: 'Yes' | 'Maybe later' | 'Do not show again' | undefined;
+    };
     [EventName.REFACTOR_EXTRACT_FUNCTION]: never | undefined;
     [EventName.REFACTOR_EXTRACT_VAR]: never | undefined;
     [EventName.REFACTOR_RENAME]: never | undefined;

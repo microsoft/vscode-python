@@ -103,6 +103,11 @@ export namespace DataScienceSurveyBanner {
     export const bannerLabelNo = localize('DataScienceSurveyBanner.bannerLabelNo', 'No, thanks');
 }
 
+export namespace ExtensionSurveyBanner {
+    export const bannerMessage = localize('ExtensionSurveyBanner.bannerMessage', 'Can you please take 2 minutes to tell us how the Python extension is working for you?');
+    export const maybeLater = localize('ExtensionSurveyBanner.maybeLater', 'Maybe later');
+}
+
 export namespace DataScience {
     export const historyTitle = localize('DataScience.historyTitle', 'Python Interactive');
     export const dataExplorerTitle = localize('DataScience.dataExplorerTitle', 'Data Viewer');

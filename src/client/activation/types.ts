@@ -134,3 +134,8 @@ export interface ILanguageServerOutputChannel {
      */
     readonly channel: IOutputChannel;
 }
+
+export const IExtensionSurvey = Symbol('IExtensionSurvey');
+export interface IExtensionSurvey {
+    initialize(): Promise<void>;
+}
