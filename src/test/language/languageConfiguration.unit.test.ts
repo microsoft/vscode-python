@@ -54,7 +54,12 @@ suite('Language configuration regexes', () => {
         });
     });
 
-    ['elif x < 5:', 'else:', 'except TestError:', 'finally:'].forEach(example => {
+    [
+        'elif x < 5:',
+        'else:',
+        'except TestError:',
+        'finally:'
+    ].forEach(example => {
         const keyword = example.split(' ')[0];
 
         test(`Increase indent regex should pick up lines containing the ${keyword} keyword`, async () => {
@@ -78,7 +83,13 @@ suite('Language configuration regexes', () => {
         expect(result).to.be.equal(false, 'Decrease indent regex should not pick up lines without keywords');
     });
 
-    ['    break', '\t\t continue', ' pass', 'raise Exception(\'Unknown Exception\'', '    return [ True, False, False ]'].forEach(example => {
+    [
+        '    break',
+        '\t\t continue',
+        ' pass',
+        'raise Exception(\'Unknown Exception\'',
+        '    return [ True, False, False ]'
+    ].forEach(example => {
         const keyword = example.trim().split(' ')[0];
 
         const testWithoutComments = `Outdent regex for on enter rule should pick up lines containing the ${keyword} keyword`;
