@@ -22,16 +22,23 @@ export function getLanguageConfiguration() {
         onEnterRules: [
             {
                 beforeText: MULTILINE_SEPARATOR_INDENT_REGEX,
-                action: { indentAction: IndentAction.Indent }
+                action: {
+                    indentAction: IndentAction.Indent
+                }
             },
             {
                 beforeText: /^\s*#.*/,
                 afterText: /.+$/,
-                action: { indentAction: IndentAction.None, appendText: '# ' }
+                action: {
+                    indentAction: IndentAction.None,
+                    appendText: '# '
+                }
             },
             {
                 beforeText: OUTDENT_ONENTER_REGEX,
-                action: { indentAction: IndentAction.Outdent }
+                action: {
+                    indentAction: IndentAction.Outdent
+                }
             }
         ],
         indentationRules: {
