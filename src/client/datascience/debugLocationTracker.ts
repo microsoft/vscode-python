@@ -81,7 +81,7 @@ export class DebugLocationTracker implements IDebugLocationTracker {
                 const messageBody = responseMessage.body;
                 if (messageBody.stackFrames.length > 0) {
                     const lineNumber = messageBody.stackFrames[0].line;
-                    const fileName = messageBody.stackFrames[0].source.path;
+                    const fileName = this.normalizeFilePath(messageBody.stackFrames[0].source.path);
                     const column = messageBody.stackFrames[0].column;
                     return { lineNumber, fileName, column };
                 }
@@ -89,6 +89,15 @@ export class DebugLocationTracker implements IDebugLocationTracker {
         }
 
         return undefined;
+    }
+
+    private normalizeFilePath(path: string): string {
+        // Make the path match the os. Debugger seems to return
+        // invalid path chars on linux/darwin
+        if (process.platform !== 'win32') {
+            return path.replace('\\', '/');
+        }
+        return path;
     }
 
     // tslint:disable-next-line:no-any
