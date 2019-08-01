@@ -43,7 +43,7 @@ interface ICellProps {
     monacoTheme: string | undefined;
     editorOptions: monacoEditor.editor.IEditorOptions;
     editExecutionCount: number;
-    enableGather: boolean;
+    enableGather?: boolean;
     gotoCode(): void;
     copyCode(): void;
     delete(): void;

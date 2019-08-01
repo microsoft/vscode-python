@@ -416,7 +416,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             showCellInputCode: true,
             collapseCellInputCodeByDefault: true,
             allowInput: true,
-            enableGather: true,
             maxOutputSize: 400,
             errorBackgroundColor: '#FFFFFF',
             sendSelectionToInteractiveWindow: false,

@@ -31,7 +31,7 @@ export interface IMainPanelState {
     editorOptions: monacoEditor.editor.IEditorOptions;
     currentExecutionCount: number;
     debugging: boolean;
-    enableGather: boolean;
+    enableGather?: boolean;
 }
 
 // tslint:disable-next-line: no-multiline-string
@@ -63,7 +63,7 @@ export function generateTestState(inputBlockToggled: (id: string) => void, fileP
         editorOptions: {},
         currentExecutionCount: 0,
         debugging: false,
-        enableGather: true
+        enableGather: false
     };
 }
 

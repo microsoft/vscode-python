@@ -608,6 +608,7 @@ for _ in range(50):
     }, () => { return ioc; });
 
     runMountedTest('Gather code run from text editor', async (wrapper) => {
+        ioc.getSettings().datascience.enableGather = true;
         // Enter some code.
         const code = '#%%\na=1\na';
         await addCode(getOrCreateInteractiveWindow, wrapper, code);
@@ -626,6 +627,7 @@ for _ in range(50):
     }, () => { return ioc; });
 
     runMountedTest('Gather code run from input box', async (wrapper) => {
+        ioc.getSettings().datascience.enableGather = true;
         // Create an interactive window so that it listens to the results.
         const interactiveWindow = await getOrCreateInteractiveWindow();
         await interactiveWindow.show();

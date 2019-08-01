@@ -77,7 +77,6 @@ suite('DataScience Code Watcher Unit Tests', () => {
             jupyterServerURI: 'local',
             notebookFileRoot: 'WORKSPACE',
             changeDirOnImportExport: true,
-            enableGather: true,
             useDefaultConfigForJupyter: true,
             jupyterInterruptTimeout: 10000,
             searchForJupyter: true,

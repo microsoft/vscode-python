@@ -59,7 +59,7 @@ export function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<an
     //return result;
 //}
 
-export function mountWebView(ioc: DataScienceIocContainer, node: React.ReactElement<any>): ReactWrapper<any, Readonly<{}>, React.Component> {
+export function mountWebView(ioc: DataScienceIocContainer, node: React.ReactElement): ReactWrapper<any, Readonly<{}>, React.Component> {
     // Setup our webview panel
     ioc.createWebView(() => mount(node));
     return ioc.wrapper!;
@@ -307,7 +307,6 @@ export function defaultDataScienceSettings(): IDataScienceSettings {
         jupyterLaunchTimeout: 10,
         jupyterLaunchRetries: 3,
         enabled: true,
-        enableGather: true,
         jupyterServerURI: 'local',
         notebookFileRoot: 'WORKSPACE',
         changeDirOnImportExport: true,

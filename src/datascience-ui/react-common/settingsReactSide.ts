@@ -53,7 +53,6 @@ function load() {
             showJupyterVariableExplorer: true,
             variableExplorerExclude: 'module;function;builtin_function_or_method',
             enablePlotViewer: true,
-            enableGather: true,
             extraSettings: {
                 editorCursor: 'line',
                 editorCursorBlink: 'blink',

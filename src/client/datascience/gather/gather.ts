@@ -29,9 +29,8 @@ export class GatherExecution implements IGatherExecution, INotebookExecutionLogg
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(ICommandManager) private commandManager: ICommandManager
-
     ) {
-        this._enabled = this.configService.getSettings().datascience.enableGather;
+        this._enabled = this.configService.getSettings().datascience.enableGather ? true : false;
 
         const rules = this.configService.getSettings().datascience.gatherRules;
         this.dataflowAnalyzer = new DataflowAnalyzer(rules);
@@ -98,7 +97,7 @@ export class GatherExecution implements IGatherExecution, INotebookExecutionLogg
 
     public async updateEnableGather(_e: void) {
         if (this.enabled !== this.configService.getSettings().datascience.enableGather) {
-            this.enabled = this.configService.getSettings().datascience.enableGather;
+            this.enabled = this.configService.getSettings().datascience.enableGather ? true : false;
             const item = await this.applicationShell.showInformationMessage(localize.DataScience.reloadRequired(), Common.reload());
             if (!item) {
                 return;

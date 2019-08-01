@@ -24,7 +24,7 @@ export interface IContentPanelProps {
     skipNextScroll: boolean;
     monacoTheme: string | undefined;
     editorOptions: monacoEditor.editor.IEditorOptions;
-    enableGather: boolean;
+    enableGather?: boolean;
     gotoCellCode(index: number): void;
     copyCellCode(index: number): void;
     deleteCell(index: number): void;
