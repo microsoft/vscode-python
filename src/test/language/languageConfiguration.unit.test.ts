@@ -88,6 +88,7 @@ suite('Language configuration regexes', () => {
         '\t\t continue',
         ' pass',
         'raise Exception(\'Unknown Exception\'',
+        '    return',
         '    return [ True, False, False ]'
     ].forEach(example => {
         const keyword = example.trim().split(' ')[0];

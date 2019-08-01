@@ -37,13 +37,22 @@ export function getLanguageConfiguration() {
             {
                 beforeText: verboseRegExp(`
                     ^
-                    \\s*
                     (?:
-                        break |
-                        continue |
-                        pass |
-                        raise \\b .* |
-                        return \\b .*
+                        (?:
+                            \\s*
+                            (?:
+                                pass |
+                                raise \\b .* |
+                            )
+                        ) |
+                        (?:
+                            \\s+
+                            (?:
+                                break |
+                                continue |
+                                return \\b .*
+                            )
+                        )
                     )
                     \\s*
                     ( [#] .* )?
@@ -65,27 +74,25 @@ export function getLanguageConfiguration() {
              */
             increaseIndentPattern: verboseRegExp(`
                 ^
-                \\s*
                 (?:
+                    \\s*
                     (?:
                         (?:
                             async |
                             class |
                             def |
-                            elif |
                             except |
                             for |
                             if |
+                            elif |
                             while |
                             with
                         )
                         \\b .*
                     ) |
-                    (
-                        else |
-                        finally |
-                        try
-                    )
+                    else |
+                    try |
+                    finally
                 )
                 \\s*
                 [:]
@@ -97,13 +104,15 @@ export function getLanguageConfiguration() {
                 ^
                 \\s*
                 (?:
-                    else |
-                    finally |
                     (?:
-                        elif |
-                        except
-                    )
-                    \\b .*
+                        (?:
+                            elif |
+                            except
+                        )
+                        \\b .*
+                    ) |
+                    else |
+                    finally
                 )
                 \\s*
                 [:]
