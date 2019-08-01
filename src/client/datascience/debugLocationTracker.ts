@@ -95,7 +95,7 @@ export class DebugLocationTracker implements IDebugLocationTracker {
         // Make the path match the os. Debugger seems to return
         // invalid path chars on linux/darwin
         if (process.platform !== 'win32') {
-            return path.replace('\\', '/');
+            return path.replace(/\\/g, '/');
         }
         return path;
     }
