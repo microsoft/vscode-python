@@ -2633,7 +2633,6 @@
         "monaco-editor-webpack-plugin": "^1.7.0",
         "nock": "^10.0.6",
         "node-has-native-dependencies": "^1.0.2",
-        "marked": "0.7.0",
         "node-html-parser": "^1.1.13",
         "nyc": "^14.1.1",
         "raw-loader": "^0.5.1",
