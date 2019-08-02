@@ -13,7 +13,7 @@ import {
 import { Common, ExtensionSurveyBanner, LanguageService } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
-import { IExtensionSurvey } from './types';
+import { IExtensionSingleActivationService } from './types';
 
 // persistent state names, exported to make use of in testing
 export enum extensionSurveyStateKeys {
@@ -21,25 +21,25 @@ export enum extensionSurveyStateKeys {
     disableSurveyForTime = 'doNotShowExtensionSurveyUntilTime'
 }
 
-export const timeToDisableSurveyFor = 1000 * 60 * 60 * 24 * 7 * 12; // 12 weeks
-const waitTimeToShowSurvey = 1000 * 60 * 60 * 3; // 3 hours
+const timeToDisableSurveyFor = 1000 * 60 * 60 * 24 * 7 * 12; // 12 weeks
+const WAIT_TIME_TO_SHOW_SURVEY = 1000 * 60 * 60 * 3; // 3 hours
 
 @injectable()
-export class ExtensionSurveyPrompt implements IExtensionSurvey {
+export class ExtensionSurveyPrompt implements IExtensionSingleActivationService {
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IBrowserService) private browserService: IBrowserService,
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IRandom) private random: IRandom,
         @optional() private sampleSizePerOneHundredUsers: number = 10,
-        @optional() private _waitTimeToShowSurvey: number = waitTimeToShowSurvey) { }
+        @optional() private waitTimeToShowSurvey: number = WAIT_TIME_TO_SHOW_SURVEY) { }
 
-    public async initialize(): Promise<void> {
+    public async activate(): Promise<void> {
         const show = this.shouldShowBanner();
         if (!show) {
             return;
         }
-        setTimeout(() => this.showSurvey().ignoreErrors(), this._waitTimeToShowSurvey);
+        setTimeout(() => this.showSurvey().ignoreErrors(), this.waitTimeToShowSurvey);
     }
 
     @traceDecorators.error('Failed to check whether to display prompt for extension survey')

@@ -34,7 +34,7 @@ import {
 } from 'vscode';
 
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
-import { IExtensionActivationManager, IExtensionSurvey, ILanguageServerExtension } from './activation/types';
+import { IExtensionActivationManager, IExtensionSingleActivationService, ILanguageServerExtension } from './activation/types';
 import { buildApi, IExtensionApi } from './api';
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationDiagnostics } from './application/types';
@@ -266,7 +266,8 @@ function registerServices(context: ExtensionContext, serviceManager: ServiceMana
 async function initializeServices(context: ExtensionContext, serviceManager: ServiceManager, serviceContainer: ServiceContainer) {
     const abExperiments = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
     await abExperiments.activate();
-    serviceContainer.get<IExtensionSurvey>(IExtensionSurvey).initialize().ignoreErrors();
+    const singleActivationServices = serviceContainer.getAll<IExtensionSingleActivationService>(IExtensionSingleActivationService);
+    Promise.all(singleActivationServices.map(item => item.activate())).ignoreErrors();
     const selector = serviceContainer.get<IInterpreterSelector>(IInterpreterSelector);
     selector.initialize();
     context.subscriptions.push(selector);

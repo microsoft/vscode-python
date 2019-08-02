@@ -459,6 +459,9 @@ export interface IEventNamePropertyMapping {
          */
         error?: string;
     };
+    /**
+     * When user clicks a button in the python extension survey prompt, this telemetry event is sent with details
+     */
     [EventName.EXTENSION_SURVEY_PROMPT]: {
         /**
          * Carries the selection of user when they are asked to take the extension survey

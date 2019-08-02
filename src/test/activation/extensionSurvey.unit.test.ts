@@ -75,7 +75,8 @@ suite('xExtension survey prompt - shouldShowBanner()', () => {
         doNotShowAgain
             .setup(d => d.value)
             .returns(() => false);
-        for (let i = 11; i < 100; i = i + 1) {
+        // Default sample size is 10
+        for (let i = 10; i < 100; i = i + 1) {
             random
                 .setup(r => r.getRandomInt(0, 100))
                 .returns(() => i);
@@ -91,6 +92,7 @@ suite('xExtension survey prompt - shouldShowBanner()', () => {
         doNotShowAgain
             .setup(d => d.value)
             .returns(() => false);
+        // Default sample size is 10
         for (let i = 0; i < 10; i = i + 1) {
             random
                 .setup(r => r.getRandomInt(0, 100))

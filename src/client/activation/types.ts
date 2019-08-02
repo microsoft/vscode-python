@@ -18,7 +18,7 @@ export interface IExtensionActivationManager extends IDisposable {
 export const IExtensionActivationService = Symbol('IExtensionActivationService');
 /**
  * Classes implementing this interface will have their `activate` methods
- * invoked during the actiavtion of the extension.
+ * invoked for every resource during the actiavtion of the extension.
  * This is a great hook for extension activation code, i.e. you don't need to modify
  * the `extension.ts` file to invoke some code when extension gets activated.
  * @export
@@ -135,7 +135,15 @@ export interface ILanguageServerOutputChannel {
     readonly channel: IOutputChannel;
 }
 
-export const IExtensionSurvey = Symbol('IExtensionSurvey');
-export interface IExtensionSurvey {
-    initialize(): Promise<void>;
+export const IExtensionSingleActivationService = Symbol('IExtensionSingleActivationService');
+/**
+ * Classes implementing this interface will have their `activate` methods
+ * invoked during the activation of the extension.
+ * This is a great hook for extension activation code, i.e. you don't need to modify
+ * the `extension.ts` file to invoke some code when extension gets activated.
+ * @export
+ * @interface IExtensionSingleActivationService
+ */
+export interface IExtensionSingleActivationService {
+    activate(): Promise<void>;
 }

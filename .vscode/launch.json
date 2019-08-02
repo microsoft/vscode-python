@@ -144,7 +144,7 @@
                 "--ui=tdd",
                 "--recursive",
                 "--colors",
-                "--grep", "xExtension",
+                //"--grep", "<suite name>",
                 "--timeout=300000"
             ],
             "outFiles": [
