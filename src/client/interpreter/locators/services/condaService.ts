@@ -260,28 +260,28 @@ export class CondaService implements ICondaService {
         if (envsPos > 0) {
             // This should be where the original python was run from when the environment was created.
             const originalPath = interpreterDir.slice(0, envsPos);
-            let condaPath = path.join(originalPath, condaExe);
+            let condaPath1 = path.join(originalPath, condaExe);
 
-            if (await this.fileSystem.fileExists(condaPath)) {
-                return condaPath;
+            if (await this.fileSystem.fileExists(condaPath1)) {
+                return condaPath1;
             }
 
             // Also look in the scripts directory here too.
-            condaPath = path.join(originalPath, scriptsDir, condaExe);
-            if (await this.fileSystem.fileExists(condaPath)) {
-                return condaPath;
+            condaPath1 = path.join(originalPath, scriptsDir, condaExe);
+            if (await this.fileSystem.fileExists(condaPath1)) {
+                return condaPath1;
             }
         }
 
-        let condaPath = path.join(interpreterDir, condaExe);
-        if (await this.fileSystem.fileExists(condaPath)) {
-            return condaPath;
+        let condaPath2 = path.join(interpreterDir, condaExe);
+        if (await this.fileSystem.fileExists(condaPath2)) {
+            return condaPath2;
         }
         // Conda path has changed locations, check the new location in the scripts directory after checking
         // the old location
-        condaPath = path.join(interpreterDir, scriptsDir, condaExe);
-        if (await this.fileSystem.fileExists(condaPath)) {
-            return condaPath;
+        condaPath2 = path.join(interpreterDir, scriptsDir, condaExe);
+        if (await this.fileSystem.fileExists(condaPath2)) {
+            return condaPath2;
         }
     }
 
