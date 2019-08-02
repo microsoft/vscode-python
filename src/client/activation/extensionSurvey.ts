@@ -69,11 +69,11 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
         if (!selection) {
             return;
         }
-        if (selection === prompts[0]) {
+        if (selection === LanguageService.bannerLabelYes()) {
             this.launchSurvey();
             // Disable survey for a few weeks
             await this.persistentState.createGlobalPersistentState(extensionSurveyStateKeys.disableSurveyForTime, false, timeToDisableSurveyFor).updateValue(true);
-        } else if (selection === prompts[2]) {
+        } else if (selection === Common.doNotShowAgain()) {
             // Never show the survey again
             await this.persistentState.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false).updateValue(true);
         }
