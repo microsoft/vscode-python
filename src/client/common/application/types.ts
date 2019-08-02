@@ -50,7 +50,8 @@ import {
     WorkspaceEdit,
     WorkspaceFolder,
     WorkspaceFolderPickOptions,
-    WorkspaceFoldersChangeEvent
+    WorkspaceFoldersChangeEvent,
+    OutputChannel
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
@@ -346,6 +347,13 @@ export interface IApplicationShell {
      * @returns a [TreeView](#TreeView).
      */
     createTreeView<T>(viewId: string, options: TreeViewOptions<T>): TreeView<T>;
+
+    /**
+     * Creates a new [output channel](#OutputChannel) with the given name.
+     *
+     * @param name Human-readable string which will be used to represent the channel in the UI.
+     */
+    createOutputChannel(name: string): OutputChannel;
 }
 
 export const ICommandManager = Symbol('ICommandManager');

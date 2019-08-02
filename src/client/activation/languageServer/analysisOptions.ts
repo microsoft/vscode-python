@@ -11,7 +11,6 @@ import {
     Disposable,
     Event,
     EventEmitter,
-    OutputChannel,
     Position,
     TextDocument,
     Uri,
@@ -27,7 +26,7 @@ import {
 } from 'vscode-languageclient';
 
 import { IWorkspaceService } from '../../common/application/types';
-import { HiddenFilePrefix, isTestExecution, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
+import { HiddenFilePrefix, isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
 import { traceDecorators, traceError } from '../../common/logger';
 import {
     BANNER_NAME_LS_SURVEY,
@@ -41,7 +40,7 @@ import {
 import { debounceSync } from '../../common/utils/decorators';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IInterpreterService } from '../../interpreter/contracts';
-import { ILanguageServerAnalysisOptions, ILanguageServerFolderService } from '../types';
+import { ILanguageServerAnalysisOptions, ILanguageServerFolderService, ILanguageServerOutputChannel } from '../types';
 
 @injectable()
 export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOptions {
@@ -51,6 +50,7 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
     private disposables: Disposable[] = [];
     private languageServerFolder: string = '';
     private resource: Resource;
+    private output: IOutputChannel;
     private readonly didChange = new EventEmitter<void>();
     constructor(@inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider,
@@ -58,10 +58,11 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IPythonExtensionBanner) @named(BANNER_NAME_LS_SURVEY) private readonly surveyBanner: IPythonExtensionBanner,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: OutputChannel,
+        @inject(ILanguageServerOutputChannel) private readonly lsOutputChannel: ILanguageServerOutputChannel,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
-        @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService) {
-
+        @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService
+    ) {
+        this.output = this.lsOutputChannel.channel;
     }
     public async initialize(resource: Resource) {
         this.resource = resource;

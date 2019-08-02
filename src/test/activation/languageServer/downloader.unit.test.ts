@@ -8,23 +8,23 @@
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { SemVer } from 'semver';
+import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Uri, WorkspaceConfiguration } from 'vscode';
 import { LanguageServerDownloader } from '../../../client/activation/languageServer/downloader';
-import { ILanguageServerFolderService, IPlatformData } from '../../../client/activation/types';
-import { IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
-import { IFileSystem } from '../../../client/common/platform/types';
-import { IOutputChannel, Resource, IFileDownloader } from '../../../client/common/types';
-import { Common, LanguageService } from '../../../client/common/utils/localize';
-import { mock, instance, verify, when, anything, deepEqual } from 'ts-mockito';
-import { PlatformData } from '../../../client/activation/languageServer/platformData';
-import { FileDownloader } from '../../../client/common/net/fileDownloader';
 import { LanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
+import { PlatformData } from '../../../client/activation/languageServer/platformData';
+import { ILanguageServerFolderService, ILanguageServerOutputChannel, IPlatformData } from '../../../client/activation/types';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
-import { FileSystem } from '../../../client/common/platform/fileSystem';
+import { IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
-import { MockOutputChannel } from '../../mockClasses';
+import { FileDownloader } from '../../../client/common/net/fileDownloader';
+import { FileSystem } from '../../../client/common/platform/fileSystem';
+import { IFileSystem } from '../../../client/common/platform/types';
+import { IFileDownloader, IOutputChannel, Resource } from '../../../client/common/types';
+import { Common, LanguageService } from '../../../client/common/utils/localize';
 import { noop } from '../../core';
+import { MockOutputChannel } from '../../mockClasses';
 
 use(chaiAsPromised);
 
@@ -160,6 +160,8 @@ suite('Activation - Downloader', () => {
         let lsDownloader: LanguageServerDownloader;
         let outputChannel: IOutputChannel;
         let fileDownloader: IFileDownloader;
+        let lsOutputChannel: TypeMoq.IMock<ILanguageServerOutputChannel>;
+        // tslint:disable-next-line: no-http-string
         const downloadUri = 'http://wow.com/file.txt';
         const downloadTitle = 'Downloadimg file.txt';
         setup(() => {
@@ -169,10 +171,15 @@ suite('Activation - Downloader', () => {
             const lsFolderService = mock(LanguageServerFolderService);
             const appShell = mock(ApplicationShell);
             const fs = mock(FileSystem);
+            // tslint:disable-next-line: no-shadowed-variable
             const workspaceService = mock(WorkspaceService);
+            lsOutputChannel = TypeMoq.Mock.ofType<ILanguageServerOutputChannel>();
+            lsOutputChannel
+                .setup(l => l.channel)
+                .returns(() => instance(outputChannel));
 
             lsDownloader = new LanguageServerDownloader(instance(platformData),
-                instance(outputChannel), instance(fileDownloader),
+                lsOutputChannel.object, instance(fileDownloader),
                 instance(lsFolderService), instance(appShell),
                 instance(fs), instance(workspaceService));
         });
@@ -244,6 +251,7 @@ suite('Activation - Downloader', () => {
         let output: TypeMoq.IMock<IOutputChannel>;
         let appShell: TypeMoq.IMock<IApplicationShell>;
         let fs: TypeMoq.IMock<IFileSystem>;
+        let lsOutputChannel: TypeMoq.IMock<ILanguageServerOutputChannel>;
         let platformData: TypeMoq.IMock<IPlatformData>;
         let languageServerDownloaderTest: LanguageServerDownloaderTest;
         let languageServerExtractorTest: LanguageServerExtractorTest;
@@ -253,10 +261,14 @@ suite('Activation - Downloader', () => {
             output = TypeMoq.Mock.ofType<IOutputChannel>(undefined, TypeMoq.MockBehavior.Strict);
             fs = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
             platformData = TypeMoq.Mock.ofType<IPlatformData>(undefined, TypeMoq.MockBehavior.Strict);
+            lsOutputChannel = TypeMoq.Mock.ofType<ILanguageServerOutputChannel>();
+            lsOutputChannel
+                .setup(l => l.channel)
+                .returns(() => output.object);
 
             languageServerDownloaderTest = new LanguageServerDownloaderTest(
                 platformData.object,
-                output.object,
+                lsOutputChannel.object,
                 undefined as any,
                 folderService.object,
                 appShell.object,
@@ -265,7 +277,7 @@ suite('Activation - Downloader', () => {
             );
             languageServerExtractorTest = new LanguageServerExtractorTest(
                 platformData.object,
-                output.object,
+                lsOutputChannel.object,
                 undefined as any,
                 folderService.object,
                 appShell.object,

@@ -75,6 +75,11 @@ export namespace ExtensionChannels {
     export const installingStableMessage = localize('ExtensionChannels.installingStableMessage', 'Installing Stable build of extension... ');
     export const installationCompleteMessage = localize('ExtensionChannels.installationCompleteMessage', 'complete.');
 }
+export namespace OutputChannelNames {
+    export const languageServer = localize('OutputChannelNames.languageServer', 'Python Language Server');
+    export const python = localize('OutputChannelNames.languageServer', 'Python');
+    export const pythonTest = localize('OutputChannelNames.languageServer', 'Python Test Log');
+}
 
 export namespace Logging {
     export const currentWorkingDirectory = localize('Logging.CurrentWorkingDirectory', 'cwd:');
