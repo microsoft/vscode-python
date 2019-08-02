@@ -77,8 +77,8 @@ export namespace ExtensionChannels {
 }
 export namespace OutputChannelNames {
     export const languageServer = localize('OutputChannelNames.languageServer', 'Python Language Server');
-    export const python = localize('OutputChannelNames.languageServer', 'Python');
-    export const pythonTest = localize('OutputChannelNames.languageServer', 'Python Test Log');
+    export const python = localize('OutputChannelNames.python', 'Python');
+    export const pythonTest = localize('OutputChannelNames.pythonTest', 'Python Test Log');
 }
 
 export namespace Logging {
