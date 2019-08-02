@@ -8,10 +8,9 @@ import { IApplicationShell } from '../common/application/types';
 import '../common/extensions';
 import { traceDecorators } from '../common/logger';
 import {
-    IBrowserService, IPersistentStateFactory
+    IBrowserService, IPersistentStateFactory, IRandom
 } from '../common/types';
 import { Common, ExtensionSurveyBanner, LanguageService } from '../common/utils/localize';
-import { getRandomBetween } from '../common/utils/random';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { IExtensionSurvey } from './types';
@@ -31,29 +30,30 @@ export class ExtensionSurveyPrompt implements IExtensionSurvey {
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IBrowserService) private browserService: IBrowserService,
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
+        @inject(IRandom) private random: IRandom,
         @optional() private sampleSizePerOneHundredUsers: number = 10,
-        @optional() private waitTime: number = waitTimeToShowSurvey) { }
+        @optional() private _waitTimeToShowSurvey: number = waitTimeToShowSurvey) { }
 
     public async initialize(): Promise<void> {
         const show = this.shouldShowBanner();
         if (!show) {
             return;
         }
-        setTimeout(() => this.showSurvey().ignoreErrors(), this.waitTime);
+        setTimeout(() => this.showSurvey().ignoreErrors(), this._waitTimeToShowSurvey);
     }
 
     @traceDecorators.error('Failed to check whether to display prompt for extension survey')
     public shouldShowBanner(): boolean {
-        const doNotShowSurveyAgain = this.persistentState.createWorkspacePersistentState(extensionSurveyStateKeys.doNotShowAgain, false);
+        const doNotShowSurveyAgain = this.persistentState.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false);
         if (doNotShowSurveyAgain.value) {
             return false;
         }
-        const isSurveyDisabledForTimeState = this.persistentState.createWorkspacePersistentState(extensionSurveyStateKeys.disableSurveyForTime, false, timeToDisableSurveyFor);
+        const isSurveyDisabledForTimeState = this.persistentState.createGlobalPersistentState(extensionSurveyStateKeys.disableSurveyForTime, false, timeToDisableSurveyFor);
         if (isSurveyDisabledForTimeState.value) {
             return false;
         }
         // we only want 10% of folks to see this survey.
-        const randomSample: number = getRandomBetween(0, 100);
+        const randomSample: number = this.random.getRandomInt(0, 100);
         if (randomSample >= this.sampleSizePerOneHundredUsers) {
             return false;
         }
@@ -72,10 +72,10 @@ export class ExtensionSurveyPrompt implements IExtensionSurvey {
         if (selection === prompts[0]) {
             this.launchSurvey();
             // Disable survey for a few weeks
-            await this.persistentState.createWorkspacePersistentState(extensionSurveyStateKeys.disableSurveyForTime, false, timeToDisableSurveyFor).updateValue(true);
+            await this.persistentState.createGlobalPersistentState(extensionSurveyStateKeys.disableSurveyForTime, false, timeToDisableSurveyFor).updateValue(true);
         } else if (selection === prompts[2]) {
             // Never show the survey again
-            await this.persistentState.createWorkspacePersistentState(extensionSurveyStateKeys.doNotShowAgain, false).updateValue(true);
+            await this.persistentState.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false).updateValue(true);
         }
     }
 
