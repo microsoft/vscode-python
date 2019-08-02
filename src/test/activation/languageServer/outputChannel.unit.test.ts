@@ -10,7 +10,7 @@ import { IApplicationShell } from '../../../client/common/application/types';
 import { IOutputChannel } from '../../../client/common/types';
 import { OutputChannelNames } from '../../../client/common/utils/localize';
 
-suite('xLanguage Server Output Channel', () => {
+suite('Language Server Output Channel', () => {
     let appShell: TypeMoq.IMock<IApplicationShell>;
     let languageServerOutputChannel: LanguageServerOutputChannel;
     let output: IOutputChannel;
