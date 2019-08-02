@@ -34,13 +34,20 @@ suite('Activation - Downloader', () => {
     let folderService: TypeMoq.IMock<ILanguageServerFolderService>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let resource: Resource;
+    let outputChannel: IOutputChannel;
+    let lsOutputChannel: TypeMoq.IMock<ILanguageServerOutputChannel>;
     setup(() => {
+        outputChannel = mock(MockOutputChannel);
+        lsOutputChannel = TypeMoq.Mock.ofType<ILanguageServerOutputChannel>();
+        lsOutputChannel
+            .setup(l => l.channel)
+            .returns(() => instance(outputChannel));
         folderService = TypeMoq.Mock.ofType<ILanguageServerFolderService>(undefined, TypeMoq.MockBehavior.Strict);
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>(undefined, TypeMoq.MockBehavior.Strict);
         resource = Uri.file(__dirname);
         languageServerDownloader = new LanguageServerDownloader(
             undefined as any,
-            undefined as any,
+            lsOutputChannel.object,
             undefined as any,
             folderService.object,
             undefined as any,
@@ -251,14 +258,13 @@ suite('Activation - Downloader', () => {
         let output: TypeMoq.IMock<IOutputChannel>;
         let appShell: TypeMoq.IMock<IApplicationShell>;
         let fs: TypeMoq.IMock<IFileSystem>;
-        let lsOutputChannel: TypeMoq.IMock<ILanguageServerOutputChannel>;
         let platformData: TypeMoq.IMock<IPlatformData>;
         let languageServerDownloaderTest: LanguageServerDownloaderTest;
         let languageServerExtractorTest: LanguageServerExtractorTest;
         setup(() => {
             appShell = TypeMoq.Mock.ofType<IApplicationShell>(undefined, TypeMoq.MockBehavior.Strict);
             folderService = TypeMoq.Mock.ofType<ILanguageServerFolderService>(undefined, TypeMoq.MockBehavior.Strict);
-            output = TypeMoq.Mock.ofType<IOutputChannel>(undefined, TypeMoq.MockBehavior.Strict);
+            output = TypeMoq.Mock.ofType<IOutputChannel>();
             fs = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
             platformData = TypeMoq.Mock.ofType<IPlatformData>(undefined, TypeMoq.MockBehavior.Strict);
             lsOutputChannel = TypeMoq.Mock.ofType<ILanguageServerOutputChannel>();
