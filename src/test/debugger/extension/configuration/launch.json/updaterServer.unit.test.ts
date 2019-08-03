@@ -4,9 +4,10 @@
 'use strict';
 
 import * as assert from 'assert';
+import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
-import { CancellationTokenSource, DebugConfiguration, Position, TextDocument, TextEditor, Uri } from 'vscode';
+import { CancellationTokenSource, DebugConfiguration, Position, Range, TextDocument, TextEditor, Uri } from 'vscode';
 import { CommandManager } from '../../../../../client/common/application/commandManager';
 import { DocumentManager } from '../../../../../client/common/application/documentManager';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../../../../client/common/application/types';
@@ -27,15 +28,17 @@ suite('Debugging - launch.json Updater Service', () => {
     let workspace: IWorkspaceService;
     let documentManager: IDocumentManager;
     let debugConfigService: IDebugConfigurationService;
-
+    const sandbox = sinon.createSandbox();
     setup(() => {
         commandManager = mock(CommandManager);
         workspace = mock(WorkspaceService);
         documentManager = mock(DocumentManager);
         debugConfigService = mock(PythonDebugConfigurationService);
+        sandbox.stub(LaunchJsonUpdaterServiceHelper.prototype, 'isCommaImmediatelyBeforeCursor').returns(false);
         helper = new LaunchJsonUpdaterServiceHelper(instance(commandManager),
             instance(workspace), instance(documentManager), instance(debugConfigService));
     });
+    teardown(() => sandbox.restore());
     test('Activation will register the required commands', async () => {
         const service = new LaunchJsonUpdaterService(instance(commandManager), [], instance(workspace), instance(documentManager), instance(debugConfigService));
         await service.activate(undefined);
@@ -174,6 +177,14 @@ suite('Debugging - launch.json Updater Service', () => {
         const expectedText = `,${JSON.stringify(config)}`;
 
         const textToInsert = helper.getTextForInsertion(config, 'AfterItem');
+
+        assert.equal(textToInsert, expectedText);
+    });
+    test('Text to be inserted must not be prefixed with a comma (as a comma already exists)', async () => {
+        const config = {} as any;
+        const expectedText = JSON.stringify(config);
+
+        const textToInsert = helper.getTextForInsertion(config, 'AfterItem', 'BeforeCursor');
 
         assert.equal(textToInsert, expectedText);
     });
@@ -336,5 +347,103 @@ suite('Debugging - launch.json Updater Service', () => {
         textEditor.verifyAll();
         document.verifyAll();
         assert.equal(debugConfigInserted, true);
+    });
+    test('If cursor is at the begining of line 1 then there is no comma before cursor', async () => {
+        sandbox.restore();
+        const document = typemoq.Mock.ofType<TextDocument>();
+        const position = new Position(1, 0);
+        document
+            .setup(doc => doc.lineAt(1))
+            .returns(() => ({range: new Range(1, 0, 1, 1)}) as any)
+            .verifiable(typemoq.Times.atLeastOnce());
+        document
+            .setup(doc => doc.getText(typemoq.It.isAny()))
+            .returns(() => '')
+            .verifiable(typemoq.Times.atLeastOnce());
+
+        const isBeforeCursor =  helper.isCommaImmediatelyBeforeCursor(document.object, position);
+
+        assert.ok(!isBeforeCursor);
+        document.verifyAll();
+    });
+    test('If cursor is positioned after some text (not a comma) then detect this', async () => {
+        sandbox.restore();
+        const document = typemoq.Mock.ofType<TextDocument>();
+        const position = new Position(2, 2);
+        document
+            .setup(doc => doc.lineAt(2))
+            .returns(() => ({range: new Range(2, 0, 1, 5)}) as any)
+            .verifiable(typemoq.Times.atLeastOnce());
+        document
+            .setup(doc => doc.getText(typemoq.It.isAny()))
+            .returns(() => 'Hello')
+            .verifiable(typemoq.Times.atLeastOnce());
+
+        const isBeforeCursor =  helper.isCommaImmediatelyBeforeCursor(document.object, position);
+
+        assert.ok(!isBeforeCursor);
+        document.verifyAll();
+    });
+    test('If cursor is positioned after a comma then detect this', async () => {
+        sandbox.restore();
+        const document = typemoq.Mock.ofType<TextDocument>();
+        const position = new Position(2, 2);
+        document
+            .setup(doc => doc.lineAt(2))
+            .returns(() => ({range: new Range(2, 0, 2, 3)}) as any)
+            .verifiable(typemoq.Times.atLeastOnce());
+        document
+            .setup(doc => doc.getText(typemoq.It.isAny()))
+            .returns(() => '}, ')
+            .verifiable(typemoq.Times.atLeastOnce());
+
+        const isBeforeCursor =  helper.isCommaImmediatelyBeforeCursor(document.object, position);
+
+        assert.ok(isBeforeCursor);
+        document.verifyAll();
+    });
+    test('If cursor is positioned in an empty line and previous line ends with comma, then detect this', async () => {
+        sandbox.restore();
+        const document = typemoq.Mock.ofType<TextDocument>();
+        const position = new Position(2, 2);
+        document
+            .setup(doc => doc.lineAt(1))
+            .returns(() => ({range: new Range(1, 0, 1, 3), text: '}, '}) as any)
+            .verifiable(typemoq.Times.atLeastOnce());
+        document
+            .setup(doc => doc.lineAt(2))
+            .returns(() => ({range: new Range(2, 0, 2, 3), text: '   '}) as any)
+            .verifiable(typemoq.Times.atLeastOnce());
+        document
+            .setup(doc => doc.getText(typemoq.It.isAny()))
+            .returns(() => '   ')
+            .verifiable(typemoq.Times.atLeastOnce());
+
+        const isBeforeCursor =  helper.isCommaImmediatelyBeforeCursor(document.object, position);
+
+        assert.ok(isBeforeCursor);
+        document.verifyAll();
+    });
+    test('If cursor is positioned in an empty line and previous line does not end with comma, then detect this', async () => {
+        sandbox.restore();
+        const document = typemoq.Mock.ofType<TextDocument>();
+        const position = new Position(2, 2);
+        document
+            .setup(doc => doc.lineAt(1))
+            .returns(() => ({range: new Range(1, 0, 1, 3), text: '} '}) as any)
+            .verifiable(typemoq.Times.atLeastOnce());
+        document
+            .setup(doc => doc.lineAt(2))
+            .returns(() => ({range: new Range(2, 0, 2, 3), text: '   '}) as any)
+            .verifiable(typemoq.Times.atLeastOnce());
+        document
+            .setup(doc => doc.getText(typemoq.It.isAny()))
+            .returns(() => '   ')
+            .verifiable(typemoq.Times.atLeastOnce());
+
+        const isBeforeCursor =  helper.isCommaImmediatelyBeforeCursor(document.object, position);
+
+        assert.ok(!isBeforeCursor);
+        document.verifyAll();
     });
 });

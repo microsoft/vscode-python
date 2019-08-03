@@ -38,6 +38,10 @@ export class DebugService implements IDebugService {
     public registerDebugConfigurationProvider(debugType: string, provider: any): Disposable {
         return debug.registerDebugConfigurationProvider(debugType, provider);
     }
+    // tslint:disable-next-line:no-any
+    public registerDebugAdapterTrackerFactory(debugType: string, provider: any): Disposable {
+        return debug.registerDebugAdapterTrackerFactory(debugType, provider);
+    }
     public startDebugging(folder: WorkspaceFolder | undefined, nameOrConfiguration: string | DebugConfiguration, parentSession?: DebugSession): Thenable<boolean> {
         return debug.startDebugging(folder, nameOrConfiguration, parentSession);
     }

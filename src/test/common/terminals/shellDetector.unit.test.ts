@@ -4,14 +4,21 @@
 'use strict';
 
 import { expect } from 'chai';
+import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { ApplicationEnvironment } from '../../../client/common/application/applicationEnvironment';
+import { WorkspaceService } from '../../../client/common/application/workspace';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { IPlatformService } from '../../../client/common/platform/types';
 import { ShellDetector } from '../../../client/common/terminal/shellDetector';
+import { SettingsShellDetector } from '../../../client/common/terminal/shellDetectors/settingsShellDetector';
+import { TerminalNameShellDetector } from '../../../client/common/terminal/shellDetectors/terminalNameShellDetector';
 import { UserEnvironmentShellDetector } from '../../../client/common/terminal/shellDetectors/userEnvironmentShellDetector';
+import { VSCEnvironmentShellDetector } from '../../../client/common/terminal/shellDetectors/vscEnvironmentShellDetector';
 import { TerminalShellType } from '../../../client/common/terminal/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { OSType } from '../../../client/common/utils/platform';
+import { MockProcess } from '../../../test/mocks/process';
 
 // tslint:disable:max-func-body-length no-any
 
@@ -23,11 +30,47 @@ suite('Shell Detector', () => {
         [OSType.Windows]: TerminalShellType.commandPrompt,
         [OSType.Unknown]: TerminalShellType.other
     };
-
+    const sandbox = sinon.createSandbox();
     setup(() => platformService = mock(PlatformService));
+    teardown(() => sandbox.restore());
 
     getNamesAndValues<OSType>(OSType).forEach(os => {
         const testSuffix = `(OS ${os.name})`;
+        test('Test identification of Terminal Shells in order of priority', async () => {
+            const callOrder: string[] = [];
+            const nameDetectorIdentify = sandbox.stub(TerminalNameShellDetector.prototype, 'identify');
+            nameDetectorIdentify.callsFake(() => {
+                callOrder.push('calledFirst');
+                return undefined;
+            });
+            const vscEnvDetectorIdentify = sandbox.stub(VSCEnvironmentShellDetector.prototype, 'identify');
+            vscEnvDetectorIdentify.callsFake(() => {
+                callOrder.push('calledSecond');
+                return undefined;
+            });
+            const userEnvDetectorIdentify = sandbox.stub(UserEnvironmentShellDetector.prototype, 'identify');
+            userEnvDetectorIdentify.callsFake(() => {
+                callOrder.push('calledLast');
+                return undefined;
+            });
+            const settingsDetectorIdentify = sandbox.stub(SettingsShellDetector.prototype, 'identify');
+            settingsDetectorIdentify.callsFake(() => {
+                callOrder.push('calledThird');
+                return undefined;
+            });
+
+            when(platformService.osType).thenReturn(os.value);
+            const nameDetector = new TerminalNameShellDetector();
+            const vscEnvDetector = new VSCEnvironmentShellDetector(instance(mock(ApplicationEnvironment)));
+            const userEnvDetector = new UserEnvironmentShellDetector(mock(MockProcess), instance(platformService));
+            const settingsDetector = new SettingsShellDetector(instance(mock(WorkspaceService)), instance(platformService));
+            const detectors = [settingsDetector, userEnvDetector, nameDetector, vscEnvDetector];
+            const shellDetector = new ShellDetector(instance(platformService), detectors);
+
+            shellDetector.identifyTerminalShell();
+
+            expect(callOrder).to.deep.equal(['calledFirst', 'calledSecond', 'calledThird', 'calledLast']);
+        });
         test(`Use default shell based on OS if there are no shell detectors ${testSuffix}`, () => {
             when(platformService.osType).thenReturn(os.value);
             when(platformService.osType).thenReturn(os.value);

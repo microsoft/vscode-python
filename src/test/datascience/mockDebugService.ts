@@ -8,6 +8,8 @@ import * as uuid from 'uuid/v4';
 import {
     Breakpoint,
     BreakpointsChangeEvent,
+    DebugAdapterTracker,
+    DebugAdapterTrackerFactory,
     DebugConfiguration,
     DebugConfigurationProvider,
     DebugConsole,
@@ -67,12 +69,15 @@ export class MockDebuggerService implements IDebugService, IDisposable {
     private session: DebugSession | undefined;
     private sequence: number = 1;
     private breakpointEmitter: EventEmitter<void> = new EventEmitter<void>();
+    private debugAdapterTrackerFactory: DebugAdapterTrackerFactory | undefined;
+    private debugAdapterTracker: DebugAdapterTracker | undefined;
     private sessionChangedEvent: EventEmitter<DebugSession> = new EventEmitter<DebugSession>();
     private sessionStartedEvent: EventEmitter<DebugSession> = new EventEmitter<DebugSession>();
     private sessionTerminatedEvent: EventEmitter<DebugSession> = new EventEmitter<DebugSession>();
     private sessionCustomEvent: EventEmitter<DebugSessionCustomEvent> = new EventEmitter<DebugSessionCustomEvent>();
     private breakpointsChangedEvent: EventEmitter<BreakpointsChangeEvent> = new EventEmitter<BreakpointsChangeEvent>();
     private _breakpoints: Breakpoint[] = [];
+    private _stoppedThreadId: number | undefined;
     constructor(
         @inject(IProtocolParser) private protocolParser: IProtocolParser
     ) {
@@ -120,11 +125,22 @@ export class MockDebuggerService implements IDebugService, IDisposable {
     public registerDebugConfigurationProvider(_debugType: string, _provider: DebugConfigurationProvider): Disposable {
         throw new Error('Method not implemented.');
     }
+    public registerDebugAdapterTrackerFactory(_debugType: string, _provider: DebugAdapterTrackerFactory): Disposable {
+        this.debugAdapterTrackerFactory = _provider;
+        return { dispose: () => { noop(); } };
+    }
+
     public startDebugging(_folder: WorkspaceFolder | undefined, nameOrConfiguration: string | DebugConfiguration, _parentSession?: DebugSession | undefined): Thenable<boolean> {
         // Should have a port number. We'll assume during the test it's local
         const config = nameOrConfiguration as DebugConfiguration;
         if (config.port) {
             this.session = new MockDebugSession(uuid(), config, this.sendCustomRequest.bind(this));
+
+            // Create our debug adapter tracker at session start
+            if (this.debugAdapterTrackerFactory) {
+                this.debugAdapterTracker = this.debugAdapterTrackerFactory.createDebugAdapterTracker(this.session) as DebugAdapterTracker;
+            }
+
             this.socket = net.createConnection(config.port);
             this.protocolParser.connect(this.socket);
             this.protocolParser.on('event_stopped', this.onBreakpoint.bind(this));
@@ -145,17 +161,23 @@ export class MockDebuggerService implements IDebugService, IDisposable {
         return this.breakpointEmitter.event;
     }
 
-    public continue(): Promise<void> {
-        return this.sendMessage('continue', { threadId: 0 });
+    public async continue(): Promise<void> {
+        await this.sendMessage('continue', { threadId: 0 });
+        if (this.debugAdapterTracker && this.debugAdapterTracker.onDidSendMessage) {
+            this.debugAdapterTracker.onDidSendMessage({ type: 'event', event: 'continue' });
+        }
     }
 
     public async getStackTrace(): Promise<DebugProtocol.StackTraceResponse | undefined> {
         const deferred = createDeferred<DebugProtocol.StackTraceResponse>();
         this.protocolParser.once('response_stackTrace', (args: any) => {
+            if (this.debugAdapterTracker && this.debugAdapterTracker.onDidSendMessage) {
+                this.debugAdapterTracker.onDidSendMessage(args as DebugProtocol.StackTraceResponse);
+            }
             deferred.resolve(args as DebugProtocol.StackTraceResponse);
         });
         await this.emitMessage('stackTrace', {
-            threadId: 1,
+            threadId: this._stoppedThreadId ? this._stoppedThreadId : 1,
             startFrame: 0,
             levels: 1
         });
@@ -257,6 +279,9 @@ export class MockDebuggerService implements IDebugService, IDisposable {
                     const objString = JSON.stringify(obj);
                     const message = `Content-Length: ${objString.length}\r\n\r\n${objString}`;
                     this.socket.write(message, (_a: any) => {
+                        if (this.debugAdapterTracker && this.debugAdapterTracker.onDidSendMessage) {
+                            this.debugAdapterTracker.onDidSendMessage(obj);
+                        }
                         resolve();
                     });
                 }
@@ -266,7 +291,15 @@ export class MockDebuggerService implements IDebugService, IDisposable {
         });
     }
 
-    private onBreakpoint(_args: any): void {
+    private onBreakpoint(args: DebugProtocol.StoppedEvent): void {
+        // Save the current thread id. We use this in our stack trace request
+        this._stoppedThreadId = args.body.threadId;
+
+        if (this.debugAdapterTracker && this.debugAdapterTracker.onDidSendMessage) {
+            this.debugAdapterTracker.onDidSendMessage(args);
+        }
+
+        // Indicate we stopped at a breakpoint
         this.breakpointEmitter.fire();
     }
 

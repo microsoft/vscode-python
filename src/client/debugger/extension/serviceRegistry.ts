@@ -18,6 +18,7 @@ import { DebugConfigurationProviderFactory } from './configuration/providers/pro
 import { PyramidLaunchDebugConfigurationProvider } from './configuration/providers/pyramidLaunch';
 import { RemoteAttachDebugConfigurationProvider } from './configuration/providers/remoteAttach';
 import { AttachConfigurationResolver } from './configuration/resolvers/attach';
+import { DebugEnvironmentVariablesHelper, IDebugEnvironmentVariablesService } from './configuration/resolvers/helper';
 import { LaunchConfigurationResolver } from './configuration/resolvers/launch';
 import { IDebugConfigurationProviderFactory, IDebugConfigurationResolver } from './configuration/types';
 import { ChildProcessAttachEventHandler } from './hooks/childProcessAttachHandler';
@@ -41,4 +42,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, RemoteAttachDebugConfigurationProvider, DebugConfigurationType.remoteAttach);
     serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, ModuleLaunchDebugConfigurationProvider, DebugConfigurationType.launchModule);
     serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, PyramidLaunchDebugConfigurationProvider, DebugConfigurationType.launchPyramid);
+    serviceManager.addSingleton<IDebugEnvironmentVariablesService>(IDebugEnvironmentVariablesService, DebugEnvironmentVariablesHelper);
 }

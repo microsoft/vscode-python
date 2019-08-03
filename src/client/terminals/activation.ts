@@ -5,10 +5,42 @@
 
 import { inject, injectable } from 'inversify';
 import { Terminal } from 'vscode';
-import { ITerminalManager, IWorkspaceService } from '../common/application/types';
+import { IExtensionActivationService } from '../activation/types';
+import {
+    ICommandManager, ITerminalManager, IWorkspaceService
+} from '../common/application/types';
+import { ShowPlayIcon } from '../common/experimentGroups';
 import { ITerminalActivator } from '../common/terminal/types';
-import { IDisposable, IDisposableRegistry } from '../common/types';
+import {
+    IDisposable, IDisposableRegistry, IExperimentsManager, Resource
+} from '../common/types';
+import { noop } from '../common/utils/misc';
 import { ITerminalAutoActivation } from './types';
+
+@injectable()
+export class ExtensionActivationForTerminalActivation implements IExtensionActivationService {
+    constructor(
+        @inject(IExperimentsManager) private experiments: IExperimentsManager,
+        @inject(ICommandManager) private commands: ICommandManager
+    ) { }
+    public async activate(_resource: Resource): Promise<void> {
+        this.checkExperiments();
+    }
+
+    // Nothing after this point is part of the IExtensionActivationService interface.
+
+    public checkExperiments() {
+        if (this.experiments.inExperiment(ShowPlayIcon.icon1)) {
+            this.commands.executeCommand('setContext', 'python.showPlayIcon1', true)
+                .then(noop, noop);
+        } else if (this.experiments.inExperiment(ShowPlayIcon.icon2)) {
+            this.commands.executeCommand('setContext', 'python.showPlayIcon2', true)
+                .then(noop, noop);
+        } else {
+            this.experiments.sendTelemetryIfInExperiment(ShowPlayIcon.control);
+        }
+    }
+}
 
 @injectable()
 export class TerminalAutoActivation implements ITerminalAutoActivation {

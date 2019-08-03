@@ -34,7 +34,19 @@ export class CodeExecutionManager implements ICodeExecutionManager {
     }
 
     public registerCommands() {
-        this.disposableRegistry.push(this.commandManager.registerCommand(Commands.Exec_In_Terminal, this.executeFileInTerminal.bind(this)));
+        [
+            Commands.Exec_In_Terminal,
+            Commands.Exec_In_Terminal_Icon_1,
+            Commands.Exec_In_Terminal_Icon_2
+        ].forEach(cmd => {
+            this.disposableRegistry.push(
+                this.commandManager.registerCommand(
+                    // tslint:disable-next-line:no-any
+                    cmd as any,
+                    this.executeFileInTerminal.bind(this)
+                )
+            );
+        });
         this.disposableRegistry.push(this.commandManager.registerCommand(Commands.Exec_Selection_In_Terminal, this.executeSelectionInTerminal.bind(this)));
         this.disposableRegistry.push(this.commandManager.registerCommand(Commands.Exec_Selection_In_Django_Shell, this.executeSelectionInDjangoShell.bind(this)));
     }

@@ -202,13 +202,13 @@ export abstract class BaseTestManager implements ITestManager {
                 sendTelemetryEvent(EventName.UNITTEST_DISCOVER, undefined, telementryProperties);
                 return tests;
             })
-            .catch((reason: {}) => {
+            .catch(async (reason: {}) => {
                 if (userInitiated) {
                     this.testsStatusUpdaterService.updateStatusAsUnknown(this.workspaceFolder, this.tests);
                 }
-                if (isNotInstalledError(reason as Error) && !quietMode) {
+                if (isNotInstalledError(reason as Error) && !quietMode && !await this.installer.isInstalled(this.product, this.workspaceFolder)) {
                     this.installer.promptToInstall(this.product, this.workspaceFolder)
-                        .catch(ex => traceError('isNotInstalledError', ex));
+                    .catch(ex => traceError('isNotInstalledError', ex));
                 }
 
                 this.tests = undefined;

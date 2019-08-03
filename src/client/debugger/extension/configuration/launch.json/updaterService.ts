@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { createScanner, parse, SyntaxKind } from 'jsonc-parser';
-import { CancellationToken, DebugConfiguration, Position, TextDocument, WorkspaceEdit } from 'vscode';
+import { CancellationToken, DebugConfiguration, Position, Range, TextDocument, WorkspaceEdit } from 'vscode';
 import { IExtensionActivationService } from '../../../../activation/types';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../../../common/application/types';
 import { IDisposableRegistry, Resource } from '../../../../common/types';
@@ -15,12 +15,15 @@ import { EventName } from '../../../../telemetry/constants';
 import { IDebugConfigurationService } from '../../types';
 
 type PositionOfCursor = 'InsideEmptyArray' | 'BeforeItem' | 'AfterItem';
+type PositionOfComma = 'BeforeCursor';
 
 export class LaunchJsonUpdaterServiceHelper {
-    constructor(private readonly commandManager: ICommandManager,
+    constructor(
+        private readonly commandManager: ICommandManager,
         private readonly workspace: IWorkspaceService,
         private readonly documentManager: IDocumentManager,
-        private readonly configurationProvider: IDebugConfigurationService) { }
+        private readonly configurationProvider: IDebugConfigurationService
+    ) {}
     @captureTelemetry(EventName.DEBUGGER_CONFIGURATION_PROMPTS_IN_LAUNCH_JSON)
     public async selectAndInsertDebugConfig(document: TextDocument, position: Position, token: CancellationToken): Promise<void> {
         if (this.documentManager.activeTextEditor && this.documentManager.activeTextEditor.document === document) {
@@ -47,7 +50,8 @@ export class LaunchJsonUpdaterServiceHelper {
         if (!cursorPosition) {
             return;
         }
-        const formattedJson = this.getTextForInsertion(config, cursorPosition);
+        const commaPosition = this.isCommaImmediatelyBeforeCursor(document, position) ? 'BeforeCursor' : undefined;
+        const formattedJson = this.getTextForInsertion(config, cursorPosition, commaPosition);
         const workspaceEdit = new WorkspaceEdit();
         workspaceEdit.insert(document.uri, position, formattedJson);
         await this.documentManager.applyEdit(workspaceEdit);
@@ -62,10 +66,11 @@ export class LaunchJsonUpdaterServiceHelper {
      * @returns
      * @memberof LaunchJsonCompletionItemProvider
      */
-    public getTextForInsertion(config: DebugConfiguration, cursorPosition: PositionOfCursor) {
+    public getTextForInsertion(config: DebugConfiguration, cursorPosition: PositionOfCursor, commaPosition?: PositionOfComma) {
         const json = JSON.stringify(config);
         if (cursorPosition === 'AfterItem') {
-            return `,${json}`;
+            // If we already have a comma immediatley before the cursor, then no need of adding a comma.
+            return commaPosition === 'BeforeCursor' ? json : `,${json}`;
         }
         if (cursorPosition === 'BeforeItem') {
             return `${json},`;
@@ -88,18 +93,48 @@ export class LaunchJsonUpdaterServiceHelper {
     }
     public isConfigurationArrayEmpty(document: TextDocument): boolean {
         const configuration = parse(document.getText(), [], { allowTrailingComma: true, disallowComments: false }) as { configurations: [] };
-        return (!configuration || !Array.isArray(configuration.configurations) || configuration.configurations.length === 0);
+        return !configuration || !Array.isArray(configuration.configurations) || configuration.configurations.length === 0;
+    }
+    public isCommaImmediatelyBeforeCursor(document: TextDocument, position: Position) {
+        const line = document.lineAt(position.line);
+        // Get text from start of line until the cursor.
+        const currentLine = document.getText(new Range(line.range.start, position));
+        if (currentLine.trim().endsWith(',')) {
+            return true;
+        }
+        // If there are other characters, then don't bother.
+        if (currentLine.trim().length !== 0) {
+            return false;
+        }
+
+        // Keep walking backwards until we hit a non-comma character or a comm character.
+        let startLineNumber = position.line - 1;
+        while (startLineNumber > 0) {
+            const lineText = document.lineAt(startLineNumber).text;
+            if (lineText.trim().endsWith(',')) {
+                return true;
+            }
+            // If there are other characters, then don't bother.
+            if (lineText.trim().length !== 0) {
+                return false;
+            }
+            startLineNumber -= 1;
+            continue;
+        }
+        return false;
     }
 }
 
 @injectable()
 export class LaunchJsonUpdaterService implements IExtensionActivationService {
     private activated: boolean = false;
-    constructor(@inject(ICommandManager) private readonly commandManager: ICommandManager,
+    constructor(
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
-        @inject(IDebugConfigurationService) private readonly configurationProvider: IDebugConfigurationService) { }
+        @inject(IDebugConfigurationService) private readonly configurationProvider: IDebugConfigurationService
+    ) {}
     public async activate(_resource: Resource): Promise<void> {
         if (this.activated) {
             return;

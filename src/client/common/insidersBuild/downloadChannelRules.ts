@@ -3,8 +3,7 @@
 
 'use strict';
 
-import { inject, injectable, named } from 'inversify';
-import { IExtensionBuildInstaller, INSIDERS_INSTALLER, STABLE_INSTALLER } from '../installer/types';
+import { inject, injectable } from 'inversify';
 import { traceDecorators } from '../logger';
 import { IPersistentStateFactory } from '../types';
 import { IExtensionChannelRule } from './types';
@@ -13,29 +12,27 @@ export const frequencyForDailyInsidersCheck = 1000 * 60 * 60 * 24; // One day.
 export const frequencyForWeeklyInsidersCheck = 1000 * 60 * 60 * 24 * 7; // One week.
 export const lastLookUpTimeKey = 'INSIDERS_LAST_LOOK_UP_TIME_KEY';
 
+/**
+ * Determines if we should install insiders when install channel is set of "off".
+ * "off" setting is defined as a no op, which means we should not be looking for insiders.
+ *
+ * @export
+ * @class ExtensionInsidersOffChannelRule
+ * @implements {IExtensionChannelRule}
+ */
 @injectable()
-export class ExtensionStableChannelRule implements IExtensionChannelRule {
-    constructor(@inject(IExtensionBuildInstaller) @named(STABLE_INSTALLER) private readonly stableInstaller: IExtensionBuildInstaller) { }
-    public async getInstaller(isChannelRuleNew: boolean = false): Promise<IExtensionBuildInstaller | undefined> {
-        if (isChannelRuleNew) {
-            // Channel rule has changed to stable, return stable installer
-            return this.stableInstaller;
-        }
+export class ExtensionInsidersOffChannelRule implements IExtensionChannelRule {
+    public async shouldLookForInsidersBuild(): Promise<boolean> {
+        return false;
     }
 }
 @injectable()
 export class ExtensionInsidersDailyChannelRule implements IExtensionChannelRule {
     constructor(
-        @inject(IExtensionBuildInstaller) @named(INSIDERS_INSTALLER) private readonly insidersInstaller: IExtensionBuildInstaller,
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory
     ) { }
-    @traceDecorators.error('Error in getting installer for daily channel rule')
-    public async getInstaller(isChannelRuleNew: boolean): Promise<IExtensionBuildInstaller | undefined> {
-        if (await this.shouldLookForInsidersBuild(isChannelRuleNew)) {
-            return this.insidersInstaller;
-        }
-    }
-    private async shouldLookForInsidersBuild(isChannelRuleNew: boolean): Promise<boolean> {
+    @traceDecorators.error('Error in checking if insiders build is to be for daily channel rule')
+    public async shouldLookForInsidersBuild(isChannelRuleNew: boolean): Promise<boolean> {
         const lastLookUpTime = this.persistentStateFactory.createGlobalPersistentState(lastLookUpTimeKey, -1);
         if (isChannelRuleNew) {
             // Channel rule has changed to insiders, look for insiders build
@@ -53,16 +50,10 @@ export class ExtensionInsidersDailyChannelRule implements IExtensionChannelRule 
 @injectable()
 export class ExtensionInsidersWeeklyChannelRule implements IExtensionChannelRule {
     constructor(
-        @inject(IExtensionBuildInstaller) @named(INSIDERS_INSTALLER) private readonly insidersInstaller: IExtensionBuildInstaller,
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory
     ) { }
-    @traceDecorators.error('Error in getting installer for weekly channel rule')
-    public async getInstaller(isChannelRuleNew: boolean): Promise<IExtensionBuildInstaller | undefined> {
-        if (await this.shouldLookForInsidersBuild(isChannelRuleNew)) {
-            return this.insidersInstaller;
-        }
-    }
-    private async shouldLookForInsidersBuild(isChannelRuleNew: boolean): Promise<boolean> {
+    @traceDecorators.error('Error in checking if insiders build is to be for daily channel rule')
+    public async shouldLookForInsidersBuild(isChannelRuleNew: boolean): Promise<boolean> {
         const lastLookUpTime = this.persistentStateFactory.createGlobalPersistentState(lastLookUpTimeKey, -1);
         if (isChannelRuleNew) {
             // Channel rule has changed to insiders, look for insiders build

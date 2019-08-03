@@ -25,8 +25,9 @@ import { LanguageServerFolderService } from './languageServer/languageServerFold
 import { BetaLanguageServerPackageRepository, DailyLanguageServerPackageRepository, LanguageServerDownloadChannel, StableLanguageServerPackageRepository } from './languageServer/languageServerPackageRepository';
 import { LanguageServerPackageService } from './languageServer/languageServerPackageService';
 import { LanguageServerManager } from './languageServer/manager';
+import { LanguageServerOutputChannel } from './languageServer/outputChannel';
 import { PlatformData } from './languageServer/platformData';
-import { IDownloadChannelRule, IExtensionActivationManager, IExtensionActivationService, ILanguageClientFactory, ILanguageServer, ILanguageServerActivator, ILanguageServerAnalysisOptions, ILanguageServerCompatibilityService as ILanagueServerCompatibilityService, ILanguageServerDownloader, ILanguageServerExtension, ILanguageServerFolderService, ILanguageServerManager, ILanguageServerPackageService, IPlatformData, LanguageClientFactory, LanguageServerActivator } from './types';
+import { IDownloadChannelRule, IExtensionActivationManager, IExtensionActivationService, ILanguageClientFactory, ILanguageServer, ILanguageServerActivator, ILanguageServerAnalysisOptions, ILanguageServerCompatibilityService as ILanagueServerCompatibilityService, ILanguageServerDownloader, ILanguageServerExtension, ILanguageServerFolderService, ILanguageServerManager, ILanguageServerOutputChannel, ILanguageServerPackageService, IPlatformData, LanguageClientFactory, LanguageServerActivator } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, LanguageServerExtensionActivationService);
@@ -55,4 +56,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, LanguageServerAnalysisOptions);
     serviceManager.addSingleton<ILanguageServer>(ILanguageServer, LanguageServer);
     serviceManager.add<ILanguageServerManager>(ILanguageServerManager, LanguageServerManager);
+    serviceManager.addSingleton<ILanguageServerOutputChannel>(ILanguageServerOutputChannel, LanguageServerOutputChannel);
 }

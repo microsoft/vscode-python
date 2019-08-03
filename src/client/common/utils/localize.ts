@@ -64,15 +64,21 @@ export namespace Interpreters {
     export const selectInterpreterTip = localize('Interpreters.selectInterpreterTip', 'Tip: you can change the Python interpreter used by the Python extension by clicking on the Python version in the status bar');
 }
 export namespace ExtensionChannels {
-    export const useStable = localize('ExtensionChannels.useStable', 'Use Stable');
-    export const promptMessage = localize('ExtensionChannels.promptMessage', 'We noticed you are using Visual Studio Code ExtensionChannels. Reload to use the Insiders build of the extension.');
-    export const reloadMessage = localize('ExtensionChannels.reloadMessage', 'Please reload the window switching between insiders channels');
+    export const yesWeekly = localize('ExtensionChannels.yesWeekly', 'Yes, weekly');
+    export const yesDaily = localize('ExtensionChannels.yesDaily', 'Yes, daily');
+    export const promptMessage = localize('ExtensionChannels.promptMessage', 'We noticed you are using Visual Studio Code Insiders. Would you like to use the Insiders build of the Python extension?');
+    export const reloadToUseInsidersMessage = localize('ExtensionChannels.reloadToUseInsidersMessage', 'Please reload Visual Studio Code to use the insiders build of the extension');
     export const downloadCompletedOutputMessage = localize('ExtensionChannels.downloadCompletedOutputMessage', 'Insiders build download complete.');
     export const startingDownloadOutputMessage = localize('ExtensionChannels.startingDownloadOutputMessage', 'Starting download for Insiders build.');
     export const downloadingInsidersMessage = localize('ExtensionChannels.downloadingInsidersMessage', 'Downloading Insiders Extension... ');
     export const installingInsidersMessage = localize('ExtensionChannels.installingInsidersMessage', 'Installing Insiders build of extension... ');
     export const installingStableMessage = localize('ExtensionChannels.installingStableMessage', 'Installing Stable build of extension... ');
     export const installationCompleteMessage = localize('ExtensionChannels.installationCompleteMessage', 'complete.');
+}
+export namespace OutputChannelNames {
+    export const languageServer = localize('OutputChannelNames.languageServer', 'Python Language Server');
+    export const python = localize('OutputChannelNames.python', 'Python');
+    export const pythonTest = localize('OutputChannelNames.pythonTest', 'Python Test Log');
 }
 
 export namespace Logging {
@@ -132,7 +138,7 @@ export namespace DataScience {
     export const connectingToJupyter = localize('DataScience.connectingToJupyter', 'Connecting to Jupyter server');
     export const exportingFormat = localize('DataScience.exportingFormat', 'Exporting {0}');
     export const runAllCellsLensCommandTitle = localize('python.command.python.datascience.runallcells.title', 'Run all cells');
-    export const runAllCellsAboveLensCommandTitle = localize('python.command.python.datascience.runallcellsabove.title', 'Run Above');
+    export const runAllCellsAboveLensCommandTitle = localize('python.command.python.datascience.runallcellsabove.title', 'Run above');
     export const runCellAndAllBelowLensCommandTitle = localize('python.command.python.datascience.runcellandallbelow.title', 'Run Below');
     export const importChangeDirectoryComment = localize('DataScience.importChangeDirectoryComment', '#%% Change working directory from the workspace root to the ipynb file location. Turn this addition off with the DataScience.changeDirOnImportExport setting');
     export const exportChangeDirectoryComment = localize('DataScience.exportChangeDirectoryComment', '# Change directory to VSCode workspace root so that relative path loads work correctly. Turn this addition off with the DataScience.changeDirOnImportExport setting');
@@ -141,7 +147,7 @@ export namespace DataScience {
     export const restartKernelMessageYes = localize('DataScience.restartKernelMessageYes', 'Restart');
     export const restartKernelMessageDontAskAgain = localize('DataScience.restartKernelMessageDontAskAgain', 'Don\'t Ask Again');
     export const restartKernelMessageNo = localize('DataScience.restartKernelMessageNo', 'Cancel');
-    export const restartingKernelStatus = localize('DataScience.restartingKernelStatus', 'Restarting iPython Kernel');
+    export const restartingKernelStatus = localize('DataScience.restartingKernelStatus', 'Restarting IPython Kernel');
     export const restartingKernelFailed = localize('DataScience.restartingKernelFailed', 'Kernel restart failed. Jupyter server is hung. Please reload VS code.');
     export const interruptingKernelFailed = localize('DataScience.interruptingKernelFailed', 'Kernel interrupt failed. Jupyter server is hung. Please reload VS code.');
 
@@ -150,11 +156,12 @@ export namespace DataScience {
     export const expandAll = localize('DataScience.expandAll', 'Expand all cell inputs');
     export const collapseSingle = localize('DataScience.collapseSingle', 'Collapse');
     export const expandSingle = localize('DataScience.expandSingle', 'Expand');
-    export const exportKey = localize('DataScience.export', 'Export as Jupyter Notebook');
-    export const restartServer = localize('DataScience.restartServer', 'Restart iPython Kernel');
+    export const exportKey = localize('DataScience.export', 'Export as Jupyter notebook');
+    export const restartServer = localize('DataScience.restartServer', 'Restart IPython Kernel');
     export const undo = localize('DataScience.undo', 'Undo');
     export const redo = localize('DataScience.redo', 'Redo');
-    export const clearAll = localize('DataScience.clearAll', 'Remove All Cells');
+    export const clearAll = localize('DataScience.clearAll', 'Remove all cells');
+    export const reloadRequired = localize('DataScience.reloadRequired', 'Please reload the window for new settings to take effect.');
     export const pythonVersionHeader = localize('DataScience.pythonVersionHeader', 'Python Version:');
     export const pythonRestartHeader = localize('DataScience.pythonRestartHeader', 'Restarted Kernel:');
     export const pythonNewHeader = localize('DataScience.pythonNewHeader', 'Started new kernel:');
@@ -172,16 +179,16 @@ export namespace DataScience {
     export const jupyterServerCrashed = localize('DataScience.jupyterServerCrashed', 'Jupyter server crashed. Unable to connect. \r\nError code from jupyter: {0}');
     export const notebookVersionFormat = localize('DataScience.notebookVersionFormat', 'Jupyter Notebook Version: {0}');
     //tslint:disable-next-line:no-multiline-string
-    export const jupyterKernelNotSupportedOnActive = localize('DataScience.jupyterKernelNotSupportedOnActive', `iPython kernel cannot be started from '{0}'. Using closest match {1} instead.`);
-    export const jupyterKernelSpecNotFound = localize('DataScience.jupyterKernelSpecNotFound', 'Cannot create a iPython kernel spec and none are available for use');
-    export const interruptKernel = localize('DataScience.interruptKernel', 'Interrupt iPython Kernel');
-    export const interruptKernelStatus = localize('DataScience.interruptKernelStatus', 'Interrupting iPython Kernel');
+    export const jupyterKernelNotSupportedOnActive = localize('DataScience.jupyterKernelNotSupportedOnActive', `IPython kernel cannot be started from '{0}'. Using closest match {1} instead.`);
+    export const jupyterKernelSpecNotFound = localize('DataScience.jupyterKernelSpecNotFound', 'Cannot create a IPython kernel spec and none are available for use');
+    export const interruptKernel = localize('DataScience.interruptKernel', 'Interrupt IPython Kernel');
+    export const interruptKernelStatus = localize('DataScience.interruptKernelStatus', 'Interrupting IPython Kernel');
     export const exportCancel = localize('DataScience.exportCancel', 'Cancel');
     export const restartKernelAfterInterruptMessage = localize('DataScience.restartKernelAfterInterruptMessage', 'Interrupting the kernel timed out. Do you want to restart the kernel instead? All variables will be lost.');
     export const pythonInterruptFailedHeader = localize('DataScience.pythonInterruptFailedHeader', 'Keyboard interrupt crashed the kernel. Kernel restarted.');
     export const sysInfoURILabel = localize('DataScience.sysInfoURILabel', 'Jupyter Server URI: ');
     export const executingCodeFailure = localize('DataScience.executingCodeFailure', 'Executing code failed : {0}');
-    export const inputWatermark = localize('DataScience.inputWatermark', 'Shift-enter to run');
+    export const inputWatermark = localize('DataScience.inputWatermark', 'Type code here and press shift-enter to run');
     export const liveShareConnectFailure = localize('DataScience.liveShareConnectFailure', 'Cannot connect to host jupyter session. URI not found.');
     export const liveShareCannotSpawnNotebooks = localize('DataScience.liveShareCannotSpawnNotebooks', 'Spawning jupyter notebooks is not supported over a live share connection');
     export const liveShareCannotImportNotebooks = localize('DataScience.liveShareCannotImportNotebooks', 'Importing notebooks is not currently supported over a live share connection');
@@ -228,12 +235,24 @@ export namespace DataScience {
     export const jupyterDataRateExceeded = localize('DataScience.jupyterDataRateExceeded', 'Cannot view variable because data rate exceeded. Please restart your server with a higher data rate limit. For example, --NotebookApp.iopub_data_rate_limit=10000000000.0');
     export const addCellBelowCommandTitle = localize('DataScience.addCellBelowCommandTitle', 'Add cell');
     export const debugCellCommandTitle = localize('DataScience.debugCellCommandTitle', 'Debug cell');
-    export const variableExplorerDisabledDuringDebugging = localize('DataScience.variableExplorerDisabledDuringDebugging', 'Variables are not available while debugging.');
+    export const debugStepOverCommandTitle = localize('DataScience.debugStepOverCommandTitle', 'Step over');
+    export const debugContinueCommandTitle = localize('DataScience.debugContinueCommandTitle', 'Continue');
+    export const debugStopCommandTitle = localize('DataScience.debugStopCommandTitle', 'Stop');
+    export const runCurrentCellAndAddBelow = localize('DataScience.runCurrentCellAndAddBelow', 'Run current and add cell below');
+    export const variableExplorerDisabledDuringDebugging = localize('DataScience.variableExplorerDisabledDuringDebugging', 'Please see the Debug Side Bar\'s VARIABLES section.');
     export const jupyterDebuggerNotInstalledError = localize('DataScience.jupyterDebuggerNotInstalledError', 'Pip module ptvsd is required for debugging cells. You will need to install it to debug cells.');
     export const jupyterDebuggerPortNotAvailableError = localize('DataScience.jupyterDebuggerPortNotAvailableError', 'Port {0} cannot be opened for debugging. Please specify a different port in the remoteDebuggerPort setting.');
     export const jupyterDebuggerPortBlockedError = localize('DataScience.jupyterDebuggerPortBlockedError', 'Port {0} cannot be connected to for debugging. Please let port {0} through your firewall.');
     export const jupyterDebuggerPortNotAvailableSearchError = localize('DataScience.jupyterDebuggerPortNotAvailableSearchError', 'Ports in the range {0}-{1} cannot be found for debugging. Please specify a port in the remoteDebuggerPort setting.');
     export const jupyterDebuggerPortBlockedSearchError = localize('DataScience.jupyterDebuggerPortBlockedSearchError', 'A port cannot be connected to for debugging. Please let ports {0}-{1} through your firewall.');
+    export const jupyterDebuggerInstallPtvsdNew = localize('DataScience.jupyterDebuggerInstallPtvsdNew', 'Pip module ptvsd is required for debugging cells. Install ptvsd and continue to debug cell?');
+    export const jupyterDebuggerInstallPtvsdUpdate = localize('DataScience.jupyterDebuggerInstallPtvsdUpdate', 'The version of ptvsd installed does not support debugging cells. Update ptvsd to newest version and continue to debug cell?');
+    export const jupyterDebuggerInstallPtvsdYes = localize('DataScience.jupyterDebuggerInstallPtvsdYes', 'Yes');
+    export const jupyterDebuggerInstallPtvsdNo = localize('DataScience.jupyterDebuggerInstallPtvsdNo', 'No');
+    export const cellStopOnErrorFormatMessage = localize('DataScience.cellStopOnErrorFormatMessage', '{0} cells were canceled due to an error in the previous cell.');
+    export const scrollToCellTitleFormatMessage = localize('DataScience.scrollToCellTitleFormatMessage', 'Go to [{0}]');
+    export const instructionComments = localize('DataScience.instructionComments', '# To add a new cell, type "#%%"\n# To add a new markdown cell, type "#%% [markdown]"\n');
+    export const remoteDebuggerNotSupported = localize('DataScience.remoteDebuggerNotSupported', 'Debugging while attached to a remote server is not currently supported.');
 }
 
 export namespace DebugConfigStrings {

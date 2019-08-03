@@ -20,11 +20,13 @@ export type CommandsWithoutArgs = keyof ICommandNameWithoutArgumentTypeMapping;
 interface ICommandNameWithoutArgumentTypeMapping {
     [Commands.SwitchToInsidersDaily]: [];
     [Commands.SwitchToInsidersWeekly]: [];
-    [Commands.SwitchToStable]: [];
+    [Commands.SwitchOffInsidersChannel]: [];
     [Commands.Set_Interpreter]: [];
     [Commands.Set_ShebangInterpreter]: [];
     [Commands.Run_Linter]: [];
     [Commands.Enable_Linter]: [];
+    ['workbench.action.debug.continue']: [];
+    ['workbench.action.debug.stepOver']: [];
     ['workbench.action.debug.stop']: [];
     ['workbench.action.reloadWindow']: [];
     ['editor.action.formatDocument']: [];
@@ -72,6 +74,8 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [Commands.Build_Workspace_Symbols]: [boolean, CancellationToken];
     [Commands.Sort_Imports]: [undefined, Uri];
     [Commands.Exec_In_Terminal]: [undefined, Uri];
+    [Commands.Exec_In_Terminal_Icon_1]: [undefined, Uri];
+    [Commands.Exec_In_Terminal_Icon_2]: [undefined, Uri];
     [Commands.Tests_ViewOutput]: [undefined, CommandSource];
     [Commands.Tests_Select_And_Run_File]: [undefined, CommandSource];
     [Commands.Tests_Run_Current_File]: [undefined, CommandSource];
@@ -111,5 +115,11 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.ImportNotebook]: [undefined | Uri, undefined | CommandSource];
     [DSCommands.ExportFileAsNotebook]: [undefined | Uri, undefined | CommandSource];
     [DSCommands.RunFileInInteractiveWindows]: [string];
+    [DSCommands.DebugFileInInteractiveWindows]: [string];
     [DSCommands.DebugCell]: [string, number, number, number, number];
+    [DSCommands.DebugStepOver]: [];
+    [DSCommands.DebugStop]: [];
+    [DSCommands.DebugContinue]: [];
+    [DSCommands.RunCurrentCellAndAddBelow]: [string];
+    [DSCommands.ScrollToCell]: [string, string];
 }

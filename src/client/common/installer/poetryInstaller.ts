@@ -20,6 +20,10 @@ const poetryFile = 'poetry.lock';
 @injectable()
 export class PoetryInstaller extends ModuleInstaller implements IModuleInstaller {
 
+    public get name(): string {
+        return 'poetry';
+    }
+
     public get displayName() {
         return poetryName;
     }

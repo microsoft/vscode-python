@@ -53,6 +53,7 @@ export class ShellDetector {
 
         for (const detector of shellDetectors) {
             shell = detector.identify(telemetryProperties, terminal);
+            traceVerbose(`${detector}. Shell identified as ${shell} ${terminal ? `(Terminal name is ${terminal.name})` : ''}`);
             if (shell) {
                 break;
             }
@@ -66,6 +67,7 @@ export class ShellDetector {
 
         // If we could not identify the shell, use the defaults.
         if (shell === undefined || shell === TerminalShellType.other) {
+            traceVerbose('Using default OS shell');
             shell = defaultOSShells[this.platform.osType];
         }
         return shell;

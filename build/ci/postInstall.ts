@@ -19,6 +19,9 @@ function fixJupyterLabDTSFiles() {
     const relativePath = path.join(
         'node_modules',
         '@jupyterlab',
+        'services',
+        'node_modules',
+        '@jupyterlab',
         'coreutils',
         'lib',
         'settingregistry.d.ts'
@@ -36,13 +39,18 @@ function fixJupyterLabDTSFiles() {
         console.log(colors.blue(`${relativePath} file already updated (by Python VSC)`));
         return;
     }
-    const replacedText = fileContents.replace('[key: string]: ISchema;', '[key: string]: ISchema | undefined;');
-    if (fileContents === replacedText) {
-        throw new Error('Fix for JupyterLabl file \'settingregistry.d.ts\' failed (pvsc post install script)');
+    if (fileContents.indexOf('[key: string]: ISchema;') > 0) {
+        const replacedText = fileContents.replace('[key: string]: ISchema;', '[key: string]: ISchema | undefined;');
+        if (fileContents === replacedText) {
+            throw new Error('Fix for JupyterLabl file \'settingregistry.d.ts\' failed (pvsc post install script)');
+        }
+        fs.writeFileSync(filePath, replacedText);
+        // tslint:disable-next-line:no-console
+        console.log(colors.green(`${relativePath} file updated (by Python VSC)`));
+    } else {
+        // tslint:disable-next-line:no-console
+        console.log(colors.red(`${relativePath} file does not need updating.`));
     }
-    fs.writeFileSync(filePath, replacedText);
-    // tslint:disable-next-line:no-console
-    console.log(colors.green(`${relativePath} file updated (by Python VSC)`));
 }
 
 fixJupyterLabDTSFiles();

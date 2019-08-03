@@ -7,7 +7,7 @@ import { SemVer } from 'semver';
 import { Event } from 'vscode';
 import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
 import { NugetPackage } from '../common/nuget/types';
-import { IDisposable, LanguageServerDownloadChannels, Resource } from '../common/types';
+import { IDisposable, IOutputChannel, LanguageServerDownloadChannels, Resource } from '../common/types';
 
 export const IExtensionActivationManager = Symbol('IExtensionActivationManager');
 export interface IExtensionActivationManager extends IDisposable {
@@ -122,4 +122,15 @@ export interface IPlatformData {
     readonly platformName: PlatformName;
     readonly engineDllName: string;
     readonly engineExecutableName: string;
+}
+
+export const ILanguageServerOutputChannel = Symbol('ILanguageServerOutputChannel');
+export interface ILanguageServerOutputChannel {
+    /**
+     * Creates output channel if necessary and returns it
+     *
+     * @type {IOutputChannel}
+     * @memberof ILanguageServerOutputChannel
+     */
+    readonly channel: IOutputChannel;
 }
