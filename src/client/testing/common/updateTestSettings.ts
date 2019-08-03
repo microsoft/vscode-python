@@ -53,17 +53,25 @@ export class UpdateTestSettingService implements IExtensionActivationService {
         const setting_pytest_enabled = new RegExp('.pyTestEnabled"', 'g');
         const setting_pytest_args = new RegExp('.pyTestArgs"', 'g');
         const setting_pytest_path = new RegExp('.pyTestPath"', 'g');
+        const setting_pep8_args = new RegExp('.(?<!auto)pep8Args', 'g');
+        const setting_pep8_cat_severity = new RegExp('.pep8CategorySeverity\.', 'g');
+        const setting_pep8_enabled = new RegExp('.pep8Enabled', 'g');
+        const setting_pep8_path = new RegExp('.(?<!auto)pep8Path', 'g');
 
         fileContents = fileContents.replace(setting, '"python.testing');
         fileContents = fileContents.replace(setting_pytest_enabled, '.pytestEnabled"');
         fileContents = fileContents.replace(setting_pytest_args, '.pytestArgs"');
         fileContents = fileContents.replace(setting_pytest_path, '.pytestPath"');
+        fileContents = fileContents.replace(setting_pep8_args, '.pycodestyleArgs');
+        fileContents = fileContents.replace(setting_pep8_cat_severity, '.pycodestyleCategorySeverity.');
+        fileContents = fileContents.replace(setting_pep8_enabled, '.pycodestyleEnabled');
+        fileContents = fileContents.replace(setting_pep8_path, '.pycodestylePath');
         await this.fs.writeFile(filePath, fileContents);
     }
     public async doesFileNeedToBeFixed(filePath: string) {
         try {
             const contents = await this.fs.readFile(filePath);
-            return contents.indexOf('python.unitTest.') > 0 || contents.indexOf('.pyTest') > 0;
+            return contents.indexOf('python.unitTest.') > 0 || contents.indexOf('.pyTest') > 0 || contents.indexOf('.pep8') > 0;
         } catch (ex) {
             traceError('Failed to check if file needs to be fixed', ex);
             return false;
