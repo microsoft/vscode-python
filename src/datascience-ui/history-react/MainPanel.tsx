@@ -932,6 +932,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private submitInput = (code: string) => {
+        // noop if the submitted code is just a cell marker
+        if (code.trim() === "#%%") {
+            return;
+        }
         // This should be from our last entry. Switch this entry to read only, and add a new item to our list
         let editCell = this.getEditCell();
         if (editCell) {
