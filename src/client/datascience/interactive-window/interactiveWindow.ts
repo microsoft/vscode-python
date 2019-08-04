@@ -744,8 +744,14 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
     }
 
     private async submitCode(code: string, file: string, line: number, id?: string, _editor?: TextEditor, debug?: boolean): Promise<boolean> {
-        traceInfo(`Submitting code for ${this.id}`);
         let result = true;
+
+        // Do not execute or render empty code cells
+        if (code.trim() === "#%%") {
+            return result;
+        }
+
+        traceInfo(`Submitting code for ${this.id}`);
         // Start a status item
         const status = this.setStatus(localize.DataScience.executingCode());
 
