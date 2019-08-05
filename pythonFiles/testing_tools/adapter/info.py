@@ -26,16 +26,17 @@ class TestPath(namedtuple('TestPath', 'root relfile func sub')):
         # self.sub may be None.
 
 
-class ParentInfo(namedtuple('ParentInfo', 'id kind name root parentid')):
+class ParentInfo(namedtuple('ParentInfo', 'id kind name location root parentid')):
 
     KINDS = ('folder', 'file', 'suite', 'function', 'subtest')
 
-    def __new__(cls, id, kind, name, root=None, parentid=None):
+    def __new__(cls, id, kind, name, location=None, root=None, parentid=None):
         self = super(ParentInfo, cls).__new__(
                 cls,
                 str(id) if id else None,
                 str(kind) if kind else None,
                 str(name) if name else None,
+                str(location) if location else None,
                 str(root) if root else None,
                 str(parentid) if parentid else None,
                 )

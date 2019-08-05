@@ -54,7 +54,8 @@ class DiscoveredTests(object):
             # As in add_test(), the parent ID *should* already be correct.
             if parentid != '.' and not parentid.startswith('.' + os.path.sep):
                 parentid = os.path.join('.', parentid)
-            info = ParentInfo(nodeid, kind, name, rootdir, parentid)
+            loc = None
+            info = ParentInfo(nodeid, kind, name, loc, rootdir, parentid)
             self._parents[(rootdir, nodeid)] = info
             nodeid, name, kind = parentid, parentname, parentkind
         assert nodeid == '.'
