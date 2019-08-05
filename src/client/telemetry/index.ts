@@ -410,7 +410,7 @@ export interface IEventNamePropertyMapping {
          */
         scope: 'file' | 'selection';
         /**
-         * How was the code executed, throught the command or by clicking the `Run File` icon.
+         * How was the code executed (through the command or by clicking the `Run File` icon).
          *
          * @type {('command' | 'icon')}
          */
