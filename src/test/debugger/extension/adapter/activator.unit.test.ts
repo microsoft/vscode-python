@@ -13,7 +13,7 @@ import { DebugAdapterActivator } from '../../../../client/debugger/extension/ada
 import { DebugAdapterDescriptorFactory } from '../../../../client/debugger/extension/adapter/factory';
 import { noop } from '../../../core';
 
-suite('xDebugging - Adapter Factory Registration', () => {
+suite('Debugging - Adapter Factory Registration', () => {
     let activator: IExtensionSingleActivationService;
     let debugService: IDebugService;
     let factory: DebugAdapterDescriptorFactory;

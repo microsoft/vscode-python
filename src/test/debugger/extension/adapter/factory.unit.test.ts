@@ -19,7 +19,7 @@ use(chaiAsPromised);
 
 const pathToScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'ptvsd', 'adapter');
 
-suite('xDebugging - Adapter Factory', () => {
+suite('Debugging - Adapter Factory', () => {
     let factory: DebugAdapterDescriptorFactory;
     let interpreterService: IInterpreterService;
     let appShell: IApplicationShell;
