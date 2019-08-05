@@ -270,6 +270,7 @@ def _get_location(item, testroot, relfile, _normcase, _pathsep):
 
 def _matches_relfile(srcfile, testroot, relfile, _normcase, _pathsep):
     """Return True if "srcfile" matches the given relfile."""
+    testroot = _normcase(testroot)
     srcfile = _normcase(srcfile)
     relfile = _normcase(relfile)
     if srcfile == relfile:
