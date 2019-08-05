@@ -231,7 +231,7 @@ steps:
   # > python -m pip install -U -r build/test-requirements.txt
   # > python pythonFiles/tests/run_all.py --color=yes --junit-xml=python-tests-junit.xml
   - bash: |
-      python pythonFiles/tests/run_all.py --color=yes --junit-xml=$COMMON_TESTRESULTSDIRECTORY/python-tests-junit.xml
+      python pythonFiles/tests/run_all.py --color=no --junit-xml=$COMMON_TESTRESULTSDIRECTORY/python-tests-junit.xml
     displayName: 'Python unittests'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'pythonUnitTests'))
 
@@ -256,7 +256,7 @@ steps:
   # > python -m pip install -U -r build/test-requirements.txt
   # > python pythonFiles/tests/run_all.py --color=yes --junit-xml=python-tests-junit.xml
   - bash: |
-      python -m IPython pythonFiles/tests/run_all.py -- --color=yes --junit-xml=$COMMON_TESTRESULTSDIRECTORY/ipython-tests-junit.xml
+      python -m IPython pythonFiles/tests/run_all.py -- --color=no --junit-xml=$COMMON_TESTRESULTSDIRECTORY/ipython-tests-junit.xml
     displayName: 'Python ipython tests'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'pythonIPythonTests'))
 
