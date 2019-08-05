@@ -787,14 +787,14 @@ class CollectorTests(unittest.TestCase):
         stub = Stub()
         discovered = StubDiscoveredTests(stub)
         session = StubPytestSession(stub)
-        testroot = r'c:\a\b\c'
+        testroot = r'C:\A\B\C'
         relfile = r'X\Y\Z\test_eggs.py'
         session.items = [
             StubFunctionItem(
                 stub,
-                nodeid='X/Y/Z/test_eggs.py::SpamTests::test_spam',
+                nodeid='x/y/z/test_eggs.py::SpamTests::test_spam',
                 name='test_spam',
-                location=('x/y/z/test_eggs.py', 12, 'SpamTests.test_spam'),
+                location=('X/Y/Z/test_eggs.py', 12, 'SpamTests.test_spam'),
                 fspath=testroot + '\\' + relfile,
                 function=FakeFunc('test_spam'),
                 ),
@@ -825,12 +825,12 @@ class CollectorTests(unittest.TestCase):
                     id=r'.\x\y\z\test_eggs.py::SpamTests::test_spam',
                     name='test_spam',
                     path=TestPath(
-                        root=testroot,
-                        relfile=r'.\X\Y\Z\test_eggs.py',
+                        root=testroot,  # not normalized
+                        relfile=r'.\X\Y\Z\test_eggs.py',  # not normalized
                         func='SpamTests.test_spam',
                         sub=None,
                         ),
-                    source=r'.\X\Y\Z\test_eggs.py:{}'.format(13),
+                    source=r'.\X\Y\Z\test_eggs.py:{}'.format(13),  # not normalized
                     markers=None,
                     parentid=r'.\x\y\z\test_eggs.py::SpamTests',
                     ),
