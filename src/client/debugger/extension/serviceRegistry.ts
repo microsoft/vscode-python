@@ -6,8 +6,8 @@
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IServiceManager } from '../../ioc/types';
 import { AttachRequestArguments, LaunchRequestArguments } from '../types';
+import { DebugAdapterActivator } from './adapter/activator';
 import { DebugAdapterDescriptorFactory } from './adapter/factory';
-import { DebugAdapterActivator } from './adapter/initialize';
 import { DebuggerBanner } from './banner';
 import { PythonDebugConfigurationService } from './configuration/debugConfigurationService';
 import { LaunchJsonCompletionProvider } from './configuration/launch.json/completionProvider';

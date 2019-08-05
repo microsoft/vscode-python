@@ -27,8 +27,20 @@ export class DebugAdapterDescriptorFactory implements VSCDADescriptionFactory {
         if (executable) {
             return executable;
         }
+        // Unlikely scenario.
         throw new Error('Debug Adapter Executable not provided');
     }
+    /**
+     * Get the python executable used to launch the Python Debug Adapter.
+     * In the case of `attach` scenarios, just use the workspace interpreter, else first available one.
+     * It is unlike user won't have a Python interpreter
+     *
+     * @private
+     * @param {(LaunchRequestArguments | AttachRequestArguments)} configuration
+     * @param {WorkspaceFolder} [workspaceFolder]
+     * @returns {Promise<string>}
+     * @memberof DebugAdapterDescriptorFactory
+     */
     private async getPythonPath(configuration: LaunchRequestArguments | AttachRequestArguments, workspaceFolder?: WorkspaceFolder): Promise<string> {
         if (configuration.pythonPath) {
             return configuration.pythonPath;

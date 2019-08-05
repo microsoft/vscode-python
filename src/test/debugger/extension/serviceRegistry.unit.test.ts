@@ -7,6 +7,9 @@
 
 import { expect } from 'chai';
 import * as typemoq from 'typemoq';
+import { IExtensionSingleActivationService } from '../../../client/activation/types';
+import { DebugAdapterActivator } from '../../../client/debugger/extension/adapter/activator';
+import { DebugAdapterDescriptorFactory } from '../../../client/debugger/extension/adapter/factory';
 import { DebuggerBanner } from '../../../client/debugger/extension/banner';
 import { PythonDebugConfigurationService } from '../../../client/debugger/extension/configuration/debugConfigurationService';
 import { DjangoLaunchDebugConfigurationProvider } from '../../../client/debugger/extension/configuration/providers/djangoLaunch';
@@ -34,6 +37,8 @@ suite('Debugging - Service Registry', () => {
             [IDebugConfigurationService, PythonDebugConfigurationService],
             [IDebuggerBanner, DebuggerBanner],
             [IChildProcessAttachService, ChildProcessAttachService],
+            [IExtensionSingleActivationService, DebugAdapterActivator],
+            [DebugAdapterDescriptorFactory, DebugAdapterDescriptorFactory],
             [IDebugSessionEventHandlers, ChildProcessAttachEventHandler],
             [IDebugConfigurationResolver, LaunchConfigurationResolver, 'launch'],
             [IDebugConfigurationResolver, AttachConfigurationResolver, 'attach'],
