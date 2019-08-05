@@ -3,13 +3,21 @@
 
 'use strict';
 
+import { inject, injectable } from 'inversify';
 import { IExtensionSingleActivationService } from '../../../activation/types';
-import { inject } from 'inversify';
 import { IDebugService } from '../../../common/application/types';
+import { IDisposableRegistry } from '../../../common/types';
+import { DebuggerTypeName } from '../../constants';
+import { DebugAdapterDescriptorFactory } from './factory';
 
+@injectable()
 export class DebugAdapterActivator implements IExtensionSingleActivationService {
-    constructor(@inject(IDebugService) private readonly debugService: IDebugService){}
+    constructor(
+        @inject(IDebugService) private readonly debugService: IDebugService,
+        @inject(DebugAdapterDescriptorFactory) private factory: DebugAdapterDescriptorFactory,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
+    ) {}
     public async activate(): Promise<void> {
-
+        this.disposables.push(this.debugService.registerDebugAdapterDescriptorFactory(DebuggerTypeName, this.factory));
     }
 }

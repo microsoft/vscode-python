@@ -6,6 +6,8 @@
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IServiceManager } from '../../ioc/types';
 import { AttachRequestArguments, LaunchRequestArguments } from '../types';
+import { DebugAdapterDescriptorFactory } from './adapter/factory';
+import { DebugAdapterActivator } from './adapter/initialize';
 import { DebuggerBanner } from './banner';
 import { PythonDebugConfigurationService } from './configuration/debugConfigurationService';
 import { LaunchJsonCompletionProvider } from './configuration/launch.json/completionProvider';
@@ -43,4 +45,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, ModuleLaunchDebugConfigurationProvider, DebugConfigurationType.launchModule);
     serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, PyramidLaunchDebugConfigurationProvider, DebugConfigurationType.launchPyramid);
     serviceManager.addSingleton<IDebugEnvironmentVariablesService>(IDebugEnvironmentVariablesService, DebugEnvironmentVariablesHelper);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, DebugAdapterActivator);
+    serviceManager.addSingleton<DebugAdapterDescriptorFactory>(DebugAdapterDescriptorFactory, DebugAdapterDescriptorFactory);
 }
