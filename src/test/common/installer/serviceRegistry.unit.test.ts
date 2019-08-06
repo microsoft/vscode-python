@@ -20,7 +20,7 @@ import { ProductType } from '../../../client/common/types';
 import { ServiceManager } from '../../../client/ioc/serviceManager';
 import { IServiceManager } from '../../../client/ioc/types';
 
-suite('Unit Tests - Common installer Service Registry', () => {
+suite('Common installer Service Registry', () => {
     let serviceManager: IServiceManager;
 
     setup(() => {
