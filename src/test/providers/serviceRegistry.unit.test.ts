@@ -10,7 +10,7 @@ import { SortImportsEditingProvider } from '../../client/providers/importSortPro
 import { registerTypes } from '../../client/providers/serviceRegistry';
 import { ISortImportsEditingProvider } from '../../client/providers/types';
 
-suite('Unit Tests - Common Providers Service Registry', () => {
+suite('Common Providers Service Registry', () => {
     let serviceManager: IServiceManager;
 
     setup(() => {
