@@ -13,7 +13,7 @@ import { IBufferDecoder, IProcessServiceFactory, IPythonExecutionFactory, IPytho
 import { ServiceManager } from '../../../client/ioc/serviceManager';
 import { IServiceManager } from '../../../client/ioc/types';
 
-suite('Unit Tests - Common Process Service Registry', () => {
+suite('Common Process Service Registry', () => {
     let serviceManager: IServiceManager;
 
     setup(() => {
