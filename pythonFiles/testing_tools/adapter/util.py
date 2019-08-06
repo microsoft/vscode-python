@@ -44,13 +44,13 @@ def group_attr_names(attrnames):
 #############################
 # file paths
 
-def fix_path(path, *,
+def fix_path(path, #*,
              _pathsep=os.path.sep):
     """Return a platform-appropriate path for the given path."""
     return path.replace('/', _pathsep)
 
 
-def fix_relpath(path, *,
+def fix_relpath(path, #*,
                 _fix_path=fix_path,
                 _path_isabs=os.path.isabs,
                 _pathsep=os.path.sep
@@ -63,7 +63,7 @@ def fix_relpath(path, *,
     return path
 
 
-def fix_fileid(fileid, rootdir=None, *,
+def fix_fileid(fileid, rootdir=None, #*,
                _normcase=os.path.normcase,
                _path_isabs=os.path.isabs,
                _pathsep=os.path.sep,

@@ -182,56 +182,74 @@ def generate_parse_item(pathsep):
     def _fix_fileid(*args):
         return fix_fileid(
                 *args,
-                _normcase=normcase,
-                _pathsep=pathsep,
+                **dict(
+                    _normcase=normcase,
+                    _pathsep=pathsep,
+                    )
                 )
     def _normalize_test_id(*args):
         return pytest_item._normalize_test_id(
                 *args,
-                _fix_fileid=_fix_fileid,
+                **dict(
+                    _fix_fileid=_fix_fileid,
+                    )
                 )
     def _iter_nodes(*args):
         return pytest_item._iter_nodes(
                 *args,
-                _normalize_test_id=_normalize_test_id,
+                **dict(
+                    _normalize_test_id=_normalize_test_id,
+                    )
                 )
     def _parse_node_id(*args):
         return pytest_item._parse_node_id(
                 *args,
-                _iter_nodes=_iter_nodes,
+                **dict(
+                    _iter_nodes=_iter_nodes,
+                    )
                 )
     ##########
     def _split_fspath(*args):
         return pytest_item._split_fspath(
                 *args,
-                _fix_fileid=_fix_fileid,
+                **dict(
+                    _fix_fileid=_fix_fileid,
+                    )
                 )
     ##########
     def _matches_relfile(*args):
         return pytest_item._matches_relfile(
                 *args,
-                _normcase=normcase,
-                _pathsep=pathsep,
+                **dict(
+                    _normcase=normcase,
+                    _pathsep=pathsep,
+                    )
                 )
     def _is_legacy_wrapper(*args):
         return pytest_item._is_legacy_wrapper(
                 *args,
-                _pathsep=pathsep,
+                **dict(
+                    _pathsep=pathsep,
+                    )
                 )
     def _get_location(*args):
         return pytest_item._get_location(
                 *args,
-                _matches_relfile=_matches_relfile,
-                _is_legacy_wrapper=_is_legacy_wrapper,
-                _pathsep=pathsep,
+                **dict(
+                    _matches_relfile=_matches_relfile,
+                    _is_legacy_wrapper=_is_legacy_wrapper,
+                    _pathsep=pathsep,
+                    )
                 )
     ##########
     def _parse_item(item):
         return pytest_item.parse_item(
                 item,
-                _parse_node_id=_parse_node_id,
-                _split_fspath=_split_fspath,
-                _get_location=_get_location,
+                **dict(
+                    _parse_node_id=_parse_node_id,
+                    _split_fspath=_split_fspath,
+                    _get_location=_get_location,
+                    )
                 )
     return _parse_item
 

@@ -20,7 +20,7 @@ FILE_ID_RE = re.compile(r"""
         """, re.VERBOSE)
 
 
-def fix_nodeid(nodeid, rootdir=None, *,
+def fix_nodeid(nodeid, rootdir=None, #*,
                _fix_fileid=fix_fileid,
                _pathsep=os.path.sep,
                ):

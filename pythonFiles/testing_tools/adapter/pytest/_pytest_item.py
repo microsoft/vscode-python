@@ -137,7 +137,7 @@ def should_never_reach_here(node, **extra):
     return exc
 
 
-def parse_item(item, *,
+def parse_item(item, #*,
                _get_item_kind=(lambda *a: _get_item_kind(*a)),
                _parse_node_id=(lambda *a: _parse_node_id(*a)),
                _split_fspath=(lambda *a: _split_fspath(*a)),
@@ -218,7 +218,7 @@ def parse_item(item, *,
     return test, parents
 
 
-def _split_fspath(fspath, fileid, item, *,
+def _split_fspath(fspath, fileid, item, #*,
                   _fix_fileid=fix_fileid,
                   ):
     """Return (testroot, relfile) for the given fspath.
@@ -239,7 +239,7 @@ def _split_fspath(fspath, fileid, item, *,
     return testroot, relfile
 
 
-def _get_location(item, testroot, relfile, *,
+def _get_location(item, testroot, relfile, #*,
                   _matches_relfile=(lambda *a: _matches_relfile(*a)),
                   _is_legacy_wrapper=(lambda *a: _is_legacy_wrapper(*a)),
                   _unwrap_decorator=(lambda *a: _unwrap_decorator(*a)),
@@ -281,7 +281,7 @@ def _get_location(item, testroot, relfile, *,
     return location, fullname
 
 
-def _matches_relfile(srcfile, testroot, relfile, *,
+def _matches_relfile(srcfile, testroot, relfile, #*,
                      _normcase=os.path.normcase,
                      _pathsep=os.path.sep,
                      ):
@@ -299,7 +299,7 @@ def _matches_relfile(srcfile, testroot, relfile, *,
         return False
 
 
-def _is_legacy_wrapper(srcfile, *,
+def _is_legacy_wrapper(srcfile, #*,
                        _pathsep=os.path.sep,
                        _pyversion=sys.version_info,
                        ):
@@ -342,7 +342,7 @@ def _unwrap_decorator(func):
                 return filename, lineno
 
 
-def _parse_node_id(testid, kind, *,
+def _parse_node_id(testid, kind, #*,
                    _iter_nodes=(lambda *a: _iter_nodes(*a)),
                    ):
     """Return the components of the given node ID, in heirarchical order."""
@@ -395,7 +395,7 @@ def _parse_node_id(testid, kind, *,
     return testid, parents, fileid, fullname, parameterized or ''
 
 
-def _iter_nodes(testid, kind, *,
+def _iter_nodes(testid, kind, #*,
                 _normalize_test_id=(lambda *a: _normalize_test_id(*a)),
                 ):
     """Yield (nodeid, name, kind) for the given node ID and its parents."""
@@ -448,7 +448,7 @@ def _iter_nodes(testid, kind, *,
     yield (parentid, testroot, 'folder')
 
 
-def _normalize_test_id(testid, kind, *,
+def _normalize_test_id(testid, kind, #*,
                        _fix_fileid=fix_fileid,
                        ):
     """Return the canonical form for the given node ID."""
