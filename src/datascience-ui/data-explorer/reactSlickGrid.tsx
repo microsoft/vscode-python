@@ -295,7 +295,8 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         args.grid.render();
     }
 
-    // These adjustments for the row height come from trial and error
+    // These adjustments for the row height come from trial and error, by changing the font size in VS code,
+    // opening a new Data Viewer, and making sure the data is visible
     // They were tested up to a font size of 60, and the row height still allows the content to be seen
     private getAppropiateRowHeight(fontSize: number): number {
         switch (true) {
