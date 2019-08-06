@@ -12,7 +12,7 @@ import { IFileSystem, IPlatformService, IRegistry } from '../../../client/common
 import { ServiceManager } from '../../../client/ioc/serviceManager';
 import { IServiceManager } from '../../../client/ioc/types';
 
-suite('Unit Tests - Common Platform Service Registry', () => {
+suite('Common Platform Service Registry', () => {
     let serviceManager: IServiceManager;
 
     setup(() => {
