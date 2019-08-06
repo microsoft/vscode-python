@@ -102,7 +102,7 @@ import _pytest.unittest
 from ..info import TestInfo, TestPath
 
 
-def should_never_reach_here(node, *extra):
+def should_never_reach_here(node, **extra):
     """Indicates a code path we should never reach."""
     print('The Python extension has run into an unexpected situation')
     print('while processing a pytest node during test discovery.  Please')
@@ -115,14 +115,15 @@ def should_never_reach_here(node, *extra):
     if extra:
         print()
         print('extra info:')
-        for info in extra:
-            if isinstance(line, str):
-                print(str)
+        for name, info in extra.items():
+            print('{:10}'.format(name + ':'), end='')
+            if isinstance(info, str):
+                print(info)
             else:
                 try:
-                    print(*line)
+                    print(*info)
                 except TypeError:
-                    print(line)
+                    print(info)
     print()
     print('traceback:')
     import traceback
@@ -159,17 +160,17 @@ def parse_item(item, _normcase, _pathsep):
         if testfunc and fullname != testfunc + parameterized:
             raise should_never_reach_here(
                 item,
-                fullname,
-                testfunc,
-                parameterized,
+                fullname=fullname,
+                testfunc=testfunc,
+                parameterized=parameterized,
                 )
     elif kind == 'doctest':
         if (testfunc and fullname != testfunc and
                 fullname != '[doctest] ' + testfunc):
             raise should_never_reach_here(
                 item,
-                fullname,
-                testfunc,
+                fullname=fullname,
+                testfunc=testfunc,
                 )
         testfunc = None
 
@@ -223,8 +224,8 @@ def _split_fspath(fspath, fileid, item, _normcase):
     if not _normcase(fspath).endswith(_relsuffix):
         raise should_never_reach_here(
             item,
-            fspath,
-            fileid,
+            fspath=fspath,
+            fileid=fileid,
             )
     testroot = fspath[:-len(fileid) + 1]  # Ignore the "./" prefix.
     relfile = '.' + fspath[-len(fileid) + 1:]  # Keep the pathsep.
@@ -347,7 +348,7 @@ def _parse_node_id(testid, kind, _pathsep, _normcase):
         else:
             raise should_never_reach_here(
                 testid,
-                kind,
+                kind=kind,
                 )
         fullname = funcname
 
@@ -365,7 +366,7 @@ def _parse_node_id(testid, kind, _pathsep, _normcase):
         else:
             raise should_never_reach_here(
                 testid,
-                node,
+                node=node,
                 )
     else:
         fileid = None
