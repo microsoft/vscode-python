@@ -41,6 +41,8 @@ def report_discovered(tests, parents, pretty=False, simple=False,
                 'name': parent.name,
                 'parentid': parent.parentid,
                 })
+            if parent.relpath is not None:
+                root['parents'][-1]['relpath'] = parent.relpath
         for test in tests:
             # We are guaranteed that the parent was added.
             root = byroot[test.path.root]

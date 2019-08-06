@@ -43,6 +43,7 @@ class DiscoveredTests(object):
 
     def _ensure_parent(self, path, parents):
         rootdir = path.root
+        relpath = path.relfile
 
         _parents = iter(parents)
         nodeid, name, kind = next(_parents)
@@ -54,8 +55,11 @@ class DiscoveredTests(object):
             # As in add_test(), the parent ID *should* already be correct.
             if parentid != '.' and not parentid.startswith('.' + os.path.sep):
                 parentid = os.path.join('.', parentid)
-            loc = None
-            info = ParentInfo(nodeid, kind, name, loc, rootdir, parentid)
+            if kind in ('folder', 'file'):
+                info = ParentInfo(nodeid, kind, name, rootdir, relpath, parentid)
+                relpath = os.path.dirname(relpath)
+            else:
+                info = ParentInfo(nodeid, kind, name, rootdir, None, parentid)
             self._parents[(rootdir, nodeid)] = info
             nodeid, name, kind = parentid, parentname, parentkind
         assert nodeid == '.'
