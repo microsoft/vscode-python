@@ -12,7 +12,7 @@ import { LintingEngine } from '../../client/linters/lintingEngine';
 import { registerTypes } from '../../client/linters/serviceRegistry';
 import { IAvailableLinterActivator, ILinterManager, ILintingEngine } from '../../client/linters/types';
 
-suite('Unit Tests - Linters Service Registry', () => {
+suite('Linters Service Registry', () => {
     let serviceManager: IServiceManager;
 
     setup(() => {
