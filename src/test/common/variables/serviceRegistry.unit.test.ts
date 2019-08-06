@@ -11,7 +11,7 @@ import { IEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../
 import { ServiceManager } from '../../../client/ioc/serviceManager';
 import { IServiceManager } from '../../../client/ioc/types';
 
-suite('Unit Tests - Common variables Service Registry', () => {
+suite('Common variables Service Registry', () => {
     let serviceManager: IServiceManager;
 
     setup(() => {
