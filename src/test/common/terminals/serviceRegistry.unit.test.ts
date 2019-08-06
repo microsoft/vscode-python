@@ -16,7 +16,7 @@ import { TerminalCodeExecutionProvider } from '../../../client/terminals/codeExe
 import { registerTypes } from '../../../client/terminals/serviceRegistry';
 import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService, ITerminalAutoActivation } from '../../../client/terminals/types';
 
-suite('Unit Tests - Common Terminal Service Registry', () => {
+suite('Common Terminal Service Registry', () => {
     let serviceManager: IServiceManager;
 
     setup(() => {
