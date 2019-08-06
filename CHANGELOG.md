@@ -1,6 +1,6 @@
 # Changelog
 
-## 2019.8.0-rc (30 July 2019)
+## 2019.8.0 (6 August 2019)
 
 ### Enhancements
 
@@ -40,6 +40,8 @@
 1. Remove "Debug cell" action from data science code lenses for markdown cells.
    (thanks [Janosh Riebesell](https://github.com/janosh))
    ([#6588](https://github.com/Microsoft/vscode-python/issues/6588))
+1. Add debug command code lenses when in debug mode
+   ([#6672](https://github.com/Microsoft/vscode-python/issues/6672))
 
 ### Fixes
 
@@ -123,6 +125,12 @@
    ([#6743](https://github.com/Microsoft/vscode-python/issues/6743))
 1. Remove Debug Cell and Run Cell from the command palette. They should both be 'Debug Current Cell' and 'Run Current Cell'
    ([#6754](https://github.com/Microsoft/vscode-python/issues/6754))
+1. Make the dataviewer open a window much faster. Total load time is the same, but initial response is much faster.
+   ([#6729](https://github.com/Microsoft/vscode-python/issues/6729))
+1. Debugging an untitled file causes an error 'Untitled-1 cannot be opened'.
+   ([#6738](https://github.com/Microsoft/vscode-python/issues/6738))
+1. Eliminate 'History_\<guid\>' from the problems list when using the interactive panel.
+   ([#6748](https://github.com/Microsoft/vscode-python/issues/6748))
 
 ### Code Health
 
