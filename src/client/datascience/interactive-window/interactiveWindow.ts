@@ -75,6 +75,7 @@ import {
     ISubmitNewCell,
     SysInfoReason
 } from './interactiveWindowTypes';
+import { CellMatcher } from '../cellMatcher';
 
 @injectable()
 export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> implements IInteractiveWindow {
@@ -747,7 +748,8 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         let result = true;
 
         // Do not execute or render empty code cells
-        if (code.trim() === "#%%") {
+        const cellMatcher = new CellMatcher(this.configService.getSettings().datascience);
+        if (cellMatcher.stripFirstMarker(code).length === 0) {
             return result;
         }
 

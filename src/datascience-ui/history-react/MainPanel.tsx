@@ -933,7 +933,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private submitInput = (code: string) => {
         // noop if the submitted code is just a cell marker
-        if (code.trim() === '#%%') {
+        const matcher = new CellMatcher(getSettings());
+        if (matcher.stripFirstMarker(code).length === 0) {
             return;
         }
         // This should be from our last entry. Switch this entry to read only, and add a new item to our list
@@ -946,7 +947,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             // Change type to markdown if necessary
             const split = code.splitLines({ trim: false });
             const firstLine = split[0];
-            const matcher = new CellMatcher(getSettings());
             if (matcher.isMarkdown(firstLine)) {
                 editCell.cell.data.cell_type = 'markdown';
                 editCell.cell.data.source = generateMarkdownFromCodeLines(split);
