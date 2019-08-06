@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IWorkspaceService } from '../../common/application/types';
@@ -13,6 +13,7 @@ import { EventName } from '../../telemetry/constants';
 import { ITestConfigSettingsService } from '../types';
 import { ITestsHelper, TestProvider } from './types';
 
+@injectable()
 export class EnablementTracker implements IExtensionSingleActivationService {
     constructor(
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
