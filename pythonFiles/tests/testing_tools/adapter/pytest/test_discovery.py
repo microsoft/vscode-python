@@ -16,12 +16,9 @@ import pytest
 import _pytest.doctest
 
 from ....util import Stub, StubProxy
+from testing_tools.adapter.util import fix_path
 from testing_tools.adapter.info import TestInfo, TestPath, ParentInfo
 from testing_tools.adapter.pytest._discovery import discover, TestCollector
-
-
-def fix_path(nodeid):
-    return nodeid.replace('/', os.path.sep)
 
 
 class StubPyTest(StubProxy):

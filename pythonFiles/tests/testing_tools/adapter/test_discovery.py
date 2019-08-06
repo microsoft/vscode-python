@@ -6,12 +6,9 @@ from __future__ import absolute_import, print_function
 import os.path
 import unittest
 
+from testing_tools.adapter.util import fix_path
 from testing_tools.adapter.info import TestInfo, TestPath, ParentInfo
 from testing_tools.adapter.discovery import DiscoveredTests
-
-
-def fix_path(nodeid):
-    return nodeid.replace('/', os.path.sep)
 
 
 class DiscoveredTestsTests(unittest.TestCase):

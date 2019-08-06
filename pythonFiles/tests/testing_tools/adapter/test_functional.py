@@ -13,6 +13,7 @@ import unittest
 import pytest
 
 from ...__main__ import TESTING_TOOLS_ROOT
+from testing_tools.adapter.util import fix_path
 
 
 CWD = os.getcwd()
@@ -42,13 +43,10 @@ def _run_adapter(cmd, tool, *cliargs, **kwargs):
         kwds['stderr'] = subprocess.STDOUT
     argv.append('--cache-clear')
     print('running {!r}'.format(' '.join(arg.rpartition(CWD + '/')[-1] for arg in argv)))
-    return subprocess.check_output(argv,
-                                   universal_newlines=True,
-                                   **kwds)
-
-
-def fix_path(nodeid):
-    return nodeid.replace('/', os.path.sep)
+    output = subprocess.check_output(argv,
+                                     universal_newlines=True,
+                                     **kwds)
+    return output
 
 
 def fix_test_order(tests):

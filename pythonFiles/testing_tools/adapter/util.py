@@ -6,33 +6,13 @@ try:
     from io import StringIO
 except ImportError:
     from StringIO import StringIO  # 2.7
+import os.path
 import sys
 
 
 @contextlib.contextmanager
 def noop_cm():
     yield
-
-
-@contextlib.contextmanager
-def hide_stdio():
-    """Swallow stdout and stderr."""
-    ignored = StdioStream()
-    sys.stdout = ignored
-    sys.stderr = ignored
-    try:
-        yield ignored
-    finally:
-        sys.stdout = sys.__stdout__
-        sys.stderr = sys.__stderr__
-
-
-if sys.version_info < (3,):
-    class StdioStream(StringIO):
-        def write(self, msg):
-            StringIO.write(self, msg.decode())
-else:
-    StdioStream = StringIO
 
 
 def group_attr_names(attrnames):
@@ -60,6 +40,86 @@ def group_attr_names(attrnames):
         grouped[group].append(name)
     return grouped
 
+
+#############################
+# file paths
+
+def fix_path(path, *,
+             _pathsep=os.path.sep):
+    """Return a platform-appropriate path for the given path."""
+    return path.replace('/', _pathsep)
+
+
+def fix_relpath(path, *,
+                _fix_path=fix_path,
+                _path_isabs=os.path.isabs,
+                _pathsep=os.path.sep
+                ):
+    """Return a ./-prefixed, platform-appropriate path for the given path."""
+    path = _fix_path(path)
+    if not _path_isabs(path):
+        if not path.startswith('.' + _pathsep):
+            path = '.' + _pathsep + path
+    return path
+
+
+def fix_nodeid(nodeid, rootdir=None, *,
+               _normcase=os.path.normcase,
+               _path_isabs=os.path.isabs,
+               _pathsep=os.path.sep,
+               ):
+    """Return a "/" separated node ID ("./"-prefixed) for the given value.
+
+    The contained file ID may be absolute.  If so and "rootdir" is
+    provided then make the file ID relative.  If absolute but "rootdir"
+    is not provided then leave it absolute.
+    """
+    if nodeid == '.':
+        return nodeid
+    nodeid = _normcase(nodeid)
+    isabs = False
+    if _path_isabs(nodeid):
+        isabs = True
+        if rootdir is not None:
+            rootdir = _normcase(rootdir)
+            if not rootdir.endswith(_pathsep):
+                rootdir += _pathsep
+            if nodeid.startswith(rootdir):
+                nodeid = nodeid[len(rootdir):]
+                isabs = False
+    nodeid = nodeid.replace(_pathsep, '/')
+    if not isabs:
+        if not nodeid.startswith('./'):
+            nodeid = './' + nodeid
+    return nodeid
+
+
+#############################
+# stdio
+
+@contextlib.contextmanager
+def hide_stdio():
+    """Swallow stdout and stderr."""
+    ignored = StdioStream()
+    sys.stdout = ignored
+    sys.stderr = ignored
+    try:
+        yield ignored
+    finally:
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+
+
+if sys.version_info < (3,):
+    class StdioStream(StringIO):
+        def write(self, msg):
+            StringIO.write(self, msg.decode())
+else:
+    StdioStream = StringIO
+
+
+#############################
+# shell
 
 def shlex_unsplit(argv):
     """Return the shell-safe string for the given arguments.

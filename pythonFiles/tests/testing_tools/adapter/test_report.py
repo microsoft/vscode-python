@@ -6,6 +6,7 @@ import os.path
 import unittest
 
 from ...util import StubProxy
+from testing_tools.adapter.util import fix_path
 from testing_tools.adapter.info import TestInfo, TestPath, ParentInfo
 from testing_tools.adapter.report import report_discovered
 
@@ -14,10 +15,6 @@ class StubSender(StubProxy):
 
     def send(self, outstr):
         self.add_call('send', (json.loads(outstr),), None)
-
-
-def fix_path(path):
-    return path.replace('/', os.path.sep)
 
 
 ##################################
