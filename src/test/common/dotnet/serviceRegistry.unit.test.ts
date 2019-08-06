@@ -15,7 +15,7 @@ import { OSType } from '../../../client/common/utils/platform';
 import { ServiceManager } from '../../../client/ioc/serviceManager';
 import { IServiceManager } from '../../../client/ioc/types';
 
-suite('Unit Tests - Common Dotnet Service Registry', () => {
+suite('Common Dotnet Service Registry', () => {
     let serviceManager: IServiceManager;
 
     setup(() => {
