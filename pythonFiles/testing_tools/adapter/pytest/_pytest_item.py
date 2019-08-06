@@ -395,11 +395,13 @@ def _parse_node_id(testid, kind, *,
     return testid, parents, fileid, fullname, parameterized or ''
 
 
-def _iter_nodes(nodeid, kind, *,
-                _normalize_node_id=(lambda *a: _normalize_node_id(*a)),
+def _iter_nodes(testid, kind, *,
+                _normalize_test_id=(lambda *a: _normalize_test_id(*a)),
                 ):
     """Yield (nodeid, name, kind) for the given node ID and its parents."""
-    nodeid = _normalize_node_id(nodeid, kind)
+    nodeid, testid = _normalize_test_id(testid, kind)
+    if len(nodeid) > len(testid):
+        testid = './' + testid
 
     if kind == 'function' and nodeid.endswith(']'):
         funcid, sep, parameterized = nodeid.partition('[')
@@ -431,36 +433,40 @@ def _iter_nodes(nodeid, kind, *,
 
     # Extract the file and folders.
     fileid = parentid
+    raw = testid[:len(fileid)]
     parentid, _, filename = fileid.rpartition('/')
-    yield (fileid, filename, 'file')
+    raw, name = raw[:len(parentid)], raw[-len(filename):]
+    yield (fileid, name, 'file')
     # We're guaranteed at least one (the test root).
     while '/' in parentid:
         folderid = parentid
         parentid, _, foldername = folderid.rpartition('/')
-        yield (folderid, foldername, 'folder')
+        raw, name = raw[:len(parentid)], raw[-len(foldername):]
+        yield (folderid, name, 'folder')
     # We set the actual test root later at the bottom of parse_item().
     testroot = None
     yield (parentid, testroot, 'folder')
 
 
-def _normalize_node_id(nodeid, kind, *,
+def _normalize_test_id(testid, kind, *,
                        _fix_fileid=fix_fileid,
                        ):
     """Return the canonical form for the given node ID."""
-    while '::()::' in nodeid:
-        nodeid = nodeid.replace('::()::', '::')
+    while '::()::' in testid:
+        testid = testid.replace('::()::', '::')
     if kind is None:
-        return nodeid
+        return testid, testid
+    orig = testid
 
-    fileid, sep, remainder = nodeid.partition('::')
+    fileid, sep, remainder = testid.partition('::')
     # pytest works fine even if we normalize the filename.
-    nodeid = _fix_fileid(fileid) + sep + remainder
+    testid = _fix_fileid(fileid) + sep + remainder
 
-    if not nodeid.startswith('./'):  # Absolute "paths" not expected.
+    if not testid.startswith('./'):  # Absolute "paths" not expected.
         raise should_never_reach_here(
-            nodeid,
+            testid,
             )
-    return nodeid
+    return testid, orig
 
 
 def _get_item_kind(item):

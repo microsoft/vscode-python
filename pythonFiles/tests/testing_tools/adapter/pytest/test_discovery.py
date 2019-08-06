@@ -185,15 +185,15 @@ def generate_parse_item(pathsep):
                 _normcase=normcase,
                 _pathsep=pathsep,
                 )
-    def _normalize_node_id(*args):
-        return pytest_item._normalize_node_id(
+    def _normalize_test_id(*args):
+        return pytest_item._normalize_test_id(
                 *args,
                 _fix_fileid=_fix_fileid,
                 )
     def _iter_nodes(*args):
         return pytest_item._iter_nodes(
                 *args,
-                _normalize_node_id=_normalize_node_id,
+                _normalize_test_id=_normalize_test_id,
                 )
     def _parse_node_id(*args):
         return pytest_item._parse_node_id(
@@ -845,14 +845,14 @@ class CollectorTests(unittest.TestCase):
         discovered = StubDiscoveredTests(stub)
         session = StubPytestSession(stub)
         testroot = r'C:\A\B\C'
-        relfile = r'X\Y\Z\test_eggs.py'
+        relfile = r'X\Y\Z\test_Eggs.py'
         session.items = [
             StubFunctionItem(
                 stub,
                 nodeid=relfile + '::SpamTests::test_spam',
                 name='test_spam',
                 # wrong pathsep:
-                location=('X/Y/Z/test_eggs.py', 12, 'SpamTests.test_spam'),
+                location=('X/Y/Z/test_Eggs.py', 12, 'SpamTests.test_spam'),
                 fspath=testroot + '\\' + relfile,
                 function=FakeFunc('test_spam'),
                 ),
@@ -869,10 +869,10 @@ class CollectorTests(unittest.TestCase):
             ('discovered.add_test', None, dict(
                 parents=[
                     ('./x/y/z/test_eggs.py::SpamTests', 'SpamTests', 'suite'),
-                    ('./x/y/z/test_eggs.py', 'test_eggs.py', 'file'),
-                    ('./x/y/z', 'z', 'folder'),
-                    ('./x/y', 'y', 'folder'),
-                    ('./x', 'x', 'folder'),
+                    ('./x/y/z/test_eggs.py', 'test_Eggs.py', 'file'),
+                    ('./x/y/z', 'Z', 'folder'),
+                    ('./x/y', 'Y', 'folder'),
+                    ('./x', 'X', 'folder'),
                     ('.', testroot, 'folder'),
                     ],
                 test=TestInfo(
@@ -880,11 +880,11 @@ class CollectorTests(unittest.TestCase):
                     name='test_spam',
                     path=TestPath(
                         root=testroot,  # not normalized
-                        relfile=r'.\X\Y\Z\test_eggs.py',  # not normalized
+                        relfile=r'.\X\Y\Z\test_Eggs.py',  # not normalized
                         func='SpamTests.test_spam',
                         sub=None,
                         ),
-                    source=r'.\X\Y\Z\test_eggs.py:{}'.format(13),  # not normalized
+                    source=r'.\X\Y\Z\test_Eggs.py:13',  # not normalized
                     markers=None,
                     parentid='./x/y/z/test_eggs.py::SpamTests',
                     ),
