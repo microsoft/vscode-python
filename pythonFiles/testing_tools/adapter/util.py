@@ -64,34 +64,41 @@ def fix_relpath(path, #*,
 
 
 def fix_fileid(fileid, rootdir=None, #*,
+               normalize=False,
                _normcase=os.path.normcase,
                _path_isabs=os.path.isabs,
                _pathsep=os.path.sep,
                ):
-    """Return a "/" separated file ID ("./"-prefixed) for the given value.
+    """Return a pathsep-separated file ID ("./"-prefixed) for the given value.
 
     The file ID may be absolute.  If so and "rootdir" is
     provided then make the file ID relative.  If absolute but "rootdir"
     is not provided then leave it absolute.
     """
-    if fileid == '.':
+    if not fileid or fileid == '.':
         return fileid
-    _fileid = _normcase(fileid)
+    relprefix = '.' + _pathsep
+
+    normalized = _normcase(fileid)
+    if normalized.startswith(relprefix):
+        return fileid
+
     isabs = False
-    if _path_isabs(_fileid):
+    if _path_isabs(normalized):
         isabs = True
         if rootdir is not None:
             rootdir = _normcase(rootdir)
             if not rootdir.endswith(_pathsep):
                 rootdir += _pathsep
-            if _fileid.startswith(rootdir):
+            if normalized.startswith(rootdir):
                 # This assumes pathsep has length 1.
                 fileid = fileid[len(rootdir):]
                 isabs = False
-    fileid = fileid.replace(_pathsep, '/').lower()
+    if normalize:
+        fileid = fileid.replace(_pathsep, '/').lower()
+        relprefix = './'
     if not isabs:
-        if not fileid.startswith('./'):
-            fileid = './' + fileid
+        fileid = relprefix + fileid
     return fileid
 
 

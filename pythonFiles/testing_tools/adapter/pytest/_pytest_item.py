@@ -219,16 +219,17 @@ def parse_item(item, #*,
 
 
 def _split_fspath(fspath, fileid, item, #*,
-                  _fix_fileid=fix_fileid,
+                  _normcase=os.path.normcase,
                   ):
     """Return (testroot, relfile) for the given fspath.
 
     "relfile" will match "fileid".
     """
-    # "fileid" comes from nodeid, is always normcased, and is always
-    # relative to the testroot (with a "./" prefix.
-    _relsuffix = fileid[1:]  # Drop (only) the "." prefix.
-    if not _fix_fileid(fspath).endswith(_relsuffix):
+    # "fileid" comes from nodeid and is always relative to the testroot
+    # (with a "./" prefix).  There are no guarantees about casing, so we
+    # normcase just be to sure.
+    relsuffix = fileid[1:]  # Drop (only) the "." prefix.
+    if not _normcase(fspath).endswith(_normcase(relsuffix)):
         raise should_never_reach_here(
             item,
             fspath=fspath,
@@ -397,11 +398,13 @@ def _parse_node_id(testid, kind, #*,
 
 def _iter_nodes(testid, kind, #*,
                 _normalize_test_id=(lambda *a: _normalize_test_id(*a)),
+                _normcase=os.path.normcase,
+                _pathsep=os.path.sep,
                 ):
     """Yield (nodeid, name, kind) for the given node ID and its parents."""
     nodeid, testid = _normalize_test_id(testid, kind)
     if len(nodeid) > len(testid):
-        testid = './' + testid
+        testid = '.' + _pathsep + testid
 
     if kind == 'function' and nodeid.endswith(']'):
         funcid, sep, parameterized = nodeid.partition('[')
@@ -434,13 +437,15 @@ def _iter_nodes(testid, kind, #*,
     # Extract the file and folders.
     fileid = parentid
     raw = testid[:len(fileid)]
-    parentid, _, filename = fileid.rpartition('/')
-    raw, name = raw[:len(parentid)], raw[-len(filename):]
+    _parentid, _, filename = _normcase(fileid).rpartition(_pathsep)
+    parentid = fileid[:len(_parentid)]
+    raw, name = raw[:len(_parentid)], raw[-len(filename):]
     yield (fileid, name, 'file')
     # We're guaranteed at least one (the test root).
-    while '/' in parentid:
+    while _pathsep in _normcase(parentid):
         folderid = parentid
-        parentid, _, foldername = folderid.rpartition('/')
+        _parentid, _, foldername = _normcase(folderid).rpartition(_pathsep)
+        parentid = folderid[:len(_parentid)]
         raw, name = raw[:len(parentid)], raw[-len(foldername):]
         yield (folderid, name, 'folder')
     # We set the actual test root later at the bottom of parse_item().
@@ -450,6 +455,7 @@ def _iter_nodes(testid, kind, #*,
 
 def _normalize_test_id(testid, kind, #*,
                        _fix_fileid=fix_fileid,
+                       _pathsep=os.path.sep,
                        ):
     """Return the canonical form for the given node ID."""
     while '::()::' in testid:
@@ -458,14 +464,18 @@ def _normalize_test_id(testid, kind, #*,
         return testid, testid
     orig = testid
 
+    # We need to keep the testid as-is, or else pytest won't recognize
+    # it when we try to use it later (e.g. to run a test).  The only
+    # exception is that we add a "./" prefix for relative paths.
     fileid, sep, remainder = testid.partition('::')
-    # pytest works fine even if we normalize the filename.
-    testid = _fix_fileid(fileid) + sep + remainder
-
-    if not testid.startswith('./'):  # Absolute "paths" not expected.
+    fileid = _fix_fileid(fileid)
+    if not fileid.startswith('.' + _pathsep):  # Absolute "paths" not expected.
         raise should_never_reach_here(
             testid,
+            fileid=fileid,
             )
+    testid = fileid + sep + remainder
+
     return testid, orig
 
 

@@ -36,6 +36,7 @@ def report_discovered(tests, parents, pretty=False, simple=False,
                 root['id'] = parent.id
                 continue
             root['parents'].append({
+                # "id" must match what the testing framework recognizes.
                 'id': parent.id,
                 'kind': parent.kind,
                 'name': parent.name,
@@ -47,6 +48,7 @@ def report_discovered(tests, parents, pretty=False, simple=False,
             # We are guaranteed that the parent was added.
             root = byroot[test.path.root]
             testdata = {
+                # "id" must match what the testing framework recognizes.
                 'id': test.id,
                 'name': test.name,
                 # TODO: Add a "kind" field

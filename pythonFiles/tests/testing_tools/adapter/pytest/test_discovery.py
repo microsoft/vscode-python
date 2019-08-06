@@ -192,6 +192,7 @@ def generate_parse_item(pathsep):
                 *args,
                 **dict(
                     _fix_fileid=_fix_fileid,
+                    _pathsep=pathsep,
                     )
                 )
     def _iter_nodes(*args):
@@ -199,6 +200,8 @@ def generate_parse_item(pathsep):
                 *args,
                 **dict(
                     _normalize_test_id=_normalize_test_id,
+                    _normcase=normcase,
+                    _pathsep=pathsep,
                     )
                 )
     def _parse_node_id(*args):
@@ -213,7 +216,7 @@ def generate_parse_item(pathsep):
         return pytest_item._split_fspath(
                 *args,
                 **dict(
-                    _fix_fileid=_fix_fileid,
+                    _normcase=normcase,
                     )
                 )
     ##########
@@ -886,15 +889,15 @@ class CollectorTests(unittest.TestCase):
             ('discovered.reset', None, None),
             ('discovered.add_test', None, dict(
                 parents=[
-                    ('./x/y/z/test_eggs.py::SpamTests', 'SpamTests', 'suite'),
-                    ('./x/y/z/test_eggs.py', 'test_Eggs.py', 'file'),
-                    ('./x/y/z', 'Z', 'folder'),
-                    ('./x/y', 'Y', 'folder'),
-                    ('./x', 'X', 'folder'),
+                    (r'.\X\Y\Z\test_Eggs.py::SpamTests', 'SpamTests', 'suite'),
+                    (r'.\X\Y\Z\test_Eggs.py', 'test_Eggs.py', 'file'),
+                    (r'.\X\Y\Z', 'Z', 'folder'),
+                    (r'.\X\Y', 'Y', 'folder'),
+                    (r'.\X', 'X', 'folder'),
                     ('.', testroot, 'folder'),
                     ],
                 test=TestInfo(
-                    id='./x/y/z/test_eggs.py::SpamTests::test_spam',
+                    id=r'.\X\Y\Z\test_Eggs.py::SpamTests::test_spam',
                     name='test_spam',
                     path=TestPath(
                         root=testroot,  # not normalized
@@ -904,7 +907,7 @@ class CollectorTests(unittest.TestCase):
                         ),
                     source=r'.\X\Y\Z\test_Eggs.py:13',  # not normalized
                     markers=None,
-                    parentid='./x/y/z/test_eggs.py::SpamTests',
+                    parentid=r'.\X\Y\Z\test_Eggs.py::SpamTests',
                     ),
                 )),
             ])
