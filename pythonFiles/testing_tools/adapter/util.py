@@ -63,35 +63,36 @@ def fix_relpath(path, *,
     return path
 
 
-def fix_nodeid(nodeid, rootdir=None, *,
+def fix_fileid(fileid, rootdir=None, *,
                _normcase=os.path.normcase,
                _path_isabs=os.path.isabs,
                _pathsep=os.path.sep,
                ):
-    """Return a "/" separated node ID ("./"-prefixed) for the given value.
+    """Return a "/" separated file ID ("./"-prefixed) for the given value.
 
-    The contained file ID may be absolute.  If so and "rootdir" is
+    The file ID may be absolute.  If so and "rootdir" is
     provided then make the file ID relative.  If absolute but "rootdir"
     is not provided then leave it absolute.
     """
-    if nodeid == '.':
-        return nodeid
-    nodeid = _normcase(nodeid)
+    if fileid == '.':
+        return fileid
+    _fileid = _normcase(fileid)
     isabs = False
-    if _path_isabs(nodeid):
+    if _path_isabs(_fileid):
         isabs = True
         if rootdir is not None:
             rootdir = _normcase(rootdir)
             if not rootdir.endswith(_pathsep):
                 rootdir += _pathsep
-            if nodeid.startswith(rootdir):
-                nodeid = nodeid[len(rootdir):]
+            if _fileid.startswith(rootdir):
+                # This assumes pathsep has length 1.
+                fileid = fileid[len(rootdir):]
                 isabs = False
-    nodeid = nodeid.replace(_pathsep, '/')
+    fileid = fileid.replace(_pathsep, '/').lower()
     if not isabs:
-        if not nodeid.startswith('./'):
-            nodeid = './' + nodeid
-    return nodeid
+        if not fileid.startswith('./'):
+            fileid = './' + fileid
+    return fileid
 
 
 #############################
