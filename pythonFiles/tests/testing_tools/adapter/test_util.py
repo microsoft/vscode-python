@@ -1,10 +1,61 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import os
+import os.path
 import shlex
 import unittest
 
+import pytest
+
 from testing_tools.adapter.util import shlex_unsplit
+
+
+class FilePathTests(unittest.TestCase):
+
+    @pytest.mark.functional
+    def test_isolated_imports(self):
+        import testing_tools.adapter
+        from testing_tools.adapter import util
+        from . import test_functional
+        ignored = {
+                os.path.abspath(__file__),
+                os.path.abspath(util.__file__),
+                os.path.abspath(test_functional.__file__),
+                }
+        adapter = os.path.abspath(
+                os.path.dirname(testing_tools.adapter.__file__))
+        tests = os.path.join(
+                os.path.abspath(
+                    os.path.dirname(
+                        os.path.dirname(testing_tools.__file__))),
+                'tests',
+                'testing_tools',
+                'adapter',
+                )
+        found = []
+        for root in [adapter, tests]:
+            for dirname, _, files in os.walk(root):
+                if '.data' in dirname:
+                    continue
+                for basename in files:
+                    if not basename.endswith('.py'):
+                        continue
+                    filename = os.path.join(dirname, basename)
+                    if filename in ignored:
+                        continue
+                    with open(filename) as srcfile:
+                        for line in srcfile:
+                            if line.strip() == 'import os.path':
+                                found.append(filename)
+                                break
+
+        if found:
+            self.fail(os.linesep.join([
+                '',
+                'Please only use path-related API from testing_tools.adapter.util.',
+                'Found use of "os.path" in the following files:',
+                ] + ['  ' + file for file in found]))
 
 
 class ShlexUnsplitTests(unittest.TestCase):
