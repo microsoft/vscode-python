@@ -532,6 +532,28 @@ steps:
     env:
       DISPLAY: :10
 
+  # Run the smoke tests.
+  #
+  # This task only runs if the string 'testSmoke' exists in variable `TestsToRun`.
+  #
+  # Example command line (windows pwsh):
+  # > npm run clean
+  # > npm run updateBuildNumber -- --buildNumber 0.0.0-local
+  # > npm run package
+  # > npx gulp clean:cleanExceptTests
+  # > npm run testSmoke
+  - bash: |
+      npm install -g vsce
+      npm run clean
+      npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID
+      npm run package
+      npx gulp clean:cleanExceptTests
+      npm run testSmoke
+    displayName: 'Run Smoke Tests'
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'testSmoke'))
+    env:
+      DISPLAY: :10
+
   - task: PublishBuildArtifacts@1
     inputs:
       pathtoPublish: $(Build.ArtifactStagingDirectory)
