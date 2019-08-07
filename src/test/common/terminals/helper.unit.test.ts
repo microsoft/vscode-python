@@ -4,15 +4,13 @@ import { expect } from 'chai';
 import { SemVer } from 'semver';
 import * as sinon from 'sinon';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
-import { Uri } from 'vscode';
+import { Terminal, Uri } from 'vscode';
 import { TerminalManager } from '../../../client/common/application/terminalManager';
 import { ITerminalManager } from '../../../client/common/application/types';
-import { WorkspaceService } from '../../../client/common/application/workspace';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { IPlatformService } from '../../../client/common/platform/types';
-import { CurrentProcess } from '../../../client/common/process/currentProcess';
 import { Bash } from '../../../client/common/terminal/environmentActivationProviders/bash';
 import { CommandPromptAndPowerShell } from '../../../client/common/terminal/environmentActivationProviders/commandPrompt';
 import {
@@ -26,7 +24,9 @@ import {
 } from '../../../client/common/terminal/environmentActivationProviders/pyenvActivationProvider';
 import { TerminalHelper } from '../../../client/common/terminal/helper';
 import { ShellDetector } from '../../../client/common/terminal/shellDetector';
+import { TerminalNameShellDetector } from '../../../client/common/terminal/shellDetectors/terminalNameShellDetector';
 import {
+    IShellDetector,
     ITerminalActivationCommandProvider,
     TerminalShellType
 } from '../../../client/common/terminal/types';
@@ -51,9 +51,8 @@ suite('Terminal Service helpers', () => {
     let pyenvActivationProvider: ITerminalActivationCommandProvider;
     let pipenvActivationProvider: ITerminalActivationCommandProvider;
     let pythonSettings: PythonSettings;
-    let currentProcess: CurrentProcess;
-    let shellDetectorIdentifyTerminalShell: sinon.SinonStub;
-
+    let shellDetectorIdentifyTerminalShell: sinon.SinonStub<[(Terminal | undefined)?], TerminalShellType>;
+    let mockDetector: IShellDetector;
     const pythonInterpreter: PythonInterpreter = {
         path: '/foo/bar/python.exe',
         version: new SemVer('3.6.6-final'),
@@ -64,6 +63,7 @@ suite('Terminal Service helpers', () => {
     };
 
     function doSetup() {
+        mockDetector = mock(TerminalNameShellDetector);
         terminalManager = mock(TerminalManager);
         platformService = mock(PlatformService);
         condaService = mock(CondaService);
@@ -74,7 +74,6 @@ suite('Terminal Service helpers', () => {
         pyenvActivationProvider = mock(PyEnvActivationCommandProvider);
         pipenvActivationProvider = mock(PipEnvActivationCommandProvider);
         pythonSettings = mock(PythonSettings);
-        currentProcess = mock(CurrentProcess);
         shellDetectorIdentifyTerminalShell = sinon.stub(ShellDetector.prototype, 'identifyTerminalShell');
         helper = new TerminalHelper(instance(platformService), instance(terminalManager),
             instance(condaService),
@@ -85,8 +84,7 @@ suite('Terminal Service helpers', () => {
             instance(cmdActivationProvider),
             instance(pyenvActivationProvider),
             instance(pipenvActivationProvider),
-            instance(currentProcess),
-            instance(mock(WorkspaceService)));
+            [instance(mockDetector)]);
     }
     teardown(() => shellDetectorIdentifyTerminalShell.restore());
     suite('Misc', () => {
@@ -347,6 +345,32 @@ suite('Terminal Service helpers', () => {
                     });
                 });
             });
+        });
+    });
+
+    suite('Identify Terminal Shell', () => {
+        setup(doSetup);
+        test('Use shell detector to identify terminal shells', () => {
+            const terminal = {} as any;
+            const expectedShell = TerminalShellType.ksh;
+            shellDetectorIdentifyTerminalShell.returns(expectedShell);
+
+            const shell = helper.identifyTerminalShell(terminal);
+            expect(shell).to.be.equal(expectedShell);
+            expect(shellDetectorIdentifyTerminalShell.callCount).to.equal(1);
+            expect(shellDetectorIdentifyTerminalShell.args[0]).deep.equal([terminal]);
+        });
+        test('Detector passed throught constructor is used by shell detector class', () => {
+            const terminal = {} as any;
+            const expectedShell = TerminalShellType.ksh;
+            shellDetectorIdentifyTerminalShell.callThrough();
+            when(mockDetector.identify(anything(), terminal)).thenReturn(expectedShell);
+
+            const shell = helper.identifyTerminalShell(terminal);
+
+            expect(shell).to.be.equal(expectedShell);
+            expect(shellDetectorIdentifyTerminalShell.callCount).to.equal(1);
+            verify(mockDetector.identify(anything(), terminal)).once();
         });
     });
 });

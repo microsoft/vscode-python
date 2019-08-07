@@ -18,6 +18,7 @@ import { IFileSystem } from '../../client/common/platform/types';
 import { IConfigurationService, IDisposable, ILogger } from '../../client/common/types';
 import { generateCells } from '../../client/datascience/cellFactory';
 import { Commands } from '../../client/datascience/constants';
+import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/errorHandler';
 import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
@@ -69,6 +70,7 @@ suite('Interactive window command listener', async () => {
     const pythonSettings = new PythonSettings(undefined, new MockAutoSelectionService());
     const disposableRegistry: IDisposable[] = [];
     const interactiveWindowProvider = mock(InteractiveWindowProvider);
+    const dataScienceErrorHandler = mock(DataScienceErrorHandler);
     const notebookImporter = mock(JupyterImporter);
     const notebookExporter = mock(JupyterExporter);
     const applicationShell = mock(ApplicationShell);
@@ -144,10 +146,11 @@ suite('Interactive window command listener', async () => {
             errorBackgroundColor: '#FFFFFF',
             sendSelectionToInteractiveWindow: false,
             showJupyterVariableExplorer: true,
-            variableExplorerExclude: 'module;builtin_function_or_method',
+            variableExplorerExclude: 'module;function;builtin_function_or_method',
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
-            autoPreviewNotebooksInInteractivePane: true
+            autoPreviewNotebooksInInteractivePane: true,
+            enablePlotViewer: true
         };
 
         when(knownSearchPaths.getSearchPaths()).thenReturn(['/foo/bar']);
@@ -215,7 +218,8 @@ suite('Interactive window command listener', async () => {
             instance(logger),
             instance(configService),
             statusProvider,
-            instance(notebookImporter));
+            instance(notebookImporter),
+            instance(dataScienceErrorHandler));
         result.register(commandManager);
 
         return result;

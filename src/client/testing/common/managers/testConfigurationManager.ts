@@ -82,8 +82,8 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
         const items: QuickPickItem[] = [
             { label: '*test.py', description: 'Python Files ending with \'test\'' },
             { label: '*_test.py', description: 'Python Files ending with \'_test\'' },
-            { label: 'test*.py', description: 'Python Files begining with \'test\'' },
-            { label: 'test_*.py', description: 'Python Files begining with \'test_\'' },
+            { label: 'test*.py', description: 'Python Files beginning with \'test\'' },
+            { label: 'test_*.py', description: 'Python Files beginning with \'test_\'' },
             { label: '*test*.py', description: 'Python Files containing the word \'test\'' }
         ];
 

@@ -23,6 +23,8 @@ import { InputHistory } from './inputHistory';
 import { MenuBar } from './menuBar';
 import { transforms } from './transforms';
 
+// tslint:disable-next-line: no-require-imports
+import cloneDeep = require('lodash/cloneDeep');
 import './cell.css';
 
 interface ICellProps {
@@ -38,9 +40,11 @@ interface ICellProps {
     monacoTheme: string | undefined;
     editorOptions: monacoEditor.editor.IEditorOptions;
     editExecutionCount: number;
+    enableGather?: boolean;
     gotoCode(): void;
     copyCode(): void;
     delete(): void;
+    gatherCode(): void;
     submitNewCode(code: string): void;
     onCodeChange(changes: monacoEditor.editor.IModelContentChange[], cellId: string, modelId: string): void;
     onCodeCreated(code: string, file: string, cellId: string, modelId: string): void;
@@ -55,10 +59,21 @@ export interface ICellViewModel {
     inputBlockText: string;
     inputBlockCollapseNeeded: boolean;
     editable: boolean;
+    gathered: boolean;
     directInput?: boolean;
     inputBlockToggled(id: string): void;
 }
 
+interface ICellOutput {
+    mimeType: string;
+    data: nbformat.MultilineString | JSONObject;
+    renderWithScrollbars: boolean;
+    isText: boolean;
+    isError: boolean;
+    extraButton: JSX.Element | null; // Extra button for plot viewing is stored here
+    doubleClick(): void; // Double click handler for plot viewing is stored here
+}
+// tslint:disable: react-this-binding-issue
 export class Cell extends React.Component<ICellProps> {
     private code: Code | undefined;
 
@@ -92,7 +107,11 @@ export class Cell extends React.Component<ICellProps> {
     }
 
     private getDeleteString = () => {
-        return getLocString('DataScience.deleteButtonTooltip', 'Remove Cell');
+        return getLocString('DataScience.deleteButtonTooltip', 'Remove cell');
+    }
+
+    private getGatherCodeString = () => {
+        return getLocString('DataScience.gatherCodeTooltip', 'Gather code');
     }
 
     private getGoToCodeString = () => {
@@ -100,7 +119,7 @@ export class Cell extends React.Component<ICellProps> {
     }
 
     private getCopyBackToSourceString = () => {
-        return getLocString('DataScience.copyBackToSource', 'Paste code into file');
+        return getLocString('DataScience.copyBackToSourceButtonTooltip', 'Paste code into file');
     }
 
     private getCell = () => {
@@ -139,6 +158,9 @@ export class Cell extends React.Component<ICellProps> {
             return (
                 <div className={cellWrapperClass} role={this.props.role} onClick={this.onMouseClick}>
                     <MenuBar baseTheme={this.props.baseTheme}>
+                        <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.gatherCode} tooltip={this.getGatherCodeString()} hidden={!this.props.enableGather || this.props.cellVM.editable || !this.isCodeCell()}>
+                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.OpenInNewWindow} />
+                        </ImageButton>
                         <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.gotoCode} tooltip={this.getGoToCodeString()} hidden={hasNoSource}>
                             <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.GoToSourceCode} />
                         </ImageButton>
@@ -220,7 +242,7 @@ export class Cell extends React.Component<ICellProps> {
 
     private renderInputs = () => {
         if (this.showInputs()) {
-            const backgroundColor = this.props.cellVM.cell.type === 'preview' ?
+            const backgroundColor = this.props.cellVM.cell.type === 'preview' || (getSettings().colorizeInputBox && this.props.cellVM.editable) ?
                 'var(--override-peek-background, var(--vscode-peekViewEditor-background))'
                 : undefined;
 

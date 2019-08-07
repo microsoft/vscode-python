@@ -6,12 +6,18 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { MaxStringCompare } from '../../client/datascience/data-viewing/types';
+import { KeyCodes } from '../react-common/constants';
 import { measureText } from '../react-common/textMeasure';
 import { ReactSlickGridFilterBox } from './reactSlickGridFilterBox';
 
 // Slickgrid requires jquery to be defined. Globally. So we do some hacks here.
+// We need to manipulate the grid with the same jquery that it uses
+// use slickgridJQ instead of the usual $ to make it clear that we need that JQ and not
+// the one currently in node-modules
 // tslint:disable-next-line: no-var-requires no-require-imports
 require('expose-loader?jQuery!slickgrid/lib/jquery-1.11.2.min');
+// tslint:disable-next-line: no-var-requires no-require-imports
+const slickgridJQ = require('slickgrid/lib/jquery-1.11.2.min');
 // tslint:disable-next-line: no-var-requires no-require-imports
 require('expose-loader?jQuery.fn.drag!slickgrid/lib/jquery.event.drag-2.3.0');
 
@@ -135,6 +141,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         this.props.rowsAdded.subscribe(this.addedRows);
     }
 
+    // tslint:disable-next-line:max-func-body-length
     public componentDidMount = () => {
         window.addEventListener('resize', this.windowResized);
 
@@ -152,7 +159,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 enableCellNavigation: true,
                 showHeaderRow: true,
                 enableColumnReorder: false,
-                explicitInitialization: true,
+                explicitInitialization: false,
                 viewportClass: 'react-grid',
                 rowHeight: fontSize + RowHeightAdjustment
             };
@@ -192,6 +199,31 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
             // Setup the filter render
             grid.onHeaderRowCellRendered.subscribe(this.renderFilterCell);
+
+            grid.onHeaderCellRendered.subscribe((_e, args) => {
+                // Add a tab index onto our header cell
+                args.node.tabIndex = 0;
+            });
+
+            // Unbind the slickgrid key handler from the canvas code
+            // We want to keep EnableCellNavigation on so that we can use the slickgrid
+            // public navigations functions, but we don't want the slickgrid keyhander
+            // to eat tab keys and prevent us from tabbing to input boxes or column headers
+            const canvasElement = grid.getCanvasNode();
+            slickgridJQ(canvasElement).off('keydown');
+
+            if (this.containerRef && this.containerRef.current) {
+                // slickgrid creates empty focus sink div elements that capture tab input we don't want that
+                // so unhook their key handlers and remove their tabindex
+                const firstFocus = slickgridJQ('.react-grid-container').children().first();
+                const lastFocus = slickgridJQ('.react-grid-container').children().last();
+                slickgridJQ(firstFocus).off('keydown').removeAttr('tabindex');
+                slickgridJQ(lastFocus).off('keydown').removeAttr('tabindex');
+
+                // Set our key handling on the actual grid viewport
+                slickgridJQ('.react-grid').on('keydown', this.slickgridHandleKeyDown).attr('role', 'grid').on('focusin', this.slickgridFocus);
+                slickgridJQ('.grid-canvas').on('keydown', this.slickgridHandleKeyDown);
+            }
 
             // Setup the sorting
             grid.onSort.subscribe(this.sort);
@@ -246,7 +278,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
         return (
             <div className='outer-container'>
-                <button className='react-grid-filter-button' title={this.props.filterRowsTooltip} onClick={this.clickFilterButton}>
+                <button className='react-grid-filter-button' tabIndex={0} title={this.props.filterRowsTooltip} onClick={this.clickFilterButton}>
                     <span>{this.props.filterRowsText}</span>
                 </button>
                 <div className='react-grid-container' style={style} ref={this.containerRef}>
@@ -262,6 +294,70 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         this.dataView.sort((l: any, r: any) => this.compareElements(l, r, args.sortCol), args.sortAsc);
         args.grid.invalidateAllRows();
         args.grid.render();
+    }
+
+    // If the slickgrid gets focus and nothing is selected select the first item
+    // so that you can keyboard navigate from there
+    private slickgridFocus = (_e: any): void => {
+        if (this.state.grid) {
+            if (!this.state.grid.getActiveCell()) {
+                this.state.grid.setActiveCell(0, 0);
+            }
+        }
+    }
+
+    private slickgridHandleKeyDown = (e: KeyboardEvent): void => {
+        let handled: boolean = false;
+
+        // Defined here:
+        // https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/Grid_Role#Keyboard_interactions
+
+        if (this.state.grid) {
+            // The slickgrid version of jquery populates keyCode not code, so use the numerical values here
+            switch (e.keyCode) {
+                case KeyCodes.LeftArrow:
+                    this.state.grid.navigateLeft();
+                    handled = true;
+                    break;
+                case KeyCodes.UpArrow:
+                    this.state.grid.navigateUp();
+                    handled = true;
+                    break;
+                case KeyCodes.RightArrow:
+                    this.state.grid.navigateRight();
+                    handled = true;
+                    break;
+                case KeyCodes.DownArrow:
+                    this.state.grid.navigateDown();
+                    handled = true;
+                    break;
+                case KeyCodes.PageUp:
+                    this.state.grid.navigatePageUp();
+                    handled = true;
+                    break;
+                case KeyCodes.PageDown:
+                    this.state.grid.navigatePageDown();
+                    handled = true;
+                    break;
+                case KeyCodes.End:
+                    e.ctrlKey ? this.state.grid.navigateBottom() : this.state.grid.navigateRowEnd();
+                    handled = true;
+                    break;
+                case KeyCodes.Home:
+                    e.ctrlKey ? this.state.grid.navigateTop() : this.state.grid.navigateRowStart();
+                    handled = true;
+                    break;
+                default:
+            }
+        }
+
+        if (handled) {
+            // Don't let the parent / browser do stuff if we handle it
+            // otherwise we'll both move the cell selection and scroll the window
+            // with up and down keys
+            e.stopPropagation();
+            e.preventDefault();
+        }
     }
 
     private updateCssStyles = () => {

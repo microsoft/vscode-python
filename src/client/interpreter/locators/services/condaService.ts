@@ -4,7 +4,7 @@ import { compare, parse, SemVer } from 'semver';
 import { ConfigurationChangeEvent, Uri } from 'vscode';
 
 import { IWorkspaceService } from '../../../common/application/types';
-import { Logger } from '../../../common/logger';
+import { Logger, traceDecorators, traceVerbose } from '../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../common/process/types';
 import { IConfigurationService, IDisposableRegistry, ILogger, IPersistentStateFactory } from '../../../common/types';
@@ -210,6 +210,7 @@ export class CondaService implements ICondaService {
     /**
      * Return the list of conda envs (by name, interpreter filename).
      */
+    @traceDecorators.verbose('Get Conda environments')
     public async getCondaEnvironments(ignoreCache: boolean): Promise<({ name: string; path: string }[]) | undefined> {
         // Global cache.
         // tslint:disable-next-line:no-any
@@ -221,7 +222,21 @@ export class CondaService implements ICondaService {
         try {
             const condaFile = await this.getCondaFile();
             const processService = await this.processServiceFactory.create();
-            const envInfo = await processService.exec(condaFile, ['env', 'list']).then(output => output.stdout);
+            let envInfo = await processService.exec(condaFile, ['env', 'list']).then(output => output.stdout);
+            traceVerbose(`Conda Env List ${envInfo}}`);
+            if (!envInfo) {
+                traceVerbose('Conda env list failure, attempting path additions.');
+                // Try adding different folders to the path. Miniconda fails to run
+                // without them.
+                const baseFolder = path.dirname(path.dirname(condaFile));
+                const binFolder = path.join(baseFolder, 'bin');
+                const condaBinFolder = path.join(baseFolder, 'condabin');
+                const libaryBinFolder = path.join(baseFolder, 'library', 'bin');
+                const newEnv = process.env;
+                newEnv.PATH = `${binFolder};${condaBinFolder};${libaryBinFolder};${newEnv.PATH}`;
+                traceVerbose(`Attempting new path for conda env list: ${newEnv.PATH}`);
+                envInfo = await processService.exec(condaFile, ['env', 'list'], { env: newEnv }).then(output => output.stdout);
+            }
             const environments = this.condaHelper.parseCondaEnvironmentNames(envInfo);
             await globalPersistence.updateValue({ data: environments });
             return environments;
@@ -246,6 +261,7 @@ export class CondaService implements ICondaService {
     /**
      * Get the conda exe from the path to an interpreter's python. This might be different than the globally registered conda.exe
      */
+    @traceDecorators.verbose('Get Conda File from interpreter')
     public async getCondaFileFromInterpreter(interpreterPath?: string, envName?: string): Promise<string | undefined> {
         const condaExe = this.platform.isWindows ? 'conda.exe' : 'conda';
         const scriptsDir = this.platform.isWindows ? 'Scripts' : 'bin';
@@ -257,28 +273,28 @@ export class CondaService implements ICondaService {
         if (envsPos > 0) {
             // This should be where the original python was run from when the environment was created.
             const originalPath = interpreterDir.slice(0, envsPos);
-            let condaPath = path.join(originalPath, condaExe);
+            let condaPath1 = path.join(originalPath, condaExe);
 
-            if (await this.fileSystem.fileExists(condaPath)) {
-                return condaPath;
+            if (await this.fileSystem.fileExists(condaPath1)) {
+                return condaPath1;
             }
 
             // Also look in the scripts directory here too.
-            condaPath = path.join(originalPath, scriptsDir, condaExe);
-            if (await this.fileSystem.fileExists(condaPath)) {
-                return condaPath;
+            condaPath1 = path.join(originalPath, scriptsDir, condaExe);
+            if (await this.fileSystem.fileExists(condaPath1)) {
+                return condaPath1;
             }
         }
 
-        let condaPath = path.join(interpreterDir, condaExe);
-        if (await this.fileSystem.fileExists(condaPath)) {
-            return condaPath;
+        let condaPath2 = path.join(interpreterDir, condaExe);
+        if (await this.fileSystem.fileExists(condaPath2)) {
+            return condaPath2;
         }
         // Conda path has changed locations, check the new location in the scripts directory after checking
         // the old location
-        condaPath = path.join(interpreterDir, scriptsDir, condaExe);
-        if (await this.fileSystem.fileExists(condaPath)) {
-            return condaPath;
+        condaPath2 = path.join(interpreterDir, scriptsDir, condaExe);
+        if (await this.fileSystem.fileExists(condaPath2)) {
+            return condaPath2;
         }
     }
 

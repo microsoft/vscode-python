@@ -58,7 +58,7 @@ export class TestDiscoveredTestParser implements ITestDiscoveredTestParser {
      * @param {Tests} tests
      * @memberof TestsDiscovery
      */
-    protected buildChildren(rootFolder: TestFolder, parent: TestDataItem, discoveredTests: DiscoveredTests, tests: Tests) {
+    public buildChildren(rootFolder: TestFolder, parent: TestDataItem, discoveredTests: DiscoveredTests, tests: Tests) {
         const parentType = getTestType(parent);
         switch (parentType) {
             case TestType.testFolder: {

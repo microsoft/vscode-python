@@ -21,8 +21,7 @@ SCRIPT = os.path.join(TESTING_TOOLS_ROOT, 'run_adapter.py')
 
 
 def resolve_testroot(name):
-    projroot = os.path.normcase(
-            os.path.join(DATA_DIR, name))
+    projroot = os.path.join(DATA_DIR, name)
     return projroot, os.path.join(projroot, 'tests')
 
 
@@ -255,6 +254,57 @@ class PytestTests(unittest.TestCase):
                          stderr=subprocess.STDOUT,
                          )
         self.assertIn('(exit code 2)', cm.exception.output)
+
+    def test_discover_normcase(self):
+        projroot, testroot = resolve_testroot('NormCase')
+
+        out = run_adapter('discover', 'pytest',
+                          '--rootdir', projroot,
+                          testroot)
+        result = json.loads(out)
+
+        self.maxDiff = None
+        self.assertTrue(projroot.endswith('NormCase'))
+        fix_id = os.path.normcase
+        self.assertEqual(result, [{
+            'root': projroot,
+            'rootid': '.',
+            'parents': [
+                {'id': fix_id('./tests'),
+                 'kind': 'folder',
+                 'name': 'tests',
+                 'parentid': '.',
+                 },
+                {'id': fix_id('./tests/A'),
+                 'kind': 'folder',
+                 'name': fix_id('A'),
+                 'parentid': fix_id('./tests'),
+                 },
+                {'id': fix_id('./tests/A/b'),
+                 'kind': 'folder',
+                 'name': 'b',
+                 'parentid': fix_id('./tests/A'),
+                 },
+                {'id': fix_id('./tests/A/b/C'),
+                 'kind': 'folder',
+                 'name': fix_id('C'),
+                 'parentid': fix_id('./tests/A/b'),
+                 },
+                {'id': fix_id('./tests/A/b/C/test_Spam.py'),
+                 'kind': 'file',
+                 'name': fix_id('test_Spam.py'),
+                 'parentid': fix_id('./tests/A/b/C'),
+                 },
+                ],
+            'tests': [
+                {'id': fix_id('./tests/A/b/C/test_Spam.py::test_okay'),
+                 'name': 'test_okay',
+                 'source': fix_path('./tests/A/b/C/test_Spam.py:2'),
+                 'markers': [],
+                 'parentid': fix_id('./tests/A/b/C/test_Spam.py'),
+                 },
+                ],
+            }])
 
 
 COMPLEX = {

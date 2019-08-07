@@ -15,6 +15,10 @@ export const pipenvName = 'pipenv';
 export class PipEnvInstaller extends ModuleInstaller implements IModuleInstaller {
     private readonly pipenv: IInterpreterLocatorService;
 
+    public get name(): string {
+        return 'pipenv';
+    }
+
     public get displayName() {
         return pipenvName;
     }

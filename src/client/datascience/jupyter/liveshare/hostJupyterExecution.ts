@@ -161,6 +161,7 @@ export class HostJupyterExecution
                 return {
                     baseUrl: connectionInfo.baseUrl,
                     token: connectionInfo.token,
+                    hostName: connectionInfo.hostName,
                     localLaunch: false,
                     localProcExitCode: undefined,
                     disconnected: (_l) => { return { dispose: noop }; },

@@ -22,6 +22,10 @@ export class CondaInstaller extends ModuleInstaller implements IModuleInstaller 
         super(serviceContainer);
     }
 
+    public get name(): string {
+        return 'Conda';
+    }
+
     public get displayName() {
         return 'Conda';
     }

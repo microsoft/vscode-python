@@ -5,16 +5,28 @@
 
 // tslint:disable:no-any
 
-import { expect } from 'chai';
+import { expect, use } from 'chai';
+import * as chaiAsPromised from 'chai-as-promised';
 import { SemVer } from 'semver';
+import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Uri, WorkspaceConfiguration } from 'vscode';
 import { LanguageServerDownloader } from '../../../client/activation/languageServer/downloader';
-import { ILanguageServerFolderService, IPlatformData } from '../../../client/activation/types';
+import { LanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
+import { PlatformData } from '../../../client/activation/languageServer/platformData';
+import { ILanguageServerFolderService, ILanguageServerOutputChannel, IPlatformData } from '../../../client/activation/types';
+import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
+import { WorkspaceService } from '../../../client/common/application/workspace';
+import { FileDownloader } from '../../../client/common/net/fileDownloader';
+import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../client/common/platform/types';
-import { IOutputChannel, Resource } from '../../../client/common/types';
+import { IFileDownloader, IOutputChannel, Resource } from '../../../client/common/types';
 import { Common, LanguageService } from '../../../client/common/utils/localize';
+import { noop } from '../../core';
+import { MockOutputChannel } from '../../mockClasses';
+
+use(chaiAsPromised);
 
 // tslint:disable-next-line:max-func-body-length
 suite('Activation - Downloader', () => {
@@ -22,13 +34,20 @@ suite('Activation - Downloader', () => {
     let folderService: TypeMoq.IMock<ILanguageServerFolderService>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let resource: Resource;
+    let outputChannel: IOutputChannel;
+    let lsOutputChannel: TypeMoq.IMock<ILanguageServerOutputChannel>;
     setup(() => {
+        outputChannel = mock(MockOutputChannel);
+        lsOutputChannel = TypeMoq.Mock.ofType<ILanguageServerOutputChannel>();
+        lsOutputChannel
+            .setup(l => l.channel)
+            .returns(() => instance(outputChannel));
         folderService = TypeMoq.Mock.ofType<ILanguageServerFolderService>(undefined, TypeMoq.MockBehavior.Strict);
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>(undefined, TypeMoq.MockBehavior.Strict);
         resource = Uri.file(__dirname);
         languageServerDownloader = new LanguageServerDownloader(
             undefined as any,
-            undefined as any,
+            lsOutputChannel.object,
             undefined as any,
             folderService.object,
             undefined as any,
@@ -144,6 +163,69 @@ suite('Activation - Downloader', () => {
         expect(version).to.equal(pkg.version.raw);
     });
 
+    suite('Test LanguageServerDownloader.downloadFile', () => {
+        let lsDownloader: LanguageServerDownloader;
+        let outputChannel: IOutputChannel;
+        let fileDownloader: IFileDownloader;
+        let lsOutputChannel: TypeMoq.IMock<ILanguageServerOutputChannel>;
+        // tslint:disable-next-line: no-http-string
+        const downloadUri = 'http://wow.com/file.txt';
+        const downloadTitle = 'Downloadimg file.txt';
+        setup(() => {
+            const platformData = mock(PlatformData);
+            outputChannel = mock(MockOutputChannel);
+            fileDownloader = mock(FileDownloader);
+            const lsFolderService = mock(LanguageServerFolderService);
+            const appShell = mock(ApplicationShell);
+            const fs = mock(FileSystem);
+            // tslint:disable-next-line: no-shadowed-variable
+            const workspaceService = mock(WorkspaceService);
+            lsOutputChannel = TypeMoq.Mock.ofType<ILanguageServerOutputChannel>();
+            lsOutputChannel
+                .setup(l => l.channel)
+                .returns(() => instance(outputChannel));
+
+            lsDownloader = new LanguageServerDownloader(instance(platformData),
+                lsOutputChannel.object, instance(fileDownloader),
+                instance(lsFolderService), instance(appShell),
+                instance(fs), instance(workspaceService));
+        });
+
+        test('Downloaded file name must be returned from file downloader and right args passed', async () => {
+            const downloadedFile = 'This is the downloaded file';
+            when(fileDownloader.downloadFile(anything(), anything())).thenResolve(downloadedFile);
+            const expectedDownloadOptions = {
+                extension: '.nupkg',
+                outputChannel: instance(outputChannel),
+                progressMessagePrefix: downloadTitle
+            };
+
+            const file = await lsDownloader.downloadFile(downloadUri, downloadTitle);
+
+            expect(file).to.be.equal(downloadedFile);
+            verify(fileDownloader.downloadFile(anything(), anything())).once();
+            verify(fileDownloader.downloadFile(downloadUri, deepEqual(expectedDownloadOptions))).once();
+        });
+        test('If download succeeds then log completion message', async () => {
+            when(fileDownloader.downloadFile(anything(), anything())).thenResolve();
+
+            await lsDownloader.downloadFile(downloadUri, downloadTitle);
+
+            verify(fileDownloader.downloadFile(anything(), anything())).once();
+            verify(outputChannel.appendLine(LanguageService.extractionCompletedOutputMessage())).once();
+        });
+        test('If download fails do not log completion message', async () => {
+            const ex = new Error('kaboom');
+            when(fileDownloader.downloadFile(anything(), anything())).thenReject(ex);
+
+            const promise = lsDownloader.downloadFile(downloadUri, downloadTitle);
+            await promise.catch(noop);
+
+            verify(outputChannel.appendLine(LanguageService.extractionCompletedOutputMessage())).never();
+            expect(promise).to.eventually.be.rejectedWith('kaboom');
+        });
+    });
+
     // tslint:disable-next-line:max-func-body-length
     suite('Test LanguageServerDownloader.downloadLanguageServer', () => {
         const failure = new Error('kaboom');
@@ -153,7 +235,7 @@ suite('Activation - Downloader', () => {
             public async downloadLanguageServer(destinationFolder: string, res?: Resource): Promise<void> {
                 return super.downloadLanguageServer(destinationFolder, res);
             }
-            protected async downloadFile(_uri: string, _title: string): Promise<string> {
+            public async downloadFile(_uri: string, _title: string): Promise<string> {
                 throw failure;
             }
         }
@@ -166,7 +248,7 @@ suite('Activation - Downloader', () => {
             public async getDownloadInfo(res?: Resource) {
                 return super.getDownloadInfo(res);
             }
-            protected async downloadFile() {
+            public async downloadFile() {
                 return 'random';
             }
             protected async unpackArchive(_extensionPath: string, _tempFilePath: string): Promise<void> {
@@ -182,13 +264,17 @@ suite('Activation - Downloader', () => {
         setup(() => {
             appShell = TypeMoq.Mock.ofType<IApplicationShell>(undefined, TypeMoq.MockBehavior.Strict);
             folderService = TypeMoq.Mock.ofType<ILanguageServerFolderService>(undefined, TypeMoq.MockBehavior.Strict);
-            output = TypeMoq.Mock.ofType<IOutputChannel>(undefined, TypeMoq.MockBehavior.Strict);
+            output = TypeMoq.Mock.ofType<IOutputChannel>();
             fs = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
             platformData = TypeMoq.Mock.ofType<IPlatformData>(undefined, TypeMoq.MockBehavior.Strict);
+            lsOutputChannel = TypeMoq.Mock.ofType<ILanguageServerOutputChannel>();
+            lsOutputChannel
+                .setup(l => l.channel)
+                .returns(() => output.object);
 
             languageServerDownloaderTest = new LanguageServerDownloaderTest(
                 platformData.object,
-                output.object,
+                lsOutputChannel.object,
                 undefined as any,
                 folderService.object,
                 appShell.object,
@@ -197,7 +283,7 @@ suite('Activation - Downloader', () => {
             );
             languageServerExtractorTest = new LanguageServerExtractorTest(
                 platformData.object,
-                output.object,
+                lsOutputChannel.object,
                 undefined as any,
                 folderService.object,
                 appShell.object,

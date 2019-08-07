@@ -5,11 +5,11 @@
 import { DiagnosticCodes } from '../application/diagnostics/constants';
 import { TerminalShellType } from '../common/terminal/types';
 import { DebugConfigurationType } from '../debugger/extension/types';
-import { ConsoleType } from '../debugger/types';
 import { AutoSelectionRule } from '../interpreter/autoSelection/types';
 import { InterpreterType } from '../interpreter/contracts';
 import { LinterId } from '../linters/types';
-import { PlatformErrors } from './constants';
+import { IEventNamePropertyMapping } from '../telemetry/index'
+import { EventName, PlatformErrors } from './constants';
 
 export type EditorLoadTelemetry = {
     condaVersion: string | undefined;
@@ -71,26 +71,7 @@ export type PythonInterpreterTelemetry = {
 export type CodeExecutionTelemetry = {
     scope: 'file' | 'selection';
 };
-export type DebuggerTelemetry = {
-    trigger: 'launch' | 'attach' | 'test';
-    console?: ConsoleType;
-    hasEnvVars: boolean;
-    hasArgs: boolean;
-    django: boolean;
-    flask: boolean;
-    jinja: boolean;
-    isLocalhost: boolean;
-    isModule: boolean;
-    isSudo: boolean;
-    stopOnEntry: boolean;
-    showReturnValue: boolean;
-    pyramid: boolean;
-    subProcess: boolean;
-    watson: boolean;
-    pyspark: boolean;
-    gevent: boolean;
-    scrapy: boolean;
-};
+export type DebuggerTelemetry = IEventNamePropertyMapping[EventName.DEBUGGER];
 export type DebuggerPerformanceTelemetry = {
     duration: number;
     action: 'stepIn' | 'stepOut' | 'continue' | 'next' | 'launch';

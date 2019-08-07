@@ -27,6 +27,11 @@ exports.nodeModulesToExternalize = [
     'node-stream-zip',
     'xml2js',
     'vsls/vscode',
+    'pdfkit',
+    'crypto-js',
+    'fontkit',
+    'linebreak',
+    'png-js'
 ];
 exports.nodeModulesToReplacePaths = [
     ...exports.nodeModulesToExternalize

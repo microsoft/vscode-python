@@ -32,7 +32,24 @@ export namespace Commands {
     export const ExportOutputAsNotebook = 'python.datascience.exportoutputasnotebook';
     export const ExecSelectionInInteractiveWindow = 'python.datascience.execSelectionInteractive';
     export const RunFileInInteractiveWindows = 'python.datascience.runFileInteractive';
+    export const DebugFileInInteractiveWindows = 'python.datascience.debugFileInteractive';
     export const AddCellBelow = 'python.datascience.addcellbelow';
+    export const DebugCurrentCellPalette = 'python.datascience.debugcurrentcell.palette';
+    export const DebugCell = 'python.datascience.debugcell';
+    export const DebugStepOver = 'python.datascience.debugstepover';
+    export const DebugContinue = 'python.datascience.debugcontinue';
+    export const DebugStop = 'python.datascience.debugstop';
+    export const RunCurrentCellAndAddBelow = 'python.datascience.runcurrentcellandaddbelow';
+    export const ScrollToCell = 'python.datascience.scrolltocell';
+}
+
+export namespace CodeLensCommands {
+    // If not specified in the options this is the default set of commands in our design time code lenses
+    export const DefaultDesignLenses = [Commands.RunCurrentCell, Commands.RunAllCellsAbove, Commands.DebugCell];
+    // If not specified in the options this is the default set of commands in our debug time code lenses
+    export const DefaultDebuggingLenses = [Commands.DebugContinue, Commands.DebugStop, Commands.DebugStepOver];
+    // These are the commands that are allowed at debug time
+    export const DebuggerCommands = [Commands.DebugContinue, Commands.DebugStop, Commands.DebugStepOver];
 }
 
 export namespace EditorContexts {
@@ -52,7 +69,7 @@ export namespace RegExpValues {
     export const KernelSpecOutputRegEx = /^\s*(\S+)\s+(\S+)$/;
     // This next one has to be a string because uglifyJS isn't handling the groups. We use named-js-regexp to parse it
     // instead.
-    export const UrlPatternRegEx = '(?<PREFIX>https?:\\/\\/)((\\(.+\\s+or\\s+(?<IP>.+)\\))|(?<LOCAL>[^\\s]+))(?<REST>:.+)' ;
+    export const UrlPatternRegEx = '(?<PREFIX>https?:\\/\\/)((\\(.+\\s+or\\s+(?<IP>.+)\\))|(?<LOCAL>[^\\s]+))(?<REST>:.+)';
     export interface IUrlPatternGroupType {
         LOCAL: string | undefined;
         PREFIX: string | undefined;
@@ -115,6 +132,7 @@ export enum Telemetry {
     DisableInteractiveShiftEnter = 'DATASCIENCE.DISABLE_INTERACTIVE_SHIFT_ENTER',
     ShowDataViewer = 'DATASCIENCE.SHOW_DATA_EXPLORER',
     RunFileInteractive = 'DATASCIENCE.RUN_FILE_INTERACTIVE',
+    DebugFileInteractive = 'DATASCIENCE.DEBUG_FILE_INTERACTIVE',
     PandasNotInstalled = 'DATASCIENCE.SHOW_DATA_NO_PANDAS',
     PandasTooOld = 'DATASCIENCE.SHOW_DATA_PANDAS_TOO_OLD',
     DataScienceSettings = 'DATASCIENCE.SETTINGS',
@@ -124,16 +142,44 @@ export enum Telemetry {
     GetPasswordAttempt = 'DATASCIENCE.GET_PASSWORD_ATTEMPT',
     GetPasswordFailure = 'DATASCIENCE.GET_PASSWORD_FAILURE',
     GetPasswordSuccess = 'DATASCIENCE.GET_PASSWORD_SUCCESS',
-    OpenPlotViewer = 'DATASCIENCE.OPEN_PLOT_VIEWER'
- }
+    OpenPlotViewer = 'DATASCIENCE.OPEN_PLOT_VIEWER',
+    DebugCurrentCell = 'DATASCIENCE.DEBUG_CURRENT_CELL',
+    CodeLensAverageAcquisitionTime = 'DATASCIENCE.CODE_LENS_ACQ_TIME',
+    ClassConstructionTime = 'DATASCIENCE.CLASS_CONSTRUCTION_TIME',
+    FindJupyterCommand = 'DATASCIENCE.FIND_JUPYTER_COMMAND',
+    StartJupyterProcess = 'DATASCIENCE.START_JUPYTER_PROCESS',
+    WaitForIdleJupyter = 'DATASCIENCE.WAIT_FOR_IDLE_JUPYTER',
+    HiddenCellTime = 'DATASCIENCE.HIDDEN_EXECUTION_TIME',
+    RestartJupyterTime = 'DATASCIENCE.RESTART_JUPYTER_TIME',
+    InterruptJupyterTime = 'DATASCIENCE.INTERRUPT_JUPYTER_TIME',
+    ExecuteCell = 'DATASCIENCE.EXECUTE_CELL_TIME',
+    ExecuteCellPerceivedCold = 'DATASCIENCE.EXECUTE_CELL_PERCEIVED_COLD',
+    ExecuteCellPerceivedWarm = 'DATASCIENCE.EXECUTE_CELL_PERCEIVED_WARM',
+    WebviewStartup = 'DATASCIENCE.WEBVIEW_STARTUP',
+    VariableExplorerFetchTime = 'DATASCIENCE.VARIABLE_EXPLORER_FETCH_TIME',
+    WebviewStyleUpdate = 'DATASCIENCE.WEBVIEW_STYLE_UPDATE',
+    WebviewMonacoStyleUpdate = 'DATASCIENCE.WEBVIEW_MONACO_STYLE_UPDATE',
+    DataViewerFetchTime = 'DATASCIENCE.DATAVIEWER_FETCH_TIME',
+    FindJupyterKernelSpec = 'DATASCIENCE.FIND_JUPYTER_KERNEL_SPEC',
+    PtvsdPromptToInstall = 'DATASCIENCE.PTVSD_PROMPT_TO_INSTALL',
+    PtvsdSuccessfullyInstalled = 'DATASCIENCE.PTVSD_SUCCESSFULLY_INSTALLED',
+    PtvsdInstallFailed = 'DATASCIENCE.PTVSD_INSTALL_FAILED',
+    ScrolledToCell = 'DATASCIENCE.SCROLLED_TO_CELL',
+    DebugStepOver = 'DATASCIENCE.DEBUG_STEP_OVER',
+    DebugContinue = 'DATASCIENCE.DEBUG_CONTINUE',
+    DebugStop = 'DATASCIENCE.DEBUG_STOP'
+}
 
 export namespace HelpLinks {
     export const PythonInteractiveHelpLink = 'https://aka.ms/pyaiinstall';
+    export const JupyterDataRateHelpLink = 'https://aka.ms/AA5ggm0'; // This redirects here: https://jupyter-notebook.readthedocs.io/en/stable/config.html
 }
 
 export namespace Settings {
     export const JupyterServerLocalLaunch = 'local';
     export const IntellisenseTimeout = 300;
+    export const RemoteDebuggerPortBegin = 8889;
+    export const RemoteDebuggerPortEnd = 9000;
 }
 
 export namespace Identifiers {
@@ -148,7 +194,9 @@ export namespace Identifiers {
 export namespace CodeSnippits {
     export const ChangeDirectory = ['{0}', '{1}', 'import os', 'try:', '\tos.chdir(os.path.join(os.getcwd(), \'{2}\'))', '\tprint(os.getcwd())', 'except:', '\tpass', ''];
     export const ChangeDirectoryCommentIdentifier = '# ms-python.python added'; // Not translated so can compare.
-    export const MatplotLibInit = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_format = 'svg'`;
+    export const ImportIPython = '#%%\nfrom IPython import get_ipython\n\n';
+    export const MatplotLibInitSvg = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_formats = 'svg', 'png'`;
+    export const MatplotLibInitPng = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_formats = 'png'`;
 }
 
 export namespace JupyterCommands {

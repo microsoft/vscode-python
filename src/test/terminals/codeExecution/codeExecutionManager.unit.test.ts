@@ -36,7 +36,7 @@ suite('Terminal - Code Execution Manager', () => {
             };
         });
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
-        commandManager = TypeMoq.Mock.ofType<ICommandManager>();
+        commandManager = TypeMoq.Mock.ofType<ICommandManager>(undefined, TypeMoq.MockBehavior.Strict);
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         executionManager = new CodeExecutionManager(commandManager.object, documentManager.object, disposables, fileSystem.object, shiftEnterBanner.object, serviceContainer.object);
     });
@@ -51,10 +51,25 @@ suite('Terminal - Code Execution Manager', () => {
     });
 
     test('Ensure commands are registered', async () => {
+        const registered: string[] = [];
+        commandManager.setup(c => c.registerCommand)
+            .returns(() => {
+                return (command: string, _callback: (...args: any[]) => any, _thisArg?: any) => {
+                    registered.push(command);
+                    return { dispose: () => void 0 };
+                };
+            });
+
         executionManager.registerCommands();
-        commandManager.verify(c => c.registerCommand(TypeMoq.It.isValue(Commands.Exec_In_Terminal) as any, TypeMoq.It.isAny()), TypeMoq.Times.once());
-        commandManager.verify(c => c.registerCommand(TypeMoq.It.isValue(Commands.Exec_Selection_In_Terminal) as any, TypeMoq.It.isAny()), TypeMoq.Times.once());
-        commandManager.verify(c => c.registerCommand(TypeMoq.It.isValue(Commands.Exec_Selection_In_Django_Shell) as any, TypeMoq.It.isAny()), TypeMoq.Times.once());
+
+        const sorted = registered.sort();
+        expect(sorted).to.deep.equal([
+            Commands.Exec_In_Terminal,
+            Commands.Exec_In_Terminal_Icon_1,
+            Commands.Exec_In_Terminal_Icon_2,
+            Commands.Exec_Selection_In_Django_Shell,
+            Commands.Exec_Selection_In_Terminal
+        ]);
     });
 
     test('Ensure executeFileInterTerminal will do nothing if no file is avialble', async () => {

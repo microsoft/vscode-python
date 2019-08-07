@@ -1,0 +1,32 @@
+[
+    {
+        "name": "AlwaysDisplayTestExplorer - experiment",
+        "salt": "AlwaysDisplayTestExplorer",
+        "min": 80,
+        "max": 100
+    },
+    {
+        "name": "AlwaysDisplayTestExplorer - control",
+        "salt": "AlwaysDisplayTestExplorer",
+        "min": 0,
+        "max": 20
+    },
+    {
+        "name": "ShowPlayIcon - start",
+        "salt": "ShowPlayIcon",
+        "max": 100,
+        "min": 80
+    },
+    {
+        "name": "ShowPlayIcon - runFile",
+        "salt": "ShowPlayIcon",
+        "max": 60,
+        "min": 40
+    },
+    {
+        "name": "ShowPlayIcon - control",
+        "salt": "ShowPlayIcon",
+        "min": 0,
+        "max": 20
+    }
+]

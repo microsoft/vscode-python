@@ -2,8 +2,8 @@
     "name": "python",
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, and more.",
-    "version": "2019.6.0-dev",
-    "languageServerVersion": "0.2.82",
+    "version": "2019.9.0-dev",
+    "languageServerVersion": "0.3.43",
     "publisher": "ms-python",
     "author": {
         "name": "Microsoft Corporation"
@@ -24,7 +24,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.33.0"
+        "vscode": "^1.36.0"
     },
     "keywords": [
         "python",
@@ -106,6 +106,11 @@
                 "command": "python.datascience.runcurrentcell",
                 "key": "ctrl+enter",
                 "when": "editorTextFocus && !editorHasSelection && python.datascience.hascodecells && python.datascience.featureenabled"
+            },
+            {
+                "command": "python.datascience.runcurrentcellandaddbelow",
+                "key": "alt+enter",
+                "when": "editorTextFocus && !editorHasSelection && python.datascience.hascodecells && python.datascience.featureenabled"
             }
         ],
         "commands": [
@@ -182,8 +187,41 @@
                 "category": "Python"
             },
             {
+                "command": "python.execInTerminal-icon1",
+                "title": "%python.command.python.execInTerminal.title%",
+                "category": "Python",
+                "icon": {
+                    "light": "resources/light/start.svg",
+                    "dark": "resources/dark/start.svg"
+                }
+            },
+            {
+                "command": "python.execInTerminal-icon2",
+                "title": "%python.command.python.execInTerminal.title%",
+                "category": "Python",
+                "icon": {
+                    "light": "resources/light/run-file.svg",
+                    "dark": "resources/dark/run-file.svg"
+                }
+            },
+            {
                 "command": "python.setInterpreter",
                 "title": "%python.command.python.setInterpreter.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.switchOffInsidersChannel",
+                "title": "%python.command.python.switchOffInsidersChannel.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.switchToDailyChannel",
+                "title": "%python.command.python.switchToDailyChannel.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.switchToWeeklyChannel",
+                "title": "%python.command.python.switchToWeeklyChannel.title%",
                 "category": "Python"
             },
             {
@@ -316,6 +354,26 @@
                 "category": "Python"
             },
             {
+                "command": "python.datascience.debugcell",
+                "title": "%python.command.python.datascience.debugcell.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.debugstepover",
+                "title": "%python.command.python.datascience.debugstepover.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.debugstop",
+                "title": "%python.command.python.datascience.debugstop.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.debugcontinue",
+                "title": "%python.command.python.datascience.debugcontinue.title%",
+                "category": "Python"
+            },
+            {
                 "command": "python.datascience.runcurrentcelladvance",
                 "title": "%python.command.python.datascience.runcurrentcelladvance.title%",
                 "category": "Python"
@@ -331,6 +389,11 @@
                 "category": "Python"
             },
             {
+                "command": "python.datascience.debugcurrentcell.palette",
+                "title": "%python.command.python.datascience.debugcurrentcell.palette.title%",
+                "category": "Python"
+            },
+            {
                 "command": "python.datascience.execSelectionInteractive",
                 "title": "%python.command.python.datascience.execSelectionInteractive.title%",
                 "category": "Python"
@@ -343,6 +406,11 @@
             {
                 "command": "python.datascience.runFileInteractive",
                 "title": "%python.command.python.datascience.runFileInteractive.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.debugFileInteractive",
+                "title": "%python.command.python.datascience.debugFileInteractive.title%",
                 "category": "Python"
             },
             {
@@ -442,8 +510,9 @@
                 "category": "Python"
             },
             {
-                "command": "python.datascience.openNotebookFolder",
-                "title": "Open Notebook Folder"
+                "command": "python.datascience.scrolltocell",
+                "title": "%python.command.python.datascience.scrolltocell.title%",
+                "category": "Python"
             }
         ],
         "menus": {
@@ -537,6 +606,20 @@
                     "group": "Python3@3"
                 }
             ],
+            "editor/title": [
+                {
+                    "command": "python.execInTerminal-icon1",
+                    "title": "%python.command.python.execInTerminal.title%",
+                    "group": "navigation",
+                    "when": "resourceLangId == python && python.showPlayIcon1"
+                },
+                {
+                    "command": "python.execInTerminal-icon2",
+                    "title": "%python.command.python.execInTerminal.title%",
+                    "group": "navigation",
+                    "when": "resourceLangId == python && python.showPlayIcon2"
+                }
+            ],
             "explorer/context": [
                 {
                     "when": "resourceLangId == python && !busyTests",
@@ -565,6 +648,24 @@
                 }
             ],
             "commandPalette": [
+                {
+                    "command": "python.switchOffInsidersChannel",
+                    "title": "%python.command.python.switchOffInsidersChannel.title%",
+                    "category": "Python",
+                    "when": "config.python.insidersChannel != 'default'"
+                },
+                {
+                    "command": "python.switchToDailyChannel",
+                    "title": "%python.command.python.switchToDailyChannel.title%",
+                    "category": "Python",
+                    "when": "config.python.insidersChannel != 'daily'"
+                },
+                {
+                    "command": "python.switchToWeeklyChannel",
+                    "title": "%python.command.python.switchToWeeklyChannel.title%",
+                    "category": "Python",
+                    "when": "config.python.insidersChannel != 'weekly'"
+                },
                 {
                     "command": "python.viewOutput",
                     "title": "%python.command.python.viewOutput.title%",
@@ -623,6 +724,12 @@
                     "when": "python.datascience.hascodecells && python.datascience.featureenabled"
                 },
                 {
+                    "command": "python.datascience.debugcurrentcell.palette",
+                    "title": "%python.command.python.datascience.debugcurrentcell.palette.title%",
+                    "category": "Python",
+                    "when": "python.datascience.hascodecells && python.datascience.featureenabled"
+                },
+                {
                     "command": "python.datascience.showhistorypane",
                     "title": "%python.command.python.datascience.showhistorypane.title%",
                     "category": "Python",
@@ -635,14 +742,14 @@
                     "when": "python.datascience.featureenabled"
                 },
                 {
-                    "command": "python.datascience.runcell",
-                    "title": "%python.command.python.datascience.runcell.title%",
+                    "command": "python.datascience.runFileInteractive",
+                    "title": "%python.command.python.datascience.runFileInteractive.title%",
                     "category": "Python",
                     "when": "python.datascience.featureenabled"
                 },
                 {
-                    "command": "python.datascience.runFileInteractive",
-                    "title": "%python.command.python.datascience.runFileInteractive.title%",
+                    "command": "python.datascience.debugFileInteractive",
+                    "title": "%python.command.python.datascience.debugFileInteractive.title%",
                     "category": "Python",
                     "when": "python.datascience.featureenabled"
                 },
@@ -828,6 +935,17 @@
                 }
             ]
         },
+        "breakpoints": [
+            {
+                "language": "python"
+            },
+            {
+                "language": "html"
+            },
+            {
+                "language": "jinja"
+            }
+        ],
         "debuggers": [
             {
                 "type": "python",
@@ -835,14 +953,6 @@
                 "languages": [
                     "python"
                 ],
-                "enableBreakpointsFor": {
-                    "languageIds": [
-                        "python",
-                        "html",
-                        "jinja"
-                    ]
-                },
-                "aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
                 "program": "./out/client/debugger/debugAdapter/main.js",
                 "runtime": "node",
                 "configurationSnippets": [],
@@ -1153,6 +1263,68 @@
                     "description": "Allows a user to import a jupyter notebook into a python file anytime one is opened.",
                     "scope": "resource"
                 },
+                "python.dataScience.gatherRules": {
+                    "type": "array",
+                    "default": [
+                        {
+                            "objectName": "df",
+                            "functionName": "head",
+                            "doesNotModify": [
+                                "OBJECT"
+                            ]
+                        },
+                        {
+                            "objectName": "df",
+                            "functionName": "describe",
+                            "doesNotModify": [
+                                "OBJECT"
+                            ]
+                        },
+                        {
+                            "objectName": "df",
+                            "functionName": "tail",
+                            "doesNotModify": [
+                                "OBJECT"
+                            ]
+                        },
+                        {
+                            "functionName": "print",
+                            "doesNotModify": [
+                                "ARGUMENTS"
+                            ]
+                        },
+                        {
+                            "functionName": "KMeans",
+                            "doesNotModify": [
+                                "ARGUMENTS"
+                            ]
+                        },
+                        {
+                            "functionName": "scatter",
+                            "doesNotModify": [
+                                "ARGUMENTS"
+                            ]
+                        },
+                        {
+                            "functionName": "fit",
+                            "doesNotModify": [
+                                "ARGUMENTS"
+                            ]
+                        },
+                        {
+                            "functionName": "sum",
+                            "doesNotModify": [
+                                "ARGUMENTS"
+                            ]
+                        },
+                        {
+                            "functionName": "len",
+                            "doesNotModify": [
+                                "ARGUMENTS"
+                            ]
+                        }
+                    ]
+                },
                 "python.dataScience.askForLargeDataFrames": {
                     "type": "boolean",
                     "default": true,
@@ -1337,6 +1509,72 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Allow for connecting the Python Interactive window to a https Jupyter server that does not have valid certificates. This can be a security risk, so only use for known and trusted servers.",
+                    "scope": "resource"
+                },
+                "python.dataScience.enablePlotViewer": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Modify plot output so that it can be expanded into a plot viewer window.",
+                    "scope": "resource"
+                },
+                "python.dataScience.enableGather": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable code gathering for single cells in the interactive window (experimental).",
+                    "scope": "resource"
+                },
+                "python.dataScience.codeLenses": {
+                    "type": "string",
+                    "default": "python.datascience.runcell,  python.datascience.runallcellsabove, python.datascience.debugcell",
+                    "description": "Set of commands to put as code lens above a cell. Defaults to 'python.datascience.runcell,  python.datascience.runallcellsabove, python.datascience.debugcell'",
+                    "scope": "resource"
+                },
+                "python.dataScience.debugCodeLenses": {
+                    "type": "string",
+                    "default": "python.datascience.debugcontinue, python.datascience.debugstop, python.datascience.debugstepover",
+                    "description": "Set of debug commands to put as code lens above a cell while debugging.",
+                    "scope": "resource"
+                },
+                "python.dataScience.ptvsdDistPath": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Path to ptsvd experimental bits for debugging cells.",
+                    "scope": "resource"
+                },
+                "python.dataScience.stopOnFirstLineWhileDebugging": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "When debugging a cell, stop on the first line.",
+                    "scope": "resource"
+                },
+                "python.dataScience.remoteDebuggerPort": {
+                    "type": "number",
+                    "default": -1,
+                    "description": "When debugging a cell, open this port on the remote box. If -1 is specified, a random port between 8889 and 9000 will be attempted.",
+                    "scope": "resource"
+                },
+                "python.dataScience.textOutputLimit": {
+                    "type": "number",
+                    "default": 20000,
+                    "description": "Limit the amount of text in Python Interactive cell text output to this value. 0 to allow any amount of characters.",
+                    "scope": "resource"
+                },
+                "python.dataScience.colorizeInputBox": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Whether or not to use the theme's peek color as the background for the input box.",
+                    "scope": "resource"
+                },
+                "python.dataScience.stopOnError": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Stop running cells if a cell throws an exception.",
+                    "scope": "resource"
+                },
+                "python.dataScience.addGotoCodeLenses": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "After running a cell, add a 'Goto' code lens on the cell. Note, disabling all code lenses disables this code lens as well.",
                     "scope": "resource"
                 },
                 "python.disableInstallationCheck": {
@@ -2075,6 +2313,23 @@
                     "default": "${workspaceFolder}/.vscode/tags",
                     "description": "Fully qualified path to tag file (exuberant ctag file), used to provide workspace symbols.",
                     "scope": "resource"
+                },
+                "python.dataScience.magicCommandsAsComments": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Uncomment shell assignments (#!), line magic (#!%) and cell magic (#!%%) when parsing code cells.",
+                    "scope": "resource"
+                },
+                "python.insidersChannel": {
+                    "type": "string",
+                    "default": "off",
+                    "description": "Set to \"weekly\" or \"daily\" to automatically download and install the latest Insiders builds of the python extension, which include upcoming features and bug fixes.",
+                    "enum": [
+                        "off",
+                        "weekly",
+                        "daily"
+                    ],
+                    "scope": "application"
                 }
             }
         },
@@ -2187,7 +2442,7 @@
         "dump-datascience-webpack-stats": "npx -n --max_old_space_size=4096 webpack --config webpack.datascience-ui.config.js --profile --json > tmp/ds-stats.json",
         "compile-webviews": "gulp compile-webviews",
         "compile-webviews-verbose": "npx webpack --config webpack.datascience-ui.config.js",
-        "postinstall": "node ./node_modules/vscode/bin/install && node ./build/ci/postInstall.js",
+        "postinstall": "node ./build/ci/postInstall.js",
         "test": "node ./out/test/standardTest.js && node ./out/test/multiRootTest.js",
         "test:unittests": "mocha --opts ./build/.mocha.unittests.js.opts",
         "test:unittests:cover": "nyc --silent --no-clean --nycrc-path build/.nycrc mocha --opts ./build/.mocha.unittests.ts.opts",
@@ -2198,7 +2453,6 @@
         "testSingleWorkspace": "node ./out/test/testBootstrap.js ./out/test/standardTest.js",
         "testMultiWorkspace": "node ./out/test/testBootstrap.js ./out/test/multiRootTest.js",
         "testPerformance": "node ./out/test/testBootstrap.js ./out/test/performanceTest.js",
-        "testSmoke": "node ./out/test/smokeTest.js",
         "lint-staged": "node gulpfile.js",
         "lint": "tslint src/**/*.ts -t verbose",
         "clean": "gulp clean",
@@ -2207,6 +2461,8 @@
     },
     "dependencies": {
         "@jupyterlab/services": "^3.2.1",
+        "@msrvida/python-program-analysis": "0.0.5",
+        "ansi-regex": "^4.1.0",
         "arch": "^2.1.0",
         "azure-storage": "^2.10.1",
         "diff-match-patch": "^1.0.0",
@@ -2217,10 +2473,11 @@
         "hash.js": "^1.1.7",
         "iconv-lite": "^0.4.21",
         "inversify": "^4.11.1",
+        "jison": "^0.4.18",
         "jsonc-parser": "^2.0.3",
         "less-plugin-inline-urls": "^1.2.0",
         "line-by-line": "^0.1.6",
-        "lodash": "^4.17.11",
+        "lodash": "^4.17.13",
         "md5": "^2.2.1",
         "minimatch": "^3.0.4",
         "monaco-editor-textmate": "^2.1.1",
@@ -2254,7 +2511,7 @@
         "untildify": "^3.0.2",
         "vscode-debugadapter": "^1.28.0",
         "vscode-debugprotocol": "^1.28.0",
-        "vscode-extension-telemetry": "^0.1.0",
+        "vscode-extension-telemetry": "0.1.0",
         "vscode-languageclient": "^5.2.1",
         "vscode-languageserver": "^5.2.1",
         "vscode-languageserver-protocol": "^3.14.1",
@@ -2273,12 +2530,13 @@
         "@babel/preset-react": "^7.0.0",
         "@babel/register": "^7.4.4",
         "@istanbuljs/nyc-config-typescript": "^0.1.3",
-        "@nteract/plotly": "^1.47.1",
+        "@nteract/plotly": "^1.48.3",
         "@nteract/transform-dataresource": "^4.3.5",
         "@nteract/transform-geojson": "^3.2.3",
         "@nteract/transform-model-debug": "^3.2.3",
         "@nteract/transform-plotly": "^5.0.0",
         "@nteract/transforms": "^4.4.4",
+        "@types/ansi-regex": "^4.0.0",
         "@types/chai": "^4.1.2",
         "@types/chai-arrays": "^1.0.2",
         "@types/chai-as-promised": "^7.1.0",
@@ -2295,10 +2553,12 @@
         "@types/html-webpack-plugin": "^3.2.0",
         "@types/iconv-lite": "^0.0.1",
         "@types/jsdom": "^11.12.0",
+        "@types/jquery": "^1.10.35",
         "@types/loader-utils": "^1.1.3",
         "@types/lodash": "^4.14.104",
         "@types/md5": "^2.1.32",
-        "@types/mocha": "^5.2.6",
+        "@types/mocha": "^5.2.7",
+        "@types/nock": "^10.0.3",
         "@types/node": "9.4.7",
         "@types/node-fetch": "^2.3.4",
         "@types/pdfkit": "^0.7.36",
@@ -2310,14 +2570,14 @@
         "@types/request": "^2.47.0",
         "@types/semver": "^5.5.0",
         "@types/shortid": "^0.0.29",
-        "@types/sinon": "^4.3.3",
-        "@types/slickgrid": "^2.1.27",
+        "@types/sinon": "^7.0.13",
         "@types/stack-trace": "0.0.29",
         "@types/strip-json-comments": "0.0.30",
         "@types/temp": "^0.8.32",
         "@types/tmp": "0.0.33",
         "@types/untildify": "^3.0.0",
         "@types/uuid": "^3.4.3",
+        "@types/vscode": "^1.36.0",
         "@types/webpack-bundle-analyzer": "^2.13.0",
         "@types/winreg": "^1.2.30",
         "@types/ws": "^6.0.1",
@@ -2336,25 +2596,35 @@
         "chai": "^4.1.2",
         "chai-arrays": "^2.0.0",
         "chai-as-promised": "^7.1.1",
+        "codecov": "^3.5.0",
         "colors": "^1.2.1",
         "copy-webpack-plugin": "^4.6.0",
+        "coveralls": "^3.0.4",
         "cross-spawn": "^6.0.5",
         "css-loader": "^1.0.1",
+        "cucumber-html-reporter": "^4.0.5",
         "decache": "^4.4.0",
         "del": "^3.0.0",
         "download": "^7.0.0",
+        "electron-download": "^4.1.1",
         "enzyme": "^3.7.0",
         "enzyme-adapter-react-16": "^1.6.0",
         "event-stream": "3.3.4",
         "expose-loader": "^0.7.5",
+        "extract-zip": "^1.6.7",
         "file-loader": "^2.0.0",
+        "filemanager-webpack-plugin": "^2.0.5",
         "flat": "^4.0.0",
         "gulp": "^4.0.0",
         "gulp-azure-storage": "^0.9.0",
+        "gulp-chmod": "^2.0.0",
         "gulp-filter": "^5.1.0",
+        "gulp-gunzip": "^1.1.0",
         "gulp-rename": "^1.4.0",
         "gulp-sourcemaps": "^2.6.4",
         "gulp-typescript": "^4.0.1",
+        "gulp-untar": "0.0.8",
+        "gulp-vinyl-zip": "^2.1.2",
         "html-webpack-plugin": "^3.2.0",
         "husky": "^1.1.2",
         "immutable": "^4.0.0-rc.12",
@@ -2369,13 +2639,13 @@
         "mocha-multi-reporters": "^1.1.7",
         "monaco-editor": "0.16.2",
         "monaco-editor-webpack-plugin": "^1.7.0",
+        "nock": "^10.0.6",
         "node-has-native-dependencies": "^1.0.2",
         "node-html-parser": "^1.1.13",
         "nyc": "^14.1.1",
         "raw-loader": "^0.5.1",
         "react": "^16.5.2",
         "react-data-grid": "^6.0.2-0",
-        "react-data-grid-addons": "^6.0.2-0",
         "react-dev-utils": "^5.0.2",
         "react-dom": "^16.5.2",
         "react-json-tree": "^0.11.0",
@@ -2402,11 +2672,13 @@
         "typemoq": "^2.1.0",
         "typescript": "^3.5.2",
         "typescript-formatter": "^7.1.0",
+        "unicode-properties": "1.1.0",
         "url-loader": "^1.1.2",
         "uuid": "^3.3.2",
+        "vinyl-fs": "^3.0.3",
         "vsce": "^1.59.0",
-        "vscode": "^1.1.34",
         "vscode-debugadapter-testsupport": "^1.27.0",
+        "vscode-test": "^1.0.2",
         "webpack": "^4.33.0",
         "webpack-bundle-analyzer": "^3.3.2",
         "webpack-cli": "^3.1.2",

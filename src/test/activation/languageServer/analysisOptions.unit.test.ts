@@ -10,7 +10,7 @@ import { ConfigurationChangeEvent, Uri, WorkspaceFolder } from 'vscode';
 import { DocumentSelector } from 'vscode-languageclient';
 import { LanguageServerAnalysisOptions } from '../../../client/activation/languageServer/analysisOptions';
 import { LanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
-import { ILanguageServerFolderService } from '../../../client/activation/types';
+import { ILanguageServerFolderService, ILanguageServerOutputChannel } from '../../../client/activation/types';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
@@ -58,6 +58,7 @@ suite('Language Server - Analysis Options', () => {
     let surveyBanner: IPythonExtensionBanner;
     let interpreterService: IInterpreterService;
     let outputChannel: IOutputChannel;
+    let lsOutputChannel: typemoq.IMock<ILanguageServerOutputChannel>;
     let pathUtils: IPathUtils;
     let lsFolderService: ILanguageServerFolderService;
     setup(() => {
@@ -68,12 +69,16 @@ suite('Language Server - Analysis Options', () => {
         surveyBanner = mock(ProposeLanguageServerBanner);
         interpreterService = mock(InterpreterService);
         outputChannel = typemoq.Mock.ofType<IOutputChannel>().object;
+        lsOutputChannel = typemoq.Mock.ofType<ILanguageServerOutputChannel>();
+        lsOutputChannel
+            .setup(l => l.channel)
+            .returns(() => outputChannel);
         pathUtils = mock(PathUtils);
         lsFolderService = mock(LanguageServerFolderService);
         analysisOptions = new TestClass(context.object, instance(envVarsProvider),
             instance(configurationService),
             instance(workspace), instance(surveyBanner),
-            instance(interpreterService), outputChannel,
+            instance(interpreterService), lsOutputChannel.object,
             instance(pathUtils), instance(lsFolderService));
     });
     test('Initialize will add event handlers and will dispose them when running dispose', async () => {

@@ -7,6 +7,7 @@ import {
     CancellationToken,
     CompletionItemProvider,
     ConfigurationChangeEvent,
+    DebugAdapterTrackerFactory,
     DebugConfiguration,
     DebugConfigurationProvider,
     DebugConsole,
@@ -50,7 +51,8 @@ import {
     WorkspaceEdit,
     WorkspaceFolder,
     WorkspaceFolderPickOptions,
-    WorkspaceFoldersChangeEvent
+    WorkspaceFoldersChangeEvent,
+    OutputChannel
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
@@ -346,6 +348,13 @@ export interface IApplicationShell {
      * @returns a [TreeView](#TreeView).
      */
     createTreeView<T>(viewId: string, options: TreeViewOptions<T>): TreeView<T>;
+
+    /**
+     * Creates a new [output channel](#OutputChannel) with the given name.
+     *
+     * @param name Human-readable string which will be used to represent the channel in the UI.
+     */
+    createOutputChannel(name: string): OutputChannel;
 }
 
 export const ICommandManager = Symbol('ICommandManager');
@@ -765,6 +774,15 @@ export interface IDebugService {
     registerDebugConfigurationProvider(debugType: string, provider: DebugConfigurationProvider): Disposable;
 
     /**
+     * Register a debug adapter tracker factory for the given debug type.
+     *
+     * @param debugType The debug type for which the factory is registered or '*' for matching all debug types.
+     * @param factory The [debug adapter tracker factory](#DebugAdapterTrackerFactory) to register.
+     * @return A [disposable](#Disposable) that unregisters this factory when being disposed.
+     */
+    registerDebugAdapterTrackerFactory(debugType: string, factory: DebugAdapterTrackerFactory): Disposable;
+
+    /**
      * Start debugging by using either a named launch or named compound configuration,
      * or by directly passing a [DebugConfiguration](#DebugConfiguration).
      * The named configurations are looked up in '.vscode/launch.json' found in the given folder.
@@ -847,6 +865,25 @@ export interface IApplicationEnvironment {
      * @memberof IApplicationShell
      */
     readonly userSettingsFile: string | undefined;
+    /**
+     * The detected default shell for the extension host, this is overridden by the
+     * `terminal.integrated.shell` setting for the extension host's platform.
+     *
+     * @type {string}
+     * @memberof IApplicationShell
+     */
+    readonly shell: string | undefined;
+    /**
+     * Gets the vscode channel (whether 'insiders' or 'stable').
+     */
+    readonly channel: Channel;
+    /**
+     * Gets the extension channel (whether 'insiders' or 'stable').
+     *
+     * @type {string}
+     * @memberof IApplicationShell
+     */
+    readonly extensionChannel: Channel;
 }
 
 export const IWebPanelMessageListener = Symbol('IWebPanelMessageListener');
@@ -953,3 +990,5 @@ export interface ILanguageService {
      */
     registerCompletionItemProvider(selector: DocumentSelector, provider: CompletionItemProvider, ...triggerCharacters: string[]): Disposable;
 }
+
+export type Channel = 'stable' | 'insiders';

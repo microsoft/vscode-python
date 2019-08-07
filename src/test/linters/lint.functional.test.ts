@@ -22,6 +22,7 @@ import { PythonExecutionFactory } from '../../client/common/process/pythonExecut
 import { PythonToolExecutionService } from '../../client/common/process/pythonToolService';
 import {
     IBufferDecoder,
+    IProcessLogger,
     IPythonExecutionFactory,
     IPythonToolExecutionService
 } from '../../client/common/process/types';
@@ -189,6 +190,9 @@ class TestFixture extends BaseTestFixture {
     ) {
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
         const configService = TypeMoq.Mock.ofType<IConfigurationService>(undefined, TypeMoq.MockBehavior.Strict);
+        const processLogger = TypeMoq.Mock.ofType<IProcessLogger>(undefined, TypeMoq.MockBehavior.Strict);
+        processLogger.setup(p => p.logProcess(TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => { return; });
+        serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IProcessLogger), TypeMoq.It.isAny())).returns(() => processLogger.object);
 
         const platformService = new PlatformService();
         const filesystem = new FileSystem(platformService);
@@ -229,12 +233,10 @@ class TestFixture extends BaseTestFixture {
         configService: IConfigurationService
     ): IPythonExecutionFactory {
         const envVarsService = TypeMoq.Mock.ofType<IEnvironmentVariablesProvider>(undefined, TypeMoq.MockBehavior.Strict);
-        envVarsService.setup(e => e.getEnvironmentVariables(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve({}));
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IEnvironmentVariablesProvider), TypeMoq.It.isAny()))
-            .returns(() => envVarsService.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny()))
-            .returns(() => []);
+        envVarsService.setup(e => e.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({}));
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IEnvironmentVariablesProvider), TypeMoq.It.isAny())).returns(() => envVarsService.object);
+        const disposableRegistry: IDisposableRegistry = [];
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny())).returns(() => disposableRegistry);
 
         const envActivationService = TypeMoq.Mock.ofType<IEnvironmentActivationService>(undefined, TypeMoq.MockBehavior.Strict);
 
@@ -242,7 +244,13 @@ class TestFixture extends BaseTestFixture {
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IBufferDecoder), TypeMoq.It.isAny()))
             .returns(() => decoder);
 
-        const procServiceFactory = new ProcessServiceFactory(serviceContainer.object);
+        const processLogger = TypeMoq.Mock.ofType<IProcessLogger>(undefined, TypeMoq.MockBehavior.Strict);
+        processLogger
+            .setup(p => p.logProcess(TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => {
+                return;
+            });
+        const procServiceFactory = new ProcessServiceFactory(envVarsService.object, processLogger.object, decoder, disposableRegistry);
 
         return new PythonExecutionFactory(
             serviceContainer.object,

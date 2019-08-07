@@ -139,5 +139,7 @@ suite('Debugging - Attach Debugger', () => {
     }
     test('Confirm we are able to attach to a running program', async () => {
         await testAttachingToRemoteProcess(path.dirname(fileToDebug), path.dirname(fileToDebug), IS_WINDOWS);
-    });
+    })
+        // Retry as tests can timeout on server due to connectivity issues.
+        .retries(3);
 });
