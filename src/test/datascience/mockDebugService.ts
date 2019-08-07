@@ -30,6 +30,7 @@ import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { IProtocolParser } from '../../client/debugger/debugAdapter/types';
+import { DebugAdapterDescriptorFactory } from '../../client/debugger/extension/adapter/factory';
 
 // tslint:disable:no-any
 
@@ -126,7 +127,7 @@ export class MockDebuggerService implements IDebugService, IDisposable {
         throw new Error('Method not implemented.');
     }
 
-    public registerDebugAdapterDescriptorFactory(debugType: string, factory: DebugAdapterDescriptorFactory): Disposable {
+    public registerDebugAdapterDescriptorFactory(_debugType: string, _factory: DebugAdapterDescriptorFactory): Disposable {
         throw new Error('Not implemented');
     }
     public registerDebugAdapterTrackerFactory(_debugType: string, _provider: DebugAdapterTrackerFactory): Disposable {
