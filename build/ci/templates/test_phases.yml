@@ -544,7 +544,8 @@ steps:
   # > npm run testSmoke
   - bash: |
       npm install -g vsce
-      npm run clean
+      npx tsc -p ./
+      npx gulp clean:cleanExceptTests
       npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID
       npm run package
       npx gulp clean:cleanExceptTests
