@@ -1,16 +1,25 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+from __future__ import absolute_import, print_function
+
+import ntpath
 import os
 import os.path
+import posixpath
 import shlex
+import sys
 import unittest
 
 import pytest
 
-from testing_tools.adapter.util import shlex_unsplit
+from testing_tools.adapter.util import (
+        fix_path, fix_relpath, fix_fileid,
+        shlex_unsplit,
+        )
 
 
+@unittest.skipIf(sys.version_info < (3,), 'Python 2 does not have subTest')
 class FilePathTests(unittest.TestCase):
 
     @pytest.mark.functional
@@ -56,6 +65,171 @@ class FilePathTests(unittest.TestCase):
                 'Please only use path-related API from testing_tools.adapter.util.',
                 'Found use of "os.path" in the following files:',
                 ] + ['  ' + file for file in found]))
+
+    def test_fix_path(self):
+        tests = [
+            ('./spam.py', r'.\spam.py'),
+            ('./some-dir', r'.\some-dir'),
+            ('./some-dir/', '.\\some-dir\\'),
+            ('./some-dir/eggs', r'.\some-dir\eggs'),
+            ('./some-dir/eggs/spam.py', r'.\some-dir\eggs\spam.py'),
+            ('X/y/Z/a.B.c.PY', r'X\y\Z\a.B.c.PY'),
+            ('/', '\\'),
+            ('/spam', r'\spam'),
+            ('C:/spam', r'C:\spam'),
+            ]
+        for path, expected in tests:
+            pathsep = ntpath.sep
+            with self.subTest(r'fixed for \: {!r}'.format(path)):
+                fixed = fix_path(path, _pathsep=pathsep)
+                self.assertEqual(fixed, expected)
+
+            pathsep = posixpath.sep
+            with self.subTest('unchanged for /: {!r}'.format(path)):
+                unchanged = fix_path(path, _pathsep=pathsep)
+                self.assertEqual(unchanged, path)
+
+        # no path -> "."
+        for path in ['', None]:
+            for pathsep in [ntpath.sep, posixpath.sep]:
+                with self.subTest(r'fixed for {}: {!r}'.format(pathsep, path)):
+                    fixed = fix_path(path, _pathsep=pathsep)
+                    self.assertEqual(fixed, '.')
+
+        # no-op paths
+        paths = [path for _, path in tests]
+        paths.extend([
+            '.',
+            '..',
+            'some-dir',
+            'spam.py',
+            ])
+        for path in paths:
+            for pathsep in [ntpath.sep, posixpath.sep]:
+                with self.subTest(r'unchanged for {}: {!r}'.format(pathsep, path)):
+                    unchanged = fix_path(path, _pathsep=pathsep)
+                    self.assertEqual(unchanged, path)
+
+    def test_fix_relpath(self):
+        tests = [
+            ('spam.py', posixpath, './spam.py'),
+            ('eggs/spam.py', posixpath, './eggs/spam.py'),
+            ('eggs/spam/', posixpath, './eggs/spam/'),
+            (r'\spam.py', posixpath, r'./\spam.py'),
+            ('spam.py', ntpath, r'.\spam.py'),
+            (r'eggs\spam.py', ntpath, '.\eggs\spam.py'),
+            ('eggs\\spam\\', ntpath, '.\\eggs\\spam\\'),
+            ('/spam.py', ntpath, r'\spam.py'),  # Note the fixed "/".
+            # absolute
+            ('/', posixpath, '/'),
+            ('/spam.py', posixpath, '/spam.py'),
+            ('\\', ntpath, '\\'),
+            (r'\spam.py', ntpath, r'\spam.py'),
+            (r'C:\spam.py', ntpath, r'C:\spam.py'),
+            # no-op
+            ('./spam.py', posixpath, './spam.py'),
+            (r'.\spam.py', ntpath, r'.\spam.py'),
+            ]
+        # no-op
+        for path in ['.', '..']:
+            tests.extend([
+                (path, posixpath, path),
+                (path, ntpath, path),
+                ])
+        for path, _os_path, expected in tests:
+            with self.subTest((path, _os_path.sep)):
+                fixed = fix_relpath(path,
+                                    _fix_path=(lambda p: fix_path(p, _pathsep=_os_path.sep)),
+                                    _path_isabs=_os_path.isabs,
+                                    _pathsep=_os_path.sep,
+                                    )
+                self.assertEqual(fixed, expected)
+
+    def test_fix_fileid(self):
+        tests = [
+            ('spam.py', posixpath, './spam.py'),
+            ('eggs/spam.py', posixpath, './eggs/spam.py'),
+            ('eggs/spam/', posixpath, './eggs/spam/'),
+            (r'\spam.py', posixpath, r'./\spam.py'),
+            ('spam.py', ntpath, r'.\spam.py'),
+            (r'eggs\spam.py', ntpath, '.\eggs\spam.py'),
+            ('eggs\\spam\\', ntpath, '.\\eggs\\spam\\'),
+            ('/spam.py', ntpath, r'/spam.py'),  # "/" is valid on Windows.
+            # absolute
+            ('/', posixpath, '/'),
+            ('/spam.py', posixpath, '/spam.py'),
+            ('\\', ntpath, '\\'),
+            (r'\spam.py', ntpath, r'\spam.py'),
+            (r'C:\spam.py', ntpath, r'C:\spam.py'),
+            # no-op
+            ('/', posixpath, '/'),
+            ('//', posixpath, '//'),
+            ('./spam.py', posixpath, './spam.py'),
+            ('\\', ntpath, '\\'),
+            ('\\\\', ntpath, '\\\\'),
+            ('C:\\\\', ntpath, 'C:\\\\'),
+            (r'.\spam.py', ntpath, r'.\spam.py'),
+            ]
+        # no-op
+        for path in [None, '', '.']:
+            tests.extend([
+                (path, posixpath, path),
+                (path, ntpath, path),
+                ])
+        for fileid, _os_path, expected in tests:
+            pathsep = _os_path.sep
+            with self.subTest(r'for {}: {!r}'.format(pathsep, fileid)):
+                fixed = fix_fileid(fileid,
+                                   _path_isabs=_os_path.isabs,
+                                   _pathsep=pathsep,
+                                   )
+                self.assertEqual(fixed, expected)
+
+        # with rootdir
+        tests = [
+            ('spam.py', '/eggs', posixpath, './spam.py'),
+            ('spam.py', r'\eggs', ntpath, r'.\spam.py'),
+            # absolute
+            ('/spam.py', '/', posixpath, './spam.py'),
+            ('/eggs/spam.py', '/eggs', posixpath, './spam.py'),
+            ('/eggs/spam.py', '/eggs/', posixpath, './spam.py'),
+            (r'\spam.py', '\\', ntpath, r'.\spam.py'),
+            (r'C:\spam.py', 'C:\\', ntpath, r'.\spam.py'),
+            (r'\eggs\spam.py', r'\eggs', ntpath, r'.\spam.py'),
+            (r'\eggs\spam.py', '\\eggs\\', ntpath, r'.\spam.py'),
+            # normcase
+            (r'C:\spam.py', 'c:\\', ntpath, r'.\spam.py'),
+            (r'\Eggs\Spam.py', '\\eggs', ntpath, r'.\Spam.py'),
+            (r'\eggs\spam.py', '\\Eggs', ntpath, r'.\spam.py'),
+            (r'\eggs\Spam.py', '\\Eggs', ntpath, r'.\Spam.py'),
+            # no change
+            ('/spam.py', '/eggs', posixpath, '/spam.py'),
+            ('/spam.py', '/eggs/', posixpath, '/spam.py'),
+            (r'\spam.py', r'\eggs', ntpath, r'\spam.py'),
+            (r'C:\spam.py', r'C:\eggs', ntpath, r'C:\spam.py'),
+            # TODO: Should these be supported.
+            (r'C:\spam.py', '\\', ntpath, r'C:\spam.py'),
+            (r'\spam.py', 'C:\\', ntpath, r'\spam.py'),
+            # root-only
+            ('/', '/', posixpath, '/'),
+            ('/', '/spam', posixpath, '/'),
+            ('//', '/', posixpath, '//'),
+            ('//', '//', posixpath, '//'),
+            ('//', '//spam', posixpath, '//'),
+            ('\\', '\\', ntpath, '\\'),
+            ('\\\\', '\\', ntpath, '\\\\'),
+            ('C:\\', 'C:\\eggs', ntpath, 'C:\\'),
+            ('C:\\', 'C:\\', ntpath, 'C:\\'),
+            (r'C:\spam.py', 'D:\\', ntpath, r'C:\spam.py'),
+            ]
+        for fileid, rootdir, _os_path, expected in tests:
+            pathsep = _os_path.sep
+            with self.subTest(r'for {} (with rootdir {!r}): {!r}'.format(pathsep, rootdir, fileid)):
+                fixed = fix_fileid(fileid, rootdir,
+                                   _path_isabs=_os_path.isabs,
+                                   _pathsep=pathsep,
+                                   )
+                self.assertEqual(fixed, expected)
 
 
 class ShlexUnsplitTests(unittest.TestCase):

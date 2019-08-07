@@ -41,6 +41,13 @@ def group_attr_names(attrnames):
     return grouped
 
 
+if sys.version_info < (3,):
+    def _str_to_lower(value):
+        return value.decode().lower()
+else:
+    _str_to_lower = str.lower
+
+
 #############################
 # file paths
 
@@ -58,6 +65,8 @@ PATH_JOIN = _os_path.join
 def fix_path(path, #*,
              _pathsep=PATH_SEP):
     """Return a platform-appropriate path for the given path."""
+    if not path:
+        return '.'
     return path.replace('/', _pathsep)
 
 
@@ -68,6 +77,8 @@ def fix_relpath(path, #*,
                 ):
     """Return a ./-prefixed, platform-appropriate path for the given path."""
     path = _fix_path(path)
+    if path in ('.', '..'):
+        return path
     if not _path_isabs(path):
         if not path.startswith('.' + _pathsep):
             path = '.' + _pathsep + path
@@ -76,8 +87,8 @@ def fix_relpath(path, #*,
 
 def fix_fileid(fileid, rootdir=None, #*,
                normalize=False,
-               _normcase=NORMCASE,
                _path_isabs=IS_ABS_PATH,
+               _normcase=NORMCASE,
                _pathsep=PATH_SEP,
                ):
     """Return a pathsep-separated file ID ("./"-prefixed) for the given value.
@@ -89,24 +100,30 @@ def fix_fileid(fileid, rootdir=None, #*,
     if not fileid or fileid == '.':
         return fileid
     relprefix = '.' + _pathsep
-
-    normalized = _normcase(fileid)
-    if normalized.startswith(relprefix):
+    if fileid.startswith(relprefix):
         return fileid
 
+    # We do not use NORMCASE because we want to leave the pathseps alone.
+    _normcase = _str_to_lower if _pathsep == '\\' else (lambda p: p)
+
     isabs = False
+    normalized = _normcase(fileid)
     if _path_isabs(normalized):
+        # Deal with root-dir-as-fileid.
+        _, sep, relpath = fileid.partition(_pathsep)
+        if sep and not relpath.replace(_pathsep, ''):
+            return fileid
+
         isabs = True
         if rootdir is not None:
             rootdir = _normcase(rootdir)
             if not rootdir.endswith(_pathsep):
                 rootdir += _pathsep
             if normalized.startswith(rootdir):
-                # This assumes pathsep has length 1.
                 fileid = fileid[len(rootdir):]
                 isabs = False
     if normalize:
-        fileid = fileid.replace(_pathsep, '/').lower()
+        fileid = _str_to_lower(fileid.replace(_pathsep, '/'))
         relprefix = './'
     if not isabs:
         fileid = relprefix + fileid
