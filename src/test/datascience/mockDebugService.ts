@@ -125,6 +125,10 @@ export class MockDebuggerService implements IDebugService, IDisposable {
     public registerDebugConfigurationProvider(_debugType: string, _provider: DebugConfigurationProvider): Disposable {
         throw new Error('Method not implemented.');
     }
+
+    public registerDebugAdapterDescriptorFactory(debugType: string, factory: DebugAdapterDescriptorFactory): Disposable {
+        throw new Error('Not implemented');
+    }
     public registerDebugAdapterTrackerFactory(_debugType: string, _provider: DebugAdapterTrackerFactory): Disposable {
         this.debugAdapterTrackerFactory = _provider;
         return { dispose: () => { noop(); } };
