@@ -3,10 +3,9 @@
 
 from __future__ import absolute_import, print_function
 
-import os.path
 import re
 
-from .util import fix_fileid
+from .util import fix_fileid, PATH_SEP, DIRNAME
 from .info import ParentInfo
 
 
@@ -22,7 +21,7 @@ FILE_ID_RE = re.compile(r"""
 
 def fix_nodeid(nodeid, rootdir=None, #*,
                _fix_fileid=fix_fileid,
-               _pathsep=os.path.sep,
+               _pathsep=PATH_SEP,
                ):
     if not nodeid:
         raise ValueError('missing nodeid')
@@ -75,7 +74,9 @@ class DiscoveredTests(object):
                 )
         self._tests.append(test)
 
-    def _ensure_parent(self, path, parents):
+    def _ensure_parent(self, path, parents, #*,
+                       _dirname=DIRNAME,
+                       ):
         rootdir = path.root
         relpath = path.relfile
 
@@ -89,7 +90,7 @@ class DiscoveredTests(object):
             parentid = fix_nodeid(parentid, rootdir)
             if kind in ('folder', 'file'):
                 info = ParentInfo(nodeid, kind, name, rootdir, relpath, parentid)
-                relpath = os.path.dirname(relpath)
+                relpath = _dirname(relpath)
             else:
                 info = ParentInfo(nodeid, kind, name, rootdir, None, parentid)
             self._parents[(rootdir, nodeid)] = info

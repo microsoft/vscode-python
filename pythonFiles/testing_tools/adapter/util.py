@@ -44,16 +44,27 @@ def group_attr_names(attrnames):
 #############################
 # file paths
 
+_os_path = os.path
+# Uncomment to test Windows behavior on non-windows OS:
+#import ntpath as _os_path
+PATH_SEP = _os_path.sep
+NORMCASE = _os_path.normcase
+DIRNAME = _os_path.dirname
+BASENAME = _os_path.basename
+IS_ABS_PATH = _os_path.isabs
+PATH_JOIN = _os_path.join
+
+
 def fix_path(path, #*,
-             _pathsep=os.path.sep):
+             _pathsep=PATH_SEP):
     """Return a platform-appropriate path for the given path."""
     return path.replace('/', _pathsep)
 
 
 def fix_relpath(path, #*,
                 _fix_path=fix_path,
-                _path_isabs=os.path.isabs,
-                _pathsep=os.path.sep
+                _path_isabs=IS_ABS_PATH,
+                _pathsep=PATH_SEP
                 ):
     """Return a ./-prefixed, platform-appropriate path for the given path."""
     path = _fix_path(path)
@@ -65,9 +76,9 @@ def fix_relpath(path, #*,
 
 def fix_fileid(fileid, rootdir=None, #*,
                normalize=False,
-               _normcase=os.path.normcase,
-               _path_isabs=os.path.isabs,
-               _pathsep=os.path.sep,
+               _normcase=NORMCASE,
+               _path_isabs=IS_ABS_PATH,
+               _pathsep=PATH_SEP,
                ):
     """Return a pathsep-separated file ID ("./"-prefixed) for the given value.
 

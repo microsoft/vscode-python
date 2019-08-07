@@ -7,8 +7,7 @@ try:
     from io import StringIO
 except ImportError:  # 2.7
     from StringIO import StringIO
-import os
-import os.path
+from os import name as OS_NAME
 import sys
 import unittest
 
@@ -16,7 +15,9 @@ import pytest
 import _pytest.doctest
 
 from ....util import Stub, StubProxy
-from testing_tools.adapter.util import fix_path, fix_relpath, fix_fileid
+from testing_tools.adapter.util import (
+        fix_path, fix_relpath, fix_fileid, PATH_JOIN
+        )
 from testing_tools.adapter.info import TestInfo, TestPath, ParentInfo
 from testing_tools.adapter.pytest import _pytest_item as pytest_item
 from testing_tools.adapter.pytest._discovery import discover, TestCollector
@@ -397,7 +398,7 @@ class CollectorTests(unittest.TestCase):
                 nodeid='test_spam.py::SpamTests::test_one',
                 name='test_one',
                 location=('test_spam.py', 12, 'SpamTests.test_one'),
-                fspath=os.path.join(testroot, 'test_spam.py'),
+                fspath=PATH_JOIN(testroot, 'test_spam.py'),
                 function=FakeFunc('test_one'),
                 ),
             StubFunctionItem(
@@ -405,7 +406,7 @@ class CollectorTests(unittest.TestCase):
                 nodeid='test_spam.py::SpamTests::test_other',
                 name='test_other',
                 location=('test_spam.py', 19, 'SpamTests.test_other'),
-                fspath=os.path.join(testroot, 'test_spam.py'),
+                fspath=PATH_JOIN(testroot, 'test_spam.py'),
                 function=FakeFunc('test_other'),
                 ),
             StubFunctionItem(
@@ -413,7 +414,7 @@ class CollectorTests(unittest.TestCase):
                 nodeid='test_spam.py::test_all',
                 name='test_all',
                 location=('test_spam.py', 144, 'test_all'),
-                fspath=os.path.join(testroot, 'test_spam.py'),
+                fspath=PATH_JOIN(testroot, 'test_spam.py'),
                 function=FakeFunc('test_all'),
                 ),
             StubFunctionItem(
@@ -421,7 +422,7 @@ class CollectorTests(unittest.TestCase):
                 nodeid='test_spam.py::test_each[10-10]',
                 name='test_each[10-10]',
                 location=('test_spam.py', 273, 'test_each[10-10]'),
-                fspath=os.path.join(testroot, 'test_spam.py'),
+                fspath=PATH_JOIN(testroot, 'test_spam.py'),
                 function=FakeFunc('test_each'),
                 ),
             StubFunctionItem(
@@ -429,7 +430,7 @@ class CollectorTests(unittest.TestCase):
                 nodeid=relfile2 + '::All::BasicTests::test_first',
                 name='test_first',
                 location=(relfile2, 31, 'All.BasicTests.test_first'),
-                fspath=os.path.join(testroot, relfile2),
+                fspath=PATH_JOIN(testroot, relfile2),
                 function=FakeFunc('test_first'),
                 ),
             StubFunctionItem(
@@ -437,7 +438,7 @@ class CollectorTests(unittest.TestCase):
                 nodeid=relfile2 + '::All::BasicTests::test_each[1+2-3]',
                 name='test_each[1+2-3]',
                 location=(relfile2, 62, 'All.BasicTests.test_each[1+2-3]'),
-                fspath=os.path.join(testroot, relfile2),
+                fspath=PATH_JOIN(testroot, relfile2),
                 function=FakeFunc('test_each'),
                 own_markers=[FakeMarker(v) for v in [
                     # supported
@@ -457,12 +458,12 @@ class CollectorTests(unittest.TestCase):
             ('discovered.reset', None, None),
             ('discovered.add_test', None, dict(
                 parents=[
-                    ('./test_spam.py::SpamTests', 'SpamTests', 'suite'),
-                    ('./test_spam.py', 'test_spam.py', 'file'),
+                    (fix_path('./test_spam.py::SpamTests'), 'SpamTests', 'suite'),
+                    (fix_path('./test_spam.py'), 'test_spam.py', 'file'),
                     ('.', testroot, 'folder'),
                     ],
                 test=TestInfo(
-                    id='./test_spam.py::SpamTests::test_one',
+                    id=fix_path('./test_spam.py::SpamTests::test_one'),
                     name='test_one',
                     path=TestPath(
                         root=testroot,
@@ -472,17 +473,17 @@ class CollectorTests(unittest.TestCase):
                         ),
                     source='{}:{}'.format(relfile1, 13),
                     markers=None,
-                    parentid='./test_spam.py::SpamTests',
+                    parentid=fix_path('./test_spam.py::SpamTests'),
                     ),
                 )),
             ('discovered.add_test', None, dict(
                 parents=[
-                    ('./test_spam.py::SpamTests', 'SpamTests', 'suite'),
-                    ('./test_spam.py', 'test_spam.py', 'file'),
+                    (fix_path('./test_spam.py::SpamTests'), 'SpamTests', 'suite'),
+                    (fix_path('./test_spam.py'), 'test_spam.py', 'file'),
                     ('.', testroot, 'folder'),
                     ],
                 test=TestInfo(
-                    id='./test_spam.py::SpamTests::test_other',
+                    id=fix_path('./test_spam.py::SpamTests::test_other'),
                     name='test_other',
                     path=TestPath(
                         root=testroot,
@@ -492,16 +493,16 @@ class CollectorTests(unittest.TestCase):
                         ),
                     source='{}:{}'.format(relfile1, 20),
                     markers=None,
-                    parentid='./test_spam.py::SpamTests',
+                    parentid=fix_path('./test_spam.py::SpamTests'),
                     ),
                 )),
             ('discovered.add_test', None, dict(
                 parents=[
-                    ('./test_spam.py', 'test_spam.py', 'file'),
+                    (fix_path('./test_spam.py'), 'test_spam.py', 'file'),
                     ('.', testroot, 'folder'),
                     ],
                 test=TestInfo(
-                    id='./test_spam.py::test_all',
+                    id=fix_path('./test_spam.py::test_all'),
                     name='test_all',
                     path=TestPath(
                         root=testroot,
@@ -511,17 +512,17 @@ class CollectorTests(unittest.TestCase):
                         ),
                     source='{}:{}'.format(relfile1, 145),
                     markers=None,
-                    parentid='./test_spam.py',
+                    parentid=fix_path('./test_spam.py'),
                     ),
                 )),
             ('discovered.add_test', None, dict(
                 parents=[
-                    ('./test_spam.py::test_each', 'test_each', 'function'),
-                    ('./test_spam.py', 'test_spam.py', 'file'),
+                    (fix_path('./test_spam.py::test_each'), 'test_each', 'function'),
+                    (fix_path('./test_spam.py'), 'test_spam.py', 'file'),
                     ('.', testroot, 'folder'),
                     ],
                 test=TestInfo(
-                    id='./test_spam.py::test_each[10-10]',
+                    id=fix_path('./test_spam.py::test_each[10-10]'),
                     name='test_each[10-10]',
                     path=TestPath(
                         root=testroot,
@@ -531,21 +532,21 @@ class CollectorTests(unittest.TestCase):
                         ),
                     source='{}:{}'.format(relfile1, 274),
                     markers=None,
-                    parentid='./test_spam.py::test_each',
+                    parentid=fix_path('./test_spam.py::test_each'),
                     ),
                 )),
             ('discovered.add_test', None, dict(
                 parents=[
-                    ('./x/y/z/test_eggs.py::All::BasicTests', 'BasicTests', 'suite'),
-                    ('./x/y/z/test_eggs.py::All', 'All', 'suite'),
-                    ('./x/y/z/test_eggs.py', 'test_eggs.py', 'file'),
-                    ('./x/y/z', 'z', 'folder'),
-                    ('./x/y', 'y', 'folder'),
-                    ('./x', 'x', 'folder'),
+                    (fix_path('./x/y/z/test_eggs.py::All::BasicTests'), 'BasicTests', 'suite'),
+                    (fix_path('./x/y/z/test_eggs.py::All'), 'All', 'suite'),
+                    (fix_path('./x/y/z/test_eggs.py'), 'test_eggs.py', 'file'),
+                    (fix_path('./x/y/z'), 'z', 'folder'),
+                    (fix_path('./x/y'), 'y', 'folder'),
+                    (fix_path('./x'), 'x', 'folder'),
                     ('.', testroot, 'folder'),
                     ],
                 test=TestInfo(
-                    id='./x/y/z/test_eggs.py::All::BasicTests::test_first',
+                    id=fix_path('./x/y/z/test_eggs.py::All::BasicTests::test_first'),
                     name='test_first',
                     path=TestPath(
                         root=testroot,
@@ -555,22 +556,22 @@ class CollectorTests(unittest.TestCase):
                         ),
                     source='{}:{}'.format(fix_relpath(relfile2), 32),
                     markers=None,
-                    parentid='./x/y/z/test_eggs.py::All::BasicTests',
+                    parentid=fix_path('./x/y/z/test_eggs.py::All::BasicTests'),
                     ),
                 )),
             ('discovered.add_test', None, dict(
                 parents=[
-                    ('./x/y/z/test_eggs.py::All::BasicTests::test_each', 'test_each', 'function'),
-                    ('./x/y/z/test_eggs.py::All::BasicTests', 'BasicTests', 'suite'),
-                    ('./x/y/z/test_eggs.py::All', 'All', 'suite'),
-                    ('./x/y/z/test_eggs.py', 'test_eggs.py', 'file'),
-                    ('./x/y/z', 'z', 'folder'),
-                    ('./x/y', 'y', 'folder'),
-                    ('./x', 'x', 'folder'),
+                    (fix_path('./x/y/z/test_eggs.py::All::BasicTests::test_each'), 'test_each', 'function'),
+                    (fix_path('./x/y/z/test_eggs.py::All::BasicTests'), 'BasicTests', 'suite'),
+                    (fix_path('./x/y/z/test_eggs.py::All'), 'All', 'suite'),
+                    (fix_path('./x/y/z/test_eggs.py'), 'test_eggs.py', 'file'),
+                    (fix_path('./x/y/z'), 'z', 'folder'),
+                    (fix_path('./x/y'), 'y', 'folder'),
+                    (fix_path('./x'), 'x', 'folder'),
                     ('.', testroot, 'folder'),
                     ],
                 test=TestInfo(
-                    id='./x/y/z/test_eggs.py::All::BasicTests::test_each[1+2-3]',
+                    id=fix_path('./x/y/z/test_eggs.py::All::BasicTests::test_each[1+2-3]'),
                     name='test_each[1+2-3]',
                     path=TestPath(
                         root=testroot,
@@ -580,7 +581,7 @@ class CollectorTests(unittest.TestCase):
                         ),
                     source='{}:{}'.format(fix_relpath(relfile2), 63),
                     markers=['expected-failure', 'skip', 'skip-if'],
-                    parentid='./x/y/z/test_eggs.py::All::BasicTests::test_each',
+                    parentid=fix_path('./x/y/z/test_eggs.py::All::BasicTests::test_each'),
                     ),
                 )),
             ])
@@ -597,7 +598,7 @@ class CollectorTests(unittest.TestCase):
                 nodeid=relfile + '::SpamTests::test_spam',
                 name='test_spam',
                 location=(relfile, 12, 'SpamTests.test_spam'),
-                fspath=os.path.join(testroot, relfile),
+                fspath=PATH_JOIN(testroot, relfile),
                 function=FakeFunc('test_spam'),
                 ),
             ]
@@ -610,15 +611,15 @@ class CollectorTests(unittest.TestCase):
             ('discovered.reset', None, None),
             ('discovered.add_test', None, dict(
                 parents=[
-                    ('./x/y/z/test_eggs.py::SpamTests', 'SpamTests', 'suite'),
-                    ('./x/y/z/test_eggs.py', 'test_eggs.py', 'file'),
-                    ('./x/y/z', 'z', 'folder'),
-                    ('./x/y', 'y', 'folder'),
-                    ('./x', 'x', 'folder'),
+                    (fix_path('./x/y/z/test_eggs.py::SpamTests'), 'SpamTests', 'suite'),
+                    (fix_path('./x/y/z/test_eggs.py'), 'test_eggs.py', 'file'),
+                    (fix_path('./x/y/z'), 'z', 'folder'),
+                    (fix_path('./x/y'), 'y', 'folder'),
+                    (fix_path('./x'), 'x', 'folder'),
                     ('.', testroot, 'folder'),
                     ],
                 test=TestInfo(
-                    id='./x/y/z/test_eggs.py::SpamTests::test_spam',
+                    id=fix_path('./x/y/z/test_eggs.py::SpamTests::test_spam'),
                     name='test_spam',
                     path=TestPath(
                         root=testroot,
@@ -628,7 +629,7 @@ class CollectorTests(unittest.TestCase):
                         ),
                     source='{}:{}'.format(fix_relpath(relfile), 13),
                     markers=None,
-                    parentid='./x/y/z/test_eggs.py::SpamTests',
+                    parentid=fix_path('./x/y/z/test_eggs.py::SpamTests'),
                     ),
                 )),
             ])
@@ -646,7 +647,7 @@ class CollectorTests(unittest.TestCase):
                 nodeid=doctestfile + '::test_doctest.txt',
                 name='test_doctest.txt',
                 location=(doctestfile, 0, '[doctest] test_doctest.txt'),
-                fspath=os.path.join(testroot, doctestfile),
+                fspath=PATH_JOIN(testroot, doctestfile),
                 ),
             # With --doctest-modules
             StubDoctestItem(
@@ -654,21 +655,21 @@ class CollectorTests(unittest.TestCase):
                 nodeid=relfile + '::test_eggs',
                 name='test_eggs',
                 location=(relfile, 0, '[doctest] test_eggs'),
-                fspath=os.path.join(testroot, relfile),
+                fspath=PATH_JOIN(testroot, relfile),
                 ),
             StubDoctestItem(
                 stub,
                 nodeid=relfile + '::test_eggs.TestSpam',
                 name='test_eggs.TestSpam',
                 location=(relfile, 12, '[doctest] test_eggs.TestSpam'),
-                fspath=os.path.join(testroot, relfile),
+                fspath=PATH_JOIN(testroot, relfile),
                 ),
             StubDoctestItem(
                 stub,
                 nodeid=relfile + '::test_eggs.TestSpam.TestEggs',
                 name='test_eggs.TestSpam.TestEggs',
                 location=(relfile, 27, '[doctest] test_eggs.TestSpam.TestEggs'),
-                fspath=os.path.join(testroot, relfile),
+                fspath=PATH_JOIN(testroot, relfile),
                 ),
             ]
         collector = TestCollector(tests=discovered)
@@ -680,12 +681,12 @@ class CollectorTests(unittest.TestCase):
             ('discovered.reset', None, None),
             ('discovered.add_test', None, dict(
                 parents=[
-                    ('./x/test_doctest.txt', 'test_doctest.txt', 'file'),
-                    ('./x', 'x', 'folder'),
+                    (fix_path('./x/test_doctest.txt'), 'test_doctest.txt', 'file'),
+                    (fix_path('./x'), 'x', 'folder'),
                     ('.', testroot, 'folder'),
                     ],
                 test=TestInfo(
-                    id='./x/test_doctest.txt::test_doctest.txt',
+                    id=fix_path('./x/test_doctest.txt::test_doctest.txt'),
                     name='test_doctest.txt',
                     path=TestPath(
                         root=testroot,
@@ -694,19 +695,19 @@ class CollectorTests(unittest.TestCase):
                         ),
                     source='{}:{}'.format(fix_relpath(doctestfile), 1),
                     markers=[],
-                    parentid='./x/test_doctest.txt',
+                    parentid=fix_path('./x/test_doctest.txt'),
                     ),
                 )),
             ('discovered.add_test', None, dict(
                 parents=[
-                    ('./x/y/z/test_eggs.py', 'test_eggs.py', 'file'),
-                    ('./x/y/z', 'z', 'folder'),
-                    ('./x/y', 'y', 'folder'),
-                    ('./x', 'x', 'folder'),
+                    (fix_path('./x/y/z/test_eggs.py'), 'test_eggs.py', 'file'),
+                    (fix_path('./x/y/z'), 'z', 'folder'),
+                    (fix_path('./x/y'), 'y', 'folder'),
+                    (fix_path('./x'), 'x', 'folder'),
                     ('.', testroot, 'folder'),
                     ],
                 test=TestInfo(
-                    id='./x/y/z/test_eggs.py::test_eggs',
+                    id=fix_path('./x/y/z/test_eggs.py::test_eggs'),
                     name='test_eggs',
                     path=TestPath(
                         root=testroot,
@@ -715,19 +716,19 @@ class CollectorTests(unittest.TestCase):
                         ),
                     source='{}:{}'.format(fix_relpath(relfile), 1),
                     markers=[],
-                    parentid='./x/y/z/test_eggs.py',
+                    parentid=fix_path('./x/y/z/test_eggs.py'),
                     ),
                 )),
             ('discovered.add_test', None, dict(
                 parents=[
-                    ('./x/y/z/test_eggs.py', 'test_eggs.py', 'file'),
-                    ('./x/y/z', 'z', 'folder'),
-                    ('./x/y', 'y', 'folder'),
-                    ('./x', 'x', 'folder'),
+                    (fix_path('./x/y/z/test_eggs.py'), 'test_eggs.py', 'file'),
+                    (fix_path('./x/y/z'), 'z', 'folder'),
+                    (fix_path('./x/y'), 'y', 'folder'),
+                    (fix_path('./x'), 'x', 'folder'),
                     ('.', testroot, 'folder'),
                     ],
                 test=TestInfo(
-                    id='./x/y/z/test_eggs.py::test_eggs.TestSpam',
+                    id=fix_path('./x/y/z/test_eggs.py::test_eggs.TestSpam'),
                     name='test_eggs.TestSpam',
                     path=TestPath(
                         root=testroot,
@@ -736,19 +737,19 @@ class CollectorTests(unittest.TestCase):
                         ),
                     source='{}:{}'.format(fix_relpath(relfile), 13),
                     markers=[],
-                    parentid='./x/y/z/test_eggs.py',
+                    parentid=fix_path('./x/y/z/test_eggs.py'),
                     ),
                 )),
             ('discovered.add_test', None, dict(
                 parents=[
-                    ('./x/y/z/test_eggs.py', 'test_eggs.py', 'file'),
-                    ('./x/y/z', 'z', 'folder'),
-                    ('./x/y', 'y', 'folder'),
-                    ('./x', 'x', 'folder'),
+                    (fix_path('./x/y/z/test_eggs.py'), 'test_eggs.py', 'file'),
+                    (fix_path('./x/y/z'), 'z', 'folder'),
+                    (fix_path('./x/y'), 'y', 'folder'),
+                    (fix_path('./x'), 'x', 'folder'),
                     ('.', testroot, 'folder'),
                     ],
                 test=TestInfo(
-                    id='./x/y/z/test_eggs.py::test_eggs.TestSpam.TestEggs',
+                    id=fix_path('./x/y/z/test_eggs.py::test_eggs.TestSpam.TestEggs'),
                     name='test_eggs.TestSpam.TestEggs',
                     path=TestPath(
                         root=testroot,
@@ -757,7 +758,7 @@ class CollectorTests(unittest.TestCase):
                         ),
                     source='{}:{}'.format(fix_relpath(relfile), 28),
                     markers=[],
-                    parentid='./x/y/z/test_eggs.py',
+                    parentid=fix_path('./x/y/z/test_eggs.py'),
                     ),
                 )),
             ])
@@ -774,7 +775,7 @@ class CollectorTests(unittest.TestCase):
                 nodeid=relfile + '::SpamTests::test_spam[a-[b]-c]',
                 name='test_spam[a-[b]-c]',
                 location=(relfile, 12, 'SpamTests.test_spam[a-[b]-c]'),
-                fspath=os.path.join(testroot, relfile),
+                fspath=PATH_JOIN(testroot, relfile),
                 function=FakeFunc('test_spam'),
                 ),
             ]
@@ -787,16 +788,16 @@ class CollectorTests(unittest.TestCase):
             ('discovered.reset', None, None),
             ('discovered.add_test', None, dict(
                 parents=[
-                    ('./x/y/z/test_eggs.py::SpamTests::test_spam', 'test_spam', 'function'),
-                    ('./x/y/z/test_eggs.py::SpamTests', 'SpamTests', 'suite'),
-                    ('./x/y/z/test_eggs.py', 'test_eggs.py', 'file'),
-                    ('./x/y/z', 'z', 'folder'),
-                    ('./x/y', 'y', 'folder'),
-                    ('./x', 'x', 'folder'),
+                    (fix_path('./x/y/z/test_eggs.py::SpamTests::test_spam'), 'test_spam', 'function'),
+                    (fix_path('./x/y/z/test_eggs.py::SpamTests'), 'SpamTests', 'suite'),
+                    (fix_path('./x/y/z/test_eggs.py'), 'test_eggs.py', 'file'),
+                    (fix_path('./x/y/z'), 'z', 'folder'),
+                    (fix_path('./x/y'), 'y', 'folder'),
+                    (fix_path('./x'), 'x', 'folder'),
                     ('.', testroot, 'folder'),
                     ],
                 test=TestInfo(
-                    id='./x/y/z/test_eggs.py::SpamTests::test_spam[a-[b]-c]',
+                    id=fix_path('./x/y/z/test_eggs.py::SpamTests::test_spam[a-[b]-c]'),
                     name='test_spam[a-[b]-c]',
                     path=TestPath(
                         root=testroot,
@@ -806,7 +807,7 @@ class CollectorTests(unittest.TestCase):
                         ),
                     source='{}:{}'.format(fix_relpath(relfile), 13),
                     markers=None,
-                    parentid='./x/y/z/test_eggs.py::SpamTests::test_spam',
+                    parentid=fix_path('./x/y/z/test_eggs.py::SpamTests::test_spam'),
                     ),
                 )),
             ])
@@ -823,7 +824,7 @@ class CollectorTests(unittest.TestCase):
                 nodeid=relfile + '::SpamTests::Ham::Eggs::test_spam',
                 name='test_spam',
                 location=(relfile, 12, 'SpamTests.Ham.Eggs.test_spam'),
-                fspath=os.path.join(testroot, relfile),
+                fspath=PATH_JOIN(testroot, relfile),
                 function=FakeFunc('test_spam'),
                 ),
             ]
@@ -836,17 +837,17 @@ class CollectorTests(unittest.TestCase):
             ('discovered.reset', None, None),
             ('discovered.add_test', None, dict(
                 parents=[
-                    ('./x/y/z/test_eggs.py::SpamTests::Ham::Eggs', 'Eggs', 'suite'),
-                    ('./x/y/z/test_eggs.py::SpamTests::Ham', 'Ham', 'suite'),
-                    ('./x/y/z/test_eggs.py::SpamTests', 'SpamTests', 'suite'),
-                    ('./x/y/z/test_eggs.py', 'test_eggs.py', 'file'),
-                    ('./x/y/z', 'z', 'folder'),
-                    ('./x/y', 'y', 'folder'),
-                    ('./x', 'x', 'folder'),
+                    (fix_path('./x/y/z/test_eggs.py::SpamTests::Ham::Eggs'), 'Eggs', 'suite'),
+                    (fix_path('./x/y/z/test_eggs.py::SpamTests::Ham'), 'Ham', 'suite'),
+                    (fix_path('./x/y/z/test_eggs.py::SpamTests'), 'SpamTests', 'suite'),
+                    (fix_path('./x/y/z/test_eggs.py'), 'test_eggs.py', 'file'),
+                    (fix_path('./x/y/z'), 'z', 'folder'),
+                    (fix_path('./x/y'), 'y', 'folder'),
+                    (fix_path('./x'), 'x', 'folder'),
                     ('.', testroot, 'folder'),
                     ],
                 test=TestInfo(
-                    id='./x/y/z/test_eggs.py::SpamTests::Ham::Eggs::test_spam',
+                    id=fix_path('./x/y/z/test_eggs.py::SpamTests::Ham::Eggs::test_spam'),
                     name='test_spam',
                     path=TestPath(
                         root=testroot,
@@ -856,7 +857,7 @@ class CollectorTests(unittest.TestCase):
                         ),
                     source='{}:{}'.format(fix_relpath(relfile), 13),
                     markers=None,
-                    parentid='./x/y/z/test_eggs.py::SpamTests::Ham::Eggs',
+                    parentid=fix_path('./x/y/z/test_eggs.py::SpamTests::Ham::Eggs'),
                     ),
                 )),
             ])
@@ -879,7 +880,7 @@ class CollectorTests(unittest.TestCase):
                 ),
             ]
         collector = TestCollector(tests=discovered)
-        if os.name != 'nt':
+        if OS_NAME != 'nt':
             collector.parse_item = generate_parse_item('\\')
 
         collector.pytest_collection_finish(session)
@@ -918,14 +919,14 @@ class CollectorTests(unittest.TestCase):
         session = StubPytestSession(stub)
         testroot = fix_path('/a/b/c')
         relfile = fix_path('x/y/z/test_eggs.py')
-        relfileid = os.path.join('.', relfile)
+        relfileid = fix_relpath(relfile)
         session.items = [
             StubFunctionItem(
                 stub,
                 nodeid=relfile + '::SpamTests::()::()::test_spam',
                 name='test_spam',
                 location=(relfile, 12, 'SpamTests.test_spam'),
-                fspath=os.path.join(testroot, relfile),
+                fspath=PATH_JOIN(testroot, relfile),
                 function=FakeFunc('test_spam'),
                 ),
             ]
@@ -940,9 +941,9 @@ class CollectorTests(unittest.TestCase):
                 parents=[
                     (relfileid + '::SpamTests', 'SpamTests', 'suite'),
                     (relfileid, 'test_eggs.py', 'file'),
-                    ('./x/y/z', 'z', 'folder'),
-                    ('./x/y', 'y', 'folder'),
-                    ('./x', 'x', 'folder'),
+                    (fix_path('./x/y/z'), 'z', 'folder'),
+                    (fix_path('./x/y'), 'y', 'folder'),
+                    (fix_path('./x'), 'x', 'folder'),
                     ('.', testroot, 'folder'),
                     ],
                 test=TestInfo(
@@ -976,7 +977,7 @@ class CollectorTests(unittest.TestCase):
                 nodeid=relfile + '::SpamTests::test_spam',
                 name='test_spam',
                 location=(srcfile, 12, 'SpamTests.test_spam'),
-                fspath=os.path.join(testroot, relfile),
+                fspath=PATH_JOIN(testroot, relfile),
                 function=FakeFunc('test_spam'),
                 ),
             StubFunctionItem(
@@ -984,7 +985,7 @@ class CollectorTests(unittest.TestCase):
                 nodeid=relfile + '::test_ham',
                 name='test_ham',
                 location=(srcfile, 3, 'test_ham'),
-                fspath=os.path.join(testroot, relfile),
+                fspath=PATH_JOIN(testroot, relfile),
                 function=FakeFunc('test_spam'),
                 ),
             ]
@@ -997,15 +998,15 @@ class CollectorTests(unittest.TestCase):
             ('discovered.reset', None, None),
             ('discovered.add_test', None, dict(
                 parents=[
-                    ('./x/y/z/test_eggs.py::SpamTests', 'SpamTests', 'suite'),
-                    ('./x/y/z/test_eggs.py', 'test_eggs.py', 'file'),
-                    ('./x/y/z', 'z', 'folder'),
-                    ('./x/y', 'y', 'folder'),
-                    ('./x', 'x', 'folder'),
+                    (fix_path('./x/y/z/test_eggs.py::SpamTests'), 'SpamTests', 'suite'),
+                    (fix_path('./x/y/z/test_eggs.py'), 'test_eggs.py', 'file'),
+                    (fix_path('./x/y/z'), 'z', 'folder'),
+                    (fix_path('./x/y'), 'y', 'folder'),
+                    (fix_path('./x'), 'x', 'folder'),
                     ('.', testroot, 'folder'),
                     ],
                 test=TestInfo(
-                    id='./x/y/z/test_eggs.py::SpamTests::test_spam',
+                    id=fix_path('./x/y/z/test_eggs.py::SpamTests::test_spam'),
                     name='test_spam',
                     path=TestPath(
                         root=testroot,
@@ -1015,19 +1016,19 @@ class CollectorTests(unittest.TestCase):
                         ),
                     source='{}:{}'.format(fix_relpath(srcfile), 13),
                     markers=None,
-                    parentid='./x/y/z/test_eggs.py::SpamTests',
+                    parentid=fix_path('./x/y/z/test_eggs.py::SpamTests'),
                     ),
                 )),
             ('discovered.add_test', None, dict(
                 parents=[
-                    ('./x/y/z/test_eggs.py', 'test_eggs.py', 'file'),
-                    ('./x/y/z', 'z', 'folder'),
-                    ('./x/y', 'y', 'folder'),
-                    ('./x', 'x', 'folder'),
+                    (fix_path('./x/y/z/test_eggs.py'), 'test_eggs.py', 'file'),
+                    (fix_path('./x/y/z'), 'z', 'folder'),
+                    (fix_path('./x/y'), 'y', 'folder'),
+                    (fix_path('./x'), 'x', 'folder'),
                     ('.', testroot, 'folder'),
                     ],
                 test=TestInfo(
-                    id='./x/y/z/test_eggs.py::test_ham',
+                    id=fix_path('./x/y/z/test_eggs.py::test_ham'),
                     name='test_ham',
                     path=TestPath(
                         root=testroot,
@@ -1037,7 +1038,7 @@ class CollectorTests(unittest.TestCase):
                         ),
                     source='{}:{}'.format(fix_relpath(srcfile), 4),
                     markers=None,
-                    parentid='./x/y/z/test_eggs.py',
+                    parentid=fix_path('./x/y/z/test_eggs.py'),
                     ),
                 )),
             ])

@@ -93,7 +93,6 @@ When parsing an item, we make use of the following attributes:
 
 from __future__ import absolute_import, print_function
 
-import os.path
 import sys
 
 import pytest
@@ -101,7 +100,7 @@ import _pytest.doctest
 import _pytest.unittest
 
 from ..info import TestInfo, TestPath
-from ..util import fix_fileid
+from ..util import fix_fileid, PATH_SEP, NORMCASE
 
 
 def should_never_reach_here(node, **extra):
@@ -219,7 +218,7 @@ def parse_item(item, #*,
 
 
 def _split_fspath(fspath, fileid, item, #*,
-                  _normcase=os.path.normcase,
+                  _normcase=NORMCASE,
                   ):
     """Return (testroot, relfile) for the given fspath.
 
@@ -244,7 +243,7 @@ def _get_location(item, testroot, relfile, #*,
                   _matches_relfile=(lambda *a: _matches_relfile(*a)),
                   _is_legacy_wrapper=(lambda *a: _is_legacy_wrapper(*a)),
                   _unwrap_decorator=(lambda *a: _unwrap_decorator(*a)),
-                  _pathsep=os.path.sep,
+                  _pathsep=PATH_SEP,
                   ):
     """Return (loc str, fullname) for the given item."""
     srcfile, lineno, fullname = item.location
@@ -283,8 +282,8 @@ def _get_location(item, testroot, relfile, #*,
 
 
 def _matches_relfile(srcfile, testroot, relfile, #*,
-                     _normcase=os.path.normcase,
-                     _pathsep=os.path.sep,
+                     _normcase=NORMCASE,
+                     _pathsep=PATH_SEP,
                      ):
     """Return True if "srcfile" matches the given relfile."""
     testroot = _normcase(testroot)
@@ -301,7 +300,7 @@ def _matches_relfile(srcfile, testroot, relfile, #*,
 
 
 def _is_legacy_wrapper(srcfile, #*,
-                       _pathsep=os.path.sep,
+                       _pathsep=PATH_SEP,
                        _pyversion=sys.version_info,
                        ):
     """Return True if the test might be wrapped.
@@ -398,8 +397,8 @@ def _parse_node_id(testid, kind, #*,
 
 def _iter_nodes(testid, kind, #*,
                 _normalize_test_id=(lambda *a: _normalize_test_id(*a)),
-                _normcase=os.path.normcase,
-                _pathsep=os.path.sep,
+                _normcase=NORMCASE,
+                _pathsep=PATH_SEP,
                 ):
     """Yield (nodeid, name, kind) for the given node ID and its parents."""
     nodeid, testid = _normalize_test_id(testid, kind)
@@ -455,7 +454,7 @@ def _iter_nodes(testid, kind, #*,
 
 def _normalize_test_id(testid, kind, #*,
                        _fix_fileid=fix_fileid,
-                       _pathsep=os.path.sep,
+                       _pathsep=PATH_SEP,
                        ):
     """Return the canonical form for the given node ID."""
     while '::()::' in testid:

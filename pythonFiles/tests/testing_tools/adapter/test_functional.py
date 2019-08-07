@@ -13,7 +13,7 @@ import unittest
 import pytest
 
 from ...__main__ import TESTING_TOOLS_ROOT
-from testing_tools.adapter.util import fix_path
+from testing_tools.adapter.util import fix_path, PATH_SEP
 
 
 CWD = os.getcwd()
@@ -77,8 +77,17 @@ def fix_source(tests, testid, srcfile, lineno):
     test['source'] = fix_path('{}:{}'.format(srcfile, lineno))
 
 
+# Note that these tests are skipped if util.PATH_SEP is not os.path.sep.
+# This is because the functional tests should reflect the actual
+# operating environment.
+
 @pytest.mark.functional
 class PytestTests(unittest.TestCase):
+
+    def setUp(self):
+        if PATH_SEP is not os.path.sep:
+            raise unittest.SkipTest('functional tests require unmodified env')
+        super(PytestTests, self).setUp()
 
     def complex(self, testroot):
         results = COMPLEX.copy()
@@ -271,43 +280,43 @@ class PytestTests(unittest.TestCase):
             'root': projroot,
             'rootid': '.',
             'parents': [
-                {'id': './tests',
+                {'id': fix_path('./tests'),
                  'kind': 'folder',
                  'name': 'tests',
                  'relpath': fix_path('./tests'),
                  'parentid': '.',
                  },
-                {'id': './tests/A',
+                {'id': fix_path('./tests/A'),
                  'kind': 'folder',
                  'name': 'A',
                  'relpath': fix_path('./tests/A'),
-                 'parentid': './tests',
+                 'parentid': fix_path('./tests'),
                  },
-                {'id': './tests/A/b',
+                {'id': fix_path('./tests/A/b'),
                  'kind': 'folder',
                  'name': 'b',
                  'relpath': fix_path('./tests/A/b'),
-                 'parentid': './tests/A',
+                 'parentid': fix_path('./tests/A'),
                  },
-                {'id': './tests/A/b/C',
+                {'id': fix_path('./tests/A/b/C'),
                  'kind': 'folder',
                  'name': 'C',
                  'relpath': fix_path('./tests/A/b/C'),
-                 'parentid': './tests/A/b',
+                 'parentid': fix_path('./tests/A/b'),
                  },
-                {'id': './tests/A/b/C/test_Spam.py',
+                {'id': fix_path('./tests/A/b/C/test_Spam.py'),
                  'kind': 'file',
                  'name': 'test_Spam.py',
                  'relpath': fix_path('./tests/A/b/C/test_Spam.py'),
-                 'parentid': './tests/A/b/C',
+                 'parentid': fix_path('./tests/A/b/C'),
                  },
                 ],
             'tests': [
-                {'id': './tests/A/b/C/test_Spam.py::test_okay',
+                {'id': fix_path('./tests/A/b/C/test_Spam.py::test_okay'),
                  'name': 'test_okay',
                  'source': fix_path('./tests/A/b/C/test_Spam.py:2'),
                  'markers': [],
-                 'parentid': './tests/A/b/C/test_Spam.py',
+                 'parentid': fix_path('./tests/A/b/C/test_Spam.py'),
                  },
                 ],
             }])

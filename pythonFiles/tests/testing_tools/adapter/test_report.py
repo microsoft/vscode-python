@@ -2,11 +2,10 @@
 # Licensed under the MIT License.
 
 import json
-import os.path
 import unittest
 
 from ...util import StubProxy
-from testing_tools.adapter.util import fix_path
+from testing_tools.adapter.util import fix_path, fix_relpath
 from testing_tools.adapter.info import TestInfo, TestPath, ParentInfo
 from testing_tools.adapter.report import report_discovered
 
@@ -26,7 +25,7 @@ class ReportDiscoveredTests(unittest.TestCase):
         stub = StubSender()
         testroot = fix_path('/a/b/c')
         relfile = 'test_spam.py'
-        relpath = os.path.join('.', relfile)
+        relpath = fix_relpath(relfile)
         tests = [
             TestInfo(
                 id='test#1',
@@ -113,10 +112,10 @@ class ReportDiscoveredTests(unittest.TestCase):
             ParentInfo(
                 id=relfileid1,
                 kind='file',
-                name=os.path.basename(relpath1),
+                name='test_spam.py',
                 root=testroot1,
                 relpath=relpath1,
-                parentid=os.path.dirname(relfileid1),
+                parentid='.',
                 ),
             ]
         expected = [
@@ -175,7 +174,7 @@ class ReportDiscoveredTests(unittest.TestCase):
             ParentInfo(
                 id=relfileid2,
                 kind='file',
-                name=os.path.basename(relfile2),
+                name='test_eggs.py',
                 root=testroot2,
                 relpath=relpath2,
                 parentid='./w',
