@@ -1,5 +1,5 @@
 import { nbformat } from '@jupyterlab/coreutils';
-import ansiToHtml from 'ansi-to-html';
+import ansiToHtml = require('ansi-to-html');
 import * as path from 'path';
 import { TextEditor, Uri, WebviewEditorInset, window } from 'vscode';
 import { IWorkspaceService } from '../common/application/types';
