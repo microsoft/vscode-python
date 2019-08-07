@@ -44,9 +44,9 @@ export class CodeExecutionManager implements ICodeExecutionManager {
                 this.commandManager.registerCommand(
                     // tslint:disable-next-line:no-any
                     cmd as any,
-                    (file: Resource) => {
+                    async (file: Resource) => {
                         const trigger = cmd === Commands.Exec_In_Terminal ? 'command' : 'icon';
-                        this.executeFileInTerminal(file, trigger).catch(ex => traceError('Failed to execute file in terminal', ex));
+                        await this.executeFileInTerminal(file, trigger).catch(ex => traceError('Failed to execute file in terminal', ex));
                     }
                 )
             );
