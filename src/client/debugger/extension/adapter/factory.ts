@@ -24,9 +24,11 @@ export class DebugAdapterDescriptorFactory implements VSCDADescriptionFactory {
             const pythonPath = await this.getPythonPath(configuration, session.workspaceFolder);
             // tslint:disable-next-line: no-any
             const ptvsdPathToUse = 'ptvsd' in configuration ? (configuration as any).ptvsd : ptvsdPath;
+            traceVerbose(`Using Python Debug Adapter with PTVSD ${ptvsdPathToUse}`);
             return new DebugAdapterExecutable(pythonPath, [path.join(ptvsdPathToUse, 'adapter'), ...logArgs]);
         }
         if (executable) {
+            traceVerbose('Using Node Debug Adapter');
             return executable;
         }
         // Unlikely scenario.
