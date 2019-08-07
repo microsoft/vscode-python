@@ -100,14 +100,12 @@ def fix_fileid(fileid, rootdir=None, #*,
     if not fileid or fileid == '.':
         return fileid
     relprefix = '.' + _pathsep
-    if fileid.startswith(relprefix):
+
+    normalized = _normcase(fileid)
+    if normalized.startswith(relprefix):
         return fileid
 
-    # We do not use NORMCASE because we want to leave the pathseps alone.
-    _normcase = _str_to_lower if _pathsep == '\\' else (lambda p: p)
-
     isabs = False
-    normalized = _normcase(fileid)
     if _path_isabs(normalized):
         # Deal with root-dir-as-fileid.
         _, sep, relpath = fileid.partition(_pathsep)

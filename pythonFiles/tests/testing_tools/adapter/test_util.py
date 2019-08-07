@@ -181,6 +181,7 @@ class FilePathTests(unittest.TestCase):
             with self.subTest(r'for {}: {!r}'.format(pathsep, fileid)):
                 fixed = fix_fileid(fileid,
                                    _path_isabs=_os_path.isabs,
+                                   _normcase=_os_path.normcase,
                                    _pathsep=pathsep,
                                    )
                 self.assertEqual(fixed, expected)
@@ -227,6 +228,7 @@ class FilePathTests(unittest.TestCase):
             with self.subTest(r'for {} (with rootdir {!r}): {!r}'.format(pathsep, rootdir, fileid)):
                 fixed = fix_fileid(fileid, rootdir,
                                    _path_isabs=_os_path.isabs,
+                                   _normcase=_os_path.normcase,
                                    _pathsep=pathsep,
                                    )
                 self.assertEqual(fixed, expected)
