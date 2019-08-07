@@ -12,7 +12,7 @@ import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { AttachRequestArguments, LaunchRequestArguments } from '../../types';
 
-const pathToScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'ptvsd', 'adapter');
+const ptvsdPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'ptvsd');
 
 @injectable()
 export class DebugAdapterDescriptorFactory implements VSCDADescriptionFactory {
@@ -22,7 +22,9 @@ export class DebugAdapterDescriptorFactory implements VSCDADescriptionFactory {
             const configuration = session.configuration as (LaunchRequestArguments | AttachRequestArguments);
             const logArgs = configuration.logToFile ? ['--log-dir', EXTENSION_ROOT_DIR] : [];
             const pythonPath = await this.getPythonPath(configuration, session.workspaceFolder);
-            return new DebugAdapterExecutable(pythonPath, [pathToScript, ...logArgs]);
+            // tslint:disable-next-line: no-any
+            const ptvsdPathToUse = 'ptvsd' in configuration ? (configuration as any).ptvsd : ptvsdPath;
+            return new DebugAdapterExecutable(pythonPath, [path.join(ptvsdPathToUse, 'adapter'), ...logArgs]);
         }
         if (executable) {
             return executable;
