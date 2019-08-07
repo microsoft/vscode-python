@@ -1,7 +1,7 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import ansiToHtml from 'ansi-to-html';
 import * as path from 'path';
-import { Position, Range, TextEditor, Uri, WebviewEditorInset, window } from 'vscode';
+import { TextEditor, Uri, WebviewEditorInset, window } from 'vscode';
 import { IWorkspaceService } from '../common/application/types';
 import { WebPanel } from '../common/application/webPanel';
 import { createDeferred, Deferred } from '../common/utils/async';
@@ -87,10 +87,9 @@ export class CellOutputInset {
     }
 
     private createInset(heightInLines: number, cell: ICell | undefined) {
-        const insetRange = new Range(new Position(this.line, 0), new Position(this.line + heightInLines, 0));
         const htmldir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'inset-react');
         const mainScriptPath = path.join(htmldir, 'index_bundle.js');
-        const inset = window.createWebviewTextEditorInset(this.editor, insetRange, { enableScripts: true, localResourceRoots: [Uri.file(htmldir)] });
+        const inset = window.createWebviewTextEditorInset(this.editor, this.line, heightInLines, { enableScripts: true, localResourceRoots: [Uri.file(htmldir)] });
         inset.webview.html = WebPanel.generateReactHtml(mainScriptPath, undefined, { cell: cell });
         inset.webview.onDidReceiveMessage(m => this.onMessage(m.type, m.payload));
         return inset;

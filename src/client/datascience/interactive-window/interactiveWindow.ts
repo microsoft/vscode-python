@@ -32,8 +32,9 @@ import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { CellOutputInset } from '../cellOutputInset';
 import { generateCellRanges } from '../cellFactory';
+import { CellMatcher } from '../cellMatcher';
+import { CellOutputInset } from '../cellOutputInset';
 import { EditorContexts, Identifiers, Telemetry } from '../constants';
 import { ColumnWarningSize } from '../data-viewing/types';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
@@ -76,7 +77,6 @@ import {
     ISubmitNewCell,
     SysInfoReason
 } from './interactiveWindowTypes';
-import { CellMatcher } from '../cellMatcher';
 
 @injectable()
 export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> implements IInteractiveWindow {
@@ -747,7 +747,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
     }
 
     // tslint:disable-next-line: max-func-body-length
-    private async submitCode(code: string, file: string, line: number, id?: string, _editor?: TextEditor, debug?: boolean): Promise<boolean> {
+    private async submitCode(code: string, file: string, line: number, id?: string, editor?: TextEditor, debug?: boolean): Promise<boolean> {
         let result = true;
 
         // Do not execute or render empty code cells

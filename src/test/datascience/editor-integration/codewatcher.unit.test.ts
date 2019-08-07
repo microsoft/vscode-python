@@ -487,7 +487,7 @@ testing3`;
             TypeMoq.It.isAny()
         )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
 
-        await codeWatcher.runCellAndAllBelow(2, 0, textEditor.object);
+        await codeWatcher.runCellAndAllBelow(2, 0);
 
         // Verify function calls
         activeInteractiveWindow.verifyAll();
@@ -531,7 +531,7 @@ testing2`;
             TypeMoq.It.isAny()
         )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
 
-        await codeWatcher.runAllCellsAbove(4, 0, textEditor.object);
+        await codeWatcher.runAllCellsAbove(4, 0);
 
         // Verify function calls
         activeInteractiveWindow.verifyAll();

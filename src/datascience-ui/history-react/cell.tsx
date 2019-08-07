@@ -24,7 +24,6 @@ import { MenuBar } from './menuBar';
 import { transforms } from './transforms';
 
 // tslint:disable-next-line: no-require-imports
-import cloneDeep = require('lodash/cloneDeep');
 import './cell.css';
 
 interface ICellProps {
@@ -64,15 +63,15 @@ export interface ICellViewModel {
     inputBlockToggled(id: string): void;
 }
 
-interface ICellOutput {
-    mimeType: string;
-    data: nbformat.MultilineString | JSONObject;
-    renderWithScrollbars: boolean;
-    isText: boolean;
-    isError: boolean;
-    extraButton: JSX.Element | null; // Extra button for plot viewing is stored here
-    doubleClick(): void; // Double click handler for plot viewing is stored here
-}
+// interface ICellOutput {
+//     mimeType: string;
+//     data: nbformat.MultilineString | JSONObject;
+//     renderWithScrollbars: boolean;
+//     isText: boolean;
+//     isError: boolean;
+//     extraButton: JSX.Element | null; // Extra button for plot viewing is stored here
+//     doubleClick(): void; // Double click handler for plot viewing is stored here
+// }
 // tslint:disable: react-this-binding-issue
 export class Cell extends React.Component<ICellProps> {
     private code: Code | undefined;

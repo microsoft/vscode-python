@@ -254,8 +254,8 @@ export interface ICodeWatcher {
     runSelectionOrLine(activeEditor: TextEditor | undefined): Promise<void>;
     runToLine(targetLine: number): Promise<void>;
     runFromLine(targetLine: number): Promise<void>;
-    runAllCellsAbove(stopLine: number, stopCharacter: number, activeEditor: TextEditor | undefined): Promise<void>;
-    runCellAndAllBelow(startLine: number, startCharacter: number, activeEditor: TextEditor | undefined): Promise<void>;
+    runAllCellsAbove(stopLine: number, stopCharacter: number): Promise<void>;
+    runCellAndAllBelow(startLine: number, startCharacter: number): Promise<void>;
     runFileInteractive(): Promise<void>;
     debugFileInteractive(): Promise<void>;
     addEmptyCellToBottom(): Promise<void>;
