@@ -55,8 +55,8 @@ class DiscoveredTests(object):
     @property
     def parents(self):
         return sorted(self._parents.values(),
-                      key=lambda v: (NORMCASE(v.root or v.name),
-                                     NORMCASE(v.id)),
+                      key=lambda p: (NORMCASE(p.root or p.name),
+                                     p.id),
                       )
 
     def reset(self):
