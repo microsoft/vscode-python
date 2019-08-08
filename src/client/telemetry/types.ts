@@ -119,13 +119,41 @@ export type TestRunTelemetry = {
     failed: boolean;
 };
 export type TestDiscoverytTelemetry = {
+    /**
+     * The test framework used to discover tests
+     *
+     * @type {TestTool}
+     */
     tool: TestTool;
+    /**
+     * Carries the source which triggered discovering of tests
+     *
+     * @type {('ui' | 'commandpalette')}
+     */
     trigger: 'ui' | 'commandpalette';
+    /**
+     * Carries `true` if discovering tests failed, `false` otherwise
+     *
+     * @type {boolean}
+     */
     failed: boolean;
 };
 export type TestConfiguringTelemetry = {
+    /**
+     * Name of the test framework to configure
+     */
     tool?: TestTool;
+    /**
+     * Carries the source which triggered configuration of tests
+     *
+     * @type {('ui' | 'commandpalette')}
+     */
     trigger: 'ui' | 'commandpalette';
+    /**
+     * Carries `true` if configuring test framework failed, `false` otherwise
+     *
+     * @type {boolean}
+     */
     failed: boolean;
 };
 export type FeedbackTelemetry = {
@@ -135,9 +163,29 @@ export type SettingsTelemetry = {
     enabled: boolean;
 };
 export type TerminalTelemetry = {
+    /**
+     * The type of terminal shell created: powershell, cmd, zsh, bash etc.
+     *
+     * @type {TerminalShellType}
+     */
     terminal?: TerminalShellType;
+    /**
+     * The source which triggered creation of terminal
+     *
+     * @type {'commandpalette'}
+     */
     triggeredBy?: 'commandpalette';
+    /**
+     * The default Python interpreter version to be used in terminal, inferred from resource's 'settings.json'
+     *
+     * @type {string}
+     */
     pythonVersion?: string;
+    /**
+     * The Python interpreter type: Conda, Virtualenv, Venv, Pipenv etc.
+     *
+     * @type {InterpreterType}
+     */
     interpreterType?: InterpreterType;
 };
 export type DebuggerConfigurationPromtpsTelemetry = {

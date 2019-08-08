@@ -270,7 +270,7 @@ export interface IEventNamePropertyMapping {
     [EventName.COMPLETION]: never | undefined;
     [EventName.COMPLETION_ADD_BRACKETS]: { enabled: boolean };
     /**
-     * Telemetry captured when staring the debugger.
+     * Telemetry captured when starting the debugger.
      */
     [EventName.DEBUGGER]: {
         /**
@@ -603,13 +603,62 @@ export interface IEventNamePropertyMapping {
         action: 'enable' | 'ignore' | 'disablePrompt' | undefined;
     };
     [EventName.SIGNATURE]: never | undefined;
+    /**
+     * Telemetry sent when providing document symbol information for Jedi autocomplete intellisense
+     */
     [EventName.SYMBOL]: never | undefined;
+    /**
+     * Telemetry event sent if and when user configure tests command. This command can be trigerred from multiple places in the extension. (Command palette, prompt etc.)
+     */
     [EventName.UNITTEST_CONFIGURE]: never | undefined;
+    /**
+     * Telemetry event sent when user chooses a test framework in the Quickpick displayed for enabling and configuring test framework
+     */
     [EventName.UNITTEST_CONFIGURING]: TestConfiguringTelemetry;
+    /**
+     * Telemetry sent with details when a terminal is created
+     */
     [EventName.TERMINAL_CREATE]: TerminalTelemetry;
+    /**
+     * Telemetry event sent with details about discovering tests
+     */
     [EventName.UNITTEST_DISCOVER]: TestDiscoverytTelemetry;
+    /**
+     * Telemetry event is sent if we are doing test discovery using python code
+     */
     [EventName.UNITTEST_DISCOVER_WITH_PYCODE]: never | undefined;
-    [EventName.UNITTEST_NAVIGATE]: { byFile?: boolean; byFunction?: boolean; bySuite?: boolean; focus_code?: boolean };
+    /**
+     * Telemetry event sent when user clicks a file, function, or suite in test explorer.
+     */
+    [EventName.UNITTEST_NAVIGATE]: {
+        /**
+         * Carries `true` if user clicks a file, `false` otherwise
+         *
+         * @type {boolean}
+         */
+        byFile?: boolean;
+        /**
+         * Carries `true` if user clicks a function, `false` otherwise
+         *
+         * @type {boolean}
+         */
+        byFunction?: boolean;
+        /**
+         * Carries `true` if user clicks a suite, `false` otherwise
+         *
+         * @type {boolean}
+         */
+        bySuite?: boolean;
+        /**
+         * Carries `true` if we are changing focus to the suite/file/function, `false` otherwise
+         *
+         * @type {boolean}
+         */
+        focus_code?: boolean;
+    };
+    /**
+     * Tracks number of workspace folders shown in test explorer
+     */
     [EventName.UNITTEST_EXPLORER_WORK_SPACE_COUNT]: { count: number };
     /**
      * Telemetry event sent with details about running the tests, what is being run, what framework is being used etc.
