@@ -15,6 +15,7 @@
     "python.command.python.refactorExtractMethod.title": "Extract Method",
     "python.command.python.viewOutput.title": "Show Output",
     "python.command.python.viewTestOutput.title": "Show Test Output",
+    "python.command.python.viewLanguageServerOutput.title": "Show Language Server Output",
     "python.command.python.selectAndRunTestMethod.title": "Run Test Method ...",
     "python.command.python.selectAndDebugTestMethod.title": "Debug Test Method ...",
     "python.command.python.selectAndRunTestFile.title": "Run Test File ...",

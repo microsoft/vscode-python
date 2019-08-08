@@ -6,18 +6,20 @@
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { LanguageServerOutputChannel } from '../../../client/activation/languageServer/outputChannel';
-import { IApplicationShell } from '../../../client/common/application/types';
+import { IApplicationShell, ICommandManager } from '../../../client/common/application/types';
 import { IOutputChannel } from '../../../client/common/types';
 import { OutputChannelNames } from '../../../client/common/utils/localize';
 
 suite('Language Server Output Channel', () => {
     let appShell: TypeMoq.IMock<IApplicationShell>;
     let languageServerOutputChannel: LanguageServerOutputChannel;
+    let commandManager: TypeMoq.IMock<ICommandManager>;
     let output: IOutputChannel;
     setup(() => {
         appShell = TypeMoq.Mock.ofType<IApplicationShell>();
         output = TypeMoq.Mock.ofType<IOutputChannel>().object;
-        languageServerOutputChannel = new LanguageServerOutputChannel(appShell.object);
+        commandManager = TypeMoq.Mock.ofType<ICommandManager>();
+        languageServerOutputChannel = new LanguageServerOutputChannel(appShell.object, commandManager.object);
     });
 
     test('Create output channel if one does not exist before and return it', async () => {
