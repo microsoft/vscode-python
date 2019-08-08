@@ -508,14 +508,41 @@ export interface IEventNamePropertyMapping {
          */
         selection: 'Reload' | undefined;
     };
+    /**
+     * Telemetry tracking switching between LS and Jedi
+     */
     [EventName.PYTHON_LANGUAGE_SERVER_SWITCHED]: { change: 'Switch to Jedi from LS' | 'Switch to LS from Jedi' };
+    /**
+     * Telemetry sent with details after attempting to download LS
+     */
     [EventName.PYTHON_LANGUAGE_SERVER_DOWNLOADED]: LanguageServerVersionTelemetry;
+    /**
+     * Telemetry sent when LS is started for workspace (workspace folder in case of multi-root)
+     */
     [EventName.PYTHON_LANGUAGE_SERVER_ENABLED]: never | undefined;
+    /**
+     * Telemetry sent with details when downloading or extracting LS fails
+     */
     [EventName.PYTHON_LANGUAGE_SERVER_ERROR]: LanguageServerErrorTelemetry;
+    /**
+     * Telemetry sent with details after attempting to extract LS
+     */
     [EventName.PYTHON_LANGUAGE_SERVER_EXTRACTED]: LanguageServerVersionTelemetry;
+    /**
+     * Telemetry sent if azure blob packages are being listed
+     */
     [EventName.PYTHON_LANGUAGE_SERVER_LIST_BLOB_STORE_PACKAGES]: never | undefined;
+    /**
+     * Tracks if LS is supported on platform or not
+     */
     [EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED]: LanguageServePlatformSupported;
+    /**
+     * Telemetry sent when LS is ready to start
+     */
     [EventName.PYTHON_LANGUAGE_SERVER_READY]: never | undefined;
+    /**
+     * Telemetry sent when starting LS
+     */
     [EventName.PYTHON_LANGUAGE_SERVER_STARTUP]: never | undefined;
     [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: any;
     [EventName.PYTHON_EXPERIMENTS]: {
@@ -552,7 +579,7 @@ export interface IEventNamePropertyMapping {
     [EventName.REFERENCE]: never | undefined;
     [EventName.REPL]: never | undefined;
     /**
-     * Telemetry sent with details linter selected in quickpick of linter list.
+     * Telemetry sent with details of linter selected in quickpick of linter list.
      */
     [EventName.SELECT_LINTER]: LinterSelectionTelemetry;
     /**

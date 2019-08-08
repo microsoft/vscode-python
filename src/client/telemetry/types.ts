@@ -29,8 +29,17 @@ export type FormatTelemetry = {
 };
 
 export type LanguageServerVersionTelemetry = {
+    /**
+     * Whether LS downloading/extracting succeeds
+     */
     success: boolean;
+    /**
+     * Version of LS downloaded/extracted
+     */
     lsVersion?: string;
+    /**
+     * Whether download uri starts with `https:` or not
+     */
     usedSSL?: boolean;
 };
 
