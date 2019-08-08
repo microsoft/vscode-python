@@ -66,7 +66,6 @@ def fix_test_order(tests):
 
 
 def fix_source(tests, testid, srcfile, lineno):
-    testid = fix_path(testid)
     for test in tests:
         if test['id'] == testid:
             break
