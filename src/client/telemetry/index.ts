@@ -394,7 +394,13 @@ export interface IEventNamePropertyMapping {
     [EventName.DEBUGGER_CONFIGURATION_PROMPTS]: DebuggerConfigurationPromtpsTelemetry;
     [EventName.DEBUGGER_CONFIGURATION_PROMPTS_IN_LAUNCH_JSON]: never | undefined;
     [EventName.DEFINITION]: never | undefined;
+    /**
+     * Telemetry sent with details of actions when invoking a diagnostic command
+     */
     [EventName.DIAGNOSTICS_ACTION]: DiagnosticsAction;
+    /**
+     * Telemetry event sent when we are checking if we can handle the diagnostic code
+     */
     [EventName.DIAGNOSTICS_MESSAGE]: DiagnosticsMessages;
     [EventName.EDITOR_LOAD]: EditorLoadTelemetry;
     [EventName.ENVFILE_VARIABLE_SUBSTITUTION]: never | undefined;
@@ -461,6 +467,20 @@ export interface IEventNamePropertyMapping {
         interpreters?: number;
     };
     [EventName.PYTHON_INTERPRETER_ACTIVATE_ENVIRONMENT_PROMPT]: { selection: 'Yes' | 'No' | 'Ignore' | undefined };
+    /**
+     * Telemetry event sent with details when user clicks a button in the virtual environment prompt.
+     * `Prompt message` :- 'We noticed a new virtual environment has been created. Do you want to select it for the workspace folder?'
+     */
+    [EventName.PYTHON_INTERPRETER_ACTIVATE_ENVIRONMENT_PROMPT]: {
+        /**
+         * `Yes` When 'Yes' option is selected
+         * `No` When 'No' option is selected
+         * `Ignore` When 'Do not show again' option is clicked
+         *
+         * @type {('Yes' | 'No' | 'Ignore' | undefined)}
+         */
+        selection: 'Yes' | 'No' | 'Ignore' | undefined;
+    };
     [EventName.INSIDERS_PROMPT]: {
         /**
          * @type {'Yes, weekly'} When user selects to use "weekly" as extension channel in insiders prompt
@@ -471,7 +491,19 @@ export interface IEventNamePropertyMapping {
          */
         selection: 'Yes, weekly' | 'Yes, daily' | 'No, thanks' | undefined;
     };
-    [EventName.INSIDERS_RELOAD_PROMPT]: { selection: 'Reload' | undefined };
+    /**
+     * Telemetry event sent with details when user clicks a button in the 'Reload to install insiders prompt'.
+     * `Prompt message` :- 'Please reload Visual Studio Code to use the insiders build of the extension'
+     */
+    [EventName.INSIDERS_RELOAD_PROMPT]: {
+        /**
+         * `Reload` When 'Reload' option is clicked
+         * `undefined` When prompt is closed
+         *
+         * @type {('Reload' | undefined)}
+         */
+        selection: 'Reload' | undefined;
+    };
     [EventName.PYTHON_LANGUAGE_SERVER_SWITCHED]: { change: 'Switch to Jedi from LS' | 'Switch to LS from Jedi' };
     [EventName.PYTHON_LANGUAGE_SERVER_DOWNLOADED]: LanguageServerVersionTelemetry;
     [EventName.PYTHON_LANGUAGE_SERVER_ENABLED]: never | undefined;
@@ -515,8 +547,30 @@ export interface IEventNamePropertyMapping {
     [EventName.REFACTOR_RENAME]: never | undefined;
     [EventName.REFERENCE]: never | undefined;
     [EventName.REPL]: never | undefined;
+    /**
+     * Telemetry sent with details linter selected in quickpick of linter list.
+     */
     [EventName.SELECT_LINTER]: LinterSelectionTelemetry;
-    [EventName.CONFIGURE_AVAILABLE_LINTER_PROMPT]: { tool: LinterId; action: 'enable' | 'ignore' | 'disablePrompt' | undefined };
+    /**
+     * Telemetry sent with details when clicking the prompt with the following message,
+     * `Prompt message` :- 'You have a pylintrc file in your workspace. Do you want to enable pylint?'
+     */
+    [EventName.CONFIGURE_AVAILABLE_LINTER_PROMPT]: {
+        /**
+         * Name of the linter tool
+         *
+         * @type {LinterId}
+         */
+        tool: LinterId;
+        /**
+         * `enable` When 'Enable [linter name]' option is clicked
+         * `ignore` When 'Not now' option is clicked
+         * `disablePrompt` When 'Do not show again` option is clicked
+         *
+         * @type {('enable' | 'ignore' | 'disablePrompt' | undefined)}
+         */
+        action: 'enable' | 'ignore' | 'disablePrompt' | undefined;
+    };
     [EventName.SIGNATURE]: never | undefined;
     [EventName.SYMBOL]: never | undefined;
     [EventName.UNITTEST_CONFIGURE]: never | undefined;
