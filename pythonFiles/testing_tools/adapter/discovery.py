@@ -5,7 +5,7 @@ from __future__ import absolute_import, print_function
 
 import re
 
-from .util import fix_fileid, PATH_SEP, DIRNAME, NORMCASE
+from .util import fix_fileid, DIRNAME, NORMCASE
 from .info import ParentInfo
 
 
@@ -19,24 +19,23 @@ FILE_ID_RE = re.compile(r"""
         """, re.VERBOSE)
 
 
-def fix_nodeid(nodeid, rootdir=None, #*,
+def fix_nodeid(nodeid, kind, rootdir=None, #*,
                _fix_fileid=fix_fileid,
-               _pathsep=PATH_SEP,
                ):
     if not nodeid:
         raise ValueError('missing nodeid')
     if nodeid == '.':
         return nodeid
 
-    m = FILE_ID_RE.match(nodeid)
-    if m:
-        fileid, remainder = m.groups()
-    elif len(nodeid) == 1:
-        fileid = nodeid
-        remainder = ''
-    else:
-        fileid = nodeid[:2]
-        remainder = nodeid[2:]
+    fileid = nodeid
+    remainder = ''
+    if kind not in ('folder', 'file'):
+        m = FILE_ID_RE.match(nodeid)
+        if m:
+            fileid, remainder = m.groups()
+        elif len(nodeid) > 1:
+            fileid = nodeid[:2]
+            remainder = nodeid[2:]
     fileid = _fix_fileid(fileid, rootdir)
     return fileid + (remainder or '')
 
@@ -72,7 +71,7 @@ class DiscoveredTests(object):
         # provided test and parents (from the test collector) are
         # properly generated.  However, we play it safe here.
         test = test._replace(
-                id=fix_nodeid(test.id, test.path.root),
+                id=fix_nodeid(test.id, 'test', test.path.root),
                 parentid=parentid,
                 )
         self._tests.append(test)
@@ -86,11 +85,11 @@ class DiscoveredTests(object):
         _parents = iter(parents)
         nodeid, name, kind = next(_parents)
         # As in add_test(), the node ID *should* already be correct.
-        nodeid = fix_nodeid(nodeid, rootdir)
+        nodeid = fix_nodeid(nodeid, kind, rootdir)
         _parentid = nodeid
         for parentid, parentname, parentkind in _parents:
             # As in add_test(), the parent ID *should* already be correct.
-            parentid = fix_nodeid(parentid, rootdir)
+            parentid = fix_nodeid(parentid, kind, rootdir)
             if kind in ('folder', 'file'):
                 info = ParentInfo(nodeid, kind, name, rootdir, relpath, parentid)
                 relpath = _dirname(relpath)
