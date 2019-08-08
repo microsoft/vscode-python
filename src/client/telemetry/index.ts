@@ -395,7 +395,7 @@ export interface IEventNamePropertyMapping {
     [EventName.DEBUGGER_CONFIGURATION_PROMPTS_IN_LAUNCH_JSON]: never | undefined;
     [EventName.DEFINITION]: never | undefined;
     /**
-     * Telemetry sent with details of actions when invoking a diagnostic command
+     * Telemetry event sent with details of actions when invoking a diagnostic command
      */
     [EventName.DIAGNOSTICS_ACTION]: DiagnosticsAction;
     /**
@@ -445,7 +445,7 @@ export interface IEventNamePropertyMapping {
     [EventName.HASHED_PACKAGE_NAME]: { hashedName: string };
     [EventName.HASHED_PACKAGE_PERF]: never | undefined;
     /**
-     * Telemetry sent with details of selection in prompt
+     * Telemetry event sent with details of selection in prompt
      * `Prompt message` :- 'Linter ${productName} is not installed'
      */
     [EventName.LINTER_NOT_INSTALLED_PROMPT]: LinterInstallPromptTelemetry;
@@ -513,23 +513,23 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.PYTHON_LANGUAGE_SERVER_SWITCHED]: { change: 'Switch to Jedi from LS' | 'Switch to LS from Jedi' };
     /**
-     * Telemetry sent with details after attempting to download LS
+     * Telemetry event sent with details after attempting to download LS
      */
     [EventName.PYTHON_LANGUAGE_SERVER_DOWNLOADED]: LanguageServerVersionTelemetry;
     /**
-     * Telemetry sent when LS is started for workspace (workspace folder in case of multi-root)
+     * Telemetry event sent when LS is started for workspace (workspace folder in case of multi-root)
      */
     [EventName.PYTHON_LANGUAGE_SERVER_ENABLED]: never | undefined;
     /**
-     * Telemetry sent with details when downloading or extracting LS fails
+     * Telemetry event sent with details when downloading or extracting LS fails
      */
     [EventName.PYTHON_LANGUAGE_SERVER_ERROR]: LanguageServerErrorTelemetry;
     /**
-     * Telemetry sent with details after attempting to extract LS
+     * Telemetry event sent with details after attempting to extract LS
      */
     [EventName.PYTHON_LANGUAGE_SERVER_EXTRACTED]: LanguageServerVersionTelemetry;
     /**
-     * Telemetry sent if azure blob packages are being listed
+     * Telemetry event sent if azure blob packages are being listed
      */
     [EventName.PYTHON_LANGUAGE_SERVER_LIST_BLOB_STORE_PACKAGES]: never | undefined;
     /**
@@ -537,11 +537,11 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED]: LanguageServePlatformSupported;
     /**
-     * Telemetry sent when LS is ready to start
+     * Telemetry event sent when LS is ready to start
      */
     [EventName.PYTHON_LANGUAGE_SERVER_READY]: never | undefined;
     /**
-     * Telemetry sent when starting LS
+     * Telemetry event sent when starting LS
      */
     [EventName.PYTHON_LANGUAGE_SERVER_STARTUP]: never | undefined;
     [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: any;
@@ -579,11 +579,11 @@ export interface IEventNamePropertyMapping {
     [EventName.REFERENCE]: never | undefined;
     [EventName.REPL]: never | undefined;
     /**
-     * Telemetry sent with details of linter selected in quickpick of linter list.
+     * Telemetry event sent with details of linter selected in quickpick of linter list.
      */
     [EventName.SELECT_LINTER]: LinterSelectionTelemetry;
     /**
-     * Telemetry sent with details when clicking the prompt with the following message,
+     * Telemetry event sent with details when clicking the prompt with the following message,
      * `Prompt message` :- 'You have a pylintrc file in your workspace. Do you want to enable pylint?'
      */
     [EventName.CONFIGURE_AVAILABLE_LINTER_PROMPT]: {
@@ -611,14 +611,26 @@ export interface IEventNamePropertyMapping {
     [EventName.UNITTEST_DISCOVER_WITH_PYCODE]: never | undefined;
     [EventName.UNITTEST_NAVIGATE]: { byFile?: boolean; byFunction?: boolean; bySuite?: boolean; focus_code?: boolean };
     [EventName.UNITTEST_EXPLORER_WORK_SPACE_COUNT]: { count: number };
+    /**
+     * Telemetry event sent with details about running the tests, what is being run, what framework is being used etc.
+     */
     [EventName.UNITTEST_RUN]: TestRunTelemetry;
+    /**
+     * Telemetry event sent when cancelling running or discovering tests
+     */
     [EventName.UNITTEST_STOP]: never | undefined;
+    /**
+     * Telemetry event sent when disabling all test frameworks
+     */
     [EventName.UNITTEST_DISABLE]: never | undefined;
+    /**
+     * Telemetry event sent when viewing Python test log output
+     */
     [EventName.UNITTEST_VIEW_OUTPUT]: never | undefined;
     /**
      * Tracks which testing framework has been enabled by the user.
      * Telemetry is sent when settings have been modified by the user.
-     * Values sent includ:
+     * Values sent include:
      * unittest -   If this value is `true`, then unittest has been enabled by the user.
      * pytest   -   If this value is `true`, then pytest has been enabled by the user.
      * nosetest -   If this value is `true`, then nose has been enabled by the user.

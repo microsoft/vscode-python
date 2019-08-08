@@ -97,10 +97,25 @@ export type DebuggerPerformanceTelemetry = {
 };
 export type TestTool = 'nosetest' | 'pytest' | 'unittest';
 export type TestRunTelemetry = {
+    /**
+     * Framework being used to run tests
+     */
     tool: TestTool;
+    /**
+     * Carries info what is being run
+     */
     scope: 'currentFile' | 'all' | 'file' | 'class' | 'function' | 'failed';
+    /**
+     * Carries `true` if debugging, `false` otherwise
+     */
     debugging: boolean;
+    /**
+     * Carries what triggered the execution of the tests
+     */
     triggerSource: 'ui' | 'codelens' | 'commandpalette' | 'auto' | 'testExplorer';
+    /**
+     * Carries `true` if running tests failed, `false` otherwise
+     */
     failed: boolean;
 };
 export type TestDiscoverytTelemetry = {
