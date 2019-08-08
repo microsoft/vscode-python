@@ -5,7 +5,7 @@ from __future__ import absolute_import, print_function
 
 import re
 
-from .util import fix_fileid, PATH_SEP, DIRNAME
+from .util import fix_fileid, PATH_SEP, DIRNAME, NORMCASE
 from .info import ParentInfo
 
 
@@ -55,7 +55,10 @@ class DiscoveredTests(object):
 
     @property
     def parents(self):
-        return sorted(self._parents.values(), key=lambda v: (v.root or v.name, v.id))
+        return sorted(self._parents.values(),
+                      key=lambda v: (NORMCASE(v.root or v.name),
+                                     NORMCASE(v.id)),
+                      )
 
     def reset(self):
         """Clear out any previously discovered tests."""
