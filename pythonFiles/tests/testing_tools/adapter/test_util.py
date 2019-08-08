@@ -146,36 +146,39 @@ class FilePathTests(unittest.TestCase):
                 self.assertEqual(fixed, expected)
 
     def test_fix_fileid(self):
-        tests = [
-            ('spam.py', posixpath, './spam.py'),
-            ('eggs/spam.py', posixpath, './eggs/spam.py'),
-            ('eggs/spam/', posixpath, './eggs/spam/'),
-            (r'\spam.py', posixpath, r'./\spam.py'),
-            ('spam.py', ntpath, r'.\spam.py'),
-            (r'eggs\spam.py', ntpath, '.\eggs\spam.py'),
-            ('eggs\\spam\\', ntpath, '.\\eggs\\spam\\'),
-            ('/spam.py', ntpath, r'/spam.py'),  # "/" is valid on Windows.
-            # absolute
-            ('/', posixpath, '/'),
-            ('/spam.py', posixpath, '/spam.py'),
-            ('\\', ntpath, '\\'),
-            (r'\spam.py', ntpath, r'\spam.py'),
-            (r'C:\spam.py', ntpath, r'C:\spam.py'),
+        common = [
+            ('spam.py', './spam.py'),
+            ('eggs/spam.py', './eggs/spam.py'),
+            ('eggs/spam/', './eggs/spam/'),
+            # absolute (no-op)
+            ('/', '/'),
+            ('//', '//'),
+            ('/spam.py', '/spam.py'),
             # no-op
-            ('/', posixpath, '/'),
-            ('//', posixpath, '//'),
-            ('./spam.py', posixpath, './spam.py'),
-            ('\\', ntpath, '\\'),
-            ('\\\\', ntpath, '\\\\'),
-            ('C:\\\\', ntpath, 'C:\\\\'),
-            (r'.\spam.py', ntpath, r'.\spam.py'),
+            (None, None),
+            ('', ''),
+            ('.', '.'),
+            ('./spam.py', './spam.py'),
             ]
-        # no-op
-        for path in [None, '', '.']:
-            tests.extend([
-                (path, posixpath, path),
-                (path, ntpath, path),
-                ])
+        tests = [(p, posixpath, e) for p, e in common]
+        tests.extend((p, posixpath, e) for p, e in [
+            (r'\spam.py', r'./\spam.py'),
+            ])
+        tests.extend((p, ntpath, e) for p, e in common)
+        tests.extend((p, ntpath, e) for p, e in [
+            (r'eggs\spam.py', './eggs/spam.py'),
+            ('eggs\\spam\\', './eggs/spam/'),
+            (r'.\spam.py', r'./spam.py'),
+            # absolute
+            (r'\spam.py', '/spam.py'),
+            (r'C:\spam.py', 'C:/spam.py'),
+            ('\\', '/'),
+            ('\\\\', '//'),
+            ('C:\\\\', 'C://'),
+            ('C:/', 'C:/'),
+            ('C://', 'C://'),
+            ('C:/spam.py', 'C:/spam.py'),
+            ])
         for fileid, _os_path, expected in tests:
             pathsep = _os_path.sep
             with self.subTest(r'for {}: {!r}'.format(pathsep, fileid)):
@@ -187,42 +190,50 @@ class FilePathTests(unittest.TestCase):
                 self.assertEqual(fixed, expected)
 
         # with rootdir
-        tests = [
-            ('spam.py', '/eggs', posixpath, './spam.py'),
-            ('spam.py', r'\eggs', ntpath, r'.\spam.py'),
+        common = [
+            ('spam.py', '/eggs', './spam.py'),
+            ('spam.py', '\eggs', './spam.py'),
             # absolute
-            ('/spam.py', '/', posixpath, './spam.py'),
-            ('/eggs/spam.py', '/eggs', posixpath, './spam.py'),
-            ('/eggs/spam.py', '/eggs/', posixpath, './spam.py'),
-            (r'\spam.py', '\\', ntpath, r'.\spam.py'),
-            (r'C:\spam.py', 'C:\\', ntpath, r'.\spam.py'),
-            (r'\eggs\spam.py', r'\eggs', ntpath, r'.\spam.py'),
-            (r'\eggs\spam.py', '\\eggs\\', ntpath, r'.\spam.py'),
-            # normcase
-            (r'C:\spam.py', 'c:\\', ntpath, r'.\spam.py'),
-            (r'\Eggs\Spam.py', '\\eggs', ntpath, r'.\Spam.py'),
-            (r'\eggs\spam.py', '\\Eggs', ntpath, r'.\spam.py'),
-            (r'\eggs\Spam.py', '\\Eggs', ntpath, r'.\Spam.py'),
-            # no change
-            ('/spam.py', '/eggs', posixpath, '/spam.py'),
-            ('/spam.py', '/eggs/', posixpath, '/spam.py'),
-            (r'\spam.py', r'\eggs', ntpath, r'\spam.py'),
-            (r'C:\spam.py', r'C:\eggs', ntpath, r'C:\spam.py'),
-            # TODO: Should these be supported.
-            (r'C:\spam.py', '\\', ntpath, r'C:\spam.py'),
-            (r'\spam.py', 'C:\\', ntpath, r'\spam.py'),
-            # root-only
-            ('/', '/', posixpath, '/'),
-            ('/', '/spam', posixpath, '/'),
-            ('//', '/', posixpath, '//'),
-            ('//', '//', posixpath, '//'),
-            ('//', '//spam', posixpath, '//'),
-            ('\\', '\\', ntpath, '\\'),
-            ('\\\\', '\\', ntpath, '\\\\'),
-            ('C:\\', 'C:\\eggs', ntpath, 'C:\\'),
-            ('C:\\', 'C:\\', ntpath, 'C:\\'),
-            (r'C:\spam.py', 'D:\\', ntpath, r'C:\spam.py'),
+            ('/spam.py', '/', './spam.py'),
+            ('/eggs/spam.py', '/eggs', './spam.py'),
+            ('/eggs/spam.py', '/eggs/', './spam.py'),
+            # no-op
+            ('/spam.py', '/eggs', '/spam.py'),
+            ('/spam.py', '/eggs/', '/spam.py'),
+            # root-only (no-op)
+            ('/', '/', '/'),
+            ('/', '/spam', '/'),
+            ('//', '/', '//'),
+            ('//', '//', '//'),
+            ('//', '//spam', '//'),
             ]
+        tests = [(p, r, posixpath, e) for p, r, e in common]
+        tests = [(p, r, ntpath, e) for p, r, e in common]
+        tests.extend((p, r, ntpath, e) for p, r, e in [
+            ('spam.py', r'\eggs', './spam.py'),
+            # absolute
+            (r'\spam.py', '\\', r'./spam.py'),
+            (r'C:\spam.py', 'C:\\', r'./spam.py'),
+            (r'\eggs\spam.py', r'\eggs', r'./spam.py'),
+            (r'\eggs\spam.py', '\\eggs\\', r'./spam.py'),
+            # normcase
+            (r'C:\spam.py', 'c:\\', r'./spam.py'),
+            (r'\Eggs\Spam.py', '\\eggs', r'./Spam.py'),
+            (r'\eggs\spam.py', '\\Eggs', r'./spam.py'),
+            (r'\eggs\Spam.py', '\\Eggs', r'./Spam.py'),
+            # no-op
+            (r'\spam.py', r'\eggs', r'/spam.py'),
+            (r'C:\spam.py', r'C:\eggs', r'C:/spam.py'),
+            # TODO: Should these be supported.
+            (r'C:\spam.py', '\\', r'C:/spam.py'),
+            (r'\spam.py', 'C:\\', r'/spam.py'),
+            # root-only
+            ('\\', '\\', '/'),
+            ('\\\\', '\\', '//'),
+            ('C:\\', 'C:\\eggs', 'C:/'),
+            ('C:\\', 'C:\\', 'C:/'),
+            (r'C:\spam.py', 'D:\\', r'C:/spam.py'),
+            ])
         for fileid, rootdir, _os_path, expected in tests:
             pathsep = _os_path.sep
             with self.subTest(r'for {} (with rootdir {!r}): {!r}'.format(pathsep, rootdir, fileid)):

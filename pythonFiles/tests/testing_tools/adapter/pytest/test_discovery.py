@@ -867,18 +867,51 @@ class CollectorTests(unittest.TestCase):
         discovered = StubDiscoveredTests(stub)
         session = StubPytestSession(stub)
         testroot = r'C:\A\B\C'
+        altroot = testroot.replace('\\', '/')
         relfile = r'X\Y\Z\test_Eggs.py'
         session.items = [
+            # typical:
             StubFunctionItem(
                 stub,
-                nodeid=relfile + '::SpamTests::test_spam',
+                # pytest always uses "/" as the path separator in node IDs:
+                nodeid='X/Y/Z/test_Eggs.py::SpamTests::test_spam',
                 name='test_spam',
-                # wrong pathsep:
-                location=('X/Y/Z/test_Eggs.py', 12, 'SpamTests.test_spam'),
+                # normal path separator (contrast with nodeid):
+                location=(relfile, 12, 'SpamTests.test_spam'),
+                # path separator matches location:
                 fspath=testroot + '\\' + relfile,
                 function=FakeFunc('test_spam'),
                 ),
             ]
+        tests = [
+            # permutations of path separators
+            (r'X/test_a.py', '\\', '\\'),  # typical
+            (r'X/test_b.py', '\\', '/'),
+            (r'X/test_c.py', '/', '\\'),
+            (r'X/test_d.py', '/', '/'),
+            (r'X\test_e.py', '\\', '\\'),
+            (r'X\test_f.py', '\\', '/'),
+            (r'X\test_g.py', '/', '\\'),
+            (r'X\test_h.py', '/', '/'),
+            ]
+        for fileid, locfile, fspath in tests:
+            if locfile == '/':
+                locfile = fileid.replace('\\', '/')
+            elif locfile == '\\':
+                locfile = fileid.replace('/', '\\')
+            if fspath == '/':
+                fspath = (testroot + '/' + fileid).replace('\\', '/')
+            elif fspath == '\\':
+                fspath = (testroot + '/' + fileid).replace('/', '\\')
+            session.items.append(
+                StubFunctionItem(
+                    stub,
+                    nodeid=fileid + '::test_spam',
+                    name='test_spam',
+                    location=(locfile, 12, 'test_spam'),
+                    fspath=fspath,
+                    function=FakeFunc('test_spam'),
+                    ))
         collector = TestCollector(tests=discovered)
         if OS_NAME != 'nt':
             collector.parse_item = generate_parse_item('\\')
@@ -890,15 +923,15 @@ class CollectorTests(unittest.TestCase):
             ('discovered.reset', None, None),
             ('discovered.add_test', None, dict(
                 parents=[
-                    (r'.\X\Y\Z\test_Eggs.py::SpamTests', 'SpamTests', 'suite'),
-                    (r'.\X\Y\Z\test_Eggs.py', 'test_Eggs.py', 'file'),
-                    (r'.\X\Y\Z', 'Z', 'folder'),
-                    (r'.\X\Y', 'Y', 'folder'),
-                    (r'.\X', 'X', 'folder'),
+                    (r'./X/Y/Z/test_Eggs.py::SpamTests', 'SpamTests', 'suite'),
+                    (r'./X/Y/Z/test_Eggs.py', 'test_Eggs.py', 'file'),
+                    (r'./X/Y/Z', 'Z', 'folder'),
+                    (r'./X/Y', 'Y', 'folder'),
+                    (r'./X', 'X', 'folder'),
                     ('.', testroot, 'folder'),
                     ],
                 test=TestInfo(
-                    id=r'.\X\Y\Z\test_Eggs.py::SpamTests::test_spam',
+                    id=r'./X/Y/Z/test_Eggs.py::SpamTests::test_spam',
                     name='test_spam',
                     path=TestPath(
                         root=testroot,  # not normalized
@@ -908,7 +941,180 @@ class CollectorTests(unittest.TestCase):
                         ),
                     source=r'.\X\Y\Z\test_Eggs.py:13',  # not normalized
                     markers=None,
-                    parentid=r'.\X\Y\Z\test_Eggs.py::SpamTests',
+                    parentid=r'./X/Y/Z/test_Eggs.py::SpamTests',
+                    ),
+                )),
+
+            # permutations
+            # (*all* the IDs use "/")
+            # (source path separator should match relfile, not location)
+
+            # /, \, \
+            ('discovered.add_test', None, dict(
+                parents=[
+                    (r'./X/test_a.py', 'test_a.py', 'file'),
+                    (r'./X', 'X', 'folder'),
+                    ('.', testroot, 'folder'),
+                    ],
+                test=TestInfo(
+                    id=r'./X/test_a.py::test_spam',
+                    name='test_spam',
+                    path=TestPath(
+                        root=testroot,
+                        relfile=r'.\X\test_a.py',
+                        func='test_spam',
+                        sub=None,
+                        ),
+                    source=r'.\X\test_a.py:13',
+                    markers=None,
+                    parentid=r'./X/test_a.py',
+                    ),
+                )),
+            # /, \, /
+            ('discovered.add_test', None, dict(
+                parents=[
+                    (r'./X/test_b.py', 'test_b.py', 'file'),
+                    (r'./X', 'X', 'folder'),
+                    ('.', altroot, 'folder'),
+                    ],
+                test=TestInfo(
+                    id=r'./X/test_b.py::test_spam',
+                    name='test_spam',
+                    path=TestPath(
+                        root=altroot,
+                        relfile=r'./X/test_b.py',
+                        func='test_spam',
+                        sub=None,
+                        ),
+                    source=r'./X/test_b.py:13',
+                    markers=None,
+                    parentid=r'./X/test_b.py',
+                    ),
+                )),
+            # /, /, \
+            ('discovered.add_test', None, dict(
+                parents=[
+                    (r'./X/test_c.py', 'test_c.py', 'file'),
+                    (r'./X', 'X', 'folder'),
+                    ('.', testroot, 'folder'),
+                    ],
+                test=TestInfo(
+                    id=r'./X/test_c.py::test_spam',
+                    name='test_spam',
+                    path=TestPath(
+                        root=testroot,
+                        relfile=r'.\X\test_c.py',
+                        func='test_spam',
+                        sub=None,
+                        ),
+                    source=r'.\X\test_c.py:13',
+                    markers=None,
+                    parentid=r'./X/test_c.py',
+                    ),
+                )),
+            # /, /, /
+            ('discovered.add_test', None, dict(
+                parents=[
+                    (r'./X/test_d.py', 'test_d.py', 'file'),
+                    (r'./X', 'X', 'folder'),
+                    ('.', altroot, 'folder'),
+                    ],
+                test=TestInfo(
+                    id=r'./X/test_d.py::test_spam',
+                    name='test_spam',
+                    path=TestPath(
+                        root=altroot,
+                        relfile=r'./X/test_d.py',
+                        func='test_spam',
+                        sub=None,
+                        ),
+                    source=r'./X/test_d.py:13',
+                    markers=None,
+                    parentid=r'./X/test_d.py',
+                    ),
+                )),
+            # \, \, \
+            ('discovered.add_test', None, dict(
+                parents=[
+                    (r'./X/test_e.py', 'test_e.py', 'file'),
+                    (r'./X', 'X', 'folder'),
+                    ('.', testroot, 'folder'),
+                    ],
+                test=TestInfo(
+                    id=r'./X/test_e.py::test_spam',
+                    name='test_spam',
+                    path=TestPath(
+                        root=testroot,
+                        relfile=r'.\X\test_e.py',
+                        func='test_spam',
+                        sub=None,
+                        ),
+                    source=r'.\X\test_e.py:13',
+                    markers=None,
+                    parentid=r'./X/test_e.py',
+                    ),
+                )),
+            # \, \, /
+            ('discovered.add_test', None, dict(
+                parents=[
+                    (r'./X/test_f.py', 'test_f.py', 'file'),
+                    (r'./X', 'X', 'folder'),
+                    ('.', altroot, 'folder'),
+                    ],
+                test=TestInfo(
+                    id=r'./X/test_f.py::test_spam',
+                    name='test_spam',
+                    path=TestPath(
+                        root=altroot,
+                        relfile=r'./X/test_f.py',
+                        func='test_spam',
+                        sub=None,
+                        ),
+                    source=r'./X/test_f.py:13',
+                    markers=None,
+                    parentid=r'./X/test_f.py',
+                    ),
+                )),
+            # \, /, \
+            ('discovered.add_test', None, dict(
+                parents=[
+                    (r'./X/test_g.py', 'test_g.py', 'file'),
+                    (r'./X', 'X', 'folder'),
+                    ('.', testroot, 'folder'),
+                    ],
+                test=TestInfo(
+                    id=r'./X/test_g.py::test_spam',
+                    name='test_spam',
+                    path=TestPath(
+                        root=testroot,
+                        relfile=r'.\X\test_g.py',
+                        func='test_spam',
+                        sub=None,
+                        ),
+                    source=r'.\X\test_g.py:13',
+                    markers=None,
+                    parentid=r'./X/test_g.py',
+                    ),
+                )),
+            # \, /, /
+            ('discovered.add_test', None, dict(
+                parents=[
+                    (r'./X/test_h.py', 'test_h.py', 'file'),
+                    (r'./X', 'X', 'folder'),
+                    ('.', altroot, 'folder'),
+                    ],
+                test=TestInfo(
+                    id=r'./X/test_h.py::test_spam',
+                    name='test_spam',
+                    path=TestPath(
+                        root=altroot,
+                        relfile=r'./X/test_h.py',
+                        func='test_spam',
+                        sub=None,
+                        ),
+                    source=r'./X/test_h.py:13',
+                    markers=None,
+                    parentid=r'./X/test_h.py',
                     ),
                 )),
             ])

@@ -246,6 +246,9 @@ def _get_location(item, testroot, relfile, #*,
                   _pathsep=PATH_SEP,
                   ):
     """Return (loc str, fullname) for the given item."""
+    # When it comes to normcase, we favor relfile (from item.fspath)
+    # over item.location in this function.
+
     srcfile, lineno, fullname = item.location
     if _matches_relfile(srcfile, testroot, relfile):
         srcfile = relfile
@@ -466,9 +469,10 @@ def _normalize_test_id(testid, kind, #*,
     # We need to keep the testid as-is, or else pytest won't recognize
     # it when we try to use it later (e.g. to run a test).  The only
     # exception is that we add a "./" prefix for relative paths.
+    # Note that pytest always uses "/" as the path separator in IDs.
     fileid, sep, remainder = testid.partition('::')
     fileid = _fix_fileid(fileid)
-    if not fileid.startswith('.' + _pathsep):  # Absolute "paths" not expected.
+    if not fileid.startswith('./'):  # Absolute "paths" not expected.
         raise should_never_reach_here(
             testid,
             fileid=fileid,

@@ -85,11 +85,40 @@ def fix_relpath(path, #*,
     return path
 
 
+def _resolve_relpath(path, rootdir=None, #*,
+                     _path_isabs=IS_ABS_PATH,
+                     _normcase=NORMCASE,
+                     _pathsep=PATH_SEP,
+                     ):
+    # "path" is expected to use "/" for its path separator, regardless
+    # of the provided "_pathsep".
+
+    if path.startswith('./'):
+        return path[2:]
+    if not _path_isabs(path):
+        return path
+
+    # Deal with root-dir-as-fileid.
+    _, sep, relpath = path.partition('/')
+    if sep and not relpath.replace('/', ''):
+        return ''
+
+    if rootdir is None:
+        return None
+    rootdir = _normcase(rootdir)
+    if not rootdir.endswith(_pathsep):
+        rootdir += _pathsep
+
+    if not _normcase(path).startswith(rootdir):
+        return None
+    return path[len(rootdir):]
+
+
 def fix_fileid(fileid, rootdir=None, #*,
                normalize=False,
-               _path_isabs=IS_ABS_PATH,
-               _normcase=NORMCASE,
+               strictpathsep=None,
                _pathsep=PATH_SEP,
+               **kwargs
                ):
     """Return a pathsep-separated file ID ("./"-prefixed) for the given value.
 
@@ -99,33 +128,29 @@ def fix_fileid(fileid, rootdir=None, #*,
     """
     if not fileid or fileid == '.':
         return fileid
-    relprefix = '.' + _pathsep
 
-    normalized = _normcase(fileid)
-    if normalized.startswith(relprefix):
-        return fileid
+    # We default to "/" (forward slash) as the final path sep, since
+    # that gives us a consistent, cross-platform result.  (Windows does
+    # actually support "/" as a path separator.)  Most notably, node IDs
+    # from pytest use "/" as the path separator by default.
+    _fileid = fileid.replace(_pathsep, '/')
 
-    isabs = False
-    if _path_isabs(normalized):
-        # Deal with root-dir-as-fileid.
-        _, sep, relpath = fileid.partition(_pathsep)
-        if sep and not relpath.replace(_pathsep, ''):
-            return fileid
+    relpath = _resolve_relpath(_fileid, rootdir,
+                               _pathsep=_pathsep,
+                               **kwargs
+                               )
+    if relpath:  # Note that we treat "" here as an absolute path.
+        _fileid = './' + relpath
 
-        isabs = True
-        if rootdir is not None:
-            rootdir = _normcase(rootdir)
-            if not rootdir.endswith(_pathsep):
-                rootdir += _pathsep
-            if normalized.startswith(rootdir):
-                fileid = fileid[len(rootdir):]
-                isabs = False
     if normalize:
-        fileid = _str_to_lower(fileid.replace(_pathsep, '/'))
-        relprefix = './'
-    if not isabs:
-        fileid = relprefix + fileid
-    return fileid
+        if strictpathsep:
+            raise ValueError(
+                    'cannot normalize *and* keep strict path separator')
+        _fileid = _str_to_lower(_fileid)
+    elif strictpathsep:
+        # We do not use _normcase since we want to preserve capitalization.
+        _fileid = _fileid.replace('/', _pathsep)
+    return _fileid
 
 
 #############################
