@@ -444,6 +444,10 @@ export interface IEventNamePropertyMapping {
     [EventName.HOVER_DEFINITION]: never | undefined;
     [EventName.HASHED_PACKAGE_NAME]: { hashedName: string };
     [EventName.HASHED_PACKAGE_PERF]: never | undefined;
+    /**
+     * Telemetry sent with details of selection in prompt
+     * `Prompt message` :- 'Linter ${productName} is not installed'
+     */
     [EventName.LINTER_NOT_INSTALLED_PROMPT]: LinterInstallPromptTelemetry;
     [EventName.PYTHON_INSTALL_PACKAGE]: { installer: string };
     [EventName.LINTING]: LintingTelemetry;

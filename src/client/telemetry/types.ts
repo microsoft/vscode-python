@@ -53,7 +53,19 @@ export type LintingTelemetry = {
 };
 
 export type LinterInstallPromptTelemetry = {
+    /**
+     * Name of the linter
+     *
+     * @type {LinterId}
+     */
     tool?: LinterId;
+    /**
+     * `select` When 'Select linter' option is selected
+     * `disablePrompt` When 'Do not show again' option is selected
+     * `install` When 'Install' option is selected
+     *
+     * @type {('select' | 'disablePrompt' | 'install')}
+     */
     action: 'select' | 'disablePrompt' | 'install';
 };
 
