@@ -103,7 +103,7 @@ from ..info import TestInfo, TestPath
 from ..util import fix_fileid, PATH_SEP, NORMCASE
 
 
-def should_never_reach_here(node, **extra):
+def should_never_reach_here(item, **extra):
     """Indicates a code path we should never reach."""
     print('The Python extension has run into an unexpected situation')
     print('while processing a pytest node during test discovery.  Please')
@@ -111,7 +111,7 @@ def should_never_reach_here(node, **extra):
     print('  https://github.com/microsoft/vscode-python/issues')
     print('and paste the following output there.')
     print()
-    for field, info in _summarize_item(node):
+    for field, info in _summarize_item(item):
         print('{}: {}'.format(field, info))
     if extra:
         print()
@@ -132,7 +132,7 @@ def should_never_reach_here(node, **extra):
 
     msg = 'Unexpected pytest node (see printed output).'
     exc = NotImplementedError(msg)
-    exc.node = node
+    exc.item = item
     return exc
 
 
@@ -531,7 +531,7 @@ def _summarize_item(item):
             else:
                 yield field, getattr(item, field, '<???>')
         except Exception as exc:
-            yield field, '<error>'
+            yield field, '<error {!r}>'.format(exc)
 
 
 def _debug_item(item, showsummary=False):
