@@ -156,7 +156,14 @@ export type InterpreterAutoSelection = {
     updated?: boolean;
 };
 export type InterpreterDiscovery = {
+    /**
+     * Name of the locator
+     */
     locator: string;
+    /**
+     * The number of the interpreters returned by locator
+     */
+    counter?: number;
 };
 
 export type InterpreterActivationEnvironmentVariables = {
