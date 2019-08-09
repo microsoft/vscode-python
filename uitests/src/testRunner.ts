@@ -112,6 +112,8 @@ export async function start(
     const results = await runCucumber(cucumberArgs, worldParameters);
     const rerunFilesToDelete = [results.rerunFile];
     let rerunFule = results.rerunFile;
+    let success = results.success;
+
     // if failed, then re-run the failed tests.
     if (await shouldRerunTests(results)) {
         try {
@@ -150,6 +152,7 @@ export async function start(
                     await fs.writeFile(results.jsonReportFile, JSON.stringify(originalJson));
                 }
                 if (rerunResults.success) {
+                    success = true;
                     break;
                 }
                 // If all tests that were supposed to be rerun failed, then don't bother trying again.
@@ -176,7 +179,7 @@ export async function start(
     ]);
 
     // Bye bye.
-    if (!results.success) {
+    if (!success) {
         throw new Error('Error in running UI Tests');
     }
 }
