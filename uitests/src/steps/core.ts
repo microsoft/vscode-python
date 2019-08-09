@@ -13,6 +13,10 @@ import { waitForPythonExtensionToActivate } from '../setup';
 
 Then('do nothing', noop);
 
+Then('kaboom', () => {
+    throw new Error('Kaboom');
+});
+
 Then('wip', noop);
 
 Then('Step {string}', async (_step: string) => {

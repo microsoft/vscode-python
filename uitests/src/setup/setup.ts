@@ -19,9 +19,17 @@ import { getExtensionPath as getBootstrapExtensionPath } from './bootstrap';
 // tslint:disable: no-console
 
 export class TestOptions implements ITestOptions {
+    /**
+     * Make static, as we might have a couple of runs of same tests.
+     * We will use this to ensure we have a unique name (counter increases per process session, hence no conflicts).
+     *
+     * @private
+     * @static
+     * @memberof TestOptions
+     */
+    private static workspaceCounter = 0;
     private _reportsPath?: string;
     private _workspacePathOrFolder!: string;
-    private workspaceCounter = 0;
     get extensionsPath(): string {
         return path.join(this.testPath, 'extensions');
     }
@@ -62,7 +70,8 @@ export class TestOptions implements ITestOptions {
      */
     public async initilize() {
         this._workspacePathOrFolder =
-            this._workspacePathOrFolder || path.join(this.tempPath, `workspace folder${(this.workspaceCounter += 1)}`);
+            this._workspacePathOrFolder ||
+            path.join(this.tempPath, `workspace folder${(TestOptions.workspaceCounter += 1)}`);
         await Promise.all([
             new Promise(resolve => rimraf(this.tempPath, resolve)).catch(
                 warn.bind(warn, 'Failed to empty temp dir in updateForScenario')
@@ -99,9 +108,12 @@ export class TestOptions implements ITestOptions {
         const location = scenario.pickle.locations[0].line;
         this._reportsPath = path.join(
             this.rootReportsPath,
-            `${scenario.pickle.name}:${location}`.replace(/[^a-z0-9\-]/gi, '_')
+            `${scenario.pickle.name}:${location}:_${TestOptions.workspaceCounter}`.replace(/[^a-z0-9\-]/gi, '_')
         );
-        this._workspacePathOrFolder = path.join(this.tempPath, `workspace folder${(this.workspaceCounter += 1)}`);
+        this._workspacePathOrFolder = path.join(
+            this.tempPath,
+            `workspace folder${(TestOptions.workspaceCounter += 1)}`
+        );
         // await Promise.all([
         //     fs.ensureDir(scenarioLogsPath),
         //     fs.emptyDir(this.tempPath).catch(warn.bind(warn, 'Failed to empty temp dir in updateForScenario')),
