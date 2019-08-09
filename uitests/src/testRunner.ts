@@ -17,6 +17,8 @@ import { Channel, ITestOptions } from './types';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const Cli = require('cucumber/lib/cli');
 
+const retryCount = 2;
+
 export async function initialize(options: ITestOptions) {
     // Delete all old test related stuff.
     debug('Deleting old test data');
@@ -37,11 +39,13 @@ type Scenario = {
     steps: [{ result: { status: 'passed' | 'other' } }];
 };
 type CucumberReport = [{ id: string; elements: [Scenario] }];
+type CucumberReportStats = { total: number; failed: number };
 
 type CucumberResults = {
     success: boolean;
     jsonReportFile: string;
     rerunFile: string;
+    stats?: CucumberReportStats;
 };
 
 async function parseCucumberJson(jsonFile: string): Promise<CucumberReport> {
@@ -67,6 +71,23 @@ async function findScenario(
     return found;
 }
 
+async function getCucumberResultStats(json: CucumberReport): Promise<CucumberReportStats> {
+    const report = { total: 0, failed: 0 };
+    json.forEach(feature =>
+        feature.elements.forEach(scenario => {
+            report.total += 1;
+            report.failed += hasScenarioPassed(scenario) ? 0 : 1;
+        })
+    );
+    return report;
+}
+async function shouldRerunTests(results: CucumberResults): Promise<boolean> {
+    if (results.success || !results.stats) {
+        return false;
+    }
+    return results.stats.failed / results.stats.total < 0.25;
+}
+
 export async function start(
     channel: Channel,
     testDir: string,
@@ -83,8 +104,8 @@ export async function start(
     const rerunFilesToDelete = [results.rerunFile];
     let rerunFule = results.rerunFile;
     // if failed, then re-run the failed tests.
-    if (!results.success) {
-        for (let retry = 1; retry <= 3; retry += 1) {
+    if (await shouldRerunTests(results)) {
+        for (let retry = 1; retry <= retryCount; retry += 1) {
             // tslint:disable-next-line: no-console
             console.info(`Rerunning tests (retry #${retry}`);
             const cucumberArgsWithoutTags = cucumberArgs.filter(arg => !arg.startsWith('--tags'));
@@ -119,6 +140,10 @@ export async function start(
                 await fs.writeFile(results.jsonReportFile, JSON.stringify(originalJson));
             }
             if (rerunResults.success) {
+                break;
+            }
+            // If all tests that were supposed to be rerun failed, then don't bother trying again.
+            if (!results.stats || !rerunResults.stats || rerunResults.stats.failed === results.stats.failed) {
                 break;
             }
             rerunFule = rerunResults.rerunFile;
@@ -192,9 +217,16 @@ async function runCucumber(
         const result = await cli.run().catch(console.error);
         success = result.success;
     }
+
+    let stats;
+    if (fs.pathExists(jsonReportFile)) {
+        const json = await parseCucumberJson(jsonReportFile);
+        stats = await getCucumberResultStats(json);
+    }
     return {
         success,
         jsonReportFile,
-        rerunFile: newRerunFile
+        rerunFile: newRerunFile,
+        stats
     };
 }
