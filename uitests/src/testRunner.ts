@@ -18,7 +18,13 @@ import { Channel, ITestOptions } from './types';
 const Cli = require('cucumber/lib/cli');
 
 const retryCount = 2;
+// If we have a large number of tests, and a large nuber of them failed.
+// Then lets not retry, fix the flaky tests.
+// Lets allow only 25% failure rate to allow retries.
 const failureThresholdToRetry = 0.25;
+// If total number of tests is <= 10, then retry, no matter how many failed.
+// I.e. even if all 10 failed, try again (we're assuming these are small tests)
+const maxTestsToRetryAll = 10;
 
 export async function initialize(options: ITestOptions) {
     // Delete all old test related stuff.
@@ -87,6 +93,11 @@ async function shouldRerunTests(results: CucumberResults): Promise<boolean> {
         // tslint:disable-next-line: no-console
         console.info('Not retrying, as there are no stats');
         return false;
+    }
+
+    // If we have just <= 10 tests, then always retry.
+    if (results.stats.total <= maxTestsToRetryAll) {
+        return true;
     }
 
     if (results.stats.failed / results.stats.total < failureThresholdToRetry) {
