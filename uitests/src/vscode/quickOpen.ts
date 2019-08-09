@@ -4,7 +4,7 @@
 'use strict';
 
 import { EventEmitter } from 'events';
-import { RetryMax20Seconds, RetryMax2Seconds, RetryMax30Seconds } from '../constants';
+import { RetryMax10Seconds, RetryMax20Seconds, RetryMax2Seconds, RetryMax30Seconds } from '../constants';
 import { retry, retryWrapper } from '../helpers';
 import { debug, warn } from '../helpers/logger';
 import { Selector } from '../selectors';
@@ -76,6 +76,16 @@ export class QuickOpen extends EventEmitter implements IQuickOpen {
         // await this._selectValue(`>   ${command}`, command);
         await this._selectValue(`> ${command}`, command);
     }
+    /**
+     * Keep retrying (possible things didn't get typed in correctly as something else stole focus).
+     *
+     * @private
+     * @param {string} valueToType
+     * @param {string} [valueToGetSelected]
+     * @returns {Promise<void>}
+     * @memberof QuickOpen
+     */
+    @retry(RetryMax10Seconds)
     private async _selectValue(valueToType: string, valueToGetSelected?: string): Promise<void> {
         await this.waitUntilOpened();
         debug(' - type into input');
@@ -86,7 +96,7 @@ export class QuickOpen extends EventEmitter implements IQuickOpen {
             await this.waitUntilSelected(valueToGetSelected).catch(async ex => {
                 // Close the quick open before we try to re-open (as part of retry operations).
                 await this.app.driver.press('Escape');
-                return Promise.reject(ex);
+                throw ex;
             });
         }
         await this.app.driver.press('Enter');
