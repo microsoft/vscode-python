@@ -17,7 +17,7 @@ import { Channel, ITestOptions } from './types';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const Cli = require('cucumber/lib/cli');
 
-const retryCount = 2;
+const retryCount = 3;
 // If we have a large number of tests, and a large nuber of them failed.
 // Then lets not retry, fix the flaky tests.
 // Lets allow only 25% failure rate to allow retries.
@@ -233,7 +233,8 @@ async function runCucumber(
         // We cannot re-run cucumber in the same process more than once.
         // It seems to maintain some global state.
         // Cucumberjs isn't designed to be run more than once in same process, its meant to be run via its cli.
-        const proc = spawn(process.execPath, ['./node_modules/.bin/cucumber-js', ...args.slice(2)], {
+        // const proc = spawn(process.execPath, ['./node_modules/.bin/cucumber-js', ...args.slice(2)], {
+        const proc = spawn('./node_modules/.bin/cucumber-js', args.slice(2), {
             cwd: uitestsRootPath
         });
         proc.stdout.pipe(process.stdout);
