@@ -234,7 +234,8 @@ async function runCucumber(
         // It seems to maintain some global state.
         // Cucumberjs isn't designed to be run more than once in same process, its meant to be run via its cli.
         // const proc = spawn(process.execPath, ['./node_modules/.bin/cucumber-js', ...args.slice(2)], {
-        const proc = spawn('./node_modules/.bin/cucumber-js', args.slice(2), {
+        const cucumberjsPath = path.join(uitestsRootPath, 'node_modules', 'cucumber', 'bin', 'cucumber-js');
+        const proc = spawn(process.execPath, [cucumberjsPath, ...args.slice(2)], {
             cwd: uitestsRootPath
         });
         proc.stdout.pipe(process.stdout);
