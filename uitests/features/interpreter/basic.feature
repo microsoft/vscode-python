@@ -18,7 +18,7 @@ Feature: Interpreter
         When I reload VS Code
         And the Python extension has activated
         Then a message containing the text "Tip: you can change the Python interpreter used by the Python extension by clicking" is displayed
-    @wow
+
     Scenario: Re-opening VS Code will not display tip about selecting interpreter after clicking the 'Got it' button
         Given VS Code is opened for the first time
         Then the Python extension has activated

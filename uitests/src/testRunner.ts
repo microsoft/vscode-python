@@ -3,9 +3,9 @@
 
 'use strict';
 
+import { spawn } from 'child_process';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import * as util from 'util';
 import { uitestsRootPath } from './constants';
 import { noop } from './helpers';
 import { debug } from './helpers/logger';
@@ -29,6 +29,44 @@ export async function initialize(options: ITestOptions) {
     ]);
 }
 
+type Scenario = {
+    id: string;
+    name: string;
+    tags: [{ name: string; line: number }];
+    line: number;
+    steps: [{ result: { status: 'passed' | 'other' } }];
+};
+type CucumberReport = [{ id: string; elements: [Scenario] }];
+
+type CucumberResults = {
+    success: boolean;
+    jsonReportFile: string;
+    rerunFile: string;
+};
+
+async function parseCucumberJson(jsonFile: string): Promise<CucumberReport> {
+    return JSON.parse(await fs.readFile(jsonFile, 'utf8'));
+}
+function hasScenarioPassed(scenario: Scenario): boolean {
+    return scenario.steps.every(step => step.result.status === 'passed');
+}
+async function findScenario(
+    report: CucumberReport,
+    featureId: string,
+    scenarioId: string,
+    line: number
+): Promise<Scenario> {
+    const featureFound = report.find(feature => feature.id === featureId);
+    if (!featureFound) {
+        throw new Error(`Feature not found. Id = ${featureId}, ScenarioId = ${scenarioId}, line = ${line}`);
+    }
+    const found = featureFound.elements.find(scenario => scenario.id === scenarioId && scenario.line === line);
+    if (!found) {
+        throw new Error(`Scenario not found. Id = ${featureId}, ScenarioId = ${scenarioId}, line = ${line}`);
+    }
+    return found;
+}
+
 export async function start(
     channel: Channel,
     testDir: string,
@@ -41,29 +79,57 @@ export async function start(
     await fs.ensureDir(options.reportsPath);
 
     const worldParameters: WorldParameters = { channel, testDir, verboseLogging, pythonPath };
-    const reportFileName = `cucumber_report_${new Date().getTime()}.json`;
-    const args: string[] = [
-        '', // Leave empty (not used by cucmberjs)
-        '', // Leave empty (not used by cucmberjs)
-        'features',
-        '--require-module',
-        'source-map-support/register',
-        '-r',
-        'out/steps/**/*.js',
-        '--format',
-        'node_modules/cucumber-pretty',
-        '--format',
-        `json:.vscode test/reports/${reportFileName}`,
-        '--world-parameters',
-        JSON.stringify(worldParameters),
-        ...cucumberArgs
-    ];
-    const cli = new Cli.default({ argv: args, cwd: uitestsRootPath, stdout: process.stdout });
-    // tslint:disable-next-line: no-console
-    const result = await cli.run().catch(console.error);
+    const results = await runCucumber(cucumberArgs, worldParameters);
+    const rerunFilesToDelete = [results.rerunFile];
+    let rerunFule = results.rerunFile;
+    // if failed, then re-run the failed tests.
+    if (!results.success) {
+        for (let retry = 1; retry <= 3; retry += 1) {
+            // tslint:disable-next-line: no-console
+            console.info(`Rerunning tests (retry #${retry}`);
+            const cucumberArgsWithoutTags = cucumberArgs.filter(arg => !arg.startsWith('--tags'));
+            const rerunResults = await runCucumber(cucumberArgsWithoutTags, worldParameters, rerunFule);
+            rerunFilesToDelete.push(rerunResults.rerunFile);
+            // if some tests passed in the re-run, then update those tests in the original report as having succeeded.
+            const rerurnJson = await parseCucumberJson(rerunResults.jsonReportFile);
+            const originalJson = await parseCucumberJson(results.jsonReportFile);
+            let originalJsonUpdated = false;
+            for (const feature of rerurnJson) {
+                for (const scenario of feature.elements) {
+                    if (hasScenarioPassed(scenario)) {
+                        const originalScenario = await findScenario(
+                            originalJson,
+                            feature.id,
+                            scenario.id,
+                            scenario.line
+                        );
+                        Object.keys(scenario).forEach(key => {
+                            // tslint:disable-next-line: no-any
+                            (originalScenario as any)[key] = (scenario as any)[key];
+                        });
+                        // Keep track of the fact that this was successful only after a retry.
+                        originalScenario.name += ` (Retry ${retry})`;
+                        originalScenario.tags.push({ name: `retry${retry}`, line: 0 });
+                        originalJsonUpdated = true;
+                    }
+                }
+            }
+
+            if (originalJsonUpdated) {
+                await fs.writeFile(results.jsonReportFile, JSON.stringify(originalJson));
+            }
+            if (rerunResults.success) {
+                break;
+            }
+            rerunFule = rerunResults.rerunFile;
+        }
+    }
+
+    // Delete all the rerun files that were created in root directory.
+    await Promise.all(rerunFilesToDelete.map(item => fs.unlink(item).catch(noop)));
 
     // Generate necessary reports.
-    const jsonReportFilePath = path.join(options.reportsPath, reportFileName);
+    const jsonReportFilePath = results.jsonReportFile;
     await addReportMetadata(options, jsonReportFilePath);
     await Promise.all([
         generateHtmlReport(options, jsonReportFilePath),
@@ -71,7 +137,64 @@ export async function start(
     ]);
 
     // Bye bye.
-    if (!result.success) {
-        throw new Error(`Error in running UI Tests. ${util.format(result)}`);
+    if (!results.success) {
+        throw new Error('Error in running UI Tests');
     }
+}
+
+async function runCucumber(
+    cucumberArgs: string[],
+    worldParameters: WorldParameters,
+    rerunFile?: string
+): Promise<CucumberResults> {
+    const jsonReportFile = path.join(
+        uitestsRootPath,
+        '.vscode test',
+        'reports',
+        `cucumber_report_${new Date().getTime()}.json`
+    );
+    const newRerunFile = `@rerun${new Date().getTime()}.txt`;
+    const args: string[] = [
+        '', // Leave empty (not used by cucmberjs)
+        '', // Leave empty (not used by cucmberjs)
+        // If we have a rerun file, use that else run all features in `features` folder.
+        rerunFile || 'features',
+        '--require-module',
+        'source-map-support/register',
+        '-r',
+        'out/steps/**/*.js',
+        '--format',
+        'node_modules/cucumber-pretty',
+        '--format',
+        `rerun:${newRerunFile}`,
+        '--format',
+        `json:${jsonReportFile}`,
+        '--world-parameters',
+        JSON.stringify(worldParameters),
+        ...cucumberArgs
+    ];
+
+    let success = true;
+    if (rerunFile) {
+        // When this is a rerun, then spanw a node process to run cucumber.
+        // We cannot re-run cucumber in the same process more than once.
+        // It seems to maintain some global state.
+        // Cucumberjs isn't designed to be run more than once in same process, its meant to be run via its cli.
+        const proc = spawn(process.execPath, ['./node_modules/.bin/cucumber-js', ...args.slice(2)]);
+        proc.stdout.pipe(process.stdout);
+        proc.stderr.pipe(process.stderr);
+        const exitCode = await new Promise<number>(resolve => proc.once('exit', resolve));
+        success = exitCode === 0;
+    } else {
+        // This is a hack, reunnin cucumberjs like this, but allows us to  debug it and have our own code run as part of the test initialization.
+        const cli = new Cli.default({ argv: args, cwd: uitestsRootPath, stdout: process.stdout });
+        // tslint:disable-next-line: no-console
+        const result = await cli.run().catch(console.error);
+        success = result.success;
+    }
+    return {
+        success,
+        jsonReportFile,
+        rerunFile: newRerunFile
+    };
 }
