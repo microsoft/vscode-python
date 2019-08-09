@@ -18,6 +18,7 @@ import { Channel, ITestOptions } from './types';
 const Cli = require('cucumber/lib/cli');
 
 const retryCount = 2;
+const failureThresholdToRetry = 0.25;
 
 export async function initialize(options: ITestOptions) {
     // Delete all old test related stuff.
@@ -83,9 +84,17 @@ async function getCucumberResultStats(json: CucumberReport): Promise<CucumberRep
 }
 async function shouldRerunTests(results: CucumberResults): Promise<boolean> {
     if (results.success || !results.stats) {
+        // tslint:disable-next-line: no-console
+        console.info('Not retrying, as there are no stats');
         return false;
     }
-    return results.stats.failed / results.stats.total < 0.25;
+
+    if (results.stats.failed / results.stats.total < failureThresholdToRetry) {
+        return true;
+    }
+    // tslint:disable-next-line: no-console
+    console.info(`Not retrying, as there are too many failures ${results.stats.failed}/${results.stats.total}`);
+    return false;
 }
 
 export async function start(
@@ -105,48 +114,53 @@ export async function start(
     let rerunFule = results.rerunFile;
     // if failed, then re-run the failed tests.
     if (await shouldRerunTests(results)) {
-        for (let retry = 1; retry <= retryCount; retry += 1) {
-            // tslint:disable-next-line: no-console
-            console.info(`Rerunning tests (retry #${retry}`);
-            const cucumberArgsWithoutTags = cucumberArgs.filter(arg => !arg.startsWith('--tags'));
-            const rerunResults = await runCucumber(cucumberArgsWithoutTags, worldParameters, rerunFule);
-            rerunFilesToDelete.push(rerunResults.rerunFile);
-            // if some tests passed in the re-run, then update those tests in the original report as having succeeded.
-            const rerurnJson = await parseCucumberJson(rerunResults.jsonReportFile);
-            const originalJson = await parseCucumberJson(results.jsonReportFile);
-            let originalJsonUpdated = false;
-            for (const feature of rerurnJson) {
-                for (const scenario of feature.elements) {
-                    if (hasScenarioPassed(scenario)) {
-                        const originalScenario = await findScenario(
-                            originalJson,
-                            feature.id,
-                            scenario.id,
-                            scenario.line
-                        );
-                        Object.keys(scenario).forEach(key => {
-                            // tslint:disable-next-line: no-any
-                            (originalScenario as any)[key] = (scenario as any)[key];
-                        });
-                        // Keep track of the fact that this was successful only after a retry.
-                        originalScenario.name += ` (Retry ${retry})`;
-                        originalScenario.tags.push({ name: `retry${retry}`, line: 0 });
-                        originalJsonUpdated = true;
+        try {
+            for (let retry = 1; retry <= retryCount; retry += 1) {
+                // tslint:disable-next-line: no-console
+                console.info(`Rerunning tests (retry #${retry})`);
+                const cucumberArgsWithoutTags = cucumberArgs.filter(arg => !arg.startsWith('--tags'));
+                const rerunResults = await runCucumber(cucumberArgsWithoutTags, worldParameters, rerunFule);
+                rerunFilesToDelete.push(rerunResults.rerunFile);
+                // if some tests passed in the re-run, then update those tests in the original report as having succeeded.
+                const rerurnJson = await parseCucumberJson(rerunResults.jsonReportFile);
+                const originalJson = await parseCucumberJson(results.jsonReportFile);
+                let originalJsonUpdated = false;
+                for (const feature of rerurnJson) {
+                    for (const scenario of feature.elements) {
+                        if (hasScenarioPassed(scenario)) {
+                            const originalScenario = await findScenario(
+                                originalJson,
+                                feature.id,
+                                scenario.id,
+                                scenario.line
+                            );
+                            Object.keys(scenario).forEach(key => {
+                                // tslint:disable-next-line: no-any
+                                (originalScenario as any)[key] = (scenario as any)[key];
+                            });
+                            // Keep track of the fact that this was successful only after a retry.
+                            originalScenario.name += ` (Retry ${retry})`;
+                            originalScenario.tags.push({ name: `retry${retry}`, line: 0 });
+                            originalJsonUpdated = true;
+                        }
                     }
                 }
-            }
 
-            if (originalJsonUpdated) {
-                await fs.writeFile(results.jsonReportFile, JSON.stringify(originalJson));
+                if (originalJsonUpdated) {
+                    await fs.writeFile(results.jsonReportFile, JSON.stringify(originalJson));
+                }
+                if (rerunResults.success) {
+                    break;
+                }
+                // If all tests that were supposed to be rerun failed, then don't bother trying again.
+                if (!results.stats || !rerunResults.stats || rerunResults.stats.failed === results.stats.failed) {
+                    break;
+                }
+                rerunFule = rerunResults.rerunFile;
             }
-            if (rerunResults.success) {
-                break;
-            }
-            // If all tests that were supposed to be rerun failed, then don't bother trying again.
-            if (!results.stats || !rerunResults.stats || rerunResults.stats.failed === results.stats.failed) {
-                break;
-            }
-            rerunFule = rerunResults.rerunFile;
+        } catch (ex) {
+            // tslint:disable-next-line: no-console
+            console.error('Rerun failed', ex);
         }
     }
 
@@ -205,7 +219,9 @@ async function runCucumber(
         // We cannot re-run cucumber in the same process more than once.
         // It seems to maintain some global state.
         // Cucumberjs isn't designed to be run more than once in same process, its meant to be run via its cli.
-        const proc = spawn(process.execPath, ['./node_modules/.bin/cucumber-js', ...args.slice(2)]);
+        const proc = spawn(process.execPath, ['./node_modules/.bin/cucumber-js', ...args.slice(2)], {
+            cwd: uitestsRootPath
+        });
         proc.stdout.pipe(process.stdout);
         proc.stderr.pipe(process.stderr);
         const exitCode = await new Promise<number>(resolve => proc.once('exit', resolve));
