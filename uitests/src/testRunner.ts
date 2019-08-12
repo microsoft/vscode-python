@@ -67,15 +67,18 @@ async function findScenario(
     scenarioId: string,
     line: number
 ): Promise<Scenario> {
-    const featureFound = report.find(feature => feature.id === featureId);
-    if (!featureFound) {
-        throw new Error(`Feature not found. Id = ${featureId}, ScenarioId = ${scenarioId}, line = ${line}`);
+    for (const feature of report) {
+        if (feature.id !== featureId) {
+            continue;
+        }
+        const found = feature.elements.find(scenario => scenario.id === scenarioId && scenario.line === line);
+        if (found) {
+            return found;
+        }
     }
-    const found = featureFound.elements.find(scenario => scenario.id === scenarioId && scenario.line === line);
-    if (!found) {
-        throw new Error(`Scenario not found. Id = ${featureId}, ScenarioId = ${scenarioId}, line = ${line}`);
-    }
-    return found;
+    throw new Error(
+        `Feature & Scenario not found. FeatureId = ${featureId}, ScenarioId = ${scenarioId}, line = ${line}`
+    );
 }
 
 async function getCucumberResultStats(json: CucumberReport): Promise<CucumberReportStats> {
