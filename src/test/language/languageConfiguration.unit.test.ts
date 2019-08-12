@@ -105,7 +105,6 @@ suite('Language configuration regexes', () => {
         'elif x < 5:',
         'elif :',
         'else:',
-        //'else if x < 5:',
         'except TestError:',
         'except :',
         'finally:',
