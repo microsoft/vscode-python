@@ -17,7 +17,7 @@ const NEEDS_INDENT = [
     /^raise$/,  // only re-raise
     /^return\b/
 ];
-const INDENT_ON_MATCH = [
+const INDENT_ON_ENTER = [  // block-beginning statements
     /^async\s+def\b/,
     /^class\b/,
     /^def\b/,
@@ -31,13 +31,7 @@ const INDENT_ON_MATCH = [
     /^elif\b/,
     /^else\b/
 ];
-const DEDENT_ON_MATCH = [
-    /^elif\b/,
-    /^else\b/,
-    /^except\b/,
-    /^finally\b/
-];
-const DEDENT_ON_ENTER = [
+const DEDENT_ON_ENTER = [  // block-ending statements
     /^break$/,
     /^continue$/,
     /^raise\b/,
@@ -55,15 +49,76 @@ function isMember(line: string, regexes: RegExp[]): boolean {
     return false;
 }
 
-suite('Language configuration regexes', () => {
-    const cfg = getLanguageConfiguration();
-    const MULTILINE_SEPARATOR_INDENT_REGEX = cfg.onEnterRules[0].beforeText;
-    const DECREASE_INDENT_REGEX = cfg.indentationRules.decreaseIndentPattern;
-    const INCREASE_INDENT_REGEX = cfg.indentationRules.increaseIndentPattern;
-    const OUTDENT_ONENTER_REGEX = cfg.onEnterRules[2].beforeText;
-    // To see the actual (non-verbose) regex patterns, un-comment here:
-    //console.log(DECREASE_INDENT_REGEX.source);
-    //console.log(INCREASE_INDENT_REGEX.source);
+function resolveExample(
+    base: string,
+    leading: string,
+    postKeyword: string,
+    preColon: string,
+    trailing: string
+): [string | undefined, string | undefined, boolean] {
+    let invalid: string | undefined;
+    if (base.trim() === '') {
+        invalid = 'blank line';
+    } else if (leading === '' && isMember(base, NEEDS_INDENT)) {
+        invalid = 'expected indent';
+    } else if (leading.trim() !== '') {
+        invalid = 'look-alike - pre-keyword';
+    } else if (postKeyword.trim() !== '') {
+        invalid = 'look-alike - post-keyword';
+    }
+
+    let resolvedBase = base;
+    if (postKeyword !== '') {
+        if (resolvedBase.includes(' ')) {
+            const kw = resolvedBase.split(' ', 1)[0];
+            const remainder = resolvedBase.substring(kw.length);
+            resolvedBase = `${kw}${postKeyword} ${remainder}`;
+        } else {
+            if (resolvedBase.endsWith(':')) {
+                resolvedBase = `${resolvedBase.substring(0, resolvedBase.length - 1)}${postKeyword}:`;
+            } else {
+                resolvedBase = `${resolvedBase}${postKeyword}`;
+            }
+        }
+    }
+    if (preColon !== '') {
+        if (resolvedBase.endsWith(':')) {
+            resolvedBase = `${resolvedBase.substring(0, resolvedBase.length - 1)}${preColon}:`;
+        } else {
+            return [undefined, undefined, true];
+        }
+    }
+    const example = `${leading}${resolvedBase}${trailing}`;
+    return [example, invalid, false];
+}
+
+const cfg = getLanguageConfiguration();
+
+suite('Language configuration - brackets', () => {
+    test('brackets is not defined', () => {
+        expect(cfg.brackets).to.be.equal(undefined, 'missing tests');
+    });
+});
+
+suite('Language configuration - comments', () => {
+    test('comments is not defined', () => {
+        expect(cfg.comments).to.be.equal(undefined, 'missing tests');
+    });
+});
+
+suite('Language configuration - indentationRules', () => {
+    test('indentationRules is not defined', () => {
+        expect(cfg.indentationRules).to.be.equal(undefined, 'missing tests');
+    });
+});
+
+suite('Language configuration - onEnterRules', () => {
+    const MULTILINE_SEPARATOR_INDENT_REGEX = cfg.onEnterRules![0].beforeText;
+    const INDENT_ONENTER_REGEX = cfg.onEnterRules![2].beforeText;
+    const OUTDENT_ONENTER_REGEX = cfg.onEnterRules![3].beforeText;
+    // To see the actual (non-verbose) regex patterns, un-comment
+    // the following lines:
+    //console.log(INDENT_ONENTER_REGEX.source);
     //console.log(OUTDENT_ONENTER_REGEX.source);
 
     test('Multiline separator indent regex should not pick up strings with no multiline separator', async () => {
@@ -147,46 +202,17 @@ suite('Language configuration regexes', () => {
             ['', '', '', ' # ...']
         ].forEach(whitespace => {
             const [leading, postKeyword, preColon, trailing] = whitespace;
-            let invalid: string | undefined;
-            if (base.trim() === '') {
-                invalid = 'blank line';
-            } else if (leading === '' && isMember(base, NEEDS_INDENT)) {
-                invalid = 'expected indent';
-            } else if (leading.trim() !== '') {
-                invalid = 'look-alike - pre-keyword';
-            } else if (postKeyword.trim() !== '') {
-                invalid = 'look-alike - post-keyword';
+            const [_example, invalid, ignored] = resolveExample(base, leading, postKeyword, preColon, trailing);
+            if (ignored) {
+                return;
             }
-
-            let resolvedBase = base;
-            if (postKeyword !== '') {
-                if (resolvedBase.includes(' ')) {
-                    const kw = resolvedBase.split(' ', 1)[0];
-                    const remainder = resolvedBase.substring(kw.length);
-                    resolvedBase = `${kw}${postKeyword} ${remainder}`;
-                } else {
-                    if (resolvedBase.endsWith(':')) {
-                        resolvedBase = `${resolvedBase.substring(0, resolvedBase.length - 1)}${postKeyword}:`;
-                    } else {
-                        resolvedBase = `${resolvedBase}${postKeyword}`;
-                    }
-                }
-            }
-            if (preColon !== '') {
-                if (resolvedBase.endsWith(':')) {
-                    resolvedBase = `${resolvedBase.substring(0, resolvedBase.length - 1)}${preColon}:`;
-                } else {
-                    return;
-                }
-            }
-            const example = `${leading}${resolvedBase}${trailing}`;
+            const example = _example!;
 
             if (invalid) {
                 test(`Line "${example}" ignored (${invalid})`, () => {
-                    let result = INCREASE_INDENT_REGEX.test(example);
-                    expect(result).to.be.equal(false, 'unexpected match');
+                    let result: boolean;
 
-                    result = DECREASE_INDENT_REGEX.test(example);
+                    result = INDENT_ONENTER_REGEX.test(example);
                     expect(result).to.be.equal(false, 'unexpected match');
 
                     result = OUTDENT_ONENTER_REGEX.test(example);
@@ -195,24 +221,13 @@ suite('Language configuration regexes', () => {
                 return;
             }
 
-            test(`Check indent-on-match for line "${example}"`, () => {
+            test(`Check indent-on-enter for line "${example}"`, () => {
                 let expected = false;
-                if (isMember(base, INDENT_ON_MATCH)) {
+                if (isMember(base, INDENT_ON_ENTER)) {
                     expected = true;
                 }
 
-                const result = INCREASE_INDENT_REGEX.test(example);
-
-                expect(result).to.be.equal(expected, 'unexpected result');
-            });
-
-            test(`Check dedent-on-match for line "${example}"`, () => {
-                let expected = false;
-                if (isMember(base, DEDENT_ON_MATCH)) {
-                    expected = true;
-                }
-
-                const result = DECREASE_INDENT_REGEX.test(example);
+                const result = INDENT_ONENTER_REGEX.test(example);
 
                 expect(result).to.be.equal(expected, 'unexpected result');
             });
@@ -228,5 +243,11 @@ suite('Language configuration regexes', () => {
                 expect(result).to.be.equal(expected, 'unexpected result');
             });
         });
+    });
+});
+
+suite('Language configuration - wordPattern', () => {
+    test('wordPattern is not defined', () => {
+        expect(cfg.wordPattern).to.be.equal(undefined, 'missing tests');
     });
 });
