@@ -41,7 +41,8 @@ const DEDENT_ON_ENTER = [
     /^break$/,
     /^continue$/,
     /^raise\b/,
-    /^return$/,
+    // For now we are ignoring "return" completely.  See gh-6564.
+    ///^return\b/,
     /^pass\b/
 ];
 
