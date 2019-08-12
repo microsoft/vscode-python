@@ -32,11 +32,11 @@ const INDENT_ON_ENTER = [  // block-beginning statements
     /^else\b/
 ];
 const DEDENT_ON_ENTER = [  // block-ending statements
+    // For now we are ignoring "return" completely.  See gh-6564.
+    ///^return\b/,
     /^break$/,
     /^continue$/,
     /^raise\b/,
-    // For now we are ignoring "return" completely.  See gh-6564.
-    ///^return\b/,
     /^pass\b/
 ];
 
