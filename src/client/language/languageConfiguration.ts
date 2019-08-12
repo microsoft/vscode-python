@@ -2,24 +2,19 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { IndentAction } from 'vscode';
+import { IndentAction, languages } from 'vscode';
+import { PYTHON_LANGUAGE } from '../common/constants';
 
 export const MULTILINE_SEPARATOR_INDENT_REGEX = /^(?!\s+\\)[^#\n]+\\$/;
-/**
- * This does not handle all cases. However, it does handle nearly all usage.
- * Here's what it does not cover:
- * - the statement is split over multiple lines (and hence the ":" is on a different line)
- * - the code block is inlined (after the ":")
- * - there are multiple statements on the line (separated by semicolons)
- * Also note that `lambda` is purposefully excluded.
- */
-export const INCREASE_INDENT_REGEX = /^\s*(?:(?:async|class|def|elif|except|for|if|while|with)\b.*|(else|finally|try))\s*:\s*(#.*)?$/;
-export const DECREASE_INDENT_REGEX = /^\s*(?:else|finally|(?:elif|except)\b.*)\s*:\s*(#.*)?$/;
-export const OUTDENT_ONENTER_REGEX = /^\s*(?:break|continue|pass|(?:raise|return)\b.*)\s*(#.*)?$/;
 
-export function getLanguageConfiguration() {
-    return {
+export function setLanguageConfiguration() {
+    // Enable indentAction
+    languages.setLanguageConfiguration(PYTHON_LANGUAGE, {
         onEnterRules: [
+            {
+                beforeText: /^\s*(?:def|class|for|if|elif|else|while|try|with|finally|except|async)\b.*:\s*/,
+                action: { indentAction: IndentAction.Indent }
+            },
             {
                 beforeText: MULTILINE_SEPARATOR_INDENT_REGEX,
                 action: { indentAction: IndentAction.Indent }
@@ -30,13 +25,10 @@ export function getLanguageConfiguration() {
                 action: { indentAction: IndentAction.None, appendText: '# ' }
             },
             {
-                beforeText: OUTDENT_ONENTER_REGEX,
+                beforeText: /^\s+(continue|break|return)\b.*/,
+                afterText: /\s+$/,
                 action: { indentAction: IndentAction.Outdent }
             }
-        ],
-        indentationRules: {
-            increaseIndentPattern: INCREASE_INDENT_REGEX,
-            decreaseIndentPattern: DECREASE_INDENT_REGEX
-        }
-    };
+        ]
+    });
 }
