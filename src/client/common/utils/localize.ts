@@ -67,7 +67,7 @@ export namespace ExtensionChannels {
     export const yesWeekly = localize('ExtensionChannels.yesWeekly', 'Yes, weekly');
     export const yesDaily = localize('ExtensionChannels.yesDaily', 'Yes, daily');
     export const promptMessage = localize('ExtensionChannels.promptMessage', 'We noticed you are using Visual Studio Code Insiders. Would you like to use the Insiders build of the Python extension?');
-    export const reloadToUseInsidersMessage = localize('ExtensionChannels.reloadToUseInsidersMessage', 'Please reload Visual Studio Code to use the insiders build of the extension');
+    export const reloadToUseInsidersMessage = localize('ExtensionChannels.reloadToUseInsidersMessage', 'Please reload Visual Studio Code to use the insiders build of the Python extension.');
     export const downloadCompletedOutputMessage = localize('ExtensionChannels.downloadCompletedOutputMessage', 'Insiders build download complete.');
     export const startingDownloadOutputMessage = localize('ExtensionChannels.startingDownloadOutputMessage', 'Starting download for Insiders build.');
     export const downloadingInsidersMessage = localize('ExtensionChannels.downloadingInsidersMessage', 'Downloading Insiders Extension... ');
