@@ -166,11 +166,19 @@ export async function start(
                     success = true;
                     break;
                 }
+                // Set rerun file for next retry.
+                rerunFule = rerunResults.rerunFile;
+
+                // If only 10 failed, we can retry, event if this is the same 10 that we retried.
+                // Its small enough to retry again.
+                if (rerunResults.stats && rerunResults.stats.failed <= maxTestsToRetryAll) {
+                    continue;
+                }
                 // If all tests that were supposed to be rerun failed, then don't bother trying again.
                 if (!results.stats || !rerunResults.stats || rerunResults.stats.failed === results.stats.failed) {
                     break;
                 }
-                rerunFule = rerunResults.rerunFile;
+                continue;
             }
         } catch (ex) {
             // tslint:disable-next-line: no-console
