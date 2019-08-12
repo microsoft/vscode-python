@@ -42,12 +42,13 @@ export function getLanguageConfiguration() {
                             \\s*
                             (?:
                                 pass |
-                                raise \\b .* |
+                                raise \\s+ [^#\\s] [^#]*
                             )
                         ) |
                         (?:
                             \\s+
                             (?:
+                                raise |
                                 break |
                                 continue |
                                 return \\b .*
@@ -55,7 +56,7 @@ export function getLanguageConfiguration() {
                         )
                     )
                     \\s*
-                    ( [#] .* )?
+                    (?: [#] .* )?
                     $
                 `),
                 action: {
@@ -74,11 +75,11 @@ export function getLanguageConfiguration() {
              */
             increaseIndentPattern: verboseRegExp(`
                 ^
+                \\s*
                 (?:
-                    \\s*
                     (?:
                         (?:
-                            async |
+                            async \\s+ def |
                             class |
                             def |
                             except |
@@ -97,7 +98,7 @@ export function getLanguageConfiguration() {
                 \\s*
                 [:]
                 \\s*
-                ( [#] .* )?
+                (?: [#] .* )?
                 $
             `),
             decreaseIndentPattern: verboseRegExp(`
@@ -117,7 +118,7 @@ export function getLanguageConfiguration() {
                 \\s*
                 [:]
                 \\s*
-                ( [#] .* )?
+                (?: [#] .* )?
                 $
             `)
         }
