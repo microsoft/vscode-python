@@ -41,7 +41,7 @@ const DEDENT_ON_ENTER = [
     /^break$/,
     /^continue$/,
     /^raise\b/,
-    /^return\b/,
+    /^return$/,
     /^pass\b/
 ];
 
@@ -115,6 +115,7 @@ suite('Language configuration regexes', () => {
         'raise',  // re-raise
         'break',
         'continue',
+        'return',
         'return True',
         'return (True, False, False)',
         'return [True, False, False]',

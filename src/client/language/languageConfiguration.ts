@@ -51,7 +51,7 @@ export function getLanguageConfiguration() {
                                 raise |
                                 break |
                                 continue |
-                                return \\b .*
+                                return
                             )
                         )
                     )
