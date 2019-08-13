@@ -76,9 +76,9 @@ import { AutoSelectionRule, IInterpreterAutoSelectionRule, IInterpreterAutoSelec
 import { IInterpreterSelector } from './interpreter/configuration/types';
 import {
     ICondaService,
+    IInterpreterLocatorProgressHandler,
     IInterpreterLocatorProgressService,
     IInterpreterService,
-    InterpreterLocatorProgressHandler,
     PythonInterpreter
 } from './interpreter/contracts';
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
@@ -283,7 +283,7 @@ async function initializeServices(context: ExtensionContext, serviceManager: Ser
     disposables.push(cmdManager.registerCommand(Commands.ViewOutput, () => outputChannel.show()));
 
     // Display progress of interpreter refreshes only after extension has activated.
-    serviceContainer.get<InterpreterLocatorProgressHandler>(InterpreterLocatorProgressHandler).register();
+    serviceContainer.get<IInterpreterLocatorProgressHandler>(IInterpreterLocatorProgressHandler).register();
     serviceContainer.get<IInterpreterLocatorProgressService>(IInterpreterLocatorProgressService).register();
     serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics).register();
     serviceContainer.get<ITestCodeNavigatorCommandHandler>(ITestCodeNavigatorCommandHandler).register();

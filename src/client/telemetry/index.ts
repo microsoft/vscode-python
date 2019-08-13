@@ -7,19 +7,20 @@ import { basename as pathBasename, sep as pathSep } from 'path';
 import * as stackTrace from 'stack-trace';
 import TelemetryReporter from 'vscode-extension-telemetry';
 
+import { DiagnosticCodes } from '../application/diagnostics/constants';
 import { IWorkspaceService } from '../common/application/types';
 import { AppinsightsKey, EXTENSION_ROOT_DIR, isTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
 import { traceInfo } from '../common/logger';
+import { TerminalShellType } from '../common/terminal/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { Telemetry } from '../datascience/constants';
 import { ConsoleType } from '../debugger/types';
+import { InterpreterType } from '../interpreter/contracts';
 import { LinterId } from '../linters/types';
 import { TestProvider } from '../testing/common/types';
 import { EventName } from './constants';
 import {
     DebuggerConfigurationPromtpsTelemetry,
-    DiagnosticsAction,
-    DiagnosticsMessages,
     EditorLoadTelemetry,
     FormatTelemetry,
     InterpreterActivation,
@@ -27,16 +28,11 @@ import {
     InterpreterAutoSelection,
     LanguageServePlatformSupported,
     LanguageServerErrorTelemetry,
-    LanguageServerVersionTelemetry,
-    LinterInstallPromptTelemetry,
     LinterSelectionTelemetry,
     LintingTelemetry,
     Platform,
     PythonInterpreterTelemetry,
-    TerminalTelemetry,
-    TestConfiguringTelemetry,
-    TestDiscoverytTelemetry,
-    TestRunTelemetry
+    TestTool
 } from './types';
 
 /**
@@ -397,11 +393,38 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent with details of actions when invoking a diagnostic command
      */
-    [EventName.DIAGNOSTICS_ACTION]: DiagnosticsAction;
+    [EventName.DIAGNOSTICS_ACTION]: {
+        /**
+         * Diagnostics command executed.
+         * @type {string}
+         */
+        commandName?: string;
+        /**
+         * Diagnostisc code ignored (message will not be seen again).
+         * @type {string}
+         */
+        ignoreCode?: string;
+        /**
+         * Url of web page launched in browser.
+         * @type {string}
+         */
+        url?: string;
+        /**
+         * Custom actions performed.
+         * @type {'switchToCommandPrompt'}
+         */
+        action?: 'switchToCommandPrompt';
+    };
     /**
      * Telemetry event sent when we are checking if we can handle the diagnostic code
      */
-    [EventName.DIAGNOSTICS_MESSAGE]: DiagnosticsMessages;
+    [EventName.DIAGNOSTICS_MESSAGE]: {
+        /**
+         * Code of diagnostics message detected and displayed.
+         * @type {string}
+         */
+        code: DiagnosticCodes;
+    };
     [EventName.EDITOR_LOAD]: EditorLoadTelemetry;
     [EventName.ENVFILE_VARIABLE_SUBSTITUTION]: never | undefined;
     /**
@@ -448,7 +471,22 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent with details of selection in prompt
      * `Prompt message` :- 'Linter ${productName} is not installed'
      */
-    [EventName.LINTER_NOT_INSTALLED_PROMPT]: LinterInstallPromptTelemetry;
+    [EventName.LINTER_NOT_INSTALLED_PROMPT]: {
+        /**
+         * Name of the linter
+         *
+         * @type {LinterId}
+         */
+        tool?: LinterId;
+        /**
+         * `select` When 'Select linter' option is selected
+         * `disablePrompt` When 'Do not show again' option is selected
+         * `install` When 'Install' option is selected
+         *
+         * @type {('select' | 'disablePrompt' | 'install')}
+         */
+        action: 'select' | 'disablePrompt' | 'install';
+    };
     [EventName.PYTHON_INSTALL_PACKAGE]: { installer: string };
     [EventName.LINTING]: LintingTelemetry;
     [EventName.PLATFORM_INFO]: Platform;
@@ -515,7 +553,20 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent with details after attempting to download LS
      */
-    [EventName.PYTHON_LANGUAGE_SERVER_DOWNLOADED]: LanguageServerVersionTelemetry;
+    [EventName.PYTHON_LANGUAGE_SERVER_DOWNLOADED]: {
+        /**
+         * Whether LS downloading succeeds
+         */
+        success: boolean;
+        /**
+         * Version of LS downloaded
+         */
+        lsVersion?: string;
+        /**
+         * Whether download uri starts with `https:` or not
+         */
+        usedSSL?: boolean;
+    };
     /**
      * Telemetry event sent when LS is started for workspace (workspace folder in case of multi-root)
      */
@@ -527,7 +578,20 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent with details after attempting to extract LS
      */
-    [EventName.PYTHON_LANGUAGE_SERVER_EXTRACTED]: LanguageServerVersionTelemetry;
+    [EventName.PYTHON_LANGUAGE_SERVER_EXTRACTED]: {
+        /**
+         * Whether LS extracting succeeds
+         */
+        success: boolean;
+        /**
+         * Version of LS extracted
+         */
+        lsVersion?: string;
+        /**
+         * Whether download uri starts with `https:` or not
+         */
+        usedSSL?: boolean;
+    };
     /**
      * Telemetry event sent if azure blob packages are being listed
      */
@@ -614,15 +678,76 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when user chooses a test framework in the Quickpick displayed for enabling and configuring test framework
      */
-    [EventName.UNITTEST_CONFIGURING]: TestConfiguringTelemetry;
+    [EventName.UNITTEST_CONFIGURING]: {
+        /**
+         * Name of the test framework to configure
+         */
+        tool?: TestTool;
+        /**
+         * Carries the source which triggered configuration of tests
+         *
+         * @type {('ui' | 'commandpalette')}
+         */
+        trigger: 'ui' | 'commandpalette';
+        /**
+         * Carries `true` if configuring test framework failed, `false` otherwise
+         *
+         * @type {boolean}
+         */
+        failed: boolean;
+    };
     /**
      * Telemetry sent with details when a terminal is created
      */
-    [EventName.TERMINAL_CREATE]: TerminalTelemetry;
+    [EventName.TERMINAL_CREATE]: {
+        /**
+         * The type of terminal shell created: powershell, cmd, zsh, bash etc.
+         *
+         * @type {TerminalShellType}
+         */
+        terminal?: TerminalShellType;
+        /**
+         * The source which triggered creation of terminal
+         *
+         * @type {'commandpalette'}
+         */
+        triggeredBy?: 'commandpalette';
+        /**
+         * The default Python interpreter version to be used in terminal, inferred from resource's 'settings.json'
+         *
+         * @type {string}
+         */
+        pythonVersion?: string;
+        /**
+         * The Python interpreter type: Conda, Virtualenv, Venv, Pipenv etc.
+         *
+         * @type {InterpreterType}
+         */
+        interpreterType?: InterpreterType;
+    };
     /**
      * Telemetry event sent with details about discovering tests
      */
-    [EventName.UNITTEST_DISCOVER]: TestDiscoverytTelemetry;
+    [EventName.UNITTEST_DISCOVER]: {
+        /**
+         * The test framework used to discover tests
+         *
+         * @type {TestTool}
+         */
+        tool: TestTool;
+        /**
+         * Carries the source which triggered discovering of tests
+         *
+         * @type {('ui' | 'commandpalette')}
+         */
+        trigger: 'ui' | 'commandpalette';
+        /**
+         * Carries `true` if discovering tests failed, `false` otherwise
+         *
+         * @type {boolean}
+         */
+        failed: boolean;
+    };
     /**
      * Telemetry event is sent if we are doing test discovery using python code
      */
@@ -663,7 +788,28 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent with details about running the tests, what is being run, what framework is being used etc.
      */
-    [EventName.UNITTEST_RUN]: TestRunTelemetry;
+    [EventName.UNITTEST_RUN]: {
+        /**
+         * Framework being used to run tests
+         */
+        tool: TestTool;
+        /**
+         * Carries info what is being run
+         */
+        scope: 'currentFile' | 'all' | 'file' | 'class' | 'function' | 'failed';
+        /**
+         * Carries `true` if debugging, `false` otherwise
+         */
+        debugging: boolean;
+        /**
+         * Carries what triggered the execution of the tests
+         */
+        triggerSource: 'ui' | 'codelens' | 'commandpalette' | 'auto' | 'testExplorer';
+        /**
+         * Carries `true` if running tests failed, `false` otherwise
+         */
+        failed: boolean;
+    };
     /**
      * Telemetry event sent when cancelling running or discovering tests
      */

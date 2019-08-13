@@ -134,9 +134,8 @@ export interface IInterpreterWatcherBuilder {
     getWorkspaceVirtualEnvInterpreterWatcher(resource: Resource): Promise<IInterpreterWatcher>;
 }
 
-export const InterpreterLocatorProgressHandler = Symbol('InterpreterLocatorProgressHandler');
-// tslint:disable-next-line: interface-name
-export interface InterpreterLocatorProgressHandler {
+export const IInterpreterLocatorProgressHandler = Symbol('IInterpreterLocatorProgressHandler');
+export interface IInterpreterLocatorProgressHandler {
     register(): void;
 }
 
