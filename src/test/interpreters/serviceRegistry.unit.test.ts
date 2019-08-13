@@ -5,9 +5,7 @@
 
 // tslint:disable: no-any
 
-import { expect } from 'chai';
 import { instance, mock, verify } from 'ts-mockito';
-import * as typemoq from 'typemoq';
 import { IExtensionActivationService, IExtensionSingleActivationService } from '../../client/activation/types';
 import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
