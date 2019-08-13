@@ -3,7 +3,6 @@
 
 from __future__ import absolute_import, print_function
 
-import os.path
 import sys
 
 import pytest
@@ -61,8 +60,9 @@ def _adjust_pytest_args(pytestargs):
 class TestCollector(object):
     """This is a pytest plugin that collects the discovered tests."""
 
-    NORMCASE = staticmethod(os.path.normcase)
-    PATHSEP = os.path.sep
+    @classmethod
+    def parse_item(cls, item):
+        return parse_item(item)
 
     def __init__(self, tests=None):
         if tests is None:
@@ -77,7 +77,7 @@ class TestCollector(object):
         self._started = True
         self._tests.reset()
         for item in items:
-            test, parents = parse_item(item, self.NORMCASE, self.PATHSEP)
+            test, parents = self.parse_item(item)
             self._tests.add_test(test, parents)
 
     # This hook is not specified in the docs, so we also provide
@@ -91,5 +91,5 @@ class TestCollector(object):
             return
         self._tests.reset()
         for item in items:
-            test, parents = parse_item(item, self.NORMCASE, self.PATHSEP)
+            test, parents = self.parse_item(item)
             self._tests.add_test(test, parents)

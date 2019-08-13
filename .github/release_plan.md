@@ -93,5 +93,5 @@
 - [ ] GDPR bookkeeping
 
 ## Prep for the _next_ release
-- [ ] Create a new [release plan](https://github.com/Microsoft/vscode-python/edit/master/.github/release_plan.md)
+- [ ] Create a new [release plan](https://raw.githubusercontent.com/microsoft/vscode-python/master/.github/release_plan.md)
 - [ ] [(Un-)pin](https://help.github.com/en/articles/pinning-an-issue-to-your-repository) [release plan issues](https://github.com/Microsoft/vscode-python/labels/release%20plan)

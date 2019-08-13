@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { IExtensionActivationService } from '../../activation/types';
+import { IExtensionSingleActivationService } from '../../activation/types';
 import { IServiceManager } from '../../ioc/types';
 import { AttachRequestArguments, LaunchRequestArguments } from '../types';
 import { DebuggerBanner } from './banner';
@@ -27,8 +27,8 @@ import { IChildProcessAttachService, IDebugSessionEventHandlers } from './hooks/
 import { DebugConfigurationType, IDebugConfigurationProvider, IDebugConfigurationService, IDebuggerBanner } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, LaunchJsonCompletionProvider);
-    serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, LaunchJsonUpdaterService);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, LaunchJsonCompletionProvider);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, LaunchJsonUpdaterService);
     serviceManager.addSingleton<IDebugConfigurationService>(IDebugConfigurationService, PythonDebugConfigurationService);
     serviceManager.addSingleton<IDebuggerBanner>(IDebuggerBanner, DebuggerBanner);
     serviceManager.addSingleton<IChildProcessAttachService>(IChildProcessAttachService, ChildProcessAttachService);

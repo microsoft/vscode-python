@@ -4,14 +4,14 @@
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 
-import { IExtensionActivationService } from '../../activation/types';
+import { IExtensionSingleActivationService } from '../../activation/types';
 import { IDocumentManager } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
-import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../common/types';
+import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../common/types';
 import { generateCellRanges } from '../cellFactory';
 
 @injectable()
-export class Decorator implements IExtensionActivationService, IDisposable {
+export class Decorator implements IExtensionSingleActivationService, IDisposable {
     private activeCellTop: vscode.TextEditorDecorationType | undefined;
     private activeCellBottom: vscode.TextEditorDecorationType | undefined;
     private cellSeparatorType: vscode.TextEditorDecorationType | undefined;
@@ -31,7 +31,7 @@ export class Decorator implements IExtensionActivationService, IDisposable {
         this.settingsChanged();
     }
 
-    public activate(_resource: Resource): Promise<void> {
+    public activate(): Promise<void> {
         // We don't need to do anything here as we already did all of our work in the
         // constructor.
         return Promise.resolve();

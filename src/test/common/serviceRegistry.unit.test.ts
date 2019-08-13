@@ -7,7 +7,7 @@
 
 import { expect } from 'chai';
 import * as typemoq from 'typemoq';
-import { IExtensionActivationService } from '../../client/activation/types';
+import { IExtensionSingleActivationService } from '../../client/activation/types';
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { CommandManager } from '../../client/common/application/commandManager';
@@ -107,7 +107,7 @@ suite('Common - Service Registry', () => {
             [IShellDetector, UserEnvironmentShellDetector],
             [IShellDetector, VSCEnvironmentShellDetector],
             [IInsiderExtensionPrompt, InsidersExtensionPrompt],
-            [IExtensionActivationService, InsidersExtensionService],
+            [IExtensionSingleActivationService, InsidersExtensionService],
             [IExtensionChannelService, ExtensionChannelService],
             [IExtensionChannelRule, ExtensionInsidersOffChannelRule, ExtensionChannel.off],
             [IExtensionChannelRule, ExtensionInsidersDailyChannelRule, ExtensionChannel.daily],

@@ -122,6 +122,8 @@
     "OutputChannelNames.languageServer": "Python Language Server",
     "OutputChannelNames.python": "Python",
     "OutputChannelNames.pythonTest": "Python Test Log",
+    "ExtensionSurveyBanner.bannerMessage": "Can you please take 2 minutes to tell us how the Python extension is working for you?",
+    "ExtensionSurveyBanner.maybeLater": "Maybe later",
     "ExtensionChannels.installingInsidersMessage": "Installing Insiders... ",
     "ExtensionChannels.installingStableMessage": "Installing Stable... ",
     "ExtensionChannels.installationCompleteMessage": "complete.",
@@ -193,7 +195,7 @@
     "diagnostics.disableSourceMaps": "Disable Source Map Support",
     "diagnostics.warnBeforeEnablingSourceMaps": "Enabling source map support in the Python Extension will adversely impact performance of the extension.",
     "diagnostics.enableSourceMapsAndReloadVSC": "Enable and reload Window",
-    "diagnostics.lsNotSupported": "Your operating system does not meet the minimum requirements of the Language Server. Reverting to the alternative, Jedi.",
+    "diagnostics.lsNotSupported": "Your operating system does not meet the minimum requirements of the Python Language Server. Reverting to the alternative autocompletion provider, Jedi.",
     "diagnostics.invalidPythonPathInDebuggerSettings": "You need to select a Python interpreter before you start debugging.\n\nTip: click on \"Select Python Interpreter\" in the status bar.",
     "diagnostics.invalidPythonPathInDebuggerLaunch": "The Python path in your debug configuration is invalid.",
     "diagnostics.invalidDebuggerTypeDiagnostic": "Your launch.json file needs to be updated to change the \"pythonExperimental\" debug configurations to use the \"python\" debugger type, otherwise Python debugging may not work. Would you like to automatically update your launch.json file now?",
@@ -329,5 +331,5 @@
     "DataScience.cellStopOnErrorFormatMessage": "{0} cells were canceled due to an error in the previous cell.",
     "DataScience.instructionComments": "# To add a new cell, type '#%%'\n# To add a new markdown cell, type '#%% [markdown]'\n",
     "DataScience.scrollToCellTitleFormatMessage": "Go to [{0}]",
-    "DataScience.remoteDebuggerNotSupported" : "Debugging while attached to a remote server is not currently supported."
+    "DataScience.remoteDebuggerNotSupported": "Debugging while attached to a remote server is not currently supported."
 }

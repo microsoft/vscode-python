@@ -36,7 +36,7 @@ export class WebPanel implements IWebPanel {
         this.panel = window.createWebviewPanel(
             title.toLowerCase().replace(' ', ''),
             title,
-            {viewColumn , preserveFocus: true},
+            { viewColumn, preserveFocus: true },
             {
                 enableScripts: true,
                 retainContextWhenHidden: true,
@@ -58,11 +58,11 @@ export class WebPanel implements IWebPanel {
         }
     }
 
-    public isVisible() : boolean {
+    public isVisible(): boolean {
         return this.panel ? this.panel.visible : false;
     }
 
-    public isActive() : boolean {
+    public isActive(): boolean {
         return this.panel ? this.panel.active : false;
     }
 
@@ -121,7 +121,7 @@ export class WebPanel implements IWebPanel {
     private generateReactHtml(mainScriptPath: string, embeddedCss?: string, settings?: any) {
         const uriBasePath = Uri.file(`${path.dirname(mainScriptPath)}/`);
         const uriPath = Uri.file(mainScriptPath);
-        const uriBase = uriBasePath.with({ scheme: 'vscode-resource'});
+        const uriBase = uriBasePath.with({ scheme: 'vscode-resource' });
         const uri = uriPath.with({ scheme: 'vscode-resource' });
         const locDatabase = localize.getCollectionJSON();
         const style = embeddedCss ? embeddedCss : '';

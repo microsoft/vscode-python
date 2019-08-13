@@ -33,6 +33,7 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateCellRanges } from '../cellFactory';
+import { CellMatcher } from '../cellMatcher';
 import { EditorContexts, Identifiers, Telemetry } from '../constants';
 import { ColumnWarningSize } from '../data-viewing/types';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
@@ -569,23 +570,6 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         this.addMessageImpl(message, 'preview');
     }
 
-    private async checkPandas(): Promise<boolean> {
-        const pandasVersion = await this.dataExplorerProvider.getPandasVersion();
-        if (!pandasVersion) {
-            sendTelemetryEvent(Telemetry.PandasNotInstalled);
-            // Warn user that there is no pandas.
-            this.applicationShell.showErrorMessage(localize.DataScience.pandasRequiredForViewing());
-            return false;
-        } else if (pandasVersion.major < 1 && pandasVersion.minor < 20) {
-            sendTelemetryEvent(Telemetry.PandasTooOld);
-            // Warn user that we cannot start because pandas is too old.
-            const versionStr = `${pandasVersion.major}.${pandasVersion.minor}.${pandasVersion.build}`;
-            this.applicationShell.showErrorMessage(localize.DataScience.pandasTooOldForViewingFormat().format(versionStr));
-            return false;
-        }
-        return true;
-    }
-
     private shouldAskForLargeData(): boolean {
         const settings = this.configuration.getSettings();
         return settings && settings.datascience && settings.datascience.askForLargeDataFrames === true;
@@ -617,7 +601,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
 
     private async showDataViewer(request: IShowDataViewer): Promise<void> {
         try {
-            if (await this.checkPandas() && await this.checkColumnSize(request.columnSize)) {
+            if (await this.checkColumnSize(request.columnSize)) {
                 await this.dataExplorerProvider.create(request.variableName);
             }
         } catch (e) {
@@ -744,8 +728,15 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
     }
 
     private async submitCode(code: string, file: string, line: number, id?: string, _editor?: TextEditor, debug?: boolean): Promise<boolean> {
-        traceInfo(`Submitting code for ${this.id}`);
         let result = true;
+
+        // Do not execute or render empty code cells
+        const cellMatcher = new CellMatcher(this.configService.getSettings().datascience);
+        if (cellMatcher.stripFirstMarker(code).length === 0) {
+            return result;
+        }
+
+        traceInfo(`Submitting code for ${this.id}`);
         // Start a status item
         const status = this.setStatus(localize.DataScience.executingCode());
 
@@ -764,7 +755,6 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         };
 
         try {
-
             // Make sure we're loaded first.
             try {
                 traceInfo('Waiting for jupyter server and web panel ...');
@@ -773,7 +763,6 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
                 // We should dispose ourselves if the load fails. Othewise the user
                 // updates their install and we just fail again because the load promise is the same.
                 this.dispose();
-
                 throw exc;
             }
 

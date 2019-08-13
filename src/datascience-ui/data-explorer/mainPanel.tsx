@@ -40,6 +40,7 @@ interface IMainPanelState {
     totalRowCount: number;
     filters: {};
     indexColumn: string;
+    styleReady: boolean;
 }
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
@@ -65,13 +66,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 totalRowCount: data.rows.length,
                 fetchedRowCount: 0,
                 filters: {},
-                indexColumn: data.primaryKeys[0]
+                indexColumn: data.primaryKeys[0],
+                styleReady: false
             };
 
             // Fire off a timer to mimic dynamic loading
-            setTimeout(() => {
-                this.handleGetAllRowsResponse({data: data.rows});
-            }, 1000);
+            setTimeout(() => this.handleGetAllRowsResponse({data: data.rows}), 1000);
         } else {
             this.state = {
                 gridColumns: [],
@@ -79,7 +79,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 totalRowCount: 0,
                 fetchedRowCount: 0,
                 filters: {},
-                indexColumn: 'index'
+                indexColumn: 'index',
+                styleReady: false
             };
         }
     }
@@ -110,10 +111,11 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return (
             <div className='main-panel' ref={this.container}>
                 <StyleInjector
+                    onReady={this.saveReadyState}
                     expectingDark={this.props.baseTheme !== 'vscode-light'}
                     postOffice={this.postOffice} />
                 {progressBar}
-                {this.state.totalRowCount > 0 && this.renderGrid()}
+                {this.state.totalRowCount > 0 && this.state.styleReady && this.renderGrid()}
             </div>
         );
     }
@@ -138,6 +140,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
 
         return false;
+    }
+
+    private saveReadyState = () => {
+        this.setState({styleReady: true});
     }
 
     private renderGrid() {

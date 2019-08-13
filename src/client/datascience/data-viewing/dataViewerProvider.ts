@@ -11,6 +11,8 @@ import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
+import { sendTelemetryEvent } from '../../telemetry';
+import { Telemetry } from '../constants';
 import { IDataViewer, IDataViewerProvider, IJupyterVariables } from '../types';
 
 @injectable()
@@ -32,20 +34,35 @@ export class DataViewerProvider implements IDataViewerProvider, IAsyncDisposable
     }
 
     public async create(variable: string): Promise<IDataViewer> {
-        // Make sure this is a valid variable
-        const variables = await this.variables.getVariables();
-        const index = variables.findIndex(v => v && v.name === variable);
-        if (index >= 0) {
-            const dataExplorer = this.serviceContainer.get<IDataViewer>(IDataViewer);
-            this.activeExplorers.push(dataExplorer);
-            await dataExplorer.showVariable(variables[index]);
-            return dataExplorer;
-        }
+        let result: IDataViewer | undefined;
 
-        throw new Error(localize.DataScience.dataExplorerInvalidVariableFormat().format(variable));
+        // Create the data explorer (this should show the window)
+        const dataExplorer = this.serviceContainer.get<IDataViewer>(IDataViewer);
+        try {
+            // Verify this is allowed.
+            await this.checkPandas();
+
+            // Make sure this is a valid variable
+            const variables = await this.variables.getVariables();
+            const index = variables.findIndex(v => v && v.name === variable);
+            if (index >= 0) {
+                // Then load the data.
+                this.activeExplorers.push(dataExplorer);
+                await dataExplorer.showVariable(variables[index]);
+                result = dataExplorer;
+            } else {
+                throw new Error(localize.DataScience.dataExplorerInvalidVariableFormat().format(variable));
+            }
+        } finally {
+            if (!result) {
+                // If throw any errors, close the window we opened.
+                dataExplorer.dispose();
+            }
+        }
+        return result;
     }
 
-    public async getPandasVersion(): Promise<{ major: number; minor: number; build: number } | undefined> {
+    private async getPandasVersion(): Promise<{ major: number; minor: number; build: number } | undefined> {
         const interpreter = await this.interpreterService.getActiveInterpreter();
         const launcher = await this.pythonFactory.createActivatedEnvironment({ resource: undefined, interpreter, allowEnvironmentFetchExceptions: true });
         try {
@@ -59,6 +76,20 @@ export class DataViewerProvider implements IDataViewerProvider, IAsyncDisposable
             }
         } catch {
             noop();
+        }
+    }
+
+    private async checkPandas(): Promise<void> {
+        const pandasVersion = await this.getPandasVersion();
+        if (!pandasVersion) {
+            sendTelemetryEvent(Telemetry.PandasNotInstalled);
+            // Warn user that there is no pandas.
+            throw new Error(localize.DataScience.pandasRequiredForViewing());
+        } else if (pandasVersion.major < 1 && pandasVersion.minor < 20) {
+            sendTelemetryEvent(Telemetry.PandasTooOld);
+            // Warn user that we cannot start because pandas is too old.
+            const versionStr = `${pandasVersion.major}.${pandasVersion.minor}.${pandasVersion.build}`;
+            throw new Error(localize.DataScience.pandasTooOldForViewingFormat().format(versionStr));
         }
     }
 }

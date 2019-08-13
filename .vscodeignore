@@ -3,6 +3,7 @@
 *.vsix
 .appveyor.yml
 .editorconfig
+.env
 .eslintrc
 .gitattributes
 .gitignore

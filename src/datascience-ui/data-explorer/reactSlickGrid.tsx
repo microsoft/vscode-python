@@ -34,7 +34,6 @@ import './reactSlickGrid.css';
 
 const MinColumnWidth = 70;
 const MaxColumnWidth = 500;
-const RowHeightAdjustment = 4;
 
 export interface ISlickRow extends Slick.SlickData {
     id: string;
@@ -147,13 +146,13 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
         if (this.containerRef.current) {
             // Compute font size. Default to 15 if not found.
-            let fontSize = parseInt(getComputedStyle(this.containerRef.current).getPropertyValue('--vscode-font-size'), 10);
+            let fontSize = parseInt(getComputedStyle(this.containerRef.current).getPropertyValue('--code-font-size'), 10);
             if (isNaN(fontSize)) {
                 fontSize = 15;
             }
 
             // Setup options for the grid
-            const options : Slick.GridOptions<Slick.SlickData> = {
+            const options: Slick.GridOptions<Slick.SlickData> = {
                 asyncEditorLoading: true,
                 editable: false,
                 enableCellNavigation: true,
@@ -161,7 +160,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 enableColumnReorder: false,
                 explicitInitialization: false,
                 viewportClass: 'react-grid',
-                rowHeight: fontSize + RowHeightAdjustment
+                rowHeight: this.getAppropiateRowHeight(fontSize)
             };
 
             // Transform columns so they are sortable and stylable
@@ -296,6 +295,22 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         args.grid.render();
     }
 
+    // These adjustments for the row height come from trial and error, by changing the font size in VS code,
+    // opening a new Data Viewer, and making sure the data is visible
+    // They were tested up to a font size of 60, and the row height still allows the content to be seen
+    private getAppropiateRowHeight(fontSize: number): number {
+        switch (true) {
+            case (fontSize < 15):
+                return fontSize + 4;
+            case (fontSize < 20):
+                return fontSize + 8;
+            case (fontSize < 30):
+                return fontSize + 10;
+            default:
+                return fontSize + 12;
+        }
+    }
+
     // If the slickgrid gets focus and nothing is selected select the first item
     // so that you can keyboard navigate from there
     private slickgridFocus = (_e: any): void => {
@@ -366,7 +381,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             const document = this.containerRef.current.ownerDocument;
             if (document) {
                 const cssOverrideNode = document.createElement('style');
-                const rule = `.${gridName} .slick-cell {height: ${this.state.fontSize + RowHeightAdjustment}px;}`;
+                const rule = `.${gridName} .slick-cell {height: ${this.getAppropiateRowHeight(this.state.fontSize)}px;}`;
                 cssOverrideNode.setAttribute('type', 'text/css');
                 cssOverrideNode.setAttribute('rel', 'stylesheet');
                 cssOverrideNode.appendChild(document.createTextNode(rule));

@@ -6,9 +6,9 @@
 import { inject, injectable } from 'inversify';
 import { createScanner, parse, SyntaxKind } from 'jsonc-parser';
 import { CancellationToken, DebugConfiguration, Position, Range, TextDocument, WorkspaceEdit } from 'vscode';
-import { IExtensionActivationService } from '../../../../activation/types';
+import { IExtensionSingleActivationService } from '../../../../activation/types';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../../../common/application/types';
-import { IDisposableRegistry, Resource } from '../../../../common/types';
+import { IDisposableRegistry } from '../../../../common/types';
 import { noop } from '../../../../common/utils/misc';
 import { captureTelemetry } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
@@ -126,8 +126,7 @@ export class LaunchJsonUpdaterServiceHelper {
 }
 
 @injectable()
-export class LaunchJsonUpdaterService implements IExtensionActivationService {
-    private activated: boolean = false;
+export class LaunchJsonUpdaterService implements IExtensionSingleActivationService {
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
@@ -135,11 +134,7 @@ export class LaunchJsonUpdaterService implements IExtensionActivationService {
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IDebugConfigurationService) private readonly configurationProvider: IDebugConfigurationService
     ) {}
-    public async activate(_resource: Resource): Promise<void> {
-        if (this.activated) {
-            return;
-        }
-        this.activated = true;
+    public async activate(): Promise<void> {
         const handler = new LaunchJsonUpdaterServiceHelper(this.commandManager, this.workspace, this.documentManager, this.configurationProvider);
         this.disposableRegistry.push(this.commandManager.registerCommand('python.SelectAndInsertDebugConfiguration', handler.selectAndInsertDebugConfig, handler));
     }

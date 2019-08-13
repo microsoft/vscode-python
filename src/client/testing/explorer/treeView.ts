@@ -5,17 +5,16 @@
 
 import { inject, injectable } from 'inversify';
 import { TreeView } from 'vscode';
-import { IExtensionActivationService } from '../../activation/types';
+import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import { Commands } from '../../common/constants';
-import { IDisposable, IDisposableRegistry, Resource } from '../../common/types';
+import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { ITestTreeViewProvider, TestDataItem } from '../types';
 
 @injectable()
-export class TreeViewService implements IExtensionActivationService, IDisposable {
+export class TreeViewService implements IExtensionSingleActivationService, IDisposable {
     private _treeView!: TreeView<TestDataItem>;
     private readonly disposables: IDisposable[] = [];
-    private activated: boolean = false;
     public get treeView(): TreeView<TestDataItem> {
         return this._treeView;
     }
@@ -28,11 +27,7 @@ export class TreeViewService implements IExtensionActivationService, IDisposable
     public dispose() {
         this.disposables.forEach(d => d.dispose());
     }
-    public async activate(_resource: Resource): Promise<void> {
-        if (this.activated) {
-            return;
-        }
-        this.activated = true;
+    public async activate(): Promise<void> {
         this._treeView = this.appShell.createTreeView('python_tests', { showCollapseAll: true, treeDataProvider: this.treeViewProvider });
         this.disposables.push(this._treeView);
         this.disposables.push(this.commandManager.registerCommand(Commands.Test_Reveal_Test_Item, this.onRevealTestItem, this));
