@@ -68,9 +68,7 @@ export type PythonInterpreterTelemetry = {
     pythonVersion?: string;
     pipVersion?: string;
 };
-export type CodeExecutionTelemetry = {
-    scope: 'file' | 'selection';
-};
+export type CodeExecutionTelemetry = IEventNamePropertyMapping[EventName.EXECUTION_CODE];
 export type DebuggerTelemetry = IEventNamePropertyMapping[EventName.DEBUGGER];
 export type DebuggerPerformanceTelemetry = {
     duration: number;

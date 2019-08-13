@@ -133,11 +133,7 @@ export function cacheResourceSpecificInterpreterData(key: string, expiryDuration
         descriptor.value = async function (...args: [Uri | undefined, ...any[]]) {
             const cache = new InMemoryInterpreterSpecificCache(key, expiryDurationMs, args, vscode);
             if (cache.hasData) {
-                try {
-                    traceVerbose(`Cached data exists ${key}, ${args[0] ? args[0].fsPath : '<No Resource>'} ${JSON.stringify(cache.data)}`);
-                } catch {
-                    // Stringify might fail.
-                }
+                traceVerbose(`Cached data exists ${key}, ${args[0] ? args[0].fsPath : '<No Resource>'}`);
                 return Promise.resolve(cache.data);
             }
             const promise = originalMethod.apply(this, args) as Promise<any>;

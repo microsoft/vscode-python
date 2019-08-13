@@ -12,6 +12,7 @@ import { LanguageServerSurveyBanner } from '../languageServices/languageServerSu
 import { ProposeLanguageServerBanner } from '../languageServices/proposeLanguageServerBanner';
 import { ExtensionActivationManager } from './activationManager';
 import { LanguageServerExtensionActivationService } from './activationService';
+import { ExtensionSurveyPrompt } from './extensionSurvey';
 import { JediExtensionActivator } from './jedi';
 import { LanguageServerExtensionActivator } from './languageServer/activator';
 import { LanguageServerAnalysisOptions } from './languageServer/analysisOptions';
@@ -27,7 +28,7 @@ import { LanguageServerPackageService } from './languageServer/languageServerPac
 import { LanguageServerManager } from './languageServer/manager';
 import { LanguageServerOutputChannel } from './languageServer/outputChannel';
 import { PlatformData } from './languageServer/platformData';
-import { IDownloadChannelRule, IExtensionActivationManager, IExtensionActivationService, ILanguageClientFactory, ILanguageServer, ILanguageServerActivator, ILanguageServerAnalysisOptions, ILanguageServerCompatibilityService as ILanagueServerCompatibilityService, ILanguageServerDownloader, ILanguageServerExtension, ILanguageServerFolderService, ILanguageServerManager, ILanguageServerOutputChannel, ILanguageServerPackageService, IPlatformData, LanguageClientFactory, LanguageServerActivator } from './types';
+import { IDownloadChannelRule, IExtensionActivationManager, IExtensionActivationService, IExtensionSingleActivationService, ILanguageClientFactory, ILanguageServer, ILanguageServerActivator, ILanguageServerAnalysisOptions, ILanguageServerCompatibilityService as ILanagueServerCompatibilityService, ILanguageServerDownloader, ILanguageServerExtension, ILanguageServerFolderService, ILanguageServerManager, ILanguageServerPackageService, IPlatformData, LanguageClientFactory, LanguageServerActivator, ILanguageServerOutputChannel } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, LanguageServerExtensionActivationService);
@@ -57,4 +58,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ILanguageServer>(ILanguageServer, LanguageServer);
     serviceManager.add<ILanguageServerManager>(ILanguageServerManager, LanguageServerManager);
     serviceManager.addSingleton<ILanguageServerOutputChannel>(ILanguageServerOutputChannel, LanguageServerOutputChannel);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ExtensionSurveyPrompt);
 }

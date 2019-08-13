@@ -5,25 +5,25 @@
 
 import { inject, injectable } from 'inversify';
 import { Terminal } from 'vscode';
-import { IExtensionActivationService } from '../activation/types';
+import { IExtensionSingleActivationService } from '../activation/types';
 import {
     ICommandManager, ITerminalManager, IWorkspaceService
 } from '../common/application/types';
 import { ShowPlayIcon } from '../common/experimentGroups';
 import { ITerminalActivator } from '../common/terminal/types';
 import {
-    IDisposable, IDisposableRegistry, IExperimentsManager, Resource
+    IDisposable, IDisposableRegistry, IExperimentsManager
 } from '../common/types';
 import { noop } from '../common/utils/misc';
 import { ITerminalAutoActivation } from './types';
 
 @injectable()
-export class ExtensionActivationForTerminalActivation implements IExtensionActivationService {
+export class ExtensionActivationForTerminalActivation implements IExtensionSingleActivationService {
     constructor(
         @inject(IExperimentsManager) private experiments: IExperimentsManager,
         @inject(ICommandManager) private commands: ICommandManager
     ) { }
-    public async activate(_resource: Resource): Promise<void> {
+    public async activate(): Promise<void> {
         this.checkExperiments();
     }
 

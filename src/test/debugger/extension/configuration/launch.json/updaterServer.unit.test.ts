@@ -41,7 +41,7 @@ suite('Debugging - launch.json Updater Service', () => {
     teardown(() => sandbox.restore());
     test('Activation will register the required commands', async () => {
         const service = new LaunchJsonUpdaterService(instance(commandManager), [], instance(workspace), instance(documentManager), instance(debugConfigService));
-        await service.activate(undefined);
+        await service.activate();
         verify(commandManager.registerCommand('python.SelectAndInsertDebugConfiguration', helper.selectAndInsertDebugConfig, helper));
     });
 

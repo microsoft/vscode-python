@@ -29,7 +29,7 @@ export class WebViewHost<IMapping> implements IDisposable {
     private startupStopwatch = new StopWatch();
 
     constructor(
-        @unmanaged() private configService: IConfigurationService,
+        @unmanaged() protected configService: IConfigurationService,
         @unmanaged() private provider: IWebPanelProvider,
         @unmanaged() private cssGenerator: ICodeCssGenerator,
         @unmanaged() protected themeFinder: IThemeFinder,

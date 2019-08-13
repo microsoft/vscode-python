@@ -222,8 +222,21 @@ export class CondaService implements ICondaService {
         try {
             const condaFile = await this.getCondaFile();
             const processService = await this.processServiceFactory.create();
-            const envInfo = await processService.exec(condaFile, ['env', 'list']).then(output => output.stdout);
+            let envInfo = await processService.exec(condaFile, ['env', 'list']).then(output => output.stdout);
             traceVerbose(`Conda Env List ${envInfo}}`);
+            if (!envInfo) {
+                traceVerbose('Conda env list failure, attempting path additions.');
+                // Try adding different folders to the path. Miniconda fails to run
+                // without them.
+                const baseFolder = path.dirname(path.dirname(condaFile));
+                const binFolder = path.join(baseFolder, 'bin');
+                const condaBinFolder = path.join(baseFolder, 'condabin');
+                const libaryBinFolder = path.join(baseFolder, 'library', 'bin');
+                const newEnv = process.env;
+                newEnv.PATH = `${binFolder};${condaBinFolder};${libaryBinFolder};${newEnv.PATH}`;
+                traceVerbose(`Attempting new path for conda env list: ${newEnv.PATH}`);
+                envInfo = await processService.exec(condaFile, ['env', 'list'], { env: newEnv }).then(output => output.stdout);
+            }
             const environments = this.condaHelper.parseCondaEnvironmentNames(envInfo);
             await globalPersistence.updateValue({ data: environments });
             return environments;

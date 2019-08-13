@@ -14,9 +14,9 @@ import { StopWatch } from '../common/utils/stopWatch';
 import { Telemetry } from '../datascience/constants';
 import { ConsoleType } from '../debugger/types';
 import { LinterId } from '../linters/types';
+import { TestProvider } from '../testing/common/types';
 import { EventName } from './constants';
 import {
-    CodeExecutionTelemetry,
     DebuggerConfigurationPromtpsTelemetry,
     DiagnosticsAction,
     DiagnosticsMessages,
@@ -399,8 +399,39 @@ export interface IEventNamePropertyMapping {
     [EventName.DIAGNOSTICS_MESSAGE]: DiagnosticsMessages;
     [EventName.EDITOR_LOAD]: EditorLoadTelemetry;
     [EventName.ENVFILE_VARIABLE_SUBSTITUTION]: never | undefined;
-    [EventName.EXECUTION_CODE]: CodeExecutionTelemetry;
-    [EventName.EXECUTION_DJANGO]: CodeExecutionTelemetry;
+    /**
+     * Telemetry Event sent when user sends code to be executed in the terminal.
+     *
+     */
+    [EventName.EXECUTION_CODE]: {
+        /**
+         * Whether the user executed a file in the terminal or just the selected text.
+         *
+         * @type {('file' | 'selection')}
+         */
+        scope: 'file' | 'selection';
+        /**
+         * How was the code executed (through the command or by clicking the `Run File` icon).
+         *
+         * @type {('command' | 'icon')}
+         */
+        trigger?: 'command' | 'icon';
+    };
+    /**
+     * Telemetry Event sent when user executes code against Django Shell.
+     * Values sent:
+     * scope
+     *
+     */
+    [EventName.EXECUTION_DJANGO]: {
+        /**
+         * If `file`, then the file was executed in the django shell.
+         * If `selection`, then the selected text was sent to the django shell.
+         *
+         * @type {('file' | 'selection')}
+         */
+        scope: 'file' | 'selection';
+    };
     [EventName.FORMAT]: FormatTelemetry;
     [EventName.FORMAT_ON_TYPE]: { enabled: boolean };
     [EventName.FORMAT_SORT_IMPORTS]: never | undefined;
@@ -459,6 +490,15 @@ export interface IEventNamePropertyMapping {
          */
         error?: string;
     };
+    /**
+     * When user clicks a button in the python extension survey prompt, this telemetry event is sent with details
+     */
+    [EventName.EXTENSION_SURVEY_PROMPT]: {
+        /**
+         * Carries the selection of user when they are asked to take the extension survey
+         */
+        selection: 'Yes' | 'Maybe later' | 'Do not show again' | undefined;
+    };
     [EventName.REFACTOR_EXTRACT_FUNCTION]: never | undefined;
     [EventName.REFACTOR_EXTRACT_VAR]: never | undefined;
     [EventName.REFACTOR_RENAME]: never | undefined;
@@ -479,6 +519,17 @@ export interface IEventNamePropertyMapping {
     [EventName.UNITTEST_STOP]: never | undefined;
     [EventName.UNITTEST_DISABLE]: never | undefined;
     [EventName.UNITTEST_VIEW_OUTPUT]: never | undefined;
+    /**
+     * Tracks which testing framework has been enabled by the user.
+     * Telemetry is sent when settings have been modified by the user.
+     * Values sent includ:
+     * unittest -   If this value is `true`, then unittest has been enabled by the user.
+     * pytest   -   If this value is `true`, then pytest has been enabled by the user.
+     * nosetest -   If this value is `true`, then nose has been enabled by the user.
+     * @type {(never | undefined)}
+     * @memberof IEventNamePropertyMapping
+     */
+    [EventName.UNITTEST_ENABLED]: Partial<Record<TestProvider, undefined | boolean>>;
     [EventName.UPDATE_PYSPARK_LIBRARY]: never | undefined;
     [EventName.WORKSPACE_SYMBOLS_BUILD]: never | undefined;
     [EventName.WORKSPACE_SYMBOLS_GO_TO]: never | undefined;

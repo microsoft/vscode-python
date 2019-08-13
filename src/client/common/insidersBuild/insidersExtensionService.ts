@@ -4,18 +4,17 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
-import { IExtensionActivationService } from '../../../client/activation/types';
+import { IExtensionSingleActivationService } from '../../../client/activation/types';
 import { IServiceContainer } from '../../ioc/types';
 import { IApplicationEnvironment, ICommandManager } from '../application/types';
 import { Commands } from '../constants';
 import { IExtensionBuildInstaller, INSIDERS_INSTALLER } from '../installer/types';
 import { traceDecorators } from '../logger';
-import { IDisposable, IDisposableRegistry, Resource } from '../types';
+import { IDisposable, IDisposableRegistry } from '../types';
 import { ExtensionChannels, IExtensionChannelRule, IExtensionChannelService, IInsiderExtensionPrompt } from './types';
 
 @injectable()
-export class InsidersExtensionService implements IExtensionActivationService {
-    public activatedOnce: boolean = false;
+export class InsidersExtensionService implements IExtensionSingleActivationService {
     constructor(
         @inject(IExtensionChannelService) private readonly extensionChannelService: IExtensionChannelService,
         @inject(IInsiderExtensionPrompt) private readonly insidersPrompt: IInsiderExtensionPrompt,
@@ -26,12 +25,8 @@ export class InsidersExtensionService implements IExtensionActivationService {
         @inject(IDisposableRegistry) public readonly disposables: IDisposable[]
     ) { }
 
-    public async activate(_resource: Resource) {
-        if (this.activatedOnce) {
-            return;
-        }
+    public async activate() {
         this.registerCommandsAndHandlers();
-        this.activatedOnce = true;
         const installChannel = this.extensionChannelService.getChannel();
         await this.handleEdgeCases(installChannel);
         this.handleChannel(installChannel).ignoreErrors();

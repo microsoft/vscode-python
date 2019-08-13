@@ -53,7 +53,7 @@ suite('Activation - ActivationManager', () => {
         activationService1 = mock(LanguageServerExtensionActivationService);
         activationService2 = mock(LanguageServerExtensionActivationService);
         managerTest = new ExtensionActivationManagerTest(
-            [instance(activationService1), instance(activationService2)],
+            [instance(activationService1), instance(activationService2)], [],
             documentManager.object,
             instance(interpreterService),
             autoSelection.object,

@@ -16,6 +16,7 @@ export interface IStyleInjectorProps {
     postOffice: PostOffice;
     darkChanged?(newDark: boolean): void;
     monacoThemeChanged?(theme: string): void;
+    onReady?(): void;
 }
 
 interface IStyleInjectorState {
@@ -104,7 +105,7 @@ export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleIn
                 rootCss: response.css,
                 theme: response.theme,
                 knownDark: computedKnownDark
-            });
+            }, this.props.onReady);
         }
     }
 

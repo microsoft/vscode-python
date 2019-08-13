@@ -2,11 +2,12 @@
 // Licensed under the MIT License.
 
 import { Uri } from 'vscode';
-import { IExtensionActivationService } from '../activation/types';
+import { IExtensionActivationService, IExtensionSingleActivationService } from '../activation/types';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { ArgumentsHelper } from './common/argumentsHelper';
 import { NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from './common/constants';
 import { DebugLauncher } from './common/debugLauncher';
+import { EnablementTracker } from './common/enablementTracker';
 import { TestRunner } from './common/runner';
 import { TestConfigSettingsService } from './common/services/configSettingService';
 import { TestContextService } from './common/services/contextService';
@@ -116,8 +117,9 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ITestTreeViewProvider>(ITestTreeViewProvider, TestTreeViewProvider);
     serviceManager.addSingleton<ITestDataItemResource>(ITestDataItemResource, TestTreeViewProvider);
     serviceManager.addSingleton<ITestExplorerCommandHandler>(ITestExplorerCommandHandler, TestExplorerCommandHandler);
-    serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, TreeViewService);
-    serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, FailedTestHandler);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, TreeViewService);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, FailedTestHandler);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, EnablementTracker);
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, UpdateTestSettingService);
 
     serviceManager.addFactory<ITestManager>(ITestManagerFactory, (context) => {

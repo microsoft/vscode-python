@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { IExtensionActivationService } from '../activation/types';
+import { IExtensionSingleActivationService } from '../activation/types';
 import { noop } from '../common/utils/misc';
 import { StopWatch } from '../common/utils/stopWatch';
 import { ClassType, IServiceManager } from '../ioc/types';
@@ -113,7 +113,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IThemeFinder>(IThemeFinder, wrapType(ThemeFinder));
     serviceManager.addSingleton<IDataViewerProvider>(IDataViewerProvider, wrapType(DataViewerProvider));
     serviceManager.add<IDataViewer>(IDataViewer, wrapType(DataViewer));
-    serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, wrapType(Decorator));
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, wrapType(Decorator));
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, wrapType(DotNetIntellisenseProvider));
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, wrapType(JediIntellisenseProvider));
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, wrapType(LinkProvider));
