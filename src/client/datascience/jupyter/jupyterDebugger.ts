@@ -88,9 +88,6 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
             //     };
             //     await this.debugService.activeDebugSession.customRequest('setExceptionBreakpoints', args);
             // }
-        } else {
-            // if we cannot connect to the server, throw so we exit out of debugging
-            throw new JupyterDebuggerNotInstalledError(localize.DataScience.environmentVariablePtvsdLogDirIsSet());
         }
     }
 
@@ -326,6 +323,9 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                         };
                     }
                 }
+            } else {
+                // if we cannot parse the connect information, throw so we exit out of debugging
+                throw new JupyterDebuggerNotInstalledError(localize.DataScience.environmentVariablePtvsdLogDirIsSet());
             }
         }
         return undefined;
