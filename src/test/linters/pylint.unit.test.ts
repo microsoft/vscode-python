@@ -264,6 +264,34 @@ suite('Pylint - Function hasConfigurationFileInWorkspace()', () => {
             .returns(() => Promise.resolve(false))
             .verifiable(TypeMoq.Times.never());
 
+        const rootPathItems = ['user', 'a'];
+        const folderPathItems = ['b', 'c']; // full folder path will be prefixed by root path
+        let rootPath = '';
+        rootPathItems.forEach(item => {
+            rootPath = path.join(rootPath, item);
+            fileSystem
+                .setup(x => x.fileExists(path.join(rootPath, pylintrc)))
+                .returns(() => Promise.resolve(false))
+                .verifiable(TypeMoq.Times.never());
+            fileSystem
+                .setup(x => x.fileExists(path.join(rootPath, dotPylintrc)))
+                .returns(() => Promise.resolve(false))
+                .verifiable(TypeMoq.Times.never());
+        });
+        let relativeFolderPath = '';
+        folderPathItems.forEach(item => {
+            relativeFolderPath = path.join(relativeFolderPath, item);
+            const absoluteFolderPath = path.join(rootPath, relativeFolderPath);
+            fileSystem
+                .setup(x => x.fileExists(path.join(absoluteFolderPath, pylintrc)))
+                .returns(() => Promise.resolve(false))
+                .verifiable(TypeMoq.Times.once());
+            fileSystem
+                .setup(x => x.fileExists(path.join(absoluteFolderPath, dotPylintrc)))
+                .returns(() => Promise.resolve(false))
+                .verifiable(TypeMoq.Times.once());
+        });
+
         const hasConfig = await Pylint.hasConfigrationFileInWorkspace(fileSystem.object, folder, root);
         expect(hasConfig).to.equal(false, 'Should return false');
         fileSystem.verifyAll();
