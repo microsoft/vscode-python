@@ -10,17 +10,7 @@ import { LinterId } from '../linters/types';
 import { IEventNamePropertyMapping } from '../telemetry/index';
 import { EventName, PlatformErrors } from './constants';
 
-export type EditorLoadTelemetry = {
-    condaVersion: string | undefined;
-    pythonVersion: string | undefined;
-    interpreterType: InterpreterType | undefined;
-    terminal: TerminalShellType;
-    workspaceFolderCount: number;
-    hasPython3: boolean;
-    usingUserDefinedInterpreter: boolean;
-    usingAutoSelectedWorkspaceInterpreter: boolean;
-    usingGlobalInterpreter: boolean;
-};
+export type EditorLoadTelemetry = IEventNamePropertyMapping[EventName.EDITOR_LOAD];
 export type FormatTelemetry = {
     tool: 'autopep8' | 'black' | 'yapf';
     hasCustomArgs: boolean;

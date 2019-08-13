@@ -21,7 +21,6 @@ import { TestProvider } from '../testing/common/types';
 import { EventName } from './constants';
 import {
     DebuggerConfigurationPromtpsTelemetry,
-    EditorLoadTelemetry,
     FormatTelemetry,
     InterpreterActivation,
     InterpreterActivationEnvironmentVariables,
@@ -394,8 +393,14 @@ export interface IEventNamePropertyMapping {
          */
         scrapy: boolean;
     };
+    /**
+     * Telemetry event sent when attaching to child process
+     */
     [EventName.DEBUGGER_ATTACH_TO_CHILD_PROCESS]: never | undefined;
     [EventName.DEBUGGER_CONFIGURATION_PROMPTS]: DebuggerConfigurationPromtpsTelemetry;
+    /**
+     * Telemetry sent when providing completion provider in launch.json. It is sent just *after* inserting the completion.
+     */
     [EventName.DEBUGGER_CONFIGURATION_PROMPTS_IN_LAUNCH_JSON]: never | undefined;
     /**
      * Telemetry is sent when providing definitions for python code, particularly when [go to definition](https://code.visualstudio.com/docs/editor/editingevolved#_go-to-definition)
@@ -437,7 +442,49 @@ export interface IEventNamePropertyMapping {
          */
         code: DiagnosticCodes;
     };
-    [EventName.EDITOR_LOAD]: EditorLoadTelemetry;
+    /**
+     * Telemetry sent with details just after editor loads
+     */
+    [EventName.EDITOR_LOAD]: {
+        /**
+         * The conda version if selected
+         */
+        condaVersion: string | undefined;
+        /**
+         * The python interpreter version if selected
+         */
+        pythonVersion: string | undefined;
+        /**
+         * The type of interpreter (conda, virtualenv, pipenv etc.)
+         */
+        interpreterType: InterpreterType | undefined;
+        /**
+         * The type of terminal shell created: powershell, cmd, zsh, bash etc.
+         *
+         * @type {TerminalShellType}
+         */
+        terminal: TerminalShellType;
+        /**
+         * Number of workspace folders opened
+         */
+        workspaceFolderCount: number;
+        /**
+         * If interpreters found for the main workspace contains a python3 interpreter
+         */
+        hasPython3: boolean;
+        /**
+         * If user has defined an interpreter in settings.json
+         */
+        usingUserDefinedInterpreter: boolean;
+        /**
+         * If interpreter is auto selected for the workspace
+         */
+        usingAutoSelectedWorkspaceInterpreter: boolean;
+        /**
+         * If global interpreter is being used
+         */
+        usingGlobalInterpreter: boolean;
+    };
     [EventName.ENVFILE_VARIABLE_SUBSTITUTION]: never | undefined;
     /**
      * Telemetry Event sent when user sends code to be executed in the terminal.
