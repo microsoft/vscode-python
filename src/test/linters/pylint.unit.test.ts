@@ -228,42 +228,6 @@ suite('Pylint - Function hasConfigurationFileInWorkspace()', () => {
         const folder = path.join('user', 'a', 'b', 'c');
         const root = path.join('user', 'a');
 
-        fileSystem
-            .setup(x => x.fileExists(path.join(path.join('user', 'a', 'b', 'c'), pylintrc)))
-            .returns(() => Promise.resolve(false))
-            .verifiable(TypeMoq.Times.once());
-        fileSystem
-            .setup(x => x.fileExists(path.join(path.join('user', 'a', 'b', 'c'), dotPylintrc)))
-            .returns(() => Promise.resolve(false))
-            .verifiable(TypeMoq.Times.once());
-
-        fileSystem
-            .setup(x => x.fileExists(path.join(path.join('user', 'a', 'b'), pylintrc)))
-            .returns(() => Promise.resolve(false))
-            .verifiable(TypeMoq.Times.once());
-        fileSystem
-            .setup(x => x.fileExists(path.join(path.join('user', 'a', 'b'), dotPylintrc)))
-            .returns(() => Promise.resolve(false))
-            .verifiable(TypeMoq.Times.once());
-
-        fileSystem
-            .setup(x => x.fileExists(path.join(path.join('user', 'a'), pylintrc)))
-            .returns(() => Promise.resolve(false))
-            .verifiable(TypeMoq.Times.never());
-        fileSystem
-            .setup(x => x.fileExists(path.join(path.join('user', 'a'), dotPylintrc)))
-            .returns(() => Promise.resolve(false))
-            .verifiable(TypeMoq.Times.never());
-
-        fileSystem
-            .setup(x => x.fileExists(path.join(path.join('user'), pylintrc)))
-            .returns(() => Promise.resolve(false))
-            .verifiable(TypeMoq.Times.never());
-        fileSystem
-            .setup(x => x.fileExists(path.join(path.join('user'), dotPylintrc)))
-            .returns(() => Promise.resolve(false))
-            .verifiable(TypeMoq.Times.never());
-
         const rootPathItems = ['user', 'a'];
         const folderPathItems = ['b', 'c']; // full folder path will be prefixed by root path
         let rootPath = '';
