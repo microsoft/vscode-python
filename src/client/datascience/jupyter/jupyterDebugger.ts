@@ -332,7 +332,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                         throw new JupyterDebuggerNotInstalledError(error.ename);
                     }
                 }
-                throw new JupyterDebuggerNotInstalledError();
+                throw new JupyterDebuggerNotInstalledError(localize.DataScience.jupyterDebuggerPtvsdParseError());
             }
         }
         return undefined;
