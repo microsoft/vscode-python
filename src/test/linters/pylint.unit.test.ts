@@ -270,7 +270,7 @@ suite('Pylint - Function hasConfigrationFileInWorkspace()', () => {
         fileSystem.verifyAll();
     });
 
-    test('If pylintrc file exist while going upto the workspace root, return true', async () => {
+    test('If the pylintrc file exists while traversing up to the workspace root, return true', async () => {
         const folder = '/user/a/b/c';
         const root = '/user/a';
 
