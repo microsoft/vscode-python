@@ -9,6 +9,7 @@ import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { IFileSystem, IPlatformService, TemporaryFile } from '../../../client/common/platform/types';
 // tslint:disable-next-line:no-require-imports no-var-requires
 const assertArrays = require('chai-arrays');
+use(require('chai-as-promised'));
 use(assertArrays);
 
 // tslint:disable-next-line:max-func-body-length
@@ -115,5 +116,15 @@ suite('FileSystem', () => {
                     expect(failReason).to.equal('There was no error using chmod', `Failed to perform chmod operation successfully, got error ${failReason}`);
                 });
         });
+    });
+    test('Getting hash for non existent file should throw error', async () => {
+        const promise = fileSystem.getFileHash('some unknown file');
+
+        await expect(promise).to.eventually.be.rejected;
+    });
+    test('Getting hash for a file should return non-empty string', async () => {
+        const hash = await fileSystem.getFileHash(__filename);
+
+        expect(hash).to.be.length.greaterThan(0);
     });
 });

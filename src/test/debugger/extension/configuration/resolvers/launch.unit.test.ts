@@ -9,31 +9,27 @@ import { expect } from 'chai';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { DebugConfiguration, DebugConfigurationProvider, TextDocument, TextEditor, Uri, WorkspaceFolder } from 'vscode';
-import { InvalidPythonPathInDebuggerServiceId } from '../../../../../client/application/diagnostics/checks/invalidPythonPathInDebugger';
-import { IDiagnosticsService, IInvalidPythonPathInDebuggerService } from '../../../../../client/application/diagnostics/types';
-import { IApplicationShell, IDocumentManager, IWorkspaceService } from '../../../../../client/common/application/types';
+import { IInvalidPythonPathInDebuggerService } from '../../../../../client/application/diagnostics/types';
+import { IDocumentManager, IWorkspaceService } from '../../../../../client/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../../../client/common/constants';
-import { IFileSystem, IPlatformService } from '../../../../../client/common/platform/types';
+import { IPlatformService } from '../../../../../client/common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../../../client/common/process/types';
-import { IConfigurationService, ILogger, IPythonSettings } from '../../../../../client/common/types';
+import { IConfigurationService, IPythonSettings } from '../../../../../client/common/types';
 import { DebuggerTypeName } from '../../../../../client/debugger/constants';
+import { IDebugEnvironmentVariablesService } from '../../../../../client/debugger/extension/configuration/resolvers/helper';
 import { LaunchConfigurationResolver } from '../../../../../client/debugger/extension/configuration/resolvers/launch';
 import { DebugOptions, LaunchRequestArguments } from '../../../../../client/debugger/types';
 import { IInterpreterHelper } from '../../../../../client/interpreter/contracts';
-import { IServiceContainer } from '../../../../../client/ioc/types';
 
 suite('Debugging - Config Resolver Launch', () => {
-    let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let debugProvider: DebugConfigurationProvider;
     let platformService: TypeMoq.IMock<IPlatformService>;
-    let fileSystem: TypeMoq.IMock<IFileSystem>;
-    let appShell: TypeMoq.IMock<IApplicationShell>;
     let pythonExecutionService: TypeMoq.IMock<IPythonExecutionService>;
-    let logger: TypeMoq.IMock<ILogger>;
     let helper: TypeMoq.IMock<IInterpreterHelper>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let documentManager: TypeMoq.IMock<IDocumentManager>;
     let diagnosticsService: TypeMoq.IMock<IInvalidPythonPathInDebuggerService>;
+    let debugEnvHelper: TypeMoq.IMock<IDebugEnvironmentVariablesService>;
     function createMoqWorkspaceFolder(folderPath: string) {
         const folder = TypeMoq.Mock.ofType<WorkspaceFolder>();
         folder.setup(f => f.uri).returns(() => Uri.file(folderPath));
@@ -43,13 +39,10 @@ suite('Debugging - Config Resolver Launch', () => {
         const confgService = TypeMoq.Mock.ofType<IConfigurationService>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
-        serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
 
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
-        fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-        appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-        logger = TypeMoq.Mock.ofType<ILogger>();
         diagnosticsService = TypeMoq.Mock.ofType<IInvalidPythonPathInDebuggerService>();
+        debugEnvHelper = TypeMoq.Mock.ofType<IDebugEnvironmentVariablesService>();
 
         pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
         helper = TypeMoq.Mock.ofType<IInterpreterHelper>();
@@ -61,15 +54,6 @@ suite('Debugging - Config Resolver Launch', () => {
             .setup(h => h.validatePythonPath(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(true));
 
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPythonExecutionFactory))).returns(() => factory.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService))).returns(() => confgService.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformService.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILogger))).returns(() => logger.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterHelper))).returns(() => helper.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDiagnosticsService), TypeMoq.It.isValue(InvalidPythonPathInDebuggerServiceId))).returns(() => diagnosticsService.object);
-
         const settings = TypeMoq.Mock.ofType<IPythonSettings>();
         settings.setup(s => s.pythonPath).returns(() => pythonPath);
         if (workspaceFolder) {
@@ -77,8 +61,15 @@ suite('Debugging - Config Resolver Launch', () => {
         }
         confgService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
         setupOs(isWindows, isMac, isLinux);
+        debugEnvHelper.setup(x => x.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({}));
 
-        debugProvider = new LaunchConfigurationResolver(workspaceService.object, documentManager.object, diagnosticsService.object, platformService.object, confgService.object);
+        debugProvider = new LaunchConfigurationResolver(
+            workspaceService.object,
+            documentManager.object,
+            diagnosticsService.object,
+            platformService.object,
+            confgService.object,
+            debugEnvHelper.object);
     }
     function setupActiveEditor(fileName: string | undefined, languageId: string) {
         if (fileName) {
@@ -91,12 +82,10 @@ suite('Debugging - Config Resolver Launch', () => {
         } else {
             documentManager.setup(d => d.activeTextEditor).returns(() => undefined);
         }
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDocumentManager))).returns(() => documentManager.object);
     }
     function setupWorkspaces(folders: string[]) {
         const workspaceFolders = folders.map(createMoqWorkspaceFolder);
         workspaceService.setup(w => w.workspaceFolders).returns(() => workspaceFolders);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService))).returns(() => workspaceService.object);
     }
     function setupOs(isWindows: boolean, isMac: boolean, isLinux: boolean) {
         platformService.setup(p => p.isWindows).returns(() => isWindows);

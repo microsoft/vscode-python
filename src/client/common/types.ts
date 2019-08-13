@@ -291,6 +291,12 @@ export interface IAnalysisSettings {
     readonly logLevel: LogLevel;
 }
 
+interface IGatherRule {
+    objectName?: string;
+    functionName: string;
+    doesNotModify: string[] | number[];
+}
+
 export interface IDataScienceSettings {
     allowImportFromNotebook: boolean;
     enabled: boolean;
@@ -306,6 +312,8 @@ export interface IDataScienceSettings {
     showCellInputCode: boolean;
     collapseCellInputCodeByDefault: boolean;
     maxOutputSize: number;
+    enableGather?: boolean;
+    gatherRules?: IGatherRule[];
     sendSelectionToInteractiveWindow: boolean;
     markdownRegularExpression: string;
     codeRegularExpression: string;
@@ -324,11 +332,15 @@ export interface IDataScienceSettings {
     askForKernelRestart?: boolean;
     enablePlotViewer?: boolean;
     codeLenses?: string;
+    debugCodeLenses?: string;
     ptvsdDistPath?: string;
     stopOnFirstLineWhileDebugging?: boolean;
     textOutputLimit?: number;
     magicCommandsAsComments?: boolean;
+    stopOnError?: boolean;
     remoteDebuggerPort?: number;
+    colorizeInputBox?: boolean;
+    addGotoCodeLenses?: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');
@@ -406,7 +418,7 @@ export interface IExtensions {
      * All extensions currently known to the system.
      */
     // tslint:disable-next-line:no-any
-    readonly all: Extension<any>[];
+    readonly all: readonly Extension<any>[];
 
     /**
      * Get an extension by its full identifier in the form of: `publisher.name`.

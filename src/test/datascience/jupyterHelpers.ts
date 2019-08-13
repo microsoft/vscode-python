@@ -33,7 +33,8 @@ export function getIPConnectionInfo(output: string): string | undefined {
         return `${urlMatch[1]}://${urlMatch[2]}:${urlMatch[3]}/?token=${urlMatch[4]}`;
     }
 
-    return undefined;
+    // In Notebook 6.0 instead of the above format it returns a single valid web address so just return that
+    return getConnectionInfo(output);
 }
 
 export function getConnectionInfo(output: string): string | undefined {

@@ -24,15 +24,16 @@ import {
 import { CancellationError } from '../../common/cancellation';
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../common/constants';
 import { ContextKey } from '../../common/contextKey';
-import { traceInfo, traceWarning } from '../../common/logger';
+import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateCellRanges } from '../cellFactory';
+import { CellMatcher } from '../cellMatcher';
 import { EditorContexts, Identifiers, Telemetry } from '../constants';
 import { ColumnWarningSize } from '../data-viewing/types';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
@@ -78,7 +79,6 @@ import {
 
 @injectable()
 export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> implements IInteractiveWindow {
-    private static sentExecuteCellTelemetry: boolean = false;
     private disposed: boolean = false;
     private loadPromise: Promise<void>;
     private interpreterChangedDisposable: Disposable;
@@ -104,7 +104,6 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
         @inject(IThemeFinder) themeFinder: IThemeFinder,
-        @inject(ILogger) private logger: ILogger,
         @inject(IStatusProvider) private statusProvider: IStatusProvider,
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IFileSystem) private fileSystem: IFileSystem,
@@ -179,14 +178,48 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         return this.executeEvent.event;
     }
 
-    public addCode(code: string, file: string, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<void> {
-        // Call the internal method.
-        return this.submitCode(code, file, line, undefined, editor, runningStopWatch, false);
+    public addMessage(message: string): Promise<void> {
+        this.addMessageImpl(message, 'execute');
+        return Promise.resolve();
     }
 
-    public debugCode(code: string, file: string, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<void> {
+    public addCode(code: string, file: string, line: number, editor?: TextEditor): Promise<boolean> {
         // Call the internal method.
-        return this.submitCode(code, file, line, undefined, editor, runningStopWatch, true);
+        return this.submitCode(code, file, line, undefined, editor, false);
+    }
+
+    public async debugCode(code: string, file: string, line: number, editor?: TextEditor): Promise<boolean> {
+        let saved = true;
+        // Make sure the file is saved before debugging
+        const doc = this.documentManager.textDocuments.find(d => d.fileName === file);
+        if (doc && doc.isUntitled) {
+            // Before we start, get the list of documents
+            const beforeSave = [...this.documentManager.textDocuments];
+
+            saved = await doc.save();
+
+            // If that worked, we have to open the new document. It should be
+            // the new entry in the list
+            if (saved) {
+                const diff = this.documentManager.textDocuments.filter(f => beforeSave.indexOf(f) === -1);
+                if (diff && diff.length > 0) {
+                    file = diff[0].fileName;
+
+                    // Open the new document
+                    await this.documentManager.openTextDocument(file);
+
+                    // Change the editor to the new file
+                    editor = this.documentManager.visibleTextEditors.find(e => e.document.fileName === file);
+                }
+            }
+        }
+
+        // Call the internal method if we were able to save
+        if (saved) {
+            return this.submitCode(code, file, line, undefined, editor, true);
+        }
+
+        return false;
     }
 
     // tslint:disable-next-line: no-any no-empty cyclomatic-complexity max-func-body-length
@@ -415,7 +448,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
                 }
             } catch (err) {
                 status.dispose();
-                this.logger.logError(err);
+                traceError(err);
                 this.applicationShell.showErrorMessage(err);
             }
         }
@@ -472,6 +505,11 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         });
     }
 
+    @captureTelemetry(Telemetry.ScrolledToCell)
+    public scrollToCell(id: string): void {
+        this.postMessage(InteractiveWindowMessages.ScrollToCell, { id }).ignoreErrors();
+    }
+
     protected async activating() {
         // Only activate if the active editor is empty. This means that
         // vscode thinks we are actually supposed to have focus. It would be
@@ -503,7 +541,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         }
     }
 
-    private addMessage(message: string, type: 'preview' | 'execute'): void {
+    private addMessageImpl(message: string, type: 'preview' | 'execute'): void {
         const cell: ICell = {
             id: uuid(),
             file: Identifiers.EmptyFileName,
@@ -524,29 +562,12 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
 
     private addPreviewHeader(file: string): void {
         const message = localize.DataScience.previewHeader().format(file);
-        this.addMessage(message, 'preview');
+        this.addMessageImpl(message, 'preview');
     }
 
     private addPreviewFooter(file: string): void {
         const message = localize.DataScience.previewFooter().format(file);
-        this.addMessage(message, 'preview');
-    }
-
-    private async checkPandas(): Promise<boolean> {
-        const pandasVersion = await this.dataExplorerProvider.getPandasVersion();
-        if (!pandasVersion) {
-            sendTelemetryEvent(Telemetry.PandasNotInstalled);
-            // Warn user that there is no pandas.
-            this.applicationShell.showErrorMessage(localize.DataScience.pandasRequiredForViewing());
-            return false;
-        } else if (pandasVersion.major < 1 && pandasVersion.minor < 20) {
-            sendTelemetryEvent(Telemetry.PandasTooOld);
-            // Warn user that we cannot start because pandas is too old.
-            const versionStr = `${pandasVersion.major}.${pandasVersion.minor}.${pandasVersion.build}`;
-            this.applicationShell.showErrorMessage(localize.DataScience.pandasTooOldForViewingFormat().format(versionStr));
-            return false;
-        }
-        return true;
+        this.addMessageImpl(message, 'preview');
     }
 
     private shouldAskForLargeData(): boolean {
@@ -580,7 +601,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
 
     private async showDataViewer(request: IShowDataViewer): Promise<void> {
         try {
-            if (await this.checkPandas() && await this.checkColumnSize(request.columnSize)) {
+            if (await this.checkColumnSize(request.columnSize)) {
                 await this.dataExplorerProvider.create(request.variableName);
             }
         } catch (e) {
@@ -615,7 +636,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
             sendTelemetryEvent(Telemetry.RemoteAddCode);
 
             // Submit this item as new code.
-            this.submitCode(args.code, args.file, args.line, args.id, undefined, undefined, args.debug).ignoreErrors();
+            this.submitCode(args.code, args.file, args.line, args.id, undefined, args.debug).ignoreErrors();
         }
     }
 
@@ -658,7 +679,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
             } else {
                 // Show the error message
                 this.applicationShell.showErrorMessage(exc);
-                this.logger.logError(exc);
+                traceError(exc);
             }
         } finally {
             status.dispose();
@@ -706,9 +727,16 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         }
     }
 
-    private async submitCode(code: string, file: string, line: number, id?: string, _editor?: TextEditor, runningStopWatch?: StopWatch, debug?: boolean): Promise<void> {
-        this.logger.logInformation(`Submitting code for ${this.id}`);
+    private async submitCode(code: string, file: string, line: number, id?: string, _editor?: TextEditor, debug?: boolean): Promise<boolean> {
+        let result = true;
 
+        // Do not execute or render empty code cells
+        const cellMatcher = new CellMatcher(this.configService.getSettings().datascience);
+        if (cellMatcher.stripFirstMarker(code).length === 0) {
+            return result;
+        }
+
+        traceInfo(`Submitting code for ${this.id}`);
         // Start a status item
         const status = this.setStatus(localize.DataScience.executingCode());
 
@@ -727,16 +755,14 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         };
 
         try {
-
             // Make sure we're loaded first.
             try {
-                this.logger.logInformation('Waiting for jupyter server and web panel ...');
+                traceInfo('Waiting for jupyter server and web panel ...');
                 await this.loadPromise;
             } catch (exc) {
                 // We should dispose ourselves if the load fails. Othewise the user
                 // updates their install and we just fail again because the load promise is the same.
                 this.dispose();
-
                 throw exc;
             }
 
@@ -770,6 +796,11 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
                 observable.subscribe(
                     (cells: ICell[]) => {
                         this.onAddCodeEvent(cells, undefined);
+
+                        // Any errors will move our result to false (if allowed)
+                        if (this.configuration.getSettings().datascience.stopOnError) {
+                            result = result && cells.find(c => c.state === CellState.error) === undefined;
+                        }
                     },
                     (error) => {
                         status.dispose();
@@ -780,9 +811,6 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
                     () => {
                         // Indicate executing until this cell is done.
                         status.dispose();
-
-                        // Fire a telemetry event if we have a stop watch
-                        this.sendPerceivedCellExecute(runningStopWatch);
                     });
 
                 // Wait for the cell to finish
@@ -801,19 +829,9 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
                 }
             }
         }
-    }
 
-    private sendPerceivedCellExecute(runningStopWatch?: StopWatch) {
-        if (runningStopWatch) {
-            if (!InteractiveWindow.sentExecuteCellTelemetry) {
-                InteractiveWindow.sentExecuteCellTelemetry = true;
-                sendTelemetryEvent(Telemetry.ExecuteCellPerceivedCold, runningStopWatch.elapsedTime);
-            } else {
-                sendTelemetryEvent(Telemetry.ExecuteCellPerceivedWarm, runningStopWatch.elapsedTime);
-            }
-        }
+        return result;
     }
-
     private setStatus = (message: string): Disposable => {
         const result = this.statusProvider.set(message);
         this.potentiallyUnfinishedStatus.push(result);
@@ -1033,14 +1051,14 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
                     }
                 });
             } catch (exc) {
-                this.logger.logError('Error in exporting notebook file');
+                traceError('Error in exporting notebook file');
                 this.applicationShell.showInformationMessage(localize.DataScience.exportDialogFailed().format(exc));
             }
         }
     }
 
     private async loadJupyterServer(_restart?: boolean): Promise<void> {
-        this.logger.logInformation('Getting jupyter server options ...');
+        traceInfo('Getting jupyter server options ...');
 
         // Wait for the webpanel to pass back our current theme darkness
         const knownDark = await this.isDark();
@@ -1048,7 +1066,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         // Extract our options
         const options = await this.interactiveWindowProvider.getNotebookOptions();
 
-        this.logger.logInformation('Connecting to jupyter server ...');
+        traceInfo('Connecting to jupyter server ...');
 
         // Now try to create a notebook server
         this.jupyterServer = await this.jupyterExecution.connectToNotebookServer(options);
@@ -1058,7 +1076,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
             await this.jupyterServer.setMatplotLibStyle(knownDark);
         }
 
-        this.logger.logInformation('Connected to jupyter server.');
+        traceInfo('Connected to jupyter server.');
     }
 
     private generateSysInfoCell = async (reason: SysInfoReason): Promise<ICell | undefined> => {
@@ -1109,7 +1127,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
                 return localize.DataScience.pythonNewHeader();
                 break;
             default:
-                this.logger.logError('Invalid SysInfoReason');
+                traceError('Invalid SysInfoReason');
                 return '';
                 break;
         }
@@ -1128,7 +1146,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
 
     private addSysInfo = async (reason: SysInfoReason): Promise<void> => {
         if (!this.addSysInfoPromise || reason !== SysInfoReason.Start) {
-            this.logger.logInformation(`Adding sys info for ${this.id} ${reason}`);
+            traceInfo(`Adding sys info for ${this.id} ${reason}`);
             const deferred = createDeferred<boolean>();
             this.addSysInfoPromise = deferred;
 
@@ -1151,10 +1169,10 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
                 }
             }
 
-            this.logger.logInformation(`Sys info for ${this.id} ${reason} complete`);
+            traceInfo(`Sys info for ${this.id} ${reason} complete`);
             deferred.resolve(true);
         } else if (this.addSysInfoPromise) {
-            this.logger.logInformation(`Wait for sys info for ${this.id} ${reason}`);
+            traceInfo(`Wait for sys info for ${this.id} ${reason}`);
             await this.addSysInfoPromise.promise;
         }
     }

@@ -6,6 +6,7 @@ import { Product, ProductType } from '../types';
 
 export const IModuleInstaller = Symbol('IModuleInstaller');
 export interface IModuleInstaller {
+    readonly name: string;
     readonly displayName: string;
     readonly priority: number;
     installModule(name: string, resource?: Uri): Promise<void>;

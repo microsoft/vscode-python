@@ -6,3 +6,13 @@
 #cell-table-body {
     display: table-row-group;
 }
+
+.flash {
+    animation-name: flash-animation;
+    animation-duration: 1.0s;
+}
+
+@keyframes flash-animation {
+    from { background: var(--override-peek-background, var(--vscode-peekViewEditor-background));; }
+    to   { background: default; }
+}

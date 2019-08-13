@@ -2,8 +2,8 @@
     "name": "python",
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, and more.",
-    "version": "2019.7.0-dev",
-    "languageServerVersion": "0.2.82",
+    "version": "2019.9.0-dev",
+    "languageServerVersion": "0.3.43",
     "publisher": "ms-python",
     "author": {
         "name": "Microsoft Corporation"
@@ -24,7 +24,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.33.0"
+        "vscode": "^1.36.0"
     },
     "keywords": [
         "python",
@@ -104,6 +104,11 @@
                 "command": "python.datascience.runcurrentcell",
                 "key": "ctrl+enter",
                 "when": "editorTextFocus && !editorHasSelection && python.datascience.hascodecells && python.datascience.featureenabled"
+            },
+            {
+                "command": "python.datascience.runcurrentcellandaddbelow",
+                "key": "alt+enter",
+                "when": "editorTextFocus && !editorHasSelection && python.datascience.hascodecells && python.datascience.featureenabled"
             }
         ],
         "commands": [
@@ -180,23 +185,41 @@
                 "category": "Python"
             },
             {
+                "command": "python.execInTerminal-icon1",
+                "title": "%python.command.python.execInTerminal.title%",
+                "category": "Python",
+                "icon": {
+                    "light": "resources/light/start.svg",
+                    "dark": "resources/dark/start.svg"
+                }
+            },
+            {
+                "command": "python.execInTerminal-icon2",
+                "title": "%python.command.python.execInTerminal.title%",
+                "category": "Python",
+                "icon": {
+                    "light": "resources/light/run-file.svg",
+                    "dark": "resources/dark/run-file.svg"
+                }
+            },
+            {
                 "command": "python.setInterpreter",
                 "title": "%python.command.python.setInterpreter.title%",
                 "category": "Python"
             },
             {
-                "command": "python.switchToStable",
-                "title": "%python.command.python.switchToStable.title%",
+                "command": "python.switchOffInsidersChannel",
+                "title": "%python.command.python.switchOffInsidersChannel.title%",
                 "category": "Python"
             },
             {
-                "command": "python.switchToInsidersDaily",
-                "title": "%python.command.python.switchToInsidersDaily.title%",
+                "command": "python.switchToDailyChannel",
+                "title": "%python.command.python.switchToDailyChannel.title%",
                 "category": "Python"
             },
             {
-                "command": "python.switchToInsidersWeekly",
-                "title": "%python.command.python.switchToInsidersWeekly.title%",
+                "command": "python.switchToWeeklyChannel",
+                "title": "%python.command.python.switchToWeeklyChannel.title%",
                 "category": "Python"
             },
             {
@@ -334,6 +357,21 @@
                 "category": "Python"
             },
             {
+                "command": "python.datascience.debugstepover",
+                "title": "%python.command.python.datascience.debugstepover.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.debugstop",
+                "title": "%python.command.python.datascience.debugstop.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.debugcontinue",
+                "title": "%python.command.python.datascience.debugcontinue.title%",
+                "category": "Python"
+            },
+            {
                 "command": "python.datascience.runcurrentcelladvance",
                 "title": "%python.command.python.datascience.runcurrentcelladvance.title%",
                 "category": "Python"
@@ -366,6 +404,11 @@
             {
                 "command": "python.datascience.runFileInteractive",
                 "title": "%python.command.python.datascience.runFileInteractive.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.debugFileInteractive",
+                "title": "%python.command.python.datascience.debugFileInteractive.title%",
                 "category": "Python"
             },
             {
@@ -463,6 +506,11 @@
                 "command": "python.datascience.addcellbelow",
                 "title": "%python.command.python.datascience.addcellbelow.title%",
                 "category": "Python"
+            },
+            {
+                "command": "python.datascience.scrolltocell",
+                "title": "%python.command.python.datascience.scrolltocell.title%",
+                "category": "Python"
             }
         ],
         "menus": {
@@ -556,6 +604,20 @@
                     "group": "Python3@3"
                 }
             ],
+            "editor/title": [
+                {
+                    "command": "python.execInTerminal-icon1",
+                    "title": "%python.command.python.execInTerminal.title%",
+                    "group": "navigation",
+                    "when": "resourceLangId == python && python.showPlayIcon1"
+                },
+                {
+                    "command": "python.execInTerminal-icon2",
+                    "title": "%python.command.python.execInTerminal.title%",
+                    "group": "navigation",
+                    "when": "resourceLangId == python && python.showPlayIcon2"
+                }
+            ],
             "explorer/context": [
                 {
                     "when": "resourceLangId == python && !busyTests",
@@ -585,22 +647,22 @@
             ],
             "commandPalette": [
                 {
-                    "command": "python.switchToStable",
-                    "title": "%python.command.python.switchToStable.title%",
+                    "command": "python.switchOffInsidersChannel",
+                    "title": "%python.command.python.switchOffInsidersChannel.title%",
                     "category": "Python",
-                    "when": "config.python.insidersChannel != 'Stable'"
+                    "when": "config.python.insidersChannel != 'default'"
                 },
                 {
-                    "command": "python.switchToInsidersDaily",
-                    "title": "%python.command.python.switchToInsidersDaily.title%",
+                    "command": "python.switchToDailyChannel",
+                    "title": "%python.command.python.switchToDailyChannel.title%",
                     "category": "Python",
-                    "when": "config.python.insidersChannel != 'InsidersDaily'"
+                    "when": "config.python.insidersChannel != 'daily'"
                 },
                 {
-                    "command": "python.switchToInsidersWeekly",
-                    "title": "%python.command.python.switchToInsidersWeekly.title%",
+                    "command": "python.switchToWeeklyChannel",
+                    "title": "%python.command.python.switchToWeeklyChannel.title%",
                     "category": "Python",
-                    "when": "config.python.insidersChannel != 'InsidersWeekly'"
+                    "when": "config.python.insidersChannel != 'weekly'"
                 },
                 {
                     "command": "python.viewOutput",
@@ -678,14 +740,14 @@
                     "when": "python.datascience.featureenabled"
                 },
                 {
-                    "command": "python.datascience.runcell",
-                    "title": "%python.command.python.datascience.runcell.title%",
+                    "command": "python.datascience.runFileInteractive",
+                    "title": "%python.command.python.datascience.runFileInteractive.title%",
                     "category": "Python",
                     "when": "python.datascience.featureenabled"
                 },
                 {
-                    "command": "python.datascience.runFileInteractive",
-                    "title": "%python.command.python.datascience.runFileInteractive.title%",
+                    "command": "python.datascience.debugFileInteractive",
+                    "title": "%python.command.python.datascience.debugFileInteractive.title%",
                     "category": "Python",
                     "when": "python.datascience.featureenabled"
                 },
@@ -871,6 +933,17 @@
                 }
             ]
         },
+        "breakpoints": [
+            {
+                "language": "python"
+            },
+            {
+                "language": "html"
+            },
+            {
+                "language": "jinja"
+            }
+        ],
         "debuggers": [
             {
                 "type": "python",
@@ -878,14 +951,6 @@
                 "languages": [
                     "python"
                 ],
-                "enableBreakpointsFor": {
-                    "languageIds": [
-                        "python",
-                        "html",
-                        "jinja"
-                    ]
-                },
-                "aiKey": "AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217",
                 "program": "./out/client/debugger/debugAdapter/main.js",
                 "runtime": "node",
                 "configurationSnippets": [],
@@ -1196,6 +1261,68 @@
                     "description": "Allows a user to import a jupyter notebook into a python file anytime one is opened.",
                     "scope": "resource"
                 },
+                "python.dataScience.gatherRules": {
+                    "type": "array",
+                    "default": [
+                        {
+                            "objectName": "df",
+                            "functionName": "head",
+                            "doesNotModify": [
+                                "OBJECT"
+                            ]
+                        },
+                        {
+                            "objectName": "df",
+                            "functionName": "describe",
+                            "doesNotModify": [
+                                "OBJECT"
+                            ]
+                        },
+                        {
+                            "objectName": "df",
+                            "functionName": "tail",
+                            "doesNotModify": [
+                                "OBJECT"
+                            ]
+                        },
+                        {
+                            "functionName": "print",
+                            "doesNotModify": [
+                                "ARGUMENTS"
+                            ]
+                        },
+                        {
+                            "functionName": "KMeans",
+                            "doesNotModify": [
+                                "ARGUMENTS"
+                            ]
+                        },
+                        {
+                            "functionName": "scatter",
+                            "doesNotModify": [
+                                "ARGUMENTS"
+                            ]
+                        },
+                        {
+                            "functionName": "fit",
+                            "doesNotModify": [
+                                "ARGUMENTS"
+                            ]
+                        },
+                        {
+                            "functionName": "sum",
+                            "doesNotModify": [
+                                "ARGUMENTS"
+                            ]
+                        },
+                        {
+                            "functionName": "len",
+                            "doesNotModify": [
+                                "ARGUMENTS"
+                            ]
+                        }
+                    ]
+                },
                 "python.dataScience.askForLargeDataFrames": {
                     "type": "boolean",
                     "default": true,
@@ -1382,10 +1509,22 @@
                     "description": "Modify plot output so that it can be expanded into a plot viewer window.",
                     "scope": "resource"
                 },
+                "python.dataScience.enableGather": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Enable code gathering for single cells in the interactive window (experimental).",
+                    "scope": "resource"
+                },
                 "python.dataScience.codeLenses": {
                     "type": "string",
                     "default": "python.datascience.runcell,  python.datascience.runallcellsabove, python.datascience.debugcell",
                     "description": "Set of commands to put as code lens above a cell. Defaults to 'python.datascience.runcell,  python.datascience.runallcellsabove, python.datascience.debugcell'",
+                    "scope": "resource"
+                },
+                "python.dataScience.debugCodeLenses": {
+                    "type": "string",
+                    "default": "python.datascience.debugcontinue, python.datascience.debugstop, python.datascience.debugstepover",
+                    "description": "Set of debug commands to put as code lens above a cell while debugging.",
                     "scope": "resource"
                 },
                 "python.dataScience.ptvsdDistPath": {
@@ -1397,7 +1536,7 @@
                 "python.dataScience.stopOnFirstLineWhileDebugging": {
                     "type": "boolean",
                     "default": true,
-                    "description": "When debugging a cell, stop on the first line if no other breakpoints in the current cell.",
+                    "description": "When debugging a cell, stop on the first line.",
                     "scope": "resource"
                 },
                 "python.dataScience.remoteDebuggerPort": {
@@ -1410,6 +1549,24 @@
                     "type": "number",
                     "default": 20000,
                     "description": "Limit the amount of text in Python Interactive cell text output to this value. 0 to allow any amount of characters.",
+                    "scope": "resource"
+                },
+                "python.dataScience.colorizeInputBox": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Whether or not to use the theme's peek color as the background for the input box.",
+                    "scope": "resource"
+                },
+                "python.dataScience.stopOnError": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Stop running cells if a cell throws an exception.",
+                    "scope": "resource"
+                },
+                "python.dataScience.addGotoCodeLenses": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "After running a cell, add a 'Goto' code lens on the cell. Note, disabling all code lenses disables this code lens as well.",
                     "scope": "resource"
                 },
                 "python.disableInstallationCheck": {
@@ -2157,12 +2314,12 @@
                 },
                 "python.insidersChannel": {
                     "type": "string",
-                    "default": "Stable",
-                    "description": "Set to \"Insiders\" to automatically download and install the latest Insiders builds of the extension, which include upcoming features and bug fixes.",
+                    "default": "off",
+                    "description": "Set to \"weekly\" or \"daily\" to automatically download and install the latest Insiders builds of the python extension, which include upcoming features and bug fixes.",
                     "enum": [
-                        "Stable",
-                        "InsidersWeekly",
-                        "InsidersDaily"
+                        "off",
+                        "weekly",
+                        "daily"
                     ],
                     "scope": "application"
                 }
@@ -2277,7 +2434,7 @@
         "dump-datascience-webpack-stats": "npx -n --max_old_space_size=4096 webpack --config webpack.datascience-ui.config.js --profile --json > tmp/ds-stats.json",
         "compile-webviews": "gulp compile-webviews",
         "compile-webviews-verbose": "npx webpack --config webpack.datascience-ui.config.js",
-        "postinstall": "node ./node_modules/vscode/bin/install && node ./build/ci/postInstall.js",
+        "postinstall": "node ./build/ci/postInstall.js",
         "test": "node ./out/test/standardTest.js && node ./out/test/multiRootTest.js",
         "test:unittests": "mocha --opts ./build/.mocha.unittests.js.opts",
         "test:unittests:cover": "nyc --silent --no-clean --nycrc-path build/.nycrc mocha --opts ./build/.mocha.unittests.ts.opts",
@@ -2288,6 +2445,7 @@
         "testSingleWorkspace": "node ./out/test/testBootstrap.js ./out/test/standardTest.js",
         "testMultiWorkspace": "node ./out/test/testBootstrap.js ./out/test/multiRootTest.js",
         "testPerformance": "node ./out/test/testBootstrap.js ./out/test/performanceTest.js",
+        "testSmoke": "node ./out/test/smokeTest.js",
         "lint-staged": "node gulpfile.js",
         "lint": "tslint src/**/*.ts -t verbose",
         "clean": "gulp clean",
@@ -2296,9 +2454,10 @@
     },
     "dependencies": {
         "@jupyterlab/services": "^3.2.1",
+        "@msrvida/python-program-analysis": "0.0.5",
         "ansi-regex": "^4.1.0",
         "arch": "^2.1.0",
-        "azure-storage": "^2.10.1",
+        "azure-storage": "^2.10.3",
         "diff-match-patch": "^1.0.0",
         "fs-extra": "^4.0.3",
         "fuzzy": "^0.1.3",
@@ -2307,10 +2466,11 @@
         "hash.js": "^1.1.7",
         "iconv-lite": "^0.4.21",
         "inversify": "^4.11.1",
+        "jison": "^0.4.18",
         "jsonc-parser": "^2.0.3",
         "less-plugin-inline-urls": "^1.2.0",
         "line-by-line": "^0.1.6",
-        "lodash": "^4.17.13",
+        "lodash": "^4.17.15",
         "md5": "^2.2.1",
         "minimatch": "^3.0.4",
         "monaco-editor-textmate": "^2.1.1",
@@ -2344,7 +2504,7 @@
         "untildify": "^3.0.2",
         "vscode-debugadapter": "^1.28.0",
         "vscode-debugprotocol": "^1.28.0",
-        "vscode-extension-telemetry": "^0.1.0",
+        "vscode-extension-telemetry": "0.1.0",
         "vscode-languageclient": "^5.2.1",
         "vscode-languageserver": "^5.2.1",
         "vscode-languageserver-protocol": "^3.14.1",
@@ -2385,11 +2545,12 @@
         "@types/glob": "^5.0.35",
         "@types/html-webpack-plugin": "^3.2.0",
         "@types/iconv-lite": "^0.0.1",
+        "@types/jquery": "^1.10.35",
         "@types/jsdom": "^11.12.0",
         "@types/loader-utils": "^1.1.3",
         "@types/lodash": "^4.14.104",
         "@types/md5": "^2.1.32",
-        "@types/mocha": "^5.2.6",
+        "@types/mocha": "^5.2.7",
         "@types/nock": "^10.0.3",
         "@types/node": "9.4.7",
         "@types/node-fetch": "^2.3.4",
@@ -2403,13 +2564,13 @@
         "@types/semver": "^5.5.0",
         "@types/shortid": "^0.0.29",
         "@types/sinon": "^7.0.13",
-        "@types/slickgrid": "^2.1.27",
         "@types/stack-trace": "0.0.29",
         "@types/strip-json-comments": "0.0.30",
         "@types/temp": "^0.8.32",
         "@types/tmp": "0.0.33",
         "@types/untildify": "^3.0.0",
         "@types/uuid": "^3.4.3",
+        "@types/vscode": "^1.36.0",
         "@types/webpack-bundle-analyzer": "^2.13.0",
         "@types/winreg": "^1.2.30",
         "@types/ws": "^6.0.1",
@@ -2431,7 +2592,6 @@
         "codecov": "^3.5.0",
         "colors": "^1.2.1",
         "copy-webpack-plugin": "^4.6.0",
-        "coveralls": "^3.0.4",
         "cross-spawn": "^6.0.5",
         "css-loader": "^1.0.1",
         "cucumber-html-reporter": "^4.0.5",
@@ -2478,7 +2638,6 @@
         "raw-loader": "^0.5.1",
         "react": "^16.5.2",
         "react-data-grid": "^6.0.2-0",
-        "react-data-grid-addons": "^6.0.2-0",
         "react-dev-utils": "^5.0.2",
         "react-dom": "^16.5.2",
         "react-json-tree": "^0.11.0",
@@ -2510,8 +2669,8 @@
         "uuid": "^3.3.2",
         "vinyl-fs": "^3.0.3",
         "vsce": "^1.59.0",
-        "vscode": "^1.1.33",
         "vscode-debugadapter-testsupport": "^1.27.0",
+        "vscode-test": "^1.0.2",
         "webpack": "^4.33.0",
         "webpack-bundle-analyzer": "^3.3.2",
         "webpack-cli": "^3.1.2",

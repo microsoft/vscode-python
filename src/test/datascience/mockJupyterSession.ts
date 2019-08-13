@@ -20,7 +20,7 @@ export class MockJupyterSession implements IJupyterSession {
     private executionCount: number = 0;
     private outstandingRequestTokenSources: CancellationTokenSource[] = [];
     private executes: string[] = [];
-    private forceRestartTimeout : boolean = false;
+    private forceRestartTimeout: boolean = false;
     private completionTimeout: number = 1;
 
     constructor(cellDictionary: Record<string, ICell>, timedelay: number) {
@@ -28,7 +28,7 @@ export class MockJupyterSession implements IJupyterSession {
         this.timedelay = timedelay;
     }
 
-    public get onRestarted() : Event<void> {
+    public get onRestarted(): Event<void> {
         return this.restartedEvent.event;
     }
 
@@ -63,7 +63,7 @@ export class MockJupyterSession implements IJupyterSession {
         }
 
         // Create a new dummy request
-        this.executionCount += 1;
+        this.executionCount += content.store_history && content.code.trim().length > 0 ? 1 : 0;
         const tokenSource = new CancellationTokenSource();
         const request = new MockJupyterRequest(cell, this.timedelay, this.executionCount, tokenSource.token);
         this.outstandingRequestTokenSources.push(tokenSource);
@@ -106,7 +106,7 @@ export class MockJupyterSession implements IJupyterSession {
         return sleep(10);
     }
 
-    public getExecutes() : string [] {
+    public getExecutes(): string[] {
         return this.executes;
     }
 
@@ -114,7 +114,7 @@ export class MockJupyterSession implements IJupyterSession {
         this.completionTimeout = timeout;
     }
 
-    private findCell = (code : string) : ICell => {
+    private findCell = (code: string): ICell => {
         // Match skipping line separators
         const withoutLines = code.replace(LineFeedRegEx, '');
 

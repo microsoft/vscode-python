@@ -5,7 +5,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
 import { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
-import { CancellationToken, CodeLens, CodeLensProvider, Disposable, Event, Range, TextDocument, TextEditor } from 'vscode';
+import { CancellationToken, CodeLens, CodeLensProvider, DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, Disposable, Event, Range, TextDocument, TextEditor } from 'vscode';
 
 import { ICommandManager } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
@@ -96,6 +96,12 @@ export interface INotebookExecutionLogger {
     postExecute(cell: ICell, silent: boolean): Promise<void>;
 }
 
+export const IGatherExecution = Symbol('IGatherExecution');
+export interface IGatherExecution {
+    enabled: boolean;
+    gatherCode(vscCell: ICell): string;
+}
+
 export const IJupyterExecution = Symbol('IJupyterExecution');
 export interface IJupyterExecution extends IAsyncDisposable {
     sessionChanged: Event<void>;
@@ -170,7 +176,7 @@ export interface IInteractiveWindowProvider {
 
 export const IDataScienceErrorHandler = Symbol('IDataScienceErrorHandler');
 export interface IDataScienceErrorHandler {
-    handleError(err: Error): void;
+    handleError(err: Error): Promise<void>;
 }
 
 export const IInteractiveWindow = Symbol('IInteractiveWindow');
@@ -179,8 +185,9 @@ export interface IInteractiveWindow extends Disposable {
     ready: Promise<void>;
     onExecutedCode: Event<string>;
     show(): Promise<void>;
-    addCode(code: string, file: string, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<void>;
-    debugCode(code: string, file: string, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<void>;
+    addCode(code: string, file: string, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;
+    addMessage(message: string): Promise<void>;
+    debugCode(code: string, file: string, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;
     startProgress(): void;
     stopProgress(): void;
     undoCells(): void;
@@ -192,6 +199,7 @@ export interface IInteractiveWindow extends Disposable {
     collapseAllCells(): void;
     exportCells(): void;
     previewNotebook(notebookFile: string): Promise<void>;
+    scrollToCell(id: string): void;
 }
 
 export const IInteractiveWindowListener = Symbol('IInteractiveWindowListener');
@@ -232,6 +240,7 @@ export interface IDataScienceCodeLensProvider extends CodeLensProvider {
 // Wraps the Code Watcher API
 export const ICodeWatcher = Symbol('ICodeWatcher');
 export interface ICodeWatcher {
+    codeLensUpdated: Event<void>;
     setDocument(document: TextDocument): void;
     getFileName(): string;
     getVersion(): number;
@@ -248,12 +257,15 @@ export interface ICodeWatcher {
     runAllCellsAbove(stopLine: number, stopCharacter: number): Promise<void>;
     runCellAndAllBelow(startLine: number, startCharacter: number): Promise<void>;
     runFileInteractive(): Promise<void>;
+    debugFileInteractive(): Promise<void>;
     addEmptyCellToBottom(): Promise<void>;
+    runCurrentCellAndAddBelow(): Promise<void>;
     debugCurrentCell(): Promise<void>;
 }
 
 export const ICodeLensFactory = Symbol('ICodeLensFactory');
 export interface ICodeLensFactory {
+    updateRequired: Event<void>;
     createCodeLenses(document: TextDocument): CodeLens[];
 }
 
@@ -280,6 +292,7 @@ export interface IInteractiveWindowInfo {
     cellCount: number;
     undoCount: number;
     redoCount: number;
+    visibleCells: ICell[];
 }
 
 export interface IMessageCell extends nbformat.IBaseCell {
@@ -381,7 +394,6 @@ export interface IJupyterVariablesResponse {
 export const IDataViewerProvider = Symbol('IDataViewerProvider');
 export interface IDataViewerProvider {
     create(variable: string): Promise<IDataViewer>;
-    getPandasVersion(): Promise<{ major: number; minor: number; build: number } | undefined>;
 }
 export const IDataViewer = Symbol('IDataViewer');
 
@@ -415,11 +427,12 @@ export interface ISourceMapRequest {
 }
 
 export interface ICellHash {
-    line: number;       // 1 based
-    endLine: number;    // 1 based and inclusive
+    line: number; // 1 based
+    endLine: number; // 1 based and inclusive
     runtimeLine: number; // Line in the jupyter source to start at
     hash: string;
     executionCount: number;
+    id: string;         // Cell id as sent to jupyter
 }
 
 export interface IFileHashes {
@@ -434,5 +447,23 @@ export interface ICellHashListener {
 
 export const ICellHashProvider = Symbol('ICellHashProvider');
 export interface ICellHashProvider {
+    updated: Event<void>;
     getHashes(): IFileHashes[];
+}
+
+export const IDebugLocationTrackerFactory = Symbol('IDebugLocationTrackerFactory');
+export interface IDebugLocationTrackerFactory extends DebugAdapterTrackerFactory {
+}
+
+export interface IDebugLocation {
+    fileName: string;
+    lineNumber: number;
+    column: number;
+}
+
+export const IDebugLocationTracker = Symbol('IDebugLocationTracker');
+export interface IDebugLocationTracker extends DebugAdapterTracker {
+    debugLocationUpdated: Event<void>;
+    debugLocation: IDebugLocation | undefined;
+    setDebugSession(targetSession: DebugSession): void;
 }

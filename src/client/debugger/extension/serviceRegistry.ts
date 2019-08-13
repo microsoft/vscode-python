@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { IExtensionActivationService } from '../../activation/types';
+import { IExtensionSingleActivationService } from '../../activation/types';
 import { IServiceManager } from '../../ioc/types';
 import { AttachRequestArguments, LaunchRequestArguments } from '../types';
 import { DebuggerBanner } from './banner';
@@ -18,6 +18,7 @@ import { DebugConfigurationProviderFactory } from './configuration/providers/pro
 import { PyramidLaunchDebugConfigurationProvider } from './configuration/providers/pyramidLaunch';
 import { RemoteAttachDebugConfigurationProvider } from './configuration/providers/remoteAttach';
 import { AttachConfigurationResolver } from './configuration/resolvers/attach';
+import { DebugEnvironmentVariablesHelper, IDebugEnvironmentVariablesService } from './configuration/resolvers/helper';
 import { LaunchConfigurationResolver } from './configuration/resolvers/launch';
 import { IDebugConfigurationProviderFactory, IDebugConfigurationResolver } from './configuration/types';
 import { ChildProcessAttachEventHandler } from './hooks/childProcessAttachHandler';
@@ -26,8 +27,8 @@ import { IChildProcessAttachService, IDebugSessionEventHandlers } from './hooks/
 import { DebugConfigurationType, IDebugConfigurationProvider, IDebugConfigurationService, IDebuggerBanner } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, LaunchJsonCompletionProvider);
-    serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, LaunchJsonUpdaterService);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, LaunchJsonCompletionProvider);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, LaunchJsonUpdaterService);
     serviceManager.addSingleton<IDebugConfigurationService>(IDebugConfigurationService, PythonDebugConfigurationService);
     serviceManager.addSingleton<IDebuggerBanner>(IDebuggerBanner, DebuggerBanner);
     serviceManager.addSingleton<IChildProcessAttachService>(IChildProcessAttachService, ChildProcessAttachService);
@@ -41,4 +42,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, RemoteAttachDebugConfigurationProvider, DebugConfigurationType.remoteAttach);
     serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, ModuleLaunchDebugConfigurationProvider, DebugConfigurationType.launchModule);
     serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, PyramidLaunchDebugConfigurationProvider, DebugConfigurationType.launchPyramid);
+    serviceManager.addSingleton<IDebugEnvironmentVariablesService>(IDebugEnvironmentVariablesService, DebugEnvironmentVariablesHelper);
 }

@@ -197,7 +197,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         const cells = generateCells(undefined, code, 'foo.py', 1, true, uuid());
         cells.forEach(c => {
             const cellMatcher = new CellMatcher();
-            const key = cellMatcher.stripMarkers(concatMultilineString(c.data.source)).replace(LineFeedRegEx, '');
+            const key = cellMatcher.stripFirstMarker(concatMultilineString(c.data.source)).replace(LineFeedRegEx, '');
             if (c.data.cell_type === 'code') {
                 const massagedResult = this.massageCellResult(result, mimeType);
                 const data: nbformat.ICodeCell = c.data as nbformat.ICodeCell;

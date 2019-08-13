@@ -74,7 +74,8 @@ import { TerminalHelper } from '../../client/common/terminal/helper';
 import { TerminalNameShellDetector } from '../../client/common/terminal/shellDetectors/terminalNameShellDetector';
 import {
     IShellDetector,
-    ITerminalActivationCommandProvider, ITerminalHelper,
+    ITerminalActivationCommandProvider,
+    ITerminalHelper,
     TerminalActivationProviders
 } from '../../client/common/terminal/types';
 import {
@@ -96,10 +97,15 @@ import { IEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
 import { DataViewer } from '../../client/datascience/data-viewing/dataViewer';
 import { DataViewerProvider } from '../../client/datascience/data-viewing/dataViewerProvider';
+import { DebugLocationTracker } from '../../client/datascience/debugLocationTracker';
+import { DebugLocationTrackerFactory } from '../../client/datascience/debugLocationTrackerFactory';
 import { CellHashProvider } from '../../client/datascience/editor-integration/cellhashprovider';
 import { CodeLensFactory } from '../../client/datascience/editor-integration/codeLensFactory';
+import { DataScienceCodeLensProvider } from '../../client/datascience/editor-integration/codelensprovider';
 import { CodeWatcher } from '../../client/datascience/editor-integration/codewatcher';
 import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/errorHandler';
+import { GatherExecution } from '../../client/datascience/gather/gather';
+import { GatherListener } from '../../client/datascience/gather/gatherListener';
 import {
     DotNetIntellisenseProvider
 } from '../../client/datascience/interactive-window/intellisense/dotNetIntellisenseProvider';
@@ -128,10 +134,14 @@ import {
     ICodeLensFactory,
     ICodeWatcher,
     IDataScience,
+    IDataScienceCodeLensProvider,
     IDataScienceCommandListener,
     IDataScienceErrorHandler,
     IDataViewer,
     IDataViewerProvider,
+    IDebugLocationTracker,
+    IDebugLocationTrackerFactory,
+    IGatherExecution,
     IInteractiveWindow,
     IInteractiveWindowListener,
     IInteractiveWindowProvider,
@@ -338,12 +348,15 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IPythonInPathCommandProvider>(IPythonInPathCommandProvider, PythonInPathCommandProvider);
         this.serviceManager.addSingleton<IEnvironmentActivationService>(IEnvironmentActivationService, EnvironmentActivationService);
         this.serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
+        this.serviceManager.add<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider, DataScienceCodeLensProvider);
         this.serviceManager.add<ICodeExecutionHelper>(ICodeExecutionHelper, CodeExecutionHelper);
         this.serviceManager.add<IDataScienceCommandListener>(IDataScienceCommandListener, InteractiveWindowCommandListener);
         this.serviceManager.add<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
         this.serviceManager.add<IInstallationChannelManager>(IInstallationChannelManager, InstallationChannelManager);
         this.serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables);
         this.serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, JupyterDebugger);
+        this.serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTracker);
+        this.serviceManager.addSingleton<IDebugLocationTrackerFactory>(IDebugLocationTrackerFactory, DebugLocationTrackerFactory);
 
         this.serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
         this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
@@ -365,8 +378,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IDebugService>(IDebugService, MockDebuggerService);
         this.serviceManager.addSingleton<ICellHashProvider>(ICellHashProvider, CellHashProvider);
         this.serviceManager.addBinding(ICellHashProvider, IInteractiveWindowListener);
+        this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, GatherListener);
         this.serviceManager.addBinding(ICellHashProvider, INotebookExecutionLogger);
         this.serviceManager.addBinding(IJupyterDebugger, ICellHashListener);
+        this.serviceManager.addSingleton<IGatherExecution>(IGatherExecution, GatherExecution);
+        this.serviceManager.addBinding(IGatherExecution, INotebookExecutionLogger);
         this.serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory);
         this.serviceManager.addSingleton<IShellDetector>(IShellDetector, TerminalNameShellDetector);
 
@@ -410,7 +426,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             liveShareConnectionTimeout: 100,
             autoPreviewNotebooksInInteractivePane: true,
             enablePlotViewer: true,
-            stopOnFirstLineWhileDebugging: true
+            stopOnFirstLineWhileDebugging: true,
+            stopOnError: true,
+            addGotoCodeLenses: true,
+            enableCellCodeLens: true
         };
 
         const workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration> = TypeMoq.Mock.ofType<WorkspaceConfiguration>();

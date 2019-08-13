@@ -8,16 +8,16 @@ import * as stackTrace from 'stack-trace';
 import TelemetryReporter from 'vscode-extension-telemetry';
 
 import { IWorkspaceService } from '../common/application/types';
-import { EXTENSION_ROOT_DIR, isTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
+import { AppinsightsKey, EXTENSION_ROOT_DIR, isTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
 import { traceInfo } from '../common/logger';
 import { StopWatch } from '../common/utils/stopWatch';
 import { Telemetry } from '../datascience/constants';
+import { ConsoleType } from '../debugger/types';
 import { LinterId } from '../linters/types';
+import { TestProvider } from '../testing/common/types';
 import { EventName } from './constants';
 import {
-    CodeExecutionTelemetry,
     DebuggerConfigurationPromtpsTelemetry,
-    DebuggerTelemetry,
     DiagnosticsAction,
     DiagnosticsMessages,
     EditorLoadTelemetry,
@@ -79,12 +79,10 @@ function getTelemetryReporter() {
     const extension = extensions.getExtension(extensionId)!;
     // tslint:disable-next-line:no-unsafe-any
     const extensionVersion = extension.packageJSON.version;
-    // tslint:disable-next-line:no-unsafe-any
-    const aiKey = extension.packageJSON.contributes.debuggers[0].aiKey;
 
     // tslint:disable-next-line:no-require-imports
     const reporter = require('vscode-extension-telemetry').default as typeof TelemetryReporter;
-    return (telemetryReporter = new reporter(extensionId, extensionVersion, aiKey));
+    return (telemetryReporter = new reporter(extensionId, extensionVersion, AppinsightsKey));
 }
 
 export function clearTelemetryReporter() {
@@ -247,7 +245,9 @@ function getStackTrace(ex: Error): string {
             trace += '\n\tat <anonymous>';
         }
     }
-    return trace.trim();
+    // Ensure we always use `/` as path seperators.
+    // This way stack traces (with relative paths) comming from different OS will always look the same.
+    return trace.trim().replace(/\\/g, '/');
 }
 
 function getCallsite(frame: stackTrace.StackFrame) {
@@ -270,7 +270,127 @@ function getCallsite(frame: stackTrace.StackFrame) {
 export interface IEventNamePropertyMapping {
     [EventName.COMPLETION]: never | undefined;
     [EventName.COMPLETION_ADD_BRACKETS]: { enabled: boolean };
-    [EventName.DEBUGGER]: DebuggerTelemetry;
+    /**
+     * Telemetry captured when staring the debugger.
+     */
+    [EventName.DEBUGGER]: {
+        /**
+         * Trigger for starting the debugger.
+         * - `launch`: Launch/start new code and debug it.
+         * - `attach`: Attach to an exiting python process (remote debugging).
+         * - `test`: Debugging python tests.
+         *
+         * @type {('launch' | 'attach' | 'test')}
+         */
+        trigger: 'launch' | 'attach' | 'test';
+        /**
+         * Type of console used.
+         *  -`internalConsole`: Use VS Code debug console (no shells/terminals).
+         * - `integratedTerminal`: Use VS Code terminal.
+         * - `externalTerminal`: Use an External terminal.
+         *
+         * @type {ConsoleType}
+         */
+        console?: ConsoleType;
+        /**
+         * Whether user has defined environment variables.
+         * Could have been defined in launch.json or the env file (defined in `settings.json`).
+         * Default `env file` is `.env` in the workspace folder.
+         *
+         * @type {boolean}
+         */
+        hasEnvVars: boolean;
+        /**
+         * Whether there are any CLI arguments that need to be passed into the program being debugged.
+         *
+         * @type {boolean}
+         */
+        hasArgs: boolean;
+        /**
+         * Whether the user is debugging `django`.
+         *
+         * @type {boolean}
+         */
+        django: boolean;
+        /**
+         * Whether the user is debugging `flask`.
+         *
+         * @type {boolean}
+         */
+        flask: boolean;
+        /**
+         * Whether the user is debugging `jinja` templates.
+         *
+         * @type {boolean}
+         */
+        jinja: boolean;
+        /**
+         * Whether user is attaching to a local python program (attach scenario).
+         *
+         * @type {boolean}
+         */
+        isLocalhost: boolean;
+        /**
+         * Whether debugging a module.
+         *
+         * @type {boolean}
+         */
+        isModule: boolean;
+        /**
+         * Whether debugging with `sudo`.
+         *
+         * @type {boolean}
+         */
+        isSudo: boolean;
+        /**
+         * Whether required to stop upon entry.
+         *
+         * @type {boolean}
+         */
+        stopOnEntry: boolean;
+        /**
+         * Whether required to display return types in debugger.
+         *
+         * @type {boolean}
+         */
+        showReturnValue: boolean;
+        /**
+         * Whether debugging `pyramid`.
+         *
+         * @type {boolean}
+         */
+        pyramid: boolean;
+        /**
+         * Whether debugging a subprocess.
+         *
+         * @type {boolean}
+         */
+        subProcess: boolean;
+        /**
+         * Whether debugging `watson`.
+         *
+         * @type {boolean}
+         */
+        watson: boolean;
+        /**
+         * Whether degbugging `pyspark`.
+         *
+         * @type {boolean}
+         */
+        pyspark: boolean;
+        /**
+         * Whether using `gevent` when deugging.
+         *
+         * @type {boolean}
+         */
+        gevent: boolean;
+        /**
+         * Whether debugging `scrapy`.
+         *
+         * @type {boolean}
+         */
+        scrapy: boolean;
+    };
     [EventName.DEBUGGER_ATTACH_TO_CHILD_PROCESS]: never | undefined;
     [EventName.DEBUGGER_CONFIGURATION_PROMPTS]: DebuggerConfigurationPromtpsTelemetry;
     [EventName.DEBUGGER_CONFIGURATION_PROMPTS_IN_LAUNCH_JSON]: never | undefined;
@@ -279,8 +399,39 @@ export interface IEventNamePropertyMapping {
     [EventName.DIAGNOSTICS_MESSAGE]: DiagnosticsMessages;
     [EventName.EDITOR_LOAD]: EditorLoadTelemetry;
     [EventName.ENVFILE_VARIABLE_SUBSTITUTION]: never | undefined;
-    [EventName.EXECUTION_CODE]: CodeExecutionTelemetry;
-    [EventName.EXECUTION_DJANGO]: CodeExecutionTelemetry;
+    /**
+     * Telemetry Event sent when user sends code to be executed in the terminal.
+     *
+     */
+    [EventName.EXECUTION_CODE]: {
+        /**
+         * Whether the user executed a file in the terminal or just the selected text.
+         *
+         * @type {('file' | 'selection')}
+         */
+        scope: 'file' | 'selection';
+        /**
+         * How was the code executed (through the command or by clicking the `Run File` icon).
+         *
+         * @type {('command' | 'icon')}
+         */
+        trigger?: 'command' | 'icon';
+    };
+    /**
+     * Telemetry Event sent when user executes code against Django Shell.
+     * Values sent:
+     * scope
+     *
+     */
+    [EventName.EXECUTION_DJANGO]: {
+        /**
+         * If `file`, then the file was executed in the django shell.
+         * If `selection`, then the selected text was sent to the django shell.
+         *
+         * @type {('file' | 'selection')}
+         */
+        scope: 'file' | 'selection';
+    };
     [EventName.FORMAT]: FormatTelemetry;
     [EventName.FORMAT_ON_TYPE]: { enabled: boolean };
     [EventName.FORMAT_SORT_IMPORTS]: never | undefined;
@@ -299,7 +450,16 @@ export interface IEventNamePropertyMapping {
     [EventName.PYTHON_INTERPRETER_AUTO_SELECTION]: InterpreterAutoSelection;
     [EventName.PYTHON_INTERPRETER_DISCOVERY]: InterpreterDiscovery;
     [EventName.PYTHON_INTERPRETER_ACTIVATE_ENVIRONMENT_PROMPT]: { selection: 'Yes' | 'No' | 'Ignore' | undefined };
-    [EventName.INSIDERS_PROMPT]: { selection: 'Use Stable' | 'Reload' | undefined };
+    [EventName.INSIDERS_PROMPT]: {
+        /**
+         * @type {'Yes, weekly'} When user selects to use "weekly" as extension channel in insiders prompt
+         * @type {'Yes, daily'} When user selects to use "daily" as extension channel in insiders prompt
+         * @type {'No, thanks'} When user decides to keep using the same extension channel as before
+         *
+         * @type {('Yes, weekly' | 'Yes, daily' | 'No, thanks' | undefined)}
+         */
+        selection: 'Yes, weekly' | 'Yes, daily' | 'No, thanks' | undefined;
+    };
     [EventName.INSIDERS_RELOAD_PROMPT]: { selection: 'Reload' | undefined };
     [EventName.PYTHON_LANGUAGE_SERVER_SWITCHED]: { change: 'Switch to Jedi from LS' | 'Switch to LS from Jedi' };
     [EventName.PYTHON_LANGUAGE_SERVER_DOWNLOADED]: LanguageServerVersionTelemetry;
@@ -311,7 +471,34 @@ export interface IEventNamePropertyMapping {
     [EventName.PYTHON_LANGUAGE_SERVER_READY]: never | undefined;
     [EventName.PYTHON_LANGUAGE_SERVER_STARTUP]: never | undefined;
     [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: any;
-    [EventName.PYTHON_EXPERIMENTS]: { error?: string; expName?: string };
+    [EventName.PYTHON_EXPERIMENTS]: {
+        /**
+         * Name of the experiment group the user is in
+         * @type {string}
+         */
+        expName?: string;
+    };
+    [EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE]: {
+        /**
+         * Carries `true` if downloading experiments successfully finishes within timeout, `false` otherwise
+         * @type {boolean}
+         */
+        success?: boolean;
+        /**
+         * Carries an error string if downloading experiments fails with error
+         * @type {string}
+         */
+        error?: string;
+    };
+    /**
+     * When user clicks a button in the python extension survey prompt, this telemetry event is sent with details
+     */
+    [EventName.EXTENSION_SURVEY_PROMPT]: {
+        /**
+         * Carries the selection of user when they are asked to take the extension survey
+         */
+        selection: 'Yes' | 'Maybe later' | 'Do not show again' | undefined;
+    };
     [EventName.REFACTOR_EXTRACT_FUNCTION]: never | undefined;
     [EventName.REFACTOR_EXTRACT_VAR]: never | undefined;
     [EventName.REFACTOR_RENAME]: never | undefined;
@@ -332,6 +519,17 @@ export interface IEventNamePropertyMapping {
     [EventName.UNITTEST_STOP]: never | undefined;
     [EventName.UNITTEST_DISABLE]: never | undefined;
     [EventName.UNITTEST_VIEW_OUTPUT]: never | undefined;
+    /**
+     * Tracks which testing framework has been enabled by the user.
+     * Telemetry is sent when settings have been modified by the user.
+     * Values sent includ:
+     * unittest -   If this value is `true`, then unittest has been enabled by the user.
+     * pytest   -   If this value is `true`, then pytest has been enabled by the user.
+     * nosetest -   If this value is `true`, then nose has been enabled by the user.
+     * @type {(never | undefined)}
+     * @memberof IEventNamePropertyMapping
+     */
+    [EventName.UNITTEST_ENABLED]: Partial<Record<TestProvider, undefined | boolean>>;
     [EventName.UPDATE_PYSPARK_LIBRARY]: never | undefined;
     [EventName.WORKSPACE_SYMBOLS_BUILD]: never | undefined;
     [EventName.WORKSPACE_SYMBOLS_GO_TO]: never | undefined;
@@ -348,7 +546,11 @@ export interface IEventNamePropertyMapping {
     [Telemetry.CopySourceCode]: never | undefined;
     [Telemetry.DataScienceSettings]: JSONObject;
     [Telemetry.DataViewerFetchTime]: never | undefined;
+    [Telemetry.DebugContinue]: never | undefined;
     [Telemetry.DebugCurrentCell]: never | undefined;
+    [Telemetry.DebugStepOver]: never | undefined;
+    [Telemetry.DebugStop]: never | undefined;
+    [Telemetry.DebugFileInteractive]: never | undefined;
     [Telemetry.DeleteAllCells]: never | undefined;
     [Telemetry.DeleteCell]: never | undefined;
     [Telemetry.FindJupyterCommand]: { command: string };
@@ -390,6 +592,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RunToLine]: never | undefined;
     [Telemetry.RunFileInteractive]: never | undefined;
     [Telemetry.RunFromLine]: never | undefined;
+    [Telemetry.ScrolledToCell]: never | undefined;
     [Telemetry.SelfCertsMessageClose]: never | undefined;
     [Telemetry.SelfCertsMessageEnabled]: never | undefined;
     [Telemetry.SelectJupyterURI]: never | undefined;
@@ -411,12 +614,12 @@ export interface IEventNamePropertyMapping {
     [Telemetry.WebviewStyleUpdate]: never | undefined;
     /*
     Telemetry event sent with details of Jedi Memory usage.
-    memory - Memory usage of Process in kb.
+    mem_use - Memory usage of Process in kb.
     limit - Upper bound for memory usage of Jedi process.
     isUserDefinedLimit - Whether the user has configfured the upper bound limit.
     restart - Whether to restart the Jedi Process (i.e. memory > limit).
     */
-    [EventName.JEDI_MEMORY]: { memory: number; limit: number; isUserDefinedLimit: boolean; restart: boolean };
+    [EventName.JEDI_MEMORY]: { mem_use: number; limit: number; isUserDefinedLimit: boolean; restart: boolean };
     /*
     Telemetry event sent to provide information on whether we have successfully identify the type of shell used.
     This information is useful in determining how well we identify shells on users machines.

@@ -270,6 +270,10 @@ export function setUpDomEnvironment() {
         userAgent: 'node.js',
         platform: 'node'
     };
+    (global as any)['Event'] = window.Event;
+    (global as any)['KeyboardEvent'] = window.KeyboardEvent;
+    (global as any)['MouseEvent'] = window.MouseEvent;
+    (global as any)['DocumentFragment'] = window.DocumentFragment;
     // tslint:disable-next-line:no-string-literal no-any
     (global as any)['getComputedStyle'] = window.getComputedStyle;
     // tslint:disable-next-line:no-string-literal no-any

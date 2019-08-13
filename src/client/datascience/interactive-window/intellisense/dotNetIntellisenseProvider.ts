@@ -23,8 +23,8 @@ import { IntellisenseDocument } from './intellisenseDocument';
 @injectable()
 export class DotNetIntellisenseProvider extends BaseIntellisenseProvider implements IInteractiveWindowListener {
 
-    private languageClientPromise : Deferred<vscodeLanguageClient.LanguageClient> | undefined;
-    private sentOpenDocument : boolean = false;
+    private languageClientPromise: Deferred<vscodeLanguageClient.LanguageClient> | undefined;
+    private sentOpenDocument: boolean = false;
     private active: boolean = false;
 
     constructor(
@@ -47,11 +47,11 @@ export class DotNetIntellisenseProvider extends BaseIntellisenseProvider impleme
         this.configService.getSettings().onDidChange(() => this.active = !this.configService.getSettings().jediEnabled);
     }
 
-    protected get isActive() : boolean {
+    protected get isActive(): boolean {
         return this.active;
     }
 
-    protected async provideCompletionItems(position: monacoEditor.Position, context: monacoEditor.languages.CompletionContext, cellId: string, token: CancellationToken) : Promise<monacoEditor.languages.CompletionList> {
+    protected async provideCompletionItems(position: monacoEditor.Position, context: monacoEditor.languages.CompletionContext, cellId: string, token: CancellationToken): Promise<monacoEditor.languages.CompletionList> {
         const languageClient = await this.getLanguageClient();
         const document = await this.getDocument();
         if (languageClient && document) {
@@ -68,7 +68,7 @@ export class DotNetIntellisenseProvider extends BaseIntellisenseProvider impleme
             incomplete: false
         };
     }
-    protected async provideHover(position: monacoEditor.Position, cellId: string, token: CancellationToken) : Promise<monacoEditor.languages.Hover> {
+    protected async provideHover(position: monacoEditor.Position, cellId: string, token: CancellationToken): Promise<monacoEditor.languages.Hover> {
         const languageClient = await this.getLanguageClient();
         const document = await this.getDocument();
         if (languageClient && document) {
@@ -84,7 +84,7 @@ export class DotNetIntellisenseProvider extends BaseIntellisenseProvider impleme
             contents: []
         };
     }
-    protected async provideSignatureHelp(position: monacoEditor.Position, _context: monacoEditor.languages.SignatureHelpContext, cellId: string, token: CancellationToken) : Promise<monacoEditor.languages.SignatureHelp> {
+    protected async provideSignatureHelp(position: monacoEditor.Position, _context: monacoEditor.languages.SignatureHelpContext, cellId: string, token: CancellationToken): Promise<monacoEditor.languages.SignatureHelp> {
         const languageClient = await this.getLanguageClient();
         const document = await this.getDocument();
         if (languageClient && document) {
@@ -103,7 +103,7 @@ export class DotNetIntellisenseProvider extends BaseIntellisenseProvider impleme
         };
     }
 
-    protected async handleChanges(originalFile: string | undefined, document: IntellisenseDocument, changes: TextDocumentContentChangeEvent[]) : Promise<void> {
+    protected async handleChanges(originalFile: string | undefined, document: IntellisenseDocument, changes: TextDocumentContentChangeEvent[]): Promise<void> {
         // Then see if we can talk to our language client
         if (this.active && document) {
 
@@ -124,7 +124,7 @@ export class DotNetIntellisenseProvider extends BaseIntellisenseProvider impleme
         }
     }
 
-    private getLanguageClient(file?: Uri) : Promise<vscodeLanguageClient.LanguageClient> {
+    private getLanguageClient(file?: Uri): Promise<vscodeLanguageClient.LanguageClient> {
         if (!this.languageClientPromise) {
             this.languageClientPromise = createDeferred<vscodeLanguageClient.LanguageClient>();
             this.startup(file)
@@ -138,7 +138,7 @@ export class DotNetIntellisenseProvider extends BaseIntellisenseProvider impleme
         return this.languageClientPromise.promise;
     }
 
-    private async startup(resource?: Uri) : Promise<void> {
+    private async startup(resource?: Uri): Promise<void> {
         // Start up the language server. We'll use this to talk to the language server
         const options = await this.analysisOptions!.getAnalysisOptions();
         await this.languageServer.start(resource, options);

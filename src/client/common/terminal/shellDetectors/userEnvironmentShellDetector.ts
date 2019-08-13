@@ -12,7 +12,6 @@ import { OSType } from '../../utils/platform';
 import { ShellIdentificationTelemetry, TerminalShellType } from '../types';
 import { BaseShellDetector } from './baseShellDetector';
 
-
 /**
  * Identifies the shell based on the users environment (env variables).
  *
@@ -24,7 +23,7 @@ import { BaseShellDetector } from './baseShellDetector';
 export class UserEnvironmentShellDetector extends BaseShellDetector {
     constructor(@inject(ICurrentProcess) private readonly currentProcess: ICurrentProcess,
         @inject(IPlatformService) private readonly platform: IPlatformService) {
-        super(3);
+        super(1);
     }
     public getDefaultPlatformShell(): string {
         return getDefaultShell(this.platform, this.currentProcess);

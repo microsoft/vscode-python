@@ -63,10 +63,10 @@ suite('Shell Detectors', () => {
         appEnv = mock(ApplicationEnvironment);
     });
     test('Test Priority of detectors', async () => {
-        expect(new TerminalNameShellDetector().priority).to.equal(0);
-        expect(new VSCEnvironmentShellDetector(instance(appEnv)).priority).to.equal(1);
+        expect(new TerminalNameShellDetector().priority).to.equal(4);
+        expect(new VSCEnvironmentShellDetector(instance(appEnv)).priority).to.equal(3);
         expect(new SettingsShellDetector(instance(workspaceService), instance(platformService)).priority).to.equal(2);
-        expect(new UserEnvironmentShellDetector(instance(currentProcess), instance(platformService)).priority).to.equal(3);
+        expect(new UserEnvironmentShellDetector(instance(currentProcess), instance(platformService)).priority).to.equal(1);
     });
     test('Test identification of Terminal Shells (base class method)', async () => {
         const shellDetector = new TerminalNameShellDetector();

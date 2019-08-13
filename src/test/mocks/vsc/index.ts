@@ -172,6 +172,12 @@ export namespace vscMock {
         Operator = 24,
         TypeParameter = 25
     }
+    export enum IndentAction {
+        None = 0,
+        Indent = 1,
+        IndentOutdent = 2,
+        Outdent = 3
+    }
 
     export class CodeActionKind {
         public static readonly Empty: CodeActionKind = new CodeActionKind('empty');

@@ -6,23 +6,39 @@
 import { Uri } from 'vscode';
 import { Tests } from '../types';
 
-export type TestContainer = {
+export type TestNode = {
     id: string;
-    kind: 'file' | 'folder' | 'suite' | 'function';
     name: string;
     parentid: string;
 };
-export type TestItem = {
-    id: string;
-    name: string;
+export type TestParent = TestNode & {
+    kind: 'folder' | 'file' | 'suite' | 'function';
+};
+export type TestFSNode = TestParent & {
+    kind: 'folder' | 'file';
+    relpath: string;
+};
+export type TestFolder = TestFSNode & {
+    kind: 'folder';
+};
+export type TestFile = TestFSNode & {
+    kind: 'file';
+};
+export type TestSuite = TestParent & {
+    kind: 'suite';
+};
+// function-as-a-container is for parameterized ("sub") tests.
+export type TestFunction = TestParent & {
+    kind: 'function';
+};
+export type Test = TestNode & {
     source: string;
-    parentid: string;
 };
 export type DiscoveredTests = {
     rootid: string;
     root: string;
-    parents: TestContainer[];
-    tests: TestItem[];
+    parents: TestParent[];
+    tests: Test[];
 };
 
 export const ITestDiscoveredTestParser = Symbol('ITestDiscoveredTestParser');

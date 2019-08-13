@@ -72,7 +72,7 @@ gulp.task('compile', done => {
         .on('error', () => (failed = true))
         .js.pipe(gulp.dest('out'))
         .on('finish', () => (failed ? done(new Error('TypeScript compilation errors')) : done()));
-});
+    });
 
 gulp.task('precommit', done => run({ exitOnError: true, mode: 'staged' }, done));
 

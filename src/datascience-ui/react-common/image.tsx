@@ -27,7 +27,8 @@ export enum ImageName {
     ZoomOut,
     Next,
     Prev,
-    Copy
+    Copy,
+    GatherCode
 }
 
 // All of the images must be 'require' so that webpack doesn't rewrite the import as requiring a .default.
@@ -47,6 +48,11 @@ const images: { [key: string] : { light: string; dark: string } } = {
         {
             light: require('./images/ExpandAll/ExpandAll_16x_vscode.svg'),
             dark : require('./images/ExpandAll/ExpandAll_16x_vscode_dark.svg')
+        },
+    GatherCode:
+        {
+            light: require('./images/GatherCode/GatherCode_16x_vscode.svg'),
+            dark : require('./images/GatherCode/GatherCode_16x_vscode.svg')
         },
     GoToSourceCode:
         {

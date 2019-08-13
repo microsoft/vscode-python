@@ -63,7 +63,7 @@ export class JupyterImporter implements INotebookImporter {
             if (directoryChange) {
                 fileOutput = this.addDirectoryChange(fileOutput, directoryChange);
             }
-            return fileOutput;
+            return this.addInstructionComments(fileOutput);
         }
 
         throw new Error(localize.DataScience.jupyterNbConvertNotSupported());
@@ -71,6 +71,11 @@ export class JupyterImporter implements INotebookImporter {
 
     public dispose = () => {
         this.isDisposed = true;
+    }
+
+    private addInstructionComments = (pythonOutput: string): string => {
+        const comments = localize.DataScience.instructionComments();
+        return comments.concat(pythonOutput);
     }
 
     private addIPythonImport = (pythonOutput: string): string => {

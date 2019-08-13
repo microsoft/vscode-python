@@ -10,7 +10,7 @@ import { IExtensions } from '../types';
 @injectable()
 export class Extensions implements IExtensions {
     // tslint:disable-next-line:no-any
-    public get all(): Extension<any>[] {
+    public get all(): readonly Extension<any>[] {
         return extensions.all;
     }
 

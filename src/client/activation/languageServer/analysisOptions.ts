@@ -1,20 +1,46 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 'use strict';
-
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { CancellationToken, CompletionContext, ConfigurationChangeEvent, Disposable, Event, EventEmitter, OutputChannel, Position, TextDocument, WorkspaceFolder } from 'vscode';
-import { DocumentFilter, DocumentSelector, LanguageClientOptions, ProvideCompletionItemsSignature, RevealOutputChannelOn } from 'vscode-languageclient';
+import {
+    CancellationToken,
+    CompletionContext,
+    ConfigurationChangeEvent,
+    Diagnostic,
+    Disposable,
+    Event,
+    EventEmitter,
+    Position,
+    TextDocument,
+    Uri,
+    WorkspaceFolder
+} from 'vscode';
+import {
+    DocumentFilter,
+    DocumentSelector,
+    HandleDiagnosticsSignature,
+    LanguageClientOptions,
+    ProvideCompletionItemsSignature,
+    RevealOutputChannelOn
+} from 'vscode-languageclient';
+
 import { IWorkspaceService } from '../../common/application/types';
-import { isTestExecution, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
+import { HiddenFilePrefix, isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
 import { traceDecorators, traceError } from '../../common/logger';
-import { BANNER_NAME_LS_SURVEY, IConfigurationService, IExtensionContext, IOutputChannel, IPathUtils, IPythonExtensionBanner, Resource } from '../../common/types';
+import {
+    BANNER_NAME_LS_SURVEY,
+    IConfigurationService,
+    IExtensionContext,
+    IOutputChannel,
+    IPathUtils,
+    IPythonExtensionBanner,
+    Resource
+} from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IInterpreterService } from '../../interpreter/contracts';
-import { ILanguageServerAnalysisOptions, ILanguageServerFolderService } from '../types';
+import { ILanguageServerAnalysisOptions, ILanguageServerFolderService, ILanguageServerOutputChannel } from '../types';
 
 @injectable()
 export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOptions {
@@ -24,6 +50,7 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
     private disposables: Disposable[] = [];
     private languageServerFolder: string = '';
     private resource: Resource;
+    private output: IOutputChannel;
     private readonly didChange = new EventEmitter<void>();
     constructor(@inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider,
@@ -31,10 +58,11 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IPythonExtensionBanner) @named(BANNER_NAME_LS_SURVEY) private readonly surveyBanner: IPythonExtensionBanner,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: OutputChannel,
+        @inject(ILanguageServerOutputChannel) private readonly lsOutputChannel: ILanguageServerOutputChannel,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
-        @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService) {
-
+        @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService
+    ) {
+        this.output = this.lsOutputChannel.channel;
     }
     public async initialize(resource: Resource) {
         this.resource = resource;
@@ -88,6 +116,7 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
             }
         }
 
+        // tslint:disable-next-line: no-suspicious-comment
         // TODO: remove this setting since LS 0.2.92+ is not using it.
         // tslint:disable-next-line:no-string-literal
         properties['DatabasePath'] = path.join(this.context.extensionPath, this.languageServerFolder);
@@ -139,6 +168,14 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
                 provideCompletionItem: (document: TextDocument, position: Position, context: CompletionContext, token: CancellationToken, next: ProvideCompletionItemsSignature) => {
                     this.surveyBanner.showBanner().ignoreErrors();
                     return next(document, position, context, token);
+                },
+                handleDiagnostics: (uri: Uri, diagnostics: Diagnostic[], next: HandleDiagnosticsSignature) => {
+                    // Skip sending if this is a special file.
+                    const filePath = uri.fsPath;
+                    const baseName = filePath ? path.basename(filePath) : undefined;
+                    if (!baseName || !baseName.startsWith(HiddenFilePrefix)) {
+                        next(uri, diagnostics);
+                    }
                 }
             }
         };

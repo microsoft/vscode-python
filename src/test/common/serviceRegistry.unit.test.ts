@@ -7,7 +7,7 @@
 
 import { expect } from 'chai';
 import * as typemoq from 'typemoq';
-import { IExtensionActivationService } from '../../client/activation/types';
+import { IExtensionSingleActivationService } from '../../client/activation/types';
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { CommandManager } from '../../client/common/application/commandManager';
@@ -24,7 +24,7 @@ import { CryptoUtils } from '../../client/common/crypto';
 import { EditorUtils } from '../../client/common/editor';
 import { ExperimentsManager } from '../../client/common/experiments';
 import { FeatureDeprecationManager } from '../../client/common/featureDeprecationManager';
-import { ExtensionInsidersDailyChannelRule, ExtensionInsidersWeeklyChannelRule, ExtensionStableChannelRule } from '../../client/common/insidersBuild/downloadChannelRules';
+import { ExtensionInsidersDailyChannelRule, ExtensionInsidersOffChannelRule, ExtensionInsidersWeeklyChannelRule } from '../../client/common/insidersBuild/downloadChannelRules';
 import { ExtensionChannelService } from '../../client/common/insidersBuild/downloadChannelService';
 import { InsidersExtensionPrompt } from '../../client/common/insidersBuild/insidersExtensionPrompt';
 import { InsidersExtensionService } from '../../client/common/insidersBuild/insidersExtensionService';
@@ -107,9 +107,9 @@ suite('Common - Service Registry', () => {
             [IShellDetector, UserEnvironmentShellDetector],
             [IShellDetector, VSCEnvironmentShellDetector],
             [IInsiderExtensionPrompt, InsidersExtensionPrompt],
-            [IExtensionActivationService, InsidersExtensionService],
+            [IExtensionSingleActivationService, InsidersExtensionService],
             [IExtensionChannelService, ExtensionChannelService],
-            [IExtensionChannelRule, ExtensionStableChannelRule, ExtensionChannel.stable],
+            [IExtensionChannelRule, ExtensionInsidersOffChannelRule, ExtensionChannel.off],
             [IExtensionChannelRule, ExtensionInsidersDailyChannelRule, ExtensionChannel.daily],
             [IExtensionChannelRule, ExtensionInsidersWeeklyChannelRule, ExtensionChannel.weekly]
         ].forEach(mapping => {

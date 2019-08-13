@@ -95,19 +95,83 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
                 rootid: '.',
                 root: '/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/src/test/pythonFiles/testFiles/single',
                 parents: [
-                    { id: './test_root.py', kind: 'file', name: 'test_root.py', parentid: '.' },
-                    { id: './test_root.py::Test_Root_test1', kind: 'suite', name: 'Test_Root_test1', parentid: './test_root.py' },
-                    { id: './tests', kind: 'folder', name: 'tests', parentid: '.' },
-                    { id: './tests/test_one.py', kind: 'file', name: 'test_one.py', parentid: './tests' },
-                    { id: './tests/test_one.py::Test_test1', kind: 'suite', name: 'Test_test1', parentid: './tests/test_one.py' }
+                    {
+                        id: './test_root.py',
+                        kind: 'file',
+                        name: 'test_root.py',
+                        relpath: './test_root.py',
+                        parentid: '.'
+                    },
+                    {
+                        id: './test_root.py::Test_Root_test1',
+                        kind: 'suite',
+                        name: 'Test_Root_test1',
+                        parentid: './test_root.py'
+                    },
+                    {
+                        id: './tests',
+                        kind: 'folder',
+                        name: 'tests',
+                        relpath: './tests',
+                        parentid: '.'
+                    },
+                    {
+                        id: './tests/test_one.py',
+                        kind: 'file',
+                        name: 'test_one.py',
+                        relpath: './tests/test_one.py',
+                        parentid: './tests'
+                    },
+                    {
+                        id: './tests/test_one.py::Test_test1',
+                        kind: 'suite',
+                        name: 'Test_test1',
+                        parentid: './tests/test_one.py'
+                    }
                 ],
                 tests: [
-                    { id: './test_root.py::Test_Root_test1::test_Root_A', name: 'test_Root_A', source: './test_root.py:6', markers: [], parentid: './test_root.py::Test_Root_test1' },
-                    { id: './test_root.py::Test_Root_test1::test_Root_B', name: 'test_Root_B', source: './test_root.py:9', markers: [], parentid: './test_root.py::Test_Root_test1' },
-                    { id: './test_root.py::Test_Root_test1::test_Root_c', name: 'test_Root_c', source: './test_root.py:12', markers: [], parentid: './test_root.py::Test_Root_test1' },
-                    { id: './tests/test_one.py::Test_test1::test_A', name: 'test_A', source: 'tests/test_one.py:6', markers: [], parentid: './tests/test_one.py::Test_test1' },
-                    { id: './tests/test_one.py::Test_test1::test_B', name: 'test_B', source: 'tests/test_one.py:9', markers: [], parentid: './tests/test_one.py::Test_test1' },
-                    { id: './tests/test_one.py::Test_test1::test_c', name: 'test_c', source: 'tests/test_one.py:12', markers: [], parentid: './tests/test_one.py::Test_test1' }
+                    {
+                        id: './test_root.py::Test_Root_test1::test_Root_A',
+                        name: 'test_Root_A',
+                        source: './test_root.py:6',
+                        markers: [],
+                        parentid: './test_root.py::Test_Root_test1'
+                    },
+                    {
+                        id: './test_root.py::Test_Root_test1::test_Root_B',
+                        name: 'test_Root_B',
+                        source: './test_root.py:9',
+                        markers: [],
+                        parentid: './test_root.py::Test_Root_test1'
+                    },
+                    {
+                        id: './test_root.py::Test_Root_test1::test_Root_c',
+                        name: 'test_Root_c',
+                        source: './test_root.py:12',
+                        markers: [],
+                        parentid: './test_root.py::Test_Root_test1'
+                    },
+                    {
+                        id: './tests/test_one.py::Test_test1::test_A',
+                        name: 'test_A',
+                        source: 'tests/test_one.py:6',
+                        markers: [],
+                        parentid: './tests/test_one.py::Test_test1'
+                    },
+                    {
+                        id: './tests/test_one.py::Test_test1::test_B',
+                        name: 'test_B',
+                        source: 'tests/test_one.py:9',
+                        markers: [],
+                        parentid: './tests/test_one.py::Test_test1'
+                    },
+                    {
+                        id: './tests/test_one.py::Test_test1::test_c',
+                        name: 'test_c',
+                        source: 'tests/test_one.py:12',
+                        markers: [],
+                        parentid: './tests/test_one.py::Test_test1'
+                    }
                 ]
             }]));
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
@@ -132,6 +196,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
             parents: [
                 {
                     id: './test_root.py',
+                    relpath: './test_root.py',
                     kind: 'file',
                     name: 'test_root.py',
                     parentid: '.'
@@ -144,12 +209,14 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
                 },
                 {
                     id: './tests',
+                    relpath: './tests',
                     kind: 'folder',
                     name: 'tests',
                     parentid: '.'
                 },
                 {
                     id: './tests/test_another_pytest.py',
+                    relpath: './tests/test_another_pytest.py',
                     kind: 'file',
                     name: 'test_another_pytest.py',
                     parentid: './tests'
@@ -162,6 +229,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
                 },
                 {
                     id: './tests/test_foreign_nested_tests.py',
+                    relpath: './tests/test_foreign_nested_tests.py',
                     kind: 'file',
                     name: 'test_foreign_nested_tests.py',
                     parentid: './tests'
@@ -186,6 +254,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
                 },
                 {
                     id: './tests/test_pytest.py',
+                    relpath: './tests/test_pytest.py',
                     kind: 'file',
                     name: 'test_pytest.py',
                     parentid: './tests'
@@ -216,6 +285,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
                 },
                 {
                     id: './tests/test_unittest_one.py',
+                    relpath: './tests/test_unittest_one.py',
                     kind: 'file',
                     name: 'test_unittest_one.py',
                     parentid: './tests'
@@ -228,6 +298,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
                 },
                 {
                     id: './tests/test_unittest_two.py',
+                    relpath: './tests/test_unittest_two.py',
                     kind: 'file',
                     name: 'test_unittest_two.py',
                     parentid: './tests'
@@ -246,6 +317,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
                 },
                 {
                     id: './tests/unittest_three_test.py',
+                    relpath: './tests/unittest_three_test.py',
                     kind: 'file',
                     name: 'unittest_three_test.py',
                     parentid: './tests'
@@ -523,12 +595,14 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
                         id: './tests',
                         kind: 'folder',
                         name: 'tests',
+                        relpath: './tests',
                         parentid: '.'
                     },
                     {
                         id: './tests/unittest_three_test.py',
                         kind: 'file',
                         name: 'unittest_three_test.py',
+                        relpath: './tests/unittest_three_test.py',
                         parentid: './tests'
                     },
                     {
@@ -580,12 +654,14 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
                 parents: [
                     {
                         id: './other',
+                        relpath: './other',
                         kind: 'folder',
                         name: 'other',
                         parentid: '.'
                     },
                     {
                         id: './other/test_pytest.py',
+                        relpath: './other/test_pytest.py',
                         kind: 'file',
                         name: 'test_pytest.py',
                         parentid: './other'
@@ -616,6 +692,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
                     },
                     {
                         id: './other/test_unittest_one.py',
+                        relpath: './other/test_unittest_one.py',
                         kind: 'file',
                         name: 'test_unittest_one.py',
                         parentid: './other'
@@ -756,12 +833,14 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
                         id: './tests',
                         kind: 'folder',
                         name: 'tests',
+                        relpath: './tests',
                         parentid: '.'
                     },
                     {
                         id: './tests/test_cwd.py',
                         kind: 'file',
                         name: 'test_cwd.py',
+                        relpath: './tests/test_cwd.py',
                         parentid: './tests'
                     },
                     {
