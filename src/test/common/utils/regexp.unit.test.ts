@@ -12,7 +12,7 @@ import {
 } from '../../../client/common/utils/regexp';
 
 suite('Utils for regular expressions - verboseRegExp()', () => {
-    test('typical usage', () => {
+    test('whitespace removed in multiline pattern (example of typical usage)', () => {
         const regex = verboseRegExp(`
             ^
             (?:
