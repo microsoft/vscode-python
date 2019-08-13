@@ -158,7 +158,7 @@ suite('Pylint - Function hasConfigurationFile()', () => {
         platformService.verifyAll();
     });
 
-    test('If none of pylintrc configuration files does not exist anywhere, return false', async () => {
+    test('If none of the pylintrc configuration files exist anywhere, return false', async () => {
         const home = os.homedir();
         fileSystem
             .setup(x => x.fileExists(path.join(folder, pylintrc)))
