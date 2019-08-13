@@ -21,7 +21,7 @@ import { ILinterInfo, ILinterManager, ILintMessage, LintMessageSeverity } from '
 
 // tslint:disable-next-line:max-func-body-length
 suite('Pylint - Function hasConfigurationFile()', () => {
-    const folder = '/user/a/b/c/d';
+    const folder = path.join('user', 'a', 'b', 'c', 'd');
     const oldValueOfPYLINTRC = process.env.PYLINTRC;
     const pylintrcFiles = ['pylintrc', '.pylintrc'];
     const pylintrc = 'pylintrc';
@@ -68,27 +68,27 @@ suite('Pylint - Function hasConfigurationFile()', () => {
 
         test(`If the current working directory is in a Python module, Pylint searches up the hierarchy of Python modules until it finds a ${pylintrcFile} file. And if ${pylintrcFile} exists, return true`, async () => {
             fileSystem
-                .setup(x => x.fileExists(path.join('/user/a/b/c/d', '__init__.py')))
+                .setup(x => x.fileExists(path.join(path.join('user', 'a', 'b', 'c', 'd'), '__init__.py')))
                 .returns(() => Promise.resolve(true))
                 .verifiable(TypeMoq.Times.once());
             fileSystem
-                .setup(x => x.fileExists(path.join('/user/a/b/c/d', pylintrc)))
+                .setup(x => x.fileExists(path.join(path.join('user', 'a', 'b', 'c', 'd'), pylintrc)))
                 .returns(() => Promise.resolve(false))
                 .verifiable(TypeMoq.Times.atLeastOnce());
             fileSystem
-                .setup(x => x.fileExists(path.join('/user/a/b/c/d', dotPylintrc)))
+                .setup(x => x.fileExists(path.join(path.join('user', 'a', 'b', 'c', 'd'), dotPylintrc)))
                 .returns(() => Promise.resolve(false))
                 .verifiable(TypeMoq.Times.atLeastOnce());
 
             fileSystem
-                .setup(x => x.fileExists(path.join('/user/a/b/c', '__init__.py')))
+                .setup(x => x.fileExists(path.join(path.join('user', 'a', 'b', 'c'), '__init__.py')))
                 .returns(() => Promise.resolve(true))
                 .verifiable(TypeMoq.Times.once());
             fileSystem
-                .setup(x => x.fileExists(path.join('/user/a/b/c', pylintrc)))
+                .setup(x => x.fileExists(path.join(path.join('user', 'a', 'b', 'c'), pylintrc)))
                 .returns(() => Promise.resolve(pylintrc === pylintrcFile));
             fileSystem
-                .setup(x => x.fileExists(path.join('/user/a/b/c', dotPylintrc)))
+                .setup(x => x.fileExists(path.join(path.join('user', 'a', 'b', 'c'), dotPylintrc)))
                 .returns(() => Promise.resolve(dotPylintrc === pylintrcFile));
             const hasConfig = await Pylint.hasConfigurationFile(fileSystem.object, folder, platformService.object);
             expect(hasConfig).to.equal(true, 'Should return true');
@@ -225,42 +225,42 @@ suite('Pylint - Function hasConfigurationFileInWorkspace()', () => {
     });
 
     test('If none of the pylintrc files exist up to the workspace root, return false', async () => {
-        const folder = '/user/a/b/c';
-        const root = '/user/a';
+        const folder = path.join('user', 'a', 'b', 'c');
+        const root = path.join('user', 'a');
 
         fileSystem
-            .setup(x => x.fileExists(path.join('/user/a/b/c', pylintrc)))
+            .setup(x => x.fileExists(path.join(path.join('user', 'a', 'b', 'c'), pylintrc)))
             .returns(() => Promise.resolve(false))
             .verifiable(TypeMoq.Times.once());
         fileSystem
-            .setup(x => x.fileExists(path.join('/user/a/b/c', dotPylintrc)))
-            .returns(() => Promise.resolve(false))
-            .verifiable(TypeMoq.Times.once());
-
-        fileSystem
-            .setup(x => x.fileExists(path.join('/user/a/b', pylintrc)))
-            .returns(() => Promise.resolve(false))
-            .verifiable(TypeMoq.Times.once());
-        fileSystem
-            .setup(x => x.fileExists(path.join('/user/a/b', dotPylintrc)))
+            .setup(x => x.fileExists(path.join(path.join('user', 'a', 'b', 'c'), dotPylintrc)))
             .returns(() => Promise.resolve(false))
             .verifiable(TypeMoq.Times.once());
 
         fileSystem
-            .setup(x => x.fileExists(path.join('/user/a', pylintrc)))
+            .setup(x => x.fileExists(path.join(path.join('user', 'a', 'b'), pylintrc)))
+            .returns(() => Promise.resolve(false))
+            .verifiable(TypeMoq.Times.once());
+        fileSystem
+            .setup(x => x.fileExists(path.join(path.join('user', 'a', 'b'), dotPylintrc)))
+            .returns(() => Promise.resolve(false))
+            .verifiable(TypeMoq.Times.once());
+
+        fileSystem
+            .setup(x => x.fileExists(path.join(path.join('user', 'a'), pylintrc)))
             .returns(() => Promise.resolve(false))
             .verifiable(TypeMoq.Times.never());
         fileSystem
-            .setup(x => x.fileExists(path.join('/user/a', dotPylintrc)))
+            .setup(x => x.fileExists(path.join(path.join('user', 'a'), dotPylintrc)))
             .returns(() => Promise.resolve(false))
             .verifiable(TypeMoq.Times.never());
 
         fileSystem
-            .setup(x => x.fileExists(path.join('/user', dotPylintrc)))
+            .setup(x => x.fileExists(path.join(path.join('user'), dotPylintrc)))
             .returns(() => Promise.resolve(false))
             .verifiable(TypeMoq.Times.never());
         fileSystem
-            .setup(x => x.fileExists(path.join('/user', dotPylintrc)))
+            .setup(x => x.fileExists(path.join(path.join('user'), dotPylintrc)))
             .returns(() => Promise.resolve(false))
             .verifiable(TypeMoq.Times.never());
 
@@ -271,40 +271,40 @@ suite('Pylint - Function hasConfigurationFileInWorkspace()', () => {
 
     [pylintrc, dotPylintrc].forEach(pylintrcFile => {
         test(`If ${pylintrcFile} exists while traversing up to the workspace root, return true`, async () => {
-            const folder = '/user/a/b/c';
-            const root = '/user/a';
+            const folder = path.join('user', 'a', 'b', 'c');
+            const root = path.join('user', 'a');
 
             fileSystem
-                .setup(x => x.fileExists(path.join('/user/a/b/c', pylintrc)))
+                .setup(x => x.fileExists(path.join(path.join('user', 'a', 'b', 'c'), pylintrc)))
                 .returns(() => Promise.resolve(false))
                 .verifiable(TypeMoq.Times.once());
             fileSystem
-                .setup(x => x.fileExists(path.join('/user/a/b/c', dotPylintrc)))
+                .setup(x => x.fileExists(path.join(path.join('user', 'a', 'b', 'c'), dotPylintrc)))
                 .returns(() => Promise.resolve(false))
                 .verifiable(TypeMoq.Times.once());
 
             fileSystem
-                .setup(x => x.fileExists(path.join('/user/a/b', pylintrc)))
+                .setup(x => x.fileExists(path.join(path.join('user', 'a', 'b'), pylintrc)))
                 .returns(() => Promise.resolve(pylintrc === pylintrcFile));
             fileSystem
-                .setup(x => x.fileExists(path.join('/user/a/b', dotPylintrc)))
+                .setup(x => x.fileExists(path.join(path.join('user', 'a', 'b'), dotPylintrc)))
                 .returns(() => Promise.resolve(dotPylintrc === pylintrcFile));
 
             fileSystem
-                .setup(x => x.fileExists(path.join('/user/a', pylintrc)))
+                .setup(x => x.fileExists(path.join(path.join('user', 'a'), pylintrc)))
                 .returns(() => Promise.resolve(false))
                 .verifiable(TypeMoq.Times.never());
             fileSystem
-                .setup(x => x.fileExists(path.join('/user/a', dotPylintrc)))
+                .setup(x => x.fileExists(path.join(path.join('user', 'a'), dotPylintrc)))
                 .returns(() => Promise.resolve(false))
                 .verifiable(TypeMoq.Times.never());
 
             fileSystem
-                .setup(x => x.fileExists(path.join('/user', dotPylintrc)))
+                .setup(x => x.fileExists(path.join(path.join('user'), dotPylintrc)))
                 .returns(() => Promise.resolve(false))
                 .verifiable(TypeMoq.Times.never());
             fileSystem
-                .setup(x => x.fileExists(path.join('/user', dotPylintrc)))
+                .setup(x => x.fileExists(path.join(path.join('user'), dotPylintrc)))
                 .returns(() => Promise.resolve(false))
                 .verifiable(TypeMoq.Times.never());
 
