@@ -458,7 +458,7 @@ export interface IEventNamePropertyMapping {
         /**
          * The number of the interpreters returned by locator
          */
-        counter?: number;
+        interpreters?: number;
     };
     [EventName.PYTHON_INTERPRETER_ACTIVATE_ENVIRONMENT_PROMPT]: { selection: 'Yes' | 'No' | 'Ignore' | undefined };
     [EventName.INSIDERS_PROMPT]: {
