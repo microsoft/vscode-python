@@ -440,7 +440,7 @@ suite('Pylint - Function runLinter()', () => {
         assert.ok(run.calledOnce);
     });
 
-    test('Use minimal checkers if setting to use minimal checkers is false', async () => {
+    test('Do not use minimal checkers if setting to use minimal checkers is false', async () => {
         const settings = {
             linting: {
                 pylintUseMinimalCheckers: false
