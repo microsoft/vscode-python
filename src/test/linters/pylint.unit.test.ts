@@ -60,7 +60,7 @@ suite('Pylint - Function hasConfigurationFile()', () => {
                 .returns(() => Promise.resolve(pylintrc === pylintrcFile))
                 .verifiable(TypeMoq.Times.once());
             fileSystem
-                .setup(x => x.fileExists(path.join(folder, pylintrcFile)))
+                .setup(x => x.fileExists(path.join(folder, dotPylintrc)))
                 .returns(() => Promise.resolve(dotPylintrc === pylintrcFile))
                 .verifiable(TypeMoq.Times.once());
             const hasConfig = await Pylint.hasConfigurationFile(fileSystem.object, folder, platformService.object);
