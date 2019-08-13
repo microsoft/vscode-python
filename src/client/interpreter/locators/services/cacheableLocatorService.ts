@@ -55,7 +55,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
                     await this.cacheInterpreters(items, resource);
                     traceVerbose(`Interpreters returned by ${this.name} are of count ${Array.isArray(items) ? items.length : 0}`);
                     traceVerbose(`Interpreters returned by ${this.name} are ${JSON.stringify(items)}`);
-                    sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, { locator: this.name, counter: Array.isArray(items) ? items.length : 0 });
+                    sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, { locator: this.name, interpreters: Array.isArray(items) ? items.length : 0 });
                     deferred!.resolve(items);
                 })
                 .catch(ex => {

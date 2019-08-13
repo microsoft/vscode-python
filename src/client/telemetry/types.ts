@@ -8,7 +8,7 @@ import { DebugConfigurationType } from '../debugger/extension/types';
 import { AutoSelectionRule } from '../interpreter/autoSelection/types';
 import { InterpreterType } from '../interpreter/contracts';
 import { LinterId } from '../linters/types';
-import { IEventNamePropertyMapping } from '../telemetry/index'
+import { IEventNamePropertyMapping } from '../telemetry/index';
 import { EventName, PlatformErrors } from './constants';
 
 export type EditorLoadTelemetry = {
