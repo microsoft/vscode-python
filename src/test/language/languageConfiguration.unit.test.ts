@@ -92,162 +92,164 @@ function resolveExample(
     return [example, invalid, false];
 }
 
-const cfg = getLanguageConfiguration();
+suite('Language Configuration', () => {
+    const cfg = getLanguageConfiguration();
 
-suite('Language configuration - brackets', () => {
-    test('brackets is not defined', () => {
-        expect(cfg.brackets).to.be.equal(undefined, 'missing tests');
-    });
-});
-
-suite('Language configuration - comments', () => {
-    test('comments is not defined', () => {
-        expect(cfg.comments).to.be.equal(undefined, 'missing tests');
-    });
-});
-
-suite('Language configuration - indentationRules', () => {
-    test('indentationRules is not defined', () => {
-        expect(cfg.indentationRules).to.be.equal(undefined, 'missing tests');
-    });
-});
-
-suite('Language configuration - onEnterRules', () => {
-    const MULTILINE_SEPARATOR_INDENT_REGEX = cfg.onEnterRules![0].beforeText;
-    const INDENT_ONENTER_REGEX = cfg.onEnterRules![2].beforeText;
-    const OUTDENT_ONENTER_REGEX = cfg.onEnterRules![3].beforeText;
-    // To see the actual (non-verbose) regex patterns, un-comment
-    // the following lines:
-    //console.log(INDENT_ONENTER_REGEX.source);
-    //console.log(OUTDENT_ONENTER_REGEX.source);
-
-    test('Multiline separator indent regex should not pick up strings with no multiline separator', async () => {
-        const result = MULTILINE_SEPARATOR_INDENT_REGEX.test('a = "test"');
-        expect(result).to.be.equal(false, 'Multiline separator indent regex for regular strings should not have matches');
+    suite('"brackets"', () => {
+        test('brackets is not defined', () => {
+            expect(cfg.brackets).to.be.equal(undefined, 'missing tests');
+        });
     });
 
-    test('Multiline separator indent regex should not pick up strings with escaped characters', async () => {
-        const result = MULTILINE_SEPARATOR_INDENT_REGEX.test('a = \'hello \\n\'');
-        expect(result).to.be.equal(false, 'Multiline separator indent regex for strings with escaped characters should not have matches');
+    suite('"comments"', () => {
+        test('comments is not defined', () => {
+            expect(cfg.comments).to.be.equal(undefined, 'missing tests');
+        });
     });
 
-    test('Multiline separator indent regex should pick up strings ending with a multiline separator', async () => {
-        const result = MULTILINE_SEPARATOR_INDENT_REGEX.test('a = \'multiline \\');
-        expect(result).to.be.equal(true, 'Multiline separator indent regex for strings with newline separator should have matches');
+    suite('"indentationRules"', () => {
+        test('indentationRules is not defined', () => {
+            expect(cfg.indentationRules).to.be.equal(undefined, 'missing tests');
+        });
     });
 
-    [
-        // compound statements
-        'async def test(self):',
-        'async def :',
-        'async :',
-        'class Test:',
-        'class Test(object):',
-        'class :',
-        'def spam():',
-        'def spam(self, node, namespace=""):',
-        'def :',
-        'for item in items:',
-        'for item in :',
-        'for :',
-        'if foo is None:',
-        'if :',
-        'try:',
-        'while \'::\' in macaddress:',
-        'while :',
-        'with self.test:',
-        'with :',
-        'elif x < 5:',
-        'elif :',
-        'else:',
-        'except TestError:',
-        'except :',
-        'finally:',
-        // simple statemenhts
-        'pass',
-        'raise Exception(msg)',
-        'raise Exception',
-        'raise',  // re-raise
-        'break',
-        'continue',
-        'return',
-        'return True',
-        'return (True, False, False)',
-        'return [True, False, False]',
-        'return {True, False, False}',
-        'return (',
-        'return [',
-        'return {',
-        'return',
-        // bogus
-        '',
-        ' ',
-        '  '
-    ].forEach(base => {
+    suite('"onEnterRules"', () => {
+        const MULTILINE_SEPARATOR_INDENT_REGEX = cfg.onEnterRules![0].beforeText;
+        const INDENT_ONENTER_REGEX = cfg.onEnterRules![2].beforeText;
+        const OUTDENT_ONENTER_REGEX = cfg.onEnterRules![3].beforeText;
+        // To see the actual (non-verbose) regex patterns, un-comment
+        // the following lines:
+        //console.log(INDENT_ONENTER_REGEX.source);
+        //console.log(OUTDENT_ONENTER_REGEX.source);
+
+        test('Multiline separator indent regex should not pick up strings with no multiline separator', async () => {
+            const result = MULTILINE_SEPARATOR_INDENT_REGEX.test('a = "test"');
+            expect(result).to.be.equal(false, 'Multiline separator indent regex for regular strings should not have matches');
+        });
+
+        test('Multiline separator indent regex should not pick up strings with escaped characters', async () => {
+            const result = MULTILINE_SEPARATOR_INDENT_REGEX.test('a = \'hello \\n\'');
+            expect(result).to.be.equal(false, 'Multiline separator indent regex for strings with escaped characters should not have matches');
+        });
+
+        test('Multiline separator indent regex should pick up strings ending with a multiline separator', async () => {
+            const result = MULTILINE_SEPARATOR_INDENT_REGEX.test('a = \'multiline \\');
+            expect(result).to.be.equal(true, 'Multiline separator indent regex for strings with newline separator should have matches');
+        });
+
         [
-            ['', '', '', ''],
-            // leading
-            ['    ', '', '', ''],
-            ['   ', '', '', ''],  // unusual indent
-            ['\t\t', '', '', ''],
-            // pre-keyword
-            ['x', '', '', ''],
-            // post-keyword
-            ['', 'x', '', ''],
-            // pre-colon
-            ['', '', ' ', ''],
-            // trailing
-            ['', '', '', ' '],
-            ['', '', '', '# a comment'],
-            ['', '', '', ' # ...']
-        ].forEach(whitespace => {
-            const [leading, postKeyword, preColon, trailing] = whitespace;
-            const [_example, invalid, ignored] = resolveExample(base, leading, postKeyword, preColon, trailing);
-            if (ignored) {
-                return;
-            }
-            const example = _example!;
+            // compound statements
+            'async def test(self):',
+            'async def :',
+            'async :',
+            'class Test:',
+            'class Test(object):',
+            'class :',
+            'def spam():',
+            'def spam(self, node, namespace=""):',
+            'def :',
+            'for item in items:',
+            'for item in :',
+            'for :',
+            'if foo is None:',
+            'if :',
+            'try:',
+            'while \'::\' in macaddress:',
+            'while :',
+            'with self.test:',
+            'with :',
+            'elif x < 5:',
+            'elif :',
+            'else:',
+            'except TestError:',
+            'except :',
+            'finally:',
+            // simple statemenhts
+            'pass',
+            'raise Exception(msg)',
+            'raise Exception',
+            'raise',  // re-raise
+            'break',
+            'continue',
+            'return',
+            'return True',
+            'return (True, False, False)',
+            'return [True, False, False]',
+            'return {True, False, False}',
+            'return (',
+            'return [',
+            'return {',
+            'return',
+            // bogus
+            '',
+            ' ',
+            '  '
+        ].forEach(base => {
+            [
+                ['', '', '', ''],
+                // leading
+                ['    ', '', '', ''],
+                ['   ', '', '', ''],  // unusual indent
+                ['\t\t', '', '', ''],
+                // pre-keyword
+                ['x', '', '', ''],
+                // post-keyword
+                ['', 'x', '', ''],
+                // pre-colon
+                ['', '', ' ', ''],
+                // trailing
+                ['', '', '', ' '],
+                ['', '', '', '# a comment'],
+                ['', '', '', ' # ...']
+            ].forEach(whitespace => {
+                const [leading, postKeyword, preColon, trailing] = whitespace;
+                const [_example, invalid, ignored] = resolveExample(base, leading, postKeyword, preColon, trailing);
+                if (ignored) {
+                    return;
+                }
+                const example = _example!;
 
-            if (invalid) {
-                test(`Line "${example}" ignored (${invalid})`, () => {
-                    let result: boolean;
+                if (invalid) {
+                    test(`Line "${example}" ignored (${invalid})`, () => {
+                        let result: boolean;
 
-                    result = INDENT_ONENTER_REGEX.test(example);
-                    expect(result).to.be.equal(false, 'unexpected match');
+                        result = INDENT_ONENTER_REGEX.test(example);
+                        expect(result).to.be.equal(false, 'unexpected match');
 
-                    result = OUTDENT_ONENTER_REGEX.test(example);
-                    expect(result).to.be.equal(false, 'unexpected match');
+                        result = OUTDENT_ONENTER_REGEX.test(example);
+                        expect(result).to.be.equal(false, 'unexpected match');
+                    });
+                    return;
+                }
+
+                test(`Check indent-on-enter for line "${example}"`, () => {
+                    let expected = false;
+                    if (isMember(base, INDENT_ON_ENTER)) {
+                        expected = true;
+                    }
+
+                    const result = INDENT_ONENTER_REGEX.test(example);
+
+                    expect(result).to.be.equal(expected, 'unexpected result');
                 });
-                return;
-            }
 
-            test(`Check indent-on-enter for line "${example}"`, () => {
-                let expected = false;
-                if (isMember(base, INDENT_ON_ENTER)) {
-                    expected = true;
-                }
+                test(`Check dedent-on-enter for line "${example}"`, () => {
+                    let expected = false;
+                    if (isMember(base, DEDENT_ON_ENTER)) {
+                        expected = true;
+                    }
 
-                const result = INDENT_ONENTER_REGEX.test(example);
+                    const result = OUTDENT_ONENTER_REGEX.test(example);
 
-                expect(result).to.be.equal(expected, 'unexpected result');
-            });
-
-            test(`Check dedent-on-enter for line "${example}"`, () => {
-                let expected = false;
-                if (isMember(base, DEDENT_ON_ENTER)) {
-                    expected = true;
-                }
-
-                const result = OUTDENT_ONENTER_REGEX.test(example);
-
-                expect(result).to.be.equal(expected, 'unexpected result');
+                    expect(result).to.be.equal(expected, 'unexpected result');
+                });
             });
         });
     });
-});
 
-suite('Language configuration - wordPattern', () => {
-    test('wordPattern is not defined', () => {
-        expect(cfg.wordPattern).to.be.equal(undefined, 'missing tests');
+    suite('"wordPattern"', () => {
+        test('wordPattern is not defined', () => {
+            expect(cfg.wordPattern).to.be.equal(undefined, 'missing tests');
+        });
     });
 });
