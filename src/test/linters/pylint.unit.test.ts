@@ -256,7 +256,7 @@ suite('Pylint - Function hasConfigurationFileInWorkspace()', () => {
             .verifiable(TypeMoq.Times.never());
 
         fileSystem
-            .setup(x => x.fileExists(path.join(path.join('user'), dotPylintrc)))
+            .setup(x => x.fileExists(path.join(path.join('user'), pylintrc)))
             .returns(() => Promise.resolve(false))
             .verifiable(TypeMoq.Times.never());
         fileSystem
