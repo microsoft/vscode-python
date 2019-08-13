@@ -195,7 +195,7 @@ suite('Pylint - Function hasConfigurationFile()', () => {
     });
 
     test(If process.env.PYLINTRC contains the path to pylintrc, return true', async () => {
-        process.env.PYLINTRC = 'path/to/pylintrc';
+        process.env.PYLINTRC = path.join('path', 'to', 'pylintrc');
         const hasConfig = await Pylint.hasConfigurationFile(fileSystem.object, folder, platformService.object);
         expect(hasConfig).to.equal(true, 'Should return true');
     });
