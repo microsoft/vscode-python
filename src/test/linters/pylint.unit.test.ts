@@ -562,7 +562,7 @@ suite('Pylint - Function runLinter()', () => {
         assert.ok(run.calledOnce);
     });
 
-    test('Do not use minimal checkers if there is pylintrc file exists in process or at the workspace root and above (Method hasConfigurationFile() returns true)', async () => {
+    test('Do not use minimal checkers if a pylintrc file exists in the process, in the current working directory or up in the hierarchy tree (hasConfigurationFile() returns true)', async () => {
         const settings = {
             linting: {
                 pylintUseMinimalCheckers: true
