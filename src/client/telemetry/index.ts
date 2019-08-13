@@ -264,7 +264,15 @@ function getCallsite(frame: stackTrace.StackFrame) {
 // Map all events to their properties
 export interface IEventNamePropertyMapping {
     [EventName.COMPLETION]: never | undefined;
-    [EventName.COMPLETION_ADD_BRACKETS]: { enabled: boolean };
+    /**
+     * Telemetry sent with details 'python.autoComplete.addBrackets' setting
+     */
+    [EventName.COMPLETION_ADD_BRACKETS]: {
+        /**
+         * Carries boolean `true` if 'python.autoComplete.addBrackets' is set to true, `false` otherwise
+         */
+        enabled: boolean;
+    };
     /**
      * Telemetry captured when starting the debugger.
      */
@@ -389,6 +397,10 @@ export interface IEventNamePropertyMapping {
     [EventName.DEBUGGER_ATTACH_TO_CHILD_PROCESS]: never | undefined;
     [EventName.DEBUGGER_CONFIGURATION_PROMPTS]: DebuggerConfigurationPromtpsTelemetry;
     [EventName.DEBUGGER_CONFIGURATION_PROMPTS_IN_LAUNCH_JSON]: never | undefined;
+    /**
+     * Telemetry is sent when providing definitions for python code, particularly when [go to definition](https://code.visualstudio.com/docs/editor/editingevolved#_go-to-definition)
+     * and peek definition features are used.
+     */
     [EventName.DEFINITION]: never | undefined;
     /**
      * Telemetry event sent with details of actions when invoking a diagnostic command
