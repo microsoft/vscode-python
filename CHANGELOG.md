@@ -1,5 +1,13 @@
 # Changelog
 
+## 2019.8.1 (13 August 2019)
+
+### Enhancements
+
+1. Revert changes to resolve unexpected indentation behavior after previous update.
+   ([#6886](https://github.com/microsoft/vscode-python/issues/6886))
+   ([#6945](https://github.com/microsoft/vscode-python/pull/6945))
+
 ## 2019.8.0 (6 August 2019)
 
 ### Enhancements
