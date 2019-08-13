@@ -225,7 +225,7 @@ suite('Pylint - Function hasConfigrationFileInWorkspace()', () => {
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
     });
 
-    test('If none of pylint rc files exist upto the workspace root, return false', async () => {
+    test('If none of the pylintrc files exist up to the workspace root, return false', async () => {
         const folder = '/user/a/b/c';
         const root = '/user/a';
 
