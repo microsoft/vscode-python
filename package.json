@@ -2436,7 +2436,7 @@
         "compile-webviews-verbose": "npx webpack --config webpack.datascience-ui.config.js",
         "postinstall": "node ./build/ci/postInstall.js",
         "test": "node ./out/test/standardTest.js && node ./out/test/multiRootTest.js",
-        "test:unittests": "mocha --opts ./build/.mocha.unittests.js.opts --grep='Interpretersx'",
+        "test:unittests": "mocha --opts ./build/.mocha.unittests.js.opts",
         "test:unittests:cover": "nyc --silent --no-clean --nycrc-path build/.nycrc mocha --opts ./build/.mocha.unittests.ts.opts",
         "test:functional": "mocha --require source-map-support/register --opts ./build/.mocha.functional.opts",
         "test:functional:cover": "npm run test:functional",
