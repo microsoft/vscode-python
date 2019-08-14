@@ -94,8 +94,7 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
             });
         }
         // If attaching to local host, then always map local root and remote roots.
-        if (workspaceFolder && debugConfiguration.host &&
-            ['LOCALHOST', '127.0.0.1', '::1'].indexOf(debugConfiguration.host.toUpperCase()) >= 0) {
+        if (workspaceFolder && this.isLocalHost(debugConfiguration.host)) {
                 let configPathMappings;
                 if (debugConfiguration.pathMappings!.length === 0) {
                     configPathMappings = [{

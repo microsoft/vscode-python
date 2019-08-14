@@ -151,7 +151,7 @@ getNamesAndValues(OSType).forEach(os => {
 
             expect(debugConfig).to.have.property('localRoot', localRoot);
         });
-        ['localhost', '127.0.0.1', '::1'].forEach(host => {
+        ['localhost', 'LOCALHOST', '127.0.0.1', '::1'].forEach(host => {
             test(`Ensure path mappings are automatically added when host is '${host}'`, async () => {
                 const activeFile = 'xyz.py';
                 const workspaceFolder = createMoqWorkspaceFolder(__dirname);
