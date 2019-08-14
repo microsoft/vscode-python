@@ -152,12 +152,46 @@ suite('Interpretersx from Windows Registry (unit)', () => {
         const winRegistry = new WindowsRegistryService(registry, setup64Bit(false), serviceContainer.object, windowsStoreInterpreter.object);
         interpreterHelper.reset();
         interpreterHelper.setup(h => h.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ architecture: Architecture.x86 }));
+        windowsStoreInterpreter.reset();
+        const expectedPythonPath = path.join(environmentsPath, 'path1', 'python.exe');
+        windowsStoreInterpreter
+            .setup(w => w.isInternalInterpreter(TypeMoq.It.isValue(expectedPythonPath)))
+            .returns(() => false)
+            .verifiable(TypeMoq.Times.atLeastOnce());
+        windowsStoreInterpreter
+            .setup(w => w.isWindowsStoreInterpreter(TypeMoq.It.isValue(expectedPythonPath)))
+            .returns(() => true)
+            .verifiable(TypeMoq.Times.atLeastOnce());
 
         const interpreters = await winRegistry.getInterpreters();
 
         assert.equal(interpreters.length, 1, 'Incorrect number of entries');
-        console.log(interpreters[0].path);
         assert.equal(interpreters[0].type, InterpreterType.WindowsStore, 'Incorrect type');
+        windowsStoreInterpreter.verifyAll();
+    });
+    test('Must not return any interpreters (must ignore internal windows store intrepreters)', async () => {
+        const registryKeys = [
+            { key: '\\Software\\Python', hive: RegistryHive.HKCU, arch: Architecture.x86, values: ['\\Software\\Python\\Company One'] },
+            { key: '\\Software\\Python\\Company One', hive: RegistryHive.HKCU, arch: Architecture.x86, values: ['\\Software\\Python\\Company One\\9.9.9-final'] }
+        ];
+        const registryValues = [
+            { key: '\\Software\\Python\\Company One\\9.9.9-final\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'path1') }
+        ];
+        const registry = new MockRegistry(registryKeys, registryValues);
+        const winRegistry = new WindowsRegistryService(registry, setup64Bit(false), serviceContainer.object, windowsStoreInterpreter.object);
+        interpreterHelper.reset();
+        interpreterHelper.setup(h => h.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ architecture: Architecture.x86 }));
+        windowsStoreInterpreter.reset();
+        const expectedPythonPath = path.join(environmentsPath, 'path1', 'python.exe');
+        windowsStoreInterpreter
+            .setup(w => w.isInternalInterpreter(TypeMoq.It.isValue(expectedPythonPath)))
+            .returns(() => true)
+            .verifiable(TypeMoq.Times.atLeastOnce());
+
+        const interpreters = await winRegistry.getInterpreters();
+
+        assert.equal(interpreters.length, 0, 'Incorrect number of entries');
+        windowsStoreInterpreter.verifyAll();
     });
     test('Must return multiple entries', async () => {
         const registryKeys = [
