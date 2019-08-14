@@ -171,11 +171,7 @@ getNamesAndValues(OSType).forEach(os => {
                 expect(pathMappings![0].localRoot).to.be.equal(workspaceFolder.uri.fsPath);
                 expect(pathMappings![0].remoteRoot).to.be.equal(workspaceFolder.uri.fsPath);
             });
-            test(`Ensure drive letter is lower cased for local path mappings on Windows when host is '${host}'`, async function () {
-                if (os.name !== 'Windows') {
-                    return this.skip();
-                }
-
+            test(`Ensure drive letter is lower cased for local path mappings on Windows when host is '${host}'`, async () => {
                 const activeFile = 'xyz.py';
                 const workspaceFolder = createMoqWorkspaceFolder(pathJoin('C:', 'Debug', 'Python_Path'));
                 setupActiveEditor(activeFile, PYTHON_LANGUAGE);
@@ -185,15 +181,13 @@ getNamesAndValues(OSType).forEach(os => {
                 const localRoot = `Debug_PythonPath_${new Date().toString()}`;
                 const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { localRoot, host, request: 'attach' } as any as DebugConfiguration);
                 const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
-                const lowercasedLocalRoot = pathJoin('c:', 'Debug', 'Python_Path');
 
-                expect(pathMappings![0].localRoot).to.be.equal(lowercasedLocalRoot);
+                const expected = os.name === 'Windows'
+                    ? pathJoin('c:', 'Debug', 'Python_Path')
+                    : pathJoin('C:', 'Debug', 'Python_Path');
+                expect(pathMappings![0].localRoot).to.be.equal(expected);
             });
-            test(`Ensure drive letter is lower cased for local path mappings on Windows when host is '${host}' and with existing path mappings`, async function () {
-                if (os.name !== 'Windows') {
-                    return this.skip();
-                }
-
+            test(`Ensure drive letter is lower cased for local path mappings on Windows when host is '${host}' and with existing path mappings`, async () => {
                 const activeFile = 'xyz.py';
                 const workspaceFolder = createMoqWorkspaceFolder(pathJoin('C:', 'Debug', 'Python_Path'));
                 setupActiveEditor(activeFile, PYTHON_LANGUAGE);
@@ -204,9 +198,11 @@ getNamesAndValues(OSType).forEach(os => {
                 const debugPathMappings = [ { localRoot: pathJoin('${workspaceFolder}', localRoot), remoteRoot: '/app/' }];
                 const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { localRoot, pathMappings: debugPathMappings, host, request: 'attach' } as any as DebugConfiguration);
                 const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
-                const lowercasedLocalRoot = pathJoin('c:', 'Debug', 'Python_Path', localRoot);
 
-                expect(pathMappings![0].localRoot).to.be.equal(lowercasedLocalRoot);
+                const expected = os.name === 'Windows'
+                    ? pathJoin('c:', 'Debug', 'Python_Path', localRoot)
+                    : pathJoin('C:', 'Debug', 'Python_Path', localRoot);
+                expect(pathMappings![0].localRoot).to.be.equal(expected);
             });
             test(`Ensure local path mappings are not modified when not pointing to a local drive when host is '${host}'`, async () => {
                 const activeFile = 'xyz.py';
