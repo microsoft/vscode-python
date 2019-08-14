@@ -36,14 +36,15 @@ interface ICommonDebugArguments {
     // Show return values of functions while stepping.
     showReturnValue?: boolean;
     subProcess?: boolean;
+    // An absolute path to local directory with source.
+    pathMappings?: { localRoot: string; remoteRoot: string }[];
 }
 export interface IKnownAttachDebugArguments extends ICommonDebugArguments {
     workspaceFolder?: string;
-    // An absolute path to local directory with source.
+    customDebugger?: boolean;
+    // localRoot and remoteRoot are deprecated (replaced by pathMappings).
     localRoot?: string;
     remoteRoot?: string;
-    pathMappings?: { localRoot: string; remoteRoot: string }[];
-    customDebugger?: boolean;
 }
 
 export interface IKnownLaunchRequestArguments extends ICommonDebugArguments {
