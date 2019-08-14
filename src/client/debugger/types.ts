@@ -22,6 +22,10 @@ export enum DebugOptions {
     SubProcess = 'Multiprocess'
 }
 
+export type PathMapping = {
+    localRoot: string;
+    remoteRoot: string;
+};
 interface ICommonDebugArguments {
     redirectOutput?: boolean;
     django?: boolean;
@@ -37,7 +41,7 @@ interface ICommonDebugArguments {
     showReturnValue?: boolean;
     subProcess?: boolean;
     // An absolute path to local directory with source.
-    pathMappings?: { localRoot: string; remoteRoot: string }[];
+    pathMappings?: PathMapping[];
 }
 export interface IKnownAttachDebugArguments extends ICommonDebugArguments {
     workspaceFolder?: string;

@@ -3,27 +3,34 @@
 
 'use strict';
 
-// tslint:disable:no-invalid-template-strings
+// tslint:disable:no-invalid-template-strings no-suspicious-comment
 
 import { injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, DebugConfiguration, Uri, WorkspaceFolder } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../../../common/constants';
+import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService } from '../../../../common/types';
+import { SystemVariables } from '../../../../common/variables/systemVariables';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
 import { DebuggerTelemetry } from '../../../../telemetry/types';
-import { AttachRequestArguments, DebugOptions, LaunchRequestArguments } from '../../../types';
+import {
+    AttachRequestArguments, DebugOptions, LaunchRequestArguments, PathMapping
+} from '../../../types';
 import { PythonPathSource } from '../../types';
 import { IDebugConfigurationResolver } from '../types';
 
 @injectable()
 export abstract class BaseConfigurationResolver<T extends DebugConfiguration> implements IDebugConfigurationResolver<T> {
     protected pythonPathSource: PythonPathSource = PythonPathSource.launchJson;
-    constructor(protected readonly workspaceService: IWorkspaceService,
+    constructor(
+        protected readonly workspaceService: IWorkspaceService,
         protected readonly documentManager: IDocumentManager,
-        protected readonly configurationService: IConfigurationService) { }
+        protected readonly platformService: IPlatformService,
+        protected readonly configurationService: IConfigurationService
+    ) { }
     public abstract resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: DebugConfiguration, token?: CancellationToken): Promise<T | undefined>;
     protected getWorkspaceFolder(folder: WorkspaceFolder | undefined): Uri | undefined {
         if (folder) {
@@ -70,6 +77,50 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration> im
     protected isLocalHost(hostName?: string) {
         const LocalHosts = ['localhost', '127.0.0.1', '::1'];
         return (hostName && LocalHosts.indexOf(hostName.toLowerCase()) >= 0) ? true : false;
+    }
+    protected fixUpPathMappings(
+        pathMappings: PathMapping[],
+        defaultLocalRoot?: string,
+        defaultRemoteRoot?: string
+    ): PathMapping[] {
+        if (!defaultLocalRoot) {
+            return [];
+        }
+        if (!defaultRemoteRoot) {
+            defaultRemoteRoot = defaultLocalRoot;
+        }
+
+        if (pathMappings.length === 0) {
+            pathMappings = [
+                {
+                    localRoot: defaultLocalRoot,
+                    remoteRoot: defaultRemoteRoot
+                }
+            ];
+        } else {
+            // Expand ${workspaceFolder} variable first if necessary.
+            const systemVariables = new SystemVariables(defaultLocalRoot);
+            pathMappings = pathMappings.map(({ localRoot: mappedLocalRoot, remoteRoot }) => ({
+                localRoot: systemVariables.resolveAny(mappedLocalRoot),
+                // TODO: Apply to remoteRoot too?
+                remoteRoot
+            }));
+        }
+
+        // If on Windows, lowercase the drive letter for path mappings.
+        // TODO: Apply even if no localRoot?
+        if (this.platformService.isWindows) {
+            // TODO: Apply to remoteRoot too?
+            pathMappings = pathMappings.map(({ localRoot: windowsLocalRoot, remoteRoot }) => {
+                let localRoot = windowsLocalRoot;
+                if (windowsLocalRoot.match(/^[A-Z]:/)) {
+                    localRoot = `${windowsLocalRoot[0].toLowerCase()}${windowsLocalRoot.substr(1)}`;
+                }
+                return { localRoot, remoteRoot };
+            });
+        }
+
+        return pathMappings;
     }
     protected isDebuggingFlask(debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>) {
         return (debugConfiguration.module && debugConfiguration.module.toUpperCase() === 'FLASK') ? true : false;

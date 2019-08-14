@@ -21,11 +21,11 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IDocumentManager) documentManager: IDocumentManager,
         @inject(IDiagnosticsService) @named(InvalidPythonPathInDebuggerServiceId) private readonly invalidPythonPathInDebuggerService: IInvalidPythonPathInDebuggerService,
-        @inject(IPlatformService) private readonly platformService: IPlatformService,
+        @inject(IPlatformService) platformService: IPlatformService,
         @inject(IConfigurationService) configurationService: IConfigurationService,
         @inject(IDebugEnvironmentVariablesService) private readonly debugEnvHelper: IDebugEnvironmentVariablesService
     ) {
-        super(workspaceService, documentManager, configurationService);
+        super(workspaceService, documentManager, platformService, configurationService);
     }
     public async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: LaunchRequestArguments, _token?: CancellationToken): Promise<LaunchRequestArguments | undefined> {
         const workspaceFolder = this.getWorkspaceFolder(folder);

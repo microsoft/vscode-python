@@ -8,17 +8,18 @@ import { CancellationToken, Uri, WorkspaceFolder } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../../../common/application/types';
 import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService } from '../../../../common/types';
-import { SystemVariables } from '../../../../common/variables/systemVariables';
 import { AttachRequestArguments, DebugOptions } from '../../../types';
 import { BaseConfigurationResolver } from './base';
 
 @injectable()
 export class AttachConfigurationResolver extends BaseConfigurationResolver<AttachRequestArguments> {
-    constructor(@inject(IWorkspaceService) workspaceService: IWorkspaceService,
+    constructor(
+        @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IDocumentManager) documentManager: IDocumentManager,
-        @inject(IPlatformService) private readonly platformService: IPlatformService,
-        @inject(IConfigurationService) configurationService: IConfigurationService) {
-        super(workspaceService, documentManager, configurationService);
+        @inject(IPlatformService) platformService: IPlatformService,
+        @inject(IConfigurationService) configurationService: IConfigurationService
+    ) {
+        super(workspaceService, documentManager, platformService, configurationService);
     }
     public async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: AttachRequestArguments, _token?: CancellationToken): Promise<AttachRequestArguments | undefined> {
         const workspaceFolder = this.getWorkspaceFolder(folder);
@@ -94,33 +95,15 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
             });
         }
         // If attaching to local host, then always map local root and remote roots.
-        if (workspaceFolder && this.isLocalHost(debugConfiguration.host)) {
-                let configPathMappings;
-                if (debugConfiguration.pathMappings!.length === 0) {
-                    configPathMappings = [{
-                        localRoot: workspaceFolder.fsPath,
-                        remoteRoot: workspaceFolder.fsPath
-                    }];
-                } else {
-                    // Expand ${workspaceFolder} variable first if necessary.
-                    const systemVariables = new SystemVariables(workspaceFolder.fsPath);
-                    configPathMappings = debugConfiguration.pathMappings.map(({ localRoot: mappedLocalRoot, remoteRoot }) => ({
-                        localRoot: systemVariables.resolveAny(mappedLocalRoot),
-                        remoteRoot
-                    }));
-                }
-                // If on Windows, lowercase the drive letter for path mappings.
-                let pathMappings = configPathMappings;
-                if (this.platformService.isWindows) {
-                    pathMappings = configPathMappings.map(({ localRoot: windowsLocalRoot, remoteRoot }) => {
-                        let localRoot = windowsLocalRoot;
-                        if (windowsLocalRoot.match(/^[A-Z]:/)) {
-                            localRoot = `${windowsLocalRoot[0].toLowerCase()}${windowsLocalRoot.substr(1)}`;
-                        }
-                        return { localRoot, remoteRoot };
-                    });
-                }
-                debugConfiguration.pathMappings = pathMappings;
+        if (this.isLocalHost(debugConfiguration.host)) {
+            const pathMappings = this.fixUpPathMappings(
+                debugConfiguration.pathMappings || [],
+                workspaceFolder ? workspaceFolder.fsPath : '',
+                workspaceFolder ? workspaceFolder.fsPath : ''
+            );
+            debugConfiguration.pathMappings = pathMappings.length > 0
+                ? pathMappings
+                : undefined;
         }
         this.sendTelemetry('attach', debugConfiguration);
     }
