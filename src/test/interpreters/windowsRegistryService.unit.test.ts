@@ -14,7 +14,7 @@ const environmentsPath = path.join(__dirname, '..', '..', '..', 'src', 'test', '
 
 // tslint:disable:max-func-body-length no-octal-literal
 
-suite('Interpretersx from Windows Registry (unit)', () => {
+suite('Interpreters from Windows Registry (unit)', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let interpreterHelper: TypeMoq.IMock<IInterpreterHelper>;
     let platformService: TypeMoq.IMock<IPlatformService>;
