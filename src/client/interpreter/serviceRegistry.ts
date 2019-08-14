@@ -64,6 +64,7 @@ import { CurrentPathService, PythonInPathCommandProvider } from './locators/serv
 import { GlobalVirtualEnvironmentsSearchPathProvider, GlobalVirtualEnvService } from './locators/services/globalVirtualEnvService';
 import { InterpreterHashProvider } from './locators/services/hashProvider';
 import { InterpeterHashProviderFactory } from './locators/services/hashProviderFactory';
+import { InterpreterFilter } from './locators/services/interpreterFilter';
 import { InterpreterWatcherBuilder } from './locators/services/interpreterWatcherBuilder';
 import { KnownPathsService, KnownSearchPathsForInterpreters } from './locators/services/KnownPathsService';
 import { PipEnvService } from './locators/services/pipEnvService';
@@ -137,4 +138,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
     serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
     serviceManager.addSingleton<InterpeterHashProviderFactory>(InterpeterHashProviderFactory, InterpeterHashProviderFactory);
+    serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
 }
