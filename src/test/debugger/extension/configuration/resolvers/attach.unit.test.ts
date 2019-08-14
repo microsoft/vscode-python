@@ -6,7 +6,6 @@
 // tslint:disable:max-func-body-length no-invalid-template-strings no-any no-object-literal-type-assertion no-invalid-this
 
 import { expect } from 'chai';
-import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { DebugConfiguration, DebugConfigurationProvider, TextDocument, TextEditor, Uri, WorkspaceFolder } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../../../../client/common/application/types';
@@ -23,6 +22,10 @@ getNamesAndValues(OSType).forEach(os => {
     if (os.value === OSType.Unknown) {
         return;
     }
+    function pathJoin(...parts: string[]): string {
+        return parts.join(os.name === 'Windows' ? '\\' : '/');
+    }
+
     suite(`Debugging - Config Resolver attach, OS = ${os.name}`, () => {
         let serviceContainer: TypeMoq.IMock<IServiceContainer>;
         let debugProvider: DebugConfigurationProvider;
@@ -129,7 +132,7 @@ getNamesAndValues(OSType).forEach(os => {
         test('Defaults should be returned when an empty object is passed without Workspace Folder, with a workspace and an active python file', async () => {
             const activeFile = 'xyz.py';
             setupActiveEditor(activeFile, PYTHON_LANGUAGE);
-            const defaultWorkspace = path.join('usr', 'desktop');
+            const defaultWorkspace = pathJoin('usr', 'desktop');
             setupWorkspaces([defaultWorkspace]);
 
             const debugConfig = await debugProvider.resolveDebugConfiguration!(undefined, { request: 'attach' } as DebugConfiguration);
@@ -143,7 +146,7 @@ getNamesAndValues(OSType).forEach(os => {
             const activeFile = 'xyz.py';
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             setupActiveEditor(activeFile, PYTHON_LANGUAGE);
-            const defaultWorkspace = path.join('usr', 'desktop');
+            const defaultWorkspace = pathJoin('usr', 'desktop');
             setupWorkspaces([defaultWorkspace]);
 
             const localRoot = `Debug_PythonPath_${new Date().toString()}`;
@@ -156,7 +159,7 @@ getNamesAndValues(OSType).forEach(os => {
                 const activeFile = 'xyz.py';
                 const workspaceFolder = createMoqWorkspaceFolder(__dirname);
                 setupActiveEditor(activeFile, PYTHON_LANGUAGE);
-                const defaultWorkspace = path.join('usr', 'desktop');
+                const defaultWorkspace = pathJoin('usr', 'desktop');
                 setupWorkspaces([defaultWorkspace]);
 
                 const localRoot = `Debug_PythonPath_${new Date().toString()}`;
@@ -174,15 +177,15 @@ getNamesAndValues(OSType).forEach(os => {
                 }
 
                 const activeFile = 'xyz.py';
-                const workspaceFolder = createMoqWorkspaceFolder(path.join('C:', 'Debug', 'Python_Path'));
+                const workspaceFolder = createMoqWorkspaceFolder(pathJoin('C:', 'Debug', 'Python_Path'));
                 setupActiveEditor(activeFile, PYTHON_LANGUAGE);
-                const defaultWorkspace = path.join('usr', 'desktop');
+                const defaultWorkspace = pathJoin('usr', 'desktop');
                 setupWorkspaces([defaultWorkspace]);
 
                 const localRoot = `Debug_PythonPath_${new Date().toString()}`;
                 const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { localRoot, host, request: 'attach' } as any as DebugConfiguration);
                 const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
-                const lowercasedLocalRoot = path.join('c:', 'Debug', 'Python_Path');
+                const lowercasedLocalRoot = pathJoin('c:', 'Debug', 'Python_Path');
 
                 expect(pathMappings![0].localRoot).to.be.equal(lowercasedLocalRoot);
             });
@@ -192,24 +195,24 @@ getNamesAndValues(OSType).forEach(os => {
                 }
 
                 const activeFile = 'xyz.py';
-                const workspaceFolder = createMoqWorkspaceFolder(path.join('C:', 'Debug', 'Python_Path'));
+                const workspaceFolder = createMoqWorkspaceFolder(pathJoin('C:', 'Debug', 'Python_Path'));
                 setupActiveEditor(activeFile, PYTHON_LANGUAGE);
-                const defaultWorkspace = path.join('usr', 'desktop');
+                const defaultWorkspace = pathJoin('usr', 'desktop');
                 setupWorkspaces([defaultWorkspace]);
 
                 const localRoot = `Debug_PythonPath_${new Date().toString()}`;
-                const debugPathMappings = [ { localRoot: path.join('${workspaceFolder}', localRoot), remoteRoot: '/app/' }];
+                const debugPathMappings = [ { localRoot: pathJoin('${workspaceFolder}', localRoot), remoteRoot: '/app/' }];
                 const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { localRoot, pathMappings: debugPathMappings, host, request: 'attach' } as any as DebugConfiguration);
                 const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
-                const lowercasedLocalRoot = path.join('c:', 'Debug', 'Python_Path', localRoot);
+                const lowercasedLocalRoot = pathJoin('c:', 'Debug', 'Python_Path', localRoot);
 
                 expect(pathMappings![0].localRoot).to.be.equal(lowercasedLocalRoot);
             });
             test(`Ensure local path mappings are not modified when not pointing to a local drive when host is '${host}'`, async () => {
                 const activeFile = 'xyz.py';
-                const workspaceFolder = createMoqWorkspaceFolder(path.join('Server', 'Debug', 'Python_Path'));
+                const workspaceFolder = createMoqWorkspaceFolder(pathJoin('Server', 'Debug', 'Python_Path'));
                 setupActiveEditor(activeFile, PYTHON_LANGUAGE);
-                const defaultWorkspace = path.join('usr', 'desktop');
+                const defaultWorkspace = pathJoin('usr', 'desktop');
                 setupWorkspaces([defaultWorkspace]);
 
                 const localRoot = `Debug_PythonPath_${new Date().toString()}`;
@@ -224,7 +227,7 @@ getNamesAndValues(OSType).forEach(os => {
                 const activeFile = 'xyz.py';
                 const workspaceFolder = createMoqWorkspaceFolder(__dirname);
                 setupActiveEditor(activeFile, PYTHON_LANGUAGE);
-                const defaultWorkspace = path.join('usr', 'desktop');
+                const defaultWorkspace = pathJoin('usr', 'desktop');
                 setupWorkspaces([defaultWorkspace]);
 
                 const localRoot = `Debug_PythonPath_${new Date().toString()}`;
@@ -239,7 +242,7 @@ getNamesAndValues(OSType).forEach(os => {
             const activeFile = 'xyz.py';
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             setupActiveEditor(activeFile, PYTHON_LANGUAGE);
-            const defaultWorkspace = path.join('usr', 'desktop');
+            const defaultWorkspace = pathJoin('usr', 'desktop');
             setupWorkspaces([defaultWorkspace]);
 
             const localRoot = `Debug_PythonPath_Local_Root_${new Date().toString()}`;
@@ -253,7 +256,7 @@ getNamesAndValues(OSType).forEach(os => {
             const activeFile = 'xyz.py';
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             setupActiveEditor(activeFile, PYTHON_LANGUAGE);
-            const defaultWorkspace = path.join('usr', 'desktop');
+            const defaultWorkspace = pathJoin('usr', 'desktop');
             setupWorkspaces([defaultWorkspace]);
 
             const localRoot = `Debug_PythonPath_Local_Root_${new Date().toString()}`;
@@ -267,7 +270,7 @@ getNamesAndValues(OSType).forEach(os => {
             const activeFile = 'xyz.py';
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             setupActiveEditor(activeFile, PYTHON_LANGUAGE);
-            const defaultWorkspace = path.join('usr', 'desktop');
+            const defaultWorkspace = pathJoin('usr', 'desktop');
             setupWorkspaces([defaultWorkspace]);
 
             const remoteRoot = `Debug_PythonPath_${new Date().toString()}`;
@@ -279,7 +282,7 @@ getNamesAndValues(OSType).forEach(os => {
             const activeFile = 'xyz.py';
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             setupActiveEditor(activeFile, PYTHON_LANGUAGE);
-            const defaultWorkspace = path.join('usr', 'desktop');
+            const defaultWorkspace = pathJoin('usr', 'desktop');
             setupWorkspaces([defaultWorkspace]);
 
             const port = 12341234;
@@ -291,7 +294,7 @@ getNamesAndValues(OSType).forEach(os => {
             const activeFile = 'xyz.py';
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             setupActiveEditor(activeFile, PYTHON_LANGUAGE);
-            const defaultWorkspace = path.join('usr', 'desktop');
+            const defaultWorkspace = pathJoin('usr', 'desktop');
             setupWorkspaces([defaultWorkspace]);
 
             const debugOptions = debugOptionsAvailable.slice().concat(DebugOptions.Jinja, DebugOptions.Sudo);
@@ -353,7 +356,7 @@ getNamesAndValues(OSType).forEach(os => {
             const activeFile = 'xyz.py';
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             setupActiveEditor(activeFile, PYTHON_LANGUAGE);
-            const defaultWorkspace = path.join('usr', 'desktop');
+            const defaultWorkspace = pathJoin('usr', 'desktop');
             setupWorkspaces([defaultWorkspace]);
 
             const debugOptions = debugOptionsAvailable.slice().concat(DebugOptions.Jinja, DebugOptions.Sudo);
