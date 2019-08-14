@@ -121,41 +121,43 @@ suite('Pylint - Function hasConfigurationFile()', () => {
         });
     });
 
-    if (new PlatformService().isWindows === false) {
-        test('If /etc/pylintrc exists in non-Windows platform, return true', async () => {
-            const home = os.homedir();
-            fileSystem
-                .setup(x => x.fileExists(path.join(folder, pylintrc)))
-                .returns(() => Promise.resolve(false))
-                .verifiable(TypeMoq.Times.once());
-            fileSystem
-                .setup(x => x.fileExists(path.join(folder, dotPylintrc)))
-                .returns(() => Promise.resolve(false))
-                .verifiable(TypeMoq.Times.once());
-            fileSystem
-                .setup(x => x.fileExists(path.join(folder, '__init__.py')))
-                .returns(() => Promise.resolve(false))
-                .verifiable(TypeMoq.Times.once());
-            fileSystem
-                .setup(x => x.fileExists(path.join(home, '.config', pylintrc)))
-                .returns(() => Promise.resolve(false))
-                .verifiable(TypeMoq.Times.once());
-            fileSystem
-                .setup(x => x.fileExists(path.join(home, dotPylintrc)))
-                .returns(() => Promise.resolve(false))
-                .verifiable(TypeMoq.Times.once());
-            platformService
-                .setup(x => x.isWindows)
-                .returns(() => false);
-            fileSystem
-                .setup(x => x.fileExists(path.join('/etc', pylintrc)))
-                .returns(() => Promise.resolve(true));
-            const hasConfig = await Pylint.hasConfigurationFile(fileSystem.object, folder, platformService.object);
-            expect(hasConfig).to.equal(true, 'Should return true');
-            fileSystem.verifyAll();
-            platformService.verifyAll();
-        });
-    }
+    test('If /etc/pylintrc exists in non-Windows platform, return true', async function () {
+        if (new PlatformService().isWindows) {
+            // tslint:disable-next-line:no-invalid-this
+            return this.skip();
+        }
+        const home = os.homedir();
+        fileSystem
+            .setup(x => x.fileExists(path.join(folder, pylintrc)))
+            .returns(() => Promise.resolve(false))
+            .verifiable(TypeMoq.Times.once());
+        fileSystem
+            .setup(x => x.fileExists(path.join(folder, dotPylintrc)))
+            .returns(() => Promise.resolve(false))
+            .verifiable(TypeMoq.Times.once());
+        fileSystem
+            .setup(x => x.fileExists(path.join(folder, '__init__.py')))
+            .returns(() => Promise.resolve(false))
+            .verifiable(TypeMoq.Times.once());
+        fileSystem
+            .setup(x => x.fileExists(path.join(home, '.config', pylintrc)))
+            .returns(() => Promise.resolve(false))
+            .verifiable(TypeMoq.Times.once());
+        fileSystem
+            .setup(x => x.fileExists(path.join(home, dotPylintrc)))
+            .returns(() => Promise.resolve(false))
+            .verifiable(TypeMoq.Times.once());
+        platformService
+            .setup(x => x.isWindows)
+            .returns(() => false);
+        fileSystem
+            .setup(x => x.fileExists(path.join('/etc', pylintrc)))
+            .returns(() => Promise.resolve(true));
+        const hasConfig = await Pylint.hasConfigurationFile(fileSystem.object, folder, platformService.object);
+        expect(hasConfig).to.equal(true, 'Should return true');
+        fileSystem.verifyAll();
+        platformService.verifyAll();
+    });
 
     test('If none of the pylintrc configuration files exist anywhere, return false', async () => {
         const home = os.homedir();
