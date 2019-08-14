@@ -135,12 +135,12 @@ suite('Interpreters - Windows Store Interpreter', () => {
         }
     ];
     for (const interpreter of interpreters) {
-        test(`${interpreter.path} must ${interpreter.isWindowsStoreInterpreter ? 'be' : 'not be'} identified as a windows store interpter`, async () => {
+        test(`${interpreter.path} must ${interpreter.isWindowsStoreInterpreter ? 'be' : 'not be'} identified as a windows store interpter`, () => {
             const isWindowsStoreInterpreter = windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.path);
             expect(isWindowsStoreInterpreter).to.equal(interpreter.isWindowsStoreInterpreter);
         });
-        test(`${interpreter.path} must ${interpreter.isInternalInterpreter ? 'be' : 'not be'} identified as an internal windows store interpter`, async () => {
-            const isWindowsStoreInterpreter = await windowsStoreInterpreter.isInternalInterpreter(interpreter.path);
+        test(`${interpreter.path} must ${interpreter.isInternalInterpreter ? 'be' : 'not be'} identified as an internal windows store interpter`, () => {
+            const isWindowsStoreInterpreter = windowsStoreInterpreter.isInternalInterpreter(interpreter.path);
             expect(isWindowsStoreInterpreter).to.equal(interpreter.isInternalInterpreter);
         });
     }

@@ -57,8 +57,8 @@ export interface IWindowsStoreInterpreter {
      * Whether this is a python executable in a windows app store folder that is internal and can be hidden from users.
      *
      * @param {string} pythonPath
-     * @returns {Promise<boolean>}
+     * @returns {boolean}
      * @memberof IInterpreterHelper
      */
-    isInternalInterpreter(pythonPath: string): Promise<boolean>;
+    isInternalInterpreter(pythonPath: string): boolean;
 }

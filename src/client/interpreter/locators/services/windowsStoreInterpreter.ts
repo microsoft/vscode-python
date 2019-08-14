@@ -40,7 +40,7 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInter
      * @returns {Promise<boolean>}
      * @memberof IInterpreterHelper
      */
-    public async isInternalInterpreter(pythonPath: string): Promise<boolean> {
+    public isInternalInterpreter(pythonPath: string): boolean {
         const pythonPathToCompare = pythonPath.toUpperCase();
         return (
             pythonPathToCompare.includes('Program Files\\WindowsApps'.toUpperCase()) ||
