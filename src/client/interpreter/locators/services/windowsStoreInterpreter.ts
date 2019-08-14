@@ -4,6 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import * as path from 'path';
 import { traceDecorators } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IPythonExecutionFactory } from '../../../common/process/types';
@@ -99,7 +100,9 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInter
         const executionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         const pythonService = await executionFactory.create({ pythonPath });
         const executablePath = await pythonService.getExecutablePath();
-        const hash = await this.fs.getFileHash(executablePath);
+        // If we are unable to get file hash of executable, then get hash of parent directory.
+        // Its likely it will fail for the executable (fails during development, but try nevertheless - in case things start working).
+        const hash = await this.fs.getFileHash(executablePath).catch(() => this.fs.getFileHash(path.dirname(executablePath)));
         await stateStore.updateValue(hash);
 
         return hash;
