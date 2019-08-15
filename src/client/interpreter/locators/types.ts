@@ -65,5 +65,5 @@ export interface IWindowsStoreInterpreter {
 }
 
 export interface IInterpreterFilter {
-    canIgnoreIntepreter(interpreter: PythonInterpreter): boolean;
+    isHiddenInterpreter(interpreter: PythonInterpreter): boolean;
 }

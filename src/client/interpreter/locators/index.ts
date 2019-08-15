@@ -87,7 +87,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
         const items = flatten(listOfInterpreters)
             .filter(item => !!item)
             .map(item => item!)
-            .filter(item => !this.interpreterFilter.canIgnoreIntepreter(item));
+            .filter(item => !this.interpreterFilter.isHiddenInterpreter(item));
         this._hasInterpreters.resolve(items.length > 0);
         return this.interpreterLocatorHelper.mergeInterpreters(items);
     }

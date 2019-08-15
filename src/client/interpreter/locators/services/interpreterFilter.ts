@@ -11,7 +11,7 @@ import { WindowsStoreInterpreter } from './windowsStoreInterpreter';
 @injectable()
 export class InterpreterFilter implements IInterpreterFilter {
     constructor(@inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter) {}
-    public canIgnoreIntepreter(interpreter: PythonInterpreter): boolean {
-        return this.windowsStoreInterpreter.isInternalInterpreter(interpreter.path);
+    public isHiddenInterpreter(interpreter: PythonInterpreter): boolean {
+        return this.windowsStoreInterpreter.isHiddenInterpreter(interpreter.path);
     }
 }
