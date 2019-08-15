@@ -3,6 +3,8 @@
 
 'use strict';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { ChildProcess } from 'child_process';
 import { EventEmitter } from 'events';
 import {
@@ -35,6 +37,40 @@ import { getVSCodeElectronPath } from './downloader';
 // Right now using 100ms seems to be enough, 50ms might be enough as well, but 100ms works.
 const waitTimeoutAfterTypging = 100;
 
+/*
+ Hacky way to translate control keys into puppeteer keys.
+ Better way would be to wrap this up with a class.
+(plenty of places to get inspiration from .NET, Java, Flex, etc)...
+ Current approach is quite sloppy.
+*/
+const KeyTranslations: Record<string, string> = {
+    alt: 'Alt',
+    control: 'Control',
+    ctrl: 'Control',
+    shift: 'Shift',
+    space: 'Space',
+    Escape: 'Escape',
+    escape: 'Escape',
+    esc: 'Escape',
+    Enter: 'Enter',
+    enter: 'Enter',
+    down: 'ArrowDown',
+    right: 'ArrowRight',
+    left: 'ArrowLeft',
+    tab: 'Tab'
+};
+
+/**
+ * Given a key (control key or standard alphanumeric character),
+ *  convert them into a key understoon by puppeteer.
+ *
+ * @param {string} key
+ * @returns {string}
+ */
+function normalizeKey(key: string): string {
+    return key in KeyTranslations ? KeyTranslations[key] : key;
+}
+
 /**
  * This is what loads VS Code.
  * VS Code is launched using puppeteer and provides the ability to run CSS queries against the dom and perform UI actions.
@@ -46,15 +82,17 @@ const waitTimeoutAfterTypging = 100;
  * @implements {IDriver}
  */
 export class Driver extends EventEmitter implements IDriver {
-    get isAlive(): boolean {
+    public get isAlive(): boolean {
         return this.process && !this.process.killed ? true : false;
     }
     private process?: ChildProcess;
     private browser!: Browser;
     private pages!: Page[];
     private mainPage!: Page;
-    constructor(private readonly options: ITestOptions) {
+    private readonly options: ITestOptions;
+    constructor(options: ITestOptions) {
         super();
+        this.options = options;
     }
     /**
      * Given the `SelectorRetryOptions`, and an error message, convert it into `RetryOptions`.
@@ -157,9 +195,9 @@ export class Driver extends EventEmitter implements IDriver {
         debug('Shutting down vscode driver');
         await this.browser.close().catch(warn);
         try {
-            if (this.process.connected) {
+            if (this.process.connected && this.process) {
                 // If exiting failed, kill the underlying process.
-                process.kill(this.process!.pid);
+                process.kill(this.process.pid);
             }
         } catch {
             noop();
@@ -171,7 +209,6 @@ export class Driver extends EventEmitter implements IDriver {
         selector: string,
         options?: WaitForSelectorOptionsHidden
     ): Promise<ElementHandle | undefined>;
-    // tslint:disable-next-line: no-any
     public async waitForSelector(
         selector: string,
         options?: WaitForSelectorOptions | WaitForSelectorOptionsHidden
@@ -312,10 +349,12 @@ export class Driver extends EventEmitter implements IDriver {
                 debug(`Press ${key}`);
                 await this.mainPage.keyboard.press(key, options);
             }
-            while (pressUpControlKeys.length > 0) {
-                const key = pressUpControlKeys.shift()!;
-                debug(`Up ${key}`);
-                await this.mainPage.keyboard.up(key);
+            while (pressUpControlKeys.length) {
+                const key = pressUpControlKeys.shift();
+                if (key) {
+                    debug(`Up ${key}`);
+                    await this.mainPage.keyboard.up(key);
+                }
             }
         } finally {
             await sleep(waitTimeoutAfterTypging);
@@ -323,38 +362,4 @@ export class Driver extends EventEmitter implements IDriver {
         // Key(s) was pressed, lets wait for UI to react to this.
         await sleep(waitTimeoutAfterTypging);
     }
-}
-
-/*
- Hacky way to translate control keys into puppeteer keys.
- Better way would be to wrap this up with a class.
-(plenty of places to get inspiration from .NET, Java, Flex, etc)...
- Current approach is quite sloppy.
-*/
-const KeyTranslations: Record<string, string> = {
-    alt: 'Alt',
-    control: 'Control',
-    ctrl: 'Control',
-    shift: 'Shift',
-    space: 'Space',
-    Escape: 'Escape',
-    escape: 'Escape',
-    esc: 'Escape',
-    Enter: 'Enter',
-    enter: 'Enter',
-    down: 'ArrowDown',
-    right: 'ArrowRight',
-    left: 'ArrowLeft',
-    tab: 'Tab'
-};
-
-/**
- * Given a key (control key or standard alphanumeric character),
- *  convert them into a key understoon by puppeteer.
- *
- * @param {string} key
- * @returns {string}
- */
-function normalizeKey(key: string): string {
-    return key in KeyTranslations ? KeyTranslations[key] : key;
 }

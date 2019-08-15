@@ -39,5 +39,12 @@
     "eslint.validate": ["javascript", { "language": "typescript", "autoFix": true }],
     "[javascript]": {
         "editor.formatOnSave": true
+    },
+    "eslint.options": {
+        "configFile": ".eslintrc.js"
+    },
+    "eslint.codeAction.disableRuleComment": {
+        "enable": true,
+        "location": "separateLine"
     }
 }

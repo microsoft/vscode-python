@@ -23,7 +23,10 @@ type CrudSetting = {
 };
 
 export class Settings implements ISettings {
-    constructor(private readonly app: IApplication) {}
+    private readonly app: IApplication;
+    constructor(app: IApplication) {
+        this.app = app;
+    }
     public async removeSetting(setting: string, scope: ConfigurationTarget): Promise<void> {
         const content = await this.getSettingsContent(scope);
         if (!content) {

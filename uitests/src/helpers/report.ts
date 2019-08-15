@@ -96,26 +96,4 @@ export async function mergeAndgenerateHtmlReport(cucumberReportsPath: string, ou
         customMetadata: true,
         displayDuration: true
     });
-    const htmlFile = path.join(outputDir, 'index.html');
-    await fixHtmlResourceLinks(htmlFile);
-}
-
-/**
- * The HTML report generated has relative imports.
- * Opening a HTML report from Azure Pipelines will not work unless we download the entire artifact.
- * Modify relative resource links to absolute (by including the resources in repo) and
- * ensuring they get served with the right mime types (using https://min.gitcdn.link/).
- *
- * @param {string} htmlFile
- * @returns {Promise<void>}
- */
-async function fixHtmlResourceLinks(htmlFile: string): Promise<void> {
-    let html = await fs.readFile(htmlFile, 'utf8');
-    // Use https://min.gitcdn.link/ to have proper links to source from git repo.
-    html = html.replace(
-        new RegExp('"assets/', 'g'),
-        '"https://min.gitcdn.link/repo/DonJayamanne/pythonVSCode/puppeteer/uitests/assets/'
-    );
-
-    await fs.writeFile(htmlFile, html);
 }
