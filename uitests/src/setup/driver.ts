@@ -129,6 +129,9 @@ export class Driver extends EventEmitter implements IDriver {
         debug(`Launched with process ${this.process.pid}`);
 
         this.pages = await this.browser.pages();
+        this.pages.forEach(page => {
+            page.on('error', error => warn('One of the pages have errored', error));
+        });
         this.mainPage = this.pages[0];
         // We know it will take at least 1 second, so lets wait for 1 second, no point trying before then.
         await sleep(1000);
