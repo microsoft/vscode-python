@@ -21,7 +21,6 @@ import { TestProvider } from '../testing/common/types';
 import { EventName } from './constants';
 import {
     DebuggerConfigurationPromtpsTelemetry,
-    FormatTelemetry,
     InterpreterActivation,
     InterpreterActivationEnvironmentVariables,
     InterpreterAutoSelection,
@@ -262,9 +261,12 @@ function getCallsite(frame: stackTrace.StackFrame) {
 
 // Map all events to their properties
 export interface IEventNamePropertyMapping {
+    /**
+     * Telemetry event sent when providing completion items for the given position and document.
+     */
     [EventName.COMPLETION]: never | undefined;
     /**
-     * Telemetry sent with details 'python.autoComplete.addBrackets' setting
+     * Telemetry event sent with details 'python.autoComplete.addBrackets' setting
      */
     [EventName.COMPLETION_ADD_BRACKETS]: {
         /**
@@ -399,7 +401,7 @@ export interface IEventNamePropertyMapping {
     [EventName.DEBUGGER_ATTACH_TO_CHILD_PROCESS]: never | undefined;
     [EventName.DEBUGGER_CONFIGURATION_PROMPTS]: DebuggerConfigurationPromtpsTelemetry;
     /**
-     * Telemetry sent when providing completion provider in launch.json. It is sent just *after* inserting the completion.
+     * Telemetry event sent when providing completion provider in launch.json. It is sent just *after* inserting the completion.
      */
     [EventName.DEBUGGER_CONFIGURATION_PROMPTS_IN_LAUNCH_JSON]: never | undefined;
     /**
@@ -443,7 +445,7 @@ export interface IEventNamePropertyMapping {
         code: DiagnosticCodes;
     };
     /**
-     * Telemetry sent with details just after editor loads
+     * Telemetry event sent with details just after editor loads
      */
     [EventName.EDITOR_LOAD]: {
         /**
@@ -519,12 +521,57 @@ export interface IEventNamePropertyMapping {
          */
         scope: 'file' | 'selection';
     };
-    [EventName.FORMAT]: FormatTelemetry;
-    [EventName.FORMAT_ON_TYPE]: { enabled: boolean };
+    /**
+     * Telemetry event sent with details when formatting a document
+     */
+    [EventName.FORMAT]: {
+        /**
+         * Tool being used to format
+         */
+        tool: 'autopep8' | 'black' | 'yapf';
+        /**
+         * If arguments for formatter is provided in resource settings
+         */
+        hasCustomArgs: boolean;
+        /**
+         * Carries `true` when formatting a selection of text, `false` otherwise
+         */
+        formatSelection: boolean;
+    };
+    /**
+     * Telemetry event sent with the value of setting 'Format on type'
+     */
+    [EventName.FORMAT_ON_TYPE]: {
+        /**
+         * Carries `true` if format on type is enabled, `false` otherwise
+         *
+         * @type {boolean}
+         */
+        enabled: boolean;
+    };
+    /**
+     * Telemetry event sent when sorting imports using formatter
+     */
     [EventName.FORMAT_SORT_IMPORTS]: never | undefined;
+    /**
+     * Telemetry event sent when Go to Python object command is executed
+     */
     [EventName.GO_TO_OBJECT_DEFINITION]: never | undefined;
+    /**
+     * Telemetry event sent when providing a hover for the given position and document for interactive window using Jedi.
+     */
     [EventName.HOVER_DEFINITION]: never | undefined;
-    [EventName.HASHED_PACKAGE_NAME]: { hashedName: string };
+    /**
+     * Telemetry event sent with details when tracking imports
+     */
+    [EventName.HASHED_PACKAGE_NAME]: {
+        /**
+         * Hash of the package name
+         *
+         * @type {string}
+         */
+        hashedName: string;
+    };
     [EventName.HASHED_PACKAGE_PERF]: never | undefined;
     /**
      * Telemetry event sent with details of selection in prompt
@@ -697,9 +744,21 @@ export interface IEventNamePropertyMapping {
         selection: 'Yes' | 'Maybe later' | 'Do not show again' | undefined;
     };
     [EventName.REFACTOR_EXTRACT_FUNCTION]: never | undefined;
+    /**
+     * Telemetry event sent when executing `Extract variable` command
+     */
     [EventName.REFACTOR_EXTRACT_VAR]: never | undefined;
+    /**
+     * Telemetry event sent when providing an edit that describes changes that have to be made to one or many resources to rename a symbol to a different name.
+     */
     [EventName.REFACTOR_RENAME]: never | undefined;
+    /**
+     * Telemetry event sent when providing a set of project-wide references for the given position and document.
+     */
     [EventName.REFERENCE]: never | undefined;
+    /**
+     * Telemetry event sent when starting REPL
+     */
     [EventName.REPL]: never | undefined;
     /**
      * Telemetry event sent with details of linter selected in quickpick of linter list.
@@ -727,7 +786,7 @@ export interface IEventNamePropertyMapping {
     };
     [EventName.SIGNATURE]: never | undefined;
     /**
-     * Telemetry sent when providing document symbol information for Jedi autocomplete intellisense
+     * Telemetry event sent when providing document symbol information for Jedi autocomplete intellisense
      */
     [EventName.SYMBOL]: never | undefined;
     /**
@@ -756,7 +815,7 @@ export interface IEventNamePropertyMapping {
         failed: boolean;
     };
     /**
-     * Telemetry sent with details when a terminal is created
+     * Telemetry event sent with details when a terminal is created
      */
     [EventName.TERMINAL_CREATE]: {
         /**

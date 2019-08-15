@@ -11,11 +11,6 @@ import { IEventNamePropertyMapping } from '../telemetry/index';
 import { EventName, PlatformErrors } from './constants';
 
 export type EditorLoadTelemetry = IEventNamePropertyMapping[EventName.EDITOR_LOAD];
-export type FormatTelemetry = {
-    tool: 'autopep8' | 'black' | 'yapf';
-    hasCustomArgs: boolean;
-    formatSelection: boolean;
-};
 
 export type LanguageServerErrorTelemetry = {
     error: string;
