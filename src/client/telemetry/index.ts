@@ -1201,7 +1201,13 @@ export interface IEventNamePropertyMapping {
      * Telemetry sent when updating Pyspark library
      */
     [EventName.UPDATE_PYSPARK_LIBRARY]: never | undefined;
+    /**
+     * Telemetry sent when building workspace symbols
+     */
     [EventName.WORKSPACE_SYMBOLS_BUILD]: never | undefined;
+    /**
+     * Telemetry sent when providing workspace symbols doing Project-wide search for a symbol matching the given query string
+     */
     [EventName.WORKSPACE_SYMBOLS_GO_TO]: never | undefined;
     // Data Science
     [Telemetry.AddCellBelow]: never | undefined;
