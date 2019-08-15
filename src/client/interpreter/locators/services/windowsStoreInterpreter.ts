@@ -25,10 +25,10 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInter
      * @memberof WindowsStoreInterpreter
      */
     public isWindowsStoreInterpreter(pythonPath: string): boolean {
-        const pythonPathToCompare = pythonPath.toUpperCase();
+        const pythonPathToCompare = pythonPath.toUpperCase().replace(/\//g, '\\');
         return (
             pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\'.toUpperCase()) ||
-            pythonPathToCompare.includes('Program Files\\WindowsApps'.toUpperCase()) ||
+            pythonPathToCompare.includes('\\Program Files\\WindowsApps\\'.toUpperCase()) ||
             pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\PythonSoftwareFoundation'.toUpperCase())
         );
     }
@@ -41,9 +41,9 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInter
      * @memberof IInterpreterHelper
      */
     public isInternalInterpreter(pythonPath: string): boolean {
-        const pythonPathToCompare = pythonPath.toUpperCase();
+        const pythonPathToCompare = pythonPath.toUpperCase().replace(/\//g, '\\');
         return (
-            pythonPathToCompare.includes('Program Files\\WindowsApps'.toUpperCase()) ||
+            pythonPathToCompare.includes('\\Program Files\\WindowsApps\\'.toUpperCase()) ||
             pythonPathToCompare.includes('\\Microsoft\\WindowsApps\\PythonSoftwareFoundation'.toUpperCase())
         );
     }

@@ -27,6 +27,36 @@ suite('Interpreters - Windows Store Interpreter', () => {
         executionFactory = mock(PythonExecutionFactory);
         windowsStoreInterpreter = new WindowsStoreInterpreter(instance(executionFactory), instance(persistanceStateFactory), instance(fs));
     });
+    const windowsStoreInterpreters = [
+        'C:\\Program Files\\WindowsApps\\Something\\Python.exe',
+        'C:\\Program Files\\WindowsApps\\Python.exe',
+        'C:\\Program Files\\python\\Python.exe',
+        'D:\\program files\\WindowsApps\\Something\\Python.exe',
+        'D:\\program files\\WindowsApps\\Python.exe',
+        'D:\\program files\\python\\Python.exe',
+        'C:\\Program Files\\python\\Python.exe',
+        'C:\\Microsoft\\WindowsApps\\Something\\Python.exe',
+        'C:\\Microsoft\\WindowsApps\\Python.exe',
+        'C:\\Microsoft\\python\\Python.exe',
+        'D:\\microsoft\\WindowsApps\\Something\\Python.exe',
+        'D:\\microsoft\\WindowsApps\\Python.exe',
+        'D:\\microsoft\\python\\Python.exe',
+        'C:\\Microsoft\\python\\Python.exe',
+        'C:\\Microsoft\\WindowsApps\\PythonSoftwareFoundation\\Python.exe',
+        'C:\\Microsoft\\WindowsApps\\PythonSoftwareFoundation\\Python.exe',
+        'C:\\Microsoft\\WindowsApps\\PythonSoftwareFoundation\\Python.exe',
+        'D:\\microsoft\\WindowsApps\\PythonSoftwareFoundation\\Something\\Python.exe',
+        'D:\\microsoft\\WindowsApps\\PythonSoftwareFoundation\\Python.exe',
+        'D:\\Microsoft\\WindowsApps\\PythonSoftwareFoundation\\python\\Python.exe',
+        'C:\\Microsoft\\WindowsApps\\PythonSoftwareFoundation\\Python.exe'
+    ];
+    for (const interpreter of windowsStoreInterpreters) {
+        test(`${interpreter} must be identified as a windows store interpter`, () => {
+            const isWindowsStoreInterpreter = windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter);
+            expect(isWindowsStoreInterpreter).to.equal(true, 'Must be true');
+        });
+    }
+
     const interpreters = [
         {
             path: 'C:\\Program Files\\WindowsApps\\Something\\Python.exe',
