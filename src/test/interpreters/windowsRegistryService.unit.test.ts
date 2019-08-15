@@ -26,7 +26,7 @@ suite('Interpreters from Windows Registry (unit)', () => {
         const pathUtils = TypeMoq.Mock.ofType<IPathUtils>();
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         windowsStoreInterpreter = TypeMoq.Mock.ofType<IWindowsStoreInterpreter>();
-        windowsStoreInterpreter.setup(w => w.isInternalInterpreter(TypeMoq.It.isAny())).returns(() => false);
+        windowsStoreInterpreter.setup(w => w.isHiddenInterpreter(TypeMoq.It.isAny())).returns(() => false);
         windowsStoreInterpreter.setup(w => w.isWindowsStoreInterpreter(TypeMoq.It.isAny())).returns(() => false);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory))).returns(() => stateFactory.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterHelper))).returns(() => interpreterHelper.object);
@@ -155,7 +155,7 @@ suite('Interpreters from Windows Registry (unit)', () => {
         windowsStoreInterpreter.reset();
         const expectedPythonPath = path.join(environmentsPath, 'path1', 'python.exe');
         windowsStoreInterpreter
-            .setup(w => w.isInternalInterpreter(TypeMoq.It.isValue(expectedPythonPath)))
+            .setup(w => w.isHiddenInterpreter(TypeMoq.It.isValue(expectedPythonPath)))
             .returns(() => false)
             .verifiable(TypeMoq.Times.atLeastOnce());
         windowsStoreInterpreter
@@ -184,7 +184,7 @@ suite('Interpreters from Windows Registry (unit)', () => {
         windowsStoreInterpreter.reset();
         const expectedPythonPath = path.join(environmentsPath, 'path1', 'python.exe');
         windowsStoreInterpreter
-            .setup(w => w.isInternalInterpreter(TypeMoq.It.isValue(expectedPythonPath)))
+            .setup(w => w.isHiddenInterpreter(TypeMoq.It.isValue(expectedPythonPath)))
             .returns(() => true)
             .verifiable(TypeMoq.Times.atLeastOnce());
 

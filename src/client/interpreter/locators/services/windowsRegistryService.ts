@@ -135,7 +135,7 @@ export class WindowsRegistryService extends CacheableLocatorService {
                         ? interpreterInfo.executablePath
                         : path.join(interpreterInfo.installPath, DefaultPythonExecutable);
 
-                if (this.windowsStoreInterpreter.isInternalInterpreter(executablePath)) {
+                if (this.windowsStoreInterpreter.isHiddenInterpreter(executablePath)) {
                     return;
                 }
                 const helper = this.serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);

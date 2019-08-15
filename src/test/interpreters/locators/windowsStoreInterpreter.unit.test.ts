@@ -28,150 +28,78 @@ suite('Interpreters - Windows Store Interpreter', () => {
         windowsStoreInterpreter = new WindowsStoreInterpreter(instance(executionFactory), instance(persistanceStateFactory), instance(fs));
     });
     const windowsStoreInterpreters = [
+        '\\\\Program Files\\WindowsApps\\Something\\Python.exe',
+        '..\\Program Files\\WindowsApps\\Something\\Python.exe',
+        '..\\one\\Program Files\\WindowsApps\\Something\\Python.exe',
         'C:\\Program Files\\WindowsApps\\Something\\Python.exe',
         'C:\\Program Files\\WindowsApps\\Python.exe',
-        'C:\\Program Files\\python\\Python.exe',
-        'D:\\program files\\WindowsApps\\Something\\Python.exe',
-        'D:\\program files\\WindowsApps\\Python.exe',
-        'D:\\program files\\python\\Python.exe',
-        'C:\\Program Files\\python\\Python.exe',
         'C:\\Microsoft\\WindowsApps\\Something\\Python.exe',
         'C:\\Microsoft\\WindowsApps\\Python.exe',
-        'C:\\Microsoft\\python\\Python.exe',
-        'D:\\microsoft\\WindowsApps\\Something\\Python.exe',
-        'D:\\microsoft\\WindowsApps\\Python.exe',
-        'D:\\microsoft\\python\\Python.exe',
-        'C:\\Microsoft\\python\\Python.exe',
         'C:\\Microsoft\\WindowsApps\\PythonSoftwareFoundation\\Python.exe',
-        'C:\\Microsoft\\WindowsApps\\PythonSoftwareFoundation\\Python.exe',
-        'C:\\Microsoft\\WindowsApps\\PythonSoftwareFoundation\\Python.exe',
-        'D:\\microsoft\\WindowsApps\\PythonSoftwareFoundation\\Something\\Python.exe',
-        'D:\\microsoft\\WindowsApps\\PythonSoftwareFoundation\\Python.exe',
-        'D:\\Microsoft\\WindowsApps\\PythonSoftwareFoundation\\python\\Python.exe',
-        'C:\\Microsoft\\WindowsApps\\PythonSoftwareFoundation\\Python.exe'
+        'C:\\microsoft\\WindowsApps\\PythonSoftwareFoundation\\Something\\Python.exe'
     ];
     for (const interpreter of windowsStoreInterpreters) {
         test(`${interpreter} must be identified as a windows store interpter`, () => {
-            const isWindowsStoreInterpreter = windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter);
-            expect(isWindowsStoreInterpreter).to.equal(true, 'Must be true');
+            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter)).to.equal(true, 'Must be true');
+        });
+        test(`${interpreter.toLowerCase()} must be identified as a windows store interpter (ignoring case)`, () => {
+            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.toLowerCase())).to.equal(true, 'Must be true');
+            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.toUpperCase())).to.equal(true, 'Must be true');
+        });
+        test(`D${interpreter.substring(1)} must be identified as a windows store interpter (ignoring driver letter)`, () => {
+            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(`D${interpreter.substring(1)}`)).to.equal(true, 'Must be true');
+        });
+        test(`${interpreter.replace(/\\/g, '/')} must be identified as a windows store interpter (ignoring path separator)`, () => {
+            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.replace(/\\/g, '/'))).to.equal(true, 'Must be true');
         });
     }
-
-    const interpreters = [
-        {
-            path: 'C:\\Program Files\\WindowsApps\\Something\\Python.exe',
-            isWindowsStoreInterpreter: true,
-            isInternalInterpreter: true
-        },
-        {
-            path: 'C:\\Program Files\\WindowsApps\\Python.exe',
-            isWindowsStoreInterpreter: true,
-            isInternalInterpreter: true
-        },
-        {
-            path: 'C:\\Program Files\\python\\Python.exe',
-            isWindowsStoreInterpreter: false,
-            isInternalInterpreter: false
-        },
-        {
-            path: 'D:\\program files\\WindowsApps\\Something\\Python.exe',
-            isWindowsStoreInterpreter: true,
-            isInternalInterpreter: true
-        },
-        {
-            path: 'D:\\program files\\WindowsApps\\Python.exe',
-            isWindowsStoreInterpreter: true,
-            isInternalInterpreter: true
-        },
-        {
-            path: 'D:\\program files\\python\\Python.exe',
-            isWindowsStoreInterpreter: false,
-            isInternalInterpreter: false
-        },
-        {
-            path: 'C:\\Program Files\\python\\Python.exe',
-            isWindowsStoreInterpreter: false,
-            isInternalInterpreter: false
-        },
-        {
-            path: 'C:\\Microsoft\\WindowsApps\\Something\\Python.exe',
-            isWindowsStoreInterpreter: true,
-            isInternalInterpreter: false
-        },
-        {
-            path: 'C:\\Microsoft\\WindowsApps\\Python.exe',
-            isWindowsStoreInterpreter: true,
-            isInternalInterpreter: false
-        },
-        {
-            path: 'C:\\Microsoft\\python\\Python.exe',
-            isWindowsStoreInterpreter: false,
-            isInternalInterpreter: false
-        },
-        {
-            path: 'D:\\microsoft\\WindowsApps\\Something\\Python.exe',
-            isWindowsStoreInterpreter: true,
-            isInternalInterpreter: false
-        },
-        {
-            path: 'D:\\microsoft\\WindowsApps\\Python.exe',
-            isWindowsStoreInterpreter: true,
-            isInternalInterpreter: false
-        },
-        {
-            path: 'D:\\microsoft\\python\\Python.exe',
-            isWindowsStoreInterpreter: false,
-            isInternalInterpreter: false
-        },
-        {
-            path: 'C:\\Microsoft\\python\\Python.exe',
-            isWindowsStoreInterpreter: false,
-            isInternalInterpreter: false
-        },
-        {
-            path: 'C:\\Microsoft\\WindowsApps\\PythonSoftwareFoundation\\Python.exe',
-            isWindowsStoreInterpreter: true,
-            isInternalInterpreter: true
-        },
-        {
-            path: 'C:\\Microsoft\\WindowsApps\\PythonSoftwareFoundation\\Python.exe',
-            isWindowsStoreInterpreter: true,
-            isInternalInterpreter: true
-        },
-        {
-            path: 'C:\\Microsoft\\WindowsApps\\PythonSoftwareFoundation\\Python.exe',
-            isWindowsStoreInterpreter: true,
-            isInternalInterpreter: true
-        },
-        {
-            path: 'D:\\microsoft\\WindowsApps\\PythonSoftwareFoundation\\Something\\Python.exe',
-            isWindowsStoreInterpreter: true,
-            isInternalInterpreter: true
-        },
-        {
-            path: 'D:\\microsoft\\WindowsApps\\PythonSoftwareFoundation\\Python.exe',
-            isWindowsStoreInterpreter: true,
-            isInternalInterpreter: true
-        },
-        {
-            path: 'D:\\Microsoft\\WindowsApps\\PythonSoftwareFoundation\\python\\Python.exe',
-            isWindowsStoreInterpreter: true,
-            isInternalInterpreter: true
-        },
-        {
-            path: 'C:\\Microsoft\\WindowsApps\\PythonSoftwareFoundation\\Python.exe',
-            isWindowsStoreInterpreter: true,
-            isInternalInterpreter: true
-        }
+    const nonWindowsStoreInterpreters = [
+        '..\\Program Filess\\WindowsApps\\Something\\Python.exe',
+        'C:\\Program Filess\\WindowsApps\\Something\\Python.exe',
+        'C:\\Program Files\\WindowsAppss\\Python.exe',
+        'C:\\Microsofts\\WindowsApps\\Something\\Python.exe',
+        'C:\\Microsoft\\WindowsAppss\\Python.exe',
+        'C:\\Microsofts\\WindowsApps\\PythonSoftwareFoundation\\Python.exe',
+        'C:\\microsoft\\WindowsAppss\\PythonSoftwareFoundation\\Something\\Python.exe',
+        'C:\\Python\\python.exe',
+        'C:\\Program Files\\Python\\python.exe',
+        'C:\\Program Files\\Microsoft\\Python\\python.exe',
+        '..\\apps\\Python.exe',
+        'C:\\Apps\\Python.exe'
     ];
-    for (const interpreter of interpreters) {
-        test(`${interpreter.path} must ${interpreter.isWindowsStoreInterpreter ? 'be' : 'not be'} identified as a windows store interpter`, () => {
-            const isWindowsStoreInterpreter = windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.path);
-            expect(isWindowsStoreInterpreter).to.equal(interpreter.isWindowsStoreInterpreter);
+    for (const interpreter of nonWindowsStoreInterpreters) {
+        test(`${interpreter} must not be identified as a windows store interpter`, () => {
+            expect(windowsStoreInterpreter.isHiddenInterpreter(interpreter)).to.equal(false, 'Must be false');
+            expect(windowsStoreInterpreter.isHiddenInterpreter(interpreter.replace(/\\/g, '/'))).to.equal(false, 'Must be false');
+            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter)).to.equal(false, 'Must be false');
+            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.replace(/\\/g, '/'))).to.equal(false, 'Must be false');
+            expect(windowsStoreInterpreter.isHiddenInterpreter(interpreter.toLowerCase())).to.equal(false, 'Must be false');
+            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.toUpperCase())).to.equal(false, 'Must be false');
+            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(`D${interpreter.substring(1)}`)).to.equal(false, 'Must be false');
         });
-        test(`${interpreter.path} must ${interpreter.isInternalInterpreter ? 'be' : 'not be'} identified as an internal windows store interpter`, () => {
-            const isWindowsStoreInterpreter = windowsStoreInterpreter.isInternalInterpreter(interpreter.path);
-            expect(isWindowsStoreInterpreter).to.equal(interpreter.isInternalInterpreter);
+    }
+    const windowsStoreHiddenInterpreters = [
+        'C:\\Program Files\\WindowsApps\\Something\\Python.exe',
+        'C:\\Program Files\\WindowsApps\\Python.exe',
+        'C:\\Microsoft\\WindowsApps\\PythonSoftwareFoundation\\Python.exe',
+        'C:\\microsoft\\WindowsApps\\PythonSoftwareFoundation\\Something\\Python.exe'
+    ];
+    for (const interpreter of windowsStoreHiddenInterpreters) {
+        test(`${interpreter} must be identified as a windows store (hidden) interpter`, () => {
+            expect(windowsStoreInterpreter.isHiddenInterpreter(interpreter)).to.equal(true, 'Must be true');
+        });
+        test(`${interpreter.toLowerCase()} must be identified as a windows store (hidden) interpter (ignoring case)`, () => {
+            expect(windowsStoreInterpreter.isHiddenInterpreter(interpreter.toLowerCase())).to.equal(true, 'Must be true');
+            expect(windowsStoreInterpreter.isHiddenInterpreter(interpreter.toUpperCase())).to.equal(true, 'Must be true');
+        });
+        test(`${interpreter} must be identified as a windows store (hidden) interpter (ignoring driver letter)`, () => {
+            expect(windowsStoreInterpreter.isHiddenInterpreter(`D${interpreter.substring(1)}`)).to.equal(true, 'Must be true');
+        });
+    }
+    const nonWindowsStoreHiddenInterpreters = ['C:\\Microsofts\\WindowsApps\\Something\\Python.exe', 'C:\\Microsoft\\WindowsAppss\\Python.exe'];
+    for (const interpreter of nonWindowsStoreHiddenInterpreters) {
+        test(`${interpreter} must not be identified as a windows store (hidden) interpter`, () => {
+            expect(windowsStoreInterpreter.isHiddenInterpreter(interpreter)).to.equal(false, 'Must be true');
         });
     }
 

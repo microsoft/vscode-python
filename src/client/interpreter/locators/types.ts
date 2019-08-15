@@ -60,5 +60,5 @@ export interface IWindowsStoreInterpreter {
      * @returns {boolean}
      * @memberof IInterpreterHelper
      */
-    isInternalInterpreter(pythonPath: string): boolean;
+    isHiddenInterpreter(pythonPath: string): boolean;
 }
