@@ -32,6 +32,7 @@ import {
     PythonInterpreter
 } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
+import { IInterpreterHashProviderFactory } from '../../client/interpreter/locators/types';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
@@ -56,6 +57,7 @@ suite('Interpreters service', () => {
     let pythonExecutionService: TypeMoq.IMock<IPythonExecutionService>;
     let configService: TypeMoq.IMock<IConfigurationService>;
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
+    let hashProviderFactory: TypeMoq.IMock<IInterpreterHashProviderFactory>;
 
     function setupSuite() {
         const cont = new Container();
@@ -74,6 +76,7 @@ suite('Interpreters service', () => {
         pythonExecutionFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
         pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
+        hashProviderFactory = TypeMoq.Mock.ofType<IInterpreterHashProviderFactory>();
 
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
         pythonSettings.setup(s => s.pythonPath).returns(() => PYTHON_PATH);
@@ -119,7 +122,7 @@ suite('Interpreters service', () => {
                         .returns(() => Promise.resolve(undefined))
                         .verifiable(TypeMoq.Times.once());
 
-                    const service = new InterpreterService(serviceContainer);
+                    const service = new InterpreterService(serviceContainer, hashProviderFactory.object);
                     await service.refresh(resource);
 
                     interpreterDisplay.verifyAll();
@@ -131,7 +134,7 @@ suite('Interpreters service', () => {
                         .returns(() => Promise.resolve([]))
                         .verifiable(TypeMoq.Times.once());
 
-                    const service = new InterpreterService(serviceContainer);
+                    const service = new InterpreterService(serviceContainer, hashProviderFactory.object);
                     await service.getInterpreters(resource);
 
                     locator.verifyAll();
@@ -139,7 +142,7 @@ suite('Interpreters service', () => {
             });
 
         test('Changes to active document should invoke interpreter.refresh method', async () => {
-            const service = new InterpreterService(serviceContainer);
+            const service = new InterpreterService(serviceContainer, hashProviderFactory.object);
             const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
             let activeTextEditorChangeHandler: Function | undefined;
@@ -162,7 +165,7 @@ suite('Interpreters service', () => {
         });
 
         test('If there is no active document then interpreter.refresh should not be invoked', async () => {
-            const service = new InterpreterService(serviceContainer);
+            const service = new InterpreterService(serviceContainer, hashProviderFactory.object);
             const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
             let activeTextEditorChangeHandler: Function | undefined;
@@ -187,7 +190,7 @@ suite('Interpreters service', () => {
             .forEach(resource => {
                 test(`Ensure undefined is returned if we're unable to retrieve interpreter info (Resource is ${resource})`, async () => {
                     const pythonPath = 'SOME VALUE';
-                    const service = new InterpreterService(serviceContainer);
+                    const service = new InterpreterService(serviceContainer, hashProviderFactory.object);
                     locator
                         .setup(l => l.getInterpreters(TypeMoq.It.isValue(resource)))
                         .returns(() => Promise.resolve([]))
@@ -246,7 +249,7 @@ suite('Interpreters service', () => {
                 })
                 .verifiable(TypeMoq.Times.once());
 
-            const service = new InterpreterService(serviceContainer);
+            const service = new InterpreterService(serviceContainer, hashProviderFactory.object);
             const displayName = await service.getDisplayName(interpreterInfo, undefined);
 
             expect(displayName).to.equal(expectedDisplayName);
@@ -273,7 +276,7 @@ suite('Interpreters service', () => {
                 })
                 .verifiable(TypeMoq.Times.once());
 
-            const service = new InterpreterService(serviceContainer);
+            const service = new InterpreterService(serviceContainer, hashProviderFactory.object);
             const displayName = await service.getDisplayName(interpreterInfo, undefined).catch(() => '');
 
             expect(displayName).to.not.equal(expectedDisplayName);
@@ -324,7 +327,7 @@ suite('Interpreters service', () => {
                                                 .returns(() => `${interpreterType!.name}_display`);
                                         }
 
-                                        const service = new InterpreterService(serviceContainer);
+                                        const service = new InterpreterService(serviceContainer, hashProviderFactory.object);
                                         const expectedDisplayName = buildDisplayName(interpreterInfo);
 
                                         const displayName = await service.getDisplayName(interpreterInfo, resource);
@@ -404,7 +407,7 @@ suite('Interpreters service', () => {
                 .returns(() => state.object)
                 .verifiable(TypeMoq.Times.once());
 
-            const service = new InterpreterService(serviceContainer);
+            const service = new InterpreterService(serviceContainer, hashProviderFactory.object);
 
             const store = await service.getInterpreterCache(pythonPath);
 
@@ -444,7 +447,7 @@ suite('Interpreters service', () => {
                 .returns(() => state.object)
                 .verifiable(TypeMoq.Times.once());
 
-            const service = new InterpreterService(serviceContainer);
+            const service = new InterpreterService(serviceContainer, hashProviderFactory.object);
 
             const store = await service.getInterpreterCache(pythonPath);
 
