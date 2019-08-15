@@ -14,6 +14,7 @@ import { traceInfo } from '../common/logger';
 import { TerminalShellType } from '../common/terminal/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { Telemetry } from '../datascience/constants';
+import { DebugConfigurationType } from '../debugger/extension/types';
 import { ConsoleType } from '../debugger/types';
 import { AutoSelectionRule } from '../interpreter/autoSelection/types';
 import { InterpreterType } from '../interpreter/contracts';
@@ -21,10 +22,6 @@ import { LinterId } from '../linters/types';
 import { TestProvider } from '../testing/common/types';
 import { EventName, PlatformErrors } from './constants';
 import {
-    DebuggerConfigurationPromtpsTelemetry,
-    LanguageServePlatformSupported,
-    LanguageServerErrorTelemetry,
-    LinterSelectionTelemetry,
     LinterTrigger,
     TestTool
 } from './types';
@@ -395,7 +392,42 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when attaching to child process
      */
     [EventName.DEBUGGER_ATTACH_TO_CHILD_PROCESS]: never | undefined;
-    [EventName.DEBUGGER_CONFIGURATION_PROMPTS]: DebuggerConfigurationPromtpsTelemetry;
+    /**
+     * Telemetry sent after building configuration for debugger
+     */
+    [EventName.DEBUGGER_CONFIGURATION_PROMPTS]: {
+        /**
+         * The type of debug configuration to build configuration fore
+         *
+         * @type {DebugConfigurationType}
+         */
+        configurationType: DebugConfigurationType;
+        /**
+         * Carries `true` if we are able to auto-detect manage.py path for Django, `false` otherwise
+         *
+         * @type {boolean}
+         */
+        autoDetectedDjangoManagePyPath?: boolean;
+        /**
+         * Carries `true` if we are able to auto-detect .ini file path for Pyramid, `false` otherwise
+         *
+         * @type {boolean}
+         */
+        autoDetectedPyramidIniPath?: boolean;
+        /**
+         * Carries `true` if we are able to auto-detect app.py path for Flask, `false` otherwise
+         *
+         * @type {boolean}
+         */
+        autoDetectedFlaskAppPyPath?: boolean;
+        /**
+         * Carries `true` if user manually entered the required path for the app
+         * (path to `manage.py` for Django, path to `.ini` for Pyramid, path to `app.py` for Flask), `false` otherwise
+         *
+         * @type {boolean}
+         */
+        manuallyEnteredAValue?: boolean;
+    };
     /**
      * Telemetry event sent when providing completion provider in launch.json. It is sent just *after* inserting the completion.
      */
@@ -864,7 +896,12 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent with details when downloading or extracting LS fails
      */
-    [EventName.PYTHON_LANGUAGE_SERVER_ERROR]: LanguageServerErrorTelemetry;
+    [EventName.PYTHON_LANGUAGE_SERVER_ERROR]: {
+        /**
+         * The error associated with initializing language server
+         */
+        error: string;
+    };
     /**
      * Telemetry event sent with details after attempting to extract LS
      */
@@ -889,7 +926,20 @@ export interface IEventNamePropertyMapping {
     /**
      * Tracks if LS is supported on platform or not
      */
-    [EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED]: LanguageServePlatformSupported;
+    [EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED]: {
+        /**
+         * Carries `true` if LS is supported, `false` otherwise
+         *
+         * @type {boolean}
+         */
+        supported: boolean;
+        /**
+         * If checking support for LS failed
+         *
+         * @type {'UnknownError'}
+         */
+        failureType?: 'UnknownError';
+    };
     /**
      * Telemetry event sent when LS is ready to start
      */
@@ -950,7 +1000,16 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent with details of linter selected in quickpick of linter list.
      */
-    [EventName.SELECT_LINTER]: LinterSelectionTelemetry;
+    [EventName.SELECT_LINTER]: {
+        /**
+         * The name of the linter
+         */
+        tool?: LinterId;
+        /**
+         * Carries `true` if linter is enabled, `false` otherwise
+         */
+        enabled: boolean;
+    };
     /**
      * Telemetry event sent with details when clicking the prompt with the following message,
      * `Prompt message` :- 'You have a pylintrc file in your workspace. Do you want to enable pylint?'
