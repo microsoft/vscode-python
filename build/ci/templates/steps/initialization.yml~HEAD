@@ -11,11 +11,13 @@
 #   Working directory.
 # 2. PythonVersion
 #   Python version to be used.
+#   If not provided, python will not be setup on CI.
 parameters:
   workingDirectory: ''
   PythonVersion: ''
   compile: 'true'
   sqlite: 'false'
+  installVSCEorNPX: 'true'
 
 steps:
     - bash: |
@@ -24,9 +26,9 @@ steps:
       condition: eq(variables['system.debug'], 'true')
 
     - task: NodeTool@0
-      displayName: "Use Node 10.5.0"
+      displayName: "Use Node $(NodeVersion)"
       inputs:
-          versionSpec: '10.5.0'
+          versionSpec: $(NodeVersion)
 
     - task: UsePythonVersion@0
       displayName: "Use Python ${{ parameters.PythonVersion }}"
@@ -55,11 +57,11 @@ steps:
       condition: and(succeeded(), eq('${{ parameters.sqlite }}', 'true'), not(eq('${{ parameters.PythonVersion }}', '')), not(eq('${{ parameters.PythonVersion }}', '2.7')), eq(variables['Agent.Os'], 'Linux'))
 
     - task: Npm@1
-      displayName: "Use NPM latest"
+      displayName: "Use NPM $(NpmVersion)"
       inputs:
           command: custom
           verbose: true
-          customCommand: "install -g npm@latest"
+          customCommand: "install -g npm@$(NpmVersion)"
 
     - task: Npm@1
       displayName: "npm ci"
@@ -83,6 +85,7 @@ steps:
           npm install -g vsce
           npm install -g npx
       displayName: "Install vsce & npx"
+      condition: and(succeeded(), eq('${{ parameters.installVSCEorNPX }}', 'true'))
 
     - bash: npx tsc -p ./
       displayName: "compile (npx tsc -p ./)"

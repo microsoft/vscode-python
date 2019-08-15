@@ -17,7 +17,6 @@ parameters:
   PythonVersion: ''
   compile: 'true'
   sqlite: 'false'
-  installVSCEorNPX: 'true'
 
 steps:
     - bash: |
@@ -57,13 +56,6 @@ steps:
       condition: and(succeeded(), eq('${{ parameters.sqlite }}', 'true'), not(eq('${{ parameters.PythonVersion }}', '')), not(eq('${{ parameters.PythonVersion }}', '2.7')), eq(variables['Agent.Os'], 'Linux'))
 
     - task: Npm@1
-      displayName: "Use NPM $(NpmVersion)"
-      inputs:
-          command: custom
-          verbose: true
-          customCommand: "install -g npm@$(NpmVersion)"
-
-    - task: Npm@1
       displayName: "npm ci"
       inputs:
           workingDir: ${{ parameters.workingDirectory }}
@@ -85,7 +77,6 @@ steps:
           npm install -g vsce
           npm install -g npx
       displayName: "Install vsce & npx"
-      condition: and(succeeded(), eq('${{ parameters.installVSCEorNPX }}', 'true'))
 
     - bash: npx tsc -p ./
       displayName: "compile (npx tsc -p ./)"

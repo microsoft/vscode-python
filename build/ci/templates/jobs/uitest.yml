@@ -93,36 +93,33 @@ parameters:
   vscodeChannels: ['stable', 'insider']
   pythonVersions: [
       {
-          "version": "3.7",
+          "version": "$(PythonVersion)",
           "displayName": "37",
           "excludeTags": "not @python3.6 and not @python3.5 and not @python2"
       },
       {
           "version": "3.6",
           "displayName": "36",
-          "excludeTags": "not @python3.7 and not @python3.5 and not @python2"
+          "excludeTags": "not @python3.7 and not @python3.5 and not @python2 and not @noNeedToTestInAllPython"
       },
       {
           "version": "3.5",
           "displayName": "35",
-          "excludeTags": "not @python3.7 and not @python3.6 and not @python2"
+          "excludeTags": "not @python3.7 and not @python3.6 and not @python2 and not @noNeedToTestInAllPython"
       },
       {
           "version": "2.7",
           "displayName": "27",
-          "excludeTags": "not @python3.7 and not @python3.5 and not @python3"
+          "excludeTags": "not @python3.7 and not @python3.5 and not @python3 and not @noNeedToTestInAllPython"
       }
     ]
 
 
 jobs:
 - job: UITest
-#   dependsOn:
-#     - Compile
-#     - Build
   # Remember, some tests can take easily an hour (the `tests` features take just around 1 hour).
   timeoutInMinutes: 90
-  # Build our matrix (permutations of all environments & tests).
+  # Build our matrix (permutations of VS Code + Tests + Pyhton + OS).
   strategy:
     matrix:
       ${{ each channel in parameters.vscodeChannels }}:
@@ -154,4 +151,4 @@ jobs:
     vmImage: $(VMImageName)
 
   steps:
-    - template: uitest_phases.yml
+    - template: ../steps/uitest.yml

@@ -53,7 +53,7 @@ steps:
           versionSpec: 3.7
 
     # Setup python environment in current path for extension to use.
-    - template: initialization_steps.yml
+    - template: initialization.yml
       parameters:
         PythonVersion: $(PythonVersion)
         workingDirectory: $(Build.SourcesDirectory)/uitests
