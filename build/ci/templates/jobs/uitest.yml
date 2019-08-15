@@ -93,7 +93,7 @@ parameters:
   vscodeChannels: ['stable', 'insider']
   pythonVersions: [
       {
-          "version": "$(PythonVersion)",
+          "version": "3.7.4",
           "displayName": "37",
           "excludeTags": "not @python3.6 and not @python3.5 and not @python2"
       },
