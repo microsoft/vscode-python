@@ -15,21 +15,17 @@ import { TerminalShellType } from '../common/terminal/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { Telemetry } from '../datascience/constants';
 import { ConsoleType } from '../debugger/types';
+import { AutoSelectionRule } from '../interpreter/autoSelection/types';
 import { InterpreterType } from '../interpreter/contracts';
 import { LinterId } from '../linters/types';
 import { TestProvider } from '../testing/common/types';
-import { EventName } from './constants';
+import { EventName, PlatformErrors } from './constants';
 import {
     DebuggerConfigurationPromtpsTelemetry,
-    InterpreterActivation,
-    InterpreterActivationEnvironmentVariables,
-    InterpreterAutoSelection,
     LanguageServePlatformSupported,
     LanguageServerErrorTelemetry,
     LinterSelectionTelemetry,
-    LintingTelemetry,
-    Platform,
-    PythonInterpreterTelemetry,
+    LinterTrigger,
     TestTool
 } from './types';
 
@@ -593,14 +589,202 @@ export interface IEventNamePropertyMapping {
          */
         action: 'select' | 'disablePrompt' | 'install';
     };
-    [EventName.PYTHON_INSTALL_PACKAGE]: { installer: string };
-    [EventName.LINTING]: LintingTelemetry;
-    [EventName.PLATFORM_INFO]: Platform;
-    [EventName.PYTHON_INTERPRETER]: PythonInterpreterTelemetry;
-    [EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES]: InterpreterActivationEnvironmentVariables;
-    [EventName.PYTHON_INTERPRETER_ACTIVATION_FOR_RUNNING_CODE]: InterpreterActivation;
-    [EventName.PYTHON_INTERPRETER_ACTIVATION_FOR_TERMINAL]: InterpreterActivation;
-    [EventName.PYTHON_INTERPRETER_AUTO_SELECTION]: InterpreterAutoSelection;
+    /**
+     * Telemetry event sent when installing modules
+     */
+    [EventName.PYTHON_INSTALL_PACKAGE]: {
+        /**
+         * The name of the module. (pipenv, Conda etc.)
+         *
+         * @type {string}
+         */
+        installer: string;
+    };
+    /**
+     * Telemetry sent with details immediately after linting a document completes
+     */
+    [EventName.LINTING]: {
+        /**
+         * Name of the linter being used
+         *
+         * @type {LinterId}
+         */
+        tool: LinterId;
+        /**
+         * If custom arguments for linter is provided in settings.json
+         *
+         * @type {boolean}
+         */
+        hasCustomArgs: boolean;
+        /**
+         * Carries the source which triggered configuration of tests
+         *
+         * @type {LinterTrigger}
+         */
+        trigger: LinterTrigger;
+        /**
+         * Carries `true` if linter executable is specified, `false` otherwise
+         *
+         * @type {boolean}
+         */
+        executableSpecified: boolean;
+    };
+    /**
+     * Telemetry event sent after fetching the OS version
+     */
+    [EventName.PLATFORM_INFO]: {
+        /**
+         * If fetching OS version fails, list the failure type
+         *
+         * @type {PlatformErrors}
+         */
+        failureType?: PlatformErrors;
+        /**
+         * The OS version of the platform
+         *
+         * @type {string}
+         */
+        osVersion?: string;
+    };
+    /**
+     * Telemetry event sent with details after updating the python interpreter
+     */
+    [EventName.PYTHON_INTERPRETER]: {
+        /**
+         * Carries the source which triggered the update
+         *
+         * @type {('ui' | 'shebang' | 'load')}
+         */
+        trigger: 'ui' | 'shebang' | 'load';
+        /**
+         * Carries `true` if updating python interpreter failed
+         *
+         * @type {boolean}
+         */
+        failed: boolean;
+        /**
+         * The python version of the interpreter
+         *
+         * @type {string}
+         */
+        pythonVersion?: string;
+        /**
+         * The version of pip module installed in the python interpreter
+         *
+         * @type {string}
+         */
+        pipVersion?: string;
+    };
+    [EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES]: {
+        /**
+         * Carries `true` if environment variables are present, `false` otherwise
+         *
+         * @type {boolean}
+         */
+        hasEnvVars?: boolean;
+        /**
+         * Carries `true` if fetching environment variables failed, `false` otherwise
+         *
+         * @type {boolean}
+         */
+        failed?: boolean;
+    };
+    /**
+     * Telemetry event sent when getting activation commands for active interpreter
+     */
+    [EventName.PYTHON_INTERPRETER_ACTIVATION_FOR_RUNNING_CODE]: {
+        /**
+         * Carries `true` if activation commands exists for interpreter, `false` otherwise
+         *
+         * @type {boolean}
+         */
+        hasCommands?: boolean;
+        /**
+         * Carries `true` if fetching activation commands for interpreter failed, `false` otherwise
+         *
+         * @type {boolean}
+         */
+        failed?: boolean;
+        /**
+         * The type of terminal shell to activate
+         *
+         * @type {TerminalShellType}
+         */
+        terminal: TerminalShellType;
+        /**
+         * The Python interpreter version of the active interpreter for the resource
+         *
+         * @type {string}
+         */
+        pythonVersion?: string;
+        /**
+         * The type of the interpreter used
+         *
+         * @type {InterpreterType}
+         */
+        interpreterType: InterpreterType;
+    };
+    /**
+     * Telemetry event sent when getting activation commands for terminal when interpreter is not specified
+     */
+    [EventName.PYTHON_INTERPRETER_ACTIVATION_FOR_TERMINAL]: {
+        /**
+         * Carries `true` if activation commands exists for terminal, `false` otherwise
+         *
+         * @type {boolean}
+         */
+        hasCommands?: boolean;
+        /**
+         * Carries `true` if fetching activation commands for terminal failed, `false` otherwise
+         *
+         * @type {boolean}
+         */
+        failed?: boolean;
+        /**
+         * The type of terminal shell to activate
+         *
+         * @type {TerminalShellType}
+         */
+        terminal: TerminalShellType;
+        /**
+         * The Python interpreter version of the interpreter for the resource
+         *
+         * @type {string}
+         */
+        pythonVersion?: string;
+        /**
+         * The type of the interpreter used
+         *
+         * @type {InterpreterType}
+         */
+        interpreterType: InterpreterType;
+    };
+    [EventName.PYTHON_INTERPRETER_AUTO_SELECTION]: {
+        /**
+         * The rule used to auto-select the interpreter
+         *
+         * @type {AutoSelectionRule}
+         */
+        rule?: AutoSelectionRule;
+        /**
+         * If cached interpreter no longer exists or is invalid
+         *
+         * @type {boolean}
+         */
+        interpreterMissing?: boolean;
+        /**
+         * Carries `true` if next rule is identified for autoselecting interpreter
+         *
+         * @type {boolean}
+         */
+        identified?: boolean;
+        /**
+         * Carries `true` if cached interpreter is updated to use the current interpreter, `false` otherwise
+         *
+         * @type {boolean}
+         */
+        updated?: boolean;
+    };
     /**
      * Sends information regarding discovered python environments (virtualenv, conda, pipenv etc.)
      */
@@ -743,17 +927,20 @@ export interface IEventNamePropertyMapping {
          */
         selection: 'Yes' | 'Maybe later' | 'Do not show again' | undefined;
     };
+    /**
+     * Telemetry event sent when 'Extract Method' command is invoked
+     */
     [EventName.REFACTOR_EXTRACT_FUNCTION]: never | undefined;
     /**
-     * Telemetry event sent when executing `Extract variable` command
+     * Telemetry event sent when 'Extract Variable' command is invoked
      */
     [EventName.REFACTOR_EXTRACT_VAR]: never | undefined;
     /**
-     * Telemetry event sent when providing an edit that describes changes that have to be made to one or many resources to rename a symbol to a different name.
+     * Telemetry event sent when providing an edit that describes changes to rename a symbol to a different name
      */
     [EventName.REFACTOR_RENAME]: never | undefined;
     /**
-     * Telemetry event sent when providing a set of project-wide references for the given position and document.
+     * Telemetry event sent when providing a set of project-wide references for the given position and document
      */
     [EventName.REFERENCE]: never | undefined;
     /**

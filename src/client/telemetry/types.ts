@@ -2,13 +2,10 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { TerminalShellType } from '../common/terminal/types';
 import { DebugConfigurationType } from '../debugger/extension/types';
-import { AutoSelectionRule } from '../interpreter/autoSelection/types';
-import { InterpreterType } from '../interpreter/contracts';
 import { LinterId } from '../linters/types';
 import { IEventNamePropertyMapping } from '../telemetry/index';
-import { EventName, PlatformErrors } from './constants';
+import { EventName } from './constants';
 
 export type EditorLoadTelemetry = IEventNamePropertyMapping[EventName.EDITOR_LOAD];
 
@@ -23,24 +20,14 @@ export type LanguageServePlatformSupported = {
 
 export type LinterTrigger = 'auto' | 'save';
 
-export type LintingTelemetry = {
-    tool: LinterId;
-    hasCustomArgs: boolean;
-    trigger: LinterTrigger;
-    executableSpecified: boolean;
-};
+export type LintingTelemetry = IEventNamePropertyMapping[EventName.LINTING];
 
 export type LinterSelectionTelemetry = {
     tool?: LinterId;
     enabled: boolean;
 };
 
-export type PythonInterpreterTelemetry = {
-    trigger: 'ui' | 'shebang' | 'load';
-    failed: boolean;
-    pythonVersion?: string;
-    pipVersion?: string;
-};
+export type PythonInterpreterTelemetry = IEventNamePropertyMapping[EventName.PYTHON_INTERPRETER];
 export type CodeExecutionTelemetry = IEventNamePropertyMapping[EventName.EXECUTION_CODE];
 export type DebuggerTelemetry = IEventNamePropertyMapping[EventName.DEBUGGER];
 export type DebuggerPerformanceTelemetry = {
@@ -66,31 +53,6 @@ export type DebuggerConfigurationPromtpsTelemetry = {
 };
 export type ImportNotebook = {
     scope: 'command';
-};
-
-export type Platform = {
-    failureType?: PlatformErrors;
-    osVersion?: string;
-};
-
-export type InterpreterAutoSelection = {
-    rule?: AutoSelectionRule;
-    interpreterMissing?: boolean;
-    identified?: boolean;
-    updated?: boolean;
-};
-
-export type InterpreterActivationEnvironmentVariables = {
-    hasEnvVars?: boolean;
-    failed?: boolean;
-};
-
-export type InterpreterActivation = {
-    hasCommands?: boolean;
-    failed?: boolean;
-    terminal: TerminalShellType;
-    pythonVersion?: string;
-    interpreterType: InterpreterType;
 };
 
 export const IImportTracker = Symbol('IImportTracker');
