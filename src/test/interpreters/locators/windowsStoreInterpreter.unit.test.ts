@@ -15,17 +15,22 @@ import { PythonExecutionService } from '../../../client/common/process/pythonPro
 import { IPythonExecutionFactory } from '../../../client/common/process/types';
 import { IPersistentStateFactory } from '../../../client/common/types';
 import { WindowsStoreInterpreter } from '../../../client/interpreter/locators/services/windowsStoreInterpreter';
+import { ServiceContainer } from '../../../client/ioc/container';
+import { IServiceContainer } from '../../../client/ioc/types';
 
 suite('Interpreters - Windows Store Interpreter', () => {
     let windowsStoreInterpreter: WindowsStoreInterpreter;
     let fs: IFileSystem;
     let persistanceStateFactory: IPersistentStateFactory;
     let executionFactory: IPythonExecutionFactory;
+    let serviceContainer: IServiceContainer;
     setup(() => {
         fs = mock(FileSystem);
         persistanceStateFactory = mock(PersistentStateFactory);
         executionFactory = mock(PythonExecutionFactory);
-        windowsStoreInterpreter = new WindowsStoreInterpreter(instance(executionFactory), instance(persistanceStateFactory), instance(fs));
+        serviceContainer = mock(ServiceContainer);
+        when(serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)).thenReturn(instance(executionFactory));
+        windowsStoreInterpreter = new WindowsStoreInterpreter(instance(serviceContainer), instance(persistanceStateFactory), instance(fs));
     });
     const windowsStoreInterpreters = [
         '\\\\Program Files\\WindowsApps\\Something\\Python.exe',
