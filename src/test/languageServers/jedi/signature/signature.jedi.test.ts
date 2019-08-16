@@ -65,7 +65,20 @@ suite('Signatures (Jedi)', () => {
     });
 
     test('For intrinsic', async () => {
-        const expected = [
+        let expected: SignatureHelpResult[];
+        if (isPython2) {
+            expected = [
+                new SignatureHelpResult(0, 0, 0, 0, null),
+                new SignatureHelpResult(0, 1, 0, 0, null),
+                new SignatureHelpResult(0, 2, 0, 0, null),
+                new SignatureHelpResult(0, 3, 0, 0, null),
+                new SignatureHelpResult(0, 4, 0, 0, null),
+                new SignatureHelpResult(0, 5, 0, 0, null),
+                new SignatureHelpResult(0, 6, 1, 0, 'x'),
+                new SignatureHelpResult(0, 7, 1, 0, 'x')
+            ];
+        } else {
+            expected = [
             new SignatureHelpResult(0, 0, 0, 0, null),
             new SignatureHelpResult(0, 1, 0, 0, null),
             new SignatureHelpResult(0, 2, 0, 0, null),
@@ -82,6 +95,7 @@ suite('Signatures (Jedi)', () => {
             // new SignatureHelpResult(0, 11, 1, 2, 'step'),
             // new SignatureHelpResult(1, 0, 1, 2, 'step')
         ];
+        }
 
         const document = await openDocument(path.join(autoCompPath, 'basicSig.py'));
         for (let i = 0; i < expected.length; i += 1) {
