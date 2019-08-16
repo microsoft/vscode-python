@@ -6,7 +6,6 @@
 import { expect } from 'chai';
 import { EOL } from 'os';
 import * as path from 'path';
-import { instance, mock } from 'ts-mockito';
 import * as typeMoq from 'typemoq';
 import { Range, TextEditorCursorStyle, TextEditorLineNumbersStyle, TextEditorOptions, window, workspace } from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
@@ -17,7 +16,6 @@ import { PythonExecutionFactory } from '../../client/common/process/pythonExecut
 import { IProcessLogger, IProcessServiceFactory, IPythonExecutionFactory } from '../../client/common/process/types';
 import { IConfigurationService, IPythonSettings } from '../../client/common/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
-import { WindowsStoreInterpreter } from '../../client/interpreter/locators/services/windowsStoreInterpreter';
 import { IServiceContainer } from '../../client/ioc/types';
 import { RefactorProxy } from '../../client/refactor/proxy';
 import { PYTHON_PATH } from '../common';
@@ -48,12 +46,11 @@ suite('Refactor Rename', () => {
         serviceContainer.setup(s => s.get(typeMoq.It.isValue(IProcessServiceFactory), typeMoq.It.isAny())).returns(() => processServiceFactory.object);
         serviceContainer.setup(s => s.get(typeMoq.It.isValue(IEnvironmentActivationService), typeMoq.It.isAny()))
             .returns(() => envActivationService.object);
-        const windowsStoreInterpreter = mock(WindowsStoreInterpreter);
         serviceContainer
             .setup(s => s.get(typeMoq.It.isValue(IPythonExecutionFactory), typeMoq.It.isAny()))
             .returns(() => new PythonExecutionFactory(serviceContainer.object,
                 undefined as any, processServiceFactory.object,
-                configService.object, undefined as any, instance(windowsStoreInterpreter)));
+                configService.object, undefined as any));
         const processLogger = typeMoq.Mock.ofType<IProcessLogger>();
         processLogger.setup(p => p.logProcess(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny())).returns(() => { return; });
         serviceContainer.setup(s => s.get(typeMoq.It.isValue(IProcessLogger), typeMoq.It.isAny())).returns(() => processLogger.object);

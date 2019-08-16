@@ -27,8 +27,6 @@ import { Architecture } from '../../../client/common/utils/platform';
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import { InterpreterType, PythonInterpreter } from '../../../client/interpreter/contracts';
-import { WindowsStoreInterpreter } from '../../../client/interpreter/locators/services/windowsStoreInterpreter';
-import { IWindowsStoreInterpreter } from '../../../client/interpreter/locators/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 
 // tslint:disable:no-any max-func-body-length
@@ -73,14 +71,12 @@ suite('Process - PythonExecutionFactory', () => {
             let configService: IConfigurationService;
             let processLogger: IProcessLogger;
             let processService: ProcessService;
-            let windowsStoreInterpreter: IWindowsStoreInterpreter;
             setup(() => {
                 bufferDecoder = mock(BufferDecoder);
                 activationHelper = mock(EnvironmentActivationService);
                 procecssFactory = mock(ProcessServiceFactory);
                 configService = mock(ConfigurationService);
                 processLogger = mock(ProcessLogger);
-                windowsStoreInterpreter = mock(WindowsStoreInterpreter);
                 when(processLogger.logProcess('', [], {})).thenReturn();
                 processService = mock(ProcessService);
                 when(processService.on('exec', () => { return; })).thenReturn(processService);
@@ -89,8 +85,7 @@ suite('Process - PythonExecutionFactory', () => {
                 when(serviceContainer.get<IProcessLogger>(IProcessLogger)).thenReturn(processLogger);
                 factory = new PythonExecutionFactory(instance(serviceContainer),
                     instance(activationHelper), instance(procecssFactory),
-                    instance(configService), instance(bufferDecoder),
-                    instance(windowsStoreInterpreter));
+                    instance(configService), instance(bufferDecoder));
             });
 
             test('Ensure PythonExecutionService is created', async () => {

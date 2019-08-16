@@ -20,7 +20,7 @@ export class PythonExecutionService implements IPythonExecutionService {
     constructor(
         serviceContainer: IServiceContainer,
         private readonly procService: IProcessService,
-        protected readonly pythonPath: string
+        private readonly pythonPath: string
     ) {
         this.fileSystem = serviceContainer.get<IFileSystem>(IFileSystem);
     }
