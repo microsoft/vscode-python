@@ -209,11 +209,13 @@ suite('Hover Definition (Jedi)', () => {
             assert.equal(`${def[0].range!.start.line},${def[0].range!.start.character}`, '8,11', 'Start position is incorrect');
             assert.equal(`${def[0].range!.end.line},${def[0].range!.end.character}`, '8,15', 'End position is incorrect');
             // tslint:disable-next-line:prefer-template
-            assert.equal(normalizeMarkedString(def[0].contents[0]), '```python' + EOL +
-                'def acos(x)' + EOL +
-                '```' + EOL +
-                'Return the arc cosine (measured in radians) of x.', 'Invalid contents');
-        }).then(done, done);
+                assert.equal(
+                    normalizeMarkedString(def[0].contents[0]),
+                    '```python' + EOL + 'def acos(x: SupportsFloat)' + EOL + '```' + EOL + 'Return the arc cosine (measured in radians) of x.',
+                    'Invalid contents'
+                );
+            })
+            .then(done, done);
     });
 
     test('Highlight Multiline Method Signature', done => {
