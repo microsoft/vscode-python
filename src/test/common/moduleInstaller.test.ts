@@ -28,6 +28,9 @@ import { ITerminalHelper, ITerminalService, ITerminalServiceFactory } from '../.
 import { IConfigurationService, ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IPythonSettings, IsWindows } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
 import { ICondaService, IInterpreterLocatorService, IInterpreterService, INTERPRETER_LOCATOR_SERVICE, InterpreterType, PIPENV_SERVICE, PythonInterpreter } from '../../client/interpreter/contracts';
+import { InterpreterHashProvider } from '../../client/interpreter/locators/services/hashProvider';
+import { InterpeterHashProviderFactory } from '../../client/interpreter/locators/services/hashProviderFactory';
+import { WindowsStoreInterpreter } from '../../client/interpreter/locators/services/windowsStoreInterpreter';
 import { IServiceContainer } from '../../client/ioc/types';
 import { getExtensionSettings, PYTHON_PATH, rootWorkspaceUri } from '../common';
 import { MockModuleInstaller } from '../mocks/moduleInstaller';
@@ -80,6 +83,9 @@ suite('Module Installer', () => {
             ioc.registerVariableTypes();
             ioc.registerLinterTypes();
             ioc.registerFormatterTypes();
+            ioc.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
+            ioc.serviceManager.addSingleton<InterpeterHashProviderFactory>(InterpeterHashProviderFactory, InterpeterHashProviderFactory);
+            ioc.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
 
             ioc.serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
             ioc.serviceManager.addSingleton<ILogger>(ILogger, Logger);
