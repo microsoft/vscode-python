@@ -37,6 +37,7 @@ import {
     IInterpreterDisplay,
     IInterpreterHelper,
     IInterpreterLocatorHelper,
+    IInterpreterLocatorProgressHandler,
     IInterpreterLocatorProgressService,
     IInterpreterLocatorService,
     IInterpreterService,
@@ -45,7 +46,6 @@ import {
     IInterpreterWatcherBuilder,
     IKnownSearchPathsForInterpreters,
     INTERPRETER_LOCATOR_SERVICE,
-    InterpreterLocatorProgressHandler,
     IPipEnvService,
     IShebangCodeLensProvider,
     IVirtualEnvironmentsSearchPathProvider,
@@ -129,7 +129,7 @@ suite('Interpreters - Service Registry', () => {
             [IInterpreterLocatorHelper, InterpreterLocatorHelper],
             [IInterpreterComparer, InterpreterComparer],
 
-            [InterpreterLocatorProgressHandler, InterpreterLocatorProgressStatubarHandler],
+            [IInterpreterLocatorProgressHandler, InterpreterLocatorProgressStatubarHandler],
             [IInterpreterLocatorProgressService, InterpreterLocatorProgressService],
 
             [IInterpreterAutoSelectionRule, CurrentPathInterpretersAutoSelectionRule, AutoSelectionRule.currentPath],
