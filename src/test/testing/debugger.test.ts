@@ -25,6 +25,7 @@ import { deleteDirectory, rootWorkspaceUri, updateSetting } from '../common';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../initialize';
 import { MockDebugLauncher } from './mocks';
 import { UnitTestIocContainer } from './serviceRegistry';
+import { WindowsStoreInterpreter } from 'src/client/interpreter/locators/services/windowsStoreInterpreter';
 
 use(chaiAsPromised);
 

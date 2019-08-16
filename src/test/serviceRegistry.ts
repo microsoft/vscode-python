@@ -26,6 +26,9 @@ import { registerTypes as formattersRegisterTypes } from '../client/formatters/s
 import { EnvironmentActivationService } from '../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../client/interpreter/activation/types';
 import { IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService } from '../client/interpreter/autoSelection/types';
+import { InterpreterHashProvider } from '../client/interpreter/locators/services/hashProvider';
+import { InterpeterHashProviderFactory } from '../client/interpreter/locators/services/hashProviderFactory';
+import { WindowsStoreInterpreter } from '../client/interpreter/locators/services/windowsStoreInterpreter';
 import { registerTypes as interpretersRegisterTypes } from '../client/interpreter/serviceRegistry';
 import { ServiceContainer } from '../client/ioc/container';
 import { ServiceManager } from '../client/ioc/serviceManager';
@@ -125,6 +128,9 @@ export class IocContainer {
         const mockEnvironmentActivationService = mock(EnvironmentActivationService);
         when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything())).thenResolve();
         this.serviceManager.rebindInstance<IEnvironmentActivationService>(IEnvironmentActivationService, instance(mockEnvironmentActivationService));
+        this.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
+        this.serviceManager.addSingleton<InterpeterHashProviderFactory>(InterpeterHashProviderFactory, InterpeterHashProviderFactory);
+        this.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
     }
 
     public registerMockProcess() {
