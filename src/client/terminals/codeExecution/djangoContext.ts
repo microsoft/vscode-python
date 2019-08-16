@@ -3,10 +3,10 @@
 
 import { injectable } from 'inversify';
 import * as path from 'path';
-import { traceError } from 'src/client/common/logger';
 import { Disposable } from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
+import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 
 @injectable()
