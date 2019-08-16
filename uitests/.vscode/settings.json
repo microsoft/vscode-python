@@ -1,13 +1,13 @@
 // Place your settings in this file to overwrite default and user settings.
 {
     "files.exclude": {
-        "out": false,
+        "out": true,
         "**/*.pyc": true,
         ".nyc_output": true,
         "obj": true,
         "bin": true,
         "**/__pycache__": true,
-        "**/node_modules": false,
+        "**/node_modules": true,
         ".vscode test": false,
         ".vscode-test": false,
         "**/.mypy_cache/**": true,
@@ -27,24 +27,16 @@
     "[typescript]": {
         "editor.formatOnSave": true
     },
-    "tslint.enable": true,
     "typescript.preferences.quoteStyle": "single",
     "javascript.preferences.quoteStyle": "single",
     "typescriptHero.imports.stringQuoteStyle": "'",
     "prettier.tslintIntegration": true,
-    "prettier.printWidth": 120,
-    "prettier.singleQuote": true,
     "cucumberautocomplete.skipDocStringsFormat": true,
-    "eslint.autoFixOnSave": true,
-    "eslint.validate": ["javascript", { "language": "typescript", "autoFix": true }],
     "[javascript]": {
         "editor.formatOnSave": true
     },
-    "eslint.options": {
-        "configFile": ".eslintrc.js"
-    },
-    "eslint.codeAction.disableRuleComment": {
-        "enable": true,
-        "location": "separateLine"
+    "editor.codeActionsOnSave": {
+        "source.fixAll": true,
+        "source.fixAll.tslint": true
     }
 }

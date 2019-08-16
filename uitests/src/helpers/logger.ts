@@ -167,7 +167,7 @@ function trace(message: string, options: LogOptions = LogOptions.None, logLevel?
             const timer = new StopWatch();
             try {
                 trace(`Before ${message}`, options, logLevel);
-                // tslint:disable-next-line:no-invalid-this no-use-before-declare no-unsafe-any
+                // tslint:disable-next-line:no-invalid-this no-unsafe-any
                 const result = originalMethod.apply(this, args);
                 // If method being wrapped returns a promise then wait for it.
                 // tslint:disable-next-line:no-unsafe-any

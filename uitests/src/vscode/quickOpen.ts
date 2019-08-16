@@ -71,9 +71,6 @@ export class QuickOpen extends EventEmitter implements IQuickOpen {
         debug(`Run command ${command}`);
         debug(' - display quick open');
         await this.open();
-        // // Prefix with some empty space, else sometimes when typing the first few characters are lost.
-        // // This way, the first few characters that are (can be) lost are just spaces that can be ignored.
-        // await this._selectValue(`>   ${command}`, command);
         await this._selectValue(`> ${command}`, command);
     }
     /**
@@ -146,14 +143,5 @@ export class QuickOpen extends EventEmitter implements IQuickOpen {
                 ', '
             )} & ${highlightedItem2s.join(', ')}.`
         );
-
-        // // If the first item is exactly what we need, then use that.
-        // const eles = await this.app.driver.$$eval(this.app.getCSSSelector(Selector.QuickOpenEntryLabel),
-        //     elements => elements.map(e => (e.textContent || '').toLowerCase()));
-        // if (Array.isArray(eles) && (eles[0] || '').normalize() === value) {
-        //     debug(' - Command not highlighted in quick open, but first item in the list');
-        //     return;
-        // }
-        // throw new Error(`Item '${value}' not found in quick open, lets wait for some more time`);
     }
 }

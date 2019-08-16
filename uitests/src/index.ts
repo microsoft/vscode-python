@@ -99,7 +99,7 @@ const parsedArgs = yargs
     })
     .command({
         command: 'test',
-        describe: 'Runs the UI Tests (Arguments after \'--\' are cucumberjs args)',
+        describe: "Runs the UI Tests (Arguments after '--' are cucumberjs args)",
         builder: (args: yargs.Argv) =>
             args
                 .option('channel', channelOption)
@@ -114,11 +114,11 @@ const parsedArgs = yargs
                 .example('test', '--channel=insider --pythonPath=c:/python/python.exe   # (Runs all tests in insiders)')
                 .example(
                     'test',
-                    '-- --tags=@wip                        # (Runs tests in stable with with tags @wip. Arguments after \'--\' are cucumberjs args.)'
+                    "-- --tags=@wip                        # (Runs tests in stable with with tags @wip. Arguments after '--' are cucumberjs args.)"
                 )
                 .example(
                     'test',
-                    '-- --tags=\'@smoke and @terminal\'      # (Runs tests in stable with tags \'@smoke and @terminal\')'
+                    "-- --tags='@smoke and @terminal'      # (Runs tests in stable with tags '@smoke and @terminal')"
                 ),
         handler: async argv => {
             initialize(argv.verbose);

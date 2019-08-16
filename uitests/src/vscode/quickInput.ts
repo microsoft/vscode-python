@@ -44,11 +44,5 @@ export class QuickInput implements IQuickInput {
     public async waitUntilClosed(): Promise<void> {
         const selector = this.app.getCSSSelector(Selector.QuickInput);
         await this.app.driver.waitForSelector(selector, { hidden: true, timeout: 5000 });
-        // const css = await this.app.driver.$eval(selector, ele => ele && (getComputedStyle(ele).display || ''));
-        // debug(css);
-        // const found = await this.app.driver.$eval(selector, ele => ele && (getComputedStyle(ele).display || '').includes('none'));
-        // if (!found) {
-        //     throw new Error('Quick input not closed, retrying');
-        // }
     }
 }

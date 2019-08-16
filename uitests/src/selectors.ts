@@ -188,7 +188,7 @@ class QuickInput {
 
 const selectors: Record<Selector, { stable: string } & { insider?: string }> = {
     [Selector.PythonExtensionStatusBar]: {
-        stable: '.statusbar-item[id=\'ms-python.python\']'
+        stable: ".statusbar-item[id='ms-python.python']"
     },
     [Selector.PyBootstrapStatusBar]: {
         stable: `.part.statusbar *[title='${pyBootstrapTooltip}'] a`
@@ -197,7 +197,7 @@ const selectors: Record<Selector, { stable: string } & { insider?: string }> = {
         stable: `.part.statusbar *[title='${pyBootstrapActivatedStatusBarTooltip}'] a`
     },
     [Selector.CurrentEditorLineColumnStatusBar]: {
-        stable: '.part.statusbar *[title=\'PyLine\'] a'
+        stable: ".part.statusbar *[title='PyLine'] a"
     },
     [Selector.ColumnLineNumbnerStatusBar]: {
         stable: 'div.statusbar-item[title="Go to Line"] a'
@@ -246,7 +246,7 @@ const selectors: Record<Selector, { stable: string } & { insider?: string }> = {
     },
     [Selector.ButtonInNthNotification]: {
         stable:
-            '.notifications-toasts.visible .notification-toast-container:nth-child({0}) .notification-list-item.expanded .monaco-button.monaco-text-button[title=\'{1}\']'
+            ".notifications-toasts.visible .notification-toast-container:nth-child({0}) .notification-list-item.expanded .monaco-button.monaco-text-button[title='{1}']"
     },
     [Selector.ProblemsBadge]: {
         stable: '.part.panel.bottom .action-item.checked .badge-content'
@@ -284,10 +284,10 @@ const selectors: Record<Selector, { stable: string } & { insider?: string }> = {
         stable: '.composite.viewlet[id="workbench.view.extension.test"]'
     },
     [Selector.TestActivityIcon]: {
-        stable: '.activitybar.left .actions-container a[title=\'Test\']'
+        stable: ".activitybar.left .actions-container a[title='Test']"
     },
     [Selector.TestExplorerToolbarcon]: {
-        stable: 'div[id=\'workbench.parts.sidebar\'] .action-item a[title=\'{0}\']'
+        stable: "div[id='workbench.parts.sidebar'] .action-item a[title='{0}']"
     },
     [Selector.NthTestExplorerNodeLabel]: {
         stable: 'div[id="workbench.view.extension.test"] div.monaco-tree-row:nth-child({0}) a.label-name'
@@ -303,7 +303,7 @@ const selectors: Record<Selector, { stable: string } & { insider?: string }> = {
         stable: 'div[id="workbench.view.extension.test"] .tree-explorer-viewlet-tree-view div.monaco-tree-row'
     },
     [Selector.TestExplorerTreeViewContainer]: {
-        stable: 'div[id=\'workbench.view.extension.test\'] .monaco-tree'
+        stable: "div[id='workbench.view.extension.test'] .monaco-tree"
     },
     [Selector.QuickOpenHidden]: {
         stable: QuickOpen.QUICK_OPEN_HIDDEN

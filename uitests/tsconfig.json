@@ -16,5 +16,5 @@
         "noUnusedParameters": true,
         "noFallthroughCasesInSwitch": true
     },
-    "exclude": ["node_modules", "src/client", "src/datascience-ui", "src/smoke", "src/test", "src/testMultiRootWkspc", "src/uitests/bootstrap", "build"]
+    "exclude": ["node_modules", "bootstrap"]
 }

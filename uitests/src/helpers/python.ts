@@ -56,33 +56,3 @@ export async function ensurePackageIsNotInstalled(pythonPath: string, moduleName
         await sleep(1000);
     }
 }
-
-// type PythonEnvironment = 'venv' | 'standard';
-// export type PythonEnvironment = {
-//     name: string;
-//     // execPath: string;
-//     envPath: string;
-//     type: 'venv' | 'standard';
-// };
-
-// export function createEnvironment(options: { type: PythonEnvironment; name: string }): Promise<PythonEnvironment> {
-
-// }
-
-// async function createVenv(name: string, cwd: string): Promise<PythonEnvironment> {
-//     const cmd = `${context.options.python3Path.toCommandArgument()} -m venv ${name.toCommandArgument()}`;
-//     await new Promise<void>((resolve, reject) => exec(cmd.trim(), { cwd }, (error: Error | null, _: string | Buffer, stdErr: string | Buffer) => {
-//         if (error) {
-//             return reject(error);
-//         }
-//         if (stdErr) {
-//             return reject(stdErr.toString());
-//         }
-//         resolve();
-//     }));
-//     return {
-//         type: 'venv',
-//         name,
-//         envPath: path.join(cwd, name)
-//     };
-// }

@@ -12,22 +12,14 @@ import { Selector } from './selectors';
 export type Channel = 'insider' | 'stable';
 
 /**
- * The configuration target
+ * Similar to ConfigurationTarget found in VS Code API.
+ *
+ * @export
+ * @enum {number}
  */
 export enum ConfigurationTarget {
-    /**
-     * Global configuration
-     */
     Global = 1,
-
-    /**
-     * Workspace configuration
-     */
     Workspace = 2,
-
-    /**
-     * Workspace folder configuration
-     */
     WorkspaceFolder = 3
 }
 

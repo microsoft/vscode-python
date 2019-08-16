@@ -6,14 +6,12 @@
 import * as fs from 'fs-extra';
 import { applyEdits, modify, parse } from 'jsonc-parser';
 import * as path from 'path';
-// import stripJsonComments = require('strip-json-comments');
 import { noop } from '../helpers';
 import { sleep } from '../helpers/misc';
 import { ConfigurationTarget, IApplication, ISettings } from '../types';
 
 // tslint:disable: max-func-body-length no-invalid-template-strings no-http-string no-invalid-this no-multiline-string member-access no-any radix no-shadowed-variable no-unnecessary-callback-wrapper member-ordering no-constant-condition prefer-const no-increment-decrement no-single-line-block-comment prefer-object-spread no-function-expression no-string-literal
 
-// type DebugSetting = 'stopOnEntry';
 const modifyOptions = { formattingOptions: { tabSize: 4, insertSpaces: true } };
 type CrudSetting = {
     type: 'user' | 'workspaceFolder';
@@ -59,16 +57,6 @@ export class Settings implements ISettings {
             await this.saveSettingsContent(applyEdits(content, edits), scope);
         }
     }
-
-    // public async  updateDebugConfiguration(setting: string, value: string | boolean | number, workspaceFolder: string, _debugConfiugrationIndex: number): Promise<void> {
-    //     const settings = await this.getLaunchJson(workspaceFolder);
-    //     if (settings['configurations'][0][setting] === value) {
-    //         return;
-    //     }
-    //     settings['configurations'][0][setting] = value;
-    //     await this.updateLaunchJson(settings, workspaceFolder);
-    // }
-
     public async getSetting<T>(setting: string, scope: ConfigurationTarget): Promise<T | undefined> {
         const content = await this.getSettingsContent(scope);
         return content ? (this.getJson(content)[setting] as T) : undefined;
@@ -102,8 +90,6 @@ export class Settings implements ISettings {
             return;
         }
 
-        // uitests.vscode.application.capture_screen(context)
-
         let errorMessage = '';
         if (await fs.pathExists(errorFile)) {
             errorMessage += await fs.readFile(errorFile);
@@ -113,19 +99,6 @@ export class Settings implements ISettings {
         }
         throw new Error(`Settings not updated by Bootstrap\n ${errorMessage}`);
     }
-    // /**
-    //  * We might use this same code to update user settings.
-    //  *
-    //  * @param {string} folder
-    //  * @returns
-    //  */
-    // private async getJsonFilePath(fileName: string, folder: string) {
-    //     let jsonFile = path.join(folder, fileName);
-    //     if (!(await fs.pathExists(jsonFile))) {
-    //         return path.join(folder, '.vscode', fileName);
-    //     }
-    //     return jsonFile;
-    // }
 
     private async getSettingsContent(scope: ConfigurationTarget): Promise<string | undefined> {
         const jsonFile =
@@ -150,16 +123,4 @@ export class Settings implements ISettings {
     private getJson(content: string): any {
         return parse(content, undefined, { allowTrailingComma: true, disallowComments: false });
     }
-
-    // private async updateLaunchJson(settings: object, workspaceFolder: string): Promise<void> {
-    //     const jsonFile = await this.getJsonFilePath('launch.json', workspaceFolder);
-    //     await fs.writeFile(jsonFile, JSON.stringify(settings, undefined, 4));
-    // }
-
-    // private async getLaunchJson(workspaceFolder: string): Promise<{ [key: string]: any }> {
-    //     const jsonFile = await this.getJsonFilePath('launch.json', workspaceFolder);
-    //     const jsonContent = await fs.readFile(jsonFile, 'utf8');
-    //     const json = stripJsonComments(jsonContent);
-    //     return JSON.parse(json);
-    // }
 }

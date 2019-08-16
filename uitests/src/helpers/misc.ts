@@ -64,6 +64,7 @@ type Unpacked<T> = T extends Promise<infer U> ? U : T;
  * @returns {Promise<Unpacked<ReturnType<T>>>}
  */
 export async function retryWrapper<T extends AnyAsyncFunction>(
+    // tslint:disable-next-line: no-any
     this: {} | any,
     options: RetryOptions,
     fn: T,

@@ -47,8 +47,6 @@ export class Notifications implements INotifications {
 
             // tslint:disable-next-line: prefer-array-literal
             for (const i of [...new Array(count).keys()]) {
-                // const message = messages.shift()!;
-                // debug(`Looking for notification '${message.content}' to dismiss.`);
                 // Check if we can find a notification with this message.
                 const selector = this.app.getCSSSelector(Selector.NthNotificationMessage).format((i + 1).toString());
                 const textContent = await this.app.driver
@@ -91,9 +89,6 @@ export class Notifications implements INotifications {
             }
 
             if (stopwatch.elapsedTime > timeout) {
-                // if (count > 0) {
-                //     warn(`At least ${0} notifications displayed. Unable to dismiss them due to timeout. Consider increasing timeout.`);
-                // }
                 return;
             }
             await _closeNotifications();

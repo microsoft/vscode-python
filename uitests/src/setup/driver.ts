@@ -3,8 +3,6 @@
 
 'use strict';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { ChildProcess } from 'child_process';
 import { EventEmitter } from 'events';
 import {
@@ -157,6 +155,7 @@ export class Driver extends EventEmitter implements IDriver {
             headless: true,
             devtools: false,
             // This must be set to `null`, else VSC UI resizes in a funky way.
+            // tslint:disable-next-line: no-null-keyword
             defaultViewport: null,
             // This must be set to ensure puppeteer doesn't send default (additional) args.
             ignoreDefaultArgs: true
@@ -212,6 +211,7 @@ export class Driver extends EventEmitter implements IDriver {
     public async waitForSelector(
         selector: string,
         options?: WaitForSelectorOptions | WaitForSelectorOptionsHidden
+        // tslint:disable-next-line: no-any
     ): Promise<any> {
         if (options && 'hidden' in options && options.hidden === true) {
             // We expect selector to be available.
