@@ -2,7 +2,7 @@
 .DS_Store
 out
 **/node_modules
-*.xvsix
+*.vsix
 **/.vscode/.ropeproject/**
 **/testFiles/**/.cache/**
 *.noseids
