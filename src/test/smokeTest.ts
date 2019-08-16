@@ -17,11 +17,12 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS, SMOKE_TEST_EXTENSIONS_DIR } from './const
 
 class TestRunner {
     public async start() {
+        console.log('Start Test Runner');
         await this.enableLanguageServer(true);
         await this.extractLatestExtension(SMOKE_TEST_EXTENSIONS_DIR);
         await this.launchSmokeTests();
     }
-    private async  launchSmokeTests() {
+    private async launchSmokeTests() {
         const env: Record<string, {}> = {
             VSC_PYTHON_SMOKE_TEST: '1',
             CODE_EXTENSIONS_PATH: SMOKE_TEST_EXTENSIONS_DIR
@@ -34,10 +35,12 @@ class TestRunner {
         await fs.ensureDir(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', '.vscode'));
         await fs.writeFile(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', '.vscode', 'settings.json'), settings);
     }
-    private async  launchTest(customEnvVars: Record<string, {}>) {
+    private async launchTest(customEnvVars: Record<string, {}>) {
+        console.log('Launc tests in test runner');
         await new Promise((resolve, reject) => {
             const env: Record<string, {}> = {
                 TEST_FILES_SUFFIX: 'smoke.test',
+                IS_SMOKE_TEST: 'true',
                 CODE_TESTS_WORKSPACE: path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests'),
                 ...process.env,
                 ...customEnvVars
@@ -46,7 +49,8 @@ class TestRunner {
             proc.stdout.pipe(process.stdout);
             proc.stderr.pipe(process.stderr);
             proc.on('error', reject);
-            proc.on('close', code => {
+            proc.on('exit', code => {
+                console.log(`Tests Exited with code ${code}`);
                 if (code === 0) {
                     resolve();
                 } else {
@@ -57,7 +61,7 @@ class TestRunner {
     }
 
     private async extractLatestExtension(targetDir: string): Promise<void> {
-        const extensionFile = await new Promise<string>((resolve, reject) => glob('*.vsix', (ex, files) => ex ? reject(ex) : resolve(files[0])));
+        const extensionFile = await new Promise<string>((resolve, reject) => glob('*.vsix', (ex, files) => (ex ? reject(ex) : resolve(files[0]))));
         await unzip(extensionFile, targetDir);
     }
 }

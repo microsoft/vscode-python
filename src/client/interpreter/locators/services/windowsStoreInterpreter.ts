@@ -8,7 +8,6 @@ import { traceDecorators } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import { IPersistentStateFactory } from '../../../common/types';
-import { IServiceContainer } from '../../../ioc/types';
 import { IInterpreterHashProvider, IWindowsStoreInterpreter } from '../types';
 
 /**
@@ -37,7 +36,7 @@ import { IInterpreterHashProvider, IWindowsStoreInterpreter } from '../types';
 @injectable()
 export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInterpreterHashProvider {
     constructor(
-        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
+        @inject(IPythonExecutionFactory) private readonly executionFactory: IPythonExecutionFactory,
         @inject(IPersistentStateFactory) private readonly persistentFactory: IPersistentStateFactory,
         @inject(IFileSystem) private readonly fs: IFileSystem
     ) {}
@@ -96,8 +95,7 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInter
         if (stateStore.value) {
             return stateStore.value;
         }
-        const executionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-        const pythonService = await executionFactory.create({ pythonPath });
+        const pythonService = await this.executionFactory.create({ pythonPath });
         const executablePath = await pythonService.getExecutablePath();
         const hash = await this.fs.getFileHash(executablePath);
         await stateStore.updateValue(hash);
