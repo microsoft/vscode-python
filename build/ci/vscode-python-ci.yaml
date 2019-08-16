@@ -19,7 +19,7 @@ jobs:
 
 - template: templates/jobs/build_compile.yml
 
-- template: templates/jobs/smoke.yml
+# - template: templates/jobs/smoke.yml
 
 - job: 'CI'
 

@@ -22,7 +22,6 @@ stages:
   jobs:
   - template: templates/jobs/build_compile.yml
 
-
 - stage: Tests
   dependsOn:
   - Build_and_Compile
