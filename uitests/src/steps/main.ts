@@ -3,15 +3,7 @@
 
 'use strict';
 
-import {
-    After,
-    Before,
-    HookScenarioResult,
-    setDefaultTimeout,
-    setDefinitionFunctionWrapper,
-    setWorldConstructor,
-    Status
-} from 'cucumber';
+import { After, Before, HookScenarioResult, setDefaultTimeout, setDefinitionFunctionWrapper, setWorldConstructor, Status } from 'cucumber';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as rimraf from 'rimraf';
@@ -44,16 +36,9 @@ class MyWorld {
     public readonly options: ITestOptions;
     constructor({ parameters, attach }: { attach: Function; parameters: WorldParameters }) {
         debug('Start MyWorld contructor');
-        const testOptions = getTestOptions(
-            parameters.channel,
-            parameters.testDir,
-            parameters.pythonPath,
-            parameters.verboseLogging
-        );
+        const testOptions = getTestOptions(parameters.channel, parameters.testDir, parameters.pythonPath, parameters.verboseLogging);
         this.app = new Application(testOptions);
-        this.app.on('start', emulateFirstTimeLoad =>
-            emulateFirstTimeLoad ? (oneTimeMessagesDismissed = false) : undefined
-        );
+        this.app.on('start', emulateFirstTimeLoad => (emulateFirstTimeLoad ? (oneTimeMessagesDismissed = false) : undefined));
         this.app.on('screenshotCatured', data => attach(data, 'image/png'));
         this.options = testOptions;
         debug('End MyWorld contructor');

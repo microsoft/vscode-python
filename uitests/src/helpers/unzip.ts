@@ -37,11 +37,7 @@ export async function unzipFile(zipFile: string, targetFolder: string) {
 
 export async function unzipTarGz(zipFile: string, targetFolder: string) {
     debug(`Unzip (unzipTarGz) ${zipFile} into ${targetFolder}`);
-    const fileToFixPermissions = [
-        'VSCode-linux-x64/code',
-        'VSCode-linux-x64/code-insiders',
-        'VSCode-linux-x64/resources/app/node_modules*/vscode-ripgrep/**/rg'
-    ];
+    const fileToFixPermissions = ['VSCode-linux-x64/code', 'VSCode-linux-x64/code-insiders', 'VSCode-linux-x64/resources/app/node_modules*/vscode-ripgrep/**/rg'];
     await fs.ensureDir(targetFolder);
     await new Promise((resolve, reject) => {
         const gulpFilter = filter(fileToFixPermissions, { restore: true });

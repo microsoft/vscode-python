@@ -69,16 +69,10 @@ export class TestOptions implements ITestOptions {
      * @memberof TestOptions
      */
     public async initilize() {
-        this._workspacePathOrFolder =
-            this._workspacePathOrFolder ||
-            path.join(this.tempPath, `workspace folder${(TestOptions.workspaceCounter += 1)}`);
+        this._workspacePathOrFolder = this._workspacePathOrFolder || path.join(this.tempPath, `workspace folder${(TestOptions.workspaceCounter += 1)}`);
         await Promise.all([
-            new Promise(resolve => rimraf(this.tempPath, resolve)).catch(
-                warn.bind(warn, 'Failed to empty temp dir in updateForScenario')
-            ),
-            new Promise(resolve => rimraf(this._workspacePathOrFolder, resolve)).catch(
-                warn.bind(warn, 'Failed to create workspace directory')
-            )
+            new Promise(resolve => rimraf(this.tempPath, resolve)).catch(warn.bind(warn, 'Failed to empty temp dir in updateForScenario')),
+            new Promise(resolve => rimraf(this._workspacePathOrFolder, resolve)).catch(warn.bind(warn, 'Failed to create workspace directory'))
         ]);
         await Promise.all([
             fs.ensureDir(this.tempPath),
@@ -106,14 +100,8 @@ export class TestOptions implements ITestOptions {
      */
     public async updateForScenario(scenario: HookScenarioResult) {
         const location = scenario.pickle.locations[0].line;
-        this._reportsPath = path.join(
-            this.rootReportsPath,
-            `${scenario.pickle.name}:${location}:_${TestOptions.workspaceCounter}`.replace(/[^a-z0-9\-]/gi, '_')
-        );
-        this._workspacePathOrFolder = path.join(
-            this.tempPath,
-            `workspace folder${(TestOptions.workspaceCounter += 1)}`
-        );
+        this._reportsPath = path.join(this.rootReportsPath, `${scenario.pickle.name}:${location}:_${TestOptions.workspaceCounter}`.replace(/[^a-z0-9\-]/gi, '_'));
+        this._workspacePathOrFolder = path.join(this.tempPath, `workspace folder${(TestOptions.workspaceCounter += 1)}`);
         // await Promise.all([
         //     fs.ensureDir(scenarioLogsPath),
         //     fs.emptyDir(this.tempPath).catch(warn.bind(warn, 'Failed to empty temp dir in updateForScenario')),
@@ -137,12 +125,7 @@ export class TestOptions implements ITestOptions {
  * @export
  * @returns {TestOptions}
  */
-export function getTestOptions(
-    channel: Channel,
-    testDir: string,
-    pythonPath: string = 'python',
-    verboseLogging: boolean = false
-): ITestOptions {
+export function getTestOptions(channel: Channel, testDir: string, pythonPath: string = 'python', verboseLogging: boolean = false): ITestOptions {
     pythonPath =
         pythonPath ||
         cp
@@ -150,13 +133,7 @@ export function getTestOptions(
             .toString()
             .trim();
     const options = new TestOptions(channel, testDir, path.join(testDir, 'temp folder'), verboseLogging, pythonPath);
-    [
-        options.tempPath,
-        options.userDataPath,
-        options.logsPath,
-        options.screenshotsPath,
-        options.workspacePathOrFolder
-    ].forEach(dir => {
+    [options.tempPath, options.userDataPath, options.logsPath, options.screenshotsPath, options.workspacePathOrFolder].forEach(dir => {
         try {
             rimraf.sync(dir);
         } catch {

@@ -31,10 +31,7 @@ export class Notifications implements INotifications {
      * @returns {Promise<void>}
      * @memberof Notifications
      */
-    public async dismiss(
-        messages: { content: string; buttonText?: string | undefined }[],
-        timeout: number
-    ): Promise<void> {
+    public async dismiss(messages: { content: string; buttonText?: string | undefined }[], timeout: number): Promise<void> {
         const stopwatch = new StopWatch();
         const _closeNotifications = async (): Promise<void> => {
             if (messages.length === 0) {
@@ -50,9 +47,7 @@ export class Notifications implements INotifications {
                 // Check if we can find a notification with this message.
                 const selector = this.app.getCSSSelector(Selector.NthNotificationMessage).format((i + 1).toString());
                 const textContent = await this.app.driver
-                    .$$eval(selector, elements =>
-                        elements.reduce<string>((content, element) => element.textContent || content, '')
-                    )
+                    .$$eval(selector, elements => elements.reduce<string>((content, element) => element.textContent || content, ''))
                     .catch(warn.bind(warn, `Failed to get content of notification with selector '${selector}'`));
 
                 if (!textContent) {
@@ -68,9 +63,7 @@ export class Notifications implements INotifications {
                 }
 
                 const closeSelector = message.buttonText
-                    ? this.app
-                          .getCSSSelector(Selector.ButtonInNthNotification)
-                          .format((i + 1).toString(), message.buttonText)
+                    ? this.app.getCSSSelector(Selector.ButtonInNthNotification).format((i + 1).toString(), message.buttonText)
                     : this.app.getCSSSelector(Selector.CloseButtonInNthNotification).format((i + 1).toString());
 
                 // If we found a notification with this message, then use the selector to dismiss it.

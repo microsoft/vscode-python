@@ -39,11 +39,7 @@ export class Settings implements ISettings {
             await this.saveSettingsContent(applyEdits(content, edits), scope);
         }
     }
-    public async updateSetting(
-        setting: string,
-        value: string | boolean | number | void,
-        scope: ConfigurationTarget
-    ): Promise<void> {
+    public async updateSetting(setting: string, value: string | boolean | number | void, scope: ConfigurationTarget): Promise<void> {
         let content = await this.getSettingsContent(scope);
         if (!content) {
             content = '{}';
@@ -101,10 +97,7 @@ export class Settings implements ISettings {
     }
 
     private async getSettingsContent(scope: ConfigurationTarget): Promise<string | undefined> {
-        const jsonFile =
-            scope === ConfigurationTarget.Global
-                ? this.app.userSettingsFilePath
-                : path.join(this.app.workspacePathOrFolder, '.vscode', 'settings.json');
+        const jsonFile = scope === ConfigurationTarget.Global ? this.app.userSettingsFilePath : path.join(this.app.workspacePathOrFolder, '.vscode', 'settings.json');
         if (!(await fs.pathExists(jsonFile))) {
             return;
         }
@@ -112,10 +105,7 @@ export class Settings implements ISettings {
     }
 
     private async saveSettingsContent(content: string, scope: ConfigurationTarget): Promise<void> {
-        const jsonFile =
-            scope === ConfigurationTarget.Global
-                ? this.app.userSettingsFilePath
-                : path.join(this.app.workspacePathOrFolder, '.vscode', 'settings.json');
+        const jsonFile = scope === ConfigurationTarget.Global ? this.app.userSettingsFilePath : path.join(this.app.workspacePathOrFolder, '.vscode', 'settings.json');
         await fs.mkdirp(path.dirname(jsonFile)).catch(noop);
         return fs.writeFile(jsonFile, content, 'utf8');
     }

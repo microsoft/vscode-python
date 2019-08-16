@@ -30,10 +30,7 @@ Then('the debugger stops', async function() {
 Then('the debugger will stop within {int} seconds', async function(timeoutSeconds: number) {
     await this.app.debugger.waitUntilStopped(timeoutSeconds * 1000);
 });
-Then('the current stack frame is at line {int} in {string}', CucumberRetryMax5Seconds, async function(
-    line: number,
-    fileName: string
-) {
+Then('the current stack frame is at line {int} in {string}', CucumberRetryMax5Seconds, async function(line: number, fileName: string) {
     await this.app.documents.waitForActiveEditor(fileName);
     await this.app.documents.waitForPosition({ line });
 });

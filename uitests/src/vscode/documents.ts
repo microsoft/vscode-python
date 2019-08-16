@@ -66,9 +66,7 @@ export class Documents implements IDocuments {
             await this.app.quickopen.runCommand(commandToRunAfterRefreshingExplorer);
         }
     }
-    public async gotToPosition(
-        options: { line: number } | { column: number } | { line: number; column: number }
-    ): Promise<void> {
+    public async gotToPosition(options: { line: number } | { column: number } | { line: number; column: number }): Promise<void> {
         if ('line' in options) {
             await this.goToLine(options.line);
         }
@@ -86,9 +84,7 @@ export class Documents implements IDocuments {
     }
     public getAutoCompletionList(): Promise<string[]> {
         const selector = this.app.getCSSSelector(Selector.AutoCompletionListItem);
-        return this.app.driver
-            .$$eval(selector, elements => elements.map(element => element.textContent || ''))
-            .then(items => items.map(item => item.normalize()));
+        return this.app.driver.$$eval(selector, elements => elements.map(element => element.textContent || '')).then(items => items.map(item => item.normalize()));
     }
     public async waitForEditorFocus(fileName: string): Promise<void> {
         await this.waitForActiveTab(fileName);
@@ -99,9 +95,7 @@ export class Documents implements IDocuments {
         await this.app.driver.waitForSelector(selector, { timeout: 5000, visible: true });
     }
     public async waitForActiveTab(fileName: string, isDirty: boolean = false): Promise<void> {
-        const selector = `.tabs-container div.tab.active${
-            isDirty ? '.dirty' : ''
-        }[aria-selected="true"][aria-label="${fileName}, tab"]`;
+        const selector = `.tabs-container div.tab.active${isDirty ? '.dirty' : ''}[aria-selected="true"][aria-label="${fileName}, tab"]`;
         await this.app.driver.waitForSelector(selector, { timeout: 5000, visible: true });
     }
     private async gotToColumn(columnNumber: number): Promise<void> {

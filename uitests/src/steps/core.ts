@@ -49,9 +49,7 @@ When('I reload VS Code', function() {
     return this.app.reload();
 });
 
-When('I wait for a maximum of {int} seconds for the Python extension to get activated', async function(
-    seconds: number
-) {
+When('I wait for a maximum of {int} seconds for the Python extension to get activated', async function(seconds: number) {
     await waitForPythonExtensionToActivate(seconds * 1000, this.app);
 });
 

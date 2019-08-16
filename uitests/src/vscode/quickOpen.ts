@@ -62,9 +62,7 @@ export class QuickOpen extends EventEmitter implements IQuickOpen {
         await this.app.driver.waitForSelector(this.app.getCSSSelector(Selector.QuickOpenInput));
     }
     public async waitUntilClosed(): Promise<void> {
-        await this.app.driver
-            .waitForSelector(this.app.getCSSSelector(Selector.QuickOpenInput), { hidden: true })
-            .catch(warn.bind(warn, 'Quick Open not hidden'));
+        await this.app.driver.waitForSelector(this.app.getCSSSelector(Selector.QuickOpenInput), { hidden: true }).catch(warn.bind(warn, 'Quick Open not hidden'));
     }
     @retry(RetryMax30Seconds)
     private async _runCommand(command: string): Promise<void> {
@@ -115,33 +113,17 @@ export class QuickOpen extends EventEmitter implements IQuickOpen {
         // For some reason VSC seems to display the item in the quick open in a funky way.
         // If we retry it will work, but why waste cpu cycles, lets accomodate for this funky state.
         const [highlightedItems, highlightedItem2s] = await Promise.all([
-            this.app.driver.$$eval(this.app.getCSSSelector(Selector.QuickOpenEntryLabelFocused), elements =>
-                elements.map(e => (e.textContent || '').toLowerCase())
-            ),
-            this.app.driver.$$eval(this.app.getCSSSelector(Selector.QuickOpenEntryLabelFocused2), elements =>
-                elements.map(e => (e.textContent || '').toLowerCase())
-            )
+            this.app.driver.$$eval(this.app.getCSSSelector(Selector.QuickOpenEntryLabelFocused), elements => elements.map(e => (e.textContent || '').toLowerCase())),
+            this.app.driver.$$eval(this.app.getCSSSelector(Selector.QuickOpenEntryLabelFocused2), elements => elements.map(e => (e.textContent || '').toLowerCase()))
         ]);
-        if (
-            Array.isArray(highlightedItems) &&
-            highlightedItems.length > 0 &&
-            (highlightedItems[0] || '').normalize() === value
-        ) {
+        if (Array.isArray(highlightedItems) && highlightedItems.length > 0 && (highlightedItems[0] || '').normalize() === value) {
             debug(' - Command highlighted in quick open');
             return;
         }
-        if (
-            Array.isArray(highlightedItem2s) &&
-            highlightedItem2s.length > 0 &&
-            (highlightedItem2s[0] || '').normalize() === value
-        ) {
+        if (Array.isArray(highlightedItem2s) && highlightedItem2s.length > 0 && (highlightedItem2s[0] || '').normalize() === value) {
             debug(' - Command highlighted in quick open');
             return;
         }
-        throw new Error(
-            `Item '${value}' not found in quick open, lets wait for some more time. Items found ${highlightedItems.join(
-                ', '
-            )} & ${highlightedItem2s.join(', ')}.`
-        );
+        throw new Error(`Item '${value}' not found in quick open, lets wait for some more time. Items found ${highlightedItems.join(', ')} & ${highlightedItem2s.join(', ')}.`);
     }
 }

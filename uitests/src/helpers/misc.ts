@@ -72,9 +72,7 @@ export async function retryWrapper<T extends AnyAsyncFunction>(
 ): Promise<Unpacked<ReturnType<T>>> {
     const watch = new StopWatch();
     const interval = options.interval || 100;
-    const iterations = (options as RetryTimeoutOptions).timeout
-        ? (options as RetryTimeoutOptions).timeout / interval
-        : (options as RetryCounterOptions).count;
+    const iterations = (options as RetryTimeoutOptions).timeout ? (options as RetryTimeoutOptions).timeout / interval : (options as RetryCounterOptions).count;
     const timeout = (options as RetryTimeoutOptions).timeout || (options as RetryCounterOptions).count * interval;
 
     let lastEx: Error | undefined;

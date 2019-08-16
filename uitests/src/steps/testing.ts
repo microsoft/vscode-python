@@ -37,23 +37,15 @@ async function getNumberOfNodesWithIcon(app: IApplication, status: TestExplorerN
     const elements = await app.testExplorer.getNodes();
     return elements.filter(node => node.status === status).length;
 }
-Then('{int} nodes in the test explorer have a status of "{word}"', CucumberRetryMax5Seconds, async function(
-    count: number,
-    status: TestExplorerNodeStatus
-) {
+Then('{int} nodes in the test explorer have a status of "{word}"', CucumberRetryMax5Seconds, async function(count: number, status: TestExplorerNodeStatus) {
     const nodeCount = await getNumberOfNodesWithIcon(this.app, status);
     expect(nodeCount).to.equal(count);
 });
-Then('1 node in the test explorer has a status of "{word}"', CucumberRetryMax5Seconds, async function(
-    status: TestExplorerNodeStatus
-) {
+Then('1 node in the test explorer has a status of "{word}"', CucumberRetryMax5Seconds, async function(status: TestExplorerNodeStatus) {
     const nodeCount = await getNumberOfNodesWithIcon(this.app, status);
     expect(nodeCount).to.equal(1);
 });
-Then('the node {string} in the test explorer has a status of "{word}"', CucumberRetryMax5Seconds, async function(
-    label: string,
-    status: TestExplorerNodeStatus
-) {
+Then('the node {string} in the test explorer has a status of "{word}"', CucumberRetryMax5Seconds, async function(label: string, status: TestExplorerNodeStatus) {
     const node = await this.app.testExplorer.getNode(label);
     expect(node.status).to.equal(status);
 });

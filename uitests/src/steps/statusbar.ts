@@ -17,9 +17,7 @@ Then('the python the status bar contains the text {string}', CucumberRetryMax5Se
 });
 
 // Add a delay, as this can take around 1s (from the time something was selected).
-Then('the python the status bar does not contain the text {string}', CucumberRetryMax5Seconds, async function(
-    text: string
-) {
+Then('the python the status bar does not contain the text {string}', CucumberRetryMax5Seconds, async function(text: string) {
     const statubarText = await this.app.statusbar.getPythonStatusBarText();
     expect(statubarText).not.contains(text);
 });

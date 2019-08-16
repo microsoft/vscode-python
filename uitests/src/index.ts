@@ -9,13 +9,7 @@ import * as yargs from 'yargs';
 import { sleep } from './helpers';
 import { info, initialize } from './helpers/logger';
 import { mergeAndgenerateHtmlReport } from './helpers/report';
-import {
-    downloadVSCode,
-    getTestOptions,
-    installExtensions,
-    TestOptions,
-    waitForPythonExtensionToActivate
-} from './setup';
+import { downloadVSCode, getTestOptions, installExtensions, TestOptions, waitForPythonExtensionToActivate } from './setup';
 import { start } from './testRunner';
 import { Channel } from './types';
 import { Application } from './vscode';
@@ -112,14 +106,8 @@ const parsedArgs = yargs
                 .example('test', '                                      # (Runs all tests in stable)')
                 .example('test', '--channel=insider                     # (Runs all tests in insiders)')
                 .example('test', '--channel=insider --pythonPath=c:/python/python.exe   # (Runs all tests in insiders)')
-                .example(
-                    'test',
-                    "-- --tags=@wip                        # (Runs tests in stable with with tags @wip. Arguments after '--' are cucumberjs args.)"
-                )
-                .example(
-                    'test',
-                    "-- --tags='@smoke and @terminal'      # (Runs tests in stable with tags '@smoke and @terminal')"
-                ),
+                .example('test', "-- --tags=@wip                        # (Runs tests in stable with with tags @wip. Arguments after '--' are cucumberjs args.)")
+                .example('test', "-- --tags='@smoke and @terminal'      # (Runs tests in stable with tags '@smoke and @terminal')"),
         handler: async argv => {
             initialize(argv.verbose);
             const cucumberArgs = argv._.slice(1);
@@ -130,12 +118,10 @@ const parsedArgs = yargs
                           .toString()
                           .trim()
                     : argv.pythonPath;
-            await start(argv.channel, path.resolve(argv.destination), argv.verbose, pythonPath, cucumberArgs).catch(
-                ex => {
-                    console.error('UI Tests Failed', ex);
-                    process.exit(1); // Required for CLI to fail on CI servers.
-                }
-            );
+            await start(argv.channel, path.resolve(argv.destination), argv.verbose, pythonPath, cucumberArgs).catch(ex => {
+                console.error('UI Tests Failed', ex);
+                process.exit(1); // Required for CLI to fail on CI servers.
+            });
         }
     })
     .command({

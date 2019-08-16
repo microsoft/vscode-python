@@ -53,8 +53,7 @@ export class Debugger implements IDebugger {
     @retry(RetryMax10Seconds)
     public async waitUntilPaused(): Promise<void> {
         const iconSelector = this.app.getCSSSelector(Selector.DebugToolbarIcon);
-        const predicateToFindTitleWithContinue = (elements: Element[]) =>
-            elements.find(element => (element.getAttribute('title') || '').includes('Continue')) !== undefined;
+        const predicateToFindTitleWithContinue = (elements: Element[]) => elements.find(element => (element.getAttribute('title') || '').includes('Continue')) !== undefined;
         const found = await this.app.driver.$$eval(iconSelector, predicateToFindTitleWithContinue);
         ok(found);
     }

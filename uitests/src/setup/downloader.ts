@@ -47,19 +47,9 @@ export function getVSCodeExecutablePath(channel: Channel, testDir: string) {
     if (process.platform === 'win32') {
         return path.join(testDir, channel, channel === 'stable' ? 'Code.exe' : 'Code - Insiders.exe');
     } else if (process.platform === 'darwin') {
-        return path.join(
-            testDir,
-            channel,
-            channel === 'stable'
-                ? 'Visual Studio Code.app/Contents/MacOS/Electron'
-                : 'Visual Studio Code - Insiders.app/Contents/MacOS/Electron'
-        );
+        return path.join(testDir, channel, channel === 'stable' ? 'Visual Studio Code.app/Contents/MacOS/Electron' : 'Visual Studio Code - Insiders.app/Contents/MacOS/Electron');
     } else {
-        return path.join(
-            testDir,
-            channel,
-            channel === 'stable' ? 'VSCode-linux-x64/code' : 'VSCode-linux-x64/code-insiders'
-        );
+        return path.join(testDir, channel, channel === 'stable' ? 'VSCode-linux-x64/code' : 'VSCode-linux-x64/code-insiders');
     }
 }
 
@@ -75,19 +65,9 @@ export function getVSCodeElectronPath(channel: Channel, testDir: string) {
     if (process.platform === 'win32') {
         return path.join(testDir, channel, channel === 'stable' ? 'Code.exe' : 'Code - Insiders.exe');
     } else if (process.platform === 'darwin') {
-        return path.join(
-            testDir,
-            channel,
-            channel === 'stable'
-                ? 'Visual Studio Code.app/Contents/MacOS/Electron'
-                : 'Visual Studio Code - Insiders.app/Contents/MacOS/Electron'
-        );
+        return path.join(testDir, channel, channel === 'stable' ? 'Visual Studio Code.app/Contents/MacOS/Electron' : 'Visual Studio Code - Insiders.app/Contents/MacOS/Electron');
     } else {
-        return path.join(
-            testDir,
-            channel,
-            channel === 'stable' ? 'VSCode-linux-x64/code' : 'VSCode-linux-x64/code-insiders'
-        );
+        return path.join(testDir, channel, channel === 'stable' ? 'VSCode-linux-x64/code' : 'VSCode-linux-x64/code-insiders');
     }
 }
 
@@ -103,11 +83,7 @@ export function getVSCodeDirectory(channel: Channel, testDir: string) {
     if (process.platform === 'win32') {
         return path.join(testDir, channel);
     } else if (process.platform === 'darwin') {
-        return path.join(
-            testDir,
-            channel,
-            channel === 'stable' ? 'Visual Studio Code.app' : 'Visual Studio Code - Insiders.app'
-        );
+        return path.join(testDir, channel, channel === 'stable' ? 'Visual Studio Code.app' : 'Visual Studio Code - Insiders.app');
     } else {
         return path.join(testDir, channel, channel === 'stable' ? 'VSCode-linux-x64' : 'VSCode-linux-x64');
     }

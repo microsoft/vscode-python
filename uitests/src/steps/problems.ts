@@ -24,9 +24,7 @@ Then('there is at least one problem in the problems panel', CucumberRetryMax5Sec
     expect(count).to.greaterThan(0);
 });
 
-Then('there are at least {int} problems in the problems panel', CucumberRetryMax5Seconds, async function(
-    expectedMinimumCount: number
-) {
+Then('there are at least {int} problems in the problems panel', CucumberRetryMax5Seconds, async function(expectedMinimumCount: number) {
     const count = await this.app.problems.getProblemCount();
     expect(count).to.greaterThan(expectedMinimumCount - 1);
 });

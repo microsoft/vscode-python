@@ -19,7 +19,11 @@ export class ProcessLogger implements IProcessLogger {
     ) {}
 
     public logProcess(file: string, args: string[], options?: SpawnOptions) {
-        if (!isTestExecution() && isCI && !workspace.getConfiguration('python', null).get<boolean>('enableProcessLogging', true)) {
+        if (
+            !isTestExecution() &&
+            isCI &&
+            !workspace.getConfiguration('python', null).get<boolean>('enableProcessLogging', true)
+        ) {
             return;
         }
         const argsList = args.reduce((accumulator, current, index) => {

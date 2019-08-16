@@ -241,10 +241,7 @@ export interface IDriver {
      * @returns {Promise<ElementHandle[]>}
      * @memberof IDriver
      */
-    $$(
-        selector: string,
-        options?: SelectorRetryOptions & { predicate?: ElementsSelectorPredicate }
-    ): Promise<ElementHandle[]>;
+    $$(selector: string, options?: SelectorRetryOptions & { predicate?: ElementsSelectorPredicate }): Promise<ElementHandle[]>;
     /**
      * This method runs `document.querySelector` within the context and passes it as the first argument to `pageFunction`.
      * If there's no element matching `selector`, the method throws an error.
@@ -268,11 +265,7 @@ export interface IDriver {
      * @param x1 First argument to pass to pageFunction
      * @returns Promise which resolves to the return value of pageFunction
      */
-    $eval<R, X1>(
-        selector: string,
-        pageFunction: (element: Element, x1: UnwrapElementHandle<X1>) => R | Promise<R>,
-        x1: X1
-    ): Promise<WrapElementHandle<R>>;
+    $eval<R, X1>(selector: string, pageFunction: (element: Element, x1: UnwrapElementHandle<X1>) => R | Promise<R>, x1: X1): Promise<WrapElementHandle<R>>;
 
     /**
      * This method runs `Array.from(document.querySelectorAll(selector))` within the context and passes it as the
@@ -296,11 +289,7 @@ export interface IDriver {
      * @param x1 First argument to pass to pageFunction
      * @returns Promise which resolves to the return value of pageFunction
      */
-    $$eval<R, X1>(
-        selector: string,
-        pageFunction: (elements: Element[], x1: UnwrapElementHandle<X1>) => R | Promise<R>,
-        x1: X1
-    ): Promise<WrapElementHandle<R>>;
+    $$eval<R, X1>(selector: string, pageFunction: (elements: Element[], x1: UnwrapElementHandle<X1>) => R | Promise<R>, x1: X1): Promise<WrapElementHandle<R>>;
 
     /**
      * This method fetches an element with selector, scrolls it into view if needed, and

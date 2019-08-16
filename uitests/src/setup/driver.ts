@@ -5,28 +5,13 @@
 
 import { ChildProcess } from 'child_process';
 import { EventEmitter } from 'events';
-import {
-    Browser,
-    ClickOptions,
-    ElementHandle,
-    launch,
-    Page,
-    UnwrapElementHandle,
-    WrapElementHandle
-} from 'puppeteer-core';
+import { Browser, ClickOptions, ElementHandle, launch, Page, UnwrapElementHandle, WrapElementHandle } from 'puppeteer-core';
 import { URI } from 'vscode-uri';
 import { isCI } from '../constants';
 import { noop, RetryOptions, retryWrapper, sleep } from '../helpers';
 import { debug, warn } from '../helpers/logger';
 import { getSelector, Selector } from '../selectors';
-import {
-    ElementsSelectorPredicate,
-    IDriver,
-    ITestOptions,
-    SelectorRetryOptions,
-    WaitForSelectorOptions,
-    WaitForSelectorOptionsHidden
-} from '../types';
+import { ElementsSelectorPredicate, IDriver, ITestOptions, SelectorRetryOptions, WaitForSelectorOptions, WaitForSelectorOptionsHidden } from '../types';
 import { getVSCodeElectronPath } from './downloader';
 
 // Time to wait for UI to react to user typing in a textbox.
@@ -204,10 +189,7 @@ export class Driver extends EventEmitter implements IDriver {
         this.process = undefined;
     }
     public async waitForSelector(selector: string, options?: WaitForSelectorOptions): Promise<ElementHandle>;
-    public async waitForSelector(
-        selector: string,
-        options?: WaitForSelectorOptionsHidden
-    ): Promise<ElementHandle | undefined>;
+    public async waitForSelector(selector: string, options?: WaitForSelectorOptionsHidden): Promise<ElementHandle | undefined>;
     public async waitForSelector(
         selector: string,
         options?: WaitForSelectorOptions | WaitForSelectorOptionsHidden
@@ -223,13 +205,7 @@ export class Driver extends EventEmitter implements IDriver {
     // tslint:disable-next-line: no-any
     public async $(selector: string, options?: SelectorRetryOptions): Promise<any> {
         if (!options) {
-            return this.mainPage
-                .$(selector)
-                .then(ele =>
-                    ele
-                        ? Promise.resolve(ele)
-                        : Promise.reject(new Error(`Element not found with selector '${selector}'`))
-                );
+            return this.mainPage.$(selector).then(ele => (ele ? Promise.resolve(ele) : Promise.reject(new Error(`Element not found with selector '${selector}'`))));
         }
         const wrapper = async (): Promise<ElementHandle> => {
             const ele = await this.mainPage.$(selector);
@@ -241,10 +217,7 @@ export class Driver extends EventEmitter implements IDriver {
         };
         return retryWrapper(Driver.toRetryOptions(options, `Failed to find for selector '${selector}'`), wrapper);
     }
-    public async $$(
-        selector: string,
-        options?: SelectorRetryOptions & { predicate?: ElementsSelectorPredicate }
-    ): Promise<ElementHandle[]> {
+    public async $$(selector: string, options?: SelectorRetryOptions & { predicate?: ElementsSelectorPredicate }): Promise<ElementHandle[]> {
         if (!options) {
             return this.mainPage.$$(selector);
         }
@@ -262,15 +235,8 @@ export class Driver extends EventEmitter implements IDriver {
 
         return retryWrapper(Driver.toRetryOptions(options, `Failed to find for selector '${selector}'`), wrapper);
     }
-    public $eval<R>(
-        selector: string,
-        pageFunction: (element: Element) => R | Promise<R>
-    ): Promise<WrapElementHandle<R>>;
-    public $eval<R, X1>(
-        selector: string,
-        pageFunction: (element: Element, x1: UnwrapElementHandle<X1>) => R | Promise<R>,
-        x1: X1
-    ): Promise<WrapElementHandle<R>>;
+    public $eval<R>(selector: string, pageFunction: (element: Element) => R | Promise<R>): Promise<WrapElementHandle<R>>;
+    public $eval<R, X1>(selector: string, pageFunction: (element: Element, x1: UnwrapElementHandle<X1>) => R | Promise<R>, x1: X1): Promise<WrapElementHandle<R>>;
     // tslint:disable-next-line: no-any
     public $eval(selector: any, pageFunction: any, x1?: any) {
         if (arguments.length === 3) {
@@ -279,15 +245,8 @@ export class Driver extends EventEmitter implements IDriver {
         return this.mainPage.$eval(selector, pageFunction);
     }
 
-    public $$eval<R>(
-        selector: string,
-        pageFunction: (elements: Element[]) => R | Promise<R>
-    ): Promise<WrapElementHandle<R>>;
-    public $$eval<R, X1>(
-        selector: string,
-        pageFunction: (elements: Element[], x1: UnwrapElementHandle<X1>) => R | Promise<R>,
-        x1: X1
-    ): Promise<WrapElementHandle<R>>;
+    public $$eval<R>(selector: string, pageFunction: (elements: Element[]) => R | Promise<R>): Promise<WrapElementHandle<R>>;
+    public $$eval<R, X1>(selector: string, pageFunction: (elements: Element[], x1: UnwrapElementHandle<X1>) => R | Promise<R>, x1: X1): Promise<WrapElementHandle<R>>;
     // tslint:disable-next-line: no-any
     public $$eval(selector: any, pageFunction: any, x1?: any) {
         return this.mainPage.$$eval(selector, pageFunction, x1);

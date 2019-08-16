@@ -100,9 +100,7 @@ export class Application extends EventEmitter implements IApplication {
             // Also delete the downloaded language server.
             await Promise.all([
                 new Promise(resolve => rimraf(this.options.userDataPath, resolve)),
-                new Promise(resolve =>
-                    rimraf(path.join(this.options.extensionsPath, '**', 'languageServer.*'), resolve)
-                )
+                new Promise(resolve => rimraf(path.join(this.options.extensionsPath, '**', 'languageServer.*'), resolve))
             ]);
 
             // These must never change (we control the test environment).

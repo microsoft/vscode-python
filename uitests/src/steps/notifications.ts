@@ -44,10 +44,7 @@ Then('a message containing the text {string} is displayed', async function(messa
     await notificationDisplayed(this.app, message);
 });
 
-Then('a message containing the text {string} will be displayed within {int} seconds', async function(
-    message: string,
-    timeoutSeconds: number
-) {
+Then('a message containing the text {string} will be displayed within {int} seconds', async function(message: string, timeoutSeconds: number) {
     await notificationDisplayed(this.app, message, timeoutSeconds * 1000);
 });
 
@@ -76,10 +73,7 @@ Then('a message containing the text {string} is not displayed', async function(m
     await messageIsNotDisplayed(this.app, message);
 });
 
-Then('I click the {string} button for the message with the text {string}', CucumberRetryMax20Seconds, async function(
-    button: string,
-    message: string
-) {
+Then('I click the {string} button for the message with the text {string}', CucumberRetryMax20Seconds, async function(button: string, message: string) {
     await notificationDisplayed(this.app, message);
     await this.app.notifications.dismiss([{ buttonText: button, content: message }], 2);
     // We might have to retry closing the message as its possible a new message was displayed in the mean time.

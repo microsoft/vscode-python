@@ -35,10 +35,7 @@ When('I create a new file with the following content', async function(contents: 
     await sleep(200);
 });
 
-Given('a file named {string} is created with the following content', async function(
-    filename: string,
-    contents: string
-) {
+Given('a file named {string} is created with the following content', async function(filename: string, contents: string) {
     const fullpath = path.join(this.app.workspacePathOrFolder, filename);
     await fs.ensureDir(path.dirname(fullpath));
     await fs.writeFile(fullpath, contents);

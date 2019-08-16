@@ -28,16 +28,10 @@ export async function installPackage(pythonPath: string, moduleName: string): Pr
 export async function uninstallModule(pythonPath: string, moduleName: string): Promise<void> {
     await installOrUninstallPackage(pythonPath, moduleName, false);
 }
-export async function installOrUninstallPackage(
-    pythonPath: string,
-    moduleName: string,
-    install: boolean = true
-): Promise<void> {
+export async function installOrUninstallPackage(pythonPath: string, moduleName: string, install: boolean = true): Promise<void> {
     const installCmd = install ? 'install' : 'uninstall';
     const extraArgs = install ? [] : ['-y'];
-    const cmd = `${pythonPath.toCommandArgument()} -m pip ${installCmd} ${moduleName} -q --disable-pip-version-check ${extraArgs.join(
-        ' '
-    )}`;
+    const cmd = `${pythonPath.toCommandArgument()} -m pip ${installCmd} ${moduleName} -q --disable-pip-version-check ${extraArgs.join(' ')}`;
     // tslint:disable-next-line: no-unnecessary-callback-wrapper
     return new Promise<void>(resolve => exec(cmd.trim(), () => resolve()));
 }

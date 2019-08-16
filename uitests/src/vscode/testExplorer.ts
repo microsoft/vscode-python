@@ -61,10 +61,7 @@ export class TestExplorer implements ITestExplorer {
         });
     }
     public async waitUntilTestsStop(timeout: number): Promise<void> {
-        await this.app.driver.waitForSelector(
-            this.app.getCSSSelector(Selector.TestExplorerToolbarcon).format(iconTitleMapping.Stop),
-            { timeout, hidden: true }
-        );
+        await this.app.driver.waitForSelector(this.app.getCSSSelector(Selector.TestExplorerToolbarcon).format(iconTitleMapping.Stop), { timeout, hidden: true });
     }
     public async expandNodes(maxNodes: number = maxNodesToExpand): Promise<void> {
         await this.ensureOpened();
@@ -245,9 +242,7 @@ export class TestExplorer implements ITestExplorer {
             await sleep(delayForUIToUpdate);
         }
     }
-    private async getNodeInfo(
-        options: { label: string } | { nodeNumber: number } | { label: string; nodeNumber: number }
-    ): Promise<NodeInfo> {
+    private async getNodeInfo(options: { label: string } | { nodeNumber: number } | { label: string; nodeNumber: number }): Promise<NodeInfo> {
         let label = '';
         let nodeNumber = -1;
         if ('nodeNumber' in options) {
@@ -269,15 +264,12 @@ export class TestExplorer implements ITestExplorer {
             this.app.driver.$eval(selector, element => element.className)
         ]);
 
-        const status = Array.from(statusToIconMapping.entries()).reduce<TestExplorerNodeStatus>(
-            (currentStatus, item) => {
-                if (bgIcon.includes(item[1])) {
-                    return item[0];
-                }
-                return currentStatus;
-            },
-            'Unknown'
-        );
+        const status = Array.from(statusToIconMapping.entries()).reduce<TestExplorerNodeStatus>((currentStatus, item) => {
+            if (bgIcon.includes(item[1])) {
+                return item[0];
+            }
+            return currentStatus;
+        }, 'Unknown');
 
         return {
             expanded: className.indexOf('expanded') >= 0,

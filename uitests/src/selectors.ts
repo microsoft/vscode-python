@@ -172,10 +172,8 @@ export class QuickOpen {
     public static QUICK_OPEN_HIDDEN = 'div.monaco-quick-open-widget[aria-hidden="true"]';
     public static QUICK_OPEN_INPUT = `${QuickOpen.QUICK_OPEN} .quick-open-input input`;
     public static QUICK_OPEN_FOCUSED_ELEMENT = `${QuickOpen.QUICK_OPEN} .quick-open-tree .monaco-tree-row.focused .monaco-highlighted-label`;
-    public static QUICK_OPEN_ENTRY_SELECTOR =
-        'div[aria-label="Quick Picker"] .monaco-tree-rows.show-twisties .monaco-tree-row .quick-open-entry';
-    public static QUICK_OPEN_ENTRY_LABEL_SELECTOR =
-        'div[aria-label="Quick Picker"] .monaco-tree-rows.show-twisties .monaco-tree-row .quick-open-entry .label-name';
+    public static QUICK_OPEN_ENTRY_SELECTOR = 'div[aria-label="Quick Picker"] .monaco-tree-rows.show-twisties .monaco-tree-row .quick-open-entry';
+    public static QUICK_OPEN_ENTRY_LABEL_SELECTOR = 'div[aria-label="Quick Picker"] .monaco-tree-rows.show-twisties .monaco-tree-row .quick-open-entry .label-name';
     public static QUICK_OPEN_ENTRY_LINE_LABEL_SELECTOR =
         'div[aria-label="Quick Picker"] .monaco-tree-rows.show-twisties .monaco-tree-row.focused .quick-open-entry .monaco-label-description-container .label-name .monaco-highlighted-label span';
 }
@@ -230,23 +228,19 @@ const selectors: Record<Selector, { stable: string } & { insider?: string }> = {
         stable: '.notifications-toasts.visible .notification-toast-container .notification-list-item.expanded'
     },
     [Selector.NotificationError]: {
-        stable:
-            '.notifications-toasts.visible .notification-toast-container .notification-list-item.expanded .notification-list-item-icon.icon-error'
+        stable: '.notifications-toasts.visible .notification-toast-container .notification-list-item.expanded .notification-list-item-icon.icon-error'
     },
     [Selector.NthNotificationMessage]: {
-        stable:
-            '.notifications-toasts.visible .notification-toast-container:nth-child({0}) .notification-list-item.expanded div.notification-list-item-message span'
+        stable: '.notifications-toasts.visible .notification-toast-container:nth-child({0}) .notification-list-item.expanded div.notification-list-item-message span'
     },
     [Selector.IndividualNotification]: {
         stable: messageBoxSelector
     },
     [Selector.CloseButtonInNthNotification]: {
-        stable:
-            '.notifications-toasts.visible .notification-toast-container:nth-child({0}) .notification-list-item.expanded .action-label.icon.clear-notification-action'
+        stable: '.notifications-toasts.visible .notification-toast-container:nth-child({0}) .notification-list-item.expanded .action-label.icon.clear-notification-action'
     },
     [Selector.ButtonInNthNotification]: {
-        stable:
-            ".notifications-toasts.visible .notification-toast-container:nth-child({0}) .notification-list-item.expanded .monaco-button.monaco-text-button[title='{1}']"
+        stable: ".notifications-toasts.visible .notification-toast-container:nth-child({0}) .notification-list-item.expanded .monaco-button.monaco-text-button[title='{1}']"
     },
     [Selector.ProblemsBadge]: {
         stable: '.part.panel.bottom .action-item.checked .badge-content'
@@ -261,12 +255,10 @@ const selectors: Record<Selector, { stable: string } & { insider?: string }> = {
         stable: `${quickOpen} .quick-open-input input`
     },
     [Selector.QuickOpenEntryLabel]: {
-        stable:
-            'div[aria-label="Quick Picker"] .monaco-tree-rows.show-twisties .monaco-tree-row .quick-open-entry .label-name'
+        stable: 'div[aria-label="Quick Picker"] .monaco-tree-rows.show-twisties .monaco-tree-row .quick-open-entry .label-name'
     },
     [Selector.QuickOpenEntryLabelFocused]: {
-        stable:
-            'div[aria-label="Quick Picker"] .monaco-tree-rows.show-twisties .monaco-tree-row.focused .quick-open-entry .label-name .monaco-highlighted-label .highlight'
+        stable: 'div[aria-label="Quick Picker"] .monaco-tree-rows.show-twisties .monaco-tree-row.focused .quick-open-entry .label-name .monaco-highlighted-label .highlight'
     },
     [Selector.QuickOpenEntryLineLabel]: {
         stable: QuickOpen.QUICK_OPEN_ENTRY_LINE_LABEL_SELECTOR
@@ -293,8 +285,7 @@ const selectors: Record<Selector, { stable: string } & { insider?: string }> = {
         stable: 'div[id="workbench.view.extension.test"] div.monaco-tree-row:nth-child({0}) a.label-name'
     },
     [Selector.NthTestExplorerNodeIcon]: {
-        stable:
-            'div[id="workbench.view.extension.test"] div.monaco-tree-row:nth-child({0}) .custom-view-tree-node-item-icon'
+        stable: 'div[id="workbench.view.extension.test"] div.monaco-tree-row:nth-child({0}) .custom-view-tree-node-item-icon'
     },
     [Selector.NthTestExplorerNode]: {
         stable: 'div[id="workbench.view.extension.test"] div.monaco-tree-row:nth-child({0})'

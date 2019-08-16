@@ -120,10 +120,7 @@ async function cloneGitRepo({ url }: { url: string }, cwd: string): Promise<void
  * @param {string} workspaceFolder
  * @returns {(Promise<string | undefined>)}
  */
-export async function initializeWorkspace(
-    scenario: HookScenarioResult,
-    workspaceFolder: string
-): Promise<string | undefined> {
+export async function initializeWorkspace(scenario: HookScenarioResult, workspaceFolder: string): Promise<string | undefined> {
     const repo = getGitRepo(scenario.pickle.tags);
     if (!repo) {
         debug('initializeWorkspace without a repo');

@@ -61,12 +61,7 @@ async function parseCucumberJson(jsonFile: string): Promise<CucumberReport> {
 function hasScenarioPassed(scenario: Scenario): boolean {
     return scenario.steps.every(step => step.result.status === 'passed');
 }
-async function findScenario(
-    report: CucumberReport,
-    featureId: string,
-    scenarioId: string,
-    line: number
-): Promise<Scenario> {
+async function findScenario(report: CucumberReport, featureId: string, scenarioId: string, line: number): Promise<Scenario> {
     for (const feature of report) {
         if (feature.id !== featureId) {
             continue;
@@ -76,9 +71,7 @@ async function findScenario(
             return found;
         }
     }
-    throw new Error(
-        `Feature & Scenario not found. FeatureId = ${featureId}, ScenarioId = ${scenarioId}, line = ${line}`
-    );
+    throw new Error(`Feature & Scenario not found. FeatureId = ${featureId}, ScenarioId = ${scenarioId}, line = ${line}`);
 }
 
 async function getCucumberResultStats(json: CucumberReport): Promise<CucumberReportStats> {
@@ -111,13 +104,7 @@ async function shouldRerunTests(results: CucumberResults): Promise<boolean> {
     return false;
 }
 
-export async function start(
-    channel: Channel,
-    testDir: string,
-    verboseLogging: boolean,
-    pythonPath: string,
-    cucumberArgs: string[]
-) {
+export async function start(channel: Channel, testDir: string, verboseLogging: boolean, pythonPath: string, cucumberArgs: string[]) {
     const options = getTestOptions(channel, testDir, pythonPath, verboseLogging);
     await initialize(options);
     await fs.ensureDir(options.reportsPath);
@@ -144,12 +131,7 @@ export async function start(
                 for (const feature of rerurnJson) {
                     for (const scenario of feature.elements) {
                         if (hasScenarioPassed(scenario)) {
-                            const originalScenario = await findScenario(
-                                originalJson,
-                                feature.id,
-                                scenario.id,
-                                scenario.line
-                            );
+                            const originalScenario = await findScenario(originalJson, feature.id, scenario.id, scenario.line);
                             Object.keys(scenario).forEach(key => {
                                 // tslint:disable-next-line: no-any
                                 (originalScenario as any)[key] = (scenario as any)[key];
@@ -195,10 +177,7 @@ export async function start(
     // Generate necessary reports.
     const jsonReportFilePath = results.jsonReportFile;
     await addReportMetadata(options, jsonReportFilePath);
-    await Promise.all([
-        generateHtmlReport(options, jsonReportFilePath),
-        generateJUnitReport(options, jsonReportFilePath)
-    ]);
+    await Promise.all([generateHtmlReport(options, jsonReportFilePath), generateJUnitReport(options, jsonReportFilePath)]);
 
     // Bye bye.
     if (!success) {
@@ -206,17 +185,8 @@ export async function start(
     }
 }
 
-async function runCucumber(
-    cucumberArgs: string[],
-    worldParameters: WorldParameters,
-    rerunFile?: string
-): Promise<CucumberResults> {
-    const jsonReportFile = path.join(
-        uitestsRootPath,
-        '.vscode test',
-        'reports',
-        `cucumber_report_${new Date().getTime()}.json`
-    );
+async function runCucumber(cucumberArgs: string[], worldParameters: WorldParameters, rerunFile?: string): Promise<CucumberResults> {
+    const jsonReportFile = path.join(uitestsRootPath, '.vscode test', 'reports', `cucumber_report_${new Date().getTime()}.json`);
     const newRerunFile = `@rerun${new Date().getTime()}.txt`;
     const args: string[] = [
         '', // Leave empty (not used by cucmberjs)
