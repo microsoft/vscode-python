@@ -176,12 +176,12 @@ suite('Application Diagnostics - Check Test Settings', () => {
         {
             testTitle: 'Should replace python.unitTest.pyTest.',
             contents: '{"python.pythonPath":"1234", "python.unitTest.pyTestArgs":[], "python.unitTest.pyTestArgs":[], "python.unitTest.pyTestPath":[]}',
-            expectedContents: '{"python.pythonPath":"1234", "python.testing.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}',
+            expectedContents: '{"python.pythonPath":"1234", "python.testing.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}'
         },
         {
             testTitle: 'Should replace python.testing.pyTest.',
             contents: '{"python.pythonPath":"1234", "python.testing.pyTestArgs":[], "python.testing.pyTestArgs":[], "python.testing.pyTestPath":[]}',
-            expectedContents: '{"python.pythonPath":"1234", "python.testing.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}',
+            expectedContents: '{"python.pythonPath":"1234", "python.testing.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}'
         },
         {
             testTitle: 'Should not make any changes to the file',

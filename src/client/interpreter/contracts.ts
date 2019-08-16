@@ -135,6 +135,7 @@ export interface IInterpreterWatcherBuilder {
 }
 
 export const InterpreterLocatorProgressHandler = Symbol('InterpreterLocatorProgressHandler');
+// tslint:disable-next-line: interface-name
 export interface InterpreterLocatorProgressHandler {
     register(): void;
 }
