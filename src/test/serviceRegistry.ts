@@ -68,7 +68,7 @@ export class IocContainer {
         this.serviceManager.addSingleton<IInterpreterAutoSelectionService>(IInterpreterAutoSelectionService, MockAutoSelectionService);
         this.serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(IInterpreterAutoSeletionProxyService, MockAutoSelectionService);
     }
-    public async dispose() : Promise<void> {
+    public async dispose(): Promise<void> {
         for (const disposable of this.disposables) {
             if (!disposable) {
                 continue;
@@ -86,6 +86,9 @@ export class IocContainer {
         if (registerFileSystem) {
             this.registerFileSystemTypes();
         }
+        this.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
+        this.serviceManager.addSingleton<InterpeterHashProviderFactory>(InterpeterHashProviderFactory, InterpeterHashProviderFactory);
+        this.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
     }
     public registerFileSystemTypes() {
         this.serviceManager.addSingleton<IPlatformService>(IPlatformService, PlatformService);
@@ -128,9 +131,6 @@ export class IocContainer {
         const mockEnvironmentActivationService = mock(EnvironmentActivationService);
         when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything())).thenResolve();
         this.serviceManager.rebindInstance<IEnvironmentActivationService>(IEnvironmentActivationService, instance(mockEnvironmentActivationService));
-        this.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
-        this.serviceManager.addSingleton<InterpeterHashProviderFactory>(InterpeterHashProviderFactory, InterpeterHashProviderFactory);
-        this.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
     }
 
     public registerMockProcess() {
