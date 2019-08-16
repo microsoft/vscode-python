@@ -32,7 +32,7 @@ import {
     PythonInterpreter
 } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
-import { IInterpreterHashProviderFactory, IInterpreterHashProvider } from '../../client/interpreter/locators/types';
+import { IInterpreterHashProvider, IInterpreterHashProviderFactory } from '../../client/interpreter/locators/types';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
