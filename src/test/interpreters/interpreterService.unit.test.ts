@@ -32,7 +32,7 @@ import {
     PythonInterpreter
 } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
-import { IInterpreterHashProviderFactory } from '../../client/interpreter/locators/types';
+import { IInterpreterHashProviderFactory, IInterpreterHashProvider } from '../../client/interpreter/locators/types';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
@@ -231,12 +231,7 @@ suite('Interpreters service', () => {
         test('Return cached display name', async () => {
             const pythonPath = '1234';
             const interpreterInfo: Partial<PythonInterpreter> = { path: pythonPath };
-            const fileHash = 'File_Hash';
-            const hash = `${fileHash}-${md5(JSON.stringify({ ...interpreterInfo, displayName: '' }))}`;
-            fileSystem
-                .setup(fs => fs.getFileHash(TypeMoq.It.isValue(pythonPath)))
-                .returns(() => Promise.resolve(fileHash))
-                .verifiable(TypeMoq.Times.once());
+            const hash = `-${md5(JSON.stringify({ ...interpreterInfo, displayName: '' }))}`;
             const expectedDisplayName = 'Formatted display name';
             persistentStateFactory
                 .setup(p => p.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
@@ -253,17 +248,24 @@ suite('Interpreters service', () => {
             const displayName = await service.getDisplayName(interpreterInfo, undefined);
 
             expect(displayName).to.equal(expectedDisplayName);
-            fileSystem.verifyAll();
             persistentStateFactory.verifyAll();
         });
         test('Cached display name is not used if file hashes differ', async () => {
             const pythonPath = '1234';
             const interpreterInfo: Partial<PythonInterpreter> = { path: pythonPath };
             const fileHash = 'File_Hash';
-            fileSystem
-                .setup(fs => fs.getFileHash(TypeMoq.It.isValue(pythonPath)))
+            const hashProvider = TypeMoq.Mock.ofType<IInterpreterHashProvider>();
+            hashProviderFactory
+                .setup(factory => factory.create(TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve(hashProvider.object))
+                .verifiable(TypeMoq.Times.atLeastOnce());
+            hashProvider
+                .setup(provider => provider.getInterpreterHash(TypeMoq.It.isValue(pythonPath)))
                 .returns(() => Promise.resolve(fileHash))
                 .verifiable(TypeMoq.Times.once());
+            hashProvider
+                .setup(provider => (provider as any).then)
+                .returns(() => undefined);
             const expectedDisplayName = 'Formatted display name';
             persistentStateFactory
                 .setup(p => p.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
@@ -280,7 +282,8 @@ suite('Interpreters service', () => {
             const displayName = await service.getDisplayName(interpreterInfo, undefined).catch(() => '');
 
             expect(displayName).to.not.equal(expectedDisplayName);
-            fileSystem.verifyAll();
+            hashProviderFactory.verifyAll();
+            hashProvider.verifyAll();
             persistentStateFactory.verifyAll();
         });
     });
@@ -379,10 +382,18 @@ suite('Interpreters service', () => {
         test('Ensure cache is returned', async () => {
             const fileHash = 'file_hash';
             const pythonPath = 'Some Python Path';
-            fileSystem
-                .setup(fs => fs.getFileHash(TypeMoq.It.isValue(pythonPath)))
+            const hashProvider = TypeMoq.Mock.ofType<IInterpreterHashProvider>();
+            hashProviderFactory
+                .setup(factory => factory.create(TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve(hashProvider.object))
+                .verifiable(TypeMoq.Times.atLeastOnce());
+            hashProvider
+                .setup(provider => provider.getInterpreterHash(TypeMoq.It.isValue(pythonPath)))
                 .returns(() => Promise.resolve(fileHash))
                 .verifiable(TypeMoq.Times.once());
+            hashProvider
+                .setup(provider => (provider as any).then)
+                .returns(() => undefined);
 
             const state = TypeMoq.Mock.ofType<IPersistentState<{ fileHash: string; info?: PythonInterpreter }>>();
             const info = { path: 'hell', type: InterpreterType.Venv };
@@ -414,15 +425,24 @@ suite('Interpreters service', () => {
             expect(store.value).to.deep.equal({ fileHash, info });
             state.verifyAll();
             persistentStateFactory.verifyAll();
-            fileSystem.verifyAll();
+            hashProviderFactory.verifyAll();
+            hashProvider.verifyAll();
         });
         test('Ensure cache is cleared if file hash is different', async () => {
             const fileHash = 'file_hash';
             const pythonPath = 'Some Python Path';
-            fileSystem
-                .setup(fs => fs.getFileHash(TypeMoq.It.isValue(pythonPath)))
+            const hashProvider = TypeMoq.Mock.ofType<IInterpreterHashProvider>();
+            hashProviderFactory
+                .setup(factory => factory.create(TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve(hashProvider.object))
+                .verifiable(TypeMoq.Times.atLeastOnce());
+            hashProvider
+                .setup(provider => provider.getInterpreterHash(TypeMoq.It.isValue(pythonPath)))
                 .returns(() => Promise.resolve('different value'))
                 .verifiable(TypeMoq.Times.once());
+            hashProvider
+                .setup(provider => (provider as any).then)
+                .returns(() => undefined);
 
             const state = TypeMoq.Mock.ofType<IPersistentState<{ fileHash: string; info?: PythonInterpreter }>>();
             const info = { path: 'hell', type: InterpreterType.Venv };
@@ -454,7 +474,8 @@ suite('Interpreters service', () => {
             expect(store.value.info).to.deep.equal(info);
             state.verifyAll();
             persistentStateFactory.verifyAll();
-            fileSystem.verifyAll();
+            hashProviderFactory.verifyAll();
+            hashProvider.verifyAll();
         });
     });
 });
