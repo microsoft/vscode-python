@@ -56,7 +56,7 @@ steps:
           targets: "prePublishNonBundle"
       condition: and(succeeded(), eq(variables['build'], 'false'))
 
-    - bash: npx tslint ./src/**/*.ts{,x}
+    - bash: npx tslint --project tsconfig.json
       displayName: "code hygiene"
       condition: and(succeeded(), eq(variables['build'], 'false'))
 
