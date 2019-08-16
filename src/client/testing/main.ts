@@ -1,4 +1,4 @@
-–'use strict';
+'use strict';
 
 // tslint:disable:no-duplicate-imports no-unnecessary-callback-wrapper
 
