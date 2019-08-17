@@ -148,6 +148,7 @@ export const IJupyterSessionManager = Symbol('IJupyterSessionManager');
 export interface IJupyterSessionManager {
     startNew(connInfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, cancelToken?: CancellationToken): Promise<IJupyterSession>;
     getActiveKernelSpecs(connInfo: IConnection): Promise<IJupyterKernelSpec[]>;
+    getActiveKernels(connInfo: IConnection): Promise<Kernel.IModel[]>;
 }
 
 export interface IJupyterKernelSpec extends IAsyncDisposable {

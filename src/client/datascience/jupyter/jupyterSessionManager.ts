@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { ServerConnection, SessionManager } from '@jupyterlab/services';
+import { ServerConnection, SessionManager, Kernel } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { IConnection, IJupyterKernelSpec, IJupyterPasswordConnect, IJupyterSession, IJupyterSessionManager } from '../types';
-import { IApplicationShell } from '../../common/application/types';
+import { IConfigurationService } from '../../common/types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { JupyterSession } from './jupyterSession';
 
@@ -14,12 +14,15 @@ import { JupyterSession } from './jupyterSession';
 export class JupyterSessionManager implements IJupyterSessionManager {
     constructor(
         @inject(IJupyterPasswordConnect) private jupyterPasswordConnect: IJupyterPasswordConnect,
-        @inject(IApplicationShell) private appShell: IApplicationShell
+        @inject(IConfigurationService) private readonly configurationService: IConfigurationService
     ) { }
 
     public async startNew(connInfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, cancelToken?: CancellationToken): Promise<IJupyterSession> {
         // Create a new session and attempt to connect to it
-        const session = new JupyterSession(this.appShell, connInfo, kernelSpec, this.jupyterPasswordConnect);
+        const settings = this.configurationService.getSettings();
+        const allowShutdown = settings.datascience.jupyterServerAllowKernelShutdown;
+        const kernelId = settings.datascience.jupyterServerKernelId;
+        const session = new JupyterSession(connInfo, kernelSpec, this.jupyterPasswordConnect, kernelId, allowShutdown);
         try {
             await session.connect(cancelToken);
         } finally {
@@ -30,19 +33,15 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         return session;
     }
 
+    public getActiveKernels(connection: IConnection): Promise<Kernel.IModel[]> {
+        return Kernel.listRunning(this.makeServerSettings(connection));
+    }
+
     public async getActiveKernelSpecs(connection: IConnection): Promise<IJupyterKernelSpec[]> {
         let sessionManager: SessionManager | undefined;
         try {
             // Use our connection to create a session manager
-            const serverSettings = ServerConnection.makeSettings(
-                {
-                    baseUrl: connection.baseUrl,
-                    token: connection.token,
-                    pageUrl: '',
-                    // A web socket is required to allow token authentication (what if there is no token authentication?)
-                    wsUrl: connection.baseUrl.replace('http', 'ws'),
-                    init: { cache: 'no-store', credentials: 'same-origin' }
-                });
+            const serverSettings = this.makeServerSettings(connection);
             sessionManager = new SessionManager({ serverSettings: serverSettings });
 
             // Ask the session manager to refresh its list of kernel specs.
@@ -65,6 +64,19 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             }
         }
 
+    }
+
+
+    private makeServerSettings(connection: IConnection): ServerConnection.ISettings {
+        return ServerConnection.makeSettings(
+            {
+                baseUrl: connection.baseUrl,
+                token: connection.token,
+                pageUrl: '',
+                // A web socket is required to allow token authentication (what if there is no token authentication?)
+                wsUrl: connection.baseUrl.replace('http', 'ws'),
+                init: { cache: 'no-store', credentials: 'same-origin' }
+            });
     }
 
 }

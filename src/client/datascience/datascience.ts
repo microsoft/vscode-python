@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import '../common/extensions';
-
+import { Kernel } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils';
 import { inject, injectable } from 'inversify';
 import { URL } from 'url';
@@ -11,7 +11,7 @@ import * as vscode from 'vscode';
 import { IApplicationShell, ICommandManager, IDebugService, IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { PYTHON_ALLFILES, PYTHON_LANGUAGE } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
-import { traceError } from '../common/logger';
+import { traceInfo, traceError } from '../common/logger';
 import {
     BANNER_NAME_DS_SURVEY,
     IConfigurationService,
@@ -26,7 +26,12 @@ import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { hasCells } from './cellFactory';
 import { Commands, EditorContexts, Settings, Telemetry } from './constants';
-import { ICodeWatcher, IDataScience, IDataScienceCodeLensProvider, IDataScienceCommandListener } from './types';
+import { JupyterExecutionBase } from './jupyter/jupyterExecution';
+import { ICodeWatcher, IDataScience, IDataScienceCodeLensProvider, IDataScienceCommandListener, IJupyterSessionManager } from './types';
+
+interface IKernelQuickPickItem extends vscode.QuickPickItem {
+    kernelId: string;
+}
 
 @injectable()
 export class DataScience implements IDataScience {
@@ -44,7 +49,8 @@ export class DataScience implements IDataScience {
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IDebugService) private debugService: IDebugService,
-        @inject(IWorkspaceService) private workspace: IWorkspaceService
+        @inject(IWorkspaceService) private workspace: IWorkspaceService,
+        @inject(IJupyterSessionManager) private sessionManager: IJupyterSessionManager
     ) {
         this.commandListeners = this.serviceContainer.getAll<IDataScienceCommandListener>(IDataScienceCommandListener);
         this.dataScienceSurveyBanner = this.serviceContainer.get<IPythonExtensionBanner>(IPythonExtensionBanner, BANNER_NAME_DS_SURVEY);
@@ -289,6 +295,58 @@ export class DataScience implements IDataScience {
 
         if (userURI) {
             await this.configuration.updateSetting('dataScience.jupyterServerURI', userURI, undefined, vscode.ConfigurationTarget.Workspace);
+
+            const connInfo = JupyterExecutionBase.createRemoteConnectionInfo(userURI, this.configuration);
+
+            const runningKernels: Kernel.IModel[] = await this.sessionManager.getActiveKernels(connInfo);
+            const arr: IKernelQuickPickItem[] = runningKernels.map(runningKernel => {
+                traceInfo(`Found running kernel ${runningKernel.id}, running since ${runningKernel.last_activity}`);
+                const localLastActivity = runningKernel.last_activity ? new Date(runningKernel.last_activity.toString()).toLocaleString() : '?';
+                return {
+                    label: `Kernel ${runningKernel.name} - ${runningKernel.id}`,
+                    detail: `Running since ${localLastActivity}, ${runningKernel.connections} existing connections`,
+                    kernelId: runningKernel.id
+                };
+            });
+            const startNewKernel = {
+                label: 'Start new kernel on Jupyter server',
+                picked: true,
+                kernelId: 'none'
+            };
+            arr.unshift(startNewKernel);
+
+            const kernelSelection = await this.appShell.showQuickPick(arr, {
+                ignoreFocusOut: true,
+                placeHolder: 'Select Jupyer Kernel'
+            });
+
+            const autoShutdown = {
+                label: 'Automatically shutdown Kernel when closed',
+                picked: true
+            };
+            const leaveRunning = {
+                label: 'Leave Kernel running when closed',
+                picked: true
+            };
+            const shutdownOptions = [autoShutdown, leaveRunning];
+            const shutdownSelection = await this.appShell.showQuickPick(shutdownOptions, { ignoreFocusOut: true });
+
+            if (kernelSelection && kernelSelection !== startNewKernel) {
+                traceInfo(`Connecting to existing kernel ${kernelSelection.kernelId}`);
+                sendTelemetryEvent(Telemetry.JupyterKernelSpecified);
+                await this.configuration.updateSetting('dataScience.jupyterServerKernelId', kernelSelection.kernelId, undefined, vscode.ConfigurationTarget.Workspace);
+            } else {
+                traceInfo('Creating new kernel for connection');
+            }
+
+            let allowShutdown = true;
+            if (shutdownSelection === leaveRunning) {
+                traceInfo('Session will not be shutdown on close');
+                allowShutdown = false;
+            }
+            sendTelemetryEvent(Telemetry.JupyterKernelAutoShutdown, undefined, { autoShutdownEnabled: allowShutdown });
+            await this.configuration.updateSetting('dataScience.jupyterServerAllowKernelShutdown', allowShutdown, undefined, vscode.ConfigurationTarget.Workspace);
+
         }
     }
 

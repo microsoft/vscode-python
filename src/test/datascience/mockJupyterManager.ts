@@ -33,6 +33,7 @@ import { noop, sleep } from '../core';
 import { MockJupyterSession } from './mockJupyterSession';
 import { MockProcessService } from './mockProcessService';
 import { MockPythonService } from './mockPythonService';
+import { Kernel } from '@jupyterlab/services';
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
 
@@ -234,6 +235,10 @@ export class MockJupyterManager implements IJupyterSessionManager {
         } else {
             return Promise.resolve(this.createNewSession());
         }
+    }
+
+    public getActiveKernels(_connection: IConnection): Promise<Kernel.IModel[]> {
+        return Promise.resolve([]);
     }
 
     public getActiveKernelSpecs(_connection: IConnection): Promise<IJupyterKernelSpec[]> {

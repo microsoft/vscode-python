@@ -349,6 +349,8 @@ export function setUpDomEnvironment() {
             jupyterLaunchTimeout: 10,
             jupyterLaunchRetries: 3,
             enabled: true,
+            jupyterServerAllowKernelShutdown: true,
+            jupyterServerKernelId: '',
             jupyterServerURI: 'local',
             notebookFileRoot: 'WORKSPACE',
             changeDirOnImportExport: true,

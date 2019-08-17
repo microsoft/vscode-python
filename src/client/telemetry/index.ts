@@ -1272,6 +1272,8 @@ export interface IEventNamePropertyMapping {
     [Telemetry.SelfCertsMessageClose]: never | undefined;
     [Telemetry.SelfCertsMessageEnabled]: never | undefined;
     [Telemetry.SelectJupyterURI]: never | undefined;
+    [Telemetry.JupyterKernelSpecified]: never | undefined;
+    [Telemetry.JupyterKernelAutoShutdown]: { autoShutdownEnabled: boolean };
     [Telemetry.SetJupyterURIToLocal]: never | undefined;
     [Telemetry.SetJupyterURIToUserSpecified]: never | undefined;
     [Telemetry.ShiftEnterBannerShown]: never | undefined;

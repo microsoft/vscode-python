@@ -112,6 +112,8 @@ export enum Telemetry {
     ExpandAll = 'DATASCIENCE.EXPAND_ALL',
     CollapseAll = 'DATASCIENCE.COLLAPSE_ALL',
     SelectJupyterURI = 'DATASCIENCE.SELECT_JUPYTER_URI',
+    JupyterKernelSpecified = 'DATASCIENCE.JUPYTER_KERNEL_SPECIFIED',
+    JupyterKernelAutoShutdown = 'DATASCIENCE.JUPYTER_AUTO_SHUTDOWN',
     SetJupyterURIToLocal = 'DATASCIENCE.SET_JUPYTER_URI_LOCAL',
     SetJupyterURIToUserSpecified = 'DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED',
     Interrupt = 'DATASCIENCE.INTERRUPT',

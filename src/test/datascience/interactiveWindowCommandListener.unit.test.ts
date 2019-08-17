@@ -133,6 +133,8 @@ suite('Interactive window command listener', async () => {
             jupyterLaunchTimeout: 10,
             jupyterLaunchRetries: 3,
             enabled: true,
+            jupyterServerAllowKernelShutdown: true,
+            jupyterServerKernelId: '',
             jupyterServerURI: '',
             changeDirOnImportExport: true,
             notebookFileRoot: 'WORKSPACE',

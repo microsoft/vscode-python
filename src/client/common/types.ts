@@ -303,6 +303,8 @@ export interface IDataScienceSettings {
     jupyterInterruptTimeout: number;
     jupyterLaunchTimeout: number;
     jupyterLaunchRetries: number;
+    jupyterServerAllowKernelShutdown: boolean,
+    jupyterServerKernelId: string,
     jupyterServerURI: string;
     notebookFileRoot: string;
     changeDirOnImportExport: boolean;

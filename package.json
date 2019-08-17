@@ -72,6 +72,8 @@
         "onCommand:python.datascience.showhistorypane",
         "onCommand:python.datascience.importnotebook",
         "onCommand:python.datascience.selectjupyteruri",
+        "onCommand:python.dataScience.jupyterserverkernelid",
+        "onCommand:python.dataScience.jupyterserverallowkernelshutdown",
         "onCommand:python.datascience.exportfileasnotebook",
         "onCommand:python.datascience.exportfileandoutputasnotebook",
         "onCommand:python.enableSourceMapSupport"
@@ -1363,6 +1365,18 @@
                     "type": "string",
                     "default": "local",
                     "description": "Select the Jupyter server URI to connect to. Select 'local' to launch a new Juypter server on the local machine.",
+                    "scope": "resource"
+                },
+                "python.dataScience.jupyterServerKernelId": {
+                    "type": "string",
+                    "default": "",
+                    "description": "Select the Jupyter server Kernel UUID to connect to. Leave blank to start a new kernel",
+                    "scope": "resource"
+                },
+                "python.dataScience.jupyterServerAllowKernelShutdown": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Shutdown the Jupyter kernel when finishede",
                     "scope": "resource"
                 },
                 "python.dataScience.notebookFileRoot": {

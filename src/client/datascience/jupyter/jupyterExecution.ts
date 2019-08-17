@@ -291,7 +291,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             }
         } else {
             // If we have a URI spec up a connection info for it
-            connection = this.createRemoteConnectionInfo(options.uri);
+            connection = JupyterExecutionBase.createRemoteConnectionInfo(options.uri, this.configuration);
             kernelSpec = undefined;
         }
 
@@ -310,7 +310,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return { connection, kernelSpec };
     }
 
-    private createRemoteConnectionInfo = (uri: string): IConnection => {
+    public static createRemoteConnectionInfo = (uri: string, configuration: IConfigurationService): IConnection => {
         let url: URL;
         try {
             url = new URL(uri);
@@ -318,7 +318,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             // This should already have been parsed when set, so just throw if it's not right here
             throw err;
         }
-        const settings = this.configuration.getSettings();
+        const settings = configuration.getSettings();
         const allowUnauthorized = settings.datascience.allowUnauthorizedRemoteConnection ? settings.datascience.allowUnauthorizedRemoteConnection : false;
 
         return {
