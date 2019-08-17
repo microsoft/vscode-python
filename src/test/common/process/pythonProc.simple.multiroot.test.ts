@@ -11,11 +11,12 @@ import { Container } from 'inversify';
 import { EOL } from 'os';
 import * as path from 'path';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { ConfigurationTarget, Disposable, OutputChannel, Uri } from 'vscode';
+import { ConfigurationTarget, Disposable, Memento, OutputChannel, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../client/common/constants';
+import { PersistentStateFactory } from '../../../client/common/persistentState';
 import { IS_WINDOWS } from '../../../client/common/platform/constants';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
@@ -25,7 +26,7 @@ import { CurrentProcess } from '../../../client/common/process/currentProcess';
 import { ProcessLogger } from '../../../client/common/process/logger';
 import { registerTypes as processRegisterTypes } from '../../../client/common/process/serviceRegistry';
 import { IProcessLogger, IPythonExecutionFactory, StdErrError } from '../../../client/common/process/types';
-import { IConfigurationService, ICurrentProcess, IDisposableRegistry, IOutputChannel, IPathUtils, IsWindows } from '../../../client/common/types';
+import { GLOBAL_MEMENTO, IConfigurationService, ICurrentProcess, IDisposableRegistry, IMemento, IOutputChannel, IPathUtils, IPersistentStateFactory, IsWindows, WORKSPACE_MEMENTO } from '../../../client/common/types';
 import { clearCache } from '../../../client/common/utils/cacheUtils';
 import { OSType } from '../../../client/common/utils/platform';
 import {
@@ -40,6 +41,7 @@ import { WindowsStoreInterpreter } from '../../../client/interpreter/locators/se
 import { ServiceContainer } from '../../../client/ioc/container';
 import { ServiceManager } from '../../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { MockMemento } from '../../../test/mocks/mementos';
 import { clearPythonPathInWorkspaceFolder, getExtensionSettings, isOs, isPythonVersion } from '../../common';
 import { MockOutputChannel } from '../../mockClasses';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
@@ -91,6 +93,9 @@ suite('PythonExecutableService', () => {
         serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
         serviceManager.addSingleton<InterpeterHashProviderFactory>(InterpeterHashProviderFactory, InterpeterHashProviderFactory);
         serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
+        serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
+        serviceManager.addSingleton<Memento>(IMemento, MockMemento, GLOBAL_MEMENTO);
+        serviceManager.addSingleton<Memento>(IMemento, MockMemento, WORKSPACE_MEMENTO);
         processRegisterTypes(serviceManager);
         variablesRegisterTypes(serviceManager);
 
