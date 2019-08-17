@@ -14,7 +14,7 @@ import { JSONObject } from '@phosphor/coreutils';
 import { Slot } from '@phosphor/signaling';
 import { Agent as HttpsAgent } from 'https';
 import * as uuid from 'uuid/v4';
-import { Event, EventEmitter } from 'vscode';
+import { Event, EventEmitter, QuickPickItem } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { Cancellation } from '../../common/cancellation';
@@ -33,6 +33,11 @@ import {
 import { JupyterKernelPromiseFailedError } from './jupyterKernelPromiseFailedError';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 import { createJupyterWebSocket } from './jupyterWebSocket';
+import { IApplicationShell } from '../../common/application/types';
+
+interface KernelQuickPickItem extends QuickPickItem {
+    kernelId: string;
+}
 
 export class JupyterSession implements IJupyterSession {
     private connInfo: IConnection | undefined;
@@ -47,12 +52,17 @@ export class JupyterSession implements IJupyterSession {
     private connected: boolean = false;
     private jupyterPasswordConnect: IJupyterPasswordConnect;
     private oldSessions: Session.ISession[] = [];
+    private readonly appShell: IApplicationShell;
+    private allowShutdown: boolean = true;
 
     constructor(
+        appShell: IApplicationShell,
         connInfo: IConnection,
         kernelSpec: IJupyterKernelSpec | undefined,
         jupyterPasswordConnect: IJupyterPasswordConnect
     ) {
+        console.trace()
+        this.appShell = appShell;
         this.connInfo = connInfo;
         this.kernelSpec = kernelSpec;
         this.jupyterPasswordConnect = jupyterPasswordConnect;
@@ -154,6 +164,7 @@ export class JupyterSession implements IJupyterSession {
         this.sessionManager = new SessionManager({ serverSettings: serverSettings });
         this.contentsManager = new ContentsManager({ serverSettings: serverSettings });
 
+
         // Start a new session
         this.session = await this.createSession(serverSettings, this.contentsManager, cancelToken);
 
@@ -217,18 +228,65 @@ export class JupyterSession implements IJupyterSession {
         throw exception;
     }
 
+
     private async createSession(serverSettings: ServerConnection.ISettings, contentsManager: ContentsManager, cancelToken?: CancellationToken): Promise<Session.ISession> {
 
         // Create a temporary notebook for this session.
         this.notebookFiles.push(await contentsManager.newUntitled({ type: 'notebook' }));
 
-        // Create our session options using this temporary notebook and our connection info
+        const runningKernels: Kernel.IModel[] = await Kernel.listRunning(serverSettings);
+        const arr: KernelQuickPickItem[] = runningKernels.map(runningKernel => {
+            traceInfo(`Found running kernel ${runningKernel.id}, running since ${runningKernel.last_activity}`);
+            const localLastActivity = runningKernel.last_activity ? new Date(runningKernel.last_activity.toString()).toLocaleString() : '?';
+            return {
+                label: `Kernel ${runningKernel.name} - ${runningKernel.id}`,
+                detail: `Running since ${localLastActivity}, ${runningKernel.connections} existing connections`,
+                kernelId: runningKernel.id
+            };
+        });
+        const startNewKernel = {
+            label: 'Start new kernel on Jupyter server',
+            picked: true,
+            kernelId: 'none'
+        };
+        arr.unshift(startNewKernel);
+
+        const kernelSelection = await this.appShell.showQuickPick(arr, {
+            ignoreFocusOut: true,
+            placeHolder: 'Select Jupyer Kernel'
+        });
+
+        const autoShutdown = {
+            label: 'Automatically shutdown Kernel when closed',
+            picked: true
+        };
+        const leaveRunning = {
+            label: 'Leave Kernel running when closed',
+            picked: true
+        };
+        const shutdownOptions = [autoShutdown, leaveRunning];
+        const shutdownSelection = await this.appShell.showQuickPick(shutdownOptions, { ignoreFocusOut: true });
+
         const options: Session.IOptions = {
             path: this.notebookFiles[this.notebookFiles.length - 1].path,
             kernelName: this.kernelSpec ? this.kernelSpec.name : '',
             name: uuid(), // This is crucial to distinguish this session from any other.
             serverSettings: serverSettings
         };
+
+        if (kernelSelection && kernelSelection !== startNewKernel) {
+            options.kernelId = kernelSelection.kernelId
+            traceInfo(`Connecting to existing kernel ${kernelSelection.kernelId}`);
+        } else {
+            traceInfo('Creating new kernel for connection');
+        }
+
+        if (shutdownSelection === leaveRunning) {
+            this.allowShutdown = false;
+            traceInfo('Session will not be shutdown on close');
+        }
+
+        // Create our session options using this temporary notebook and our connection info
 
         return Cancellation.race(() => this.sessionManager!.startNew(options), cancelToken);
     }
@@ -347,10 +405,14 @@ export class JupyterSession implements IJupyterSession {
                                 });
                             }
                         }
-                        await waitForPromise(session.shutdown(), 1000);
+                        if (this.allowShutdown) {
+                            await waitForPromise(session.shutdown(), 1000);
+                        }
                     } else {
-                        // Shutdown may fail if the process has been killed
-                        await waitForPromise(session.shutdown(), 1000);
+                        if (this.allowShutdown) {
+                            // Shutdown may fail if the process has been killed
+                            await waitForPromise(session.shutdown(), 1000);
+                        }
                     }
                 } catch {
                     noop();

@@ -6,18 +6,20 @@ import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { IConnection, IJupyterKernelSpec, IJupyterPasswordConnect, IJupyterSession, IJupyterSessionManager } from '../types';
+import { IApplicationShell } from '../../common/application/types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { JupyterSession } from './jupyterSession';
 
 @injectable()
 export class JupyterSessionManager implements IJupyterSessionManager {
     constructor(
-        @inject(IJupyterPasswordConnect) private jupyterPasswordConnect: IJupyterPasswordConnect
-    ) {}
+        @inject(IJupyterPasswordConnect) private jupyterPasswordConnect: IJupyterPasswordConnect,
+        @inject(IApplicationShell) private appShell: IApplicationShell
+    ) { }
 
-    public async startNew(connInfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, cancelToken?: CancellationToken) : Promise<IJupyterSession> {
+    public async startNew(connInfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, cancelToken?: CancellationToken): Promise<IJupyterSession> {
         // Create a new session and attempt to connect to it
-        const session = new JupyterSession(connInfo, kernelSpec, this.jupyterPasswordConnect);
+        const session = new JupyterSession(this.appShell, connInfo, kernelSpec, this.jupyterPasswordConnect);
         try {
             await session.connect(cancelToken);
         } finally {
@@ -28,8 +30,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         return session;
     }
 
-    public async getActiveKernelSpecs(connection: IConnection) : Promise<IJupyterKernelSpec[]> {
-        let sessionManager: SessionManager | undefined ;
+    public async getActiveKernelSpecs(connection: IConnection): Promise<IJupyterKernelSpec[]> {
+        let sessionManager: SessionManager | undefined;
         try {
             // Use our connection to create a session manager
             const serverSettings = ServerConnection.makeSettings(
