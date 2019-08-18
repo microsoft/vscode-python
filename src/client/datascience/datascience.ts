@@ -309,7 +309,7 @@ export class DataScience implements IDataScience {
                 };
             });
             const startNewKernel = {
-                label: 'Start new kernel on Jupyter server',
+                label: localize.DataScience.jupyterServerReconnectKernelStartNewLocal(),
                 picked: true,
                 kernelId: 'none'
             };
@@ -317,15 +317,15 @@ export class DataScience implements IDataScience {
 
             const kernelSelection = await this.appShell.showQuickPick(arr, {
                 ignoreFocusOut: true,
-                placeHolder: 'Select Jupyer Kernel'
+                placeHolder: localize.DataScience.jupyterServerReconnectKernelLocal()
             });
 
             const autoShutdown = {
-                label: 'Automatically shutdown Kernel when closed',
+                label: localize.DataScience.jupyterServerKernelAutoShutdownLocal(),
                 picked: true
             };
             const leaveRunning = {
-                label: 'Leave Kernel running when closed',
+                label: localize.DataScience.jupyterServerKernelLeaveRunningLocal(),
                 picked: true
             };
             const shutdownOptions = [autoShutdown, leaveRunning];
