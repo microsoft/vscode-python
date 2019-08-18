@@ -160,7 +160,6 @@ export class JupyterSession implements IJupyterSession {
         this.sessionManager = new SessionManager({ serverSettings: serverSettings });
         this.contentsManager = new ContentsManager({ serverSettings: serverSettings });
 
-
         // Start a new session
         this.session = await this.createSession(serverSettings, this.contentsManager, cancelToken);
 
@@ -223,7 +222,6 @@ export class JupyterSession implements IJupyterSession {
         }
         throw exception;
     }
-
 
     private async createSession(serverSettings: ServerConnection.ISettings, contentsManager: ContentsManager, cancelToken?: CancellationToken): Promise<Session.ISession> {
 

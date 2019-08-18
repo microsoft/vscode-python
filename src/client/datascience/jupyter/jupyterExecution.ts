@@ -49,6 +49,10 @@ enum ModuleExistsResult {
 
 export class JupyterExecutionBase implements IJupyterExecution {
 
+    public get sessionChanged(): Event<void> {
+        return this.eventEmitter.event;
+    }
+
     private processServicePromise: Promise<IProcessService>;
     private commands: Record<string, IJupyterCommand> = {};
     private jupyterPath: string | undefined;
@@ -86,8 +90,27 @@ export class JupyterExecutionBase implements IJupyterExecution {
         }
     }
 
-    public get sessionChanged(): Event<void> {
-        return this.eventEmitter.event;
+    public static createRemoteConnectionInfo = (uri: string, configuration: IConfigurationService): IConnection => {
+        let url: URL;
+        try {
+            url = new URL(uri);
+        } catch (err) {
+            // This should already have been parsed when set, so just throw if it's not right here
+            throw err;
+        }
+        const settings = configuration.getSettings();
+        const allowUnauthorized = settings.datascience.allowUnauthorizedRemoteConnection ? settings.datascience.allowUnauthorizedRemoteConnection : false;
+
+        return {
+            allowUnauthorized,
+            baseUrl: `${url.protocol}//${url.host}${url.pathname}`,
+            token: `${url.searchParams.get('token')}`,
+            hostName: url.hostname,
+            localLaunch: false,
+            localProcExitCode: undefined,
+            disconnected: (_l) => { return { dispose: noop }; },
+            dispose: noop
+        };
     }
 
     public dispose(): Promise<void> {
@@ -308,29 +331,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
         // Return the data we found.
         return { connection, kernelSpec };
-    }
-
-    public static createRemoteConnectionInfo = (uri: string, configuration: IConfigurationService): IConnection => {
-        let url: URL;
-        try {
-            url = new URL(uri);
-        } catch (err) {
-            // This should already have been parsed when set, so just throw if it's not right here
-            throw err;
-        }
-        const settings = configuration.getSettings();
-        const allowUnauthorized = settings.datascience.allowUnauthorizedRemoteConnection ? settings.datascience.allowUnauthorizedRemoteConnection : false;
-
-        return {
-            allowUnauthorized,
-            baseUrl: `${url.protocol}//${url.host}${url.pathname}`,
-            token: `${url.searchParams.get('token')}`,
-            hostName: url.hostname,
-            localLaunch: false,
-            localProcExitCode: undefined,
-            disconnected: (_l) => { return { dispose: noop }; },
-            dispose: noop
-        };
     }
 
     // tslint:disable-next-line: max-func-body-length

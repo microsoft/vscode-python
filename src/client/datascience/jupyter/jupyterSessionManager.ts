@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { ServerConnection, SessionManager, Kernel } from '@jupyterlab/services';
+import { Kernel, ServerConnection, SessionManager } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode-jsonrpc';
 
-import { IConnection, IJupyterKernelSpec, IJupyterPasswordConnect, IJupyterSession, IJupyterSessionManager } from '../types';
 import { IConfigurationService } from '../../common/types';
+import { IConnection, IJupyterKernelSpec, IJupyterPasswordConnect, IJupyterSession, IJupyterSessionManager } from '../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { JupyterSession } from './jupyterSession';
 
@@ -65,7 +65,6 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         }
 
     }
-
 
     private makeServerSettings(connection: IConnection): ServerConnection.ISettings {
         return ServerConnection.makeSettings(

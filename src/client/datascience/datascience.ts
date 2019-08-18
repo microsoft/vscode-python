@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import '../common/extensions';
+
 import { Kernel } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils';
 import { inject, injectable } from 'inversify';
@@ -11,7 +12,7 @@ import * as vscode from 'vscode';
 import { IApplicationShell, ICommandManager, IDebugService, IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { PYTHON_ALLFILES, PYTHON_LANGUAGE } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
-import { traceInfo, traceError } from '../common/logger';
+import { traceError, traceInfo } from '../common/logger';
 import {
     BANNER_NAME_DS_SURVEY,
     IConfigurationService,

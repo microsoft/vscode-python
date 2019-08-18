@@ -12,6 +12,7 @@ import * as uuid from 'uuid/v4';
 import { EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
+import { Kernel } from '@jupyterlab/services';
 import { Cancellation } from '../../client/common/cancellation';
 import { ExecutionResult, IProcessServiceFactory, IPythonExecutionFactory, Output } from '../../client/common/process/types';
 import { IAsyncDisposableRegistry, IConfigurationService } from '../../client/common/types';
@@ -33,7 +34,6 @@ import { noop, sleep } from '../core';
 import { MockJupyterSession } from './mockJupyterSession';
 import { MockProcessService } from './mockProcessService';
 import { MockPythonService } from './mockPythonService';
-import { Kernel } from '@jupyterlab/services';
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
 
