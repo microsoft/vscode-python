@@ -15,7 +15,7 @@ import { ConfigurationService } from '../../client/common/configuration/service'
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../client/common/platform/types';
-import { IConfigurationService, IPersistentState, IPersistentStateFactory, IPythonSettings, Product, LanguageServerType } from '../../client/common/types';
+import { IConfigurationService, IPersistentState, IPersistentStateFactory, IPythonSettings, LanguageServerType, Product } from '../../client/common/types';
 import { Common, Linters } from '../../client/common/utils/localize';
 import { AvailableLinterActivator } from '../../client/linters/linterAvailability';
 import { LinterInfo } from '../../client/linters/linterInfo';
