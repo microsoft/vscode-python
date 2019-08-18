@@ -227,13 +227,17 @@ export class JupyterSession implements IJupyterSession {
 
     private async createSession(serverSettings: ServerConnection.ISettings, contentsManager: ContentsManager, cancelToken?: CancellationToken): Promise<Session.ISession> {
 
-        // Create a temporary notebook for this session.
-        this.notebookFiles.push(await contentsManager.newUntitled({ type: 'notebook' }));
+        // Create a temporary notebook for this session.  Give it a unique name, so there is no possiblity of us reusing a session lingering the jupyter server
+        // (sessions in jupyter are indexed by path, regardless if the file exists of not and regardless of the session name, so deleting the file later doesn't save us)
+        // See https://github.com/jupyter/notebook/blob/5.7.x/notebook/services/sessions/handlers.py#L65
+        const sessionUUID = uuid();
+        const nbFile = await contentsManager.newUntitled({ type: 'notebook' });
+        this.notebookFiles.push(await contentsManager.rename(nbFile.path, `.vscode-jupyter-session-${sessionUUID}.ipynb`));
 
         const options: Session.IOptions = {
             path: this.notebookFiles[this.notebookFiles.length - 1].path,
             kernelName: this.kernelSpec ? this.kernelSpec.name : '',
-            name: uuid(), // This is crucial to distinguish this session from any other.
+            name: sessionUUID, // This is crucial to distinguish this session from any other.
             serverSettings: serverSettings
         };
 

@@ -331,13 +331,16 @@ export class DataScience implements IDataScience {
             const shutdownOptions = [autoShutdown, leaveRunning];
             const shutdownSelection = await this.appShell.showQuickPick(shutdownOptions, { ignoreFocusOut: true });
 
+            let kernelUUID: string = '';
             if (kernelSelection && kernelSelection !== startNewKernel) {
-                traceInfo(`Connecting to existing kernel ${kernelSelection.kernelId}`);
+                traceInfo(`Will connect to existing kernel ${kernelSelection.kernelId}`);
+                kernelUUID = kernelSelection.kernelId;
                 sendTelemetryEvent(Telemetry.JupyterKernelSpecified);
-                await this.configuration.updateSetting('dataScience.jupyterServerKernelId', kernelSelection.kernelId, undefined, vscode.ConfigurationTarget.Workspace);
+
             } else {
-                traceInfo('Creating new kernel for connection');
+                traceInfo('Will create a new kernel for connection');
             }
+            await this.configuration.updateSetting('dataScience.jupyterServerKernelId', kernelUUID, undefined, vscode.ConfigurationTarget.Workspace);
 
             let allowShutdown = true;
             if (shutdownSelection === leaveRunning) {
