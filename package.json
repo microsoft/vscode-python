@@ -1376,7 +1376,7 @@
                 "python.dataScience.jupyterServerAllowKernelShutdown": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Shutdown the Jupyter kernel when finishede",
+                    "description": "Shutdown the Jupyter kernel when finished",
                     "scope": "resource"
                 },
                 "python.dataScience.notebookFileRoot": {
