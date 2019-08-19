@@ -14,7 +14,13 @@ const pathToScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'ptvsd_launche
 export class NoDebugLauncherScriptProvider implements IDebugLauncherScriptProvider<LocalDebugOptions> {
     constructor(@optional() private script: string = pathToScript) { }
     public getLauncherArgs(options: LocalDebugOptions): string[] {
-        const customDebugger = options.customDebugger ? '--custom' : '--default';
+        let customDebugger;
+        if (options.debugAdapterExperiment) {
+            customDebugger = '--use-wheels';
+        } else {
+            // Will be removed when the debug adapter works gets done
+            customDebugger = options.customDebugger ? '--custom' : '--default';
+        }
         return [this.script, customDebugger, '--nodebug', '--client', '--host', options.host, '--port', options.port.toString()];
     }
 }
@@ -22,7 +28,13 @@ export class NoDebugLauncherScriptProvider implements IDebugLauncherScriptProvid
 export class DebuggerLauncherScriptProvider implements IDebugLauncherScriptProvider<LocalDebugOptions>  {
     constructor(@optional() private script: string = pathToScript) { }
     public getLauncherArgs(options: LocalDebugOptions): string[] {
-        const customDebugger = options.customDebugger ? '--custom' : '--default';
+        let customDebugger;
+        if (options.debugAdapterExperiment) {
+            customDebugger = '--use-wheels';
+        } else {
+            // Will be removed when the debug adapter works gets done
+            customDebugger = options.customDebugger ? '--custom' : '--default';
+        }
         return [this.script, customDebugger, '--client', '--host', options.host, '--port', options.port.toString()];
     }
 }

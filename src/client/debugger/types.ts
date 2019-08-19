@@ -44,6 +44,7 @@ export interface IKnownAttachDebugArguments extends ICommonDebugArguments {
     remoteRoot?: string;
     pathMappings?: { localRoot: string; remoteRoot: string }[];
     customDebugger?: boolean;
+    debugAdapterExperiment: boolean;
 }
 
 export interface IKnownLaunchRequestArguments extends ICommonDebugArguments {
@@ -74,6 +75,6 @@ export interface AttachRequestArguments extends DebugProtocol.AttachRequestArgum
 }
 
 // tslint:disable-next-line:interface-name
-export interface DebugConfigurationArguments extends LaunchRequestArguments, AttachRequestArguments { }
+export interface DebugConfigurationArguments extends LaunchRequestArguments, AttachRequestArguments {}
 
 export type ConsoleType = 'internalConsole' | 'integratedTerminal' | 'externalTerminal';

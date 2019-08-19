@@ -13,7 +13,12 @@ export class LocalDebugClientV2 extends LocalDebugClient {
         super(args, debugSession, canLaunchTerminal, launcherScriptProvider);
     }
     protected buildDebugArguments(_cwd: string, debugPort: number): string[] {
-        return this.launcherScriptProvider.getLauncherArgs({ host: 'localhost', port: debugPort, customDebugger: this.args.customDebugger });
+        return this.launcherScriptProvider.getLauncherArgs({
+            host: 'localhost',
+            port: debugPort,
+            customDebugger: this.args.customDebugger,
+            debugAdapterExperiment: this.args.debugAdapterExperiment
+        });
     }
     protected buildStandardArguments() {
         const programArgs = Array.isArray(this.args.args) && this.args.args.length > 0 ? this.args.args : [];

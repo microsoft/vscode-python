@@ -13,3 +13,9 @@ export enum ShowPlayIcon {
     icon1 = 'ShowPlayIcon - start',
     icon2 = 'ShowPlayIcon - runFile'
 }
+
+// Experiment to check whether the ptvsd launcher should use pre-installed ptvsd wheels for debugging or not.
+export enum DebugAdapterWheelsGroups {
+    control = 'DebugAdapterWheels - control',
+    experiment = 'DebugAdapterWheels - experiment'
+}

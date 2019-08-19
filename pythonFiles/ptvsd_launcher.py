@@ -7,6 +7,7 @@ import sys
 import traceback
 
 useCustomPtvsd = sys.argv[1] == '--custom'
+usePtvsdWheels = sys.argv[1] == '--use-wheels'
 ptvsdArgs = sys.argv[:]
 ptvsdArgs.pop(1)
 
@@ -15,6 +16,8 @@ try:
     ptvs_lib_path = os.path.join(os.path.dirname(__file__), 'lib', 'python')
     if useCustomPtvsd:
         sys.path.append(ptvs_lib_path)
+    elif usePtvsdWheels:
+        raise Exception('Not implemented yet')
     else:
         sys.path.insert(0, ptvs_lib_path)
     try:

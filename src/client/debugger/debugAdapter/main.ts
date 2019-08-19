@@ -18,10 +18,11 @@ import { DebugSession, ErrorDestination, Event, logger, OutputEvent, Response, T
 import { LogLevel } from 'vscode-debugadapter/lib/logger';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
+import { DebugAdapterWheelsGroups } from '../../common/experimentGroups';
 import '../../common/extensions';
 import { isNotInstalledError } from '../../common/helpers';
 import { IFileSystem } from '../../common/platform/types';
-import { ICurrentProcess, IDisposable, IDisposableRegistry } from '../../common/types';
+import { ICurrentProcess, IDisposable, IDisposableRegistry, IExperimentsManager } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
@@ -103,13 +104,15 @@ export class PythonDebugger extends DebugSession {
                 const message = this.getUserFriendlyAttachErrorMessage(ex) || 'Attach Failed';
                 this.sendErrorResponse(response, { format: message, id: 1 }, undefined, undefined, ErrorDestination.User);
             });
-
     }
     protected launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): void {
         const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
         if ((typeof args.module !== 'string' || args.module.length === 0) && args.program && !fs.fileExistsSync(args.program)) {
             return this.sendErrorResponse(response, { format: `File does not exist. "${args.program}"`, id: 1 }, undefined, undefined, ErrorDestination.User);
         }
+
+        const experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+        args.debugAdapterExperiment = experiments.inExperiment(DebugAdapterWheelsGroups.experiment);
 
         this.launchPTVSD(args)
             .then(() => this.waitForPTVSDToConnect(args))
