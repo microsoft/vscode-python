@@ -11,8 +11,6 @@ import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
-import { sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../constants';
 import { IDataViewer, IDataViewerProvider, IJupyterVariables, INotebook } from '../types';
 
 @injectable()

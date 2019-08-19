@@ -19,14 +19,12 @@ import { ContextKey } from '../../common/contextKey';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { StopWatch } from '../../common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { generateCellRanges } from '../cellFactory';
-import { CellMatcher } from '../cellMatcher';
+import { IInterpreterService } from '../../interpreter/contracts';
+import { captureTelemetry } from '../../telemetry';
 import { EditorContexts, Identifiers, Telemetry } from '../constants';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
+import { InteractiveWindowMessages, ISubmitNewCell } from '../interactive-common/interactiveWindowTypes';
 import {
     ICell,
     ICodeCssGenerator,
