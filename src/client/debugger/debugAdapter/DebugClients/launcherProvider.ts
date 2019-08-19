@@ -18,7 +18,7 @@ export class NoDebugLauncherScriptProvider implements IDebugLauncherScriptProvid
         if (options.debugAdapterExperiment) {
             customDebugger = '--use-wheels';
         } else {
-            // Will be removed when the debug adapter works gets done
+            // Will change when the debug adapter works gets done
             customDebugger = options.customDebugger ? '--custom' : '--default';
         }
         return [this.script, customDebugger, '--nodebug', '--client', '--host', options.host, '--port', options.port.toString()];
@@ -32,7 +32,7 @@ export class DebuggerLauncherScriptProvider implements IDebugLauncherScriptProvi
         if (options.debugAdapterExperiment) {
             customDebugger = '--use-wheels';
         } else {
-            // Will be removed when the debug adapter works gets done
+            // Will change when the debug adapter works gets done
             customDebugger = options.customDebugger ? '--custom' : '--default';
         }
         return [this.script, customDebugger, '--client', '--host', options.host, '--port', options.port.toString()];
