@@ -30,7 +30,6 @@
     "python.command.python.datascience.showhistorypane.title": "Interactief Python-venster laten zien",
     "python.command.python.datascience.selectjupyteruri.title": "Jupyter-server-URI specificeren",
     "python.command.python.datascience.importnotebook.title": "Jupyter-notebook importeren",
-    "python.command.python.datascience.importnotebookonfile.title": "Jupyter-notebook importeren",
     "python.command.python.enableSourceMapSupport.title": "Bronkaartondersteuning voor extensie-debugging inschakelen",
     "python.command.python.datascience.exportoutputasnotebook.title": "Interactief Python-venster als Jupyter-notebook exporteren",
     "python.command.python.datascience.exportfileasnotebook.title": "Huidige Python-bestand als Jupyter-notebook exporteren",

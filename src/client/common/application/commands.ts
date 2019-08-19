@@ -29,6 +29,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     ['workbench.action.debug.stepOver']: [];
     ['workbench.action.debug.stop']: [];
     ['workbench.action.reloadWindow']: [];
+    ['workbench.action.closeActiveEditor']: [];
     ['editor.action.formatDocument']: [];
     ['editor.action.rename']: [];
     [Commands.ViewOutput]: [];
@@ -52,10 +53,16 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.RemoveAllCells]: [];
     [DSCommands.InterruptKernel]: [];
     [DSCommands.RestartKernel]: [];
+    [DSCommands.NotebookEditorUndoCells]: [];
+    [DSCommands.NotebookEditorRedoCells]: [];
+    [DSCommands.NotebookEditorRemoveAllCells]: [];
+    [DSCommands.NotebookEditorInterruptKernel]: [];
+    [DSCommands.NotebookEditorRestartKernel]: [];
     [DSCommands.ExpandAllCells]: [];
     [DSCommands.CollapseAllCells]: [];
     [DSCommands.ExportOutputAsNotebook]: [];
     [DSCommands.AddCellBelow]: [];
+    [DSCommands.CreateNewNotebook]: [];
 }
 
 /**
@@ -113,6 +120,8 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.RunToLine]: [string, number, number];
     [DSCommands.RunFromLine]: [string, number, number];
     [DSCommands.ImportNotebook]: [undefined | Uri, undefined | CommandSource];
+    [DSCommands.ImportNotebookFile]: [undefined | Uri, undefined | CommandSource];
+    [DSCommands.OpenNotebook]: [undefined | Uri, undefined | CommandSource];
     [DSCommands.ExportFileAsNotebook]: [undefined | Uri, undefined | CommandSource];
     [DSCommands.RunFileInInteractiveWindows]: [string];
     [DSCommands.DebugFileInInteractiveWindows]: [string];

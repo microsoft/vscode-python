@@ -28,7 +28,16 @@ export enum ImageName {
     Next,
     Prev,
     Copy,
-    GatherCode
+    GatherCode,
+    Up,
+    Down,
+    Run,
+    RunAbove,
+    RunBelow,
+    InsertAbove,
+    InsertBelow,
+    SwitchToCode,
+    SwitchToMarkdown
 }
 
 // All of the images must be 'require' so that webpack doesn't rewrite the import as requiring a .default.
@@ -130,6 +139,51 @@ const images: { [key: string] : { light: string; dark: string } } = {
         {
             light: require('./images/Copy/copy.svg'),
             dark : require('./images/Copy/copy_inverse.svg')
+        },
+    Up:
+        {
+            light: require('./images/Up/up.svg'),
+            dark : require('./images/Up/up-inverse.svg')
+        },
+    Down:
+        {
+            light: require('./images/Down/down.svg'),
+            dark : require('./images/Down/down-inverse.svg')
+        },
+    Run:
+        {
+            light: require('./images/Run/run-light.svg'),
+            dark : require('./images/Run/run-dark.svg')
+        },
+    RunAbove:
+        {
+            light: require('./images/RunAbove/runabove.svg'),
+            dark : require('./images/RunAbove/runabove-inverse.svg')
+        },
+    RunBelow:
+        {
+            light: require('./images/RunBelow/runbelow.svg'),
+            dark : require('./images/RunBelow/runbelow-inverse.svg')
+        },
+    InsertAbove:
+        {
+            light: require('./images/InsertAbove/above.svg'),
+            dark : require('./images/InsertAbove/above-inverse.svg')
+        },
+    InsertBelow:
+        {
+            light: require('./images/InsertBelow/below.svg'),
+            dark : require('./images/InsertBelow/below-inverse.svg')
+        },
+    SwitchToCode:
+        {
+            light: require('./images/SwitchToCode/switchtocode.svg'),
+            dark : require('./images/SwitchToCode/switchtocode-inverse.svg')
+        },
+    SwitchToMarkdown:
+        {
+            light: require('./images/SwitchToMarkdown/switchtomarkdown.svg'),
+            dark : require('./images/SwitchToMarkdown/switchtomarkdown-inverse.svg')
         }
 };
 

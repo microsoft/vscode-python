@@ -10,7 +10,7 @@ import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { generateCellRanges } from '../cellFactory';
 import { CodeLensCommands, Commands } from '../constants';
-import { InteractiveWindowMessages } from '../interactive-window/interactiveWindowTypes';
+import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { ICell, ICellHashProvider, ICodeLensFactory, IFileHashes, IInteractiveWindowListener } from '../types';
 
 @injectable()

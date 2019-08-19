@@ -3,7 +3,6 @@
 'use strict';
 import { Kernel } from '@jupyterlab/services';
 import { execSync } from 'child_process';
-import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
 import { URL } from 'url';
@@ -507,7 +506,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                             return;
                         }
                         try {
-                            await fs.remove(path.dirname(diskPath));
+                            await this.fileSystem.deleteDirectory(path.dirname(diskPath));
                         } catch {
                             noop();
                         }
@@ -516,10 +515,10 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
                 // If that works, rewrite our active interpreter into the argv
                 if (diskPath && bestInterpreter) {
-                    if (await fs.pathExists(diskPath)) {
-                        const specModel: Kernel.ISpecModel = await fs.readJSON(diskPath);
+                    if (await this.fileSystem.fileExists(diskPath)) {
+                        const specModel: Kernel.ISpecModel = JSON.parse(await this.fileSystem.readFile(diskPath));
                         specModel.argv[0] = bestInterpreter.path;
-                        await fs.writeJSON(diskPath, specModel, { flag: 'w', encoding: 'utf8' });
+                        await this.fileSystem.writeFile(diskPath, JSON.stringify(specModel), { flag: 'w', encoding: 'utf8' });
                     }
                 }
             }
@@ -553,7 +552,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                 let count = 0;
                 while (count < 10) {
                     try {
-                        await fs.remove(resultDir);
+                        await this.fileSystem.deleteDirectory(resultDir);
                         count = 10;
                     } catch {
                         count += 1;
@@ -633,7 +632,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
         // For each get its details as we will likely need them
         const specDetails = await Promise.all(specs.map(async s => {
-            if (s && s.path && s.path.length > 0 && await fs.pathExists(s.path)) {
+            if (s && s.path && s.path.length > 0 && await this.fileSystem.fileExists(s.path)) {
                 return this.interpreterService.getInterpreterDetails(s.path);
             }
             if (s && s.path && s.path.length > 0 && path.basename(s.path) === s.path) {
@@ -711,11 +710,15 @@ export class JupyterExecutionBase implements IJupyterExecution {
         if (match && match !== null && match.length > 2) {
             // Second match should be our path to the kernel spec
             const file = path.join(match[2], 'kernel.json');
-            if (await fs.pathExists(file)) {
-                // Turn this into a IJupyterKernelSpec
-                const model = await fs.readJSON(file, { encoding: 'utf8' });
-                model.name = match[1];
-                return new JupyterKernelSpec(model, file);
+            try {
+                if (await this.fileSystem.fileExists(file)) {
+                    // Turn this into a IJupyterKernelSpec
+                    const model = JSON.parse(await this.fileSystem.readFile(file));
+                    model.name = match[1];
+                    return new JupyterKernelSpec(model, file);
+                }
+            } catch {
+                // Just return nothing if we can't parse.
             }
         }
 

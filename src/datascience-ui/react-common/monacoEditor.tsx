@@ -10,6 +10,11 @@ import { IDisposable } from '../../client/common/types';
 // tslint:disable-next-line:no-require-imports no-var-requires
 const debounce = require('lodash/debounce') as typeof import('lodash/debounce');
 
+// See the discussion here: https://github.com/Microsoft/tslint-microsoft-contrib/issues/676
+// tslint:disable: react-this-binding-issue
+// tslint:disable-next-line:no-require-imports no-var-requires
+const throttle = require('lodash/throttle') as typeof import('lodash/throttle');
+
 import './monacoEditor.css';
 
 const LINE_HEIGHT = 18;
@@ -22,15 +27,16 @@ export interface IMonacoEditorProps {
     options: monacoEditor.editor.IEditorConstructionOptions;
     testMode?: boolean;
     forceBackground?: string;
+    measureWidthClassName?: string;
     editorMounted(editor: monacoEditor.editor.IStandaloneCodeEditor): void;
     openLink(uri: monacoEditor.Uri): void;
+    lineCountChanged(newCount: number): void;
 }
 
 interface IMonacoEditorState {
     editor?: monacoEditor.editor.IStandaloneCodeEditor;
     model: monacoEditor.editor.ITextModel | null;
-    editorWidth: number;
-    editorHeight: number;
+    visibleLineCount: number;
 }
 
 // Need this to prevent wiping of the current value on a componentUpdate. react-monaco-editor has that problem.
@@ -47,14 +53,26 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
     private lastOffsetLeft: number | undefined;
     private lastOffsetTop: number | undefined;
     private debouncedUpdateEditorSize : () => void | undefined;
+    private styleObserver : MutationObserver | undefined;
+    private watchingMargin: boolean = false;
+    private throttledUpdateWidgetPosition = throttle(this.updateWidgetPosition.bind(this), 100);
+
     constructor(props: IMonacoEditorProps) {
         super(props);
-        this.state = { editor: undefined, model: null, editorHeight: 0, editorWidth: 0 };
+        this.state = { editor: undefined, model: null, visibleLineCount: -1 };
         this.containerRef = React.createRef<HTMLDivElement>();
         this.measureWidthRef = React.createRef<HTMLDivElement>();
         this.debouncedUpdateEditorSize = debounce(this.updateEditorSize.bind(this), 150);
+
+        // JSDOM has MutationObserver in the window object
+        if ('MutationObserver' in window) {
+            // tslint:disable-next-line: no-string-literal no-any
+            const ctor = (window as any)['MutationObserver'];
+            this.styleObserver = new ctor(this.watchStyles);
+        }
     }
 
+    // tslint:disable-next-line: max-func-body-length
     public componentDidMount = () => {
         if (window) {
             window.addEventListener('resize', this.windowResized);
@@ -102,12 +120,16 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             this.windowResized();
 
             // on each edit recompute height (wait a bit)
-            this.subscriptions.push(editor.onDidChangeModelDecorations(() => {
+            if (model) {
+                this.subscriptions.push(model.onDidChangeContent(() => {
+                    this.windowResized();
+                }));
+            }
+
+            // On layout recompute height
+            this.subscriptions.push(editor.onDidLayoutChange(() => {
                 this.windowResized();
             }));
-
-            // List for key down events
-            this.subscriptions.push(editor.onKeyDown(this.onKeyDown));
 
             // Setup our context menu to show up outside. Autocomplete doesn't have this problem so it just works
             this.subscriptions.push(editor.onContextMenu((e) => {
@@ -127,6 +149,9 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                     }
                 }
             }));
+
+            // Update our margin to include the correct line number style
+            this.updateMargin(editor);
 
             // Make sure our suggest and hover windows show up on top of other stuff
             this.updateWidgetParent(editor);
@@ -170,6 +195,10 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         if (this.state.editor) {
             this.state.editor.dispose();
         }
+
+        if (this.styleObserver) {
+            this.styleObserver.disconnect();
+        }
     }
 
     public componentDidUpdate(prevProps: IMonacoEditorProps, prevState: IMonacoEditorState) {
@@ -181,6 +210,9 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                 monacoEditor.editor.setTheme(this.props.theme);
             }
             if (prevProps.options !== this.props.options) {
+                if (prevProps.options.lineNumbers !== this.props.options.lineNumbers) {
+                    this.updateMargin(this.state.editor);
+                }
                 this.state.editor.updateOptions(this.props.options);
             }
             if (prevProps.value !== this.props.value && this.state.model) {
@@ -188,13 +220,12 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             }
         }
 
-        if (this.state.editorHeight === 0 || this.state.editorWidth === 0) {
+        if (this.state.visibleLineCount === -1) {
             this.updateEditorSize();
         } else {
             // Debounce the call. This can happen too fast
             this.debouncedUpdateEditorSize();
         }
-
         // If this is our first time setting the editor, we might need to dynanically modify the styles
         // that the editor generates for the background colors.
         if (!prevState.editor && this.state.editor && this.containerRef.current) {
@@ -203,10 +234,11 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
     }
 
     public render() {
+        const measureWidthClassName = this.props.measureWidthClassName ? this.props.measureWidthClassName : 'measure-width-div';
         return (
             <div className='monaco-editor-outer-container' ref={this.containerRef}>
                 <div className='monaco-editor-container' />
-                <div className='measure-width-div' ref={this.measureWidthRef} />
+                <div className={measureWidthClassName} ref={this.measureWidthRef} />
             </div>
         );
     }
@@ -214,11 +246,41 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
     public isSuggesting() : boolean {
         // This should mean our widgetParent has some height
         if (this.widgetParent && this.widgetParent.firstChild && this.widgetParent.firstChild.childNodes.length >= 2) {
-            const suggestWidget = this.widgetParent.firstChild.childNodes.item(1) as HTMLDivElement;
-            const signatureHelpWidget = this.widgetParent.firstChild.childNodes.length > 2 ? this.widgetParent.firstChild.childNodes.item(2) as HTMLDivElement : undefined;
-            const suggestVisible = suggestWidget ? suggestWidget.className.includes('visible') : false;
-            const signatureVisible = signatureHelpWidget ? signatureHelpWidget.className.includes('visible') : false;
-            return suggestVisible || signatureVisible;
+            const htmlFirstChild = this.widgetParent.firstChild as HTMLElement;
+            const suggestWidget = htmlFirstChild.getElementsByClassName('suggest-widget')[0] as HTMLDivElement;
+            const signatureHelpWidget = htmlFirstChild.getElementsByClassName('parameter-hints-widget')[0] as HTMLDivElement;
+            return this.isElementVisible(suggestWidget) || this.isElementVisible(signatureHelpWidget);
+        }
+        return false;
+    }
+
+    private watchStyles = (mutations: MutationRecord[], _observer: MutationObserver): void => {
+        try {
+            if (mutations && mutations.length > 0 && this.styleObserver) {
+                mutations.forEach(m => {
+                    if (m.type === 'attributes' && m.attributeName === 'style') {
+                        const element = m.target as HTMLDivElement;
+                        if (element && element.style && element.style.left) {
+                            const left = element.style.left.endsWith('px') ? parseInt(element.style.left.substr(0, element.style.left.length - 2), 10) : -1;
+                            if (left > 10) {
+                                this.styleObserver!.disconnect();
+                                element.style.left = `${left + 3}px`;
+                                this.styleObserver!.observe(element, { attributes: true, attributeFilter: ['style']});
+                            }
+                        }
+                    }
+                });
+            }
+        } catch {
+            // Skip doing anything if it fails
+        }
+    }
+
+    private isElementVisible(element: HTMLElement | undefined): boolean {
+        if (element && element.clientHeight > 0) {
+            // See if it has the visibility set on the style
+            const visibility = element.style.visibility;
+            return visibility ? visibility !== 'hidden' : true;
         }
         return false;
     }
@@ -244,33 +306,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
     }
 
     private startUpdateWidgetPosition = () => {
-        this.updateWidgetPosition();
-    }
-
-    private onKeyDown = (e: monacoEditor.IKeyboardEvent) => {
-        if (e.keyCode === monacoEditor.KeyCode.Escape && !this.isSuggesting()) {
-            // Shift Escape is special, so it doesn't work as going backwards.
-            // For now just support escape to get out of a cell (like Jupyter does)
-            const nextElement = this.findTabStop(1);
-            if (nextElement) {
-                nextElement.focus();
-            }
-        }
-    }
-
-    private findTabStop(direction: number) : HTMLElement | undefined {
-        if (this.state.editor) {
-            const editorDomNode = this.state.editor.getDomNode();
-            if (editorDomNode) {
-                const textArea = editorDomNode.getElementsByTagName('textarea');
-                const allFocusable = document.querySelectorAll('input, button, select, textarea, a[href]');
-                if (allFocusable && textArea && textArea.length > 0) {
-                    const tabable = Array.prototype.filter.call(allFocusable, (i: HTMLElement) => i.tabIndex >= 0);
-                    const self = tabable.indexOf(textArea.item(0));
-                    return direction >= 0 ? tabable[self + 1] || tabable[0] : tabable[self - 1] || tabable[0];
-                }
-            }
-        }
+        this.throttledUpdateWidgetPosition();
     }
 
     private updateBackgroundStyle = () => {
@@ -313,30 +349,33 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
     private updateEditorSize() {
         if (this.measureWidthRef.current &&
-            this.measureWidthRef.current.clientWidth &&
             this.containerRef.current &&
             this.containerRef.current.parentElement &&
+            this.containerRef.current.parentElement.parentElement &&
             this.state.editor &&
             this.state.model) {
             const editorDomNode = this.state.editor.getDomNode();
             if (!editorDomNode) { return; }
+            const grandParent = this.containerRef.current.parentElement.parentElement;
             const container = editorDomNode.getElementsByClassName('view-lines')[0] as HTMLElement;
-            const lineHeight = container.firstChild
-                ? (container.firstChild as HTMLElement).offsetHeight
-                : LINE_HEIGHT;
-            const currLineCount = this.state.model.getLineCount();
+            const currLineCount = Math.max(container.childElementCount, this.state.model.getLineCount());
+            const lineHeightPx = container.firstChild && (container.firstChild as HTMLElement).style.height ?
+                (container.firstChild as HTMLElement).style.height
+                : `${LINE_HEIGHT}px`;
+            const lineHeight = lineHeightPx && lineHeightPx.endsWith('px') ? parseInt(lineHeightPx.substr(0, lineHeightPx.length - 2), 10) : LINE_HEIGHT;
             const height = (currLineCount * lineHeight) + 3; // Fudge factor
-            const width = this.measureWidthRef.current.clientWidth - this.containerRef.current.parentElement.offsetLeft - 15; // Leave room for the scroll bar in regular cell table
+            const width = this.measureWidthRef.current.clientWidth - grandParent.offsetLeft - 15; // Leave room for the scroll bar in regular cell table
 
-            if (this.state.editorHeight !== height || this.state.editorWidth !== width) {
-                this.setState({
-                    editorHeight: height,
-                    editorWidth: width
-                });
+            const layoutInfo = this.state.editor.getLayoutInfo();
+            if (layoutInfo.height !== height || layoutInfo.width !== width || currLineCount !== this.state.visibleLineCount) {
+                if (this.state.visibleLineCount !== currLineCount) {
+                    this.props.lineCountChanged(currLineCount);
+                }
+                this.setState({visibleLineCount: currLineCount});
                 this.state.editor.layout({width, height});
 
                 // Also need to update our widget positions
-                this.updateWidgetPosition(width);
+                this.throttledUpdateWidgetPosition(width);
             }
         }
     }
@@ -376,6 +415,34 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         }
     }
 
+    private updateMargin(editor: monacoEditor.editor.IStandaloneCodeEditor) {
+        const editorNode = editor.getDomNode();
+        if (editorNode) {
+            try {
+                const elements = editorNode.getElementsByClassName('margin-view-overlays');
+                if (elements && elements.length) {
+                    const margin = elements[0] as HTMLDivElement;
+
+                    // Create  special class name based on the line number property
+                    const specialExtra = `margin-view-overlays-border-${this.props.options.lineNumbers}`;
+                    if (margin.className && !margin.className.includes(specialExtra)) {
+                        margin.className = `margin-view-overlays ${specialExtra}`;
+                    }
+
+                    // Watch the scrollable element (it's where the code lines up)
+                    const scrollable = editorNode.getElementsByClassName('monaco-scrollable-element');
+                    if (!this.watchingMargin && scrollable && scrollable.length && this.styleObserver) {
+                        const watching = scrollable[0] as HTMLDivElement;
+                        this.watchingMargin = true;
+                        this.styleObserver.observe(watching, { attributes: true, attributeFilter: ['style'] });
+                    }
+                }
+            } catch {
+                // Ignore if we can't get modify the margin class
+            }
+        }
+    }
+
     private updateWidgetParent(editor: monacoEditor.editor.IStandaloneCodeEditor) {
         // Reparent the hover widgets. They cannot be inside anything that has overflow hidden or scrolling or they won't show
         // up overtop of anything. Warning, this is a big hack. If the class name changes or the logic
@@ -399,16 +466,6 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                                 // We need to create a dummy 'monaco-editor' div so that the content widgets get the same styles.
                                 this.widgetParent = document.createElement('div', {});
                                 this.widgetParent.setAttribute('class', `${editorNode.className} monaco-editor-pretend-parent`);
-
-                                // We also need to make sure its position follows the editor around on the screen.
-                                const rect = editorNode.getBoundingClientRect();
-                                if (rect) {
-                                    this.lastOffsetLeft = rect.left;
-                                    this.lastOffsetTop = rect.top;
-                                    this.widgetParent.setAttribute(
-                                        'style',
-                                        `position: absolute; left: ${rect.left}px; top: ${rect.top}px`);
-                                }
 
                                 root.appendChild(this.widgetParent);
                                 this.widgetParent.appendChild(contentWidgets);

@@ -1,18 +1,21 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
+import * as uuid from 'uuid/v4';
 
 import { IWorkspaceService } from '../../common/application/types';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { CodeSnippits } from '../constants';
-import { IJupyterExecution, INotebookImporter } from '../types';
+import { CodeSnippits, Identifiers } from '../constants';
+import { CellState, ICell, IJupyterExecution, INotebookImporter } from '../types';
+import { InvalidNotebookFileError } from './invalidNotebookFileError';
 
 @injectable()
 export class JupyterImporter implements INotebookImporter {
@@ -67,6 +70,46 @@ export class JupyterImporter implements INotebookImporter {
         }
 
         throw new Error(localize.DataScience.jupyterNbConvertNotSupported());
+    }
+
+    public async importCellsFromFile(file: string): Promise<ICell[]> {
+        // First convert to a python file to verify this file is valid. This is
+        // an easy way to have something else verify the validity of the file. If nbconvert isn't installed
+        // just assume the file is correct.
+        const results = (await this.jupyterExecution.isImportSupported()) ? await this.importFromFile(file) : '';
+        if (results) {
+            // Then read in the file as json. This json should already
+            return this.importCells(await this.fileSystem.readFile(file));
+        }
+
+        throw new InvalidNotebookFileError(file);
+    }
+
+    public async importCells(json: string): Promise<ICell[]> {
+        // Should we do validation here? jupyterlabs has a ContentsManager that can do validation, but skipping
+        // for now because:
+        // a) JSON parse should validate that it's JSON
+        // b) cells check should validate it's at least close to a notebook
+        // tslint:disable-next-line: no-any
+        const contents = json ? JSON.parse(json) as any : undefined;
+        if (contents && contents.cells && contents.cells.length) {
+            // Convert the cells into actual cell objects
+            const cells = contents.cells as (nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell)[];
+
+            // Convert the inputdata into our ICell format
+            return cells.filter(c => c.source.length > 0).map(c => {
+                return {
+                    id: uuid(),
+                    file: Identifiers.EmptyFileName,
+                    line: 0,
+                    state: CellState.finished,
+                    data: c,
+                    type: 'preview'
+                };
+            });
+        }
+
+        throw new InvalidNotebookFileError();
     }
 
     public dispose = () => {
