@@ -44,7 +44,7 @@ export interface IKnownAttachDebugArguments extends ICommonDebugArguments {
     remoteRoot?: string;
     pathMappings?: { localRoot: string; remoteRoot: string }[];
     customDebugger?: boolean;
-    debugAdapterExperiment: boolean;
+    debugAdapterExperiment?: boolean;
 }
 
 export interface IKnownLaunchRequestArguments extends ICommonDebugArguments {
