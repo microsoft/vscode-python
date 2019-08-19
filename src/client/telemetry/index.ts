@@ -516,7 +516,7 @@ export interface IEventNamePropertyMapping {
         usingGlobalInterpreter: boolean;
     };
     /**
-     * Telemetry event sent when substituing Environment variables to calculate value of variables
+     * Telemetry event sent when substituting Environment variables to calculate value of variables
      */
     [EventName.ENVFILE_VARIABLE_SUBSTITUTION]: never | undefined;
     /**
