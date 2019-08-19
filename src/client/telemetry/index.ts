@@ -515,6 +515,9 @@ export interface IEventNamePropertyMapping {
          */
         usingGlobalInterpreter: boolean;
     };
+    /**
+     * Telemetry event sent when substituing Environment variables to calculate value of variables
+     */
     [EventName.ENVFILE_VARIABLE_SUBSTITUTION]: never | undefined;
     /**
      * Telemetry Event sent when user sends code to be executed in the terminal.
@@ -830,7 +833,6 @@ export interface IEventNamePropertyMapping {
          */
         interpreters?: number;
     };
-    [EventName.PYTHON_INTERPRETER_ACTIVATE_ENVIRONMENT_PROMPT]: { selection: 'Yes' | 'No' | 'Ignore' | undefined };
     /**
      * Telemetry event sent with details when user clicks a button in the virtual environment prompt.
      * `Prompt message` :- 'We noticed a new virtual environment has been created. Do you want to select it for the workspace folder?'
@@ -845,6 +847,10 @@ export interface IEventNamePropertyMapping {
          */
         selection: 'Yes' | 'No' | 'Ignore' | undefined;
     };
+    /**
+     * Telemetry event sent with details when user clicks a button in the following prompt
+     * `Prompt message` :- 'We noticed you are using Visual Studio Code Insiders. Would you like to use the Insiders build of the Python extension?'
+     */
     [EventName.INSIDERS_PROMPT]: {
         /**
          * @type {'Yes, weekly'} When user selects to use "weekly" as extension channel in insiders prompt
@@ -948,7 +954,13 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when starting LS
      */
     [EventName.PYTHON_LANGUAGE_SERVER_STARTUP]: never | undefined;
+    /**
+     * Telemetry sent from Language Server (details of telemetry sent can be provided by LS team)
+     */
     [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: any;
+    /**
+     * Telemetry event sent with details when inExperiment() API is called
+     */
     [EventName.PYTHON_EXPERIMENTS]: {
         /**
          * Name of the experiment group the user is in
@@ -956,6 +968,9 @@ export interface IEventNamePropertyMapping {
          */
         expName?: string;
     };
+    /**
+     * Telemetry event sent with details when doing best effort to download the experiments within timeout and using it in the current session only
+     */
     [EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE]: {
         /**
          * Carries `true` if downloading experiments successfully finishes within timeout, `false` otherwise
@@ -1030,6 +1045,9 @@ export interface IEventNamePropertyMapping {
          */
         action: 'enable' | 'ignore' | 'disablePrompt' | undefined;
     };
+    /**
+     * Telemetry event sent when providing help for the signature at the given position and document.
+     */
     [EventName.SIGNATURE]: never | undefined;
     /**
      * Telemetry event sent when providing document symbol information for Jedi autocomplete intellisense
