@@ -123,6 +123,8 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             && debugConfiguration.jinja !== false) {
             this.debugOption(debugOptions, DebugOptions.Jinja);
         }
+        // Unlike with attach, we do not set a default path mapping.
+        // (See: https://github.com/microsoft/vscode-python/issues/3568)
         if (debugConfiguration.pathMappings) {
             let pathMappings = debugConfiguration.pathMappings;
             if (pathMappings.length > 0) {
