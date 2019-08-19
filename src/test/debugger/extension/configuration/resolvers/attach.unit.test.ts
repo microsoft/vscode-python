@@ -231,7 +231,7 @@ getNamesAndValues(OSType).forEach(os => {
 
                 expect(debugConfig).to.have.property('localRoot', localRoot);
                 const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
-                expect(pathMappings).to.be.lengthOf(0);
+                expect(pathMappings || []).to.be.lengthOf(0);
             });
         });
         test('Ensure \'localRoot\' and \'remoteRoot\' is used', async () => {

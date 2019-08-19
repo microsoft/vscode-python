@@ -8,7 +8,7 @@ import { CancellationToken, Uri, WorkspaceFolder } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../../../common/application/types';
 import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService } from '../../../../common/types';
-import { AttachRequestArguments, DebugOptions } from '../../../types';
+import { AttachRequestArguments, DebugOptions, PathMapping } from '../../../types';
 import { BaseConfigurationResolver } from './base';
 
 @injectable()
@@ -84,27 +84,39 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
             this.debugOption(debugOptions, DebugOptions.ShowReturnValue);
         }
 
-        if (!debugConfiguration.pathMappings) {
-            debugConfiguration.pathMappings = [];
-        }
+        debugConfiguration.pathMappings = this.resolvePathMappings(
+            debugConfiguration.pathMappings || [],
+            debugConfiguration.host,
+            debugConfiguration.localRoot,
+            debugConfiguration.remoteRoot,
+            workspaceFolder
+        );
+        this.sendTelemetry('attach', debugConfiguration);
+    }
+
+    private resolvePathMappings(
+        pathMappings: PathMapping[],
+        host: string,
+        localRoot?: string,
+        remoteRoot?: string,
+        workspaceFolder?: Uri
+    ) {
         // This is for backwards compatibility.
-        if (debugConfiguration.localRoot && debugConfiguration.remoteRoot) {
-            debugConfiguration.pathMappings!.push({
-                localRoot: debugConfiguration.localRoot,
-                remoteRoot: debugConfiguration.remoteRoot
+        if (localRoot && remoteRoot) {
+            pathMappings.push({
+                localRoot: localRoot,
+                remoteRoot: remoteRoot
             });
         }
         // If attaching to local host, then always map local root and remote roots.
-        if (this.isLocalHost(debugConfiguration.host)) {
-            const pathMappings = this.fixUpPathMappings(
-                debugConfiguration.pathMappings || [],
-                workspaceFolder ? workspaceFolder.fsPath : '',
+        if (this.isLocalHost(host)) {
+            pathMappings = this.fixUpPathMappings(
+                pathMappings,
                 workspaceFolder ? workspaceFolder.fsPath : ''
             );
-            debugConfiguration.pathMappings = pathMappings.length > 0
+        }
+        return pathMappings.length > 0
                 ? pathMappings
                 : undefined;
-        }
-        this.sendTelemetry('attach', debugConfiguration);
     }
 }
