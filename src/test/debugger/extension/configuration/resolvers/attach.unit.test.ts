@@ -186,6 +186,7 @@ getNamesAndValues(OSType).forEach(os => {
                     ? pathJoin('c:', 'Debug', 'Python_Path')
                     : pathJoin('C:', 'Debug', 'Python_Path');
                 expect(pathMappings![0].localRoot).to.be.equal(expected);
+                expect(pathMappings![0].remoteRoot).to.be.equal(workspaceFolder.uri.fsPath);
             });
             test(`Ensure drive letter is lower cased for local path mappings on Windows when host is '${host}' and with existing path mappings`, async () => {
                 const activeFile = 'xyz.py';
@@ -203,6 +204,7 @@ getNamesAndValues(OSType).forEach(os => {
                     ? pathJoin('c:', 'Debug', 'Python_Path', localRoot)
                     : pathJoin('C:', 'Debug', 'Python_Path', localRoot);
                 expect(pathMappings![0].localRoot).to.be.equal(expected);
+                expect(pathMappings![0].remoteRoot).to.be.equal('/app/');
             });
             test(`Ensure local path mappings are not modified when not pointing to a local drive when host is '${host}'`, async () => {
                 const activeFile = 'xyz.py';
@@ -216,6 +218,7 @@ getNamesAndValues(OSType).forEach(os => {
                 const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
 
                 expect(pathMappings![0].localRoot).to.be.equal(workspaceFolder.uri.fsPath);
+                expect(pathMappings![0].remoteRoot).to.be.equal(workspaceFolder.uri.fsPath);
             });
         });
         ['192.168.1.123', 'don.debugger.com'].forEach(host => {

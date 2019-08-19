@@ -123,6 +123,18 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             && debugConfiguration.jinja !== false) {
             this.debugOption(debugOptions, DebugOptions.Jinja);
         }
+        if (debugConfiguration.pathMappings) {
+            let pathMappings = debugConfiguration.pathMappings;
+            if (pathMappings.length > 0) {
+                pathMappings = this.fixUpPathMappings(
+                    pathMappings || [],
+                    workspaceFolder ? workspaceFolder.fsPath : ''
+                );
+            }
+            debugConfiguration.pathMappings = pathMappings.length > 0
+                ? pathMappings
+                : undefined;
+        }
         this.sendTelemetry(
             debugConfiguration.request as 'launch' | 'test',
             debugConfiguration
