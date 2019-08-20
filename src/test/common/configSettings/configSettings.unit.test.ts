@@ -121,7 +121,7 @@ suite('Python Settings', async () => {
     }
 
     suite('String settings', async () => {
-        ['pythonPath', 'venvPath', 'condaPath', 'pipenvPath', 'envFile', 'poetryPath', 'insidersChannel'].forEach(async settingName => {
+        ['pythonPath', 'venvPath', 'condaPath', 'pipenvPath', 'envFile', 'poetryPath', 'insidersChannel', 'runMagicCommands'].forEach(async settingName => {
             testIfValueIsUpdated(settingName, 'stringValue');
         });
     });
