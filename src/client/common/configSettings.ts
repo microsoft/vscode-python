@@ -58,6 +58,7 @@ export class PythonSettings implements IPythonSettings {
     public autoUpdateLanguageServer: boolean = true;
     public datascience!: IDataScienceSettings;
     public insidersChannel!: ExtensionChannels;
+    public runMagicCommands = '';
 
     protected readonly changed = new EventEmitter<void>();
     private workspaceRoot: Uri;
@@ -151,6 +152,7 @@ export class PythonSettings implements IPythonSettings {
         this.pipenvPath = pipenvPath && pipenvPath.length > 0 ? getAbsolutePath(pipenvPath, workspaceRoot) : pipenvPath;
         const poetryPath = systemVariables.resolveAny(pythonSettings.get<string>('poetryPath'))!;
         this.poetryPath = poetryPath && poetryPath.length > 0 ? getAbsolutePath(poetryPath, workspaceRoot) : poetryPath;
+        this.runMagicCommands = systemVariables.resolveAny(pythonSettings.get<string>('runMagicCommands'))!;
 
         this.downloadLanguageServer = systemVariables.resolveAny(pythonSettings.get<boolean>('downloadLanguageServer', true))!;
         this.jediEnabled = systemVariables.resolveAny(pythonSettings.get<boolean>('jediEnabled', true))!;

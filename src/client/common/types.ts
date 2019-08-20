@@ -172,6 +172,7 @@ export interface IPythonSettings {
     readonly autoUpdateLanguageServer: boolean;
     readonly datascience: IDataScienceSettings;
     readonly onDidChange: Event<void>;
+    readonly runMagicCommands: string;
 }
 export interface ISortImportSettings {
     readonly path: string;
