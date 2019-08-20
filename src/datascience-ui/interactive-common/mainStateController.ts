@@ -41,6 +41,7 @@ export interface IMainStateControllerProps {
     testMode: boolean;
     expectingDark: boolean;
     defaultEditable: boolean;
+    enableGather: boolean;
     setState(state: {}, callback: () => void): void;
     activate(): void;
     scrollToCell(id: string): void;
@@ -73,7 +74,8 @@ export class MainStateController implements IMessageHandler {
             pendingVariableCount: 0,
             debugging: false,
             knownDark: false,
-            editCellVM: this.props.hasEdit ? createEditableCellVM(1) : undefined
+            editCellVM: this.props.hasEdit ? createEditableCellVM(1) : undefined,
+            enableGather: this.props.enableGather
         };
 
         // Add test state if necessary
@@ -381,6 +383,12 @@ export class MainStateController implements IMessageHandler {
         // Send a message to the other side to jump to a particular cell
         if (cellVM) {
             this.sendMessage(InteractiveWindowMessages.CopyCodeCell, { source: extractInputText(cellVM.cell, getSettings()) });
+        }
+    }
+
+    public gatherCell = (cellVM: ICellViewModel | undefined) => {
+        if (cellVM) {
+            this.sendMessage(InteractiveWindowMessages.GatherCode, cellVM.cell);
         }
     }
 

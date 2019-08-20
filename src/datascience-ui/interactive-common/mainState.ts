@@ -38,6 +38,7 @@ export interface IMainState {
     dirty?: boolean;
     selectedCell?: string;
     focusedCell?: string;
+    enableGather: boolean;
 }
 
 // tslint:disable-next-line: no-multiline-string
@@ -82,7 +83,8 @@ export function generateTestState(inputBlockToggled: (id: string) => void, fileP
             }
         ],
         pendingVariableCount: 0,
-        debugging: false
+        debugging: false,
+        enableGather: true
     };
 }
 

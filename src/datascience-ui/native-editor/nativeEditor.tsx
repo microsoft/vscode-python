@@ -54,7 +54,8 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             activate: this.activated.bind(this),
             scrollToCell: this.scrollToCell.bind(this),
             defaultEditable: true,
-            hasEdit: true
+            hasEdit: true,
+            enableGather: false
         });
 
         // Default our state.
@@ -147,8 +148,8 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                     {this.renderCellType()}
                 </div>
                 <div className='toolbar-extra-button'>
-                <Button onClick={this.stateController.export} disabled={!this.stateController.canExport()} className='toolbar-panel-button' tooltip={getLocString('DataScience.exportAsPythonFileTooltip', 'Convert to a python script')}>
-                        <span>{getLocString('DataScience.exportAsPythonFileTitle', 'Convert')}</span>
+                <Button onClick={this.stateController.export} disabled={!this.stateController.canExport()} className='toolbar-panel-button' tooltip={getLocString('DataScience.exportAsPythonFileTooltip', 'Save As Python File')}>
+                        <span>{getLocString('DataScience.exportAsPythonFileTitle', 'Save As Python File')}</span>
                     </Button>
                 </div>
             </div>
@@ -160,8 +161,8 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         if (selectedCell) {
             return (
                 <select id='cell_type' aria-label='combobox' role='combobox' aria-expanded='false' aria-controls='' value={selectedCell.cell.data.cell_type} onChange={this.codeTypeChanged} className='cell-state-selector'>
-                        <option key={0} aria-selected='false' value='code'>{getLocString('DataScience.codeCell', 'Code')}</option>,
-                        <option key={1} aria-selected='false' value='markdown'>{getLocString('DataScience.markdownCell', 'Markdown')}</option>
+                        <option key={0} className='cell-state-selector-option' aria-selected='false' value='code'>{getLocString('DataScience.codeCell', 'Code')}</option>,
+                        <option key={1} className='cell-state-selector-option' aria-selected='false' value='markdown'>{getLocString('DataScience.markdownCell', 'Markdown')}</option>
                 </select>
             );
         }

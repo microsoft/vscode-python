@@ -45,7 +45,8 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
             activate: this.activated.bind(this),
             scrollToCell: this.scrollToCell.bind(this),
             defaultEditable: false,
-            hasEdit: getSettings && getSettings().allowInput
+            hasEdit: getSettings && getSettings().allowInput,
+            enableGather: (getSettings && getSettings().enableGather) ? true : false
         });
 
         // Default our state.
@@ -311,11 +312,15 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
         const deleteCode = () => this.stateController.deleteCell(cellId);
         const copyCode = () => this.stateController.copyCellCode(cellId);
         const cell = this.stateController.findCell(cellId);
+        const gatherCode = () => this.stateController.gatherCell(cell);
         const hasNoSource = !cell || !cell.cell.file || cell.cell.file === Identifiers.EmptyFileName;
 
         return (
             [
                 <div className='cell-toolbar' key={0}>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={gatherCode} tooltip={getLocString('DataScience.gatherCodeTooltip', 'Gather code')} hidden={false}>
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.GatherCode} />
+                    </ImageButton>
                     <ImageButton baseTheme={this.props.baseTheme} onClick={gotoCode} tooltip={getLocString('DataScience.gotoCodeButtonTooltip', 'Go to code')} hidden={hasNoSource}>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.GoToSourceCode} />
                     </ImageButton>

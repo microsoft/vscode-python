@@ -5,6 +5,7 @@
     border-width: 1px;
     border-style: solid;
     border-color: var(--override-badge-background, var(--vscode-badge-background));
+    color: var(--override-foreground, var(--vscode-editor-foreground));
     cursor: pointer;
     text-align: center;
     overflow: hidden;
@@ -58,6 +59,7 @@
     border-width: 1px;
     border-style: solid;
     border-color: var(--override-badge-background, var(--vscode-badge-background));
+    color: var(--override-foreground, var(--vscode-editor-foreground));
     cursor: pointer;
     text-align: center;
     overflow: hidden;
@@ -65,6 +67,14 @@
     padding: 2px;
     background-color: transparent;
     cursor: hand;
+}
+
+.cell-state-selector-option {
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--override-badge-background, var(--vscode-badge-background));
+    color: var(--override-foreground, var(--vscode-editor-foreground));
+    background-color: var(--override-background, var(--vscode-editor-background));
 }
 
 .code-area {

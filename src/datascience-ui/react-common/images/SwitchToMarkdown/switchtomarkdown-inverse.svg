@@ -1,6 +1,69 @@
-<svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-
- <g>
-  <text stroke="null" xml:space="preserve" text-anchor="start" font-family="Consolas, 'Courier New', monospace" font-size="10" y="9" x="3" fill-opacity="null" stroke-opacity="null" stroke-width="0" fill="#CCCCC">M</text>
- </g>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="12"
+   height="12"
+   viewBox="0 0 12 12"
+   fill="none"
+   version="1.1"
+   id="svg6"
+   sodipodi:docname="switchtomarkdown-inverse.svg"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)">
+  <metadata
+     id="metadata12">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs10" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1634"
+     inkscape:window-height="992"
+     id="namedview8"
+     showgrid="false"
+     inkscape:zoom="19.666667"
+     inkscape:cx="7.779661"
+     inkscape:cy="6"
+     inkscape:window-x="876"
+     inkscape:window-y="597"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg6" />
+  <g
+     id="g4"
+     style="fill:#cccccc;fill-opacity:1">
+    <text
+       stroke="null"
+       xml:space="preserve"
+       text-anchor="start"
+       font-family="Consolas, 'Courier New', monospace"
+       font-size="10"
+       y="9"
+       x="3"
+       fill-opacity="null"
+       stroke-opacity="null"
+       stroke-width="0"
+       fill="#424242"
+       id="text2"
+       style="fill:#cccccc;fill-opacity:1">M</text>
+  </g>
 </svg>
