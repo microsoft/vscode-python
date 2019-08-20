@@ -20,7 +20,7 @@ export class DebugAdapterDescriptorFactory implements VSCDADescriptionFactory {
     public async createDebugAdapterDescriptor(session: DebugSession, executable: DebugAdapterExecutable | undefined): Promise<DebugAdapterDescriptor> {
         if ('experiment' in session.configuration && session.configuration.experiment) {
             const configuration = session.configuration as (LaunchRequestArguments | AttachRequestArguments);
-            const logArgs = configuration.logToFile ? ['--log-dir', EXTENSION_ROOT_DIR] : [];
+            const logArgs = configuration.logToFile ? ['--log-dir', EXTENSION_ROOT_DIR] : []; // test
             const pythonPath = await this.getPythonPath(configuration, session.workspaceFolder);
             // tslint:disable-next-line: no-any
             const ptvsdPathToUse = 'ptvsd' in configuration ? (configuration as any).ptvsd : ptvsdPath;
