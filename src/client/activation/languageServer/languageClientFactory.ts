@@ -41,7 +41,7 @@ export class BaseLanguageClientFactory implements ILanguageClientFactory {
 }
 
 /**
- * Creates a langauge client for use by users of the extension.
+ * Creates a language client for use by users of the extension.
  *
  * @export
  * @class DownloadedLanguageClientFactory

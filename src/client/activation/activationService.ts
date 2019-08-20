@@ -112,7 +112,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
     }
 
     @swallowExceptions('Switch Language Server')
-    public async trackLangaugeServerSwitch(newValue: LanguageServerType): Promise<void> {
+    public async trackLanguageServerSwitch(newValue: LanguageServerType): Promise<void> {
         const state = this.stateFactory.createGlobalPersistentState<LanguageServerType | undefined>('SWITCH_LS', undefined);
         if (typeof state.value !== 'string') {
             await state.updateValue(newValue);
@@ -166,7 +166,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
             languageServerType = 'jedi';
         }
 
-        this.trackLangaugeServerSwitch(languageServerType).ignoreErrors();
+        this.trackLanguageServerSwitch(languageServerType).ignoreErrors();
 
         return languageServerType;
     }

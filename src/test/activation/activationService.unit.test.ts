@@ -509,7 +509,7 @@ suite('Activation - ActivationService', () => {
         });
     });
 
-    suite('Test trackLangaugeServerSwitch()', () => {
+    suite('Test trackLanguageServerSwitch()', () => {
         let serviceContainer: TypeMoq.IMock<IServiceContainer>;
         let pythonSettings: TypeMoq.IMock<IPythonSettings>;
         let appShell: TypeMoq.IMock<IApplicationShell>;
@@ -589,7 +589,7 @@ suite('Activation - ActivationService', () => {
             state.setup(s => s.updateValue(TypeMoq.It.isValue('jedi'))).returns(() => Promise.resolve()).verifiable(TypeMoq.Times.once());
 
             const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
-            await activationService.trackLangaugeServerSwitch('jedi');
+            await activationService.trackLanguageServerSwitch('jedi');
 
             state.verifyAll();
         });
@@ -600,7 +600,7 @@ suite('Activation - ActivationService', () => {
             state.setup(s => s.updateValue(TypeMoq.It.isValue('microsoft'))).returns(() => Promise.resolve()).verifiable(TypeMoq.Times.once());
 
             const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
-            await activationService.trackLangaugeServerSwitch('microsoft');
+            await activationService.trackLanguageServerSwitch('microsoft');
 
             state.verify(s => s.updateValue(TypeMoq.It.isValue('microsoft')), TypeMoq.Times.once());
         });
@@ -611,7 +611,7 @@ suite('Activation - ActivationService', () => {
             state.setup(s => s.updateValue(TypeMoq.It.isValue('jedi'))).returns(() => Promise.resolve()).verifiable(TypeMoq.Times.once());
 
             const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
-            await activationService.trackLangaugeServerSwitch('jedi');
+            await activationService.trackLanguageServerSwitch('jedi');
 
             state.verify(s => s.updateValue(TypeMoq.It.isValue('jedi')), TypeMoq.Times.once());
         });
@@ -622,7 +622,7 @@ suite('Activation - ActivationService', () => {
             state.setup(s => s.updateValue(TypeMoq.It.isValue('none'))).returns(() => Promise.resolve()).verifiable(TypeMoq.Times.once());
 
             const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
-            await activationService.trackLangaugeServerSwitch('none');
+            await activationService.trackLanguageServerSwitch('none');
 
             state.verify(s => s.updateValue(TypeMoq.It.isValue('none')), TypeMoq.Times.once());
         });
