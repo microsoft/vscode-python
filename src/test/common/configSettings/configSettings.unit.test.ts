@@ -48,7 +48,7 @@ suite('Python Settings', async () => {
 
     function initializeConfig(sourceSettings: PythonSettings) {
         // string settings
-        for (const name of ['pythonPath', 'venvPath', 'condaPath', 'pipenvPath', 'envFile', 'poetryPath', 'insidersChannel']) {
+        for (const name of ['pythonPath', 'venvPath', 'condaPath', 'pipenvPath', 'envFile', 'poetryPath', 'insidersChannel', 'runMagicCommands']) {
             config.setup(c => c.get<string>(name))
                 // tslint:disable-next-line:no-any
                 .returns(() => (sourceSettings as any)[name]);
