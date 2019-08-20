@@ -306,7 +306,9 @@ async function checkDatascienceDependencies() {
     const contents = await fsExtra.readFile(statsOutput).then(data => data.toString());
     const startIndex = contents.toString().indexOf('{') - 1;
 
+    console.error('---------------------------------------------');
     console.error(contents);
+    console.error('---------------------------------------------');
     const json = JSON.parse(contents.substring(startIndex));
     const newModules = new Set();
     const packageLock = JSON.parse(await fsExtra.readFile('package-lock.json').then(data => data.toString()));
