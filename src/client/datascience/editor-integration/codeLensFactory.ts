@@ -99,6 +99,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         return fullCommandList;
     }
 
+    // tslint:disable-next-line: max-func-body-length
     private createCodeLens(document: TextDocument, cellRange: { range: Range; cell_type: string }, commandName: string, isFirst: boolean): CodeLens | undefined {
         // We only support specific commands
         // Be careful here. These arguments will be serialized during liveshare sessions

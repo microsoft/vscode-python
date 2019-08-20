@@ -7,7 +7,7 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { IFileSystem, IPlatformService, TemporaryFile } from '../../../client/common/platform/types';
-// tslint:disable-next-line:no-require-imports no-var-requires
+// tslint:disable:no-require-imports no-var-requires
 const assertArrays = require('chai-arrays');
 use(require('chai-as-promised'));
 use(assertArrays);

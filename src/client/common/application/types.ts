@@ -24,6 +24,7 @@ import {
     MessageItem,
     MessageOptions,
     OpenDialogOptions,
+    OutputChannel,
     Progress,
     ProgressOptions,
     QuickPick,
@@ -51,8 +52,7 @@ import {
     WorkspaceEdit,
     WorkspaceFolder,
     WorkspaceFolderPickOptions,
-    WorkspaceFoldersChangeEvent,
-    OutputChannel
+    WorkspaceFoldersChangeEvent
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
 

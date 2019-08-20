@@ -21,7 +21,7 @@ import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
-import { Logger } from './../common/logger';
+import { Logger, traceError } from './../common/logger';
 
 const pythonVSCodeTypeMappings = new Map<string, CompletionItemKind>();
 pythonVSCodeTypeMappings.set('none', CompletionItemKind.Value);
@@ -212,7 +212,7 @@ export class JediProxy implements Disposable {
             this.commands.set(executionCmd.id, executionCmd);
             this.commandQueue.push(executionCmd.id);
         } catch (ex) {
-            console.error(ex);
+            traceError(ex);
             //If 'This socket is closed.' that means process didn't start at all (at least not properly).
             if (ex.message === 'This socket is closed.') {
                 this.killProcess();
@@ -278,7 +278,7 @@ export class JediProxy implements Disposable {
                     this.pidUsageFailures.counter = 0;
                     this.pidUsageFailures.timer.reset();
                 }
-                console.error('Python Extension: (pidusage)', err);
+                traceError('Python Extension: (pidusage)', err);
             } else {
                 const limit = Math.min(Math.max(this.pythonSettings.jediMemoryLimit, 1024), 8192);
                 let restartJedi = false;
@@ -690,7 +690,7 @@ export class JediProxy implements Disposable {
             const filePaths = await Promise.all(filePathPromises);
             return filePaths.concat(...pythonPaths, ...resolvedPaths).filter(p => p.length > 0);
         } catch (ex) {
-            console.error('Python Extension: jediProxy.filePaths', ex);
+            traceError('Python Extension: jediProxy.filePaths', ex);
             return [];
         }
     }
@@ -872,7 +872,7 @@ export class JediProxyHandler<R extends ICommandResult> implements Disposable {
         executionCmd.token = cancellation.token;
 
         return this.jediProxy.sendCommand<R>(executionCmd).catch(reason => {
-            console.error(reason);
+            traceError(reason);
             return undefined;
         });
     }
@@ -885,7 +885,7 @@ export class JediProxyHandler<R extends ICommandResult> implements Disposable {
         }
 
         return this.jediProxy.sendCommand<R>(executionCmd).catch(reason => {
-            console.error(reason);
+            traceError(reason);
             return undefined;
         });
     }

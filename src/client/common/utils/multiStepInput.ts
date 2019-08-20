@@ -33,6 +33,7 @@ export interface IQuickPickParameters<T extends QuickPickItem> {
     shouldResume?(): Promise<boolean>;
 }
 
+// tslint:disable-next-line: interface-name
 export interface InputBoxParameters {
     title: string;
     step?: number;

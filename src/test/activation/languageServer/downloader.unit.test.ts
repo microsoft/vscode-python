@@ -165,28 +165,28 @@ suite('Activation - Downloader', () => {
 
     suite('Test LanguageServerDownloader.downloadFile', () => {
         let lsDownloader: LanguageServerDownloader;
-        let outputChannel: IOutputChannel;
+        let outputChannelDownload: IOutputChannel;
         let fileDownloader: IFileDownloader;
-        let lsOutputChannel: TypeMoq.IMock<ILanguageServerOutputChannel>;
+        let lsOutputChannelDownload: TypeMoq.IMock<ILanguageServerOutputChannel>;
         // tslint:disable-next-line: no-http-string
         const downloadUri = 'http://wow.com/file.txt';
         const downloadTitle = 'Downloadimg file.txt';
         setup(() => {
             const platformData = mock(PlatformData);
-            outputChannel = mock(MockOutputChannel);
+            outputChannelDownload = mock(MockOutputChannel);
             fileDownloader = mock(FileDownloader);
             const lsFolderService = mock(LanguageServerFolderService);
             const appShell = mock(ApplicationShell);
             const fs = mock(FileSystem);
             // tslint:disable-next-line: no-shadowed-variable
             const workspaceService = mock(WorkspaceService);
-            lsOutputChannel = TypeMoq.Mock.ofType<ILanguageServerOutputChannel>();
-            lsOutputChannel
+            lsOutputChannelDownload = TypeMoq.Mock.ofType<ILanguageServerOutputChannel>();
+            lsOutputChannelDownload
                 .setup(l => l.channel)
-                .returns(() => instance(outputChannel));
+                .returns(() => instance(outputChannelDownload));
 
             lsDownloader = new LanguageServerDownloader(instance(platformData),
-                lsOutputChannel.object, instance(fileDownloader),
+                lsOutputChannelDownload.object, instance(fileDownloader),
                 instance(lsFolderService), instance(appShell),
                 instance(fs), instance(workspaceService));
         });
@@ -196,7 +196,7 @@ suite('Activation - Downloader', () => {
             when(fileDownloader.downloadFile(anything(), anything())).thenResolve(downloadedFile);
             const expectedDownloadOptions = {
                 extension: '.nupkg',
-                outputChannel: instance(outputChannel),
+                outputChannel: instance(outputChannelDownload),
                 progressMessagePrefix: downloadTitle
             };
 
@@ -212,7 +212,7 @@ suite('Activation - Downloader', () => {
             await lsDownloader.downloadFile(downloadUri, downloadTitle);
 
             verify(fileDownloader.downloadFile(anything(), anything())).once();
-            verify(outputChannel.appendLine(LanguageService.extractionCompletedOutputMessage())).once();
+            verify(outputChannelDownload.appendLine(LanguageService.extractionCompletedOutputMessage())).once();
         });
         test('If download fails do not log completion message', async () => {
             const ex = new Error('kaboom');
@@ -221,7 +221,7 @@ suite('Activation - Downloader', () => {
             const promise = lsDownloader.downloadFile(downloadUri, downloadTitle);
             await promise.catch(noop);
 
-            verify(outputChannel.appendLine(LanguageService.extractionCompletedOutputMessage())).never();
+            verify(outputChannelDownload.appendLine(LanguageService.extractionCompletedOutputMessage())).never();
             expect(promise).to.eventually.be.rejectedWith('kaboom');
         });
     });

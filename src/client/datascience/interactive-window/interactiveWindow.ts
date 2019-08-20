@@ -727,6 +727,7 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         }
     }
 
+    // tslint:disable-next-line: max-func-body-length
     private async submitCode(code: string, file: string, line: number, id?: string, _editor?: TextEditor, debug?: boolean): Promise<boolean> {
         let result = true;
 

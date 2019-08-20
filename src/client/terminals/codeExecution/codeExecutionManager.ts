@@ -9,6 +9,7 @@ import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { ICommandManager, IDocumentManager } from '../../common/application/types';
 import { Commands } from '../../common/constants';
 import '../../common/extensions';
+import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { BANNER_NAME_INTERACTIVE_SHIFTENTER, IDisposableRegistry, IPythonExtensionBanner, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
@@ -16,7 +17,6 @@ import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService } from '../../terminals/types';
-import { traceError } from '../../common/logger';
 
 @injectable()
 export class CodeExecutionManager implements ICodeExecutionManager {

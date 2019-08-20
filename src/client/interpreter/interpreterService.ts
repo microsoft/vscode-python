@@ -4,6 +4,7 @@ import * as path from 'path';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import '../../client/common/extensions';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
+import { traceError } from '../common/logger';
 import { getArchitectureDisplayName } from '../common/platform/registry';
 import { IFileSystem } from '../common/platform/types';
 import { IPythonExecutionFactory } from '../common/process/types';
@@ -258,7 +259,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
             this.didChangeInterpreterEmitter.fire();
             const interpreterDisplay = this.serviceContainer.get<IInterpreterDisplay>(IInterpreterDisplay);
             interpreterDisplay.refresh()
-                .catch(ex => console.error('Python Extension: display.refresh', ex));
+                .catch(ex => traceError('Python Extension: display.refresh', ex));
         }
     }
     private async collectInterpreterDetails(pythonPath: string, resource: Uri | undefined) {
