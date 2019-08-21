@@ -4,28 +4,38 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
 import { DebugAdapterDescriptor, DebugAdapterDescriptorFactory as VSCDADescriptionFactory, DebugAdapterExecutable, DebugSession, WorkspaceFolder } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
+import { DebugAdapterPtvsdGroups } from '../../../common/experimentGroups';
 import { traceVerbose } from '../../../common/logger';
-import { EXTENSION_ROOT_DIR } from '../../../constants';
+import { IExperimentsManager } from '../../../common/types';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { AttachRequestArguments, LaunchRequestArguments } from '../../types';
 
-const ptvsdPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'ptvsd');
-
 @injectable()
 export class DebugAdapterDescriptorFactory implements VSCDADescriptionFactory {
-    constructor(@inject(IInterpreterService) private readonly interpreterService: IInterpreterService, @inject(IApplicationShell) private readonly appShell: IApplicationShell) {}
+    constructor(
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
+        @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager
+    ) {}
     public async createDebugAdapterDescriptor(session: DebugSession, executable: DebugAdapterExecutable | undefined): Promise<DebugAdapterDescriptor> {
-        if ('experiment' in session.configuration && session.configuration.experiment) {
-            const configuration = session.configuration as (LaunchRequestArguments | AttachRequestArguments);
-            const logArgs = configuration.logToFile ? ['--log-dir', EXTENSION_ROOT_DIR] : []; // test
-            const pythonPath = await this.getPythonPath(configuration, session.workspaceFolder);
-            // tslint:disable-next-line: no-any
-            const ptvsdPathToUse = 'ptvsd' in configuration ? (configuration as any).ptvsd : ptvsdPath;
-            traceVerbose(`Using Python Debug Adapter with PTVSD ${ptvsdPathToUse}`);
-            return new DebugAdapterExecutable(pythonPath, [path.join(ptvsdPathToUse, 'adapter'), ...logArgs]);
+        const configuration = session.configuration as (LaunchRequestArguments | AttachRequestArguments);
+        const pythonPath = await this.getPythonPath(configuration, session.workspaceFolder);
+        const interpreterInfo = await this.interpreterService.getInterpreterDetails(pythonPath);
+
+        if (
+            interpreterInfo &&
+            interpreterInfo.version &&
+            interpreterInfo.version.raw.startsWith('3.7') &&
+            this.experimentsManager.inExperiment(DebugAdapterPtvsdGroups.experiment)
+        ) {
+            traceVerbose('Compute and return the path to the correct PTVSD folder (use packaging module)');
+            // const ptvsdPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'ptvsd');
+            // // tslint:disable-next-line: no-any
+            // const ptvsdPathToUse = 'ptvsd' in configuration ? (configuration as any).ptvsd : ptvsdPath;
+            // traceVerbose(`Using Python Debug Adapter with PTVSD ${ptvsdPathToUse}`);
+            // return new DebugAdapterExecutable(pythonPath, [path.join(ptvsdPathToUse, 'adapter'), ...logArgs]);
         }
         if (executable) {
             traceVerbose('Using Node Debug Adapter');

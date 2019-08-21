@@ -8,7 +8,7 @@ import { InputStep, MultiStepInput } from '../../common/utils/multiStepInput';
 import { DebugConfigurationArguments } from '../types';
 
 export const IDebugConfigurationService = Symbol('IDebugConfigurationService');
-export interface IDebugConfigurationService extends DebugConfigurationProvider { }
+export interface IDebugConfigurationService extends DebugConfigurationProvider {}
 export const IDebuggerBanner = Symbol('IDebuggerBanner');
 export interface IDebuggerBanner {
     initialize(): void;
@@ -34,3 +34,11 @@ export enum PythonPathSource {
     launchJson = 'launch.json',
     settingsJson = 'settings.json'
 }
+
+export enum ExtensionSingleActivationServiceType {
+    jsonCompletionProvider = 'jsonCompletionProvider',
+    jsonUpdaterService = 'jsonUpdaterService',
+    debugAdapterActivator = 'debugAdapterActivator'
+}
+
+export const IDebugAdapterDescriptorFactory = Symbol('DebugAdapterDescriptorFactory');
