@@ -13,15 +13,13 @@ import { IDocumentManager, IWorkspaceService } from '../../../../../client/commo
 import { PYTHON_LANGUAGE } from '../../../../../client/common/constants';
 import { IFileSystem, IPlatformService } from '../../../../../client/common/platform/types';
 import { IConfigurationService } from '../../../../../client/common/types';
-import { getNamesAndValues } from '../../../../../client/common/utils/enum';
 import { OSType } from '../../../../../client/common/utils/platform';
 import { AttachConfigurationResolver } from '../../../../../client/debugger/extension/configuration/resolvers/attach';
 import { AttachRequestArguments, DebugOptions } from '../../../../../client/debugger/types';
 import { IServiceContainer } from '../../../../../client/ioc/types';
-import { emulateOS } from './common';
+import { iterOSes } from './common';
 
-getNamesAndValues(OSType).forEach(os => {
-    const osType: OSType = os.value as OSType;
+iterOSes().forEach(([osName, osType, setUpMocks]) => {
     if (osType === OSType.Unknown) {
         return;
     }
@@ -41,7 +39,7 @@ getNamesAndValues(OSType).forEach(os => {
         return options;
     }
 
-    suite(`Debugging - Config Resolver attach, OS = ${os.name}`, () => {
+    suite(`Debugging - Config Resolver attach, OS = ${osName}`, () => {
         let serviceContainer: TypeMoq.IMock<IServiceContainer>;
         let debugProvider: DebugConfigurationProvider;
         let platformService: TypeMoq.IMock<IPlatformService>;
@@ -58,7 +56,9 @@ getNamesAndValues(OSType).forEach(os => {
             fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
             serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformService.object);
             serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
-            emulateOS(os.value as OSType, platformService);
+            setUpMocks(
+                platformService
+            );
             documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
             debugProvider = new AttachConfigurationResolver(workspaceService.object, documentManager.object, platformService.object, configurationService.object);
         });

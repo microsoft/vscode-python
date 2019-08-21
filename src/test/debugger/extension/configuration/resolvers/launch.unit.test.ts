@@ -15,17 +15,15 @@ import { PYTHON_LANGUAGE } from '../../../../../client/common/constants';
 import { IPlatformService } from '../../../../../client/common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../../../client/common/process/types';
 import { IConfigurationService, IPythonSettings } from '../../../../../client/common/types';
-import { getNamesAndValues } from '../../../../../client/common/utils/enum';
 import { OSType } from '../../../../../client/common/utils/platform';
 import { DebuggerTypeName } from '../../../../../client/debugger/constants';
 import { IDebugEnvironmentVariablesService } from '../../../../../client/debugger/extension/configuration/resolvers/helper';
 import { LaunchConfigurationResolver } from '../../../../../client/debugger/extension/configuration/resolvers/launch';
 import { DebugOptions, LaunchRequestArguments } from '../../../../../client/debugger/types';
 import { IInterpreterHelper } from '../../../../../client/interpreter/contracts';
-import { emulateOS } from './common';
+import { iterOSes } from './common';
 
-getNamesAndValues(OSType).forEach(os => {
-    const osType: OSType = os.value as OSType;
+iterOSes().forEach(([osName, osType, setUpMocks]) => {
     if (osType === OSType.Unknown) {
         return;
     }
@@ -33,7 +31,7 @@ getNamesAndValues(OSType).forEach(os => {
     // So we can use path.join() even though the tests are OS-specific.
     // We could use hard-coded paths instead if we wanted to.
 
-    suite(`Debugging - Config Resolver Launch, OS = ${os.name}`, () => {
+    suite(`Debugging - Config Resolver Launch, OS = ${osName}`, () => {
         let debugProvider: DebugConfigurationProvider;
         let platformService: TypeMoq.IMock<IPlatformService>;
         let pythonExecutionService: TypeMoq.IMock<IPythonExecutionService>;
@@ -72,7 +70,9 @@ getNamesAndValues(OSType).forEach(os => {
                 settings.setup(s => s.envFile).returns(() => path.join(workspaceFolder!.uri.fsPath, '.env2'));
             }
             confgService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
-            emulateOS(os.value as OSType, platformService);
+            setUpMocks(
+                platformService
+            );
             debugEnvHelper.setup(x => x.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({}));
 
             debugProvider = new LaunchConfigurationResolver(
