@@ -36,6 +36,7 @@ export class DebugAdapterDescriptorFactory implements VSCDADescriptionFactory {
             // const ptvsdPathToUse = 'ptvsd' in configuration ? (configuration as any).ptvsd : ptvsdPath;
             // traceVerbose(`Using Python Debug Adapter with PTVSD ${ptvsdPathToUse}`);
             // return new DebugAdapterExecutable(pythonPath, [path.join(ptvsdPathToUse, 'adapter'), ...logArgs]);
+            return new DebugAdapterExecutable(pythonPath);
         }
         if (executable) {
             traceVerbose('Using Node Debug Adapter');
@@ -69,6 +70,7 @@ export class DebugAdapterDescriptorFactory implements VSCDADescriptionFactory {
         const interpreters = await this.interpreterService.getInterpreters(resourceUri);
         if (interpreters.length === 0) {
             this.notifySelectInterpreter().ignoreErrors();
+            return '';
         }
 
         traceVerbose(`Picking first available interpreter to launch the DA '${interpreters[0].path}'`);
