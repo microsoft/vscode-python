@@ -229,7 +229,8 @@ gulp.task('verifyBundle', async () => {
 });
 
 gulp.task('prePublishBundle', gulp.series('webpack', 'renameSourceMaps'));
-gulp.task('prePublishNonBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'compile-webviews'));
+//gulp.task('prePublishNonBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'compile-webviews'));
+gulp.task('prePublishNonBundle', gulp.series('checkNativeDependencies', 'compile', 'compile-webviews'));
 
 gulp.task('installPythonLibs', async () => {
     const requirements = fs
@@ -290,8 +291,7 @@ function spawnAsync(command, args) {
 }
 function buildDatascienceDependencies() {
     fsExtra.ensureDirSync(path.join(__dirname, 'tmp'));
-    const spawnReturn = spawn.sync('npm', ['run', 'dump-datascience-webpack-stats']);
-    console.error(spawnReturn.toString());
+    spawn.sync('npm', ['run', 'dump-datascience-webpack-stats']);
 }
 
 async function checkDatascienceDependencies() {
@@ -303,22 +303,9 @@ async function checkDatascienceDependencies() {
     const existingModules = new Set(existingModulesList);
     const existingModulesCopy = new Set(existingModulesList);
 
-    console.error("--------");
     const statsOutput = path.join(__dirname, 'tmp', 'ds-stats.json');
-    console.error(statsOutput);
-    if (fs.existsSync(statsOutput))
-    {
-        console.error("exists");
-        const stats = fs.statSync(statsOutput);
-        console.error(stats.size);
-        const buffer = await fsExtra.readFileSync(statsOutput);
-        const string = buffer.toString();
-        console.error(string);
-    }
     const contents = await fsExtra.readFile(statsOutput).then(data => data.toString());
-    console.error(contents);
     const startIndex = contents.toString().indexOf('{') - 1;
-    console.error("--------");
 
     const json = JSON.parse(contents.substring(startIndex));
     const newModules = new Set();
