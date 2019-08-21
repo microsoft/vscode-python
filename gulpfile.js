@@ -310,7 +310,7 @@ async function checkDatascienceDependencies() {
     console.error(contents);
     console.error('---------------------------------------------');
     if (contents.length == 0) {
-        contents = '{}';
+        contents = '[{}]';
     }
     console.error('---------------------------------------------');
     console.error(contents);
