@@ -28,5 +28,17 @@
         "salt": "ShowPlayIcon",
         "min": 0,
         "max": 20
+    },
+    {
+        "name": "DebugAdapterPtvsd - control",
+        "salt": "DebugAdapterPtvsd",
+        "min": 100,
+        "max": 0
+    },
+    {
+        "name": "DebugAdapterPtvsd - experiment",
+        "salt": "DebugAdapterPtvsd",
+        "min": 100,
+        "max": 0
     }
 ]
