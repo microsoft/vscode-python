@@ -229,7 +229,8 @@ gulp.task('verifyBundle', async () => {
 });
 
 gulp.task('prePublishBundle', gulp.series('webpack', 'renameSourceMaps'));
-gulp.task('prePublishNonBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'compile-webviews'));
+//gulp.task('prePublishNonBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'compile-webviews'));
+gulp.task('prePublishNonBundle', gulp.series('checkNativeDependencies', 'compile', 'compile-webviews'));
 
 gulp.task('installPythonLibs', async () => {
     const requirements = fs
