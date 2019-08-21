@@ -27,9 +27,9 @@ getNamesAndValues(OSType).forEach(os => {
     if (os.value === OSType.Unknown) {
         return;
     }
-    function pathJoin(...parts: string[]): string {
-        return parts.join(os.name === 'Windows' ? '\\' : '/');
-    }
+    // None of the behavior tested here relies on the path separator.
+    // So we can use path.join() even though the tests are OS-specific.
+    // We could use hard-coded paths instead if we wanted to.
 
     suite(`Debugging - Config Resolver Launch, OS = ${os.name}`, () => {
         let debugProvider: DebugConfigurationProvider;
@@ -75,7 +75,7 @@ getNamesAndValues(OSType).forEach(os => {
             const settings = TypeMoq.Mock.ofType<IPythonSettings>();
             settings.setup(s => s.pythonPath).returns(() => pythonPath);
             if (workspaceFolder) {
-                settings.setup(s => s.envFile).returns(() => pathJoin(workspaceFolder!.uri.fsPath, '.env2'));
+                settings.setup(s => s.envFile).returns(() => path.join(workspaceFolder!.uri.fsPath, '.env2'));
             }
             confgService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
             platformService.setup(p => p.isWindows).returns(() => os.value === OSType.Windows);
@@ -125,7 +125,7 @@ getNamesAndValues(OSType).forEach(os => {
             expect(debugConfig).to.have.property('cwd');
             expect(debugConfig!.cwd!.toLowerCase()).to.be.equal(__dirname.toLowerCase());
             expect(debugConfig).to.have.property('envFile');
-            expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(pathJoin(__dirname, '.env2').toLowerCase());
+            expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(path.join(__dirname, '.env2').toLowerCase());
             expect(debugConfig).to.have.property('env');
             // tslint:disable-next-line:no-any
             expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
@@ -147,7 +147,7 @@ getNamesAndValues(OSType).forEach(os => {
             expect(debugConfig).to.have.property('cwd');
             expect(debugConfig!.cwd!.toLowerCase()).to.be.equal(__dirname.toLowerCase());
             expect(debugConfig).to.have.property('envFile');
-            expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(pathJoin(__dirname, '.env2').toLowerCase());
+            expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(path.join(__dirname, '.env2').toLowerCase());
             expect(debugConfig).to.have.property('env');
             // tslint:disable-next-line:no-any
             expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
@@ -170,7 +170,7 @@ getNamesAndValues(OSType).forEach(os => {
             expect(debugConfig).to.have.property('cwd');
             expect(debugConfig!.cwd!.toLowerCase()).to.be.equal(filePath.toLowerCase());
             expect(debugConfig).to.have.property('envFile');
-            expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(pathJoin(filePath, '.env2').toLowerCase());
+            expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(path.join(filePath, '.env2').toLowerCase());
             expect(debugConfig).to.have.property('env');
             // tslint:disable-next-line:no-any
             expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
@@ -217,7 +217,7 @@ getNamesAndValues(OSType).forEach(os => {
         test('Defaults should be returned when an empty object is passed without Workspace Folder, with a workspace and an active python file', async () => {
             const pythonPath = `PythonPath_${new Date().toString()}`;
             const activeFile = 'xyz.py';
-            const defaultWorkspace = pathJoin('usr', 'desktop');
+            const defaultWorkspace = path.join('usr', 'desktop');
             setupIoc(pythonPath, createMoqWorkspaceFolder(defaultWorkspace));
             setupActiveEditor(activeFile, PYTHON_LANGUAGE);
             setupWorkspaces([defaultWorkspace]);
@@ -233,7 +233,7 @@ getNamesAndValues(OSType).forEach(os => {
             expect(debugConfig).to.have.property('cwd');
             expect(debugConfig!.cwd!.toLowerCase()).to.be.equal(filePath.toLowerCase());
             expect(debugConfig).to.have.property('envFile');
-            expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(pathJoin(filePath, '.env2').toLowerCase());
+            expect(debugConfig!.envFile!.toLowerCase()).to.be.equal(path.join(filePath, '.env2').toLowerCase());
             expect(debugConfig).to.have.property('env');
             // tslint:disable-next-line:no-any
             expect(Object.keys((debugConfig as any).env)).to.have.lengthOf(0);
@@ -241,7 +241,7 @@ getNamesAndValues(OSType).forEach(os => {
         test('Ensure \'port\' is left unaltered', async () => {
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             setupActiveEditor('spam.py', PYTHON_LANGUAGE);
-            const defaultWorkspace = pathJoin('usr', 'desktop');
+            const defaultWorkspace = path.join('usr', 'desktop');
             setupWorkspaces([defaultWorkspace]);
 
             const port = 12341234;
@@ -252,7 +252,7 @@ getNamesAndValues(OSType).forEach(os => {
         test('Ensure \'localRoot\' is left unaltered', async () => {
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             setupActiveEditor('spam.py', PYTHON_LANGUAGE);
-            const defaultWorkspace = pathJoin('usr', 'desktop');
+            const defaultWorkspace = path.join('usr', 'desktop');
             setupWorkspaces([defaultWorkspace]);
 
             const localRoot = `Debug_PythonPath_${new Date().toString()}`;
@@ -263,7 +263,7 @@ getNamesAndValues(OSType).forEach(os => {
         test('Ensure \'remoteRoot\' is left unaltered', async () => {
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             setupActiveEditor('spam.py', PYTHON_LANGUAGE);
-            const defaultWorkspace = pathJoin('usr', 'desktop');
+            const defaultWorkspace = path.join('usr', 'desktop');
             setupWorkspaces([defaultWorkspace]);
 
             const remoteRoot = `Debug_PythonPath_${new Date().toString()}`;
@@ -274,7 +274,7 @@ getNamesAndValues(OSType).forEach(os => {
         test('Ensure \'localRoot\' and \'remoteRoot\' are not used', async () => {
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             setupActiveEditor('spam.py', PYTHON_LANGUAGE);
-            const defaultWorkspace = pathJoin('usr', 'desktop');
+            const defaultWorkspace = path.join('usr', 'desktop');
             setupWorkspaces([defaultWorkspace]);
 
             const localRoot = `Debug_PythonPath_Local_Root_${new Date().toString()}`;
@@ -286,7 +286,7 @@ getNamesAndValues(OSType).forEach(os => {
         test('Ensure non-empty path mappings are used', async () => {
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             setupActiveEditor('spam.py', PYTHON_LANGUAGE);
-            const defaultWorkspace = pathJoin('usr', 'desktop');
+            const defaultWorkspace = path.join('usr', 'desktop');
             setupWorkspaces([defaultWorkspace]);
 
             const expected = {
@@ -307,7 +307,7 @@ getNamesAndValues(OSType).forEach(os => {
         test('Ensure replacement in path mappings happens', async () => {
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             setupActiveEditor('spam.py', PYTHON_LANGUAGE);
-            const defaultWorkspace = pathJoin('usr', 'desktop');
+            const defaultWorkspace = path.join('usr', 'desktop');
             setupWorkspaces([defaultWorkspace]);
 
             const debugConfig = await debugProvider.resolveDebugConfiguration!(
@@ -330,7 +330,7 @@ getNamesAndValues(OSType).forEach(os => {
         test('Ensure path mappings are not automatically added if missing', async () => {
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             setupActiveEditor('spam.py', PYTHON_LANGUAGE);
-            const defaultWorkspace = pathJoin('usr', 'desktop');
+            const defaultWorkspace = path.join('usr', 'desktop');
             setupWorkspaces([defaultWorkspace]);
             const localRoot = `Debug_PythonPath_${new Date().toString()}`;
 
@@ -348,7 +348,7 @@ getNamesAndValues(OSType).forEach(os => {
         test('Ensure path mappings are not automatically added if empty', async () => {
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             setupActiveEditor('spam.py', PYTHON_LANGUAGE);
-            const defaultWorkspace = pathJoin('usr', 'desktop');
+            const defaultWorkspace = path.join('usr', 'desktop');
             setupWorkspaces([defaultWorkspace]);
             const localRoot = `Debug_PythonPath_${new Date().toString()}`;
 
@@ -367,7 +367,7 @@ getNamesAndValues(OSType).forEach(os => {
         test('Ensure path mappings are not automatically added to existing', async () => {
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             setupActiveEditor('spam.py', PYTHON_LANGUAGE);
-            const defaultWorkspace = pathJoin('usr', 'desktop');
+            const defaultWorkspace = path.join('usr', 'desktop');
             setupWorkspaces([defaultWorkspace]);
             const localRoot = `Debug_PythonPath_${new Date().toString()}`;
 
@@ -391,11 +391,11 @@ getNamesAndValues(OSType).forEach(os => {
             }]);
         });
         test('Ensure drive letter is lower cased for local path mappings on Windows when with existing path mappings', async () => {
-            const workspaceFolder = createMoqWorkspaceFolder(pathJoin('C:', 'Debug', 'Python_Path'));
+            const workspaceFolder = createMoqWorkspaceFolder(path.join('C:', 'Debug', 'Python_Path'));
             setupActiveEditor('spam.py', PYTHON_LANGUAGE);
-            const defaultWorkspace = pathJoin('usr', 'desktop');
+            const defaultWorkspace = path.join('usr', 'desktop');
             setupWorkspaces([defaultWorkspace]);
-            const localRoot = pathJoin(workspaceFolder.uri.fsPath, 'app');
+            const localRoot = path.join(workspaceFolder.uri.fsPath, 'app');
 
             const debugConfig = await debugProvider.resolveDebugConfiguration!(
                 workspaceFolder,
@@ -418,9 +418,9 @@ getNamesAndValues(OSType).forEach(os => {
             }]);
         });
         test('Ensure local path mappings are not modified when not pointing to a local drive', async () => {
-            const workspaceFolder = createMoqWorkspaceFolder(pathJoin('Server', 'Debug', 'Python_Path'));
+            const workspaceFolder = createMoqWorkspaceFolder(path.join('Server', 'Debug', 'Python_Path'));
             setupActiveEditor('spam.py', PYTHON_LANGUAGE);
-            const defaultWorkspace = pathJoin('usr', 'desktop');
+            const defaultWorkspace = path.join('usr', 'desktop');
             setupWorkspaces([defaultWorkspace]);
 
             const debugConfig = await debugProvider.resolveDebugConfiguration!(
@@ -446,7 +446,7 @@ getNamesAndValues(OSType).forEach(os => {
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             setupIoc(pythonPath);
             setupActiveEditor(activeFile, PYTHON_LANGUAGE);
-            const defaultWorkspace = pathJoin('usr', 'desktop');
+            const defaultWorkspace = path.join('usr', 'desktop');
             setupWorkspaces([defaultWorkspace]);
 
             const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { pythonPath: '${config:python.pythonPath}' } as any as DebugConfiguration);
@@ -459,7 +459,7 @@ getNamesAndValues(OSType).forEach(os => {
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             setupIoc(pythonPath);
             setupActiveEditor(activeFile, PYTHON_LANGUAGE);
-            const defaultWorkspace = pathJoin('usr', 'desktop');
+            const defaultWorkspace = path.join('usr', 'desktop');
             setupWorkspaces([defaultWorkspace]);
 
             const debugPythonPath = `Debug_PythonPath_${new Date().toString()}`;
@@ -609,8 +609,8 @@ getNamesAndValues(OSType).forEach(os => {
             }
         });
         test('Jinja added for Pyramid', async () => {
-            const workspacePath = pathJoin('usr', 'development', 'wksp1');
-            const pythonPath = pathJoin(workspacePath, 'env', 'bin', 'python');
+            const workspacePath = path.join('usr', 'development', 'wksp1');
+            const pythonPath = path.join(workspacePath, 'env', 'bin', 'python');
             const workspaceFolder = createMoqWorkspaceFolder(workspacePath);
             const pythonFile = 'xyz.py';
 
