@@ -6,7 +6,6 @@
 // tslint:disable:max-func-body-length no-invalid-template-strings no-any no-object-literal-type-assertion
 
 import { expect } from 'chai';
-import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { DebugConfiguration, DebugConfigurationProvider, TextDocument, TextEditor, Uri, WorkspaceFolder } from 'vscode';
 import { IInvalidPythonPathInDebuggerService } from '../../../../../client/application/diagnostics/types';
@@ -23,13 +22,10 @@ import { DebugOptions, LaunchRequestArguments } from '../../../../../client/debu
 import { IInterpreterHelper } from '../../../../../client/interpreter/contracts';
 import { iterOSes } from './common';
 
-iterOSes().forEach(([osName, osType, setUpMocks]) => {
+iterOSes().forEach(([osName, osType, path, setUpMocks]) => {
     if (osType === OSType.Unknown) {
         return;
     }
-    // None of the behavior tested here relies on the path separator.
-    // So we can use path.join() even though the tests are OS-specific.
-    // We could use hard-coded paths instead if we wanted to.
 
     suite(`Debugging - Config Resolver Launch, OS = ${osName}`, () => {
         let debugProvider: DebugConfigurationProvider;

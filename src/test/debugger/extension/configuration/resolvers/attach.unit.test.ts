@@ -6,7 +6,6 @@
 // tslint:disable:max-func-body-length no-invalid-template-strings no-any no-object-literal-type-assertion no-invalid-this
 
 import { expect } from 'chai';
-import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { DebugConfiguration, DebugConfigurationProvider, TextDocument, TextEditor, Uri, WorkspaceFolder } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../../../../client/common/application/types';
@@ -19,13 +18,10 @@ import { AttachRequestArguments, DebugOptions } from '../../../../../client/debu
 import { IServiceContainer } from '../../../../../client/ioc/types';
 import { iterOSes } from './common';
 
-iterOSes().forEach(([osName, osType, setUpMocks]) => {
+iterOSes().forEach(([osName, osType, path, setUpMocks]) => {
     if (osType === OSType.Unknown) {
         return;
     }
-    // None of the behavior tested here relies on the path separator.
-    // So we can use path.join() even though the tests are OS-specific.
-    // We could use hard-coded paths instead if we wanted to.
 
     function getAvailableOptions(): string[] {
         const options = [DebugOptions.RedirectOutput];
