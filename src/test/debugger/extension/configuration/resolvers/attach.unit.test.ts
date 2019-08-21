@@ -20,7 +20,8 @@ import { AttachRequestArguments, DebugOptions } from '../../../../../client/debu
 import { IServiceContainer } from '../../../../../client/ioc/types';
 
 getNamesAndValues(OSType).forEach(os => {
-    if (os.value === OSType.Unknown) {
+    const osType: OSType = os.value as OSType;
+    if (osType === OSType.Unknown) {
         return;
     }
     // None of the behavior tested here relies on the path separator.
@@ -36,7 +37,7 @@ getNamesAndValues(OSType).forEach(os => {
         let configurationService: TypeMoq.IMock<IConfigurationService>;
         let workspaceService: TypeMoq.IMock<IWorkspaceService>;
         const debugOptionsAvailable = [DebugOptions.RedirectOutput];
-        if (os.value === OSType.Windows) {
+        if (osType === OSType.Windows) {
             debugOptionsAvailable.push(DebugOptions.FixFilePathCase);
             debugOptionsAvailable.push(DebugOptions.WindowsClient);
         } else {
@@ -51,9 +52,9 @@ getNamesAndValues(OSType).forEach(os => {
             fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
             serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformService.object);
             serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
-            platformService.setup(p => p.isWindows).returns(() => os.value === OSType.Windows);
-            platformService.setup(p => p.isMac).returns(() => os.value === OSType.OSX);
-            platformService.setup(p => p.isLinux).returns(() => os.value === OSType.Linux);
+            platformService.setup(p => p.isWindows).returns(() => osType === OSType.Windows);
+            platformService.setup(p => p.isMac).returns(() => osType === OSType.OSX);
+            platformService.setup(p => p.isLinux).returns(() => osType === OSType.Linux);
             documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
             debugProvider = new AttachConfigurationResolver(workspaceService.object, documentManager.object, platformService.object, configurationService.object);
         });
@@ -183,7 +184,7 @@ getNamesAndValues(OSType).forEach(os => {
                 const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { localRoot, host, request: 'attach' } as any as DebugConfiguration);
                 const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
 
-                const expected = os.name === 'Windows'
+                const expected = osType === OSType.Windows
                     ? path.join('c:', 'Debug', 'Python_Path')
                     : path.join('C:', 'Debug', 'Python_Path');
                 expect(pathMappings![0].localRoot).to.be.equal(expected);
@@ -201,7 +202,7 @@ getNamesAndValues(OSType).forEach(os => {
                 const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { localRoot, pathMappings: debugPathMappings, host, request: 'attach' } as any as DebugConfiguration);
                 const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
 
-                const expected = os.name === 'Windows'
+                const expected = osType === OSType.Windows
                     ? path.join('c:', 'Debug', 'Python_Path', localRoot)
                     : path.join('C:', 'Debug', 'Python_Path', localRoot);
                 expect(pathMappings![0].localRoot).to.be.equal(expected);

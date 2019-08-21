@@ -24,7 +24,8 @@ import { DebugOptions, LaunchRequestArguments } from '../../../../../client/debu
 import { IInterpreterHelper } from '../../../../../client/interpreter/contracts';
 
 getNamesAndValues(OSType).forEach(os => {
-    if (os.value === OSType.Unknown) {
+    const osType: OSType = os.value as OSType;
+    if (osType === OSType.Unknown) {
         return;
     }
     // None of the behavior tested here relies on the path separator.
@@ -41,7 +42,7 @@ getNamesAndValues(OSType).forEach(os => {
         let diagnosticsService: TypeMoq.IMock<IInvalidPythonPathInDebuggerService>;
         let debugEnvHelper: TypeMoq.IMock<IDebugEnvironmentVariablesService>;
         const debugOptionsAvailable = [DebugOptions.RedirectOutput];
-        if (os.value === OSType.Windows) {
+        if (osType === OSType.Windows) {
             debugOptionsAvailable.push(DebugOptions.FixFilePathCase);
             debugOptionsAvailable.push(DebugOptions.WindowsClient);
         } else {
@@ -78,9 +79,9 @@ getNamesAndValues(OSType).forEach(os => {
                 settings.setup(s => s.envFile).returns(() => path.join(workspaceFolder!.uri.fsPath, '.env2'));
             }
             confgService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
-            platformService.setup(p => p.isWindows).returns(() => os.value === OSType.Windows);
-            platformService.setup(p => p.isMac).returns(() => os.value === OSType.OSX);
-            platformService.setup(p => p.isLinux).returns(() => os.value === OSType.Linux);
+            platformService.setup(p => p.isWindows).returns(() => osType === OSType.Windows);
+            platformService.setup(p => p.isMac).returns(() => osType === OSType.OSX);
+            platformService.setup(p => p.isLinux).returns(() => osType === OSType.Linux);
             debugEnvHelper.setup(x => x.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({}));
 
             debugProvider = new LaunchConfigurationResolver(
@@ -409,7 +410,7 @@ getNamesAndValues(OSType).forEach(os => {
             );
 
             const pathMappings = (debugConfig as LaunchRequestArguments).pathMappings;
-            const expected = os.name === 'Windows'
+            const expected = osType === OSType.Windows
                 ? `c${localRoot.substring(1)}`
                 : localRoot;
             expect(pathMappings).to.deep.equal([{
@@ -484,7 +485,7 @@ getNamesAndValues(OSType).forEach(os => {
                 DebugOptions.ShowReturnValue,
                 DebugOptions.RedirectOutput
             ];
-            if (os.name === 'Windows') {
+            if (osType === OSType.Windows) {
                 expectedOptions.push(
                     DebugOptions.FixFilePathCase
                 );
@@ -528,7 +529,7 @@ getNamesAndValues(OSType).forEach(os => {
                 DebugOptions.DebugStdLib,
                 DebugOptions.ShowReturnValue
             ];
-            if (os.name === 'Windows') {
+            if (osType === OSType.Windows) {
                 expectedOptions.push(
                     DebugOptions.FixFilePathCase
                 );
@@ -602,7 +603,7 @@ getNamesAndValues(OSType).forEach(os => {
             setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
             const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, {} as DebugConfiguration);
-            if (os.name === 'Windows') {
+            if (osType === OSType.Windows) {
                 expect(debugConfig).to.have.property('debugOptions').contains(DebugOptions.FixFilePathCase);
             } else {
                 expect(debugConfig).to.have.property('debugOptions').not.contains(DebugOptions.FixFilePathCase);
