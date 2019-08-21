@@ -28,6 +28,18 @@ getNamesAndValues(OSType).forEach(os => {
     // So we can use path.join() even though the tests are OS-specific.
     // We could use hard-coded paths instead if we wanted to.
 
+    function getAvailableOptions(): string[] {
+        const options = [DebugOptions.RedirectOutput];
+        if (osType === OSType.Windows) {
+            options.push(DebugOptions.FixFilePathCase);
+            options.push(DebugOptions.WindowsClient);
+        } else {
+            options.push(DebugOptions.UnixClient);
+        }
+        options.push(DebugOptions.ShowReturnValue);
+        return options;
+    }
+
     suite(`Debugging - Config Resolver attach, OS = ${os.name}`, () => {
         let serviceContainer: TypeMoq.IMock<IServiceContainer>;
         let debugProvider: DebugConfigurationProvider;
@@ -36,14 +48,7 @@ getNamesAndValues(OSType).forEach(os => {
         let documentManager: TypeMoq.IMock<IDocumentManager>;
         let configurationService: TypeMoq.IMock<IConfigurationService>;
         let workspaceService: TypeMoq.IMock<IWorkspaceService>;
-        const debugOptionsAvailable = [DebugOptions.RedirectOutput];
-        if (osType === OSType.Windows) {
-            debugOptionsAvailable.push(DebugOptions.FixFilePathCase);
-            debugOptionsAvailable.push(DebugOptions.WindowsClient);
-        } else {
-            debugOptionsAvailable.push(DebugOptions.UnixClient);
-        }
-        debugOptionsAvailable.push(DebugOptions.ShowReturnValue);
+        const debugOptionsAvailable = getAvailableOptions();
         setup(() => {
             serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
             platformService = TypeMoq.Mock.ofType<IPlatformService>();

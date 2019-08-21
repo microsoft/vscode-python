@@ -41,14 +41,6 @@ getNamesAndValues(OSType).forEach(os => {
         let documentManager: TypeMoq.IMock<IDocumentManager>;
         let diagnosticsService: TypeMoq.IMock<IInvalidPythonPathInDebuggerService>;
         let debugEnvHelper: TypeMoq.IMock<IDebugEnvironmentVariablesService>;
-        const debugOptionsAvailable = [DebugOptions.RedirectOutput];
-        if (osType === OSType.Windows) {
-            debugOptionsAvailable.push(DebugOptions.FixFilePathCase);
-            debugOptionsAvailable.push(DebugOptions.WindowsClient);
-        } else {
-            debugOptionsAvailable.push(DebugOptions.UnixClient);
-        }
-        debugOptionsAvailable.push(DebugOptions.ShowReturnValue);
         function createMoqWorkspaceFolder(folderPath: string) {
             const folder = TypeMoq.Mock.ofType<WorkspaceFolder>();
             folder.setup(f => f.uri).returns(() => Uri.file(folderPath));
