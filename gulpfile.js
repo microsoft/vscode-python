@@ -302,9 +302,17 @@ async function checkDatascienceDependencies() {
     const existingModules = new Set(existingModulesList);
     const existingModulesCopy = new Set(existingModulesList);
 
+    console.error("--------");
     const statsOutput = path.join(__dirname, 'tmp', 'ds-stats.json');
+    console.error(statsOutput);
+    if (fs.existsSync(statsOutput))
+    {
+        console.error("exists");
+    }
     const contents = await fsExtra.readFile(statsOutput).then(data => data.toString());
+    console.error(contents);
     const startIndex = contents.toString().indexOf('{') - 1;
+    console.error("--------");
 
     const json = JSON.parse(contents.substring(startIndex));
     const newModules = new Set();
