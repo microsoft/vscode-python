@@ -22,6 +22,7 @@ import { IDebugEnvironmentVariablesService } from '../../../../../client/debugge
 import { LaunchConfigurationResolver } from '../../../../../client/debugger/extension/configuration/resolvers/launch';
 import { DebugOptions, LaunchRequestArguments } from '../../../../../client/debugger/types';
 import { IInterpreterHelper } from '../../../../../client/interpreter/contracts';
+import { emulateOS } from './common';
 
 getNamesAndValues(OSType).forEach(os => {
     const osType: OSType = os.value as OSType;
@@ -71,9 +72,7 @@ getNamesAndValues(OSType).forEach(os => {
                 settings.setup(s => s.envFile).returns(() => path.join(workspaceFolder!.uri.fsPath, '.env2'));
             }
             confgService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
-            platformService.setup(p => p.isWindows).returns(() => osType === OSType.Windows);
-            platformService.setup(p => p.isMac).returns(() => osType === OSType.OSX);
-            platformService.setup(p => p.isLinux).returns(() => osType === OSType.Linux);
+            emulateOS(os.value as OSType, platformService);
             debugEnvHelper.setup(x => x.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({}));
 
             debugProvider = new LaunchConfigurationResolver(

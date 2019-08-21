@@ -18,6 +18,7 @@ import { OSType } from '../../../../../client/common/utils/platform';
 import { AttachConfigurationResolver } from '../../../../../client/debugger/extension/configuration/resolvers/attach';
 import { AttachRequestArguments, DebugOptions } from '../../../../../client/debugger/types';
 import { IServiceContainer } from '../../../../../client/ioc/types';
+import { emulateOS } from './common';
 
 getNamesAndValues(OSType).forEach(os => {
     const osType: OSType = os.value as OSType;
@@ -57,9 +58,7 @@ getNamesAndValues(OSType).forEach(os => {
             fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
             serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformService.object);
             serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
-            platformService.setup(p => p.isWindows).returns(() => osType === OSType.Windows);
-            platformService.setup(p => p.isMac).returns(() => osType === OSType.OSX);
-            platformService.setup(p => p.isLinux).returns(() => osType === OSType.Linux);
+            emulateOS(os.value as OSType, platformService);
             documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
             debugProvider = new AttachConfigurationResolver(workspaceService.object, documentManager.object, platformService.object, configurationService.object);
         });
