@@ -290,7 +290,8 @@ function spawnAsync(command, args) {
 }
 function buildDatascienceDependencies() {
     fsExtra.ensureDirSync(path.join(__dirname, 'tmp'));
-    spawn.sync('npm', ['run', 'dump-datascience-webpack-stats']);
+    const spawnReturn = spawn.sync('npm', ['run', 'dump-datascience-webpack-stats']);
+    console.error(spawnReturn.toString());
 }
 
 async function checkDatascienceDependencies() {
