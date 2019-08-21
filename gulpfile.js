@@ -312,7 +312,7 @@ async function checkDatascienceDependencies() {
 
     const statsOutput = path.join(__dirname, 'tmp', 'ds-stats.json');
     const contents = await fsExtra.readFile(statsOutput).then(data => data.toString());
-    wait(123000);
+    wait(140000);
     const startIndex = contents.toString().indexOf('{') - 1;
 
     console.error('---------------------------------------------');
