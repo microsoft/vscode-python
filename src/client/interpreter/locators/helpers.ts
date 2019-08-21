@@ -1,5 +1,6 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import { traceError } from '../../common/logger';
 import { IS_WINDOWS } from '../../common/platform/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { fsReaddirAsync } from '../../common/utils/fs';
@@ -12,7 +13,7 @@ export function lookForInterpretersInDirectory(pathToCheck: string): Promise<str
     return fsReaddirAsync(pathToCheck)
         .then(subDirs => subDirs.filter(fileName => CheckPythonInterpreterRegEx.test(path.basename(fileName))))
         .catch(err => {
-            console.error('Python Extension (lookForInterpretersInDirectory.fsReaddirAsync):', err);
+            traceError('Python Extension (lookForInterpretersInDirectory.fsReaddirAsync):', err);
             return [] as string[];
         });
 }

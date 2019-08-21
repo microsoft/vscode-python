@@ -323,6 +323,16 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                         };
                     }
                 }
+            } else {
+                // if we cannot parse the connect information, throw so we exit out of debugging
+                if (cells[0].data) {
+                    const outputs = cells[0].data.outputs as nbformat.IOutput[];
+                    if (outputs[0]) {
+                        const error = outputs[0] as nbformat.IError;
+                        throw new JupyterDebuggerNotInstalledError(error.ename);
+                    }
+                }
+                throw new JupyterDebuggerNotInstalledError(localize.DataScience.jupyterDebuggerPtvsdParseError());
             }
         }
         return undefined;

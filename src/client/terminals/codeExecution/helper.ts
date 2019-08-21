@@ -7,6 +7,7 @@ import { Range, TextEditor, Uri } from 'vscode';
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../common/constants';
 import '../../common/extensions';
+import { traceError } from '../../common/logger';
 import { IProcessServiceFactory } from '../../common/process/types';
 import { IConfigurationService } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
@@ -39,7 +40,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
 
             return proc.stdout;
         } catch (ex) {
-            console.error(ex, 'Python: Failed to normalize code for execution in terminal');
+            traceError(ex, 'Python: Failed to normalize code for execution in terminal');
             return code;
         }
     }
