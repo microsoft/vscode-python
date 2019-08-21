@@ -293,6 +293,14 @@ function buildDatascienceDependencies() {
     spawn.sync('npm', ['run', 'dump-datascience-webpack-stats']);
 }
 
+function wait(ms){
+    var start = new Date().getTime();
+    var end = start;
+    while(end < start + ms) {
+      end = new Date().getTime();
+   }
+ }
+
 async function checkDatascienceDependencies() {
     buildDatascienceDependencies();
 
@@ -304,14 +312,9 @@ async function checkDatascienceDependencies() {
 
     const statsOutput = path.join(__dirname, 'tmp', 'ds-stats.json');
     let contents = await fsExtra.readFile(statsOutput).then(data => data.toString());
+    wait(123000);
     const startIndex = contents.toString().indexOf('{') - 1;
 
-    console.error('---------------------------------------------');
-    console.error(contents);
-    console.error('---------------------------------------------');
-    if (contents.length == 0) {
-        contents = '[{}]';
-    }
     console.error('---------------------------------------------');
     console.error(contents);
     console.error('---------------------------------------------');
