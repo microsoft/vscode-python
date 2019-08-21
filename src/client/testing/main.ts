@@ -8,6 +8,7 @@ import { IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService
 import * as constants from '../common/constants';
 import { AlwaysDisplayTestExplorerGroups } from '../common/experimentGroups';
 import '../common/extensions';
+import { traceError } from '../common/logger';
 import { IConfigurationService, IDisposableRegistry, IExperimentsManager, ILogger, IOutputChannel, Resource } from '../common/types';
 import { noop } from '../common/utils/misc';
 import { IServiceContainer } from '../ioc/types';
@@ -187,7 +188,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
             this.testResultDisplay = this.serviceContainer.get<ITestResultDisplay>(ITestResultDisplay);
         }
         const discoveryPromise = testManager.discoverTests(cmdSource, ignoreCache, quietMode, userInitiated, clearTestStatus);
-        this.testResultDisplay.displayDiscoverStatus(discoveryPromise, quietMode).catch(ex => console.error('Python Extension: displayDiscoverStatus', ex));
+        this.testResultDisplay.displayDiscoverStatus(discoveryPromise, quietMode).catch(ex => traceError('Python Extension: displayDiscoverStatus', ex));
         await discoveryPromise;
     }
     public async stopTests(resource: Uri) {

@@ -122,7 +122,12 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
     private scrollIntoView() {
         // Force auto here as smooth scrolling can be canceled by updates to the window
         // from elsewhere (and keeping track of these would make this hard to maintain)
-        if (this.bottomRef.current) {
+        if (this.bottomRef.current
+            // This condition prevents window to scroll down when user is not near the bottom.
+            // We increase window.innerHeight by 20% to still snap to the bottom when creating
+            // multiple default plots. User needs to do about 3 'scrolls' up from the bottom
+            // to prevent the window to snap to the bottom.
+            && this.bottomRef.current.getBoundingClientRect().bottom <= window.innerHeight * 1.2) {
             this.bottomRef.current.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' });
         }
     }
@@ -133,5 +138,4 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
             this.throttledScrollIntoView();
         }
     }
-
 }

@@ -18,8 +18,8 @@ import { CondaService } from '../../client/interpreter/locators/services/condaSe
 import { isPythonVersionInProcess } from '../common';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { MockProcessService } from '../mocks/proc';
-import { compareFiles } from '../textUtils';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
+import { compareFiles } from '../textUtils';
 
 const ch = window.createOutputChannel('Tests');
 const formatFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'formatting');

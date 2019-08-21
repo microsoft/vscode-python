@@ -146,11 +146,11 @@ export class FileSystem implements IFileSystem {
         return deferred.promise;
     }
 
-    public getFileHash(filePath: string): Promise<string | undefined> {
-        return new Promise<string | undefined>(resolve => {
+    public getFileHash(filePath: string): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
             fs.lstat(filePath, (err, stats) => {
                 if (err) {
-                    resolve();
+                    reject(err);
                 } else {
                     const actual = createHash('sha512').update(`${stats.ctimeMs}-${stats.mtimeMs}`).digest('hex');
                     resolve(actual);

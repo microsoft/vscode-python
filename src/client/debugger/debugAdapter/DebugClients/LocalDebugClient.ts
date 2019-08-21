@@ -90,6 +90,7 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
                     // Only once connected do we know that the application has successfully launched.
                     this.debugServer!.DebugClientConnected
                         .then(resolve)
+                        // tslint:disable-next-line: no-console
                         .catch(ex => console.error('Python Extension: debugServer.DebugClientConnected', ex));
                 }
             }
