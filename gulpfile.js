@@ -309,6 +309,8 @@ async function checkDatascienceDependencies() {
     if (fs.existsSync(statsOutput))
     {
         console.error("exists");
+        const stats = fs.statSync(statsOutput);
+        console.error(stats.size);
         const buffer = await fsExtra.readFileSync(statsOutput);
         const string = buffer.toString();
         console.error(string);
