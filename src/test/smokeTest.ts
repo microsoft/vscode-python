@@ -31,7 +31,7 @@ class TestRunner {
         await this.launchTest(env);
     }
     private async enableLanguageServer(enable: boolean) {
-        const settings = `{ "python.languageServer": ${enable ? '"microsoft"' : '"jedi"'} }`;
+        const settings = `{ "python.jediEnabled": ${!enable} }`;
         await fs.ensureDir(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', '.vscode'));
         await fs.writeFile(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', '.vscode', 'settings.json'), settings);
     }

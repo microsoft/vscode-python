@@ -10,7 +10,6 @@ import * as fs from 'fs-extra';
 import * as glob from 'glob';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { LanguageServerType } from '../../client/common/types';
 import { SMOKE_TEST_EXTENSIONS_DIR } from '../constants';
 import { noop, sleep } from '../core';
 
@@ -31,16 +30,16 @@ async function getLanaguageServerFolders(): Promise<string[]> {
         });
     });
 }
-export function getLanguageServerSetting() {
+export function isJediEnabled() {
     const resource = vscode.workspace.workspaceFolders![0].uri;
     const settings = vscode.workspace.getConfiguration('python', resource);
-    return settings.get<string>('languageServer');
+    return settings.get<boolean>('jediEnabled') === true;
 }
-export async function setLanguageServerSetting(lsSetting: LanguageServerType) {
-    if (getLanguageServerSetting() === lsSetting) {
+export async function enableJedi(enable: boolean | undefined) {
+    if (isJediEnabled() === enable) {
         return;
     }
-    await updateSetting('languageServer', lsSetting);
+    await updateSetting('jediEnabled', enable);
 }
 export async function openFileAndWaitForLS(file: string): Promise<vscode.TextDocument> {
     const textDocument = await vscode.workspace.openTextDocument(file);

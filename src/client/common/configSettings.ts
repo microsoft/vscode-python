@@ -23,7 +23,6 @@ import {
     ITerminalSettings,
     ITestingSettings,
     IWorkspaceSymbolSettings,
-    LanguageServerType,
     Resource
 } from './types';
 import { debounceSync } from './utils/decorators';
@@ -36,7 +35,7 @@ const untildify = require('untildify');
 export class PythonSettings implements IPythonSettings {
     private static pythonSettings: Map<string, PythonSettings> = new Map<string, PythonSettings>();
     public downloadLanguageServer = true;
-    public languageServer: LanguageServerType = 'jedi';
+    public jediEnabled = true;
     public jediPath = '';
     public jediMemoryLimit = 1024;
     public envFile = '';
@@ -154,9 +153,9 @@ export class PythonSettings implements IPythonSettings {
         this.poetryPath = poetryPath && poetryPath.length > 0 ? getAbsolutePath(poetryPath, workspaceRoot) : poetryPath;
 
         this.downloadLanguageServer = systemVariables.resolveAny(pythonSettings.get<boolean>('downloadLanguageServer', true))!;
-        this.languageServer = systemVariables.resolveAny(pythonSettings.get<LanguageServerType>('languageServer'))!;
+        this.jediEnabled = systemVariables.resolveAny(pythonSettings.get<boolean>('jediEnabled', true))!;
         this.autoUpdateLanguageServer = systemVariables.resolveAny(pythonSettings.get<boolean>('autoUpdateLanguageServer', true))!;
-        if (this.languageServer === 'jedi') {
+        if (this.jediEnabled) {
             // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
             this.jediPath = systemVariables.resolveAny(pythonSettings.get<string>('jediPath'))!;
             if (typeof this.jediPath === 'string' && this.jediPath.length > 0) {

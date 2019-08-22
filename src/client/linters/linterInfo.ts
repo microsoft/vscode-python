@@ -77,7 +77,7 @@ export class PylintLinterInfo extends LinterInfo {
     }
     public isEnabled(resource?: Uri): boolean {
         const enabled = super.isEnabled(resource);
-        if (!enabled || this.configService.getSettings(resource).languageServer === 'jedi') {
+        if (!enabled || this.configService.getSettings(resource).jediEnabled) {
             return enabled;
         }
         // If we're using new LS, then by default Pylint is disabled (unless the user provides a value).
