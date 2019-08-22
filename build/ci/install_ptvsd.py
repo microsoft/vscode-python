@@ -16,8 +16,8 @@ if __name__ == "__main__":
         json_response = json.loads(response.read())
         releases = json_response["releases"]
 
-        # Remove these lines when the version of PTVSD in requirements.txt gets updated
-        # (and add code to parse requirements.txt).
+        # Remove these lines when the version of PTVSD in requirements.txt gets updated.
+        # (and add code to parse requirements.txt)
         releases_keys = list(releases)
         ptvsd_version = releases_keys[-1]
 
