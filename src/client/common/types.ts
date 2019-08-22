@@ -172,7 +172,6 @@ export interface IPythonSettings {
     readonly autoUpdateLanguageServer: boolean;
     readonly datascience: IDataScienceSettings;
     readonly onDidChange: Event<void>;
-    readonly runMagicCommands: string;
 }
 export interface ISortImportSettings {
     readonly path: string;
@@ -342,6 +341,7 @@ export interface IDataScienceSettings {
     remoteDebuggerPort?: number;
     colorizeInputBox?: boolean;
     addGotoCodeLenses?: boolean;
+    runMagicCommands: string;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

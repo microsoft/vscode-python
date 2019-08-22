@@ -72,7 +72,8 @@ function load() {
                 suggestSelection: 'recentlyUsed',
                 wordBasedSuggestions: true,
                 parameterHintsEnabled: true
-            }
+            },
+            runMagicCommands: ''
         };
     }
 }

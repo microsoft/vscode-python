@@ -150,7 +150,8 @@ suite('Interactive window command listener', async () => {
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
             autoPreviewNotebooksInInteractivePane: true,
-            enablePlotViewer: true
+            enablePlotViewer: true,
+            runMagicCommands: ''
         };
 
         when(knownSearchPaths.getSearchPaths()).thenReturn(['/foo/bar']);

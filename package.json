@@ -2118,12 +2118,6 @@
                     "description": "Path to the conda executable to use for activation (version 4.4+).",
                     "scope": "resource"
                 },
-                "python.runMagicCommands": {
-                    "type": "string",
-                    "default": "",
-                    "description": "A series of Python instructions that will be executed when the interactive window loads.",
-                    "scope": "resource"
-                },
                 "python.pipenvPath": {
                     "type": "string",
                     "default": "pipenv",
@@ -2316,6 +2310,12 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Uncomment shell assignments (#!), line magic (#!%) and cell magic (#!%%) when parsing code cells.",
+                    "scope": "resource"
+                },
+                "python.dataScience.runMagicCommands": {
+                    "type": "string",
+                    "default": "",
+                    "description": "A series of Python instructions that will be executed when the interactive window loads.",
                     "scope": "resource"
                 },
                 "python.insidersChannel": {
