@@ -29,7 +29,7 @@ type OSTestHelpers = {
 };
 
 // For each supported OS, provide a set of helpers to use in tests.
-export function iterOSes(): OSTestHelpers[] {
+export function getHelpersPerOS(): OSTestHelpers[] {
     return getNamesAndValues(OSType)
         .map(os => {
             const osType = os.value as OSType;

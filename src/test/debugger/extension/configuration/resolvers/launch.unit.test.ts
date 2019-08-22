@@ -20,9 +20,9 @@ import { IDebugEnvironmentVariablesService } from '../../../../../client/debugge
 import { LaunchConfigurationResolver } from '../../../../../client/debugger/extension/configuration/resolvers/launch';
 import { DebugOptions, LaunchRequestArguments } from '../../../../../client/debugger/types';
 import { IInterpreterHelper } from '../../../../../client/interpreter/contracts';
-import { iterOSes } from './common';
+import { getHelpersPerOS } from './common';
 
-iterOSes().forEach(helpers => {
+getHelpersPerOS().forEach(helpers => {
     const osType = helpers.osType;
     if (osType === OSType.Unknown) {
         return;
