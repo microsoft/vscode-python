@@ -126,11 +126,11 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
      *
      * This is a feature of the vscode-python extension that will become enabled once the
      * Python Language Server becomes the default, replacing Jedi as the default. Testing
-     * the global default setting for `"python.jediEnabled": false` enables it.
+     * the global default setting for `"python.languageServer": "microsoft"` enables it.
      *
-     * @returns true if the global default for python.jediEnabled is false.
+     * @returns true if the global default for python.languageServer is "microsoft".
      */
     public get isFeatureEnabled(): boolean {
-        return !this.configService.getSettings().jediEnabled;
+        return this.configService.getSettings().languageServer === 'microsoft';
     }
 }
