@@ -72,7 +72,7 @@ steps:
       inputs:
           scriptSource: "filePath"
           scriptPath: "./build/ci/install_ptvsd.py"
-      failOnStderr: true
+          failOnStderr: true
       condition: and(succeeded(), eq(variables['build'], 'true'))
 
     - bash: |
