@@ -1,0 +1,144 @@
+# Nightly flake build
+# Notes: Scheduled builds don't have a trigger in YAML (as of this writing).
+#        Trigger is set through the Azure DevOps UI `Nightly Build->Edit->...->Triggers`.
+
+name: '$(Year:yyyy).$(Month).0.$(BuildID)-alpha-flake'
+
+# Not the CI build, see `vscode-python-ci.yaml`.
+trigger: none
+
+# Not the PR build for merges to master and release.
+pr: none
+
+# Variables that are available for the entire pipeline.
+variables:
+  PythonVersion: '3.7'
+  NodeVersion: '10.5.0'
+  NpmVersion: 'latest'
+  MOCHA_FILE: '$(Build.ArtifactStagingDirectory)/test-junit.xml' # All test files will write their JUnit xml output to this file, clobbering the last time it was written.
+  MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter).
+  VSC_PYTHON_LOG_FILE: '$(Build.ArtifactStagingDirectory)/pvsc.log'
+
+jobs:
+
+- template: templates/build_compile_jobs.yml
+
+# - template: templates/uitest_jobs.yml
+#   parameters:
+#     # In PRs, test only against stable version of VSC.
+#     vscodeChannels: ['stable']
+#     # In PRs, run smoke tests against 3.7 and 2.7 (excluding others).
+#     jobs:
+#     - test: "Smoke"
+#       tags: "--tags=@smoke"
+#       ignorePythonVersions: "3.6,3.5"
+
+- job: 'Nightly-Flake'
+  timeoutInMinutes: 120
+  strategy:
+    matrix:
+      # Each member of this list must contain these values:
+        # VMImageName: '[name]' - the VM image to run the tests on.
+        # TestsToRun: 'testA, testB, ..., testN' - the list of tests to execute, see the list above.
+      # Each member of this list may contain these values:
+        # NeedsPythonTestReqs: [true|false] - install the test-requirements prior to running tests. False if not set.
+        # NeedsPythonFunctionalReqs: [true|false] - install the functional-requirements prior to running tests. False if not set.
+        # PythonVersion: 'M.m' - the Python version to run. DefaultPythonVersion if not set.
+        # NodeVersion: 'x.y.z' - Node version to use. DefaultNodeVersion if not set.
+        # SkipXvfb: [true|false] - skip initialization of xvfb prior to running system tests on Linux. False if not set
+        # UploadBinary: [true|false] - upload test binaries to Azure if true. False if not set.
+
+      ## Virtual Environment Tests:
+
+      # Functional tests (not mocked Jupyter)
+      'Windows-Py3.7 Functional':
+        PythonVersion: '3.7'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'testfunctional'
+        NeedsPythonTestReqs: true
+        NeedsPythonFunctionalReqs: true
+        # This tells the functional tests to not mock out Jupyter...
+        VSCODE_PYTHON_ROLLING: true
+      'Linux-Py3.7 Functional':
+        PythonVersion: '3.7'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testfunctional'
+        NeedsPythonTestReqs: true
+        NeedsPythonFunctionalReqs: true
+        VSCODE_PYTHON_ROLLING: true
+      'Mac-Py3.7 Functional':
+        PythonVersion: '3.7'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testfunctional'
+        NeedsPythonTestReqs: true
+        NeedsPythonFunctionalReqs: true
+        VSCODE_PYTHON_ROLLING: true
+      'Windows-Py3.6 Functional':
+        PythonVersion: '3.6'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'testfunctional'
+        NeedsPythonTestReqs: true
+        NeedsPythonFunctionalReqs: true
+        VSCODE_PYTHON_ROLLING: true
+      'Linux-Py3.6 Functional':
+        PythonVersion: '3.6'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testfunctional'
+        NeedsPythonTestReqs: true
+        NeedsPythonFunctionalReqs: true
+        VSCODE_PYTHON_ROLLING: true
+      'Mac-Py3.6 Functional':
+        PythonVersion: '3.6'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testfunctional'
+        NeedsPythonTestReqs: true
+        NeedsPythonFunctionalReqs: true
+        VSCODE_PYTHON_ROLLING: true
+      'Windows-Py3.5 Functional':
+        PythonVersion: '3.5'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'testfunctional'
+        NeedsPythonTestReqs: true
+        NeedsPythonFunctionalReqs: true
+        VSCODE_PYTHON_ROLLING: true
+      'Linux-Py3.5 Functional':
+        PythonVersion: '3.5'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testfunctional'
+        NeedsPythonTestReqs: true
+        NeedsPythonFunctionalReqs: true
+        VSCODE_PYTHON_ROLLING: true
+      'Mac-Py3.5 Functional':
+        PythonVersion: '3.5'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testfunctional'
+        NeedsPythonTestReqs: true
+        NeedsPythonFunctionalReqs: true
+        VSCODE_PYTHON_ROLLING: true
+      'Windows-Py2.7 Functional':
+        PythonVersion: '2.7'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'testfunctional'
+        NeedsPythonTestReqs: true
+        NeedsPythonFunctionalReqs: true
+        VSCODE_PYTHON_ROLLING: true
+      'Linux-Py2.7 Functional':
+        PythonVersion: '2.7'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testfunctional'
+        NeedsPythonTestReqs: true
+        NeedsPythonFunctionalReqs: true
+        VSCODE_PYTHON_ROLLING: true
+      'Mac-Py2.7 Functional':
+        PythonVersion: '2.7'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testfunctional'
+        NeedsPythonTestReqs: true
+        NeedsPythonFunctionalReqs: true
+        VSCODE_PYTHON_ROLLING: true
+
+  pool:
+    vmImage: $(VMImageName)
+
+  steps:
+    - template: templates/test_phases.yml
