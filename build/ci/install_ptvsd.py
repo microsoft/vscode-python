@@ -1,18 +1,19 @@
+from io import BytesIO
 from os import path
+from zipfile import ZipFile
+import json
 import sys
+import urllib.request
 
+# append PYTHONFILES_PATH to sys.path or CI won't be able to find the packaging module
 ROOT_DIRNAME = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
 PYTHONFILES_PATH = path.join(ROOT_DIRNAME, "pythonFiles", "lib", "python")
 
-sys.path.insert(0, PYTHONFILES_PATH)
+sys.path.append(PYTHONFILES_PATH)
 
-from io import BytesIO
-from packaging.requirements import Requirement
-from packaging.version import Version
+from packaging.requirements import Requirement  # noqa
+from packaging.version import Version  # noqa
 
-import json
-import urllib.request
-import zipfile
 
 REQUIREMENTS_PATH = path.join(ROOT_DIRNAME, "requirements.txt")
 PYPI_PTVSD_URL = "https://pypi.org/pypi/ptvsd/json"
@@ -30,7 +31,7 @@ def get_ptvsd_version():
                     if spec.contains(minimum_version):
                         return spec.version
 
-        return "latest"
+    return "latest"
 
 
 def download_ptvsd(ptvsd_version):
@@ -49,10 +50,11 @@ def download_ptvsd(ptvsd_version):
                 "python_version"
             ].endswith("37"):
                 filename = wheel_info["filename"][:-4]
+                print(f"downloading and extracting {filename}")
 
                 with urllib.request.urlopen(wheel_info["url"]) as wheel_response:
                     wheel_file = BytesIO(wheel_response.read())
-                    with zipfile.ZipFile(wheel_file, "r") as wheel:
+                    with ZipFile(wheel_file, "r") as wheel:
                         wheel.extractall(path.join(PYTHONFILES_PATH, filename))
 
 
