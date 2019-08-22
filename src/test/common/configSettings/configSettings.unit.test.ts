@@ -48,7 +48,7 @@ suite('Python Settings', async () => {
 
     function initializeConfig(sourceSettings: PythonSettings) {
         // string settings
-        for (const name of ['pythonPath', 'venvPath', 'condaPath', 'pipenvPath', 'envFile', 'poetryPath', 'insidersChannel', 'runMagicCommands']) {
+        for (const name of ['pythonPath', 'venvPath', 'condaPath', 'pipenvPath', 'envFile', 'poetryPath', 'insidersChannel']) {
             config.setup(c => c.get<string>(name))
                 // tslint:disable-next-line:no-any
                 .returns(() => (sourceSettings as any)[name]);
@@ -121,7 +121,7 @@ suite('Python Settings', async () => {
     }
 
     suite('String settings', async () => {
-        ['pythonPath', 'venvPath', 'condaPath', 'pipenvPath', 'envFile', 'poetryPath', 'insidersChannel', 'runMagicCommands'].forEach(async settingName => {
+        ['pythonPath', 'venvPath', 'condaPath', 'pipenvPath', 'envFile', 'poetryPath', 'insidersChannel'].forEach(async settingName => {
             testIfValueIsUpdated(settingName, 'stringValue');
         });
     });
