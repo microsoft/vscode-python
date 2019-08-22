@@ -17,7 +17,9 @@ interface IPathModule {
     join(...paths: string[]): string;
 }
 
-export function iterOSes(): [
+// The set of helpers, related to a target OS, that are available to
+// tests.  The target OS is not necessarily the native OS.
+type OSTestHelpers = [
     string,  // OS name
     OSType,
     IPathModule,
@@ -25,18 +27,27 @@ export function iterOSes(): [
     (
         platformService: TypeMoq.IMock<IPlatformService>
     ) => void
-][] {
+];
+
+// For each supported OS, provide a set of helpers to use in tests.
+export function iterOSes(): OSTestHelpers[] {
     return getNamesAndValues(OSType)
         .map(os => {
             const osType = os.value as OSType;
 
+            // Decide which "path" module to use.
+            // By default we use the regular module.
             let pathMod: IPathModule = path;
             if (osType !== OS_TYPE) {
+                // We are testing a different OS from the native one.
+                // So use a "path" module matching the target OS.
                 pathMod = osType === OSType.Windows
                     ? path.win32
                     : path.posix;
             }
 
+            // Generate the function to use for populating the
+            // relevant mocks relative to the target OS.
             function setUpMocks(
                 platformService: TypeMoq.IMock<IPlatformService>
             ) {
