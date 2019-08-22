@@ -1,5 +1,12 @@
-from io import BytesIO
 from os import path
+import sys
+
+ROOT_DIRNAME = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
+PYTHONFILES_PATH = path.join(ROOT_DIRNAME, "pythonFiles", "lib", "python")
+
+sys.path.insert(0, PYTHONFILES_PATH)
+
+from io import BytesIO
 from packaging.requirements import Requirement
 from packaging.version import Version
 
@@ -7,9 +14,7 @@ import json
 import urllib.request
 import zipfile
 
-ROOT_DIRNAME = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
 REQUIREMENTS_PATH = path.join(ROOT_DIRNAME, "requirements.txt")
-PYTHONFILES_PATH = path.join(ROOT_DIRNAME, "pythonFiles", "lib", "python")
 PYPI_PTVSD_URL = "https://pypi.org/pypi/ptvsd/json"
 
 
