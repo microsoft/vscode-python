@@ -10,7 +10,7 @@ import * as TypeMoq from 'typemoq';
 import { ExtensionSurveyPrompt, extensionSurveyStateKeys } from '../../client/activation/extensionSurvey';
 import { IApplicationShell } from '../../client/common/application/types';
 import { PersistentStateFactory } from '../../client/common/persistentState';
-import { IBrowserService, IPersistentState, IPersistentStateFactory, IRandom } from '../../client/common/types';
+import { IBrowserService, IExperimentsManager, IPersistentState, IPersistentStateFactory, IRandom } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { Common, ExtensionSurveyBanner, LanguageService } from '../../client/common/utils/localize';
 import { sleep } from '../core';
@@ -23,10 +23,12 @@ suite('Extension survey prompt - shouldShowBanner()', () => {
     let browserService: TypeMoq.IMock<IBrowserService>;
     let random: TypeMoq.IMock<IRandom>;
     let persistentStateFactory: IPersistentStateFactory;
+    let experiments: TypeMoq.IMock<IExperimentsManager>;
     let disableSurveyForTime: TypeMoq.IMock<IPersistentState<any>>;
     let doNotShowAgain: TypeMoq.IMock<IPersistentState<any>>;
     let extensionSurveyPrompt: ExtensionSurveyPrompt;
     setup(() => {
+        experiments = TypeMoq.Mock.ofType<IExperimentsManager>();
         appShell = TypeMoq.Mock.ofType<IApplicationShell>();
         browserService = TypeMoq.Mock.ofType<IBrowserService>();
         random = TypeMoq.Mock.ofType<IRandom>();
@@ -35,7 +37,7 @@ suite('Extension survey prompt - shouldShowBanner()', () => {
         doNotShowAgain = TypeMoq.Mock.ofType<IPersistentState<any>>();
         when(persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.disableSurveyForTime, false, anything())).thenReturn(disableSurveyForTime.object);
         when(persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false)).thenReturn(doNotShowAgain.object);
-        extensionSurveyPrompt = new ExtensionSurveyPrompt(appShell.object, browserService.object, instance(persistentStateFactory), random.object, 10);
+        extensionSurveyPrompt = new ExtensionSurveyPrompt(appShell.object, browserService.object, instance(persistentStateFactory), random.object, experiments.object, 10);
     });
     test('Returns false if do not show again is clicked', async () => {
         random
