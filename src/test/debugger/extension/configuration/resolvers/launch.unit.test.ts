@@ -22,12 +22,14 @@ import { DebugOptions, LaunchRequestArguments } from '../../../../../client/debu
 import { IInterpreterHelper } from '../../../../../client/interpreter/contracts';
 import { iterOSes } from './common';
 
-iterOSes().forEach(([osName, osType, path, setUpMocks]) => {
+iterOSes().forEach(helpers => {
+    const osType = helpers.osType;
     if (osType === OSType.Unknown) {
         return;
     }
+    const path = helpers.path;
 
-    suite(`Debugging - Config Resolver Launch, OS = ${osName}`, () => {
+    suite(`Debugging - Config Resolver Launch, OS = ${helpers.osName}`, () => {
         let debugProvider: DebugConfigurationProvider;
         let platformService: TypeMoq.IMock<IPlatformService>;
         let pythonExecutionService: TypeMoq.IMock<IPythonExecutionService>;
@@ -66,7 +68,7 @@ iterOSes().forEach(([osName, osType, path, setUpMocks]) => {
                 settings.setup(s => s.envFile).returns(() => path.join(workspaceFolder!.uri.fsPath, '.env2'));
             }
             confgService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
-            setUpMocks(
+            helpers.setUpMocks(
                 platformService
             );
             debugEnvHelper.setup(x => x.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({}));

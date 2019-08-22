@@ -19,15 +19,14 @@ interface IPathModule {
 
 // The set of helpers, related to a target OS, that are available to
 // tests.  The target OS is not necessarily the native OS.
-type OSTestHelpers = [
-    string,  // OS name
-    OSType,
-    IPathModule,
-    // setUpMocks()
-    (
+type OSTestHelpers = {
+    osName: string;
+    osType: OSType;
+    path: IPathModule;
+    setUpMocks(
         platformService: TypeMoq.IMock<IPlatformService>
-    ) => void
-];
+    ): void;
+};
 
 // For each supported OS, provide a set of helpers to use in tests.
 export function iterOSes(): OSTestHelpers[] {
@@ -59,11 +58,11 @@ export function iterOSes(): OSTestHelpers[] {
                     .returns(() => osType === OSType.Linux);
             }
 
-            return [
-                os.name,
-                osType,
-                pathMod,
-                setUpMocks
-            ];
+            return {
+                osName: os.name,
+                osType: osType,
+                path: pathMod,
+                setUpMocks: setUpMocks
+            };
         });
 }
