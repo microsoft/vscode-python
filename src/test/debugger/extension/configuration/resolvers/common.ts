@@ -30,24 +30,26 @@ export function getInfoPerOS(): OSTestInfo[] {
     return getNamesAndValues(OSType)
         .map(os => {
             const osType = os.value as OSType;
-
-            // Decide which "path" module to use.
-            // By default we use the regular module.
-            let pathMod: IPathModule = path;
-            if (osType !== OS_TYPE) {
-                // We are testing a different OS from the native one.
-                // So use a "path" module matching the target OS.
-                pathMod = osType === OSType.Windows
-                    ? path.win32
-                    : path.posix;
-            }
-
             return [
                 os.name,
                 osType,
-                pathMod
+                getPathModuleForOS(osType)
             ];
         });
+}
+
+// Decide which "path" module to use.
+// By default we use the regular module.
+function getPathModuleForOS(osType: OSType): IPathModule {
+    if (osType === OS_TYPE) {
+        return path;
+    }
+
+    // We are testing a different OS from the native one.
+    // So use a "path" module matching the target OS.
+    return osType === OSType.Windows
+        ? path.win32
+        : path.posix;
 }
 
 // Generate the function to use for populating the
