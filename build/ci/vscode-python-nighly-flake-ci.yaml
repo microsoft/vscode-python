@@ -33,7 +33,7 @@ jobs:
 #       tags: "--tags=@smoke"
 #       ignorePythonVersions: "3.6,3.5"
 
-- job: 'Nightly-Flake'
+- job: 'NightlyFlake'
   timeoutInMinutes: 120
   strategy:
     matrix:
