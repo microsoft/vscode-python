@@ -17,19 +17,16 @@ interface IPathModule {
     join(...paths: string[]): string;
 }
 
-// The set of helpers, related to a target OS, that are available to
-// tests.  The target OS is not necessarily the native OS.
-type OSTestHelpers = {
-    osName: string;
-    osType: OSType;
-    path: IPathModule;
-    setUpMocks(
-        platformService: TypeMoq.IMock<IPlatformService>
-    ): void;
-};
+// The set of information, related to a target OS, that are available
+// to tests.  The target OS is not necessarily the native OS.
+type OSTestInfo = [
+    string,  // os name
+    OSType,
+    IPathModule
+];
 
 // For each supported OS, provide a set of helpers to use in tests.
-export function getHelpersPerOS(): OSTestHelpers[] {
+export function getInfoPerOS(): OSTestInfo[] {
     return getNamesAndValues(OSType)
         .map(os => {
             const osType = os.value as OSType;
@@ -45,24 +42,24 @@ export function getHelpersPerOS(): OSTestHelpers[] {
                     : path.posix;
             }
 
-            // Generate the function to use for populating the
-            // relevant mocks relative to the target OS.
-            function setUpMocks(
-                platformService: TypeMoq.IMock<IPlatformService>
-            ) {
-                platformService.setup(p => p.isWindows)
-                    .returns(() => osType === OSType.Windows);
-                platformService.setup(p => p.isMac)
-                    .returns(() => osType === OSType.OSX);
-                platformService.setup(p => p.isLinux)
-                    .returns(() => osType === OSType.Linux);
-            }
-
-            return {
-                osName: os.name,
-                osType: osType,
-                path: pathMod,
-                setUpMocks: setUpMocks
-            };
+            return [
+                os.name,
+                osType,
+                pathMod
+            ];
         });
+}
+
+// Generate the function to use for populating the
+// relevant mocks relative to the target OS.
+export function setUpOSMocks(
+    osType: OSType,
+    platformService: TypeMoq.IMock<IPlatformService>
+) {
+    platformService.setup(p => p.isWindows)
+        .returns(() => osType === OSType.Windows);
+    platformService.setup(p => p.isMac)
+        .returns(() => osType === OSType.OSX);
+    platformService.setup(p => p.isLinux)
+        .returns(() => osType === OSType.Linux);
 }

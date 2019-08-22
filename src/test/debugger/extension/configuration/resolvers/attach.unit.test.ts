@@ -16,14 +16,12 @@ import { OSType } from '../../../../../client/common/utils/platform';
 import { AttachConfigurationResolver } from '../../../../../client/debugger/extension/configuration/resolvers/attach';
 import { AttachRequestArguments, DebugOptions } from '../../../../../client/debugger/types';
 import { IServiceContainer } from '../../../../../client/ioc/types';
-import { getHelpersPerOS } from './common';
+import { getInfoPerOS, setUpOSMocks } from './common';
 
-getHelpersPerOS().forEach(helpers => {
-    const osType = helpers.osType;
+getInfoPerOS().forEach(([osName, osType, path]) => {
     if (osType === OSType.Unknown) {
         return;
     }
-    const path = helpers.path;
 
     function getAvailableOptions(): string[] {
         const options = [DebugOptions.RedirectOutput];
@@ -37,7 +35,7 @@ getHelpersPerOS().forEach(helpers => {
         return options;
     }
 
-    suite(`Debugging - Config Resolver attach, OS = ${helpers.osName}`, () => {
+    suite(`Debugging - Config Resolver attach, OS = ${osName}`, () => {
         let serviceContainer: TypeMoq.IMock<IServiceContainer>;
         let debugProvider: DebugConfigurationProvider;
         let platformService: TypeMoq.IMock<IPlatformService>;
@@ -54,7 +52,8 @@ getHelpersPerOS().forEach(helpers => {
             fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
             serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformService.object);
             serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
-            helpers.setUpMocks(
+            setUpOSMocks(
+                osType,
                 platformService
             );
             documentManager = TypeMoq.Mock.ofType<IDocumentManager>();

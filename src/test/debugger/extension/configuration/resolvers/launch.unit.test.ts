@@ -20,16 +20,14 @@ import { IDebugEnvironmentVariablesService } from '../../../../../client/debugge
 import { LaunchConfigurationResolver } from '../../../../../client/debugger/extension/configuration/resolvers/launch';
 import { DebugOptions, LaunchRequestArguments } from '../../../../../client/debugger/types';
 import { IInterpreterHelper } from '../../../../../client/interpreter/contracts';
-import { getHelpersPerOS } from './common';
+import { getInfoPerOS, setUpOSMocks } from './common';
 
-getHelpersPerOS().forEach(helpers => {
-    const osType = helpers.osType;
+getInfoPerOS().forEach(([osName, osType, path]) => {
     if (osType === OSType.Unknown) {
         return;
     }
-    const path = helpers.path;
 
-    suite(`Debugging - Config Resolver Launch, OS = ${helpers.osName}`, () => {
+    suite(`Debugging - Config Resolver Launch, OS = ${osName}`, () => {
         let debugProvider: DebugConfigurationProvider;
         let platformService: TypeMoq.IMock<IPlatformService>;
         let pythonExecutionService: TypeMoq.IMock<IPythonExecutionService>;
@@ -68,7 +66,8 @@ getHelpersPerOS().forEach(helpers => {
                 settings.setup(s => s.envFile).returns(() => path.join(workspaceFolder!.uri.fsPath, '.env2'));
             }
             confgService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
-            helpers.setUpMocks(
+            setUpOSMocks(
+                osType,
                 platformService
             );
             debugEnvHelper.setup(x => x.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({}));
