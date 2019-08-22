@@ -2323,6 +2323,12 @@
                     "description": "A series of Python instructions that will be executed when the interactive window loads.",
                     "scope": "resource"
                 },
+                "python.dataScience.debugJustMyCode": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "When debugging, debug just my code.",
+                    "scope": "resource"
+                },
                 "python.insidersChannel": {
                     "type": "string",
                     "default": "off",

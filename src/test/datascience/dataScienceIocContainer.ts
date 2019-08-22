@@ -431,7 +431,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             stopOnError: true,
             addGotoCodeLenses: true,
             enableCellCodeLens: true,
-            runMagicCommands: ''
+            runMagicCommands: '',
+            debugJustMyCode: true
         };
 
         const workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration> = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
