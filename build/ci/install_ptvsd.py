@@ -6,7 +6,6 @@ import urllib.request
 
 ROOT_DIRNAME = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
 PYTHONFILES_PATH = path.join(ROOT_DIRNAME, "pythonFiles", "lib", "python")
-
 PYPI_PTVSD_URL = "https://pypi.org/pypi/ptvsd/json"
 
 if __name__ == "__main__":
