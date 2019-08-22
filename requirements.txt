@@ -3,4 +3,6 @@ parso==0.5.1
 isort==4.3.21
 ptvsd==4.3.2
 packaging==19.1
+# pyparsing and six are packaging dependencies
 pyparsing==2.4.2
+six==1.12.0
