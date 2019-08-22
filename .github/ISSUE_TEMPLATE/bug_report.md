@@ -14,7 +14,7 @@ labels: classify, type-bug
 - Python version (& distribution if applicable, e.g. Anaconda): XXX
 - Type of virtual environment used (N/A | venv | virtualenv | conda | ...): XXX
 - Relevant/affected Python packages and their versions: XXX
-- Jedi Language Server or Microsoft Language Server? (i.e. what is `"python.languageServer"` set to; more info #3977): XXX
+- Language Server? (i.e. what is `"python.languageServer"` set to; more info #3977): XXX
 
 ## Expected behaviour
 
