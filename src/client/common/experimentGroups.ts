@@ -20,7 +20,7 @@ export enum DebugAdapterDescriptorFactory {
     experiment = 'NewDebugAdapter - experiment'
 }
 // Experiment to check whether the ptvsd launcher should use pre-installed ptvsd wheels for debugging.
-export enum DebugAdapterPtvsd {
-    control = 'NewPtvsdWheels - control',
-    experiment = 'NewPtvsdWheels - experiment'
+export enum DebugAdapterNewPtvsd {
+    control = 'PtvsdWheels - control',
+    experiment = 'PtvsdWheels - experiment'
 }

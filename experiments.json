@@ -42,14 +42,14 @@
         "max": 0
     },
     {
-        "name": "NewPtvsdWheels - control",
-        "salt": "NewPtvsdWheels",
+        "name": "PtvsdWheels - control",
+        "salt": "PtvsdWheels",
         "min": 100,
         "max": 0
     },
     {
-        "name": "NewPtvsdWheels - experiment",
-        "salt": "NewPtvsdWheels",
+        "name": "PtvsdWheels - experiment",
+        "salt": "PtvsdWheels",
         "min": 100,
         "max": 0
     }
