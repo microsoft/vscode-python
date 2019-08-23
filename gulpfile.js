@@ -355,18 +355,18 @@ async function checkDatascienceDependencies() {
             //}
             //newModules.add(moduleName);
         //});
-    });
+    //});
 
-    const errorMessages = [];
-    if (newModules.size > 0) {
-        errorMessages.push(`Add the untracked dependencies '${Array.from(newModules.values()).join(', ')}' to ${existingModulesFileName}`);
-    }
-    if (existingModulesCopy.size > 0) {
-        errorMessages.push(`Remove the unused '${Array.from(existingModulesCopy.values()).join(', ')}' dependencies from ${existingModulesFileName}`);
-    }
-    if (errorMessages.length > 0) {
-        throwAndLogError(errorMessages.join('\n'));
-    }
+    //const errorMessages = [];
+    //if (newModules.size > 0) {
+        //errorMessages.push(`Add the untracked dependencies '${Array.from(newModules.values()).join(', ')}' to ${existingModulesFileName}`);
+    //}
+    //if (existingModulesCopy.size > 0) {
+        //errorMessages.push(`Remove the unused '${Array.from(existingModulesCopy.values()).join(', ')}' dependencies from ${existingModulesFileName}`);
+    //}
+    //if (errorMessages.length > 0) {
+        //throwAndLogError(errorMessages.join('\n'));
+    //}
 }
 function throwAndLogError(message) {
     if (message.length > 0) {
