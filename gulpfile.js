@@ -297,64 +297,64 @@ function buildDatascienceDependencies() {
 async function checkDatascienceDependencies() {
     buildDatascienceDependencies();
 
-    const existingModulesFileName = 'package.datascience-ui.dependencies.json';
-    const existingModulesFile = path.join(__dirname, existingModulesFileName);
-    const existingModulesList = JSON.parse(await fsExtra.readFile(existingModulesFile).then(data => data.toString()));
-    const existingModules = new Set(existingModulesList);
-    const existingModulesCopy = new Set(existingModulesList);
+    //const existingModulesFileName = 'package.datascience-ui.dependencies.json';
+    //const existingModulesFile = path.join(__dirname, existingModulesFileName);
+    //const existingModulesList = JSON.parse(await fsExtra.readFile(existingModulesFile).then(data => data.toString()));
+    //const existingModules = new Set(existingModulesList);
+    //const existingModulesCopy = new Set(existingModulesList);
 
-    const statsOutput = path.join(__dirname, 'tmp', 'ds-stats.json');
-    const contents = await fsExtra.readFile(statsOutput).then(data => data.toString());
-    const startIndex = contents.toString().indexOf('{') - 1;
+    //const statsOutput = path.join(__dirname, 'tmp', 'ds-stats.json');
+    //const contents = await fsExtra.readFile(statsOutput).then(data => data.toString());
+    //const startIndex = contents.toString().indexOf('{') - 1;
 
-    const json = JSON.parse(contents.substring(startIndex));
-    const newModules = new Set();
-    const packageLock = JSON.parse(await fsExtra.readFile('package-lock.json').then(data => data.toString()));
-    const modulesInPackageLock = Object.keys(packageLock.dependencies);
+    //const json = JSON.parse(contents.substring(startIndex));
+    //const newModules = new Set();
+    //const packageLock = JSON.parse(await fsExtra.readFile('package-lock.json').then(data => data.toString()));
+    //const modulesInPackageLock = Object.keys(packageLock.dependencies);
 
-    // Right now the script only handles two parts in the dependency name (with one '/').
-    // If we have dependencies with more than one '/', then update this code.
-    if (modulesInPackageLock.some(dependency => dependency.indexOf('/') !== dependency.lastIndexOf('/'))) {
-        throwAndLogError("Dependencies detected with more than one '/', please update this script.");
-    }
-    json.children.forEach(c => {
-        c.chunks[0].modules.forEach(m => {
-            const name = m.name;
-            if (!name.startsWith('./node_modules')) {
-                return;
-            }
+    //// Right now the script only handles two parts in the dependency name (with one '/').
+    //// If we have dependencies with more than one '/', then update this code.
+    //if (modulesInPackageLock.some(dependency => dependency.indexOf('/') !== dependency.lastIndexOf('/'))) {
+        //throwAndLogError("Dependencies detected with more than one '/', please update this script.");
+    //}
+    //json.children.forEach(c => {
+        //c.chunks[0].modules.forEach(m => {
+            //const name = m.name;
+            //if (!name.startsWith('./node_modules')) {
+                //return;
+            //}
 
-            let nameWithoutNodeModules = name.substring('./node_modules'.length);
-            // Special case expose-loader.
-            if (nameWithoutNodeModules.startsWith('/expose-loader')) {
-                nameWithoutNodeModules = nameWithoutNodeModules.substring(nameWithoutNodeModules.indexOf('./node_modules') + './node_modules'.length);
-            }
+            //let nameWithoutNodeModules = name.substring('./node_modules'.length);
+            //// Special case expose-loader.
+            //if (nameWithoutNodeModules.startsWith('/expose-loader')) {
+                //nameWithoutNodeModules = nameWithoutNodeModules.substring(nameWithoutNodeModules.indexOf('./node_modules') + './node_modules'.length);
+            //}
 
-            let moduleName1 = nameWithoutNodeModules.split('/')[1];
-            moduleName1 = moduleName1.endsWith('!.') ? moduleName1.substring(0, moduleName1.length - 2) : moduleName1;
-            const moduleName2 = `${nameWithoutNodeModules.split('/')[1]}/${nameWithoutNodeModules.split('/')[2]}`;
+            //let moduleName1 = nameWithoutNodeModules.split('/')[1];
+            //moduleName1 = moduleName1.endsWith('!.') ? moduleName1.substring(0, moduleName1.length - 2) : moduleName1;
+            //const moduleName2 = `${nameWithoutNodeModules.split('/')[1]}/${nameWithoutNodeModules.split('/')[2]}`;
 
-            const matchedModules = modulesInPackageLock.filter(dependency => dependency === moduleName2 || dependency === moduleName1);
-            switch (matchedModules.length) {
-                case 0:
-                    throwAndLogError(`Dependency not found in package-lock.json, Dependency = '${name}, ${moduleName1}, ${moduleName2}'`);
-                    break;
-                case 1:
-                    break;
-                default: {
-                    throwAndLogError(`Exact Dependency not found in package-lock.json, Dependency = '${name}'`);
-                }
-            }
+            //const matchedModules = modulesInPackageLock.filter(dependency => dependency === moduleName2 || dependency === moduleName1);
+            //switch (matchedModules.length) {
+                //case 0:
+                    //throwAndLogError(`Dependency not found in package-lock.json, Dependency = '${name}, ${moduleName1}, ${moduleName2}'`);
+                    //break;
+                //case 1:
+                    //break;
+                //default: {
+                    //throwAndLogError(`Exact Dependency not found in package-lock.json, Dependency = '${name}'`);
+                //}
+            //}
 
-            const moduleName = matchedModules[0];
-            if (existingModulesCopy.has(moduleName)) {
-                existingModulesCopy.delete(moduleName);
-            }
-            if (existingModules.has(moduleName) || newModules.has(moduleName)) {
-                return;
-            }
-            newModules.add(moduleName);
-        });
+            //const moduleName = matchedModules[0];
+            //if (existingModulesCopy.has(moduleName)) {
+                //existingModulesCopy.delete(moduleName);
+            //}
+            //if (existingModules.has(moduleName) || newModules.has(moduleName)) {
+                //return;
+            //}
+            //newModules.add(moduleName);
+        //});
     });
 
     const errorMessages = [];
