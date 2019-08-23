@@ -30,14 +30,26 @@
         "max": 20
     },
     {
-        "name": "DebugAdapterPtvsd - control",
-        "salt": "DebugAdapterPtvsd",
+        "name": "NewDebugAdapter - control",
+        "salt": "NewDebugAdapter",
         "min": 100,
         "max": 0
     },
     {
-        "name": "DebugAdapterPtvsd - experiment",
-        "salt": "DebugAdapterPtvsd",
+        "name": "NewDebugAdapter - experiment",
+        "salt": "NewDebugAdapter",
+        "min": 100,
+        "max": 0
+    },
+    {
+        "name": "NewPtvsdWheels - control",
+        "salt": "NewPtvsdWheels",
+        "min": 100,
+        "max": 0
+    },
+    {
+        "name": "NewPtvsdWheels - experiment",
+        "salt": "NewPtvsdWheels",
         "min": 100,
         "max": 0
     }

@@ -14,8 +14,13 @@ export enum ShowPlayIcon {
     icon2 = 'ShowPlayIcon - runFile'
 }
 
-// Experiment to check whether the ptvsd launcher should use pre-installed ptvsd wheels for debugging or not.
-export enum DebugAdapterPtvsdGroups {
-    control = 'DebugAdapterPtvsd - control',
-    experiment = 'DebugAdapterPtvsd - experiment'
+// Experiment to check whether the extension should use the new VS Code debug adapter API.
+export enum DebugAdapterDescriptorFactory {
+    control = 'NewDebugAdapter - control',
+    experiment = 'NewDebugAdapter - experiment'
+}
+// Experiment to check whether the ptvsd launcher should use pre-installed ptvsd wheels for debugging.
+export enum DebugAdapterPtvsd {
+    control = 'NewPtvsdWheels - control',
+    experiment = 'NewPtvsdWheels - experiment'
 }
