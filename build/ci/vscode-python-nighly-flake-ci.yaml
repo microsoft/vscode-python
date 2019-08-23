@@ -14,7 +14,7 @@ pr: none
 variables:
   PythonVersion: '3.7'
   NodeVersion: '10.5.0'
-  NpmVersion: 'latest'
+  NpmVersion: '6.10.3'
   MOCHA_FILE: '$(Build.ArtifactStagingDirectory)/test-junit.xml' # All test files will write their JUnit xml output to this file, clobbering the last time it was written.
   MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter).
   VSC_PYTHON_LOG_FILE: '$(Build.ArtifactStagingDirectory)/pvsc.log'
