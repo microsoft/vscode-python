@@ -23,7 +23,7 @@ suite('DataScience Intellisense tests', () => {
     setup(() => {
         ioc = new DataScienceIocContainer();
         // For this test, jedi is turned off so we use our mock language server
-        ioc.changeJediEnabled(false);
+        ioc.changeLanguageServer('microsoft');
         ioc.registerDataScienceTypes();
     });
 

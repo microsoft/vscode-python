@@ -12,14 +12,17 @@ import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { LSControl, LSEnabled } from '../common/experimentGroups';
 import '../common/extensions';
 import { traceError } from '../common/logger';
-import { IConfigurationService, IDisposableRegistry, IExperimentsManager, IOutputChannel, IPersistentStateFactory, IPythonSettings, Resource } from '../common/types';
+import {
+    IConfigurationService, IDisposableRegistry, IExperimentsManager, IOutputChannel,
+    IPersistentStateFactory, IPythonSettings, LanguageServerType, Resource
+} from '../common/types';
 import { swallowExceptions } from '../common/utils/decorators';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { IExtensionActivationService, ILanguageServerActivator, LanguageServerActivator } from './types';
 
-const jediEnabledSetting: keyof IPythonSettings = 'jediEnabled';
+const languageServerSetting: keyof IPythonSettings = 'languageServer';
 const workspacePathNameForGlobalWorkspaces = '';
 type ActivatorInfo = { jedi: boolean; activator: ILanguageServerActivator };
 
@@ -51,8 +54,8 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
     }
 
     public async activate(resource: Resource): Promise<void> {
-        let jedi = this.useJedi();
-        if (!jedi) {
+        let lsSettingValue = this.getLanguageServerSetting();
+        if (lsSettingValue === 'microsoft') {
             if (this.lsActivatedWorkspaces.has(this.getWorkspacePathKey(resource))) {
                 return;
             }
@@ -60,7 +63,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
             this.lsNotSupportedDiagnosticService.handle(diagnostic).ignoreErrors();
             if (diagnostic.length) {
                 sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED, undefined, { supported: false });
-                jedi = true;
+                lsSettingValue = 'jedi';
             }
         } else {
             if (this.jediActivatedOnce) {
@@ -70,18 +73,22 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         }
 
         this.resource = resource;
-        await this.logStartup(jedi);
-        let activatorName = jedi ? LanguageServerActivator.Jedi : LanguageServerActivator.DotNet;
+        await this.logStartup(lsSettingValue);
+        if (lsSettingValue === 'none') {
+            this.currentActivator = undefined;
+            return;
+        }
+        let activatorName = lsSettingValue === 'jedi' ? LanguageServerActivator.Jedi : LanguageServerActivator.DotNet;
         let activator = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, activatorName);
-        this.currentActivator = { jedi, activator };
+        this.currentActivator = { jedi: lsSettingValue === 'jedi', activator };
 
         try {
             await activator.activate(resource);
-            if (!jedi) {
+            if (lsSettingValue === 'microsoft') {
                 this.lsActivatedWorkspaces.set(this.getWorkspacePathKey(resource), activator);
             }
         } catch (ex) {
-            if (jedi) {
+            if (lsSettingValue === 'jedi') {
                 return;
             }
             //Language server fails, reverting to jedi
@@ -89,11 +96,11 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
                 return;
             }
             this.jediActivatedOnce = true;
-            jedi = true;
-            await this.logStartup(jedi);
+            lsSettingValue = 'jedi';
+            await this.logStartup(lsSettingValue);
             activatorName = LanguageServerActivator.Jedi;
             activator = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, activatorName);
-            this.currentActivator = { jedi, activator };
+            this.currentActivator = { jedi: lsSettingValue === 'jedi', activator };
             await activator.activate(resource);
         }
     }
@@ -103,29 +110,30 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
             this.currentActivator.activator.dispose();
         }
     }
+
     @swallowExceptions('Switch Language Server')
-    public async trackLangaugeServerSwitch(jediEnabled: boolean): Promise<void> {
-        const state = this.stateFactory.createGlobalPersistentState<boolean | undefined>('SWITCH_LS', undefined);
-        if (typeof state.value !== 'boolean') {
-            await state.updateValue(jediEnabled);
+    public async trackLanguageServerSwitch(newValue: LanguageServerType): Promise<void> {
+        const state = this.stateFactory.createGlobalPersistentState<LanguageServerType | undefined>('SWITCH_LS', undefined);
+        if (typeof state.value !== 'string') {
+            await state.updateValue(newValue);
             return;
         }
-        if (state.value !== jediEnabled) {
-            await state.updateValue(jediEnabled);
-            const message = jediEnabled ? 'Switch to Jedi from LS' : 'Switch to LS from Jedi';
-            sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_SWITCHED, undefined, { change: message });
+        const oldValue = state.value;
+        if (oldValue !== newValue) {
+            await state.updateValue(newValue);
+            sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_SWITCHED, undefined, { oldValue, newValue });
         }
     }
 
     /**
-     * Checks if user has not manually set `jediEnabled` setting
+     * Checks if user has not manually set `languageServer` setting
      * @param resource
-     * @returns `true` if user has NOT manually added the setting and is using default configuration, `false` if user has `jediEnabled` setting added
+     * @returns `true` if user has NOT manually added the setting and is using default configuration, `false` if user has `languageServer` setting added
      */
-    public isJediUsingDefaultConfiguration(resource?: Uri): boolean {
-        const settings = this.workspaceService.getConfiguration('python', resource).inspect<boolean>('jediEnabled');
+    public isLanguageServerUsingDefaultConfiguration(resource?: Uri): boolean {
+        const settings = this.workspaceService.getConfiguration('python', resource).inspect<LanguageServerType>('languageServer');
         if (!settings) {
-            traceError('WorkspaceConfiguration.inspect returns `undefined` for setting `python.jediEnabled`');
+            traceError('WorkspaceConfiguration.inspect returns `undefined` for setting `python.languageServer`');
             return false;
         }
         return (settings.globalValue === undefined && settings.workspaceValue === undefined && settings.workspaceFolderValue === undefined);
@@ -133,20 +141,34 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
 
     /**
      * Checks if user is using Jedi as intellisense
-     * @returns `true` if user is using jedi, `false` if user is using language server
+     * @returns `jedi` if user is using jedi, `microsoft` if user is using language server
+     * or `none` if using neither.
      */
-    public useJedi(): boolean {
-        if (this.isJediUsingDefaultConfiguration()) {
+    public getLanguageServerSetting(): LanguageServerType {
+        if (this.isLanguageServerUsingDefaultConfiguration()) {
             if (this.abExperiments.inExperiment(LSEnabled)) {
-                return false;
+                return 'microsoft';
             }
             // Send telemetry if user is in control group
             this.abExperiments.sendTelemetryIfInExperiment(LSControl);
         }
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        const enabled = configurationService.getSettings(this.resource).jediEnabled;
-        this.trackLangaugeServerSwitch(enabled).ignoreErrors();
-        return enabled;
+        const languageServerValue = configurationService.getSettings(this.resource).languageServer.toLowerCase();
+        let languageServerType: LanguageServerType;
+
+        // Make sure the value is one of the allowed values.
+        if (languageServerValue === 'microsoft') {
+            languageServerType = 'microsoft';
+        } else if (languageServerValue === 'none') {
+            languageServerType = 'none';
+        } else {
+            // Map everything else to the default value.
+            languageServerType = 'jedi';
+        }
+
+        this.trackLanguageServerSwitch(languageServerType).ignoreErrors();
+
+        return languageServerType;
     }
 
     protected onWorkspaceFoldersChanged() {
@@ -162,10 +184,15 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         }
     }
 
-    private async logStartup(isJedi: boolean): Promise<void> {
-        const outputLine = isJedi
-            ? 'Starting Jedi Python language engine.'
-            : 'Starting Microsoft Python language server.';
+    private async logStartup(lsSettingValue: LanguageServerType): Promise<void> {
+        let outputLine: string;
+        if (lsSettingValue === 'jedi') {
+            outputLine = 'Starting Jedi Python language engine.';
+        } else if (lsSettingValue === 'none') {
+            outputLine = 'No language server started.';
+        } else {
+            outputLine = 'Starting Microsoft Python language server.';
+        }
         this.output.appendLine(outputLine);
     }
 
@@ -173,12 +200,20 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         const workspacesUris: (Uri | undefined)[] = this.workspaceService.hasWorkspaceFolders
             ? this.workspaceService.workspaceFolders!.map(workspace => workspace.uri)
             : [undefined];
-        if (workspacesUris.findIndex(uri => event.affectsConfiguration(`python.${jediEnabledSetting}`, uri)) === -1) {
+        if (workspacesUris.findIndex(uri => event.affectsConfiguration(`python.${languageServerSetting}`, uri)) === -1) {
             return;
         }
-        const jedi = this.useJedi();
-        if (this.currentActivator && this.currentActivator.jedi === jedi) {
-            return;
+        const newSettingValue = this.getLanguageServerSetting();
+
+        // If the setting value doesn't require a change in activators, return without doing anything.
+        if (newSettingValue === 'none') {
+            if (this.currentActivator === undefined) {
+                return;
+            }
+        } else {
+            if (this.currentActivator && this.currentActivator.jedi === (newSettingValue === 'jedi')) {
+                return;
+            }
         }
 
         const item = await this.appShell.showInformationMessage(

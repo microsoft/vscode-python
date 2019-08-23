@@ -69,7 +69,8 @@ suite('Theme colors', () => {
             variableExplorerExclude: 'module;function;builtin_function_or_method',
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
-            enablePlotViewer: true
+            enablePlotViewer: true,
+            runMagicCommands: ''
         };
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
         configService.setup(x => x.getSettings(TypeMoq.It.isAny())).returns(() => settings);

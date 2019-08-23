@@ -47,7 +47,7 @@ suite('DataScience Intellisense Unit Tests', () => {
         jupyterExecution = TypeMoq.Mock.ofType<IJupyterExecution>();
         interactiveWindowProvider = TypeMoq.Mock.ofType<IInteractiveWindowProvider>();
 
-        pythonSettings.jediEnabled = false;
+        pythonSettings.languageServer = 'microsoft';
         languageServer.setup(l => l.start(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve());
         analysisOptions.setup(a => a.getAnalysisOptions()).returns(() => Promise.resolve({}));
         languageServer.setup(l => l.languageClient).returns(() => languageClient);
