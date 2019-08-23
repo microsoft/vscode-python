@@ -49,21 +49,26 @@ export class UpdateTestSettingService implements IExtensionActivationService {
     @swallowExceptions('Failed to update settings.json')
     public async fixSettingInFile(filePath: string) {
         let fileContents = await this.fs.readFile(filePath);
-        const setting = new RegExp('"python.unitTest', 'g');
-        const setting_pytest_enabled = new RegExp('.pyTestEnabled"', 'g');
-        const setting_pytest_args = new RegExp('.pyTestArgs"', 'g');
-        const setting_pytest_path = new RegExp('.pyTestPath"', 'g');
+        const setting = new RegExp('"python\\.unitTest', 'g');
+        const setting_pytest_enabled = new RegExp('\\.pyTestEnabled"', 'g');
+        const setting_pytest_args = new RegExp('\\.pyTestArgs"', 'g');
+        const setting_pytest_path = new RegExp('\\.pyTestPath"', 'g');
+        const setting_jedi_disabled = new RegExp('\\.jediEnabled": *false', 'g');
+        const setting_jedi_enabled = new RegExp('\\.jediEnabled": *true', 'g');
 
         fileContents = fileContents.replace(setting, '"python.testing');
         fileContents = fileContents.replace(setting_pytest_enabled, '.pytestEnabled"');
         fileContents = fileContents.replace(setting_pytest_args, '.pytestArgs"');
         fileContents = fileContents.replace(setting_pytest_path, '.pytestPath"');
+        fileContents = fileContents.replace(setting_jedi_disabled, '.languageServer": "microsoft"');
+        fileContents = fileContents.replace(setting_jedi_enabled, '.languageServer": "jedi"');
         await this.fs.writeFile(filePath, fileContents);
     }
     public async doesFileNeedToBeFixed(filePath: string) {
         try {
             const contents = await this.fs.readFile(filePath);
-            return contents.indexOf('python.unitTest.') > 0 || contents.indexOf('.pyTest') > 0;
+            return contents.indexOf('python.unitTest.') > 0 || contents.indexOf('.pyTest') > 0 ||
+                contents.indexOf('python.jediEnabled') > 0;
         } catch (ex) {
             traceError('Failed to check if file needs to be fixed', ex);
             return false;

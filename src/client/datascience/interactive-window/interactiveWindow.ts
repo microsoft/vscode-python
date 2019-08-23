@@ -148,6 +148,11 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         // Load on a background thread.
         this.loadPromise = this.load();
 
+        const settings = this.configuration.getSettings();
+        if (settings.datascience.runMagicCommands) {
+            this.addCode(settings.datascience.runMagicCommands, Identifiers.EmptyFileName, 0).ignoreErrors();
+        }
+
         // For each listener sign up for their post events
         this.listeners.forEach(l => l.postMessage((e) => this.postMessageInternal(e.message, e.payload)));
     }
@@ -730,7 +735,6 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
     // tslint:disable-next-line: max-func-body-length
     private async submitCode(code: string, file: string, line: number, id?: string, _editor?: TextEditor, debug?: boolean): Promise<boolean> {
         let result = true;
-
         // Do not execute or render empty code cells
         const cellMatcher = new CellMatcher(this.configService.getSettings().datascience);
         if (cellMatcher.stripFirstMarker(code).length === 0) {
@@ -769,7 +773,6 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
 
             // Then show our webpanel
             await this.show();
-
             // Add our sys info if necessary
             if (file !== Identifiers.EmptyFileName) {
                 await this.addSysInfo(SysInfoReason.Start);
@@ -781,15 +784,12 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
                 if (file !== Identifiers.EmptyFileName) {
                     await this.jupyterServer.setInitialDirectory(path.dirname(file));
                 }
-
                 if (debug) {
                     // Attach our debugger
                     await this.jupyterDebugger.startDebugging(this.jupyterServer);
                 }
-
                 // Attempt to evaluate this cell in the jupyter notebook
                 const observable = this.jupyterServer.executeObservable(code, file, line, id, false);
-
                 // Indicate we executed some code
                 this.executeEvent.fire(code);
 
