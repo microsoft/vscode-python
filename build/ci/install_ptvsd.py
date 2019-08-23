@@ -16,14 +16,14 @@ if __name__ == "__main__":
         releases = json_response["releases"]
 
         # Remove these lines when the version of PTVSD in requirements.txt gets updated.
-        # (and add code to parse requirements.txt)
+        # (and add code leveraging the packaging module to parse requirements.txt)
         releases_keys = list(releases)
         ptvsd_version = releases_keys[-1]
 
         for wheel_info in releases[ptvsd_version]:
-            # Download only if it's a 3.7 wheel (aka don't download the source code).
+            # Download only if it's a 3.7 wheel .
             if wheel_info["python_version"].endswith("37"):
-                wheel_filename = wheel_info["filename"][:-4]  # trim .whl
+                wheel_filename = wheel_info["filename"][:-4]  # trim the file extension
                 ptvsd_path = path.join(PYTHONFILES_PATH, wheel_filename)
 
                 with urllib.request.urlopen(wheel_info["url"]) as wheel_response:
