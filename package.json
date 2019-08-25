@@ -1530,7 +1530,7 @@
                 "python.dataScience.ptvsdDistPath": {
                     "type": "string",
                     "default": "",
-                    "description": "Path to ptsvd experimental bits for debugging cells.",
+                    "description": "Path to ptvsd experimental bits for debugging cells.",
                     "scope": "resource"
                 },
                 "python.dataScience.stopOnFirstLineWhileDebugging": {

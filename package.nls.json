@@ -228,7 +228,7 @@
     "debug.moduleEnterModuleDefault": "enter-your-module-name",
     "debug.moduleEnterModuleInvalidNameError": "Enter a valid module name",
     "debug.remoteAttachConfigurationLabel": "Remote Attach",
-    "debug.remoteAttachConfigurationDescription": "Attach to a remote ptsvd debug server",
+    "debug.remoteAttachConfigurationDescription": "Attach to a remote ptvsd debug server",
     "debug.attachRemoteHostTitle": "Remote Debugging",
     "debug.attachRemoteHostPrompt": "Enter the host name",
     "debug.attachRemoteHostValidationError": "Enter a valid host name or IP address",
