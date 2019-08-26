@@ -65,5 +65,5 @@ export function registerTypes(serviceManager: IServiceManager) {
         DebugAdapterActivator,
         ExtensionSingleActivationServiceType.debugAdapterActivator
     );
-    serviceManager.addSingleton<DebugAdapterDescriptorFactory>(IDebugAdapterDescriptorFactory, DebugAdapterDescriptorFactory);
+    serviceManager.addSingleton<IDebugAdapterDescriptorFactory>(IDebugAdapterDescriptorFactory, DebugAdapterDescriptorFactory);
 }

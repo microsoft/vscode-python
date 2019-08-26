@@ -9,13 +9,13 @@ import { IDebugService } from '../../../common/application/types';
 import { DebugAdapterDescriptorFactory as DebugAdapterExperiment } from '../../../common/experimentGroups';
 import { IDisposableRegistry, IExperimentsManager } from '../../../common/types';
 import { DebuggerTypeName } from '../../constants';
-import { DebugAdapterDescriptorFactory } from './factory';
+import { IDebugAdapterDescriptorFactory } from '../types';
 
 @injectable()
 export class DebugAdapterActivator implements IExtensionSingleActivationService {
     constructor(
         @inject(IDebugService) private readonly debugService: IDebugService,
-        @inject(DebugAdapterDescriptorFactory) private factory: DebugAdapterDescriptorFactory,
+        @inject(IDebugAdapterDescriptorFactory) private factory: IDebugAdapterDescriptorFactory,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager
     ) {}

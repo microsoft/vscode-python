@@ -4,16 +4,17 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { DebugAdapterDescriptor, DebugAdapterDescriptorFactory as VSCDADescriptionFactory, DebugAdapterExecutable, DebugSession, WorkspaceFolder } from 'vscode';
+import { DebugAdapterDescriptor, DebugAdapterExecutable, DebugSession, WorkspaceFolder } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
 import { DebugAdapterNewPtvsd } from '../../../common/experimentGroups';
 import { traceVerbose } from '../../../common/logger';
 import { IExperimentsManager } from '../../../common/types';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { AttachRequestArguments, LaunchRequestArguments } from '../../types';
+import { IDebugAdapterDescriptorFactory } from '../types';
 
 @injectable()
-export class DebugAdapterDescriptorFactory implements VSCDADescriptionFactory {
+export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFactory {
     constructor(
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,

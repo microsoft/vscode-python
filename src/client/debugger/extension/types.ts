@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { CancellationToken, DebugConfigurationProvider, WorkspaceFolder } from 'vscode';
+import { CancellationToken, DebugAdapterDescriptorFactory, DebugConfigurationProvider, WorkspaceFolder } from 'vscode';
 import { InputStep, MultiStepInput } from '../../common/utils/multiStepInput';
 import { DebugConfigurationArguments } from '../types';
 
@@ -41,4 +41,5 @@ export enum ExtensionSingleActivationServiceType {
     debugAdapterActivator = 'debugAdapterActivator'
 }
 
-export const IDebugAdapterDescriptorFactory = Symbol('DebugAdapterDescriptorFactory');
+export const IDebugAdapterDescriptorFactory = Symbol('IDebugAdapterDescriptorFactory');
+export interface IDebugAdapterDescriptorFactory extends DebugAdapterDescriptorFactory {}

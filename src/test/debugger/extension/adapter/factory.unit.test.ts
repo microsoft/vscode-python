@@ -17,13 +17,14 @@ import { ExperimentsManager } from '../../../../client/common/experiments';
 import { IExperimentsManager } from '../../../../client/common/types';
 import { Architecture } from '../../../../client/common/utils/platform';
 import { DebugAdapterDescriptorFactory } from '../../../../client/debugger/extension/adapter/factory';
+import { IDebugAdapterDescriptorFactory } from '../../../../client/debugger/extension/types';
 import { IInterpreterService, InterpreterType } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
 use(chaiAsPromised);
 
 // tslint:disable-next-line: max-func-body-length
 suite('Debugging - Adapter Factory', () => {
-    let factory: DebugAdapterDescriptorFactory;
+    let factory: IDebugAdapterDescriptorFactory;
     let interpreterService: IInterpreterService;
     let appShell: IApplicationShell;
     let experimentsManager: IExperimentsManager;
@@ -180,7 +181,7 @@ suite('Debugging - Adapter Factory', () => {
 
     test('Throw an error if the executable has not been defined', async () => {
         const session = createSession({});
-        const promise = factory.createDebugAdapterDescriptor(session, undefined).catch();
+        const promise = factory.createDebugAdapterDescriptor(session, undefined);
 
         await expect(promise).to.eventually.be.rejectedWith('Debug Adapter Executable not provided');
     });

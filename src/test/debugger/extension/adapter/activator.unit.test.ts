@@ -13,12 +13,13 @@ import { ExperimentsManager } from '../../../../client/common/experiments';
 import { IDisposableRegistry, IExperimentsManager } from '../../../../client/common/types';
 import { DebugAdapterActivator } from '../../../../client/debugger/extension/adapter/activator';
 import { DebugAdapterDescriptorFactory } from '../../../../client/debugger/extension/adapter/factory';
+import { IDebugAdapterDescriptorFactory } from '../../../../client/debugger/extension/types';
 import { noop } from '../../../core';
 
 suite('Debugging - Adapter Factory Registration', () => {
     let activator: IExtensionSingleActivationService;
     let debugService: IDebugService;
-    let factory: DebugAdapterDescriptorFactory;
+    let factory: IDebugAdapterDescriptorFactory;
     let disposableRegistry: IDisposableRegistry;
     let experimentsManager: IExperimentsManager;
     setup(() => {
