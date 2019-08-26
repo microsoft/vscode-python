@@ -9,16 +9,14 @@ PYTHONFILES_PATH = path.join(ROOT_DIRNAME, "pythonFiles", "lib", "python")
 PYPI_PTVSD_URL = "https://pypi.org/pypi/ptvsd/json"
 
 if __name__ == "__main__":
-    ptvsd_version = "latest"
+    # Remove this when the version of PTVSD in requirements.txt gets updated.
+    # (and add code leveraging the packaging module to parse requirements.txt) in #7002
+    ptvsd_version = "5.0.0a3"
 
     # Response format: https://warehouse.readthedocs.io/api-reference/json/#project
     with urllib.request.urlopen(PYPI_PTVSD_URL) as response:
         json_response = json.loads(response.read())
     releases = json_response["releases"]
-
-    # Remove this when the version of PTVSD in requirements.txt gets updated.
-    # (and add code leveraging the packaging module to parse requirements.txt) in #7002
-    ptvsd_version = "5.0.0a3"
 
     # Release metadata format: https://github.com/pypa/interoperability-peps/blob/master/pep-0426-core-metadata.rst
     for wheel_info in releases[ptvsd_version]:
