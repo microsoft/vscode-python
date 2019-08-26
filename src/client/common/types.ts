@@ -343,6 +343,7 @@ export interface IDataScienceSettings {
     colorizeInputBox?: boolean;
     addGotoCodeLenses?: boolean;
     runMagicCommands: string;
+    debugJustMyCode: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

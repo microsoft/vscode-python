@@ -13,3 +13,9 @@ export enum ShowPlayIcon {
     icon1 = 'ShowPlayIcon - start',
     icon2 = 'ShowPlayIcon - runFile'
 }
+
+// Experiment to check whether to show "Extension Survey prompt" or not.
+export enum ShowExtensionSurveyPrompt {
+    control = 'ShowExtensionSurveyPrompt - control',
+    enabled = 'ShowExtensionSurveyPrompt - enabled'
+}

@@ -73,7 +73,8 @@ function load() {
                 wordBasedSuggestions: true,
                 parameterHintsEnabled: true
             },
-            runMagicCommands: ''
+            runMagicCommands: '',
+            debugJustMyCode: true
         };
     }
 }

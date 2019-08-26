@@ -133,7 +133,7 @@ suite('Linting - Pylint', () => {
             .setup(x => x.fileExists(path.join(midFolder, pylintrc)))
             .returns(() => Promise.resolve(true));
 
-        const result = await Pylint.hasConfigrationFileInWorkspace(fileSystem.object, basePath, root);
+        const result = await Pylint.hasConfigurationFileInWorkspace(fileSystem.object, basePath, root);
         expect(result).to.be.equal(true, `'${pylintrc}' not detected in the workspace tree.`);
     });
 
@@ -195,6 +195,7 @@ suite('Linting - Pylint', () => {
         lintSettings['pylintEnabled'] = true;
 
         const settings = TypeMoq.Mock.ofType<IPythonSettings>();
+        settings.setup(x => x.languageServer).returns(() => 'jedi');
         settings.setup(x => x.linting).returns(() => lintSettings);
         config.setup(x => x.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
 
@@ -238,6 +239,7 @@ suite('Linting - Pylint', () => {
 
         const settings = TypeMoq.Mock.ofType<IPythonSettings>();
         settings.setup(x => x.linting).returns(() => lintSettings);
+        settings.setup(x => x.languageServer).returns(() => 'jedi');
         config.setup(x => x.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
 
         const messages = await pylinter.lint(document.object, new CancellationTokenSource().token);

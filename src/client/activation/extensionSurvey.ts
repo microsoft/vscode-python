@@ -5,10 +5,11 @@
 
 import { inject, injectable, optional } from 'inversify';
 import { IApplicationShell } from '../common/application/types';
+import { ShowExtensionSurveyPrompt } from '../common/experimentGroups';
 import '../common/extensions';
 import { traceDecorators } from '../common/logger';
 import {
-    IBrowserService, IPersistentStateFactory, IRandom
+    IBrowserService, IExperimentsManager, IPersistentStateFactory, IRandom
 } from '../common/types';
 import { Common, ExtensionSurveyBanner, LanguageService } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../telemetry';
@@ -31,10 +32,15 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
         @inject(IBrowserService) private browserService: IBrowserService,
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IRandom) private random: IRandom,
+        @inject(IExperimentsManager) private experiments: IExperimentsManager,
         @optional() private sampleSizePerOneHundredUsers: number = 10,
         @optional() private waitTimeToShowSurvey: number = WAIT_TIME_TO_SHOW_SURVEY) { }
 
     public async activate(): Promise<void> {
+        if (!this.experiments.inExperiment(ShowExtensionSurveyPrompt.enabled)) {
+            this.experiments.sendTelemetryIfInExperiment(ShowExtensionSurveyPrompt.control);
+            return;
+        }
         const show = this.shouldShowBanner();
         if (!show) {
             return;
