@@ -16,6 +16,8 @@ import { IDocumentManager, IWorkspaceService } from '../../../../../client/commo
 import { WorkspaceService } from '../../../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../../../client/common/configuration/service';
 import { PYTHON_LANGUAGE } from '../../../../../client/common/constants';
+import { PlatformService } from '../../../../../client/common/platform/platformService';
+import { IPlatformService } from '../../../../../client/common/platform/types';
 import { IConfigurationService } from '../../../../../client/common/types';
 import { BaseConfigurationResolver } from '../../../../../client/debugger/extension/configuration/resolvers/base';
 import { AttachRequestArguments, DebugOptions, LaunchRequestArguments } from '../../../../../client/debugger/types';
@@ -46,13 +48,20 @@ suite('Debugging - Config Resolver', () => {
     }
     let resolver: BaseResolver;
     let workspaceService: IWorkspaceService;
+    let platformService: IPlatformService;
     let documentManager: IDocumentManager;
     let configurationService: IConfigurationService;
     setup(() => {
         workspaceService = mock(WorkspaceService);
         documentManager = mock(DocumentManager);
+        platformService = mock(PlatformService);
         configurationService = mock(ConfigurationService);
-        resolver = new BaseResolver(instance(workspaceService), instance(documentManager), instance(configurationService));
+        resolver = new BaseResolver(
+            instance(workspaceService),
+            instance(documentManager),
+            instance(platformService),
+            instance(configurationService)
+        );
     });
 
     test('Program should return filepath of active editor if file is python', () => {

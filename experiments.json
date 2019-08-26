@@ -28,5 +28,17 @@
         "salt": "ShowPlayIcon",
         "min": 0,
         "max": 20
+    },
+    {
+        "name": "ShowExtensionSurveyPrompt - enabled",
+        "salt": "ShowExtensionSurveyPrompt",
+        "max": 100,
+        "min": 80
+    },
+    {
+        "name": "ShowExtensionSurveyPrompt - control",
+        "salt": "ShowExtensionSurveyPrompt",
+        "min": 0,
+        "max": 20
     }
 ]
