@@ -11,21 +11,22 @@ PYPI_PTVSD_URL = "https://pypi.org/pypi/ptvsd/json"
 if __name__ == "__main__":
     ptvsd_version = "latest"
 
+    # Response format: https://warehouse.readthedocs.io/api-reference/json/#project
     with urllib.request.urlopen(PYPI_PTVSD_URL) as response:
         json_response = json.loads(response.read())
     releases = json_response["releases"]
 
-    # Remove these lines when the version of PTVSD in requirements.txt gets updated.
-    # (and add code leveraging the packaging module to parse requirements.txt)
-    releases_keys = list(releases)
-    ptvsd_version = releases_keys[-1]
+    # Remove this when the version of PTVSD in requirements.txt gets updated.
+    # (and add code leveraging the packaging module to parse requirements.txt) in #7002
+    ptvsd_version = "5.0.0a3"
 
+    # Release metadata format: https://github.com/pypa/interoperability-peps/blob/master/pep-0426-core-metadata.rst
     for wheel_info in releases[ptvsd_version]:
         # Download only if it's a 3.7 wheel.
-        if not wheel_info["python_version"].endswith("37"):
+        if not wheel_info["python_version"].endswith(("37", "3.7")):
             continue
-        wheel_filename = wheel_info["filename"][:-4]  # Trim the file extension
-        ptvsd_path = path.join(PYTHONFILES_PATH, wheel_filename)
+        filename = wheel_info["filename"].rpartition(".")[0]  # Trim the file extension
+        ptvsd_path = path.join(PYTHONFILES_PATH, filename)
 
         with urllib.request.urlopen(wheel_info["url"]) as wheel_response:
             wheel_file = BytesIO(wheel_response.read())
