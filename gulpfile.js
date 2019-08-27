@@ -231,7 +231,7 @@ gulp.task('verifyBundle', async () => {
 gulp.task('prePublishBundle', gulp.series('webpack', 'renameSourceMaps'));
 gulp.task('prePublishNonBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'compile-webviews'));
 
-gulp.task('installPythonLibs', async () => {
+gulp.task('installPythonRequirements', async () => {
     const requirements = fs
         .readFileSync(path.join(__dirname, 'requirements.txt'), 'utf8')
         .split('\n')
@@ -253,6 +253,23 @@ gulp.task('installPythonLibs', async () => {
         })
     );
 });
+
+// Install the old version of PTVSD until all users have migrated to the new debug adapter + new PTVSD (specified in requirements.txt)
+gulp.task('installOldPtvsd', async () => {
+    const args = ['-m', 'pip', '--disable-pip-version-check', 'install', '-t', './pythonFiles/lib/python/old_ptvsd', '--no-cache-dir', '--implementation', 'py', '--no-deps', '--upgrade', 'ptvsd==4.3.2']
+    const success = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args)
+        .then(() => true)
+        .catch(ex => {
+            console.error("Failed to install PTVSD using 'python3'", ex);
+            return false;
+        });
+    if (!success) {
+        console.info("Failed to install PTVSD using 'python3', attempting to install using 'python'");
+        await spawnAsync('python', args.concat(requirement)).catch(ex => console.error("Failed to install PTVSD using 'python'", ex));
+    }
+});
+
+gulp.task('installPythonLibs', gulp.series('installPythonRequirements', 'installOldPtvsd'));
 
 function uploadExtension(uploadBlobName) {
     const azure = require('gulp-azure-storage');
