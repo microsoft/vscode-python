@@ -109,6 +109,9 @@ import { GatherListener } from '../../client/datascience/gather/gatherListener';
 import {
     DotNetIntellisenseProvider
 } from '../../client/datascience/interactive-common/intellisense/dotNetIntellisenseProvider';
+import { IpynbCommandListener } from '../../client/datascience/interactive-ipynb/ipynbCommandListener';
+import { IpynbEditor } from '../../client/datascience/interactive-ipynb/ipynbEditor';
+import { IpynbProvider } from '../../client/datascience/interactive-ipynb/ipynbEditorProvider';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import {
     InteractiveWindowCommandListener
@@ -151,6 +154,8 @@ import {
     IJupyterPasswordConnect,
     IJupyterSessionManager,
     IJupyterVariables,
+    INotebookEditor,
+    INotebookEditorProvider,
     INotebookExecutionLogger,
     INotebookExporter,
     INotebookImporter,
@@ -220,6 +225,7 @@ import {
 import { PipEnvService } from '../../client/interpreter/locators/services/pipEnvService';
 import { PipEnvServiceHelper } from '../../client/interpreter/locators/services/pipEnvServiceHelper';
 import { WindowsRegistryService } from '../../client/interpreter/locators/services/windowsRegistryService';
+import { WindowsStoreInterpreter } from '../../client/interpreter/locators/services/windowsStoreInterpreter';
 import {
     WorkspaceVirtualEnvironmentsSearchPathProvider,
     WorkspaceVirtualEnvService
@@ -227,7 +233,7 @@ import {
 import {
     WorkspaceVirtualEnvWatcherService
 } from '../../client/interpreter/locators/services/workspaceVirtualEnvWatcherService';
-import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
+import { IPipEnvServiceHelper, IPythonInPathCommandProvider, IWindowsStoreInterpreter } from '../../client/interpreter/locators/types';
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { CodeExecutionHelper } from '../../client/terminals/codeExecution/helper';
@@ -244,10 +250,6 @@ import { MockLanguageServer } from './mockLanguageServer';
 import { MockLanguageServerAnalysisOptions } from './mockLanguageServerAnalysisOptions';
 import { MockLiveShareApi } from './mockLiveShare';
 import { blurWindow, createMessageEvent } from './reactHelpers';
-import { INotebookEditorProvider, INotebookEditor } from '../../client/datascience/types';
-import { IpynbProvider } from '../../client/datascience/interactive-ipynb/ipynbEditorProvider';
-import { IpynbEditor } from '../../client/datascience/interactive-ipynb/ipynbEditor';
-import { IpynbCommandListener } from '../../client/datascience/interactive-ipynb/ipynbCommandListener';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
 
@@ -351,6 +353,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingletonInstance<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, this.asyncRegistry);
         this.serviceManager.addSingleton<IPythonInPathCommandProvider>(IPythonInPathCommandProvider, PythonInPathCommandProvider);
         this.serviceManager.addSingleton<IEnvironmentActivationService>(IEnvironmentActivationService, EnvironmentActivationService);
+        this.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
         this.serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
         this.serviceManager.add<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider, DataScienceCodeLensProvider);
         this.serviceManager.add<ICodeExecutionHelper>(ICodeExecutionHelper, CodeExecutionHelper);
@@ -364,7 +367,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, IpynbProvider);
         this.serviceManager.add<INotebookEditor>(INotebookEditor, IpynbEditor);
         this.serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, IpynbCommandListener);
-
 
         this.serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
         this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(

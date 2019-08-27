@@ -30,7 +30,6 @@ export class DataViewerProvider implements IDataViewerProvider, IAsyncDisposable
         await Promise.all(this.activeExplorers.map(d => d.dispose()));
     }
 
-    // IANHU: Possible master merge error here?
     public async create(variable: string, notebook: INotebook): Promise<IDataViewer> {
         // Make sure this is a valid variable
         const variables = await this.variables.getVariables(notebook);

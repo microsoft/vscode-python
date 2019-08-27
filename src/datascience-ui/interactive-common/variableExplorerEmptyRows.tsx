@@ -7,7 +7,6 @@ import * as React from 'react';
 import { getLocString } from '../react-common/locReactSide';
 
 export const VariableExplorerEmptyRowsView = () => {
-    // IANHU: Change
     const message = getLocString('DataScience.noRowsInVariableExplorer', 'No variables defined');
 
     return (
