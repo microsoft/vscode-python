@@ -86,8 +86,7 @@ import {
     ILogger,
     IPathUtils,
     IPersistentStateFactory,
-    IsWindows,
-    LanguageServerType
+    IsWindows
 } from '../../client/common/types';
 import { Deferred, sleep } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
@@ -674,8 +673,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.extraListeners.push(callback);
     }
 
-    public changeLanguageServer(languageServerValue: LanguageServerType) {
-        this.pythonSettings.languageServer = languageServerValue;
+    public changeJediEnabled(enabled: boolean) {
+        this.pythonSettings.jediEnabled = enabled;
     }
 
     private findPythonPath(): string {

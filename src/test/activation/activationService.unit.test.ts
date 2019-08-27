@@ -22,18 +22,14 @@ import { IDiagnostic, IDiagnosticsService } from '../../client/application/diagn
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
 import { LSControl, LSEnabled } from '../../client/common/experimentGroups';
 import { IPlatformService } from '../../client/common/platform/types';
-import {
-    IConfigurationService, IDisposable, IDisposableRegistry, IExperimentsManager, IOutputChannel,
-    IPersistentState, IPersistentStateFactory, IPythonSettings, LanguageServerType, Resource
-} from '../../client/common/types';
+import { IConfigurationService, IDisposable, IDisposableRegistry, IExperimentsManager, IOutputChannel, IPersistentState, IPersistentStateFactory, IPythonSettings, Resource } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
 
 // tslint:disable:no-any
 
 suite('Activation - ActivationService', () => {
-    const languageServiceValues: LanguageServerType[] = ['jedi', 'microsoft', 'none'];
-    languageServiceValues.forEach(languageServerValue => {
-        suite(`Test activation - Language Server is ${languageServerValue}`, () => {
+    [true, false].forEach(jediIsEnabled => {
+        suite(`Test activation - ${jediIsEnabled ? 'Jedi is enabled' : 'Jedi is disabled'}`, () => {
             let serviceContainer: TypeMoq.IMock<IServiceContainer>;
             let pythonSettings: TypeMoq.IMock<IPythonSettings>;
             let appShell: TypeMoq.IMock<IApplicationShell>;
@@ -72,10 +68,10 @@ suite('Activation - ActivationService', () => {
                     .returns(() => state.object);
                 state.setup(s => s.value).returns(() => undefined);
                 state.setup(s => s.updateValue(TypeMoq.It.isAny())).returns(() => Promise.resolve());
-                const setting = { workspaceFolderValue: languageServerValue };
+                const setting = { workspaceFolderValue: jediIsEnabled };
                 workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
                 workspaceService.setup(ws => ws.getConfiguration('python', TypeMoq.It.isAny())).returns(() => workspaceConfig.object);
-                workspaceConfig.setup(c => c.inspect<string>('languageServer'))
+                workspaceConfig.setup(c => c.inspect<boolean>('jediEnabled'))
                     .returns(() => setting as any);
                 const output = TypeMoq.Mock.ofType<IOutputChannel>();
                 serviceContainer
@@ -118,14 +114,13 @@ suite('Activation - ActivationService', () => {
                 activator
                     .setup(a => a.activate(undefined))
                     .returns(() => Promise.resolve())
-                    .verifiable(languageServerValue === 'none' ?
-                        TypeMoq.Times.never() : TypeMoq.Times.once());
+                    .verifiable(TypeMoq.Times.once());
                 let activatorName = LanguageServerActivator.Jedi;
-                if (lsSupported && languageServerValue === 'microsoft') {
+                if (lsSupported && !jediIsEnabled) {
                     activatorName = LanguageServerActivator.DotNet;
                 }
                 let diagnostics: IDiagnostic[];
-                if (!lsSupported && languageServerValue === 'microsoft') {
+                if (!lsSupported && !jediIsEnabled) {
                     diagnostics = [TypeMoq.It.isAny()];
                 } else {
                     diagnostics = [];
@@ -139,8 +134,7 @@ suite('Activation - ActivationService', () => {
                 serviceContainer
                     .setup(c => c.get(TypeMoq.It.isValue(ILanguageServerActivator), TypeMoq.It.isValue(activatorName)))
                     .returns(() => activator.object)
-                    .verifiable(languageServerValue === 'none' ?
-                        TypeMoq.Times.never() : TypeMoq.Times.once());
+                    .verifiable(TypeMoq.Times.once());
 
                 experiments
                     .setup(ex => ex.inExperiment(TypeMoq.It.isAny()))
@@ -155,14 +149,14 @@ suite('Activation - ActivationService', () => {
             }
 
             test('LS is supported', async () => {
-                pythonSettings.setup(p => p.languageServer).returns(() => languageServerValue);
+                pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
                 const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                 const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
 
                 await testActivation(activationService, activator, true);
             });
             test('LS is not supported', async () => {
-                pythonSettings.setup(p => p.languageServer).returns(() => languageServerValue);
+                pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
                 const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                 const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
 
@@ -170,14 +164,14 @@ suite('Activation - ActivationService', () => {
             });
 
             test('Activatory must be activated', async () => {
-                pythonSettings.setup(p => p.languageServer).returns(() => languageServerValue);
+                pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
                 const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                 const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
 
                 await testActivation(activationService, activator);
             });
             test('Activatory must be deactivated', async () => {
-                pythonSettings.setup(p => p.languageServer).returns(() => languageServerValue);
+                pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
                 const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                 const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
 
@@ -185,22 +179,21 @@ suite('Activation - ActivationService', () => {
 
                 activator
                     .setup(a => a.dispose())
-                    .verifiable(languageServerValue === 'none' ?
-                        TypeMoq.Times.never() : TypeMoq.Times.once());
+                    .verifiable(TypeMoq.Times.once());
 
                 activationService.dispose();
                 activator.verifyAll();
             });
             test('Prompt user to reload VS Code and reload, when setting is toggled', async () => {
                 let callbackHandler!: (e: ConfigurationChangeEvent) => Promise<void>;
-                let lsValueInSetting = languageServerValue;
+                let jediIsEnabledValueInSetting = jediIsEnabled;
                 workspaceService
                     .setup(w => w.onDidChangeConfiguration(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                     .callback(cb => (callbackHandler = cb))
                     .returns(() => TypeMoq.Mock.ofType<Disposable>().object)
                     .verifiable(TypeMoq.Times.once());
 
-                pythonSettings.setup(p => p.languageServer).returns(() => lsValueInSetting);
+                pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabledValueInSetting);
                 const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                 const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
 
@@ -209,7 +202,7 @@ suite('Activation - ActivationService', () => {
 
                 const event = TypeMoq.Mock.ofType<ConfigurationChangeEvent>();
                 event
-                    .setup(e => e.affectsConfiguration(TypeMoq.It.isValue('python.languageServer'), TypeMoq.It.isAny()))
+                    .setup(e => e.affectsConfiguration(TypeMoq.It.isValue('python.jediEnabled'), TypeMoq.It.isAny()))
                     .returns(() => true)
                     .verifiable(TypeMoq.Times.atLeastOnce());
                 appShell
@@ -221,7 +214,7 @@ suite('Activation - ActivationService', () => {
                     .verifiable(TypeMoq.Times.once());
 
                 // Toggle the value in the setting and invoke the callback.
-                lsValueInSetting = lsValueInSetting === 'none' ? 'jedi' : 'none';
+                jediIsEnabledValueInSetting = !jediIsEnabledValueInSetting;
                 await callbackHandler(event.object);
 
                 event.verifyAll();
@@ -230,14 +223,14 @@ suite('Activation - ActivationService', () => {
             });
             test('Prompt user to reload VS Code and do not reload, when setting is toggled', async () => {
                 let callbackHandler!: (e: ConfigurationChangeEvent) => Promise<void>;
-                let lsValueInSetting = languageServerValue;
+                let jediIsEnabledValueInSetting = jediIsEnabled;
                 workspaceService
                     .setup(w => w.onDidChangeConfiguration(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                     .callback(cb => (callbackHandler = cb))
                     .returns(() => TypeMoq.Mock.ofType<Disposable>().object)
                     .verifiable(TypeMoq.Times.once());
 
-                pythonSettings.setup(p => p.languageServer).returns(() => lsValueInSetting);
+                pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabledValueInSetting);
                 const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                 const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
 
@@ -246,7 +239,7 @@ suite('Activation - ActivationService', () => {
 
                 const event = TypeMoq.Mock.ofType<ConfigurationChangeEvent>();
                 event
-                    .setup(e => e.affectsConfiguration(TypeMoq.It.isValue('python.languageServer'), TypeMoq.It.isAny()))
+                    .setup(e => e.affectsConfiguration(TypeMoq.It.isValue('python.jediEnabled'), TypeMoq.It.isAny()))
                     .returns(() => true)
                     .verifiable(TypeMoq.Times.atLeastOnce());
                 appShell
@@ -258,7 +251,7 @@ suite('Activation - ActivationService', () => {
                     .verifiable(TypeMoq.Times.never());
 
                 // Toggle the value in the setting and invoke the callback.
-                lsValueInSetting = lsValueInSetting === 'none' ? 'jedi' : 'none';
+                jediIsEnabledValueInSetting = !jediIsEnabledValueInSetting;
                 await callbackHandler(event.object);
 
                 event.verifyAll();
@@ -273,7 +266,7 @@ suite('Activation - ActivationService', () => {
                     .returns(() => TypeMoq.Mock.ofType<Disposable>().object)
                     .verifiable(TypeMoq.Times.once());
 
-                pythonSettings.setup(p => p.languageServer).returns(() => languageServerValue);
+                pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
                 const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                 const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
 
@@ -282,7 +275,7 @@ suite('Activation - ActivationService', () => {
 
                 const event = TypeMoq.Mock.ofType<ConfigurationChangeEvent>();
                 event
-                    .setup(e => e.affectsConfiguration(TypeMoq.It.isValue('python.languageServer'), TypeMoq.It.isAny()))
+                    .setup(e => e.affectsConfiguration(TypeMoq.It.isValue('python.jediEnabled'), TypeMoq.It.isAny()))
                     .returns(() => true)
                     .verifiable(TypeMoq.Times.atLeastOnce());
                 appShell
@@ -308,7 +301,7 @@ suite('Activation - ActivationService', () => {
                     .returns(() => TypeMoq.Mock.ofType<Disposable>().object)
                     .verifiable(TypeMoq.Times.once());
 
-                pythonSettings.setup(p => p.languageServer).returns(() => languageServerValue);
+                pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
                 const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                 const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
 
@@ -317,7 +310,7 @@ suite('Activation - ActivationService', () => {
 
                 const event = TypeMoq.Mock.ofType<ConfigurationChangeEvent>();
                 event
-                    .setup(e => e.affectsConfiguration(TypeMoq.It.isValue('python.languageServer'), TypeMoq.It.isAny()))
+                    .setup(e => e.affectsConfiguration(TypeMoq.It.isValue('python.jediEnabled'), TypeMoq.It.isAny()))
                     .returns(() => false)
                     .verifiable(TypeMoq.Times.atLeastOnce());
                 appShell
@@ -335,9 +328,9 @@ suite('Activation - ActivationService', () => {
                 appShell.verifyAll();
                 cmdManager.verifyAll();
             });
-            if (languageServerValue === 'microsoft') {
+            if (!jediIsEnabled) {
                 test('Revert to jedi when LS activation fails', async () => {
-                    pythonSettings.setup(p => p.languageServer).returns(() => languageServerValue);
+                    pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
                     const activatorDotNet = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                     const activatorJedi = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                     const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
@@ -417,7 +410,7 @@ suite('Activation - ActivationService', () => {
                     experiments.verifyAll();
                 }
                 test('Activator is disposed if activated workspace is removed', async () => {
-                    pythonSettings.setup(p => p.languageServer).returns(() => languageServerValue);
+                    pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
                     let workspaceFoldersChangedHandler!: Function;
                     workspaceService
                         .setup(w => w.onDidChangeWorkspaceFolders(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
@@ -462,9 +455,9 @@ suite('Activation - ActivationService', () => {
                     workspaceService.verifyAll();
                     activator3.verifyAll();
                 });
-            } else if (languageServerValue === 'jedi') {
+            } else {
                 test('Jedi is only activated once', async () => {
-                    pythonSettings.setup(p => p.languageServer).returns(() => languageServerValue);
+                    pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
                     const activator1 = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                     const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
                     const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
@@ -509,7 +502,7 @@ suite('Activation - ActivationService', () => {
         });
     });
 
-    suite('Test trackLanguageServerSwitch()', () => {
+    suite('Test trackLangaugeServerSwitch()', () => {
         let serviceContainer: TypeMoq.IMock<IServiceContainer>;
         let pythonSettings: TypeMoq.IMock<IPythonSettings>;
         let appShell: TypeMoq.IMock<IApplicationShell>;
@@ -518,7 +511,7 @@ suite('Activation - ActivationService', () => {
         let platformService: TypeMoq.IMock<IPlatformService>;
         let lsNotSupportedDiagnosticService: TypeMoq.IMock<IDiagnosticsService>;
         let stateFactory: TypeMoq.IMock<IPersistentStateFactory>;
-        let state: TypeMoq.IMock<IPersistentState<LanguageServerType | undefined>>;
+        let state: TypeMoq.IMock<IPersistentState<boolean | undefined>>;
         let experiments: TypeMoq.IMock<IExperimentsManager>;
         let workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration>;
         setup(() => {
@@ -528,7 +521,7 @@ suite('Activation - ActivationService', () => {
             cmdManager = TypeMoq.Mock.ofType<ICommandManager>();
             platformService = TypeMoq.Mock.ofType<IPlatformService>();
             stateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
-            state = TypeMoq.Mock.ofType<IPersistentState<LanguageServerType | undefined>>();
+            state = TypeMoq.Mock.ofType<IPersistentState<boolean | undefined>>();
             const configService = TypeMoq.Mock.ofType<IConfigurationService>();
             pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
             experiments = TypeMoq.Mock.ofType<IExperimentsManager>();
@@ -586,45 +579,32 @@ suite('Activation - ActivationService', () => {
         test('Track current LS usage for first usage', async () => {
             state.reset();
             state.setup(s => s.value).returns(() => undefined).verifiable(TypeMoq.Times.once());
-            state.setup(s => s.updateValue(TypeMoq.It.isValue('jedi'))).returns(() => Promise.resolve()).verifiable(TypeMoq.Times.once());
+            state.setup(s => s.updateValue(TypeMoq.It.isValue(true))).returns(() => Promise.resolve()).verifiable(TypeMoq.Times.once());
 
             const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
-            await activationService.trackLanguageServerSwitch('jedi');
+            await activationService.trackLangaugeServerSwitch(true);
 
             state.verifyAll();
         });
-
         test('Track switch to LS', async () => {
             state.reset();
-            state.setup(s => s.value).returns(() => 'jedi').verifiable(TypeMoq.Times.once());
-            state.setup(s => s.updateValue(TypeMoq.It.isValue('microsoft'))).returns(() => Promise.resolve()).verifiable(TypeMoq.Times.once());
+            state.setup(s => s.value).returns(() => true).verifiable(TypeMoq.Times.once());
+            state.setup(s => s.updateValue(TypeMoq.It.isValue(false))).returns(() => Promise.resolve()).verifiable(TypeMoq.Times.once());
 
             const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
-            await activationService.trackLanguageServerSwitch('microsoft');
+            await activationService.trackLangaugeServerSwitch(false);
 
-            state.verify(s => s.updateValue(TypeMoq.It.isValue('microsoft')), TypeMoq.Times.once());
+            state.verify(s => s.updateValue(TypeMoq.It.isValue(false)), TypeMoq.Times.once());
         });
-
         test('Track switch to Jedi', async () => {
             state.reset();
-            state.setup(s => s.value).returns(() => 'microsoft').verifiable(TypeMoq.Times.once());
-            state.setup(s => s.updateValue(TypeMoq.It.isValue('jedi'))).returns(() => Promise.resolve()).verifiable(TypeMoq.Times.once());
+            state.setup(s => s.value).returns(() => false).verifiable(TypeMoq.Times.once());
+            state.setup(s => s.updateValue(TypeMoq.It.isValue(true))).returns(() => Promise.resolve()).verifiable(TypeMoq.Times.once());
 
             const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
-            await activationService.trackLanguageServerSwitch('jedi');
+            await activationService.trackLangaugeServerSwitch(true);
 
-            state.verify(s => s.updateValue(TypeMoq.It.isValue('jedi')), TypeMoq.Times.once());
-        });
-
-        test('Track switch to None', async () => {
-            state.reset();
-            state.setup(s => s.value).returns(() => 'microsoft').verifiable(TypeMoq.Times.once());
-            state.setup(s => s.updateValue(TypeMoq.It.isValue('none'))).returns(() => Promise.resolve()).verifiable(TypeMoq.Times.once());
-
-            const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
-            await activationService.trackLanguageServerSwitch('none');
-
-            state.verify(s => s.updateValue(TypeMoq.It.isValue('none')), TypeMoq.Times.once());
+            state.verify(s => s.updateValue(TypeMoq.It.isValue(true)), TypeMoq.Times.once());
         });
     });
 
@@ -712,13 +692,13 @@ suite('Activation - ActivationService', () => {
                 .setup(ex => ex.sendTelemetryIfInExperiment(TypeMoq.It.isAny()))
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.never());
-            workspaceConfig.setup(c => c.inspect<string>('languageServer'))
+            workspaceConfig.setup(c => c.inspect<boolean>('jediEnabled'))
                 .returns(() => settings as any)
                 .verifiable(TypeMoq.Times.once());
 
             const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
-            const result = activationService.getLanguageServerSetting();
-            expect(result).to.equal('microsoft', 'LS should be enabled');
+            const result = activationService.useJedi();
+            expect(result).to.equal(false, 'LS should be enabled');
 
             workspaceService.verifyAll();
             workspaceConfig.verifyAll();
@@ -735,17 +715,17 @@ suite('Activation - ActivationService', () => {
                 .setup(ex => ex.sendTelemetryIfInExperiment(LSControl))
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.once());
-            workspaceConfig.setup(c => c.inspect<string>('languageServer'))
+            workspaceConfig.setup(c => c.inspect<boolean>('jediEnabled'))
                 .returns(() => settings as any)
                 .verifiable(TypeMoq.Times.once());
             pythonSettings
-                .setup(p => p.languageServer)
-                .returns(() => 'jedi')
+                .setup(p => p.jediEnabled)
+                .returns(() => true)
                 .verifiable(TypeMoq.Times.once());
 
             const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
-            const result = activationService.getLanguageServerSetting();
-            expect(result).to.equal('jedi', 'Return value should be "jedi"');
+            const result = activationService.useJedi();
+            expect(result).to.equal(true, 'Return value should be true');
 
             pythonSettings.verifyAll();
             experiments.verifyAll();
@@ -756,19 +736,14 @@ suite('Activation - ActivationService', () => {
         suite('If default value of jedi is not being used, then no experiments are used, and python settings value is returned', async () => {
             [
                 {
-                    testName: 'Returns "microsoft" when python settings value is "microsoft',
-                    pythonSettingsValue: 'microsoft' as LanguageServerType,
-                    expectedResult: 'microsoft' as LanguageServerType
+                    testName: 'Returns false when python settings value is false',
+                    pythonSettingsValue: false,
+                    expectedResult: false
                 },
                 {
-                    testName: 'Returns "jedi" when python settings value is "jedi"',
-                    pythonSettingsValue: 'jedi' as LanguageServerType,
-                    expectedResult: 'jedi' as LanguageServerType
-                },
-                {
-                    testName: 'Returns "none" when python settings value is "none"',
-                    pythonSettingsValue: 'none' as LanguageServerType,
-                    expectedResult: 'none' as LanguageServerType
+                    testName: 'Returns true when python settings value is true',
+                    pythonSettingsValue: true,
+                    expectedResult: true
                 }
             ].forEach(testParams => {
                 test(testParams.testName, async () => {
@@ -781,16 +756,16 @@ suite('Activation - ActivationService', () => {
                         .setup(ex => ex.sendTelemetryIfInExperiment(LSControl))
                         .returns(() => undefined)
                         .verifiable(TypeMoq.Times.never());
-                    workspaceConfig.setup(c => c.inspect<string>('languageServer'))
+                    workspaceConfig.setup(c => c.inspect<boolean>('jediEnabled'))
                         .returns(() => settings as any)
                         .verifiable(TypeMoq.Times.once());
                     pythonSettings
-                        .setup(p => p.languageServer)
+                        .setup(p => p.jediEnabled)
                         .returns(() => testParams.pythonSettingsValue)
                         .verifiable(TypeMoq.Times.once());
 
                     const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
-                    const result = activationService.getLanguageServerSetting();
+                    const result = activationService.useJedi();
                     expect(result).to.equal(testParams.pythonSettingsValue, `Return value should be ${testParams.pythonSettingsValue}`);
 
                     pythonSettings.verifyAll();
@@ -890,12 +865,12 @@ suite('Activation - ActivationService', () => {
                     const testName = `Returns ${expectedResult} for setting = ${JSON.stringify(settings)}`;
                     test(testName, async () => {
                         workspaceConfig.reset();
-                        workspaceConfig.setup(c => c.inspect<string>('languageServer'))
+                        workspaceConfig.setup(c => c.inspect<boolean>('jediEnabled'))
                             .returns(() => settings as any)
                             .verifiable(TypeMoq.Times.once());
 
                         const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
-                        const result = activationService.isLanguageServerUsingDefaultConfiguration(Uri.parse('a'));
+                        const result = activationService.isJediUsingDefaultConfiguration(Uri.parse('a'));
                         expect(result).to.equal(expectedResult);
 
                         workspaceService.verifyAll();
@@ -906,12 +881,12 @@ suite('Activation - ActivationService', () => {
         }
         test('Returns false for settings = undefined', async () => {
             workspaceConfig.reset();
-            workspaceConfig.setup(c => c.inspect<string>('languageServer'))
+            workspaceConfig.setup(c => c.inspect<boolean>('jediEnabled'))
                 .returns(() => undefined as any)
                 .verifiable(TypeMoq.Times.once());
 
             const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
-            const result = activationService.isLanguageServerUsingDefaultConfiguration(Uri.parse('a'));
+            const result = activationService.isJediUsingDefaultConfiguration(Uri.parse('a'));
             expect(result).to.equal(false, 'Return value should be false');
 
             workspaceService.verifyAll();

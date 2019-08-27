@@ -1,5 +1,5 @@
 {
-    "python.languageServer": "microsoft",
+    "python.jediEnabled": false,
     "python.formatting.provider": "black",
     "editor.formatOnSave": true,
     "python.testing.pytestArgs": [

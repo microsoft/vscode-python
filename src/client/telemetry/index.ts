@@ -877,16 +877,7 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry tracking switching between LS and Jedi
      */
-    [EventName.PYTHON_LANGUAGE_SERVER_SWITCHED]: {
-        /**
-         * Value of LS setting prior to switch.
-         */
-        oldValue: string;
-        /**
-         * Value of LS setting after switch.
-         */
-        newValue: string;
-    };
+    [EventName.PYTHON_LANGUAGE_SERVER_SWITCHED]: { change: 'Switch to Jedi from LS' | 'Switch to LS from Jedi' };
     /**
      * Telemetry event sent with details after attempting to download LS
      */
