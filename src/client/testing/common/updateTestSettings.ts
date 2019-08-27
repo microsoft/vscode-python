@@ -53,11 +53,15 @@ export class UpdateTestSettingService implements IExtensionActivationService {
         const setting_pytest_enabled = new RegExp('.pyTestEnabled"', 'g');
         const setting_pytest_args = new RegExp('.pyTestArgs"', 'g');
         const setting_pytest_path = new RegExp('.pyTestPath"', 'g');
+        const setting_microsoftLanguageServer = new RegExp('.languageServer": "microsoft"', 'g');
+        const setting_JediLanguageServer = new RegExp('.languageServer": "jedi"', 'g');
 
         fileContents = fileContents.replace(setting, '"python.testing');
         fileContents = fileContents.replace(setting_pytest_enabled, '.pytestEnabled"');
         fileContents = fileContents.replace(setting_pytest_args, '.pytestArgs"');
         fileContents = fileContents.replace(setting_pytest_path, '.pytestPath"');
+        fileContents = fileContents.replace(setting_microsoftLanguageServer, '.jediEnabled": false');
+        fileContents = fileContents.replace(setting_JediLanguageServer, '.jediEnabled": true');
         await this.fs.writeFile(filePath, fileContents);
     }
     public async doesFileNeedToBeFixed(filePath: string) {
