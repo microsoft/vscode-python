@@ -254,7 +254,9 @@ gulp.task('installPythonRequirements', async () => {
     );
 });
 
-// Install the old version of PTVSD until all users have migrated to the new debug adapter + new PTVSD (specified in requirements.txt)
+// Install the last stable version of old PTVSD (which includes a middle layer adapter and requires ptvsd_launcher.py)
+// until all users have migrated to the new debug adapter + new PTVSD (specified in requirements.txt)
+// See https://github.com/microsoft/vscode-python/issues/7136
 gulp.task('installOldPtvsd', async () => {
     const args = ['-m', 'pip', '--disable-pip-version-check', 'install', '-t', './pythonFiles/lib/python/old_ptvsd', '--no-cache-dir', '--implementation', 'py', '--no-deps', '--upgrade', 'ptvsd==4.3.2']
     const success = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args)
