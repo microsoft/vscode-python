@@ -72,7 +72,8 @@ steps:
       displayName: "Install PTVSD wheels"
       inputs:
           scriptSource: "filePath"
-          scriptPath: "./build/ci/install_ptvsd.py --ci"
+          scriptPath: "./build/ci/install_ptvsd.py"
+          arguments: "--ci"
           failOnStderr: true
       condition: and(succeeded(), eq(variables['build'], 'true'))
 
