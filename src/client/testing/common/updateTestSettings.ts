@@ -52,7 +52,7 @@ export class UpdateTestSettingService implements IExtensionActivationService {
 
         const setting = new RegExp('"python\\.unitTest', 'g');
         fileContents = fileContents.replace(setting, '"python.testing');
-      
+
         const setting_pytest_enabled = new RegExp('\\.pyTestEnabled"', 'g');
         const setting_pytest_args = new RegExp('\\.pyTestArgs"', 'g');
         const setting_pytest_path = new RegExp('\\.pyTestPath"', 'g');
@@ -79,7 +79,11 @@ export class UpdateTestSettingService implements IExtensionActivationService {
     public async doesFileNeedToBeFixed(filePath: string) {
         try {
             const contents = await this.fs.readFile(filePath);
-            return contents.indexOf('python.unitTest.') > 0 || contents.indexOf('.pyTest') > 0 || contents.indexOf('.pep8') > 0;
+            return (
+                contents.indexOf('python.unitTest.') > 0 ||
+                contents.indexOf('.pyTest') > 0 ||
+                contents.indexOf('.pep8') > 0
+            );
         } catch (ex) {
             traceError('Failed to check if file needs to be fixed', ex);
             return false;
