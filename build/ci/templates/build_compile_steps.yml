@@ -68,6 +68,14 @@ steps:
       displayName: "pip install requirements"
       condition: and(succeeded(), eq(variables['build'], 'true'))
 
+    - task: PythonScript@0
+      displayName: "Install PTVSD wheels"
+      inputs:
+          scriptSource: "filePath"
+          scriptPath: "./build/ci/install_ptvsd.py"
+          failOnStderr: true
+      condition: and(succeeded(), eq(variables['build'], 'true'))
+
     - bash: |
           npm install -g vsce
           npm run clean

@@ -1,5 +1,143 @@
 # Changelog
 
+## 2019.9.0 (27 August 2019)
+
+### Enhancements
+
+1. Get "select virtual environment for the workspace" prompt to show up regardless of pythonpath setting.
+   ([#5499](https://github.com/Microsoft/vscode-python/issues/5499))
+1. Changes to telemetry with regards to discovery of python environments.
+   ([#5593](https://github.com/Microsoft/vscode-python/issues/5593))
+1. Update Jedi to 0.15.1 and parso to 0.5.1.
+   ([#6294](https://github.com/Microsoft/vscode-python/issues/6294))
+1. Moved Language Server logging to its own output channel.
+   ([#6559](https://github.com/Microsoft/vscode-python/issues/6559))
+1. Interactive window will only snap to the bottom if the user is already in the bottom, like a chat window.
+   ([#6580](https://github.com/Microsoft/vscode-python/issues/6580))
+1. Add debug command code lenses when in debug mode.
+   ([#6672](https://github.com/Microsoft/vscode-python/issues/6672))
+1. Implemented prompt for survey.
+   ([#6752](https://github.com/Microsoft/vscode-python/issues/6752))
+1. Add code gathering tools.
+   ([#6810](https://github.com/Microsoft/vscode-python/issues/6810))
+1. Added a setting called 'Run Magic Commands'. The input should be python code to be executed when the interactive window is loading.
+   ([#6842](https://github.com/Microsoft/vscode-python/issues/6842))
+1. Added a setting so the user can decide if they want the debugger to debug only their code, or also debug external libraries.
+   ([#6870](https://github.com/Microsoft/vscode-python/issues/6870))
+1. Implemented prompt for survey using A/B test framework.
+   ([#6957](https://github.com/Microsoft/vscode-python/issues/6957))
+
+### Fixes
+
+1. Add support for the "pathMappings" setting in "launch" debug configs.
+   ([#3568](https://github.com/Microsoft/vscode-python/issues/3568))
+1. Supports error codes like ABC123 as used in plugins.
+   ([#4074](https://github.com/Microsoft/vscode-python/issues/4074))
+1. Fixes to insertion of commas when inserting generated debug configurations in `launch.json`.
+   ([#5531](https://github.com/Microsoft/vscode-python/issues/5531))
+1. Fix code lenses shown for pytest.
+   ([#6303](https://github.com/Microsoft/vscode-python/issues/6303))
+1. Make data viewer change row height according to font size in settings.
+   ([#6614](https://github.com/Microsoft/vscode-python/issues/6614))
+1. Fix miniconda environments to work.
+   ([#6802](https://github.com/Microsoft/vscode-python/issues/6802))
+1. Drop dedent-on-enter for "return" statements. It will be addressed in https://github.com/microsoft/vscode-python/issues/6564.
+   ([#6813](https://github.com/Microsoft/vscode-python/issues/6813))
+1. Show PTVSD exceptions to the user.
+   ([#6818](https://github.com/Microsoft/vscode-python/issues/6818))
+1. Tweaked message for restarting VS Code to use a Python Extension insider build
+   (thanks [Marsfan](https://github.com/Marsfan)).
+   ([#6838](https://github.com/Microsoft/vscode-python/issues/6838))
+1. Do not execute empty code cells or render them in the interactive window when sent from the editor or input box.
+   ([#6839](https://github.com/Microsoft/vscode-python/issues/6839))
+1. Fix failing functional tests (for pytest) in the extension.
+   ([#6940](https://github.com/Microsoft/vscode-python/issues/6940))
+1. Fix ptvsd typo in descriptions.
+   ([#7097](https://github.com/Microsoft/vscode-python/issues/7097))
+
+### Code Health
+
+1. Update the message and the link displayed when `Language Server` isn't supported.
+   ([#5969](https://github.com/Microsoft/vscode-python/issues/5969))
+1. Normalize path separators in stack traces.
+   ([#6460](https://github.com/Microsoft/vscode-python/issues/6460))
+1. Update `package.json` to define supported languages for breakpoints.
+   Update telemetry code to hardcode Telemetry Key in code (removed from `package.json`).
+   ([#6469](https://github.com/Microsoft/vscode-python/issues/6469))
+1. Functional tests for DataScience Error Handler.
+   ([#6697](https://github.com/Microsoft/vscode-python/issues/6697))
+1. Move .env file handling into the extension. This is in preparation to switch to the out-of-proc debug adapter from ptvsd.
+   ([#6770](https://github.com/Microsoft/vscode-python/issues/6770))
+1. Track enablement of a test framework.
+   ([#6783](https://github.com/Microsoft/vscode-python/issues/6783))
+1. Track how code was sent to the terminal (via `command` or `UI`).
+   ([#6801](https://github.com/Microsoft/vscode-python/issues/6801))
+1. Upload coverage reports to [codecov](https://codecov.io/gh/microsoft/vscode-python).
+   ([#6938](https://github.com/Microsoft/vscode-python/issues/6938))
+1. Bump version of [PTVSD](https://pypi.org/project/ptvsd/) to `4.3.2`.
+
+    * Fix an issue with Jump to cursor command. [#1667](https://github.com/microsoft/ptvsd/issues/1667)
+    * Fix "Unable to find threadStateIndex for the current thread" message in terminal. [#1587](https://github.com/microsoft/ptvsd/issues/1587)
+    * Fixes crash when using python 3.7.4. [#1688](https://github.com/microsoft/ptvsd/issues/1688)
+   ([#6961](https://github.com/Microsoft/vscode-python/issues/6961))
+1. Move nightly functional tests to use mock jupyter and create a new pipeline for flakey tests which use real jupyter.
+   ([#7066](https://github.com/Microsoft/vscode-python/issues/7066))
+1. Corrected spelling of name for method to be `hasConfigurationFileInWorkspace`.
+   ([#7072](https://github.com/Microsoft/vscode-python/issues/7072))
+1. Fix functional test failures due to new WindowsStoreInterpreter addition.
+   ([#7081](https://github.com/Microsoft/vscode-python/issues/7081))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+- [isort](https://pypi.org/project/isort/)
+- [jedi](https://pypi.org/project/jedi/)
+  and [parso](https://pypi.org/project/parso/)
+- [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+- [ptvsd](https://pypi.org/project/ptvsd/)
+- [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+- [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+- Debugging support:
+  [Django](https://pypi.org/project/Django/),
+  [Flask](https://pypi.org/project/Flask/),
+  [gevent](https://pypi.org/project/gevent/),
+  [Jinja](https://pypi.org/project/Jinja/),
+  [Pyramid](https://pypi.org/project/pyramid/),
+  [PySpark](https://pypi.org/project/pyspark/),
+  [Scrapy](https://pypi.org/project/Scrapy/),
+  [Watson](https://pypi.org/project/Watson/)
+- Formatting:
+  [autopep8](https://pypi.org/project/autopep8/),
+  [black](https://pypi.org/project/black/),
+  [yapf](https://pypi.org/project/yapf/)
+- Interpreter support:
+  [conda](https://conda.io/),
+  [direnv](https://direnv.net/),
+  [pipenv](https://pypi.org/project/pipenv/),
+  [pyenv](https://github.com/pyenv/pyenv),
+  [venv](https://docs.python.org/3/library/venv.html#module-venv),
+  [virtualenv](https://pypi.org/project/virtualenv/)
+- Linting:
+  [bandit](https://pypi.org/project/bandit/),
+  [flake8](https://pypi.org/project/flake8/),
+  [mypy](https://pypi.org/project/mypy/),
+  [prospector](https://pypi.org/project/prospector/),
+  [pylint](https://pypi.org/project/pylint/),
+  [pydocstyle](https://pypi.org/project/pydocstyle/),
+  [pylama](https://pypi.org/project/pylama/)
+- Testing:
+  [nose](https://pypi.org/project/nose/),
+  [pytest](https://pypi.org/project/pytest/),
+  [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
 ## 2019.8.0 (6 August 2019)
 
 ### Enhancements

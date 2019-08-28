@@ -64,5 +64,17 @@
         "salt": "PtvsdWheels",
         "min": 100,
         "max": 0
+    },
+    {
+        "name": "LS - control",
+        "salt": "LS",
+        "min": 0,
+        "max": 1
+    },
+    {
+        "name": "LS - enabled",
+        "salt": "LS",
+        "min": 99,
+        "max": 100
     }
 ]

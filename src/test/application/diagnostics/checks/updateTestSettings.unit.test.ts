@@ -184,19 +184,19 @@ suite('Application Diagnostics - Check Test Settings', () => {
             expectedContents: '{"python.pythonPath":"1234", "python.testing.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}'
         },
         {
-            testTitle: 'Should replace python.jediEnabled.',
-            contents: '{"python.jediEnabled":false}',
-            expectedContents: '{"python.languageServer": "microsoft"}'
-        },
-        {
-            testTitle: 'Should replace python.jediEnabled.',
-            contents: '{"python.jediEnabled": true}',
-            expectedContents: '{"python.languageServer": "jedi"}'
-        },
-        {
             testTitle: 'Should not make any changes to the file',
             contents: '{"python.pythonPath":"1234", "python.unittest.unitTestArgs":[], "python.unitTest.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}',
             expectedContents: '{"python.pythonPath":"1234", "python.unittest.unitTestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}'
+        },
+        {
+            testTitle: 'Should replace python.jediEnabled.',
+            expectedContents: '{"python.jediEnabled": false}',
+            contents: '{"python.languageServer": "microsoft"}'
+        },
+        {
+            testTitle: 'Should replace python.jediEnabled.',
+            expectedContents: '{"python.jediEnabled": true}',
+            contents: '{"python.languageServer": "jedi"}'
         }
     ].forEach(item => {
         test(item.testTitle, async () => {

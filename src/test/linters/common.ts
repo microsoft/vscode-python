@@ -344,8 +344,8 @@ export class BaseTestFixture {
             })
             .returns(() => Promise.resolve(undefined));
 
-        this.pythonSettings.setup(s => s.languageServer)
-            .returns(() => 'jedi');
+        this.pythonSettings.setup(s => s.jediEnabled)
+            .returns(() => true);
     }
 
     private initData(): void {
