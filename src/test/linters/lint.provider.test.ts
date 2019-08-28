@@ -73,6 +73,7 @@ suite('Linting - Provider', () => {
         lintSettings.setup(x => x.lintOnSave).returns(() => true);
 
         settings = TypeMoq.Mock.ofType<IPythonSettings>();
+        settings.setup(x => x.languageServer).returns(() => 'jedi');
         settings.setup(x => x.linting).returns(() => lintSettings.object);
 
         configService = TypeMoq.Mock.ofType<IConfigurationService>();

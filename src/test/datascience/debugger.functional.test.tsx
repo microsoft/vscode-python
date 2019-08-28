@@ -173,7 +173,8 @@ suite('DataScience Debugger tests', () => {
         const expectedBreakLine = breakpoint && !breakpointFile ? breakpoint.start.line : 2; // 2 because of the 'breakpoint()' that gets added
 
         // Debug this code. We should either hit the breakpoint or stop on entry
-        const resultPromise = getCellResults(ioc.wrapper!, 5, async () => {
+        //const resultPromise = getCellResults(ioc.wrapper!, 5, async () => {
+        const resultPromise = getCellResults(ioc.wrapper!, 2, async () => {
             const breakPromise = createDeferred<void>();
             disposables.push(mockDebuggerService!.onBreakpointHit(() => breakPromise.resolve()));
             const done = history.debugCode(code, fileName, 0, docManager.activeTextEditor);
@@ -290,7 +291,7 @@ suite('DataScience Debugger tests', () => {
         const expectedBreakLine = 2; // 2 because of the 'breakpoint()' that gets added
 
         // Debug this code. We should either hit the breakpoint or stop on entry
-        const resultPromise = getCellResults(ioc.wrapper!, 5, async () => {
+        const resultPromise = getCellResults(ioc.wrapper!, 2, async () => {
             const breakPromise = createDeferred<void>();
             disposables.push(mockDebuggerService!.onBreakpointHit(() => breakPromise.resolve()));
             const done = history.debugCode(code, fileName, 0, docManager.activeTextEditor);

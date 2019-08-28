@@ -592,7 +592,9 @@ suite('Jupyter Execution', async () => {
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
             allowLiveShare: false,
-            enablePlotViewer: true
+            enablePlotViewer: true,
+            runMagicCommands: '',
+            debugJustMyCode: true
         };
 
         // Service container also needs to generate jupyter servers. However we can't use a mock as that messes up returning

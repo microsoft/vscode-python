@@ -86,7 +86,8 @@ import {
     ILogger,
     IPathUtils,
     IPersistentStateFactory,
-    IsWindows
+    IsWindows,
+    LanguageServerType
 } from '../../client/common/types';
 import { Deferred, sleep } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
@@ -233,7 +234,7 @@ import {
 import {
     WorkspaceVirtualEnvWatcherService
 } from '../../client/interpreter/locators/services/workspaceVirtualEnvWatcherService';
-import { IPipEnvServiceHelper, IPythonInPathCommandProvider, IWindowsStoreInterpreter } from '../../client/interpreter/locators/types';
+import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { CodeExecutionHelper } from '../../client/terminals/codeExecution/helper';
@@ -438,7 +439,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             stopOnFirstLineWhileDebugging: true,
             stopOnError: true,
             addGotoCodeLenses: true,
-            enableCellCodeLens: true
+            enableCellCodeLens: true,
+            runMagicCommands: '',
+            debugJustMyCode: true
         };
 
         const workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration> = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
@@ -678,8 +681,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.extraListeners.push(callback);
     }
 
-    public changeJediEnabled(enabled: boolean) {
-        this.pythonSettings.jediEnabled = enabled;
+    public changeLanguageServer(languageServerValue: LanguageServerType) {
+        this.pythonSettings.languageServer = languageServerValue;
     }
 
     private findPythonPath(): string {

@@ -1112,6 +1112,31 @@
                                 "description": "IP address of the of the local debug server (default is localhost).",
                                 "default": "localhost"
                             },
+                            "pathMappings": {
+                                "type": "array",
+                                "label": "Path mappings.",
+                                "items": {
+                                    "type": "object",
+                                    "label": "Path mapping",
+                                    "required": [
+                                        "localRoot",
+                                        "remoteRoot"
+                                    ],
+                                    "properties": {
+                                        "localRoot": {
+                                            "type": "string",
+                                            "label": "Local source root.",
+                                            "default": "${workspaceFolder}"
+                                        },
+                                        "remoteRoot": {
+                                            "type": "string",
+                                            "label": "Remote source root.",
+                                            "default": ""
+                                        }
+                                    }
+                                },
+                                "default": []
+                            },
                             "logToFile": {
                                 "type": "boolean",
                                 "description": "Enable logging of debugger events to a log file.",
@@ -1625,7 +1650,7 @@
                 "python.dataScience.ptvsdDistPath": {
                     "type": "string",
                     "default": "",
-                    "description": "Path to ptsvd experimental bits for debugging cells.",
+                    "description": "Path to ptvsd experimental bits for debugging cells.",
                     "scope": "resource"
                 },
                 "python.dataScience.stopOnFirstLineWhileDebugging": {
@@ -1739,10 +1764,15 @@
                     "description": "Whether to install Python modules globally when not using an environment.",
                     "scope": "resource"
                 },
-                "python.jediEnabled": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Enables Jedi as IntelliSense engine instead of Microsoft Python Analysis Engine.",
+                "python.languageServer": {
+                    "type": "string",
+                    "enum": [
+                        "jedi",
+                        "microsoft",
+                        "none"
+                    ],
+                    "default": "jedi",
+                    "description": "Specifies which language server to use for IntelliSense engine.",
                     "scope": "resource"
                 },
                 "python.jediMemoryLimit": {
@@ -2405,6 +2435,18 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Uncomment shell assignments (#!), line magic (#!%) and cell magic (#!%%) when parsing code cells.",
+                    "scope": "resource"
+                },
+                "python.dataScience.runMagicCommands": {
+                    "type": "string",
+                    "default": "",
+                    "description": "A series of Python instructions that will be executed when the interactive window loads.",
+                    "scope": "resource"
+                },
+                "python.dataScience.debugJustMyCode": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "When debugging, debug just my code.",
                     "scope": "resource"
                 },
                 "python.insidersChannel": {
