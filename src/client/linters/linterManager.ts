@@ -16,9 +16,9 @@ import { Bandit } from './bandit';
 import { Flake8 } from './flake8';
 import { LinterInfo, PylintLinterInfo } from './linterInfo';
 import { MyPy } from './mypy';
-import { Pycodestyle } from './pycodestyle';
 import { Prospector } from './prospector';
 import { PyDocStyle } from './pydocstyle';
+import { Pycodestyle } from './pycodestyle';
 import { PyLama } from './pylama';
 import { Pylint } from './pylint';
 import {
