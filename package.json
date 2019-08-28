@@ -2,8 +2,8 @@
     "name": "python",
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, and more.",
-    "version": "2019.9.0-dev",
-    "languageServerVersion": "0.3.43",
+    "version": "2019.10.0-dev",
+    "languageServerVersion": "0.3.66",
     "publisher": "ms-python",
     "author": {
         "name": "Microsoft Corporation"
@@ -1024,6 +1024,31 @@
                                 "description": "IP address of the of the local debug server (default is localhost).",
                                 "default": "localhost"
                             },
+                            "pathMappings": {
+                                "type": "array",
+                                "label": "Path mappings.",
+                                "items": {
+                                    "type": "object",
+                                    "label": "Path mapping",
+                                    "required": [
+                                        "localRoot",
+                                        "remoteRoot"
+                                    ],
+                                    "properties": {
+                                        "localRoot": {
+                                            "type": "string",
+                                            "label": "Local source root.",
+                                            "default": "${workspaceFolder}"
+                                        },
+                                        "remoteRoot": {
+                                            "type": "string",
+                                            "label": "Remote source root.",
+                                            "default": ""
+                                        }
+                                    }
+                                },
+                                "default": []
+                            },
                             "logToFile": {
                                 "type": "boolean",
                                 "description": "Enable logging of debugger events to a log file.",
@@ -1530,7 +1555,7 @@
                 "python.dataScience.ptvsdDistPath": {
                     "type": "string",
                     "default": "",
-                    "description": "Path to ptsvd experimental bits for debugging cells.",
+                    "description": "Path to ptvsd experimental bits for debugging cells.",
                     "scope": "resource"
                 },
                 "python.dataScience.stopOnFirstLineWhileDebugging": {
@@ -2311,6 +2336,18 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Uncomment shell assignments (#!), line magic (#!%) and cell magic (#!%%) when parsing code cells.",
+                    "scope": "resource"
+                },
+                "python.dataScience.runMagicCommands": {
+                    "type": "string",
+                    "default": "",
+                    "description": "A series of Python instructions that will be executed when the interactive window loads.",
+                    "scope": "resource"
+                },
+                "python.dataScience.debugJustMyCode": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "When debugging, debug just my code.",
                     "scope": "resource"
                 },
                 "python.insidersChannel": {

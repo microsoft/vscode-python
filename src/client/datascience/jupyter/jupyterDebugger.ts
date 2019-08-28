@@ -123,6 +123,8 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         // If we already have configuration, we're already attached, don't do it again.
         let result = this.configs.get(server.id);
         if (result) {
+            const settings = this.configService.getSettings();
+            result.justMyCode = settings.datascience.debugJustMyCode;
             return result;
         }
         traceInfo('enable debugger attach');
@@ -300,6 +302,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                 const debugInfoRegEx = /\('(.*?)', ([0-9]*)\)/;
 
                 const debugInfoMatch = debugInfoRegEx.exec(enableAttachString);
+                const settings = this.configService.getSettings();
                 if (debugInfoMatch) {
                     const localConfig: DebugConfiguration = {
                         name: 'IPython',
@@ -307,7 +310,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                         type: 'python',
                         port: parseInt(debugInfoMatch[2], 10),
                         host: debugInfoMatch[1],
-                        justMyCode: true
+                        justMyCode: settings.datascience.debugJustMyCode
                     };
                     if (local) {
                         return localConfig;
@@ -323,6 +326,16 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                         };
                     }
                 }
+            } else {
+                // if we cannot parse the connect information, throw so we exit out of debugging
+                if (cells[0].data) {
+                    const outputs = cells[0].data.outputs as nbformat.IOutput[];
+                    if (outputs[0]) {
+                        const error = outputs[0] as nbformat.IError;
+                        throw new JupyterDebuggerNotInstalledError(error.ename);
+                    }
+                }
+                throw new JupyterDebuggerNotInstalledError(localize.DataScience.jupyterDebuggerPtvsdParseError());
             }
         }
         return undefined;

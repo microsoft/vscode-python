@@ -6,7 +6,6 @@
 import { CancellationToken, DebugConfiguration, WorkspaceFolder } from 'vscode';
 import { DebugConfigurationType, IDebugConfigurationProvider } from '../types';
 
-
 export const IDebugConfigurationResolver = Symbol('IDebugConfigurationResolver');
 export interface IDebugConfigurationResolver<T extends DebugConfiguration> {
     resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: T, token?: CancellationToken): Promise<T | undefined>;

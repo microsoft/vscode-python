@@ -35,7 +35,7 @@ export class PyramidLaunchDebugConfigurationProvider implements IDebugConfigurat
             name: DebugConfigStrings.pyramid.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
-            module: "pyramid.scripts.pserve",
+            module: 'pyramid.scripts.pserve',
             args: [
                 iniPath || defaultIni
             ],

@@ -5,6 +5,7 @@ import {
 } from 'vscode';
 import { EXTENSION_ROOT_DIR, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { getWorkspaceEditsFromPatch } from '../common/editor';
+import { traceError } from '../common/logger';
 import { IConfigurationService, IInstaller, IOutputChannel, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { RefactorProxy } from '../refactor/proxy';
@@ -61,7 +62,7 @@ export class PythonRenameProvider implements RenameProvider {
             if (reason === 'Not installed') {
                 const installer = this.serviceContainer.get<IInstaller>(IInstaller);
                 installer.promptToInstall(Product.rope, document.uri)
-                    .catch(ex => console.error('Python Extension: promptToInstall', ex));
+                    .catch(ex => traceError('Python Extension: promptToInstall', ex));
                 return Promise.reject('');
             } else {
                 window.showErrorMessage(reason);

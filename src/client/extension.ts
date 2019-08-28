@@ -40,7 +40,7 @@ import { registerTypes as appRegisterTypes } from './application/serviceRegistry
 import { IApplicationDiagnostics } from './application/types';
 import { DebugService } from './common/application/debugService';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from './common/application/types';
-import { Commands, isTestExecution, PYTHON, STANDARD_OUTPUT_CHANNEL } from './common/constants';
+import { Commands, isTestExecution, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from './common/constants';
 import { registerTypes as registerDotNetTypes } from './common/dotnet/serviceRegistry';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { traceError } from './common/logger';
@@ -76,16 +76,16 @@ import { AutoSelectionRule, IInterpreterAutoSelectionRule, IInterpreterAutoSelec
 import { IInterpreterSelector } from './interpreter/configuration/types';
 import {
     ICondaService,
+    IInterpreterLocatorProgressHandler,
     IInterpreterLocatorProgressService,
     IInterpreterService,
-    InterpreterLocatorProgressHandler,
     PythonInterpreter
 } from './interpreter/contracts';
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 import { ServiceContainer } from './ioc/container';
 import { ServiceManager } from './ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from './ioc/types';
-import { setLanguageConfiguration } from './language/languageConfiguration';
+import { getLanguageConfiguration } from './language/languageConfiguration';
 import { LinterCommands } from './linters/linterCommands';
 import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
 import { ILintingEngine } from './linters/types';
@@ -176,7 +176,7 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     const linterProvider = new LinterProvider(context, serviceManager);
     context.subscriptions.push(linterProvider);
 
-    setLanguageConfiguration();
+    languages.setLanguageConfiguration(PYTHON_LANGUAGE, getLanguageConfiguration());
 
     if (pythonSettings && pythonSettings.formatting && pythonSettings.formatting.provider !== 'internalConsole') {
         const formatProvider = new PythonFormattingEditProvider(context, serviceContainer);
@@ -283,7 +283,7 @@ async function initializeServices(context: ExtensionContext, serviceManager: Ser
     disposables.push(cmdManager.registerCommand(Commands.ViewOutput, () => outputChannel.show()));
 
     // Display progress of interpreter refreshes only after extension has activated.
-    serviceContainer.get<InterpreterLocatorProgressHandler>(InterpreterLocatorProgressHandler).register();
+    serviceContainer.get<IInterpreterLocatorProgressHandler>(IInterpreterLocatorProgressHandler).register();
     serviceContainer.get<IInterpreterLocatorProgressService>(IInterpreterLocatorProgressService).register();
     serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics).register();
     serviceContainer.get<ITestCodeNavigatorCommandHandler>(ITestCodeNavigatorCommandHandler).register();

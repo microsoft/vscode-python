@@ -2,6 +2,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { Commands } from '../common/constants';
+import { traceError } from '../common/logger';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 
@@ -19,7 +20,7 @@ function updateSparkLibrary() {
         //Done
     }, reason => {
         vscode.window.showErrorMessage(`Failed to update ${extraLibPath}. Error: ${reason.message}`);
-        console.error(reason);
+        traceError(reason);
     });
     vscode.window.showInformationMessage('Make sure you have SPARK_HOME environment variable set to the root path of the local spark installation!');
     sendTelemetryEvent(EventName.UPDATE_PYSPARK_LIBRARY);

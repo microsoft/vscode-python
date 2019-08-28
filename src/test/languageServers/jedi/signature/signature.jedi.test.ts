@@ -65,15 +65,28 @@ suite('Signatures (Jedi)', () => {
     });
 
     test('For intrinsic', async () => {
-        const expected = [
+        let expected: SignatureHelpResult[];
+        if (isPython2) {
+            expected = [
+                new SignatureHelpResult(0, 0, 0, 0, null),
+                new SignatureHelpResult(0, 1, 0, 0, null),
+                new SignatureHelpResult(0, 2, 0, 0, null),
+                new SignatureHelpResult(0, 3, 0, 0, null),
+                new SignatureHelpResult(0, 4, 0, 0, null),
+                new SignatureHelpResult(0, 5, 0, 0, null),
+                new SignatureHelpResult(0, 6, 1, 0, 'x'),
+                new SignatureHelpResult(0, 7, 1, 0, 'x')
+            ];
+        } else {
+            expected = [
             new SignatureHelpResult(0, 0, 0, 0, null),
             new SignatureHelpResult(0, 1, 0, 0, null),
             new SignatureHelpResult(0, 2, 0, 0, null),
             new SignatureHelpResult(0, 3, 0, 0, null),
             new SignatureHelpResult(0, 4, 0, 0, null),
             new SignatureHelpResult(0, 5, 0, 0, null),
-            new SignatureHelpResult(0, 6, 1, 0, 'stop'),
-            new SignatureHelpResult(0, 7, 1, 0, 'stop')
+            new SignatureHelpResult(0, 6, 2, 0, 'start'),
+            new SignatureHelpResult(0, 7, 2, 0, 'start')
             // new SignatureHelpResult(0, 6, 1, 0, 'start'),
             // new SignatureHelpResult(0, 7, 1, 0, 'start'),
             // new SignatureHelpResult(0, 8, 1, 1, 'stop'),
@@ -82,6 +95,7 @@ suite('Signatures (Jedi)', () => {
             // new SignatureHelpResult(0, 11, 1, 2, 'step'),
             // new SignatureHelpResult(1, 0, 1, 2, 'step')
         ];
+        }
 
         const document = await openDocument(path.join(autoCompPath, 'basicSig.py'));
         for (let i = 0; i < expected.length; i += 1) {
@@ -92,18 +106,17 @@ suite('Signatures (Jedi)', () => {
     test('For ellipsis', async function () {
         if (isPython2) {
             // tslint:disable-next-line:no-invalid-this
-            this.skip();
-            return;
+            return this.skip();
         }
         const expected = [
             new SignatureHelpResult(0, 5, 0, 0, null),
-            new SignatureHelpResult(0, 6, 1, 0, 'value'),
-            new SignatureHelpResult(0, 7, 1, 0, 'value'),
-            new SignatureHelpResult(0, 8, 1, 1, '...'),
-            new SignatureHelpResult(0, 9, 1, 1, '...'),
-            new SignatureHelpResult(0, 10, 1, 1, '...'),
-            new SignatureHelpResult(0, 11, 1, 2, 'sep'),
-            new SignatureHelpResult(0, 12, 1, 2, 'sep')
+            new SignatureHelpResult(0, 6, 1, 0, 'values'),
+            new SignatureHelpResult(0, 7, 1, 0, 'values'),
+            new SignatureHelpResult(0, 8, 1, 0, 'values'),
+            new SignatureHelpResult(0, 9, 1, 0, 'values'),
+            new SignatureHelpResult(0, 10, 1, 0, 'values'),
+            new SignatureHelpResult(0, 11, 1, 0, 'values'),
+            new SignatureHelpResult(0, 12, 1, 0, 'values')
         ];
 
         const document = await openDocument(path.join(autoCompPath, 'ellipsis.py'));
@@ -115,9 +128,9 @@ suite('Signatures (Jedi)', () => {
     test('For pow', async () => {
         let expected: SignatureHelpResult;
         if (isPython2) {
-            expected = new SignatureHelpResult(0, 4, 1, 0, 'x');
+            expected = new SignatureHelpResult(0, 4, 4, 0, 'x');
         } else {
-            expected = new SignatureHelpResult(0, 4, 1, 0, null);
+            expected = new SignatureHelpResult(0, 4, 4, 0, null);
         }
 
         const document = await openDocument(path.join(autoCompPath, 'noSigPy3.py'));

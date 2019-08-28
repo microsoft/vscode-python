@@ -133,7 +133,7 @@ suite('Linting - Pylint', () => {
             .setup(x => x.fileExists(path.join(midFolder, pylintrc)))
             .returns(() => Promise.resolve(true));
 
-        const result = await Pylint.hasConfigrationFileInWorkspace(fileSystem.object, basePath, root);
+        const result = await Pylint.hasConfigurationFileInWorkspace(fileSystem.object, basePath, root);
         expect(result).to.be.equal(true, `'${pylintrc}' not detected in the workspace tree.`);
     });
 

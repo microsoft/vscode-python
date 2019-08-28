@@ -28,5 +28,53 @@
         "salt": "ShowPlayIcon",
         "min": 0,
         "max": 20
+    },
+    {
+        "name": "ShowExtensionSurveyPrompt - enabled",
+        "salt": "ShowExtensionSurveyPrompt",
+        "max": 100,
+        "min": 80
+    },
+    {
+        "name": "ShowExtensionSurveyPrompt - control",
+        "salt": "ShowExtensionSurveyPrompt",
+        "min": 0,
+        "max": 20
+    },
+    {
+        "name": "NewDebugAdapter - control",
+        "salt": "NewDebugAdapter",
+        "min": 100,
+        "max": 0
+    },
+    {
+        "name": "NewDebugAdapter - experiment",
+        "salt": "NewDebugAdapter",
+        "min": 100,
+        "max": 0
+    },
+    {
+        "name": "PtvsdWheels - control",
+        "salt": "PtvsdWheels",
+        "min": 100,
+        "max": 0
+    },
+    {
+        "name": "PtvsdWheels - experiment",
+        "salt": "PtvsdWheels",
+        "min": 100,
+        "max": 0
+    },
+    {
+        "name": "LS - control",
+        "salt": "LS",
+        "min": 0,
+        "max": 1
+    },
+    {
+        "name": "LS - enabled",
+        "salt": "LS",
+        "min": 99,
+        "max": 100
     }
 ]

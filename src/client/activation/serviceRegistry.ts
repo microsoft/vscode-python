@@ -28,7 +28,7 @@ import { LanguageServerPackageService } from './languageServer/languageServerPac
 import { LanguageServerManager } from './languageServer/manager';
 import { LanguageServerOutputChannel } from './languageServer/outputChannel';
 import { PlatformData } from './languageServer/platformData';
-import { IDownloadChannelRule, IExtensionActivationManager, IExtensionActivationService, IExtensionSingleActivationService, ILanguageClientFactory, ILanguageServer, ILanguageServerActivator, ILanguageServerAnalysisOptions, ILanguageServerCompatibilityService as ILanagueServerCompatibilityService, ILanguageServerDownloader, ILanguageServerExtension, ILanguageServerFolderService, ILanguageServerManager, ILanguageServerPackageService, IPlatformData, LanguageClientFactory, LanguageServerActivator, ILanguageServerOutputChannel } from './types';
+import { IDownloadChannelRule, IExtensionActivationManager, IExtensionActivationService, IExtensionSingleActivationService, ILanguageClientFactory, ILanguageServer, ILanguageServerActivator, ILanguageServerAnalysisOptions, ILanguageServerCompatibilityService as ILanagueServerCompatibilityService, ILanguageServerDownloader, ILanguageServerExtension, ILanguageServerFolderService, ILanguageServerManager, ILanguageServerOutputChannel, ILanguageServerPackageService, IPlatformData, LanguageClientFactory, LanguageServerActivator } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, LanguageServerExtensionActivationService);

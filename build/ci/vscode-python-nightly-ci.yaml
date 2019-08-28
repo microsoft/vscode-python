@@ -1,6 +1,4 @@
 # Nightly build
-# Notes: Scheduled builds don't have a trigger in YAML (as of this writing).
-#        Trigger is set through the Azure DevOps UI `Nightly Build->Edit->...->Triggers`.
 
 name: '$(Year:yyyy).$(Month).0.$(BuildID)-alpha'
 
@@ -10,11 +8,21 @@ trigger: none
 # Not the PR build for merges to master and release.
 pr: none
 
+schedules:
+- cron: "0 0 * * 1-5"
+  # Daily midnight build, runs Monday - Friday always
+  displayName: Nightly build
+  branches:
+    include:
+    - master
+    - release
+  always: true
+
 # Variables that are available for the entire pipeline.
 variables:
   PythonVersion: '3.7'
   NodeVersion: '10.5.0'
-  NpmVersion: 'latest'
+  NpmVersion: '6.10.3'
   MOCHA_FILE: '$(Build.ArtifactStagingDirectory)/test-junit.xml' # All test files will write their JUnit xml output to this file, clobbering the last time it was written.
   MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter).
   VSC_PYTHON_LOG_FILE: '$(Build.ArtifactStagingDirectory)/pvsc.log'
@@ -354,92 +362,79 @@ jobs:
         TestsToRun: 'testDebugger'
         NeedsPythonTestReqs: true
 
-      # Functional tests (not mocked Jupyter)
+      # Functional tests (mocked Jupyter)
       'Windows-Py3.7 Functional':
         PythonVersion: '3.7'
         VMImageName: 'vs2017-win2016'
         TestsToRun: 'testfunctional'
         NeedsPythonTestReqs: true
         NeedsPythonFunctionalReqs: true
-        # This tells the functional tests to not mock out Jupyter...
-        VSCODE_PYTHON_ROLLING: true
       'Linux-Py3.7 Functional':
         PythonVersion: '3.7'
         VMImageName: 'ubuntu-16.04'
         TestsToRun: 'testfunctional'
         NeedsPythonTestReqs: true
         NeedsPythonFunctionalReqs: true
-        VSCODE_PYTHON_ROLLING: true
       'Mac-Py3.7 Functional':
         PythonVersion: '3.7'
         VMImageName: 'macos-10.13'
         TestsToRun: 'testfunctional'
         NeedsPythonTestReqs: true
         NeedsPythonFunctionalReqs: true
-        VSCODE_PYTHON_ROLLING: true
       'Windows-Py3.6 Functional':
         PythonVersion: '3.6'
         VMImageName: 'vs2017-win2016'
         TestsToRun: 'testfunctional'
         NeedsPythonTestReqs: true
         NeedsPythonFunctionalReqs: true
-        VSCODE_PYTHON_ROLLING: true
       'Linux-Py3.6 Functional':
         PythonVersion: '3.6'
         VMImageName: 'ubuntu-16.04'
         TestsToRun: 'testfunctional'
         NeedsPythonTestReqs: true
         NeedsPythonFunctionalReqs: true
-        VSCODE_PYTHON_ROLLING: true
       'Mac-Py3.6 Functional':
         PythonVersion: '3.6'
         VMImageName: 'macos-10.13'
         TestsToRun: 'testfunctional'
         NeedsPythonTestReqs: true
         NeedsPythonFunctionalReqs: true
-        VSCODE_PYTHON_ROLLING: true
       'Windows-Py3.5 Functional':
         PythonVersion: '3.5'
         VMImageName: 'vs2017-win2016'
         TestsToRun: 'testfunctional'
         NeedsPythonTestReqs: true
         NeedsPythonFunctionalReqs: true
-        VSCODE_PYTHON_ROLLING: true
       'Linux-Py3.5 Functional':
         PythonVersion: '3.5'
         VMImageName: 'ubuntu-16.04'
         TestsToRun: 'testfunctional'
         NeedsPythonTestReqs: true
         NeedsPythonFunctionalReqs: true
-        VSCODE_PYTHON_ROLLING: true
       'Mac-Py3.5 Functional':
         PythonVersion: '3.5'
         VMImageName: 'macos-10.13'
         TestsToRun: 'testfunctional'
         NeedsPythonTestReqs: true
         NeedsPythonFunctionalReqs: true
-        VSCODE_PYTHON_ROLLING: true
       'Windows-Py2.7 Functional':
         PythonVersion: '2.7'
         VMImageName: 'vs2017-win2016'
         TestsToRun: 'testfunctional'
         NeedsPythonTestReqs: true
         NeedsPythonFunctionalReqs: true
-        VSCODE_PYTHON_ROLLING: true
       'Linux-Py2.7 Functional':
         PythonVersion: '2.7'
         VMImageName: 'ubuntu-16.04'
         TestsToRun: 'testfunctional'
         NeedsPythonTestReqs: true
         NeedsPythonFunctionalReqs: true
-        VSCODE_PYTHON_ROLLING: true
       'Mac-Py2.7 Functional':
         PythonVersion: '2.7'
         VMImageName: 'macos-10.13'
         TestsToRun: 'testfunctional'
         NeedsPythonTestReqs: true
         NeedsPythonFunctionalReqs: true
-        VSCODE_PYTHON_ROLLING: true
 
   pool:
     vmImage: $(VMImageName)
