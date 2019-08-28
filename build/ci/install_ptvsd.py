@@ -3,15 +3,25 @@ from os import path
 from zipfile import ZipFile
 import json
 import urllib.request
+import sys
 
 ROOT_DIRNAME = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
+REQUIREMENTS_PATH = path.join(ROOT_DIRNAME, "requirements.txt")
 PYTHONFILES_PATH = path.join(ROOT_DIRNAME, "pythonFiles", "lib", "python")
 PYPI_PTVSD_URL = "https://pypi.org/pypi/ptvsd/json"
 
+if sys.argv[1] == "--ci":
+    sys.path.insert(0, PYTHONFILES_PATH)
+from packaging.requirements import Requirement
+
 if __name__ == "__main__":
-    # Remove this when the version of PTVSD in requirements.txt gets updated.
-    # (and add code leveraging the packaging module to parse requirements.txt) in #7002
-    ptvsd_version = "5.0.0a3"
+    with open(REQUIREMENTS_PATH, "r", encoding="utf-8") as requirements:
+        for line in requirements:
+            package_requirement = Requirement(line)
+            if package_requirement.name != "ptvsd":
+                continue
+            requirement_specifier = package_requirement.specifier
+            ptvsd_version = next(requirement_specifier.__iter__()).version
 
     # Response format: https://warehouse.readthedocs.io/api-reference/json/#project
     with urllib.request.urlopen(PYPI_PTVSD_URL) as response:
