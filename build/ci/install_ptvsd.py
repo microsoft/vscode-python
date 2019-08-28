@@ -10,6 +10,7 @@ REQUIREMENTS_PATH = path.join(ROOT_DIRNAME, "requirements.txt")
 PYTHONFILES_PATH = path.join(ROOT_DIRNAME, "pythonFiles", "lib", "python")
 PYPI_PTVSD_URL = "https://pypi.org/pypi/ptvsd/json"
 
+# If we are in CI use the packaging module installed in PYTHONFILES_PATH.
 if sys.argv[1] == "--ci":
     sys.path.insert(0, PYTHONFILES_PATH)
 from packaging.requirements import Requirement
