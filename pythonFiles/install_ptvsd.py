@@ -10,12 +10,13 @@ REQUIREMENTS_PATH = path.join(ROOT_DIRNAME, "requirements.txt")
 PYTHONFILES_PATH = path.join(ROOT_DIRNAME, "pythonFiles", "lib", "python")
 PYPI_PTVSD_URL = "https://pypi.org/pypi/ptvsd/json"
 
-# If we are in CI use the packaging module installed in PYTHONFILES_PATH.
-if len(sys.argv) == 2 and sys.argv[1] == "--ci":
-    sys.path.insert(0, PYTHONFILES_PATH)
-from packaging.requirements import Requirement
 
-if __name__ == "__main__":
+def install_ptvsd():
+    # If we are in CI use the packaging module installed in PYTHONFILES_PATH.
+    if len(sys.argv) == 2 and sys.argv[1] == "--ci":
+        sys.path.insert(0, PYTHONFILES_PATH)
+    from packaging.requirements import Requirement
+
     with open(REQUIREMENTS_PATH, "r", encoding="utf-8") as requirements:
         for line in requirements:
             package_requirement = Requirement(line)
@@ -49,3 +50,7 @@ if __name__ == "__main__":
                 # Flatten the folder structure.
                 zip_info.filename = zip_info.filename.split(prefix)[-1]
                 wheel.extract(zip_info, ptvsd_path)
+
+
+if __name__ == "__main__":
+    install_ptvsd()
