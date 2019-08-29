@@ -1936,7 +1936,8 @@
                     "description": "Path to mypy, you can use a custom version of mypy by modifying this setting to include the full path.",
                     "scope": "resource"
                 },
-                "python.linting.pep8Args": {
+
+                "python.linting.pycodestyleArgs": {
                     "type": "array",
                     "description": "Arguments passed in. Each argument is a separate item in the array.",
                     "default": [],
@@ -1945,10 +1946,10 @@
                     },
                     "scope": "resource"
                 },
-                "python.linting.pep8CategorySeverity.E": {
+                "python.linting.pycodestyleCategorySeverity.E": {
                     "type": "string",
                     "default": "Error",
-                    "description": "Severity of Pep8 message type 'E'.",
+                    "description": "Severity of pycodestyle message type 'E'.",
                     "enum": [
                         "Hint",
                         "Error",
@@ -1957,10 +1958,10 @@
                     ],
                     "scope": "resource"
                 },
-                "python.linting.pep8CategorySeverity.W": {
+                "python.linting.pycodestyleCategorySeverity.W": {
                     "type": "string",
                     "default": "Warning",
-                    "description": "Severity of Pep8 message type 'W'.",
+                    "description": "Severity of pycodestyle message type 'W'.",
                     "enum": [
                         "Hint",
                         "Error",
@@ -1969,16 +1970,16 @@
                     ],
                     "scope": "resource"
                 },
-                "python.linting.pep8Enabled": {
+                "python.linting.pycodestyleEnabled": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Whether to lint Python files using pep8",
+                    "description": "Whether to lint Python files using pycodestyle",
                     "scope": "resource"
                 },
-                "python.linting.pep8Path": {
+                "python.linting.pycodestylePath": {
                     "type": "string",
-                    "default": "pep8",
-                    "description": "Path to pep8, you can use a custom version of pep8 by modifying this setting to include the full path.",
+                    "default": "pycodestyle",
+                    "description": "Path to pycodestyle, you can use a custom version of pycodestyle by modifying this setting to include the full path.",
                     "scope": "resource"
                 },
                 "python.linting.prospectorArgs": {

@@ -159,7 +159,7 @@ foo = 42  # Marked as a blacklisted name.
   - [ ] `Select linter` lists the linter and installs it if necessary
 - [ ] mypy works
   - [ ] `Select linter` lists the linter and installs it if necessary
-- [ ] pep8 works
+- [ ] pycodestyle works
   - [ ] `Select linter` lists the linter and installs it if necessary
 - [ ] prospector works
   - [ ] `Select linter` lists the linter and installs it if necessary

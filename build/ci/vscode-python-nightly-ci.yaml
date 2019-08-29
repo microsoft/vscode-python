@@ -1,6 +1,4 @@
 # Nightly build
-# Notes: Scheduled builds don't have a trigger in YAML (as of this writing).
-#        Trigger is set through the Azure DevOps UI `Nightly Build->Edit->...->Triggers`.
 
 name: '$(Year:yyyy).$(Month).0.$(BuildID)-alpha'
 
@@ -9,6 +7,16 @@ trigger: none
 
 # Not the PR build for merges to master and release.
 pr: none
+
+schedules:
+- cron: "0 0 * * 1-5"
+  # Daily midnight build, runs Monday - Friday always
+  displayName: Nightly build
+  branches:
+    include:
+    - master
+    - release
+  always: true
 
 # Variables that are available for the entire pipeline.
 variables:
