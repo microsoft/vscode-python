@@ -124,7 +124,7 @@ export class JupyterSession implements IJupyterSession {
                 oldSession.statusChanged.disconnect(oldStatusHandler);
             }
 
-            this.shutdownSession(oldSession, undefined);
+            this.shutdownSession(oldSession, undefined).ignoreErrors();
         } else {
             throw new Error(localize.DataScience.sessionDisposed());
         }
@@ -206,7 +206,7 @@ export class JupyterSession implements IJupyterSession {
                 traceInfo(`Error waiting for restart session: ${exc}`);
                 tryCount += 1;
                 if (result) {
-                    this.shutdownSession(result, undefined);
+                    this.shutdownSession(result, undefined).ignoreErrors();
                 }
                 result = undefined;
                 exception = exc;
