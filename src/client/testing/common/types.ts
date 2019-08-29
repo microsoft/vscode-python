@@ -290,6 +290,7 @@ export enum PassCalculationFormulae {
 
 export const IXUnitParser = Symbol('IXUnitParser');
 export interface IXUnitParser {
+    // Update "tests" with the results parsed from the given file.
     updateResultsFromXmlLogFile(tests: Tests, outputXmlFile: string, passCalculationFormulae: PassCalculationFormulae): Promise<void>;
 }
 

@@ -63,6 +63,7 @@ export class XUnitParser implements IXUnitParser {
     }
 }
 
+// Update "tests" with the results parsed from the given file.
 async function updateResultsFromXmlLogFile(
     fs: IFileSystem,
     tests: Tests,
