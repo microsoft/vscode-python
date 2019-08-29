@@ -12,6 +12,8 @@ import * as vscode from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { ProductNames } from '../../../client/common/installer/productNames';
+import { FileSystem } from '../../../client/common/platform/fileSystem';
+import { PlatformService } from '../../../client/common/platform/platformService';
 import { Product } from '../../../client/common/types';
 import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
@@ -99,6 +101,8 @@ async function getExpectedLocationStackFromTestDetails(testDetails: ITestDetails
 
 suite('Unit Tests - PyTest - TestMessageService', () => {
     let ioc: UnitTestIocContainer;
+    const platformService = new PlatformService();
+    const filesystem = new FileSystem(platformService);
     const configTarget = IS_MULTI_ROOT_TEST ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Workspace;
     suiteSetup(async () => {
         await initialize();
@@ -141,7 +145,7 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
                 const discoveredTest: DiscoveredTests[] = JSON.parse(discoveryOutput);
                 options.workspaceFolder = vscode.Uri.file(discoveredTest[0].root);
                 const parsedTests: Tests = parser.parse(options.workspaceFolder, discoveredTest);
-                const xUnitParser = new XUnitParser();
+                const xUnitParser = new XUnitParser(filesystem);
                 await xUnitParser.updateResultsFromXmlLogFile(parsedTests, path.join(PYTEST_RESULTS_PATH, scenario.runOutput), PassCalculationFormulae.pytest);
                 const testResultsService = new TestResultsService(testVisitor.object);
                 testResultsService.updateResults(parsedTests);

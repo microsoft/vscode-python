@@ -1,5 +1,5 @@
-import * as fs from 'fs';
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
+import { IFileSystem } from '../../common/platform/types';
 import { IXUnitParser, PassCalculationFormulae, Tests, TestStatus } from './types';
 
 type TestSuiteResult = {
@@ -45,12 +45,17 @@ function getSafeInt(value: string, defaultValue: any = 0): number {
 
 @injectable()
 export class XUnitParser implements IXUnitParser {
+    constructor(
+        @inject(IFileSystem) private readonly fs: IFileSystem
+    ) { }
+
     public updateResultsFromXmlLogFile(
         tests: Tests,
         outputXmlFile: string,
         passCalculationFormulae: PassCalculationFormulae
     ): Promise<void> {
         return updateResultsFromXmlLogFile(
+            this.fs,
             tests,
             outputXmlFile,
             passCalculationFormulae
@@ -58,104 +63,95 @@ export class XUnitParser implements IXUnitParser {
     }
 }
 
-function updateResultsFromXmlLogFile(
+async function updateResultsFromXmlLogFile(
+    fs: IFileSystem,
     tests: Tests,
     outputXmlFile: string,
     passCalculationFormulae: PassCalculationFormulae
-): Promise<void> {
-    // tslint:disable-next-line:no-any
-    return new Promise<any>((resolve, reject) => {
-        fs.readFile(outputXmlFile, 'utf8', (err, data) => {
-            if (err) {
-                return reject(err);
+) {
+    const data = await fs.readFile(outputXmlFile);
+
+    // tslint:disable-next-line:no-require-imports
+    const xml2js = require('xml2js');
+    xml2js.parseString(data, (error: Error, parserResult: { testsuite: TestSuiteResult }) => {
+        if (error) {
+            throw error;
+            //return reject(error);
+        }
+
+        const testSuiteResult: TestSuiteResult = parserResult.testsuite;
+        tests.summary.errors = getSafeInt(testSuiteResult.$.errors);
+        tests.summary.failures = getSafeInt(testSuiteResult.$.failures);
+        tests.summary.skipped = getSafeInt(testSuiteResult.$.skips ? testSuiteResult.$.skips : testSuiteResult.$.skip);
+        const testCount = getSafeInt(testSuiteResult.$.tests);
+
+        switch (passCalculationFormulae) {
+            case PassCalculationFormulae.pytest: {
+                tests.summary.passed = testCount - tests.summary.failures - tests.summary.skipped - tests.summary.errors;
+                break;
             }
-            // tslint:disable-next-line:no-require-imports
-            const xml2js = require('xml2js');
-            xml2js.parseString(data, (error: Error, parserResult: { testsuite: TestSuiteResult }) => {
-                if (error) {
-                    return reject(error);
+            case PassCalculationFormulae.nosetests: {
+                tests.summary.passed = testCount - tests.summary.failures - tests.summary.skipped - tests.summary.errors;
+                break;
+            }
+            default: {
+                throw new Error('Unknown Test Pass Calculation');
+            }
+        }
+
+        if (!Array.isArray(testSuiteResult.testcase)) {
+            return;
+        }
+
+        testSuiteResult.testcase.forEach((testcase: TestCaseResult) => {
+            const xmlClassName = testcase.$.classname.replace(/\(\)/g, '').replace(/\.\./g, '.').replace(/\.\./g, '.').replace(/\.+$/, '');
+            const result = tests.testFunctions.find(fn => fn.xmlClassName === xmlClassName && fn.testFunction.name === testcase.$.name);
+            if (!result) {
+                // Possible we're dealing with nosetests, where the file name isn't returned to us
+                // When dealing with nose tests
+                // It is possible to have a test file named x in two separate test sub directories and have same functions/classes
+                // And unforutnately xunit log doesn't ouput the filename
+
+                // result = tests.testFunctions.find(fn => fn.testFunction.name === testcase.$.name &&
+                //     fn.parentTestSuite && fn.parentTestSuite.name === testcase.$.classname);
+
+                // Look for failed file test
+                const fileTest = testcase.$.file && tests.testFiles.find(file => file.nameToRun === testcase.$.file);
+                if (fileTest && testcase.error) {
+                    fileTest.status = TestStatus.Error;
+                    fileTest.passed = false;
+                    fileTest.message = testcase.error[0].$.message;
+                    fileTest.traceback = testcase.error[0]._;
                 }
-                try {
-                    const testSuiteResult: TestSuiteResult = parserResult.testsuite;
-                    tests.summary.errors = getSafeInt(testSuiteResult.$.errors);
-                    tests.summary.failures = getSafeInt(testSuiteResult.$.failures);
-                    tests.summary.skipped = getSafeInt(testSuiteResult.$.skips ? testSuiteResult.$.skips : testSuiteResult.$.skip);
-                    const testCount = getSafeInt(testSuiteResult.$.tests);
+                return;
+            }
 
-                    switch (passCalculationFormulae) {
-                        case PassCalculationFormulae.pytest: {
-                            tests.summary.passed = testCount - tests.summary.failures - tests.summary.skipped - tests.summary.errors;
-                            break;
-                        }
-                        case PassCalculationFormulae.nosetests: {
-                            tests.summary.passed = testCount - tests.summary.failures - tests.summary.skipped - tests.summary.errors;
-                            break;
-                        }
-                        default: {
-                            throw new Error('Unknown Test Pass Calculation');
-                        }
-                    }
+            result.testFunction.line = getSafeInt(testcase.$.line, null);
+            result.testFunction.file = testcase.$.file;
+            result.testFunction.time = parseFloat(testcase.$.time);
+            result.testFunction.passed = true;
+            result.testFunction.status = TestStatus.Pass;
 
-                    if (!Array.isArray(testSuiteResult.testcase)) {
-                        return resolve();
-                    }
+            if (testcase.failure) {
+                result.testFunction.status = TestStatus.Fail;
+                result.testFunction.passed = false;
+                result.testFunction.message = testcase.failure[0].$.message;
+                result.testFunction.traceback = testcase.failure[0]._;
+            }
 
-                    testSuiteResult.testcase.forEach((testcase: TestCaseResult) => {
-                        const xmlClassName = testcase.$.classname.replace(/\(\)/g, '').replace(/\.\./g, '.').replace(/\.\./g, '.').replace(/\.+$/, '');
-                        const result = tests.testFunctions.find(fn => fn.xmlClassName === xmlClassName && fn.testFunction.name === testcase.$.name);
-                        if (!result) {
-                            // Possible we're dealing with nosetests, where the file name isn't returned to us
-                            // When dealing with nose tests
-                            // It is possible to have a test file named x in two separate test sub directories and have same functions/classes
-                            // And unforutnately xunit log doesn't ouput the filename
+            if (testcase.error) {
+                result.testFunction.status = TestStatus.Error;
+                result.testFunction.passed = false;
+                result.testFunction.message = testcase.error[0].$.message;
+                result.testFunction.traceback = testcase.error[0]._;
+            }
 
-                            // result = tests.testFunctions.find(fn => fn.testFunction.name === testcase.$.name &&
-                            //     fn.parentTestSuite && fn.parentTestSuite.name === testcase.$.classname);
-
-                            // Look for failed file test
-                            const fileTest = testcase.$.file && tests.testFiles.find(file => file.nameToRun === testcase.$.file);
-                            if (fileTest && testcase.error) {
-                                fileTest.status = TestStatus.Error;
-                                fileTest.passed = false;
-                                fileTest.message = testcase.error[0].$.message;
-                                fileTest.traceback = testcase.error[0]._;
-                            }
-                            return;
-                        }
-
-                        result.testFunction.line = getSafeInt(testcase.$.line, null);
-                        result.testFunction.file = testcase.$.file;
-                        result.testFunction.time = parseFloat(testcase.$.time);
-                        result.testFunction.passed = true;
-                        result.testFunction.status = TestStatus.Pass;
-
-                        if (testcase.failure) {
-                            result.testFunction.status = TestStatus.Fail;
-                            result.testFunction.passed = false;
-                            result.testFunction.message = testcase.failure[0].$.message;
-                            result.testFunction.traceback = testcase.failure[0]._;
-                        }
-
-                        if (testcase.error) {
-                            result.testFunction.status = TestStatus.Error;
-                            result.testFunction.passed = false;
-                            result.testFunction.message = testcase.error[0].$.message;
-                            result.testFunction.traceback = testcase.error[0]._;
-                        }
-
-                        if (testcase.skipped) {
-                            result.testFunction.status = TestStatus.Skipped;
-                            result.testFunction.passed = undefined;
-                            result.testFunction.message = testcase.skipped[0].$.message;
-                            result.testFunction.traceback = '';
-                        }
-                    });
-                } catch (ex) {
-                    return reject(ex);
-                }
-
-                resolve();
-            });
+            if (testcase.skipped) {
+                result.testFunction.status = TestStatus.Skipped;
+                result.testFunction.passed = undefined;
+                result.testFunction.message = testcase.skipped[0].$.message;
+                result.testFunction.traceback = '';
+            }
         });
     });
 }
