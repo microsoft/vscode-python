@@ -35,7 +35,7 @@ def install_ptvsd():
         # Download only if it's a 3.7 wheel.
         if not wheel_info["python_version"].endswith(("37", "3.7")):
             continue
-        filename = wheel_info["filename"].rpartition(".")[0]  # Trim the file extension
+        filename = wheel_info["filename"].rpartition(".")[0]  # Trim the file extension.
         ptvsd_path = path.join(PYTHONFILES_PATH, filename)
 
         with urllib.request.urlopen(wheel_info["url"]) as wheel_response:
