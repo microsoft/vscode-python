@@ -5,13 +5,13 @@ import json
 import urllib.request
 import sys
 
-ROOT_DIRNAME = path.dirname(path.dirname(path.dirname(path.abspath(__file__))))
+ROOT_DIRNAME = path.dirname(path.dirname(path.abspath(__file__)))
 REQUIREMENTS_PATH = path.join(ROOT_DIRNAME, "requirements.txt")
 PYTHONFILES_PATH = path.join(ROOT_DIRNAME, "pythonFiles", "lib", "python")
 PYPI_PTVSD_URL = "https://pypi.org/pypi/ptvsd/json"
 
 # If we are in CI use the packaging module installed in PYTHONFILES_PATH.
-if sys.argv[1] == "--ci":
+if len(sys.argv) == 2 and sys.argv[1] == "--ci":
     sys.path.insert(0, PYTHONFILES_PATH)
 from packaging.requirements import Requirement
 

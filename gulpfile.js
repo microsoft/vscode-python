@@ -254,6 +254,22 @@ gulp.task('installPythonRequirements', async () => {
     );
 });
 
+// Install new PTVSD wheels for python 3.7
+// See https://github.com/microsoft/vscode-python/issues/7136
+gulp.task('installPtvsdWheels', async () => {
+    const args = ['./pythonFiles/install_ptvsd.py']
+    const success = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args)
+        .then(() => true)
+        .catch(ex => {
+            console.error("Failed to install new PTVSD wheels using 'python3'", ex);
+            return false;
+        });
+    if (!success) {
+        console.info("Failed to install new PTVSD wheels using 'python3', attempting to install using 'python'");
+        await spawnAsync('python', args.concat(requirement)).catch(ex => console.error("Failed to install PTVSD 5.0 wheels using 'python'", ex));
+    }
+});
+
 // Install the last stable version of old PTVSD (which includes a middle layer adapter and requires ptvsd_launcher.py)
 // until all users have migrated to the new debug adapter + new PTVSD (specified in requirements.txt)
 // See https://github.com/microsoft/vscode-python/issues/7136
@@ -271,7 +287,7 @@ gulp.task('installOldPtvsd', async () => {
     }
 });
 
-gulp.task('installPythonLibs', gulp.series('installPythonRequirements', 'installOldPtvsd'));
+gulp.task('installPythonLibs', gulp.series('installPythonRequirements', 'installOldPtvsd', 'installPtvsdWheels'));
 
 function uploadExtension(uploadBlobName) {
     const azure = require('gulp-azure-storage');
