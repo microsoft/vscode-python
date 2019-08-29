@@ -17,8 +17,8 @@ import { Flake8 } from './flake8';
 import { LinterInfo, PylintLinterInfo } from './linterInfo';
 import { MyPy } from './mypy';
 import { Prospector } from './prospector';
-import { PyDocStyle } from './pydocstyle';
 import { Pycodestyle } from './pycodestyle';
+import { PyDocStyle } from './pydocstyle';
 import { PyLama } from './pylama';
 import { Pylint } from './pylint';
 import {
