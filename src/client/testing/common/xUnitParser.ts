@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import { injectable } from 'inversify';
 import { IXUnitParser, PassCalculationFormulae, Tests, TestStatus } from './types';
+
 type TestSuiteResult = {
     $: {
         errors: string;
@@ -44,11 +45,24 @@ function getSafeInt(value: string, defaultValue: any = 0): number {
 
 @injectable()
 export class XUnitParser implements IXUnitParser {
-    public updateResultsFromXmlLogFile(tests: Tests, outputXmlFile: string, passCalculationFormulae: PassCalculationFormulae): Promise<void> {
-        return updateResultsFromXmlLogFile(tests, outputXmlFile, passCalculationFormulae);
+    public updateResultsFromXmlLogFile(
+        tests: Tests,
+        outputXmlFile: string,
+        passCalculationFormulae: PassCalculationFormulae
+    ): Promise<void> {
+        return updateResultsFromXmlLogFile(
+            tests,
+            outputXmlFile,
+            passCalculationFormulae
+        );
     }
 }
-export function updateResultsFromXmlLogFile(tests: Tests, outputXmlFile: string, passCalculationFormulae: PassCalculationFormulae): Promise<void> {
+
+function updateResultsFromXmlLogFile(
+    tests: Tests,
+    outputXmlFile: string,
+    passCalculationFormulae: PassCalculationFormulae
+): Promise<void> {
     // tslint:disable-next-line:no-any
     return new Promise<any>((resolve, reject) => {
         fs.readFile(outputXmlFile, 'utf8', (err, data) => {
