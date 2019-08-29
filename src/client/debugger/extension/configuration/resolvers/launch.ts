@@ -21,11 +21,11 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IDocumentManager) documentManager: IDocumentManager,
         @inject(IDiagnosticsService) @named(InvalidPythonPathInDebuggerServiceId) private readonly invalidPythonPathInDebuggerService: IInvalidPythonPathInDebuggerService,
-        @inject(IPlatformService) private readonly platformService: IPlatformService,
+        @inject(IPlatformService) platformService: IPlatformService,
         @inject(IConfigurationService) configurationService: IConfigurationService,
         @inject(IDebugEnvironmentVariablesService) private readonly debugEnvHelper: IDebugEnvironmentVariablesService
     ) {
-        super(workspaceService, documentManager, configurationService);
+        super(workspaceService, documentManager, platformService, configurationService);
     }
     public async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: LaunchRequestArguments, _token?: CancellationToken): Promise<LaunchRequestArguments | undefined> {
         const workspaceFolder = this.getWorkspaceFolder(folder);
@@ -122,6 +122,20 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             && debugOptions.indexOf(DebugOptions.Jinja) === -1
             && debugConfiguration.jinja !== false) {
             this.debugOption(debugOptions, DebugOptions.Jinja);
+        }
+        // Unlike with attach, we do not set a default path mapping.
+        // (See: https://github.com/microsoft/vscode-python/issues/3568)
+        if (debugConfiguration.pathMappings) {
+            let pathMappings = debugConfiguration.pathMappings;
+            if (pathMappings.length > 0) {
+                pathMappings = this.fixUpPathMappings(
+                    pathMappings || [],
+                    workspaceFolder ? workspaceFolder.fsPath : ''
+                );
+            }
+            debugConfiguration.pathMappings = pathMappings.length > 0
+                ? pathMappings
+                : undefined;
         }
         this.sendTelemetry(
             debugConfiguration.request as 'launch' | 'test',

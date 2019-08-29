@@ -7,6 +7,7 @@ import {
     CancellationToken,
     CompletionItemProvider,
     ConfigurationChangeEvent,
+    DebugAdapterDescriptorFactory,
     DebugAdapterTrackerFactory,
     DebugConfiguration,
     DebugConfigurationProvider,
@@ -772,6 +773,17 @@ export interface IDebugService {
      * @return A [disposable](#Disposable) that unregisters this provider when being disposed.
      */
     registerDebugConfigurationProvider(debugType: string, provider: DebugConfigurationProvider): Disposable;
+
+    /**
+     * Register a [debug adapter descriptor factory](#DebugAdapterDescriptorFactory) for a specific debug type.
+     * An extension is only allowed to register a DebugAdapterDescriptorFactory for the debug type(s) defined by the extension. Otherwise an error is thrown.
+     * Registering more than one DebugAdapterDescriptorFactory for a debug type results in an error.
+     *
+     * @param debugType The debug type for which the factory is registered.
+     * @param factory The [debug adapter descriptor factory](#DebugAdapterDescriptorFactory) to register.
+     * @return A [disposable](#Disposable) that unregisters this factory when being disposed.
+     */
+    registerDebugAdapterDescriptorFactory(debugType: string, factory: DebugAdapterDescriptorFactory): Disposable;
 
     /**
      * Register a debug adapter tracker factory for the given debug type.

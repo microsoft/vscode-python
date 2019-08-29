@@ -145,6 +145,7 @@ export interface ICurrentProcess {
     on(event: string | symbol, listener: Function): this;
 }
 
+export type LanguageServerType = 'jedi' | 'microsoft' | 'none';
 export interface IPythonSettings {
     readonly pythonPath: string;
     readonly venvPath: string;
@@ -154,7 +155,7 @@ export interface IPythonSettings {
     readonly poetryPath: string;
     readonly insidersChannel: ExtensionChannels;
     readonly downloadLanguageServer: boolean;
-    readonly jediEnabled: boolean;
+    readonly languageServer: LanguageServerType;
     readonly jediPath: string;
     readonly jediMemoryLimit: number;
     readonly devOptions: string[];
@@ -341,6 +342,8 @@ export interface IDataScienceSettings {
     colorizeInputBox?: boolean;
     addGotoCodeLenses?: boolean;
     autoOpenNotebooks?: boolean;
+    runMagicCommands: string;
+    debugJustMyCode: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

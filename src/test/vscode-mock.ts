@@ -79,6 +79,8 @@ mockedVSCode.TextEditorRevealType = vscodeMocks.vscMockExtHostedTypes.TextEditor
 mockedVSCode.TreeItem = vscodeMocks.vscMockExtHostedTypes.TreeItem;
 mockedVSCode.TreeItemCollapsibleState = vscodeMocks.vscMockExtHostedTypes.TreeItemCollapsibleState;
 mockedVSCode.CodeActionKind = vscodeMocks.vscMock.CodeActionKind;
+mockedVSCode.DebugAdapterExecutable = vscodeMocks.vscMock.DebugAdapterExecutable;
+mockedVSCode.DebugAdapterServer = vscodeMocks.vscMock.DebugAdapterServer;
 
 // This API is used in src/client/telemetry/telemetry.ts
 const extensions = TypeMoq.Mock.ofType<typeof vscode.extensions>();

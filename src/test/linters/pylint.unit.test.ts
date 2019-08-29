@@ -258,7 +258,7 @@ suite('Pylint - Function hasConfigurationFileInWorkspace()', () => {
                 .verifiable(TypeMoq.Times.once());
         });
 
-        const hasConfig = await Pylint.hasConfigrationFileInWorkspace(fileSystem.object, folder, root);
+        const hasConfig = await Pylint.hasConfigurationFileInWorkspace(fileSystem.object, folder, root);
         expect(hasConfig).to.equal(false, 'Should return false');
         fileSystem.verifyAll();
     });
@@ -302,7 +302,7 @@ suite('Pylint - Function hasConfigurationFileInWorkspace()', () => {
                 .returns(() => Promise.resolve(false))
                 .verifiable(TypeMoq.Times.never());
 
-            const hasConfig = await Pylint.hasConfigrationFileInWorkspace(fileSystem.object, folder, root);
+            const hasConfig = await Pylint.hasConfigurationFileInWorkspace(fileSystem.object, folder, root);
             expect(hasConfig).to.equal(true, 'Should return true');
             fileSystem.verifyAll();
         });
@@ -349,7 +349,7 @@ suite('Pylint - Function runLinter()', () => {
         '--output-format=text',
         doc.uri.fsPath
     ];
-    const original_hasConfigrationFileInWorkspace = Pylint.hasConfigrationFileInWorkspace;
+    const original_hasConfigurationFileInWorkspace = Pylint.hasConfigurationFileInWorkspace;
     const original_hasConfigurationFile = Pylint.hasConfigurationFile;
 
     class PylintTest extends Pylint {
@@ -404,7 +404,7 @@ suite('Pylint - Function runLinter()', () => {
     });
 
     teardown(() => {
-        Pylint.hasConfigrationFileInWorkspace = original_hasConfigrationFileInWorkspace;
+        Pylint.hasConfigurationFileInWorkspace = original_hasConfigurationFileInWorkspace;
         Pylint.hasConfigurationFile = original_hasConfigurationFile;
         sinon.restore();
     });
@@ -421,7 +421,7 @@ suite('Pylint - Function runLinter()', () => {
         _info
             .setup(info => info.linterArgs(doc.uri))
             .returns(() => []);
-        Pylint.hasConfigrationFileInWorkspace = () => Promise.resolve(false);
+        Pylint.hasConfigurationFileInWorkspace = () => Promise.resolve(false);
         Pylint.hasConfigurationFile = () => Promise.resolve(false);
         run = sinon.stub(PylintTest.prototype, 'run');
         run.callsFake(() => Promise.resolve([]));
@@ -446,7 +446,7 @@ suite('Pylint - Function runLinter()', () => {
         _info
             .setup(info => info.linterArgs(doc.uri))
             .returns(() => []);
-        Pylint.hasConfigrationFileInWorkspace = () => Promise.resolve(false);
+        Pylint.hasConfigurationFileInWorkspace = () => Promise.resolve(false);
         Pylint.hasConfigurationFile = () => Promise.resolve(false);
         run = sinon.stub(PylintTest.prototype, 'run');
         run.callsFake(() => Promise.resolve([]));
@@ -471,7 +471,7 @@ suite('Pylint - Function runLinter()', () => {
         _info
             .setup(info => info.linterArgs(doc.uri))
             .returns(() => ['customArg1', 'customArg2']);
-        Pylint.hasConfigrationFileInWorkspace = () => Promise.resolve(false);
+        Pylint.hasConfigurationFileInWorkspace = () => Promise.resolve(false);
         Pylint.hasConfigurationFile = () => Promise.resolve(false);
         run = sinon.stub(PylintTest.prototype, 'run');
         run.callsFake(() => Promise.resolve([]));
@@ -484,7 +484,7 @@ suite('Pylint - Function runLinter()', () => {
         assert.ok(run.calledOnce);
     });
 
-    test('Do not use minimal checkers if there is a pylintrc file in the current working directory or when traversing the workspace up to its root (hasConfigrationFileInWorkspace() returns true)', async () => {
+    test('Do not use minimal checkers if there is a pylintrc file in the current working directory or when traversing the workspace up to its root (hasConfigurationFileInWorkspace() returns true)', async () => {
         const settings = {
             linting: {
                 pylintUseMinimalCheckers: true
@@ -496,7 +496,7 @@ suite('Pylint - Function runLinter()', () => {
         _info
             .setup(info => info.linterArgs(doc.uri))
             .returns(() => []);
-        Pylint.hasConfigrationFileInWorkspace = () => Promise.resolve(true); // This implies method hasConfigrationFileInWorkspace() returns true
+        Pylint.hasConfigurationFileInWorkspace = () => Promise.resolve(true); // This implies method hasConfigurationFileInWorkspace() returns true
         Pylint.hasConfigurationFile = () => Promise.resolve(false);
         run = sinon.stub(PylintTest.prototype, 'run');
         run.callsFake(() => Promise.resolve([]));
@@ -521,7 +521,7 @@ suite('Pylint - Function runLinter()', () => {
         _info
             .setup(info => info.linterArgs(doc.uri))
             .returns(() => []);
-        Pylint.hasConfigrationFileInWorkspace = () => Promise.resolve(false);
+        Pylint.hasConfigurationFileInWorkspace = () => Promise.resolve(false);
         Pylint.hasConfigurationFile = () => Promise.resolve(true);   // This implies method hasConfigurationFile() returns true
         run = sinon.stub(PylintTest.prototype, 'run');
         run.callsFake(() => Promise.resolve([]));
@@ -553,7 +553,7 @@ suite('Pylint - Function runLinter()', () => {
         _info
             .setup(info => info.linterArgs(doc.uri))
             .returns(() => []);
-        Pylint.hasConfigrationFileInWorkspace = () => Promise.resolve(false);
+        Pylint.hasConfigurationFileInWorkspace = () => Promise.resolve(false);
         Pylint.hasConfigurationFile = () => Promise.resolve(false);
         run = sinon.stub(PylintTest.prototype, 'run');
         run.callsFake(() => Promise.resolve(message as any));

@@ -122,6 +122,8 @@ export function verifyHtmlOnCell(wrapper: ReactWrapper<any, Readonly<{}>, React.
     // ! is ok here to get rid of undefined type check as we want a fail here if we have not initialized targetCell
     assert.ok(targetCell!, 'Target cell doesn\'t exist');
 
+    targetCell!.instance().forceUpdate();
+
     // If html is specified, check it
     if (html) {
         // Extract only the first 100 chars from the input string
@@ -182,7 +184,7 @@ export async function getCellResults(wrapper: ReactWrapper<any, Readonly<{}>, Re
     return wrapper.find('Cell');
 }
 
-export async function addCode(interactiveWindowProvider: () => Promise<IInteractiveWindow>, wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string, expectedRenderCount: number = 4, expectError: boolean = false): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
+export async function addCode(interactiveWindowProvider: () => Promise<IInteractiveWindow>, wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string, expectedRenderCount: number = 3, expectError: boolean = false): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
     // Adding code should cause 5 renders to happen.
     // 1) Input
     // 2) Status ready
@@ -237,7 +239,7 @@ function simulateKey(domNode: HTMLTextAreaElement, key: string, shiftDown?: bool
 async function submitInput(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, textArea: HTMLTextAreaElement): Promise<void> {
     // Get a render promise with the expected number of renders (how many updates a the shift + enter will cause)
     // Should be 6 - 1 for the shift+enter and 5 for the new cell.
-    const renderPromise = waitForUpdate(wrapper, InteractivePanel, 6);
+    const renderPromise = waitForUpdate(wrapper, InteractivePanel, 3);
 
     // Submit a keypress into the textarea
     simulateKey(textArea, '\n', true);
@@ -323,7 +325,9 @@ export function defaultDataScienceSettings(): IDataScienceSettings {
         variableExplorerExclude: 'module;function;builtin_function_or_method',
         codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
         markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
-        enablePlotViewer: true
+        enablePlotViewer: true,
+        runMagicCommands: '',
+        debugJustMyCode: true
     };
 }
 
