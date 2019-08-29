@@ -30,7 +30,6 @@ import { IChildProcessAttachService, IDebugSessionEventHandlers } from '../../..
 import { registerTypes } from '../../../client/debugger/extension/serviceRegistry';
 import {
     DebugConfigurationType,
-    ExtensionSingleActivationServiceType,
     IDebugAdapterDescriptorFactory,
     IDebugConfigurationProvider,
     IDebugConfigurationService,
@@ -46,9 +45,6 @@ suite('Debugging - Service Registry', () => {
             [IDebugConfigurationService, PythonDebugConfigurationService],
             [IDebuggerBanner, DebuggerBanner],
             [IChildProcessAttachService, ChildProcessAttachService],
-            [IExtensionSingleActivationService, LaunchJsonCompletionProvider, ExtensionSingleActivationServiceType.jsonCompletionProvider],
-            [IExtensionSingleActivationService, LaunchJsonUpdaterService, ExtensionSingleActivationServiceType.jsonUpdaterService],
-            [IExtensionSingleActivationService, DebugAdapterActivator, ExtensionSingleActivationServiceType.debugAdapterActivator],
             [IDebugAdapterDescriptorFactory, DebugAdapterDescriptorFactory],
             [IDebugSessionEventHandlers, ChildProcessAttachEventHandler],
             [IDebugConfigurationResolver, LaunchConfigurationResolver, 'launch'],
@@ -73,6 +69,8 @@ suite('Debugging - Service Registry', () => {
                     .verifiable(typemoq.Times.once());
             }
         });
+
+        // IExtensionSingleActivationService is a special case
 
         registerTypes(serviceManager.object);
         serviceManager.verifyAll();

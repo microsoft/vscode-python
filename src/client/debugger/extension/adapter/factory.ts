@@ -4,11 +4,14 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import * as path from 'path';
 import { DebugAdapterDescriptor, DebugAdapterExecutable, DebugSession, WorkspaceFolder } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
 import { DebugAdapterNewPtvsd } from '../../../common/experimentGroups';
 import { traceVerbose } from '../../../common/logger';
+import { ExecutionResult, IPythonExecutionFactory } from '../../../common/process/types';
 import { IExperimentsManager } from '../../../common/types';
+import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { AttachRequestArguments, LaunchRequestArguments } from '../../types';
 import { IDebugAdapterDescriptorFactory } from '../types';
@@ -18,7 +21,8 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
     constructor(
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager
+        @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager,
+        @inject(IPythonExecutionFactory) private readonly executionFactory: IPythonExecutionFactory
     ) {}
     public async createDebugAdapterDescriptor(session: DebugSession, executable: DebugAdapterExecutable | undefined): Promise<DebugAdapterDescriptor> {
         const configuration = session.configuration as (LaunchRequestArguments | AttachRequestArguments);
@@ -26,16 +30,15 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
         const interpreterInfo = await this.interpreterService.getInterpreterDetails(pythonPath);
 
         if (interpreterInfo && interpreterInfo.version && interpreterInfo.version.raw.startsWith('3.7') && this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
-            traceVerbose('Compute and return the path to the correct PTVSD folder (use packaging module)');
-            // const ptvsdPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'ptvsd');
-            // // tslint:disable-next-line: no-any
-            // const ptvsdPathToUse = 'ptvsd' in configuration ? (configuration as any).ptvsd : ptvsdPath;
-            // traceVerbose(`Using Python Debug Adapter with PTVSD ${ptvsdPathToUse}`);
-            // return new DebugAdapterExecutable(pythonPath, [path.join(ptvsdPathToUse, 'adapter'), ...logArgs]);
-            return new DebugAdapterExecutable(pythonPath);
+            const ptvsdPathToUse = await this.getPtvsdFolder(pythonPath).then(output => output.stdout.trim());
+            // If logToFile is set in the debug config then pass --log-dir <path-to-extension-dir> when launching the debug adapter.
+            const logArgs = configuration.logToFile ? ['--log-dir', EXTENSION_ROOT_DIR] : [];
+
+            return new DebugAdapterExecutable(`${pythonPath}`, [path.join(ptvsdPathToUse, 'adapter'), ...logArgs]);
         }
+
+        // Use the Node debug adapter (and ptvsd_launcher.py)
         if (executable) {
-            traceVerbose('Using Node Debug Adapter');
             return executable;
         }
         // Unlikely scenario.
@@ -83,5 +86,20 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
     private async notifySelectInterpreter() {
         // tslint:disable-next-line: messages-must-be-localized
         await this.appShell.showErrorMessage('Please install Python or select a Python Interpereter to use the debugger.');
+    }
+
+    /**
+     * Return the folder name for the bundled PTVSD wheel compatible with the new debug adapter.
+     *
+     * @private
+     * @param {string} pythonPath Path to the python executable used to launch the Python Debug Adapter (result of `this.getPythonPath()`)
+     * @returns {Promise<ExecutionResult<string>>}
+     * @memberof DebugAdapterDescriptorFactory
+     */
+    private async getPtvsdFolder(pythonPath: string): Promise<ExecutionResult<string>> {
+        const pathToScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'ptvsd_folder_name.py');
+
+        const pythonProcess = await this.executionFactory.create({ pythonPath });
+        return pythonProcess.exec([pathToScript], {});
     }
 }

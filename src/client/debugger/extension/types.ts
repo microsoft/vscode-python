@@ -35,11 +35,5 @@ export enum PythonPathSource {
     settingsJson = 'settings.json'
 }
 
-export enum ExtensionSingleActivationServiceType {
-    jsonCompletionProvider = 'jsonCompletionProvider',
-    jsonUpdaterService = 'jsonUpdaterService',
-    debugAdapterActivator = 'debugAdapterActivator'
-}
-
 export const IDebugAdapterDescriptorFactory = Symbol('IDebugAdapterDescriptorFactory');
 export interface IDebugAdapterDescriptorFactory extends DebugAdapterDescriptorFactory {}

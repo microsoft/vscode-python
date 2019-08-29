@@ -14,6 +14,8 @@ import { ApplicationShell } from '../../../../client/common/application/applicat
 import { IApplicationShell } from '../../../../client/common/application/types';
 import { DebugAdapterNewPtvsd } from '../../../../client/common/experimentGroups';
 import { ExperimentsManager } from '../../../../client/common/experiments';
+import { PythonExecutionFactory } from '../../../../client/common/process/pythonExecutionFactory';
+import { IPythonExecutionFactory } from '../../../../client/common/process/types';
 import { IExperimentsManager } from '../../../../client/common/types';
 import { Architecture } from '../../../../client/common/utils/platform';
 import { DebugAdapterDescriptorFactory } from '../../../../client/debugger/extension/adapter/factory';
@@ -28,6 +30,7 @@ suite('Debugging - Adapter Factory', () => {
     let interpreterService: IInterpreterService;
     let appShell: IApplicationShell;
     let experimentsManager: IExperimentsManager;
+    let executionFactory: IPythonExecutionFactory;
     const nodeExecutable = { command: 'node', args: [] };
 
     setup(() => {
@@ -43,7 +46,8 @@ suite('Debugging - Adapter Factory', () => {
         appShell = mock(ApplicationShell);
         appShell = mock(ApplicationShell);
         experimentsManager = mock(ExperimentsManager);
-        factory = new DebugAdapterDescriptorFactory(instance(interpreterService), instance(appShell), instance(experimentsManager));
+        executionFactory = mock(PythonExecutionFactory);
+        factory = new DebugAdapterDescriptorFactory(instance(interpreterService), instance(appShell), instance(experimentsManager), instance(executionFactory));
     });
 
     function createSession(config: Partial<DebugConfiguration>, workspaceFolder?: WorkspaceFolder): DebugSession {
