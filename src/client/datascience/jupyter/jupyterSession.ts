@@ -34,6 +34,8 @@ import { JupyterKernelPromiseFailedError } from './jupyterKernelPromiseFailedErr
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 import { createJupyterWebSocket } from './jupyterWebSocket';
 
+export const internalUseCellKey: string = "####vscode-python-datascience-internal####";
+
 export class JupyterSession implements IJupyterSession {
     private connInfo: IConnection | undefined;
     private kernelSpec: IJupyterKernelSpec | undefined;

@@ -13,6 +13,7 @@ import { Common } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { CellMatcher } from '../cellMatcher';
 import { concatMultilineString } from '../common';
+import { internalUseCellKey } from '../jupyter/jupyterSession';
 import { CellState, ICell as IVscCell, IGatherExecution, INotebookExecutionLogger } from '../types';
 
 /**
@@ -60,7 +61,9 @@ export class GatherExecution implements IGatherExecution, INotebookExecutionLogg
                 const cell = convertVscToGatherCell(vscCell) as LabCell;
 
                 // Call internal logging method
-                this._executionSlicer.logExecution(cell);
+                if (!vscCell.data.source.startsWith(internalUseCellKey)) {
+                    this._executionSlicer.logExecution(cell);
+                }
             }
         }
     }
