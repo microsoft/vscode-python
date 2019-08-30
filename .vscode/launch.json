@@ -145,6 +145,7 @@
                 "--recursive",
                 "--colors",
                 //"--grep", "<suite name>",
+                "--grep", "Jupyter Execution",
                 "--timeout=300000"
             ],
             "outFiles": [
