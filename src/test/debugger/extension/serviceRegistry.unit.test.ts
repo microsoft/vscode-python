@@ -46,6 +46,9 @@ suite('Debugging - Service Registry', () => {
             [IDebuggerBanner, DebuggerBanner],
             [IChildProcessAttachService, ChildProcessAttachService],
             [IDebugAdapterDescriptorFactory, DebugAdapterDescriptorFactory],
+            [IExtensionSingleActivationService, LaunchJsonCompletionProvider],
+            [IExtensionSingleActivationService, LaunchJsonUpdaterService],
+            [IExtensionSingleActivationService, DebugAdapterActivator],
             [IDebugSessionEventHandlers, ChildProcessAttachEventHandler],
             [IDebugConfigurationResolver, LaunchConfigurationResolver, 'launch'],
             [IDebugConfigurationResolver, AttachConfigurationResolver, 'attach'],
@@ -59,18 +62,16 @@ suite('Debugging - Service Registry', () => {
         ].forEach(mapping => {
             if (mapping.length === 2) {
                 serviceManager
-                    .setup(s => s.addSingleton(typemoq.It.isValue(mapping[0] as any), typemoq.It.isAny()))
+                    .setup(s => s.addSingleton(mapping[0] as any, mapping[1] as any))
                     .callback((_, cls) => expect(cls).to.equal(mapping[1]))
                     .verifiable(typemoq.Times.once());
             } else {
                 serviceManager
-                    .setup(s => s.addSingleton(typemoq.It.isValue(mapping[0] as any), typemoq.It.isAny(), typemoq.It.isValue(mapping[2] as any)))
+                    .setup(s => s.addSingleton(mapping[0] as any, mapping[1] as any, mapping[2] as any))
                     .callback((_, cls) => expect(cls).to.equal(mapping[1]))
                     .verifiable(typemoq.Times.once());
             }
         });
-
-        // IExtensionSingleActivationService is a special case
 
         registerTypes(serviceManager.object);
         serviceManager.verifyAll();
