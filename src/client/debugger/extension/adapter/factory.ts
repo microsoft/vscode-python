@@ -34,7 +34,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
             // If logToFile is set in the debug config then pass --log-dir <path-to-extension-dir> when launching the debug adapter.
             const logArgs = configuration.logToFile ? ['--log-dir', EXTENSION_ROOT_DIR] : [];
 
-            return new DebugAdapterExecutable(`${pythonPath}`, [path.join(ptvsdPathToUse, 'adapter'), ...logArgs]);
+            return new DebugAdapterExecutable(`${pythonPath}`, [path.join(ptvsdPathToUse, 'ptvsd', 'adapter'), ...logArgs]);
         }
 
         // Use the Node debug adapter (and ptvsd_launcher.py)
