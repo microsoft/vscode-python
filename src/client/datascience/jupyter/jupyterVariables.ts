@@ -78,7 +78,7 @@ export class JupyterVariables implements IJupyterVariables {
     // Load our python files for fetching variables
     private async loadVariableFiles(): Promise<void> {
         let file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getJupyterVariableList.py');
-        this.fetchVariablesScript = await this.fileSystem.readFile(file)
+        this.fetchVariablesScript = await this.fileSystem.readFile(file);
 
         file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getJupyterVariableValue.py');
         this.fetchVariableValueScript = await this.fileSystem.readFile(file);
