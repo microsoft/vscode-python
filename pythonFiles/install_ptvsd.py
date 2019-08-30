@@ -40,7 +40,8 @@ def install_ptvsd():
 
         with urllib.request.urlopen(wheel_info["url"]) as wheel_response:
             wheel_file = BytesIO(wheel_response.read())
-        # Extract only the contents of the purelib subfolder (parent folder of ptvsd).
+        # Extract only the contents of the purelib subfolder (parent folder of ptvsd),
+        # since ptvsd files rely on the presence of a 'ptvsd' folder.
         prefix = path.join(f"ptvsd-{ptvsd_version}.data", "purelib")
 
         with ZipFile(wheel_file, "r") as wheel:
