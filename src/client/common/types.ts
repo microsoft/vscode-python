@@ -341,7 +341,7 @@ export interface IDataScienceSettings {
     remoteDebuggerPort?: number;
     colorizeInputBox?: boolean;
     addGotoCodeLenses?: boolean;
-    runMagicCommands: string;
+    runStartupCommands: string;
     debugJustMyCode: boolean;
 }
 

@@ -149,8 +149,8 @@ export class InteractiveWindow extends WebViewHost<IInteractiveWindowMapping> im
         this.loadPromise = this.load();
 
         const settings = this.configuration.getSettings();
-        if (settings.datascience.runMagicCommands) {
-            this.addCode(settings.datascience.runMagicCommands, Identifiers.EmptyFileName, 0).ignoreErrors();
+        if (settings.datascience.runStartupCommands) {
+            this.addCode(settings.datascience.runStartupCommands, Identifiers.EmptyFileName, 0).ignoreErrors();
         }
 
         // For each listener sign up for their post events

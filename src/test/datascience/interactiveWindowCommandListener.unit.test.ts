@@ -151,7 +151,7 @@ suite('Interactive window command listener', async () => {
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
             autoPreviewNotebooksInInteractivePane: true,
             enablePlotViewer: true,
-            runMagicCommands: '',
+            runStartupCommands: '',
             debugJustMyCode: true
         };
 

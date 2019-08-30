@@ -70,7 +70,7 @@ suite('Theme colors', () => {
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
             enablePlotViewer: true,
-            runMagicCommands: '',
+            runStartupCommands: '',
             debugJustMyCode: true
         };
         configService = TypeMoq.Mock.ofType<IConfigurationService>();

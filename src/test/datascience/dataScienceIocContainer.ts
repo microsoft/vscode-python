@@ -432,7 +432,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             stopOnError: true,
             addGotoCodeLenses: true,
             enableCellCodeLens: true,
-            runMagicCommands: '',
+            runStartupCommands: '',
             debugJustMyCode: true
         };
 

@@ -2338,7 +2338,7 @@
                     "description": "Uncomment shell assignments (#!), line magic (#!%) and cell magic (#!%%) when parsing code cells.",
                     "scope": "resource"
                 },
-                "python.dataScience.runMagicCommands": {
+                "python.dataScience.runStartupCommands": {
                     "type": "string",
                     "default": "",
                     "description": "A series of Python instructions that will be executed when the interactive window loads.",
