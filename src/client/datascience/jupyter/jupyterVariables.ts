@@ -78,16 +78,16 @@ export class JupyterVariables implements IJupyterVariables {
     // Load our python files for fetching variables
     private async loadVariableFiles(): Promise<void> {
         let file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getJupyterVariableList.py');
-        this.fetchVariablesScript = (await this.fileSystem.readFile(file)).replace('# %DATASCIENCE_INTERNAL_KEY%', internalUseCellKey);
+        this.fetchVariablesScript = await this.fileSystem.readFile(file)
 
         file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getJupyterVariableValue.py');
-        this.fetchVariableValueScript = (await this.fileSystem.readFile(file)).replace('# %DATASCIENCE_INTERNAL_KEY%', internalUseCellKey);
+        this.fetchVariableValueScript = await this.fileSystem.readFile(file);
 
         file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getJupyterVariableDataFrameInfo.py');
-        this.fetchDataFrameInfoScript = (await this.fileSystem.readFile(file)).replace('# %DATASCIENCE_INTERNAL_KEY%', internalUseCellKey);
+        this.fetchDataFrameInfoScript = await this.fileSystem.readFile(file);
 
         file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getJupyterVariableDataFrameRows.py');
-        this.fetchDataFrameRowsScript = (await this.fileSystem.readFile(file)).replace('# %DATASCIENCE_INTERNAL_KEY%', internalUseCellKey);
+        this.fetchDataFrameRowsScript = await this.fileSystem.readFile(file);
 
         this.filesLoaded = true;
     }
