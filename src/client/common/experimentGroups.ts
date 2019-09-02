@@ -31,3 +31,9 @@ export enum DebugAdapterNewPtvsd {
     control = 'PtvsdWheels - control',
     experiment = 'PtvsdWheels - experiment'
 }
+
+// Dummy experiment added to validate metrics of A/B testing
+export enum ValidateABTesting {
+    control = 'AA_testing - control',
+    experiment = 'AA_testing - experiment'
+}

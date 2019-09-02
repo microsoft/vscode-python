@@ -76,5 +76,17 @@
         "salt": "LS",
         "min": 10,
         "max": 11
+    },
+    {
+        "name": "AA_testing - control",
+        "salt": "AA_testing",
+        "min": 0,
+        "max": 10
+    },
+    {
+        "name": "AA_testing - experiment",
+        "salt": "AA_testing",
+        "min": 90,
+        "max": 100
     }
 ]
