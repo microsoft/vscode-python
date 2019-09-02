@@ -1368,6 +1368,12 @@
                     "scope": "resource"
                 },
                 "python.dataScience.jupyterServerKernelId": {
+                    "type": "object",
+                    "default": "",
+                    "description": "Select the Jupyter server kernel UUID to connect to. Leave blank to start a new kernel",
+                    "scope": "resource"
+                },
+                "python.dataScience.jupyterServerKernelSpec": {
                     "type": "string",
                     "default": "",
                     "description": "Select the Jupyter server kernel UUID to connect to. Leave blank to start a new kernel",

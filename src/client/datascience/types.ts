@@ -164,6 +164,12 @@ export interface IKernelQuickPickItem extends QuickPickItem {
     kernelId: string | undefined;
 }
 
+export interface IJupyterShutdown {
+    label: string;
+    picked: boolean;
+    keepRunning: boolean;
+}
+
 export const INotebookImporter = Symbol('INotebookImporter');
 export interface INotebookImporter extends Disposable {
     importFromFile(file: string): Promise<string>;
