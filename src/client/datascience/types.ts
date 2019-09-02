@@ -5,7 +5,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
 import { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
-import { CancellationToken, CodeLens, CodeLensProvider, DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, Disposable, Event, Range, TextDocument, TextEditor } from 'vscode';
+import { CancellationToken, CodeLens, CodeLensProvider, DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, Disposable, Event, QuickPickItem, Range, TextDocument, TextEditor } from 'vscode';
 
 import { ICommandManager } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
@@ -34,6 +34,7 @@ export interface IConnection extends Disposable {
     localProcExitCode: number | undefined;
     disconnected: Event<number>;
     allowUnauthorized?: boolean;
+    allowShutdown?: boolean;
 }
 
 export enum InterruptResult {
@@ -155,6 +156,12 @@ export interface IJupyterKernelSpec extends IAsyncDisposable {
     name: string | undefined;
     language: string | undefined;
     path: string | undefined;
+    id: string | undefined;
+}
+
+export interface IKernelQuickPickItem extends QuickPickItem {
+    name: string | undefined;
+    kernelId: string | undefined;
 }
 
 export const INotebookImporter = Symbol('INotebookImporter');

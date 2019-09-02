@@ -409,6 +409,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             enabled: true,
             jupyterServerAllowKernelShutdown: true,
             jupyterServerKernelId: '',
+            jupyterServerKernelSpec: undefined,
             jupyterServerURI: 'local',
             notebookFileRoot: 'WORKSPACE',
             changeDirOnImportExport: true,

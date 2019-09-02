@@ -5,7 +5,7 @@ import { Kernel, ServerConnection, SessionManager } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode-jsonrpc';
 
-import { IConfigurationService } from '../../common/types';
+// import { IConfigurationService } from '../../common/types';
 import { IConnection, IJupyterKernelSpec, IJupyterPasswordConnect, IJupyterSession, IJupyterSessionManager } from '../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { JupyterSession } from './jupyterSession';
@@ -13,16 +13,17 @@ import { JupyterSession } from './jupyterSession';
 @injectable()
 export class JupyterSessionManager implements IJupyterSessionManager {
     constructor(
-        @inject(IJupyterPasswordConnect) private jupyterPasswordConnect: IJupyterPasswordConnect,
-        @inject(IConfigurationService) private readonly configurationService: IConfigurationService
+        @inject(IJupyterPasswordConnect) private jupyterPasswordConnect: IJupyterPasswordConnect
+        // @inject(IConfigurationService) private readonly configurationService: IConfigurationService
     ) { }
 
     public async startNew(connInfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, cancelToken?: CancellationToken): Promise<IJupyterSession> {
         // Create a new session and attempt to connect to it
-        const settings = this.configurationService.getSettings();
-        const allowShutdown = settings.datascience.jupyterServerAllowKernelShutdown;
-        const kernelId = settings.datascience.jupyterServerKernelId;
-        const session = new JupyterSession(connInfo, kernelSpec, this.jupyterPasswordConnect, kernelId, allowShutdown);
+        // const settings = this.configurationService.getSettings();
+        // const allowShutdown = settings.datascience.jupyterServerAllowKernelShutdown;
+        // const kernelId = settings.datascience.jupyterServerKernelId;
+        // const session = new JupyterSession(connInfo, kernelSpec, this.jupyterPasswordConnect, kernelId, allowShutdown);
+        const session = new JupyterSession(connInfo, kernelSpec, this.jupyterPasswordConnect);
         try {
             await session.connect(cancelToken);
         } finally {

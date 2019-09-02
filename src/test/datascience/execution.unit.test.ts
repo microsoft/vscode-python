@@ -542,6 +542,7 @@ suite('Jupyter Execution', async () => {
             enabled: true,
             jupyterServerAllowKernelShutdown: true,
             jupyterServerKernelId: '',
+            jupyterServerKernelSpec: undefined,
             jupyterServerURI: 'local',
             notebookFileRoot: 'WORKSPACE',
             changeDirOnImportExport: true,

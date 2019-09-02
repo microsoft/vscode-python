@@ -100,6 +100,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         }
         const settings = configuration.getSettings();
         const allowUnauthorized = settings.datascience.allowUnauthorizedRemoteConnection ? settings.datascience.allowUnauthorizedRemoteConnection : false;
+        const allowShutdown: boolean | undefined = settings.datascience.jupyterServerAllowKernelShutdown;
 
         return {
             allowUnauthorized,
@@ -109,7 +110,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
             localLaunch: false,
             localProcExitCode: undefined,
             disconnected: (_l) => { return { dispose: noop }; },
-            dispose: noop
+            dispose: noop,
+            allowShutdown: allowShutdown
         };
     }
 
@@ -315,7 +317,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
         } else {
             // If we have a URI spec up a connection info for it
             connection = JupyterExecutionBase.createRemoteConnectionInfo(options.uri, this.configuration);
-            kernelSpec = undefined;
+            const settings = this.configuration.getSettings();
+            kernelSpec = settings.datascience.jupyterServerKernelSpec;
         }
 
         // If we don't have a kernel spec yet, check using our current connection

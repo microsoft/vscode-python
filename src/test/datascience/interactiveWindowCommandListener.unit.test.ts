@@ -135,6 +135,7 @@ suite('Interactive window command listener', async () => {
             enabled: true,
             jupyterServerAllowKernelShutdown: true,
             jupyterServerKernelId: '',
+            jupyterServerKernelSpec: undefined,
             jupyterServerURI: '',
             changeDirOnImportExport: true,
             notebookFileRoot: 'WORKSPACE',

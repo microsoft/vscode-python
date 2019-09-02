@@ -47,21 +47,21 @@ export class JupyterSession implements IJupyterSession {
     private connected: boolean = false;
     private jupyterPasswordConnect: IJupyterPasswordConnect;
     private oldSessions: Session.ISession[] = [];
-    private allowShutdown: boolean;
-    private desiredKernelId: string | undefined;
+    // private allowShutdown: boolean;
+    // private desiredKernelId: string | undefined;
 
     constructor(
         connInfo: IConnection,
         kernelSpec: IJupyterKernelSpec | undefined,
-        jupyterPasswordConnect: IJupyterPasswordConnect,
-        desiredKernelId: string | undefined,
-        allowShutdown: boolean
+        jupyterPasswordConnect: IJupyterPasswordConnect
+        // desiredKernelId: string | undefined,
+        // allowShutdown: boolean
     ) {
         this.connInfo = connInfo;
         this.kernelSpec = kernelSpec;
         this.jupyterPasswordConnect = jupyterPasswordConnect;
-        this.allowShutdown = allowShutdown;
-        this.desiredKernelId = desiredKernelId;
+        // this.allowShutdown = allowShutdown;
+        // this.desiredKernelId = desiredKernelId;
     }
 
     public dispose(): Promise<void> {
@@ -239,9 +239,9 @@ export class JupyterSession implements IJupyterSession {
             serverSettings: serverSettings
         };
 
-        if (this.desiredKernelId) {
-            options.kernelId = this.desiredKernelId;
-            traceInfo(`Connecting to existing kernel ${this.desiredKernelId}`);
+        if (this.kernelSpec && this.kernelSpec.id) {
+            options.kernelId = this.kernelSpec.id;
+            traceInfo(`Connecting to existing kernel ${this.kernelSpec.id}`);
         } else {
             traceInfo('Creating new kernel for connection');
         }
@@ -365,11 +365,11 @@ export class JupyterSession implements IJupyterSession {
                                 });
                             }
                         }
-                        if (this.allowShutdown) {
+                        if (this.connInfo && this.connInfo.allowShutdown) {
                             await waitForPromise(session.shutdown(), 1000);
                         }
                     } else {
-                        if (this.allowShutdown) {
+                        if (this.connInfo && this.connInfo.allowShutdown) {
                             // Shutdown may fail if the process has been killed
                             await waitForPromise(session.shutdown(), 1000);
                         }

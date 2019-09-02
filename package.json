@@ -1370,13 +1370,13 @@
                 "python.dataScience.jupyterServerKernelId": {
                     "type": "string",
                     "default": "",
-                    "description": "Select the Jupyter server Kernel UUID to connect to. Leave blank to start a new kernel",
+                    "description": "Select the Jupyter server kernel UUID to connect to. Leave blank to start a new kernel",
                     "scope": "resource"
                 },
                 "python.dataScience.jupyterServerAllowKernelShutdown": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Shutdown the Jupyter kernel when finished",
+                    "description": "Shutdown the Jupyter kernel when finished.",
                     "scope": "resource"
                 },
                 "python.dataScience.notebookFileRoot": {

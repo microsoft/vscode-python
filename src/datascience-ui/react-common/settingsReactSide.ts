@@ -38,6 +38,7 @@ function load() {
             enabled: true,
             jupyterServerAllowKernelShutdown: true,
             jupyterServerKernelId: '',
+            jupyterServerKernelSpec: undefined,
             jupyterServerURI: 'local',
             notebookFileRoot: 'WORKSPACE',
             changeDirOnImportExport: true,
