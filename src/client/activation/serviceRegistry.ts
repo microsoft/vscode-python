@@ -10,6 +10,7 @@ import { InteractiveShiftEnterBanner } from '../datascience/shiftEnterBanner';
 import { IServiceManager } from '../ioc/types';
 import { LanguageServerSurveyBanner } from '../languageServices/languageServerSurveyBanner';
 import { ProposeLanguageServerBanner } from '../languageServices/proposeLanguageServerBanner';
+import { AATesting } from './aaTesting';
 import { ExtensionActivationManager } from './activationManager';
 import { LanguageServerExtensionActivationService } from './activationService';
 import { ExtensionSurveyPrompt } from './extensionSurvey';
@@ -59,4 +60,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<ILanguageServerManager>(ILanguageServerManager, LanguageServerManager);
     serviceManager.addSingleton<ILanguageServerOutputChannel>(ILanguageServerOutputChannel, LanguageServerOutputChannel);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ExtensionSurveyPrompt);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, AATesting);
 }

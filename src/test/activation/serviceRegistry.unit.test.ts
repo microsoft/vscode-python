@@ -5,8 +5,10 @@
 
 import { instance, mock, verify } from 'ts-mockito';
 
+import { AATesting } from '../../client/activation/aaTesting';
 import { ExtensionActivationManager } from '../../client/activation/activationManager';
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
+import { ExtensionSurveyPrompt } from '../../client/activation/extensionSurvey';
 import { JediExtensionActivator } from '../../client/activation/jedi';
 import { LanguageServerExtensionActivator } from '../../client/activation/languageServer/activator';
 import { LanguageServerAnalysisOptions } from '../../client/activation/languageServer/analysisOptions';
@@ -25,12 +27,14 @@ import {
 } from '../../client/activation/languageServer/languageServerPackageRepository';
 import { LanguageServerPackageService } from '../../client/activation/languageServer/languageServerPackageService';
 import { LanguageServerManager } from '../../client/activation/languageServer/manager';
+import { LanguageServerOutputChannel } from '../../client/activation/languageServer/outputChannel';
 import { PlatformData } from '../../client/activation/languageServer/platformData';
 import { registerTypes } from '../../client/activation/serviceRegistry';
 import {
     IDownloadChannelRule,
     IExtensionActivationManager,
     IExtensionActivationService,
+    IExtensionSingleActivationService,
     ILanguageClientFactory,
     ILanguageServer,
     ILanguageServerActivator,
@@ -40,6 +44,7 @@ import {
     ILanguageServerExtension,
     ILanguageServerFolderService,
     ILanguageServerManager,
+    ILanguageServerOutputChannel,
     ILanguageServerPackageService,
     IPlatformData,
     LanguageClientFactory,
@@ -90,5 +95,8 @@ suite('Unit Tests - Activation Service Registry', () => {
         verify(serviceManager.add<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, LanguageServerAnalysisOptions)).once();
         verify(serviceManager.addSingleton<ILanguageServer>(ILanguageServer, LanguageServer)).once();
         verify(serviceManager.add<ILanguageServerManager>(ILanguageServerManager, LanguageServerManager)).once();
+        verify(serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, AATesting)).once();
+        verify(serviceManager.addSingleton<ILanguageServerOutputChannel>(ILanguageServerOutputChannel, LanguageServerOutputChannel)).once();
+        verify(serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ExtensionSurveyPrompt)).once();
     });
 });
