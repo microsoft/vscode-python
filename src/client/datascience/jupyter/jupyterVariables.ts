@@ -15,7 +15,6 @@ import { EXTENSION_ROOT_DIR } from '../../constants';
 import { Identifiers } from '../constants';
 import { ICell, IJupyterVariable, IJupyterVariables, INotebook } from '../types';
 import { JupyterDataRateLimitError } from './jupyterDataRateLimitError';
-import { internalUseCellKey } from './jupyterSession';
 
 @injectable()
 export class JupyterVariables implements IJupyterVariables {

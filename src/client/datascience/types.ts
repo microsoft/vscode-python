@@ -499,3 +499,6 @@ export interface IDebugLocationTracker extends DebugAdapterTracker {
     debugLocation: IDebugLocation | undefined;
     setDebugSession(targetSession: DebugSession): void;
 }
+
+// Cells silently executed on behalf of the user are tagged with the following.
+export const internalUseCellKey: string = '#%DATASCIENCE_INTERNAL_KEY%#';
