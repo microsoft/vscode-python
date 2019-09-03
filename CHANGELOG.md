@@ -1,6 +1,6 @@
 # Changelog
 
-## 2019.9.0 (27 August 2019)
+## 2019.9.0 (3 September 2019)
 
 ### Enhancements
 
@@ -29,6 +29,8 @@
 
 ### Fixes
 
+1. Delete the old session immediatly after session restart instead of on close
+   ([#6975](https://github.com/Microsoft/vscode-python/issues/6975))
 1. Add support for the "pathMappings" setting in "launch" debug configs.
    ([#3568](https://github.com/Microsoft/vscode-python/issues/3568))
 1. Supports error codes like ABC123 as used in plugins.
