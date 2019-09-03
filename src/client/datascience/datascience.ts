@@ -349,6 +349,9 @@ export class DataScience implements IDataScience {
     @captureTelemetry(Telemetry.SetJupyterURIToLocal)
     private async setJupyterURIToLocal(): Promise<void> {
         await this.configuration.updateSetting('dataScience.jupyterServerURI', Settings.JupyterServerLocalLaunch, undefined, vscode.ConfigurationTarget.Workspace);
+        await this.configuration.updateSetting('dataScience.jupyterServerKernelId', undefined, undefined, vscode.ConfigurationTarget.Workspace);
+        await this.configuration.updateSetting('dataScience.jupyterServerKernelSpec', undefined, undefined, vscode.ConfigurationTarget.Workspace);
+        await this.configuration.updateSetting('dataScience.jupyterServerAllowKernelShutdown', undefined, undefined, vscode.ConfigurationTarget.Workspace);
     }
 
     private async getJupyterKernels(connInfo: IConnection): Promise<IKernelQuickPickItem[]> {
