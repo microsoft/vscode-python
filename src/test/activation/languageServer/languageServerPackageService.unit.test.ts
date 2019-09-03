@@ -169,6 +169,9 @@ suite('Language Server Package Service - getLanguageServerDownloadChannel()', ()
         platform = typeMoq.Mock.ofType<IPlatformService>();
         appVersion = typeMoq.Mock.ofType<IApplicationEnvironment>();
         configService = typeMoq.Mock.ofType<IConfigurationService>();
+        serviceContainer
+            .setup(s => s.get(IConfigurationService))
+            .returns(() => configService.object);
         lsPackageService = new LanguageServerPackageService(serviceContainer.object, appVersion.object, platform.object);
         lsPackageService.isAlphaVersionOfExtension = () => true;
     });
@@ -178,9 +181,6 @@ suite('Language Server Package Service - getLanguageServerDownloadChannel()', ()
                 downloadChannel: 'someValue'
             }
         };
-        serviceContainer
-            .setup(s => s.get(IConfigurationService))
-            .returns(() => configService.object);
         configService.setup(c => c.getSettings())
             .returns(() => settings as any);
 
@@ -195,9 +195,6 @@ suite('Language Server Package Service - getLanguageServerDownloadChannel()', ()
             analysis: {},
             insidersChannel: 'weekly'
         };
-        serviceContainer
-            .setup(s => s.get(IConfigurationService))
-            .returns(() => configService.object);
         configService.setup(c => c.getSettings())
             .returns(() => settings as any);
 
@@ -212,9 +209,6 @@ suite('Language Server Package Service - getLanguageServerDownloadChannel()', ()
             analysis: {},
             insidersChannel: 'daily'
         };
-        serviceContainer
-            .setup(s => s.get(IConfigurationService))
-            .returns(() => configService.object);
         configService.setup(c => c.getSettings())
             .returns(() => settings as any);
 
@@ -229,9 +223,6 @@ suite('Language Server Package Service - getLanguageServerDownloadChannel()', ()
             analysis: {},
             insidersChannel: 'off'
         };
-        serviceContainer
-            .setup(s => s.get(IConfigurationService))
-            .returns(() => configService.object);
         configService.setup(c => c.getSettings())
             .returns(() => settings as any);
 
@@ -246,9 +237,6 @@ suite('Language Server Package Service - getLanguageServerDownloadChannel()', ()
             analysis: {},
             insidersChannel: 'off'
         };
-        serviceContainer
-            .setup(s => s.get(IConfigurationService))
-            .returns(() => configService.object);
         configService.setup(c => c.getSettings())
             .returns(() => settings as any);
 
