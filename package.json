@@ -1361,6 +1361,12 @@
                     "description": "Number of times to attempt to connect to the Jupyter Notebook",
                     "scope": "resource"
                 },
+                "python.dataScience.jupyterServers": {
+                    "type": "array",
+                    "default": [],
+                    "description": "Jupter servers.",
+                    "scope": "resource"
+                },
                 "python.dataScience.jupyterServerURI": {
                     "type": "string",
                     "default": "local",
@@ -1368,15 +1374,15 @@
                     "scope": "resource"
                 },
                 "python.dataScience.jupyterServerKernelId": {
-                    "type": "object",
+                    "type": "string",
                     "default": "",
                     "description": "Select the Jupyter server kernel UUID to connect to. Leave blank to start a new kernel",
                     "scope": "resource"
                 },
                 "python.dataScience.jupyterServerKernelSpec": {
-                    "type": "string",
+                    "type": "object",
                     "default": "",
-                    "description": "Select the Jupyter server kernel UUID to connect to. Leave blank to start a new kernel",
+                    "description": "Specify kernel spec to connect to. Leave blank to start a new kernel",
                     "scope": "resource"
                 },
                 "python.dataScience.jupyterServerAllowKernelShutdown": {

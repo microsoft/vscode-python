@@ -164,10 +164,20 @@ export interface IKernelQuickPickItem extends QuickPickItem {
     kernelId: string | undefined;
 }
 
+export interface IJupyterServerQuickPickItem extends QuickPickItem {
+    hostName: string | undefined;
+    uri: string;
+}
+
 export interface IJupyterShutdown {
     label: string;
     picked: boolean;
     keepRunning: boolean;
+}
+
+export interface IJupyterServer {
+    hostName: string;
+    uri: string;
 }
 
 export const INotebookImporter = Symbol('INotebookImporter');

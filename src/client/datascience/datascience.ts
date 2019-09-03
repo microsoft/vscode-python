@@ -37,8 +37,12 @@ import {
     IJupyterKernelSpec,
     IJupyterSessionManager,
     IJupyterShutdown,
-    IKernelQuickPickItem
+    IKernelQuickPickItem,
+    IJupyterServer,
+    IJupyterServerQuickPickItem
 } from './types';
+// import { hostname } from 'os';
+// import { Uri } from 'monaco-editor';
 // import { Icons } from '../testing/common/constants';
 // import { Dictionary } from 'lodash';
 
@@ -47,6 +51,18 @@ const newKernel = {
     picked: true,
     kernelId: '',
     name: ''
+};
+
+const localJupyter: IJupyterServerQuickPickItem = {
+    label: localize.DataScience.jupyterSelectURILaunchLocal(),
+    hostName: 'local',
+    uri: ''
+};
+
+const specifyJupyter: IJupyterServerQuickPickItem = {
+    label: localize.DataScience.jupyterSelectURISpecifyURI(),
+    hostName: '',
+    uri: ''
 };
 
 @injectable()
@@ -239,18 +255,52 @@ export class DataScience implements IDataScience {
 
     @captureTelemetry(Telemetry.SelectJupyterURI)
     public async selectJupyterURI(): Promise<void> {
-        const quickPickOptions = [localize.DataScience.jupyterSelectURILaunchLocal(), localize.DataScience.jupyterSelectURISpecifyURI()];
-        const selection = await this.appShell.showQuickPick(quickPickOptions, { ignoreFocusOut: true });
+        const settings = this.configuration.getSettings();
+        const jupyterServers: IJupyterServer[] | undefined = settings.datascience.jupyterServers;
+        let optionsArr: IJupyterServerQuickPickItem[] = [];
+        if (jupyterServers) {
+            optionsArr = jupyterServers.map(server => {
+                traceInfo(`Found server ${server.hostName}, with uri ${server.uri}`);
+                return {
+                    label: server.hostName,
+                    hostName: server.hostName,
+                    uri: server.uri
+                };
+            });
+        }
+        optionsArr.unshift(localJupyter);
+        optionsArr.push(specifyJupyter);
+
+        // const quickPickOptions = [localize.DataScience.jupyterSelectURILaunchLocal(), localize.DataScience.jupyterSelectURISpecifyURI()];
+        const selection = await this.appShell.showQuickPick(optionsArr, { ignoreFocusOut: true });
+        if (!selection) {
+            return;
+        }
+
+        let connInfo: IConnection | undefined;
+
         switch (selection) {
-            case localize.DataScience.jupyterSelectURILaunchLocal():
+            case localJupyter:
                 return this.setJupyterURIToLocal();
                 break;
-            case localize.DataScience.jupyterSelectURISpecifyURI():
-                return this.selectJupyterLaunchURI();
+            case specifyJupyter:
+                const userURI = await this.appShell.showInputBox({
+                    prompt: localize.DataScience.jupyterSelectURIPrompt(),
+                    placeHolder: 'https://hostname:8080/?token=849d61a414abafab97bc4aab1f3547755ddc232c2b8cb7fe', validateInput: this.validateURI, ignoreFocusOut: true
+                });
+                if (userURI) {
+                    connInfo = await this.createConnectionInfo(userURI, true);
+                }
                 break;
+            // return this.selectJupyterLaunchURI();
+            // break;
             default:
                 // If user cancels quick pick we will get undefined as the selection and fall through here
+                connInfo = await this.createConnectionInfo(selection.uri);
                 break;
+        }
+        if (connInfo) {
+            return this.selectJupyterLaunchURI(connInfo);
         }
     }
 
@@ -356,53 +406,59 @@ export class DataScience implements IDataScience {
         });
     }
 
+    private async createConnectionInfo(uri: string, addToSettings: boolean = false): Promise<IConnection> {
+        await this.configuration.updateSetting('dataScience.jupyterServerURI', uri, undefined, vscode.ConfigurationTarget.Workspace);
+        const connInfo: IConnection = JupyterExecutionBase.createRemoteConnectionInfo(uri, this.configuration);
+        if (addToSettings) {
+            const settings = this.configuration.getSettings();
+            let jupyterServers: IJupyterServer[] = [{
+                hostName: connInfo.hostName,
+                uri: uri
+            }];
+            const savedjupyterServers = settings.datascience.jupyterServers;
+            if (savedjupyterServers) {
+                jupyterServers = jupyterServers.concat(savedjupyterServers);
+            }
+            await this.configuration.updateSetting('dataScience.jupyterServers', jupyterServers, undefined, vscode.ConfigurationTarget.Workspace);
+        }
+        return connInfo;
+    }
+
     @captureTelemetry(Telemetry.SetJupyterURIToUserSpecified)
-    private async selectJupyterLaunchURI(): Promise<void> {
-        // First get the proposed URI from the user
-        const userURI = await this.appShell.showInputBox({
-            prompt: localize.DataScience.jupyterSelectURIPrompt(),
-            placeHolder: 'https://hostname:8080/?token=849d61a414abafab97bc4aab1f3547755ddc232c2b8cb7fe', validateInput: this.validateURI, ignoreFocusOut: true
-        });
+    private async selectJupyterLaunchURI(connInfo: IConnection): Promise<void> {
 
         let kernelUUID: string | undefined = '';
         let kernelName: string | undefined = '';
         let kernelSpec: IJupyterKernelSpec | undefined;
         let allowShutdown = true;
 
-        if (userURI) {
-            await this.configuration.updateSetting('dataScience.jupyterServerURI', userURI, undefined, vscode.ConfigurationTarget.Workspace);
+        let kernelSelection: IKernelQuickPickItem | undefined = await this.getKernelSelection(connInfo);
 
-            const connInfo: IConnection = JupyterExecutionBase.createRemoteConnectionInfo(userURI, this.configuration);
+        const shutdownSelection = await this.appShell.showQuickPick(this.shutdownOptions(), { ignoreFocusOut: true });
 
-            let kernelSelection: IKernelQuickPickItem | undefined = await this.getKernelSelection(connInfo);
+        let kernelSpecs: IJupyterKernelSpec[] = await this.sessionManager.getActiveKernelSpecs(connInfo);
 
-            const shutdownSelection = await this.appShell.showQuickPick(this.shutdownOptions(), { ignoreFocusOut: true });
-
-            let kernelSpecs: IJupyterKernelSpec[] = await this.sessionManager.getActiveKernelSpecs(connInfo);
-
-            if (kernelSelection && kernelSelection === newKernel) {
-                traceInfo('Will create a new kernel for connection');
-                kernelSelection = await this.getNewKernelSelection(kernelSpecs);
-            }
-            sendTelemetryEvent(Telemetry.JupyterKernelAutoShutdown, undefined, { autoShutdownEnabled: allowShutdown });
-
-            if (kernelSelection) {
-                if (kernelSelection !== newKernel) {
-                    traceInfo(`Will connect to existing kernel ${kernelSelection.kernelId}`);
-                    sendTelemetryEvent(Telemetry.JupyterKernelSpecified);
-                }
-                kernelUUID = kernelSelection.kernelId ? kernelSelection.kernelId : undefined;
-                kernelName = kernelSelection.name ? kernelSelection.name : undefined;
-                kernelSpecs = kernelSpecs.filter(spec => spec.name === kernelName);
-                kernelSpec = kernelSpecs.length === 1 ? kernelSpecs[0] : undefined;
-            }
-
-            if (shutdownSelection && shutdownSelection.keepRunning) {
-                traceInfo('Session will not be shutdown on close');
-                allowShutdown = false;
-            }
+        if (kernelSelection && kernelSelection === newKernel) {
+            traceInfo('Will create a new kernel for connection');
+            kernelSelection = await this.getNewKernelSelection(kernelSpecs);
         }
-        await this.configuration.updateSetting('dataScience.jupyterServerURI', userURI, undefined, vscode.ConfigurationTarget.Workspace);
+        sendTelemetryEvent(Telemetry.JupyterKernelAutoShutdown, undefined, { autoShutdownEnabled: allowShutdown });
+
+        if (kernelSelection) {
+            if (kernelSelection !== newKernel) {
+                traceInfo(`Will connect to existing kernel ${kernelSelection.kernelId}`);
+                sendTelemetryEvent(Telemetry.JupyterKernelSpecified);
+            }
+            kernelUUID = kernelSelection.kernelId ? kernelSelection.kernelId : undefined;
+            kernelName = kernelSelection.name ? kernelSelection.name : undefined;
+            kernelSpecs = kernelSpecs.filter(spec => spec.name === kernelName);
+            kernelSpec = kernelSpecs.length === 1 ? kernelSpecs[0] : undefined;
+        }
+
+        if (shutdownSelection && shutdownSelection.keepRunning) {
+            traceInfo('Session will not be shutdown on close');
+            allowShutdown = false;
+        }
         await this.configuration.updateSetting('dataScience.jupyterServerKernelId', kernelUUID, undefined, vscode.ConfigurationTarget.Workspace);
         await this.configuration.updateSetting('dataScience.jupyterServerKernelSpec', kernelSpec, undefined, vscode.ConfigurationTarget.Workspace);
         await this.configuration.updateSetting('dataScience.jupyterServerAllowKernelShutdown', allowShutdown, undefined, vscode.ConfigurationTarget.Workspace);

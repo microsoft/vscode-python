@@ -77,6 +77,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
             jupyterServerAllowKernelShutdown: true,
             jupyterServerKernelId: '',
             jupyterServerKernelSpec: undefined,
+            jupyterServers: undefined,
             jupyterServerURI: 'local',
             notebookFileRoot: 'WORKSPACE',
             changeDirOnImportExport: true,
