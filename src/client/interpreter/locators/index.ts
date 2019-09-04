@@ -1,5 +1,6 @@
 import { inject, injectable } from 'inversify';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
+import { traceDecorators } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
@@ -68,6 +69,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
      * The optional resource arg may control where locators look for
      * interpreters.
      */
+    @traceDecorators.verbose('Get Interpreters')
     public async getInterpreters(resource?: Uri): Promise<PythonInterpreter[]> {
         const locators = this.getLocators();
         const promises = locators.map(async provider => provider.getInterpreters(resource));

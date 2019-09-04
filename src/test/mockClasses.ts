@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import {
     Flake8CategorySeverity, ILintingSettings, IMypyCategorySeverity,
-    IPep8CategorySeverity, IPylintCategorySeverity
+    IPycodestyleCategorySeverity, IPylintCategorySeverity
 } from '../client/common/types';
 
 export class MockOutputChannel implements vscode.OutputChannel {
@@ -56,8 +56,8 @@ export class MockLintingSettings implements ILintingSettings {
     public prospectorArgs!: string[];
     public pylintEnabled!: boolean;
     public pylintArgs!: string[];
-    public pep8Enabled!: boolean;
-    public pep8Args!: string[];
+    public pycodestyleEnabled!: boolean;
+    public pycodestyleArgs!: string[];
     public pylamaEnabled!: boolean;
     public pylamaArgs!: string[];
     public flake8Enabled!: boolean;
@@ -67,12 +67,12 @@ export class MockLintingSettings implements ILintingSettings {
     public lintOnSave!: boolean;
     public maxNumberOfProblems!: number;
     public pylintCategorySeverity!: IPylintCategorySeverity;
-    public pep8CategorySeverity!: IPep8CategorySeverity;
+    public pycodestyleCategorySeverity!: IPycodestyleCategorySeverity;
     public flake8CategorySeverity!: Flake8CategorySeverity;
     public mypyCategorySeverity!: IMypyCategorySeverity;
     public prospectorPath!: string;
     public pylintPath!: string;
-    public pep8Path!: string;
+    public pycodestylePath!: string;
     public pylamaPath!: string;
     public flake8Path!: string;
     public pydocstylePath!: string;

@@ -25,8 +25,7 @@
 # 'testMultiWorkspace'
 # 'testDebugger'
 # 'testFunctional'
-# 'perfomanceTests'
-# 'testSmoke'
+# 'testPerformance'
 # 'venvTests'
 
 steps:
@@ -180,6 +179,7 @@ steps:
       python -m pip install -U pip
       python -m pip install --upgrade -r build/test-requirements.txt
       python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+      python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
     displayName: 'pip install system test requirements'
     condition: and(succeeded(), eq(variables['NeedsPythonTestReqs'], 'true'))
 
@@ -232,7 +232,7 @@ steps:
   # > python -m pip install -U -r build/test-requirements.txt
   # > python pythonFiles/tests/run_all.py --color=yes --junit-xml=python-tests-junit.xml
   - bash: |
-      python pythonFiles/tests/run_all.py --color=yes --junit-xml=$COMMON_TESTRESULTSDIRECTORY/python-tests-junit.xml
+      python pythonFiles/tests/run_all.py --color=no --junit-xml=$COMMON_TESTRESULTSDIRECTORY/python-tests-junit.xml
     displayName: 'Python unittests'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'pythonUnitTests'))
 
@@ -257,7 +257,7 @@ steps:
   # > python -m pip install -U -r build/test-requirements.txt
   # > python pythonFiles/tests/run_all.py --color=yes --junit-xml=python-tests-junit.xml
   - bash: |
-      python -m IPython pythonFiles/tests/run_all.py -- --color=yes --junit-xml=$COMMON_TESTRESULTSDIRECTORY/ipython-tests-junit.xml
+      python -m IPython pythonFiles/tests/run_all.py -- --color=no --junit-xml=$COMMON_TESTRESULTSDIRECTORY/ipython-tests-junit.xml
     displayName: 'Python ipython tests'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'pythonIPythonTests'))
 
@@ -386,7 +386,7 @@ steps:
   # Run the virtual environment based tests.
   # This set of tests is simply using the `testSingleWorkspace` set of tests, but
   # with the environment variable `TEST_FILES_SUFFIX` set to `testvirtualenvs`, which
-  # got set in the Prepare Venv-Test Environmant task above.
+  # got set in the Prepare Venv-Test Environment task above.
   # **Note**: Azure DevOps tasks set environment variables via a specially formatted
   # string sent to stdout.
   #
@@ -546,10 +546,15 @@ steps:
   - bash: |
       npm install -g vsce
       npm run clean
+      npx tsc -p ./
+      npx gulp clean:cleanExceptTests
+      mkdir -p ./tmp
+      cp -r ./out/test ./tmp/test
       npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID
       npm run package
       npx gulp clean:cleanExceptTests
-      npm run testSmoke
+      cp -r ./tmp/test ./out/test
+      node ./out/test/smokeTest.js
     displayName: 'Run Smoke Tests'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testSmoke'))
     env:

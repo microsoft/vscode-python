@@ -8,6 +8,7 @@ import { IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService
 import * as constants from '../common/constants';
 import { AlwaysDisplayTestExplorerGroups } from '../common/experimentGroups';
 import '../common/extensions';
+import { traceError } from '../common/logger';
 import { IConfigurationService, IDisposableRegistry, IExperimentsManager, ILogger, IOutputChannel, Resource } from '../common/types';
 import { noop } from '../common/utils/misc';
 import { IServiceContainer } from '../ioc/types';
@@ -74,7 +75,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
     }
     public checkExperiments() {
         const experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
-        if (experiments.inExperiment(AlwaysDisplayTestExplorerGroups.enabled)) {
+        if (experiments.inExperiment(AlwaysDisplayTestExplorerGroups.experiment)) {
             const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
             commandManager.executeCommand('setContext', 'testsDiscovered', true).then(noop, noop);
         } else {
@@ -187,7 +188,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
             this.testResultDisplay = this.serviceContainer.get<ITestResultDisplay>(ITestResultDisplay);
         }
         const discoveryPromise = testManager.discoverTests(cmdSource, ignoreCache, quietMode, userInitiated, clearTestStatus);
-        this.testResultDisplay.displayDiscoverStatus(discoveryPromise, quietMode).catch(ex => console.error('Python Extension: displayDiscoverStatus', ex));
+        this.testResultDisplay.displayDiscoverStatus(discoveryPromise, quietMode).catch(ex => traceError('Python Extension: displayDiscoverStatus', ex));
         await discoveryPromise;
     }
     public async stopTests(resource: Uri) {
@@ -324,7 +325,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
             }
         });
         this.disposableRegistry.push(handler);
-        this.disposableRegistry.push(activateCodeLenses(event, symbolProvider, testCollectionStorage));
+        this.disposableRegistry.push(activateCodeLenses(event, symbolProvider, testCollectionStorage, this.serviceContainer));
     }
 
     @captureTelemetry(EventName.UNITTEST_CONFIGURE, undefined, false)

@@ -12,20 +12,20 @@ import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService } from '../../../../common/types';
 import { DebuggerTypeName } from '../../../constants';
 import { DebugOptions, LaunchRequestArguments } from '../../../types';
-import { IConfigurationProviderUtils } from '../types';
 import { BaseConfigurationResolver } from './base';
+import { IDebugEnvironmentVariablesService } from './helper';
 
 @injectable()
 export class LaunchConfigurationResolver extends BaseConfigurationResolver<LaunchRequestArguments> {
     constructor(
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IDocumentManager) documentManager: IDocumentManager,
-        @inject(IConfigurationProviderUtils) private readonly configurationProviderUtils: IConfigurationProviderUtils,
         @inject(IDiagnosticsService) @named(InvalidPythonPathInDebuggerServiceId) private readonly invalidPythonPathInDebuggerService: IInvalidPythonPathInDebuggerService,
-        @inject(IPlatformService) private readonly platformService: IPlatformService,
-        @inject(IConfigurationService) configurationService: IConfigurationService
+        @inject(IPlatformService) platformService: IPlatformService,
+        @inject(IConfigurationService) configurationService: IConfigurationService,
+        @inject(IDebugEnvironmentVariablesService) private readonly debugEnvHelper: IDebugEnvironmentVariablesService
     ) {
-        super(workspaceService, documentManager, configurationService);
+        super(workspaceService, documentManager, platformService, configurationService);
     }
     public async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: LaunchRequestArguments, _token?: CancellationToken): Promise<LaunchRequestArguments | undefined> {
         const workspaceFolder = this.getWorkspaceFolder(folder);
@@ -65,6 +65,10 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             const settings = this.configurationService.getSettings(workspaceFolder);
             debugConfiguration.envFile = settings.envFile;
         }
+        // Extract environment variables from .env file in the vscode context and
+        // set the "env" debug configuration argument. This expansion should be
+        // done here before handing of the environment settings to the debug adapter
+        debugConfiguration.env = await this.debugEnvHelper.getEnvironmentVariables(debugConfiguration);
         if (typeof debugConfiguration.stopOnEntry !== 'boolean') {
             debugConfiguration.stopOnEntry = false;
         }
@@ -119,8 +123,19 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             && debugConfiguration.jinja !== false) {
             this.debugOption(debugOptions, DebugOptions.Jinja);
         }
-        if (debugConfiguration.pyramid) {
-            debugConfiguration.program = (await this.configurationProviderUtils.getPyramidStartupScriptFilePath(workspaceFolder))!;
+        // Unlike with attach, we do not set a default path mapping.
+        // (See: https://github.com/microsoft/vscode-python/issues/3568)
+        if (debugConfiguration.pathMappings) {
+            let pathMappings = debugConfiguration.pathMappings;
+            if (pathMappings.length > 0) {
+                pathMappings = this.fixUpPathMappings(
+                    pathMappings || [],
+                    workspaceFolder ? workspaceFolder.fsPath : ''
+                );
+            }
+            debugConfiguration.pathMappings = pathMappings.length > 0
+                ? pathMappings
+                : undefined;
         }
         this.sendTelemetry(
             debugConfiguration.request as 'launch' | 'test',

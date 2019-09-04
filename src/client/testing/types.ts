@@ -70,6 +70,7 @@ export interface ITestConfigSettingsService {
     updateTestArgs(testDirectory: string | Uri, product: UnitTestProduct, args: string[]): Promise<void>;
     enable(testDirectory: string | Uri, product: UnitTestProduct): Promise<void>;
     disable(testDirectory: string | Uri, product: UnitTestProduct): Promise<void>;
+    getTestEnablingSetting(product: UnitTestProduct): string;
 }
 
 export interface ITestConfigurationManager {

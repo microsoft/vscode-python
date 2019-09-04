@@ -11,6 +11,8 @@ import { ErrorBoundary } from '../react-common/errorBoundary';
 import { getSettings } from '../react-common/settingsReactSide';
 import { Cell, ICellViewModel } from './cell';
 import { InputHistory } from './inputHistory';
+// tslint:disable-next-line:no-require-imports no-var-requires
+const throttle = require('lodash/throttle') as typeof import('lodash/throttle');
 
 export interface IContentPanelProps {
     baseTheme: string;
@@ -22,9 +24,11 @@ export interface IContentPanelProps {
     skipNextScroll: boolean;
     monacoTheme: string | undefined;
     editorOptions: monacoEditor.editor.IEditorOptions;
+    enableGather?: boolean;
     gotoCellCode(index: number): void;
     copyCellCode(index: number): void;
     deleteCell(index: number): void;
+    gatherCode(index: number): void;
     onCodeChange(changes: monacoEditor.editor.IModelContentChange[], cellId: string, modelId: string): void;
     onCodeCreated(code: string, file: string, cellId: string, modelId: string): void;
     openLink(uri: monacoEditor.Uri): void;
@@ -34,6 +38,8 @@ export interface IContentPanelProps {
 export class ContentPanel extends React.Component<IContentPanelProps> {
     private bottomRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private containerRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
+    private cellRefs: Map<string, React.RefObject<HTMLDivElement>> = new Map<string, React.RefObject<HTMLDivElement>>();
+    private throttledScrollIntoView = throttle(this.scrollIntoView.bind(this), 100);
     constructor(prop: IContentPanelProps) {
         super(prop);
     }
@@ -59,48 +65,77 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
         );
     }
 
+    public scrollToCell(cellId: string) {
+        const ref = this.cellRefs.get(cellId);
+        if (ref && ref.current) {
+            ref.current.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' });
+            ref.current.classList.add('flash');
+            setTimeout(() => {
+                if (ref.current) {
+                    ref.current.classList.remove('flash');
+                }
+            }, 1000);
+        }
+    }
+
     private renderCells = () => {
         const maxOutputSize = getSettings().maxOutputSize;
         const maxTextSize = maxOutputSize && maxOutputSize < 10000 && maxOutputSize > 0 ? maxOutputSize : undefined;
         const baseTheme = getSettings().ignoreVscodeTheme ? 'vscode-light' : this.props.baseTheme;
-        return this.props.cellVMs.map((cellVM: ICellViewModel, index: number) =>
-            <ErrorBoundary key={index}>
-                <Cell
-                    role='listitem'
-                    editorOptions={this.props.editorOptions}
-                    history={undefined}
-                    maxTextSize={maxTextSize}
-                    autoFocus={false}
-                    testMode={this.props.testMode}
-                    cellVM={cellVM}
-                    submitNewCode={noop}
-                    baseTheme={baseTheme}
-                    codeTheme={this.props.codeTheme}
-                    showWatermark={false}
-                    editExecutionCount={0}
-                    gotoCode={() => this.props.gotoCellCode(index)}
-                    copyCode={() => this.props.copyCellCode(index)}
-                    delete={() => this.props.deleteCell(index)}
-                    onCodeChange={this.props.onCodeChange}
-                    onCodeCreated={this.props.onCodeCreated}
-                    monacoTheme={this.props.monacoTheme}
-                    openLink={this.props.openLink}
-                    expandImage={this.props.expandImage}
-                    />
-            </ErrorBoundary>
+
+        return this.props.cellVMs.map((cellVM: ICellViewModel, index: number) => {
+            const ref = React.createRef<HTMLDivElement>();
+            this.cellRefs.set(cellVM.cell.id, ref);
+            return (
+                <div key={index} id={cellVM.cell.id} ref={ref}>
+                    <ErrorBoundary key={index}>
+                        <Cell
+                            role='listitem'
+                            editorOptions={this.props.editorOptions}
+                            history={undefined}
+                            maxTextSize={maxTextSize}
+                            autoFocus={false}
+                            testMode={this.props.testMode}
+                            cellVM={cellVM}
+                            submitNewCode={noop}
+                            baseTheme={baseTheme}
+                            codeTheme={this.props.codeTheme}
+                            showWatermark={false}
+                            editExecutionCount={0}
+                            gotoCode={() => this.props.gotoCellCode(index)}
+                            copyCode={() => this.props.copyCellCode(index)}
+                            delete={() => this.props.deleteCell(index)}
+                            gatherCode={() => this.props.gatherCode(index)}
+                            enableGather={this.props.enableGather}
+                            onCodeChange={this.props.onCodeChange}
+                            onCodeCreated={this.props.onCodeCreated}
+                            monacoTheme={this.props.monacoTheme}
+                            openLink={this.props.openLink}
+                            expandImage={this.props.expandImage}
+                        />
+                    </ErrorBoundary>
+                </div>);
+        }
         );
     }
 
-    private scrollToBottom = () => {
-        if (this.bottomRef.current && !this.props.skipNextScroll && !this.props.testMode && this.containerRef.current) {
-            // Force auto here as smooth scrolling can be canceled by updates to the window
-            // from elsewhere (and keeping track of these would make this hard to maintain)
-            setTimeout(() => {
-                if (this.bottomRef.current) {
-                    this.bottomRef.current!.scrollIntoView({behavior: 'auto', block: 'start', inline: 'nearest'});
-                }
-            }, 100);
+    private scrollIntoView() {
+        // Force auto here as smooth scrolling can be canceled by updates to the window
+        // from elsewhere (and keeping track of these would make this hard to maintain)
+        if (this.bottomRef.current
+            // This condition prevents window to scroll down when user is not near the bottom.
+            // We increase window.innerHeight by 20% to still snap to the bottom when creating
+            // multiple default plots. User needs to do about 3 'scrolls' up from the bottom
+            // to prevent the window to snap to the bottom.
+            && this.bottomRef.current.getBoundingClientRect().bottom <= window.innerHeight * 1.2) {
+            this.bottomRef.current.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' });
         }
     }
 
+    private scrollToBottom() {
+        if (this.bottomRef.current && !this.props.skipNextScroll && !this.props.testMode && this.containerRef.current) {
+            // Make sure to debounce this so it doesn't take up too much time.
+            this.throttledScrollIntoView();
+        }
+    }
 }

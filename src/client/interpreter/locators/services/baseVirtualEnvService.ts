@@ -63,7 +63,7 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
                     return scriptOrBinDirs.length === 1 ? scriptOrBinDirs[0] : '';
                 })
                 .catch((err) => {
-                    console.error('Python Extension (getProspectiveDirectoriesForLookup):', err);
+                    traceError('Python Extension (getProspectiveDirectoriesForLookup):', err);
                     // Ignore exceptions.
                     return '';
                 }));

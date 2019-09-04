@@ -4,6 +4,7 @@ import { Event, EventEmitter, StatusBarAlignment, StatusBarItem } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import * as constants from '../../common/constants';
 import { isNotInstalledError } from '../../common/helpers';
+import { traceError } from '../../common/logger';
 import { IConfigurationService } from '../../common/types';
 import { Testing } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -177,7 +178,7 @@ export class TestResultDisplay implements ITestResultDisplay {
                 .showInformationMessage('No tests discovered, please check the configuration settings for the tests.', Testing.disableTests(), Testing.configureTests())
                 .then(item => {
                     if (item === Testing.disableTests()) {
-                        this.disableTests().catch(ex => console.error('Python Extension: disableTests', ex));
+                        this.disableTests().catch(ex => traceError('Python Extension: disableTests', ex));
                     } else if (item === Testing.configureTests()) {
                         this.cmdManager.executeCommand(constants.Commands.Tests_Configure, undefined, undefined, undefined).then(noop);
                     }

@@ -10,13 +10,15 @@ import { IWebPanel, IWebPanelMessageListener, IWebPanelProvider, IWorkspaceServi
 import { traceInfo } from '../common/logger';
 import { IConfigurationService, IDisposable } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
-import { DefaultTheme } from './constants';
+import { StopWatch } from '../common/utils/stopWatch';
+import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
+import { DefaultTheme, Telemetry } from './constants';
 import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from './messages';
 import { ICodeCssGenerator, IDataScienceExtraSettings, IThemeFinder } from './types';
 
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
 export class WebViewHost<IMapping> implements IDisposable {
-    protected viewState : { visible: boolean; active: boolean } = { visible: false, active: false };
+    protected viewState: { visible: boolean; active: boolean } = { visible: false, active: false };
     private isDisposed: boolean = false;
     private webPanel: IWebPanel | undefined;
     private webPanelInit: Deferred<void>;
@@ -24,9 +26,10 @@ export class WebViewHost<IMapping> implements IDisposable {
     private themeChangeHandler: IDisposable | undefined;
     private settingsChangeHandler: IDisposable | undefined;
     private themeIsDarkPromise: Deferred<boolean>;
+    private startupStopwatch = new StopWatch();
 
     constructor(
-        @unmanaged() private configService: IConfigurationService,
+        @unmanaged() protected configService: IConfigurationService,
         @unmanaged() private provider: IWebPanelProvider,
         @unmanaged() private cssGenerator: ICodeCssGenerator,
         @unmanaged() protected themeFinder: IThemeFinder,
@@ -36,7 +39,7 @@ export class WebViewHost<IMapping> implements IDisposable {
         @unmanaged() private mainScriptPath: string,
         @unmanaged() private title: string,
         @unmanaged() private viewColumn: ViewColumn
-        ) {
+    ) {
         // Create our message listener for our web panel.
         this.messageListener = messageListenerCtor(this.onMessage.bind(this), this.onViewStateChanged.bind(this), this.dispose.bind(this));
 
@@ -111,7 +114,7 @@ export class WebViewHost<IMapping> implements IDisposable {
         }
     }
 
-    protected postMessage<M extends IMapping, T extends keyof M>(type: T, payload?: M[T]) : Promise<void> {
+    protected postMessage<M extends IMapping, T extends keyof M>(type: T, payload?: M[T]): Promise<void> {
         // Then send it the message
         return this.postMessageInternal(type.toString(), payload);
     }
@@ -121,12 +124,12 @@ export class WebViewHost<IMapping> implements IDisposable {
         this.messageListener.onMessage(type.toString(), payload);
     }
 
-    protected activating() : Promise<void> {
+    protected activating(): Promise<void> {
         return Promise.resolve();
     }
 
     // tslint:disable-next-line:no-any
-    protected async postMessageInternal(type: string, payload?: any) : Promise<void> {
+    protected async postMessageInternal(type: string, payload?: any): Promise<void> {
         if (this.webPanel) {
             // Make sure the webpanel is up before we send it anything.
             await this.webPanelInit.promise;
@@ -136,7 +139,7 @@ export class WebViewHost<IMapping> implements IDisposable {
         }
     }
 
-    protected generateDataScienceExtraSettings() : IDataScienceExtraSettings {
+    protected generateDataScienceExtraSettings(): IDataScienceExtraSettings {
         const editor = this.workspaceService.getConfiguration('editor');
         const workbench = this.workspaceService.getConfiguration('workbench');
         const theme = !workbench ? DefaultTheme : workbench.get<string>('colorTheme', DefaultTheme);
@@ -165,11 +168,11 @@ export class WebViewHost<IMapping> implements IDisposable {
         };
     }
 
-    protected isDark() : Promise<boolean> {
+    protected isDark(): Promise<boolean> {
         return this.themeIsDarkPromise.promise;
     }
 
-    private getValue<T>(workspaceConfig: WorkspaceConfiguration, section: string, defaultValue: T) : T {
+    private getValue<T>(workspaceConfig: WorkspaceConfiguration, section: string, defaultValue: T): T {
         if (workspaceConfig) {
             return workspaceConfig.get(section, defaultValue);
         }
@@ -187,7 +190,8 @@ export class WebViewHost<IMapping> implements IDisposable {
         }
     }
 
-    private async handleCssRequest(request: IGetCssRequest) : Promise<void> {
+    @captureTelemetry(Telemetry.WebviewStyleUpdate)
+    private async handleCssRequest(request: IGetCssRequest): Promise<void> {
         if (!this.themeIsDarkPromise.resolved) {
             this.themeIsDarkPromise.resolve(request.isDark);
         } else {
@@ -200,7 +204,8 @@ export class WebViewHost<IMapping> implements IDisposable {
         return this.postMessageInternal(CssMessages.GetCssResponse, { css, theme: settings.extraSettings.theme, knownDark: isDark });
     }
 
-    private async handleMonacoThemeRequest(request: IGetMonacoThemeRequest) : Promise<void> {
+    @captureTelemetry(Telemetry.WebviewMonacoStyleUpdate)
+    private async handleMonacoThemeRequest(request: IGetMonacoThemeRequest): Promise<void> {
         if (!this.themeIsDarkPromise.resolved) {
             this.themeIsDarkPromise.resolve(request.isDark);
         } else {
@@ -215,6 +220,10 @@ export class WebViewHost<IMapping> implements IDisposable {
     // tslint:disable-next-line:no-any
     private webPanelRendered() {
         if (!this.webPanelInit.resolved) {
+            // Send telemetry for startup
+            sendTelemetryEvent(Telemetry.WebviewStartup, this.startupStopwatch.elapsedTime, { type: this.title });
+
+            // Resolve our started promise. This means the webpanel is ready to go.
             this.webPanelInit.resolve();
         }
     }
@@ -223,7 +232,8 @@ export class WebViewHost<IMapping> implements IDisposable {
     private onPossibleSettingsChange = (event: ConfigurationChangeEvent) => {
         if (event.affectsConfiguration('workbench.colorTheme') ||
             event.affectsConfiguration('editor.cursorStyle') ||
-            event.affectsConfiguration('editor.cursorBlinking')) {
+            event.affectsConfiguration('editor.cursorBlinking') ||
+            event.affectsConfiguration('python.dataScience.enableGather')) {
             // See if the theme changed
             const newSettings = this.generateDataScienceExtraSettings();
             if (newSettings) {

@@ -6,6 +6,7 @@ import { Product, ProductType } from '../types';
 
 export const IModuleInstaller = Symbol('IModuleInstaller');
 export interface IModuleInstaller {
+    readonly name: string;
     readonly displayName: string;
     readonly priority: number;
     installModule(name: string, resource?: Uri): Promise<void>;
@@ -31,4 +32,11 @@ export const IProductPathService = Symbol('IProductPathService');
 export interface IProductPathService {
     getExecutableNameFromSettings(product: Product, resource?: Uri): string;
     isExecutableAModule(product: Product, resource?: Uri): Boolean;
+}
+
+export const INSIDERS_INSTALLER = 'INSIDERS_INSTALLER';
+export const STABLE_INSTALLER = 'STABLE_INSTALLER';
+export const IExtensionBuildInstaller = Symbol('IExtensionBuildInstaller');
+export interface IExtensionBuildInstaller {
+    install(): Promise<void>;
 }

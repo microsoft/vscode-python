@@ -3,7 +3,6 @@
 
 from __future__ import absolute_import, print_function
 
-import os.path
 import sys
 
 import pytest
@@ -28,11 +27,15 @@ def discover(pytestargs=None, hidestdio=False,
         # No tests were discovered.
         pass
     elif ec != 0:
+        print(('equivalent command: {} -m pytest {}'
+               ).format(sys.executable, util.shlex_unsplit(pytestargs)))
         if hidestdio:
             print(stdio.getvalue(), file=sys.stderr)
             sys.stdout.flush()
         raise Exception('pytest discovery failed (exit code {})'.format(ec))
     if not _plugin._started:
+        print(('equivalent command: {} -m pytest {}'
+               ).format(sys.executable, util.shlex_unsplit(pytestargs)))
         if hidestdio:
             print(stdio.getvalue(), file=sys.stderr)
             sys.stdout.flush()
@@ -57,8 +60,9 @@ def _adjust_pytest_args(pytestargs):
 class TestCollector(object):
     """This is a pytest plugin that collects the discovered tests."""
 
-    NORMCASE = staticmethod(os.path.normcase)
-    PATHSEP = os.path.sep
+    @classmethod
+    def parse_item(cls, item):
+        return parse_item(item)
 
     def __init__(self, tests=None):
         if tests is None:
@@ -73,7 +77,7 @@ class TestCollector(object):
         self._started = True
         self._tests.reset()
         for item in items:
-            test, parents = parse_item(item, self.NORMCASE, self.PATHSEP)
+            test, parents = self.parse_item(item)
             self._tests.add_test(test, parents)
 
     # This hook is not specified in the docs, so we also provide
@@ -87,5 +91,5 @@ class TestCollector(object):
             return
         self._tests.reset()
         for item in items:
-            test, parents = parse_item(item, self.NORMCASE, self.PATHSEP)
+            test, parents = self.parse_item(item)
             self._tests.add_test(test, parents)

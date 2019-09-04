@@ -123,7 +123,7 @@ const mapJupyterKind: Map<string, number> = new Map<string, number>([
     ['<unknown>', 25]
 ]);
 
-function convertToMonacoRange(range: vscodeLanguageClient.Range | undefined) : monacoEditor.IRange | undefined {
+function convertToMonacoRange(range: vscodeLanguageClient.Range | undefined): monacoEditor.IRange | undefined {
     if (range) {
         return {
             startLineNumber: range.start.line + 1,
@@ -148,10 +148,10 @@ function convertToMonacoCompletionItemKind(kind?: number): number {
     return 9; // Property
 }
 
-function convertToMonacoCompletionItem(item: vscodeLanguageClient.CompletionItem, requiresKindConversion: boolean) : monacoEditor.languages.CompletionItem {
+function convertToMonacoCompletionItem(item: vscodeLanguageClient.CompletionItem, requiresKindConversion: boolean): monacoEditor.languages.CompletionItem {
     // They should be pretty much identical? Except for ranges.
-    // tslint:disable-next-line: no-object-literal-type-assertion
-    const result = {...item} as monacoEditor.languages.CompletionItem;
+    // tslint:disable-next-line: no-object-literal-type-assertion no-any
+    const result = ({ ...item } as any) as monacoEditor.languages.CompletionItem;
     if (requiresKindConversion) {
         result.kind = convertToMonacoCompletionItemKind(item.kind);
     }
@@ -166,7 +166,7 @@ function convertToMonacoCompletionItem(item: vscodeLanguageClient.CompletionItem
 
 export function convertToMonacoCompletionList(
     result: vscodeLanguageClient.CompletionList | vscodeLanguageClient.CompletionItem[] | vscode.CompletionItem[] | vscode.CompletionList | null,
-    requiresKindConversion: boolean) : monacoEditor.languages.CompletionList {
+    requiresKindConversion: boolean): monacoEditor.languages.CompletionList {
     if (result) {
         if (result.hasOwnProperty('items')) {
             const list = result as vscodeLanguageClient.CompletionList;
@@ -190,7 +190,7 @@ export function convertToMonacoCompletionList(
     };
 }
 
-function convertToMonacoMarkdown(strings: vscodeLanguageClient.MarkupContent | vscodeLanguageClient.MarkedString | vscodeLanguageClient.MarkedString[] | vscode.MarkedString | vscode.MarkedString[]) : monacoEditor.IMarkdownString[] {
+function convertToMonacoMarkdown(strings: vscodeLanguageClient.MarkupContent | vscodeLanguageClient.MarkedString | vscodeLanguageClient.MarkedString[] | vscode.MarkedString | vscode.MarkedString[]): monacoEditor.IMarkdownString[] {
     if (strings.hasOwnProperty('kind')) {
         const content = strings as vscodeLanguageClient.MarkupContent;
         return [
@@ -220,7 +220,7 @@ function convertToMonacoMarkdown(strings: vscodeLanguageClient.MarkupContent | v
     return [];
 }
 
-export function convertToMonacoHover(result: vscodeLanguageClient.Hover | vscode.Hover | null | undefined) : monacoEditor.languages.Hover {
+export function convertToMonacoHover(result: vscodeLanguageClient.Hover | vscode.Hover | null | undefined): monacoEditor.languages.Hover {
     if (result) {
         return {
             contents: convertToMonacoMarkdown(result.contents),
@@ -234,7 +234,7 @@ export function convertToMonacoHover(result: vscodeLanguageClient.Hover | vscode
 }
 
 // tslint:disable-next-line: no-any
-export function convertStringsToSuggestions(strings: ReadonlyArray<string>, range: monacoEditor.IRange, metadata: any) : monacoEditor.languages.CompletionItem [] {
+export function convertStringsToSuggestions(strings: ReadonlyArray<string>, range: monacoEditor.IRange, metadata: any): monacoEditor.languages.CompletionItem[] {
     // Try to compute kind from the metadata.
     let kinds: number[];
     if (metadata && metadata._jupyter_types_experimental) {
@@ -257,7 +257,7 @@ export function convertStringsToSuggestions(strings: ReadonlyArray<string>, rang
 }
 
 export function convertToMonacoSignatureHelp(
-    result: vscodeLanguageClient.SignatureHelp | vscode.SignatureHelp | null) : monacoEditor.languages.SignatureHelp {
+    result: vscodeLanguageClient.SignatureHelp | vscode.SignatureHelp | null): monacoEditor.languages.SignatureHelp {
     if (result) {
         return result as monacoEditor.languages.SignatureHelp;
     }

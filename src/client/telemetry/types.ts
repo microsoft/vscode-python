@@ -2,195 +2,24 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { DiagnosticCodes } from '../application/diagnostics/constants';
-import { TerminalShellType } from '../common/terminal/types';
-import { DebugConfigurationType } from '../debugger/extension/types';
-import { ConsoleType } from '../debugger/types';
-import { AutoSelectionRule } from '../interpreter/autoSelection/types';
-import { InterpreterType } from '../interpreter/contracts';
-import { LinterId } from '../linters/types';
-import { PlatformErrors } from './constants';
+import { IEventNamePropertyMapping } from '../telemetry/index';
+import { EventName } from './constants';
 
-export type EditorLoadTelemetry = {
-    condaVersion: string | undefined;
-    pythonVersion: string | undefined;
-    interpreterType: InterpreterType | undefined;
-    terminal: TerminalShellType;
-    workspaceFolderCount: number;
-    hasPython3: boolean;
-    usingUserDefinedInterpreter: boolean;
-    usingAutoSelectedWorkspaceInterpreter: boolean;
-    usingGlobalInterpreter: boolean;
-};
-export type FormatTelemetry = {
-    tool: 'autopep8' | 'black' | 'yapf';
-    hasCustomArgs: boolean;
-    formatSelection: boolean;
-};
-
-export type LanguageServerVersionTelemetry = {
-    success: boolean;
-    lsVersion?: string;
-    usedSSL?: boolean;
-};
-
-export type LanguageServerErrorTelemetry = {
-    error: string;
-};
-
-export type LanguageServePlatformSupported = {
-    supported: boolean;
-    failureType?: 'UnknownError';
-};
+export type EditorLoadTelemetry = IEventNamePropertyMapping[EventName.EDITOR_LOAD];
 
 export type LinterTrigger = 'auto' | 'save';
 
-export type LintingTelemetry = {
-    tool: LinterId;
-    hasCustomArgs: boolean;
-    trigger: LinterTrigger;
-    executableSpecified: boolean;
-};
+export type LintingTelemetry = IEventNamePropertyMapping[EventName.LINTING];
 
-export type LinterInstallPromptTelemetry = {
-    tool?: LinterId;
-    action: 'select' | 'disablePrompt' | 'install';
-};
-
-export type LinterSelectionTelemetry = {
-    tool?: LinterId;
-    enabled: boolean;
-};
-
-export type PythonInterpreterTelemetry = {
-    trigger: 'ui' | 'shebang' | 'load';
-    failed: boolean;
-    pythonVersion?: string;
-    pipVersion?: string;
-};
-export type CodeExecutionTelemetry = {
-    scope: 'file' | 'selection';
-};
-export type DebuggerTelemetry = {
-    trigger: 'launch' | 'attach' | 'test';
-    console?: ConsoleType;
-    hasEnvVars: boolean;
-    hasArgs: boolean;
-    django: boolean;
-    flask: boolean;
-    jinja: boolean;
-    isLocalhost: boolean;
-    isModule: boolean;
-    isSudo: boolean;
-    stopOnEntry: boolean;
-    showReturnValue: boolean;
-    pyramid: boolean;
-    subProcess: boolean;
-    watson: boolean;
-    pyspark: boolean;
-    gevent: boolean;
-    scrapy: boolean;
-};
-export type DebuggerPerformanceTelemetry = {
-    duration: number;
-    action: 'stepIn' | 'stepOut' | 'continue' | 'next' | 'launch';
-};
+export type PythonInterpreterTelemetry = IEventNamePropertyMapping[EventName.PYTHON_INTERPRETER];
+export type CodeExecutionTelemetry = IEventNamePropertyMapping[EventName.EXECUTION_CODE];
+export type DebuggerTelemetry = IEventNamePropertyMapping[EventName.DEBUGGER];
 export type TestTool = 'nosetest' | 'pytest' | 'unittest';
-export type TestRunTelemetry = {
-    tool: TestTool;
-    scope: 'currentFile' | 'all' | 'file' | 'class' | 'function' | 'failed';
-    debugging: boolean;
-    triggerSource: 'ui' | 'codelens' | 'commandpalette' | 'auto' | 'testExplorer';
-    failed: boolean;
-};
-export type TestDiscoverytTelemetry = {
-    tool: TestTool;
-    trigger: 'ui' | 'commandpalette';
-    failed: boolean;
-};
-export type TestConfiguringTelemetry = {
-    tool?: TestTool;
-    trigger: 'ui' | 'commandpalette';
-    failed: boolean;
-};
-export type FeedbackTelemetry = {
-    action: 'accepted' | 'dismissed' | 'doNotShowAgain';
-};
-export type SettingsTelemetry = {
-    enabled: boolean;
-};
-export type TerminalTelemetry = {
-    terminal?: TerminalShellType;
-    triggeredBy?: 'commandpalette';
-    pythonVersion?: string;
-    interpreterType?: InterpreterType;
-};
-export type DebuggerConfigurationPromtpsTelemetry = {
-    configurationType: DebugConfigurationType;
-    autoDetectedDjangoManagePyPath?: boolean;
-    autoDetectedPyramidIniPath?: boolean;
-    autoDetectedFlaskAppPyPath?: boolean;
-    manuallyEnteredAValue?: boolean;
-};
-export type DiagnosticsAction = {
-    /**
-     * Diagnostics command executed.
-     * @type {string}
-     */
-    commandName?: string;
-    /**
-     * Diagnostisc code ignored (message will not be seen again).
-     * @type {string}
-     */
-    ignoreCode?: string;
-    /**
-     * Url of web page launched in browser.
-     * @type {string}
-     */
-    url?: string;
-    /**
-     * Custom actions performed.
-     * @type {'switchToCommandPrompt'}
-     */
-    action?: 'switchToCommandPrompt';
-};
-export type DiagnosticsMessages = {
-    /**
-     * Code of diagnostics message detected and displayed.
-     * @type {string}
-     */
-    code: DiagnosticCodes;
-};
+export type TestRunTelemetry = IEventNamePropertyMapping[EventName.UNITTEST_RUN];
+export type TestDiscoverytTelemetry = IEventNamePropertyMapping[EventName.UNITTEST_DISCOVER];
+export type TestConfiguringTelemetry = IEventNamePropertyMapping[EventName.UNITTEST_CONFIGURING];
 export type ImportNotebook = {
     scope: 'command';
-};
-
-export type Platform = {
-    failureType?: PlatformErrors;
-    osVersion?: string;
-};
-
-export type InterpreterAutoSelection = {
-    rule?: AutoSelectionRule;
-    interpreterMissing?: boolean;
-    identified?: boolean;
-    updated?: boolean;
-};
-export type InterpreterDiscovery = {
-    locator: string;
-};
-
-export type InterpreterActivationEnvironmentVariables = {
-    hasEnvVars?: boolean;
-    failed?: boolean;
-};
-
-export type InterpreterActivation = {
-    hasCommands?: boolean;
-    failed?: boolean;
-    terminal: TerminalShellType;
-    pythonVersion?: string;
-    interpreterType: InterpreterType;
 };
 
 export const IImportTracker = Symbol('IImportTracker');

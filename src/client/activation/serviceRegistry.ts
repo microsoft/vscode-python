@@ -10,8 +10,10 @@ import { InteractiveShiftEnterBanner } from '../datascience/shiftEnterBanner';
 import { IServiceManager } from '../ioc/types';
 import { LanguageServerSurveyBanner } from '../languageServices/languageServerSurveyBanner';
 import { ProposeLanguageServerBanner } from '../languageServices/proposeLanguageServerBanner';
+import { AATesting } from './aaTesting';
 import { ExtensionActivationManager } from './activationManager';
 import { LanguageServerExtensionActivationService } from './activationService';
+import { ExtensionSurveyPrompt } from './extensionSurvey';
 import { JediExtensionActivator } from './jedi';
 import { LanguageServerExtensionActivator } from './languageServer/activator';
 import { LanguageServerAnalysisOptions } from './languageServer/analysisOptions';
@@ -25,8 +27,9 @@ import { LanguageServerFolderService } from './languageServer/languageServerFold
 import { BetaLanguageServerPackageRepository, DailyLanguageServerPackageRepository, LanguageServerDownloadChannel, StableLanguageServerPackageRepository } from './languageServer/languageServerPackageRepository';
 import { LanguageServerPackageService } from './languageServer/languageServerPackageService';
 import { LanguageServerManager } from './languageServer/manager';
+import { LanguageServerOutputChannel } from './languageServer/outputChannel';
 import { PlatformData } from './languageServer/platformData';
-import { IDownloadChannelRule, IExtensionActivationManager, IExtensionActivationService, ILanguageClientFactory, ILanguageServer, ILanguageServerActivator, ILanguageServerAnalysisOptions, ILanguageServerCompatibilityService as ILanagueServerCompatibilityService, ILanguageServerDownloader, ILanguageServerExtension, ILanguageServerFolderService, ILanguageServerManager, ILanguageServerPackageService, IPlatformData, LanguageClientFactory, LanguageServerActivator } from './types';
+import { IDownloadChannelRule, IExtensionActivationManager, IExtensionActivationService, IExtensionSingleActivationService, ILanguageClientFactory, ILanguageServer, ILanguageServerActivator, ILanguageServerAnalysisOptions, ILanguageServerCompatibilityService as ILanagueServerCompatibilityService, ILanguageServerDownloader, ILanguageServerExtension, ILanguageServerFolderService, ILanguageServerManager, ILanguageServerOutputChannel, ILanguageServerPackageService, IPlatformData, LanguageClientFactory, LanguageServerActivator } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, LanguageServerExtensionActivationService);
@@ -55,4 +58,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, LanguageServerAnalysisOptions);
     serviceManager.addSingleton<ILanguageServer>(ILanguageServer, LanguageServer);
     serviceManager.add<ILanguageServerManager>(ILanguageServerManager, LanguageServerManager);
+    serviceManager.addSingleton<ILanguageServerOutputChannel>(ILanguageServerOutputChannel, LanguageServerOutputChannel);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ExtensionSurveyPrompt);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, AATesting);
 }

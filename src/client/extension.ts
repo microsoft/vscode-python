@@ -25,7 +25,6 @@ import {
     Disposable,
     ExtensionContext,
     extensions,
-    IndentAction,
     languages,
     Memento,
     OutputChannel,
@@ -63,10 +62,10 @@ import {
     WORKSPACE_MEMENTO
 } from './common/types';
 import { createDeferred } from './common/utils/async';
-import { Common } from './common/utils/localize';
+import { Common, OutputChannelNames } from './common/utils/localize';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { registerTypes as dataScienceRegisterTypes } from './datascience/serviceRegistry';
-import { IDataScience } from './datascience/types';
+import { IDataScience, IDebugLocationTrackerFactory } from './datascience/types';
 import { DebuggerTypeName } from './debugger/constants';
 import { DebugSessionEventDispatcher } from './debugger/extension/hooks/eventHandlerDispatcher';
 import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
@@ -77,15 +76,16 @@ import { AutoSelectionRule, IInterpreterAutoSelectionRule, IInterpreterAutoSelec
 import { IInterpreterSelector } from './interpreter/configuration/types';
 import {
     ICondaService,
+    IInterpreterLocatorProgressHandler,
     IInterpreterLocatorProgressService,
     IInterpreterService,
-    InterpreterLocatorProgressHandler,
     PythonInterpreter
 } from './interpreter/contracts';
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 import { ServiceContainer } from './ioc/container';
 import { ServiceManager } from './ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from './ioc/types';
+import { getLanguageConfiguration } from './language/languageConfiguration';
 import { LinterCommands } from './linters/linterCommands';
 import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
 import { ILintingEngine } from './linters/types';
@@ -155,11 +155,14 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
     interpreterManager.refresh(workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined)
-        .catch(ex => console.error('Python Extension: interpreterManager.refresh', ex));
+        .catch(ex => traceError('Python Extension: interpreterManager.refresh', ex));
 
     const jupyterExtension = extensions.getExtension('donjayamanne.jupyter');
     const lintingEngine = serviceManager.get<ILintingEngine>(ILintingEngine);
     lintingEngine.linkJupyterExtension(jupyterExtension).ignoreErrors();
+
+    // Activate debug location tracker
+    serviceManager.get<IDebugLocationTrackerFactory>(IDebugLocationTrackerFactory);
 
     // Activate data science features
     const dataScience = serviceManager.get<IDataScience>(IDataScience);
@@ -173,30 +176,7 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     const linterProvider = new LinterProvider(context, serviceManager);
     context.subscriptions.push(linterProvider);
 
-    // Enable indentAction
-    // tslint:disable-next-line:no-non-null-assertion
-    languages.setLanguageConfiguration(PYTHON_LANGUAGE, {
-        onEnterRules: [
-            {
-                beforeText: /^\s*(?:def|class|for|if|elif|else|while|try|with|finally|except|async)\b.*:\s*/,
-                action: { indentAction: IndentAction.Indent }
-            },
-            {
-                beforeText: /^(?!\s+\\)[^#\n]+\\\s*/,
-                action: { indentAction: IndentAction.Indent }
-            },
-            {
-                beforeText: /^\s*#.*/,
-                afterText: /.+$/,
-                action: { indentAction: IndentAction.None, appendText: '# ' }
-            },
-            {
-                beforeText: /^\s+(continue|break|return)\b.*/,
-                afterText: /\s+$/,
-                action: { indentAction: IndentAction.Outdent }
-            }
-        ]
-    });
+    languages.setLanguageConfiguration(PYTHON_LANGUAGE, getLanguageConfiguration());
 
     if (pythonSettings && pythonSettings.formatting && pythonSettings.formatting.provider !== 'internalConsole') {
         const formatProvider = new PythonFormattingEditProvider(context, serviceContainer);
@@ -260,8 +240,8 @@ function registerServices(context: ExtensionContext, serviceManager: ServiceMana
     serviceManager.addSingletonInstance<Memento>(IMemento, context.workspaceState, WORKSPACE_MEMENTO);
     serviceManager.addSingletonInstance<IExtensionContext>(IExtensionContext, context);
 
-    const standardOutputChannel = window.createOutputChannel('Python');
-    const unitTestOutChannel = window.createOutputChannel('Python Test Log');
+    const standardOutputChannel = window.createOutputChannel(OutputChannelNames.python());
+    const unitTestOutChannel = window.createOutputChannel(OutputChannelNames.pythonTest());
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, unitTestOutChannel, TEST_OUTPUT_CHANNEL);
 
@@ -303,7 +283,7 @@ async function initializeServices(context: ExtensionContext, serviceManager: Ser
     disposables.push(cmdManager.registerCommand(Commands.ViewOutput, () => outputChannel.show()));
 
     // Display progress of interpreter refreshes only after extension has activated.
-    serviceContainer.get<InterpreterLocatorProgressHandler>(InterpreterLocatorProgressHandler).register();
+    serviceContainer.get<IInterpreterLocatorProgressHandler>(IInterpreterLocatorProgressHandler).register();
     serviceContainer.get<IInterpreterLocatorProgressService>(IInterpreterLocatorProgressService).register();
     serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics).register();
     serviceContainer.get<ITestCodeNavigatorCommandHandler>(ITestCodeNavigatorCommandHandler).register();

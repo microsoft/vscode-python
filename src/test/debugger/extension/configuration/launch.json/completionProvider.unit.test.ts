@@ -22,7 +22,7 @@ suite('Debugging - launch.json Completion Provider', () => {
         completionProvider = new LaunchJsonCompletionProvider(instance(languageService), []);
     });
     test('Activation will register the completion provider', async () => {
-        await completionProvider.activate(undefined);
+        await completionProvider.activate();
         verify(languageService.registerCompletionItemProvider(deepEqual({ language: 'json' }), completionProvider)).once();
         verify(languageService.registerCompletionItemProvider(deepEqual({ language: 'jsonc' }), completionProvider)).once();
     });

@@ -3,12 +3,12 @@
 
 'use strict';
 
-import { CancellationToken, DebugConfigurationProvider, WorkspaceFolder } from 'vscode';
+import { CancellationToken, DebugAdapterDescriptorFactory, DebugConfigurationProvider, WorkspaceFolder } from 'vscode';
 import { InputStep, MultiStepInput } from '../../common/utils/multiStepInput';
 import { DebugConfigurationArguments } from '../types';
 
 export const IDebugConfigurationService = Symbol('IDebugConfigurationService');
-export interface IDebugConfigurationService extends DebugConfigurationProvider { }
+export interface IDebugConfigurationService extends DebugConfigurationProvider {}
 export const IDebuggerBanner = Symbol('IDebuggerBanner');
 export interface IDebuggerBanner {
     initialize(): void;
@@ -34,3 +34,12 @@ export enum PythonPathSource {
     launchJson = 'launch.json',
     settingsJson = 'settings.json'
 }
+
+export enum ExtensionSingleActivationServiceType {
+    jsonCompletionProvider = 'jsonCompletionProvider',
+    jsonUpdaterService = 'jsonUpdaterService',
+    debugAdapterActivator = 'debugAdapterActivator'
+}
+
+export const IDebugAdapterDescriptorFactory = Symbol('IDebugAdapterDescriptorFactory');
+export interface IDebugAdapterDescriptorFactory extends DebugAdapterDescriptorFactory {}

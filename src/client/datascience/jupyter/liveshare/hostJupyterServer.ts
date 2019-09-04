@@ -3,6 +3,8 @@
 'use strict';
 import '../../../common/extensions';
 
+// tslint:disable-next-line: no-require-imports
+import cloneDeep = require('lodash/cloneDeep');
 import * as os from 'os';
 import { Observable } from 'rxjs/Observable';
 import * as vscode from 'vscode';
@@ -10,6 +12,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
 import { ILiveShareApi } from '../../../common/application/types';
+import { traceError } from '../../../common/logger';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
@@ -19,6 +22,7 @@ import {
     ICell,
     IDataScience,
     IJupyterSessionManager,
+    INotebookExecutionLogger,
     INotebookServer,
     INotebookServerLaunchInfo,
     InterruptResult
@@ -34,13 +38,13 @@ import { IExecuteObservableResponse, IResponseMapping, IServerResponse, ServerRe
 export class HostJupyterServer
     extends LiveShareParticipantHost(JupyterServerBase, LiveShare.JupyterServerSharedService)
     implements IRoleBasedObject, INotebookServer {
-    private catchupResponses : ResponseQueue = new ResponseQueue();
+    private catchupResponses: ResponseQueue = new ResponseQueue();
     private localResponses: ResponseQueue = new ResponseQueue();
-    private requestLog : Map<string, number> = new Map<string, number>();
-    private catchupPendingCount : number = 0;
+    private requestLog: Map<string, number> = new Map<string, number>();
+    private catchupPendingCount: number = 0;
     private disposed = false;
     private portToForward = 0;
-    private sharedPort : vscode.Disposable | undefined;
+    private sharedPort: vscode.Disposable | undefined;
     constructor(
         liveShare: ILiveShareApi,
         dataScience: IDataScience,
@@ -48,8 +52,9 @@ export class HostJupyterServer
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         configService: IConfigurationService,
-        sessionManager: IJupyterSessionManager) {
-        super(liveShare, dataScience, logger, disposableRegistry, asyncRegistry, configService, sessionManager);
+        sessionManager: IJupyterSessionManager,
+        loggers: INotebookExecutionLogger[]) {
+        super(liveShare, dataScience, logger, disposableRegistry, asyncRegistry, configService, sessionManager, loggers);
     }
 
     public async dispose(): Promise<void> {
@@ -57,7 +62,7 @@ export class HostJupyterServer
             this.disposed = true;
             await super.dispose();
             const api = await this.api;
-            return this.onDetach(api) ;
+            return this.onDetach(api);
         }
     }
 
@@ -72,7 +77,7 @@ export class HostJupyterServer
         return super.connect(launchInfo, cancelToken);
     }
 
-    public async onAttach(api: vsls.LiveShare | null) : Promise<void> {
+    public async onAttach(api: vsls.LiveShare | null): Promise<void> {
         await super.onAttach(api);
 
         if (api && !this.disposed) {
@@ -82,10 +87,10 @@ export class HostJupyterServer
             if (service) {
                 // Requests return arrays
                 service.onRequest(LiveShareCommands.syncRequest, (_args: any[], _cancellation: CancellationToken) => this.onSync());
-                service.onRequest(LiveShareCommands.getSysInfo, (_args:  any[], cancellation: CancellationToken) => this.onGetSysInfoRequest(cancellation));
-                service.onRequest(LiveShareCommands.restart, (args:  any[], cancellation: CancellationToken) => this.onRestartRequest(args.length > 0 ? args[0] as number : LiveShare.InterruptDefaultTimeout, cancellation));
-                service.onRequest(LiveShareCommands.interrupt, (args:  any[], cancellation: CancellationToken) => this.onInterruptRequest(args.length > 0 ? args[0] as number : LiveShare.InterruptDefaultTimeout, cancellation));
-                service.onRequest(LiveShareCommands.disposeServer, (_args:  any[], _cancellation: CancellationToken) => this.dispose());
+                service.onRequest(LiveShareCommands.getSysInfo, (_args: any[], cancellation: CancellationToken) => this.onGetSysInfoRequest(cancellation));
+                service.onRequest(LiveShareCommands.restart, (args: any[], cancellation: CancellationToken) => this.onRestartRequest(args.length > 0 ? args[0] as number : LiveShare.InterruptDefaultTimeout, cancellation));
+                service.onRequest(LiveShareCommands.interrupt, (args: any[], cancellation: CancellationToken) => this.onInterruptRequest(args.length > 0 ? args[0] as number : LiveShare.InterruptDefaultTimeout, cancellation));
+                service.onRequest(LiveShareCommands.disposeServer, (_args: any[], _cancellation: CancellationToken) => this.dispose());
 
                 // Notifications are always objects.
                 service.onNotify(LiveShareCommands.catchupRequest, (args: object) => this.onCatchupRequest(args));
@@ -97,7 +102,7 @@ export class HostJupyterServer
         }
     }
 
-    public async onDetach(api: vsls.LiveShare | null) : Promise<void> {
+    public async onDetach(api: vsls.LiveShare | null): Promise<void> {
         await super.onDetach(api);
 
         // Make sure to unshare our port
@@ -107,7 +112,7 @@ export class HostJupyterServer
         }
     }
 
-    public async waitForServiceName() : Promise<string> {
+    public async waitForServiceName(): Promise<string> {
         // First wait for connect to occur
         const launchInfo = await this.waitForConnect();
 
@@ -120,7 +125,7 @@ export class HostJupyterServer
         return `${LiveShare.JupyterServerSharedService}${launchInfo.purpose}`;
     }
 
-    public async onPeerChange(ev: vsls.PeersChangeEvent) : Promise<void> {
+    public async onPeerChange(ev: vsls.PeersChangeEvent): Promise<void> {
         await super.onPeerChange(ev);
 
         // Keep track of the number of guests that need to do a catchup request
@@ -161,7 +166,7 @@ export class HostJupyterServer
         }
     }
 
-    private makeRequest(code: string, file: string, line: number, id: string, silent: boolean | undefined, responseQueues: ResponseQueue[]) : Promise<ICell[]> {
+    private makeRequest(code: string, file: string, line: number, id: string, silent: boolean | undefined, responseQueues: ResponseQueue[]): Promise<ICell[]> {
         // Create a deferred that we'll fire when we're done
         const deferred = createDeferred<ICell[]>();
 
@@ -184,7 +189,7 @@ export class HostJupyterServer
         return deferred.promise;
     }
 
-    private makeObservableRequest(code: string, file: string, line: number, id: string, silent: boolean | undefined, responseQueues: ResponseQueue[]) : Observable<ICell[]> {
+    private makeObservableRequest(code: string, file: string, line: number, id: string, silent: boolean | undefined, responseQueues: ResponseQueue[]): Observable<ICell[]> {
         try {
             this.requestLog.set(id, Date.now());
             const inner = super.executeObservable(code, file, line, id, silent);
@@ -206,42 +211,42 @@ export class HostJupyterServer
 
     }
 
-    private async attemptToForwardPort(api: vsls.LiveShare | null | undefined, port: number) : Promise<void> {
+    private async attemptToForwardPort(api: vsls.LiveShare | null | undefined, port: number): Promise<void> {
         if (port !== 0 && api && api.session && api.session.role === vsls.Role.Host) {
             this.portToForward = 0;
-            this.sharedPort = await api.shareServer({port, displayName: localize.DataScience.liveShareHostFormat().format(os.hostname())});
+            this.sharedPort = await api.shareServer({ port, displayName: localize.DataScience.liveShareHostFormat().format(os.hostname()) });
         } else {
             this.portToForward = port;
         }
     }
 
-    private translateCellForGuest(cell: ICell) : ICell {
-        const copy = {...cell};
+    private translateCellForGuest(cell: ICell): ICell {
+        const copy = { ...cell };
         if (this.role === vsls.Role.Host && this.finishedApi && copy.file !== Identifiers.EmptyFileName) {
             copy.file = this.finishedApi.convertLocalUriToShared(vscode.Uri.file(copy.file)).fsPath;
         }
         return copy;
     }
 
-    private onSync() : Promise<any> {
+    private onSync(): Promise<any> {
         return Promise.resolve(true);
     }
 
-    private onGetSysInfoRequest(_cancellation: CancellationToken) : Promise<any> {
+    private onGetSysInfoRequest(_cancellation: CancellationToken): Promise<any> {
         // Get the sys info from our local server
         return super.getSysInfo();
     }
 
-    private onRestartRequest(timeout: number, _cancellation: CancellationToken) : Promise<any> {
+    private onRestartRequest(timeout: number, _cancellation: CancellationToken): Promise<any> {
         // Just call the base
         return super.restartKernel(timeout);
     }
-    private onInterruptRequest(timeout: number, _cancellation: CancellationToken) : Promise<any> {
+    private onInterruptRequest(timeout: number, _cancellation: CancellationToken): Promise<any> {
         // Just call the base
         return super.interruptKernel(timeout);
     }
 
-    private async onCatchupRequest(args: object) : Promise<void> {
+    private async onCatchupRequest(args: object): Promise<void> {
         if (args.hasOwnProperty('since')) {
             const service = await this.waitForService();
             if (service) {
@@ -276,7 +281,7 @@ export class HostJupyterServer
         }
     }
 
-    private postObservableResult(code: string, observable: Observable<ICell[]>, id: string, responseQueues: ResponseQueue[]) : Observable<ICell[]> {
+    private postObservableResult(code: string, observable: Observable<ICell[]>, id: string, responseQueues: ResponseQueue[]): Observable<ICell[]> {
         return new Observable(subscriber => {
             let pos = 0;
 
@@ -294,18 +299,18 @@ export class HostJupyterServer
                     this.postException(e, responseQueues);
                 }
             },
-            e => {
-                subscriber.error(e);
-                this.postException(e, responseQueues);
-            },
-            () => {
-                subscriber.complete();
-                this.postObservableComplete(code, pos, id, responseQueues);
-            });
+                e => {
+                    subscriber.error(e);
+                    this.postException(e, responseQueues);
+                },
+                () => {
+                    subscriber.complete();
+                    this.postObservableComplete(code, pos, id, responseQueues);
+                });
         });
     }
 
-    private translateForGuest = (r: IServerResponse) : IServerResponse => {
+    private translateForGuest = (r: IServerResponse): IServerResponse => {
         // Remap the cell paths
         const er = r as IExecuteObservableResponse;
         if (er && er.cells) {
@@ -333,7 +338,7 @@ export class HostJupyterServer
     private postException(exc: any, responseQueues: ResponseQueue[]) {
         this.postResult(
             ServerResponseType.Exception,
-            {type: ServerResponseType.Exception, time: Date.now(), message: exc.toString()},
+            { type: ServerResponseType.Exception, time: Date.now(), message: exc.toString() },
             r => r,
             responseQueues);
     }
@@ -342,19 +347,23 @@ export class HostJupyterServer
         _type: T,
         result: R[T],
         guestTranslator: (r: IServerResponse) => IServerResponse,
-        responseQueues: ResponseQueue[]) : void {
+        responseQueues: ResponseQueue[]): void {
         const typedResult = ((result as any) as IServerResponse);
         if (typedResult) {
-            // Make a deep copy before we send. Don't want local copies being modified
-            const deepCopy = JSON.parse(JSON.stringify(typedResult));
-            this.waitForService().then(s => {
-                if (s) {
-                    s.notify(LiveShareCommands.serverResponse, guestTranslator(deepCopy));
-                }
-            }).ignoreErrors();
+            try {
+                // Make a deep copy before we send. Don't want local copies being modified
+                const deepCopy = cloneDeep(typedResult);
+                this.waitForService().then(s => {
+                    if (s) {
+                        s.notify(LiveShareCommands.serverResponse, guestTranslator(deepCopy));
+                    }
+                }).ignoreErrors();
 
-            // Need to also save in memory for those guests that are in the middle of starting up
-            responseQueues.forEach(r => r.push(deepCopy));
+                // Need to also save in memory for those guests that are in the middle of starting up
+                responseQueues.forEach(r => r.push(deepCopy));
+            } catch (exc) {
+                traceError(exc);
+            }
         }
     }
 }

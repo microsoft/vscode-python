@@ -89,6 +89,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         }
 
         return {
+            enableDebugging: true,
             uri: serverURI,
             useDefaultConfig,
             purpose: Identifiers.HistoryPurpose

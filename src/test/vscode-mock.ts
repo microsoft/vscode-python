@@ -54,6 +54,7 @@ mockedVSCode.EventEmitter = vscodeMocks.vscMock.EventEmitter;
 mockedVSCode.CancellationTokenSource = vscodeMocks.vscMock.CancellationTokenSource;
 mockedVSCode.CompletionItemKind = vscodeMocks.vscMock.CompletionItemKind;
 mockedVSCode.SymbolKind = vscodeMocks.vscMock.SymbolKind;
+mockedVSCode.IndentAction = vscodeMocks.vscMock.IndentAction;
 mockedVSCode.Uri = vscodeMocks.vscMock.Uri as any;
 mockedVSCode.Range = vscodeMocks.vscMockExtHostedTypes.Range;
 mockedVSCode.Position = vscodeMocks.vscMockExtHostedTypes.Position;
@@ -78,6 +79,8 @@ mockedVSCode.TextEditorRevealType = vscodeMocks.vscMockExtHostedTypes.TextEditor
 mockedVSCode.TreeItem = vscodeMocks.vscMockExtHostedTypes.TreeItem;
 mockedVSCode.TreeItemCollapsibleState = vscodeMocks.vscMockExtHostedTypes.TreeItemCollapsibleState;
 mockedVSCode.CodeActionKind = vscodeMocks.vscMock.CodeActionKind;
+mockedVSCode.DebugAdapterExecutable = vscodeMocks.vscMock.DebugAdapterExecutable;
+mockedVSCode.DebugAdapterServer = vscodeMocks.vscMock.DebugAdapterServer;
 
 // This API is used in src/client/telemetry/telemetry.ts
 const extensions = TypeMoq.Mock.ofType<typeof vscode.extensions>();

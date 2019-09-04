@@ -187,7 +187,7 @@
         "prefix": "__main__",
         "body": [
             "if __name__ == \"__main__\":",
-            "    ${1:pass}",
+            "    ${1:pass}"
         ],
         "description": "Code snippet for a `if __name__ == \"__main__\": ...` block"
     },
@@ -240,4 +240,14 @@
         "body": "import pudb; pudb.set_trace()",
         "description": "Code snippet for pudb debug"
     },
+    "add/new/cell": {
+        "prefix": "add/new/cell",
+        "body": "#%%",
+        "description": "Code snippet to add a new cell"
+    },
+    "mark/markdown": {
+        "prefix": "mark/markdown",
+        "body": "#%% [markdown]",
+        "description": "Code snippet to add a new markdown cell"
+    }
 }

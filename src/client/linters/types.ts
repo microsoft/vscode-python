@@ -13,7 +13,7 @@ export interface IErrorHandler {
 
 // tslint:disable-next-line:no-suspicious-comment
 // TODO: Use an enum for LinterID instead of a union of string literals.
-export type LinterId = 'flake8' | 'mypy' | 'pep8' | 'prospector' | 'pydocstyle' | 'pylama' | 'pylint' | 'bandit';
+export type LinterId = 'flake8' | 'mypy' | 'pycodestyle' | 'prospector' | 'pydocstyle' | 'pylama' | 'pylint' | 'bandit';
 
 export interface ILinterInfo {
     readonly id: LinterId;

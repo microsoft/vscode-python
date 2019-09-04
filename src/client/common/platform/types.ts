@@ -56,7 +56,7 @@ export interface IFileSystem {
     getRealPath(path: string): Promise<string>;
     copyFile(src: string, dest: string): Promise<void>;
     deleteFile(filename: string): Promise<void>;
-    getFileHash(filePath: string): Promise<string | undefined>;
+    getFileHash(filePath: string): Promise<string>;
     search(globPattern: string): Promise<string[]>;
     createTemporaryFile(extension: string): Promise<TemporaryFile>;
     createWriteStream(path: string): fs.WriteStream;

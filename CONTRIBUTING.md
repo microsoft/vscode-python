@@ -7,7 +7,7 @@
 
 | `release` branch | `master` branch | Nightly CI | coverage (`master` branch) |
 |-|-|-|-|
-| [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/CI?branchName=release)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=88&branchName=release) | [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/CI?branchName=master)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=88&branchName=master) | [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/Nightly%20Build?branchName=master)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=85&branchName=master) | [![Coverage Status](https://coveralls.io/repos/github/microsoft/vscode-python/badge.svg?branch=master)](https://coveralls.io/github/microsoft/vscode-python?branch=master) |
+| [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/CI?branchName=release)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=88&branchName=release) | [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/CI?branchName=master)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=88&branchName=master) | [![Build Status](https://dev.azure.com/ms/vscode-python/_apis/build/status/Nightly%20Build?branchName=master)](https://dev.azure.com/ms/vscode-python/_build/latest?definitionId=85&branchName=master) | [![codecov](https://codecov.io/gh/microsoft/vscode-python/branch/master/graph/badge.svg)](https://codecov.io/gh/microsoft/vscode-python) |
 
 [[Development build](https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix)]
 
@@ -36,7 +36,7 @@ cd vscode-python
 npm ci
 python3 -m venv .venv
 # Activate the virtual environment as appropriate for your shell.
-python3 -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+npx gulp installPythonLibs
 # Optionally Update `launch.json` to set a value for the environment variable `CI_PYTHON_PATH` pointing to the fully qualified path of the above interpreter.
 ```
 You may see warnings that ```The engine "vscode" appears to be invalid.```, you can ignore these.
@@ -282,4 +282,4 @@ The development build of the extension:
 * Does not get updated with new development builds of the extension (if you want to
   test a newer development build, uninstall the old version of the
   extension and then install the new version)
-* Is built everytime a PR is commited into the [`master` branch](https://github.com/Microsoft/vscode-python).
+* Is built every time a PR is committed into the [`master` branch](https://github.com/Microsoft/vscode-python).

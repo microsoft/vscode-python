@@ -18,6 +18,7 @@ import { IProcessService, IProcessServiceFactory, IPythonExecutionFactory, Spawn
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
+import { StopWatch } from '../../common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { IInterpreterService, IKnownSearchPathsForInterpreters, PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
@@ -35,6 +36,7 @@ import {
     INotebookServerOptions
 } from '../types';
 import { JupyterConnection, JupyterServerInfo } from './jupyterConnection';
+import { JupyterInstallError } from './jupyterInstallError';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
@@ -154,7 +156,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         kernelSpec: startInfo.kernelSpec,
                         workingDir: options ? options.workingDir : undefined,
                         uri: options ? options.uri : undefined,
-                        purpose: options ? options.purpose : uuid()
+                        purpose: options ? options.purpose : uuid(),
+                        enableDebugging: options ? options.enableDebugging : false
                     };
 
                     traceInfo(`Connecting to process for ${options ? options.purpose : 'unknown type of'} server`);
@@ -200,9 +203,9 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
     public async spawnNotebook(file: string): Promise<void> {
         // First we find a way to start a notebook server
-        const notebookCommand = await this.findBestCommand('notebook');
+        const notebookCommand = await this.findBestCommandTimed(JupyterCommands.NotebookCommand);
         if (!notebookCommand) {
-            throw new Error(localize.DataScience.jupyterNotSupported());
+            throw new JupyterInstallError(localize.DataScience.jupyterNotSupported(), localize.DataScience.pythonInteractiveHelpLink());
         }
 
         const args: string[] = [`--NotebookApp.file_to_run=${file}`];
@@ -213,7 +216,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
     public async importNotebook(file: string, template: string | undefined): Promise<string> {
         // First we find a way to start a nbconvert
-        const convert = await this.findBestCommand(JupyterCommands.ConvertCommand);
+        const convert = await this.findBestCommandTimed(JupyterCommands.ConvertCommand);
         if (!convert) {
             throw new Error(localize.DataScience.jupyterNbConvertNotSupported());
         }
@@ -233,6 +236,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return Promise.resolve(undefined);
     }
 
+    @captureTelemetry(Telemetry.FindJupyterKernelSpec)
     protected async getMatchingKernelSpec(connection?: IConnection, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
         try {
             // If not using an active connection, check on disk
@@ -321,6 +325,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             allowUnauthorized,
             baseUrl: `${url.protocol}//${url.host}${url.pathname}`,
             token: `${url.searchParams.get('token')}`,
+            hostName: url.hostname,
             localLaunch: false,
             localProcExitCode: undefined,
             disconnected: (_l) => { return { dispose: noop }; },
@@ -332,9 +337,9 @@ export class JupyterExecutionBase implements IJupyterExecution {
     @captureTelemetry(Telemetry.StartJupyter)
     private async startNotebookServer(useDefaultConfig: boolean, cancelToken?: CancellationToken): Promise<{ connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined }> {
         // First we find a way to start a notebook server
-        const notebookCommand = await this.findBestCommand(JupyterCommands.NotebookCommand, cancelToken);
+        const notebookCommand = await this.findBestCommandTimed(JupyterCommands.NotebookCommand, cancelToken);
         if (!notebookCommand) {
-            throw new Error(localize.DataScience.jupyterNotSupported());
+            throw new JupyterInstallError(localize.DataScience.jupyterNotSupported(), localize.DataScience.pythonInteractiveHelpLink());
         }
 
         // Now actually launch it
@@ -399,6 +404,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             }
 
             // Then use this to launch our notebook process.
+            const stopWatch = new StopWatch();
             const launchResult = await notebookCommand.execObservable(args, { throwOnStdErr: false, encoding: 'utf8', token: cancelToken });
 
             // Watch for premature exits
@@ -416,6 +422,9 @@ export class JupyterExecutionBase implements IJupyterExecution {
             // Wait for the connection information on this result
             const connection = await JupyterConnection.waitForConnection(
                 tempDir.path, this.getJupyterServerInfo, launchResult, this.serviceContainer, cancelToken);
+
+            // Fire off telemetry for the process being talkable
+            sendTelemetryEvent(Telemetry.StartJupyterProcess, stopWatch.elapsedTime);
 
             return {
                 connection: connection,
@@ -437,7 +446,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
     private getUsableJupyterPythonImpl = async (cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> => {
         // This should be the best interpreter for notebooks
-        const found = await this.findBestCommand(JupyterCommands.NotebookCommand, cancelToken);
+        const found = await this.findBestCommandTimed(JupyterCommands.NotebookCommand, cancelToken);
         if (found) {
             return found.interpreter();
         }
@@ -476,7 +485,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
     private async addMatchingSpec(bestInterpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<void> {
         const displayName = localize.DataScience.historyTitle();
-        const ipykernelCommand = await this.findBestCommand(JupyterCommands.KernelCreateCommand, cancelToken);
+        const ipykernelCommand = await this.findBestCommandTimed(JupyterCommands.KernelCreateCommand, cancelToken);
 
         // If this fails, then we just skip this spec
         try {
@@ -557,7 +566,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     private isCommandSupported = async (command: string, cancelToken?: CancellationToken): Promise<boolean> => {
         // See if we can find the command
         try {
-            const result = await this.findBestCommand(command, cancelToken);
+            const result = await this.findBestCommandTimed(command, cancelToken);
             return result !== undefined;
         } catch (err) {
             this.logger.logWarning(err);
@@ -583,6 +592,34 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return true;
     }
 
+    private async getInterpreterDetailsFromProcess(baseProcessName: string): Promise<PythonInterpreter | undefined> {
+        if (path.basename(baseProcessName) !== baseProcessName) {
+            // This function should only be called with a non qualified path. We're using this
+            // function to figure out the qualified path
+            return undefined;
+        }
+
+        // Make sure it's python based
+        if (!baseProcessName.toLocaleLowerCase().includes('python')) {
+            return undefined;
+        }
+
+        try {
+            // Create a new process service to use to execute this process
+            const processService = await this.processServiceFactory.create();
+
+            // Ask python for what path it's running at.
+            const output = await processService.exec(baseProcessName, ['-c', 'import sys;print(sys.executable)'], { throwOnStdErr: true });
+            const fullPath = output.stdout.trim();
+
+            // Use this path to get the interpreter details.
+            return this.interpreterService.getInterpreterDetails(fullPath);
+        } catch {
+            // Any failure, just assume this path is invalid.
+            return undefined;
+        }
+    }
+
     //tslint:disable-next-line:cyclomatic-complexity
     private findSpecMatch = async (enumerator: () => Promise<(IJupyterKernelSpec | undefined)[]>): Promise<IJupyterKernelSpec | undefined> => {
         // Extract our current python information that the user has picked.
@@ -598,6 +635,10 @@ export class JupyterExecutionBase implements IJupyterExecution {
         const specDetails = await Promise.all(specs.map(async s => {
             if (s && s.path && s.path.length > 0 && await fs.pathExists(s.path)) {
                 return this.interpreterService.getInterpreterDetails(s.path);
+            }
+            if (s && s.path && s.path.length > 0 && path.basename(s.path) === s.path) {
+                // This means the s.path isn't fully qualified. Try figuring it out.
+                return this.getInterpreterDetailsFromProcess(s.path);
             }
         }));
 
@@ -683,7 +724,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
     private enumerateSpecs = async (_cancelToken?: CancellationToken): Promise<(JupyterKernelSpec | undefined)[]> => {
         if (await this.isKernelSpecSupported()) {
-            const kernelSpecCommand = await this.findBestCommand(JupyterCommands.KernelSpecCommand);
+            const kernelSpecCommand = await this.findBestCommandTimed(JupyterCommands.KernelSpecCommand);
 
             if (kernelSpecCommand) {
                 try {
@@ -766,6 +807,21 @@ export class JupyterExecutionBase implements IJupyterExecution {
             }
         }
         return true;
+    }
+
+    private async findBestCommandTimed(command: string, cancelToken?: CancellationToken): Promise<IJupyterCommand | undefined> {
+        // Only log telemetry if not already found (meaning the first time)
+        let timer: StopWatch | undefined;
+        if (!this.commands.hasOwnProperty(command)) {
+            timer = new StopWatch();
+        }
+        try {
+            return await this.findBestCommand(command, cancelToken);
+        } finally {
+            if (timer) {
+                sendTelemetryEvent(Telemetry.FindJupyterCommand, timer.elapsedTime, { command });
+            }
+        }
     }
 
     // For jupyter,

@@ -38,7 +38,7 @@ export type CondaInfo = {
     envs?: string[];
     'sys.version'?: string;
     'sys.prefix'?: string;
-    'python_version'?: string;
+    python_version?: string;
     default_prefix?: string;
     conda_version?: string;
 };
@@ -64,7 +64,8 @@ export enum InterpreterType {
     VirtualEnv = 'VirtualEnv',
     Pipenv = 'PipEnv',
     Pyenv = 'Pyenv',
-    Venv = 'Venv'
+    Venv = 'Venv',
+    WindowsStore = 'WindowsStore'
 }
 export type PythonInterpreter = InterpreterInfomation & {
     companyDisplayName?: string;
@@ -133,8 +134,8 @@ export interface IInterpreterWatcherBuilder {
     getWorkspaceVirtualEnvInterpreterWatcher(resource: Resource): Promise<IInterpreterWatcher>;
 }
 
-export const InterpreterLocatorProgressHandler = Symbol('InterpreterLocatorProgressHandler');
-export interface InterpreterLocatorProgressHandler {
+export const IInterpreterLocatorProgressHandler = Symbol('IInterpreterLocatorProgressHandler');
+export interface IInterpreterLocatorProgressHandler {
     register(): void;
 }
 

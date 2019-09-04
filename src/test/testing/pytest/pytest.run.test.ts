@@ -169,7 +169,7 @@ function getIssueCountFromRelevantTestDetails(testDetails: ITestDetails[], skipp
  * @param diagnostics The array of Diagnostics for a file.
  * @param testFunc The FlattenedTestFunction to find the Diagnostic for.
  */
-function getDiagnosticForTestFunc(diagnostics: vscode.Diagnostic[], testFunc: FlattenedTestFunction): vscode.Diagnostic {
+function getDiagnosticForTestFunc(diagnostics: readonly vscode.Diagnostic[], testFunc: FlattenedTestFunction): vscode.Diagnostic {
     return diagnostics.find(diag => {
         return testFunc.testFunction.nameToRun === diag.code;
     })!;
@@ -342,7 +342,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
         procService.onExec((_file, args, _options, callback) => {
             if (args.indexOf('discover') >= 0 && args.indexOf('pytest') >= 0) {
                 let stdout = fs.readFileSync(path.join(PYTEST_RESULTS_PATH, outputFileName), 'utf8');
-                stdout = stdout.replace(/\/Users\/donjayamanne\/.vscode-insiders\/extensions\/pythonVSCode\/src\/test\/pythonFiles\/testFiles/g, path.dirname(UNITTEST_TEST_FILES_PATH))
+                stdout = stdout.replace(/\/Users\/donjayamanne\/.vscode-insiders\/extensions\/pythonVSCode\/src\/test\/pythonFiles\/testFiles/g, path.dirname(UNITTEST_TEST_FILES_PATH));
                 stdout = stdout.replace(/\\/g, '/');
                 callback({ stdout });
             }
@@ -375,7 +375,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
             let factory: ITestManagerFactory;
             let testManager: ITestManager;
             let results: Tests;
-            let diagnostics: vscode.Diagnostic[];
+            let diagnostics: readonly vscode.Diagnostic[];
             suiteSetup(async () => {
                 await initializeTest();
                 initializeDI();

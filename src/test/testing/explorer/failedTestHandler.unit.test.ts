@@ -25,17 +25,10 @@ suite('Unit Tests Test Explorer View Items', () => {
         failedTestHandler = new FailedTestHandler([], instance(commandManager), instance(testStorageService));
     });
 
-    test('Activation will add command handlers (without a resource)', async () => {
+    test('Activation will add command handlers', async () => {
         when(testStorageService.onDidChange).thenReturn(noop as any);
 
-        await failedTestHandler.activate(undefined);
-
-        verify(testStorageService.onDidChange).once();
-    });
-    test('Activation will add command handlers (with a resource)', async () => {
-        when(testStorageService.onDidChange).thenReturn(noop as any);
-
-        await failedTestHandler.activate(Uri.file(__filename));
+        await failedTestHandler.activate();
 
         verify(testStorageService.onDidChange).once();
     });

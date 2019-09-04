@@ -12,7 +12,7 @@ import { traceDecorators } from '../common/logger';
 import { IDisposable, Resource } from '../common/types';
 import { IInterpreterAutoSelectionService } from '../interpreter/autoSelection/types';
 import { IInterpreterService } from '../interpreter/contracts';
-import { IExtensionActivationManager, IExtensionActivationService } from './types';
+import { IExtensionActivationManager, IExtensionActivationService, IExtensionSingleActivationService } from './types';
 
 @injectable()
 export class ExtensionActivationManager implements IExtensionActivationManager {
@@ -21,6 +21,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
     private readonly activatedWorkspaces = new Set<string>();
     constructor(
         @multiInject(IExtensionActivationService) private readonly activationServices: IExtensionActivationService[],
+        @multiInject(IExtensionSingleActivationService) private readonly singleActivationServices: IExtensionSingleActivationService[],
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IInterpreterAutoSelectionService) private readonly autoSelection: IInterpreterAutoSelectionService,
@@ -40,7 +41,11 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
     }
     public async activate(): Promise<void> {
         await this.initialize();
-        await this.activateWorkspace(this.getActiveResource());
+        // Activate all activation services together.
+        await Promise.all([
+            Promise.all(this.singleActivationServices.map(item => item.activate())),
+            this.activateWorkspace(this.getActiveResource())
+        ]);
         await this.autoSelection.autoSelectInterpreter(undefined);
     }
     @traceDecorators.error('Failed to activate a workspace')

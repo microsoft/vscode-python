@@ -3,6 +3,7 @@
 *.vsix
 .appveyor.yml
 .editorconfig
+.env
 .eslintrc
 .gitattributes
 .gitignore
@@ -10,6 +11,7 @@
 .huskyrc.json
 .npmrc
 .nvmrc
+.nycrc
 .travis.yml
 CODE_OF_CONDUCT.md
 CODING_STANDARDS.md
@@ -41,13 +43,14 @@ webpack.datascience-*.config.js
 .venv/**
 .vscode/**
 .vscode-test/**
-data/**
+.vscode test/**
 languageServer/**
 languageServer.*/**
 bin/**
 build/**
 BuildOutput/**
 coverage/**
+data/**
 debug_coverage*/**
 images/**/*.gif
 images/**/*.png
@@ -74,3 +77,4 @@ tmp/**
 tpn/**
 typings/**
 types/**
+uitests/**

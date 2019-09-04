@@ -32,7 +32,7 @@ export class JupyterProvider {
             return Promise.resolve(selectedCode);
         }
 
-        // ok we're in a block, look for the end of the block untill the last line in the cell (if there are any cells)
+        // ok we're in a block, look for the end of the block until the last line in the cell (if there are any cells)
         return new Promise<string>((resolve, _reject) => {
             const activeEditor = window.activeTextEditor;
             if (!activeEditor) {
@@ -50,7 +50,7 @@ export class JupyterProvider {
                     continue;
                 }
                 if (nextLineIndent === startIndent) {
-                    // Return code untill previous line
+                    // Return code until previous line
                     const endRange = activeEditor.document.lineAt(lineNumber - 1).range.end;
                     resolve(activeEditor.document.getText(new Range(activeEditor.selection.start, endRange)));
                 }

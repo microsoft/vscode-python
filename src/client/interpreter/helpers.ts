@@ -2,6 +2,7 @@ import { inject, injectable } from 'inversify';
 import { compare } from 'semver';
 import { ConfigurationTarget } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
+import { traceError } from '../common/logger';
 import { IFileSystem } from '../common/platform/types';
 import { InterpreterInfomation, IPythonExecutionFactory } from '../common/process/types';
 import { IPersistentStateFactory, Resource } from '../common/types';
@@ -72,7 +73,7 @@ export class InterpreterHelper implements IInterpreterHelper {
             await store.updateValue(details);
             return details;
         } catch (ex) {
-            console.error(`Failed to get interpreter information for '${pythonPath}'`, ex);
+            traceError(`Failed to get interpreter information for '${pythonPath}'`, ex);
             return;
         }
     }

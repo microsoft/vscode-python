@@ -12,11 +12,11 @@ ptvsdArgs.pop(1)
 
 # Load the debugger package
 try:
-    ptvs_lib_path = os.path.join(os.path.dirname(__file__), 'lib', 'python')
+    ptvsd_lib_path = os.path.join(os.path.dirname(__file__), 'lib', 'python', 'old_ptvsd')
     if useCustomPtvsd:
-        sys.path.append(ptvs_lib_path)
+        sys.path.append(ptvsd_lib_path)
     else:
-        sys.path.insert(0, ptvs_lib_path)
+        sys.path.insert(0, ptvsd_lib_path)
     try:
         import ptvsd
         from ptvsd.__main__ import main
@@ -37,7 +37,7 @@ Press Enter to close. . .''')
         input()
     sys.exit(1)
 finally:
-    if ptvs_lib_path:
-        sys.path.remove(ptvs_lib_path)
+    if ptvsd_lib_path:
+        sys.path.remove(ptvsd_lib_path)
 
 main(ptvsdArgs)

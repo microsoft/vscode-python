@@ -13,7 +13,7 @@ import '../../client/common/extensions';
 import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessService } from '../../client/common/process/proc';
 import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
-import { IProcessServiceFactory, IPythonExecutionFactory } from '../../client/common/process/types';
+import { IProcessLogger, IProcessServiceFactory, IPythonExecutionFactory } from '../../client/common/process/types';
 import { IConfigurationService, IPythonSettings } from '../../client/common/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { IServiceContainer } from '../../client/ioc/types';
@@ -51,6 +51,9 @@ suite('Refactor Rename', () => {
             .returns(() => new PythonExecutionFactory(serviceContainer.object,
                 undefined as any, processServiceFactory.object,
                 configService.object, undefined as any));
+        const processLogger = typeMoq.Mock.ofType<IProcessLogger>();
+        processLogger.setup(p => p.logProcess(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny())).returns(() => { return; });
+        serviceContainer.setup(s => s.get(typeMoq.It.isValue(IProcessLogger), typeMoq.It.isAny())).returns(() => processLogger.object);
         await initializeTest();
     });
     teardown(closeActiveWindows);
