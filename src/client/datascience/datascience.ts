@@ -456,6 +456,9 @@ export class DataScience implements IDataScience {
             kernelName = kernelSelection.name ? kernelSelection.name : undefined;
             kernelSpecs = kernelSpecs.filter(spec => spec.name === kernelName);
             kernelSpec = kernelSpecs.length === 1 ? kernelSpecs[0] : undefined;
+            if (kernelSpec) {
+                kernelSpec.id = kernelUUID;
+            }
         }
 
         if (shutdownSelection && shutdownSelection.keepRunning) {
