@@ -24,6 +24,7 @@ export interface IContentPanelProps {
     skipNextScroll: boolean;
     monacoTheme: string | undefined;
     editorOptions: monacoEditor.editor.IEditorOptions;
+    isAtBottom: boolean;
     enableGather?: boolean;
     gotoCellCode(index: number): void;
     copyCellCode(index: number): void;
@@ -39,7 +40,7 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
     private bottomRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private containerRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private cellRefs: Map<string, React.RefObject<HTMLDivElement>> = new Map<string, React.RefObject<HTMLDivElement>>();
-    private throttledScrollIntoView = throttle(this.scrollIntoView.bind(this), 100);
+    private throttledScrollIntoView = throttle(this.scrollIntoView.bind(this), 1500);
     constructor(prop: IContentPanelProps) {
         super(prop);
     }
@@ -49,7 +50,9 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
     }
 
     public componentDidUpdate() {
-        this.scrollToBottom();
+        if (this.props.isAtBottom) {
+            this.scrollToBottom();
+        }
     }
 
     public render() {
@@ -122,12 +125,7 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
     private scrollIntoView() {
         // Force auto here as smooth scrolling can be canceled by updates to the window
         // from elsewhere (and keeping track of these would make this hard to maintain)
-        if (this.bottomRef.current
-            // This condition prevents window to scroll down when user is not near the bottom.
-            // We increase window.innerHeight by 20% to still snap to the bottom when creating
-            // multiple default plots. User needs to do about 3 'scrolls' up from the bottom
-            // to prevent the window to snap to the bottom.
-            && this.bottomRef.current.getBoundingClientRect().bottom <= window.innerHeight * 1.2) {
+        if (this.bottomRef.current) {
             this.bottomRef.current.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' });
         }
     }

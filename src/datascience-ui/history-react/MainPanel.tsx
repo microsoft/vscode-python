@@ -51,6 +51,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private onigasmPromise: Deferred<ArrayBuffer> | undefined;
     private tmlangugePromise: Deferred<string> | undefined;
     private monacoIdToCellId: Map<string, string> = new Map<string, string>();
+    private isAtBottom = true;
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
@@ -151,7 +152,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 <section id='main-panel-variable' aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
                     {this.renderVariablePanel(baseTheme)}
                 </section>
-                <main id='main-panel-content'>
+                <main id='main-panel-content' onScroll={this.handleScroll}>
                     {this.renderContentPanel(baseTheme)}
                 </main>
                 <section id='main-panel-footer' aria-label={getLocString('DataScience.editSection', 'Input new cells here')}>
@@ -159,6 +160,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 </section>
             </div>
         );
+    }
+
+    public handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+        this.isAtBottom = e.currentTarget.scrollHeight - e.currentTarget.scrollTop === e.currentTarget.clientHeight;
     }
 
     // tslint:disable-next-line:no-any cyclomatic-complexity max-func-body-length
@@ -445,7 +450,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             openLink: this.openLink,
             expandImage: this.showPlot,
             gatherCode: this.gatherCode,
-            enableGather: this.state.enableGather
+            enableGather: this.state.enableGather,
+            isAtBottom: this.isAtBottom
         };
     }
     private getToolbarProps = (baseTheme: string): IToolbarPanelProps => {
