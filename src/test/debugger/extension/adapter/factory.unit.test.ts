@@ -11,17 +11,20 @@ import { SemVer } from 'semver';
 import { anyString, anything, instance, mock, verify, when } from 'ts-mockito';
 import { DebugAdapterExecutable, DebugConfiguration, DebugSession, WorkspaceFolder } from 'vscode';
 import { ApplicationShell } from '../../../../client/common/application/applicationShell';
+import { Extensions } from '../../../../client/common/application/extensions';
 import { IApplicationShell } from '../../../../client/common/application/types';
 import { DebugAdapterNewPtvsd } from '../../../../client/common/experimentGroups';
 import { ExperimentsManager } from '../../../../client/common/experiments';
+import { PersistentStateFactory } from '../../../../client/common/persistentState';
 import { PythonExecutionFactory } from '../../../../client/common/process/pythonExecutionFactory';
 import { IPythonExecutionFactory } from '../../../../client/common/process/types';
-import { IExperimentsManager } from '../../../../client/common/types';
+import { IExperimentsManager, IExtensions, IPersistentStateFactory } from '../../../../client/common/types';
 import { Architecture } from '../../../../client/common/utils/platform';
 import { DebugAdapterDescriptorFactory } from '../../../../client/debugger/extension/adapter/factory';
 import { IDebugAdapterDescriptorFactory } from '../../../../client/debugger/extension/types';
 import { IInterpreterService, InterpreterType } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
+
 use(chaiAsPromised);
 
 // tslint:disable-next-line: max-func-body-length
@@ -31,6 +34,8 @@ suite('Debugging - Adapter Factory', () => {
     let appShell: IApplicationShell;
     let experimentsManager: IExperimentsManager;
     let executionFactory: IPythonExecutionFactory;
+    let stateFactory: IPersistentStateFactory;
+    let extensions: IExtensions;
     const nodeExecutable = { command: 'node', args: [] };
 
     setup(() => {
@@ -47,7 +52,16 @@ suite('Debugging - Adapter Factory', () => {
         appShell = mock(ApplicationShell);
         experimentsManager = mock(ExperimentsManager);
         executionFactory = mock(PythonExecutionFactory);
-        factory = new DebugAdapterDescriptorFactory(instance(interpreterService), instance(appShell), instance(experimentsManager), instance(executionFactory));
+        stateFactory = mock(PersistentStateFactory);
+        extensions = mock(Extensions);
+        factory = new DebugAdapterDescriptorFactory(
+            instance(interpreterService),
+            instance(appShell),
+            instance(experimentsManager),
+            instance(executionFactory),
+            instance(stateFactory),
+            instance(extensions)
+        );
     });
 
     function createSession(config: Partial<DebugConfiguration>, workspaceFolder?: WorkspaceFolder): DebugSession {

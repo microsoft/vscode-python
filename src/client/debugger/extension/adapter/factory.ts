@@ -5,16 +5,20 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import { parse } from 'semver';
 import { DebugAdapterDescriptor, DebugAdapterExecutable, DebugSession, WorkspaceFolder } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
+import { PVSC_EXTENSION_ID } from '../../../common/constants';
 import { DebugAdapterNewPtvsd } from '../../../common/experimentGroups';
 import { traceVerbose } from '../../../common/logger';
-import { ExecutionResult, IPythonExecutionFactory } from '../../../common/process/types';
-import { IExperimentsManager } from '../../../common/types';
+import { IPythonExecutionFactory } from '../../../common/process/types';
+import { IExperimentsManager, IExtensions, IPersistentStateFactory } from '../../../common/types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { AttachRequestArguments, LaunchRequestArguments } from '../../types';
-import { IDebugAdapterDescriptorFactory } from '../types';
+import { DebugAdapterPtvsdPathInfo, IDebugAdapterDescriptorFactory } from '../types';
+
+export const ptvsdPathStorageKey = 'PTVSD_PATH_STORAGE_KEY';
 
 @injectable()
 export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFactory {
@@ -22,17 +26,19 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager,
-        @inject(IPythonExecutionFactory) private readonly executionFactory: IPythonExecutionFactory
+        @inject(IPythonExecutionFactory) private readonly executionFactory: IPythonExecutionFactory,
+        @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory,
+        @inject(IExtensions) private readonly extensions: IExtensions
     ) {}
     public async createDebugAdapterDescriptor(session: DebugSession, executable: DebugAdapterExecutable | undefined): Promise<DebugAdapterDescriptor> {
         const configuration = session.configuration as (LaunchRequestArguments | AttachRequestArguments);
         const pythonPath = await this.getPythonPath(configuration, session.workspaceFolder);
         const interpreterInfo = await this.interpreterService.getInterpreterDetails(pythonPath);
 
-        if (interpreterInfo && interpreterInfo.version && interpreterInfo.version.raw.startsWith('3.7') && this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
-            const ptvsdPathToUse = await this.getPtvsdFolder(pythonPath).then(output => output.stdout.trim());
+        if (this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment) && interpreterInfo && interpreterInfo.version && interpreterInfo.version.raw.startsWith('3.7')) {
             // If logToFile is set in the debug config then pass --log-dir <path-to-extension-dir> when launching the debug adapter.
             const logArgs = configuration.logToFile ? ['--log-dir', EXTENSION_ROOT_DIR] : [];
+            const ptvsdPathToUse = await this.getPtvsdFolder(pythonPath);
 
             return new DebugAdapterExecutable(`${pythonPath}`, [path.join(ptvsdPathToUse, 'ptvsd', 'adapter'), ...logArgs]);
         }
@@ -90,16 +96,34 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
 
     /**
      * Return the folder name for the bundled PTVSD wheel compatible with the new debug adapter.
+     * Use `ptvsd_folder_name.py` to compute the experimental PTVSD folder name in 2 cases:
+     * - It has never been computed before;
+     * - The extension number has changed since the last time it was cached.
+     *
+     * Return a cached path otherwise.
      *
      * @private
      * @param {string} pythonPath Path to the python executable used to launch the Python Debug Adapter (result of `this.getPythonPath()`)
-     * @returns {Promise<ExecutionResult<string>>}
+     * @returns {Promise<string>}
      * @memberof DebugAdapterDescriptorFactory
      */
-    private async getPtvsdFolder(pythonPath: string): Promise<ExecutionResult<string>> {
-        const pathToScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'ptvsd_folder_name.py');
+    private async getPtvsdFolder(pythonPath: string): Promise<string> {
+        const persistentState = this.stateFactory.createGlobalPersistentState<DebugAdapterPtvsdPathInfo | undefined>(ptvsdPathStorageKey, undefined);
+        let pathToPtvsd = '';
 
-        const pythonProcess = await this.executionFactory.create({ pythonPath });
-        return pythonProcess.exec([pathToScript], {});
+        const extension = this.extensions.getExtension(PVSC_EXTENSION_ID)!;
+        const version = parse(extension.packageJSON.version)!;
+
+        if (!persistentState.value || version.raw !== persistentState.value.extensionVersion) {
+            const pathToScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'ptvsd_folder_name.py');
+            const pythonProcess = await this.executionFactory.create({ pythonPath });
+
+            pathToPtvsd = await pythonProcess.exec([pathToScript], {}).then(output => output.stdout.trim());
+            await persistentState.updateValue({ extensionVersion: version.raw, ptvsdPath: pathToPtvsd });
+        } else {
+            pathToPtvsd = persistentState.value.ptvsdPath;
+        }
+
+        return new Promise<string>(resolve => resolve(pathToPtvsd));
     }
 }
