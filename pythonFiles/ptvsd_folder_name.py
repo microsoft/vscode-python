@@ -30,8 +30,11 @@ def ptvsd_folder_name():
         )
         folder_path = path.join(PYTHONFILES_PATH, folder_name)
         if path.exists(folder_path):
-            print(f"{folder_path}")
+            print(folder_path)
             return
+
+    # Fallback to use base PTVSD path.
+    print(PYTHONFILES_PATH)
 
 
 if __name__ == "__main__":
