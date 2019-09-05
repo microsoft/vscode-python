@@ -117,8 +117,10 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
         if (!persistentState.value || version.raw !== persistentState.value.extensionVersion) {
             const pathToScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'ptvsd_folder_name.py');
             const pythonProcess = await this.executionFactory.create({ pythonPath });
+            const executionResult = await pythonProcess.exec([pathToScript], {});
 
-            pathToPtvsd = await pythonProcess.exec([pathToScript], {}).then(output => output.stdout.trim());
+            pathToPtvsd = executionResult.stdout.trim();
+
             await persistentState.updateValue({ extensionVersion: version.raw, ptvsdPath: pathToPtvsd });
         } else {
             pathToPtvsd = persistentState.value.ptvsdPath;
