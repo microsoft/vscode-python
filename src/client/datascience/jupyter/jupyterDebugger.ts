@@ -155,8 +155,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         return result;
     }
 
-    // Append our local ptvsd path and ptvsd settings path to sys.path
-    private async appendPtvsdPaths(server: INotebookServer): Promise<void> {
+    private calculatePtvsdPathList(server: INotebookServer): string | undefined {
         const extraPaths: string[] = [];
 
         // Add the settings path first as it takes precedence over the ptvsd extension path
@@ -183,7 +182,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         }
 
         if (extraPaths && extraPaths.length > 0) {
-            const pythonPathList = extraPaths.reduce((totalPath, currentPath) => {
+            return extraPaths.reduce((totalPath, currentPath) => {
                 if (totalPath.length === 0) {
                     totalPath = `'${currentPath}'`;
                 } else {
@@ -192,7 +191,17 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
                 return totalPath;
             }, '');
-            await this.executeSilently(server, `import sys\r\nsys.path.extend([${pythonPathList}])\r\nsys.path`);
+        }
+
+        return undefined;
+    }
+
+    // Append our local ptvsd path and ptvsd settings path to sys.path
+    private async appendPtvsdPaths(server: INotebookServer): Promise<void> {
+        const ptvsdPathList = this.calculatePtvsdPathList(server);
+
+        if (ptvsdPathList && ptvsdPathList.length > 0) {
+            await this.executeSilently(server, `import sys\r\nsys.path.extend([${ptvsdPathList}])\r\nsys.path`);
         }
     }
 
@@ -216,9 +225,19 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     }
 
     private async ptvsdCheck(server: INotebookServer): Promise<IPtvsdVersion | undefined> {
-        // We don't want to actually import ptvsd to check version so run !python instead.
+        // We don't want to actually import ptvsd to check version so run !python instead. If we import an old version it's hard to get rid of on
+        // an upgrade needed scenario
         // tslint:disable-next-line:no-multiline-string
-        const ptvsdVersionResults = await this.executeSilently(server, `import sys\r\n!{sys.executable} -c "import ptvsd;print(ptvsd.__version__)"`);
+        const ptvsdPathList = this.calculatePtvsdPathList(server);
+
+        let code;
+        if (ptvsdPathList) {
+            code = `import sys\r\n!{sys.executable} -c "import sys;sys.path.extend([${ptvsdPathList}]);sys.path;import ptvsd;print(ptvsd.__version__)"`;
+        } else {
+            code = `import sys\r\n!{sys.executable} -c "import ptvsd;print(ptvsd.__version__)"`;
+        }
+
+        const ptvsdVersionResults = await this.executeSilently(server, code);
         return this.parsePtvsdVersionInfo(ptvsdVersionResults);
     }
 
