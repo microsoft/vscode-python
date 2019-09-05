@@ -163,6 +163,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         );
     }
 
+    // This handles the scrolling. Its called from the props of contentPanel.
+    // We only scroll when the state indicates we are at the bottom of the interactive window,
+    // otherwise it sometimes scrolls when the user wasn't at the bottom.
     public scrollDiv = (div: HTMLDivElement) => {
         if (this.state.isAtBottom) {
             this.internalScrollCount += 1;
