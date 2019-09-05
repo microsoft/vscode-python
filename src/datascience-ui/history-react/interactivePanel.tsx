@@ -360,8 +360,10 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
         if (this.internalScrollCount > 0) {
             this.internalScrollCount -= 1;
         } else {
+            const currentHeight = e.currentTarget.scrollHeight - e.currentTarget.scrollTop;
+            const isAtBottom = currentHeight < e.currentTarget.clientHeight + 2 && currentHeight > e.currentTarget.clientHeight - 2;
             this.setState({
-                isAtBottom: e.currentTarget.scrollHeight - e.currentTarget.scrollTop === e.currentTarget.clientHeight
+                isAtBottom
             });
         }
     }
