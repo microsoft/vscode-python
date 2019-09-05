@@ -61,7 +61,7 @@ export namespace InteractiveWindowMessages {
     export const GatherCode = 'gather_code';
     export const LoadAllCells = 'load_all_cells';
     export const ScrollToCell = 'scroll_to_cell';
-    export const ReExecuteCell = 'rexecute_cell';
+    export const ReExecuteCell = 'reexecute_cell';
     export const NotebookIdentity = 'identity';
     export const NotebookDirty = 'dirty';
     export const NotebookClean = 'clean';

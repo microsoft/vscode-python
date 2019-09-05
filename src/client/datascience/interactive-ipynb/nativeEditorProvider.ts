@@ -15,7 +15,7 @@ import { Telemetry } from '../constants';
 import { INotebookEditor, INotebookEditorProvider } from '../types';
 
 @injectable()
-export class IpynbProvider implements INotebookEditorProvider, IAsyncDisposable {
+export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisposable {
     private activeEditors: Map<string, INotebookEditor> = new Map<string, INotebookEditor>();
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,

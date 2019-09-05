@@ -26,9 +26,9 @@ import { DotNetIntellisenseProvider } from './interactive-common/intellisense/do
 import { JediIntellisenseProvider } from './interactive-common/intellisense/jediIntellisenseProvider';
 import { LinkProvider } from './interactive-common/linkProvider';
 import { ShowPlotListener } from './interactive-common/showPlotListener';
-import { IpynbCommandListener } from './interactive-ipynb/ipynbCommandListener';
-import { IpynbEditor } from './interactive-ipynb/ipynbEditor';
-import { IpynbProvider } from './interactive-ipynb/ipynbEditorProvider';
+import { NativeEditor } from './interactive-ipynb/nativeEditor';
+import { NativeEditorCommandListener } from './interactive-ipynb/nativeEditorCommandListener';
+import { NativeEditorProvider } from './interactive-ipynb/nativeEditorProvider';
 import { InteractiveWindow } from './interactive-window/interactiveWindow';
 import { InteractiveWindowCommandListener } from './interactive-window/interactiveWindowCommandListener';
 import { InteractiveWindowProvider } from './interactive-window/interactiveWindowProvider';
@@ -135,9 +135,9 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addBinding(ICellHashProvider, IInteractiveWindowListener);
     serviceManager.addBinding(ICellHashProvider, INotebookExecutionLogger);
     serviceManager.addBinding(IJupyterDebugger, ICellHashListener);
-    serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, wrapType(IpynbProvider));
-    serviceManager.add<INotebookEditor>(INotebookEditor, wrapType(IpynbEditor));
-    serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, wrapType(IpynbCommandListener));
+    serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, wrapType(NativeEditorProvider));
+    serviceManager.add<INotebookEditor>(INotebookEditor, wrapType(NativeEditor));
+    serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, wrapType(NativeEditorCommandListener));
     serviceManager.addBinding(IGatherExecution, INotebookExecutionLogger);
     serviceManager.addBinding(ICodeLensFactory, IInteractiveWindowListener);
     serviceManager.addSingleton<IDebugLocationTrackerFactory>(IDebugLocationTrackerFactory, wrapType(DebugLocationTrackerFactory));

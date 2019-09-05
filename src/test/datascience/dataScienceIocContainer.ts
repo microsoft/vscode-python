@@ -86,7 +86,7 @@ import {
     ILogger,
     IPathUtils,
     IPersistentStateFactory,
-    IsWindows,
+    IsWindows
 } from '../../client/common/types';
 import { Deferred, sleep } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
@@ -109,9 +109,9 @@ import { GatherListener } from '../../client/datascience/gather/gatherListener';
 import {
     DotNetIntellisenseProvider
 } from '../../client/datascience/interactive-common/intellisense/dotNetIntellisenseProvider';
-import { IpynbCommandListener } from '../../client/datascience/interactive-ipynb/ipynbCommandListener';
-import { IpynbEditor } from '../../client/datascience/interactive-ipynb/ipynbEditor';
-import { IpynbProvider } from '../../client/datascience/interactive-ipynb/ipynbEditorProvider';
+import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
+import { NativeEditorCommandListener } from '../../client/datascience/interactive-ipynb/nativeEditorCommandListener';
+import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import {
     InteractiveWindowCommandListener
@@ -365,9 +365,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, JupyterDebugger);
         this.serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTracker);
         this.serviceManager.addSingleton<IDebugLocationTrackerFactory>(IDebugLocationTrackerFactory, DebugLocationTrackerFactory);
-        this.serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, IpynbProvider);
-        this.serviceManager.add<INotebookEditor>(INotebookEditor, IpynbEditor);
-        this.serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, IpynbCommandListener);
+        this.serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, NativeEditorProvider);
+        this.serviceManager.add<INotebookEditor>(INotebookEditor, NativeEditor);
+        this.serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NativeEditorCommandListener);
 
         this.serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
         this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(

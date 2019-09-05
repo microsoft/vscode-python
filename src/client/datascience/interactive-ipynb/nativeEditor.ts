@@ -53,7 +53,7 @@ import {
 } from '../types';
 
 @injectable()
-export class IpynbEditor extends InteractiveBase implements INotebookEditor {
+export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private closedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
     private loadedPromise: Deferred<void> = createDeferred<void>();
     private _file: Uri = Uri.file('');

@@ -16,7 +16,7 @@ import { Commands, Telemetry } from '../constants';
 import { IDataScienceCommandListener, IDataScienceErrorHandler, INotebookEditorProvider } from '../types';
 
 @injectable()
-export class IpynbCommandListener implements IDataScienceCommandListener {
+export class NativeEditorCommandListener implements IDataScienceCommandListener {
     constructor(
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(INotebookEditorProvider) private provider: INotebookEditorProvider,
