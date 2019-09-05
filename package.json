@@ -1611,10 +1611,10 @@
                     "description": "When opening ipynb files, automatically preview the contents in the Python Interactive window.",
                     "scope": "resource"
                 },
-                "python.dataScience.autoOpenNotebooks": {
+                "python.dataScience.useNotebookEditor": {
                     "type": "boolean",
                     "default": false,
-                    "description": "When opening ipynb files, automatically open the file in a separate editor.",
+                    "description": "Automatically open .ipynb files in the Notebook Editor.",
                     "scope": "resource"
                 },
                 "python.dataScience.allowUnauthorizedRemoteConnection": {

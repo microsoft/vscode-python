@@ -95,7 +95,7 @@ export class IpynbCommandListener implements IDataScienceCommandListener {
     private onOpenedDocument = async (document: TextDocument) => {
         // See if this is an ipynb file
         if (path.extname(document.fileName).toLocaleLowerCase() === '.ipynb' &&
-            this.configService.getSettings().datascience.autoOpenNotebooks) {
+            this.configService.getSettings().datascience.useNotebookEditor) {
             try {
                 const contents = document.getText();
                 const uri = document.uri;

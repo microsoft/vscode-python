@@ -340,7 +340,7 @@ export interface IDataScienceSettings {
     remoteDebuggerPort?: number;
     colorizeInputBox?: boolean;
     addGotoCodeLenses?: boolean;
-    autoOpenNotebooks?: boolean;
+    useNotebookEditor?: boolean;
     runStartupCommands: string;
     debugJustMyCode: boolean;
 }
