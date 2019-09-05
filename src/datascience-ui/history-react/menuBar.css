@@ -1,7 +1,0 @@
-.menuBar {
-    margin-top: 2px;
-    margin-bottom: 2px;
-    display: flex;
-    flex-direction: row-reverse;
-    justify-content: right;
-}

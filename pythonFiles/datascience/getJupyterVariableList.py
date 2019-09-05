@@ -1,3 +1,4 @@
+#%DATASCIENCE_INTERNAL_KEY%#
 # Query Jupyter server for defined variables list
 # Tested on 2.7 and 3.6
 from sys import getsizeof as _VSCODE_getsizeof

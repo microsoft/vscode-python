@@ -6,7 +6,7 @@ import { Disposable, ProgressLocation, ProgressOptions } from 'vscode';
 
 import { IApplicationShell } from '../common/application/types';
 import { createDeferred, Deferred } from '../common/utils/async';
-import { IInteractiveWindowProvider, IStatusProvider } from './types';
+import { IInteractiveBase, IStatusProvider } from './types';
 
 class StatusItem implements Disposable {
     private deferred: Deferred<void>;
@@ -53,14 +53,14 @@ class StatusItem implements Disposable {
 export class StatusProvider implements IStatusProvider {
     private statusCount: number = 0;
 
-    constructor(@inject(IApplicationShell) private applicationShell: IApplicationShell, @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider) {}
+    constructor(@inject(IApplicationShell) private applicationShell: IApplicationShell) { }
 
-    public set(message: string, timeout?: number, cancel?: () => void, skipHistory?: boolean): Disposable {
+    public set(message: string, timeout?: number, cancel?: () => void, panel?: IInteractiveBase): Disposable {
         // Start our progress
-        this.incrementCount(skipHistory);
+        this.incrementCount(panel);
 
         // Create a StatusItem that will return our promise
-        const statusItem = new StatusItem(message, () => this.decrementCount(skipHistory), timeout);
+        const statusItem = new StatusItem(message, () => this.decrementCount(panel), timeout);
 
         const progressOptions: ProgressOptions = {
             location: cancel ? ProgressLocation.Notification : ProgressLocation.Window,
@@ -82,9 +82,9 @@ export class StatusProvider implements IStatusProvider {
         return statusItem;
     }
 
-    public async waitWithStatus<T>(promise: () => Promise<T>, message: string, timeout?: number, cancel?: () => void, skipHistory?: boolean): Promise<T> {
+    public async waitWithStatus<T>(promise: () => Promise<T>, message: string, timeout?: number, cancel?: () => void, panel?: IInteractiveBase): Promise<T> {
         // Create a status item and wait for our promise to either finish or reject
-        const status = this.set(message, timeout, cancel, skipHistory);
+        const status = this.set(message, timeout, cancel, panel);
         let result: T;
         try {
             result = await promise();
@@ -94,22 +94,20 @@ export class StatusProvider implements IStatusProvider {
         return result;
     }
 
-    private incrementCount = (skipHistory?: boolean) => {
+    private incrementCount = (panel?: IInteractiveBase) => {
         if (this.statusCount === 0) {
-            const history = this.interactiveWindowProvider.getActive();
-            if (history && !skipHistory) {
-                history.startProgress();
+            if (panel) {
+                panel.startProgress();
             }
         }
         this.statusCount += 1;
     }
 
-    private decrementCount = (skipHistory?: boolean) => {
+    private decrementCount = (panel?: IInteractiveBase) => {
         const updatedCount = this.statusCount - 1;
         if (updatedCount === 0) {
-            const history = this.interactiveWindowProvider.getActive();
-            if (history && !skipHistory) {
-                history.stopProgress();
+            if (panel) {
+                panel.stopProgress();
             }
         }
         this.statusCount = Math.max(updatedCount, 0);

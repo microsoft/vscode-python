@@ -18,7 +18,7 @@ import {
     IConnection,
     IJupyterCommandFactory,
     IJupyterExecution,
-    IJupyterSessionManager,
+    IJupyterSessionManagerFactory,
     INotebookServer,
     INotebookServerOptions
 } from '../../types';
@@ -44,7 +44,7 @@ export class HostJupyterExecution
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         fileSys: IFileSystem,
-        sessionManager: IJupyterSessionManager,
+        sessionManager: IJupyterSessionManagerFactory,
         workspace: IWorkspaceService,
         configService: IConfigurationService,
         commandFactory: IJupyterCommandFactory,

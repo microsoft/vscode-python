@@ -15,13 +15,13 @@ import { noop } from '../../client/common/utils/misc';
 import { generateCellsFromDocument } from '../../client/datascience/cellFactory';
 import { concatMultilineString } from '../../client/datascience/common';
 import { EditorContexts } from '../../client/datascience/constants';
-import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import {
     InteractiveWindowMessageListener
-} from '../../client/datascience/interactive-window/interactiveWindowMessageListener';
-import { InteractiveWindowMessages } from '../../client/datascience/interactive-window/interactiveWindowTypes';
+} from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
+import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { IInteractiveWindow, IInteractiveWindowProvider } from '../../client/datascience/types';
-import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
+import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createDocument } from './editor-integration/helpers';
@@ -295,7 +295,7 @@ for _ in range(50):
             return Promise.resolve();
         });
 
-        assert.equal(afterUndo.length, 1, `Undo should remove cells + ${afterUndo.debug()}`);
+        assert.equal(afterUndo.length, 1, `Undo should remove cells`);
 
         // Redo should put the cells back
         const afterRedo = await getCellResults(wrapper, 1, async () => {
@@ -410,7 +410,7 @@ for _ in range(50):
         assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), false, 'Should not have redoable before starting');
 
         // Get an update promise so we can wait for the add code
-        const updatePromise = waitForUpdate(wrapper, MainPanel);
+        const updatePromise = waitForUpdate(wrapper, InteractivePanel);
 
         // Send some code to the interactive window
         await interactiveWindow.addCode('a=1\na', 'foo.py', 2);
@@ -561,19 +561,6 @@ for _ in range(50):
         await interactiveWindow.addCode('a=1\na', 'foo', 0);
         verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
 
-    }, () => { return ioc; });
-
-    runMountedTest('Preview', async (wrapper) => {
-
-        const testFile = path.join(srcDirectory(), 'sub', 'test.ipynb');
-
-        // Preview is much fewer renders than an add code since the data is already there.
-        await getCellResults(wrapper, 2, async () => {
-            const interactiveWindow = await getOrCreateInteractiveWindow();
-            await interactiveWindow.previewNotebook(testFile);
-        });
-
-        verifyHtmlOnCell(wrapper, '<img', CellPosition.Last);
     }, () => { return ioc; });
 
     runMountedTest('LiveLossPlot', async (wrapper) => {

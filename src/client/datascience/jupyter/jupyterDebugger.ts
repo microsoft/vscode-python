@@ -24,7 +24,7 @@ import {
     IConnection,
     IFileHashes,
     IJupyterDebugger,
-    INotebookServer,
+    INotebook,
     ISourceMapRequest
 } from '../types';
 import { JupyterDebuggerNotInstalledError } from './jupyterDebuggerNotInstalledError';
@@ -51,15 +51,15 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     ) {
     }
 
-    public async startDebugging(server: INotebookServer): Promise<void> {
+    public async startDebugging(notebook: INotebook): Promise<void> {
         traceInfo('start debugging');
 
-        // Try to connect to this server
-        const config = await this.connect(server);
+        // Try to connect to this notebook
+        const config = await this.connect(notebook);
         if (config) {
             // First check if this is a live share session. Skip debugging attach on the guest
             // tslint:disable-next-line: no-any
-            const hasRole = (server as any) as ILiveShareHasRole;
+            const hasRole = (notebook as any) as ILiveShareHasRole;
             if (hasRole && hasRole.role && hasRole.role === vsls.Role.Guest) {
                 traceInfo('guest mode attach skipped');
             } else {
@@ -72,14 +72,14 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
             // Wait for attach before we turn on tracing and allow the code to run, if the IDE is already attached this is just a no-op
             // tslint:disable-next-line:no-multiline-string
-            const importResults = await this.executeSilently(server, `import ptvsd\nptvsd.wait_for_attach()`);
+            const importResults = await this.executeSilently(notebook, `import ptvsd\nptvsd.wait_for_attach()`);
             if (importResults.length === 0 || importResults[0].state === CellState.error) {
                 traceWarning('PTVSD not found in path.');
             }
 
             // Then enable tracing
             // tslint:disable-next-line:no-multiline-string
-            await this.executeSilently(server, `from ptvsd import tracing\ntracing(True)`);
+            await this.executeSilently(notebook, `from ptvsd import tracing\ntracing(True)`);
 
             // // Force the debugger to break on raised exceptions.
             // if (this.debugService.activeDebugSession) {
@@ -91,8 +91,8 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         }
     }
 
-    public async stopDebugging(server: INotebookServer): Promise<void> {
-        const config = this.configs.get(server.id);
+    public async stopDebugging(notebook: INotebook): Promise<void> {
+        const config = this.configs.get(notebook.resource.toString());
         if (config) {
             traceInfo('stop debugging');
 
@@ -102,12 +102,12 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
             // Disable tracing after we disconnect because we don't want to step through this
             // code if the user was in step mode.
             // tslint:disable-next-line:no-multiline-string
-            await this.executeSilently(server, `from ptvsd import tracing\ntracing(False)`);
+            await this.executeSilently(notebook, `from ptvsd import tracing\ntracing(False)`);
         }
     }
 
-    public onRestart(server: INotebookServer): void {
-        this.configs.delete(server.id);
+    public onRestart(notebook: INotebook): void {
+        this.configs.delete(notebook.resource.toString());
     }
 
     public async hashesUpdated(hashes: IFileHashes[]): Promise<void> {
@@ -119,9 +119,9 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         }
     }
 
-    private async connect(server: INotebookServer): Promise<DebugConfiguration | undefined> {
+    private async connect(notebook: INotebook): Promise<DebugConfiguration | undefined> {
         // If we already have configuration, we're already attached, don't do it again.
-        let result = this.configs.get(server.id);
+        let result = this.configs.get(notebook.resource.toString());
         if (result) {
             const settings = this.configService.getSettings();
             result.justMyCode = settings.datascience.debugJustMyCode;
@@ -130,33 +130,33 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         traceInfo('enable debugger attach');
 
         // Append any specific ptvsd paths that we have
-        await this.appendPtvsdPaths(server);
+        await this.appendPtvsdPaths(notebook);
 
         // Check the version of ptvsd that we have already installed
-        const ptvsdVersion = await this.ptvsdCheck(server);
+        const ptvsdVersion = await this.ptvsdCheck(notebook);
 
         // If we don't have ptvsd installed or the version is too old then we need to install it
         if (!ptvsdVersion || !this.ptvsdMeetsRequirement(ptvsdVersion)) {
-            await this.promptToInstallPtvsd(server, ptvsdVersion);
+            await this.promptToInstallPtvsd(notebook, ptvsdVersion);
         }
 
-        // Connect local or remote based on what type of server we're talking to
-        const connectionInfo = server.getConnectionInfo();
+        // Connect local or remote based on what type of notebook we're talking to
+        const connectionInfo = notebook.server.getConnectionInfo();
         if (connectionInfo && !connectionInfo.localLaunch) {
-            result = await this.connectToRemote(server, connectionInfo);
+            result = await this.connectToRemote(notebook, connectionInfo);
         } else {
-            result = await this.connectToLocal(server);
+            result = await this.connectToLocal(notebook);
         }
 
         if (result) {
-            this.configs.set(server.id, result);
+            this.configs.set(notebook.resource.toString(), result);
         }
 
         return result;
     }
 
     // Append our local ptvsd path and ptvsd settings path to sys.path
-    private async appendPtvsdPaths(server: INotebookServer): Promise<void> {
+    private async appendPtvsdPaths(notebook: INotebook): Promise<void> {
         const extraPaths: string[] = [];
 
         // Add the settings path first as it takes precedence over the ptvsd extension path
@@ -173,7 +173,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
         // For a local connection we also need will append on the path to the ptvsd
         // installed locally by the extension
-        const connectionInfo = server.getConnectionInfo();
+        const connectionInfo = notebook.server.getConnectionInfo();
         if (connectionInfo && connectionInfo.localLaunch) {
             let localPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python');
             if (this.platform.isWindows) {
@@ -192,7 +192,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
                 return totalPath;
             }, '');
-            await this.executeSilently(server, `import sys\r\nsys.path.extend([${pythonPathList}])\r\nsys.path`);
+            await this.executeSilently(notebook, `import sys\r\nsys.path.extend([${pythonPathList}])\r\nsys.path`);
         }
     }
 
@@ -211,14 +211,14 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         return sourceMapRequest;
     }
 
-    private executeSilently(server: INotebookServer, code: string): Promise<ICell[]> {
-        return server.execute(code, Identifiers.EmptyFileName, 0, uuid(), undefined, true);
+    private executeSilently(notebook: INotebook, code: string): Promise<ICell[]> {
+        return notebook.execute(code, Identifiers.EmptyFileName, 0, uuid(), undefined, true);
     }
 
-    private async ptvsdCheck(server: INotebookServer): Promise<IPtvsdVersion | undefined> {
+    private async ptvsdCheck(notebook: INotebook): Promise<IPtvsdVersion | undefined> {
         // We don't want to actually import ptvsd to check version so run !python instead.
         // tslint:disable-next-line:no-multiline-string
-        const ptvsdVersionResults = await this.executeSilently(server, `import sys\r\n!{sys.executable} -c "import ptvsd;print(ptvsd.__version__)"`);
+        const ptvsdVersionResults = await this.executeSilently(notebook, `import sys\r\n!{sys.executable} -c "import ptvsd;print(ptvsd.__version__)"`);
         return this.parsePtvsdVersionInfo(ptvsdVersionResults);
     }
 
@@ -258,21 +258,21 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     }
 
     @captureTelemetry(Telemetry.PtvsdPromptToInstall)
-    private async promptToInstallPtvsd(server: INotebookServer, oldVersion: IPtvsdVersion | undefined): Promise<void> {
+    private async promptToInstallPtvsd(notebook: INotebook, oldVersion: IPtvsdVersion | undefined): Promise<void> {
         const promptMessage = oldVersion ? localize.DataScience.jupyterDebuggerInstallPtvsdUpdate() : localize.DataScience.jupyterDebuggerInstallPtvsdNew();
         const result = await this.appShell.showInformationMessage(promptMessage, localize.DataScience.jupyterDebuggerInstallPtvsdYes(), localize.DataScience.jupyterDebuggerInstallPtvsdNo());
 
         if (result === localize.DataScience.jupyterDebuggerInstallPtvsdYes()) {
-            await this.installPtvsd(server);
+            await this.installPtvsd(notebook);
         } else {
             // If they don't want to install, throw so we exit out of debugging
             throw new JupyterDebuggerNotInstalledError();
         }
     }
 
-    private async installPtvsd(server: INotebookServer): Promise<void> {
+    private async installPtvsd(notebook: INotebook): Promise<void> {
         // tslint:disable-next-line:no-multiline-string
-        const ptvsdInstallResults = await this.executeSilently(server, `import sys\r\n!{sys.executable} -m pip install -U ptvsd`);
+        const ptvsdInstallResults = await this.executeSilently(notebook, `import sys\r\n!{sys.executable} -m pip install -U ptvsd`);
 
         if (ptvsdInstallResults.length > 0) {
             const installResultsString = this.extractOutput(ptvsdInstallResults[0]);
@@ -359,15 +359,15 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         return undefined;
     }
 
-    private async connectToLocal(server: INotebookServer): Promise<DebugConfiguration | undefined> {
+    private async connectToLocal(notebook: INotebook): Promise<DebugConfiguration | undefined> {
         // tslint:disable-next-line: no-multiline-string
-        const enableDebuggerResults = await this.executeSilently(server, `import ptvsd\r\nptvsd.enable_attach(('localhost', 0))`);
+        const enableDebuggerResults = await this.executeSilently(notebook, `import ptvsd\r\nptvsd.enable_attach(('localhost', 0))`);
 
-        // Save our connection info to this server
+        // Save our connection info to this notebook
         return this.parseConnectInfo(enableDebuggerResults, true);
     }
 
-    private async connectToRemote(_server: INotebookServer, _connectionInfo: IConnection): Promise<DebugConfiguration | undefined> {
+    private async connectToRemote(_notebook: INotebook, _connectionInfo: IConnection): Promise<DebugConfiguration | undefined> {
         // We actually need a token. This isn't supported at the moment
         throw new JupyterDebuggerRemoteNotSupported();
 

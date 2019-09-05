@@ -5,7 +5,7 @@ import { assert } from 'chai';
 
 import { generateCells } from '../../client/datascience/cellFactory';
 import { formatStreamText, stripComments } from '../../client/datascience/common';
-import { InputHistory } from '../../datascience-ui/history-react/inputHistory';
+import { InputHistory } from '../../datascience-ui/interactive-common/inputHistory';
 
 // tslint:disable: max-func-body-length
 suite('Data Science Tests', () => {

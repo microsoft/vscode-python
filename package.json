@@ -71,6 +71,8 @@
         "onCommand:python.configureTests",
         "onCommand:python.datascience.showhistorypane",
         "onCommand:python.datascience.importnotebook",
+        "onCommand:python.datascience.importnotebookfile",
+        "onCommand:python.datascience.opennotebook",
         "onCommand:python.datascience.selectjupyteruri",
         "onCommand:python.datascience.exportfileasnotebook",
         "onCommand:python.datascience.exportfileandoutputasnotebook",
@@ -453,6 +455,16 @@
                 "category": "Python"
             },
             {
+                "command": "python.datascience.importnotebookfile",
+                "title": "%python.command.python.datascience.importnotebookfile.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.opennotebook",
+                "title": "%python.command.python.datascience.opennotebook.title%",
+                "category": "Python"
+            },
+            {
                 "command": "python.datascience.exportoutputasnotebook",
                 "title": "%python.command.python.datascience.exportoutputasnotebook.title%",
                 "category": "Python"
@@ -478,6 +490,16 @@
                 "category": "Python"
             },
             {
+                "command": "python.datascience.notebookeditor.undocells",
+                "title": "%python.command.python.datascience.undocells.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.notebookeditor.redocells",
+                "title": "%python.command.python.datascience.redocells.title%",
+                "category": "Python"
+            },
+            {
                 "command": "python.datascience.removeallcells",
                 "title": "%python.command.python.datascience.removeallcells.title%",
                 "category": "Python"
@@ -489,6 +511,21 @@
             },
             {
                 "command": "python.datascience.restartkernel",
+                "title": "%python.command.python.datascience.restartkernel.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.notebookeditor.removeallcells",
+                "title": "%python.command.python.datascience.removeallcells.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.notebookeditor.interruptkernel",
+                "title": "%python.command.python.datascience.interruptkernel.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.notebookeditor.restartkernel",
                 "title": "%python.command.python.datascience.restartkernel.title%",
                 "category": "Python"
             },
@@ -505,6 +542,11 @@
             {
                 "command": "python.datascience.addcellbelow",
                 "title": "%python.command.python.datascience.addcellbelow.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.createnewnotebook",
+                "title": "%python.command.python.datascience.createnewnotebook.title%",
                 "category": "Python"
             },
             {
@@ -641,7 +683,12 @@
                 },
                 {
                     "when": "resourceLangId == jupyter",
-                    "command": "python.datascience.importnotebook",
+                    "command": "python.datascience.opennotebook",
+                    "group": "Python"
+                },
+                {
+                    "when": "resourceLangId == jupyter",
+                    "command": "python.datascience.importnotebookfile",
                     "group": "Python"
                 }
             ],
@@ -757,6 +804,11 @@
                     "category": "Python"
                 },
                 {
+                    "command": "python.datascience.opennotebook",
+                    "title": "%python.command.python.datascience.opennotebook.title%",
+                    "category": "Python"
+                },
+                {
                     "command": "python.datascience.exportfileasnotebook",
                     "title": "%python.command.python.datascience.exportfileasnotebook.title%",
                     "category": "Python",
@@ -799,6 +851,36 @@
                     "when": "python.datascience.haveinteractive && python.datascience.featureenabled"
                 },
                 {
+                    "command": "python.datascience.notebookeditor.undocells",
+                    "title": "%python.command.python.datascience.undocells.title%",
+                    "category": "Python",
+                    "when": "python.datascience.haveinteractivecells && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.notebookeditor.redocells",
+                    "title": "%python.command.python.datascience.redocells.title%",
+                    "category": "Python",
+                    "when": "python.datascience.havenativeredoablecells && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.notebookeditor.removeallcells",
+                    "title": "%python.command.python.datascience.removeallcells.title%",
+                    "category": "Python",
+                    "when": "python.datascience.havenativecells && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.notebookeditor.interruptkernel",
+                    "title": "%python.command.python.datascience.interruptkernel.title%",
+                    "category": "Python",
+                    "when": "python.datascience.havenative && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.notebookeditor.restartkernel",
+                    "title": "%python.command.python.datascience.restartkernel.title%",
+                    "category": "Python",
+                    "when": "python.datascience.havenative && python.datascience.featureenabled"
+                },
+                {
                     "command": "python.datascience.expandallcells",
                     "title": "%python.command.python.datascience.expandallcells.title%",
                     "category": "Python",
@@ -829,6 +911,12 @@
                 {
                     "command": "python.datascience.addcellbelow",
                     "title": "%python.command.python.datascience.addcellbelow.title%",
+                    "category": "Python",
+                    "when": "python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.createnewnotebook",
+                    "title": "%python.command.python.datascience.createnewnotebook.title%",
                     "category": "Python",
                     "when": "python.datascience.featureenabled"
                 }
@@ -1518,8 +1606,15 @@
                 },
                 "python.dataScience.autoPreviewNotebooksInInteractivePane": {
                     "type": "boolean",
+                    "deprecationMessage": "No longer supported. Notebooks open directly in their own editor now.",
                     "default": false,
                     "description": "When opening ipynb files, automatically preview the contents in the Python Interactive window.",
+                    "scope": "resource"
+                },
+                "python.dataScience.autoOpenNotebooks": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "When opening ipynb files, automatically open the file in a separate editor.",
                     "scope": "resource"
                 },
                 "python.dataScience.allowUnauthorizedRemoteConnection": {
@@ -2497,6 +2592,7 @@
         "arch": "^2.1.0",
         "azure-storage": "^2.10.3",
         "diff-match-patch": "^1.0.0",
+        "fast-deep-equal": "^2.0.1",
         "fs-extra": "^4.0.3",
         "fuzzy": "^0.1.3",
         "get-port": "^3.2.0",
@@ -2510,6 +2606,7 @@
         "line-by-line": "^0.1.6",
         "lodash": "^4.17.15",
         "md5": "^2.2.1",
+        "memoize-one": "^5.1.1",
         "minimatch": "^3.0.4",
         "monaco-editor-textmate": "^2.1.1",
         "monaco-textmate": "^3.0.0",
@@ -2588,6 +2685,7 @@
         "@types/loader-utils": "^1.1.3",
         "@types/lodash": "^4.14.104",
         "@types/md5": "^2.1.32",
+        "@types/memoize-one": "^4.1.1",
         "@types/mocha": "^5.2.7",
         "@types/nock": "^10.0.3",
         "@types/node": "9.4.7",

@@ -13,7 +13,7 @@ import { noop } from '../../common/utils/misc';
 import { CellMatcher } from '../cellMatcher';
 import { splitMultilineString } from '../common';
 import { Identifiers } from '../constants';
-import { InteractiveWindowMessages, SysInfoReason } from '../interactive-window/interactiveWindowTypes';
+import { InteractiveWindowMessages, SysInfoReason } from '../interactive-common/interactiveWindowTypes';
 import {
     ICell,
     ICellHash,

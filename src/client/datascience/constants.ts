@@ -19,6 +19,8 @@ export namespace Commands {
     export const RunCurrentCellAdvance = 'python.datascience.runcurrentcelladvance';
     export const ShowHistoryPane = 'python.datascience.showhistorypane';
     export const ImportNotebook = 'python.datascience.importnotebook';
+    export const ImportNotebookFile = 'python.datascience.importnotebookfile';
+    export const OpenNotebook = 'python.datascience.opennotebook';
     export const SelectJupyterURI = 'python.datascience.selectjupyteruri';
     export const ExportFileAsNotebook = 'python.datascience.exportfileasnotebook';
     export const ExportFileAndOutputAsNotebook = 'python.datascience.exportfileandoutputasnotebook';
@@ -27,6 +29,11 @@ export namespace Commands {
     export const RemoveAllCells = 'python.datascience.removeallcells';
     export const InterruptKernel = 'python.datascience.interruptkernel';
     export const RestartKernel = 'python.datascience.restartkernel';
+    export const NotebookEditorUndoCells = 'python.datascience.notebookeditor.undocells';
+    export const NotebookEditorRedoCells = 'python.datascience.notebookeditor.redocells';
+    export const NotebookEditorRemoveAllCells = 'python.datascience.notebookeditor.removeallcells';
+    export const NotebookEditorInterruptKernel = 'python.datascience.notebookeditor.interruptkernel';
+    export const NotebookEditorRestartKernel = 'python.datascience.notebookeditor.restartkernel';
     export const ExpandAllCells = 'python.datascience.expandallcells';
     export const CollapseAllCells = 'python.datascience.collapseallcells';
     export const ExportOutputAsNotebook = 'python.datascience.exportoutputasnotebook';
@@ -41,6 +48,7 @@ export namespace Commands {
     export const DebugStop = 'python.datascience.debugstop';
     export const RunCurrentCellAndAddBelow = 'python.datascience.runcurrentcellandaddbelow';
     export const ScrollToCell = 'python.datascience.scrolltocell';
+    export const CreateNewNotebook = 'python.datascience.createnewnotebook';
 }
 
 export namespace CodeLensCommands {
@@ -59,6 +67,9 @@ export namespace EditorContexts {
     export const HaveRedoableCells = 'python.datascience.haveredoablecells';
     export const HaveInteractive = 'python.datascience.haveinteractive';
     export const OwnsSelection = 'python.datascience.ownsSelection';
+    export const HaveNativeCells = 'python.datascience.havenativecells';
+    export const HaveNativeRedoableCells = 'python.datascience.havenativeredoablecells';
+    export const HaveNative = 'python.datascience.havenative';
 }
 
 export namespace RegExpValues {
@@ -165,9 +176,12 @@ export enum Telemetry {
     PtvsdSuccessfullyInstalled = 'DATASCIENCE.PTVSD_SUCCESSFULLY_INSTALLED',
     PtvsdInstallFailed = 'DATASCIENCE.PTVSD_INSTALL_FAILED',
     ScrolledToCell = 'DATASCIENCE.SCROLLED_TO_CELL',
+    ExecuteNativeCell = 'DATASCIENCE.EXECUTE_NATIVE_CELL',
+    CreateNewNotebook = 'DATASCIENCE.CREATE_NEW_NOTEBOOK',
     DebugStepOver = 'DATASCIENCE.DEBUG_STEP_OVER',
     DebugContinue = 'DATASCIENCE.DEBUG_CONTINUE',
-    DebugStop = 'DATASCIENCE.DEBUG_STOP'
+    DebugStop = 'DATASCIENCE.DEBUG_STOP',
+    OpenNotebook = 'DATASCIENCE.OPEN_NOTEBOOK'
 }
 
 export namespace HelpLinks {
@@ -189,6 +203,8 @@ export namespace Identifiers {
     export const MatplotLibDefaultParams = '_VSCode_defaultMatplotlib_Params';
     export const EditCellId = '3D3AB152-ADC1-4501-B813-4B83B49B0C10';
     export const SvgSizeTag = 'sizeTag={{0}, {1}}';
+    export const InteractiveWindowIdentity = 'history://EC155B3B-DC18-49DC-9E99-9A948AA2F27B';
+    export const InteractiveWindowIdentityScheme = 'history';
 }
 
 export namespace CodeSnippits {
@@ -210,6 +226,7 @@ export namespace JupyterCommands {
 export namespace LiveShare {
     export const JupyterExecutionService = 'jupyterExecutionService';
     export const JupyterServerSharedService = 'jupyterServerSharedService';
+    export const JupyterNotebookSharedService = 'jupyterNotebookSharedService';
     export const CommandBrokerService = 'commmandBrokerService';
     export const WebPanelMessageService = 'webPanelMessageService';
     export const InteractiveWindowProviderService = 'interactiveWindowProviderService';
@@ -238,4 +255,5 @@ export namespace LiveShareCommands {
     export const interactiveWindowCreateSync = 'interactiveWindowCreateSync';
     export const disposeServer = 'disposeServer';
     export const guestCheck = 'guestCheck';
+    export const createNotebook = 'createNotebook';
 }

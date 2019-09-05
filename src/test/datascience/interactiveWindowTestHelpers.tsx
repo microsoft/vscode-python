@@ -10,9 +10,9 @@ import { CancellationToken } from 'vscode';
 
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { IDataScienceSettings } from '../../client/common/types';
-import { InteractiveWindowMessages } from '../../client/datascience/interactive-window/interactiveWindowTypes';
+import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IInteractiveWindow, IJupyterExecution } from '../../client/datascience/types';
-import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
+import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { updateSettings } from '../../datascience-ui/react-common/settingsReactSide';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
@@ -38,7 +38,7 @@ export function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<an
         const jupyterExecution = ioc.get<IJupyterExecution>(IJupyterExecution);
         if (await jupyterExecution.isNotebookSupported()) {
             addMockData(ioc, 'a=1\na', 1);
-            const wrapper = mountWebView(ioc, <MainPanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />);
+            const wrapper = mountWebView(ioc, <InteractivePanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />);
             await testFunc(wrapper);
         } else {
             // tslint:disable-next-line:no-console
@@ -170,7 +170,7 @@ export function verifyLastCellInputState(wrapper: ReactWrapper<any, Readonly<{}>
 export async function getCellResults(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, expectedRenders: number, updater: () => Promise<void>): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
 
     // Get a render promise with the expected number of renders
-    const renderPromise = waitForUpdate(wrapper, MainPanel, expectedRenders);
+    const renderPromise = waitForUpdate(wrapper, InteractivePanel, expectedRenders);
 
     // Call our function to update the react control
     await updater();
@@ -182,7 +182,7 @@ export async function getCellResults(wrapper: ReactWrapper<any, Readonly<{}>, Re
     return wrapper.find('Cell');
 }
 
-export async function addCode(interactiveWindowProvider: () => Promise<IInteractiveWindow>, wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string, expectedRenderCount: number = 5, expectError: boolean = false): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
+export async function addCode(interactiveWindowProvider: () => Promise<IInteractiveWindow>, wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string, expectedRenderCount: number = 4, expectError: boolean = false): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
     // Adding code should cause 5 renders to happen.
     // 1) Input
     // 2) Status ready
@@ -237,10 +237,10 @@ function simulateKey(domNode: HTMLTextAreaElement, key: string, shiftDown?: bool
 async function submitInput(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, textArea: HTMLTextAreaElement): Promise<void> {
     // Get a render promise with the expected number of renders (how many updates a the shift + enter will cause)
     // Should be 6 - 1 for the shift+enter and 5 for the new cell.
-    const renderPromise = waitForUpdate(wrapper, MainPanel, 6);
+    const renderPromise = waitForUpdate(wrapper, InteractivePanel, 6);
 
     // Submit a keypress into the textarea
-    simulateKey(textArea, '\n', true);
+    simulateKey(textArea, 'Enter', true);
 
     return renderPromise;
 }
@@ -291,7 +291,7 @@ export async function enterInput(wrapper: ReactWrapper<any, Readonly<{}>, React.
 }
 
 export function findButton(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, index: number): ReactWrapper<any, Readonly<{}>, React.Component> | undefined {
-    const mainObj = wrapper.find(MainPanel);
+    const mainObj = wrapper.find(InteractivePanel);
     if (mainObj) {
         const buttons = mainObj.find(ImageButton);
         if (buttons) {
@@ -335,10 +335,10 @@ export function initialDataScienceSettings(newSettings: IDataScienceSettings) {
     updateSettings(settingsString);
 }
 
-export function getMainPanel(wrapper: ReactWrapper<any, Readonly<{}>>): MainPanel | undefined {
-    const mainObj = wrapper.find(MainPanel);
+export function getMainPanel(wrapper: ReactWrapper<any, Readonly<{}>>): InteractivePanel | undefined {
+    const mainObj = wrapper.find(InteractivePanel);
     if (mainObj) {
-        return mainObj.instance() as MainPanel;
+        return mainObj.instance() as InteractivePanel;
     }
 
     return undefined;
@@ -349,7 +349,7 @@ export function updateDataScienceSettings(wrapper: ReactWrapper<any, Readonly<{}
     const settingsString = JSON.stringify(newSettings);
     const mainPanel = getMainPanel(wrapper);
     if (mainPanel) {
-        mainPanel.handleMessage(InteractiveWindowMessages.UpdateSettings, settingsString);
+        mainPanel.stateController.handleMessage(InteractiveWindowMessages.UpdateSettings, settingsString);
     }
     wrapper.update();
 }

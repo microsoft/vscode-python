@@ -1,48 +1,43 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { Observable } from 'rxjs/Observable';
 import * as uuid from 'uuid/v4';
+import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
 import { ILiveShareApi } from '../../../common/application/types';
-import { CancellationError } from '../../../common/cancellation';
-import { traceInfo } from '../../../common/logger';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { LiveShare, LiveShareCommands } from '../../constants';
 import {
-    ICell,
     IConnection,
     IDataScience,
-    IJupyterSessionManager,
-    INotebookCompletion,
+    IJupyterSessionManagerFactory,
+    INotebook,
     INotebookExecutionLogger,
     INotebookServer,
-    INotebookServerLaunchInfo,
-    InterruptResult
+    INotebookServerLaunchInfo
 } from '../../types';
+import { GuestJupyterNotebook } from './guestJupyterNotebook';
 import { LiveShareParticipantDefault, LiveShareParticipantGuest } from './liveShareParticipantMixin';
-import { ResponseQueue } from './responseQueue';
-import { IExecuteObservableResponse, ILiveShareParticipant, IServerResponse } from './types';
+import { ILiveShareParticipant } from './types';
 
 export class GuestJupyterServer
     extends LiveShareParticipantGuest(LiveShareParticipantDefault, LiveShare.JupyterServerSharedService)
     implements INotebookServer, ILiveShareParticipant {
     private launchInfo: INotebookServerLaunchInfo | undefined;
-    private responseQueue: ResponseQueue = new ResponseQueue();
     private connectPromise: Deferred<INotebookServerLaunchInfo> = createDeferred<INotebookServerLaunchInfo>();
     private _id = uuid();
+    private notebooks: Map<string, INotebook> = new Map<string, INotebook>();
     constructor(
-        liveShare: ILiveShareApi,
+        private liveShare: ILiveShareApi,
         private dataScience: IDataScience,
-        _logger: ILogger,
-        private disposableRegistry: IDisposableRegistry,
         _asyncRegistry: IAsyncDisposableRegistry,
+        private disposableRegistry: IDisposableRegistry,
         private configService: IConfigurationService,
-        _sessionManager: IJupyterSessionManager,
+        _sessionManager: IJupyterSessionManagerFactory,
         _loggers: INotebookExecutionLogger[]
     ) {
         super(liveShare);
@@ -58,6 +53,28 @@ export class GuestJupyterServer
         return Promise.resolve();
     }
 
+    public async createNotebook(resource: Uri): Promise<INotebook> {
+        // Tell the host side to generate a notebook for this uri
+        const service = await this.waitForService();
+        if (service) {
+            await service.request(LiveShareCommands.createNotebook, [resource]);
+        }
+
+        // Return a new notebook to listen to
+        const result = new GuestJupyterNotebook(this.liveShare, this.disposableRegistry, this.configService, resource, this, this.dataScience.activationStartTime);
+        this.notebooks.set(resource.toString(), result);
+        const oldDispose = result.dispose;
+        result.dispose = () => {
+            this.notebooks.delete(resource.toString());
+            return oldDispose();
+        };
+        return result;
+    }
+
+    public async getNotebook(resource: Uri): Promise<INotebook | undefined> {
+        return this.notebooks.get(resource.toString());
+    }
+
     public async shutdown(): Promise<void> {
         // Send this across to the other side. Otherwise the host server will remain running (like during an export)
         const service = await this.waitForService();
@@ -68,69 +85,6 @@ export class GuestJupyterServer
 
     public dispose(): Promise<void> {
         return this.shutdown();
-    }
-
-    public waitForIdle(): Promise<void> {
-        return Promise.resolve();
-    }
-
-    public async execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken): Promise<ICell[]> {
-        // Create a deferred that we'll fire when we're done
-        const deferred = createDeferred<ICell[]>();
-
-        // Attempt to evaluate this cell in the jupyter notebook
-        const observable = this.executeObservable(code, file, line, id);
-        let output: ICell[];
-
-        observable.subscribe(
-            (cells: ICell[]) => {
-                output = cells;
-            },
-            (error) => {
-                deferred.reject(error);
-            },
-            () => {
-                deferred.resolve(output);
-            });
-
-        if (cancelToken) {
-            this.disposableRegistry.push(cancelToken.onCancellationRequested(() => deferred.reject(new CancellationError())));
-        }
-
-        // Wait for the execution to finish
-        return deferred.promise;
-    }
-
-    public setInitialDirectory(_directory: string): Promise<void> {
-        // Ignore this command on this side
-        return Promise.resolve();
-    }
-
-    public async setMatplotLibStyle(_useDark: boolean): Promise<void> {
-        // Guest can't change the style. Maybe output a warning here?
-    }
-
-    public executeObservable(code: string, file: string, line: number, id: string): Observable<ICell[]> {
-        // Mimic this to the other side and then wait for a response
-        this.waitForService().then(s => {
-            if (s) {
-                s.notify(LiveShareCommands.executeObservable, { code, file, line, id });
-            }
-        }).ignoreErrors();
-        return this.responseQueue.waitForObservable(code, id);
-    }
-
-    public async restartKernel(): Promise<void> {
-        // We need to force a restart on the host side
-        return this.sendRequest(LiveShareCommands.restart, []);
-    }
-
-    public async interruptKernel(_timeoutMs: number): Promise<InterruptResult> {
-        const settings = this.configService.getSettings();
-        const interruptTimeout = settings.datascience.jupyterInterruptTimeout;
-
-        const response = await this.sendRequest(LiveShareCommands.interrupt, [interruptTimeout]);
-        return (response as InterruptResult);
     }
 
     // Return a copy of the connection information that this server used to connect with
@@ -159,26 +113,6 @@ export class GuestJupyterServer
         return `${LiveShare.JupyterServerSharedService}${launchInfo.purpose}`;
     }
 
-    public async getSysInfo(): Promise<ICell | undefined> {
-        // This is a special case. Ask the shared server
-        const service = await this.waitForService();
-        if (service) {
-            const result = await service.request(LiveShareCommands.getSysInfo, []);
-            return (result as ICell);
-        }
-    }
-
-    public async getCompletion(_cellCode: string, _offsetInCode: number, _cancelToken?: CancellationToken): Promise<INotebookCompletion> {
-        return Promise.resolve({
-            matches: [],
-            cursor: {
-                start: 0,
-                end: 0
-            },
-            metadata: {}
-        });
-    }
-
     public async onAttach(api: vsls.LiveShare | null): Promise<void> {
         await super.onAttach(api);
 
@@ -190,32 +124,6 @@ export class GuestJupyterServer
             if (!synced && api.session && api.session.role !== vsls.Role.None) {
                 throw new Error(localize.DataScience.liveShareSyncFailure());
             }
-
-            if (service) {
-                // Listen to responses
-                service.onNotify(LiveShareCommands.serverResponse, this.onServerResponse);
-
-                // Request all of the responses since this guest was started. We likely missed a bunch
-                service.notify(LiveShareCommands.catchupRequest, { since: this.dataScience.activationStartTime });
-            }
         }
     }
-
-    private onServerResponse = (args: Object) => {
-        const er = args as IExecuteObservableResponse;
-        traceInfo(`Guest serverResponse ${er.pos} ${er.id}`);
-        // Args should be of type ServerResponse. Stick in our queue if so.
-        if (args.hasOwnProperty('type')) {
-            this.responseQueue.push(args as IServerResponse);
-        }
-    }
-
-    // tslint:disable-next-line:no-any
-    private async sendRequest(command: string, args: any[]): Promise<any> {
-        const service = await this.waitForService();
-        if (service) {
-            return service.request(command, args);
-        }
-    }
-
 }
