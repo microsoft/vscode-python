@@ -30,7 +30,7 @@ import { InterpreterService } from '../../../../client/interpreter/interpreterSe
 use(chaiAsPromised);
 
 // tslint:disable-next-line: max-func-body-length
-suite('Dummy', () => {
+suite('Debugging - Adapter Factory', () => {
     let factory: IDebugAdapterDescriptorFactory;
     let interpreterService: IInterpreterService;
     let appShell: IApplicationShell;
