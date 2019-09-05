@@ -20,7 +20,7 @@ def ptvsd_folder_name():
             if package_requirement.name != "ptvsd":
                 continue
             requirement_specifier = package_requirement.specifier
-            ptvsd_version = next(requirement_specifier.__iter__()).version
+            ptvsd_version = next(iter(requirement_specifier)).version
 
     sys.path.remove(PYTHONFILES_PATH)
 
