@@ -2031,7 +2031,6 @@
                     "description": "Path to mypy, you can use a custom version of mypy by modifying this setting to include the full path.",
                     "scope": "resource"
                 },
-
                 "python.linting.pycodestyleArgs": {
                     "type": "array",
                     "description": "Arguments passed in. Each argument is a separate item in the array.",
