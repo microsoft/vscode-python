@@ -41,6 +41,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private stackLimit = 10;
     private updateCount = 0;
     private renderCount = 0;
+    private internalScrollCount = 0;
     private editCellRef: Cell | null = null;
     private mainPanel: HTMLDivElement | null = null;
     private variableExplorerRef: React.RefObject<VariableExplorer>;
@@ -68,7 +69,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             editorOptions: this.computeEditorOptions(),
             currentExecutionCount: 0,
             debugging: false,
-            enableGather: getSettings && getSettings().enableGather
+            enableGather: getSettings && getSettings().enableGather,
+            isAtBottom: true
         };
 
         // Add test state if necessary
@@ -151,7 +153,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 <section id='main-panel-variable' aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
                     {this.renderVariablePanel(baseTheme)}
                 </section>
-                <main id='main-panel-content'>
+                <main id='main-panel-content' onScroll={this.handleScroll}>
                     {this.renderContentPanel(baseTheme)}
                 </main>
                 <section id='main-panel-footer' aria-label={getLocString('DataScience.editSection', 'Input new cells here')}>
@@ -159,6 +161,26 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 </section>
             </div>
         );
+    }
+
+    // This handles the scrolling. Its called from the props of contentPanel.
+    // We only scroll when the state indicates we are at the bottom of the interactive window,
+    // otherwise it sometimes scrolls when the user wasn't at the bottom.
+    public scrollDiv = (div: HTMLDivElement) => {
+        if (this.state.isAtBottom) {
+            this.internalScrollCount += 1;
+            div.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' });
+        }
+    }
+
+    public handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+        if (this.internalScrollCount > 0) {
+            this.internalScrollCount -= 1;
+        } else {
+            this.setState({
+                isAtBottom: e.currentTarget.scrollHeight - e.currentTarget.scrollTop === e.currentTarget.clientHeight
+            });
+        }
     }
 
     // tslint:disable-next-line:no-any cyclomatic-complexity max-func-body-length
@@ -445,7 +467,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             openLink: this.openLink,
             expandImage: this.showPlot,
             gatherCode: this.gatherCode,
-            enableGather: this.state.enableGather
+            enableGather: this.state.enableGather,
+            scrollToBottom: this.scrollDiv
         };
     }
     private getToolbarProps = (baseTheme: string): IToolbarPanelProps => {
