@@ -12,12 +12,12 @@ import { IFileSystem } from '../../client/common/platform/types';
 import { IConfigurationService } from '../../client/common/types';
 import { Identifiers } from '../../client/datascience/constants';
 import {
+    DotNetIntellisenseProvider
+} from '../../client/datascience/interactive-common/intellisense/dotNetIntellisenseProvider';
+import {
     IInteractiveWindowMapping,
     InteractiveWindowMessages
 } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import {
-    DotNetIntellisenseProvider
-} from '../../client/datascience/interactive-common/intellisense/dotNetIntellisenseProvider';
 import { IInteractiveWindowListener, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { MockLanguageClient } from './mockLanguageClient';
