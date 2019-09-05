@@ -10,6 +10,8 @@ import { IFileSystem } from '../../common/platform/types';
 import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
+import { captureTelemetry } from '../../telemetry';
+import { Telemetry } from '../constants';
 import { INotebookEditor, INotebookEditorProvider } from '../types';
 
 @injectable()
@@ -57,6 +59,7 @@ export class IpynbProvider implements INotebookEditorProvider, IAsyncDisposable 
         return editor;
     }
 
+    @captureTelemetry(Telemetry.CreateNewNotebook, undefined, false)
     public async createNew(): Promise<INotebookEditor> {
         // Create a new URI for the dummy file using our root workspace path
         const uri = await this.getNextNewNotebookUri();
