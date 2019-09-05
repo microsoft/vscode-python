@@ -76,7 +76,8 @@ export class MainStateController implements IMessageHandler {
             knownDark: false,
             variablesVisible: false,
             editCellVM: this.props.hasEdit ? createEditableCellVM(1) : undefined,
-            enableGather: this.props.enableGather
+            enableGather: this.props.enableGather,
+            isAtBottom: true
         };
 
         // Add test state if necessary

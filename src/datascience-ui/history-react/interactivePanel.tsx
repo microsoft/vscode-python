@@ -33,6 +33,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
     private editCellRef: React.RefObject<Cell> = React.createRef<Cell>();
     private contentPanelRef: React.RefObject<ContentPanel> = React.createRef<ContentPanel>();
     private renderCount: number = 0;
+    private internalScrollCount: number = 0;
 
     constructor(props: IInteractivePanelProps) {
         super(props);
@@ -85,7 +86,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
                 <section id='main-panel-variable' aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
                     {this.renderVariablePanel(this.props.baseTheme)}
                 </section>
-                <main id='main-panel-content'>
+                <main id='main-panel-content' onScroll={this.handleScroll}>
                     {this.renderContentPanel(this.props.baseTheme)}
                 </main>
                 <section id='main-panel-footer' aria-label={getLocString('DataScience.editSection', 'Input new cells here')}>
@@ -234,7 +235,8 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
             editable: false,
             newCellVM: undefined,
             editExecutionCount: this.getInputExecutionCount().toString(),
-            renderCellToolbar: this.renderCellToolbar
+            renderCellToolbar: this.renderCellToolbar,
+            scrollToBottom: this.scrollDiv
         };
     }
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {
@@ -341,4 +343,27 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
     private renderEditCellToolbar = (_cellId: string) => {
         return null;
     }
+
+    // This handles the scrolling. Its called from the props of contentPanel.
+    // We only scroll when the state indicates we are at the bottom of the interactive window,
+    // otherwise it sometimes scrolls when the user wasn't at the bottom.
+    private scrollDiv = (div: HTMLDivElement) => {
+        if (this.state.isAtBottom) {
+            this.internalScrollCount += 1;
+            // Force auto here as smooth scrolling can be canceled by updates to the window
+            // from elsewhere (and keeping track of these would make this hard to maintain)
+            div.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' });
+        }
+    }
+
+    private handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+        if (this.internalScrollCount > 0) {
+            this.internalScrollCount -= 1;
+        } else {
+            this.setState({
+                isAtBottom: e.currentTarget.scrollHeight - e.currentTarget.scrollTop === e.currentTarget.clientHeight
+            });
+        }
+    }
+
 }
