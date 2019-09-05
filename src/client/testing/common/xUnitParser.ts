@@ -71,6 +71,8 @@ async function updateResultsFromXmlLogFile(
     passCalculationFormulae: PassCalculationFormulae
 ) {
     const data = await fs.readFile(outputXmlFile);
+    // Un-comment this line to capture the results file for later use in tests:
+    //await fs.writeFile('/tmp/results.xml', data);
 
     // tslint:disable-next-line:no-require-imports
     const xml2js = require('xml2js');
