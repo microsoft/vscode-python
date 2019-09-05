@@ -25,9 +25,9 @@ import { IntellisenseDocument } from './intellisenseDocument';
 export class JediIntellisenseProvider extends BaseIntellisenseProvider implements IInteractiveWindowListener {
 
     private active: boolean = false;
-    private pythonHoverProvider : PythonHoverProvider | undefined;
-    private pythonCompletionItemProvider : PythonCompletionItemProvider | undefined;
-    private pythonSignatureHelpProvider : PythonSignatureProvider | undefined;
+    private pythonHoverProvider: PythonHoverProvider | undefined;
+    private pythonCompletionItemProvider: PythonCompletionItemProvider | undefined;
+    private pythonSignatureHelpProvider: PythonSignatureProvider | undefined;
     private jediFactory: JediFactory;
     private readonly context: IExtensionContext;
 
@@ -49,8 +49,7 @@ export class JediIntellisenseProvider extends BaseIntellisenseProvider implement
         // Make sure we're active. We still listen to messages for adding and editing cells,
         // but we don't actually return any data.
         const isJediActive = () => {
-            const lsSetting = this.configService.getSettings().languageServer;
-            return lsSetting === 'jedi';
+            return this.configService.getSettings().jediEnabled;
         };
         this.active = isJediActive();
 
@@ -69,10 +68,10 @@ export class JediIntellisenseProvider extends BaseIntellisenseProvider implement
         super.dispose();
         this.jediFactory.dispose();
     }
-    protected get isActive() : boolean {
+    protected get isActive(): boolean {
         return this.active;
     }
-    protected async provideCompletionItems(position: monacoEditor.Position, _context: monacoEditor.languages.CompletionContext, cellId: string, token: CancellationToken) : Promise<monacoEditor.languages.CompletionList> {
+    protected async provideCompletionItems(position: monacoEditor.Position, _context: monacoEditor.languages.CompletionContext, cellId: string, token: CancellationToken): Promise<monacoEditor.languages.CompletionList> {
         const document = await this.getDocument();
         if (this.pythonCompletionItemProvider && document) {
             const docPos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
@@ -85,7 +84,7 @@ export class JediIntellisenseProvider extends BaseIntellisenseProvider implement
             incomplete: false
         };
     }
-    protected async provideHover(position: monacoEditor.Position, cellId: string, token: CancellationToken) : Promise<monacoEditor.languages.Hover> {
+    protected async provideHover(position: monacoEditor.Position, cellId: string, token: CancellationToken): Promise<monacoEditor.languages.Hover> {
         const document = await this.getDocument();
         if (this.pythonHoverProvider && document) {
             const docPos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
@@ -97,7 +96,7 @@ export class JediIntellisenseProvider extends BaseIntellisenseProvider implement
             contents: []
         };
     }
-    protected async provideSignatureHelp(position: monacoEditor.Position, _context: monacoEditor.languages.SignatureHelpContext, cellId: string, token: CancellationToken) : Promise<monacoEditor.languages.SignatureHelp> {
+    protected async provideSignatureHelp(position: monacoEditor.Position, _context: monacoEditor.languages.SignatureHelpContext, cellId: string, token: CancellationToken): Promise<monacoEditor.languages.SignatureHelp> {
         const document = await this.getDocument();
         if (this.pythonSignatureHelpProvider && document) {
             const docPos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
@@ -112,7 +111,7 @@ export class JediIntellisenseProvider extends BaseIntellisenseProvider implement
         };
     }
 
-    protected handleChanges(_originalFile: string | undefined, _document: IntellisenseDocument, _changes: TextDocumentContentChangeEvent[]) : Promise<void> {
+    protected handleChanges(_originalFile: string | undefined, _document: IntellisenseDocument, _changes: TextDocumentContentChangeEvent[]): Promise<void> {
         // We don't need to forward these to jedi. It always uses the entire document
         return Promise.resolve();
     }

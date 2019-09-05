@@ -15,7 +15,7 @@ export class ProductService implements IProductService {
         this.ProductTypes.set(Product.bandit, ProductType.Linter);
         this.ProductTypes.set(Product.flake8, ProductType.Linter);
         this.ProductTypes.set(Product.mypy, ProductType.Linter);
-        this.ProductTypes.set(Product.pep8, ProductType.Linter);
+        this.ProductTypes.set(Product.pycodestyle, ProductType.Linter);
         this.ProductTypes.set(Product.prospector, ProductType.Linter);
         this.ProductTypes.set(Product.pydocstyle, ProductType.Linter);
         this.ProductTypes.set(Product.pylama, ProductType.Linter);
