@@ -189,7 +189,7 @@ export class JupyterSession implements IJupyterSession {
             session.statusChanged.disconnect(handler);
 
             // If that didn't work throw an exception
-            if (!result || !session || !session.kernel) {
+            if (result === null || !result || !session || !session.kernel) {
                 traceInfo(`Failed waiting for idle on: ${session.kernel.id}${session.kernel.status}`);
                 throw new JupyterWaitForIdleError(localize.DataScience.jupyterLaunchTimedOut());
             }
