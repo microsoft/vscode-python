@@ -41,6 +41,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private stackLimit = 10;
     private updateCount = 0;
     private renderCount = 0;
+    private internalScrollCount = 0;
     private editCellRef: Cell | null = null;
     private mainPanel: HTMLDivElement | null = null;
     private variableExplorerRef: React.RefObject<VariableExplorer>;
@@ -51,7 +52,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private onigasmPromise: Deferred<ArrayBuffer> | undefined;
     private tmlangugePromise: Deferred<string> | undefined;
     private monacoIdToCellId: Map<string, string> = new Map<string, string>();
-    private isAtBottom = true;
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
@@ -69,7 +69,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             editorOptions: this.computeEditorOptions(),
             currentExecutionCount: 0,
             debugging: false,
-            enableGather: getSettings && getSettings().enableGather
+            enableGather: getSettings && getSettings().enableGather,
+            isAtBottom: true
         };
 
         // Add test state if necessary
@@ -162,8 +163,21 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         );
     }
 
+    public scrollDiv = (div: HTMLDivElement) => {
+        if (this.state.isAtBottom) {
+            this.internalScrollCount += 1;
+            div.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' });
+        }
+    }
+
     public handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-        this.isAtBottom = e.currentTarget.scrollHeight - e.currentTarget.scrollTop === e.currentTarget.clientHeight;
+        if (this.internalScrollCount > 0) {
+            this.internalScrollCount -= 1;
+        } else {
+            this.setState({
+                isAtBottom: e.currentTarget.scrollHeight - e.currentTarget.scrollTop === e.currentTarget.clientHeight
+            });
+        }
     }
 
     // tslint:disable-next-line:no-any cyclomatic-complexity max-func-body-length
@@ -451,7 +465,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             expandImage: this.showPlot,
             gatherCode: this.gatherCode,
             enableGather: this.state.enableGather,
-            isAtBottom: this.isAtBottom
+            scrollToBottom: this.scrollDiv
         };
     }
     private getToolbarProps = (baseTheme: string): IToolbarPanelProps => {

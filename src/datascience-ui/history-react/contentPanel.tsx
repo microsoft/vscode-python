@@ -24,7 +24,6 @@ export interface IContentPanelProps {
     skipNextScroll: boolean;
     monacoTheme: string | undefined;
     editorOptions: monacoEditor.editor.IEditorOptions;
-    isAtBottom: boolean;
     enableGather?: boolean;
     gotoCellCode(index: number): void;
     copyCellCode(index: number): void;
@@ -34,13 +33,14 @@ export interface IContentPanelProps {
     onCodeCreated(code: string, file: string, cellId: string, modelId: string): void;
     openLink(uri: monacoEditor.Uri): void;
     expandImage(imageHtml: string): void;
+    scrollToBottom(div: HTMLDivElement): void;
 }
 
 export class ContentPanel extends React.Component<IContentPanelProps> {
     private bottomRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private containerRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private cellRefs: Map<string, React.RefObject<HTMLDivElement>> = new Map<string, React.RefObject<HTMLDivElement>>();
-    private throttledScrollIntoView = throttle(this.scrollIntoView.bind(this), 1500);
+    private throttledScrollIntoView = throttle(this.scrollIntoView.bind(this), 100);
     constructor(prop: IContentPanelProps) {
         super(prop);
     }
@@ -50,9 +50,7 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
     }
 
     public componentDidUpdate() {
-        if (this.props.isAtBottom) {
-            this.scrollToBottom();
-        }
+        this.scrollToBottom();
     }
 
     public render() {
@@ -126,7 +124,7 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
         // Force auto here as smooth scrolling can be canceled by updates to the window
         // from elsewhere (and keeping track of these would make this hard to maintain)
         if (this.bottomRef.current) {
-            this.bottomRef.current.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' });
+            this.props.scrollToBottom(this.bottomRef.current);
         }
     }
 

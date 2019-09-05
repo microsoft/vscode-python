@@ -32,6 +32,7 @@ export interface IMainPanelState {
     currentExecutionCount: number;
     debugging: boolean;
     enableGather?: boolean;
+    isAtBottom: boolean;
 }
 
 // tslint:disable-next-line: no-multiline-string
@@ -63,7 +64,8 @@ export function generateTestState(inputBlockToggled: (id: string) => void, fileP
         editorOptions: {},
         currentExecutionCount: 0,
         debugging: false,
-        enableGather: false
+        enableGather: false,
+        isAtBottom: true
     };
 }
 
