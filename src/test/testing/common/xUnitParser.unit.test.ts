@@ -38,7 +38,7 @@ suite('Testing - parse JUnit XML file', () => {
         node.line = line;
     }
 
-    test('success with single passing test', async () => {
+    test('legacy - success with single passing test', async () => {
         const tests = createDeclaratively(`
             ./
                 test_spam.py
@@ -64,6 +64,42 @@ suite('Testing - parse JUnit XML file', () => {
                     <testcase classname="test_spam.Tests" file="test_spam.py" line="3" name="test_spam" time="1.001">
                     </testcase>
                 </testsuite>
+            `));
+
+        await parser.updateResultsFromXmlLogFile(tests, filename);
+
+        expect(tests).to.deep.equal(expected);
+        fs.verifyAll();
+    });
+
+    test('success with single passing test', async () => {
+        const tests = createDeclaratively(`
+            ./
+                test_spam.py
+                    <Tests>
+                        test_spam
+            `);
+        const expected = createDeclaratively(`
+            ./
+                test_spam.py
+                    <Tests>
+                        test_spam P 0.001
+            `);
+        fixResult(
+            expected.testFunctions[0].testFunction,
+            'test_spam.py',
+            3
+        );
+        const filename = 'x/y/z/results.xml';
+        fs.setup(f => f.readFile(filename))
+            .returns(() => Promise.resolve(`
+                <?xml version="1.0" encoding="utf-8"?>
+                <testsuites>
+                    <testsuite errors="0" failures="0" hostname="vm-dev-linux-desktop" name="pytest" skipped="0" tests="1" time="0.011" timestamp="2019-09-05T17:17:35.868863">
+                        <testcase classname="test_spam.Tests" file="test_spam.py" line="3" name="test_spam" time="0.001">
+                        </testcase>
+                    </testsuite>
+                </testsuites>
             `));
 
         await parser.updateResultsFromXmlLogFile(tests, filename);

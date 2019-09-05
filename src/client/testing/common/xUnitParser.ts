@@ -59,8 +59,25 @@ export class XUnitParser implements IXUnitParser {
     ) {
         const data = await this.fs.readFile(outputXmlFile);
 
-        const parserResult = await parseXML(data) as { testsuite: TestSuiteResult };
-        updateTests(tests, parserResult.testsuite);
+        const parserResult = await parseXML(data);
+        let junitResults: TestSuiteResult;
+        const fullResults = parserResult as { testsuites: { testsuite: TestSuiteResult[] }};
+        if (fullResults.testsuites) {
+            const junitSuites = fullResults.testsuites.testsuite;
+            if (!Array.isArray(junitSuites)) {
+                throw Error('bad JUnit XML data');
+            }
+            if (junitSuites.length === 0) {
+                return;
+            }
+            if (junitSuites.length > 1) {
+                throw Error('got multiple XML results');
+            }
+            junitResults = junitSuites[0];
+        } else {
+            junitResults = (parserResult as { testsuite: TestSuiteResult }).testsuite;
+        }
+        updateTests(tests, junitResults);
     }
 }
 
