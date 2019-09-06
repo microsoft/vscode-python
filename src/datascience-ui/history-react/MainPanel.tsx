@@ -173,16 +173,6 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
     }
 
-    public handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-        if (this.internalScrollCount > 0) {
-            this.internalScrollCount -= 1;
-        } else {
-            this.setState({
-                isAtBottom: e.currentTarget.scrollHeight - e.currentTarget.scrollTop === e.currentTarget.clientHeight
-            });
-        }
-    }
-
     // tslint:disable-next-line:no-any cyclomatic-complexity max-func-body-length
     public handleMessage = (msg: string, payload?: any) => {
         switch (msg) {
@@ -307,6 +297,18 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     //     };
     //     this.addCell(cell);
     // }
+
+    private handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+        if (this.internalScrollCount > 0) {
+            this.internalScrollCount -= 1;
+        } else {
+            const currentHeight = e.currentTarget.scrollHeight - e.currentTarget.scrollTop;
+            const isAtBottom = currentHeight < e.currentTarget.clientHeight + 2 && currentHeight > e.currentTarget.clientHeight - 2;
+            this.setState({
+                isAtBottom
+            });
+        }
+    }
 
     private renderToolbarPanel(baseTheme: string) {
         const toolbarProps = this.getToolbarProps(baseTheme);
