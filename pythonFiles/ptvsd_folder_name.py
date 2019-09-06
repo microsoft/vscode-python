@@ -19,7 +19,14 @@ def ptvsd_folder_name():
             pkgreq = Requirement(line)
             if pkgreq.name == "ptvsd":
                 specs = pkgreq.specifier
-                version = next(iter(specs)).version
+                try:
+                    spec, = specs
+                except ValueError:
+                    # Fallpack to use base PTVSD path.
+                    print(PYTHONFILES)
+                    return
+                else:
+                    version = spec.version
                 break
 
     sys.path.remove(PYTHONFILES)
