@@ -62,7 +62,12 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         this.state = this.stateController.getState();
     }
 
+    public componentDidMount() {
+        window.addEventListener('keydown', this.mainKeyDown);
+    }
+
     public componentWillUnmount() {
+        window.removeEventListener('keydown', this.mainKeyDown);
         // Dispose of our state controller so it stops listening
         this.stateController.dispose();
     }
@@ -295,6 +300,23 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             result = cellId === Identifiers.EditCellId ? this.state.editCellVM : undefined;
         }
         return result;
+    }
+
+    private mainKeyDown = (event: KeyboardEvent) => {
+        // Handler for key down presses in the main panel
+        switch (event.key) {
+            // tslint:disable-next-line: no-suspicious-comment
+            // TODO: How to have this work for when the keyboard shortcuts are changed?
+            case 's':
+                if (event.ctrlKey) {
+                    // This is save, save our cells
+                    this.stateController.save();
+                }
+                break;
+
+            default:
+                break;
+        }
     }
 
     // tslint:disable-next-line: cyclomatic-complexity

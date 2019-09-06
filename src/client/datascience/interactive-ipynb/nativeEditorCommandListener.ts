@@ -41,12 +41,6 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
         this.disposableRegistry.push(commandManager.registerCommand(Commands.NotebookEditorInterruptKernel, () => this.interruptKernel()));
         this.disposableRegistry.push(commandManager.registerCommand(Commands.NotebookEditorRestartKernel, () => this.restartKernel()));
         this.disposableRegistry.push(commandManager.registerCommand(Commands.OpenNotebook, (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => this.openNotebook(file)));
-
-        // Special cases for global commands that would normally be handled by an editor API. This is risky because these commands will be called for ALL files
-        this.disposableRegistry.push(commandManager.registerCommand('workbench.action.files.save', (_file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => this.attemptToSaveActiveNotebook()));
-        this.disposableRegistry.push(commandManager.registerCommand('workbench.action.files.saveAs', (_file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => this.attemptToSaveActiveNotebookAs()));
-        this.disposableRegistry.push(commandManager.registerCommand('workbench.action.files.saveAll', (_file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => this.attemptToSaveActiveNotebooks()));
-
     }
 
     private undoCells() {
@@ -95,24 +89,6 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
                 this.dataScienceErrorHandler.handleError(e).ignoreErrors();
             }
         }
-    }
-
-    private async attemptToSaveActiveNotebook(): Promise<void> {
-        const activeEditor = this.provider.activeEditor;
-        if (activeEditor) {
-            return activeEditor.save(false);
-        }
-    }
-
-    private async attemptToSaveActiveNotebookAs(): Promise<void> {
-        const activeEditor = this.provider.activeEditor;
-        if (activeEditor) {
-            return activeEditor.save(true);
-        }
-    }
-
-    private async attemptToSaveActiveNotebooks(): Promise<void> {
-        await Promise.all(this.provider.editors.map(p => p.save(false)));
     }
 
     private onOpenedDocument = async (document: TextDocument) => {
