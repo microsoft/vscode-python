@@ -10,6 +10,8 @@ sys.path.insert(0, PYTHONFILES)
 from packaging.tags import sys_tags
 from packaging.requirements import Requirement
 
+sys.path.remove(PYTHONFILES)
+
 
 def ptvsd_folder_name():
     """Return the folder name for the bundled PTVSD wheel compatible with the new debug adapter."""
@@ -21,22 +23,24 @@ def ptvsd_folder_name():
                 specs = pkgreq.specifier
                 try:
                     spec, = specs
+                    version = spec.version
                 except ValueError:
                     # Fallpack to use base PTVSD path.
                     print(PYTHONFILES)
                     return
-                else:
-                    version = spec.version
                 break
 
-    sys.path.remove(PYTHONFILES)
-
-    for tag in sys_tags():
-        folder_name = f"ptvsd-{version}-{tag.interpreter}-{tag.abi}-{tag.platform}"
-        folder_path = path.join(PYTHONFILES, folder_name)
-        if path.exists(folder_path):
-            print(folder_path)
-            return
+    try:
+        for tag in sys_tags():
+            folder_name = f"ptvsd-{version}-{tag.interpreter}-{tag.abi}-{tag.platform}"
+            folder_path = path.join(PYTHONFILES, folder_name)
+            if path.exists(folder_path):
+                print(folder_path)
+                return
+    except:
+        # Fallback to use base PTVSD path no matter the exception.
+        print(PYTHONFILES)
+        return
 
     # Fallback to use base PTVSD path.
     print(PYTHONFILES)
