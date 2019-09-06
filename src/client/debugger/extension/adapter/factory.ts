@@ -126,6 +126,6 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
             pathToPtvsd = persistentState.value.ptvsdPath;
         }
 
-        return new Promise<string>(resolve => resolve(pathToPtvsd));
+        return pathToPtvsd;
     }
 }
