@@ -33,13 +33,16 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
     public async createDebugAdapterDescriptor(session: DebugSession, executable: DebugAdapterExecutable | undefined): Promise<DebugAdapterDescriptor> {
         const configuration = session.configuration as (LaunchRequestArguments | AttachRequestArguments);
         const pythonPath = await this.getPythonPath(configuration, session.workspaceFolder);
-        const interpreterInfo = await this.interpreterService.getInterpreterDetails(pythonPath);
 
-        if (this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment) && interpreterInfo && interpreterInfo.version && interpreterInfo.version.raw.startsWith('3.7')) {
+        if (await this.useNewPtvsd(pythonPath)) {
             // If logToFile is set in the debug config then pass --log-dir <path-to-extension-dir> when launching the debug adapter.
             const logArgs = configuration.logToFile ? ['--log-dir', EXTENSION_ROOT_DIR] : [];
-            const ptvsdPathToUse = await this.getPtvsdFolder(pythonPath);
-
+            let ptvsdPathToUse: string;
+            try {
+                ptvsdPathToUse = await this.getPtvsdFolder(pythonPath);
+            } catch {
+                ptvsdPathToUse = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
+            }
             return new DebugAdapterExecutable(`${pythonPath}`, [path.join(ptvsdPathToUse, 'ptvsd', 'adapter'), ...logArgs]);
         }
 
@@ -50,6 +53,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
         // Unlikely scenario.
         throw new Error('Debug Adapter Executable not provided');
     }
+
     /**
      * Get the python executable used to launch the Python Debug Adapter.
      * In the case of `attach` scenarios, just use the workspace interpreter, else first available one.
@@ -58,7 +62,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
      * @private
      * @param {(LaunchRequestArguments | AttachRequestArguments)} configuration
      * @param {WorkspaceFolder} [workspaceFolder]
-     * @returns {Promise<string>}
+     * @returns {Promise<string>} Path to the python interpreter for this workspace.
      * @memberof DebugAdapterDescriptorFactory
      */
     private async getPythonPath(configuration: LaunchRequestArguments | AttachRequestArguments, workspaceFolder?: WorkspaceFolder): Promise<string> {
@@ -81,6 +85,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
         traceVerbose(`Picking first available interpreter to launch the DA '${interpreters[0].path}'`);
         return interpreters[0].path;
     }
+
     /**
      * Notify user about the requirement for Python.
      * Unlikely scenario, as ex expect users to have Python in order to use the extension.
@@ -100,32 +105,51 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
      * - It has never been computed before;
      * - The extension number has changed since the last time it was cached.
      *
-     * Return a cached path otherwise.
+     * Return a cached path otherwise, since we pin the PTVSD version with each extension release,
+     * and other factors on folder selection (like host platform) won't change.
      *
      * @private
      * @param {string} pythonPath Path to the python executable used to launch the Python Debug Adapter (result of `this.getPythonPath()`)
-     * @returns {Promise<string>}
+     * @returns {Promise<string>} Path to the PTVSD version to use in the debug adapter.
      * @memberof DebugAdapterDescriptorFactory
      */
     private async getPtvsdFolder(pythonPath: string): Promise<string> {
         const persistentState = this.stateFactory.createGlobalPersistentState<DebugAdapterPtvsdPathInfo | undefined>(ptvsdPathStorageKey, undefined);
-        let pathToPtvsd = '';
-
         const extension = this.extensions.getExtension(PVSC_EXTENSION_ID)!;
         const version = parse(extension.packageJSON.version)!;
 
-        if (!persistentState.value || version.raw !== persistentState.value.extensionVersion) {
-            const pathToScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'ptvsd_folder_name.py');
-            const pythonProcess = await this.executionFactory.create({ pythonPath });
-            const executionResult = await pythonProcess.exec([pathToScript], {});
-
-            pathToPtvsd = executionResult.stdout.trim();
-
-            await persistentState.updateValue({ extensionVersion: version.raw, ptvsdPath: pathToPtvsd });
-        } else {
-            pathToPtvsd = persistentState.value.ptvsdPath;
+        if (persistentState.value && version.raw === persistentState.value.extensionVersion) {
+            return persistentState.value.ptvsdPath;
         }
 
-        return new Promise<string>(resolve => resolve(pathToPtvsd));
+        // The ptvsd path wasn't cached, so run the script and cache it.
+        const pathToScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'ptvsd_folder_name.py');
+        const pythonProcess = await this.executionFactory.create({ pythonPath });
+        const executionResult = await pythonProcess.exec([pathToScript], {});
+        const pathToPtvsd = executionResult.stdout.trim();
+
+        await persistentState.updateValue({ extensionVersion: version.raw, ptvsdPath: pathToPtvsd });
+
+        return pathToPtvsd;
+    }
+
+    /**
+     * Check and return whether the user is in the PTVSD wheels experiment or not.
+     *
+     * @param {string} pythonPath Path to the python executable used to launch the Python Debug Adapter (result of `this.getPythonPath()`)
+     * @returns {Promise<boolean>} Whether the user is in the experiment or not.
+     * @memberof DebugAdapterDescriptorFactory
+     */
+    private async useNewPtvsd(pythonPath: string): Promise<boolean> {
+        if (!this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
+            return false;
+        }
+
+        const interpreterInfo = await this.interpreterService.getInterpreterDetails(pythonPath);
+        if (!interpreterInfo || !interpreterInfo.version || !interpreterInfo.version.raw.startsWith('3.7')) {
+            return false;
+        }
+
+        return true;
     }
 }
