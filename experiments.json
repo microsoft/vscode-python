@@ -44,26 +44,26 @@
     {
         "name": "NewDebugAdapter - control",
         "salt": "NewDebugAdapter",
-        "min": 100,
-        "max": 0
+        "min": 60,
+        "max": 90
     },
     {
         "name": "NewDebugAdapter - experiment",
         "salt": "NewDebugAdapter",
-        "min": 100,
-        "max": 0
+        "min": 10,
+        "max": 40
     },
     {
         "name": "PtvsdWheels - control",
         "salt": "PtvsdWheels",
-        "min": 100,
-        "max": 0
+        "min": 10,
+        "max": 20
     },
     {
         "name": "PtvsdWheels - experiment",
         "salt": "PtvsdWheels",
-        "min": 100,
-        "max": 0
+        "min": 20,
+        "max": 30
     },
     {
         "name": "LS - enabled",
