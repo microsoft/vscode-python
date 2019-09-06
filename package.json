@@ -2742,6 +2742,7 @@
         "file-loader": "^2.0.0",
         "filemanager-webpack-plugin": "^2.0.5",
         "flat": "^4.0.0",
+        "fnv-plus": "^1.2.12",
         "gulp": "^4.0.0",
         "gulp-azure-storage": "^0.9.0",
         "gulp-chmod": "^2.0.0",
