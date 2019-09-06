@@ -596,13 +596,30 @@ suite('xA/B experiments', () => {
                     expect(() => expManager.isUserInRange(79, 94, 'salt')).to.throw();
                 } else if (testParams.error) {
                     const error = new Error('Kaboom');
-                    when(crypto.createHash(anything(), 'number')).thenThrow(error);
+                    when(crypto.createHash(anything(), 'number', anything())).thenThrow(error);
                     expect(() => expManager.isUserInRange(79, 94, 'salt')).to.throw(error);
                 } else {
-                    when(crypto.createHash(anything(), 'number')).thenReturn(testParams.hash);
+                    when(crypto.createHash(anything(), 'number', anything())).thenReturn(testParams.hash);
                     expect(expManager.isUserInRange(79, 94, 'salt')).to.equal(testParams.expectedResult, 'Incorrectly identified');
                 }
             });
+        });
+        test('If experiment salt belongs to an old experiment, keep using `SHA512` algorithm', async () => {
+            when(appEnvironment.machineId).thenReturn('101');
+            when(crypto.createHash(anything(), 'number', 'SHA512')).thenReturn(644);
+            when(crypto.createHash(anything(), anything(), 'FNV')).thenReturn(1293);
+            // 'ShowPlayIcon' is one of the old experiments
+            expManager.isUserInRange(79, 94, 'ShowPlayIcon');
+            verify(crypto.createHash(anything(), 'number', 'SHA512')).once();
+            verify(crypto.createHash(anything(), anything(), 'FNV')).never();
+        });
+        test('If experiment salt does not belong to an old experiment, use `FNV` algorithm', async () => {
+            when(appEnvironment.machineId).thenReturn('101');
+            when(crypto.createHash(anything(), anything(), 'SHA512')).thenReturn(644);
+            when(crypto.createHash(anything(), 'number', 'FNV')).thenReturn(1293);
+            expManager.isUserInRange(79, 94, 'NewExperimentSalt');
+            verify(crypto.createHash(anything(), anything(), 'SHA512')).never();
+            verify(crypto.createHash(anything(), 'number', 'FNV')).once();
         });
     });
 
@@ -633,7 +650,7 @@ suite('xA/B experiments', () => {
                 .returns(() => testParams.experimentStorageValue);
             when(appEnvironment.machineId).thenReturn('101');
             if (testParams.hash) {
-                when(crypto.createHash(anything(), 'number')).thenReturn(testParams.hash);
+                when(crypto.createHash(anything(), 'number', anything())).thenReturn(testParams.hash);
             }
             expManager.populateUserExperiments();
             assert.deepEqual(expManager.userExperiments, testParams.expectedResult);
