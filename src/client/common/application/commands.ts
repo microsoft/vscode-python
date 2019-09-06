@@ -74,6 +74,9 @@ interface ICommandNameWithoutArgumentTypeMapping {
  */
 export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgumentTypeMapping {
     ['workbench.extensions.installExtension']: [Uri | 'ms-python.python'];
+    ['workbench.action.files.save']: [Uri];
+    ['workbench.action.files.saveAs']: [Uri];
+    ['workbench.action.files.saveAll']: [Uri];
     ['setContext']: [string, boolean];
     ['revealLine']: [{ lineNumber: number; at: 'top' | 'center' | 'bottom' }];
     ['python._loadLanguageServerExtension']: {}[];

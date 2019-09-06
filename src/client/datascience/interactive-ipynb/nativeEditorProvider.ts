@@ -40,6 +40,10 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
         }
     }
 
+    public get editors(): INotebookEditor[] {
+        return [...this.activeEditors.values()];
+    }
+
     public async open(file: Uri, contents: string): Promise<INotebookEditor> {
         // See if this file is open or not already
         let editor = this.activeEditors.get(file.fsPath);

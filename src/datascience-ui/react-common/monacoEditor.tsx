@@ -215,7 +215,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                 }
                 this.state.editor.updateOptions(this.props.options);
             }
-            if (prevProps.value !== this.props.value && this.state.model) {
+            if (prevProps.value !== this.props.value && this.state.model && this.state.model.getValue() !== this.props.value) {
                 this.state.model.setValue(this.props.value);
             }
         }

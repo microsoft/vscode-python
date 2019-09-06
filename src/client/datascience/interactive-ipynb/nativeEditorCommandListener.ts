@@ -42,6 +42,11 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
         this.disposableRegistry.push(commandManager.registerCommand(Commands.NotebookEditorRestartKernel, () => this.restartKernel()));
         this.disposableRegistry.push(commandManager.registerCommand(Commands.OpenNotebook, (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => this.openNotebook(file)));
 
+        // Special cases for global commands that would normally be handled by an editor API. This is risky because these commands will be called for ALL files
+        this.disposableRegistry.push(commandManager.registerCommand('workbench.action.files.save', (_file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => this.attemptToSaveActiveNotebook()));
+        this.disposableRegistry.push(commandManager.registerCommand('workbench.action.files.saveAs', (_file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => this.attemptToSaveActiveNotebookAs()));
+        this.disposableRegistry.push(commandManager.registerCommand('workbench.action.files.saveAll', (_file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => this.attemptToSaveActiveNotebooks()));
+
     }
 
     private undoCells() {
@@ -92,6 +97,24 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
         }
     }
 
+    private async attemptToSaveActiveNotebook(): Promise<void> {
+        const activeEditor = this.provider.activeEditor;
+        if (activeEditor) {
+            return activeEditor.save(false);
+        }
+    }
+
+    private async attemptToSaveActiveNotebookAs(): Promise<void> {
+        const activeEditor = this.provider.activeEditor;
+        if (activeEditor) {
+            return activeEditor.save(true);
+        }
+    }
+
+    private async attemptToSaveActiveNotebooks(): Promise<void> {
+        await Promise.all(this.provider.editors.map(p => p.save(false)));
+    }
+
     private onOpenedDocument = async (document: TextDocument) => {
         // See if this is an ipynb file
         if (path.extname(document.fileName).toLocaleLowerCase() === '.ipynb' &&
@@ -100,14 +123,14 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
                 const contents = document.getText();
                 const uri = document.uri;
 
-                // Close this document. This is a big hack as there's no way to register
-                // ourselves as an editor for ipynb
+                // Open our own editor instead.
+                await this.provider.open(uri, contents);
+
+                // Then switch back to the ipynb and close it.
+                // If we don't do it in this order, the close will switch to the wrong item
+                this.documentManager.showTextDocument(document);
                 const command = 'workbench.action.closeActiveEditor';
                 await this.cmdManager.executeCommand(command);
-
-                // Then take the contents and load it.
-                return this.provider.open(uri, contents);
-
             } catch (e) {
                 this.dataScienceErrorHandler.handleError(e).ignoreErrors();
             }
