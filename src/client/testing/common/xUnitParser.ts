@@ -70,23 +70,25 @@ export class XUnitParser implements IXUnitParser {
         // Un-comment this line to capture the results file for later use in tests:
         //await fs.writeFile('/tmp/results.xml', data);
 
-        // tslint:disable-next-line:no-require-imports
-        const xml2js = require('xml2js');
-        // tslint:disable-next-line:no-any
-        await new Promise<any>((resolve, reject) => {
-            xml2js.parseString(data, (error: Error, parserResult: { testsuite: TestSuiteResult }) => {
-                if (error) {
-                    return reject(error);
-                }
-                try {
-                    updateTests(tests, parserResult.testsuite);
-                } catch (err) {
-                    return reject(err);
-                }
-                return resolve();
-            });
-        });
+        const parserResult = await parseXML(data) as { testsuite: TestSuiteResult };
+        updateTests(tests, parserResult.testsuite);
     }
+}
+
+// tslint:disable-next-line:no-any
+async function parseXML(data: string): Promise<any> {
+    // tslint:disable-next-line:no-require-imports
+    const xml2js = require('xml2js');
+    // tslint:disable-next-line:no-any
+    return new Promise<any>((resolve, reject) => {
+        // tslint:disable-next-line:no-any
+        xml2js.parseString(data, (error: Error, result: any) => {
+            if (error) {
+                return reject(error);
+            }
+            return resolve(result);
+        });
+    });
 }
 
 // Set the number of passing tests given the total number.
