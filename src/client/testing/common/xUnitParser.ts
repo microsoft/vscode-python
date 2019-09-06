@@ -60,24 +60,10 @@ export class XUnitParser implements IXUnitParser {
         const data = await this.fs.readFile(outputXmlFile);
 
         const parserResult = await parseXML(data);
-        let junitResults: TestSuiteResult;
-        const fullResults = parserResult as { testsuites: { testsuite: TestSuiteResult[] }};
-        if (fullResults.testsuites) {
-            const junitSuites = fullResults.testsuites.testsuite;
-            if (!Array.isArray(junitSuites)) {
-                throw Error('bad JUnit XML data');
-            }
-            if (junitSuites.length === 0) {
-                return;
-            }
-            if (junitSuites.length > 1) {
-                throw Error('got multiple XML results');
-            }
-            junitResults = junitSuites[0];
-        } else {
-            junitResults = (parserResult as { testsuite: TestSuiteResult }).testsuite;
+        const junitResults = getJunitResults(parserResult);
+        if (junitResults) {
+            updateTests(tests, junitResults);
         }
-        updateTests(tests, junitResults);
     }
 }
 
@@ -95,6 +81,28 @@ async function parseXML(data: string): Promise<any> {
             return resolve(result);
         });
     });
+}
+
+// Return the actual test results from the given data.
+// tslint:disable-next-line:no-any
+function getJunitResults(parserResult: any): TestSuiteResult | undefined {
+    // This is the newer JUnit XML format (e.g. pytest 5.1 and later).
+    const fullResults = parserResult as { testsuites: { testsuite: TestSuiteResult[] }};
+    if (!fullResults.testsuites) {
+        return (parserResult as { testsuite: TestSuiteResult }).testsuite;
+    }
+
+    const junitSuites = fullResults.testsuites.testsuite;
+    if (!Array.isArray(junitSuites)) {
+        throw Error('bad JUnit XML data');
+    }
+    if (junitSuites.length === 0) {
+        return;
+    }
+    if (junitSuites.length > 1) {
+        throw Error('got multiple XML results');
+    }
+    return junitSuites[0];
 }
 
 // Update "tests" with the given results.
