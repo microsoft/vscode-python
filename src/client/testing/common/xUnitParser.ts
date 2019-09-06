@@ -1,6 +1,8 @@
 import { inject, injectable } from 'inversify';
 import { IFileSystem } from '../../common/platform/types';
-import { IXUnitParser, PassCalculationFormulae, Tests, TestStatus } from './types';
+import {
+    IXUnitParser, PassCalculationFormulae, Tests, TestStatus, TestSummary
+} from './types';
 
 type TestSuiteResult = {
     $: {
@@ -55,6 +57,15 @@ export class XUnitParser implements IXUnitParser {
         outputXmlFile: string,
         passCalculationFormulae: PassCalculationFormulae
     ) {
+        switch (passCalculationFormulae) {
+            case PassCalculationFormulae.pytest:
+            case PassCalculationFormulae.nosetests:
+                break;
+            default: {
+                throw new Error('Unknown Test Pass Calculation');
+            }
+        }
+
         const data = await this.fs.readFile(outputXmlFile);
         // Un-comment this line to capture the results file for later use in tests:
         //await fs.writeFile('/tmp/results.xml', data);
@@ -68,7 +79,7 @@ export class XUnitParser implements IXUnitParser {
                     return reject(error);
                 }
                 try {
-                    updateTests(tests, parserResult.testsuite, passCalculationFormulae);
+                    updateTests(tests, parserResult.testsuite);
                 } catch (err) {
                     return reject(err);
                 }
@@ -78,30 +89,25 @@ export class XUnitParser implements IXUnitParser {
     }
 }
 
+// Set the number of passing tests given the total number.
+function setPassing(
+    summary: TestSummary,
+    total: number
+) {
+    summary.passed = total - summary.failures - summary.skipped - summary.errors;
+}
+
 // Update "tests" with the given results.
 function updateTests(
     tests: Tests,
-    testSuiteResult: TestSuiteResult,
-    passCalculationFormulae: PassCalculationFormulae
+    testSuiteResult: TestSuiteResult
 ) {
     tests.summary.errors = getSafeInt(testSuiteResult.$.errors);
     tests.summary.failures = getSafeInt(testSuiteResult.$.failures);
     tests.summary.skipped = getSafeInt(testSuiteResult.$.skips ? testSuiteResult.$.skips : testSuiteResult.$.skip);
     const testCount = getSafeInt(testSuiteResult.$.tests);
 
-    switch (passCalculationFormulae) {
-        case PassCalculationFormulae.pytest: {
-            tests.summary.passed = testCount - tests.summary.failures - tests.summary.skipped - tests.summary.errors;
-            break;
-        }
-        case PassCalculationFormulae.nosetests: {
-            tests.summary.passed = testCount - tests.summary.failures - tests.summary.skipped - tests.summary.errors;
-            break;
-        }
-        default: {
-            throw new Error('Unknown Test Pass Calculation');
-        }
-    }
+    setPassing(tests.summary, testCount);
 
     if (!Array.isArray(testSuiteResult.testcase)) {
         return;
