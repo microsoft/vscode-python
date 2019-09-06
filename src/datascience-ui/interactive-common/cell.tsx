@@ -394,6 +394,10 @@ export class Cell extends React.Component<ICellProps, ICellState> {
         if (this.props.unfocused) {
             this.props.unfocused(this.props.cellVM.cell.id);
         }
+
+        // Indicate not showing the editor anymore. The equivalent of this
+        // is not when we receive focus but when we GIVE focus to the markdown editor
+        // otherwise we wouldn't be able to display it.
         this.setState({showingMarkdownEditor: false});
     }
 
