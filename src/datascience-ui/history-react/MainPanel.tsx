@@ -169,17 +169,9 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     public scrollDiv = (div: HTMLDivElement) => {
         if (this.state.isAtBottom) {
             this.internalScrollCount += 1;
+            // Force auto here as smooth scrolling can be canceled by updates to the window
+            // from elsewhere (and keeping track of these would make this hard to maintain)
             div.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' });
-        }
-    }
-
-    public handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-        if (this.internalScrollCount > 0) {
-            this.internalScrollCount -= 1;
-        } else {
-            this.setState({
-                isAtBottom: e.currentTarget.scrollHeight - e.currentTarget.scrollTop === e.currentTarget.clientHeight
-            });
         }
     }
 
@@ -285,6 +277,18 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
 
         return false;
+    }
+
+    private handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+        if (this.internalScrollCount > 0) {
+            this.internalScrollCount -= 1;
+        } else {
+            const currentHeight = e.currentTarget.scrollHeight - e.currentTarget.scrollTop;
+            const isAtBottom = currentHeight < e.currentTarget.clientHeight + 2 && currentHeight > e.currentTarget.clientHeight - 2;
+            this.setState({
+                isAtBottom
+            });
+        }
     }
 
     // Uncomment this to use for debugging messages. Add a call to this to stick in dummy sys info messages.
