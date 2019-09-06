@@ -76,13 +76,19 @@ async function updateResultsFromXmlLogFile(
 
     // tslint:disable-next-line:no-require-imports
     const xml2js = require('xml2js');
-    xml2js.parseString(data, (error: Error, parserResult: { testsuite: TestSuiteResult }) => {
-        if (error) {
-            throw error;
-            //return reject(error);
-        }
-
-        updateTests(tests, parserResult.testsuite, passCalculationFormulae);
+    // tslint:disable-next-line:no-any
+    return new Promise<any>((resolve, reject) => {
+        xml2js.parseString(data, (error: Error, parserResult: { testsuite: TestSuiteResult }) => {
+            if (error) {
+                return reject(error);
+            }
+            try {
+                updateTests(tests, parserResult.testsuite, passCalculationFormulae);
+            } catch (err) {
+                return reject(err);
+            }
+            return resolve();
+        });
     });
 }
 
