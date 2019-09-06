@@ -5,7 +5,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
 import { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
-import { CancellationToken, CodeLens, CodeLensProvider, DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, Disposable, Event, Range, TextDocument, TextEditor } from 'vscode';
+import { CancellationToken, CodeLens, CodeLensProvider, DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, Disposable, Event, Range, TextDocument, TextEditor, Uri } from 'vscode';
 
 import { ICommandManager } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
@@ -66,17 +66,25 @@ export interface INotebookCompletion {
 export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends IAsyncDisposable {
     readonly id: string;
+    createNotebook(resource: Uri, cancelToken?: CancellationToken): Promise<INotebook>;
+    getNotebook(resource: Uri): Promise<INotebook | undefined>;
     connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void>;
+    getConnectionInfo(): IConnection | undefined;
+    waitForConnect(): Promise<INotebookServerLaunchInfo | undefined>;
+    shutdown(): Promise<void>;
+}
+
+export interface INotebook extends IAsyncDisposable {
+    readonly resource: Uri;
+    readonly server: INotebookServer;
+    clear(id: string): void;
     executeObservable(code: string, file: string, line: number, id: string, silent: boolean): Observable<ICell[]>;
     execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken, silent?: boolean): Promise<ICell[]>;
     getCompletion(cellCode: string, offsetInCode: number, cancelToken?: CancellationToken): Promise<INotebookCompletion>;
     restartKernel(timeoutInMs: number): Promise<void>;
     waitForIdle(timeoutInMs: number): Promise<void>;
-    shutdown(): Promise<void>;
     interruptKernel(timeoutInMs: number): Promise<InterruptResult>;
     setInitialDirectory(directory: string): Promise<void>;
-    waitForConnect(): Promise<INotebookServerLaunchInfo | undefined>;
-    getConnectionInfo(): IConnection | undefined;
     getSysInfo(): Promise<ICell | undefined>;
     setMatplotLibStyle(useDark: boolean): Promise<void>;
 }
@@ -119,9 +127,9 @@ export interface IJupyterExecution extends IAsyncDisposable {
 
 export const IJupyterDebugger = Symbol('IJupyterDebugger');
 export interface IJupyterDebugger {
-    startDebugging(server: INotebookServer): Promise<void>;
-    stopDebugging(server: INotebookServer): Promise<void>;
-    onRestart(server: INotebookServer): void;
+    startDebugging(notebook: INotebook): Promise<void>;
+    stopDebugging(notebook: INotebook): Promise<void>;
+    onRestart(notebook: INotebook): void;
 }
 
 export interface IJupyterPasswordConnectInfo {
@@ -144,10 +152,16 @@ export interface IJupyterSession extends IAsyncDisposable {
     requestExecute(content: KernelMessage.IExecuteRequest, disposeOnDone?: boolean, metadata?: JSONObject): Kernel.IFuture | undefined;
     requestComplete(content: KernelMessage.ICompleteRequest): Promise<KernelMessage.ICompleteReplyMsg | undefined>;
 }
-export const IJupyterSessionManager = Symbol('IJupyterSessionManager');
-export interface IJupyterSessionManager {
-    startNew(connInfo: IConnection, kernelSpec: IJupyterKernelSpec | undefined, cancelToken?: CancellationToken): Promise<IJupyterSession>;
-    getActiveKernelSpecs(connInfo: IConnection): Promise<IJupyterKernelSpec[]>;
+
+export const IJupyterSessionManagerFactory = Symbol('IJupyterSessionManagerFactory');
+export interface IJupyterSessionManagerFactory {
+    create(connInfo: IConnection): Promise<IJupyterSessionManager>;
+}
+
+export interface IJupyterSessionManager extends IAsyncDisposable {
+    startNew(kernelSpec: IJupyterKernelSpec | undefined, cancelToken?: CancellationToken): Promise<IJupyterSession>;
+    getActiveKernelSpecs(): Promise<IJupyterKernelSpec[]>;
+    getConnInfo(): IConnection;
 }
 
 export interface IJupyterKernelSpec extends IAsyncDisposable {
@@ -159,6 +173,8 @@ export interface IJupyterKernelSpec extends IAsyncDisposable {
 export const INotebookImporter = Symbol('INotebookImporter');
 export interface INotebookImporter extends Disposable {
     importFromFile(file: string): Promise<string>;
+    importCellsFromFile(file: string): Promise<ICell[]>;
+    importCells(json: string): Promise<ICell[]>;
 }
 
 export const INotebookExporter = Symbol('INotebookExporter');
@@ -179,15 +195,9 @@ export interface IDataScienceErrorHandler {
     handleError(err: Error): Promise<void>;
 }
 
-export const IInteractiveWindow = Symbol('IInteractiveWindow');
-export interface IInteractiveWindow extends Disposable {
-    closed: Event<IInteractiveWindow>;
-    ready: Promise<void>;
+export interface IInteractiveBase extends Disposable {
     onExecutedCode: Event<string>;
     show(): Promise<void>;
-    addCode(code: string, file: string, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;
-    addMessage(message: string): Promise<void>;
-    debugCode(code: string, file: string, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;
     startProgress(): void;
     stopProgress(): void;
     undoCells(): void;
@@ -195,11 +205,38 @@ export interface IInteractiveWindow extends Disposable {
     removeAllCells(): void;
     interruptKernel(): Promise<void>;
     restartKernel(): Promise<void>;
+}
+
+export const IInteractiveWindow = Symbol('IInteractiveWindow');
+export interface IInteractiveWindow extends IInteractiveBase {
+    closed: Event<IInteractiveWindow>;
+    ready: Promise<void>;
+    addCode(code: string, file: string, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;
+    addMessage(message: string): Promise<void>;
+    debugCode(code: string, file: string, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;
     expandAllCells(): void;
     collapseAllCells(): void;
     exportCells(): void;
-    previewNotebook(notebookFile: string): Promise<void>;
     scrollToCell(id: string): void;
+}
+
+// For native editing, the provider acts like the IDocumentManager for normal docs
+export const INotebookEditorProvider = Symbol('INotebookEditorProvider');
+export interface INotebookEditorProvider {
+    readonly activeEditor: INotebookEditor | undefined;
+    open(file: Uri, contents: string): Promise<INotebookEditor>;
+    show(file: Uri): Promise<INotebookEditor | undefined>;
+    createNew(): Promise<INotebookEditor>;
+}
+
+// For native editing, the INotebookEditor acts like a TextEditor and a TextDocument together
+export const INotebookEditor = Symbol('INotebookEditor');
+export interface INotebookEditor extends IInteractiveBase {
+    closed: Event<INotebookEditor>;
+    readonly file: Uri;
+    readonly visible: boolean;
+    readonly active: boolean;
+    load(contents: string, file: Uri): Promise<void>;
 }
 
 export const IInteractiveWindowListener = Symbol('IInteractiveWindowListener');
@@ -317,10 +354,10 @@ export const IStatusProvider = Symbol('IStatusProvider');
 export interface IStatusProvider {
     // call this function to set the new status on the active
     // interactive window. Dispose of the returned object when done.
-    set(message: string, timeout?: number): Disposable;
+    set(message: string, timeout?: number, canceled?: () => void, interactivePanel?: IInteractiveBase): Disposable;
 
     // call this function to wait for a promise while displaying status
-    waitWithStatus<T>(promise: () => Promise<T>, message: string, timeout?: number, canceled?: () => void, skipHistory?: boolean): Promise<T>;
+    waitWithStatus<T>(promise: () => Promise<T>, message: string, timeout?: number, canceled?: () => void, interactivePanel?: IInteractiveBase): Promise<T>;
 }
 
 export interface IJupyterCommand {
@@ -379,10 +416,10 @@ export interface IJupyterVariable {
 
 export const IJupyterVariables = Symbol('IJupyterVariables');
 export interface IJupyterVariables {
-    getVariables(): Promise<IJupyterVariable[]>;
-    getValue(targetVariable: IJupyterVariable): Promise<IJupyterVariable>;
-    getDataFrameInfo(targetVariable: IJupyterVariable): Promise<IJupyterVariable>;
-    getDataFrameRows(targetVariable: IJupyterVariable, start: number, end: number): Promise<JSONObject>;
+    getVariables(notebook: INotebook): Promise<IJupyterVariable[]>;
+    getValue(targetVariable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariable>;
+    getDataFrameInfo(targetVariable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariable>;
+    getDataFrameRows(targetVariable: IJupyterVariable, notebook: INotebook, start: number, end: number): Promise<JSONObject>;
 }
 
 // Wrapper to hold an execution count for our variable requests
@@ -393,12 +430,13 @@ export interface IJupyterVariablesResponse {
 
 export const IDataViewerProvider = Symbol('IDataViewerProvider');
 export interface IDataViewerProvider {
-    create(variable: string): Promise<IDataViewer>;
+    create(variable: string, notebook: INotebook): Promise<IDataViewer>;
+    getPandasVersion(notebook: INotebook): Promise<{ major: number; minor: number; build: number } | undefined>;
 }
 export const IDataViewer = Symbol('IDataViewer');
 
 export interface IDataViewer extends IDisposable {
-    showVariable(variable: IJupyterVariable): Promise<void>;
+    showVariable(variable: IJupyterVariable, notebook: INotebook): Promise<void>;
 }
 
 export const IPlotViewerProvider = Symbol('IPlotViewerProvider');
@@ -467,3 +505,6 @@ export interface IDebugLocationTracker extends DebugAdapterTracker {
     debugLocation: IDebugLocation | undefined;
     setDebugSession(targetSession: DebugSession): void;
 }
+
+// Cells silently executed on behalf of the user are tagged with the following.
+export const internalUseCellKey: string = '#%DATASCIENCE_INTERNAL_KEY%#';

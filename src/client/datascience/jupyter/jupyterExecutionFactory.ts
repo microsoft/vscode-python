@@ -19,7 +19,7 @@ import { IServiceContainer } from '../../ioc/types';
 import {
     IJupyterCommandFactory,
     IJupyterExecution,
-    IJupyterSessionManager,
+    IJupyterSessionManagerFactory,
     INotebookServer,
     INotebookServerOptions
 } from '../types';
@@ -28,7 +28,6 @@ import { HostJupyterExecution } from './liveshare/hostJupyterExecution';
 import { IRoleBasedObject, RoleBasedFactory } from './liveshare/roleBasedFactory';
 
 interface IJupyterExecutionInterface extends IRoleBasedObject, IJupyterExecution {
-
 }
 
 // tslint:disable:callable-types
@@ -42,10 +41,10 @@ type JupyterExecutionClassType = {
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         fileSystem: IFileSystem,
-        sessionManager: IJupyterSessionManager,
+        sessionManager: IJupyterSessionManagerFactory,
         workspace: IWorkspaceService,
         configuration: IConfigurationService,
-        commandFactory : IJupyterCommandFactory,
+        commandFactory: IJupyterCommandFactory,
         serviceContainer: IServiceContainer
     ): IJupyterExecutionInterface;
 };
@@ -58,19 +57,19 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
     private sessionChangedEventEmitter: EventEmitter<void> = new EventEmitter<void>();
 
     constructor(@inject(ILiveShareApi) liveShare: ILiveShareApi,
-                @inject(IPythonExecutionFactory) pythonFactory: IPythonExecutionFactory,
-                @inject(IInterpreterService) interpreterService: IInterpreterService,
-                @inject(IProcessServiceFactory) processServiceFactory: IProcessServiceFactory,
-                @inject(IKnownSearchPathsForInterpreters) knownSearchPaths: IKnownSearchPathsForInterpreters,
-                @inject(ILogger) logger: ILogger,
-                @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
-                @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
-                @inject(IFileSystem) fileSystem: IFileSystem,
-                @inject(IJupyterSessionManager) sessionManager: IJupyterSessionManager,
-                @inject(IWorkspaceService) workspace: IWorkspaceService,
-                @inject(IConfigurationService) configuration: IConfigurationService,
-                @inject(IJupyterCommandFactory) commandFactory : IJupyterCommandFactory,
-                @inject(IServiceContainer) serviceContainer: IServiceContainer) {
+        @inject(IPythonExecutionFactory) pythonFactory: IPythonExecutionFactory,
+        @inject(IInterpreterService) interpreterService: IInterpreterService,
+        @inject(IProcessServiceFactory) processServiceFactory: IProcessServiceFactory,
+        @inject(IKnownSearchPathsForInterpreters) knownSearchPaths: IKnownSearchPathsForInterpreters,
+        @inject(ILogger) logger: ILogger,
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
+        @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
+        @inject(IFileSystem) fileSystem: IFileSystem,
+        @inject(IJupyterSessionManagerFactory) sessionManagerFactory: IJupyterSessionManagerFactory,
+        @inject(IWorkspaceService) workspace: IWorkspaceService,
+        @inject(IConfigurationService) configuration: IConfigurationService,
+        @inject(IJupyterCommandFactory) commandFactory: IJupyterCommandFactory,
+        @inject(IServiceContainer) serviceContainer: IServiceContainer) {
         asyncRegistry.push(this);
         this.executionFactory = new RoleBasedFactory<IJupyterExecutionInterface, JupyterExecutionClassType>(
             liveShare,
@@ -85,7 +84,7 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
             disposableRegistry,
             asyncRegistry,
             fileSystem,
-            sessionManager,
+            sessionManagerFactory,
             workspace,
             configuration,
             commandFactory,
@@ -94,11 +93,11 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
         this.executionFactory.sessionChanged(() => this.onSessionChanged());
     }
 
-    public get sessionChanged() : Event<void> {
+    public get sessionChanged(): Event<void> {
         return this.sessionChangedEventEmitter.event;
     }
 
-    public async dispose() : Promise<void> {
+    public async dispose(): Promise<void> {
         // Dispose of our execution object
         const execution = await this.executionFactory.get();
         return execution.dispose();
@@ -127,7 +126,7 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
     public async connectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer | undefined> {
         const execution = await this.executionFactory.get();
         return execution.connectToNotebookServer(options, cancelToken);
-}
+    }
     public async spawnNotebook(file: string): Promise<void> {
         const execution = await this.executionFactory.get();
         return execution.spawnNotebook(file);
@@ -140,7 +139,7 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
         const execution = await this.executionFactory.get();
         return execution.getUsableJupyterPython(cancelToken);
     }
-    public async getServer(options?: INotebookServerOptions) : Promise<INotebookServer | undefined> {
+    public async getServer(options?: INotebookServerOptions): Promise<INotebookServer | undefined> {
         const execution = await this.executionFactory.get();
         return execution.getServer(options);
     }

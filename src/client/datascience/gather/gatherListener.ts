@@ -3,7 +3,7 @@ import { Event, EventEmitter, Position, ViewColumn } from 'vscode';
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { noop } from '../../common/utils/misc';
-import { InteractiveWindowMessages } from '../interactive-window/interactiveWindowTypes';
+import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { ICell, IGatherExecution, IInteractiveWindowListener } from '../types';
 
 @injectable()

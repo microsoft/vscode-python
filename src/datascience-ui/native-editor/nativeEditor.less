@@ -1,0 +1,176 @@
+/* Import common styles and then override them below */
+@import "../interactive-common/common.css";
+
+.toolbar-panel-button {
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--override-badge-background, var(--vscode-badge-background));
+    color: var(--override-foreground, var(--vscode-editor-foreground));
+    cursor: pointer;
+    text-align: center;
+    overflow: hidden;
+    margin-left: 2px;
+    padding: 2px;
+    background-color: transparent;
+    cursor: hand;
+}
+
+.measure-editor-div {
+    width: 90vw;
+	visibility: hidden;
+	position: absolute;
+}
+
+.cell-wrapper {
+    margin: 1px 2px;
+    border-color: transparent;
+    border-style: solid;
+    border-width: 2px 2px 2px 20px;
+    position: relative;
+    min-height: 55px;
+}
+
+.cell-wrapper-focused {
+    border-color: var(--vscode-editorInfo-foreground);
+    border-style: solid;
+    border-width: 2px 2px 2px 20px;
+}
+
+.cell-wrapper-selected {
+    border-color: var(--vscode-peekView-border);
+    border-style: solid;
+    border-width: 2px 2px 2px 20px;
+}
+
+.cell-menu-bar-outer {
+    justify-self: right;
+}
+
+.cell-output {
+    margin-top: 5px;
+    background: transparent;
+}
+
+.cell-outer-editable {
+    margin-top: 0px;
+}
+
+.cell-state-selector {
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--override-badge-background, var(--vscode-badge-background));
+    color: var(--override-foreground, var(--vscode-editor-foreground));
+    cursor: pointer;
+    text-align: center;
+    overflow: hidden;
+    margin-left: 2px;
+    padding: 2px;
+    background-color: transparent;
+    cursor: hand;
+}
+
+.cell-state-selector-option {
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--override-badge-background, var(--vscode-badge-background));
+    color: var(--override-foreground, var(--vscode-editor-foreground));
+    background-color: var(--override-background, var(--vscode-editor-background));
+}
+
+.code-area {
+    position: relative;
+    width:100%;
+    top: -2px; /* Account for spacing removed from the monaco editor */
+    padding-right: 10px;
+    margin-bottom: 0px;
+}
+
+.code-watermark {
+    top: 5px; /* Account for extra padding and border in native editor */
+}
+
+.cell-input {
+    margin: 0px 10px 0px 0px;
+    border-color:  var(--override-badge-background, var(--vscode-badge-background));
+    border-style: solid;
+    border-width: 1px;
+    padding: 2px;
+    background: var(--override-widget-background, var(--vscode-notifications-background));
+}
+
+.controls-div {
+    grid-column: 1;
+    grid-template-columns: max-content min-content ;
+    justify-content: end;
+    display: grid;
+    min-width: 50px;
+    grid-template-rows: min-content max-content;
+}
+
+.execution-count {
+    justify-self: end;
+}
+
+.execution-count-busy-outer {
+    justify-self: end;
+}
+
+.native-editor-celltoolbar-inner {
+    justify-self: end;
+}
+
+.native-editor-celltoolbar-outer {
+    display: grid;
+    justify-items: left;
+    position: absolute; /* Relative to cell wrapper */
+    left: -20px;
+    visibility: hidden;
+}
+
+.cell-wrapper-selected .native-editor-celltoolbar-outer {
+    visibility: visible;
+}
+
+.cell-wrapper-focused .native-editor-celltoolbar-outer {
+    visibility: visible;
+}
+
+.native-editor-flyout-button {
+    width: auto;
+    height: auto;
+    border-color: transparent;
+    background-color: transparent;
+    padding: 0px;
+    margin-left: 4px;
+    margin-right: 0px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    border-width: 0px;
+}
+
+.native-editor-flyout-button:focus {
+    outline: none;
+}
+
+.native-editor-cellflyout {
+    position: relative;
+    left: 20px;
+    top: -15px;
+    width: auto;
+    height: auto;
+    padding-top: 2px;
+    padding-right: 2px;
+    z-index: 100;
+}
+
+.native-editor-cellflyout-selected {
+    background-color: var(--vscode-peekView-border);
+}
+
+.native-editor-cellflyout-focused {
+    background-color: var(--vscode-editorInfo-foreground);
+}
+
+.flyout-button-content {
+    color: var(--override-foreground, var(--vscode-editor-foreground));
+}

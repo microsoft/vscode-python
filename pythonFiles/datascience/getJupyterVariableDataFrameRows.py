@@ -1,3 +1,4 @@
+#%DATASCIENCE_INTERNAL_KEY%#
 # Query Jupyter server for the rows of a data frame
 import json as _VSCODE_json
 import pandas as _VSCODE_pd

@@ -7,8 +7,8 @@ import { IDisposable } from 'monaco-editor';
 import { Disposable } from 'vscode';
 
 import { createDeferred } from '../../client/common/utils/async';
-import { InteractiveWindowMessageListener } from '../../client/datascience/interactive-window/interactiveWindowMessageListener';
-import { InteractiveWindowMessages } from '../../client/datascience/interactive-window/interactiveWindowTypes';
+import { InteractiveWindowMessageListener } from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
+import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IInteractiveWindow, IInteractiveWindowProvider } from '../../client/datascience/types';
 import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
 import { noop } from '../core';
@@ -23,7 +23,7 @@ suite('DataScience Intellisense tests', () => {
     setup(() => {
         ioc = new DataScienceIocContainer();
         // For this test, jedi is turned off so we use our mock language server
-        ioc.changeJediEnabled(false);
+        ioc.enableJedi(false);
         ioc.registerDataScienceTypes();
     });
 

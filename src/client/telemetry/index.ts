@@ -1238,6 +1238,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ConnectRemoteFailedJupyter]: never | undefined;
     [Telemetry.ConnectRemoteSelfCertFailedJupyter]: never | undefined;
     [Telemetry.CopySourceCode]: never | undefined;
+    [Telemetry.CreateNewNotebook]: never | undefined;
     [Telemetry.DataScienceSettings]: JSONObject;
     [Telemetry.DataViewerFetchTime]: never | undefined;
     [Telemetry.DebugContinue]: never | undefined;
@@ -1254,6 +1255,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ExecuteCell]: never | undefined;
     [Telemetry.ExecuteCellPerceivedCold]: never | undefined;
     [Telemetry.ExecuteCellPerceivedWarm]: never | undefined;
+    [Telemetry.ExecuteNativeCell]: never | undefined;
     [Telemetry.ExpandAll]: never | undefined;
     [Telemetry.ExportNotebook]: never | undefined;
     [Telemetry.ExportPythonFile]: never | undefined;
@@ -1271,6 +1273,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.PtvsdInstallFailed]: never | undefined;
     [Telemetry.PtvsdPromptToInstall]: never | undefined;
     [Telemetry.PtvsdSuccessfullyInstalled]: never | undefined;
+    [Telemetry.OpenNotebook]: { scope: 'command' | 'file' };
     [Telemetry.OpenPlotViewer]: never | undefined;
     [Telemetry.Redo]: never | undefined;
     [Telemetry.RemoteAddCode]: never | undefined;

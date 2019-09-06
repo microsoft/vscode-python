@@ -64,6 +64,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
     private cellDictionary: Record<string, ICell> = {};
     private kernelSpecs: { name: string; dir: string }[] = [];
     private currentSession: MockJupyterSession | undefined;
+    private connInfo: IConnection | undefined;
 
     constructor(serviceManager: IServiceManager) {
         // Save async registry. Need to stick servers created into it
@@ -90,7 +91,6 @@ export class MockJupyterManager implements IJupyterSessionManager {
         }
 
         // Stick our services into the service manager
-        serviceManager.addSingletonInstance<IJupyterSessionManager>(IJupyterSessionManager, this);
         serviceManager.addSingletonInstance<IInterpreterService>(IInterpreterService, this.interpreterService.object);
         serviceManager.addSingletonInstance<IPythonExecutionFactory>(IPythonExecutionFactory, this.pythonExecutionFactory.object);
         serviceManager.addSingletonInstance<IProcessServiceFactory>(IProcessServiceFactory, this.processServiceFactory.object);
@@ -110,6 +110,10 @@ export class MockJupyterManager implements IJupyterSessionManager {
         this.addCell('import sys\r\nsys.version', '1.1.1.1');
         this.addCell('import sys\r\nsys.executable', 'python');
         this.addCell('import notebook\r\nnotebook.version_info', '1.1.1.1');
+    }
+
+    public getConnInfo(): IConnection {
+        return this.connInfo!;
     }
 
     public makeActive(interpreter: PythonInterpreter) {
@@ -220,8 +224,15 @@ export class MockJupyterManager implements IJupyterSessionManager {
         this.sessionTimeout = timeout;
     }
 
-    public startNew(connInfo: IConnection, kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken): Promise<IJupyterSession> {
-        this.asyncRegistry.push(connInfo);
+    public async dispose(): Promise<void> {
+        noop();
+    }
+
+    public async initialize(connInfo: IConnection): Promise<void> {
+        this.connInfo = connInfo;
+    }
+
+    public startNew(kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken): Promise<IJupyterSession> {
         if (kernelSpec) {
             this.asyncRegistry.push(kernelSpec);
         }
@@ -236,7 +247,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         }
     }
 
-    public getActiveKernelSpecs(_connection: IConnection): Promise<IJupyterKernelSpec[]> {
+    public getActiveKernelSpecs(): Promise<IJupyterKernelSpec[]> {
         return Promise.resolve([]);
     }
 

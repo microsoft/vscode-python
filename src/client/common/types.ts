@@ -327,7 +327,6 @@ export interface IDataScienceSettings {
     enableCellCodeLens?: boolean;
     askForLargeDataFrames?: boolean;
     enableAutoMoveToNextCell?: boolean;
-    autoPreviewNotebooksInInteractivePane?: boolean;
     allowUnauthorizedRemoteConnection?: boolean;
     askForKernelRestart?: boolean;
     enablePlotViewer?: boolean;
@@ -341,6 +340,7 @@ export interface IDataScienceSettings {
     remoteDebuggerPort?: number;
     colorizeInputBox?: boolean;
     addGotoCodeLenses?: boolean;
+    useNotebookEditor?: boolean;
     runStartupCommands: string;
     debugJustMyCode: boolean;
 }

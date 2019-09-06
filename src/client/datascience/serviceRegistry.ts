@@ -21,14 +21,17 @@ import { Decorator } from './editor-integration/decorator';
 import { DataScienceErrorHandler } from './errorHandler/errorHandler';
 import { GatherExecution } from './gather/gather';
 import { GatherListener } from './gather/gatherListener';
-import { DebugListener } from './interactive-window/debugListener';
-import { DotNetIntellisenseProvider } from './interactive-window/intellisense/dotNetIntellisenseProvider';
-import { JediIntellisenseProvider } from './interactive-window/intellisense/jediIntellisenseProvider';
+import { DebugListener } from './interactive-common/debugListener';
+import { DotNetIntellisenseProvider } from './interactive-common/intellisense/dotNetIntellisenseProvider';
+import { JediIntellisenseProvider } from './interactive-common/intellisense/jediIntellisenseProvider';
+import { LinkProvider } from './interactive-common/linkProvider';
+import { ShowPlotListener } from './interactive-common/showPlotListener';
+import { NativeEditor } from './interactive-ipynb/nativeEditor';
+import { NativeEditorCommandListener } from './interactive-ipynb/nativeEditorCommandListener';
+import { NativeEditorProvider } from './interactive-ipynb/nativeEditorProvider';
 import { InteractiveWindow } from './interactive-window/interactiveWindow';
 import { InteractiveWindowCommandListener } from './interactive-window/interactiveWindowCommandListener';
 import { InteractiveWindowProvider } from './interactive-window/interactiveWindowProvider';
-import { LinkProvider } from './interactive-window/linkProvider';
-import { ShowPlotListener } from './interactive-window/showPlotListener';
 import { JupyterCommandFactory } from './jupyter/jupyterCommand';
 import { JupyterDebugger } from './jupyter/jupyterDebugger';
 import { JupyterExecutionFactory } from './jupyter/jupyterExecutionFactory';
@@ -36,7 +39,7 @@ import { JupyterExporter } from './jupyter/jupyterExporter';
 import { JupyterImporter } from './jupyter/jupyterImporter';
 import { JupyterPasswordConnect } from './jupyter/jupyterPasswordConnect';
 import { JupyterServerFactory } from './jupyter/jupyterServerFactory';
-import { JupyterSessionManager } from './jupyter/jupyterSessionManager';
+import { JupyterSessionManagerFactory } from './jupyter/jupyterSessionManagerFactory';
 import { JupyterVariables } from './jupyter/jupyterVariables';
 import { PlotViewer } from './plotting/plotViewer';
 import { PlotViewerProvider } from './plotting/plotViewerProvider';
@@ -64,8 +67,10 @@ import {
     IJupyterDebugger,
     IJupyterExecution,
     IJupyterPasswordConnect,
-    IJupyterSessionManager,
+    IJupyterSessionManagerFactory,
     IJupyterVariables,
+    INotebookEditor,
+    INotebookEditorProvider,
     INotebookExecutionLogger,
     INotebookExporter,
     INotebookImporter,
@@ -97,7 +102,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider, wrapType(DataScienceCodeLensProvider));
     serviceManager.addSingleton<IDataScience>(IDataScience, wrapType(DataScience));
     serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, wrapType(JupyterExecutionFactory));
-    serviceManager.add<IDataScienceCommandListener>(IDataScienceCommandListener, wrapType(InteractiveWindowCommandListener));
+    serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, wrapType(InteractiveWindowCommandListener));
     serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, wrapType(InteractiveWindowProvider));
     serviceManager.add<IInteractiveWindow>(IInteractiveWindow, wrapType(InteractiveWindow));
     serviceManager.add<INotebookExporter>(INotebookExporter, wrapType(JupyterExporter));
@@ -106,7 +111,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, wrapType(CodeCssGenerator));
     serviceManager.addSingleton<IJupyterPasswordConnect>(IJupyterPasswordConnect, wrapType(JupyterPasswordConnect));
     serviceManager.addSingleton<IStatusProvider>(IStatusProvider, wrapType(StatusProvider));
-    serviceManager.addSingleton<IJupyterSessionManager>(IJupyterSessionManager, wrapType(JupyterSessionManager));
+    serviceManager.addSingleton<IJupyterSessionManagerFactory>(IJupyterSessionManagerFactory, wrapType(JupyterSessionManagerFactory));
     serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, wrapType(JupyterVariables));
     serviceManager.add<ICodeWatcher>(ICodeWatcher, wrapType(CodeWatcher));
     serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, wrapType(JupyterCommandFactory));
@@ -130,6 +135,9 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addBinding(ICellHashProvider, IInteractiveWindowListener);
     serviceManager.addBinding(ICellHashProvider, INotebookExecutionLogger);
     serviceManager.addBinding(IJupyterDebugger, ICellHashListener);
+    serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, wrapType(NativeEditorProvider));
+    serviceManager.add<INotebookEditor>(INotebookEditor, wrapType(NativeEditor));
+    serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, wrapType(NativeEditorCommandListener));
     serviceManager.addBinding(IGatherExecution, INotebookExecutionLogger);
     serviceManager.addBinding(ICodeLensFactory, IInteractiveWindowListener);
     serviceManager.addSingleton<IDebugLocationTrackerFactory>(IDebugLocationTrackerFactory, wrapType(DebugLocationTrackerFactory));

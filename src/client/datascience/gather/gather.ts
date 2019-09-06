@@ -13,7 +13,7 @@ import { Common } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { CellMatcher } from '../cellMatcher';
 import { concatMultilineString } from '../common';
-import { CellState, ICell as IVscCell, IGatherExecution, INotebookExecutionLogger } from '../types';
+import { CellState, ICell as IVscCell, IGatherExecution, INotebookExecutionLogger, internalUseCellKey } from '../types';
 
 /**
  * An adapter class to wrap the code gathering functionality from [microsoft/python-program-analysis](https://www.npmjs.com/package/@msrvida/python-program-analysis).
@@ -60,7 +60,9 @@ export class GatherExecution implements IGatherExecution, INotebookExecutionLogg
                 const cell = convertVscToGatherCell(vscCell) as LabCell;
 
                 // Call internal logging method
-                this._executionSlicer.logExecution(cell);
+                if (!vscCell.data.source.startsWith(internalUseCellKey)) {
+                    this._executionSlicer.logExecution(cell);
+                }
             }
         }
     }

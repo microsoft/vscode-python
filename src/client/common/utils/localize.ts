@@ -120,6 +120,7 @@ export namespace DataScience {
     export const exportDialogComplete = localize('DataScience.exportDialogComplete', 'Notebook written to {0}');
     export const exportDialogFailed = localize('DataScience.exportDialogFailed', 'Failed to export notebook. {0}');
     export const exportOpenQuestion = localize('DataScience.exportOpenQuestion', 'Open in browser');
+    export const exportOpenQuestion1 = localize('DataScience.exportOpenQuestion1', 'Open in editor');
     export const runCellLensCommandTitle = localize('python.command.python.datascience.runcell.title', 'Run cell');
     export const importDialogTitle = localize('DataScience.importDialogTitle', 'Import Jupyter Notebook');
     export const importDialogFilter = localize('DataScience.importDialogFilter', 'Jupyter Notebooks');
@@ -165,6 +166,7 @@ export namespace DataScience {
     export const restartServer = localize('DataScience.restartServer', 'Restart IPython Kernel');
     export const undo = localize('DataScience.undo', 'Undo');
     export const redo = localize('DataScience.redo', 'Redo');
+    export const save = localize('DataScience.save', 'Save file');
     export const clearAll = localize('DataScience.clearAll', 'Remove all cells');
     export const reloadRequired = localize('DataScience.reloadRequired', 'Please reload the window for new settings to take effect.');
     export const pythonVersionHeader = localize('DataScience.pythonVersionHeader', 'Python Version:');
@@ -258,7 +260,26 @@ export namespace DataScience {
     export const cellStopOnErrorFormatMessage = localize('DataScience.cellStopOnErrorFormatMessage', '{0} cells were canceled due to an error in the previous cell.');
     export const scrollToCellTitleFormatMessage = localize('DataScience.scrollToCellTitleFormatMessage', 'Go to [{0}]');
     export const instructionComments = localize('DataScience.instructionComments', '# To add a new cell, type "#%%"\n# To add a new markdown cell, type "#%% [markdown]"\n');
+    export const invalidNotebookFileError = localize('DataScience.invalidNotebookFileError', 'Notebook is not in the correct format. Check the file for correct json.');
+    export const invalidNotebookFileErrorFormat = localize('DataScience.invalidNotebookFileError', '{0} is not a valid notebook file. Check the file for correct json.');
+    export const nativeEditorTitle = localize('DataScience.nativeEditorTitle', 'Notebook Editor');
+    export const untitledNotebookFileName = localize('DataScience.untitledNotebookFileName', 'Untitled');
+    export const dirtyNotebookMessage1 = localize('DataScience.untitledNotebookMessage', 'Do you want to save the changes you made to {0}?');
+    export const dirtyNotebookMessage2 = localize('DataScience.untitledNotebookMessage', 'Your changes will be lost if you don\'t save them.');
+    export const dirtyNotebookYes = localize('DataScience.untitledNotebookYes', 'Save');
+    export const dirtyNotebookNo = localize('DataScience.untitledNotebookNo', 'Don\'t Save');
+    export const dirtyNotebookCancel = localize('DataScience.untitledNotebookNo', 'Cancel');
+    export const dirtyNotebookDialogTitle = localize('DataScience.dirtyNotebookDialogTitle', 'Save');
+    export const dirtyNotebookDialogFilter = localize('DataScience.dirtyNotebookDialogFilter', 'Jupyter Notebooks');
     export const remoteDebuggerNotSupported = localize('DataScience.remoteDebuggerNotSupported', 'Debugging while attached to a remote server is not currently supported.');
+    export const exportAsPythonFileTooltip = localize('DataScience.exportAsPythonFileTooltip', 'Save As Python File');
+    export const exportAsPythonFileTitle = localize('DataScience.exportAsPythonFileTitle', 'Save As Python File');
+    export const runCell = localize('DataScience.runCell', 'Run cell');
+    export const deleteCell = localize('DataScience.deleteCell', 'Delete cell');
+    export const moveCellUp = localize('DataScience.moveCellUp', 'Move cell up');
+    export const moveCellDown = localize('DataScience.moveCellDown', 'Move cell down');
+    export const moveSelectedCellUp = localize('DataScience.moveSelectedCellUp', 'Move selected cell up');
+    export const moveSelectedCellDown = localize('DataScience.deleteCell', 'Move selected cell down');
 }
 
 export namespace DebugConfigStrings {

@@ -12,7 +12,6 @@ import {
 } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils';
 import { Slot } from '@phosphor/signaling';
-import { Agent as HttpsAgent } from 'https';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
@@ -20,41 +19,28 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import { Cancellation } from '../../common/cancellation';
 import { isTestExecution } from '../../common/constants';
 import { traceInfo, traceWarning } from '../../common/logger';
-import { sleep, waitForPromise } from '../../common/utils/async';
+import { createDeferred, waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import {
-    IConnection,
-    IJupyterKernelSpec,
-    IJupyterPasswordConnect,
-    IJupyterPasswordConnectInfo,
-    IJupyterSession
-} from '../types';
+import { IConnection, IJupyterKernelSpec, IJupyterSession } from '../types';
 import { JupyterKernelPromiseFailedError } from './jupyterKernelPromiseFailedError';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
-import { createJupyterWebSocket } from './jupyterWebSocket';
 
 export class JupyterSession implements IJupyterSession {
-    private connInfo: IConnection | undefined;
-    private kernelSpec: IJupyterKernelSpec | undefined;
-    private sessionManager: SessionManager | undefined;
     private session: Session.ISession | undefined;
     private restartSessionPromise: Promise<Session.ISession | undefined> | undefined;
-    private contentsManager: ContentsManager | undefined;
     private notebookFiles: Contents.IModel[] = [];
     private onRestartedEvent: EventEmitter<void> | undefined;
     private statusHandler: Slot<Session.ISession, Kernel.Status> | undefined;
     private connected: boolean = false;
-    private jupyterPasswordConnect: IJupyterPasswordConnect;
 
     constructor(
-        connInfo: IConnection,
-        kernelSpec: IJupyterKernelSpec | undefined,
-        jupyterPasswordConnect: IJupyterPasswordConnect
+        private connInfo: IConnection,
+        private serverSettings: ServerConnection.ISettings,
+        private kernelSpec: IJupyterKernelSpec | undefined,
+        private sessionManager: SessionManager,
+        private contentsManager: ContentsManager
     ) {
-        this.connInfo = connInfo;
-        this.kernelSpec = kernelSpec;
-        this.jupyterPasswordConnect = jupyterPasswordConnect;
     }
 
     public dispose(): Promise<void> {
@@ -62,22 +48,38 @@ export class JupyterSession implements IJupyterSession {
     }
 
     public async shutdown(): Promise<void> {
-        await this.destroyKernelSpec();
-
         // Destroy the notebook file if not local. Local is cleaned up when we destroy the kernel spec.
         if (this.notebookFiles.length && this.contentsManager && this.connInfo && !this.connInfo.localLaunch) {
             try {
                 // Make sure we have a session first and it returns something
-                if (this.sessionManager) {
-                    await this.sessionManager.refreshRunning();
-                    await Promise.all(this.notebookFiles.map(f => this.contentsManager!.delete(f.path)));
-                    this.notebookFiles = [];
-                }
+                await this.sessionManager.refreshRunning();
+                await Promise.all(this.notebookFiles.map(f => this.contentsManager!.delete(f.path)));
+                this.notebookFiles = [];
             } catch {
                 noop();
             }
         }
-        return this.shutdownSessionAndConnection();
+        if (this.session) {
+            try {
+                traceInfo('Shutdown session - current session');
+                await this.shutdownSession(this.session, this.statusHandler);
+                traceInfo('Shutdown session - get restart session');
+                if (this.restartSessionPromise) {
+                    const restartSession = await this.restartSessionPromise;
+                    traceInfo('Shutdown session - shutdown restart session');
+                    await this.shutdownSession(restartSession, undefined);
+                }
+
+            } catch {
+                noop();
+            }
+            this.session = undefined;
+            this.restartSessionPromise = undefined;
+        }
+        if (this.onRestartedEvent) {
+            this.onRestartedEvent.dispose();
+        }
+        traceInfo('Shutdown session -- complete');
     }
 
     public get onRestarted(): Event<void> {
@@ -90,11 +92,6 @@ export class JupyterSession implements IJupyterSession {
     public async waitForIdle(timeout: number): Promise<void> {
         // Wait for idle on this session
         await this.waitForIdleOnSession(this.session, timeout);
-
-        // Once we know that works, start the restart session if not already started
-        if (!this.restartSessionPromise && this.session && this.contentsManager) {
-            this.restartSessionPromise = this.createRestartSession(this.session.serverSettings, this.contentsManager);
-        }
     }
 
     public async restart(_timeout: number): Promise<void> {
@@ -123,7 +120,6 @@ export class JupyterSession implements IJupyterSession {
             if (oldStatusHandler) {
                 oldSession.statusChanged.disconnect(oldStatusHandler);
             }
-
             this.shutdownSession(oldSession, undefined).ignoreErrors();
         } else {
             throw new Error(localize.DataScience.sessionDisposed());
@@ -137,10 +133,16 @@ export class JupyterSession implements IJupyterSession {
     }
 
     public requestExecute(content: KernelMessage.IExecuteRequest, disposeOnDone?: boolean, metadata?: JSONObject): Kernel.IFuture | undefined {
+        // Start the restart session as soon as a request is created
+        this.startRestartSession();
+
         return this.session && this.session.kernel ? this.session.kernel.requestExecute(content, disposeOnDone, metadata) : undefined;
     }
 
     public requestComplete(content: KernelMessage.ICompleteRequest): Promise<KernelMessage.ICompleteReplyMsg | undefined> {
+        // Start the restart session as soon as a request is created
+        this.startRestartSession();
+
         return this.session && this.session.kernel ? this.session.kernel.requestComplete(content) : Promise.resolve(undefined);
     }
 
@@ -149,12 +151,8 @@ export class JupyterSession implements IJupyterSession {
             throw new Error(localize.DataScience.sessionDisposed());
         }
 
-        const serverSettings: ServerConnection.ISettings = await this.getServerConnectSettings(this.connInfo);
-        this.sessionManager = new SessionManager({ serverSettings: serverSettings });
-        this.contentsManager = new ContentsManager({ serverSettings: serverSettings });
-
         // Start a new session
-        this.session = await this.createSession(serverSettings, this.contentsManager, cancelToken);
+        this.session = await this.createSession(this.serverSettings, this.contentsManager, cancelToken);
 
         // Listen for session status changes
         this.statusHandler = this.onStatusChanged.bind(this.onStatusChanged);
@@ -168,25 +166,31 @@ export class JupyterSession implements IJupyterSession {
         return this.connected;
     }
 
+    private startRestartSession() {
+        if (!this.restartSessionPromise && this.session && this.contentsManager) {
+            this.restartSessionPromise = this.createRestartSession(this.session.serverSettings, this.contentsManager);
+        }
+    }
+
     private async waitForIdleOnSession(session: Session.ISession | undefined, timeout: number): Promise<void> {
-        if (session && session.kernel) {
+        if (session && session.kernel && session.kernel.status !== 'idle') {
             traceInfo(`Waiting for idle on: ${session.kernel.id}${session.kernel.status}`);
 
-            // This function seems to cause CI builds to timeout randomly on
-            // different tests. Waiting for status to go idle doesn't seem to work and
-            // in the past, waiting on the ready promise doesn't work either. Check status with a maximum of 5 seconds
-            const startTime = Date.now();
-            while (session &&
-                session.kernel &&
-                session.kernel.status !== 'idle' &&
-                (Date.now() - startTime < timeout)) {
-                await sleep(100);
-            }
+            // Just listen to the event until we get to idle
+            const deferred = createDeferred<boolean>();
+            const handler = (_s: Session.ISession, a: Kernel.Status) => {
+                if (a === 'idle') {
+                    traceInfo(`Completed waiting for idle on: ${session.kernel.id}${session.kernel.status}`);
+                    deferred.resolve(true);
+                }
+            };
+            session.statusChanged.connect(handler);
+            const result = waitForPromise(deferred.promise, timeout);
+            session.statusChanged.disconnect(handler);
 
-            traceInfo(`Finished waiting for idle on: ${session.kernel.id}${session.kernel.status}`);
-
-            // If we didn't make it out in ten seconds, indicate an error
-            if (!session || !session.kernel || session.kernel.status !== 'idle') {
+            // If that didn't work throw an exception
+            if (result === null || !result || !session || !session.kernel) {
+                traceInfo(`Failed waiting for idle on: ${session.kernel.id}${session.kernel.status}`);
                 throw new JupyterWaitForIdleError(localize.DataScience.jupyterLaunchTimedOut());
             }
         }
@@ -231,65 +235,6 @@ export class JupyterSession implements IJupyterSession {
         return Cancellation.race(() => this.sessionManager!.startNew(options), cancelToken);
     }
 
-    private getSessionCookieString(pwSettings: IJupyterPasswordConnectInfo): string {
-        return `_xsrf=${pwSettings.xsrfCookie}; ${pwSettings.sessionCookieName}=${pwSettings.sessionCookieValue}`;
-    }
-    private async getServerConnectSettings(connInfo: IConnection): Promise<ServerConnection.ISettings> {
-        let serverSettings: Partial<ServerConnection.ISettings> =
-        {
-            baseUrl: connInfo.baseUrl,
-            pageUrl: '',
-            // A web socket is required to allow token authentication
-            wsUrl: connInfo.baseUrl.replace('http', 'ws')
-        };
-
-        // Agent is allowed to be set on this object, but ts doesn't like it on RequestInit, so any
-        // tslint:disable-next-line:no-any
-        let requestInit: any = { cache: 'no-store', credentials: 'same-origin' };
-        let requiresWebSocket = false;
-        let cookieString;
-        let allowUnauthorized;
-
-        // If no token is specified prompt for a password
-        if (connInfo.token === '' || connInfo.token === 'null') {
-            serverSettings = { ...serverSettings, token: '' };
-            const pwSettings = await this.jupyterPasswordConnect.getPasswordConnectionInfo(connInfo.baseUrl, connInfo.allowUnauthorized ? true : false);
-            if (pwSettings) {
-                cookieString = this.getSessionCookieString(pwSettings);
-                const requestHeaders = { Cookie: cookieString, 'X-XSRFToken': pwSettings.xsrfCookie };
-                requestInit = { ...requestInit, headers: requestHeaders };
-                requiresWebSocket = true;
-            } else {
-                // Failed to get password info, notify the user
-                throw new Error(localize.DataScience.passwordFailure());
-            }
-        } else {
-            serverSettings = { ...serverSettings, token: connInfo.token };
-        }
-
-        // If this is an https connection and we want to allow unauthorized connections set that option on our agent
-        // we don't need to save the agent as the previous behaviour is just to create a temporary default agent when not specified
-        if (connInfo.baseUrl.startsWith('https') && connInfo.allowUnauthorized) {
-            const requestAgent = new HttpsAgent({ rejectUnauthorized: false });
-            requestInit = { ...requestInit, agent: requestAgent };
-            requiresWebSocket = true;
-            allowUnauthorized = true;
-        }
-
-        serverSettings = { ...serverSettings, init: requestInit };
-
-        // Only replace the websocket if we need to so we keep our normal local attach clean
-        if (requiresWebSocket) {
-            // This replaces the WebSocket constructor in jupyter lab services with our own implementation
-            // See _createSocket here:
-            // https://github.com/jupyterlab/jupyterlab/blob/cfc8ebda95e882b4ed2eefd54863bb8cdb0ab763/packages/services/src/kernel/default.ts
-            // tslint:disable-next-line:no-any
-            serverSettings = { ...serverSettings, WebSocket: createJupyterWebSocket(cookieString, allowUnauthorized) as any };
-        }
-
-        return ServerConnection.makeSettings(serverSettings);
-    }
-
     private async waitForKernelPromise(kernelPromise: Promise<void>, timeout: number, errorMessage: string): Promise<void | null> {
         // Wait for this kernel promise to happen
         try {
@@ -307,17 +252,6 @@ export class JupyterSession implements IJupyterSession {
         if (a === 'starting' && this.onRestartedEvent) {
             this.onRestartedEvent.fire();
         }
-    }
-
-    private async destroyKernelSpec() {
-        try {
-            if (this.kernelSpec) {
-                await this.kernelSpec.dispose(); // This should delete any old kernel specs
-            }
-        } catch {
-            noop();
-        }
-        this.kernelSpec = undefined;
     }
 
     private async shutdownSession(session: Session.ISession | undefined, statusHandler: Slot<Session.ISession, Kernel.Status> | undefined): Promise<void> {
@@ -345,6 +279,9 @@ export class JupyterSession implements IJupyterSession {
                                 });
                             }
                         }
+                        if (defaultKernel && defaultKernel._reconnectLimit) {
+                            defaultKernel._reconnectLimit = 0;
+                        }
                         await waitForPromise(session.shutdown(), 1000);
                     } else {
                         // Shutdown may fail if the process has been killed
@@ -363,45 +300,4 @@ export class JupyterSession implements IJupyterSession {
             traceInfo(`shutdownSession ${kernelId} - shutdown complete`);
         }
     }
-
-    //tslint:disable:cyclomatic-complexity
-    private async shutdownSessionAndConnection(): Promise<void> {
-        if (this.contentsManager) {
-            traceInfo('ShutdownSessionAndConnection - dispose contents manager');
-            this.contentsManager.dispose();
-            this.contentsManager = undefined;
-        }
-        if (this.session || this.sessionManager) {
-            try {
-                traceInfo('ShutdownSessionAndConnection - current session');
-                await this.shutdownSession(this.session, this.statusHandler);
-                traceInfo('ShutdownSessionAndConnection - get restart session');
-                if (this.restartSessionPromise) {
-                    const restartSession = await this.restartSessionPromise;
-                    traceInfo('ShutdownSessionAndConnection - shutdown restart session');
-                    await this.shutdownSession(restartSession, undefined);
-                }
-
-                if (this.sessionManager && !this.sessionManager.isDisposed) {
-                    traceInfo('ShutdownSessionAndConnection - dispose session manager');
-                    this.sessionManager.dispose();
-                }
-            } catch {
-                noop();
-            }
-            this.session = undefined;
-            this.sessionManager = undefined;
-            this.restartSessionPromise = undefined;
-        }
-        if (this.onRestartedEvent) {
-            this.onRestartedEvent.dispose();
-        }
-        if (this.connInfo) {
-            traceInfo('ShutdownSessionAndConnection - dispose conn info');
-            this.connInfo.dispose(); // This should kill the process that's running
-            this.connInfo = undefined;
-        }
-        traceInfo('ShutdownSessionAndConnection -- complete');
-    }
-
 }

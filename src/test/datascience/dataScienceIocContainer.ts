@@ -108,7 +108,10 @@ import { GatherExecution } from '../../client/datascience/gather/gather';
 import { GatherListener } from '../../client/datascience/gather/gatherListener';
 import {
     DotNetIntellisenseProvider
-} from '../../client/datascience/interactive-window/intellisense/dotNetIntellisenseProvider';
+} from '../../client/datascience/interactive-common/intellisense/dotNetIntellisenseProvider';
+import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
+import { NativeEditorCommandListener } from '../../client/datascience/interactive-ipynb/nativeEditorCommandListener';
+import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import {
     InteractiveWindowCommandListener
@@ -121,7 +124,7 @@ import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporte
 import { JupyterImporter } from '../../client/datascience/jupyter/jupyterImporter';
 import { JupyterPasswordConnect } from '../../client/datascience/jupyter/jupyterPasswordConnect';
 import { JupyterServerFactory } from '../../client/datascience/jupyter/jupyterServerFactory';
-import { JupyterSessionManager } from '../../client/datascience/jupyter/jupyterSessionManager';
+import { JupyterSessionManagerFactory } from '../../client/datascience/jupyter/jupyterSessionManagerFactory';
 import { JupyterVariables } from '../../client/datascience/jupyter/jupyterVariables';
 import { PlotViewer } from '../../client/datascience/plotting/plotViewer';
 import { PlotViewerProvider } from '../../client/datascience/plotting/plotViewerProvider';
@@ -149,8 +152,10 @@ import {
     IJupyterDebugger,
     IJupyterExecution,
     IJupyterPasswordConnect,
-    IJupyterSessionManager,
+    IJupyterSessionManagerFactory,
     IJupyterVariables,
+    INotebookEditor,
+    INotebookEditorProvider,
     INotebookExecutionLogger,
     INotebookExporter,
     INotebookImporter,
@@ -241,6 +246,7 @@ import { MockDebuggerService } from './mockDebugService';
 import { MockDocumentManager } from './mockDocumentManager';
 import { MockExtensions } from './mockExtensions';
 import { MockJupyterManager, SupportedCommands } from './mockJupyterManager';
+import { MockJupyterManagerFactory } from './mockJupyterManagerFactory';
 import { MockLanguageServer } from './mockLanguageServer';
 import { MockLanguageServerAnalysisOptions } from './mockLanguageServerAnalysisOptions';
 import { MockLiveShareApi } from './mockLiveShare';
@@ -262,7 +268,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private commandManager: MockCommandManager = new MockCommandManager();
     private setContexts: Record<string, boolean> = {};
     private contextSetEvent: EventEmitter<{ name: string; value: boolean }> = new EventEmitter<{ name: string; value: boolean }>();
-    private jupyterMock: MockJupyterManager | undefined;
+    private jupyterMock: MockJupyterManagerFactory | undefined;
     private shouldMockJupyter: boolean;
     private asyncRegistry: AsyncDisposableRegistry;
     private configChangeEvent = new EventEmitter<ConfigurationChangeEvent>();
@@ -359,6 +365,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, JupyterDebugger);
         this.serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTracker);
         this.serviceManager.addSingleton<IDebugLocationTrackerFactory>(IDebugLocationTrackerFactory, DebugLocationTrackerFactory);
+        this.serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, NativeEditorProvider);
+        this.serviceManager.add<INotebookEditor>(INotebookEditor, NativeEditor);
+        this.serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NativeEditorCommandListener);
 
         this.serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
         this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
@@ -426,7 +435,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             showJupyterVariableExplorer: true,
             variableExplorerExclude: 'module;function;builtin_function_or_method',
             liveShareConnectionTimeout: 100,
-            autoPreviewNotebooksInInteractivePane: true,
             enablePlotViewer: true,
             stopOnFirstLineWhileDebugging: true,
             stopOnError: true,
@@ -548,12 +556,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         // Create our jupyter mock if necessary
         if (this.shouldMockJupyter) {
-            this.jupyterMock = new MockJupyterManager(this.serviceManager);
+            this.jupyterMock = new MockJupyterManagerFactory(this.serviceManager);
         } else {
             this.serviceManager.addSingleton<IProcessServiceFactory>(IProcessServiceFactory, ProcessServiceFactory);
             this.serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory);
             this.serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
-            this.serviceManager.addSingleton<IJupyterSessionManager>(IJupyterSessionManager, JupyterSessionManager);
+            this.serviceManager.addSingleton<IJupyterSessionManagerFactory>(IJupyterSessionManagerFactory, JupyterSessionManagerFactory);
             this.serviceManager.addSingleton<IJupyterPasswordConnect>(IJupyterPasswordConnect, JupyterPasswordConnect);
             this.serviceManager.addSingleton<IProcessLogger>(IProcessLogger, ProcessLogger);
         }
@@ -658,11 +666,15 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     }
 
     public get mockJupyter(): MockJupyterManager | undefined {
-        return this.jupyterMock;
+        return this.jupyterMock ? this.jupyterMock.getManager() : undefined;
     }
 
     public get<T>(serviceIdentifier: interfaces.ServiceIdentifier<T>, name?: string | number | symbol): T {
         return this.serviceManager.get<T>(serviceIdentifier, name);
+    }
+
+    public getAll<T>(serviceIdentifier: interfaces.ServiceIdentifier<T>, name?: string | number | symbol): T[] {
+        return this.serviceManager.getAll<T>(serviceIdentifier, name);
     }
 
     public addDocument(code: string, file: string) {
@@ -673,7 +685,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.extraListeners.push(callback);
     }
 
-    public changeJediEnabled(enabled: boolean) {
+    public enableJedi(enabled: boolean) {
         this.pythonSettings.jediEnabled = enabled;
     }
 
