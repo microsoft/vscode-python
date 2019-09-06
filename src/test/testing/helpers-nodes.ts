@@ -59,7 +59,7 @@ export function createFileResults(
     if (!xmlName) {
         xmlName = filename
             .replace(/\.[^.]+$/, '')
-            .replace(RegExp(path.sep), '.')
+            .replace(/[\\\/]/, '.')
             .replace(/^[.\\\/]*/, '');
     }
     return {
