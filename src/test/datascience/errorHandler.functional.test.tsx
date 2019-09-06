@@ -27,7 +27,6 @@ suite('DataScience Error Handler Functional Tests', () => {
         await ioc.dispose();
     });
 
-
     function createContainer(): DataScienceIocContainer {
         const result = new DataScienceIocContainer();
         result.registerDataScienceTypes();
