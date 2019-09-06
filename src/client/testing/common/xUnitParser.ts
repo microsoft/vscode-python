@@ -49,47 +49,33 @@ export class XUnitParser implements IXUnitParser {
         @inject(IFileSystem) private readonly fs: IFileSystem
     ) { }
 
+    // Update "tests" with the results parsed from the given file.
     public async updateResultsFromXmlLogFile(
         tests: Tests,
         outputXmlFile: string,
         passCalculationFormulae: PassCalculationFormulae
     ) {
-        await updateResultsFromXmlLogFile(
-            this.fs,
-            tests,
-            outputXmlFile,
-            passCalculationFormulae
-        );
-    }
-}
+        const data = await this.fs.readFile(outputXmlFile);
+        // Un-comment this line to capture the results file for later use in tests:
+        //await fs.writeFile('/tmp/results.xml', data);
 
-// Update "tests" with the results parsed from the given file.
-async function updateResultsFromXmlLogFile(
-    fs: IFileSystem,
-    tests: Tests,
-    outputXmlFile: string,
-    passCalculationFormulae: PassCalculationFormulae
-) {
-    const data = await fs.readFile(outputXmlFile);
-    // Un-comment this line to capture the results file for later use in tests:
-    //await fs.writeFile('/tmp/results.xml', data);
-
-    // tslint:disable-next-line:no-require-imports
-    const xml2js = require('xml2js');
-    // tslint:disable-next-line:no-any
-    return new Promise<any>((resolve, reject) => {
-        xml2js.parseString(data, (error: Error, parserResult: { testsuite: TestSuiteResult }) => {
-            if (error) {
-                return reject(error);
-            }
-            try {
-                updateTests(tests, parserResult.testsuite, passCalculationFormulae);
-            } catch (err) {
-                return reject(err);
-            }
-            return resolve();
+        // tslint:disable-next-line:no-require-imports
+        const xml2js = require('xml2js');
+        // tslint:disable-next-line:no-any
+        await new Promise<any>((resolve, reject) => {
+            xml2js.parseString(data, (error: Error, parserResult: { testsuite: TestSuiteResult }) => {
+                if (error) {
+                    return reject(error);
+                }
+                try {
+                    updateTests(tests, parserResult.testsuite, passCalculationFormulae);
+                } catch (err) {
+                    return reject(err);
+                }
+                return resolve();
+            });
         });
-    });
+    }
 }
 
 // Update "tests" with the given results.
