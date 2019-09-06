@@ -4,6 +4,7 @@
 import { JSONObject } from '@phosphor/coreutils/lib/json';
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
+import * as os from 'os';
 import * as path from 'path';
 import { Observable } from 'rxjs/Observable';
 import { SemVer } from 'semver';
@@ -264,7 +265,7 @@ suite('Jupyter Execution', async () => {
     });
 
     setup(() => {
-        workingKernelSpec = 'C:\\TempSpec\\kernel.json';
+        workingKernelSpec = createTempSpec(workingPython.path);
         ipykernelInstallCount = 0;
         // tslint:disable-next-line:no-invalid-this
     });
@@ -290,6 +291,26 @@ suite('Jupyter Execution', async () => {
         public toString(): string {
             return 'FunctionMatcher';
         }
+    }
+
+    function createTempSpec(pythonPath: string): string {
+        const tempDir = os.tmpdir();
+        const subDir = uuid();
+        const filePath = path.join(tempDir, subDir, 'kernel.json');
+        fs.ensureDirSync(path.dirname(filePath));
+        fs.writeJSONSync(filePath,
+            {
+                display_name: 'Python 3',
+                language: 'python',
+                argv: [
+                    pythonPath,
+                    '-m',
+                    'ipykernel_launcher',
+                    '-f',
+                    '{connection_file}'
+                ]
+            });
+        return filePath;
     }
 
     function argThat(func: (obj: any) => boolean): any {
