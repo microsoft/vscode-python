@@ -49,12 +49,12 @@ export class XUnitParser implements IXUnitParser {
         @inject(IFileSystem) private readonly fs: IFileSystem
     ) { }
 
-    public updateResultsFromXmlLogFile(
+    public async updateResultsFromXmlLogFile(
         tests: Tests,
         outputXmlFile: string,
         passCalculationFormulae: PassCalculationFormulae
-    ): Promise<void> {
-        return updateResultsFromXmlLogFile(
+    ) {
+        await updateResultsFromXmlLogFile(
             this.fs,
             tests,
             outputXmlFile,
