@@ -7,7 +7,6 @@
     "python.command.python.debugtests.title": "偵錯所有單元測試",
     "python.command.python.execInTerminal.title": "在終端機中執行 Python 檔案",
     "python.command.python.setInterpreter.title": "選擇直譯器",
-    "python.command.python.updateSparkLibrary.title": "更新工作區 PySpark 函式庫",
     "python.command.python.refactorExtractVariable.title": "提取變數",
     "python.command.python.refactorExtractMethod.title": "提取方法",
     "python.command.python.viewTestOutput.title": "顯示單元測試輸出",

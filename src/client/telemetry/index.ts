@@ -1314,10 +1314,6 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.UNITTEST_ENABLED]: Partial<Record<TestProvider, undefined | boolean>>;
     /**
-     * Telemetry sent when updating Pyspark library
-     */
-    [EventName.UPDATE_PYSPARK_LIBRARY]: never | undefined;
-    /**
      * Telemetry sent when building workspace symbols
      */
     [EventName.WORKSPACE_SYMBOLS_BUILD]: never | undefined;
