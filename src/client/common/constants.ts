@@ -78,18 +78,6 @@ export namespace Delays {
     export const MaxUnitTestCodeLensDelay = 5000;
 }
 
-export namespace LinterErrors {
-    export namespace pylint {
-        export const InvalidSyntax = 'E0001';
-    }
-    export namespace prospector {
-        export const InvalidSyntax = 'F999';
-    }
-    export namespace flake8 {
-        export const InvalidSyntax = 'E999';
-    }
-}
-
 export const STANDARD_OUTPUT_CHANNEL = 'STANDARD_OUTPUT_CHANNEL';
 
 export function isTestExecution(): boolean {

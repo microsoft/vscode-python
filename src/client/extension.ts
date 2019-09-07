@@ -24,7 +24,6 @@ import {
     DebugConfigurationProvider,
     Disposable,
     ExtensionContext,
-    extensions,
     languages,
     Memento,
     OutputChannel,
@@ -88,7 +87,6 @@ import { IServiceContainer, IServiceManager } from './ioc/types';
 import { getLanguageConfiguration } from './language/languageConfiguration';
 import { LinterCommands } from './linters/linterCommands';
 import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
-import { ILintingEngine } from './linters/types';
 import { PythonCodeActionProvider } from './providers/codeActionsProvider';
 import { PythonFormattingEditProvider } from './providers/formatProvider';
 import { LinterProvider } from './providers/linterProvider';
@@ -156,10 +154,6 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
     interpreterManager.refresh(workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined)
         .catch(ex => traceError('Python Extension: interpreterManager.refresh', ex));
-
-    const jupyterExtension = extensions.getExtension('donjayamanne.jupyter');
-    const lintingEngine = serviceManager.get<ILintingEngine>(ILintingEngine);
-    lintingEngine.linkJupyterExtension(jupyterExtension).ignoreErrors();
 
     // Activate debug location tracker
     serviceManager.get<IDebugLocationTrackerFactory>(IDebugLocationTrackerFactory);
