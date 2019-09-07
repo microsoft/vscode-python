@@ -8,7 +8,7 @@ import * as React from 'react';
 import { concatMultilineString } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import { CellState, ICell } from '../../client/datascience/types';
-import { Cell, ICellViewModel } from '../interactive-common/cell';
+import { ICellViewModel } from '../interactive-common/cell';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
 import { IMainState } from '../interactive-common/mainState';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
@@ -36,7 +36,6 @@ interface INativeEditorProps {
 export class NativeEditor extends React.Component<INativeEditorProps, IMainState> {
     private mainPanelRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private contentPanelScrollRef: React.RefObject<HTMLElement> = React.createRef<HTMLElement>();
-    private editCellRef: React.RefObject<Cell> = React.createRef<Cell>();
     private contentPanelRef: React.RefObject<ContentPanel> = React.createRef<ContentPanel>();
     private stateController: NativeEditorStateController;
     private initialCellDivs: (HTMLDivElement | null)[] = [];
@@ -104,10 +103,6 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                 // First we have to give ourselves focus (so that focus actually ends up in the code cell)
                 if (this.mainPanelRef && this.mainPanelRef.current) {
                     this.mainPanelRef.current.focus({preventScroll: true});
-                }
-
-                if (this.editCellRef && this.editCellRef.current) {
-                    this.editCellRef.current.giveFocus(true);
                 }
             }, 100);
         }
