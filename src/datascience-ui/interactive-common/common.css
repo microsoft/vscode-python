@@ -345,7 +345,6 @@ body, html {
 #toolbar-panel {
     margin-top: 2px;
     margin-bottom: 2px;
-    display: flex;
     margin-left: 2px;
     margin-right: 2px;
 }
@@ -408,7 +407,12 @@ body, html {
 
 .toolbar-divider {
     width: 100%;
-    border-top-color: var(--override-badge-background, var(--vscode-badge-background));
-    border-top-style: solid;
-    border-top-width: 2px;
+    margin-top: 2px;
+    border-bottom-color: var(--override-badge-background, var(--vscode-badge-background));
+    border-bottom-style: solid;
+    border-bottom-width: 2px;
+}
+.toolbar-menu-bar {
+    display: flex;
+    width: 100%;
 }
