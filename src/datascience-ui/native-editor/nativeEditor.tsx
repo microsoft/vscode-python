@@ -127,7 +127,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.InsertBelow} />
                     </ImageButton>
                     <ImageButton baseTheme={this.props.baseTheme} onClick={runAll} className='native-button' tooltip={getLocString('DataScience.runAll', 'Run All Cells')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.InsertBelow} />
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.RunAll} />
                     </ImageButton>
                     <ImageButton baseTheme={this.props.baseTheme} onClick={this.stateController.save} disabled={!this.state.dirty} className='native-button' tooltip={getLocString('DataScience.save', 'Save File')}>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.SaveAs} />
@@ -551,7 +551,6 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             const runAbove = () => this.stateController.runAbove(Identifiers.EditCellId);
             const canRunAbove = this.stateController.canRunAbove(Identifiers.EditCellId);
             const insertAbove = () => this.stateController.insertAbove(Identifiers.EditCellId);
-            const runCellHidden = this.state.busy;
             const flyoutClass = cell.cell.id === this.state.focusedCell ? 'native-editor-cellflyout native-editor-cellflyout-focused'
                 : 'native-editor-cellflyout native-editor-cellflyout-selected';
             const switchTooltip = cell.cell.data.cell_type === 'code' ? getLocString('DataScience.switchToMarkdown', 'Change to markdown') :
@@ -576,7 +575,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
 
             const innerPortion =
                 <div className='native-editor-celltoolbar-inner' key={1}>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={runCell} hidden={runCellHidden} tooltip={getLocString('DataScience.runCell', 'Run cell')}>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={runCell} tooltip={getLocString('DataScience.runCell', 'Run cell')}>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Run} />
                     </ImageButton>
                 </div>;

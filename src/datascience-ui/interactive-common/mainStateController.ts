@@ -602,7 +602,7 @@ export class MainStateController implements IMessageHandler {
     }
 
     public setState(newState: {}, callback?: () => void) {
-        if (this.suspendUpdates) {
+        if (this.suspendUpdateCount > 0) {
             // Just save our new state
             this.state = { ...this.state, ...newState };
             if (callback) {
