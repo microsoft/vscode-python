@@ -1,31 +1,3 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg
-   xmlns="http://www.w3.org/2000/svg"
-   width="12"
-   height="12"
-   viewBox="0 0 12 12"
-   fill="none">
-  <rect
-     style="opacity:0.98999999;fill:#cccccc;stroke:#cccccc"
-     id="rect4534"
-     width="1.3220339"
-     height="5.9491525"
-     x="3.4576271"
-     y="1.6271187" />
-  <rect
-     style="opacity:0.98999999;fill:#cccccc;stroke:#cccccc"
-     id="rect4534-1"
-     width="1.3220339"
-     height="5.9491525"
-     x="3.7627118"
-     y="-7.1440678"
-     transform="rotate(90)" />
-  <path
-     style="fill:none;stroke:#cccccc;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-     d="M 8.6949153,10.728814 6.3050847,8.2372881"
-     id="path4557" />
-  <path
-     style="fill:none;stroke:#cccccc;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-     d="M 10.449152,8.2118641 8.0593221,10.703391"
-     id="path4557-0" />
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M14 7V8H8V14H7V8H1V7H7V1H8V7H14Z" fill="#C5C5C5"/>
 </svg>
