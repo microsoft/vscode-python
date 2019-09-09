@@ -119,6 +119,22 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         }
     }
 
+    private traceCellResults(prefix: string, results: ICell[]) {
+        if (results.length > 0 && results[0].data.cell_type === 'code') {
+            const cell = results[0].data as nbformat.ICodeCell;
+            const error = cell.outputs[0].evalue;
+            if (error) {
+                traceError(`${prefix} Error : ${error}`);
+            } else {
+                const data = cell.outputs[0].data;
+                const text = cell.outputs[0].text;
+                traceInfo(`${prefix} Output: ${text || JSON.stringify(data)}`);
+            }
+        } else {
+            traceInfo(`${prefix} no output.`);
+        }
+    }
+
     private async connect(notebook: INotebook): Promise<DebugConfiguration | undefined> {
         // If we already have configuration, we're already attached, don't do it again.
         let result = this.configs.get(notebook.resource.toString());
@@ -201,7 +217,8 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         const ptvsdPathList = this.calculatePtvsdPathList(notebook);
 
         if (ptvsdPathList && ptvsdPathList.length > 0) {
-            await this.executeSilently(notebook, `import sys\r\nsys.path.extend([${ptvsdPathList}])\r\nsys.path`);
+            const result = await this.executeSilently(notebook, `import sys\r\nsys.path.extend([${ptvsdPathList}])\r\nsys.path`);
+            this.traceCellResults('Appending paths', result);
         }
     }
 
@@ -243,6 +260,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
     private parsePtvsdVersionInfo(cells: ICell[]): IPtvsdVersion | undefined {
         if (cells.length < 1 || cells[0].state !== CellState.finished) {
+            this.traceCellResults('parsePtvsdVersionInfo', cells);
             return undefined;
         }
 
@@ -261,6 +279,8 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                 };
             }
         }
+
+        this.traceCellResults('parsingPtvsdVersionInfo', cells);
 
         return undefined;
     }
@@ -292,6 +312,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     private async installPtvsd(notebook: INotebook): Promise<void> {
         // tslint:disable-next-line:no-multiline-string
         const ptvsdInstallResults = await this.executeSilently(notebook, `import sys\r\n!{sys.executable} -m pip install -U ptvsd`);
+        traceInfo('Installing ptvsd');
 
         if (ptvsdInstallResults.length > 0) {
             const installResultsString = this.extractOutput(ptvsdInstallResults[0]);
@@ -302,7 +323,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                 return;
             }
         }
-
+        this.traceCellResults('Installing PTVSD', ptvsdInstallResults);
         sendTelemetryEvent(Telemetry.PtvsdInstallFailed);
         traceError('Failed to install ptvsd');
         // Failed to install ptvsd, throw to exit debugging
