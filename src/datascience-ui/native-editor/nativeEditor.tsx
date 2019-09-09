@@ -570,7 +570,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                             <Image baseTheme={this.props.baseTheme} class='image-button-image' image={switchImage} />
                         </ImageButton>
                         <ImageButton baseTheme={this.props.baseTheme} onClick={deleteCell} tooltip={getLocString('DataScience.deleteCell', 'Delete cell')}>
-                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Cancel} />
+                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Delete} />
                         </ImageButton>
                     </Flyout>
                 </div>;

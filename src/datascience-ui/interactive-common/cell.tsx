@@ -548,7 +548,7 @@ export class Cell extends React.Component<ICellProps, ICellState> {
                         extraButton = (
                             <div className='plot-open-button'>
                                 <ImageButton baseTheme={this.props.baseTheme} tooltip={getLocString('DataScience.plotOpen', 'Expand image')} onClick={openClick}>
-                                    <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.OpenInNewWindow} />
+                                    <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.OpenPlot} />
                                 </ImageButton>
                             </div>
                         );
