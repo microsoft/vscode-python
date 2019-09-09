@@ -33,7 +33,6 @@ import {
     IConfigurationService,
     IExtensionContext,
     IOutputChannel,
-    IPathUtils,
     IPythonExtensionBanner,
     Resource
 } from '../../common/types';
@@ -59,7 +58,6 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
         @inject(IPythonExtensionBanner) @named(BANNER_NAME_LS_SURVEY) private readonly surveyBanner: IPythonExtensionBanner,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(ILanguageServerOutputChannel) private readonly lsOutputChannel: ILanguageServerOutputChannel,
-        @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService
     ) {
         this.output = this.lsOutputChannel.channel;
@@ -106,29 +104,10 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
             traceError('Unable to determine Python version. Analysis may be limited.');
         }
 
-        let searchPaths = [];
-
-        const settings = this.configuration.getSettings(this.resource);
-        if (settings.autoComplete) {
-            const extraPaths = settings.autoComplete.extraPaths;
-            if (extraPaths && extraPaths.length > 0) {
-                searchPaths.push(...extraPaths);
-            }
-        }
-
         // tslint:disable-next-line: no-suspicious-comment
         // TODO: remove this setting since LS 0.2.92+ is not using it.
         // tslint:disable-next-line:no-string-literal
         properties['DatabasePath'] = path.join(this.context.extensionPath, this.languageServerFolder);
-
-        const vars = await this.envVarsProvider.getEnvironmentVariables();
-        this.envPythonPath = vars.PYTHONPATH || '';
-        if (this.envPythonPath !== '') {
-            const paths = this.envPythonPath.split(this.pathUtils.delimiter).filter(item => item.trim().length > 0);
-            searchPaths.push(...paths);
-        }
-
-        searchPaths = searchPaths.map(p => path.normalize(p));
 
         this.excludedFiles = this.getExcludedFiles();
         this.typeshedPaths = this.getTypeshedPaths();
@@ -148,21 +127,10 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
                 interpreter: {
                     properties
                 },
-                displayOptions: {
-                    preferredFormat: 'markdown',
-                    trimDocumentationLines: false,
-                    maxDocumentationLineLength: 0,
-                    trimDocumentationText: false,
-                    maxDocumentationTextLength: 0
-                },
-                searchPaths,
                 typeStubSearchPaths: this.typeshedPaths,
                 cacheFolderPath: this.getCacheFolderPath(),
                 excludeFiles: this.excludedFiles,
-                testEnvironment: isTestExecution(),
-                analysisUpdates: true,
-                traceLogging: true, // Max level, let LS decide through settings actual level of logging.
-                asyncStartup: true
+                testEnvironment: isTestExecution()
             },
             middleware: {
                 provideCompletionItem: (document: TextDocument, position: Position, context: CompletionContext, token: CancellationToken, next: ProvideCompletionItemsSignature) => {

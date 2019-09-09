@@ -1342,8 +1342,11 @@
                     "scope": "resource"
                 },
                 "python.autoComplete.extraPaths": {
-                    "type": "array",
-                    "default": [],
+                    "type": [
+                        "array",
+                        "null"
+                    ],
+                    "default": null,
                     "description": "List of paths to libraries and the like that need to be imported by auto complete engine. E.g. when using Google App SDK, the paths are not in system path, hence need to be added into this list.",
                     "scope": "resource"
                 },
@@ -1872,6 +1875,27 @@
                     "type": "integer",
                     "default": 10,
                     "description": "Limits depth of the symbol tree in the document outline.",
+                    "scope": "resource"
+                },
+                "python.analysis.searchPaths": {
+                    "type": [
+                        "array",
+                        "null"
+                    ],
+                    "default": null,
+                    "description": "Ordered list of search paths/import roots.",
+                    "scope": "resource"
+                },
+                "python.analysis.usePYTHONPATH": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Use PYTHONPATH's contents when determining search paths/import roots.",
+                    "scope": "resource"
+                },
+                "python.analysis.autoSearchPaths": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Automatically determine some common search paths within the workspace (e.g. src).",
                     "scope": "resource"
                 },
                 "python.linting.enabled": {

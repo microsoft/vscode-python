@@ -15,8 +15,7 @@ import { IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
-import { PathUtils } from '../../../client/common/platform/pathUtils';
-import { IConfigurationService, IDisposable, IExtensionContext, IOutputChannel, IPathUtils, IPythonExtensionBanner } from '../../../client/common/types';
+import { IConfigurationService, IDisposable, IExtensionContext, IOutputChannel, IPythonExtensionBanner } from '../../../client/common/types';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
@@ -59,7 +58,6 @@ suite('Language Server - Analysis Options', () => {
     let interpreterService: IInterpreterService;
     let outputChannel: IOutputChannel;
     let lsOutputChannel: typemoq.IMock<ILanguageServerOutputChannel>;
-    let pathUtils: IPathUtils;
     let lsFolderService: ILanguageServerFolderService;
     setup(() => {
         context = typemoq.Mock.ofType<IExtensionContext>();
@@ -73,13 +71,12 @@ suite('Language Server - Analysis Options', () => {
         lsOutputChannel
             .setup(l => l.channel)
             .returns(() => outputChannel);
-        pathUtils = mock(PathUtils);
         lsFolderService = mock(LanguageServerFolderService);
         analysisOptions = new TestClass(context.object, instance(envVarsProvider),
             instance(configurationService),
             instance(workspace), instance(surveyBanner),
             instance(interpreterService), lsOutputChannel.object,
-            instance(pathUtils), instance(lsFolderService));
+            instance(lsFolderService));
     });
     test('Initialize will add event handlers and will dispose them when running dispose', async () => {
         const disposable1 = typemoq.Mock.ofType<IDisposable>();
