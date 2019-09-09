@@ -280,6 +280,8 @@ export namespace DataScience {
     export const moveCellDown = localize('DataScience.moveCellDown', 'Move cell down');
     export const moveSelectedCellUp = localize('DataScience.moveSelectedCellUp', 'Move selected cell up');
     export const moveSelectedCellDown = localize('DataScience.deleteCell', 'Move selected cell down');
+    export const insertBelow = localize('DataScience.insertBelow', 'Insert cell');
+    export const runAll = localize('DataScience.runAll', 'Insert cell');
 }
 
 export namespace DebugConfigStrings {

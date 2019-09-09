@@ -42,7 +42,7 @@ interface ICellProps {
     showWatermark: boolean;
     monacoTheme: string | undefined;
     editorOptions?: monacoEditor.editor.IEditorOptions;
-    editExecutionCount: string;
+    editExecutionCount?: string;
     editorMeasureClassName?: string;
     allowCollapse: boolean;
     selectedCell?: string;
@@ -284,7 +284,7 @@ export class Cell extends React.Component<ICellProps, ICellState> {
 
         return (
             <div className='controls-div'>
-                <ExecutionCount isBusy={busy} count={isEditOnlyCell ? this.props.editExecutionCount : executionCount} visible={this.isCodeCell()} />
+                <ExecutionCount isBusy={busy} count={isEditOnlyCell && this.props.editExecutionCount ? this.props.editExecutionCount : executionCount} visible={this.isCodeCell()} />
                 <CollapseButton theme={this.props.baseTheme}
                     visible={collapseVisible}
                     open={this.props.cellVM.inputBlockOpen}

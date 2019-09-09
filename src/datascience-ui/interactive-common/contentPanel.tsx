@@ -26,7 +26,7 @@ export interface IContentPanelProps {
     monacoTheme: string | undefined;
     editorOptions?: monacoEditor.editor.IEditorOptions;
     editable: boolean;
-    editExecutionCount: string;
+    editExecutionCount?: string;
     editorMeasureClassName?: string;
     newCellVM?: ICellViewModel;
     selectedCell?: string;

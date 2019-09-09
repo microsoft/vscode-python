@@ -55,7 +55,7 @@ export class MainStateController implements IMessageHandler {
     private intellisenseProvider: IntellisenseProvider;
     private onigasmPromise: Deferred<ArrayBuffer> | undefined;
     private tmlangugePromise: Deferred<string> | undefined;
-    private suspendUpdates: boolean = false;
+    private suspendUpdateCount: number = 0;
     private monacoIdToCellId: Map<string, string> = new Map<string, string>();
     private cellIdToMonacoId: Map<string, string> = new Map<string, string>();
 
@@ -728,6 +728,20 @@ export class MainStateController implements IMessageHandler {
         }
     }
 
+    protected suspendUpdates() {
+        this.suspendUpdateCount += 1;
+    }
+
+    protected resumeUpdates() {
+        if (this.suspendUpdateCount > 0) {
+            this.suspendUpdateCount -= 1;
+            if (this.suspendUpdateCount === 0) {
+                this.setState(this.state); // This should cause an update
+            }
+        }
+
+    }
+
     private computeEditorOptions(): monacoEditor.editor.IEditorOptions {
         const intellisenseOptions = getSettings().intellisenseOptions;
         const extraSettings = getSettings().extraSettings;
@@ -1070,15 +1084,14 @@ export class MainStateController implements IMessageHandler {
     private handleLoadAllCells(payload: any) {
         if (payload && payload.cells) {
             // Turn off updates so we generate all of the cell vms without rendering.
-            this.suspendUpdates = true;
+            this.suspendUpdates();
 
             // Update all of the vms
             const cells = payload.cells as ICell[];
             cells.forEach(c => this.finishCell(c));
 
             // Turn updates back on and resend the state.
-            this.suspendUpdates = false;
-            this.setState(this.state);
+            this.resumeUpdates();
         }
     }
 

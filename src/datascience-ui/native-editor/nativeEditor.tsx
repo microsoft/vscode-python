@@ -8,7 +8,7 @@ import * as React from 'react';
 import { concatMultilineString } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import { CellState, ICell } from '../../client/datascience/types';
-import { Cell, ICellViewModel } from '../interactive-common/cell';
+import { ICellViewModel } from '../interactive-common/cell';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
 import { IMainState } from '../interactive-common/mainState';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
@@ -36,7 +36,6 @@ interface INativeEditorProps {
 export class NativeEditor extends React.Component<INativeEditorProps, IMainState> {
     private mainPanelRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private contentPanelScrollRef: React.RefObject<HTMLElement> = React.createRef<HTMLElement>();
-    private editCellRef: React.RefObject<Cell> = React.createRef<Cell>();
     private contentPanelRef: React.RefObject<ContentPanel> = React.createRef<ContentPanel>();
     private stateController: NativeEditorStateController;
     private initialCellDivs: (HTMLDivElement | null)[] = [];
@@ -100,10 +99,6 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                 if (this.mainPanelRef && this.mainPanelRef.current) {
                     this.mainPanelRef.current.focus({preventScroll: true});
                 }
-
-                if (this.editCellRef && this.editCellRef.current) {
-                    this.editCellRef.current.giveFocus(true);
-                }
             }, 100);
         }
     }
@@ -116,65 +111,34 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
 
     // tslint:disable: react-this-binding-issue
     private renderToolbarPanel() {
-        const moveUp = () => this.moveCellUp(this.state.selectedCell);
-        const moveDown = () => this.moveCellDown(this.state.selectedCell);
-        const canMoveUp = this.stateController.canMoveUp(this.state.selectedCell);
-        const canMoveDown = this.stateController.canMoveDown(this.state.selectedCell);
         const insertBelow = () => this.stateController.insertBelow(this.state.selectedCell);
+        const runAll = () => this.stateController.runAll();
 
         return (
             <div id='toolbar-panel'>
                 <div className='toolbar-menu-bar'>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.stateController.clearAll} tooltip={getLocString('DataScience.clearAll', 'Remove all cells')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Cancel} />
-                    </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.stateController.redo} disabled={!this.stateController.canRedo()} tooltip={getLocString('DataScience.redo', 'Redo')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Redo} />
-                    </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.stateController.undo} disabled={!this.stateController.canUndo()} tooltip={getLocString('DataScience.undo', 'Undo')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Undo} />
+                <ImageButton baseTheme={this.props.baseTheme} onClick={this.stateController.restartKernel} tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}>
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Restart} />
                     </ImageButton>
                     <ImageButton baseTheme={this.props.baseTheme} onClick={this.stateController.interruptKernel} tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython kernel')}>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Interrupt} />
                     </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.stateController.restartKernel} tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Restart} />
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={insertBelow} tooltip={getLocString('DataScience.insertBelow', 'Insert cell')}>
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.InsertBelow} />
+                    </ImageButton>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={runAll} tooltip={getLocString('DataScience.runAll', 'Run All Cells')}>
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.InsertBelow} />
                     </ImageButton>
                     <ImageButton baseTheme={this.props.baseTheme} onClick={this.stateController.save} disabled={!this.state.dirty} tooltip={getLocString('DataScience.save', 'Save File')}>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.SaveAs} />
                     </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={moveUp} disabled={!canMoveUp} tooltip={getLocString('DataScience.moveSelectedCellUp', 'Move selected cell up')}>
-                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Up} />
-                    </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={moveDown} disabled={!canMoveDown} tooltip={getLocString('DataScience.moveSelectedCellDown', 'Move selected cell down')}>
-                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Down} />
-                    </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={insertBelow} disabled={!canMoveDown} tooltip={getLocString('DataScience.insertBelow', 'Insert cell below')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.InsertBelow} />
-                    </ImageButton>
-                    {this.renderCellType()}
-                </div>
-                <div className='toolbar-extra-button'>
-                <Button onClick={this.stateController.export} disabled={!this.stateController.canExport()} className='toolbar-panel-button' tooltip={getLocString('DataScience.exportAsPythonFileTooltip', 'Save As Python File')}>
+                    <Button onClick={this.stateController.export} disabled={!this.stateController.canExport()} className='toolbar-panel-button' tooltip={getLocString('DataScience.exportAsPythonFileTooltip', 'Save As Python File')}>
                         <span>{getLocString('DataScience.exportAsPythonFileTitle', 'Save As Python File')}</span>
                     </Button>
                 </div>
+                <div id='toolbar-divider'/>
             </div>
         );
-    }
-
-    private renderCellType() {
-        const selectedCell = this.stateController.findCell(this.state.selectedCell);
-        if (selectedCell) {
-            return (
-                <select id='cell_type' aria-label='combobox' role='combobox' aria-expanded='false' aria-controls='' value={selectedCell.cell.data.cell_type} onChange={this.codeTypeChanged} className='cell-state-selector'>
-                        <option key={0} className='cell-state-selector-option' aria-selected='false' value='code'>{getLocString('DataScience.codeCell', 'Code')}</option>,
-                        <option key={1} className='cell-state-selector-option' aria-selected='false' value='markdown'>{getLocString('DataScience.markdownCell', 'Markdown')}</option>
-                </select>
-            );
-        }
-
-        return null;
     }
 
     private renderVariablePanel(baseTheme: string) {
@@ -211,8 +175,6 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             openLink: this.stateController.openLink,
             expandImage: this.stateController.showPlot,
             editable: true,
-            newCellVM: this.state.editCellVM,
-            editExecutionCount: ' ', // Always a space for native. It's what Jupyter does.
             editorMeasureClassName: 'measure-editor-div',
             keyDownCell: this.keyDownCell,
             selectedCell: this.state.selectedCell,
@@ -472,18 +434,6 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             this.contentPanelRef.current.focusCell(cellId, false);
         }
 
-    }
-
-    private codeTypeChanged = (event: React.SyntheticEvent<HTMLSelectElement>) => {
-        if (this.state.selectedCell && event.currentTarget.value) {
-            const value = event.currentTarget.value === 'code' ? 'code' : 'markdown';
-            this.stateController.changeCellType(this.state.selectedCell, value);
-
-            // If this cell is the last cell, give it focus after we change time
-            if (this.state.selectedCell === Identifiers.EditCellId && this.contentPanelRef.current) {
-                setTimeout(() => this.contentPanelRef.current!.focusCell(this.state.selectedCell!, true), 1);
-            }
-        }
     }
 
     // private copyToClipboard = (cellId: string) => {
