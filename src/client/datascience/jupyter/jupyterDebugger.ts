@@ -57,6 +57,8 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         // Try to connect to this notebook
         const config = await this.connect(notebook);
         if (config) {
+            traceInfo('connected to notebook during debugging')
+
             // First check if this is a live share session. Skip debugging attach on the guest
             // tslint:disable-next-line: no-any
             const hasRole = (notebook as any) as ILiveShareHasRole;
@@ -75,6 +77,8 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
             const importResults = await this.executeSilently(notebook, `import ptvsd\nptvsd.wait_for_attach()`);
             if (importResults.length === 0 || importResults[0].state === CellState.error) {
                 traceWarning('PTVSD not found in path.');
+            } else {
+                this.traceCellResults('import startup', importResults);
             }
 
             // Then enable tracing
