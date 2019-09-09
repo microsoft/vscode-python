@@ -57,7 +57,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         // Try to connect to this notebook
         const config = await this.connect(notebook);
         if (config) {
-            traceInfo('connected to notebook during debugging')
+            traceInfo('connected to notebook during debugging');
 
             // First check if this is a live share session. Skip debugging attach on the guest
             // tslint:disable-next-line: no-any
