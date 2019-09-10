@@ -40,7 +40,8 @@ export enum ImageName {
     SwitchToMarkdown,
     OpenPlot,
     RunAll,
-    Delete
+    Delete,
+    VariableExplorer
 }
 
 // All of the images must be 'require' so that webpack doesn't rewrite the import as requiring a .default.
@@ -202,6 +203,11 @@ const images: { [key: string] : { light: string; dark: string } } = {
         {
             light: require('./images/Delete/delete_light.svg'),
             dark : require('./images/Delete/delete_dark.svg')
+        },
+    VariableExplorer:
+        {
+            light: require('./images/VariableExplorer/variable_explorer_light.svg'),
+            dark : require('./images/VariableExplorer/variable_explorer_dark.svg')
         }
 };
 

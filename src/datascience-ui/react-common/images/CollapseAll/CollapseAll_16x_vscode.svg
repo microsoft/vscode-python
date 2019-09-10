@@ -1,1 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><defs><style>.icon-canvas-transparent,.icon-vs-out{fill:#f6f6f6;}.icon-canvas-transparent{opacity:0;}.icon-vs-bg{fill:#424242;}.icon-vs-action-blue{fill:#00539c;}</style></defs><title>CollapseAll_16x</title><g ><path  data-name="&lt;Compound Path&gt;" class="icon-canvas-transparent" d="M16,16H0V0H16Z"/></g><g  style="display: none;"><path  data-name="&lt;Compound Path&gt;" class="icon-vs-out" d="M15,10H13v2H11v2H2V5H4V3H6V1h9Z" style="display: none;"/></g><g ><path  data-name="&lt;Compound Path&gt;" class="icon-vs-bg" d="M14,2V9H13V3H7V2ZM5,4V5h6v6h1V4Zm5,2v7H3V6ZM9,7H4v5H9Z"/><path class="icon-vs-action-blue" d="M8,9v1H5V9Z"/></g></svg>
+<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M9 9H4V10H9V9Z" fill="#424242"/>
+<path fill-rule="evenodd" clip-rule="evenodd" d="M5 3L6 2H13L14 3V10L13 11H11V13L10 14H3L2 13V6L3 5H5V3ZM6 5H10L11 6V10H13V3H6V5ZM10 6H3V13H10V6Z" fill="#424242"/>
+</svg>
