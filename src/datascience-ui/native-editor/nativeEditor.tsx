@@ -111,7 +111,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
 
     // tslint:disable: react-this-binding-issue
     private renderToolbarPanel() {
-        const insertBelow = () => this.stateController.insertBelow(this.state.selectedCell);
+        const addCell = () => this.stateController.addNewCell();
         const runAll = () => this.stateController.runAll();
 
         return (
@@ -123,7 +123,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                     <ImageButton baseTheme={this.props.baseTheme} onClick={this.stateController.interruptKernel} className='native-button' tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython kernel')}>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Interrupt} />
                     </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={insertBelow} className='native-button' tooltip={getLocString('DataScience.insertBelow', 'Insert cell')}>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={addCell} className='native-button' tooltip={getLocString('DataScience.addNewCell', 'Insert cell')}>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.InsertBelow} />
                     </ImageButton>
                     <ImageButton baseTheme={this.props.baseTheme} onClick={runAll} className='native-button' tooltip={getLocString('DataScience.runAll', 'Run All Cells')}>
@@ -168,7 +168,6 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             codeTheme: this.props.codeTheme,
             submittedText: this.state.submittedText,
             skipNextScroll: this.state.skipNextScroll ? true : false,
-            skipAutoScroll: true,
             monacoTheme: this.state.monacoTheme,
             onCodeCreated: this.stateController.readOnlyCodeCreated,
             onCodeChange: this.stateController.codeChange,
@@ -185,7 +184,8 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             unfocusCell: this.stateController.codeLostFocus,
             allowsMarkdownEditing: true,
             renderCellToolbar: this.renderCellToolbar,
-            onRenderCompleted: this.onContentFirstRender
+            onRenderCompleted: this.onContentFirstRender,
+            scrollToBottom: this.scrollDiv
         };
     }
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {
@@ -487,7 +487,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             const canRunBelow = this.stateController.canRunBelow(cellId);
             const insertAbove = () => this.stateController.insertAbove(cellId);
             const insertBelow = () => this.stateController.insertBelow(cellId);
-            const runCellHidden = cell.cell.state !== CellState.finished || this.state.busy;
+            const runCellHidden = cell.cell.state !== CellState.finished;
             const flyoutClass = cell.cell.id === this.state.focusedCell ? 'native-editor-cellflyout native-editor-cellflyout-focused'
                 : 'native-editor-cellflyout native-editor-cellflyout-selected';
             const switchTooltip = cell.cell.data.cell_type === 'code' ? getLocString('DataScience.switchToMarkdown', 'Change to markdown') :
@@ -575,7 +575,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
 
             const innerPortion =
                 <div className='native-editor-celltoolbar-inner' key={1}>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={runCell} tooltip={getLocString('DataScience.runCell', 'Run cell')}>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={runCell} hidden={false} tooltip={getLocString('DataScience.runCell', 'Run cell')}>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Run} />
                     </ImageButton>
                 </div>;
@@ -595,6 +595,18 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             return this.renderNormalCellToolbar(cellId);
         } else {
             return this.renderEditCellToolbar();
+        }
+    }
+
+    private scrollDiv = (div: HTMLDivElement) => {
+        if (this.state.newCell) {
+            const newCell = this.state.newCell;
+            this.stateController.setState({newCell: undefined});
+            // Bounce this so state has time to update.
+            setTimeout(() => {
+                div.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' });
+                this.contentPanelRef.current!.focusCell(newCell, true);
+            }, 10);
         }
     }
 

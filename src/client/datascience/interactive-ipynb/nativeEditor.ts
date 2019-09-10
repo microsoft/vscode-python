@@ -358,7 +358,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
     }
 
+    @captureTelemetry(Telemetry.ConvertToPythonFile, undefined, false)
     private async export(cells: ICell[]): Promise<void> {
+        const status = this.setStatus(localize.DataScience.convertingToPythonFile());
         // First generate a temporary notebook with these cells.
         let tempFile: TemporaryFile | undefined;
         try {
@@ -382,6 +384,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             if (tempFile) {
                 tempFile.dispose();
             }
+            status.dispose();
         }
     }
 

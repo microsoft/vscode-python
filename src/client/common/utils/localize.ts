@@ -280,8 +280,11 @@ export namespace DataScience {
     export const moveCellDown = localize('DataScience.moveCellDown', 'Move cell down');
     export const moveSelectedCellUp = localize('DataScience.moveSelectedCellUp', 'Move selected cell up');
     export const moveSelectedCellDown = localize('DataScience.deleteCell', 'Move selected cell down');
-    export const insertBelow = localize('DataScience.insertBelow', 'Insert cell');
+    export const insertBelow = localize('DataScience.insertBelow', 'Insert cell below');
+    export const insertAbove = localize('DataScience.insertAbove', 'Insert cell above');
+    export const addCell = localize('DataScience.addCell', 'Add cell');
     export const runAll = localize('DataScience.runAll', 'Insert cell');
+    export const convertingToPythonFile = localize('DataScience.convertingToPythonFile', 'Converting ipynb to python file');
 }
 
 export namespace DebugConfigStrings {

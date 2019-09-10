@@ -206,6 +206,9 @@ export class MainStateController implements IMessageHandler {
             case InteractiveWindowMessages.RestartKernel:
                 // this should be the response from a restart.
                 this.setState({ currentExecutionCount: 0 });
+
+                // Update our variables
+                this.refreshVariables();
                 break;
 
             case InteractiveWindowMessages.StartDebugging:
@@ -698,7 +701,7 @@ export class MainStateController implements IMessageHandler {
         this.insertCell(cell);
     }
 
-    protected insertCell(cell: ICell, position?: number) {
+    protected insertCell(cell: ICell, position?: number): ICellViewModel | undefined {
         if (cell) {
             const showInputs = getSettings().showCellInputCode;
             const collapseInputs = getSettings().collapseCellInputCodeByDefault;
@@ -724,6 +727,8 @@ export class MainStateController implements IMessageHandler {
 
                 // Tell other side, we changed our number of cells
                 this.sendInfo();
+
+                return cellVM;
             }
         }
     }

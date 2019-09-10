@@ -75,6 +75,19 @@ export class NativeEditorStateController extends MainStateController {
         this.resumeUpdates();
     }
 
+    public addNewCell = () => {
+        const cells = this.getState().cellVMs;
+        this.suspendUpdates();
+        const id = uuid();
+        this.setState({ newCell: id });
+        const vm = this.insertCell(createEmptyCell(id, null), cells.length);
+        if (vm) {
+            // Make sure the new cell is monaco
+            vm.useQuickEdit = false;
+        }
+        this.resumeUpdates();
+    }
+
     public runAbove = (cellId?: string) => {
         const cells = this.getState().cellVMs;
         const index = cellId === Identifiers.EditCellId ? cells.length : cells.findIndex(cvm => cvm.cell.id === cellId);
