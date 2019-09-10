@@ -6,7 +6,7 @@ import * as uuid from 'uuid/v4';
 
 import { concatMultilineString } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
-import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { InteractiveWindowMessages, NativeCommandType } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ICellViewModel } from '../interactive-common/cell';
 import { createEmptyCell, extractInputText } from '../interactive-common/mainState';
 import { IMainStateControllerProps, MainStateController } from '../interactive-common/mainStateController';
@@ -146,6 +146,10 @@ export class NativeEditorStateController extends MainStateController {
                 cellVMs: cellVms
             });
         }
+    }
+
+    public sendCommand(command: NativeCommandType, source: 'keyboard' | 'mouse') {
+        this.sendMessage(InteractiveWindowMessages.NativeCommand, { command, source });
     }
 
     // Adjust the visibility or collapsed state of a cell

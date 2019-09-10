@@ -747,6 +747,10 @@ export class MainStateController implements IMessageHandler {
 
     }
 
+    protected sendMessage = <M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]) => {
+        this.postOffice.sendMessage<M, T>(type, payload);
+    }
+
     private computeEditorOptions(): monacoEditor.editor.IEditorOptions {
         const intellisenseOptions = getSettings().intellisenseOptions;
         const extraSettings = getSettings().extraSettings;
@@ -828,10 +832,6 @@ export class MainStateController implements IMessageHandler {
                 this.toggleCellInputVisibility(showInputs, getSettings().collapseCellInputCodeByDefault);
             }
         }
-    }
-
-    private sendMessage = <M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]) => {
-        this.postOffice.sendMessage<M, T>(type, payload);
     }
 
     private getAllCells = () => {

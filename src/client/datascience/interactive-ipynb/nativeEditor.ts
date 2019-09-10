@@ -23,12 +23,20 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { IInterpreterService } from '../../interpreter/contracts';
-import { captureTelemetry } from '../../telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { concatMultilineString } from '../common';
-import { EditorContexts, Identifiers, Settings, Telemetry } from '../constants';
+import {
+    EditorContexts,
+    Identifiers,
+    NativeKeyboardCommandTelemetryLookup,
+    NativeMouseCommandTelemetryLookup,
+    Settings,
+    Telemetry
+} from '../constants';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
 import {
     IEditCell,
+    INativeCommand,
     InteractiveWindowMessages,
     ISaveAll,
     ISubmitNewCell
@@ -211,6 +219,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
             case InteractiveWindowMessages.EditCell:
                 this.dispatchMessage(message, payload, this.editCell);
+                break;
+
+            case InteractiveWindowMessages.NativeCommand:
+                this.dispatchMessage(message, payload, this.logNativeCommand);
                 break;
 
             default:
@@ -453,5 +465,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private saveAll(args: ISaveAll) {
         this.visibleCells = args.cells;
         this.saveContents(false).ignoreErrors();
+    }
+
+    private logNativeCommand(args: INativeCommand) {
+        const telemetryEvent = args.source === 'mouse' ? NativeMouseCommandTelemetryLookup[args.command] : NativeKeyboardCommandTelemetryLookup[args.command];
+        sendTelemetryEvent(telemetryEvent);
     }
 }
