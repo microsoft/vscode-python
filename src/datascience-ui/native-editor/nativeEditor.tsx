@@ -4,12 +4,10 @@
 import './nativeEditor.less';
 
 import * as React from 'react';
-import * as uuid from 'uuid/v4';
 
 import { concatMultilineString } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import { CellState, ICell } from '../../client/datascience/types';
-import { noop } from '../../test/core';
 import { ICellViewModel } from '../interactive-common/cell';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
 import { IMainState } from '../interactive-common/mainState';
@@ -345,7 +343,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                     this.submitCell(cellId, e, false);
                 } else if (e.altKey) {
                     this.submitCell(cellId, e, false);
-                    this.addEmptyCell(cellId, false);
+                    this.stateController.insertBelow(cellId);
                 } else {
                     this.enterCell(cellId, e);
                 }
@@ -361,17 +359,17 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             case 'a':
                 this.pressedDOnce = false;
                 if (this.state.focusedCell === cellId && e.editorInfo && e.editorInfo.isLastLine && !e.editorInfo.isSuggesting) {
-                    this.addEmptyCell(cellId, true);
+                    this.stateController.insertAbove(cellId);
                 } else if (!this.state.focusedCell) {
-                    this.addEmptyCell(cellId, true);
+                    this.stateController.insertAbove(cellId);
                 }
                 break;
             case 'b':
                 this.pressedDOnce = false;
                 if (this.state.focusedCell === cellId && e.editorInfo && e.editorInfo.isLastLine && !e.editorInfo.isSuggesting) {
-                    this.addEmptyCell(cellId, false);
+                    this.stateController.insertBelow(cellId);
                 } else if (!this.state.focusedCell) {
-                    this.addEmptyCell(cellId, false);
+                    this.stateController.insertBelow(cellId);
                 }
                 break;
             case 'j':
@@ -437,42 +435,6 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                 this.stateController.selectCell(nextCell, undefined);
             }
         }
-    }
-
-    private addEmptyCell(cellId: string, addAbove: boolean) {
-        const editedCells = this.state.cellVMs;
-        let index = editedCells.findIndex(x => x.cell.id === cellId);
-        index = addAbove ? index : index + 1;
-
-        const newCell: ICellViewModel = {
-            cell: {
-                id: uuid(),
-                file: editedCells[index].cell.file,
-                line: 0,
-                state: CellState.finished,
-                type: 'preview',
-                data: {
-                    cell_type: 'code',
-                    execution_count: null,
-                    metadata: {},
-                    outputs: [],
-                    source: []
-                }
-            },
-            inputBlockShow: true,
-            inputBlockOpen: true,
-            inputBlockText: '',
-            inputBlockCollapseNeeded: true,
-            editable: true,
-            useQuickEdit: false,
-            inputBlockToggled: noop
-        };
-
-        editedCells.splice(index, 0, newCell);
-
-        this.setState({
-            cellVMs: editedCells
-        });
     }
 
     private getNextCellId(cellId: string): string | undefined {
