@@ -352,5 +352,10 @@
     "DataScience.deleteCell" : "Move selected cell down",
     "DataScience.moveCellUp" : "Move cell up",
     "DataScience.moveCellDown" : "Move cell down",
-    "DataScience.moveSelectedCellUp" : "Move selected cell up"
+    "DataScience.moveSelectedCellUp" : "Move selected cell up",
+    "DataScience.insertBelow" : "Insert cell below",
+    "DataScience.insertAbove" : "Insert cell above",
+    "DataScience.addCell" : "Add cell",
+    "DataScience.runAll" : "Insert cell",
+    "DataScience.convertingToPythonFile" : "Converting ipynb to python file"
 }
