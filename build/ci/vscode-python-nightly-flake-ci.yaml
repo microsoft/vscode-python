@@ -29,6 +29,7 @@ variables:
   MOCHA_FILE: '$(Build.ArtifactStagingDirectory)/test-junit.xml' # All test files will write their JUnit xml output to this file, clobbering the last time it was written.
   MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter).
   VSC_PYTHON_LOG_FILE: '$(Build.ArtifactStagingDirectory)/pvsc.log'
+  PTVSD_LOG_DIR: '$(Build.ArtifactStagingDirectory)' # Get the debugger to log output too
 
 jobs:
 

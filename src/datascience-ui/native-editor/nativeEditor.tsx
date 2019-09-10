@@ -42,6 +42,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
     private initialCellDivs: (HTMLDivElement | null)[] = [];
     private debounceUpdateVisibleCells = debounce(this.updateVisibleCells.bind(this), 100);
     private insideKeyDown: boolean = false;
+    private pressedDOnce = false;
 
     constructor(props: INativeEditorProps) {
         super(props);
@@ -283,22 +284,21 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         }
     }
 
-    // tslint:disable-next-line: cyclomatic-complexity
-    private keyDownCell = (cellId: string, e: IKeyboardEvent) => {
-        this.insideKeyDown = true;
+    // tslint:disable-next-line: cyclomatic-complexity max-func-body-length
+    private keyDownCell = async (cellId: string, e: IKeyboardEvent) => {
         switch (e.code) {
             case 'ArrowUp':
+                this.pressedDOnce = false;
                 if (this.state.focusedCell === cellId && e.editorInfo && e.editorInfo.isFirstLine && !e.editorInfo.isSuggesting) {
                     this.arrowUpFromCell(cellId, e);
-                    this.stateController.sendCommand(NativeCommandType.ChangeToCode, 'keyboard');
                     this.stateController.sendCommand(NativeCommandType.ArrowUp, 'keyboard');
                 } else if (!this.state.focusedCell) {
                     this.arrowUpFromCell(cellId, e);
                     this.stateController.sendCommand(NativeCommandType.ArrowUp, 'keyboard');
                 }
                 break;
-
             case 'ArrowDown':
+                this.pressedDOnce = false;
                 if (this.state.focusedCell === cellId && e.editorInfo && e.editorInfo.isLastLine && !e.editorInfo.isSuggesting) {
                     this.arrowDownFromCell(cellId, e);
                     this.stateController.sendCommand(NativeCommandType.ArrowDown, 'keyboard');
@@ -307,57 +307,113 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                     this.stateController.sendCommand(NativeCommandType.ArrowDown, 'keyboard');
                 }
                 break;
-
             case 'Escape':
+                this.pressedDOnce = false;
                 if (this.state.focusedCell && e.editorInfo && !e.editorInfo.isSuggesting) {
                     this.escapeCell(this.state.focusedCell, e);
                     this.stateController.sendCommand(NativeCommandType.Unfocus, 'keyboard');
                 }
                 break;
-
             case 'y':
+                this.pressedDOnce = false;
                 if (!this.state.focusedCell && this.state.selectedCell) {
                     e.stopPropagation();
                     this.stateController.changeCellType(this.state.selectedCell, 'code');
                     this.stateController.sendCommand(NativeCommandType.ChangeToCode, 'keyboard');
                 }
                 break;
-
             case 'm':
+                this.pressedDOnce = false;
                 if (!this.state.focusedCell && this.state.selectedCell) {
                     e.stopPropagation();
                     this.stateController.changeCellType(this.state.selectedCell, 'markdown');
                     this.stateController.sendCommand(NativeCommandType.ChangeToMarkdown, 'keyboard');
                 }
                 break;
-
             case 'l':
+                this.pressedDOnce = false;
                 if (!this.state.focusedCell && this.state.selectedCell) {
                     e.stopPropagation();
                     this.stateController.toggleLineNumbers(this.state.selectedCell);
                     this.stateController.sendCommand(NativeCommandType.ToggleLineNumbers, 'keyboard');
                 }
                 break;
-
             case 'o':
+                this.pressedDOnce = false;
                 if (!this.state.focusedCell && this.state.selectedCell) {
                     e.stopPropagation();
                     this.stateController.toggleOutput(this.state.selectedCell);
                     this.stateController.sendCommand(NativeCommandType.ToggleOutput, 'keyboard');
                 }
                 break;
-
             case 'Enter':
+                this.pressedDOnce = false;
                 if (e.shiftKey) {
-                    this.submitCell(cellId, e);
+                    this.submitCell(cellId, e, true);
                     this.stateController.sendCommand(NativeCommandType.RunAndMove, 'keyboard');
+                } else if (e.ctrlKey) {
+                    this.submitCell(cellId, e, false);
+                    this.stateController.sendCommand(NativeCommandType.Run, 'keyboard');
+                } else if (e.altKey) {
+                    this.submitCell(cellId, e, false);
+                    this.stateController.insertBelow(cellId, true);
+                    this.stateController.sendCommand(NativeCommandType.RunAndAdd, 'keyboard');
                 } else {
                     this.enterCell(cellId, e);
                     this.stateController.sendCommand(NativeCommandType.Focus, 'keyboard');
                 }
                 break;
-
+            case 'd':
+                if (this.pressedDOnce) {
+                    this.stateController.deleteCell(cellId);
+                    this.stateController.sendCommand(NativeCommandType.DeleteCell, 'keyboard');
+                    this.pressedDOnce = false;
+                } else {
+                    this.pressedDOnce = true;
+                }
+                break;
+            case 'a':
+                this.pressedDOnce = false;
+                if (this.state.focusedCell === cellId && e.editorInfo && e.editorInfo.isLastLine && !e.editorInfo.isSuggesting) {
+                    this.stateController.insertAbove(cellId, true);
+                    this.stateController.sendCommand(NativeCommandType.InsertAbove, 'keyboard');
+                } else if (!this.state.focusedCell) {
+                    this.stateController.insertAbove(cellId, true);
+                    this.stateController.sendCommand(NativeCommandType.InsertAbove, 'keyboard');
+                }
+                break;
+            case 'b':
+                this.pressedDOnce = false;
+                if (this.state.focusedCell === cellId && e.editorInfo && e.editorInfo.isLastLine && !e.editorInfo.isSuggesting) {
+                    this.stateController.insertBelow(cellId, true);
+                    this.stateController.sendCommand(NativeCommandType.InsertBelow, 'keyboard');
+                } else if (!this.state.focusedCell) {
+                    this.stateController.insertBelow(cellId, true);
+                    this.stateController.sendCommand(NativeCommandType.InsertBelow, 'keyboard');
+                }
+                break;
+            case 'j':
+                this.pressedDOnce = false;
+                if (this.state.focusedCell === cellId && e.editorInfo && e.editorInfo.isFirstLine && !e.editorInfo.isSuggesting) {
+                    this.arrowUpFromCell(cellId, e);
+                    this.stateController.sendCommand(NativeCommandType.ArrowUp, 'keyboard');
+                } else if (!this.state.focusedCell) {
+                    this.arrowUpFromCell(cellId, e);
+                    this.stateController.sendCommand(NativeCommandType.ArrowUp, 'keyboard');
+                }
+                break;
+            case 'k':
+                this.pressedDOnce = false;
+                if (this.state.focusedCell === cellId && e.editorInfo && e.editorInfo.isFirstLine && !e.editorInfo.isSuggesting) {
+                    this.arrowDownFromCell(cellId, e);
+                    this.stateController.sendCommand(NativeCommandType.ArrowDown, 'keyboard');
+                } else if (!this.state.focusedCell) {
+                    this.arrowDownFromCell(cellId, e);
+                    this.stateController.sendCommand(NativeCommandType.ArrowDown, 'keyboard');
+                }
+                break;
             default:
+                this.pressedDOnce = false;
                 break;
         }
 
@@ -378,7 +434,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         }
     }
 
-    private submitCell = (cellId: string, e: IKeyboardEvent) => {
+    private submitCell = (cellId: string, e: IKeyboardEvent, moveToNextCell: boolean) => {
         let content: string | undefined ;
         const cellVM = this.findCellViewModel(cellId);
 
@@ -399,7 +455,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         }
 
         // If this is not the edit cell, move to our next cell
-        if (cellId !== Identifiers.EditCellId) {
+        if (cellId !== Identifiers.EditCellId && moveToNextCell) {
             const nextCell = this.getNextCellId(cellId);
             if (nextCell) {
                 this.stateController.selectCell(nextCell, undefined);
@@ -456,6 +512,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
     }
 
     private clickCell = (cellId: string) => {
+        this.pressedDOnce = false;
         const focusedCell = cellId === this.state.focusedCell ? cellId : undefined;
         this.stateController.selectCell(cellId, focusedCell);
     }
@@ -487,6 +544,24 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
     //         document.execCommand('Copy');
     //         textArea.remove();
     //     }
+    // }
+
+    // private pasteFromClipboard = (cellId: string) => {
+    //     const editedCells = this.state.cellVMs;
+    //     const index = editedCells.findIndex(x => x.cell.id === cellId) + 1;
+
+    //     if (index > -1) {
+    //         const textArea = document.createElement('textarea');
+    //         document.body.appendChild(textArea);
+    //         textArea.select();
+    //         document.execCommand('Paste');
+    //         editedCells[index].cell.data.source = textArea.value.split(/\r?\n/);
+    //         textArea.remove();
+    //     }
+
+    //     this.setState({
+    //         cellVMs: editedCells
+    //     });
     // }
 
     private moveCellUp = (cellId?: string) => {
