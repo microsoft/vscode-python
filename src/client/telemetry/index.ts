@@ -1237,6 +1237,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ConnectRemoteJupyter]: never | undefined;
     [Telemetry.ConnectRemoteFailedJupyter]: never | undefined;
     [Telemetry.ConnectRemoteSelfCertFailedJupyter]: never | undefined;
+    [Telemetry.ConvertToPythonFile]: never | undefined;
     [Telemetry.CopySourceCode]: never | undefined;
     [Telemetry.CreateNewNotebook]: never | undefined;
     [Telemetry.DataScienceSettings]: JSONObject;

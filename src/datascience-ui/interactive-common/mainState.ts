@@ -41,6 +41,7 @@ export interface IMainState {
     focusedCell?: string;
     enableGather: boolean;
     isAtBottom: boolean;
+    newCell?: string;
 }
 
 // tslint:disable-next-line: no-multiline-string

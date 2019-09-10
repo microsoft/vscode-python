@@ -10,6 +10,17 @@ trigger: none
 # Not the PR build for merges to master and release.
 pr: none
 
+schedules:
+- cron: "0 0 * * 1-5"
+  # Daily midnight build, runs Monday - Friday always
+  displayName: Nightly flake build
+  branches:
+    include:
+    - master
+    - release
+  # False here so we don't run these long tests over and over on release branch if the source isn't changing
+  always: false
+
 # Variables that are available for the entire pipeline.
 variables:
   PythonVersion: '3.7'

@@ -645,6 +645,12 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
     }
 
+    protected setStatus = (message: string): Disposable => {
+        const result = this.statusProvider.set(message, undefined, undefined, this);
+        this.potentiallyUnfinishedStatus.push(result);
+        return result;
+    }
+
     private async startServerImpl(): Promise<void> {
         // Status depends upon if we're about to connect to existing server or not.
         const status = (await this.jupyterExecution.getServer(await this.getNotebookOptions())) ?
@@ -826,12 +832,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             status.dispose();
             this.restartingKernel = false;
         }
-    }
-
-    private setStatus = (message: string): Disposable => {
-        const result = this.statusProvider.set(message, undefined, undefined, this);
-        this.potentiallyUnfinishedStatus.push(result);
-        return result;
     }
 
     private logTelemetry = (event: Telemetry) => {

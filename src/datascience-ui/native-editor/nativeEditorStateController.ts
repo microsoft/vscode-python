@@ -66,12 +66,36 @@ export class NativeEditorStateController extends MainStateController {
         return index > 0 && cells.find((cvm, i) => i >= index && cvm.cell.data.cell_type === 'code');
     }
 
+    public runAll = () => {
+        // Run all code cells (markdown don't need to be run)
+        this.suspendUpdates();
+        const cells = this.getState().cellVMs;
+        cells.filter(cvm => cvm.cell.data.cell_type === 'code').
+            forEach(cvm => this.submitInput(concatMultilineString(cvm.cell.data.source), cvm));
+        this.resumeUpdates();
+    }
+
+    public addNewCell = () => {
+        const cells = this.getState().cellVMs;
+        this.suspendUpdates();
+        const id = uuid();
+        this.setState({ newCell: id });
+        const vm = this.insertCell(createEmptyCell(id, null), cells.length);
+        if (vm) {
+            // Make sure the new cell is monaco
+            vm.useQuickEdit = false;
+        }
+        this.resumeUpdates();
+    }
+
     public runAbove = (cellId?: string) => {
         const cells = this.getState().cellVMs;
         const index = cellId === Identifiers.EditCellId ? cells.length : cells.findIndex(cvm => cvm.cell.id === cellId);
         if (index > 0) {
+            this.suspendUpdates();
             cells.filter((cvm, i) => i < index && cvm.cell.data.cell_type === 'code').
                 forEach(cvm => this.submitInput(concatMultilineString(cvm.cell.data.source), cvm));
+            this.resumeUpdates();
         }
     }
 
@@ -79,8 +103,10 @@ export class NativeEditorStateController extends MainStateController {
         const cells = this.getState().cellVMs;
         const index = cells.findIndex(cvm => cvm.cell.id === cellId);
         if (index >= 0) {
+            this.suspendUpdates();
             cells.filter((cvm, i) => i >= index && cvm.cell.data.cell_type === 'code').
                 forEach(cvm => this.submitInput(concatMultilineString(cvm.cell.data.source), cvm));
+            this.resumeUpdates();
         }
     }
 

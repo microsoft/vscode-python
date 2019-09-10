@@ -10,7 +10,7 @@ import { concatMultilineString } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import { CellState, ICell } from '../../client/datascience/types';
 import { noop } from '../../test/core';
-import { Cell, ICellViewModel } from '../interactive-common/cell';
+import { ICellViewModel } from '../interactive-common/cell';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
 import { IMainState } from '../interactive-common/mainState';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
@@ -38,7 +38,6 @@ interface INativeEditorProps {
 export class NativeEditor extends React.Component<INativeEditorProps, IMainState> {
     private mainPanelRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private contentPanelScrollRef: React.RefObject<HTMLElement> = React.createRef<HTMLElement>();
-    private editCellRef: React.RefObject<Cell> = React.createRef<Cell>();
     private contentPanelRef: React.RefObject<ContentPanel> = React.createRef<ContentPanel>();
     private stateController: NativeEditorStateController;
     private initialCellDivs: (HTMLDivElement | null)[] = [];
@@ -65,7 +64,12 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         this.state = this.stateController.getState();
     }
 
+    public componentDidMount() {
+        window.addEventListener('keydown', this.mainKeyDown);
+    }
+
     public componentWillUnmount() {
+        window.removeEventListener('keydown', this.mainKeyDown);
         // Dispose of our state controller so it stops listening
         this.stateController.dispose();
     }
@@ -103,10 +107,6 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                 if (this.mainPanelRef && this.mainPanelRef.current) {
                     this.mainPanelRef.current.focus({preventScroll: true});
                 }
-
-                if (this.editCellRef && this.editCellRef.current) {
-                    this.editCellRef.current.giveFocus(true);
-                }
             }, 100);
         }
     }
@@ -119,65 +119,34 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
 
     // tslint:disable: react-this-binding-issue
     private renderToolbarPanel() {
-        const moveUp = () => this.moveCellUp(this.state.selectedCell);
-        const moveDown = () => this.moveCellDown(this.state.selectedCell);
-        const canMoveUp = this.stateController.canMoveUp(this.state.selectedCell);
-        const canMoveDown = this.stateController.canMoveDown(this.state.selectedCell);
-        const insertBelow = () => this.stateController.insertBelow(this.state.selectedCell);
+        const addCell = () => this.stateController.addNewCell();
+        const runAll = () => this.stateController.runAll();
 
         return (
             <div id='toolbar-panel'>
                 <div className='toolbar-menu-bar'>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.stateController.clearAll} tooltip={getLocString('DataScience.clearAll', 'Remove all cells')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Cancel} />
-                    </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.stateController.redo} disabled={!this.stateController.canRedo()} tooltip={getLocString('DataScience.redo', 'Redo')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Redo} />
-                    </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.stateController.undo} disabled={!this.stateController.canUndo()} tooltip={getLocString('DataScience.undo', 'Undo')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Undo} />
-                    </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.stateController.interruptKernel} tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython kernel')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Interrupt} />
-                    </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.stateController.restartKernel} tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}>
+                <ImageButton baseTheme={this.props.baseTheme} onClick={this.stateController.restartKernel} className='native-button' tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Restart} />
                     </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.stateController.save} disabled={!this.state.dirty} tooltip={getLocString('DataScience.save', 'Save File')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.SaveAs} />
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.stateController.interruptKernel} className='native-button' tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython kernel')}>
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Interrupt} />
                     </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={moveUp} disabled={!canMoveUp} tooltip={getLocString('DataScience.moveSelectedCellUp', 'Move selected cell up')}>
-                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Up} />
-                    </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={moveDown} disabled={!canMoveDown} tooltip={getLocString('DataScience.moveSelectedCellDown', 'Move selected cell down')}>
-                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Down} />
-                    </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={insertBelow} disabled={!canMoveDown} tooltip={getLocString('DataScience.insertBelow', 'Insert cell below')}>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={addCell} className='native-button' tooltip={getLocString('DataScience.addNewCell', 'Insert cell')}>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.InsertBelow} />
                     </ImageButton>
-                    {this.renderCellType()}
-                </div>
-                <div className='toolbar-extra-button'>
-                <Button onClick={this.stateController.export} disabled={!this.stateController.canExport()} className='toolbar-panel-button' tooltip={getLocString('DataScience.exportAsPythonFileTooltip', 'Save As Python File')}>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={runAll} className='native-button' tooltip={getLocString('DataScience.runAll', 'Run All Cells')}>
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.RunAll} />
+                    </ImageButton>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.stateController.save} disabled={!this.state.dirty} className='native-button' tooltip={getLocString('DataScience.save', 'Save File')}>
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.SaveAs} />
+                    </ImageButton>
+                    <Button onClick={this.stateController.export} disabled={!this.stateController.canExport()} className='save-button' tooltip={getLocString('DataScience.exportAsPythonFileTooltip', 'Save As Python File')}>
                         <span>{getLocString('DataScience.exportAsPythonFileTitle', 'Save As Python File')}</span>
                     </Button>
                 </div>
+                <div className='toolbar-divider'/>
             </div>
         );
-    }
-
-    private renderCellType() {
-        const selectedCell = this.stateController.findCell(this.state.selectedCell);
-        if (selectedCell) {
-            return (
-                <select id='cell_type' aria-label='combobox' role='combobox' aria-expanded='false' aria-controls='' value={selectedCell.cell.data.cell_type} onChange={this.codeTypeChanged} className='cell-state-selector'>
-                        <option key={0} className='cell-state-selector-option' aria-selected='false' value='code'>{getLocString('DataScience.codeCell', 'Code')}</option>,
-                        <option key={1} className='cell-state-selector-option' aria-selected='false' value='markdown'>{getLocString('DataScience.markdownCell', 'Markdown')}</option>
-                </select>
-            );
-        }
-
-        return null;
     }
 
     private renderVariablePanel(baseTheme: string) {
@@ -207,15 +176,12 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             codeTheme: this.props.codeTheme,
             submittedText: this.state.submittedText,
             skipNextScroll: this.state.skipNextScroll ? true : false,
-            skipAutoScroll: true,
             monacoTheme: this.state.monacoTheme,
             onCodeCreated: this.stateController.readOnlyCodeCreated,
             onCodeChange: this.stateController.codeChange,
             openLink: this.stateController.openLink,
             expandImage: this.stateController.showPlot,
             editable: true,
-            newCellVM: this.state.editCellVM,
-            editExecutionCount: ' ', // Always a space for native. It's what Jupyter does.
             editorMeasureClassName: 'measure-editor-div',
             keyDownCell: this.keyDownCell,
             selectedCell: this.state.selectedCell,
@@ -226,7 +192,8 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             unfocusCell: this.stateController.codeLostFocus,
             allowsMarkdownEditing: true,
             renderCellToolbar: this.renderCellToolbar,
-            onRenderCompleted: this.onContentFirstRender
+            onRenderCompleted: this.onContentFirstRender,
+            scrollToBottom: this.scrollDiv
         };
     }
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {
@@ -298,6 +265,23 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             result = cellId === Identifiers.EditCellId ? this.state.editCellVM : undefined;
         }
         return result;
+    }
+
+    private mainKeyDown = (event: KeyboardEvent) => {
+        // Handler for key down presses in the main panel
+        switch (event.key) {
+            // tslint:disable-next-line: no-suspicious-comment
+            // TODO: How to have this work for when the keyboard shortcuts are changed?
+            case 's':
+                if (event.ctrlKey) {
+                    // This is save, save our cells
+                    this.stateController.save();
+                }
+                break;
+
+            default:
+                break;
+        }
     }
 
     // tslint:disable-next-line: cyclomatic-complexity max-func-body-length
@@ -560,18 +544,6 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
 
     }
 
-    private codeTypeChanged = (event: React.SyntheticEvent<HTMLSelectElement>) => {
-        if (this.state.selectedCell && event.currentTarget.value) {
-            const value = event.currentTarget.value === 'code' ? 'code' : 'markdown';
-            this.stateController.changeCellType(this.state.selectedCell, value);
-
-            // If this cell is the last cell, give it focus after we change time
-            if (this.state.selectedCell === Identifiers.EditCellId && this.contentPanelRef.current) {
-                setTimeout(() => this.contentPanelRef.current!.focusCell(this.state.selectedCell!, true), 1);
-            }
-        }
-    }
-
     // private copyToClipboard = (cellId: string) => {
     //     const cell = this.stateController.findCell(cellId);
     //     if (cell) {
@@ -641,7 +613,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             const canRunBelow = this.stateController.canRunBelow(cellId);
             const insertAbove = () => this.stateController.insertAbove(cellId);
             const insertBelow = () => this.stateController.insertBelow(cellId);
-            const runCellHidden = cell.cell.state !== CellState.finished || this.state.busy;
+            const runCellHidden = cell.cell.state !== CellState.finished;
             const flyoutClass = cell.cell.id === this.state.focusedCell ? 'native-editor-cellflyout native-editor-cellflyout-focused'
                 : 'native-editor-cellflyout native-editor-cellflyout-selected';
             const switchTooltip = cell.cell.data.cell_type === 'code' ? getLocString('DataScience.switchToMarkdown', 'Change to markdown') :
@@ -674,7 +646,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                             <Image baseTheme={this.props.baseTheme} class='image-button-image' image={switchImage} />
                         </ImageButton>
                         <ImageButton baseTheme={this.props.baseTheme} onClick={deleteCell} tooltip={getLocString('DataScience.deleteCell', 'Delete cell')}>
-                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Cancel} />
+                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Delete} />
                         </ImageButton>
                     </Flyout>
                 </div>;
@@ -705,7 +677,6 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             const runAbove = () => this.stateController.runAbove(Identifiers.EditCellId);
             const canRunAbove = this.stateController.canRunAbove(Identifiers.EditCellId);
             const insertAbove = () => this.stateController.insertAbove(Identifiers.EditCellId);
-            const runCellHidden = this.state.busy;
             const flyoutClass = cell.cell.id === this.state.focusedCell ? 'native-editor-cellflyout native-editor-cellflyout-focused'
                 : 'native-editor-cellflyout native-editor-cellflyout-selected';
             const switchTooltip = cell.cell.data.cell_type === 'code' ? getLocString('DataScience.switchToMarkdown', 'Change to markdown') :
@@ -730,7 +701,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
 
             const innerPortion =
                 <div className='native-editor-celltoolbar-inner' key={1}>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={runCell} hidden={runCellHidden} tooltip={getLocString('DataScience.runCell', 'Run cell')}>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={runCell} hidden={false} tooltip={getLocString('DataScience.runCell', 'Run cell')}>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Run} />
                     </ImageButton>
                 </div>;
@@ -750,6 +721,18 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             return this.renderNormalCellToolbar(cellId);
         } else {
             return this.renderEditCellToolbar();
+        }
+    }
+
+    private scrollDiv = (div: HTMLDivElement) => {
+        if (this.state.newCell) {
+            const newCell = this.state.newCell;
+            this.stateController.setState({newCell: undefined});
+            // Bounce this so state has time to update.
+            setTimeout(() => {
+                div.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' });
+                this.contentPanelRef.current!.focusCell(newCell, true);
+            }, 10);
         }
     }
 

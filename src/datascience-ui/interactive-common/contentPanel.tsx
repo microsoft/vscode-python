@@ -26,12 +26,11 @@ export interface IContentPanelProps {
     monacoTheme: string | undefined;
     editorOptions?: monacoEditor.editor.IEditorOptions;
     editable: boolean;
-    editExecutionCount: string;
+    editExecutionCount?: string;
     editorMeasureClassName?: string;
     newCellVM?: ICellViewModel;
     selectedCell?: string;
     focusedCell?: string;
-    skipAutoScroll?: boolean;
     allowsMarkdownEditing?: boolean;
     onCodeChange(changes: monacoEditor.editor.IModelContentChange[], cellId: string, modelId: string): void;
     onCodeCreated(code: string, file: string, cellId: string, modelId: string): void;
@@ -45,7 +44,7 @@ export interface IContentPanelProps {
     keyDownCell?(cellId: string, e: IKeyboardEvent): void;
     renderCellToolbar(cellId: string): JSX.Element[] | null;
     onRenderCompleted?(cells: (HTMLDivElement | null)[]): void;
-    scrollToBottom?(div: HTMLDivElement): void;
+    scrollToBottom(div: HTMLDivElement): void;
 }
 
 export class ContentPanel extends React.Component<IContentPanelProps> {
@@ -181,7 +180,7 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
     }
 
     private scrollToBottom() {
-        if (this.bottomRef.current && !this.props.skipNextScroll && !this.props.testMode && !this.props.skipAutoScroll && this.containerRef.current) {
+        if (this.bottomRef.current && !this.props.skipNextScroll && !this.props.testMode && this.containerRef.current) {
             // Make sure to debounce this so it doesn't take up too much time.
             this.throttledScrollIntoView();
         }

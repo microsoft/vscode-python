@@ -264,15 +264,15 @@ export namespace DataScience {
     export const invalidNotebookFileErrorFormat = localize('DataScience.invalidNotebookFileError', '{0} is not a valid notebook file. Check the file for correct json.');
     export const nativeEditorTitle = localize('DataScience.nativeEditorTitle', 'Notebook Editor');
     export const untitledNotebookFileName = localize('DataScience.untitledNotebookFileName', 'Untitled');
-    export const dirtyNotebookMessage1 = localize('DataScience.untitledNotebookMessage', 'Do you want to save the changes you made to {0}?');
-    export const dirtyNotebookMessage2 = localize('DataScience.untitledNotebookMessage', 'Your changes will be lost if you don\'t save them.');
-    export const dirtyNotebookYes = localize('DataScience.untitledNotebookYes', 'Save');
-    export const dirtyNotebookNo = localize('DataScience.untitledNotebookNo', 'Don\'t Save');
-    export const dirtyNotebookCancel = localize('DataScience.untitledNotebookNo', 'Cancel');
+    export const dirtyNotebookMessage1 = localize('DataScience.dirtyNotebookMessage1', 'Do you want to save the changes you made to {0}?');
+    export const dirtyNotebookMessage2 = localize('DataScience.dirtyNotebookMessage2', 'Your changes will be lost if you don\'t save them.');
+    export const dirtyNotebookYes = localize('DataScience.dirtyNotebookYes', 'Save');
+    export const dirtyNotebookNo = localize('DataScience.dirtyNotebookNo', 'Don\'t Save');
+    export const dirtyNotebookCancel = localize('DataScience.dirtyNotebookCancel', 'Cancel');
     export const dirtyNotebookDialogTitle = localize('DataScience.dirtyNotebookDialogTitle', 'Save');
     export const dirtyNotebookDialogFilter = localize('DataScience.dirtyNotebookDialogFilter', 'Jupyter Notebooks');
     export const remoteDebuggerNotSupported = localize('DataScience.remoteDebuggerNotSupported', 'Debugging while attached to a remote server is not currently supported.');
-    export const exportAsPythonFileTooltip = localize('DataScience.exportAsPythonFileTooltip', 'Save As Python File');
+    export const exportAsPythonFileTooltip = localize('DataScience.exportAsPythonFileTooltip', 'Convert and save to a python script');
     export const exportAsPythonFileTitle = localize('DataScience.exportAsPythonFileTitle', 'Save As Python File');
     export const runCell = localize('DataScience.runCell', 'Run cell');
     export const deleteCell = localize('DataScience.deleteCell', 'Delete cell');
@@ -280,6 +280,11 @@ export namespace DataScience {
     export const moveCellDown = localize('DataScience.moveCellDown', 'Move cell down');
     export const moveSelectedCellUp = localize('DataScience.moveSelectedCellUp', 'Move selected cell up');
     export const moveSelectedCellDown = localize('DataScience.deleteCell', 'Move selected cell down');
+    export const insertBelow = localize('DataScience.insertBelow', 'Insert cell below');
+    export const insertAbove = localize('DataScience.insertAbove', 'Insert cell above');
+    export const addCell = localize('DataScience.addCell', 'Add cell');
+    export const runAll = localize('DataScience.runAll', 'Insert cell');
+    export const convertingToPythonFile = localize('DataScience.convertingToPythonFile', 'Converting ipynb to python file');
 }
 
 export namespace DebugConfigStrings {

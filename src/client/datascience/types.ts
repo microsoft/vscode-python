@@ -224,6 +224,7 @@ export interface IInteractiveWindow extends IInteractiveBase {
 export const INotebookEditorProvider = Symbol('INotebookEditorProvider');
 export interface INotebookEditorProvider {
     readonly activeEditor: INotebookEditor | undefined;
+    readonly editors: INotebookEditor[];
     open(file: Uri, contents: string): Promise<INotebookEditor>;
     show(file: Uri): Promise<INotebookEditor | undefined>;
     createNew(): Promise<INotebookEditor>;
@@ -237,6 +238,7 @@ export interface INotebookEditor extends IInteractiveBase {
     readonly visible: boolean;
     readonly active: boolean;
     load(contents: string, file: Uri): Promise<void>;
+    save(saveAs: boolean): Promise<void>;
 }
 
 export const IInteractiveWindowListener = Symbol('IInteractiveWindowListener');

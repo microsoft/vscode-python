@@ -55,7 +55,7 @@ export class MainStateController implements IMessageHandler {
     private intellisenseProvider: IntellisenseProvider;
     private onigasmPromise: Deferred<ArrayBuffer> | undefined;
     private tmlangugePromise: Deferred<string> | undefined;
-    private suspendUpdates: boolean = false;
+    private suspendUpdateCount: number = 0;
     private monacoIdToCellId: Map<string, string> = new Map<string, string>();
     private cellIdToMonacoId: Map<string, string> = new Map<string, string>();
 
@@ -206,6 +206,9 @@ export class MainStateController implements IMessageHandler {
             case InteractiveWindowMessages.RestartKernel:
                 // this should be the response from a restart.
                 this.setState({ currentExecutionCount: 0 });
+
+                // Update our variables
+                this.refreshVariables();
                 break;
 
             case InteractiveWindowMessages.StartDebugging:
@@ -602,7 +605,7 @@ export class MainStateController implements IMessageHandler {
     }
 
     public setState(newState: {}, callback?: () => void) {
-        if (this.suspendUpdates) {
+        if (this.suspendUpdateCount > 0) {
             // Just save our new state
             this.state = { ...this.state, ...newState };
             if (callback) {
@@ -698,7 +701,7 @@ export class MainStateController implements IMessageHandler {
         this.insertCell(cell);
     }
 
-    protected insertCell(cell: ICell, position?: number) {
+    protected insertCell(cell: ICell, position?: number): ICellViewModel | undefined {
         if (cell) {
             const showInputs = getSettings().showCellInputCode;
             const collapseInputs = getSettings().collapseCellInputCodeByDefault;
@@ -724,8 +727,24 @@ export class MainStateController implements IMessageHandler {
 
                 // Tell other side, we changed our number of cells
                 this.sendInfo();
+
+                return cellVM;
             }
         }
+    }
+
+    protected suspendUpdates() {
+        this.suspendUpdateCount += 1;
+    }
+
+    protected resumeUpdates() {
+        if (this.suspendUpdateCount > 0) {
+            this.suspendUpdateCount -= 1;
+            if (this.suspendUpdateCount === 0) {
+                this.setState(this.state); // This should cause an update
+            }
+        }
+
     }
 
     private computeEditorOptions(): monacoEditor.editor.IEditorOptions {
@@ -1070,15 +1089,14 @@ export class MainStateController implements IMessageHandler {
     private handleLoadAllCells(payload: any) {
         if (payload && payload.cells) {
             // Turn off updates so we generate all of the cell vms without rendering.
-            this.suspendUpdates = true;
+            this.suspendUpdates();
 
             // Update all of the vms
             const cells = payload.cells as ICell[];
             cells.forEach(c => this.finishCell(c));
 
             // Turn updates back on and resend the state.
-            this.suspendUpdates = false;
-            this.setState(this.state);
+            this.resumeUpdates();
         }
     }
 

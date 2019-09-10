@@ -181,7 +181,8 @@ export enum Telemetry {
     DebugStepOver = 'DATASCIENCE.DEBUG_STEP_OVER',
     DebugContinue = 'DATASCIENCE.DEBUG_CONTINUE',
     DebugStop = 'DATASCIENCE.DEBUG_STOP',
-    OpenNotebook = 'DATASCIENCE.OPEN_NOTEBOOK'
+    OpenNotebook = 'DATASCIENCE.OPEN_NOTEBOOK',
+    ConvertToPythonFile = 'DATASCIENCE.CONVERT_NOTEBOOK_TO_PYTHON'
 }
 
 export namespace HelpLinks {
