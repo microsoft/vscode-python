@@ -701,7 +701,7 @@ export class MainStateController implements IMessageHandler {
         this.insertCell(cell);
     }
 
-    protected insertCell(cell: ICell, position?: number): ICellViewModel | undefined {
+    protected insertCell(cell: ICell, position?: number, isMonaco?: boolean): ICellViewModel | undefined {
         if (cell) {
             const showInputs = getSettings().showCellInputCode;
             const collapseInputs = getSettings().collapseCellInputCodeByDefault;
@@ -711,6 +711,10 @@ export class MainStateController implements IMessageHandler {
             cellVM = this.alterCellVM(cellVM, showInputs, !collapseInputs);
 
             if (cellVM) {
+                if (isMonaco) {
+                    cellVM.useQuickEdit = false;
+                }
+
                 const newList = [...this.state.cellVMs];
                 // Make sure to use the same array so our entire state doesn't update
                 if (position && position >= 0) {

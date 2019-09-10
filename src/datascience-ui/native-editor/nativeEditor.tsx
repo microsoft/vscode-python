@@ -343,7 +343,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                     this.submitCell(cellId, e, false);
                 } else if (e.altKey) {
                     this.submitCell(cellId, e, false);
-                    this.stateController.insertBelow(cellId);
+                    this.stateController.insertBelow(cellId, true);
                 } else {
                     this.enterCell(cellId, e);
                 }
@@ -359,17 +359,17 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             case 'a':
                 this.pressedDOnce = false;
                 if (this.state.focusedCell === cellId && e.editorInfo && e.editorInfo.isLastLine && !e.editorInfo.isSuggesting) {
-                    this.stateController.insertAbove(cellId);
+                    this.stateController.insertAbove(cellId, true);
                 } else if (!this.state.focusedCell) {
-                    this.stateController.insertAbove(cellId);
+                    this.stateController.insertAbove(cellId, true);
                 }
                 break;
             case 'b':
                 this.pressedDOnce = false;
                 if (this.state.focusedCell === cellId && e.editorInfo && e.editorInfo.isLastLine && !e.editorInfo.isSuggesting) {
-                    this.stateController.insertBelow(cellId);
+                    this.stateController.insertBelow(cellId, true);
                 } else if (!this.state.focusedCell) {
-                    this.stateController.insertBelow(cellId);
+                    this.stateController.insertBelow(cellId, true);
                 }
                 break;
             case 'j':

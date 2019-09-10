@@ -110,19 +110,19 @@ export class NativeEditorStateController extends MainStateController {
         }
     }
 
-    public insertAbove = (cellId?: string) => {
+    public insertAbove = (cellId?: string, isMonaco?: boolean) => {
         const cells = this.getState().cellVMs;
         const index = cells.findIndex(cvm => cvm.cell.id === cellId);
         if (index >= 0) {
-            this.insertCell(createEmptyCell(uuid(), null), index);
+            this.insertCell(createEmptyCell(uuid(), null), index, isMonaco);
         }
     }
 
-    public insertBelow = (cellId?: string) => {
+    public insertBelow = (cellId?: string, isMonaco?: boolean) => {
         const cells = this.getState().cellVMs;
         const index = cells.findIndex(cvm => cvm.cell.id === cellId);
         if (index >= 0) {
-            this.insertCell(createEmptyCell(uuid(), null), index + 1);
+            this.insertCell(createEmptyCell(uuid(), null), index + 1, isMonaco);
         }
     }
 
