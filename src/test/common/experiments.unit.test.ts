@@ -14,7 +14,7 @@ import { ApplicationEnvironment } from '../../client/common/application/applicat
 import { IApplicationEnvironment, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { CryptoUtils } from '../../client/common/crypto';
-import { configUri, downloadedExperimentStorageKey, ExperimentsManager, experimentStorageKey, isDownloadedStorageValidKey } from '../../client/common/experiments';
+import { configUri, downloadedExperimentStorageKey, ExperimentsManager, experimentStorageKey, isDownloadedStorageValidKey, oldExperimentSalts } from '../../client/common/experiments';
 import { HttpClient } from '../../client/common/net/httpClient';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { FileSystem } from '../../client/common/platform/fileSystem';
@@ -620,6 +620,10 @@ suite('xA/B experiments', () => {
             expManager.isUserInRange(79, 94, 'NewExperimentSalt');
             verify(crypto.createHash(anything(), anything(), 'SHA512')).never();
             verify(crypto.createHash(anything(), 'number', 'FNV')).once();
+        });
+        test('Use the expected list of old experiments', async () => {
+            const expectedOldExperimentSalts = ['ShowExtensionSurveyPrompt', 'ShowPlayIcon', 'AlwaysDisplayTestExplorer', 'LS'];
+            assert.deepEqual(expectedOldExperimentSalts, oldExperimentSalts);
         });
     });
 
