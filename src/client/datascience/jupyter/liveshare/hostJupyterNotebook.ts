@@ -88,7 +88,9 @@ export class HostJupyterNotebook
 
     public async waitForServiceName(): Promise<string> {
         // Use our base name plus our id. This means one unique server per notebook
-        return Promise.resolve(`${LiveShare.JupyterNotebookSharedService}${this.resource.toString()}`);
+        const sharedUri = this.finishedApi!.convertLocalUriToShared(this.resource);
+        const uriString = sharedUri.toString().replace('.', '');
+        return Promise.resolve(`${LiveShare.JupyterNotebookSharedService}${uriString.toString()}`);
     }
 
     public async onPeerChange(ev: vsls.PeersChangeEvent): Promise<void> {

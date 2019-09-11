@@ -57,7 +57,8 @@ export class GuestJupyterServer
         // Tell the host side to generate a notebook for this uri
         const service = await this.waitForService();
         if (service) {
-            await service.request(LiveShareCommands.createNotebook, [resource]);
+            const uriString = resource.toString();
+            await service.request(LiveShareCommands.createNotebook, [uriString]);
         }
 
         // Return a new notebook to listen to
