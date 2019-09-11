@@ -6,7 +6,7 @@ import { DebugSession, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 
 import { StopWatch } from '../common/utils/stopWatch';
-import { AttachRequestArguments, ConsoleType, LaunchRequestArguments } from '../debugger/types';
+import { AttachRequestArguments, ConsoleType, LaunchRequestArguments, TriggerType } from '../debugger/types';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { IDebugLocation, IDebugLocationTracker } from './types';
@@ -17,14 +17,14 @@ export class DebugLocationTracker implements IDebugLocationTracker {
     private waitingForStackTrace: boolean = false;
     private _debugLocation: IDebugLocation | undefined;
     private debugLocationUpdatedEvent: EventEmitter<void> = new EventEmitter<void>();
-    private trigger: 'launch' | 'attach' | 'test' = 'launch';
+    private trigger: TriggerType = 'launch';
     private console: ConsoleType | undefined;
     private timer = new StopWatch();
 
     public setDebugSession(targetSession: DebugSession) {
         this.DebugLocation = undefined;
         this.waitingForStackTrace = false;
-        this.trigger = targetSession.configuration.type as ('launch' | 'attach' | 'test');
+        this.trigger = targetSession.configuration.type as TriggerType;
         const debugConfiguration = targetSession.configuration as Partial<LaunchRequestArguments & AttachRequestArguments>;
         this.console = debugConfiguration.console;
     }
@@ -38,8 +38,7 @@ export class DebugLocationTracker implements IDebugLocationTracker {
     }
 
     public onWillStartSession() {
-        this.sendTelemetry(EventName.DEBUG_SESSION_START, 0);
-        this.timer.reset();
+        this.sendTelemetry(EventName.DEBUG_SESSION_START);
     }
 
     // tslint:disable-next-line:no-any
@@ -48,7 +47,7 @@ export class DebugLocationTracker implements IDebugLocationTracker {
             const response = message as DebugProtocol.Response;
             if (response.command === 'configurationDone') {
                 // "configurationDone" response is sent immediately after user code starts running.
-                this.sendTelemetry(EventName.DEBUG_SESSION_USER_CODE_RUNNING, this.timer.elapsedTime);
+                this.sendTelemetry(EventName.DEBUG_SESSION_USER_CODE_RUNNING);
             }
         }
 
@@ -75,11 +74,11 @@ export class DebugLocationTracker implements IDebugLocationTracker {
     }
 
     public onWillStopSession() {
-        this.sendTelemetry(EventName.DEBUG_SESSION_STOP, this.timer.elapsedTime);
+        this.sendTelemetry(EventName.DEBUG_SESSION_STOP);
     }
 
     public onError?(_error: Error) {
-        this.sendTelemetry(EventName.DEBUG_SESSION_ERROR, this.timer.elapsedTime);
+        this.sendTelemetry(EventName.DEBUG_SESSION_ERROR);
     }
 
     // Set our new location and fire our debug event
@@ -148,11 +147,14 @@ export class DebugLocationTracker implements IDebugLocationTracker {
         return false;
     }
 
-    private sendTelemetry(eventName: EventName, elapsedTime: number) {
+    private sendTelemetry(eventName: EventName) {
+        if (eventName === EventName.DEBUG_SESSION_START) {
+            this.timer.reset();
+        }
         const telemetryProps = {
             trigger: this.trigger,
             console: this.console
         };
-        sendTelemetryEvent(eventName, elapsedTime, telemetryProps);
+        sendTelemetryEvent(eventName, this.timer.elapsedTime, telemetryProps);
     }
 }
