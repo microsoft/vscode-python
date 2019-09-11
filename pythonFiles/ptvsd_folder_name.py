@@ -7,8 +7,8 @@ REQUIREMENTS = path.join(ROOT, "requirements.txt")
 
 sys.path.insert(0, PYTHONFILES)
 
-from packaging.tags import sys_tags
 from packaging.requirements import Requirement
+from packaging.tags import sys_tags
 
 sys.path.remove(PYTHONFILES)
 
@@ -24,9 +24,9 @@ def ptvsd_folder_name():
                 try:
                     spec, = specs
                     version = spec.version
-                except ValueError:
+                except:
                     # Fallpack to use base PTVSD path.
-                    print(PYTHONFILES)
+                    print(PYTHONFILES, end="")
                     return
                 break
 
@@ -35,15 +35,15 @@ def ptvsd_folder_name():
             folder_name = f"ptvsd-{version}-{tag.interpreter}-{tag.abi}-{tag.platform}"
             folder_path = path.join(PYTHONFILES, folder_name)
             if path.exists(folder_path):
-                print(folder_path)
+                print(folder_path, end="")
                 return
     except:
         # Fallback to use base PTVSD path no matter the exception.
-        print(PYTHONFILES)
+        print(PYTHONFILES, end="")
         return
 
-    # Fallback to use base PTVSD path.
-    print(PYTHONFILES)
+    # Default fallback to use base PTVSD path.
+    print(PYTHONFILES, end="")
 
 
 if __name__ == "__main__":

@@ -46,10 +46,10 @@ def install_ptvsd():
 
         with ZipFile(wheel_file, "r") as wheel:
             for zip_info in wheel.infolist():
-                if not zip_info.filename.startswith(prefix):
-                    continue
+                # Normalize path for Windows, the wheel folder structure uses forward slashes.
+                normalized = path.normpath(zip_info.filename)
                 # Flatten the folder structure.
-                zip_info.filename = zip_info.filename.split(prefix)[-1]
+                zip_info.filename = normalized.split(prefix)[-1]
                 wheel.extract(zip_info, ptvsd_path)
 
 
