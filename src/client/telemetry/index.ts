@@ -15,7 +15,7 @@ import { TerminalShellType } from '../common/terminal/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { Telemetry } from '../datascience/constants';
 import { DebugConfigurationType } from '../debugger/extension/types';
-import { ConsoleType } from '../debugger/types';
+import { ConsoleType, TriggerType } from '../debugger/types';
 import { AutoSelectionRule } from '../interpreter/autoSelection/types';
 import { InterpreterType } from '../interpreter/contracts';
 import { LinterId } from '../linters/types';
@@ -268,6 +268,98 @@ export interface IEventNamePropertyMapping {
         enabled: boolean;
     };
     /**
+     * Telemetry captured before starting debug session.
+     */
+    [EventName.DEBUG_SESSION_START]: {
+        /**
+         * Trigger for starting the debugger.
+         * - `launch`: Launch/start new code and debug it.
+         * - `attach`: Attach to an exiting python process (remote debugging).
+         * - `test`: Debugging python tests.
+         *
+         * @type {TriggerType}
+         */
+        trigger: TriggerType;
+        /**
+         * Type of console used.
+         *  -`internalConsole`: Use VS Code debug console (no shells/terminals).
+         * - `integratedTerminal`: Use VS Code terminal.
+         * - `externalTerminal`: Use an External terminal.
+         *
+         * @type {ConsoleType}
+         */
+        console?: ConsoleType;
+    };
+    /**
+     * Telemetry captured when debug session runs into an error.
+     */
+    [EventName.DEBUG_SESSION_ERROR]: {
+        /**
+         * Trigger for starting the debugger.
+         * - `launch`: Launch/start new code and debug it.
+         * - `attach`: Attach to an exiting python process (remote debugging).
+         * - `test`: Debugging python tests.
+         *
+         * @type {TriggerType}
+         */
+        trigger: TriggerType;
+        /**
+         * Type of console used.
+         *  -`internalConsole`: Use VS Code debug console (no shells/terminals).
+         * - `integratedTerminal`: Use VS Code terminal.
+         * - `externalTerminal`: Use an External terminal.
+         *
+         * @type {ConsoleType}
+         */
+        console?: ConsoleType;
+    };
+    /**
+     * Telemetry captured after stopping debug session.
+     */
+    [EventName.DEBUG_SESSION_STOP]: {
+        /**
+         * Trigger for starting the debugger.
+         * - `launch`: Launch/start new code and debug it.
+         * - `attach`: Attach to an exiting python process (remote debugging).
+         * - `test`: Debugging python tests.
+         *
+         * @type {TriggerType}
+         */
+        trigger: TriggerType;
+        /**
+         * Type of console used.
+         *  -`internalConsole`: Use VS Code debug console (no shells/terminals).
+         * - `integratedTerminal`: Use VS Code terminal.
+         * - `externalTerminal`: Use an External terminal.
+         *
+         * @type {ConsoleType}
+         */
+        console?: ConsoleType;
+    };
+    /**
+     * Telemetry captured when user code starts running after loading the debugger.
+     */
+    [EventName.DEBUG_SESSION_USER_CODE_RUNNING]: {
+        /**
+         * Trigger for starting the debugger.
+         * - `launch`: Launch/start new code and debug it.
+         * - `attach`: Attach to an exiting python process (remote debugging).
+         * - `test`: Debugging python tests.
+         *
+         * @type {TriggerType}
+         */
+        trigger: TriggerType;
+        /**
+         * Type of console used.
+         *  -`internalConsole`: Use VS Code debug console (no shells/terminals).
+         * - `integratedTerminal`: Use VS Code terminal.
+         * - `externalTerminal`: Use an External terminal.
+         *
+         * @type {ConsoleType}
+         */
+        console?: ConsoleType;
+    };
+    /**
      * Telemetry captured when starting the debugger.
      */
     [EventName.DEBUGGER]: {
@@ -277,9 +369,9 @@ export interface IEventNamePropertyMapping {
          * - `attach`: Attach to an exiting python process (remote debugging).
          * - `test`: Debugging python tests.
          *
-         * @type {('launch' | 'attach' | 'test')}
+         * @type {TriggerType}
          */
-        trigger: 'launch' | 'attach' | 'test';
+        trigger: TriggerType;
         /**
          * Type of console used.
          *  -`internalConsole`: Use VS Code debug console (no shells/terminals).
