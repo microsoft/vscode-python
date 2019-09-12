@@ -323,7 +323,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
         return (
             [
                 <div className='cell-toolbar' key={0}>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={gatherCode} tooltip={getLocString('DataScience.gatherCodeTooltip', 'Gather code')} hidden={false}>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={gatherCode} hidden={!this.state.enableGather} tooltip={getLocString('DataScience.gatherCodeTooltip', 'Gather code')} >
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.GatherCode} />
                     </ImageButton>
                     <ImageButton baseTheme={this.props.baseTheme} onClick={gotoCode} tooltip={getLocString('DataScience.gotoCodeButtonTooltip', 'Go to code')} hidden={hasNoSource}>
