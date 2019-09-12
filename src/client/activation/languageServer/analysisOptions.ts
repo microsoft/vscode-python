@@ -104,11 +104,6 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
             traceError('Unable to determine Python version. Analysis may be limited.');
         }
 
-        // tslint:disable-next-line: no-suspicious-comment
-        // TODO: remove this setting since LS 0.2.92+ is not using it.
-        // tslint:disable-next-line:no-string-literal
-        properties['DatabasePath'] = path.join(this.context.extensionPath, this.languageServerFolder);
-
         this.excludedFiles = this.getExcludedFiles();
         this.typeshedPaths = this.getTypeshedPaths();
         const workspaceFolder = this.workspace.getWorkspaceFolder(this.resource);
