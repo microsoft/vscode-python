@@ -18,8 +18,8 @@ export class CryptoUtils implements ICryptoUtils {
         let hash: string;
         if (algorithm === 'FNV') {
             // tslint:disable-next-line:no-require-imports
-            const fnv = require('fnv-plus');
-            hash = fnv.hash(data, 32).hex() as string;
+            const fnv = require('@enonic/fnv-plus');
+            hash = fnv.fast1a32hex(data) as string;
         } else {
             hash = createHash('sha512').update(data).digest('hex');
         }
