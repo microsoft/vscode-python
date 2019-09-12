@@ -34,7 +34,10 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
 
         // Look through the file system for ipynb files to see how many we have in the workspace. Don't wait
         // on this though.
-        this.workspace.findFiles('**/*.ipynb').then(r => this.notebookCount += r.length);
+        const findFilesPromise = this.workspace.findFiles('**/*.ipynb');
+        if (findFilesPromise && findFilesPromise.then) {
+            findFilesPromise.then(r => this.notebookCount += r.length);
+        }
     }
 
     public dispose(): Promise<void> {
