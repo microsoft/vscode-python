@@ -53,7 +53,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
                 <Editor
                     codeTheme={this.props.codeTheme}
                     readOnly={readOnly}
-                    history={undefined}
+                    history={this.props.history}
                     onCreated={this.props.onCreated}
                     onChange={this.onModelChanged}
                     testMode={this.props.testMode}
