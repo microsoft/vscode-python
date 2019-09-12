@@ -448,8 +448,9 @@ export class Cell extends React.Component<ICellProps, ICellState> {
         // React-markdown expects that the source is a string
         const source = concatMultilineString(markdown.source);
         const Transform = transforms['text/markdown'];
+        const MarkdownClassName = 'markdown-cell-output';
 
-        return [<Transform key={0} data={source} />];
+        return [<div className={MarkdownClassName}><Transform key={0} data={source} /></div>];
     }
 
     // tslint:disable-next-line: max-func-body-length

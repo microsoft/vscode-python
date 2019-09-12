@@ -46,9 +46,19 @@
     justify-self: right;
 }
 
+// make the width of the div be a bit less than the width of the window,
+// the 95 pixels removed account for the space the padding and controls
+// on the left take in the native Editor.
 .cell-output {
     margin-top: 5px;
     background: transparent;
+    width: calc(95vw - 95px);
+    overflow-x: scroll;
+}
+
+.markdown-cell-output {
+    width: calc(95vw - 95px);
+    overflow-x: scroll;
 }
 
 .cell-outer-editable {
@@ -195,3 +205,6 @@
     margin-right: 0px;
 }
 
+#content-panel-div {
+    overflow: hidden;
+}

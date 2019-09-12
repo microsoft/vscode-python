@@ -65,10 +65,12 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
 
     public componentDidMount() {
         window.addEventListener('keydown', this.mainKeyDown);
+        window.addEventListener('resize', () => this.forceUpdate(), true);
     }
 
     public componentWillUnmount() {
         window.removeEventListener('keydown', this.mainKeyDown);
+        window.removeEventListener('resize', () => this.forceUpdate());
         // Dispose of our state controller so it stops listening
         this.stateController.dispose();
     }
