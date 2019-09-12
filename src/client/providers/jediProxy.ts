@@ -703,18 +703,16 @@ export class JediProxy implements Disposable {
     }
     private getConfig() {
         // Add support for paths relative to workspace.
-        const extraPaths = this.pythonSettings.autoComplete
-            ? this.pythonSettings.autoComplete.extraPaths
-                ? this.pythonSettings.autoComplete.extraPaths.map(extraPath => {
-                    if (path.isAbsolute(extraPath)) {
-                        return extraPath;
-                    }
-                    if (typeof this.workspacePath !== 'string') {
-                        return '';
-                    }
-                    return path.join(this.workspacePath, extraPath);
-                })
-                : []
+        const extraPaths = this.pythonSettings.autoComplete && this.pythonSettings.autoComplete.extraPaths
+            ? this.pythonSettings.autoComplete.extraPaths.map(extraPath => {
+                if (path.isAbsolute(extraPath)) {
+                    return extraPath;
+                }
+                if (typeof this.workspacePath !== 'string') {
+                    return '';
+                }
+                return path.join(this.workspacePath, extraPath);
+            })
             : [];
 
         // Always add workspace path into extra paths.
