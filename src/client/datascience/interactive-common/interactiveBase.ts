@@ -390,7 +390,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         // it's been activated. However if there's no active text editor and we're active, we
         // can safely attempt to give ourselves focus. This won't actually give us focus if we aren't
         // allowed to have it.
-        if (visible && active && !this.documentManager.activeTextEditor) {
+        if (visible && active && (!this.viewState.active || !this.viewState.visible) && !this.documentManager.activeTextEditor) {
             // Force the webpanel to reveal and take focus.
             await super.show(false);
 
