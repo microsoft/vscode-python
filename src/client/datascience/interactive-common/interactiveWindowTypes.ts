@@ -66,7 +66,32 @@ export namespace InteractiveWindowMessages {
     export const NotebookDirty = 'dirty';
     export const NotebookClean = 'clean';
     export const SaveAll = 'save_all';
+    export const NativeCommand = 'native_command';
 
+}
+
+export enum NativeCommandType {
+    AddToEnd = 0,
+    ArrowDown,
+    ArrowUp,
+    ChangeToCode,
+    ChangeToMarkdown,
+    CollapseInput,
+    CollapseOutput,
+    DeleteCell,
+    InsertAbove,
+    InsertBelow,
+    MoveCellDown,
+    MoveCellUp,
+    Run,
+    RunAbove,
+    RunAll,
+    RunAndAdd,
+    RunAndMove,
+    RunBelow,
+    ToggleLineNumbers,
+    ToggleOutput,
+    Unfocus
 }
 
 // These are the messages that will mirror'd to guest/hosts in
@@ -196,6 +221,11 @@ export interface ISaveAll {
     cells: ICell[];
 }
 
+export interface INativeCommand {
+    command: NativeCommandType;
+    source: 'keyboard' | 'mouse';
+}
+
 // Map all messages to specific payloads
 export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.StartCell]: ICell;
@@ -259,4 +289,5 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.NotebookDirty]: never | undefined;
     public [InteractiveWindowMessages.NotebookClean]: never | undefined;
     public [InteractiveWindowMessages.SaveAll]: ISaveAll;
+    public [InteractiveWindowMessages.NativeCommand]: INativeCommand;
 }

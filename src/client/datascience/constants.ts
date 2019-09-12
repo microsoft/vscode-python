@@ -3,6 +3,7 @@
 'use strict';
 
 import { IS_WINDOWS } from '../common/platform/constants';
+import { NativeCommandType } from './interactive-common/interactiveWindowTypes';
 
 export const DefaultTheme = 'Default Light+';
 
@@ -181,8 +182,73 @@ export enum Telemetry {
     DebugStepOver = 'DATASCIENCE.DEBUG_STEP_OVER',
     DebugContinue = 'DATASCIENCE.DEBUG_CONTINUE',
     DebugStop = 'DATASCIENCE.DEBUG_STOP',
-    OpenNotebook = 'DATASCIENCE.OPEN_NOTEBOOK',
-    ConvertToPythonFile = 'DATASCIENCE.CONVERT_NOTEBOOK_TO_PYTHON'
+    OpenNotebook = 'DATASCIENCE.NATIVE.OPEN_NOTEBOOK',
+    ConvertToPythonFile = 'DATASCIENCE.NATIVE.CONVERT_NOTEBOOK_TO_PYTHON',
+    NotebookWorkspaceCount = 'DATASCIENCE.NATIVE.WORKSPACE_NOTEBOOK_COUNT',
+    NotebookRunCount = 'DATASCIENCE.NATIVE.NOTEBOOK_RUN_COUNT',
+    NotebookOpenCount = 'DATASCIENCE.NATIVE.NOTEBOOK_OPEN_COUNT',
+    NotebookOpenTime = 'DS_INTERNAL.NATIVE.NOTEBOOK_OPEN_TIME'
+}
+
+export enum NativeKeyboardCommandTelemetry {
+    AddToEnd = 'DATASCIENCE.NATIVE.KEYBOARD.ADD_TO_END',
+    ArrowDown = 'DATASCIENCE.NATIVE.KEYBOARD.ARROW_DOWN',
+    ArrowUp = 'DATASCIENCE.NATIVE.KEYBOARD.ARROW_UP',
+    ChangeToCode = 'DATASCIENCE.NATIVE.KEYBOARD.CHANGE_TO_CODE',
+    ChangeToMarkdown = 'DATASCIENCE.NATIVE.KEYBOARD.CHANGE_TO_MARKDOWN',
+    CollapseInput = 'DATASCIENCE.NATIVE.KEYBOARD.COLLAPSE_INPUT',
+    CollapseOutput = 'DATASCIENCE.NATIVE.KEYBOARD.COLLAPSE_OUTPUT',
+    DeleteCell = 'DATASCIENCE.NATIVE.KEYBOARD.DELETE_CELL',
+    InsertAbove = 'DATASCIENCE.NATIVE.KEYBOARD.INSERT_ABOVE',
+    InsertBelow = 'DATASCIENCE.NATIVE.KEYBOARD.INSERT_BELOW',
+    MoveCellDown = 'DATASCIENCE.NATIVE.KEYBOARD.MOVE_CELL_DOWN',
+    MoveCellUp = 'DATASCIENCE.NATIVE.KEYBOARD.MOVE_CELL_UP',
+    Run = 'DATASCIENCE.NATIVE.KEYBOARD.RUN',
+    RunAbove = 'DATASCIENCE.NATIVE.KEYBOARD.RUN_ABOVE',
+    RunAll = 'DATASCIENCE.NATIVE.KEYBOARD.RUN_ALL',
+    RunAndAdd = 'DATASCIENCE.NATIVE.KEYBOARD.RUN_AND_ADD',
+    RunAndMove = 'DATASCIENCE.NATIVE.KEYBOARD.RUN_AND_MOVE',
+    RunBelow = 'DATASCIENCE.NATIVE.KEYBOARD.RUN_BELOW',
+    ToggleLineNumbers = 'DATASCIENCE.NATIVE.KEYBOARD.TOGGLE_LINE_NUMBERS',
+    ToggleOutput = 'DATASCIENCE.NATIVE.KEYBOARD.TOGGLE_OUTPUT',
+    Unfocus = 'DATASCIENCE.NATIVE.KEYBOARD.UNFOCUS'
+}
+
+export let NativeKeyboardCommandTelemetryLookup: { [id: number]: NativeKeyboardCommandTelemetry } = {};
+const keys = [...Object.keys(NativeCommandType)];
+const values1 = [...Object.values(NativeKeyboardCommandTelemetry)];
+for (let i = 0; i < keys.length; i += 1) {
+    NativeKeyboardCommandTelemetryLookup[i] = values1[i];
+}
+
+export enum NativeMouseCommandTelemetry {
+    AddToEnd = 'DATASCIENCE.NATIVE.MOUSE.ADD_TO_END',
+    ArrowDown = 'DATASCIENCE.NATIVE.MOUSE.ARROW_DOWN',
+    ArrowUp = 'DATASCIENCE.NATIVE.MOUSE.ARROW_UP',
+    ChangeToCode = 'DATASCIENCE.NATIVE.MOUSE.CHANGE_TO_CODE',
+    ChangeToMarkdown = 'DATASCIENCE.NATIVE.MOUSE.CHANGE_TO_MARKDOWN',
+    CollapseInput = 'DATASCIENCE.NATIVE.MOUSE.COLLAPSE_INPUT',
+    CollapseOutput = 'DATASCIENCE.NATIVE.MOUSE.COLLAPSE_OUTPUT',
+    DeleteCell = 'DATASCIENCE.NATIVE.MOUSE.DELETE_CELL',
+    InsertAbove = 'DATASCIENCE.NATIVE.MOUSE.INSERT_ABOVE',
+    InsertBelow = 'DATASCIENCE.NATIVE.MOUSE.INSERT_BELOW',
+    MoveCellDown = 'DATASCIENCE.NATIVE.MOUSE.MOVE_CELL_DOWN',
+    MoveCellUp = 'DATASCIENCE.NATIVE.MOUSE.MOVE_CELL_UP',
+    Run = 'DATASCIENCE.NATIVE.MOUSE.RUN',
+    RunAbove = 'DATASCIENCE.NATIVE.MOUSE.RUN_ABOVE',
+    RunAll = 'DATASCIENCE.NATIVE.MOUSE.RUN_ALL',
+    RunAndAdd = 'DATASCIENCE.NATIVE.MOUSE.RUN_AND_ADD',
+    RunAndMove = 'DATASCIENCE.NATIVE.MOUSE.RUN_AND_MOVE',
+    RunBelow = 'DATASCIENCE.NATIVE.MOUSE.RUN_BELOW',
+    ToggleLineNumbers = 'DATASCIENCE.NATIVE.MOUSE.TOGGLE_LINE_NUMBERS',
+    ToggleOutput = 'DATASCIENCE.NATIVE.MOUSE.TOGGLE_OUTPUT',
+    Unfocus = 'DATASCIENCE.NATIVE.MOUSE.UNFOCUS'
+}
+
+export let NativeMouseCommandTelemetryLookup: { [id: number]: NativeMouseCommandTelemetry } = {};
+const values2 = [...Object.values(NativeMouseCommandTelemetry)];
+for (let i = 0; i < keys.length; i += 1) {
+    NativeMouseCommandTelemetryLookup[i] = values2[i];
 }
 
 export namespace HelpLinks {

@@ -13,7 +13,7 @@ import { AppinsightsKey, EXTENSION_ROOT_DIR, isTestExecution, PVSC_EXTENSION_ID 
 import { traceInfo } from '../common/logger';
 import { TerminalShellType } from '../common/terminal/types';
 import { StopWatch } from '../common/utils/stopWatch';
-import { Telemetry } from '../datascience/constants';
+import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry, Telemetry } from '../datascience/constants';
 import { DebugConfigurationType } from '../debugger/extension/types';
 import { ConsoleType } from '../debugger/types';
 import { AutoSelectionRule } from '../interpreter/autoSelection/types';
@@ -21,10 +21,7 @@ import { InterpreterType } from '../interpreter/contracts';
 import { LinterId } from '../linters/types';
 import { TestProvider } from '../testing/common/types';
 import { EventName, PlatformErrors } from './constants';
-import {
-    LinterTrigger,
-    TestTool
-} from './types';
+import { LinterTrigger, TestTool } from './types';
 
 /**
  * Checks whether telemetry is supported.
@@ -1269,6 +1266,10 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ImportNotebook]: { scope: 'command' | 'file' };
     [Telemetry.Interrupt]: never | undefined;
     [Telemetry.InterruptJupyterTime]: never | undefined;
+    [Telemetry.NotebookRunCount]: number;
+    [Telemetry.NotebookWorkspaceCount]: number;
+    [Telemetry.NotebookOpenCount]: number;
+    [Telemetry.NotebookOpenTime]: number;
     [Telemetry.PandasNotInstalled]: never | undefined;
     [Telemetry.PandasTooOld]: never | undefined;
     [Telemetry.PtvsdInstallFailed]: never | undefined;
@@ -1310,6 +1311,48 @@ export interface IEventNamePropertyMapping {
     [Telemetry.WebviewMonacoStyleUpdate]: never | undefined;
     [Telemetry.WebviewStartup]: { type: string };
     [Telemetry.WebviewStyleUpdate]: never | undefined;
+    [NativeKeyboardCommandTelemetry.AddToEnd]: never | undefined;
+    [NativeKeyboardCommandTelemetry.ArrowDown]: never | undefined;
+    [NativeKeyboardCommandTelemetry.ArrowUp]: never | undefined;
+    [NativeKeyboardCommandTelemetry.ChangeToCode]: never | undefined;
+    [NativeKeyboardCommandTelemetry.ChangeToMarkdown]: never | undefined;
+    [NativeKeyboardCommandTelemetry.CollapseInput]: never | undefined;
+    [NativeKeyboardCommandTelemetry.CollapseOutput]: never | undefined;
+    [NativeKeyboardCommandTelemetry.DeleteCell]: never | undefined;
+    [NativeKeyboardCommandTelemetry.InsertAbove]: never | undefined;
+    [NativeKeyboardCommandTelemetry.InsertBelow]: never | undefined;
+    [NativeKeyboardCommandTelemetry.MoveCellDown]: never | undefined;
+    [NativeKeyboardCommandTelemetry.MoveCellUp]: never | undefined;
+    [NativeKeyboardCommandTelemetry.Run]: never | undefined;
+    [NativeKeyboardCommandTelemetry.RunAbove]: never | undefined;
+    [NativeKeyboardCommandTelemetry.RunAll]: never | undefined;
+    [NativeKeyboardCommandTelemetry.RunAndAdd]: never | undefined;
+    [NativeKeyboardCommandTelemetry.RunAndMove]: never | undefined;
+    [NativeKeyboardCommandTelemetry.RunBelow]: never | undefined;
+    [NativeKeyboardCommandTelemetry.ToggleLineNumbers]: never | undefined;
+    [NativeKeyboardCommandTelemetry.ToggleOutput]: never | undefined;
+    [NativeKeyboardCommandTelemetry.Unfocus]: never | undefined;
+    [NativeMouseCommandTelemetry.AddToEnd]: never | undefined;
+    [NativeMouseCommandTelemetry.ArrowDown]: never | undefined;
+    [NativeMouseCommandTelemetry.ArrowUp]: never | undefined;
+    [NativeMouseCommandTelemetry.ChangeToCode]: never | undefined;
+    [NativeMouseCommandTelemetry.ChangeToMarkdown]: never | undefined;
+    [NativeMouseCommandTelemetry.CollapseInput]: never | undefined;
+    [NativeMouseCommandTelemetry.CollapseOutput]: never | undefined;
+    [NativeMouseCommandTelemetry.DeleteCell]: never | undefined;
+    [NativeMouseCommandTelemetry.InsertAbove]: never | undefined;
+    [NativeMouseCommandTelemetry.InsertBelow]: never | undefined;
+    [NativeMouseCommandTelemetry.MoveCellDown]: never | undefined;
+    [NativeMouseCommandTelemetry.MoveCellUp]: never | undefined;
+    [NativeMouseCommandTelemetry.Run]: never | undefined;
+    [NativeMouseCommandTelemetry.RunAbove]: never | undefined;
+    [NativeMouseCommandTelemetry.RunAll]: never | undefined;
+    [NativeMouseCommandTelemetry.RunAndAdd]: never | undefined;
+    [NativeMouseCommandTelemetry.RunAndMove]: never | undefined;
+    [NativeMouseCommandTelemetry.RunBelow]: never | undefined;
+    [NativeMouseCommandTelemetry.ToggleLineNumbers]: never | undefined;
+    [NativeMouseCommandTelemetry.ToggleOutput]: never | undefined;
+    [NativeMouseCommandTelemetry.Unfocus]: never | undefined;
     /*
     Telemetry event sent with details of Jedi Memory usage.
     mem_use - Memory usage of Process in kb.

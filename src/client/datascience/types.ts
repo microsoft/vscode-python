@@ -234,6 +234,8 @@ export interface INotebookEditorProvider {
 export const INotebookEditor = Symbol('INotebookEditor');
 export interface INotebookEditor extends IInteractiveBase {
     closed: Event<INotebookEditor>;
+    executed: Event<INotebookEditor>;
+    modified: Event<INotebookEditor>;
     readonly file: Uri;
     readonly visible: boolean;
     readonly active: boolean;

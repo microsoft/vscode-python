@@ -10,13 +10,17 @@ import { IFileSystem } from '../../common/platform/types';
 import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
-import { captureTelemetry } from '../../telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { INotebookEditor, INotebookEditorProvider } from '../types';
 
 @injectable()
 export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisposable {
     private activeEditors: Map<string, INotebookEditor> = new Map<string, INotebookEditor>();
+    private executedEditors: Set<string> = new Set<string>();
+    private notebookCount: number = 0;
+    private openedNotebookCount: number = 0;
+
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
@@ -27,9 +31,21 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
         asyncRegistry.push(this);
 
         // No live share sync required as open document from vscode will give us our contents.
+
+        // Look through the file system for ipynb files to see how many we have in the workspace. Don't wait
+        // on this though.
+        const findFilesPromise = this.workspace.findFiles('**/*.ipynb');
+        if (findFilesPromise && findFilesPromise.then) {
+            findFilesPromise.then(r => this.notebookCount += r.length);
+        }
     }
 
     public dispose(): Promise<void> {
+        // Send a bunch of telemetry
+        sendTelemetryEvent(Telemetry.NotebookOpenCount, this.openedNotebookCount);
+        sendTelemetryEvent(Telemetry.NotebookRunCount, this.executedEditors.size);
+        sendTelemetryEvent(Telemetry.NotebookWorkspaceCount, this.notebookCount);
+
         return Promise.resolve();
     }
 
@@ -50,6 +66,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
         if (!editor) {
             editor = await this.create(file, contents);
             this.activeEditors.set(file.fsPath, editor);
+            this.openedNotebookCount += 1;
         }
         return editor;
     }
@@ -67,6 +84,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
     public async createNew(): Promise<INotebookEditor> {
         // Create a new URI for the dummy file using our root workspace path
         const uri = await this.getNextNewNotebookUri();
+        this.notebookCount += 1;
         return this.open(uri, '');
     }
 
@@ -74,12 +92,17 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
         const editor = this.serviceContainer.get<INotebookEditor>(INotebookEditor);
         await editor.load(contents, file);
         this.disposables.push(editor.closed(this.onClosedEditor.bind(this)));
+        this.disposables.push(editor.executed(this.onExecutedEditor.bind(this)));
         await editor.show();
         return editor;
     }
 
     private onClosedEditor(e: INotebookEditor) {
         this.activeEditors.delete(e.file.fsPath);
+    }
+
+    private onExecutedEditor(e: INotebookEditor) {
+        this.executedEditors.add(e.file.fsPath);
     }
 
     private async getNextNewNotebookUri(): Promise<Uri> {

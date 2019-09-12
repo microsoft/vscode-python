@@ -717,7 +717,7 @@ export class MainStateController implements IMessageHandler {
 
                 const newList = [...this.state.cellVMs];
                 // Make sure to use the same array so our entire state doesn't update
-                if (position && position >= 0) {
+                if (position !== undefined && position >= 0) {
                     newList.splice(position, 0, cellVM);
                 } else {
                     newList.push(cellVM);
@@ -749,6 +749,10 @@ export class MainStateController implements IMessageHandler {
             }
         }
 
+    }
+
+    protected sendMessage = <M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]) => {
+        this.postOffice.sendMessage<M, T>(type, payload);
     }
 
     private computeEditorOptions(): monacoEditor.editor.IEditorOptions {
@@ -832,10 +836,6 @@ export class MainStateController implements IMessageHandler {
                 this.toggleCellInputVisibility(showInputs, getSettings().collapseCellInputCodeByDefault);
             }
         }
-    }
-
-    private sendMessage = <M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]) => {
-        this.postOffice.sendMessage<M, T>(type, payload);
     }
 
     private getAllCells = () => {

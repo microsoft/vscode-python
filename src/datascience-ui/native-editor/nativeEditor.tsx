@@ -7,6 +7,7 @@ import * as React from 'react';
 
 import { concatMultilineString } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
+import { NativeCommandType } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CellState, ICell } from '../../client/datascience/types';
 import { ICellViewModel } from '../interactive-common/cell';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
@@ -40,7 +41,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
     private stateController: NativeEditorStateController;
     private initialCellDivs: (HTMLDivElement | null)[] = [];
     private debounceUpdateVisibleCells = debounce(this.updateVisibleCells.bind(this), 100);
-    private pressedDOnce = false;
+    private lastKeyPressed: string | undefined;
 
     constructor(props: INativeEditorProps) {
         super(props);
@@ -54,7 +55,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             activate: this.activated.bind(this),
             scrollToCell: this.scrollToCell.bind(this),
             defaultEditable: true,
-            hasEdit: true,
+            hasEdit: false,
             enableGather: false
         });
 
@@ -117,8 +118,14 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
 
     // tslint:disable: react-this-binding-issue
     private renderToolbarPanel() {
-        const addCell = () => this.stateController.addNewCell();
-        const runAll = () => this.stateController.runAll();
+        const addCell = () => {
+            this.stateController.addNewCell();
+            this.stateController.sendCommand(NativeCommandType.AddToEnd, 'mouse');
+        };
+        const runAll = () => {
+            this.stateController.runAll();
+            this.stateController.sendCommand(NativeCommandType.RunAll, 'mouse');
+        };
 
         return (
             <div id='toolbar-panel'>
@@ -186,8 +193,8 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             focusedCell: this.state.focusedCell,
             clickCell: this.clickCell,
             doubleClickCell: this.doubleClickCell,
-            focusCell: this.stateController.codeGotFocus,
-            unfocusCell: this.stateController.codeLostFocus,
+            focusCell: this.codeGotFocus,
+            unfocusCell: this.codeLostFocus,
             allowsMarkdownEditing: true,
             renderCellToolbar: this.renderCellToolbar,
             onRenderCompleted: this.onContentFirstRender,
@@ -284,114 +291,97 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
 
     // tslint:disable-next-line: cyclomatic-complexity max-func-body-length
     private keyDownCell = async (cellId: string, e: IKeyboardEvent) => {
+        const isFocusedWhenNotSuggesting = this.state.focusedCell && e.editorInfo && !e.editorInfo.isSuggesting;
         switch (e.code) {
             case 'ArrowUp':
-                this.pressedDOnce = false;
-                if (this.state.focusedCell === cellId && e.editorInfo && e.editorInfo.isFirstLine && !e.editorInfo.isSuggesting) {
-                    this.arrowUpFromCell(cellId, e);
-                } else if (!this.state.focusedCell) {
+            case 'k':
+                if ((isFocusedWhenNotSuggesting && e.editorInfo!.isFirstLine) || !this.state.focusedCell) {
                     this.arrowUpFromCell(cellId, e);
                 }
                 break;
             case 'ArrowDown':
-                this.pressedDOnce = false;
-                if (this.state.focusedCell === cellId && e.editorInfo && e.editorInfo.isLastLine && !e.editorInfo.isSuggesting) {
-                    this.arrowDownFromCell(cellId, e);
-                } else if (!this.state.focusedCell) {
+            case 'j':
+                if ((isFocusedWhenNotSuggesting && e.editorInfo!.isLastLine) || !this.state.focusedCell) {
                     this.arrowDownFromCell(cellId, e);
                 }
                 break;
             case 'Escape':
-                this.pressedDOnce = false;
-                if (this.state.focusedCell && e.editorInfo && !e.editorInfo.isSuggesting) {
-                    this.escapeCell(this.state.focusedCell, e);
+                if (isFocusedWhenNotSuggesting) {
+                    this.escapeCell(this.state.focusedCell!, e);
                 }
                 break;
             case 'y':
-                this.pressedDOnce = false;
                 if (!this.state.focusedCell && this.state.selectedCell) {
                     e.stopPropagation();
                     this.stateController.changeCellType(this.state.selectedCell, 'code');
+                    this.stateController.sendCommand(NativeCommandType.ChangeToCode, 'keyboard');
                 }
                 break;
             case 'm':
-                this.pressedDOnce = false;
                 if (!this.state.focusedCell && this.state.selectedCell) {
                     e.stopPropagation();
                     this.stateController.changeCellType(this.state.selectedCell, 'markdown');
+                    this.stateController.sendCommand(NativeCommandType.ChangeToMarkdown, 'keyboard');
                 }
                 break;
             case 'l':
-                this.pressedDOnce = false;
                 if (!this.state.focusedCell && this.state.selectedCell) {
                     e.stopPropagation();
                     this.stateController.toggleLineNumbers(this.state.selectedCell);
+                    this.stateController.sendCommand(NativeCommandType.ToggleLineNumbers, 'keyboard');
                 }
                 break;
             case 'o':
-                this.pressedDOnce = false;
                 if (!this.state.focusedCell && this.state.selectedCell) {
                     e.stopPropagation();
                     this.stateController.toggleOutput(this.state.selectedCell);
+                    this.stateController.sendCommand(NativeCommandType.ToggleOutput, 'keyboard');
                 }
                 break;
             case 'Enter':
-                this.pressedDOnce = false;
                 if (e.shiftKey) {
-                    this.submitCell(cellId, e, true);
+                    this.shiftEnterCell(cellId, e);
                 } else if (e.ctrlKey) {
-                    this.submitCell(cellId, e, false);
+                    this.ctrlEnterCell(cellId, e);
                 } else if (e.altKey) {
-                    this.submitCell(cellId, e, false);
-                    this.stateController.insertBelow(cellId, true);
+                    this.altEnterCell(cellId, e);
                 } else {
                     this.enterCell(cellId, e);
                 }
                 break;
             case 'd':
-                if (this.pressedDOnce) {
+                if (this.lastKeyPressed === 'd' && !this.state.focusedCell  && this.state.selectedCell) {
+                    e.stopPropagation();
+                    this.lastKeyPressed = undefined; // Reset it so we don't keep deleting
+                    const cellToSelect = this.getPrevCellId(cellId) || this.getNextCellId(cellId);
                     this.stateController.deleteCell(cellId);
-                    this.pressedDOnce = false;
-                } else {
-                    this.pressedDOnce = true;
+                    if (cellToSelect) {
+                        this.moveSelection(cellToSelect);
+                    }
+                    this.stateController.sendCommand(NativeCommandType.DeleteCell, 'keyboard');
                 }
                 break;
             case 'a':
-                this.pressedDOnce = false;
-                if (this.state.focusedCell === cellId && e.editorInfo && e.editorInfo.isLastLine && !e.editorInfo.isSuggesting) {
-                    this.stateController.insertAbove(cellId, true);
-                } else if (!this.state.focusedCell) {
-                    this.stateController.insertAbove(cellId, true);
+                if (isFocusedWhenNotSuggesting || !this.state.focusedCell) {
+                    e.stopPropagation();
+                    const cell = this.stateController.insertAbove(cellId, true);
+                    this.moveSelection(cell!);
+                    this.stateController.sendCommand(NativeCommandType.InsertAbove, 'keyboard');
                 }
                 break;
             case 'b':
-                this.pressedDOnce = false;
-                if (this.state.focusedCell === cellId && e.editorInfo && e.editorInfo.isLastLine && !e.editorInfo.isSuggesting) {
-                    this.stateController.insertBelow(cellId, true);
-                } else if (!this.state.focusedCell) {
-                    this.stateController.insertBelow(cellId, true);
-                }
-                break;
-            case 'j':
-                this.pressedDOnce = false;
-                if (this.state.focusedCell === cellId && e.editorInfo && e.editorInfo.isFirstLine && !e.editorInfo.isSuggesting) {
-                    this.arrowUpFromCell(cellId, e);
-                } else if (!this.state.focusedCell) {
-                    this.arrowUpFromCell(cellId, e);
-                }
-                break;
-            case 'k':
-                this.pressedDOnce = false;
-                if (this.state.focusedCell === cellId && e.editorInfo && e.editorInfo.isFirstLine && !e.editorInfo.isSuggesting) {
-                    this.arrowDownFromCell(cellId, e);
-                } else if (!this.state.focusedCell) {
-                    this.arrowDownFromCell(cellId, e);
+                if (isFocusedWhenNotSuggesting || !this.state.focusedCell) {
+                    e.stopPropagation();
+                    const cell = this.stateController.insertBelow(cellId, true);
+                    this.moveSelection(cell!);
+                    this.stateController.sendCommand(NativeCommandType.InsertBelow, 'keyboard');
                 }
                 break;
             default:
-                this.pressedDOnce = false;
                 break;
         }
+
+        this.lastKeyPressed = e.code;
     }
 
     private enterCell = (cellId: string, e: IKeyboardEvent) => {
@@ -399,25 +389,102 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         if (!this.state.focusedCell && !e.editorInfo && this.contentPanelRef && this.contentPanelRef.current) {
             e.stopPropagation();
             e.preventDefault();
-
-            // Figure out which cell this is
-            const cellvm = this.stateController.findCell(cellId);
-            if (cellvm && this.state.selectedCell === cellId) {
-                this.contentPanelRef.current.focusCell(cellId, true);
-            }
+            this.contentPanelRef.current.focusCell(cellId, true);
         }
     }
 
-    private submitCell = (cellId: string, e: IKeyboardEvent, moveToNextCell: boolean) => {
+    private shiftEnterCell = (cellId: string, e: IKeyboardEvent) => {
+        // Prevent shift enter from add an enter
+        e.stopPropagation();
+        e.preventDefault();
+
+        // Submit and move to the next.
+        this.runAndMove(cellId, e.editorInfo ? e.editorInfo.contents : undefined);
+
+        this.stateController.sendCommand(NativeCommandType.RunAndMove, 'keyboard');
+    }
+
+    private altEnterCell = (cellId: string, e: IKeyboardEvent) => {
+        // Prevent shift enter from add an enter
+        e.stopPropagation();
+        e.preventDefault();
+
+        // Submit this cell
+        this.runAndAdd(cellId, e.editorInfo ? e.editorInfo.contents : undefined);
+
+        this.stateController.sendCommand(NativeCommandType.RunAndAdd, 'keyboard');
+    }
+
+    private runAndMove(cellId: string, possibleContents?: string) {
+        // Submit this cell
+        this.submitCell(cellId, possibleContents);
+
+        // Move to the next cell if we have one and give it focus
+        let nextCell = this.getNextCellId(cellId);
+        if (!nextCell) {
+            // At the bottom insert a cell to move to instead
+            nextCell = this.stateController.insertBelow(cellId, true);
+        }
+        if (nextCell) {
+            this.moveSelection(nextCell);
+        }
+    }
+
+    private runAndAdd(cellId: string, possibleContents?: string) {
+        // Submit this cell
+        this.submitCell(cellId, possibleContents);
+
+        // insert a cell below this one
+        const nextCell = this.stateController.insertBelow(cellId, true);
+
+        // On next update, move the new cell
+        if (nextCell) {
+            this.moveSelection(nextCell);
+        }
+    }
+
+    private ctrlEnterCell = (cellId: string, e: IKeyboardEvent) => {
+        // Prevent shift enter from add an enter
+        e.stopPropagation();
+        e.preventDefault();
+
+        // Submit this cell
+        this.submitCell(cellId, e.editorInfo ? e.editorInfo.contents : undefined);
+        this.stateController.sendCommand(NativeCommandType.Run, 'keyboard');
+    }
+
+    private moveSelectionToExisting = (cellId: string) => {
+        // Cell should already exist in the UI
+        if (this.contentPanelRef && this.contentPanelRef.current) {
+            const wasFocused = this.state.focusedCell;
+            this.stateController.selectCell(cellId, wasFocused ? cellId : undefined);
+            this.contentPanelRef.current.focusCell(cellId, wasFocused ? true : false);
+        }
+    }
+
+    private moveSelection = (cellId: string) => {
+        // Check to see that this cell already exists in our window (it's part of the rendered state
+        const cells = this.getNonMessageCells();
+        if (!cells || !cells.find(c => c.id === cellId)) {
+            // Force selection change right now as we don't need the cell to exist
+            // to make it selected (otherwise we'll get a flash)
+            const wasFocused = this.state.focusedCell;
+            this.stateController.selectCell(cellId, wasFocused ? cellId : undefined);
+
+            // Then wait to give it actual input focus
+            setTimeout(() => this.moveSelectionToExisting(cellId), 1);
+        } else {
+            this.moveSelectionToExisting(cellId);
+        }
+    }
+
+    private submitCell = (cellId: string, possibleContents?: string) => {
         let content: string | undefined ;
         const cellVM = this.findCellViewModel(cellId);
 
         // If inside editor, submit this code
-        if (e.editorInfo && e.editorInfo.contents) {
-            // Prevent shift+enter from turning into a enter
-            e.stopPropagation();
-            e.preventDefault();
-            content = e.editorInfo.contents;
+        if (possibleContents) {
+            content = possibleContents;
         } else if (cellVM) {
             // Outside editor, just use the cell
             content = concatMultilineString(cellVM.cell.data.source);
@@ -426,14 +493,6 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         // Send to jupyter
         if (cellVM && content) {
             this.stateController.submitInput(content, cellVM);
-        }
-
-        // If this is not the edit cell, move to our next cell
-        if (cellId !== Identifiers.EditCellId && moveToNextCell) {
-            const nextCell = this.getNextCellId(cellId);
-            if (nextCell) {
-                this.stateController.selectCell(nextCell, undefined);
-            }
         }
     }
 
@@ -454,24 +513,27 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         return nextCellId;
     }
 
-    private arrowUpFromCell = (cellId: string, e: IKeyboardEvent) => {
+    private getPrevCellId(cellId: string): string | undefined {
         const cells = this.getNonMessageCells();
-
-        // Find the next cell index
-        let index = cells.findIndex(c => c.id === cellId) - 1;
-
+        let index = cells.findIndex(c => c.id === cellId);
         // Might also be the edit cell
         if (this.state.editCellVM && cellId === this.state.editCellVM.cell.id) {
-            index = cells.length - 1;
+            index = cells.length;
+        }
+        if (index > 0) {
+            return cells[index - 1].id;
+        }
+        return undefined;
+    }
+
+    private arrowUpFromCell = (cellId: string, e: IKeyboardEvent) => {
+        const prevCellId = this.getPrevCellId(cellId);
+        if (prevCellId && this.contentPanelRef.current) {
+            e.stopPropagation();
+            this.moveSelection(prevCellId);
         }
 
-        if (index >= 0 && this.contentPanelRef.current) {
-            e.stopPropagation();
-            const prevCellId = cells[index].id;
-            const wasFocused = this.state.focusedCell;
-            this.stateController.selectCell(prevCellId, wasFocused ? prevCellId : undefined);
-            this.contentPanelRef.current.focusCell(prevCellId, wasFocused ? true : false);
-        }
+        this.stateController.sendCommand(NativeCommandType.ArrowUp, 'keyboard');
     }
 
     private arrowDownFromCell = (cellId: string, e: IKeyboardEvent) => {
@@ -479,14 +541,14 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
 
         if (nextCellId && this.contentPanelRef.current) {
             e.stopPropagation();
-            const wasFocused = this.state.focusedCell;
-            this.stateController.selectCell(nextCellId, wasFocused ? nextCellId : undefined);
-            this.contentPanelRef.current.focusCell(nextCellId, wasFocused ? true : false);
+            this.moveSelection(nextCellId);
         }
+
+        this.stateController.sendCommand(NativeCommandType.ArrowDown, 'keyboard');
     }
 
     private clickCell = (cellId: string) => {
-        this.pressedDOnce = false;
+        this.lastKeyPressed = undefined;
         const focusedCell = cellId === this.state.focusedCell ? cellId : undefined;
         this.stateController.selectCell(cellId, focusedCell);
     }
@@ -502,8 +564,8 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         if (this.contentPanelRef && this.contentPanelRef.current) {
             e.stopPropagation();
             this.contentPanelRef.current.focusCell(cellId, false);
+            this.stateController.sendCommand(NativeCommandType.Unfocus, 'keyboard');
         }
-
     }
 
     // private copyToClipboard = (cellId: string) => {
@@ -554,35 +616,63 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         }
     }
 
+    // tslint:disable-next-line: max-func-body-length
     private renderNormalCellToolbar(cellId: string): JSX.Element[] | null {
         const cell = this.state.cellVMs.find(cvm => cvm.cell.id === cellId);
         if (cell) {
-            const deleteCell = () => this.stateController.deleteCell(cellId);
+            const deleteCell = () => {
+                this.stateController.deleteCell(cellId);
+                this.stateController.sendCommand(NativeCommandType.DeleteCell, 'mouse');
+            };
             const runCell = () => {
                 this.stateController.updateCellSource(cellId);
                 this.stateController.submitInput(concatMultilineString(cell.cell.data.source), cell);
                 if (this.contentPanelRef.current) {
                     this.contentPanelRef.current.focusCell(cellId, false);
                 }
+                this.stateController.sendCommand(NativeCommandType.Run, 'mouse');
             };
-            const moveUp = () => this.moveCellUp(cellId);
-            const moveDown = () => this.moveCellDown(cellId);
+            const moveUp = () => {
+                this.moveCellUp(cellId);
+                this.stateController.sendCommand(NativeCommandType.MoveCellUp, 'mouse');
+            };
+            const moveDown = () => {
+                this.moveCellDown(cellId);
+                this.stateController.sendCommand(NativeCommandType.MoveCellDown, 'mouse');
+            };
             const canMoveUp = this.stateController.canMoveUp(cellId);
             const canMoveDown = this.stateController.canMoveDown(cellId);
-            const runAbove = () => this.stateController.runAbove(cellId);
-            const runBelow = () => this.stateController.runBelow(cellId);
+            const runAbove = () => {
+                this.stateController.runAbove(cellId);
+                this.stateController.sendCommand(NativeCommandType.RunAbove, 'mouse');
+            };
+            const runBelow = () => {
+                this.stateController.runBelow(cellId);
+                this.stateController.sendCommand(NativeCommandType.RunBelow, 'mouse');
+            };
             const canRunAbove = this.stateController.canRunAbove(cellId);
-            const canRunBelow = this.stateController.canRunBelow(cellId);
-            const insertAbove = () => this.stateController.insertAbove(cellId);
-            const insertBelow = () => this.stateController.insertBelow(cellId);
+            const canRunBelow = cell.cell.state === CellState.finished;
+            const insertAbove = () => {
+                this.stateController.insertAbove(cellId, true);
+                this.stateController.sendCommand(NativeCommandType.InsertAbove, 'mouse');
+            };
+            const insertBelow = () => {
+                this.stateController.insertBelow(cellId, true);
+                this.stateController.sendCommand(NativeCommandType.InsertBelow, 'mouse');
+            };
             const runCellHidden = cell.cell.state !== CellState.finished;
             const flyoutClass = cell.cell.id === this.state.focusedCell ? 'native-editor-cellflyout native-editor-cellflyout-focused'
                 : 'native-editor-cellflyout native-editor-cellflyout-selected';
             const switchTooltip = cell.cell.data.cell_type === 'code' ? getLocString('DataScience.switchToMarkdown', 'Change to markdown') :
                 getLocString('DataScience.switchToCode', 'Change to code');
             const switchImage = cell.cell.data.cell_type === 'code' ? ImageName.SwitchToMarkdown : ImageName.SwitchToCode;
-            const switchCell = cell.cell.data.cell_type === 'code' ? () => this.stateController.changeCellType(cellId, 'markdown') :
-                () => this.stateController.changeCellType(cellId, 'code');
+            const switchCell = cell.cell.data.cell_type === 'code' ? () => {
+                this.stateController.changeCellType(cellId, 'markdown');
+                this.stateController.sendCommand(NativeCommandType.ChangeToMarkdown, 'mouse');
+            } : () => {
+                this.stateController.changeCellType(cellId, 'code');
+                this.stateController.sendCommand(NativeCommandType.ChangeToCode, 'mouse');
+            };
             const outerPortion =
                 <div className='native-editor-celltoolbar-outer' key={0}>
                     <Flyout buttonClassName='native-editor-flyout-button' buttonContent={<span className='flyout-button-content'>...</span>} flyoutContainerName={flyoutClass}>
@@ -601,7 +691,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                         <ImageButton baseTheme={this.props.baseTheme} onClick={insertAbove} tooltip={getLocString('DataScience.insertAbove', 'Insert cell above')}>
                             <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.InsertAbove} />
                         </ImageButton>
-                        <ImageButton baseTheme={this.props.baseTheme} onClick={insertBelow} disabled={!canMoveDown} tooltip={getLocString('DataScience.insertBelow', 'Insert cell below')}>
+                        <ImageButton baseTheme={this.props.baseTheme} onClick={insertBelow} tooltip={getLocString('DataScience.insertBelow', 'Insert cell below')}>
                             <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.InsertBelow} />
                         </ImageButton>
                         <ImageButton baseTheme={this.props.baseTheme} onClick={switchCell} tooltip={switchTooltip}>
@@ -635,18 +725,30 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         if (cell) {
             const runCell = () => {
                 this.stateController.submitInput(concatMultilineString(cell.cell.data.source), cell);
+                this.stateController.sendCommand(NativeCommandType.Run, 'mouse');
             };
-            const runAbove = () => this.stateController.runAbove(Identifiers.EditCellId);
+            const runAbove = () => {
+                this.stateController.runAbove(Identifiers.EditCellId);
+                this.stateController.sendCommand(NativeCommandType.RunAbove, 'mouse');
+            };
             const canRunAbove = this.stateController.canRunAbove(Identifiers.EditCellId);
-            const insertAbove = () => this.stateController.insertAbove(Identifiers.EditCellId);
+            const insertAbove = () => {
+                this.stateController.insertAbove(Identifiers.EditCellId);
+                this.stateController.sendCommand(NativeCommandType.InsertAbove, 'mouse');
+            };
             const flyoutClass = cell.cell.id === this.state.focusedCell ? 'native-editor-cellflyout native-editor-cellflyout-focused'
                 : 'native-editor-cellflyout native-editor-cellflyout-selected';
             const switchTooltip = cell.cell.data.cell_type === 'code' ? getLocString('DataScience.switchToMarkdown', 'Change to markdown') :
                 getLocString('DataScience.switchToCode', 'Change to code');
             const switchImage = cell.cell.data.cell_type === 'code' ? ImageName.SwitchToMarkdown : ImageName.SwitchToCode;
-            const switchCell = cell.cell.data.cell_type === 'code' ? () => this.stateController.changeCellType(Identifiers.EditCellId, 'markdown') :
-                () => this.stateController.changeCellType(Identifiers.EditCellId, 'code');
-            const outerPortion =
+            const switchCell = cell.cell.data.cell_type === 'code' ? () => {
+                this.stateController.changeCellType(Identifiers.EditCellId, 'markdown');
+                this.stateController.sendCommand(NativeCommandType.ChangeToMarkdown, 'mouse');
+             } : () => {
+                 this.stateController.changeCellType(Identifiers.EditCellId, 'code');
+                 this.stateController.sendCommand(NativeCommandType.ChangeToCode, 'mouse');
+             };
+             const outerPortion =
                 <div className='native-editor-celltoolbar-outer' key={0}>
                     <Flyout buttonClassName='native-editor-flyout-button' buttonContent={<span>...</span>} flyoutContainerName={flyoutClass}>
                         <ImageButton baseTheme={this.props.baseTheme} onClick={runAbove} disabled={!canRunAbove} tooltip={getLocString('DataScience.runAbove', 'Run cells above')}>
@@ -696,6 +798,14 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                 this.contentPanelRef.current!.focusCell(newCell, true);
             }, 10);
         }
+    }
+
+    private codeLostFocus = (cellId: string) => {
+        this.stateController.codeLostFocus(cellId);
+    }
+
+    private codeGotFocus = (cellId: string) => {
+        this.stateController.codeGotFocus(cellId);
     }
 
 }
