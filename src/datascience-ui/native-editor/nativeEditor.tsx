@@ -394,8 +394,30 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
     }
 
     private shiftEnterCell = (cellId: string, e: IKeyboardEvent) => {
+        // Prevent shift enter from add an enter
+        e.stopPropagation();
+        e.preventDefault();
+
+        // Submit and move to the next.
+        this.runAndMove(cellId, e.editorInfo ? e.editorInfo.contents : undefined);
+
+        this.stateController.sendCommand(NativeCommandType.RunAndMove, 'keyboard');
+    }
+
+    private altEnterCell = (cellId: string, e: IKeyboardEvent) => {
+        // Prevent shift enter from add an enter
+        e.stopPropagation();
+        e.preventDefault();
+
         // Submit this cell
-        this.submitCell(cellId, e);
+        this.runAndAdd(cellId, e.editorInfo ? e.editorInfo.contents : undefined);
+
+        this.stateController.sendCommand(NativeCommandType.RunAndAdd, 'keyboard');
+    }
+
+    private runAndMove(cellId: string, possibleContents?: string) {
+        // Submit this cell
+        this.submitCell(cellId, possibleContents);
 
         // Move to the next cell if we have one and give it focus
         let nextCell = this.getNextCellId(cellId);
@@ -406,13 +428,11 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         if (nextCell) {
             this.moveSelection(nextCell);
         }
-
-        this.stateController.sendCommand(NativeCommandType.RunAndMove, 'keyboard');
     }
 
-    private altEnterCell = (cellId: string, e: IKeyboardEvent) => {
+    private runAndAdd(cellId: string, possibleContents?: string) {
         // Submit this cell
-        this.submitCell(cellId, e);
+        this.submitCell(cellId, possibleContents);
 
         // insert a cell below this one
         const nextCell = this.stateController.insertBelow(cellId, true);
@@ -421,13 +441,15 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         if (nextCell) {
             this.moveSelection(nextCell);
         }
-
-        this.stateController.sendCommand(NativeCommandType.RunAndAdd, 'keyboard');
     }
 
     private ctrlEnterCell = (cellId: string, e: IKeyboardEvent) => {
+        // Prevent shift enter from add an enter
+        e.stopPropagation();
+        e.preventDefault();
+
         // Submit this cell
-        this.submitCell(cellId, e);
+        this.submitCell(cellId, e.editorInfo ? e.editorInfo.contents : undefined);
         this.stateController.sendCommand(NativeCommandType.Run, 'keyboard');
     }
 
@@ -456,16 +478,13 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         }
     }
 
-    private submitCell = (cellId: string, e: IKeyboardEvent) => {
+    private submitCell = (cellId: string, possibleContents?: string) => {
         let content: string | undefined ;
         const cellVM = this.findCellViewModel(cellId);
-        e.stopPropagation();
-        e.preventDefault();
 
         // If inside editor, submit this code
-        if (e.editorInfo && e.editorInfo.contents) {
-            // Prevent shift+enter from turning into a enter
-            content = e.editorInfo.contents;
+        if (possibleContents) {
+            content = possibleContents;
         } else if (cellVM) {
             // Outside editor, just use the cell
             content = concatMultilineString(cellVM.cell.data.source);
