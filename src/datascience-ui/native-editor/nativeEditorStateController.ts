@@ -13,6 +13,8 @@ import { IMainStateControllerProps, MainStateController } from '../interactive-c
 import { getSettings } from '../react-common/settingsReactSide';
 
 export class NativeEditorStateController extends MainStateController {
+    private finishedLoadAll: boolean = false;
+
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainStateControllerProps) {
         super(props);
@@ -110,19 +112,23 @@ export class NativeEditorStateController extends MainStateController {
         }
     }
 
-    public insertAbove = (cellId?: string, isMonaco?: boolean) => {
+    public insertAbove = (cellId?: string, isMonaco?: boolean): string | undefined => {
         const cells = this.getState().cellVMs;
         const index = cells.findIndex(cvm => cvm.cell.id === cellId);
         if (index >= 0) {
-            this.insertCell(createEmptyCell(uuid(), null), index, isMonaco);
+            const id = uuid();
+            this.insertCell(createEmptyCell(id, null), index, isMonaco);
+            return id;
         }
     }
 
-    public insertBelow = (cellId?: string, isMonaco?: boolean) => {
+    public insertBelow = (cellId?: string, isMonaco?: boolean): string | undefined => {
         const cells = this.getState().cellVMs;
         const index = cells.findIndex(cvm => cvm.cell.id === cellId);
         if (index >= 0) {
-            this.insertCell(createEmptyCell(uuid(), null), index + 1, isMonaco);
+            const id = uuid();
+            this.insertCell(createEmptyCell(id, null), index + 1, isMonaco);
+            return id;
         }
     }
 
@@ -150,6 +156,17 @@ export class NativeEditorStateController extends MainStateController {
 
     public sendCommand(command: NativeCommandType, source: 'keyboard' | 'mouse') {
         this.sendMessage(InteractiveWindowMessages.NativeCommand, { command, source });
+    }
+
+    public renderUpdate(newState: {}) {
+        const oldIsBusy = this.getState().busy;
+
+        super.renderUpdate(newState);
+
+        if (!this.getState().busy && oldIsBusy && !this.finishedLoadAll) {
+            // Indicate we finished loading
+            this.sendMessage(InteractiveWindowMessages.LoadAllCells);
+        }
     }
 
     // Adjust the visibility or collapsed state of a cell

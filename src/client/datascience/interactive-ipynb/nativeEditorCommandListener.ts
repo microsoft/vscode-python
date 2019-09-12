@@ -104,7 +104,7 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
 
                 // Then switch back to the ipynb and close it.
                 // If we don't do it in this order, the close will switch to the wrong item
-                this.documentManager.showTextDocument(document);
+                await this.documentManager.showTextDocument(document);
                 const command = 'workbench.action.closeActiveEditor';
                 await this.cmdManager.executeCommand(command);
             } catch (e) {

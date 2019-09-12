@@ -717,7 +717,7 @@ export class MainStateController implements IMessageHandler {
 
                 const newList = [...this.state.cellVMs];
                 // Make sure to use the same array so our entire state doesn't update
-                if (position && position >= 0) {
+                if (position !== undefined && position >= 0) {
                     newList.splice(position, 0, cellVM);
                 } else {
                     newList.push(cellVM);

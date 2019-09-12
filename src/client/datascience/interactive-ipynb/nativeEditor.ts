@@ -21,6 +21,7 @@ import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
+import { StopWatch } from '../../common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
@@ -63,10 +64,13 @@ import {
 @injectable()
 export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private closedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
+    private executedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
+    private modifiedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
     private loadedPromise: Deferred<void> = createDeferred<void>();
     private _file: Uri = Uri.file('');
     private _dirty: boolean = false;
     private visibleCells: ICell[] = [];
+    private startupTimer: StopWatch = new StopWatch();
 
     constructor(
         @multiInject(IInteractiveWindowListener) listeners: IInteractiveWindowListener[],
@@ -116,7 +120,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'native-editor', 'index_bundle.js'),
             localize.DataScience.nativeEditorTitle(),
             ViewColumn.Active);
-
     }
 
     public get visible(): boolean {
@@ -205,10 +208,22 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return this.closedEvent.event;
     }
 
+    public get executed(): Event<INotebookEditor> {
+        return this.executedEvent.event;
+    }
+
+    public get modified(): Event<INotebookEditor> {
+        return this.modifiedEvent.event;
+    }
+
     // tslint:disable-next-line: no-any
     public onMessage(message: string, payload: any) {
         super.onMessage(message, payload);
         switch (message) {
+            case InteractiveWindowMessages.ReExecuteCell:
+                this.executedEvent.fire(this);
+                break;
+
             case InteractiveWindowMessages.SaveAll:
                 this.dispatchMessage(message, payload, this.saveAll);
                 break;
@@ -223,6 +238,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
             case InteractiveWindowMessages.NativeCommand:
                 this.dispatchMessage(message, payload, this.logNativeCommand);
+                break;
+
+            case InteractiveWindowMessages.LoadAllCells:
+                this.dispatchMessage(message, payload, this.loadCellsComplete);
                 break;
 
             default:
@@ -379,6 +398,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             this._dirty = true;
             this.setTitle(`${path.basename(this.file.fsPath)}*`);
             this.postMessage(InteractiveWindowMessages.NotebookDirty).ignoreErrors();
+            this.modifiedEvent.fire(this);
         }
     }
 
@@ -470,5 +490,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private logNativeCommand(args: INativeCommand) {
         const telemetryEvent = args.source === 'mouse' ? NativeMouseCommandTelemetryLookup[args.command] : NativeKeyboardCommandTelemetryLookup[args.command];
         sendTelemetryEvent(telemetryEvent);
+    }
+
+    private loadCellsComplete() {
+        sendTelemetryEvent(Telemetry.NotebookOpenTime, this.startupTimer.elapsedTime);
     }
 }

@@ -41,8 +41,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
     private stateController: NativeEditorStateController;
     private initialCellDivs: (HTMLDivElement | null)[] = [];
     private debounceUpdateVisibleCells = debounce(this.updateVisibleCells.bind(this), 100);
-    private insideKeyDown: boolean = false;
-    private pressedDOnce = false;
+    private lastKeyPressed: string | undefined;
 
     constructor(props: INativeEditorProps) {
         super(props);
@@ -56,7 +55,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             activate: this.activated.bind(this),
             scrollToCell: this.scrollToCell.bind(this),
             defaultEditable: true,
-            hasEdit: true,
+            hasEdit: false,
             enableGather: false
         });
 
@@ -119,8 +118,14 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
 
     // tslint:disable: react-this-binding-issue
     private renderToolbarPanel() {
-        const addCell = () => this.stateController.addNewCell();
-        const runAll = () => this.stateController.runAll();
+        const addCell = () => {
+            this.stateController.addNewCell();
+            this.stateController.sendCommand(NativeCommandType.AddToEnd, 'mouse');
+        };
+        const runAll = () => {
+            this.stateController.runAll();
+            this.stateController.sendCommand(NativeCommandType.RunAll, 'mouse');
+        };
 
         return (
             <div id='toolbar-panel'>
@@ -286,36 +291,26 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
 
     // tslint:disable-next-line: cyclomatic-complexity max-func-body-length
     private keyDownCell = async (cellId: string, e: IKeyboardEvent) => {
+        const isFocusedWhenNotSuggesting = this.state.focusedCell && e.editorInfo && !e.editorInfo.isSuggesting;
         switch (e.code) {
             case 'ArrowUp':
-                this.pressedDOnce = false;
-                if (this.state.focusedCell === cellId && e.editorInfo && e.editorInfo.isFirstLine && !e.editorInfo.isSuggesting) {
+            case 'k':
+                if ((isFocusedWhenNotSuggesting && e.editorInfo!.isFirstLine) || !this.state.focusedCell) {
                     this.arrowUpFromCell(cellId, e);
-                    this.stateController.sendCommand(NativeCommandType.ArrowUp, 'keyboard');
-                } else if (!this.state.focusedCell) {
-                    this.arrowUpFromCell(cellId, e);
-                    this.stateController.sendCommand(NativeCommandType.ArrowUp, 'keyboard');
                 }
                 break;
             case 'ArrowDown':
-                this.pressedDOnce = false;
-                if (this.state.focusedCell === cellId && e.editorInfo && e.editorInfo.isLastLine && !e.editorInfo.isSuggesting) {
+            case 'j':
+                if ((isFocusedWhenNotSuggesting && e.editorInfo!.isLastLine) || !this.state.focusedCell) {
                     this.arrowDownFromCell(cellId, e);
-                    this.stateController.sendCommand(NativeCommandType.ArrowDown, 'keyboard');
-                } else if (!this.state.focusedCell) {
-                    this.arrowDownFromCell(cellId, e);
-                    this.stateController.sendCommand(NativeCommandType.ArrowDown, 'keyboard');
                 }
                 break;
             case 'Escape':
-                this.pressedDOnce = false;
-                if (this.state.focusedCell && e.editorInfo && !e.editorInfo.isSuggesting) {
-                    this.escapeCell(this.state.focusedCell, e);
-                    this.stateController.sendCommand(NativeCommandType.Unfocus, 'keyboard');
+                if (isFocusedWhenNotSuggesting) {
+                    this.escapeCell(this.state.focusedCell!, e);
                 }
                 break;
             case 'y':
-                this.pressedDOnce = false;
                 if (!this.state.focusedCell && this.state.selectedCell) {
                     e.stopPropagation();
                     this.stateController.changeCellType(this.state.selectedCell, 'code');
@@ -323,7 +318,6 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                 }
                 break;
             case 'm':
-                this.pressedDOnce = false;
                 if (!this.state.focusedCell && this.state.selectedCell) {
                     e.stopPropagation();
                     this.stateController.changeCellType(this.state.selectedCell, 'markdown');
@@ -331,7 +325,6 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                 }
                 break;
             case 'l':
-                this.pressedDOnce = false;
                 if (!this.state.focusedCell && this.state.selectedCell) {
                     e.stopPropagation();
                     this.stateController.toggleLineNumbers(this.state.selectedCell);
@@ -339,7 +332,6 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                 }
                 break;
             case 'o':
-                this.pressedDOnce = false;
                 if (!this.state.focusedCell && this.state.selectedCell) {
                     e.stopPropagation();
                     this.stateController.toggleOutput(this.state.selectedCell);
@@ -347,77 +339,49 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                 }
                 break;
             case 'Enter':
-                this.pressedDOnce = false;
                 if (e.shiftKey) {
-                    this.submitCell(cellId, e, true);
-                    this.stateController.sendCommand(NativeCommandType.RunAndMove, 'keyboard');
+                    this.shiftEnterCell(cellId, e);
                 } else if (e.ctrlKey) {
-                    this.submitCell(cellId, e, false);
-                    this.stateController.sendCommand(NativeCommandType.Run, 'keyboard');
+                    this.ctrlEnterCell(cellId, e);
                 } else if (e.altKey) {
-                    this.submitCell(cellId, e, false);
-                    this.stateController.insertBelow(cellId, true);
-                    this.stateController.sendCommand(NativeCommandType.RunAndAdd, 'keyboard');
+                    this.altEnterCell(cellId, e);
                 } else {
                     this.enterCell(cellId, e);
-                    this.stateController.sendCommand(NativeCommandType.Focus, 'keyboard');
                 }
                 break;
             case 'd':
-                if (this.pressedDOnce) {
+                if (this.lastKeyPressed === 'd' && !this.state.focusedCell  && this.state.selectedCell) {
+                    e.stopPropagation();
+                    this.lastKeyPressed = undefined; // Reset it so we don't keep deleting
+                    const cellToSelect = this.getPrevCellId(cellId) || this.getNextCellId(cellId);
                     this.stateController.deleteCell(cellId);
+                    if (cellToSelect) {
+                        this.moveSelection(cellToSelect);
+                    }
                     this.stateController.sendCommand(NativeCommandType.DeleteCell, 'keyboard');
-                    this.pressedDOnce = false;
-                } else {
-                    this.pressedDOnce = true;
                 }
                 break;
             case 'a':
-                this.pressedDOnce = false;
-                if (this.state.focusedCell === cellId && e.editorInfo && e.editorInfo.isLastLine && !e.editorInfo.isSuggesting) {
-                    this.stateController.insertAbove(cellId, true);
-                    this.stateController.sendCommand(NativeCommandType.InsertAbove, 'keyboard');
-                } else if (!this.state.focusedCell) {
-                    this.stateController.insertAbove(cellId, true);
+                if (isFocusedWhenNotSuggesting || !this.state.focusedCell) {
+                    e.stopPropagation();
+                    const cell = this.stateController.insertAbove(cellId, true);
+                    this.moveSelection(cell!);
                     this.stateController.sendCommand(NativeCommandType.InsertAbove, 'keyboard');
                 }
                 break;
             case 'b':
-                this.pressedDOnce = false;
-                if (this.state.focusedCell === cellId && e.editorInfo && e.editorInfo.isLastLine && !e.editorInfo.isSuggesting) {
-                    this.stateController.insertBelow(cellId, true);
+                if (isFocusedWhenNotSuggesting || !this.state.focusedCell) {
+                    e.stopPropagation();
+                    const cell = this.stateController.insertBelow(cellId, true);
+                    this.moveSelection(cell!);
                     this.stateController.sendCommand(NativeCommandType.InsertBelow, 'keyboard');
-                } else if (!this.state.focusedCell) {
-                    this.stateController.insertBelow(cellId, true);
-                    this.stateController.sendCommand(NativeCommandType.InsertBelow, 'keyboard');
-                }
-                break;
-            case 'j':
-                this.pressedDOnce = false;
-                if (this.state.focusedCell === cellId && e.editorInfo && e.editorInfo.isFirstLine && !e.editorInfo.isSuggesting) {
-                    this.arrowUpFromCell(cellId, e);
-                    this.stateController.sendCommand(NativeCommandType.ArrowUp, 'keyboard');
-                } else if (!this.state.focusedCell) {
-                    this.arrowUpFromCell(cellId, e);
-                    this.stateController.sendCommand(NativeCommandType.ArrowUp, 'keyboard');
-                }
-                break;
-            case 'k':
-                this.pressedDOnce = false;
-                if (this.state.focusedCell === cellId && e.editorInfo && e.editorInfo.isFirstLine && !e.editorInfo.isSuggesting) {
-                    this.arrowDownFromCell(cellId, e);
-                    this.stateController.sendCommand(NativeCommandType.ArrowDown, 'keyboard');
-                } else if (!this.state.focusedCell) {
-                    this.arrowDownFromCell(cellId, e);
-                    this.stateController.sendCommand(NativeCommandType.ArrowDown, 'keyboard');
                 }
                 break;
             default:
-                this.pressedDOnce = false;
                 break;
         }
 
-        this.insideKeyDown = false;
+        this.lastKeyPressed = e.code;
     }
 
     private enterCell = (cellId: string, e: IKeyboardEvent) => {
@@ -425,24 +389,82 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         if (!this.state.focusedCell && !e.editorInfo && this.contentPanelRef && this.contentPanelRef.current) {
             e.stopPropagation();
             e.preventDefault();
-
-            // Figure out which cell this is
-            const cellvm = this.stateController.findCell(cellId);
-            if (cellvm && this.state.selectedCell === cellId) {
-                this.contentPanelRef.current.focusCell(cellId, true);
-            }
+            this.contentPanelRef.current.focusCell(cellId, true);
         }
     }
 
-    private submitCell = (cellId: string, e: IKeyboardEvent, moveToNextCell: boolean) => {
+    private shiftEnterCell = (cellId: string, e: IKeyboardEvent) => {
+        // Submit this cell
+        this.submitCell(cellId, e);
+
+        // Move to the next cell if we have one and give it focus
+        let nextCell = this.getNextCellId(cellId);
+        if (!nextCell) {
+            // At the bottom insert a cell to move to instead
+            nextCell = this.stateController.insertBelow(cellId, true);
+        }
+        if (nextCell) {
+            this.moveSelection(nextCell);
+        }
+
+        this.stateController.sendCommand(NativeCommandType.RunAndMove, 'keyboard');
+    }
+
+    private altEnterCell = (cellId: string, e: IKeyboardEvent) => {
+        // Submit this cell
+        this.submitCell(cellId, e);
+
+        // insert a cell below this one
+        const nextCell = this.stateController.insertBelow(cellId, true);
+
+        // On next update, move the new cell
+        if (nextCell) {
+            this.moveSelection(nextCell);
+        }
+
+        this.stateController.sendCommand(NativeCommandType.RunAndAdd, 'keyboard');
+    }
+
+    private ctrlEnterCell = (cellId: string, e: IKeyboardEvent) => {
+        // Submit this cell
+        this.submitCell(cellId, e);
+        this.stateController.sendCommand(NativeCommandType.Run, 'keyboard');
+    }
+
+    private moveSelectionToExisting = (cellId: string) => {
+        // Cell should already exist in the UI
+        if (this.contentPanelRef && this.contentPanelRef.current) {
+            const wasFocused = this.state.focusedCell;
+            this.stateController.selectCell(cellId, wasFocused ? cellId : undefined);
+            this.contentPanelRef.current.focusCell(cellId, wasFocused ? true : false);
+        }
+    }
+
+    private moveSelection = (cellId: string) => {
+        // Check to see that this cell already exists in our window (it's part of the rendered state
+        const cells = this.getNonMessageCells();
+        if (!cells || !cells.find(c => c.id === cellId)) {
+            // Force selection change right now as we don't need the cell to exist
+            // to make it selected (otherwise we'll get a flash)
+            const wasFocused = this.state.focusedCell;
+            this.stateController.selectCell(cellId, wasFocused ? cellId : undefined);
+
+            // Then wait to give it actual input focus
+            setTimeout(() => this.moveSelectionToExisting(cellId), 1);
+        } else {
+            this.moveSelectionToExisting(cellId);
+        }
+    }
+
+    private submitCell = (cellId: string, e: IKeyboardEvent) => {
         let content: string | undefined ;
         const cellVM = this.findCellViewModel(cellId);
+        e.stopPropagation();
+        e.preventDefault();
 
         // If inside editor, submit this code
         if (e.editorInfo && e.editorInfo.contents) {
             // Prevent shift+enter from turning into a enter
-            e.stopPropagation();
-            e.preventDefault();
             content = e.editorInfo.contents;
         } else if (cellVM) {
             // Outside editor, just use the cell
@@ -452,14 +474,6 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         // Send to jupyter
         if (cellVM && content) {
             this.stateController.submitInput(content, cellVM);
-        }
-
-        // If this is not the edit cell, move to our next cell
-        if (cellId !== Identifiers.EditCellId && moveToNextCell) {
-            const nextCell = this.getNextCellId(cellId);
-            if (nextCell) {
-                this.stateController.selectCell(nextCell, undefined);
-            }
         }
     }
 
@@ -480,24 +494,27 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         return nextCellId;
     }
 
-    private arrowUpFromCell = (cellId: string, e: IKeyboardEvent) => {
+    private getPrevCellId(cellId: string): string | undefined {
         const cells = this.getNonMessageCells();
-
-        // Find the next cell index
-        let index = cells.findIndex(c => c.id === cellId) - 1;
-
+        let index = cells.findIndex(c => c.id === cellId);
         // Might also be the edit cell
         if (this.state.editCellVM && cellId === this.state.editCellVM.cell.id) {
-            index = cells.length - 1;
+            index = cells.length;
+        }
+        if (index > 0) {
+            return cells[index - 1].id;
+        }
+        return undefined;
+    }
+
+    private arrowUpFromCell = (cellId: string, e: IKeyboardEvent) => {
+        const prevCellId = this.getPrevCellId(cellId);
+        if (prevCellId && this.contentPanelRef.current) {
+            e.stopPropagation();
+            this.moveSelection(prevCellId);
         }
 
-        if (index >= 0 && this.contentPanelRef.current) {
-            e.stopPropagation();
-            const prevCellId = cells[index].id;
-            const wasFocused = this.state.focusedCell;
-            this.stateController.selectCell(prevCellId, wasFocused ? prevCellId : undefined);
-            this.contentPanelRef.current.focusCell(prevCellId, wasFocused ? true : false);
-        }
+        this.stateController.sendCommand(NativeCommandType.ArrowUp, 'keyboard');
     }
 
     private arrowDownFromCell = (cellId: string, e: IKeyboardEvent) => {
@@ -505,14 +522,14 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
 
         if (nextCellId && this.contentPanelRef.current) {
             e.stopPropagation();
-            const wasFocused = this.state.focusedCell;
-            this.stateController.selectCell(nextCellId, wasFocused ? nextCellId : undefined);
-            this.contentPanelRef.current.focusCell(nextCellId, wasFocused ? true : false);
+            this.moveSelection(nextCellId);
         }
+
+        this.stateController.sendCommand(NativeCommandType.ArrowDown, 'keyboard');
     }
 
     private clickCell = (cellId: string) => {
-        this.pressedDOnce = false;
+        this.lastKeyPressed = undefined;
         const focusedCell = cellId === this.state.focusedCell ? cellId : undefined;
         this.stateController.selectCell(cellId, focusedCell);
     }
@@ -528,8 +545,8 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         if (this.contentPanelRef && this.contentPanelRef.current) {
             e.stopPropagation();
             this.contentPanelRef.current.focusCell(cellId, false);
+            this.stateController.sendCommand(NativeCommandType.Unfocus, 'keyboard');
         }
-
     }
 
     // private copyToClipboard = (cellId: string) => {
@@ -615,13 +632,13 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                 this.stateController.sendCommand(NativeCommandType.RunBelow, 'mouse');
             };
             const canRunAbove = this.stateController.canRunAbove(cellId);
-            const canRunBelow = this.stateController.canRunBelow(cellId);
+            const canRunBelow = cell.cell.state === CellState.finished;
             const insertAbove = () => {
-                this.stateController.insertAbove(cellId);
+                this.stateController.insertAbove(cellId, true);
                 this.stateController.sendCommand(NativeCommandType.InsertAbove, 'mouse');
             };
             const insertBelow = () => {
-                this.stateController.insertBelow(cellId);
+                this.stateController.insertBelow(cellId, true);
                 this.stateController.sendCommand(NativeCommandType.InsertBelow, 'mouse');
             };
             const runCellHidden = cell.cell.state !== CellState.finished;
@@ -655,7 +672,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                         <ImageButton baseTheme={this.props.baseTheme} onClick={insertAbove} tooltip={getLocString('DataScience.insertAbove', 'Insert cell above')}>
                             <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.InsertAbove} />
                         </ImageButton>
-                        <ImageButton baseTheme={this.props.baseTheme} onClick={insertBelow} disabled={!canMoveDown} tooltip={getLocString('DataScience.insertBelow', 'Insert cell below')}>
+                        <ImageButton baseTheme={this.props.baseTheme} onClick={insertBelow} tooltip={getLocString('DataScience.insertBelow', 'Insert cell below')}>
                             <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.InsertBelow} />
                         </ImageButton>
                         <ImageButton baseTheme={this.props.baseTheme} onClick={switchCell} tooltip={switchTooltip}>
@@ -770,9 +787,6 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
 
     private codeGotFocus = (cellId: string) => {
         this.stateController.codeGotFocus(cellId);
-        if (!this.insideKeyDown) {
-            this.stateController.sendCommand(NativeCommandType.Focus, 'mouse');
-        }
     }
 
 }
