@@ -417,15 +417,8 @@ export class Cell extends React.Component<ICellProps, ICellState> {
                 `cell-output cell-output-${this.props.baseTheme}` :
                 '';
 
-            // make the width of the div be the same as the width of the window,
-            // the 95 pixels removed account for the space the padding and controls on the left take.
-            const styles: React.CSSProperties = {
-                width: window.innerWidth - 95,
-                overflowX: 'scroll'
-            };
-
             // Then combine them inside a div
-            return <div className={outputClassNames} style={styles}>{results}</div>;
+            return <div className={outputClassNames}>{results}</div>;
         }
         return null;
     }
@@ -455,8 +448,9 @@ export class Cell extends React.Component<ICellProps, ICellState> {
         // React-markdown expects that the source is a string
         const source = concatMultilineString(markdown.source);
         const Transform = transforms['text/markdown'];
+        const MarkdownClassName = 'markdown-cell-output';
 
-        return [<Transform key={0} data={source} />];
+        return [<div className={MarkdownClassName}><Transform key={0} data={source} /></div>];
     }
 
     // tslint:disable-next-line: max-func-body-length
