@@ -651,7 +651,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                 this.stateController.sendCommand(NativeCommandType.RunBelow, 'mouse');
             };
             const canRunAbove = this.stateController.canRunAbove(cellId);
-            const canRunBelow = cell.cell.state === CellState.finished;
+            const canRunBelow = cell.cell.state === CellState.finished || cell.cell.state === CellState.error;
             const insertAbove = () => {
                 this.stateController.insertAbove(cellId, true);
                 this.stateController.sendCommand(NativeCommandType.InsertAbove, 'mouse');
@@ -660,7 +660,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                 this.stateController.insertBelow(cellId, true);
                 this.stateController.sendCommand(NativeCommandType.InsertBelow, 'mouse');
             };
-            const runCellHidden = cell.cell.state !== CellState.finished;
+            const runCellHidden = !canRunBelow;
             const flyoutClass = cell.cell.id === this.state.focusedCell ? 'native-editor-cellflyout native-editor-cellflyout-focused'
                 : 'native-editor-cellflyout native-editor-cellflyout-selected';
             const switchTooltip = cell.cell.data.cell_type === 'code' ? getLocString('DataScience.switchToMarkdown', 'Change to markdown') :

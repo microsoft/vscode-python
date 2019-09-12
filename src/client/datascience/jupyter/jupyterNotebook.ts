@@ -197,10 +197,13 @@ export class JupyterNotebookBase implements INotebook {
                 cancelToken
             );
 
-            // Run any startup commands that we specified
-            if (settings.runStartupCommands) {
-                await this.executeSilently(settings.runStartupCommands, cancelToken);
-                traceInfo(`Run startup code for notebook: ${settings.runStartupCommands}`);
+            // Run any startup commands that we specified. Support the old form too
+            const setting = settings.runStartupCommands || settings.runMagicCommands;
+            if (setting) {
+                // Cleanup the linefeeds. User may have typed them into the settings UI so they will have an extra \\ on the front.
+                const cleanedUp = setting.replace(/\\n/g, '\n');
+                await this.executeSilently(cleanedUp, cancelToken);
+                traceInfo(`Run startup code for notebook: ${cleanedUp}`);
             }
 
             traceInfo(`Initial setup complete for ${this.resource.toString()}`);

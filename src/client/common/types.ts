@@ -341,6 +341,7 @@ export interface IDataScienceSettings {
     colorizeInputBox?: boolean;
     addGotoCodeLenses?: boolean;
     useNotebookEditor?: boolean;
+    runMagicCommands?: string;
     runStartupCommands: string;
     debugJustMyCode: boolean;
 }
