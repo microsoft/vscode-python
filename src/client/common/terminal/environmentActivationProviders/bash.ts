@@ -27,7 +27,11 @@ export class Bash extends BaseActivationCommandProvider {
         if (!scriptFile) {
             return;
         }
-        return [`source ${scriptFile.fileToCommandArgument()}`];
+        if (targetShell === TerminalShellType.fish) {
+            return [`. ${scriptFile.fileToCommandArgument()}`];
+        } else {
+            return [`source ${scriptFile.fileToCommandArgument()}`];
+        }
     }
 
     private getScriptsInOrderOfPreference(targetShell: TerminalShellType): string[] {
