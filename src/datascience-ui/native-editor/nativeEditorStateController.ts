@@ -137,7 +137,7 @@ export class NativeEditorStateController extends MainStateController {
     }
 
     public moveCellUp = (cellId?: string) => {
-        const cellVms = this.getState().cellVMs;
+        const cellVms = [...this.getState().cellVMs];
         const index = cellVms.findIndex(cvm => cvm.cell.id === cellId);
         if (index > 0) {
             [cellVms[index - 1], cellVms[index]] = [cellVms[index], cellVms[index - 1]];
@@ -148,7 +148,7 @@ export class NativeEditorStateController extends MainStateController {
     }
 
     public moveCellDown = (cellId?: string) => {
-        const cellVms = this.getState().cellVMs;
+        const cellVms = [...this.getState().cellVMs];
         const index = cellVms.findIndex(cvm => cvm.cell.id === cellId);
         if (index < cellVms.length - 1) {
             [cellVms[index + 1], cellVms[index]] = [cellVms[index], cellVms[index + 1]];
