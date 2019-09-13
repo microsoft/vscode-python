@@ -13,6 +13,7 @@ import { getSettings } from '../react-common/settingsReactSide';
 
 export class NativeEditorStateController extends MainStateController {
     private finishedLoadAll: boolean = false;
+    private startedLoadAll: boolean = false;
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainStateControllerProps) {
@@ -32,6 +33,10 @@ export class NativeEditorStateController extends MainStateController {
             case InteractiveWindowMessages.NotebookClean:
                 // Indicate dirty
                 this.setState({ dirty: false });
+                break;
+
+            case InteractiveWindowMessages.LoadAllCells:
+                this.startedLoadAll = true;
                 break;
 
             default:
@@ -162,7 +167,8 @@ export class NativeEditorStateController extends MainStateController {
 
         super.renderUpdate(newState);
 
-        if (!this.getState().busy && oldIsBusy && !this.finishedLoadAll) {
+        if (!this.getState().busy && oldIsBusy && !this.finishedLoadAll && this.startedLoadAll) {
+            this.finishedLoadAll = true;
             // Indicate we finished loading
             this.sendMessage(InteractiveWindowMessages.LoadAllCells);
         }

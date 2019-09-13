@@ -97,12 +97,6 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
         return getLocString('DataScience.unknownMimeTypeFormat', 'Unknown Mime Type');
     }
 
-    public getOffsetCoords(): { top: number; height: number } | undefined {
-        if (this.wrapperRef && this.wrapperRef.current) {
-            return { top: this.wrapperRef.current.offsetTop, height: this.wrapperRef.current.offsetHeight };
-        }
-    }
-
     private getCell = () => {
         return this.props.cellVM.cell;
     }

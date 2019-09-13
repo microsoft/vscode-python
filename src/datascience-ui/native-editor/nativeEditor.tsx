@@ -28,6 +28,8 @@ import { NativeEditorStateController } from './nativeEditorStateController';
 // tslint:disable: react-this-binding-issue
 // tslint:disable-next-line:no-require-imports no-var-requires
 const debounce = require('lodash/debounce') as typeof import('lodash/debounce');
+// tslint:disable-next-line: no-require-imports
+import cloneDeep = require('lodash/cloneDeep');
 
 interface INativeEditorProps {
     skipDefault: boolean;
@@ -44,6 +46,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
     private debounceUpdateVisibleCells = debounce(this.updateVisibleCells.bind(this), 100);
     private lastKeyPressed: string | undefined;
     private cellRefs: Map<string, React.RefObject<NativeCell>> = new Map<string, React.RefObject<NativeCell>>();
+    private cellContainerRefs: Map<string, React.RefObject<HTMLDivElement>> = new Map<string, React.RefObject<HTMLDivElement>>();
     private initialVisibilityUpdate: boolean = false;
 
     constructor(props: INativeEditorProps) {
@@ -80,14 +83,6 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         window.removeEventListener('resize', () => this.forceUpdate());
         // Dispose of our state controller so it stops listening
         this.stateController.dispose();
-    }
-
-    public componentDidUpdate(_prevProps: INativeEditorProps, prevState: IMainState) {
-        // When the busy state changes and we haven't done a visible check yet, try one
-        if (prevState.busy && !this.state.busy && !this.initialVisibilityUpdate) {
-            this.initialVisibilityUpdate = true;
-            this.debounceUpdateVisibleCells();
-        }
     }
 
     public render() {
@@ -227,25 +222,29 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
     }
 
     private updateVisibleCells()  {
-        if (this.contentPanelScrollRef.current && this.cellRefs.size !== 0) {
+        if (this.contentPanelScrollRef.current && this.cellContainerRefs.size !== 0) {
             const visibleTop = this.contentPanelScrollRef.current.offsetTop + this.contentPanelScrollRef.current.scrollTop;
             const visibleBottom = visibleTop + this.contentPanelScrollRef.current.clientHeight;
-            const cellVMs = this.state.cellVMs;
+            const cellVMs = [...this.state.cellVMs];
 
             // Go through the cell divs and find the ones that are suddenly visible
             let makeChange = false;
-            for (const cellVM of cellVMs) {
+            // Linter is wrong, if
+            // tslint:disable-next-line: prefer-for-of
+            for (let i = 0; i < cellVMs.length; i += 1) {
+                const cellVM = cellVMs[i];
                 if (cellVM.useQuickEdit && this.cellRefs.has(cellVM.cell.id)) {
-                    const ref = this.cellRefs.get(cellVM.cell.id);
+                    const ref = this.cellContainerRefs.get(cellVM.cell.id);
                     if (ref && ref.current) {
-                        const coords = ref.current.getOffsetCoords();
-                        const bottom = coords ? coords.top + coords.height : 0;
-                        if (coords && coords.top > visibleBottom) {
+                        const top = ref.current.offsetTop;
+                        const bottom = top + ref.current.offsetHeight;
+                        if (top > visibleBottom) {
                             break;
                         } else if (bottom < visibleTop) {
                             continue;
                         } else {
-                            cellVM.useQuickEdit = false;
+                            cellVMs[i] = cloneDeep(cellVM);
+                            cellVMs[i].useQuickEdit = false;
                             makeChange = true;
                         }
                     }
@@ -609,9 +608,18 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         }
     }
 
-    private renderCell = (cellVM: ICellViewModel, index: number, containerRef?: React.RefObject<HTMLDivElement>): JSX.Element | null => {
+    private renderCell = (cellVM: ICellViewModel, index: number): JSX.Element | null => {
         const cellRef : React.RefObject<NativeCell> = React.createRef<NativeCell>();
+        const containerRef = React.createRef<HTMLDivElement>();
         this.cellRefs.set(cellVM.cell.id, cellRef);
+        this.cellContainerRefs.set(cellVM.cell.id, containerRef);
+
+        // Special case, see if our initial load is finally complete.
+        if (this.state.loadTotal && this.cellRefs.size >= this.state.loadTotal && !this.initialVisibilityUpdate) {
+            // We are finally at the point where we have rendered all visible cells. Try fixing up their visible state
+            this.initialVisibilityUpdate = true;
+            this.debounceUpdateVisibleCells();
+        }
         return (
             <div key={index} id={cellVM.cell.id} ref={containerRef}>
                 <ErrorBoundary key={index}>

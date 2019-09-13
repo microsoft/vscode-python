@@ -55,6 +55,7 @@ export interface IMainState {
     enableGather: boolean;
     isAtBottom: boolean;
     newCell?: string;
+    loadTotal?: number;
 }
 
 // tslint:disable-next-line: no-multiline-string

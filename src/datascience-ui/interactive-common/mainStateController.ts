@@ -1098,6 +1098,9 @@ export class MainStateController implements IMessageHandler {
             const cells = payload.cells as ICell[];
             cells.forEach(c => this.finishCell(c));
 
+            // Set our state to not being busy anymore
+            this.setState({ busy: false, loadTotal: payload.cells.length });
+
             // Turn updates back on and resend the state.
             this.resumeUpdates();
         }
