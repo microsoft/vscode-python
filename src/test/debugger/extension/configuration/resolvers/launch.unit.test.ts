@@ -661,6 +661,23 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             diagnosticsService.verifyAll();
             expect(debugConfig).to.not.be.equal(undefined, 'is undefined');
         });
+        test('Resolve path to envFile', async () => {
+            const pythonPath = `PythonPath_${new Date().toString()}`;
+            const workspaceFolder = createMoqWorkspaceFolder(__dirname);
+            const pythonFile = 'xyz.py';
+            const expectedEnvFilePath = `${workspaceFolder.uri.fsPath}${osType === OSType.Windows ? '\\' : '/'}${'wow.envFile'}`;
+            setupIoc(pythonPath);
+            setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
+
+            diagnosticsService.reset();
+            diagnosticsService
+                .setup(h => h.validatePythonPath(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve(true));
+
+            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { redirectOutput: false, pythonPath, envFile: path.join('${workspaceFolder}', 'wow.envFile') } as LaunchRequestArguments);
+
+            expect(debugConfig!.envFile).to.be.equal(expectedEnvFilePath);
+        });
         async function testSetting(requestType: 'launch' | 'attach', settings: Record<string, boolean>, debugOptionName: DebugOptions, mustHaveDebugOption: boolean) {
             setupIoc('pythonPath');
             const debugConfiguration: DebugConfiguration = { request: requestType, type: 'python', name: '', ...settings };

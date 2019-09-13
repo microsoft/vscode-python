@@ -57,7 +57,7 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
     }
     // tslint:disable-next-line:cyclomatic-complexity
     protected async provideLaunchDefaults(workspaceFolder: Uri | undefined, debugConfiguration: LaunchRequestArguments): Promise<void> {
-        this.resolveAndUpdatePythonPath(workspaceFolder, debugConfiguration);
+        this.resolveAndUpdatePaths(workspaceFolder, debugConfiguration);
         if (typeof debugConfiguration.cwd !== 'string' && workspaceFolder) {
             debugConfiguration.cwd = workspaceFolder.fsPath;
         }
