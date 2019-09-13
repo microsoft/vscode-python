@@ -68,10 +68,11 @@ suite('Crypto Utils', async () => {
                 hashes[i] = hash % 100;
             }
         }
-        const expectedHits = wordList.length / 10;
+        // Total number of words = wordList.length * 10, because we added ten variants of each word above.
+        const expectedHitsPerBucket = wordList.length * 10 / 100;
         for (const hit of buckets) {
-            expect(hit).to.lessThan(1.25 * expectedHits);
-            expect(hit).to.greaterThan(0.75 * expectedHits);
+            expect(hit).to.be.lessThan(1.25 * expectedHitsPerBucket);
+            expect(hit).to.be.greaterThan(0.75 * expectedHitsPerBucket);
         }
     });
     test('If hashFormat equals `number`, on a scale of 0 to 100, small difference in the input on average produce large differences (about 33) in the output ', async () => {
@@ -121,8 +122,8 @@ suite('Crypto Utils', async () => {
                 }
             }
             const averageDifference = totalDifference / hashes.length / hashes.length;
-            expect(averageDifference).to.lessThan(1.25 * 33);
-            expect(averageDifference).to.greaterThan(0.75 * 33);
+            expect(averageDifference).to.be.lessThan(1.25 * 33);
+            expect(averageDifference).to.be.greaterThan(0.75 * 33);
         }
     });
 });
