@@ -84,7 +84,6 @@ export class HostJupyterServer
                 service.onRequest(LiveShareCommands.createNotebook, async (args: any[], cancellation: CancellationToken) => {
                     const uriString = args[0];
                     const uri = vscode.Uri.parse(uriString);
-                    const isUri = uri instanceof vscode.Uri;
                     // Translate the uri into local if possible
                     //const uri = args[0] as vscode.Uri;
                     //const uri2 = vscode.Uri.parse(uri.toString());
