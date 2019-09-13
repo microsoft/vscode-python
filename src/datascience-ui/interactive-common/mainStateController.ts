@@ -29,10 +29,9 @@ import {
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { getSettings, updateSettings } from '../react-common/settingsReactSide';
 import { detectBaseTheme } from '../react-common/themeDetector';
-import { ICellViewModel } from './cell';
 import { InputHistory } from './inputHistory';
 import { IntellisenseProvider } from './intellisenseProvider';
-import { createCellVM, createEditableCellVM, extractInputText, generateTestState, IMainState } from './mainState';
+import { createCellVM, createEditableCellVM, extractInputText, generateTestState, ICellViewModel, IMainState } from './mainState';
 import { initializeTokenizer, registerMonacoLanguage } from './tokenizer';
 
 export interface IMainStateControllerProps {

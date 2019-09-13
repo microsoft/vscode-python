@@ -7,8 +7,7 @@ import * as uuid from 'uuid/v4';
 import { concatMultilineString } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import { InteractiveWindowMessages, NativeCommandType } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import { ICellViewModel } from '../interactive-common/cell';
-import { createEmptyCell, extractInputText } from '../interactive-common/mainState';
+import { createEmptyCell, extractInputText, ICellViewModel } from '../interactive-common/mainState';
 import { IMainStateControllerProps, MainStateController } from '../interactive-common/mainStateController';
 import { getSettings } from '../react-common/settingsReactSide';
 

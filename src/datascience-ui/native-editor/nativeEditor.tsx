@@ -9,7 +9,7 @@ import { concatMultilineString } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import { NativeCommandType } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CellState, ICell } from '../../client/datascience/types';
-import { ICellViewModel } from '../interactive-common/cell';
+import { ICellViewModel } from '../history-react/cell';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
 import { IMainState } from '../interactive-common/mainState';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';

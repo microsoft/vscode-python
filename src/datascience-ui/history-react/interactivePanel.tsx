@@ -7,9 +7,8 @@ import * as React from 'react';
 
 import { noop } from '../../client/common/utils/misc';
 import { Identifiers } from '../../client/datascience/constants';
-import { Cell } from '../interactive-common/cell';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
-import { IMainState } from '../interactive-common/mainState';
+import { ICellViewModel, IMainState } from '../interactive-common/mainState';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
 import { ErrorBoundary } from '../react-common/errorBoundary';
 import { IKeyboardEvent } from '../react-common/event';
@@ -17,6 +16,7 @@ import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
 import { getSettings } from '../react-common/settingsReactSide';
+import { Cell } from './cell';
 import { InteractivePanelStateController } from './interactivePanelStateController';
 
 interface IInteractivePanelProps {
@@ -32,6 +32,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
     private mainPanelRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private editCellRef: React.RefObject<Cell> = React.createRef<Cell>();
     private contentPanelRef: React.RefObject<ContentPanel> = React.createRef<ContentPanel>();
+    private cellRefs: Map<string, React.RefObject<Cell>> = new Map<string, React.RefObject<Cell>>();
     private renderCount: number = 0;
     private internalScrollCount: number = 0;
 
@@ -219,7 +220,6 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
 
     private getContentProps = (baseTheme: string): IContentPanelProps => {
         return {
-            editorOptions: this.state.editorOptions,
             baseTheme: baseTheme,
             cellVMs: this.state.cellVMs,
             history: this.state.history,
@@ -227,15 +227,10 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
             codeTheme: this.props.codeTheme,
             submittedText: this.state.submittedText,
             skipNextScroll: this.state.skipNextScroll ? true : false,
-            monacoTheme: this.state.monacoTheme,
-            onCodeCreated: this.stateController.readOnlyCodeCreated,
-            onCodeChange: this.stateController.codeChange,
-            openLink: this.stateController.openLink,
-            expandImage: this.stateController.showPlot,
             editable: false,
             newCellVM: undefined,
-            editExecutionCount: this.getInputExecutionCount().toString(),
-            renderCellToolbar: this.renderCellToolbar,
+            renderCell: this.renderCell,
+            focusCell: this.focusCell,
             scrollToBottom: this.scrollDiv
         };
     }
@@ -309,6 +304,50 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
                 const self = tabable.indexOf(element);
                 return direction >= 0 ? tabable[self + 1] || tabable[0] : tabable[self - 1] || tabable[0];
             }
+        }
+    }
+
+    private renderCell = (cellVM: ICellViewModel, index: number, containerRef?: React.RefObject<HTMLDivElement>): JSX.Element | null => {
+        let cellRef : React.RefObject<Cell> | undefined;
+        if (!this.cellRefs.has(cellVM.cell.id)) {
+            cellRef = React.createRef<Cell>();
+            this.cellRefs.set(cellVM.cell.id, cellRef);
+        }
+        return (
+            <div key={index} id={cellVM.cell.id} ref={containerRef}>
+                <ErrorBoundary key={index}>
+                    <Cell
+                        ref={cellRef}
+                        role='listitem'
+                        editorOptions={this.state.editorOptions}
+                        history={undefined}
+                        maxTextSize={getSettings().maxOutputSize}
+                        autoFocus={false}
+                        testMode={this.props.testMode}
+                        cellVM={cellVM}
+                        baseTheme={this.props.baseTheme}
+                        codeTheme={this.props.codeTheme}
+                        allowCollapse={false}
+                        showWatermark={cellVM.cell.id === Identifiers.EditCellId}
+                        editExecutionCount={this.getInputExecutionCount().toString()}
+                        onCodeChange={this.stateController.codeChange}
+                        onCodeCreated={this.stateController.editableCodeCreated}
+                        monacoTheme={this.state.monacoTheme}
+                        openLink={this.stateController.openLink}
+                        expandImage={this.stateController.showPlot}
+                        allowsMarkdownEditing={false}
+                        renderCellToolbar={this.renderCellToolbar}
+                        showLineNumbers={cellVM.showLineNumbers}
+                        hideOutput={cellVM.hideOutput}
+                    />
+                </ErrorBoundary>
+            </div>);
+    }
+
+    private focusCell = (cellVM: ICellViewModel): void => {
+        const ref = this.cellRefs.get(cellVM.cell.id);
+        if (ref && ref.current) {
+            ref.current.giveFocus(true);
         }
     }
 
