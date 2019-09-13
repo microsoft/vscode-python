@@ -7,6 +7,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 import { JSONObject } from '@phosphor/coreutils';
 import ansiRegex from 'ansi-regex';
 import ansiToHtml from 'ansi-to-html';
+// tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
@@ -21,7 +22,6 @@ import { getLocString } from '../react-common/locReactSide';
 import { ICellViewModel } from './mainState';
 import { displayOrder, richestMimetype, transforms } from './transforms';
 
-// tslint:disable-next-line: no-require-imports
 interface ICellOutputProps {
     cellVM: ICellViewModel;
     baseTheme: string;

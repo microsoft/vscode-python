@@ -3,7 +3,6 @@
 'use strict';
 import * as React from 'react';
 
-import { Identifiers } from '../../client/datascience/constants';
 import { InputHistory } from './inputHistory';
 import { ICellViewModel } from './mainState';
 
@@ -22,16 +21,13 @@ export interface IContentPanelProps {
     submittedText: boolean;
     skipNextScroll: boolean;
     editable: boolean;
-    renderCell(cellVM: ICellViewModel, index: number, containerRef?: React.RefObject<HTMLDivElement>): JSX.Element | null;
-    focusCell(cellVM: ICellViewModel, focusCode: boolean): void;
-    onRenderCompleted?(cells: (HTMLDivElement | null)[]): void;
+    renderCell(cellVM: ICellViewModel, index: number): JSX.Element | null;
     scrollToBottom(div: HTMLDivElement): void;
 }
 
 export class ContentPanel extends React.Component<IContentPanelProps> {
     private bottomRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private containerRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
-    private cellContainerRefs: Map<string, React.RefObject<HTMLDivElement>> = new Map<string, React.RefObject<HTMLDivElement>>();
     private throttledScrollIntoView = throttle(this.scrollIntoView.bind(this), 100);
     constructor(prop: IContentPanelProps) {
         super(prop);
@@ -39,12 +35,6 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
 
     public componentDidMount() {
         this.scrollToBottom();
-
-        // Indicate we completed our first render
-        if (this.props.onRenderCompleted && this.cellContainerRefs.values) {
-            const values = Array.from(this.cellContainerRefs.values()).map(c => c.current);
-            this.props.onRenderCompleted(values);
-        }
     }
 
     public componentDidUpdate() {
@@ -65,44 +55,15 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
         );
     }
 
-    public scrollToCell(cellId: string) {
-        const ref = this.cellContainerRefs.get(cellId);
-        if (ref && ref.current) {
-            ref.current.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
-            ref.current.classList.add('flash');
-            setTimeout(() => {
-                if (ref.current) {
-                    ref.current.classList.remove('flash');
-                }
-            }, 1000);
-        }
-    }
-
-    public focusCell(cellId: string, focusCode: boolean) {
-        const ref = this.cellContainerRefs.get(cellId);
-        const vm = this.props.cellVMs.find(c => c.cell.id === cellId) || (cellId === Identifiers.EditCellId) ? this.props.newCellVM : undefined;
-        if (ref && ref.current) {
-            ref.current.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
-            if (vm) {
-                this.props.focusCell(vm, focusCode);
-            }
-        }
-    }
-
     private renderCells = () => {
         return this.props.cellVMs.map((cellVM: ICellViewModel, index: number) => {
-            let ref: React.RefObject<HTMLDivElement> | undefined;
-            if (!this.cellContainerRefs.has(cellVM.cell.id)) {
-                ref = React.createRef<HTMLDivElement>();
-                this.cellContainerRefs.set(cellVM.cell.id, ref);
-            }
-            this.props.renderCell(cellVM, index, ref!);
+            return this.props.renderCell(cellVM, index);
         });
     }
 
     private renderEdit = () => {
         if (this.props.editable && this.props.newCellVM) {
-            return this.props.renderCell(this.props.newCellVM, 0, undefined);
+            return this.props.renderCell(this.props.newCellVM, 0);
         } else {
             return null;
         }

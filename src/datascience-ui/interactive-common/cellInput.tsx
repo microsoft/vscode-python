@@ -8,14 +8,14 @@ import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
 
 import { concatMultilineString } from '../../client/datascience/common';
-import { ICell } from '../../client/datascience/types';
 import { IKeyboardEvent } from '../react-common/event';
 import { getLocString } from '../react-common/locReactSide';
 import { Code } from './code';
 import { InputHistory } from './inputHistory';
+import { ICellViewModel } from './mainState';
 import { Markdown } from './markdown';
 
-// tslint:disable-next-line: no-require-imports
+// tslint:disable-next-line: no-require-importss
 interface ICellInputProps {
     cellVM: ICellViewModel;
     codeTheme: string;
@@ -34,20 +34,6 @@ interface ICellInputProps {
     keyDown?(cellId: string, e: IKeyboardEvent): void;
     focused?(cellId: string): void;
     unfocused?(cellId: string): void;
-}
-
-export interface ICellViewModel {
-    cell: ICell;
-    inputBlockShow: boolean;
-    inputBlockOpen: boolean;
-    inputBlockText: string;
-    inputBlockCollapseNeeded: boolean;
-    editable: boolean;
-    directInput?: boolean;
-    showLineNumbers?: boolean;
-    hideOutput?: boolean;
-    useQuickEdit?: boolean;
-    inputBlockToggled(id: string): void;
 }
 
 // tslint:disable: react-this-binding-issue

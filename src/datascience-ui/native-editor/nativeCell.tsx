@@ -3,23 +3,23 @@
 'use strict';
 import '../../client/common/extensions';
 
+import { nbformat } from '@jupyterlab/coreutils';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
 
 import { Identifiers } from '../../client/datascience/constants';
-import { CellState, ICell } from '../../client/datascience/types';
+import { CellState } from '../../client/datascience/types';
 import { CellInput } from '../interactive-common/cellInput';
 import { CellOutput } from '../interactive-common/cellOutput';
-import { CollapseButton } from '../interactive-common/collapseButton';
 import { ExecutionCount } from '../interactive-common/executionCount';
 import { InformationMessages } from '../interactive-common/informationMessages';
 import { InputHistory } from '../interactive-common/inputHistory';
+import { ICellViewModel } from '../interactive-common/mainState';
 import { IKeyboardEvent } from '../react-common/event';
 import { getLocString } from '../react-common/locReactSide';
-import { getSettings } from '../react-common/settingsReactSide';
 
 // tslint:disable-next-line: no-require-imports
-interface ICellProps {
+interface INativeCellProps {
     role?: string;
     cellVM: ICellViewModel;
     baseTheme: string;
@@ -33,10 +33,8 @@ interface ICellProps {
     editorOptions?: monacoEditor.editor.IEditorOptions;
     editExecutionCount?: string;
     editorMeasureClassName?: string;
-    allowCollapse: boolean;
     selectedCell?: string;
     focusedCell?: string;
-    allowsMarkdownEditing?: boolean;
     hideOutput?: boolean;
     showLineNumbers?: boolean;
     onCodeChange(changes: monacoEditor.editor.IModelContentChange[], cellId: string, modelId: string): void;
@@ -51,32 +49,20 @@ interface ICellProps {
     renderCellToolbar(cellId: string): JSX.Element[] | null;
 }
 
-export interface ICellViewModel {
-    cell: ICell;
-    inputBlockShow: boolean;
-    inputBlockOpen: boolean;
-    inputBlockText: string;
-    inputBlockCollapseNeeded: boolean;
-    editable: boolean;
-    directInput?: boolean;
-    showLineNumbers?: boolean;
-    hideOutput?: boolean;
-    useQuickEdit?: boolean;
-    inputBlockToggled(id: string): void;
+interface INativeCellState {
+    showingMarkdownEditor: boolean;
 }
-
 // tslint:disable: react-this-binding-issue
-export class Cell extends React.Component<ICellProps> {
-    private codeRef: React.RefObject<CellInput> = React.createRef<CellInput>();
-    private cellWrapperRef : React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
+export class NativeCell extends React.Component<INativeCellProps, INativeCellState> {
+    private inputRef: React.RefObject<CellInput> = React.createRef<CellInput>();
+    private wrapperRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
 
-    constructor(prop: ICellProps) {
+    constructor(prop: INativeCellProps) {
         super(prop);
         this.state = { showingMarkdownEditor: false };
     }
 
     public render() {
-
         if (this.props.cellVM.cell.data.cell_type === 'messages') {
             return <InformationMessages messages={this.props.cellVM.cell.data.messages} type={this.props.cellVM.cell.type}/>;
         } else {
@@ -84,7 +70,7 @@ export class Cell extends React.Component<ICellProps> {
         }
     }
 
-    public componentDidUpdate(prevProps: ICellProps) {
+    public componentDidUpdate(prevProps: INativeCellProps) {
         if (this.props.selectedCell === this.props.cellVM.cell.id && prevProps.selectedCell !== this.props.selectedCell) {
             this.giveFocus(this.props.focusedCell === this.props.cellVM.cell.id);
         }
@@ -92,16 +78,16 @@ export class Cell extends React.Component<ICellProps> {
 
     public giveFocus(giveCodeFocus: boolean) {
         // Start out with ourselves
-        if (this.cellWrapperRef && this.cellWrapperRef.current) {
-            this.cellWrapperRef.current.focus();
+        if (this.wrapperRef && this.wrapperRef.current) {
+            this.wrapperRef.current.focus();
         }
         // Then attempt to move into the object
         if (giveCodeFocus) {
-            // This depends upon what type of cell we are.
-            if (this.props.cellVM.cell.data.cell_type === 'code') {
-                if (this.codeRef.current) {
-                    this.codeRef.current.giveFocus();
-                }
+            if (this.inputRef && this.inputRef.current) {
+                this.inputRef.current.giveFocus();
+            }
+            if (this.isMarkdownCell()) {
+                this.setState({showingMarkdownEditor: true});
             }
         }
     }
@@ -111,9 +97,10 @@ export class Cell extends React.Component<ICellProps> {
         return getLocString('DataScience.unknownMimeTypeFormat', 'Unknown Mime Type');
     }
 
-    private toggleInputBlock = () => {
-        const cellId: string = this.getCell().id;
-        this.props.cellVM.inputBlockToggled(cellId);
+    public getOffsetCoords(): { top: number; height: number } | undefined {
+        if (this.wrapperRef && this.wrapperRef.current) {
+            return { top: this.wrapperRef.current.offsetTop, height: this.wrapperRef.current.offsetHeight };
+        }
     }
 
     private getCell = () => {
@@ -124,10 +111,11 @@ export class Cell extends React.Component<ICellProps> {
         return this.props.cellVM.cell.data.cell_type === 'code';
     }
 
+    private isMarkdownCell = () => {
+        return this.props.cellVM.cell.data.cell_type === 'markdown';
+    }
+
     private renderNormalCell() {
-        const results: JSX.Element | null = this.renderResults();
-        const allowsPlainInput = getSettings().showCellInputCode || this.props.cellVM.directInput || this.props.cellVM.editable;
-        const shouldRender = allowsPlainInput || results;
         const cellOuterClass = this.props.cellVM.editable ? 'cell-outer-editable' : 'cell-outer';
         let cellWrapperClass = this.props.cellVM.editable ? 'cell-wrapper' : 'cell-wrapper cell-wrapper-noneditable';
         if (this.props.selectedCell === this.props.cellVM.cell.id && this.props.focusedCell !== this.props.cellVM.cell.id) {
@@ -137,25 +125,19 @@ export class Cell extends React.Component<ICellProps> {
             cellWrapperClass += ' cell-wrapper-focused';
         }
 
-        // Only render if we are allowed to.
-        if (shouldRender) {
-            return (
-                <div className={cellWrapperClass} role={this.props.role} ref={this.cellWrapperRef} tabIndex={0} onKeyDown={this.onCellKeyDown} onClick={this.onMouseClick} onDoubleClick={this.onMouseDoubleClick}>
-                    <div className={cellOuterClass}>
-                        {this.renderControls()}
-                        <div className='content-div'>
-                            <div className='cell-result-container'>
-                                {this.renderInput()}
-                                {this.renderResultsDiv(results)}
-                            </div>
+        return (
+            <div className={cellWrapperClass} role={this.props.role} ref={this.wrapperRef} tabIndex={0} onKeyDown={this.onCellKeyDown} onClick={this.onMouseClick} onDoubleClick={this.onMouseDoubleClick}>
+                <div className={cellOuterClass}>
+                    {this.renderControls()}
+                    <div className='content-div'>
+                        <div className='cell-result-container'>
+                            {this.renderInput()}
+                            {this.renderResultsDiv(this.renderResults())}
                         </div>
                     </div>
                 </div>
-            );
-        }
-
-        // Shouldn't be rendered because not allowing empty input and not a direct input cell
-        return null;
+            </div>
+        );
     }
 
     private onMouseClick = (ev: React.MouseEvent<HTMLDivElement>) => {
@@ -174,9 +156,37 @@ export class Cell extends React.Component<ICellProps> {
         }
     }
 
+    private shouldRenderCodeEditor = () : boolean => {
+        return (this.isCodeCell() && (this.props.cellVM.inputBlockShow || this.props.cellVM.editable));
+    }
+
+    private shouldRenderMarkdownEditor = () : boolean => {
+        return (this.isMarkdownCell() && (this.state.showingMarkdownEditor || this.props.cellVM.cell.id === Identifiers.EditCellId));
+    }
+
+    private shouldRenderInput(): boolean {
+       return this.shouldRenderCodeEditor() || this.shouldRenderMarkdownEditor();
+    }
+
+    private hasOutput = () => {
+        return this.getCell().state === CellState.finished || this.getCell().state === CellState.error || this.getCell().state === CellState.executing;
+    }
+
+    private getCodeCell = () => {
+        return this.props.cellVM.cell.data as nbformat.ICodeCell;
+    }
+
+    private shouldRenderOutput(): boolean {
+        if (this.isCodeCell()) {
+            return this.hasOutput() && this.getCodeCell().outputs && !this.props.hideOutput;
+        } else if (this.isMarkdownCell()) {
+            return !this.state.showingMarkdownEditor;
+        }
+        return false;
+    }
+
     private renderControls = () => {
         const busy = this.props.cellVM.cell.state === CellState.init || this.props.cellVM.cell.state === CellState.executing;
-        const collapseVisible = (this.props.allowCollapse && this.props.cellVM.inputBlockCollapseNeeded && this.props.cellVM.inputBlockShow && !this.props.cellVM.editable && this.isCodeCell());
         const executionCount = this.props.cellVM && this.props.cellVM.cell && this.props.cellVM.cell.data && this.props.cellVM.cell.data.execution_count ?
             this.props.cellVM.cell.data.execution_count.toString() : '-';
         const isEditOnlyCell = this.props.cellVM.cell.id === Identifiers.EditCellId;
@@ -184,40 +194,33 @@ export class Cell extends React.Component<ICellProps> {
         return (
             <div className='controls-div'>
                 <ExecutionCount isBusy={busy} count={isEditOnlyCell && this.props.editExecutionCount ? this.props.editExecutionCount : executionCount} visible={this.isCodeCell()} />
-                <CollapseButton theme={this.props.baseTheme}
-                    visible={collapseVisible}
-                    open={this.props.cellVM.inputBlockOpen}
-                    onClick={this.toggleInputBlock}
-                    tooltip={getLocString('DataScience.collapseInputTooltip', 'Collapse input block')} />
                 {this.props.renderCellToolbar(this.props.cellVM.cell.id)}
             </div>
         );
     }
 
     private renderInput = () => {
-        if (this.isCodeCell()) {
+        if (this.shouldRenderInput()) {
             return (
-                <div className='cell-input'>
-                    <CellInput
-                        cellVM={this.props.cellVM}
-                        editorOptions={this.props.editorOptions}
-                        history={this.props.history}
-                        autoFocus={this.props.autoFocus}
-                        codeTheme={this.props.codeTheme}
-                        onCodeChange={this.props.onCodeChange}
-                        onCodeCreated={this.props.onCodeCreated}
-                        testMode={this.props.testMode ? true : false}
-                        showWatermark={this.props.showWatermark}
-                        ref={this.codeRef}
-                        monacoTheme={this.props.monacoTheme}
-                        openLink={this.props.openLink}
-                        editorMeasureClassName={this.props.editorMeasureClassName}
-                        focused={this.onCodeFocused}
-                        unfocused={this.onCodeUnfocused}
-                        keyDown={this.props.keyDown}
-                        showLineNumbers={this.props.showLineNumbers}
-                        />
-                </div>
+                <CellInput
+                    cellVM={this.props.cellVM}
+                    editorOptions={this.props.editorOptions}
+                    history={this.props.history}
+                    autoFocus={this.props.autoFocus}
+                    codeTheme={this.props.codeTheme}
+                    onCodeChange={this.props.onCodeChange}
+                    onCodeCreated={this.props.onCodeCreated}
+                    testMode={this.props.testMode ? true : false}
+                    showWatermark={this.props.showWatermark}
+                    ref={this.inputRef}
+                    monacoTheme={this.props.monacoTheme}
+                    openLink={this.props.openLink}
+                    editorMeasureClassName={this.props.editorMeasureClassName}
+                    focused={this.isCodeCell() ? this.onCodeFocused : this.onMarkdownFocused}
+                    unfocused={this.isCodeCell() ? this.onCodeUnfocused : this.onMarkdownUnfocused}
+                    keyDown={this.props.keyDown}
+                    showLineNumbers={this.props.showLineNumbers}
+                />
             );
         }
         return null;
@@ -235,6 +238,23 @@ export class Cell extends React.Component<ICellProps> {
         }
     }
 
+    private onMarkdownFocused = () => {
+        if (this.props.focused) {
+            this.props.focused(this.props.cellVM.cell.id);
+        }
+    }
+
+    private onMarkdownUnfocused = () => {
+        if (this.props.unfocused) {
+            this.props.unfocused(this.props.cellVM.cell.id);
+        }
+
+        // Indicate not showing the editor anymore. The equivalent of this
+        // is not when we receive focus but when we GIVE focus to the markdown editor
+        // otherwise we wouldn't be able to display it.
+        this.setState({showingMarkdownEditor: false});
+    }
+
     private renderResultsDiv = (results: JSX.Element | null) => {
 
         // Only render results if not an edit cell
@@ -250,7 +270,7 @@ export class Cell extends React.Component<ICellProps> {
     }
 
     private renderResults = (): JSX.Element | null => {
-        if (this.isCodeCell() || this.props.cellVM.cell.id !== Identifiers.EditCellId) {
+        if (this.shouldRenderOutput()) {
             return (
                 <CellOutput
                     cellVM={this.props.cellVM}

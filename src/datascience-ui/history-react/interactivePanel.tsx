@@ -16,7 +16,7 @@ import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
 import { getSettings } from '../react-common/settingsReactSide';
-import { Cell } from './cell';
+import { InteractiveCell } from './interactiveCell';
 import { InteractivePanelStateController } from './interactivePanelStateController';
 
 interface IInteractivePanelProps {
@@ -30,9 +30,9 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
     // Public for testing
     public stateController: InteractivePanelStateController;
     private mainPanelRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
-    private editCellRef: React.RefObject<Cell> = React.createRef<Cell>();
+    private editCellRef: React.RefObject<InteractiveCell> = React.createRef<InteractiveCell>();
     private contentPanelRef: React.RefObject<ContentPanel> = React.createRef<ContentPanel>();
-    private cellRefs: Map<string, React.RefObject<Cell>> = new Map<string, React.RefObject<Cell>>();
+    private cellRefs: Map<string, React.RefObject<InteractiveCell>> = new Map<string, React.RefObject<InteractiveCell>>();
     private renderCount: number = 0;
     private internalScrollCount: number = 0;
 
@@ -115,8 +115,9 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
     }
 
     private scrollToCell(id: string) {
-        if (this.contentPanelRef && this.contentPanelRef.current) {
-            this.contentPanelRef.current.scrollToCell(id);
+        const ref = this.cellRefs.get(id);
+        if (ref && ref.current) {
+            ref.current.scrollAndFlash();
         }
     }
 
@@ -187,7 +188,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
         return (
             <div className={editPanelClass}>
                 <ErrorBoundary>
-                    <Cell
+                    <InteractiveCell
                         editorOptions={this.state.editorOptions}
                         history={this.state.history}
                         maxTextSize={maxTextSize}
@@ -230,7 +231,6 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
             editable: false,
             newCellVM: undefined,
             renderCell: this.renderCell,
-            focusCell: this.focusCell,
             scrollToBottom: this.scrollDiv
         };
     }
@@ -308,15 +308,15 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
     }
 
     private renderCell = (cellVM: ICellViewModel, index: number, containerRef?: React.RefObject<HTMLDivElement>): JSX.Element | null => {
-        let cellRef : React.RefObject<Cell> | undefined;
+        let cellRef : React.RefObject<InteractiveCell> | undefined;
         if (!this.cellRefs.has(cellVM.cell.id)) {
-            cellRef = React.createRef<Cell>();
+            cellRef = React.createRef<InteractiveCell>();
             this.cellRefs.set(cellVM.cell.id, cellRef);
         }
         return (
             <div key={index} id={cellVM.cell.id} ref={containerRef}>
                 <ErrorBoundary key={index}>
-                    <Cell
+                    <InteractiveCell
                         ref={cellRef}
                         role='listitem'
                         editorOptions={this.state.editorOptions}
@@ -335,20 +335,12 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
                         monacoTheme={this.state.monacoTheme}
                         openLink={this.stateController.openLink}
                         expandImage={this.stateController.showPlot}
-                        allowsMarkdownEditing={false}
                         renderCellToolbar={this.renderCellToolbar}
                         showLineNumbers={cellVM.showLineNumbers}
                         hideOutput={cellVM.hideOutput}
                     />
                 </ErrorBoundary>
             </div>);
-    }
-
-    private focusCell = (cellVM: ICellViewModel): void => {
-        const ref = this.cellRefs.get(cellVM.cell.id);
-        if (ref && ref.current) {
-            ref.current.giveFocus(true);
-        }
     }
 
     private renderCellToolbar = (cellId: string) => {

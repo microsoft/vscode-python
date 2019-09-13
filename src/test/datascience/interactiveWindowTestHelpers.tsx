@@ -87,13 +87,13 @@ export function addContinuousMockData(ioc: DataScienceIocContainer, code: string
 
 export function getLastOutputCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>): ReactWrapper<any, Readonly<{}>, React.Component> {
     // Skip the edit cell
-    const foundResult = wrapper.find('Cell');
+    const foundResult = wrapper.find('InteractiveCell');
     assert.ok(foundResult.length >= 2, 'Didn\'t find any cells being rendered');
     return foundResult.at(foundResult.length - 2);
 }
 
 export function verifyHtmlOnCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, html: string | undefined, cellIndex: number | CellPosition) {
-    const foundResult = wrapper.find('Cell');
+    const foundResult = wrapper.find('InteractiveCell');
     assert.ok(foundResult.length >= 1, 'Didn\'t find any cells being rendered');
 
     let targetCell: ReactWrapper;
@@ -179,7 +179,7 @@ export async function getCellResults(wrapper: ReactWrapper<any, Readonly<{}>, Re
     await renderPromise;
 
     // Return the result
-    return wrapper.find('Cell');
+    return wrapper.find('InteractiveCell');
 }
 
 export async function addCode(interactiveWindowProvider: () => Promise<IInteractiveWindow>, wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string, expectedRenderCount: number = 4, expectError: boolean = false): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
@@ -252,7 +252,7 @@ function enterKey(_wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, te
 
 export function getEditor(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) : ReactWrapper<any, Readonly<{}>, React.Component> {
     // Find the last cell. It should have a monacoEditor object
-    const cells = wrapper.find('Cell');
+    const cells = wrapper.find('InteractiveCell');
     const lastCell = cells.last();
     return lastCell.find('MonacoEditor');
 }
@@ -287,7 +287,7 @@ export async function enterInput(wrapper: ReactWrapper<any, Readonly<{}>, React.
     await submitInput(wrapper, textArea!);
 
     // Return the result
-    return wrapper.find('Cell');
+    return wrapper.find('InteractiveCell');
 }
 
 export function findButton(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, index: number): ReactWrapper<any, Readonly<{}>, React.Component> | undefined {
