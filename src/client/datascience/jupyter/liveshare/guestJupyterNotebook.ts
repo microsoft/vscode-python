@@ -121,6 +121,7 @@ export class GuestJupyterNotebook
 
     public async waitForServiceName(): Promise<string> {
         // Use our base name plus our id. This means one unique server per notebook
+        // Live share will not accept a '.' in the name so remove any
         const uriString = this.resource.toString().replace('.', '');
         return Promise.resolve(`${LiveShare.JupyterNotebookSharedService}${uriString}`);
     }

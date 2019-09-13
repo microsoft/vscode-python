@@ -88,6 +88,7 @@ export class HostJupyterNotebook
 
     public async waitForServiceName(): Promise<string> {
         // Use our base name plus our id. This means one unique server per notebook
+        // Convert to our shared URI to match the guest and remove any '.' as live share won't support them
         const sharedUri = this.finishedApi!.convertLocalUriToShared(this.resource);
         const uriString = sharedUri.toString().replace('.', '');
         return Promise.resolve(`${LiveShare.JupyterNotebookSharedService}${uriString.toString()}`);

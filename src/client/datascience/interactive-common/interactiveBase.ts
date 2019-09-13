@@ -784,7 +784,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
             // Indicate this in our telemetry.
             // Add new telemetry type
-            //sendTelemetryEvent(Telemetry.RemoteAddCode);
+            sendTelemetryEvent(Telemetry.RemoteReexecuteCode);
 
             // Submit this item as new code.
             this.submitCode(args.code, args.file, args.line, args.id, undefined, args.debug).ignoreErrors();

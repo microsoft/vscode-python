@@ -257,7 +257,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
             // Activate the other side, and send as if came from a file
             this.ipynbProvider.show(this.file).then(_v => {
-                //this.shareMessage(InteractiveWindowMessages.RemoteAddCode, { code: info.code, file: Identifiers.EmptyFileName, line: 0, id: info.id, originator: this.id, debug: false });
                 this.shareMessage(InteractiveWindowMessages.RemoteReexecuteCode, { code: info.code, file: Identifiers.EmptyFileName, line: 0, id: info.id, originator: this.id, debug: false });
             }).ignoreErrors();
         }
