@@ -6,7 +6,6 @@ import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
-import * as uuid from 'uuid/v4';
 
 import { IWorkspaceService } from '../../common/application/types';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
@@ -97,9 +96,9 @@ export class JupyterImporter implements INotebookImporter {
             const cells = contents.cells as (nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell)[];
 
             // Convert the inputdata into our ICell format
-            return cells.filter(c => c.source.length > 0).map(c => {
+            return cells.filter(c => c.source.length > 0).map((c, index) => {
                 return {
-                    id: uuid(),
+                    id: `NotebookImport#${index}`,
                     file: Identifiers.EmptyFileName,
                     line: 0,
                     state: CellState.finished,
