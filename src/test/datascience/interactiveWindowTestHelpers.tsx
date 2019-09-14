@@ -17,7 +17,6 @@ import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { updateSettings } from '../../datascience-ui/react-common/settingsReactSide';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createInputEvent, createKeyboardEvent, waitForUpdate } from './reactHelpers';
-import { OutputPlaceholder } from '@jupyterlab/cells';
 
 //tslint:disable:trailing-comma no-any no-multiline-string
 export enum CellInputState {

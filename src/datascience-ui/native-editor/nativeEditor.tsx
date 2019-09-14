@@ -229,8 +229,6 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
 
             // Go through the cell divs and find the ones that are suddenly visible
             let makeChange = false;
-            // Linter is wrong, if
-            // tslint:disable-next-line: prefer-for-of
             for (let i = 0; i < cellVMs.length; i += 1) {
                 const cellVM = cellVMs[i];
                 if (cellVM.useQuickEdit && this.cellRefs.has(cellVM.cell.id)) {
