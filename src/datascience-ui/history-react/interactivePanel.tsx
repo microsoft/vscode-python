@@ -327,7 +327,6 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
                         cellVM={cellVM}
                         baseTheme={this.props.baseTheme}
                         codeTheme={this.props.codeTheme}
-                        allowCollapse={false}
                         showWatermark={cellVM.cell.id === Identifiers.EditCellId}
                         editExecutionCount={this.getInputExecutionCount().toString()}
                         onCodeChange={this.stateController.codeChange}

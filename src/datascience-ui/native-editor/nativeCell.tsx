@@ -253,12 +253,7 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
 
         // Only render results if not an edit cell
         if (this.props.cellVM.cell.id !== Identifiers.EditCellId) {
-            const outputClassNames = this.isCodeCell() ?
-                `cell-output cell-output-${this.props.baseTheme}` :
-                '';
-
-            // Then combine them inside a div
-            return <div className={outputClassNames}>{results}</div>;
+            return results;
         }
         return null;
     }

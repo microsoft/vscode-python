@@ -17,6 +17,7 @@ import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { updateSettings } from '../../datascience-ui/react-common/settingsReactSide';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createInputEvent, createKeyboardEvent, waitForUpdate } from './reactHelpers';
+import { OutputPlaceholder } from '@jupyterlab/cells';
 
 //tslint:disable:trailing-comma no-any no-multiline-string
 export enum CellInputState {
@@ -131,8 +132,10 @@ export function verifyHtmlOnCell(wrapper: ReactWrapper<any, Readonly<{}>, React.
         const outHtml = output.html();
         assert.ok(outHtml.includes(sliced), `${outHtml} does not contain ${sliced}`);
     } else {
+        const output = targetCell!.find('div.cell-output');
+        const outputHtml = output.length > 0 ? output.html() : 'empty';
         // html not specified, look for an empty render
-        assert.ok(targetCell!.isEmptyRender(), 'Target cell is not empty render');
+        assert.ok(targetCell!.isEmptyRender(), `Target cell is not empty render, got this instead: ${outputHtml}`);
     }
 }
 

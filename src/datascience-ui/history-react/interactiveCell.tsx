@@ -35,7 +35,6 @@ interface IInteractiveCellProps {
     editorOptions?: monacoEditor.editor.IEditorOptions;
     editExecutionCount?: string;
     editorMeasureClassName?: string;
-    allowCollapse: boolean;
     selectedCell?: string;
     focusedCell?: string;
     hideOutput?: boolean;
@@ -126,7 +125,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
     private renderNormalCell() {
         const results: JSX.Element | null = this.renderResults();
         const allowsPlainInput = getSettings().showCellInputCode || this.props.cellVM.directInput || this.props.cellVM.editable;
-        const shouldRender = allowsPlainInput || results;
+        const shouldRender = allowsPlainInput || results !== null;
         const cellOuterClass = this.props.cellVM.editable ? 'cell-outer-editable' : 'cell-outer';
         const cellWrapperClass = this.props.cellVM.editable ? 'cell-wrapper' : 'cell-wrapper cell-wrapper-noneditable';
 
@@ -169,7 +168,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
 
     private renderControls = () => {
         const busy = this.props.cellVM.cell.state === CellState.init || this.props.cellVM.cell.state === CellState.executing;
-        const collapseVisible = (this.props.allowCollapse && this.props.cellVM.inputBlockCollapseNeeded && this.props.cellVM.inputBlockShow && !this.props.cellVM.editable && this.isCodeCell());
+        const collapseVisible = (this.props.cellVM.inputBlockCollapseNeeded && this.props.cellVM.inputBlockShow && !this.props.cellVM.editable && this.isCodeCell());
         const executionCount = this.props.cellVM && this.props.cellVM.cell && this.props.cellVM.cell.data && this.props.cellVM.cell.data.execution_count ?
             this.props.cellVM.cell.data.execution_count.toString() : '-';
         const isEditOnlyCell = this.props.cellVM.cell.id === Identifiers.EditCellId;
@@ -227,15 +226,9 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
     }
 
     private renderResultsDiv = (results: JSX.Element | null) => {
-
         // Only render results if not an edit cell
         if (this.props.cellVM.cell.id !== Identifiers.EditCellId) {
-            const outputClassNames = this.isCodeCell() ?
-                `cell-output cell-output-${this.props.baseTheme}` :
-                '';
-
-            // Then combine them inside a div
-            return <div className={outputClassNames}>{results}</div>;
+            return results;
         }
         return null;
     }
@@ -249,11 +242,11 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
     }
 
     private shouldRenderResults(): boolean {
-        return this.isCodeCell() && this.hasOutput() && this.getCodeCell().outputs && !this.props.hideOutput;
+        return this.isCodeCell() && this.hasOutput() && this.getCodeCell().outputs && this.getCodeCell().outputs.length > 0 && !this.props.hideOutput;
     }
 
     private renderResults = (): JSX.Element | null => {
-        if (this.shouldRenderResults() || this.props.cellVM.cell.id !== Identifiers.EditCellId) {
+        if (this.shouldRenderResults()) {
             return (
                 <CellOutput
                     cellVM={this.props.cellVM}
