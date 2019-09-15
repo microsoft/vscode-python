@@ -30,7 +30,6 @@ import { IChildProcessAttachService, IDebugSessionEventHandlers } from '../../..
 import { registerTypes } from '../../../client/debugger/extension/serviceRegistry';
 import {
     DebugConfigurationType,
-    ExtensionSingleActivationServiceType,
     IDebugAdapterDescriptorFactory,
     IDebugConfigurationProvider,
     IDebugConfigurationService,
@@ -46,9 +45,9 @@ suite('Debugging - Service Registry', () => {
             [IDebugConfigurationService, PythonDebugConfigurationService],
             [IDebuggerBanner, DebuggerBanner],
             [IChildProcessAttachService, ChildProcessAttachService],
-            [IExtensionSingleActivationService, LaunchJsonCompletionProvider, ExtensionSingleActivationServiceType.jsonCompletionProvider],
-            [IExtensionSingleActivationService, LaunchJsonUpdaterService, ExtensionSingleActivationServiceType.jsonUpdaterService],
-            [IExtensionSingleActivationService, DebugAdapterActivator, ExtensionSingleActivationServiceType.debugAdapterActivator],
+            [IExtensionSingleActivationService, LaunchJsonCompletionProvider],
+            [IExtensionSingleActivationService, LaunchJsonUpdaterService],
+            [IExtensionSingleActivationService, DebugAdapterActivator],
             [IDebugAdapterDescriptorFactory, DebugAdapterDescriptorFactory],
             [IDebugSessionEventHandlers, ChildProcessAttachEventHandler],
             [IDebugConfigurationResolver, LaunchConfigurationResolver, 'launch'],
