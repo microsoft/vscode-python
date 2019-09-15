@@ -16,7 +16,7 @@ export class ProcessLogger implements IProcessLogger {
     constructor(
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly outputChannel: IOutputChannel,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils
-    ) {}
+    ) { }
 
     public logProcess(file: string, args: string[], options?: SpawnOptions) {
         if (
@@ -24,6 +24,8 @@ export class ProcessLogger implements IProcessLogger {
             isCI &&
             !workspace.getConfiguration('python', null).get<boolean>('enableProcessLogging', true)
         ) {
+            // Added to disable logging of process execution commands during UI Tests.
+            // Used only during UI Tests (hence this setting need not be exposed as a valid setting).
             return;
         }
         const argsList = args.reduce((accumulator, current, index) => {
