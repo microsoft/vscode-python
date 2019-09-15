@@ -25,6 +25,7 @@ import { registerTypes as variableRegisterTypes } from '../client/common/variabl
 import { registerTypes as formattersRegisterTypes } from '../client/formatters/serviceRegistry';
 import { EnvironmentActivationService } from '../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../client/interpreter/activation/types';
+import { IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService } from '../client/interpreter/autoSelection/types';
 import { InterpreterHashProvider } from '../client/interpreter/locators/services/hashProvider';
 import { InterpeterHashProviderFactory } from '../client/interpreter/locators/services/hashProviderFactory';
 import { InterpreterFilter } from '../client/interpreter/locators/services/interpreterFilter';
