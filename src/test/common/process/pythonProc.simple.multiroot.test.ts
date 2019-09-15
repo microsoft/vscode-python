@@ -34,6 +34,10 @@ import {
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import { IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService } from '../../../client/interpreter/autoSelection/types';
+import { InterpreterHashProvider } from '../../../client/interpreter/locators/services/hashProvider';
+import { InterpeterHashProviderFactory } from '../../../client/interpreter/locators/services/hashProviderFactory';
+import { InterpreterFilter } from '../../../client/interpreter/locators/services/interpreterFilter';
+import { WindowsStoreInterpreter } from '../../../client/interpreter/locators/services/windowsStoreInterpreter';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { ServiceManager } from '../../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -58,7 +62,7 @@ suite('PythonExecutableService', () => {
     let configService: IConfigurationService;
     let pythonExecFactory: IPythonExecutionFactory;
 
-    suiteSetup(async function() {
+    suiteSetup(async function () {
         if (!IS_MULTI_ROOT_TEST) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
@@ -85,6 +89,10 @@ suite('PythonExecutableService', () => {
         serviceManager.addSingleton<IProcessLogger>(IProcessLogger, ProcessLogger);
         serviceManager.addSingleton<IInterpreterAutoSelectionService>(IInterpreterAutoSelectionService, MockAutoSelectionService);
         serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(IInterpreterAutoSeletionProxyService, MockAutoSelectionService);
+        serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
+        serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
+        serviceManager.addSingleton<InterpeterHashProviderFactory>(InterpeterHashProviderFactory, InterpeterHashProviderFactory);
+        serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
         processRegisterTypes(serviceManager);
         variablesRegisterTypes(serviceManager);
 
