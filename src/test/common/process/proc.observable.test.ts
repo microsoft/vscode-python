@@ -7,7 +7,6 @@ import { CancellationTokenSource } from 'vscode';
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessService } from '../../../client/common/process/proc';
 import { createDeferred } from '../../../client/common/utils/async';
-import { noop } from '../../../client/common/utils/misc';
 import { getExtensionSettings, isOs, OSType } from '../../common';
 import { initialize } from './../../initialize';
 
