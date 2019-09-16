@@ -142,7 +142,7 @@ suite('Debugging - Attach Debugger', () => {
         await exited;
     }
     test('Confirm we are able to attach to a running program', () => {
-        // Skipping to get insiders build to pass. Opened this issue:
+        // Skipping to get nightly build to pass. Opened this issue:
         // https://github.com/microsoft/vscode-python/issues/7411
         if (testAttachingToRemoteProcess) {
             noop();

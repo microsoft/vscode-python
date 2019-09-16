@@ -51,7 +51,7 @@ suite('ProcessService', () => {
     });
 
     test('execObservable should stream output without new lines', () => { // function(done)
-        // Skipping to get insiders build to pass. Opened this issue:
+        // Skipping to get nightly build to pass. Opened this issue:
         // https://github.com/microsoft/vscode-python/issues/7411
         noop();
 
