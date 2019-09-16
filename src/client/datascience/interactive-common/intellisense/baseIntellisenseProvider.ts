@@ -23,7 +23,7 @@ import { traceWarning } from '../../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../../common/platform/types';
 import { createDeferred, Deferred, waitForPromise } from '../../../common/utils/async';
 import { Identifiers, Settings } from '../../constants';
-import { IInteractiveWindowListener, IInteractiveWindowProvider, IJupyterExecution, INotebook } from '../../types';
+import { IInteractiveWindowListener, IInteractiveWindowProvider, IJupyterExecution, INotebook, INotebookEditorProvider } from '../../types';
 import {
     IAddCell,
     ICancelIntellisenseRequest,
@@ -53,7 +53,8 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
         @unmanaged() private workspaceService: IWorkspaceService,
         @unmanaged() private fileSystem: IFileSystem,
         @unmanaged() private jupyterExecution: IJupyterExecution,
-        @unmanaged() private interactiveWindowProvider: IInteractiveWindowProvider
+        @unmanaged() private interactiveWindowProvider: IInteractiveWindowProvider,
+        @unmanaged() private nativeEditorProvider: INotebookEditorProvider
     ) {
     }
 
@@ -247,6 +248,7 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
                 }
             }
         } catch (e) {
+            console.log(e);
             if (!(e instanceof CancellationError)) {
                 traceWarning(e);
             }
@@ -353,7 +355,8 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
 
     private async getNotebook(): Promise<INotebook | undefined> {
         // First get the active server
-        const activeServer = await this.jupyterExecution.getServer(await this.interactiveWindowProvider.getNotebookOptions());
+        // const activeServer = await this.jupyterExecution.getServer(await this.interactiveWindowProvider.getNotebookOptions());
+        const activeServer = await this.jupyterExecution.getServer(await this.nativeEditorProvider.getNotebookOptions());
 
         // If that works, see if there's a matching notebook running
         if (activeServer && this.notebookIdentity) {

@@ -7,12 +7,12 @@ import { Uri } from 'vscode';
 
 import { IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
-import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry } from '../../common/types';
+import { IAsyncDisposable, IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { Telemetry } from '../constants';
-import { INotebookEditor, INotebookEditorProvider } from '../types';
+import { Identifiers, Settings, Telemetry } from '../constants';
+import { INotebookEditor, INotebookEditorProvider, INotebookServerOptions } from '../types';
 
 @injectable()
 export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisposable {
@@ -26,6 +26,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
+        @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IFileSystem) private fileSystem: IFileSystem
     ) {
         asyncRegistry.push(this);
@@ -86,6 +87,24 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
         const uri = await this.getNextNewNotebookUri();
         this.notebookCount += 1;
         return this.open(uri, '');
+    }
+
+    public async getNotebookOptions(): Promise<INotebookServerOptions> {
+        const settings = this.configuration.getSettings();
+        let serverURI: string | undefined = settings.datascience.jupyterServerURI;
+        const useDefaultConfig: boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
+
+        // For the local case pass in our URI as undefined, that way connect doesn't have to check the setting
+        if (serverURI === Settings.JupyterServerLocalLaunch) {
+            serverURI = undefined;
+        }
+
+        return {
+            enableDebugging: true,
+            uri: serverURI,
+            useDefaultConfig,
+            purpose: Identifiers.HistoryPurpose  // Share the same one as the interactive window. Just need a new session
+        };
     }
 
     private async create(file: Uri, contents: string): Promise<INotebookEditor> {

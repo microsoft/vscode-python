@@ -15,7 +15,7 @@ import { JediFactory } from '../../../languageServices/jediProxyFactory';
 import { PythonCompletionItemProvider } from '../../../providers/completionProvider';
 import { PythonHoverProvider } from '../../../providers/hoverProvider';
 import { PythonSignatureProvider } from '../../../providers/signatureProvider';
-import { IInteractiveWindowListener, IInteractiveWindowProvider, IJupyterExecution } from '../../types';
+import { IInteractiveWindowListener, IInteractiveWindowProvider, IJupyterExecution, INotebookEditorProvider } from '../../types';
 import { BaseIntellisenseProvider } from './baseIntellisenseProvider';
 import { convertToMonacoCompletionList, convertToMonacoHover, convertToMonacoSignatureHelp } from './conversion';
 import { IntellisenseDocument } from './intellisenseDocument';
@@ -38,9 +38,12 @@ export class JediIntellisenseProvider extends BaseIntellisenseProvider implement
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IFileSystem) fileSystem: IFileSystem,
         @inject(IJupyterExecution) jupyterExecution: IJupyterExecution,
-        @inject(IInteractiveWindowProvider) interactiveWindowProvider: IInteractiveWindowProvider
+        @inject(IInteractiveWindowProvider) interactiveWindowProvider: IInteractiveWindowProvider,
+        @inject(INotebookEditorProvider) nativeEditorProvider: INotebookEditorProvider
     ) {
-        super(workspaceService, fileSystem, jupyterExecution, interactiveWindowProvider);
+        super(workspaceService, fileSystem, jupyterExecution, interactiveWindowProvider,
+            nativeEditorProvider
+        );
 
         this.context = this.serviceManager.get<IExtensionContext>(IExtensionContext);
         this.jediFactory = new JediFactory(this.context.asAbsolutePath('.'), this.serviceManager);
