@@ -123,9 +123,8 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
     }
 
     private renderNormalCell() {
-        const results: JSX.Element | null = this.renderResults();
         const allowsPlainInput = getSettings().showCellInputCode || this.props.cellVM.directInput || this.props.cellVM.editable;
-        const shouldRender = allowsPlainInput || results !== null;
+        const shouldRender = allowsPlainInput || this.shouldRenderResults();
         const cellOuterClass = this.props.cellVM.editable ? 'cell-outer-editable' : 'cell-outer';
         const cellWrapperClass = this.props.cellVM.editable ? 'cell-wrapper' : 'cell-wrapper cell-wrapper-noneditable';
 
@@ -138,7 +137,12 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                         <div className='content-div'>
                             <div className='cell-result-container'>
                                 {this.renderInput()}
-                                {this.renderResultsDiv(results)}
+                                <CellOutput
+                                    cellVM={this.props.cellVM}
+                                    baseTheme={this.props.baseTheme}
+                                    expandImage={this.props.expandImage}
+                                    openLink={this.props.openLink}
+                                />
                             </div>
                         </div>
                     </div>
@@ -225,14 +229,6 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
         }
     }
 
-    private renderResultsDiv = (results: JSX.Element | null) => {
-        // Only render results if not an edit cell
-        if (this.props.cellVM.cell.id !== Identifiers.EditCellId) {
-            return results;
-        }
-        return null;
-    }
-
     private hasOutput = () => {
         return this.getCell().state === CellState.finished || this.getCell().state === CellState.error || this.getCell().state === CellState.executing;
     }
@@ -243,20 +239,6 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
 
     private shouldRenderResults(): boolean {
         return this.isCodeCell() && this.hasOutput() && this.getCodeCell().outputs && this.getCodeCell().outputs.length > 0 && !this.props.hideOutput;
-    }
-
-    private renderResults = (): JSX.Element | null => {
-        if (this.shouldRenderResults()) {
-            return (
-                <CellOutput
-                    cellVM={this.props.cellVM}
-                    baseTheme={this.props.baseTheme}
-                    expandImage={this.props.expandImage}
-                    openLink={this.props.openLink}
-                 />
-            );
-        }
-        return null;
     }
 
     private onCellKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
