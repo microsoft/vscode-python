@@ -15,6 +15,7 @@ import { IKeyboardEvent } from '../react-common/event';
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
+import { Progress } from '../react-common/progress';
 import { getSettings } from '../react-common/settingsReactSide';
 import { InteractiveCell } from './interactiveCell';
 import { InteractivePanelStateController } from './interactivePanelStateController';
@@ -68,6 +69,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
     public render() {
         // Update the state controller with our new state
         this.stateController.renderUpdate(this.state);
+        const progressBar = this.state.busy && !this.props.testMode ? <Progress /> : undefined;
 
         // If in test mode, update our count. Use this to determine how many renders a normal update takes.
         if (this.props.testMode) {
@@ -83,6 +85,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
                 </div>
                 <header id='main-panel-toolbar'>
                     {this.renderToolbarPanel()}
+                    {progressBar}
                 </header>
                 <section id='main-panel-variable' aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
                     {this.renderVariablePanel(this.props.baseTheme)}
@@ -122,6 +125,10 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
     }
 
     private renderToolbarPanel() {
+        const variableExplorerTooltip = this.state.variablesVisible ?
+            getLocString('DataScience.collapseVariableExplorerTooltip', 'Hide variables active in jupyter kernel') :
+            getLocString('DataScience.expandVariableExplorerTooltip', 'Show variables active in jupyter kernel');
+
         return (
             <div id='toolbar-panel'>
                 <div className='toolbar-menu-bar'>
@@ -141,6 +148,9 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
                         <ImageButton baseTheme={this.props.baseTheme} onClick={this.stateController.restartKernel} tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}>
                             <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Restart} />
                         </ImageButton>
+                        <ImageButton baseTheme={this.props.baseTheme} onClick={this.stateController.toggleVariableExplorer} tooltip={variableExplorerTooltip}>
+                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.VariableExplorer} />
+                        </ImageButton>
                         <ImageButton baseTheme={this.props.baseTheme} onClick={this.stateController.export} disabled={!this.stateController.canExport()} tooltip={getLocString('DataScience.export', 'Export as Jupyter notebook')}>
                             <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.SaveAs} />
                         </ImageButton>
@@ -157,8 +167,12 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
     }
 
     private renderVariablePanel(baseTheme: string) {
-        const variableProps = this.getVariableProps(baseTheme);
-        return <VariablePanel {...variableProps} />;
+        if (this.state.variablesVisible) {
+            const variableProps = this.getVariableProps(baseTheme);
+            return <VariablePanel {...variableProps} />;
+        }
+
+        return null;
     }
 
     private renderContentPanel(baseTheme: string) {
@@ -242,8 +256,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
         showDataExplorer: this.stateController.showDataViewer,
         skipDefault: this.props.skipDefault,
         testMode: this.props.testMode,
-        refreshVariables: this.stateController.refreshVariables,
-        variableExplorerToggled: this.stateController.variableExplorerToggled,
+        closeVariableExplorer: this.stateController.toggleVariableExplorer,
         baseTheme: baseTheme
        };
     }

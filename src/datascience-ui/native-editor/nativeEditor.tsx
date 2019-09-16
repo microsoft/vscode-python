@@ -20,6 +20,7 @@ import { Flyout } from '../react-common/flyout';
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
+import { Progress } from '../react-common/progress';
 import { getSettings } from '../react-common/settingsReactSide';
 import { NativeCell } from './nativeCell';
 import { NativeEditorStateController } from './nativeEditorStateController';
@@ -88,6 +89,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
     public render() {
         // Update the state controller with our new state
         this.stateController.renderUpdate(this.state);
+        const progressBar = this.state.busy && !this.props.testMode ? <Progress /> : undefined;
 
         return (
             <div id='main-panel' ref={this.mainPanelRef} role='Main'>
@@ -98,6 +100,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                 </div>
                 <header id='main-panel-toolbar'>
                     {this.renderToolbarPanel()}
+                    {progressBar}
                 </header>
                 <section id='main-panel-variable' aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
                     {this.renderVariablePanel(this.props.baseTheme)}
@@ -137,6 +140,13 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             this.stateController.runAll();
             this.stateController.sendCommand(NativeCommandType.RunAll, 'mouse');
         };
+        const toggleVariableExplorer = () => {
+            this.stateController.toggleVariableExplorer();
+            this.stateController.sendCommand(NativeCommandType.ToggleVariableExplorer, 'mouse');
+        };
+        const variableExplorerTooltip = this.state.variablesVisible ?
+            getLocString('DataScience.collapseVariableExplorerTooltip', 'Hide variables active in jupyter kernel') :
+            getLocString('DataScience.expandVariableExplorerTooltip', 'Show variables active in jupyter kernel');
 
         return (
             <div id='toolbar-panel'>
@@ -146,6 +156,9 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                     </ImageButton>
                     <ImageButton baseTheme={this.props.baseTheme} onClick={this.stateController.interruptKernel} className='native-button' tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython kernel')}>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Interrupt} />
+                    </ImageButton>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={toggleVariableExplorer} className='native-button' tooltip={variableExplorerTooltip}>
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.VariableExplorer} />
                     </ImageButton>
                     <ImageButton baseTheme={this.props.baseTheme} onClick={addCell} className='native-button' tooltip={getLocString('DataScience.addNewCell', 'Insert cell')}>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.InsertBelow} />
@@ -166,8 +179,12 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
     }
 
     private renderVariablePanel(baseTheme: string) {
-        const variableProps = this.getVariableProps(baseTheme);
-        return <VariablePanel {...variableProps} />;
+        if (this.state.variablesVisible) {
+            const variableProps = this.getVariableProps(baseTheme);
+            return <VariablePanel {...variableProps} />;
+        }
+
+        return null;
     }
 
     private renderContentPanel(baseTheme: string) {
@@ -205,8 +222,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         showDataExplorer: this.stateController.showDataViewer,
         skipDefault: this.props.skipDefault,
         testMode: this.props.testMode,
-        refreshVariables: this.stateController.refreshVariables,
-        variableExplorerToggled: this.stateController.variableExplorerToggled,
+        closeVariableExplorer: this.stateController.toggleVariableExplorer,
         baseTheme: baseTheme
        };
     }

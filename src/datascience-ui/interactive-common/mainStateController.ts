@@ -412,14 +412,17 @@ export class MainStateController implements IMessageHandler {
         this.sendMessage(InteractiveWindowMessages.Export, cellContents);
     }
 
-    public variableExplorerToggled = (open: boolean) => {
-        this.setState({ variablesVisible: open });
-        this.sendMessage(InteractiveWindowMessages.VariableExplorerToggle, open);
-    }
-
     // When the variable explorer wants to refresh state (say if it was expanded)
     public refreshVariables = (newExecutionCount?: number) => {
         this.sendMessage(InteractiveWindowMessages.GetVariablesRequest, newExecutionCount === undefined ? this.state.currentExecutionCount : newExecutionCount);
+    }
+
+    public toggleVariableExplorer = () => {
+        this.sendMessage(InteractiveWindowMessages.VariableExplorerToggle, !this.state.variablesVisible);
+        this.setState({ variablesVisible: !this.state.variablesVisible });
+        if (!this.state.variablesVisible) {
+            this.refreshVariables();
+        }
     }
 
     public codeChange = (changes: monacoEditor.editor.IModelContentChange[], id: string, modelId: string) => {
