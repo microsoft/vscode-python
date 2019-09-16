@@ -58,9 +58,6 @@ suite('Crypto Utils', async () => {
         const buckets: number[] = Array(100).fill(0);
         const hashes = Array(10).fill(0);
         for (const w of wordList) {
-            if (w.length === 0) {
-                continue;
-            }
             for (let i = 0; i < 10; i += 1) {
                 const word = `${w}${i}`;
                 const hash = crypto.createHash(word, 'number');
@@ -81,6 +78,7 @@ suite('Crypto Utils', async () => {
         const buckets: number[] = Array(100).fill(0);
         let hashes: number[] = [];
         let totalDifference = 0;
+        // We are only iterating over the first 10 words for purposes of this test
         for (const w of wordList.slice(0, 10)) {
             hashes = [];
             totalDifference = 0;
@@ -99,12 +97,14 @@ suite('Crypto Utils', async () => {
                 buckets[hash % 100] += 1;
                 hashes.push(hash % 100);
             }
+            // Iterating over ASCII alphabets 'a' to 'z' and appending to the word
             for (let i = 0; i < 26; i += 1) {
                 const word = `${String.fromCharCode(97 + i)}${w}`;
                 const hash = crypto.createHash(word, 'number');
                 buckets[hash % 100] += 1;
                 hashes.push(hash % 100);
             }
+            // Iterating over ASCII alphabets 'a' to 'z' and prepending to the word
             for (let i = 0; i < 26; i += 1) {
                 const word = `${w}${String.fromCharCode(97 + i)}`;
                 const hash = crypto.createHash(word, 'number');
