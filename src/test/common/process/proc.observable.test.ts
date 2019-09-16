@@ -50,35 +50,36 @@ suite('ProcessService', () => {
         }, done, done);
     });
 
-    test('execObservable should stream output without new lines', () => { // function(done)
+    test('execObservable should stream output without new lines', function (done) {
         // Skipping to get nightly build to pass. Opened this issue:
         // https://github.com/microsoft/vscode-python/issues/7411
-        noop();
+        // tslint:disable-next-line: no-invalid-this
+        this.skip();
 
-        // // tslint:disable-next-line:no-invalid-this
-        // this.timeout(10000);
-        // const procService = new ProcessService(new BufferDecoder());
-        // const pythonCode = ['import sys', 'import time',
-        //     'sys.stdout.write("1")', 'sys.stdout.flush()', 'time.sleep(2)',
-        //     'sys.stdout.write("2")', 'sys.stdout.flush()', 'time.sleep(2)',
-        //     'sys.stdout.write("3")', 'sys.stdout.flush()', 'time.sleep(2)'];
-        // const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')]);
-        // const outputs = ['1', '2', '3'];
+        // tslint:disable-next-line:no-invalid-this
+        this.timeout(10000);
+        const procService = new ProcessService(new BufferDecoder());
+        const pythonCode = ['import sys', 'import time',
+            'sys.stdout.write("1")', 'sys.stdout.flush()', 'time.sleep(2)',
+            'sys.stdout.write("2")', 'sys.stdout.flush()', 'time.sleep(2)',
+            'sys.stdout.write("3")', 'sys.stdout.flush()', 'time.sleep(2)'];
+        const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')]);
+        const outputs = ['1', '2', '3'];
 
-        // expect(result).not.to.be.an('undefined', 'result is undefined');
-        // result.out.subscribe(output => {
-        //     // Ignore line breaks.
-        //     if (output.out.trim().length === 0) {
-        //         return;
-        //     }
-        //     const expectedValue = outputs.shift();
-        //     if (expectedValue !== output.out) {
-        //         done(`Received value ${output.out} is not same as the expectd value ${expectedValue}`);
-        //     }
-        //     if (output.source !== 'stdout') {
-        //         done(`Source is not stdout. Value received is ${output.source}`);
-        //     }
-        // }, done, done);
+        expect(result).not.to.be.an('undefined', 'result is undefined');
+        result.out.subscribe(output => {
+            // Ignore line breaks.
+            if (output.out.trim().length === 0) {
+                return;
+            }
+            const expectedValue = outputs.shift();
+            if (expectedValue !== output.out) {
+                done(`Received value ${output.out} is not same as the expectd value ${expectedValue}`);
+            }
+            if (output.source !== 'stdout') {
+                done(`Source is not stdout. Value received is ${output.source}`);
+            }
+        }, done, done);
     });
 
     test('execObservable should end when cancellationToken is cancelled', function (done) {

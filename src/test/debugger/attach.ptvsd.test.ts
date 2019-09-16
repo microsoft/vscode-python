@@ -13,10 +13,10 @@ import { DebugClient } from 'vscode-debugadapter-testsupport';
 
 import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
+import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IPlatformService } from '../../client/common/platform/types';
 import { IConfigurationService } from '../../client/common/types';
-import { noop } from '../../client/common/utils/misc';
 import { MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
 import { DebuggerTypeName, PTVSD_PATH } from '../../client/debugger/constants';
 import { PythonDebugConfigurationService } from '../../client/debugger/extension/configuration/debugConfigurationService';
@@ -141,13 +141,11 @@ suite('Debugging - Attach Debugger', () => {
         await continueDebugging(debugClient);
         await exited;
     }
-    test('Confirm we are able to attach to a running program', () => {
+    test('Confirm we are able to attach to a running program', async function () {
         // Skipping to get nightly build to pass. Opened this issue:
         // https://github.com/microsoft/vscode-python/issues/7411
-        if (testAttachingToRemoteProcess) {
-            noop();
-        }
-        //await testAttachingToRemoteProcess(path.dirname(fileToDebug), path.dirname(fileToDebug), IS_WINDOWS);
+        this.skip();
+        await testAttachingToRemoteProcess(path.dirname(fileToDebug), path.dirname(fileToDebug), IS_WINDOWS);
     })
         // Retry as tests can timeout on server due to connectivity issues.
         .retries(3);
