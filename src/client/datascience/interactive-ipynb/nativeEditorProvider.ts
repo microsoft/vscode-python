@@ -40,13 +40,14 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
         }
     }
 
-    public dispose(): Promise<void> {
+    public async dispose(): Promise<void> {
         // Send a bunch of telemetry
         sendTelemetryEvent(Telemetry.NotebookOpenCount, this.openedNotebookCount);
         sendTelemetryEvent(Telemetry.NotebookRunCount, this.executedEditors.size);
         sendTelemetryEvent(Telemetry.NotebookWorkspaceCount, this.notebookCount);
 
-        return Promise.resolve();
+        // Try to save all of the currently dirty editors
+        await Promise.all(this.editors.map(e => e.save()));
     }
 
     public get activeEditor(): INotebookEditor | undefined {

@@ -159,7 +159,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                     allowClose = true;
 
                     if (v === yes) {
-                        this.saveContents(false).ignoreErrors();
+                        this.saveContents(false, false).ignoreErrors();
                     } else if (v === undefined) {
                         // We don't want to close, reopen
                         allowClose = false;
@@ -172,7 +172,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                     }
                 });
             } else {
-                this.saveContents(false).ignoreErrors();
+                this.saveContents(false, false).ignoreErrors();
             }
         }
         if (allowClose) {
@@ -200,8 +200,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return this.postMessage(InteractiveWindowMessages.LoadAllCells, { cells });
     }
 
-    public save(saveAs: boolean): Promise<void> {
-        return this.saveContents(saveAs);
+    public save(): Promise<void> {
+        return this.saveContents(false, true);
     }
 
     public get closed(): Event<INotebookEditor> {
@@ -445,14 +445,14 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         await this.documentManager.showTextDocument(doc, ViewColumn.One);
     }
 
-    private async saveContents(forceAsk: boolean): Promise<void> {
+    private async saveContents(forceAsk: boolean, skipUI: boolean): Promise<void> {
         try {
             let fileToSaveTo: Uri | undefined = this.file;
 
             // Ask user for a save as dialog if no title
             const baseName = path.basename(this.file.fsPath);
             const isUntitled = baseName.includes(localize.DataScience.untitledNotebookFileName());
-            if (isUntitled || forceAsk) {
+            if (!skipUI && (isUntitled || forceAsk)) {
                 const filtersKey = localize.DataScience.dirtyNotebookDialogFilter();
                 const filtersObject: { [name: string]: string[] } = {};
                 filtersObject[filtersKey] = ['ipynb'];
@@ -465,14 +465,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             }
 
             if (fileToSaveTo) {
-                let directoryChange;
-                const settings = this.configuration.getSettings();
-                if (settings.datascience.changeDirOnImportExport) {
-                    directoryChange = fileToSaveTo.fsPath;
-                }
-
                 // Save our visible cells into the file
-                const notebook = await this.jupyterExporter.translateToNotebook(this.visibleCells, directoryChange);
+                const notebook = await this.jupyterExporter.translateToNotebook(this.visibleCells, undefined);
                 await this.fileSystem.writeFile(fileToSaveTo.fsPath, JSON.stringify(notebook));
                 this.setClean();
             }
@@ -484,7 +478,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     private saveAll(args: ISaveAll) {
         this.visibleCells = args.cells;
-        this.saveContents(false).ignoreErrors();
+        this.saveContents(false, false).ignoreErrors();
     }
 
     private logNativeCommand(args: INativeCommand) {
