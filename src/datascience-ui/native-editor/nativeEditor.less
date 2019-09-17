@@ -31,13 +31,13 @@
 }
 
 .cell-wrapper-focused {
-    border-color: var(--vscode-editorInfo-foreground);
+    border-color: transparent;
     border-style: solid;
     border-width: 2px 2px 2px 20px;
 }
 
 .cell-wrapper-selected {
-    border-color: var(--vscode-peekView-border);
+    border-color: transparent;
     border-style: solid;
     border-width: 2px 2px 2px 20px;
 }
@@ -51,9 +51,13 @@
 // on the left take in the native Editor.
 .cell-output {
     margin-top: 5px;
-    background: transparent;
-    width: calc(100vw - 95px);
+    background: var(--override-widget-background, var(--vscode-notifications-background));
+    border-style: solid;
+    border-color: var(--override-widget-background, var(--vscode-notifications-background));
+    border-width: 3px;
+    width: calc(100vw - 85px);
     overflow-x: scroll;
+    flex: 1;
 }
 
 .markdown-cell-output {
@@ -101,24 +105,26 @@
 
 .cell-input {
     margin: 0px 10px 0px 0px;
-    border-color:  var(--override-badge-background, var(--vscode-badge-background));
+    border-color:  var(--override-widget-background, var(--vscode-notifications-background));
     border-style: solid;
     border-width: 1px;
     padding: 2px;
     background: var(--override-widget-background, var(--vscode-notifications-background));
+    flex: 1;
+    min-width: calc(100% - 85px);
 }
 
 .controls-div {
-    grid-column: 1;
-    grid-template-columns: max-content min-content ;
-    justify-content: end;
-    display: grid;
-    min-width: 50px;
-    grid-template-rows: min-content max-content;
+    min-width: 34px;
+    max-width: 34px;
+    padding-left: 10px;
+    flex: 1;
+    display: block;
 }
 
 .execution-count {
     justify-self: end;
+    margin-bottom: 10px;
 }
 
 .execution-count-busy-outer {
@@ -215,4 +221,42 @@
     height: 0px;
     margin-left: 0px;
     padding: 0px;
+}
+
+.cell-row-container {
+    display: flex;
+    margin-bottom: 10px;
+}
+
+.status-bar {
+    flex: 1;
+    background-color: transparent;
+    max-width: 8px;
+    min-width: 8px;
+}
+
+.status-bar-markdown {
+    margin: 0px 44px 0px 0px;
+}
+
+.status-bar-output {
+    margin: 0px 28px 0px 16px;
+}
+
+.status-bar-selected {
+    background-color: var(--vscode-peekView-border);
+}
+
+.status-bar-focused {
+    background-color: var(--vscode-editorInfo-foreground);
+}
+
+.status-bar-hover {
+    background: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 3px,
+        var(--vscode-editorGutter-addedBackground) 3px,
+        var(--vscode-editorGutter-addedBackground) 6px
+    );
 }

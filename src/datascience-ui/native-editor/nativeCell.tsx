@@ -122,11 +122,17 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
         return (
             <div className={cellWrapperClass} role={this.props.role} ref={this.wrapperRef} tabIndex={0} onKeyDown={this.onCellKeyDown} onClick={this.onMouseClick} onDoubleClick={this.onMouseDoubleClick}>
                 <div className={cellOuterClass}>
-                    {this.renderControls()}
                     <div className='content-div'>
                         <div className='cell-result-container'>
-                            {this.renderInput()}
-                            {this.renderResultsDiv(this.renderResults())}
+                            <div className='cell-row-container'>
+                                {this.renderStatusBar(true)}
+                                {this.renderControls()}
+                                {this.renderInput()}
+                            </div>
+                            <div className='cell-row-container'>
+                                {this.renderStatusBar(false)}
+                                {this.renderResultsDiv(this.renderResults())}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -290,4 +296,28 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
         }
     }
 
+    private renderStatusBar = (input: boolean) => {
+        let classes = 'status-bar';
+
+        if (this.props.selectedCell === this.props.cellVM.cell.id && this.props.focusedCell !== this.props.cellVM.cell.id) {
+            classes += ' status-bar-selected';
+        }
+        if (this.props.focusedCell === this.props.cellVM.cell.id) {
+            classes += ' status-bar-focused';
+        }
+
+        if (input) {
+            return <div className={classes}></div>;
+        }
+
+        if (this.props.cellVM.cell.data.cell_type === 'markdown') {
+            classes += ' status-bar-markdown';
+        } else if (Array.isArray(this.props.cellVM.cell.data.outputs) && this.props.cellVM.cell.data.outputs.length !== 0) {
+            classes += ' status-bar-output';
+        } else {
+            return null;
+        }
+
+        return <div className={classes}></div>;
+    }
 }
