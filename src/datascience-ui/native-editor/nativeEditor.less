@@ -61,7 +61,14 @@
     overflow-x: scroll;
 }
 
+.cell-outer {
+    display:grid;
+    grid-template-columns:auto auto 1fr;
+}
+
 .cell-outer-editable {
+    display:grid;
+    grid-template-columns:auto auto 1fr;
     margin-top: 0px;
 }
 
@@ -108,13 +115,21 @@
     background: var(--override-widget-background, var(--vscode-notifications-background));
 }
 
+.content-div {
+    grid-column: 3;
+}
+
 .controls-div {
-    grid-column: 1;
+    grid-column: 2;
     grid-template-columns: max-content min-content ;
     justify-content: end;
     display: grid;
     min-width: 50px;
     grid-template-rows: min-content max-content;
+}
+
+.navbar-div {
+    grid-column: 1;
 }
 
 .execution-count {

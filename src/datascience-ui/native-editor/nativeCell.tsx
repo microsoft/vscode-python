@@ -124,6 +124,7 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
         return (
             <div className={cellWrapperClass} role={this.props.role} ref={this.wrapperRef} tabIndex={0} onKeyDown={this.onOuterKeyDown} onClick={this.onMouseClick} onDoubleClick={this.onMouseDoubleClick}>
                 <div className={cellOuterClass}>
+                    {this.renderNavbar()}
                     {this.renderControls()}
                     <div className='content-div'>
                         <div className='cell-result-container'>
@@ -464,6 +465,35 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
         }
     }
 
+    private renderNavbar = () => {
+        const cellId = this.props.cellVM.cell.id;
+
+        const moveUp = () => {
+            this.moveCellUp();
+            this.props.stateController.sendCommand(NativeCommandType.MoveCellUp, 'mouse');
+        };
+        const moveDown = () => {
+            this.moveCellDown();
+            this.props.stateController.sendCommand(NativeCommandType.MoveCellDown, 'mouse');
+        };
+        const canMoveUp = this.props.stateController.canMoveUp(cellId);
+        const canMoveDown = this.props.stateController.canMoveDown(cellId);
+
+        return (
+            <div className='navbar-div'>
+                <div>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={moveUp} disabled={!canMoveUp} tooltip={getLocString('DataScience.moveCellUp', 'Move cell up')}>
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Up} />
+                    </ImageButton>
+                </div>
+                <div>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={moveDown} disabled={!canMoveDown} tooltip={getLocString('DataScience.moveCellDown', 'Move cell down')}>
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Down} />
+                    </ImageButton>
+                </div>
+            </div>
+        );
+    }
     private renderControls = () => {
         const cellId = this.props.cellVM.cell.id;
         const busy = this.props.cellVM.cell.state === CellState.init || this.props.cellVM.cell.state === CellState.executing;
