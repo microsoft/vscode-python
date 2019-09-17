@@ -126,6 +126,7 @@
     display: grid;
     min-width: 50px;
     grid-template-rows: min-content max-content;
+    margin-right: 2px;
 }
 
 .navbar-div {
@@ -148,13 +149,18 @@
 }
 
 .native-editor-celltoolbar-inner {
-    justify-self: end;
+    justify-self: center;
+    grid-column: 1;
 }
 
 .native-editor-celltoolbar-middle {
     display: flex;
     justify-items: left;
     visibility: collapse;
+}
+
+.cell-wrapper:hover .navbar-div {
+    visibility: visible;
 }
 
 .cell-wrapper-selected .navbar-div {
