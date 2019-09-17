@@ -1,7 +1,8 @@
 import { inject, injectable } from 'inversify';
 import { IFileSystem } from '../../common/platform/types';
 import {
-    IXUnitParser, PassCalculationFormulae, Tests, TestStatus, TestSummary
+    FlattenedTestFunction, IXUnitParser, PassCalculationFormulae,
+    TestFunction, Tests, TestStatus, TestSummary
 } from './types';
 
 type TestSuiteResult = {
@@ -104,9 +105,12 @@ function updateTests(
     }
 
     testSuiteResult.testcase.forEach((testcase: TestCaseResult) => {
-        const xmlClassName = testcase.$.classname.replace(/\(\)/g, '').replace(/\.\./g, '.').replace(/\.\./g, '.').replace(/\.+$/, '');
-        const result = tests.testFunctions.find(fn => fn.xmlClassName === xmlClassName && fn.testFunction.name === testcase.$.name);
-        if (!result) {
+        const testFunc = findTestFunction(
+            tests.testFunctions,
+            testcase.$.classname,
+            testcase.$.name
+        );
+        if (!testFunc) {
             // Possible we're dealing with nosetests, where the file name isn't returned to us
             // When dealing with nose tests
             // It is possible to have a test file named x in two separate test sub directories and have same functions/classes
@@ -126,31 +130,31 @@ function updateTests(
             return;
         }
 
-        result.testFunction.line = getSafeInt(testcase.$.line, null);
-        result.testFunction.file = testcase.$.file;
-        result.testFunction.time = parseFloat(testcase.$.time);
-        result.testFunction.passed = true;
-        result.testFunction.status = TestStatus.Pass;
+        testFunc.line = getSafeInt(testcase.$.line, null);
+        testFunc.file = testcase.$.file;
+        testFunc.time = parseFloat(testcase.$.time);
+        testFunc.passed = true;
+        testFunc.status = TestStatus.Pass;
 
         if (testcase.failure) {
-            result.testFunction.status = TestStatus.Fail;
-            result.testFunction.passed = false;
-            result.testFunction.message = testcase.failure[0].$.message;
-            result.testFunction.traceback = testcase.failure[0]._;
+            testFunc.status = TestStatus.Fail;
+            testFunc.passed = false;
+            testFunc.message = testcase.failure[0].$.message;
+            testFunc.traceback = testcase.failure[0]._;
         }
 
         if (testcase.error) {
-            result.testFunction.status = TestStatus.Error;
-            result.testFunction.passed = false;
-            result.testFunction.message = testcase.error[0].$.message;
-            result.testFunction.traceback = testcase.error[0]._;
+            testFunc.status = TestStatus.Error;
+            testFunc.passed = false;
+            testFunc.message = testcase.error[0].$.message;
+            testFunc.traceback = testcase.error[0]._;
         }
 
         if (testcase.skipped) {
-            result.testFunction.status = TestStatus.Skipped;
-            result.testFunction.passed = undefined;
-            result.testFunction.message = testcase.skipped[0].$.message;
-            result.testFunction.traceback = '';
+            testFunc.status = TestStatus.Skipped;
+            testFunc.passed = undefined;
+            testFunc.message = testcase.skipped[0].$.message;
+            testFunc.traceback = '';
         }
     });
 }
@@ -165,4 +169,21 @@ function updateSummary(
     summary.skipped = getSafeInt(testSuiteResult.$.skips ? testSuiteResult.$.skips : testSuiteResult.$.skip);
     const testCount = getSafeInt(testSuiteResult.$.tests);
     summary.passed = testCount - summary.failures - summary.skipped - summary.errors;
+}
+
+function findTestFunction(
+    candidates: FlattenedTestFunction[],
+    className: string,
+    funcName: string
+): TestFunction | undefined {
+    const xmlClassName = className
+        .replace(/\(\)/g, '')
+        .replace(/\.\./g, '.')
+        .replace(/\.\./g, '.')
+        .replace(/\.+$/, '');
+    const flattened = candidates.find(fn => fn.xmlClassName === xmlClassName && fn.testFunction.name === funcName);
+    if (!flattened) {
+        return;
+    }
+    return flattened.testFunction;
 }
