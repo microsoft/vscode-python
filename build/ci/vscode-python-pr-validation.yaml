@@ -18,15 +18,15 @@ variables:
 - template: templates/globals.yml
 
 stages:
-# - stage: Build
-#   jobs:
-#   - template: templates/jobs/build_compile.yml
+- stage: Build
+  jobs:
+  - template: templates/jobs/build_compile.yml
 
-# - template: templates/jobs/smoke.yml
+- template: templates/jobs/smoke.yml
 
 - stage: Tests
-  # dependsOn:
-  # - Build
+  dependsOn:
+  - Build
   jobs:
   - job: 'Test'
     dependsOn: []
