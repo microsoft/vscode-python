@@ -94,11 +94,7 @@ stages:
     steps:
       - template: templates/test_phases.yml
 
-- stage: Smoke
-  # dependsOn:
-  # - Build
-  jobs:
-  - job: 'Test'
+  - job: 'Smoke'
     dependsOn: []
     strategy:
       matrix:
@@ -106,17 +102,14 @@ stages:
             PythonVersion: '3.7'
             VMImageName: 'macos-10.13'
             TestsToRun: 'testSmoke'
-            NeedsPythonTestReqs: true
         'Linux-Py3.7':
             PythonVersion: '3.7'
             VMImageName: 'ubuntu-16.04'
             TestsToRun: 'testSmoke'
-            NeedsPythonTestReqs: true
         'Win-Py3.7':
             PythonVersion: '3.7'
             VMImageName: 'vs2017-win2016'
             TestsToRun: 'testSmoke'
-            NeedsPythonTestReqs: true
 
     pool:
       vmImage: $(VMImageName)
@@ -129,7 +122,6 @@ stages:
   dependsOn:
   # - Smoke_Tests
   - Tests
-  - Smoke
   condition: always()
   jobs:
   # - template: templates/jobs/merge_upload_uitest_report.yml
