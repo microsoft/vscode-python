@@ -578,11 +578,14 @@ suite('Activation - ActivationService', () => {
 
         test('Track current LS usage for first usage', async () => {
             state.reset();
-            state.setup(s => s.value).returns(() => undefined).verifiable(TypeMoq.Times.exactly(2));
-            state.setup(s => s.updateValue(TypeMoq.It.isValue(true))).returns(() => {
+            state.setup(s => s.value).returns(() => undefined)
+                .verifiable(TypeMoq.Times.exactly(2));
+            state.setup(s => s.updateValue(TypeMoq.It.isValue(true)))
+                .returns(() => {
                 state.setup(s => s.value).returns(() => true);
                 return Promise.resolve();
-            }).verifiable(TypeMoq.Times.once());
+                })
+                .verifiable(TypeMoq.Times.once());
 
             const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
             await activationService.sendTelemetryForChosenLanguageServer(true);
@@ -591,8 +594,12 @@ suite('Activation - ActivationService', () => {
         });
         test('Track switch to LS', async () => {
             state.reset();
-            state.setup(s => s.value).returns(() => true).verifiable(TypeMoq.Times.exactly(2));
-            state.setup(s => s.updateValue(TypeMoq.It.isValue(false))).returns(() => Promise.resolve()).verifiable(TypeMoq.Times.once());
+            state.setup(s => s.value)
+                .returns(() => true)
+                .verifiable(TypeMoq.Times.exactly(2));
+            state.setup(s => s.updateValue(TypeMoq.It.isValue(false)))
+                .returns(() => Promise.resolve())
+                .verifiable(TypeMoq.Times.once());
 
             const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
             await activationService.sendTelemetryForChosenLanguageServer(false);
@@ -601,8 +608,12 @@ suite('Activation - ActivationService', () => {
         });
         test('Track switch to Jedi', async () => {
             state.reset();
-            state.setup(s => s.value).returns(() => false).verifiable(TypeMoq.Times.exactly(2));
-            state.setup(s => s.updateValue(TypeMoq.It.isValue(true))).returns(() => Promise.resolve()).verifiable(TypeMoq.Times.once());
+            state.setup(s => s.value)
+                .returns(() => false)
+                .verifiable(TypeMoq.Times.exactly(2));
+            state.setup(s => s.updateValue(TypeMoq.It.isValue(true)))
+                .returns(() => Promise.resolve())
+                .verifiable(TypeMoq.Times.once());
 
             const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
             await activationService.sendTelemetryForChosenLanguageServer(true);
