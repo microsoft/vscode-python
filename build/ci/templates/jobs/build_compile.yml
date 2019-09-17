@@ -8,7 +8,7 @@ jobs:
   pool:
     vmImage: "macos-latest"
   steps:
-    - template: ../steps/build_compile.yml
+    - template: ../steps/compile.yml
 
 - job: Build
   variables:
@@ -16,4 +16,12 @@ jobs:
   pool:
     vmImage: "macos-latest"
   steps:
-    - template: ../steps/build_compile.yml
+    - template: ../steps/build.yml
+
+- job: Lint
+  variables:
+    build: true
+  pool:
+    vmImage: "macos-latest"
+  steps:
+    - template: ../steps/lint.yml

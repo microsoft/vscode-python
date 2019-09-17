@@ -1,4 +1,4 @@
-# Lint the source
+# Compiles the source
 
 steps:
     - template: initialization.yml
@@ -7,6 +7,7 @@ steps:
         workingDirectory: $(Build.SourcesDirectory)
         compile: 'false'
 
-    - bash: npx tslint --project tsconfig.json
-      displayName: "Lint"
-      workingDirectory: $(Build.SourcesDirectory)
+    - task: Gulp@0
+      displayName: "Compile and check for errors"
+      inputs:
+          targets: "prePublishNonBundle"
