@@ -104,6 +104,8 @@ function updateTests(
         return;
     }
 
+    // Update the results for each test.
+    // Previously unknown tests are ignored.
     testSuiteResult.testcase.forEach((testcase: TestCaseResult) => {
         const testFunc = findTestFunction(
             tests.testFunctions,
