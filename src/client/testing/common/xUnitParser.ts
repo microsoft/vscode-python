@@ -77,8 +77,7 @@ export class XUnitParser implements IXUnitParser {
 // An async wrapper around xml2js.parseString().
 // tslint:disable-next-line:no-any
 async function parseXML(data: string): Promise<any> {
-    // tslint:disable-next-line:no-require-imports
-    const xml2js = require('xml2js');
+    const xml2js = await import('xml2js');
     // tslint:disable-next-line:no-any
     return new Promise<any>((resolve, reject) => {
         // tslint:disable-next-line:no-any
