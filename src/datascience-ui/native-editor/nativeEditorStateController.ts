@@ -118,10 +118,13 @@ export class NativeEditorStateController extends MainStateController {
 
     public insertAbove = (cellId?: string, isMonaco?: boolean): string | undefined => {
         const cells = this.getState().cellVMs;
-        const index = cells.findIndex(cvm => cvm.cell.id === cellId);
+        const index = cellId ? cells.findIndex(cvm => cvm.cell.id === cellId) : 0;
         if (index >= 0) {
+            this.suspendUpdates();
             const id = uuid();
+            this.setState({ newCell: id });
             this.insertCell(createEmptyCell(id, null), index, isMonaco);
+            this.resumeUpdates();
             return id;
         }
     }
@@ -130,8 +133,11 @@ export class NativeEditorStateController extends MainStateController {
         const cells = this.getState().cellVMs;
         const index = cells.findIndex(cvm => cvm.cell.id === cellId);
         if (index >= 0) {
+            this.suspendUpdates();
             const id = uuid();
+            this.setState({ newCell: id });
             this.insertCell(createEmptyCell(id, null), index + 1, isMonaco);
+            this.resumeUpdates();
             return id;
         }
     }
