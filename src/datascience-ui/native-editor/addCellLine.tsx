@@ -24,7 +24,7 @@ export class AddCellLine extends React.Component<IAddCellLineProps> {
             <div className={className}>
                 <button role='button' aria-pressed='false' title={tooltip} aria-label={tooltip} className='add-cell-line-button' onClick={this.props.click}>
                     <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.InsertBelow} />
-                    <div className='add-cell-line-divider'/>
+                    <span className='add-cell-line-divider'/>
                 </button>
             </div>
         );
