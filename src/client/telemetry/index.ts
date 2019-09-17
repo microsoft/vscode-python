@@ -875,9 +875,20 @@ export interface IEventNamePropertyMapping {
         selection: 'Reload' | undefined;
     };
     /**
-     * Telemetry tracking switching between LS and Jedi
+     * Telemetry sent with details about the current selection of language server
      */
-    [EventName.PYTHON_LANGUAGE_SERVER_SWITCHED]: { change: 'Switch to Jedi from LS' | 'Switch to LS from Jedi' };
+    [EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION]: {
+        /**
+         * The startup value of the language server setting
+         *
+         * @type {boolean}
+         */
+        startup?: boolean;
+        /**
+         * Used to track switch between LS and Jedi. Carries the final state after the switch.
+         */
+        switchTo?: boolean;
+    };
     /**
      * Telemetry event sent with details after attempting to download LS
      */
