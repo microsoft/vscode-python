@@ -17,6 +17,7 @@ parameters:
   PythonVersion: ''
   compile: 'true'
   sqlite: 'false'
+  installVSCEorNPX: 'true'
 
 steps:
     - bash: |
@@ -84,6 +85,7 @@ steps:
           npm install -g vsce
           npm install -g npx
       displayName: "Install vsce & npx"
+      condition: and(succeeded(), eq('${{ parameters.installVSCEorNPX }}', 'true'))
 
     - bash: npx tsc -p ./
       displayName: "compile (npx tsc -p ./)"
