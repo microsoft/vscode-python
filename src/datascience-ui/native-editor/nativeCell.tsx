@@ -638,7 +638,9 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
     }
 
     private renderOutput = (): JSX.Element | null => {
-        if (this.shouldRenderOutput()) {
+        const cell = this.props.cellVM.cell.data;
+
+        if (this.shouldRenderOutput() && ((cell.cell_type === 'markdown') || (Array.isArray(cell.outputs) && cell.outputs.length !== 0))) {
             return (
                 <CellOutput
                     cellVM={this.props.cellVM}

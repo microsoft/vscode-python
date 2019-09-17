@@ -98,14 +98,10 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                 `cell-output cell-output-${this.props.baseTheme}` :
                 '';
 
-            const cell = this.props.cellVM.cell.data;
-
-            // And do not render if cell is of type code and has no results
-            if ((cell.cell_type === 'markdown') || (Array.isArray(cell.outputs) && cell.outputs.length !== 0)) {
-                return <div className={outputClassNames}>{this.renderResults()}</div>;
-            }
-            return null;
+            // Then combine them inside a div
+            return <div className={outputClassNames}>{this.renderResults()}</div>;
         }
+        return null;
     }
 
     // Public for testing
