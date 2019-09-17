@@ -45,7 +45,7 @@ const config = {
         'commonjs'
     ],
     plugins: [
-        ...common_1.getDefaultPlugins('extension')
+        ...common_1.getDefaultPlugins('debugger')
     ],
     resolve: {
         extensions: ['.ts', '.js'],
