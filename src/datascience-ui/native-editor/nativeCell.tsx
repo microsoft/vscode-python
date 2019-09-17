@@ -47,6 +47,7 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
     private inputRef: React.RefObject<CellInput> = React.createRef<CellInput>();
     private wrapperRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private lastKeyPressed: string | undefined;
+    private pendingFocusLoss?: () => void;
 
     constructor(prop: INativeCellProps) {
         super(prop);
@@ -527,9 +528,21 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
             setTimeout(() => this.props.focusCell(cellId, true), 10);
         };
         const switchToCode = () => {
-            this.props.stateController.changeCellType(cellId, 'code');
-            this.props.stateController.sendCommand(NativeCommandType.ChangeToCode, 'mouse');
-            setTimeout(() => this.props.focusCell(cellId, true), 10);
+            const handler = () => {
+                setTimeout(() => {
+                    this.props.stateController.changeCellType(cellId, 'code');
+                    this.props.stateController.sendCommand(NativeCommandType.ChangeToCode, 'mouse');
+                    this.props.focusCell(cellId, true);
+                }, 10);
+            };
+
+            // This is special. Coming in on a mouse down event so we get
+            // called before focus changes. After focus changes, then switch to code
+            if (this.state.showingMarkdownEditor) {
+                this.pendingFocusLoss = handler;
+            } else {
+                handler();
+            }
         };
         const switchButton = this.props.cellVM.cell.data.cell_type === 'code' ?
             <ImageButton baseTheme={this.props.baseTheme} onClick={switchToMarkdown} tooltip={switchTooltip}>
@@ -622,6 +635,13 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
 
     private onMarkdownUnfocused = () => {
         this.props.stateController.codeLostFocus(this.cellId);
+
+        // There might be a pending focus loss handler.
+        if (this.pendingFocusLoss) {
+            const func = this.pendingFocusLoss;
+            this.pendingFocusLoss = undefined;
+            func();
+        }
 
         // Indicate not showing the editor anymore. The equivalent of this
         // is not when we receive focus but when we GIVE focus to the markdown editor

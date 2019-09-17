@@ -44,5 +44,4 @@ export class ImageButton extends React.Component<IImageButtonProps> {
             </button>
         );
     }
-
 }
