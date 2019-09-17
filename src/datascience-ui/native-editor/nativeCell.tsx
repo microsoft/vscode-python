@@ -142,20 +142,20 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
         const content = this.isMarkdownCell() && !this.state.showingMarkdownEditor ?
             <div className='cell-result-container'>
                 <div className='cell-row-container'>
-                    {this.renderStatusBar(false)}
+                    {this.renderCollapseBar(false)}
                     {this.renderOutput()}
                 </div>
                 {this.renderMiddleToolbar()}
             </div> :
             <div className='cell-result-container'>
                 <div className='cell-row-container'>
-                    {this.renderStatusBar(true)}
+                    {this.renderCollapseBar(true)}
                     {this.renderControls()}
                     {this.renderInput()}
                 </div>
                 {this.renderMiddleToolbar()}
                 <div className='cell-row-container'>
-                    {this.renderStatusBar(false)}
+                    {this.renderCollapseBar(false)}
                     {this.renderOutput()}
                 </div>
             </div>;
@@ -669,14 +669,14 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
         }
     }
 
-    private renderStatusBar = (input: boolean) => {
-        let classes = 'status-bar';
+    private renderCollapseBar = (input: boolean) => {
+        let classes = 'collapse-bar';
 
         if (this.props.selectedCell === this.props.cellVM.cell.id && this.props.focusedCell !== this.props.cellVM.cell.id) {
-            classes += ' status-bar-selected';
+            classes += ' collapse-bar-selected';
         }
         if (this.props.focusedCell === this.props.cellVM.cell.id) {
-            classes += ' status-bar-focused';
+            classes += ' collapse-bar-focused';
         }
 
         if (input) {
@@ -684,9 +684,9 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
         }
 
         if (this.props.cellVM.cell.data.cell_type === 'markdown') {
-            classes += ' status-bar-markdown';
+            classes += ' collapse-bar-markdown';
         } else if (Array.isArray(this.props.cellVM.cell.data.outputs) && this.props.cellVM.cell.data.outputs.length !== 0) {
-            classes += ' status-bar-output';
+            classes += ' collapse-bar-output';
         } else {
             return null;
         }
