@@ -17,6 +17,7 @@ import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
 import { Progress } from '../react-common/progress';
 import { getSettings } from '../react-common/settingsReactSide';
+import { AddCellLine } from './addCellLine';
 import { NativeCell } from './nativeCell';
 import { NativeEditorStateController } from './nativeEditorStateController';
 
@@ -84,6 +85,13 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         // Update the state controller with our new state
         this.stateController.renderUpdate(this.state);
         const progressBar = this.state.busy && !this.props.testMode ? <Progress /> : undefined;
+        const insertAboveFirst = () => {
+            const cellId = this.state.cellVMs.length > 0 ? this.state.cellVMs[0].cell.id : undefined;
+            const newCell = this.stateController.insertAbove(cellId, true);
+            if (newCell) {
+                this.selectCell(newCell);
+            }
+        };
 
         return (
             <div id='main-panel' ref={this.mainPanelRef} role='Main'>
@@ -100,6 +108,11 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                     {this.renderVariablePanel(this.props.baseTheme)}
                 </section>
                 <main id='main-panel-content' onScroll={this.onContentScroll} ref={this.contentPanelScrollRef}>
+                    <AddCellLine
+                        baseTheme={this.props.baseTheme}
+                        className='add-cell-line-top'
+                        click={insertAboveFirst}
+                    />
                     {this.renderContentPanel(this.props.baseTheme)}
                 </main>
             </div>
@@ -122,6 +135,31 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
     private scrollToCell(_id: string) {
         // Not used in the native editor
         noop();
+    }
+
+    private moveSelectionToExisting = (cellId: string) => {
+        // Cell should already exist in the UI
+        if (this.contentPanelRef) {
+            const wasFocused = this.state.focusedCell === cellId;
+            this.stateController.selectCell(cellId, wasFocused ? cellId : undefined);
+            this.focusCell(cellId, wasFocused ? true : false);
+        }
+    }
+
+    private selectCell = (id: string) => {
+        // Check to see that this cell already exists in our window (it's part of the rendered state
+        const cells = this.state.cellVMs.map(c => c.cell);
+        if (!cells || !cells.find(c => c.id === id)) {
+            // Force selection change right now as we don't need the cell to exist
+            // to make it selected (otherwise we'll get a flash)
+            const wasFocused = this.state.focusedCell === id;
+            this.stateController.selectCell(id, wasFocused ? id : undefined);
+
+            // Then wait to give it actual input focus
+            setTimeout(() => this.moveSelectionToExisting(id), 1);
+        } else {
+            this.moveSelectionToExisting(id);
+        }
     }
 
     // tslint:disable: react-this-binding-issue
@@ -316,6 +354,13 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         const containerRef = React.createRef<HTMLDivElement>();
         this.cellRefs.set(cellVM.cell.id, cellRef);
         this.cellContainerRefs.set(cellVM.cell.id, containerRef);
+        const addNewCell = () => {
+            const newCell = this.stateController.insertBelow(cellVM.cell.id, true);
+            this.stateController.sendCommand(NativeCommandType.AddToEnd, 'mouse');
+            if (newCell) {
+                this.selectCell(newCell);
+            }
+        };
 
         // Special case, see if our initial load is finally complete.
         if (this.state.loadTotal && this.cellRefs.size >= this.state.loadTotal && !this.initialVisibilityUpdate) {
@@ -342,8 +387,13 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                         focusedCell={this.state.focusedCell}
                         hideOutput={cellVM.hideOutput}
                         focusCell={this.focusCell}
+                        selectCell={this.selectCell}
                     />
                 </ErrorBoundary>
+                <AddCellLine
+                    baseTheme={this.props.baseTheme}
+                    className='add-cell-line-cell'
+                    click={addNewCell} />
             </div>);
     }
 

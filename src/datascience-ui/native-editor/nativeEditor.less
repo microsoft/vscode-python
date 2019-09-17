@@ -214,3 +214,72 @@
     margin-left: 0px;
     padding: 0px;
 }
+
+.add-cell-line {
+    display: flex;
+    justify-content: left;
+    margin-top: 1px;
+    margin-bottom: 1px;
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+.add-cell-line:focus-within {
+    outline: 1px solid black;
+}
+
+.add-cell-line-top {
+    margin-top: 2px;
+}
+
+.add-cell-line-top .add-cell-line-button {
+    visibility: visible;
+}
+
+.add-cell-line-button {
+    border-width: 0px;
+    border-style: solid;
+    text-align: center;
+    line-height: 16px;
+    background-color: transparent;
+    cursor: hand;
+    height: var(--button-size);
+    padding: 0px;
+    display: flex;
+    visibility: hidden;
+}
+
+.add-cell-line-button:focus {
+    outline: none;
+}
+
+.add-cell-line:hover .add-cell-line-button{
+    visibility: visible;
+}
+
+.add-cell-line-button .image-button-image{
+    height: var(--button-size)
+}
+
+.add-cell-line-button .image-button-image svg {
+    height: var(--button-size)
+}
+
+.add-cell-line-divider {
+    margin-top: 8px;
+    margin-left: 2px;
+    width: calc(100vw - 40px);
+    border-width: 0px;
+    border-top-color: var(--override-badge-background, var(--vscode-badge-background));
+    border-top-width: 1px;
+    border-style: solid;
+}
+
+.cell-wrapper-selected .add-cell-line {
+    visibility: visible;
+}
+
+.cell-wrapper-focused .add-cell-line {
+    visibility: visible;
+}
+

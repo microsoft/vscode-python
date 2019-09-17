@@ -36,6 +36,7 @@ interface INativeCellProps {
     selectedCell?: string;
     focusedCell?: string;
     focusCell(cellId: string, focusCode: boolean): void;
+    selectCell(cellId: string): void;
 }
 
 interface INativeCellState {
@@ -431,29 +432,8 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
         this.props.stateController.sendCommand(NativeCommandType.Run, 'keyboard');
     }
 
-    private moveSelectionToExisting = (cellId: string) => {
-        // Cell should already exist in the UI
-        if (this.wrapperRef) {
-            const wasFocused = this.isFocused();
-            this.props.stateController.selectCell(cellId, wasFocused ? cellId : undefined);
-            this.props.focusCell(cellId, wasFocused ? true : false);
-        }
-    }
-
     private moveSelection = (cellId: string) => {
-        // Check to see that this cell already exists in our window (it's part of the rendered state
-        const cells = this.getNonMessageCells();
-        if (!cells || !cells.find(c => c.id === cellId)) {
-            // Force selection change right now as we don't need the cell to exist
-            // to make it selected (otherwise we'll get a flash)
-            const wasFocused = this.isFocused();
-            this.props.stateController.selectCell(cellId, wasFocused ? cellId : undefined);
-
-            // Then wait to give it actual input focus
-            setTimeout(() => this.moveSelectionToExisting(cellId), 1);
-        } else {
-            this.moveSelectionToExisting(cellId);
-        }
+        this.props.selectCell(cellId);
     }
 
     private submitCell = (possibleContents?: string) => {
@@ -476,7 +456,7 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
     private renderMiddleToolbar = () => {
         const cellId = this.props.cellVM.cell.id;
         const deleteCell = () => {
-            const cellToSelect = this.getPrevCellId() || this.getNextCellId();
+            const cellToSelect = this.getNextCellId() || this.getPrevCellId();
             this.props.stateController.deleteCell(cellId);
             this.props.stateController.sendCommand(NativeCommandType.DeleteCell, 'mouse');
             setTimeout(() => {
