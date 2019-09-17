@@ -56,6 +56,13 @@ steps:
       condition: and(succeeded(), eq('${{ parameters.sqlite }}', 'true'), not(eq('${{ parameters.PythonVersion }}', '')), not(eq('${{ parameters.PythonVersion }}', '2.7')), eq(variables['Agent.Os'], 'Linux'))
 
     - task: Npm@1
+      displayName: "Use NPM $(NpmVersion)"
+      inputs:
+          command: custom
+          verbose: true
+          customCommand: "install -g npm@$(NpmVersion)"
+
+    - task: Npm@1
       displayName: "npm ci"
       inputs:
           workingDir: ${{ parameters.workingDirectory }}
