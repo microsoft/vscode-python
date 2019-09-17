@@ -75,6 +75,7 @@ export class XUnitParser implements IXUnitParser {
     }
 }
 
+// An async wrapper around xml2js.parseString().
 // tslint:disable-next-line:no-any
 async function parseXML(data: string): Promise<any> {
     // tslint:disable-next-line:no-require-imports
@@ -91,25 +92,12 @@ async function parseXML(data: string): Promise<any> {
     });
 }
 
-// Set the number of passing tests given the total number.
-function setPassing(
-    summary: TestSummary,
-    total: number
-) {
-    summary.passed = total - summary.failures - summary.skipped - summary.errors;
-}
-
 // Update "tests" with the given results.
 function updateTests(
     tests: Tests,
     testSuiteResult: TestSuiteResult
 ) {
-    tests.summary.errors = getSafeInt(testSuiteResult.$.errors);
-    tests.summary.failures = getSafeInt(testSuiteResult.$.failures);
-    tests.summary.skipped = getSafeInt(testSuiteResult.$.skips ? testSuiteResult.$.skips : testSuiteResult.$.skip);
-    const testCount = getSafeInt(testSuiteResult.$.tests);
-
-    setPassing(tests.summary, testCount);
+    updateSummary(tests.summary, testSuiteResult);
 
     if (!Array.isArray(testSuiteResult.testcase)) {
         return;
@@ -165,4 +153,16 @@ function updateTests(
             result.testFunction.traceback = '';
         }
     });
+}
+
+// Update the summary with the information in the given results.
+function updateSummary(
+    summary: TestSummary,
+    testSuiteResult: TestSuiteResult
+) {
+    summary.errors = getSafeInt(testSuiteResult.$.errors);
+    summary.failures = getSafeInt(testSuiteResult.$.failures);
+    summary.skipped = getSafeInt(testSuiteResult.$.skips ? testSuiteResult.$.skips : testSuiteResult.$.skip);
+    const testCount = getSafeInt(testSuiteResult.$.tests);
+    summary.passed = testCount - summary.failures - summary.skipped - summary.errors;
 }
