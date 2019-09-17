@@ -19,6 +19,8 @@ import {
     WINDOWS_REGISTRY_SERVICE,
     WORKSPACE_VIRTUAL_ENV_SERVICE
 } from '../contracts';
+import { InterpreterFilter } from './services/interpreterFilter';
+import { IInterpreterFilter } from './types';
 // tslint:disable-next-line:no-require-imports no-var-requires
 const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
 
@@ -31,9 +33,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
     private readonly platform: IPlatformService;
     private readonly interpreterLocatorHelper: IInterpreterLocatorHelper;
     private readonly _hasInterpreters: Deferred<boolean>;
-    constructor(
-        @inject(IServiceContainer) private serviceContainer: IServiceContainer
-    ) {
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer, @inject(InterpreterFilter) private readonly interpreterFilter: IInterpreterFilter) {
         this._hasInterpreters = createDeferred<boolean>();
         serviceContainer.get<Disposable[]>(IDisposableRegistry).push(this);
         this.platform = serviceContainer.get<IPlatformService>(IPlatformService);
@@ -74,17 +74,20 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
         const locators = this.getLocators();
         const promises = locators.map(async provider => provider.getInterpreters(resource));
         locators.forEach(locator => {
-            locator.hasInterpreters.then(found => {
-                if (found) {
-                    this._hasInterpreters.resolve(true);
-                }
-            }).ignoreErrors();
+            locator.hasInterpreters
+                .then(found => {
+                    if (found) {
+                        this._hasInterpreters.resolve(true);
+                    }
+                })
+                .ignoreErrors();
         });
         const listOfInterpreters = await Promise.all(promises);
 
         const items = flatten(listOfInterpreters)
             .filter(item => !!item)
-            .map(item => item!);
+            .map(item => item!)
+            .filter(item => !this.interpreterFilter.isHiddenInterpreter(item));
         this._hasInterpreters.resolve(items.length > 0);
         return this.interpreterLocatorHelper.mergeInterpreters(items);
     }

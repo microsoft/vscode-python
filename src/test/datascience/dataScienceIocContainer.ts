@@ -217,6 +217,8 @@ import {
     GlobalVirtualEnvironmentsSearchPathProvider,
     GlobalVirtualEnvService
 } from '../../client/interpreter/locators/services/globalVirtualEnvService';
+import { InterpreterHashProvider } from '../../client/interpreter/locators/services/hashProvider';
+import { InterpeterHashProviderFactory } from '../../client/interpreter/locators/services/hashProviderFactory';
 import { InterpreterWatcherBuilder } from '../../client/interpreter/locators/services/interpreterWatcherBuilder';
 import {
     KnownPathsService,
@@ -354,7 +356,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingletonInstance<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, this.asyncRegistry);
         this.serviceManager.addSingleton<IPythonInPathCommandProvider>(IPythonInPathCommandProvider, PythonInPathCommandProvider);
         this.serviceManager.addSingleton<IEnvironmentActivationService>(IEnvironmentActivationService, EnvironmentActivationService);
-        this.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
         this.serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
         this.serviceManager.add<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider, DataScienceCodeLensProvider);
         this.serviceManager.add<ICodeExecutionHelper>(ICodeExecutionHelper, CodeExecutionHelper);
@@ -396,6 +397,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addBinding(IGatherExecution, INotebookExecutionLogger);
         this.serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory);
         this.serviceManager.addSingleton<IShellDetector>(IShellDetector, TerminalNameShellDetector);
+        this.serviceManager.addSingleton<InterpeterHashProviderFactory>(InterpeterHashProviderFactory, InterpeterHashProviderFactory);
+        this.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
+        this.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
 
         // Setup our command list
         this.commandManager.registerCommand('setContext', (name: string, value: boolean) => {

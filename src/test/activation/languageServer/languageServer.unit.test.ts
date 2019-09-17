@@ -265,4 +265,49 @@ suite('Language Server - LanguageServer', () => {
         pythonSettings.verifyAll();
         configService.verifyAll();
     });
+    test('Do not register services if languageClient is disposed while waiting for it to start', async () => {
+        const uri = Uri.file(__filename);
+        const options = typemoq.Mock.ofType<LanguageClientOptions>().object;
+
+        const pythonSettings = typemoq.Mock.ofType<IPythonSettings>();
+        pythonSettings
+            .setup(p => p.downloadLanguageServer)
+            .returns(() => false)
+            .verifiable(typemoq.Times.never());
+        configService
+            .setup(c => c.getSettings(uri))
+            .returns(() => pythonSettings.object)
+            .verifiable(typemoq.Times.never());
+
+        client.setup(c => (c as any).then).returns(() => undefined);
+        client
+            .setup(c => c.initializeResult)
+            .returns(() => undefined)
+            .verifiable(typemoq.Times.atLeastOnce());
+        when(clientFactory.createLanguageClient(uri, options)).thenResolve(client.object);
+        const startDisposable = typemoq.Mock.ofType<IDisposable>();
+        client.setup(c => c.stop()).returns(() => Promise.resolve());
+        client
+            .setup(c => c.start())
+            .returns(() => startDisposable.object)
+            .verifiable(typemoq.Times.once());
+
+        const promise = server.start(uri, options);
+        // Wait until we start ls client and check if it is ready.
+        await sleep(200);
+        // Confirm we checked if it is ready.
+        client.verifyAll();
+        // Now dispose the language client.
+        server.dispose();
+        // Wait until we check if it is ready.
+        await sleep(500);
+
+        // Promise should resolve without any errors.
+        await promise;
+
+        verify(testManager.activate(anything())).never();
+        client.verify(c => c.onTelemetry(typemoq.It.isAny()), typemoq.Times.never());
+        pythonSettings.verifyAll();
+        configService.verifyAll();
+    });
 });

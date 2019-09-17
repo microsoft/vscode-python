@@ -412,14 +412,17 @@ export class MainStateController implements IMessageHandler {
         this.sendMessage(InteractiveWindowMessages.Export, cellContents);
     }
 
-    public variableExplorerToggled = (open: boolean) => {
-        this.setState({ variablesVisible: open });
-        this.sendMessage(InteractiveWindowMessages.VariableExplorerToggle, open);
-    }
-
     // When the variable explorer wants to refresh state (say if it was expanded)
     public refreshVariables = (newExecutionCount?: number) => {
         this.sendMessage(InteractiveWindowMessages.GetVariablesRequest, newExecutionCount === undefined ? this.state.currentExecutionCount : newExecutionCount);
+    }
+
+    public toggleVariableExplorer = () => {
+        this.sendMessage(InteractiveWindowMessages.VariableExplorerToggle, !this.state.variablesVisible);
+        this.setState({ variablesVisible: !this.state.variablesVisible });
+        if (!this.state.variablesVisible) {
+            this.refreshVariables();
+        }
     }
 
     public codeChange = (changes: monacoEditor.editor.IModelContentChange[], id: string, modelId: string) => {
@@ -476,11 +479,13 @@ export class MainStateController implements IMessageHandler {
     }
 
     public changeCellType = (cellId: string, newType: 'code' | 'markdown') => {
-        const cell = this.findCell(cellId);
-        if (cell && cell.cell.data.cell_type !== newType) {
-            cell.cell.data.cell_type = newType;
-            this.alterCellVM(cell, true, true);
-            this.setState({ cellVMs: this.state.cellVMs });
+        const index = this.state.cellVMs.findIndex(c => c.cell.id === cellId);
+        if (index >= 0 && this.state.cellVMs[index].cell.data.cell_type !== newType) {
+            const newVM = cloneDeep(this.state.cellVMs[index]);
+            newVM.cell.data.cell_type = newType;
+            const cellVMs = [...this.state.cellVMs];
+            cellVMs.splice(index, 1, newVM);
+            this.setState({ cellVMs });
         }
     }
 

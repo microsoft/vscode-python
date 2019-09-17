@@ -11,11 +11,12 @@ import { Container } from 'inversify';
 import { EOL } from 'os';
 import * as path from 'path';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { ConfigurationTarget, Disposable, OutputChannel, Uri } from 'vscode';
+import { ConfigurationTarget, Disposable, Memento, OutputChannel, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../client/common/constants';
+import { PersistentStateFactory } from '../../../client/common/persistentState';
 import { IS_WINDOWS } from '../../../client/common/platform/constants';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
@@ -25,7 +26,7 @@ import { CurrentProcess } from '../../../client/common/process/currentProcess';
 import { ProcessLogger } from '../../../client/common/process/logger';
 import { registerTypes as processRegisterTypes } from '../../../client/common/process/serviceRegistry';
 import { IProcessLogger, IPythonExecutionFactory, StdErrError } from '../../../client/common/process/types';
-import { IConfigurationService, ICurrentProcess, IDisposableRegistry, IOutputChannel, IPathUtils, IsWindows } from '../../../client/common/types';
+import { GLOBAL_MEMENTO, IConfigurationService, ICurrentProcess, IDisposableRegistry, IMemento, IOutputChannel, IPathUtils, IPersistentStateFactory, IsWindows, WORKSPACE_MEMENTO } from '../../../client/common/types';
 import { clearCache } from '../../../client/common/utils/cacheUtils';
 import { OSType } from '../../../client/common/utils/platform';
 import {
@@ -34,12 +35,17 @@ import {
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import { IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService } from '../../../client/interpreter/autoSelection/types';
+import { InterpreterHashProvider } from '../../../client/interpreter/locators/services/hashProvider';
+import { InterpeterHashProviderFactory } from '../../../client/interpreter/locators/services/hashProviderFactory';
+import { InterpreterFilter } from '../../../client/interpreter/locators/services/interpreterFilter';
+import { WindowsStoreInterpreter } from '../../../client/interpreter/locators/services/windowsStoreInterpreter';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { ServiceManager } from '../../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { clearPythonPathInWorkspaceFolder, getExtensionSettings, isOs, isPythonVersion } from '../../common';
 import { MockOutputChannel } from '../../mockClasses';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
+import { MockMemento } from '../../mocks/mementos';
 import {
     closeActiveWindows, initialize, initializeTest,
     IS_MULTI_ROOT_TEST
@@ -58,7 +64,7 @@ suite('PythonExecutableService', () => {
     let configService: IConfigurationService;
     let pythonExecFactory: IPythonExecutionFactory;
 
-    suiteSetup(async function() {
+    suiteSetup(async function () {
         if (!IS_MULTI_ROOT_TEST) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
@@ -85,6 +91,13 @@ suite('PythonExecutableService', () => {
         serviceManager.addSingleton<IProcessLogger>(IProcessLogger, ProcessLogger);
         serviceManager.addSingleton<IInterpreterAutoSelectionService>(IInterpreterAutoSelectionService, MockAutoSelectionService);
         serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(IInterpreterAutoSeletionProxyService, MockAutoSelectionService);
+        serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
+        serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
+        serviceManager.addSingleton<InterpeterHashProviderFactory>(InterpeterHashProviderFactory, InterpeterHashProviderFactory);
+        serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
+        serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
+        serviceManager.addSingleton<Memento>(IMemento, MockMemento, GLOBAL_MEMENTO);
+        serviceManager.addSingleton<Memento>(IMemento, MockMemento, WORKSPACE_MEMENTO);
         processRegisterTypes(serviceManager);
         variablesRegisterTypes(serviceManager);
 

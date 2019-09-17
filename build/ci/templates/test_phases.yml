@@ -29,96 +29,12 @@
 # 'venvTests'
 
 steps:
-
-  # Show the complete set of environment variabes if we are in verbose mode.
-  - bash: |
-      printenv
-    displayName: 'Show all env vars'
-    condition: eq(variables['system.debug'], 'true')
-
-  # Ensure the required node version is made available on PATH for subsequent tasks.
-  # This would be like using nvm to specify a version on your local machine.
-  - task: NodeTool@0
-    displayName: 'Use Node $(NodeVersion)'
-    inputs:
-      versionSpec: $(NodeVersion)
-
-  # Ensure the required Python version is made available on PATH for subsequent tasks.
-  #
-  # `PythonVersion` is set in the `variables` section above.
-  #
-  # You can reproduce this on your local machine via virtual envs.
-  #
-  # See the available versions on each Hosted agent here:
-  # https://docs.microsoft.com/en-us/azure/DevOps/pipelines/agents/hosted?view=azure-DevOps&tabs=yaml#software
-  #
-  # Example command line (windows pwsh):
-  # > py -m venv .venv
-  # > .venv\Scripts\Activate.ps1
-  - task: UsePythonVersion@0
-    displayName: 'Use Python $(PythonVersion)'
-    inputs:
-      versionSpec: $(PythonVersion)
-
-  # Install the a version of python that works with sqlite3 until this bug is addressed
-  # https://mseng.visualstudio.com/AzureDevOps/_workitems/edit/1535830
-  #
-  # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
-  - bash: |
-      sudo apt-get install libsqlite3-dev
-      version=$(python -V 2>&1 | grep -Po '(?<=Python )(.+)')
-      wget https://www.python.org/ftp/python/$version/Python-$version.tar.xz
-      tar xvf Python-$version.tar.xz
-      cd Python-$version
-      ./configure --enable-loadable-sqlite-extensions --with-ensurepip=install --prefix=$HOME/py-$version
-      make
-      sudo make install
-      sudo chmod -R 777 $HOME/py-$version
-      export PATH=$HOME/py-$version/bin:$PATH
-      sudo ln -s $HOME/py-$version/bin/python3 $HOME/py-$version/bin/python
-      echo '##vso[task.prependpath]'$HOME/py-$version/bin
-    displayName: 'Setup python to run with sqlite on 3.*'
-    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Linux'), not(eq(variables['PythonVersion'], '2.7')))
-
-  # Ensure that npm is upgraded to the necessary version specified in `variables` above.
-  # Example command line (windows pwsh):
-  # > npm install -g npm@latest
-  - task: Npm@1
-    displayName: 'Use NPM $(NpmVersion)'
-    inputs:
-      command: custom
-      verbose: true
-      customCommand: 'install -g npm@$(NpmVersion)'
-
-  # On Mac, the command `node` doesn't always point to the current node version.
-  - script: |
-        export NODE_PATH=`which node`
-        echo $NODE_PATH
-        echo '##vso[task.setvariable variable=NODE_PATH]'$NODE_PATH
-    displayName: "Setup NODE_PATH for extension"
-    condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
-
-  # Install node_modules.
-  # Example command line (windows pwsh):
-  # > npm ci
-  - task: Npm@1
-    displayName: 'npm ci'
-    inputs:
-      command: custom
-      verbose: true
-      customCommand: ci
-
-  # Show all versions installed/available on PATH if in verbose mode.
-  # Example command line (windows pwsh):
-  # > Write-Host Node ver: $(& node -v) NPM Ver: $(& npm -v) Python ver: $(& python --version)"
-  - bash: |
-      echo AVAILABLE DEPENDENCY VERSIONS
-      echo Node Version = `node -v`
-      echo NPM Version = `npm -v`
-      echo Python Version = `python --version`
-      echo Gulp Version = `gulp --version`
-    condition: and(succeeded(), eq(variables['system.debug'], 'true'))
-    displayName: Show Dependency Versions
+  - template: steps/initialization.yml
+    parameters:
+      PythonVersion: $(PythonVersion)
+      workingDirectory: $(Build.SourcesDirectory)
+      compile: 'false'
+      sqlite: 'true'
 
   # Run the `prePublishNonBundle` gulp task to build the binaries we will be testing.
   # This produces the .js files required into the out/ folder.
@@ -164,7 +80,7 @@ steps:
       artifactName: 'coverage-output-$(Agent.Os)'
     condition: contains(variables['TestsToRun'], 'testUnitTests')
 
-  - template: generate_upload_coverage.yml
+  - template: steps/generate_upload_coverage.yml
 
   # Install the requirements for the Python or the system tests. This includes the supporting libs that
   # we ship in our extension such as PTVSD and Jedi.
@@ -319,21 +235,6 @@ steps:
       testRunTitle: 'tpn-$(Agent.Os)-Py$(pythonVersion)'
       buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
       buildConfiguration: 'UnitTests'
-
-  # Start the X virtual frame buffer (X-windows in memory only) on Linux. Linux VMs do not
-  # provide a desktop so VS Code cannot properly launch there. To get around this we use the
-  # xvfb service to emulate a desktop instead. See
-  # https://code.visualstudio.com/api/working-with-extensions/continuous-integration#azure-pipelines
-  #
-  # This task will only run if we are running on Linux and variable SkipXvfb is false.
-  #
-  # Example command line (windows pwsh): N/A
-  - bash: |
-      set -e
-      /usr/bin/Xvfb :10 -ac >> /tmp/Xvfb.out 2>&1 &
-      disown -ar
-    displayName: 'Start xvfb'
-    condition: and(succeeded(), eq(variables['Agent.Os'], 'Linux'), not(variables['SkipXvfb']))
 
   # Venv tests: Prepare the various virtual environments and record their details into the
   # JSON file that venvTests require to run.

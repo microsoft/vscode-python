@@ -61,7 +61,14 @@
     overflow-x: scroll;
 }
 
+.cell-outer {
+    display:grid;
+    grid-template-columns:auto auto 1fr;
+}
+
 .cell-outer-editable {
+    display:grid;
+    grid-template-columns:auto auto 1fr;
     margin-top: 0px;
 }
 
@@ -108,13 +115,22 @@
     background: var(--override-widget-background, var(--vscode-notifications-background));
 }
 
+.content-div {
+    grid-column: 3;
+}
+
 .controls-div {
-    grid-column: 1;
+    grid-column: 2;
     grid-template-columns: max-content min-content ;
     justify-content: end;
     display: grid;
     min-width: 50px;
     grid-template-rows: min-content max-content;
+}
+
+.navbar-div {
+    grid-column: 1;
+    visibility: hidden;
 }
 
 .execution-count {
@@ -129,19 +145,25 @@
     justify-self: end;
 }
 
-.native-editor-celltoolbar-outer {
-    display: grid;
+.native-editor-celltoolbar-middle {
+    display: flex;
     justify-items: left;
-    position: absolute; /* Relative to cell wrapper */
-    left: -20px;
-    visibility: hidden;
+    visibility: collapse;
 }
 
-.cell-wrapper-selected .native-editor-celltoolbar-outer {
+.cell-wrapper-selected .navbar-div {
     visibility: visible;
 }
 
-.cell-wrapper-focused .native-editor-celltoolbar-outer {
+.cell-wrapper-focused .navbar-div {
+    visibility: visible;
+}
+
+.cell-wrapper-selected .native-editor-celltoolbar-middle {
+    visibility: visible;
+}
+
+.cell-wrapper-focused .native-editor-celltoolbar-middle {
     visibility: visible;
 }
 

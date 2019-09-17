@@ -13,6 +13,7 @@ import {
 } from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IInteractiveWindow, IInteractiveWindowProvider, IJupyterVariable } from '../../client/datascience/types';
+import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
 import { VariableExplorer } from '../../datascience-ui/interactive-common/variableExplorer';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { addCode, runMountedTest } from './interactiveWindowTestHelpers';
@@ -280,13 +281,12 @@ strc = 'c'`;
 
 // Open up our variable explorer which also triggers a data fetch
 function openVariableExplorer(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) {
-    const varExp: VariableExplorer = wrapper.find('VariableExplorer').instance() as VariableExplorer;
+    const mainPanel: InteractivePanel = wrapper.find('InteractivePanel').instance() as InteractivePanel;
 
-    assert(varExp);
+    assert(mainPanel);
 
-    if (varExp) {
-        varExp.setState({open: true});
-        varExp.props.variableExplorerToggled(true);
+    if (mainPanel) {
+        mainPanel.stateController.toggleVariableExplorer();
     }
 }
 

@@ -267,7 +267,7 @@ body, html {
     font:inherit;
 }
 
-.collapseInputLabel {
+.inputLabel {
     background-color: var(--override-background, var(--vscode-editor-background));
     color: var(--override-foreground, var(--vscode-editor-foreground));
     font-family: var(--vscode-editor-font-family);
@@ -351,6 +351,23 @@ body, html {
 
 .toolbar-extra-button {
     margin-left: auto;
+}
+#variable-panel-padding {
+    padding-top: 2px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 2px;
+}
+.variable-explorer-menu-bar {
+    display: flex;
+    width: 100%;
+    justify-content: end;
+}
+.variable-explorer-label {
+    margin-right:auto;
+}
+.variable-explorer-close-button {
+    justify-self: end;
 }
 
 .execution-count {
