@@ -123,7 +123,7 @@ suite('Testing - parse JUnit XML file', () => {
         fs.verifyAll();
     });
 
-    // Missing tests:
+    // Missing tests (see gh-7447):
     // * simple pytest
     // * simple nose
     // * complex
@@ -131,4 +131,5 @@ suite('Testing - parse JUnit XML file', () => {
     // * failure
     // * skipped
     // * no clobber old if not matching
+    // * ...
 });
