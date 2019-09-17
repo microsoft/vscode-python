@@ -56,6 +56,19 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration> im
             return editor.document.fileName;
         }
     }
+    protected resolveAndUpdatePaths(workspaceFolder: Uri | undefined, debugConfiguration: LaunchRequestArguments): void {
+        this.resolveAndUpdateEnvFilePath(workspaceFolder, debugConfiguration);
+        this.resolveAndUpdatePythonPath(workspaceFolder, debugConfiguration);
+    }
+    protected resolveAndUpdateEnvFilePath(workspaceFolder: Uri | undefined, debugConfiguration: LaunchRequestArguments): void {
+        if (!debugConfiguration) {
+            return;
+        }
+        if (debugConfiguration.envFile && (workspaceFolder || debugConfiguration.cwd)) {
+            const systemVariables = new SystemVariables((workspaceFolder ? workspaceFolder.fsPath : undefined) || debugConfiguration.cwd);
+            debugConfiguration.envFile = systemVariables.resolveAny(debugConfiguration.envFile);
+        }
+    }
     protected resolveAndUpdatePythonPath(workspaceFolder: Uri | undefined, debugConfiguration: LaunchRequestArguments): void {
         if (!debugConfiguration) {
             return;
@@ -64,7 +77,7 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration> im
             const pythonPath = this.configurationService.getSettings(workspaceFolder).pythonPath;
             debugConfiguration.pythonPath = pythonPath;
             this.pythonPathSource = PythonPathSource.settingsJson;
-        } else{
+        } else {
             this.pythonPathSource = PythonPathSource.launchJson;
         }
     }

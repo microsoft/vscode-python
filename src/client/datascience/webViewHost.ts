@@ -19,13 +19,13 @@ import { ICodeCssGenerator, IDataScienceExtraSettings, IThemeFinder } from './ty
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
 export class WebViewHost<IMapping> implements IDisposable {
     protected viewState: { visible: boolean; active: boolean } = { visible: false, active: false };
-    private isDisposed: boolean = false;
+    private disposed: boolean = false;
     private webPanel: IWebPanel | undefined;
-    private webPanelInit: Deferred<void>;
+    private webPanelInit: Deferred<void> | undefined;
     private messageListener: IWebPanelMessageListener;
     private themeChangeHandler: IDisposable | undefined;
     private settingsChangeHandler: IDisposable | undefined;
-    private themeIsDarkPromise: Deferred<boolean>;
+    private themeIsDarkPromise: Deferred<boolean> | undefined;
     private startupStopwatch = new StopWatch();
 
     constructor(
@@ -33,7 +33,7 @@ export class WebViewHost<IMapping> implements IDisposable {
         @unmanaged() private provider: IWebPanelProvider,
         @unmanaged() private cssGenerator: ICodeCssGenerator,
         @unmanaged() protected themeFinder: IThemeFinder,
-        @unmanaged() private workspaceService: IWorkspaceService,
+        @unmanaged() protected workspaceService: IWorkspaceService,
         // tslint:disable-next-line:no-any
         @unmanaged() messageListenerCtor: (callback: (message: string, payload: any) => void, viewChanged: (panel: IWebPanel) => void, disposed: () => void) => IWebPanelMessageListener,
         @unmanaged() private mainScriptPath: string,
@@ -41,7 +41,7 @@ export class WebViewHost<IMapping> implements IDisposable {
         @unmanaged() private viewColumn: ViewColumn
     ) {
         // Create our message listener for our web panel.
-        this.messageListener = messageListenerCtor(this.onMessage.bind(this), this.onViewStateChanged.bind(this), this.dispose.bind(this));
+        this.messageListener = messageListenerCtor(this.onMessage.bind(this), this.webPanelViewStateChanged.bind(this), this.dispose.bind(this));
 
         // Listen for settings changes from vscode.
         this.themeChangeHandler = this.workspaceService.onDidChangeConfiguration(this.onPossibleSettingsChange, this);
@@ -49,16 +49,8 @@ export class WebViewHost<IMapping> implements IDisposable {
         // Listen for settings changes
         this.settingsChangeHandler = this.configService.getSettings().onDidChange(this.onDataScienceSettingsChanged.bind(this));
 
-        // Setup our init promise for the web panel. We use this to make sure we're in sync with our
-        // react control.
-        this.webPanelInit = createDeferred();
-
-        // Setup a promise that will wait until the webview passes back
-        // a message telling us what them is in use
-        this.themeIsDarkPromise = createDeferred<boolean>();
-
-        // Load our actual web panel
-        this.loadWebPanel();
+        // Do the same thing a reload would do
+        this.reload();
     }
 
     public async show(preserveFocus: boolean): Promise<void> {
@@ -72,7 +64,7 @@ export class WebViewHost<IMapping> implements IDisposable {
 
     public dispose() {
         if (!this.isDisposed) {
-            this.isDisposed = true;
+            this.disposed = true;
             if (this.webPanel) {
                 this.webPanel.close();
                 this.webPanel = undefined;
@@ -92,6 +84,26 @@ export class WebViewHost<IMapping> implements IDisposable {
         if (!this.isDisposed && this.webPanel) {
             this.webPanel.title = newTitle;
         }
+    }
+
+    protected reload() {
+        // Make not disposed anymore
+        this.disposed = false;
+
+        // Setup our init promise for the web panel. We use this to make sure we're in sync with our
+        // react control.
+        this.webPanelInit = createDeferred();
+
+        // Setup a promise that will wait until the webview passes back
+        // a message telling us what them is in use
+        this.themeIsDarkPromise = createDeferred<boolean>();
+
+        // Load our actual web panel
+        this.loadWebPanel();
+    }
+
+    protected get isDisposed(): boolean {
+        return this.disposed;
     }
 
     //tslint:disable-next-line:no-any
@@ -124,13 +136,13 @@ export class WebViewHost<IMapping> implements IDisposable {
         this.messageListener.onMessage(type.toString(), payload);
     }
 
-    protected activating(): Promise<void> {
+    protected onViewStateChanged(_visible: boolean, _active: boolean): Promise<void> {
         return Promise.resolve();
     }
 
     // tslint:disable-next-line:no-any
     protected async postMessageInternal(type: string, payload?: any): Promise<void> {
-        if (this.webPanel) {
+        if (this.webPanel && this.webPanelInit) {
             // Make sure the webpanel is up before we send it anything.
             await this.webPanelInit.promise;
 
@@ -169,7 +181,7 @@ export class WebViewHost<IMapping> implements IDisposable {
     }
 
     protected isDark(): Promise<boolean> {
-        return this.themeIsDarkPromise.promise;
+        return this.themeIsDarkPromise!.promise;
     }
 
     private getValue<T>(workspaceConfig: WorkspaceConfiguration, section: string, defaultValue: T): T {
@@ -179,20 +191,16 @@ export class WebViewHost<IMapping> implements IDisposable {
         return defaultValue;
     }
 
-    private onViewStateChanged = (webPanel: IWebPanel) => {
-        const oldActive = this.viewState.active;
-        this.viewState.active = webPanel.isActive();
-        this.viewState.visible = webPanel.isVisible();
-
-        // See if suddenly becoming active or not
-        if (!oldActive && this.viewState.active) {
-            this.activating().ignoreErrors();
-        }
+    private webPanelViewStateChanged = (webPanel: IWebPanel) => {
+        this.onViewStateChanged(webPanel.isVisible(), webPanel.isActive()).then(() => {
+            this.viewState.active = webPanel.isActive();
+            this.viewState.visible = webPanel.isVisible();
+        }).ignoreErrors();
     }
 
     @captureTelemetry(Telemetry.WebviewStyleUpdate)
     private async handleCssRequest(request: IGetCssRequest): Promise<void> {
-        if (!this.themeIsDarkPromise.resolved) {
+        if (this.themeIsDarkPromise && !this.themeIsDarkPromise.resolved) {
             this.themeIsDarkPromise.resolve(request.isDark);
         } else {
             this.themeIsDarkPromise = createDeferred<boolean>();
@@ -206,7 +214,7 @@ export class WebViewHost<IMapping> implements IDisposable {
 
     @captureTelemetry(Telemetry.WebviewMonacoStyleUpdate)
     private async handleMonacoThemeRequest(request: IGetMonacoThemeRequest): Promise<void> {
-        if (!this.themeIsDarkPromise.resolved) {
+        if (this.themeIsDarkPromise && !this.themeIsDarkPromise.resolved) {
             this.themeIsDarkPromise.resolve(request.isDark);
         } else {
             this.themeIsDarkPromise = createDeferred<boolean>();
@@ -219,7 +227,7 @@ export class WebViewHost<IMapping> implements IDisposable {
 
     // tslint:disable-next-line:no-any
     private webPanelRendered() {
-        if (!this.webPanelInit.resolved) {
+        if (this.webPanelInit && !this.webPanelInit.resolved) {
             // Send telemetry for startup
             sendTelemetryEvent(Telemetry.WebviewStartup, this.startupStopwatch.elapsedTime, { type: this.title });
 

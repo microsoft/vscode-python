@@ -11,8 +11,13 @@ import { PythonSettings } from '../../client/common/configSettings';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IConfigurationService } from '../../client/common/types';
 import { Identifiers } from '../../client/datascience/constants';
-import { DotNetIntellisenseProvider } from '../../client/datascience/interactive-window/intellisense/dotNetIntellisenseProvider';
-import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../../client/datascience/interactive-window/interactiveWindowTypes';
+import {
+    DotNetIntellisenseProvider
+} from '../../client/datascience/interactive-common/intellisense/dotNetIntellisenseProvider';
+import {
+    IInteractiveWindowMapping,
+    InteractiveWindowMessages
+} from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IInteractiveWindowListener, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { MockLanguageClient } from './mockLanguageClient';
@@ -64,17 +69,17 @@ suite('DataScience Intellisense Unit Tests', () => {
             interactiveWindowProvider.object);
     });
 
-    function sendMessage<M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]) : Promise<void> {
+    function sendMessage<M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]): Promise<void> {
         const result = languageClient.waitForNotification();
         intellisenseProvider.onMessage(type.toString(), payload);
         return result;
     }
 
-    function addCell(code: string, id: string) : Promise<void> {
+    function addCell(code: string, id: string): Promise<void> {
         return sendMessage(InteractiveWindowMessages.AddCell, { fullText: code, currentText: code, file: 'foo.py', id });
     }
 
-    function updateCell(newCode: string, oldCode: string, id: string) : Promise<void> {
+    function updateCell(newCode: string, oldCode: string, id: string): Promise<void> {
         const oldSplit = oldCode.split('\n');
         const change: monacoEditor.editor.IModelContentChange = {
             range: {
@@ -87,10 +92,10 @@ suite('DataScience Intellisense Unit Tests', () => {
             rangeLength: oldCode.length,
             text: newCode
         };
-        return sendMessage(InteractiveWindowMessages.EditCell, { changes: [change], id});
+        return sendMessage(InteractiveWindowMessages.EditCell, { changes: [change], id });
     }
 
-    function addCode(code: string, line: number, pos: number, offset: number) : Promise<void> {
+    function addCode(code: string, line: number, pos: number, offset: number): Promise<void> {
         if (!line || !pos) {
             throw new Error('Invalid line or position data');
         }
@@ -105,10 +110,10 @@ suite('DataScience Intellisense Unit Tests', () => {
             rangeLength: 0,
             text: code
         };
-        return sendMessage(InteractiveWindowMessages.EditCell, { changes: [change], id: Identifiers.EditCellId});
+        return sendMessage(InteractiveWindowMessages.EditCell, { changes: [change], id: Identifiers.EditCellId });
     }
 
-    function removeCode(line: number, startPos: number, endPos: number, length: number) : Promise<void> {
+    function removeCode(line: number, startPos: number, endPos: number, length: number): Promise<void> {
         if (!line || !startPos || !endPos) {
             throw new Error('Invalid line or position data');
         }
@@ -123,15 +128,15 @@ suite('DataScience Intellisense Unit Tests', () => {
             rangeLength: length,
             text: ''
         };
-        return sendMessage(InteractiveWindowMessages.EditCell, { changes: [change], id: Identifiers.EditCellId});
+        return sendMessage(InteractiveWindowMessages.EditCell, { changes: [change], id: Identifiers.EditCellId });
     }
 
-    function removeCell(id: string) : Promise<void> {
+    function removeCell(id: string): Promise<void> {
         sendMessage(InteractiveWindowMessages.RemoveCell, { id }).ignoreErrors();
         return Promise.resolve();
     }
 
-    function removeAllCells() : Promise<void> {
+    function removeAllCells(): Promise<void> {
         sendMessage(InteractiveWindowMessages.DeleteAllCells).ignoreErrors();
         return Promise.resolve();
     }

@@ -82,3 +82,5 @@ export interface AttachRequestArguments extends DebugProtocol.AttachRequestArgum
 export interface DebugConfigurationArguments extends LaunchRequestArguments, AttachRequestArguments { }
 
 export type ConsoleType = 'internalConsole' | 'integratedTerminal' | 'externalTerminal';
+
+export type TriggerType = 'launch' | 'attach' | 'test';

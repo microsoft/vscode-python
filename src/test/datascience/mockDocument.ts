@@ -8,7 +8,7 @@ import {
     ensureValidWordDefinition,
     getWordAtText,
     regExpLeadsToEndlessLoop
-} from '../../client/datascience/interactive-window/intellisense/wordHelper';
+} from '../../client/datascience/interactive-common/intellisense/wordHelper';
 
 class MockLine implements TextLine {
     private _range: Range;

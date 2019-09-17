@@ -3,6 +3,7 @@
 'use strict';
 
 import { IS_WINDOWS } from '../common/platform/constants';
+import { NativeCommandType } from './interactive-common/interactiveWindowTypes';
 
 export const DefaultTheme = 'Default Light+';
 
@@ -19,6 +20,8 @@ export namespace Commands {
     export const RunCurrentCellAdvance = 'python.datascience.runcurrentcelladvance';
     export const ShowHistoryPane = 'python.datascience.showhistorypane';
     export const ImportNotebook = 'python.datascience.importnotebook';
+    export const ImportNotebookFile = 'python.datascience.importnotebookfile';
+    export const OpenNotebook = 'python.datascience.opennotebook';
     export const SelectJupyterURI = 'python.datascience.selectjupyteruri';
     export const ExportFileAsNotebook = 'python.datascience.exportfileasnotebook';
     export const ExportFileAndOutputAsNotebook = 'python.datascience.exportfileandoutputasnotebook';
@@ -27,6 +30,11 @@ export namespace Commands {
     export const RemoveAllCells = 'python.datascience.removeallcells';
     export const InterruptKernel = 'python.datascience.interruptkernel';
     export const RestartKernel = 'python.datascience.restartkernel';
+    export const NotebookEditorUndoCells = 'python.datascience.notebookeditor.undocells';
+    export const NotebookEditorRedoCells = 'python.datascience.notebookeditor.redocells';
+    export const NotebookEditorRemoveAllCells = 'python.datascience.notebookeditor.removeallcells';
+    export const NotebookEditorInterruptKernel = 'python.datascience.notebookeditor.interruptkernel';
+    export const NotebookEditorRestartKernel = 'python.datascience.notebookeditor.restartkernel';
     export const ExpandAllCells = 'python.datascience.expandallcells';
     export const CollapseAllCells = 'python.datascience.collapseallcells';
     export const ExportOutputAsNotebook = 'python.datascience.exportoutputasnotebook';
@@ -41,6 +49,7 @@ export namespace Commands {
     export const DebugStop = 'python.datascience.debugstop';
     export const RunCurrentCellAndAddBelow = 'python.datascience.runcurrentcellandaddbelow';
     export const ScrollToCell = 'python.datascience.scrolltocell';
+    export const CreateNewNotebook = 'python.datascience.createnewnotebook';
 }
 
 export namespace CodeLensCommands {
@@ -59,6 +68,9 @@ export namespace EditorContexts {
     export const HaveRedoableCells = 'python.datascience.haveredoablecells';
     export const HaveInteractive = 'python.datascience.haveinteractive';
     export const OwnsSelection = 'python.datascience.ownsSelection';
+    export const HaveNativeCells = 'python.datascience.havenativecells';
+    export const HaveNativeRedoableCells = 'python.datascience.havenativeredoablecells';
+    export const HaveNative = 'python.datascience.havenative';
 }
 
 export namespace RegExpValues {
@@ -127,6 +139,7 @@ export enum Telemetry {
     SelfCertsMessageEnabled = 'DATASCIENCE.SELFCERTSMESSAGEENABLED',
     SelfCertsMessageClose = 'DATASCIENCE.SELFCERTSMESSAGECLOSE',
     RemoteAddCode = 'DATASCIENCE.LIVESHARE.ADDCODE',
+    RemoteReexecuteCode = 'DATASCIENCE.LIVESHARE.REEXECUTECODE',
     ShiftEnterBannerShown = 'DATASCIENCE.SHIFTENTER_BANNER_SHOWN',
     EnableInteractiveShiftEnter = 'DATASCIENCE.ENABLE_INTERACTIVE_SHIFT_ENTER',
     DisableInteractiveShiftEnter = 'DATASCIENCE.DISABLE_INTERACTIVE_SHIFT_ENTER',
@@ -165,9 +178,80 @@ export enum Telemetry {
     PtvsdSuccessfullyInstalled = 'DATASCIENCE.PTVSD_SUCCESSFULLY_INSTALLED',
     PtvsdInstallFailed = 'DATASCIENCE.PTVSD_INSTALL_FAILED',
     ScrolledToCell = 'DATASCIENCE.SCROLLED_TO_CELL',
+    ExecuteNativeCell = 'DATASCIENCE.EXECUTE_NATIVE_CELL',
+    CreateNewNotebook = 'DATASCIENCE.CREATE_NEW_NOTEBOOK',
     DebugStepOver = 'DATASCIENCE.DEBUG_STEP_OVER',
     DebugContinue = 'DATASCIENCE.DEBUG_CONTINUE',
-    DebugStop = 'DATASCIENCE.DEBUG_STOP'
+    DebugStop = 'DATASCIENCE.DEBUG_STOP',
+    OpenNotebook = 'DATASCIENCE.NATIVE.OPEN_NOTEBOOK',
+    ConvertToPythonFile = 'DATASCIENCE.NATIVE.CONVERT_NOTEBOOK_TO_PYTHON',
+    NotebookWorkspaceCount = 'DATASCIENCE.NATIVE.WORKSPACE_NOTEBOOK_COUNT',
+    NotebookRunCount = 'DATASCIENCE.NATIVE.NOTEBOOK_RUN_COUNT',
+    NotebookOpenCount = 'DATASCIENCE.NATIVE.NOTEBOOK_OPEN_COUNT',
+    NotebookOpenTime = 'DS_INTERNAL.NATIVE.NOTEBOOK_OPEN_TIME'
+}
+
+export enum NativeKeyboardCommandTelemetry {
+    AddToEnd = 'DATASCIENCE.NATIVE.KEYBOARD.ADD_TO_END',
+    ArrowDown = 'DATASCIENCE.NATIVE.KEYBOARD.ARROW_DOWN',
+    ArrowUp = 'DATASCIENCE.NATIVE.KEYBOARD.ARROW_UP',
+    ChangeToCode = 'DATASCIENCE.NATIVE.KEYBOARD.CHANGE_TO_CODE',
+    ChangeToMarkdown = 'DATASCIENCE.NATIVE.KEYBOARD.CHANGE_TO_MARKDOWN',
+    CollapseInput = 'DATASCIENCE.NATIVE.KEYBOARD.COLLAPSE_INPUT',
+    CollapseOutput = 'DATASCIENCE.NATIVE.KEYBOARD.COLLAPSE_OUTPUT',
+    DeleteCell = 'DATASCIENCE.NATIVE.KEYBOARD.DELETE_CELL',
+    InsertAbove = 'DATASCIENCE.NATIVE.KEYBOARD.INSERT_ABOVE',
+    InsertBelow = 'DATASCIENCE.NATIVE.KEYBOARD.INSERT_BELOW',
+    MoveCellDown = 'DATASCIENCE.NATIVE.KEYBOARD.MOVE_CELL_DOWN',
+    MoveCellUp = 'DATASCIENCE.NATIVE.KEYBOARD.MOVE_CELL_UP',
+    Run = 'DATASCIENCE.NATIVE.KEYBOARD.RUN',
+    RunAbove = 'DATASCIENCE.NATIVE.KEYBOARD.RUN_ABOVE',
+    RunAll = 'DATASCIENCE.NATIVE.KEYBOARD.RUN_ALL',
+    RunAndAdd = 'DATASCIENCE.NATIVE.KEYBOARD.RUN_AND_ADD',
+    RunAndMove = 'DATASCIENCE.NATIVE.KEYBOARD.RUN_AND_MOVE',
+    RunBelow = 'DATASCIENCE.NATIVE.KEYBOARD.RUN_BELOW',
+    ToggleLineNumbers = 'DATASCIENCE.NATIVE.KEYBOARD.TOGGLE_LINE_NUMBERS',
+    ToggleOutput = 'DATASCIENCE.NATIVE.KEYBOARD.TOGGLE_OUTPUT',
+    ToggleVariableExplorer = 'DATASCIENCE.NATIVE.KEYBOARD.TOGGLE_VARIABLE_EXPLORER',
+    Unfocus = 'DATASCIENCE.NATIVE.KEYBOARD.UNFOCUS'
+}
+
+export let NativeKeyboardCommandTelemetryLookup: { [id: number]: NativeKeyboardCommandTelemetry } = {};
+const keys = [...Object.keys(NativeCommandType)];
+const values1 = [...Object.values(NativeKeyboardCommandTelemetry)];
+for (let i = 0; i < keys.length; i += 1) {
+    NativeKeyboardCommandTelemetryLookup[i] = values1[i];
+}
+
+export enum NativeMouseCommandTelemetry {
+    AddToEnd = 'DATASCIENCE.NATIVE.MOUSE.ADD_TO_END',
+    ArrowDown = 'DATASCIENCE.NATIVE.MOUSE.ARROW_DOWN',
+    ArrowUp = 'DATASCIENCE.NATIVE.MOUSE.ARROW_UP',
+    ChangeToCode = 'DATASCIENCE.NATIVE.MOUSE.CHANGE_TO_CODE',
+    ChangeToMarkdown = 'DATASCIENCE.NATIVE.MOUSE.CHANGE_TO_MARKDOWN',
+    CollapseInput = 'DATASCIENCE.NATIVE.MOUSE.COLLAPSE_INPUT',
+    CollapseOutput = 'DATASCIENCE.NATIVE.MOUSE.COLLAPSE_OUTPUT',
+    DeleteCell = 'DATASCIENCE.NATIVE.MOUSE.DELETE_CELL',
+    InsertAbove = 'DATASCIENCE.NATIVE.MOUSE.INSERT_ABOVE',
+    InsertBelow = 'DATASCIENCE.NATIVE.MOUSE.INSERT_BELOW',
+    MoveCellDown = 'DATASCIENCE.NATIVE.MOUSE.MOVE_CELL_DOWN',
+    MoveCellUp = 'DATASCIENCE.NATIVE.MOUSE.MOVE_CELL_UP',
+    Run = 'DATASCIENCE.NATIVE.MOUSE.RUN',
+    RunAbove = 'DATASCIENCE.NATIVE.MOUSE.RUN_ABOVE',
+    RunAll = 'DATASCIENCE.NATIVE.MOUSE.RUN_ALL',
+    RunAndAdd = 'DATASCIENCE.NATIVE.MOUSE.RUN_AND_ADD',
+    RunAndMove = 'DATASCIENCE.NATIVE.MOUSE.RUN_AND_MOVE',
+    RunBelow = 'DATASCIENCE.NATIVE.MOUSE.RUN_BELOW',
+    ToggleLineNumbers = 'DATASCIENCE.NATIVE.MOUSE.TOGGLE_LINE_NUMBERS',
+    ToggleOutput = 'DATASCIENCE.NATIVE.MOUSE.TOGGLE_OUTPUT',
+    ToggleVariableExplorer = 'DATASCIENCE.NATIVE.MOUSE.TOGGLE_VARIABLE_EXPLORER',
+    Unfocus = 'DATASCIENCE.NATIVE.MOUSE.UNFOCUS'
+}
+
+export let NativeMouseCommandTelemetryLookup: { [id: number]: NativeMouseCommandTelemetry } = {};
+const values2 = [...Object.values(NativeMouseCommandTelemetry)];
+for (let i = 0; i < keys.length; i += 1) {
+    NativeMouseCommandTelemetryLookup[i] = values2[i];
 }
 
 export namespace HelpLinks {
@@ -189,6 +273,8 @@ export namespace Identifiers {
     export const MatplotLibDefaultParams = '_VSCode_defaultMatplotlib_Params';
     export const EditCellId = '3D3AB152-ADC1-4501-B813-4B83B49B0C10';
     export const SvgSizeTag = 'sizeTag={{0}, {1}}';
+    export const InteractiveWindowIdentity = 'history://EC155B3B-DC18-49DC-9E99-9A948AA2F27B';
+    export const InteractiveWindowIdentityScheme = 'history';
 }
 
 export namespace CodeSnippits {
@@ -210,6 +296,7 @@ export namespace JupyterCommands {
 export namespace LiveShare {
     export const JupyterExecutionService = 'jupyterExecutionService';
     export const JupyterServerSharedService = 'jupyterServerSharedService';
+    export const JupyterNotebookSharedService = 'jupyterNotebookSharedService';
     export const CommandBrokerService = 'commmandBrokerService';
     export const WebPanelMessageService = 'webPanelMessageService';
     export const InteractiveWindowProviderService = 'interactiveWindowProviderService';
@@ -238,4 +325,5 @@ export namespace LiveShareCommands {
     export const interactiveWindowCreateSync = 'interactiveWindowCreateSync';
     export const disposeServer = 'disposeServer';
     export const guestCheck = 'guestCheck';
+    export const createNotebook = 'createNotebook';
 }

@@ -48,7 +48,7 @@ export class Toolbar extends React.Component<IToolbarProps> {
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.SaveAs}/>
                     </ImageButton>
                     <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.deleteButtonClicked} disabled={!this.props.deleteButtonClicked} tooltip={getLocString('DataScience.deletePlot', 'Remove')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Cancel}/>
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Delete}/>
                     </ImageButton>
             </div>
         );
