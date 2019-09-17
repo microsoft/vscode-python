@@ -521,14 +521,23 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
         const canRunBelow = this.props.cellVM.cell.state === CellState.finished || this.props.cellVM.cell.state === CellState.error;
         const switchTooltip = this.props.cellVM.cell.data.cell_type === 'code' ? getLocString('DataScience.switchToMarkdown', 'Change to markdown') :
             getLocString('DataScience.switchToCode', 'Change to code');
-        const switchImage = this.props.cellVM.cell.data.cell_type === 'code' ? ImageName.SwitchToMarkdown : ImageName.SwitchToCode;
-        const switchCell = this.props.cellVM.cell.data.cell_type === 'code' ? () => {
+        const switchToMarkdown = () => {
             this.props.stateController.changeCellType(cellId, 'markdown');
             this.props.stateController.sendCommand(NativeCommandType.ChangeToMarkdown, 'mouse');
-        } : () => {
+            setTimeout(() => this.props.focusCell(cellId, true), 10);
+        };
+        const switchToCode = () => {
             this.props.stateController.changeCellType(cellId, 'code');
             this.props.stateController.sendCommand(NativeCommandType.ChangeToCode, 'mouse');
+            setTimeout(() => this.props.focusCell(cellId, true), 10);
         };
+        const switchButton = this.props.cellVM.cell.data.cell_type === 'code' ?
+            <ImageButton baseTheme={this.props.baseTheme} onClick={switchToMarkdown} tooltip={switchTooltip}>
+                <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.SwitchToMarkdown} />
+            </ImageButton> :
+            <ImageButton baseTheme={this.props.baseTheme} onMouseDown={switchToCode} tooltip={switchTooltip}>
+                <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.SwitchToCode} />
+            </ImageButton>;
 
         return (
             <div className='native-editor-celltoolbar-middle'>
@@ -538,9 +547,7 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
                 <ImageButton baseTheme={this.props.baseTheme} onClick={runBelow} disabled={!canRunBelow} tooltip={getLocString('DataScience.runBelow', 'Run cell and below')}>
                     <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.RunBelow} />
                 </ImageButton>
-                <ImageButton baseTheme={this.props.baseTheme} onClick={switchCell} tooltip={switchTooltip}>
-                    <Image baseTheme={this.props.baseTheme} class='image-button-image' image={switchImage} />
-                </ImageButton>
+                {switchButton}
                 <ImageButton baseTheme={this.props.baseTheme} onClick={deleteCell} tooltip={getLocString('DataScience.deleteCell', 'Delete cell')}>
                     <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Delete} />
                 </ImageButton>
