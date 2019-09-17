@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify';
 import { IFileSystem } from '../../common/platform/types';
 import {
     FlattenedTestFunction, IXUnitParser, PassCalculationFormulae,
-    TestFunction, Tests, TestStatus, TestSummary
+    TestFunction, TestResult, Tests, TestStatus, TestSummary
 } from './types';
 
 type TestSuiteResult = {
@@ -110,7 +110,10 @@ function updateTests(
             testcase.$.classname,
             testcase.$.name
         );
-        if (!testFunc) {
+        if (testFunc) {
+            updateResultInfo(testFunc, testcase);
+            updateResultStatus(testFunc, testcase);
+        } else {
             // Possible we're dealing with nosetests, where the file name isn't returned to us
             // When dealing with nose tests
             // It is possible to have a test file named x in two separate test sub directories and have same functions/classes
@@ -122,39 +125,8 @@ function updateTests(
             // Look for failed file test
             const fileTest = testcase.$.file && tests.testFiles.find(file => file.nameToRun === testcase.$.file);
             if (fileTest && testcase.error) {
-                fileTest.status = TestStatus.Error;
-                fileTest.passed = false;
-                fileTest.message = testcase.error[0].$.message;
-                fileTest.traceback = testcase.error[0]._;
+                updateResultStatus(fileTest, testcase);
             }
-            return;
-        }
-
-        testFunc.line = getSafeInt(testcase.$.line, null);
-        testFunc.file = testcase.$.file;
-        testFunc.time = parseFloat(testcase.$.time);
-        testFunc.passed = true;
-        testFunc.status = TestStatus.Pass;
-
-        if (testcase.failure) {
-            testFunc.status = TestStatus.Fail;
-            testFunc.passed = false;
-            testFunc.message = testcase.failure[0].$.message;
-            testFunc.traceback = testcase.failure[0]._;
-        }
-
-        if (testcase.error) {
-            testFunc.status = TestStatus.Error;
-            testFunc.passed = false;
-            testFunc.message = testcase.error[0].$.message;
-            testFunc.traceback = testcase.error[0]._;
-        }
-
-        if (testcase.skipped) {
-            testFunc.status = TestStatus.Skipped;
-            testFunc.passed = undefined;
-            testFunc.message = testcase.skipped[0].$.message;
-            testFunc.traceback = '';
         }
     });
 }
@@ -186,4 +158,40 @@ function findTestFunction(
         return;
     }
     return flattened.testFunction;
+}
+
+function updateResultInfo(
+    result: TestResult,
+    testCase: TestCaseResult
+) {
+    result.file = testCase.$.file;
+    result.line = getSafeInt(testCase.$.line, null);
+    result.time = parseFloat(testCase.$.time);
+}
+
+function updateResultStatus(
+    result: TestResult,
+    testCase: TestCaseResult
+) {
+    if (testCase.error) {
+        result.status = TestStatus.Error;
+        result.passed = false;
+        result.message = testCase.error[0].$.message;
+        result.traceback = testCase.error[0]._;
+    } else if (testCase.failure) {
+        result.status = TestStatus.Fail;
+        result.passed = false;
+        result.message = testCase.failure[0].$.message;
+        result.traceback = testCase.failure[0]._;
+    } else if (testCase.skipped) {
+        result.status = TestStatus.Skipped;
+        result.passed = undefined;
+        result.message = testCase.skipped[0].$.message;
+        result.traceback = '';
+    } else {
+        result.status = TestStatus.Pass;
+        result.passed = true;
+        //result.message = undefined;
+        //result.traceback = undefined;
+    }
 }
