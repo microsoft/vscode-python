@@ -45,7 +45,6 @@ export class CellOutput extends React.Component<ICellOutputProps> {
 
     constructor(prop: ICellOutputProps) {
         super(prop);
-        this.state = { showingMarkdownEditor: false };
     }
 
     private static getAnsiToHtmlOptions() : { fg: string; bg: string; colors: string [] } {

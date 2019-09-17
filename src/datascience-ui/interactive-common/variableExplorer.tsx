@@ -9,9 +9,10 @@ import * as React from 'react';
 
 import { RegExpValues } from '../../client/datascience/constants';
 import { IJupyterVariable } from '../../client/datascience/types';
+import { Image, ImageName } from '../react-common/image';
+import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
 import { getSettings } from '../react-common/settingsReactSide';
-import { CollapseButton } from './collapseButton';
 import { IButtonCellValue, VariableExplorerButtonCellFormatter } from './variableExplorerButtonCellFormatter';
 import { CellStyle, VariableExplorerCellFormatter } from './variableExplorerCellFormatter';
 import { VariableExplorerEmptyRowsView } from './variableExplorerEmptyRows';
@@ -28,13 +29,11 @@ interface IVariableExplorerProps {
     variables: IJupyterVariable[];
     pendingVariableCount: number;
     debugging: boolean;
-    refreshVariables(): void;
     showDataExplorer(targetVariable: string, numberOfColumns: number): void;
-    variableExplorerToggled(open: boolean): void;
+    closeVariableExplorer(): void;
 }
 
 interface IVariableExplorerState {
-    open: boolean;
     gridColumns: {key: string; name: string}[];
     gridHeight: number;
     height: number;
@@ -111,13 +110,12 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                 formatter: <VariableExplorerButtonCellFormatter showDataExplorer={this.props.showDataExplorer} baseTheme={this.props.baseTheme} />
             }
         ];
-        this.state = { open: false,
-                        gridColumns: columns,
-                        gridHeight: 200,
-                        height: 0,
-                        fontSize: 14,
-                        sortColumn: 'name',
-                        sortDirection: 'NONE'};
+        this.state = { gridColumns: columns,
+                       gridHeight: 200,
+                       height: 0,
+                       fontSize: 14,
+                       sortColumn: 'name',
+                       sortDirection: 'NONE'};
 
         this.divRef = React.createRef<HTMLDivElement>();
 
@@ -137,7 +135,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
 
     public render() {
         if (getSettings && getSettings().showJupyterVariableExplorer) {
-            const contentClassName = `variable-explorer-content ${this.state.open ? '' : ' hide'}`;
+            const contentClassName = `variable-explorer-content`;
 
             const fontSizeStyle: React.CSSProperties = {
                 fontSize: `${this.state.fontSize.toString()}px`
@@ -145,12 +143,12 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
 
             return(
                 <div className='variable-explorer' ref={this.divRef} style={fontSizeStyle}>
-                    <CollapseButton theme={this.props.baseTheme}
-                        visible={true}
-                        open={this.state.open}
-                        onClick={this.toggleInputBlock}
-                        tooltip={getLocString('DataScience.collapseVariableExplorerTooltip', 'Collapse variable explorer')}
-                        label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')} />
+                    <div className='variable-explorer-menu-bar'>
+                        <label className='inputLabel variable-explorer-label'>{getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}</label>
+                        <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.closeVariableExplorer} className='variable-explorer-close-button' tooltip={getLocString('DataScience.close', 'Close')}>
+                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Cancel} />
+                        </ImageButton>
+                    </div>
                     <div className={contentClassName}>
                         {this.renderGrid()}
                     </div>
@@ -193,32 +191,28 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             return {buttons: { supportsDataExplorer: false, name: '', numberOfColumns: 0}, name: '', type: '', size: '', value: ''};
         };
 
-        if (this.state.open) {
-            if (this.props.debugging) {
-                return (
-                    <span className='span-debug-message'>{getLocString('DataScience.variableExplorerDisabledDuringDebugging', 'Please see the Debug Side Bar\'s VARIABLES section.')}</span>
-                );
-            } else {
-                return (
-                    <div id='variable-explorer-data-grid' role='table' aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
+        if (this.props.debugging) {
+            return (
+                <span className='span-debug-message'>{getLocString('DataScience.variableExplorerDisabledDuringDebugging', 'Please see the Debug Side Bar\'s VARIABLES section.')}</span>
+            );
+        } else {
+            return (
+                <div id='variable-explorer-data-grid' role='table' aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
                     <AdazzleReactDataGrid
-                        columns = {this.state.gridColumns.map(c => { return {...defaultColumnProperties, ...c }; })}
+                        columns={this.state.gridColumns.map(c => { return { ...defaultColumnProperties, ...c }; })}
                         // tslint:disable-next-line: react-this-binding-issue
-                        rowGetter = {getRow}
-                        rowsCount = {gridRows.length}
-                        minHeight = {this.state.gridHeight}
-                        headerRowHeight = {this.state.fontSize + 9}
-                        rowHeight = {this.state.fontSize + 9}
-                        onRowDoubleClick = {this.rowDoubleClick}
-                        onGridSort = {this.sortRows}
-                        emptyRowsView = {VariableExplorerEmptyRowsView}
-                        rowRenderer = {VariableExplorerRowRenderer}
+                        rowGetter={getRow}
+                        rowsCount={gridRows.length}
+                        minHeight={this.state.gridHeight}
+                        headerRowHeight={this.state.fontSize + 9}
+                        rowHeight={this.state.fontSize + 9}
+                        onRowDoubleClick={this.rowDoubleClick}
+                        onGridSort={this.sortRows}
+                        emptyRowsView={VariableExplorerEmptyRowsView}
+                        rowRenderer={VariableExplorerRowRenderer}
                     />
                 </div>
-                );
-            }
-        } else {
-            return null;
+            );
         }
     }
 
@@ -243,18 +237,6 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                 value: newVar.value ? newVar.value : getLocString('DataScience.variableLoadingValue', 'Loading...')
             };
         });
-    }
-
-    private toggleInputBlock = () => {
-        this.setState({open: !this.state.open});
-
-        // If we toggle open request a data refresh
-        if (!this.state.open) {
-            this.props.refreshVariables();
-        }
-
-        // Notify of the toggle, reverse it as the state is not updated yet
-        this.props.variableExplorerToggled(!this.state.open);
     }
 
     private generateDummyVariables() : IGridRow[] {
