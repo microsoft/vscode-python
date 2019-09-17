@@ -68,8 +68,6 @@ export class XUnitParser implements IXUnitParser {
         }
 
         const data = await this.fs.readFile(outputXmlFile);
-        // Un-comment this line to capture the results file for later use in tests:
-        //await fs.writeFile('/tmp/results.xml', data);
 
         const parserResult = await parseXML(data) as { testsuite: TestSuiteResult };
         updateTests(tests, parserResult.testsuite);
