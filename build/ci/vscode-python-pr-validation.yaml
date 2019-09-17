@@ -125,6 +125,7 @@ stages:
   dependsOn:
   # - Smoke_Tests
   - Tests
+  - Smoke
   condition: always()
   jobs:
   # - template: templates/jobs/merge_upload_uitest_report.yml
