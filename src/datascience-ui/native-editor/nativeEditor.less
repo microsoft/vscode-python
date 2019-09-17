@@ -129,19 +129,17 @@
     justify-self: end;
 }
 
-.native-editor-celltoolbar-outer {
-    display: grid;
+.native-editor-celltoolbar-middle {
+    display: flex;
     justify-items: left;
-    position: absolute; /* Relative to cell wrapper */
-    left: -20px;
-    visibility: hidden;
+    visibility: collapse;
 }
 
-.cell-wrapper-selected .native-editor-celltoolbar-outer {
+.cell-wrapper-selected .native-editor-celltoolbar-middle {
     visibility: visible;
 }
 
-.cell-wrapper-focused .native-editor-celltoolbar-outer {
+.cell-wrapper-focused .native-editor-celltoolbar-middle {
     visibility: visible;
 }
 

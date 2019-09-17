@@ -157,7 +157,7 @@ export class CellInput extends React.Component<ICellInputProps> {
                         unfocused={this.onMarkdownUnfocused}
                         keyDown={this.onKeyDown}
                         ref={this.markdownRef}
-                        useQuickEdit={this.props.cellVM.useQuickEdit}
+                        useQuickEdit={false}
                         />
                 </div>
             );

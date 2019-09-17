@@ -16,7 +16,6 @@ import { ExecutionCount } from '../interactive-common/executionCount';
 import { InformationMessages } from '../interactive-common/informationMessages';
 import { ICellViewModel } from '../interactive-common/mainState';
 import { IKeyboardEvent } from '../react-common/event';
-import { Flyout } from '../react-common/flyout';
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
@@ -91,6 +90,24 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
         return getLocString('DataScience.unknownMimeTypeFormat', 'Unknown Mime Type');
     }
 
+    public moveCellUp = () => {
+        if (this.wrapperRef.current) {
+            const wasFocused = this.isFocused();
+            const cellId = this.cellId;
+            this.props.stateController.moveCellUp(cellId);
+            setTimeout(() => this.props.focusCell(cellId, wasFocused ? true : false), 1);
+        }
+    }
+
+    public moveCellDown = () => {
+        if (this.wrapperRef.current) {
+            const wasFocused = this.isFocused();
+            const cellId = this.cellId;
+            this.props.stateController.moveCellDown(cellId);
+            setTimeout(() => this.props.focusCell(cellId, wasFocused ? true : false), 1);
+        }
+    }
+
     private getCell = () => {
         return this.props.cellVM.cell;
     }
@@ -121,15 +138,24 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
             cellWrapperClass += ' cell-wrapper-focused';
         }
 
+        // Content changes based on if a markdown cell or not.
+        const content = this.isMarkdownCell() && !this.state.showingMarkdownEditor ?
+            <div className='cell-result-container'>
+                {this.renderOutput()}
+                {this.renderMiddleToolbar()}
+            </div> :
+            <div className='cell-result-container'>
+                {this.renderInput()}
+                {this.renderMiddleToolbar()}
+                {this.renderOutput()}
+            </div>;
+
         return (
             <div className={cellWrapperClass} role={this.props.role} ref={this.wrapperRef} tabIndex={0} onKeyDown={this.onOuterKeyDown} onClick={this.onMouseClick} onDoubleClick={this.onMouseDoubleClick}>
                 <div className={cellOuterClass}>
                     {this.renderControls()}
                     <div className='content-div'>
-                        <div className='cell-result-container'>
-                            {this.renderInput()}
-                            {this.renderResultsDiv(this.renderResults())}
-                        </div>
+                        {content}
                     </div>
                 </div>
             </div>
@@ -446,52 +472,19 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
             this.props.stateController.submitInput(content, this.props.cellVM);
         }
     }
-    private moveCellUp = () => {
-        if (this.wrapperRef.current) {
-            const wasFocused = this.isFocused();
-            const cellId = this.cellId;
-            this.props.stateController.moveCellUp(cellId);
-            setTimeout(() => this.props.focusCell(cellId, wasFocused ? true : false), 1);
-        }
-    }
 
-    private moveCellDown = () => {
-        if (this.wrapperRef.current) {
-            const wasFocused = this.isFocused();
-            const cellId = this.cellId;
-            this.props.stateController.moveCellDown(cellId);
-            setTimeout(() => this.props.focusCell(cellId, wasFocused ? true : false), 1);
-        }
-    }
-
-    private renderControls = () => {
+    private renderMiddleToolbar = () => {
         const cellId = this.props.cellVM.cell.id;
-        const busy = this.props.cellVM.cell.state === CellState.init || this.props.cellVM.cell.state === CellState.executing;
-        const executionCount = this.props.cellVM && this.props.cellVM.cell && this.props.cellVM.cell.data && this.props.cellVM.cell.data.execution_count ?
-            this.props.cellVM.cell.data.execution_count.toString() : '-';
-        const flyoutClass = this.isFocused() ? 'native-editor-cellflyout native-editor-cellflyout-focused'
-            : 'native-editor-cellflyout native-editor-cellflyout-selected';
-
         const deleteCell = () => {
+            const cellToSelect = this.getPrevCellId() || this.getNextCellId();
             this.props.stateController.deleteCell(cellId);
             this.props.stateController.sendCommand(NativeCommandType.DeleteCell, 'mouse');
+            setTimeout(() => {
+                if (cellToSelect) {
+                    this.moveSelection(cellToSelect);
+                }
+            }, 10);
         };
-        const runCell = () => {
-            this.props.stateController.updateCellSource(cellId);
-            this.props.stateController.submitInput(concatMultilineString(this.props.cellVM.cell.data.source), this.props.cellVM);
-            this.props.focusCell(cellId, false);
-            this.props.stateController.sendCommand(NativeCommandType.Run, 'mouse');
-        };
-        const moveUp = () => {
-            this.moveCellUp();
-            this.props.stateController.sendCommand(NativeCommandType.MoveCellUp, 'mouse');
-        };
-        const moveDown = () => {
-            this.moveCellDown();
-            this.props.stateController.sendCommand(NativeCommandType.MoveCellDown, 'mouse');
-        };
-        const canMoveUp = this.props.stateController.canMoveUp(cellId);
-        const canMoveDown = this.props.stateController.canMoveDown(cellId);
         const runAbove = () => {
             this.props.stateController.runAbove(cellId);
             this.props.stateController.sendCommand(NativeCommandType.RunAbove, 'mouse');
@@ -502,15 +495,6 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
         };
         const canRunAbove = this.props.stateController.canRunAbove(cellId);
         const canRunBelow = this.props.cellVM.cell.state === CellState.finished || this.props.cellVM.cell.state === CellState.error;
-        const insertAbove = () => {
-            this.props.stateController.insertAbove(cellId, true);
-            this.props.stateController.sendCommand(NativeCommandType.InsertAbove, 'mouse');
-        };
-        const insertBelow = () => {
-            this.props.stateController.insertBelow(cellId, true);
-            this.props.stateController.sendCommand(NativeCommandType.InsertBelow, 'mouse');
-        };
-        const runCellHidden = !canRunBelow || this.isMarkdownCell();
         const switchTooltip = this.props.cellVM.cell.data.cell_type === 'code' ? getLocString('DataScience.switchToMarkdown', 'Change to markdown') :
             getLocString('DataScience.switchToCode', 'Change to code');
         const switchImage = this.props.cellVM.cell.data.cell_type === 'code' ? ImageName.SwitchToMarkdown : ImageName.SwitchToCode;
@@ -523,37 +507,41 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
         };
 
         return (
+            <div className='native-editor-celltoolbar-middle'>
+                <ImageButton baseTheme={this.props.baseTheme} onClick={runAbove} disabled={!canRunAbove} tooltip={getLocString('DataScience.runAbove', 'Run cells above')}>
+                    <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.RunAbove} />
+                </ImageButton>
+                <ImageButton baseTheme={this.props.baseTheme} onClick={runBelow} disabled={!canRunBelow} tooltip={getLocString('DataScience.runBelow', 'Run cell and below')}>
+                    <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.RunBelow} />
+                </ImageButton>
+                <ImageButton baseTheme={this.props.baseTheme} onClick={switchCell} tooltip={switchTooltip}>
+                    <Image baseTheme={this.props.baseTheme} class='image-button-image' image={switchImage} />
+                </ImageButton>
+                <ImageButton baseTheme={this.props.baseTheme} onClick={deleteCell} tooltip={getLocString('DataScience.deleteCell', 'Delete cell')}>
+                    <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Delete} />
+                </ImageButton>
+            </div>
+        );
+    }
+
+    private renderControls = () => {
+        const cellId = this.props.cellVM.cell.id;
+        const busy = this.props.cellVM.cell.state === CellState.init || this.props.cellVM.cell.state === CellState.executing;
+        const executionCount = this.props.cellVM && this.props.cellVM.cell && this.props.cellVM.cell.data && this.props.cellVM.cell.data.execution_count ?
+            this.props.cellVM.cell.data.execution_count.toString() : '-';
+        const runCell = () => {
+            this.props.stateController.updateCellSource(cellId);
+            this.props.stateController.submitInput(concatMultilineString(this.props.cellVM.cell.data.source), this.props.cellVM);
+            this.props.focusCell(cellId, false);
+            this.props.stateController.sendCommand(NativeCommandType.Run, 'mouse');
+        };
+        const canRunBelow = this.props.cellVM.cell.state === CellState.finished || this.props.cellVM.cell.state === CellState.error;
+        const runCellHidden = !canRunBelow || this.isMarkdownCell();
+
+        return (
             <div className='controls-div'>
                 <ExecutionCount isBusy={busy} count={executionCount} visible={this.isCodeCell()} />
-                <div className='native-editor-celltoolbar-outer' key={0}>
-                    <Flyout buttonClassName='native-editor-flyout-button' buttonContent={<span className='flyout-button-content'>...</span>} flyoutContainerName={flyoutClass}>
-                        <ImageButton baseTheme={this.props.baseTheme} onClick={moveUp} disabled={!canMoveUp} tooltip={getLocString('DataScience.moveCellUp', 'Move cell up')}>
-                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Up} />
-                        </ImageButton>
-                        <ImageButton baseTheme={this.props.baseTheme} onClick={moveDown} disabled={!canMoveDown} tooltip={getLocString('DataScience.moveCellDown', 'Move cell down')}>
-                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Down} />
-                        </ImageButton>
-                        <ImageButton baseTheme={this.props.baseTheme} onClick={runAbove} disabled={!canRunAbove} tooltip={getLocString('DataScience.runAbove', 'Run cells above')}>
-                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.RunAbove} />
-                        </ImageButton>
-                        <ImageButton baseTheme={this.props.baseTheme} onClick={runBelow} disabled={!canRunBelow} tooltip={getLocString('DataScience.runBelow', 'Run cell and below')}>
-                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.RunBelow} />
-                        </ImageButton>
-                        <ImageButton baseTheme={this.props.baseTheme} onClick={insertAbove} tooltip={getLocString('DataScience.insertAbove', 'Insert cell above')}>
-                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.InsertAbove} />
-                        </ImageButton>
-                        <ImageButton baseTheme={this.props.baseTheme} onClick={insertBelow} tooltip={getLocString('DataScience.insertBelow', 'Insert cell below')}>
-                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.InsertBelow} />
-                        </ImageButton>
-                        <ImageButton baseTheme={this.props.baseTheme} onClick={switchCell} tooltip={switchTooltip}>
-                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={switchImage} />
-                        </ImageButton>
-                        <ImageButton baseTheme={this.props.baseTheme} onClick={deleteCell} tooltip={getLocString('DataScience.deleteCell', 'Delete cell')}>
-                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Delete} />
-                        </ImageButton>
-                    </Flyout>
-                </div>
-                <div className='native-editor-celltoolbar-inner' key={1}>
+                <div className='native-editor-celltoolbar-inner'>
                     <ImageButton baseTheme={this.props.baseTheme} onClick={runCell} hidden={runCellHidden} tooltip={getLocString('DataScience.runCell', 'Run cell')}>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Run} />
                     </ImageButton>
@@ -610,16 +598,7 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
         this.setState({showingMarkdownEditor: false});
     }
 
-    private renderResultsDiv = (results: JSX.Element | null) => {
-
-        // Only render results if not an edit cell
-        if (this.props.cellVM.cell.id !== Identifiers.EditCellId) {
-            return results;
-        }
-        return null;
-    }
-
-    private renderResults = (): JSX.Element | null => {
+    private renderOutput = (): JSX.Element | null => {
         if (this.shouldRenderOutput()) {
             return (
                 <CellOutput
