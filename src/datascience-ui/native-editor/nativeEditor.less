@@ -47,7 +47,7 @@
 }
 
 // make the width of the div be a bit less than the width of the window,
-// the 95 pixels removed account for the space the padding and controls
+// the 85 pixels removed account for the space the padding and controls
 // on the left take in the native Editor.
 .cell-output {
     margin-top: 5px;
@@ -131,13 +131,6 @@
     padding-left: 10px;
     flex: 1;
     display: block;
-
-    // grid-column: 2;
-    // grid-template-columns: max-content min-content ;
-    // justify-content: end;
-    // display: grid;
-    // min-width: 50px;
-    // grid-template-rows: min-content max-content;
 }
 
 .navbar-div {
@@ -281,6 +274,7 @@
     background-color: var(--vscode-editorInfo-foreground);
 }
 
+// Add this class to the status bar when the hover state is ready
 .status-bar-hover {
     background: repeating-linear-gradient(
         -45deg,
