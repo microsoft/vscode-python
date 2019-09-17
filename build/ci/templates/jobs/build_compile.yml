@@ -3,8 +3,6 @@
 
 jobs:
 - job: Compile
-  variables:
-    installVSCEorNPX: false
   pool:
     vmImage: "macos-latest"
   steps:
@@ -17,8 +15,6 @@ jobs:
     - template: ../steps/build.yml
 
 - job: Lint
-  variables:
-    installVSCEorNPX: false
   pool:
     vmImage: "macos-latest"
   steps:

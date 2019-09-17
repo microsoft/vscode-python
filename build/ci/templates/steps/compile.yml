@@ -6,6 +6,7 @@ steps:
         PythonVersion: $(PythonVersion)
         workingDirectory: $(Build.SourcesDirectory)
         compile: 'false'
+        installVSCEorNPX: 'false'
 
     - task: Gulp@0
       displayName: "Compile and check for errors"
