@@ -78,6 +78,11 @@ jobs:
         VMImageName: 'ubuntu-16.04'
         TestsToRun: 'testSmoke'
         NeedsPythonTestReqs: true
+      'Win-Py3.7 Smoke':
+        PythonVersion: '3.7'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'testSmoke'
+        NeedsPythonTestReqs: true
       'Mac-Py2.7 Unit+Single':
         PythonVersion: '2.7'
         VMImageName: 'macos-10.13'

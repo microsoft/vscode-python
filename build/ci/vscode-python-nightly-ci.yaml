@@ -436,6 +436,23 @@ jobs:
         NeedsPythonTestReqs: true
         NeedsPythonFunctionalReqs: true
 
+      # Smoke Tests
+      'Mac-Py3.7 Smoke':
+        PythonVersion: '3.7'
+        VMImageName: 'macos-10.13'
+        TestsToRun: 'testSmoke'
+        NeedsPythonTestReqs: true
+      'Linux-Py3.7 Smoke':
+        PythonVersion: '3.7'
+        VMImageName: 'ubuntu-16.04'
+        TestsToRun: 'testSmoke'
+        NeedsPythonTestReqs: true
+      'Win-Py3.7 Smoke':
+        PythonVersion: '3.7'
+        VMImageName: 'vs2017-win2016'
+        TestsToRun: 'testSmoke'
+        NeedsPythonTestReqs: true
+
   pool:
     vmImage: $(VMImageName)
 
