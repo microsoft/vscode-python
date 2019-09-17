@@ -92,6 +92,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                 this.selectCell(newCell);
             }
         };
+        const addCellLineClass = this.state.cellVMs.length === 0 ? 'add-cell-line-top-force-visible' : 'add-cell-line-top';
 
         return (
             <div id='main-panel' ref={this.mainPanelRef} role='Main'>
@@ -110,7 +111,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                 <main id='main-panel-content' onScroll={this.onContentScroll} ref={this.contentPanelScrollRef}>
                     <AddCellLine
                         baseTheme={this.props.baseTheme}
-                        className='add-cell-line-top'
+                        className={addCellLineClass}
                         click={insertAboveFirst}
                     />
                     {this.renderContentPanel(this.props.baseTheme)}
@@ -140,19 +141,19 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
     private moveSelectionToExisting = (cellId: string) => {
         // Cell should already exist in the UI
         if (this.contentPanelRef) {
-            const wasFocused = this.state.focusedCell === cellId;
+            const wasFocused = this.state.focusedCell !== undefined;
             this.stateController.selectCell(cellId, wasFocused ? cellId : undefined);
             this.focusCell(cellId, wasFocused ? true : false);
         }
     }
 
     private selectCell = (id: string) => {
-        // Check to see that this cell already exists in our window (it's part of the rendered state
-        const cells = this.state.cellVMs.map(c => c.cell);
-        if (!cells || !cells.find(c => c.id === id)) {
+        // Check to see that this cell already exists in our window (it's part of the rendered state)
+        const cells = this.state.cellVMs.map(c => c.cell).filter(c => c.data.cell_type !== 'messages');
+        if (cells.find(c => c.id === id)) {
             // Force selection change right now as we don't need the cell to exist
             // to make it selected (otherwise we'll get a flash)
-            const wasFocused = this.state.focusedCell === id;
+            const wasFocused = this.state.focusedCell !== undefined;
             this.stateController.selectCell(id, wasFocused ? id : undefined);
 
             // Then wait to give it actual input focus
