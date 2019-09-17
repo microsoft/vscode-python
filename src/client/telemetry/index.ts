@@ -880,8 +880,6 @@ export interface IEventNamePropertyMapping {
     [EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION]: {
         /**
          * The startup value of the language server setting
-         *
-         * @type {boolean}
          */
         startup?: boolean;
         /**
