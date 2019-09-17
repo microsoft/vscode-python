@@ -131,6 +131,12 @@
 .navbar-div {
     grid-column: 1;
     visibility: hidden;
+    display: grid;
+    grid-template-rows: var(--button-size) var(--button-size) auto;
+}
+
+.navbar-add-button {
+    align-self: end;
 }
 
 .execution-count {
@@ -242,8 +248,8 @@
 .add-cell-line {
     display: flex;
     justify-content: left;
-    margin-top: 1px;
-    margin-bottom: 1px;
+    margin-top: 5px;
+    margin-bottom: 0px;
     margin-left: 5px;
     margin-right: 5px;
 }
@@ -254,10 +260,11 @@
 
 .add-cell-line-top {
     margin-top: 2px;
+    margin-bottom: 0px;
 }
 
 .add-cell-line-top .add-cell-line-button {
-    visibility: visible;
+    visibility: hidden;
 }
 
 .add-cell-line-button {
@@ -270,14 +277,13 @@
     height: var(--button-size);
     padding: 0px;
     display: flex;
-    visibility: hidden;
 }
 
 .add-cell-line-button:focus {
     outline: none;
 }
 
-.add-cell-line:hover .add-cell-line-button{
+.add-cell-line-top:hover .add-cell-line-button{
     visibility: visible;
 }
 

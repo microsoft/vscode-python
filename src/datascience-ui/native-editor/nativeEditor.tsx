@@ -361,6 +361,11 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                 this.selectCell(newCell);
             }
         };
+        const lastLine = index === this.state.cellVMs.length - 1 ?
+            <AddCellLine
+                baseTheme={this.props.baseTheme}
+                className='add-cell-line-cell'
+                click={addNewCell} /> : null;
 
         // Special case, see if our initial load is finally complete.
         if (this.state.loadTotal && this.cellRefs.size >= this.state.loadTotal && !this.initialVisibilityUpdate) {
@@ -390,10 +395,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                         selectCell={this.selectCell}
                     />
                 </ErrorBoundary>
-                <AddCellLine
-                    baseTheme={this.props.baseTheme}
-                    className='add-cell-line-cell'
-                    click={addNewCell} />
+                {lastLine}
             </div>);
     }
 
@@ -404,13 +406,12 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         }
     }
 
-    private scrollDiv = (div: HTMLDivElement) => {
+    private scrollDiv = (_div: HTMLDivElement) => {
         if (this.state.newCell) {
             const newCell = this.state.newCell;
             this.stateController.setState({newCell: undefined});
             // Bounce this so state has time to update.
             setTimeout(() => {
-                div.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' });
                 this.focusCell(newCell, true);
             }, 10);
         }

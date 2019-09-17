@@ -467,6 +467,19 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
         };
         const canMoveUp = this.props.stateController.canMoveUp(cellId);
         const canMoveDown = this.props.stateController.canMoveDown(cellId);
+        const addNewCell = () => {
+            const newCell = this.props.stateController.insertBelow(cellId, true);
+            this.props.stateController.sendCommand(NativeCommandType.AddToEnd, 'mouse');
+            if (newCell) {
+                this.props.selectCell(newCell);
+            }
+        };
+        const addButtonRender = this.getNextCellId() !== undefined ?
+            <div className='navbar-add-button'>
+                <ImageButton baseTheme={this.props.baseTheme} onClick={addNewCell} tooltip={getLocString('DataScience.insertBelow', 'Insert cell below')}>
+                    <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.InsertBelow} />
+                </ImageButton>
+            </div> : null;
 
         return (
             <div className='navbar-div'>
@@ -480,6 +493,7 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Down} />
                     </ImageButton>
                 </div>
+                {addButtonRender}
             </div>
         );
     }
