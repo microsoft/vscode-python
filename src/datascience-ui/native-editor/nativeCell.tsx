@@ -144,16 +144,16 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
                 <div className='cell-row-container'>
                     {this.renderStatusBar(false)}
                     {this.renderOutput()}
-                    {this.renderMiddleToolbar()}
                 </div>
+                {this.renderMiddleToolbar()}
             </div> :
             <div className='cell-result-container'>
                 <div className='cell-row-container'>
                     {this.renderStatusBar(true)}
                     {this.renderControls()}
                     {this.renderInput()}
-                    {this.renderMiddleToolbar()}
                 </div>
+                {this.renderMiddleToolbar()}
                 <div className='cell-row-container'>
                     {this.renderStatusBar(false)}
                     {this.renderOutput()}
