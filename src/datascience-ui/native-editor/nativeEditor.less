@@ -332,7 +332,6 @@
 
 .cell-row-container {
     display: flex;
-    margin-bottom: 10px;
 }
 
 .collapse-bar {
@@ -340,6 +339,10 @@
     background-color: transparent;
     max-width: 8px;
     min-width: 8px;
+}
+
+.cell-wrapper:hover .collapse-bar {
+    background-color: var(--override-widget-background, var(--vscode-notifications-background));
 }
 
 .collapse-bar-markdown {
@@ -362,4 +365,52 @@
         var(--vscode-editorGutter-addedBackground) 3px,
         var(--vscode-editorGutter-addedBackground) 6px
     );
+}
+
+.cell-wrapper:hover .collapse-bar-selected {
+    background-color: var(--vscode-peekView-border);
+}
+
+.cell-wrapper:hover .collapse-bar-focused {
+    background: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 3px,
+        var(--vscode-editorGutter-addedBackground) 3px,
+        var(--vscode-editorGutter-addedBackground) 6px
+    );
+}
+
+.add-divider {
+    visibility: hidden;
+    position: relative;
+    top: 12px;
+}
+
+.cell-wrapper:hover .add-divider {
+    visibility: visible;
+}
+
+.cell-wrapper-selected .add-divider {
+    visibility: hidden;
+    z-index: -100;
+    pointer-events: none;
+}
+
+.cell-wrapper-focused .add-divider {
+    visibility: hidden;
+    z-index: -100;
+    pointer-events: none;
+}
+
+.cell-wrapper-selected:hover .add-divider {
+    visibility: hidden;
+    z-index: -100;
+    pointer-events: none;
+}
+
+.cell-wrapper-focused:hover .add-divider {
+    visibility: hidden;
+    z-index: -100;
+    pointer-events: none;
 }

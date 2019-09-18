@@ -19,6 +19,7 @@ import { IKeyboardEvent } from '../react-common/event';
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
+import { AddCellLine } from './addCellLine';
 import { NativeEditorStateController } from './nativeEditorStateController';
 
 interface INativeCellProps {
@@ -122,6 +123,12 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
         return this.props.cellVM.cell.data.cell_type === 'markdown';
     }
 
+    private isLastCell = () => {
+        const cellVMs = this.props.stateController.getState().cellVMs;
+        const index = cellVMs.indexOf(this.props.cellVM);
+        return index === cellVMs.length - 1;
+    }
+
     private isSelected = () => {
         return this.props.selectedCell === this.cellId;
     }
@@ -147,6 +154,7 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
                     {this.renderCollapseBar(false)}
                     {this.renderOutput()}
                 </div>
+                {this.renderAddDivider(false)}
                 {this.renderMiddleToolbar()}
             </div> :
             <div className='cell-result-container'>
@@ -155,6 +163,7 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
                     {this.renderControls()}
                     {this.renderInput()}
                 </div>
+                {this.renderAddDivider(true)}
                 {this.renderMiddleToolbar()}
                 <div className='cell-row-container'>
                     {this.renderCollapseBar(false)}
@@ -210,7 +219,8 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
 
     private shouldRenderOutput(): boolean {
         if (this.isCodeCell()) {
-            return this.hasOutput() && this.getCodeCell().outputs && !this.props.hideOutput;
+            const cell = this.getCodeCell();
+            return this.hasOutput() && cell.outputs && !this.props.hideOutput && (Array.isArray(cell.outputs) && cell.outputs.length !== 0);
         } else if (this.isMarkdownCell()) {
             return !this.state.showingMarkdownEditor;
         }
@@ -464,6 +474,14 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
         }
     }
 
+    private addNewCell = () => {
+        const newCell = this.props.stateController.insertBelow(this.props.cellVM.cell.id, true);
+        this.props.stateController.sendCommand(NativeCommandType.AddToEnd, 'mouse');
+        if (newCell) {
+            this.props.selectCell(newCell);
+        }
+    }
+
     private renderNavbar = () => {
         const cellId = this.props.cellVM.cell.id;
 
@@ -477,16 +495,9 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
         };
         const canMoveUp = this.props.stateController.canMoveUp(cellId);
         const canMoveDown = this.props.stateController.canMoveDown(cellId);
-        const addNewCell = () => {
-            const newCell = this.props.stateController.insertBelow(cellId, true);
-            this.props.stateController.sendCommand(NativeCommandType.AddToEnd, 'mouse');
-            if (newCell) {
-                this.props.selectCell(newCell);
-            }
-        };
         const addButtonRender = this.getNextCellId() !== undefined ?
             <div className='navbar-add-button'>
-                <ImageButton baseTheme={this.props.baseTheme} onClick={addNewCell} tooltip={getLocString('DataScience.insertBelow', 'Insert cell below')}>
+                <ImageButton baseTheme={this.props.baseTheme} onClick={this.addNewCell} tooltip={getLocString('DataScience.insertBelow', 'Insert cell below')}>
                     <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.InsertBelow} />
                 </ImageButton>
             </div> : null;
@@ -507,6 +518,21 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
             </div>
         );
     }
+
+    private renderAddDivider = (checkOutput: boolean) => {
+        // Skip on the last cell
+        if (!this.isLastCell()) {
+            // Divider should only show if no output
+            if (!checkOutput || !this.shouldRenderOutput()) {
+                return (
+                    <AddCellLine className='add-divider' baseTheme={this.props.baseTheme} includePlus={false} click={this.addNewCell} />
+                );
+            }
+        }
+
+        return null;
+    }
+
     private renderMiddleToolbar = () => {
         const cellId = this.props.cellVM.cell.id;
         const deleteCell = () => {
@@ -659,9 +685,7 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
     }
 
     private renderOutput = (): JSX.Element | null => {
-        const cell = this.props.cellVM.cell.data;
-
-        if (this.shouldRenderOutput() && ((cell.cell_type === 'markdown') || (Array.isArray(cell.outputs) && cell.outputs.length !== 0))) {
+        if (this.shouldRenderOutput()) {
             return (
                 <CellOutput
                     cellVM={this.props.cellVM}

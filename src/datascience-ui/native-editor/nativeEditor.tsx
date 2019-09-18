@@ -92,7 +92,8 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                 this.selectCell(newCell);
             }
         };
-        const addCellLineClass = this.state.cellVMs.length === 0 ? 'add-cell-line-top-force-visible' : 'add-cell-line-top';
+        const addCellLine = this.state.cellVMs.length === 0 ? null :
+            <AddCellLine includePlus={true} className='add-cell-line-top' click={insertAboveFirst} baseTheme={this.props.baseTheme}/>;
 
         return (
             <div id='main-panel' ref={this.mainPanelRef} role='Main'>
@@ -109,11 +110,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                     {this.renderVariablePanel(this.props.baseTheme)}
                 </section>
                 <main id='main-panel-content' onScroll={this.onContentScroll} ref={this.contentPanelScrollRef}>
-                    <AddCellLine
-                        baseTheme={this.props.baseTheme}
-                        className={addCellLineClass}
-                        click={insertAboveFirst}
-                    />
+                    {addCellLine}
                     {this.renderContentPanel(this.props.baseTheme)}
                 </main>
             </div>
@@ -364,6 +361,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         };
         const lastLine = index === this.state.cellVMs.length - 1 ?
             <AddCellLine
+                includePlus={true}
                 baseTheme={this.props.baseTheme}
                 className='add-cell-line-cell'
                 click={addNewCell} /> : null;
