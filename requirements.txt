@@ -4,4 +4,4 @@ isort==4.3.21
 ptvsd==5.0.0a4
 pyparsing==2.4.0
 six==1.12.0
-packaging==19.1
+packaging==19.2
