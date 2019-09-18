@@ -8,9 +8,19 @@ import { Uri } from 'vscode';
 import {
     FlattenedTestFunction, FlattenedTestSuite,
     SubtestParent, TestFile, TestFolder, TestFunction, TestProvider,
-    Tests, TestStatus, TestSuite, TestSummary, TestType
+    TestResult, Tests, TestStatus, TestSuite, TestSummary, TestType
 } from '../../client/testing/common/types';
-import { fixPath, RESOURCE } from './helper';
+import { fixPath, getDedentedLines, getIndent, RESOURCE } from './helper';
+
+type SuperTest = TestFunction & {
+    subtests: TestFunction[];
+};
+
+export type TestItem = TestFolder | TestFile | TestSuite | SuperTest | TestFunction;
+
+export type TestNode = TestItem & {
+    testType: TestType;
+};
 
 // Return an initialized test results.
 export function createEmptyResults(): Tests {
@@ -55,7 +65,7 @@ export function updateSummary(
 // Return the file found walking up the parents, if any.
 //
 // There should only be one parent file.
-export function findParentFile(parents: nodes.TestNode[]): TestFile | undefined {
+export function findParentFile(parents: TestNode[]): TestFile | undefined {
     // Iterate in reverse order.
     for (let i = parents.length; i > 0; i -= 1) {
         const parent = parents[i - 1];
@@ -67,7 +77,7 @@ export function findParentFile(parents: nodes.TestNode[]): TestFile | undefined 
 }
 
 // Return the first suite found walking up the parents, if any.
-export function findParentSuite(parents: nodes.TestNode[]): TestSuite | undefined {
+export function findParentSuite(parents: TestNode[]): TestSuite | undefined {
     // Iterate in reverse order.
     for (let i = parents.length; i > 0; i -= 1) {
         const parent = parents[i - 1];
@@ -81,7 +91,7 @@ export function findParentSuite(parents: nodes.TestNode[]): TestSuite | undefine
 // Return the "flattened" test suite node.
 export function flattenSuite(
     node: TestSuite,
-    parents: nodes.TestNode[]
+    parents: TestNode[]
 ): FlattenedTestSuite {
     const found = findParentFile(parents);
     if (!found) {
@@ -98,7 +108,7 @@ export function flattenSuite(
 // Return the "flattened" test function node.
 export function flattenFunction(
     node: TestFunction,
-    parents: nodes.TestNode[]
+    parents: TestNode[]
 ): FlattenedTestFunction {
     const found = findParentFile(parents);
     if (!found) {
@@ -116,15 +126,6 @@ export function flattenFunction(
 
 // operations on raw test nodes
 export namespace nodes {
-    type SuperTest = TestFunction & {
-        subtests: TestFunction[];
-    };
-
-    export type TestItem = TestFolder | TestFile | TestSuite | SuperTest | TestFunction;
-
-    export type TestNode = TestItem & {
-        testType: TestType;
-    };
     // Set the result-oriented properties back to their "unset" values.
     export function resetResult(node: TestNode) {
         node.time = 0;
@@ -335,4 +336,300 @@ export namespace nodes {
         parent.subtests.push(subtest as TestFunction);
         return subtest;
     }
+}
+
+namespace declarative {
+    type TestParent = TestNode & {
+        indent: string;
+    };
+
+    type ParsedTestNode = {
+        indent: string;
+        name: string;
+        testType: TestType;
+        result: TestResult;
+    };
+
+    // Return a test tree built from concise declarative text.
+    export function parseResults(
+        text: string,
+        tests: Tests,
+        provider: TestProvider,
+        resource: Uri
+    ) {
+        // Build the tree (and populate the return value at the same time).
+        const parents: TestParent[] = [];
+        let prev: TestParent;
+        for (const line of getDedentedLines(text)) {
+            if (line.trim() === '') {
+                continue;
+            }
+            const parsed = parseTestLine(line);
+
+            let node: TestNode;
+            if (isRootNode(parsed)) {
+                parents.length = 0;  // Clear the array.
+                node = nodes.createFolderResults(
+                    parsed.name,
+                    undefined,
+                    resource
+                );
+                tests.rootTestFolders.push(node as TestFolder);
+                tests.testFolders.push(node as TestFolder);
+            } else {
+                const parent = setMatchingParent(
+                    parents,
+                    prev!,
+                    parsed.indent
+                );
+                node = buildDiscoveredChildNode(
+                    parent,
+                    parsed.name,
+                    parsed.testType,
+                    provider,
+                    resource
+                );
+                switch (parsed.testType) {
+                    case TestType.testFolder:
+                        tests.testFolders.push(node as TestFolder);
+                        break;
+                    case TestType.testFile:
+                        tests.testFiles.push(node as TestFile);
+                        break;
+                    case TestType.testSuite:
+                        tests.testSuites.push(
+                            flattenSuite(node as TestSuite, parents)
+                        );
+                        break;
+                    case TestType.testFunction:
+                        // This does not deal with subtests?
+                        tests.testFunctions.push(
+                            flattenFunction(node as TestFunction, parents)
+                        );
+                        break;
+                    default:
+                }
+            }
+
+            // Set the result.
+            node.status = parsed.result.status;
+            node.time = parsed.result.time;
+            updateSummary(tests.summary, node.status!);
+
+            // Prepare for the next line.
+            prev = node as TestParent;
+            prev.indent = parsed.indent;
+        }
+    }
+
+    // Determine the kind, indent, and result info based on the line.
+    function parseTestLine(line: string): ParsedTestNode {
+        if (line.includes('\\')) {
+            throw Error('expected / as path separator (even on Windows)');
+        }
+
+        const indent = getIndent(line);
+        line = line.trim();
+
+        const parts = line.split(' ');
+        let name = parts.shift();
+        if (!name) {
+            throw Error('missing name');
+        }
+
+        // Determine the type from the name.
+        let testType: TestType;
+        if (name.endsWith('/')) {
+            // folder
+            testType = TestType.testFolder;
+            while (name.endsWith('/')) {
+                name = name.slice(0, -1);
+            }
+        } else if (name.includes('.')) {
+            // file
+            if (name.includes('/')) {
+                throw Error('filename must not include directories');
+            }
+            testType = TestType.testFile;
+        } else if (name.startsWith('<')) {
+            // suite
+            if (!name.endsWith('>')) {
+                throw Error('suite missing closing bracket');
+            }
+            testType = TestType.testSuite;
+            name = name.slice(1, -1);
+        } else {
+            // test
+            testType = TestType.testFunction;
+        }
+
+        // Parse the results.
+        const result: TestResult = {
+            time: 0
+        };
+        if (parts.length !== 0 && testType !== TestType.testFunction) {
+            throw Error('non-test nodes do not have results');
+        }
+        switch (parts.length) {
+            case 0:
+                break;
+            case 1:
+                // tslint:disable-next-line:no-any
+                if (isNaN(parts[0] as any)) {
+                    throw Error(`expected a time (float), got ${parts[0]}`);
+                }
+                result.time = parseFloat(parts[0]);
+                break;
+            case 2:
+                switch (parts[0]) {
+                    case 'P':
+                        result.status = TestStatus.Pass;
+                        break;
+                    case 'F':
+                        result.status = TestStatus.Fail;
+                        break;
+                    case 'E':
+                        result.status = TestStatus.Error;
+                        break;
+                    case 'S':
+                        result.status = TestStatus.Skipped;
+                        break;
+                    default:
+                        throw Error('expected a status and then a time');
+                }
+                // tslint:disable-next-line:no-any
+                if (isNaN(parts[1] as any)) {
+                    throw Error(`expected a time (float), got ${parts[1]}`);
+                }
+                result.time = parseFloat(parts[1]);
+                break;
+            default:
+                throw Error('too many items on line');
+        }
+
+        return {
+            indent: indent,
+            name: name,
+            testType: testType,
+            result: result
+        };
+    }
+
+    function isRootNode(
+        parsed: ParsedTestNode
+    ): boolean {
+        if (parsed.indent === '') {
+            if (parsed.testType !== TestType.testFolder) {
+                throw Error('a top-level node must be a folder');
+            }
+            return true;
+        }
+        return false;
+    }
+
+    function setMatchingParent(
+        parents: TestParent[],
+        prev: TestParent,
+        parsedIndent: string
+    ): TestParent {
+        let current = parents.length > 0 ? parents[parents.length - 1] : prev;
+        if (parsedIndent.length > current.indent.length) {
+            parents.push(prev);
+            current = prev;
+        } else {
+            while (parsedIndent !== current.indent) {
+                if (parsedIndent.length > current.indent.length) {
+                    throw Error('mis-aligned indentation');
+                }
+
+                parents.pop();
+                if (parents.length === 0) {
+                    throw Error('mis-aligned indentation');
+                }
+                current = parents[parents.length - 1];
+            }
+        }
+        return current;
+    }
+
+    function buildDiscoveredChildNode(
+        parent: TestParent,
+        name: string,
+        testType: TestType,
+        provider: TestProvider,
+        resource?: Uri
+    ): TestNode {
+        switch (testType) {
+            case TestType.testFolder:
+                if (parent.testType !== TestType.testFolder) {
+                    throw Error('parent must be a folder');
+                }
+                return nodes.addDiscoveredSubFolder(
+                    parent as TestFolder,
+                    name,
+                    undefined,
+                    resource
+                );
+            case TestType.testFile:
+                if (parent.testType !== TestType.testFolder) {
+                    throw Error('parent must be a folder');
+                }
+                return nodes.addDiscoveredFile(
+                    parent as TestFolder,
+                    name,
+                    undefined,
+                    undefined,
+                    resource
+                );
+            case TestType.testSuite:
+                let suiteParent: TestFile | TestSuite;
+                if (parent.testType === TestType.testFile) {
+                    suiteParent = parent as TestFile;
+                } else if (parent.testType === TestType.testSuite) {
+                    suiteParent = parent as TestSuite;
+                } else {
+                    throw Error('parent must be a file or suite');
+                }
+                return nodes.addDiscoveredSuite(
+                    suiteParent,
+                    name,
+                    undefined,
+                    undefined,
+                    provider,
+                    undefined,
+                    resource
+                );
+            case TestType.testFunction:
+                let funcParent: TestFile | TestSuite;
+                if (parent.testType === TestType.testFile) {
+                    funcParent = parent as TestFile;
+                } else if (parent.testType === TestType.testSuite) {
+                    funcParent = parent as TestSuite;
+                } else if (parent.testType === TestType.testFunction) {
+                    throw Error('not finished: use addDiscoveredSubTest()');
+                } else {
+                    throw Error('parent must be a file, suite, or function');
+                }
+                return nodes.addDiscoveredTest(
+                    funcParent,
+                    name,
+                    undefined,
+                    provider,
+                    resource
+                );
+            default:
+                throw Error('unsupported');
+        }
+    }
+}
+
+// Return a test tree built from concise declarative text.
+export function createDeclaratively(
+    text: string,
+    provider: TestProvider = 'pytest',
+    resource: Uri = RESOURCE
+): Tests {
+    const tests = createEmptyResults();
+    declarative.parseResults(text, tests, provider, resource);
+    return tests;
 }

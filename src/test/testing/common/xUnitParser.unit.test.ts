@@ -12,8 +12,7 @@ import {
     IXUnitParser, PassCalculationFormulae, Tests, TestStatus
 } from '../../../client/testing/common/types';
 import { XUnitParser } from '../../../client/testing/common/xUnitParser';
-import { createResults } from '../helpers-declarative';
-import { createEmptyResults, nodes } from '../results';
+import { createDeclaratively, createEmptyResults, TestItem } from '../results';
 
 suite('Testing - parse JUnit XML file', () => {
     let parser: IXUnitParser;
@@ -23,7 +22,7 @@ suite('Testing - parse JUnit XML file', () => {
         parser = new XUnitParser(fs.object);
     });
 
-    function fixResult(node: nodes.TestItem, file: string, line: number) {
+    function fixResult(node: TestItem, file: string, line: number) {
         switch (node.status) {
             case TestStatus.Pass:
                 node.passed = true;
@@ -40,13 +39,13 @@ suite('Testing - parse JUnit XML file', () => {
     }
 
     test('success with single passing test', async () => {
-        const tests = createResults(`
+        const tests = createDeclaratively(`
             ./
                 test_spam.py
                     <Tests>
                         test_spam
             `);
-        const expected = createResults(`
+        const expected = createDeclaratively(`
             ./
                 test_spam.py
                     <Tests>
