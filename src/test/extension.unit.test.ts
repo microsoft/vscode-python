@@ -53,7 +53,7 @@ suite('Extension version tests', () => {
     });
 
     test('If we are running a pipeline in the release branch, the extension version in `package.json` should not have the "-dev" suffix', async function() {
-        if (branchName !== 'release') {
+        if (!branchName.startsWith('release')) {
             // tslint:disable-next-line: no-invalid-this
             return this.skip();
         }
