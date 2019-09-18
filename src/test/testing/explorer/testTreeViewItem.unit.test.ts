@@ -9,12 +9,10 @@ import {
     Commands
 } from '../../../client/common/constants';
 import {
-    TestFile, TestFolder,
-    TestFunction, TestSuite, TestType
+    TestFile, TestFolder, TestFunction, TestSuite
 } from '../../../client/testing/common/types';
-import {
-    TestTreeItem
-} from '../../../client/testing/explorer/testTreeViewItem';
+import { TestTreeItem } from '../../../client/testing/explorer/testTreeViewItem';
+import { TestDataItemType } from '../../../client/testing/types';
 import {
     createMockTestDataItem, createSubtestParent
 } from '../common/testUtils.unit.test';
@@ -58,8 +56,8 @@ suite('Unit Tests Test Explorer View Items', () => {
 
     test('Test subtest parent created into test view item', () => {
         const subtestParent = createSubtestParent([
-            createMockTestDataItem<TestFunction>(TestType.testFunction, 'test_x'),
-            createMockTestDataItem<TestFunction>(TestType.testFunction, 'test_y')
+            createMockTestDataItem<TestFunction>(TestDataItemType.function, 'test_x'),
+            createMockTestDataItem<TestFunction>(TestDataItemType.function, 'test_y')
         ]);
 
         const viewItem = new TestTreeItem(resource, subtestParent.asSuite);

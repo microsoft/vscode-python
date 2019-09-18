@@ -69,7 +69,7 @@ export function findParentFile(parents: TestNode[]): TestFile | undefined {
     // Iterate in reverse order.
     for (let i = parents.length; i > 0; i -= 1) {
         const parent = parents[i - 1];
-        if (parent.testType === TestType.testFile) {
+        if (parent.testType === TestType.file) {
             return parent as TestFile;
         }
     }
@@ -81,7 +81,7 @@ export function findParentSuite(parents: TestNode[]): TestSuite | undefined {
     // Iterate in reverse order.
     for (let i = parents.length; i > 0; i -= 1) {
         const parent = parents[i - 1];
-        if (parent.testType === TestType.testSuite) {
+        if (parent.testType === TestType.suite) {
             return parent as TestSuite;
         }
     }
@@ -147,7 +147,7 @@ export namespace nodes {
             nameToRun: nameToRun || dirname,
             folders: [],
             testFiles: [],
-            testType: TestType.testFolder,
+            testType: TestType.folder,
             // result
             time: 0,
             status: TestStatus.Unknown
@@ -175,7 +175,7 @@ export namespace nodes {
             xmlName: xmlName!,
             suites: [],
             functions: [],
-            testType: TestType.testFile,
+            testType: TestType.file,
             // result
             time: 0,
             status: TestStatus.Unknown
@@ -199,7 +199,7 @@ export namespace nodes {
             isInstance: isInstance,
             suites: [],
             functions: [],
-            testType: TestType.testSuite,
+            testType: TestType.suite,
             // result
             time: 0,
             status: TestStatus.Unknown
@@ -217,7 +217,7 @@ export namespace nodes {
             name: name,
             nameToRun: nameToRun || name,
             subtestParent: subtestParent,
-            testType: TestType.testFunction,
+            testType: TestType.function,
             // result
             time: 0,
             status: TestStatus.Unknown
@@ -390,18 +390,18 @@ namespace declarative {
                     resource
                 );
                 switch (parsed.testType) {
-                    case TestType.testFolder:
+                    case TestType.folder:
                         tests.testFolders.push(node as TestFolder);
                         break;
-                    case TestType.testFile:
+                    case TestType.file:
                         tests.testFiles.push(node as TestFile);
                         break;
-                    case TestType.testSuite:
+                    case TestType.suite:
                         tests.testSuites.push(
                             flattenSuite(node as TestSuite, parents)
                         );
                         break;
-                    case TestType.testFunction:
+                    case TestType.function:
                         // This does not deal with subtests?
                         tests.testFunctions.push(
                             flattenFunction(node as TestFunction, parents)
@@ -441,7 +441,7 @@ namespace declarative {
         let testType: TestType;
         if (name.endsWith('/')) {
             // folder
-            testType = TestType.testFolder;
+            testType = TestType.folder;
             while (name.endsWith('/')) {
                 name = name.slice(0, -1);
             }
@@ -450,24 +450,24 @@ namespace declarative {
             if (name.includes('/')) {
                 throw Error('filename must not include directories');
             }
-            testType = TestType.testFile;
+            testType = TestType.file;
         } else if (name.startsWith('<')) {
             // suite
             if (!name.endsWith('>')) {
                 throw Error('suite missing closing bracket');
             }
-            testType = TestType.testSuite;
+            testType = TestType.suite;
             name = name.slice(1, -1);
         } else {
             // test
-            testType = TestType.testFunction;
+            testType = TestType.function;
         }
 
         // Parse the results.
         const result: TestResult = {
             time: 0
         };
-        if (parts.length !== 0 && testType !== TestType.testFunction) {
+        if (parts.length !== 0 && testType !== TestType.function) {
             throw Error('non-test nodes do not have results');
         }
         switch (parts.length) {
@@ -519,7 +519,7 @@ namespace declarative {
         parsed: ParsedTestNode
     ): boolean {
         if (parsed.indent === '') {
-            if (parsed.testType !== TestType.testFolder) {
+            if (parsed.testType !== TestType.folder) {
                 throw Error('a top-level node must be a folder');
             }
             return true;
@@ -560,8 +560,8 @@ namespace declarative {
         resource?: Uri
     ): TestNode {
         switch (testType) {
-            case TestType.testFolder:
-                if (parent.testType !== TestType.testFolder) {
+            case TestType.folder:
+                if (parent.testType !== TestType.folder) {
                     throw Error('parent must be a folder');
                 }
                 return nodes.addDiscoveredSubFolder(
@@ -570,8 +570,8 @@ namespace declarative {
                     undefined,
                     resource
                 );
-            case TestType.testFile:
-                if (parent.testType !== TestType.testFolder) {
+            case TestType.file:
+                if (parent.testType !== TestType.folder) {
                     throw Error('parent must be a folder');
                 }
                 return nodes.addDiscoveredFile(
@@ -581,11 +581,11 @@ namespace declarative {
                     undefined,
                     resource
                 );
-            case TestType.testSuite:
+            case TestType.suite:
                 let suiteParent: TestFile | TestSuite;
-                if (parent.testType === TestType.testFile) {
+                if (parent.testType === TestType.file) {
                     suiteParent = parent as TestFile;
-                } else if (parent.testType === TestType.testSuite) {
+                } else if (parent.testType === TestType.suite) {
                     suiteParent = parent as TestSuite;
                 } else {
                     throw Error('parent must be a file or suite');
@@ -599,13 +599,13 @@ namespace declarative {
                     undefined,
                     resource
                 );
-            case TestType.testFunction:
+            case TestType.function:
                 let funcParent: TestFile | TestSuite;
-                if (parent.testType === TestType.testFile) {
+                if (parent.testType === TestType.file) {
                     funcParent = parent as TestFile;
-                } else if (parent.testType === TestType.testSuite) {
+                } else if (parent.testType === TestType.suite) {
                     funcParent = parent as TestSuite;
-                } else if (parent.testType === TestType.testFunction) {
+                } else if (parent.testType === TestType.function) {
                     throw Error('not finished: use addDiscoveredSubTest()');
                 } else {
                     throw Error('parent must be a file, suite, or function');

@@ -157,6 +157,13 @@ export interface ILocationStackFrameDetails {
 
 export type WorkspaceTestStatus = { workspace: Uri; status: TestStatus };
 
+export enum TestDataItemType {
+    workspaceFolder = 'testWorkspaceFolder',
+    folder = 'testFolder',
+    file = 'testFile',
+    suite = 'testSuite',
+    function = 'testFunction'
+}
 export type TestDataItem = TestWorkspaceFolder | TestFolder | TestFile | TestSuite | TestFunction;
 
 export class TestWorkspaceFolder {
