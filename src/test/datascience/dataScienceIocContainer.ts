@@ -219,6 +219,7 @@ import {
 } from '../../client/interpreter/locators/services/globalVirtualEnvService';
 import { InterpreterHashProvider } from '../../client/interpreter/locators/services/hashProvider';
 import { InterpeterHashProviderFactory } from '../../client/interpreter/locators/services/hashProviderFactory';
+import { InterpreterFilter } from '../../client/interpreter/locators/services/interpreterFilter';
 import { InterpreterWatcherBuilder } from '../../client/interpreter/locators/services/interpreterWatcherBuilder';
 import {
     KnownPathsService,
@@ -400,6 +401,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<InterpeterHashProviderFactory>(InterpeterHashProviderFactory, InterpeterHashProviderFactory);
         this.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
         this.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
+        this.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
 
         // Setup our command list
         this.commandManager.registerCommand('setContext', (name: string, value: boolean) => {
