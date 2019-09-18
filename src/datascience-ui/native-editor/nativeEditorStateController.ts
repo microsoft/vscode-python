@@ -6,7 +6,7 @@ import * as uuid from 'uuid/v4';
 
 import { concatMultilineString } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
-import { InteractiveWindowMessages, NativeCommandType } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { InteractiveWindowMessages, NativeCommandType, ILoadAllCells } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ICellViewModel } from '../interactive-common/cell';
 import { createEmptyCell, extractInputText } from '../interactive-common/mainState';
 import { IMainStateControllerProps, MainStateController } from '../interactive-common/mainStateController';
@@ -165,7 +165,11 @@ export class NativeEditorStateController extends MainStateController {
 
         if (!this.getState().busy && oldIsBusy && !this.finishedLoadAll) {
             // Indicate we finished loading
-            this.sendMessage(InteractiveWindowMessages.LoadAllCells);
+            const payload: ILoadAllCells = {
+                cells: this.getState().cellVMs.map(vm => vm.cell)
+            };
+
+            this.sendMessage(InteractiveWindowMessages.LoadAllCells, payload);
         }
     }
 

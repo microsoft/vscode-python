@@ -241,7 +241,7 @@ export class IntellisenseDocument implements TextDocument {
             const result = this.removeRange('', from, to, 0);
 
             // Update our cell range
-            this._cellRanges = [ {
+            this._cellRanges = [{
                 id: Identifiers.EditCellId,
                 start: 0,
                 fullEnd: this._cellRanges[this._cellRanges.length - 1].fullEnd - toOffset,
@@ -297,6 +297,13 @@ export class IntellisenseDocument implements TextDocument {
         return new Position(line - 1, ch - 1);
     }
 
+    public getCellContent(cellId: string) {
+        const x = this._cellRanges.find((cellRange) => cellRange.id === cellId);
+        if (x) {
+            return this._contents.substring(x.start, x.currentEnd);
+        }
+    }
+
     public getEditCellContent() {
         return this._contents.substr(this.getEditCellOffset());
     }
@@ -305,7 +312,7 @@ export class IntellisenseDocument implements TextDocument {
         return this._cellRanges[this._cellRanges.length - 1].start;
     }
 
-    private removeRange(newText: string, from: Position, to: Position, cellIndex: number) : TextDocumentContentChangeEvent[] {
+    private removeRange(newText: string, from: Position, to: Position, cellIndex: number): TextDocumentContentChangeEvent[] {
         const fromOffset = this.convertToOffset(from);
         const toOffset = this.convertToOffset(to);
 

@@ -34,10 +34,13 @@ import {
     IProvideCompletionItemsRequest,
     IProvideHoverRequest,
     IProvideSignatureHelpRequest,
-    IRemoveCell
+    IRemoveCell,
+    ILoadAllCells
 } from '../interactiveWindowTypes';
 import { convertStringsToSuggestions } from './conversion';
 import { IntellisenseDocument } from './intellisenseDocument';
+import { concat } from 'event-stream';
+import { concatMultilineString } from '../../common';
 
 // tslint:disable:no-any
 @injectable()
@@ -119,6 +122,10 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
                 this.dispatchMessage(message, payload, this.setIdentity);
                 break;
 
+            case InteractiveWindowMessages.LoadAllCells:
+                this.dispatchMessage(message, payload, this.loadAllCells);
+                break;
+
             default:
                 break;
         }
@@ -189,7 +196,7 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
         // Combine all of the results together.
         this.postTimedResponse(
             [this.provideCompletionItems(request.position, request.context, request.cellId, cancelSource.token),
-            this.provideJupyterCompletionItems(request.position, request.context, cancelSource.token)],
+            this.provideJupyterCompletionItems(request.position, request.context, request.cellId, cancelSource.token)],
             InteractiveWindowMessages.ProvideCompletionItemsResponse,
             (c) => {
                 const list = this.combineCompletions(c);
@@ -213,38 +220,43 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
             });
     }
 
-    private async provideJupyterCompletionItems(position: monacoEditor.Position, _context: monacoEditor.languages.CompletionContext, cancelToken: CancellationToken): Promise<monacoEditor.languages.CompletionList> {
+    private async provideJupyterCompletionItems(position: monacoEditor.Position, _context: monacoEditor.languages.CompletionContext, cellId: string, cancelToken: CancellationToken): Promise<monacoEditor.languages.CompletionList> {
         try {
             const activeNotebook = await this.getNotebook();
             const document = await this.getDocument();
             if (activeNotebook && document) {
-                const code = document.getEditCellContent();
-                const lines = code.splitLines({ trim: false, removeEmptyEntries: false });
-                const offsetInCode = lines.reduce((a: number, c: string, i: number) => {
-                    if (i < position.lineNumber - 1) {
-                        return a + c.length + 1;
-                    } else if (i === position.lineNumber - 1) {
-                        return a + position.column - 1;
-                    } else {
-                        return a;
+                // const code = document.getEditCellContent();
+                const code = document.getCellContent(cellId);
+
+                if (code) {
+                    const lines = code.splitLines({ trim: false, removeEmptyEntries: false });
+                    const offsetInCode = lines.reduce((a: number, c: string, i: number) => {
+                        if (i < position.lineNumber - 1) {
+                            return a + c.length + 1;
+                        } else if (i === position.lineNumber - 1) {
+                            return a + position.column - 1;
+                        } else {
+                            return a;
+                        }
+                    }, 0);
+
+                    const jupyterResults = await activeNotebook.getCompletion(code, offsetInCode, cancelToken);
+                    if (jupyterResults && jupyterResults.matches) {
+                        const baseOffset = document.getEditCellOffset();
+                        const basePosition = document.positionAt(baseOffset);
+                        const startPosition = document.positionAt(jupyterResults.cursor.start + baseOffset);
+                        const endPosition = document.positionAt(jupyterResults.cursor.end + baseOffset);
+                        const range: monacoEditor.IRange = {
+                            startLineNumber: startPosition.line + 1 - basePosition.line, // monaco is 1 based
+                            startColumn: startPosition.character + 1,
+                            endLineNumber: endPosition.line + 1 - basePosition.line,
+                            endColumn: endPosition.character + 1
+                        };
+                        return {
+                            suggestions: convertStringsToSuggestions(jupyterResults.matches, range, jupyterResults.metadata),
+                            incomplete: false
+                        };
                     }
-                }, 0);
-                const jupyterResults = await activeNotebook.getCompletion(code, offsetInCode, cancelToken);
-                if (jupyterResults && jupyterResults.matches) {
-                    const baseOffset = document.getEditCellOffset();
-                    const basePosition = document.positionAt(baseOffset);
-                    const startPosition = document.positionAt(jupyterResults.cursor.start + baseOffset);
-                    const endPosition = document.positionAt(jupyterResults.cursor.end + baseOffset);
-                    const range: monacoEditor.IRange = {
-                        startLineNumber: startPosition.line + 1 - basePosition.line, // monaco is 1 based
-                        startColumn: startPosition.character + 1,
-                        endLineNumber: endPosition.line + 1 - basePosition.line,
-                        endColumn: endPosition.character + 1
-                    };
-                    return {
-                        suggestions: convertStringsToSuggestions(jupyterResults.matches, range, jupyterResults.metadata),
-                        incomplete: false
-                    };
                 }
             }
         } catch (e) {
@@ -338,6 +350,22 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
         // Skip this request. The logic here being that
         // a user can remove a cell from the UI, but it's still loaded into the Jupyter kernel.
         return Promise.resolve();
+    }
+
+    private async loadAllCells(payload: ILoadAllCells) {
+        const document = await this.getDocument();
+        if (document) {
+            await Promise.all(payload.cells.map(async cell => {
+                const text = concatMultilineString(cell.data.source);
+                const addCell: IAddCell = {
+                    fullText: text,
+                    currentText: text,
+                    file: cell.file,
+                    id: cell.id
+                };
+                await this.addCell(addCell);
+            }));
+        }
     }
 
     private async restartKernel(): Promise<void> {
