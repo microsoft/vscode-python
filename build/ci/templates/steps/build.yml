@@ -1,0 +1,63 @@
+# -----------------------------------------------------------------------------------------------------------------------------
+# Overview:
+# -----------------------------------------------------------------------------------------------------------------------------
+# Set of steps used to compile and build the extension
+#
+# -----------------------------------------------------------------------------------------------------------------------------
+# Variables
+# -----------------------------------------------------------------------------------------------------------------------------
+# 1. build
+#   Mandatory
+#   Possible values, `true` or `false`.
+#   If `true`, means we need to build the VSIX, else just compile.
+
+steps:
+    - template: initialization.yml
+      parameters:
+        PythonVersion: $(PythonVersion)
+        workingDirectory: $(Build.SourcesDirectory)
+        compile: 'false'
+
+    - bash: |
+          python -m pip install -U pip
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
+      failOnStderr: true
+      displayName: "pip install requirements"
+
+    - task: PythonScript@0
+      displayName: "Install PTVSD wheels"
+      inputs:
+          scriptSource: "filePath"
+          scriptPath: "./pythonFiles/install_ptvsd.py"
+          arguments: "--ci"
+          failOnStderr: true
+
+    - bash: npm run clean
+      displayName: "Clean"
+
+    - bash: |
+          npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID
+      displayName: "Update dev Version of Extension"
+      condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'master'))
+
+    - bash: |
+          npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID --updateChangelog
+      displayName: "Update release Version of Extension"
+      condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'release'))
+
+    - bash: |
+          npm run package
+      displayName: "Build VSIX"
+
+    - task: CopyFiles@2
+      inputs:
+          contents: "*.vsix"
+          targetFolder: $(Build.ArtifactStagingDirectory)
+      displayName: "Copy VSIX"
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+          pathtoPublish: $(Build.ArtifactStagingDirectory)
+          artifactName: VSIX
+      displayName: "Publish VSIX to Artifacts"

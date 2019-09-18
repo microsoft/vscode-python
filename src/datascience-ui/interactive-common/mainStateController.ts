@@ -479,11 +479,13 @@ export class MainStateController implements IMessageHandler {
     }
 
     public changeCellType = (cellId: string, newType: 'code' | 'markdown') => {
-        const cell = this.findCell(cellId);
-        if (cell && cell.cell.data.cell_type !== newType) {
-            cell.cell.data.cell_type = newType;
-            this.alterCellVM(cell, true, true);
-            this.setState({ cellVMs: this.state.cellVMs });
+        const index = this.state.cellVMs.findIndex(c => c.cell.id === cellId);
+        if (index >= 0 && this.state.cellVMs[index].cell.data.cell_type !== newType) {
+            const newVM = cloneDeep(this.state.cellVMs[index]);
+            newVM.cell.data.cell_type = newType;
+            const cellVMs = [...this.state.cellVMs];
+            cellVMs.splice(index, 1, newVM);
+            this.setState({ cellVMs });
         }
     }
 

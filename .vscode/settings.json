@@ -38,7 +38,7 @@
     "python.jediEnabled": false,
     "python.analysis.logLevel": "Trace",
     "python.analysis.downloadChannel": "beta",
-   "python.linting.pylintEnabled": false,
+    "python.linting.pylintEnabled": false,
     "python.linting.flake8Enabled": true,
     "cucumberautocomplete.skipDocStringsFormat": true,
     "python.linting.flake8Args": [

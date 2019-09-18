@@ -138,7 +138,10 @@ export function createEditableCellVM(executionCount: number): ICellViewModel {
 }
 
 export function extractInputText(inputCell: ICell, settings: IDataScienceSettings | undefined): string {
-    const source = inputCell.data.cell_type === 'code' ? splitMultilineString(inputCell.data.source) : [];
+    let source: string[] = [];
+    if (inputCell.data.source) {
+        source = splitMultilineString(inputCell.data.source);
+    }
     const matcher = new CellMatcher(settings);
 
     // Eliminate the #%% on the front if it has nothing else on the line

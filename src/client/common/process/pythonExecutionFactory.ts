@@ -3,6 +3,8 @@
 import { inject, injectable } from 'inversify';
 
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
+import { WindowsStoreInterpreter } from '../../interpreter/locators/services/windowsStoreInterpreter';
+import { IWindowsStoreInterpreter } from '../../interpreter/locators/types';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -19,20 +21,26 @@ import {
     IPythonExecutionFactory,
     IPythonExecutionService
 } from './types';
+import { WindowsStorePythonProcess } from './windowsStorePythonProcess';
 
 @injectable()
 export class PythonExecutionFactory implements IPythonExecutionFactory {
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
+    constructor(
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
         @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
-        @inject(IBufferDecoder) private readonly decoder: IBufferDecoder) {
-    }
+        @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
+        @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter
+    ) {}
     public async create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
         const pythonPath = options.pythonPath ? options.pythonPath : this.configService.getSettings(options.resource).pythonPath;
         const processService: IProcessService = await this.processServiceFactory.create(options.resource);
         const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
         processService.on('exec', processLogger.logProcess.bind(processLogger));
+        if (this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)) {
+            return new WindowsStorePythonProcess(this.serviceContainer, processService, pythonPath, this.windowsStoreInterpreter);
+        }
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
     }
     public async createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService> {
