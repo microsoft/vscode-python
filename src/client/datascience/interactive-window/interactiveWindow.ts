@@ -230,16 +230,18 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         // This should be called by the python interactive window every
         // time state changes. We use this opportunity to update our
         // extension contexts
-        const interactiveContext = new ContextKey(EditorContexts.HaveInteractive, this.commandManager);
-        interactiveContext.set(!this.isDisposed).catch();
-        const interactiveCellsContext = new ContextKey(EditorContexts.HaveInteractiveCells, this.commandManager);
-        const redoableContext = new ContextKey(EditorContexts.HaveRedoableCells, this.commandManager);
-        if (info) {
-            interactiveCellsContext.set(info.cellCount > 0).catch();
-            redoableContext.set(info.redoCount > 0).catch();
-        } else {
-            interactiveCellsContext.set(false).catch();
-            redoableContext.set(false).catch();
+        if (this.commandManager && this.commandManager.executeCommand) {
+            const interactiveContext = new ContextKey(EditorContexts.HaveInteractive, this.commandManager);
+            interactiveContext.set(!this.isDisposed).catch();
+            const interactiveCellsContext = new ContextKey(EditorContexts.HaveInteractiveCells, this.commandManager);
+            const redoableContext = new ContextKey(EditorContexts.HaveRedoableCells, this.commandManager);
+            if (info) {
+                interactiveCellsContext.set(info.cellCount > 0).catch();
+                redoableContext.set(info.redoCount > 0).catch();
+            } else {
+                interactiveCellsContext.set(false).catch();
+                redoableContext.set(false).catch();
+            }
         }
     }
 

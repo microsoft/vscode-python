@@ -343,16 +343,18 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         // This should be called by the python interactive window every
         // time state changes. We use this opportunity to update our
         // extension contexts
-        const interactiveContext = new ContextKey(EditorContexts.HaveNative, this.commandManager);
-        interactiveContext.set(!this.isDisposed).catch();
-        const interactiveCellsContext = new ContextKey(EditorContexts.HaveNativeCells, this.commandManager);
-        const redoableContext = new ContextKey(EditorContexts.HaveNativeRedoableCells, this.commandManager);
-        if (info) {
-            interactiveCellsContext.set(info.cellCount > 0).catch();
-            redoableContext.set(info.redoCount > 0).catch();
-        } else {
-            interactiveCellsContext.set(false).catch();
-            redoableContext.set(false).catch();
+        if (this.commandManager && this.commandManager.executeCommand) {
+            const interactiveContext = new ContextKey(EditorContexts.HaveNative, this.commandManager);
+            interactiveContext.set(!this.isDisposed).catch();
+            const interactiveCellsContext = new ContextKey(EditorContexts.HaveNativeCells, this.commandManager);
+            const redoableContext = new ContextKey(EditorContexts.HaveNativeRedoableCells, this.commandManager);
+            if (info) {
+                interactiveCellsContext.set(info.cellCount > 0).catch();
+                redoableContext.set(info.redoCount > 0).catch();
+            } else {
+                interactiveCellsContext.set(false).catch();
+                redoableContext.set(false).catch();
+            }
         }
 
         // Also keep track of our visible cells. We use this to save to the file when we close
