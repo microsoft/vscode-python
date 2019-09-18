@@ -80,6 +80,8 @@ export namespace Delays {
 
 export const STANDARD_OUTPUT_CHANNEL = 'STANDARD_OUTPUT_CHANNEL';
 
+export const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
+
 export function isTestExecution(): boolean {
     return process.env.VSC_PYTHON_CI_TEST === '1' || isUnitTestExecution();
 }
