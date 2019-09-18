@@ -182,7 +182,7 @@ function generateVMs(inputBlockToggled: (id: string) => void, filePath: string, 
     const cells = generateCells(filePath);
     return cells.map((cell: ICell) => {
         const vm = createCellVM(cell, undefined, inputBlockToggled, editable);
-        vm.useQuickEdit = true;
+        vm.useQuickEdit = false;
         return vm;
     });
 }

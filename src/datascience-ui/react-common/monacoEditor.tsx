@@ -37,6 +37,7 @@ interface IMonacoEditorState {
     editor?: monacoEditor.editor.IStandaloneCodeEditor;
     model: monacoEditor.editor.ITextModel | null;
     visibleLineCount: number;
+    attached: boolean;
 }
 
 // Need this to prevent wiping of the current value on a componentUpdate. react-monaco-editor has that problem.
@@ -56,10 +57,11 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
     private styleObserver : MutationObserver | undefined;
     private watchingMargin: boolean = false;
     private throttledUpdateWidgetPosition = throttle(this.updateWidgetPosition.bind(this), 100);
+    private monacoContainer : HTMLDivElement | undefined;
 
     constructor(props: IMonacoEditorProps) {
         super(props);
-        this.state = { editor: undefined, model: null, visibleLineCount: -1 };
+        this.state = { editor: undefined, model: null, visibleLineCount: -1, attached: false };
         this.containerRef = React.createRef<HTMLDivElement>();
         this.measureWidthRef = React.createRef<HTMLDivElement>();
         this.debouncedUpdateEditorSize = debounce(this.updateEditorSize.bind(this), 150);
@@ -88,8 +90,12 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                 this.outermostParent.addEventListener('mouseleave', this.outermostParentLeave);
             }
 
+            // Create a dummy DOM node to attach the editor to so that it skips layout.
+            this.monacoContainer = document.createElement('div');
+            this.monacoContainer.setAttribute('class', 'monaco-editor-container');
+
             // Create the editor
-            const editor = monacoEditor.editor.create(this.containerRef.current,
+            const editor = monacoEditor.editor.create(this.monacoContainer,
                 {
                     value: this.props.value,
                     language: this.props.language,
@@ -152,9 +158,6 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
             // Update our margin to include the correct line number style
             this.updateMargin(editor);
-
-            // Make sure our suggest and hover windows show up on top of other stuff
-            this.updateWidgetParent(editor);
 
             // If we're readonly, monaco is not putting the aria-readonly property on the textarea
             // We should do that
@@ -237,7 +240,6 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         const measureWidthClassName = this.props.measureWidthClassName ? this.props.measureWidthClassName : 'measure-width-div';
         return (
             <div className='monaco-editor-outer-container' ref={this.containerRef}>
-                <div className='monaco-editor-container' />
                 <div className={measureWidthClassName} ref={this.measureWidthRef} />
             </div>
         );
@@ -371,7 +373,14 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                 if (this.state.visibleLineCount !== currLineCount) {
                     this.props.lineCountChanged(currLineCount);
                 }
-                this.setState({visibleLineCount: currLineCount});
+                // Make sure to attach to a real dom node.
+                if (!this.state.attached && this.state.editor && this.monacoContainer) {
+                    this.containerRef.current.appendChild(this.monacoContainer);
+
+                    // Make sure our suggest and hover windows show up on top of other stuff
+                    this.updateWidgetParent(this.state.editor);
+                }
+                this.setState({visibleLineCount: currLineCount, attached: true});
                 this.state.editor.layout({width, height});
 
                 // Also need to update our widget positions

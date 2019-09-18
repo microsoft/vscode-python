@@ -190,11 +190,6 @@ export class NativeEditorStateController extends MainStateController {
         cellVM.inputBlockOpen = true;
         cellVM.inputBlockText = newText;
 
-        // Turn on quick edit (use a textArea) for any cell that's just been created.
-        if (cellVM.useQuickEdit === undefined) {
-            cellVM.useQuickEdit = true;
-        }
-
         return cellVM;
     }
 

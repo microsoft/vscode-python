@@ -342,7 +342,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
                         showWatermark={cellVM.cell.id === Identifiers.EditCellId}
                         editExecutionCount={this.getInputExecutionCount().toString()}
                         onCodeChange={this.stateController.codeChange}
-                        onCodeCreated={this.stateController.editableCodeCreated}
+                        onCodeCreated={this.stateController.readOnlyCodeCreated}
                         monacoTheme={this.state.monacoTheme}
                         openLink={this.stateController.openLink}
                         expandImage={this.stateController.showPlot}
