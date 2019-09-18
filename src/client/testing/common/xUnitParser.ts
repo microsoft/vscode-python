@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify';
 import { IFileSystem } from '../../common/platform/types';
 import {
-    FlattenedTestFunction, IXUnitParser, PassCalculationFormulae,
+    FlattenedTestFunction, IXUnitParser,
     TestFunction, TestResult, Tests, TestStatus, TestSummary
 } from './types';
 
@@ -55,18 +55,8 @@ export class XUnitParser implements IXUnitParser {
     // Update "tests" with the results parsed from the given file.
     public async updateResultsFromXmlLogFile(
         tests: Tests,
-        outputXmlFile: string,
-        passCalculationFormulae: PassCalculationFormulae
+        outputXmlFile: string
     ) {
-        switch (passCalculationFormulae) {
-            case PassCalculationFormulae.pytest:
-            case PassCalculationFormulae.nosetests:
-                break;
-            default: {
-                throw new Error('Unknown Test Pass Calculation');
-            }
-        }
-
         const data = await this.fs.readFile(outputXmlFile);
 
         const parserResult = await parseXML(data) as { testsuite: TestSuiteResult };

@@ -9,7 +9,7 @@ import { expect } from 'chai';
 import * as typeMoq from 'typemoq';
 import { IFileSystem } from '../../../client/common/platform/types';
 import {
-    IXUnitParser, PassCalculationFormulae, Tests, TestStatus
+    IXUnitParser, Tests, TestStatus
 } from '../../../client/testing/common/types';
 import { XUnitParser } from '../../../client/testing/common/xUnitParser';
 import { createDeclaratively, createEmptyResults, TestItem } from '../results';
@@ -66,11 +66,7 @@ suite('Testing - parse JUnit XML file', () => {
                 </testsuite>
             `));
 
-        await parser.updateResultsFromXmlLogFile(
-            tests,
-            filename,
-            PassCalculationFormulae.pytest
-        );
+        await parser.updateResultsFromXmlLogFile(tests, filename);
 
         expect(tests).to.deep.equal(expected);
         fs.verifyAll();
@@ -90,11 +86,7 @@ suite('Testing - parse JUnit XML file', () => {
                 </testsuite>
             `));
 
-        await parser.updateResultsFromXmlLogFile(
-            tests,
-            filename,
-            PassCalculationFormulae.pytest
-        );
+        await parser.updateResultsFromXmlLogFile(tests, filename);
 
         expect(tests).to.deep.equal(expected);
         fs.verifyAll();
@@ -111,11 +103,7 @@ suite('Testing - parse JUnit XML file', () => {
                 </testsuite>
             `));
 
-        await parser.updateResultsFromXmlLogFile(
-            tests,
-            filename,
-            PassCalculationFormulae.pytest
-        );
+        await parser.updateResultsFromXmlLogFile(tests, filename);
 
         expect(tests).to.deep.equal(expected);
         fs.verifyAll();

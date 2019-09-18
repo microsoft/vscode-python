@@ -21,7 +21,7 @@ import { CondaService } from '../../../client/interpreter/locators/services/cond
 import { TestDiscoveredTestParser } from '../../../client/testing/common/services/discoveredTestParser';
 import { TestResultsService } from '../../../client/testing/common/services/testResultsService';
 import { DiscoveredTests } from '../../../client/testing/common/services/types';
-import { ITestVisitor, PassCalculationFormulae, TestDiscoveryOptions, Tests, TestStatus } from '../../../client/testing/common/types';
+import { ITestVisitor, TestDiscoveryOptions, Tests, TestStatus } from '../../../client/testing/common/types';
 import { XUnitParser } from '../../../client/testing/common/xUnitParser';
 import { TestMessageService } from '../../../client/testing/pytest/services/testMessageService';
 import { ILocationStackFrameDetails, IPythonTestMessage, PythonTestMessageSeverity } from '../../../client/testing/types';
@@ -146,7 +146,7 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
                 options.workspaceFolder = vscode.Uri.file(discoveredTest[0].root);
                 const parsedTests: Tests = parser.parse(options.workspaceFolder, discoveredTest);
                 const xUnitParser = new XUnitParser(filesystem);
-                await xUnitParser.updateResultsFromXmlLogFile(parsedTests, path.join(PYTEST_RESULTS_PATH, scenario.runOutput), PassCalculationFormulae.pytest);
+                await xUnitParser.updateResultsFromXmlLogFile(parsedTests, path.join(PYTEST_RESULTS_PATH, scenario.runOutput));
                 const testResultsService = new TestResultsService(testVisitor.object);
                 testResultsService.updateResults(parsedTests);
                 const testMessageService = new TestMessageService(ioc.serviceContainer);
