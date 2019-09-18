@@ -41,7 +41,8 @@ import {
     INativeCommand,
     InteractiveWindowMessages,
     ISaveAll,
-    ISubmitNewCell
+    ISubmitNewCell,
+    SysInfoReason
 } from '../interactive-common/interactiveWindowTypes';
 import {
     ICell,
@@ -295,22 +296,21 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, false)
     // tslint:disable-next-line:no-any
-    protected reexecuteCell(info: ISubmitNewCell) {
+    protected async reexecuteCell(info: ISubmitNewCell): Promise<void> {
         // If there's any payload, it has the code and the id
         if (info && info.code && info.id) {
             // Update dirtiness
             this.setDirty();
 
             // Clear the result if we've run before
-            this.clearResult(info.id);
+            await this.clearResult(info.id);
 
             // Send to ourselves.
             this.submitCode(info.code, Identifiers.EmptyFileName, 0, info.id).ignoreErrors();
 
             // Activate the other side, and send as if came from a file
-            this.ipynbProvider.show(this.file).then(_v => {
-                this.shareMessage(InteractiveWindowMessages.RemoteReexecuteCode, { code: info.code, file: Identifiers.EmptyFileName, line: 0, id: info.id, originator: this.id, debug: false });
-            }).ignoreErrors();
+            await this.ipynbProvider.show(this.file);
+            this.shareMessage(InteractiveWindowMessages.RemoteReexecuteCode, { code: info.code, file: Identifiers.EmptyFileName, line: 0, id: info.id, originator: this.id, debug: false });
         }
     }
 
@@ -377,6 +377,11 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     protected async closeBecauseOfFailure(_exc: Error): Promise<void> {
         // Actually don't close, just let the error bubble out
+    }
+
+    protected addSysInfo(_reason: SysInfoReason): Promise<void> {
+        // No sys info in the native editor
+        return Promise.resolve();
     }
 
     private editCell(request: IEditCell) {
