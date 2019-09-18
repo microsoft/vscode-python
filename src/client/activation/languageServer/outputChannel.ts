@@ -34,6 +34,6 @@ export class LanguageServerOutputChannel implements ILanguageServerOutputChannel
         // This controls the visibility of the command used to display the LS Output panel.
         // We don't want to display it when Jedi is used instead of LS.
         await this.commandManager.executeCommand('setContext', 'python.hasLanguageServerOutputChannel', true);
-        this.commandManager.registerCommand('python.viewLanguageServerOutput', () => this.output!.show());
+        this.commandManager.registerCommand('python.viewLanguageServerOutput', () => this.output!.show(true));
     }
 }
