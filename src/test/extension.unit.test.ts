@@ -7,9 +7,8 @@
 
 import { expect } from 'chai';
 import { parse } from 'semver';
-import { extensions } from 'vscode';
 import { buildApi } from '../client/api';
-import { EXTENSION_ROOT_DIR, PVSC_EXTENSION_ID } from '../client/common/constants';
+import { EXTENSION_ROOT_DIR } from '../client/common/constants';
 
 const expectedPath = `${EXTENSION_ROOT_DIR.fileToCommandArgument()}/pythonFiles/ptvsd_launcher.py`;
 
@@ -39,7 +38,8 @@ suite('Extension version tests', () => {
     });
 
     setup(() => {
-        const extension = extensions.getExtension(PVSC_EXTENSION_ID)!;
+        // tslint:disable-next-line: no-require-imports
+        const extension = require('../../package.json');
         version = parse(extension.packageJSON.version)!.raw;
     });
 
