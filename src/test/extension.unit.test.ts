@@ -40,7 +40,7 @@ suite('Extension version tests', () => {
     setup(() => {
         // tslint:disable-next-line: no-require-imports
         const extension = require('../../package.json');
-        version = parse(extension.packageJSON.version)!.raw;
+        version = parse(extension.version)!.raw;
     });
 
     test('If we are running a pipeline in the master branch, the extension version in `package.json` should have the "-dev" suffix', async function() {
