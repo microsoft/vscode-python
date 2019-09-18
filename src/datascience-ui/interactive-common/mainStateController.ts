@@ -261,9 +261,6 @@ export class MainStateController implements IMessageHandler {
             redoStack: redoStack,
             skipNextScroll: true
         });
-
-        // Tell other side, we changed our number of cells
-        this.sendInfo();
     }
 
     public undo = () => {
@@ -278,9 +275,6 @@ export class MainStateController implements IMessageHandler {
             redoStack: redoStack,
             skipNextScroll: true
         });
-
-        // Tell other side, we changed our number of cells
-        this.sendInfo();
     }
 
     public deleteCell = (cellId: string) => {
@@ -575,9 +569,6 @@ export class MainStateController implements IMessageHandler {
                 cellVMs: [...this.state.cellVMs]
             });
         }
-
-        // Update the other side with our new state
-        this.sendInfo();
     }
 
     public findCell(cellId?: string): ICellViewModel | undefined {
@@ -634,6 +625,11 @@ export class MainStateController implements IMessageHandler {
         // Otherwise we set the state in the callback during setState and this can be
         // too late for any render code to use the stateController.
         this.state = { ...this.state, ...newState };
+
+        // If the new state includes any cellVM changes, send an update to the other side
+        if ('cellVMs' in newState) {
+            this.sendInfo();
+        }
     }
 
     public getState(): IMainState {
@@ -732,9 +728,6 @@ export class MainStateController implements IMessageHandler {
                     redoStack: this.state.redoStack,
                     skipNextScroll: false
                 });
-
-                // Tell other side, we changed our number of cells
-                this.sendInfo();
 
                 return cellVM;
             }
@@ -872,9 +865,6 @@ export class MainStateController implements IMessageHandler {
             skipNextScroll: true,
             busy: false // No more progress on delete all
         });
-
-        // Tell other side, we changed our number of cells
-        this.sendInfo();
     }
 
     private inputBlockToggled = (id: string) => {
@@ -988,9 +978,6 @@ export class MainStateController implements IMessageHandler {
             if (cell && this.isCellSupported(cell)) {
                 this.updateOrAdd(cell, true);
             }
-
-            // Update info when finishing (execution count should be different)
-            this.sendInfo();
         }
     }
 

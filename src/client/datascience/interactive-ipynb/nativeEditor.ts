@@ -3,6 +3,7 @@
 'use strict';
 import '../../common/extensions';
 
+import * as fastDeepEqual from 'fast-deep-equal';
 import { inject, injectable, multiInject } from 'inversify';
 import * as path from 'path';
 import { Event, EventEmitter, Uri, ViewColumn } from 'vscode';
@@ -71,6 +72,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private _dirty: boolean = false;
     private visibleCells: ICell[] = [];
     private startupTimer: StopWatch = new StopWatch();
+    private loadedAllCells: boolean = false;
 
     constructor(
         @multiInject(IInteractiveWindowListener) listeners: IInteractiveWindowListener[],
@@ -159,7 +161,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                     allowClose = true;
 
                     if (v === yes) {
-                        this.saveContents(false).ignoreErrors();
+                        this.saveContents(false, false).ignoreErrors();
                     } else if (v === undefined) {
                         // We don't want to close, reopen
                         allowClose = false;
@@ -172,7 +174,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                     }
                 });
             } else {
-                this.saveContents(false).ignoreErrors();
+                this.saveContents(false, false).ignoreErrors();
             }
         }
         if (allowClose) {
@@ -195,13 +197,14 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
         // Load the contents of this notebook into our cells.
         const cells = content ? await this.importer.importCells(content) : [];
+        this.visibleCells = cells;
 
         // If that works, send the cells to the web view
         return this.postMessage(InteractiveWindowMessages.LoadAllCells, { cells });
     }
 
-    public save(saveAs: boolean): Promise<void> {
-        return this.saveContents(saveAs);
+    public save(): Promise<void> {
+        return this.saveContents(false, true);
     }
 
     public get closed(): Event<INotebookEditor> {
@@ -340,21 +343,27 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         // This should be called by the python interactive window every
         // time state changes. We use this opportunity to update our
         // extension contexts
-        const interactiveContext = new ContextKey(EditorContexts.HaveNative, this.commandManager);
-        interactiveContext.set(!this.isDisposed).catch();
-        const interactiveCellsContext = new ContextKey(EditorContexts.HaveNativeCells, this.commandManager);
-        const redoableContext = new ContextKey(EditorContexts.HaveNativeRedoableCells, this.commandManager);
-        if (info) {
-            interactiveCellsContext.set(info.cellCount > 0).catch();
-            redoableContext.set(info.redoCount > 0).catch();
-        } else {
-            interactiveCellsContext.set(false).catch();
-            redoableContext.set(false).catch();
+        if (this.commandManager && this.commandManager.executeCommand) {
+            const interactiveContext = new ContextKey(EditorContexts.HaveNative, this.commandManager);
+            interactiveContext.set(!this.isDisposed).catch();
+            const interactiveCellsContext = new ContextKey(EditorContexts.HaveNativeCells, this.commandManager);
+            const redoableContext = new ContextKey(EditorContexts.HaveNativeRedoableCells, this.commandManager);
+            if (info) {
+                interactiveCellsContext.set(info.cellCount > 0).catch();
+                redoableContext.set(info.redoCount > 0).catch();
+            } else {
+                interactiveCellsContext.set(false).catch();
+                redoableContext.set(false).catch();
+            }
         }
 
         // Also keep track of our visible cells. We use this to save to the file when we close
-        if (info && info.visibleCells) {
+        if (info && 'visibleCells' in info && this.loadedAllCells) {
+            const isDirty = !fastDeepEqual(this.visibleCells, info.visibleCells);
             this.visibleCells = info.visibleCells;
+            if (isDirty) {
+                this.setDirty();
+            }
         }
     }
 
@@ -445,17 +454,19 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         await this.documentManager.showTextDocument(doc, ViewColumn.One);
     }
 
-    private async saveContents(forceAsk: boolean): Promise<void> {
+    private async saveContents(forceAsk: boolean, skipUI: boolean): Promise<void> {
         try {
             let fileToSaveTo: Uri | undefined = this.file;
+            let isDirty = this._dirty;
 
             // Ask user for a save as dialog if no title
             const baseName = path.basename(this.file.fsPath);
             const isUntitled = baseName.includes(localize.DataScience.untitledNotebookFileName());
-            if (isUntitled || forceAsk) {
+            if (!skipUI && (isUntitled || forceAsk)) {
                 const filtersKey = localize.DataScience.dirtyNotebookDialogFilter();
                 const filtersObject: { [name: string]: string[] } = {};
                 filtersObject[filtersKey] = ['ipynb'];
+                isDirty = true;
 
                 fileToSaveTo = await this.applicationShell.showSaveDialog({
                     saveLabel: localize.DataScience.dirtyNotebookDialogTitle(),
@@ -464,15 +475,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 });
             }
 
-            if (fileToSaveTo) {
-                let directoryChange;
-                const settings = this.configuration.getSettings();
-                if (settings.datascience.changeDirOnImportExport) {
-                    directoryChange = fileToSaveTo.fsPath;
-                }
-
+            if (fileToSaveTo && isDirty) {
                 // Save our visible cells into the file
-                const notebook = await this.jupyterExporter.translateToNotebook(this.visibleCells, directoryChange);
+                const notebook = await this.jupyterExporter.translateToNotebook(this.visibleCells, undefined);
                 await this.fileSystem.writeFile(fileToSaveTo.fsPath, JSON.stringify(notebook));
                 this.setClean();
             }
@@ -484,7 +489,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     private saveAll(args: ISaveAll) {
         this.visibleCells = args.cells;
-        this.saveContents(false).ignoreErrors();
+        this.saveContents(false, false).ignoreErrors();
     }
 
     private logNativeCommand(args: INativeCommand) {
@@ -493,6 +498,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     private loadCellsComplete() {
-        sendTelemetryEvent(Telemetry.NotebookOpenTime, this.startupTimer.elapsedTime);
+        if (!this.loadedAllCells) {
+            this.loadedAllCells = true;
+            sendTelemetryEvent(Telemetry.NotebookOpenTime, this.startupTimer.elapsedTime);
+        }
     }
 }

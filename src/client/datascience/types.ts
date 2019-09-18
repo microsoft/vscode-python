@@ -240,7 +240,7 @@ export interface INotebookEditor extends IInteractiveBase {
     readonly visible: boolean;
     readonly active: boolean;
     load(contents: string, file: Uri): Promise<void>;
-    save(saveAs: boolean): Promise<void>;
+    save(): Promise<void>;
 }
 
 export const IInteractiveWindowListener = Symbol('IInteractiveWindowListener');
