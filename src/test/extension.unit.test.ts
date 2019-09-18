@@ -28,6 +28,15 @@ suite('Extension API Debugger', () => {
 
 suite('Extension version tests', () => {
     let version: string;
+    let branchName: string;
+
+    suiteSetup(async function() {
+        if (!process.env.CI_BRANCH_NAME) {
+            // tslint:disable-next-line: no-invalid-this
+            return this.skip();
+        }
+        branchName = process.env.CI_BRANCH_NAME;
+    });
 
     setup(() => {
         const extension = extensions.getExtension(PVSC_EXTENSION_ID)!;
@@ -35,7 +44,7 @@ suite('Extension version tests', () => {
     });
 
     test('If we are running a pipeline in the master branch, the extension version in `package.json` should have the "-dev" suffix', async function() {
-        if (process.env.CI_BRANCH_NAME !== 'master') {
+        if (branchName !== 'master') {
             // tslint:disable-next-line: no-invalid-this
             return this.skip();
         }
@@ -44,7 +53,7 @@ suite('Extension version tests', () => {
     });
 
     test('If we are running a pipeline in the release branch, the extension version in `package.json` should not have the "-dev" suffix', async function() {
-        if (process.env.CI_BRANCH_NAME !== 'release') {
+        if (branchName !== 'release') {
             // tslint:disable-next-line: no-invalid-this
             return this.skip();
         }
