@@ -455,6 +455,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private async saveContents(forceAsk: boolean, skipUI: boolean): Promise<void> {
         try {
             let fileToSaveTo: Uri | undefined = this.file;
+            let isDirty = this._dirty;
 
             // Ask user for a save as dialog if no title
             const baseName = path.basename(this.file.fsPath);
@@ -463,7 +464,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 const filtersKey = localize.DataScience.dirtyNotebookDialogFilter();
                 const filtersObject: { [name: string]: string[] } = {};
                 filtersObject[filtersKey] = ['ipynb'];
-                this._dirty = true;
+                isDirty = true;
 
                 fileToSaveTo = await this.applicationShell.showSaveDialog({
                     saveLabel: localize.DataScience.dirtyNotebookDialogTitle(),
@@ -472,7 +473,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 });
             }
 
-            if (fileToSaveTo && this._dirty) {
+            if (fileToSaveTo && isDirty) {
                 // Save our visible cells into the file
                 const notebook = await this.jupyterExporter.translateToNotebook(this.visibleCells, undefined);
                 await this.fileSystem.writeFile(fileToSaveTo.fsPath, JSON.stringify(notebook));
