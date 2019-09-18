@@ -28,8 +28,7 @@ import {
     IInteractiveWindowListener,
     IInteractiveWindowProvider,
     IJupyterExecution,
-    INotebook,
-    INotebookEditorProvider
+    INotebook
 } from '../../types';
 import {
     IAddCell,
@@ -61,8 +60,7 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
         @unmanaged() private workspaceService: IWorkspaceService,
         @unmanaged() private fileSystem: IFileSystem,
         @unmanaged() private jupyterExecution: IJupyterExecution,
-        @unmanaged() private interactiveWindowProvider: IInteractiveWindowProvider,
-        @unmanaged() private nativeEditorProvider: INotebookEditorProvider
+        @unmanaged() private interactiveWindowProvider: IInteractiveWindowProvider
     ) {
     }
 
@@ -127,7 +125,7 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
                 this.dispatchMessage(message, payload, this.setIdentity);
                 break;
 
-            case InteractiveWindowMessages.LoadAllCells:
+            case InteractiveWindowMessages.LoadAllCellsComplete:
                 this.dispatchMessage(message, payload, this.loadAllCells);
                 break;
 
@@ -230,11 +228,10 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
             const activeNotebook = await this.getNotebook();
             const document = await this.getDocument();
             if (activeNotebook && document) {
-                // const code = document.getEditCellContent();
-                const code = document.getCellContent(cellId);
+                const data = document.getCellData(cellId);
 
-                if (code) {
-                    const lines = code.splitLines({ trim: false, removeEmptyEntries: false });
+                if (data) {
+                    const lines = data.text.splitLines({ trim: false, removeEmptyEntries: false });
                     const offsetInCode = lines.reduce((a: number, c: string, i: number) => {
                         if (i < position.lineNumber - 1) {
                             return a + c.length + 1;
@@ -245,9 +242,9 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
                         }
                     }, 0);
 
-                    const jupyterResults = await activeNotebook.getCompletion(code, offsetInCode, cancelToken);
+                    const jupyterResults = await activeNotebook.getCompletion(data.text, offsetInCode, cancelToken);
                     if (jupyterResults && jupyterResults.matches) {
-                        const baseOffset = document.getEditCellOffset();
+                        const baseOffset = data.offset;
                         const basePosition = document.positionAt(baseOffset);
                         const startPosition = document.positionAt(jupyterResults.cursor.start + baseOffset);
                         const endPosition = document.positionAt(jupyterResults.cursor.end + baseOffset);
@@ -359,15 +356,18 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
     private async loadAllCells(payload: ILoadAllCells) {
         const document = await this.getDocument();
         if (document) {
+            document.switchToEditMode();
             await Promise.all(payload.cells.map(async cell => {
-                const text = concatMultilineString(cell.data.source);
-                const addCell: IAddCell = {
-                    fullText: text,
-                    currentText: text,
-                    file: cell.file,
-                    id: cell.id
-                };
-                await this.addCell(addCell);
+                if (cell.data.cell_type === 'code') {
+                    const text = concatMultilineString(cell.data.source);
+                    const addCell: IAddCell = {
+                        fullText: text,
+                        currentText: text,
+                        file: cell.file,
+                        id: cell.id
+                    };
+                    await this.addCell(addCell);
+                }
             }));
         }
     }
@@ -387,8 +387,7 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
 
     private async getNotebook(): Promise<INotebook | undefined> {
         // First get the active server
-        // const activeServer = await this.jupyterExecution.getServer(await this.interactiveWindowProvider.getNotebookOptions());
-        const activeServer = await this.jupyterExecution.getServer(await this.nativeEditorProvider.getNotebookOptions());
+        const activeServer = await this.jupyterExecution.getServer(await this.interactiveWindowProvider.getNotebookOptions());
 
         // If that works, see if there's a matching notebook running
         if (activeServer && this.notebookIdentity) {

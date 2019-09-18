@@ -175,7 +175,6 @@ export class NativeEditorStateController extends MainStateController {
         super.renderUpdate(newState);
 
         if (!this.getState().busy && this.waitingForLoadRender) {
-            this.waitingForLoadRender = false;
 
             // After this render is complete (see this SO)
             // https://stackoverflow.com/questions/26556436/react-after-render-code,
@@ -183,11 +182,14 @@ export class NativeEditorStateController extends MainStateController {
             // so we get accurate timing on first launch.
             setTimeout(() => {
                 window.requestAnimationFrame(() => {
-                    const payload: ILoadAllCells = {
-                        cells: this.getState().cellVMs.map(vm => vm.cell)
-                    };
+                    if (this.waitingForLoadRender) {
+                        this.waitingForLoadRender = false;
+                        const payload: ILoadAllCells = {
+                            cells: this.getState().cellVMs.map(vm => vm.cell)
+                        };
 
-                    this.sendMessage(InteractiveWindowMessages.LoadAllCells, payload);
+                        this.sendMessage(InteractiveWindowMessages.LoadAllCellsComplete, payload);
+                    }
                 });
             });
         }

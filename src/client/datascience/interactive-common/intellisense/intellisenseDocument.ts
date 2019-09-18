@@ -59,6 +59,11 @@ interface ICellRange {
     currentEnd: number;
 }
 
+export interface ICellData {
+    text: string;
+    offset: number;
+}
+
 export class IntellisenseDocument implements TextDocument {
 
     private _uri: Uri;
@@ -66,6 +71,7 @@ export class IntellisenseDocument implements TextDocument {
     private _lines: IntellisenseLine[] = [];
     private _contents: string = '';
     private _cellRanges: ICellRange[] = [];
+    private inEditMode: boolean = false;
 
     constructor(fileName: string) {
         // The file passed in is the base Uri for where we're basing this
@@ -76,6 +82,10 @@ export class IntellisenseDocument implements TextDocument {
 
         // We should start our edit offset at 0. Each cell should end with a '/n'
         this._cellRanges.push({ id: Identifiers.EditCellId, start: 0, fullEnd: 0, currentEnd: 0 });
+    }
+
+    public switchToEditMode() {
+        this.inEditMode = true;
     }
 
     public get uri(): Uri {
@@ -263,7 +273,7 @@ export class IntellisenseDocument implements TextDocument {
 
             // Figure out which cell we're editing.
             const cellIndex = this._cellRanges.findIndex(c => c.id === id);
-            if (id === Identifiers.EditCellId && cellIndex >= 0) {
+            if (cellIndex >= 0 && (id === Identifiers.EditCellId || this.inEditMode)) {
                 // This is an actual edit.
                 // Line/column are within this cell. Use its offset to compute the real position
                 const editPos = this.positionAt(this._cellRanges[cellIndex].start);
@@ -297,10 +307,13 @@ export class IntellisenseDocument implements TextDocument {
         return new Position(line - 1, ch - 1);
     }
 
-    public getCellContent(cellId: string) {
-        const x = this._cellRanges.find((cellRange) => cellRange.id === cellId);
-        if (x) {
-            return this._contents.substring(x.start, x.currentEnd);
+    public getCellData(cellId: string) {
+        const range = this._cellRanges.find((cellRange) => cellRange.id === cellId);
+        if (range) {
+            return {
+                offset: range.start,
+                text: this._contents.substring(range.start, range.currentEnd)
+            };
         }
     }
 

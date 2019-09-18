@@ -14,7 +14,7 @@ import { IFileSystem } from '../../../common/platform/types';
 import { IConfigurationService } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { Identifiers } from '../../constants';
-import { IInteractiveWindowListener, IInteractiveWindowProvider, IJupyterExecution, INotebookEditorProvider } from '../../types';
+import { IInteractiveWindowListener, IInteractiveWindowProvider, IJupyterExecution } from '../../types';
 import { BaseIntellisenseProvider } from './baseIntellisenseProvider';
 import { convertToMonacoCompletionList, convertToMonacoHover, convertToMonacoSignatureHelp } from './conversion';
 import { IntellisenseDocument } from './intellisenseDocument';
@@ -34,12 +34,9 @@ export class DotNetIntellisenseProvider extends BaseIntellisenseProvider impleme
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IFileSystem) fileSystem: IFileSystem,
         @inject(IJupyterExecution) jupyterExecution: IJupyterExecution,
-        @inject(IInteractiveWindowProvider) interactiveWindowProvider: IInteractiveWindowProvider,
-        @inject(INotebookEditorProvider) nativeEditorProvider: INotebookEditorProvider
+        @inject(IInteractiveWindowProvider) interactiveWindowProvider: IInteractiveWindowProvider
     ) {
-        super(workspaceService, fileSystem, jupyterExecution, interactiveWindowProvider,
-            nativeEditorProvider
-        );
+        super(workspaceService, fileSystem, jupyterExecution, interactiveWindowProvider);
 
         // Make sure we're active. We still listen to messages for adding and editing cells,
         // but we don't actually return any data.

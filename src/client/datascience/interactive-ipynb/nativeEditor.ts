@@ -121,8 +121,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'native-editor', 'index_bundle.js'),
             localize.DataScience.nativeEditorTitle(),
             ViewColumn.Active);
-        // start server
-        this.startServer().ignoreErrors();
     }
 
     public get visible(): boolean {
@@ -245,7 +243,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 break;
 
             // call this to update the whole document for intellisense
-            case InteractiveWindowMessages.LoadAllCells:
+            case InteractiveWindowMessages.LoadAllCellsComplete:
                 this.dispatchMessage(message, payload, this.loadCellsComplete);
                 break;
 

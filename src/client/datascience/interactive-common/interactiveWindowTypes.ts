@@ -61,6 +61,7 @@ export namespace InteractiveWindowMessages {
     export const StopDebugging = 'stop_debugging';
     export const GatherCode = 'gather_code';
     export const LoadAllCells = 'load_all_cells';
+    export const LoadAllCellsComplete = 'load_all_cells_complete';
     export const ScrollToCell = 'scroll_to_cell';
     export const ReExecuteCell = 'reexecute_cell';
     export const NotebookIdentity = 'identity';
@@ -291,6 +292,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.StopDebugging]: never | undefined;
     public [InteractiveWindowMessages.GatherCode]: ICell;
     public [InteractiveWindowMessages.LoadAllCells]: ILoadAllCells;
+    public [InteractiveWindowMessages.LoadAllCellsComplete]: ILoadAllCells;
     public [InteractiveWindowMessages.ScrollToCell]: IScrollToCell;
     public [InteractiveWindowMessages.ReExecuteCell]: ISubmitNewCell;
     public [InteractiveWindowMessages.NotebookIdentity]: INotebookIdentity;

@@ -18,7 +18,7 @@ import {
     IInteractiveWindowMapping,
     InteractiveWindowMessages
 } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import { IInteractiveWindowListener, IInteractiveWindowProvider, IJupyterExecution, INotebookEditorProvider } from '../../client/datascience/types';
+import { IInteractiveWindowListener, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { MockLanguageClient } from './mockLanguageClient';
 
@@ -34,7 +34,6 @@ suite('DataScience Intellisense Unit Tests', () => {
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let jupyterExecution: TypeMoq.IMock<IJupyterExecution>;
     let interactiveWindowProvider: TypeMoq.IMock<IInteractiveWindowProvider>;
-    let nativeEditorProvider: TypeMoq.IMock<INotebookEditorProvider>;
     const pythonSettings = new class extends PythonSettings {
         public fireChangeEvent() {
             this.changed.fire();
@@ -52,7 +51,6 @@ suite('DataScience Intellisense Unit Tests', () => {
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         jupyterExecution = TypeMoq.Mock.ofType<IJupyterExecution>();
         interactiveWindowProvider = TypeMoq.Mock.ofType<IInteractiveWindowProvider>();
-        nativeEditorProvider = TypeMoq.Mock.ofType<INotebookEditorProvider>();
 
         pythonSettings.jediEnabled = false;
         languageServer.setup(l => l.start(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve());
@@ -68,8 +66,7 @@ suite('DataScience Intellisense Unit Tests', () => {
             configService.object,
             fileSystem.object,
             jupyterExecution.object,
-            interactiveWindowProvider.object,
-            nativeEditorProvider.object
+            interactiveWindowProvider.object
         );
     });
 
