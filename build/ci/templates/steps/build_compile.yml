@@ -12,43 +12,11 @@
 #   If `true`, means we need to build the VSIX, else just compile.
 
 steps:
-    - bash: |
-          printenv
-      displayName: "Show all env vars"
-      condition: eq(variables['system.debug'], 'true')
-
-    - task: NodeTool@0
-      displayName: "Use Node $(NodeVersion)"
-      inputs:
-          versionSpec: $(NodeVersion)
-
-    - task: UsePythonVersion@0
-      displayName: "Use Python $(PythonVersion)"
-      inputs:
-          versionSpec: $(PythonVersion)
-
-    - task: Npm@1
-      displayName: "Use NPM $(NpmVersion)"
-      inputs:
-          command: custom
-          verbose: true
-          customCommand: "install -g npm@$(NpmVersion)"
-
-    - task: Npm@1
-      displayName: "npm ci"
-      inputs:
-          command: custom
-          verbose: true
-          customCommand: ci
-
-    - bash: |
-          echo AVAILABLE DEPENDENCY VERSIONS
-          echo Node Version = `node -v`
-          echo NPM Version = `npm -v`
-          echo Python Version = `python --version`
-          echo Gulp Version = `gulp --version`
-      condition: and(succeeded(), eq(variables['system.debug'], 'true'))
-      displayName: Show Dependency Versions
+    - template: initialization.yml
+      parameters:
+        PythonVersion: $(PythonVersion)
+        workingDirectory: $(Build.SourcesDirectory)
+        compile: 'false'
 
     - task: Gulp@0
       displayName: "Compile and check for errors"
@@ -77,20 +45,18 @@ steps:
           failOnStderr: true
       condition: and(succeeded(), eq(variables['build'], 'true'))
 
-    - bash: |
-          npm install -g vsce
-          npm run clean
-      displayName: "Install vsce & Clean"
+    - bash: npm run clean
+      displayName: "Clean"
       condition: and(succeeded(), eq(variables['build'], 'true'))
 
     - bash: |
           npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID
-      displayName: "Update dev Version"
+      displayName: "Update dev Version of Extension"
       condition: and(succeeded(), eq(variables['build'], 'true'), eq(variables['Build.SourceBranchName'], 'master'))
 
     - bash: |
           npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID --updateChangelog
-      displayName: "Update release Version"
+      displayName: "Update release Version of Extension"
       condition: and(succeeded(), eq(variables['build'], 'true'), eq(variables['Build.SourceBranchName'], 'release'))
 
     - bash: |

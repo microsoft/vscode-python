@@ -143,20 +143,29 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
         // Content changes based on if a markdown cell or not.
         const content = this.isMarkdownCell() && !this.state.showingMarkdownEditor ?
             <div className='cell-result-container'>
-                {this.renderOutput()}
+                <div className='cell-row-container'>
+                    {this.renderCollapseBar(false)}
+                    {this.renderOutput()}
+                </div>
                 {this.renderMiddleToolbar()}
             </div> :
             <div className='cell-result-container'>
-                {this.renderInput()}
+                <div className='cell-row-container'>
+                    {this.renderCollapseBar(true)}
+                    {this.renderControls()}
+                    {this.renderInput()}
+                </div>
                 {this.renderMiddleToolbar()}
-                {this.renderOutput()}
+                <div className='cell-row-container'>
+                    {this.renderCollapseBar(false)}
+                    {this.renderOutput()}
+                </div>
             </div>;
 
         return (
             <div className={cellWrapperClass} role={this.props.role} ref={this.wrapperRef} tabIndex={0} onKeyDown={this.onOuterKeyDown} onClick={this.onMouseClick} onDoubleClick={this.onMouseDoubleClick}>
                 <div className={cellOuterClass}>
                     {this.renderNavbar()}
-                    {this.renderControls()}
                     <div className='content-div'>
                         {content}
                     </div>
@@ -650,7 +659,9 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
     }
 
     private renderOutput = (): JSX.Element | null => {
-        if (this.shouldRenderOutput()) {
+        const cell = this.props.cellVM.cell.data;
+
+        if (this.shouldRenderOutput() && ((cell.cell_type === 'markdown') || (Array.isArray(cell.outputs) && cell.outputs.length !== 0))) {
             return (
                 <CellOutput
                     cellVM={this.props.cellVM}
@@ -681,4 +692,28 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
         }
     }
 
+    private renderCollapseBar = (input: boolean) => {
+        let classes = 'collapse-bar';
+
+        if (this.props.selectedCell === this.props.cellVM.cell.id && this.props.focusedCell !== this.props.cellVM.cell.id) {
+            classes += ' collapse-bar-selected';
+        }
+        if (this.props.focusedCell === this.props.cellVM.cell.id) {
+            classes += ' collapse-bar-focused';
+        }
+
+        if (input) {
+            return <div className={classes}></div>;
+        }
+
+        if (this.props.cellVM.cell.data.cell_type === 'markdown') {
+            classes += ' collapse-bar-markdown';
+        } else if (Array.isArray(this.props.cellVM.cell.data.outputs) && this.props.cellVM.cell.data.outputs.length !== 0) {
+            classes += ' collapse-bar-output';
+        } else {
+            return null;
+        }
+
+        return <div className={classes}></div>;
+    }
 }
