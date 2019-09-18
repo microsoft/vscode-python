@@ -3,6 +3,7 @@
 'use strict';
 import '../../common/extensions';
 
+import * as fastDeepEqual from 'fast-deep-equal';
 import { inject, injectable, multiInject } from 'inversify';
 import * as path from 'path';
 import { Event, EventEmitter, Uri, ViewColumn } from 'vscode';
@@ -71,6 +72,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private _dirty: boolean = false;
     private visibleCells: ICell[] = [];
     private startupTimer: StopWatch = new StopWatch();
+    private loadedAllCells: boolean = false;
 
     constructor(
         @multiInject(IInteractiveWindowListener) listeners: IInteractiveWindowListener[],
@@ -195,6 +197,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
         // Load the contents of this notebook into our cells.
         const cells = content ? await this.importer.importCells(content) : [];
+        this.visibleCells = cells;
 
         // If that works, send the cells to the web view
         return this.postMessage(InteractiveWindowMessages.LoadAllCells, { cells });
@@ -353,8 +356,12 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
 
         // Also keep track of our visible cells. We use this to save to the file when we close
-        if (info && info.visibleCells) {
+        if (info && 'visibleCells' in info && this.loadedAllCells) {
+            const isDirty = !fastDeepEqual(this.visibleCells, info.visibleCells);
             this.visibleCells = info.visibleCells;
+            if (isDirty) {
+                this.setDirty();
+            }
         }
     }
 
@@ -456,6 +463,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 const filtersKey = localize.DataScience.dirtyNotebookDialogFilter();
                 const filtersObject: { [name: string]: string[] } = {};
                 filtersObject[filtersKey] = ['ipynb'];
+                this._dirty = true;
 
                 fileToSaveTo = await this.applicationShell.showSaveDialog({
                     saveLabel: localize.DataScience.dirtyNotebookDialogTitle(),
@@ -464,7 +472,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 });
             }
 
-            if (fileToSaveTo) {
+            if (fileToSaveTo && this._dirty) {
                 // Save our visible cells into the file
                 const notebook = await this.jupyterExporter.translateToNotebook(this.visibleCells, undefined);
                 await this.fileSystem.writeFile(fileToSaveTo.fsPath, JSON.stringify(notebook));
@@ -487,6 +495,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     private loadCellsComplete() {
-        sendTelemetryEvent(Telemetry.NotebookOpenTime, this.startupTimer.elapsedTime);
+        if (!this.loadedAllCells) {
+            this.loadedAllCells = true;
+            sendTelemetryEvent(Telemetry.NotebookOpenTime, this.startupTimer.elapsedTime);
+        }
     }
 }

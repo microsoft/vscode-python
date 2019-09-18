@@ -54,6 +54,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     private jupyterPath: string | undefined;
     private usablePythonInterpreter: PythonInterpreter | undefined;
     private eventEmitter: EventEmitter<void> = new EventEmitter<void>();
+    private disposed: boolean = false;
 
     constructor(
         _liveShare: ILiveShareApi,
@@ -91,8 +92,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     }
 
     public dispose(): Promise<void> {
-        // Clear our usableJupyterInterpreter
-        this.onSettingsChanged();
+        this.disposed = true;
         return Promise.resolve();
     }
 
@@ -103,7 +103,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
     public async getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> {
         // Only try to compute this once.
-        if (!this.usablePythonInterpreter) {
+        if (!this.usablePythonInterpreter && !this.disposed) {
             this.usablePythonInterpreter = await Cancellation.race(() => this.getUsableJupyterPythonImpl(cancelToken), cancelToken);
         }
         return this.usablePythonInterpreter;

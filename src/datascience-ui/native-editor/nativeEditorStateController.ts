@@ -12,8 +12,7 @@ import { IMainStateControllerProps, MainStateController } from '../interactive-c
 import { getSettings } from '../react-common/settingsReactSide';
 
 export class NativeEditorStateController extends MainStateController {
-    private finishedLoadAll: boolean = false;
-    private startedLoadAll: boolean = false;
+    private waitingForLoadRender: boolean = false;
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainStateControllerProps) {
@@ -36,7 +35,7 @@ export class NativeEditorStateController extends MainStateController {
                 break;
 
             case InteractiveWindowMessages.LoadAllCells:
-                this.startedLoadAll = true;
+                this.waitingForLoadRender = true;
                 break;
 
             default:
@@ -163,14 +162,20 @@ export class NativeEditorStateController extends MainStateController {
     }
 
     public renderUpdate(newState: {}) {
-        const oldIsBusy = this.getState().busy;
-
         super.renderUpdate(newState);
 
-        if (!this.getState().busy && oldIsBusy && !this.finishedLoadAll && this.startedLoadAll) {
-            this.finishedLoadAll = true;
-            // Indicate we finished loading
-            this.sendMessage(InteractiveWindowMessages.LoadAllCells);
+        if (!this.getState().busy && this.waitingForLoadRender) {
+            this.waitingForLoadRender = false;
+
+            // After this render is complete (see this SO)
+            // https://stackoverflow.com/questions/26556436/react-after-render-code,
+            // indicate we are done loading. We want to wait for the render
+            // so we get accurate timing on first launch.
+            setTimeout(() => {
+                window.requestAnimationFrame(() => {
+                    this.sendMessage(InteractiveWindowMessages.LoadAllCells);
+                });
+            });
         }
     }
 
