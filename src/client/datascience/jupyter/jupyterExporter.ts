@@ -26,7 +26,7 @@ export class JupyterExporter implements INotebookExporter {
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IPlatformService) private readonly platform: IPlatformService
-        ) {
+    ) {
     }
 
     public dispose() {

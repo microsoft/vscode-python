@@ -48,3 +48,11 @@ myDataFrame = pd.DataFrame(myNparray, columns=['name', 'b', 'c', 'd'])
 mySeries = myDataFrame['name']
 myList = [x ** 2 for x in range(0, 100000)]
 myString = 'testing testing testing'
+
+#%%
+%%latex
+\begin{align}
+\nabla \cdot \vec{\mathbf{E}} & = 4 \pi \rho \\
+\nabla \times \vec{\mathbf{E}}\, +\, \frac1c\, \frac{\partial\vec{\mathbf{B}}}{\partial t} & = \vec{\mathbf{0}} \\
+\nabla \cdot \vec{\mathbf{B}} & = 0
+\end{align}

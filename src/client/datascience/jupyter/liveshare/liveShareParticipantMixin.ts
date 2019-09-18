@@ -132,11 +132,16 @@ function LiveShareParticipantMixin<T extends ClassType<IAsyncDisposable>, S>(
             if (!api || (api.session.role !== this.wantedRole)) {
                 this.servicePromise = Promise.resolve(undefined);
             } else {
-                this.serviceFullName = await this.waitForServiceName();
+                this.serviceFullName = this.sanitizeServiceName(await this.waitForServiceName());
                 this.servicePromise = serviceWaiter(api, this.serviceFullName);
             }
 
             return this.servicePromise;
+        }
+
+        // Liveshare doesn't support '.' in service names
+        private sanitizeServiceName(baseServiceName: string): string {
+            return baseServiceName.replace('.', '');
         }
     };
 }

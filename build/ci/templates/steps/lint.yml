@@ -1,0 +1,13 @@
+# Lint the source
+
+steps:
+    - template: initialization.yml
+      parameters:
+        PythonVersion: $(PythonVersion)
+        workingDirectory: $(Build.SourcesDirectory)
+        compile: 'false'
+        installVSCEorNPX: 'false'
+
+    - bash: npx tslint --project tsconfig.json
+      displayName: "Lint"
+      workingDirectory: $(Build.SourcesDirectory)

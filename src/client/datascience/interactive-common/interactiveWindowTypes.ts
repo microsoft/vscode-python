@@ -31,6 +31,7 @@ export namespace InteractiveWindowMessages {
     export const Started = SharedMessages.Started;
     export const AddedSysInfo = 'added_sys_info';
     export const RemoteAddCode = 'remote_add_code';
+    export const RemoteReexecuteCode = 'remote_reexecute_code';
     export const Activate = 'activate';
     export const ShowDataViewer = 'show_data_explorer';
     export const GetVariablesRequest = 'get_variables_request';
@@ -91,6 +92,7 @@ export enum NativeCommandType {
     RunBelow,
     ToggleLineNumbers,
     ToggleOutput,
+    ToggleVariableExplorer,
     Unfocus
 }
 
@@ -98,7 +100,8 @@ export enum NativeCommandType {
 // a live share session
 export const InteractiveWindowRemoteMessages: string[] = [
     InteractiveWindowMessages.AddedSysInfo,
-    InteractiveWindowMessages.RemoteAddCode
+    InteractiveWindowMessages.RemoteAddCode,
+    InteractiveWindowMessages.RemoteReexecuteCode
 ];
 
 export interface IGotoCode {
@@ -132,6 +135,10 @@ export interface IExecuteInfo {
 }
 
 export interface IRemoteAddCode extends IExecuteInfo {
+    originator: string;
+}
+
+export interface IRemoteReexecuteCode extends IExecuteInfo {
     originator: string;
 }
 
@@ -252,6 +259,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.Started]: never | undefined;
     public [InteractiveWindowMessages.AddedSysInfo]: IAddedSysInfo;
     public [InteractiveWindowMessages.RemoteAddCode]: IRemoteAddCode;
+    public [InteractiveWindowMessages.RemoteReexecuteCode]: IRemoteReexecuteCode;
     public [InteractiveWindowMessages.Activate]: never | undefined;
     public [InteractiveWindowMessages.ShowDataViewer]: IShowDataViewer;
     public [InteractiveWindowMessages.GetVariablesRequest]: number;

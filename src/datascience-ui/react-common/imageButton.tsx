@@ -12,6 +12,7 @@ interface IImageButtonProps {
     hidden?: boolean;
     className?: string;
     onClick?(event?: React.MouseEvent<HTMLButtonElement>) : void;
+    onMouseDown?(event?: React.MouseEvent<HTMLButtonElement>) : void;
 }
 
 export class ImageButton extends React.Component<IImageButtonProps> {
@@ -25,7 +26,16 @@ export class ImageButton extends React.Component<IImageButtonProps> {
         const ariaDisabled = this.props.disabled ? 'true' : 'false';
 
         return (
-            <button role='button' aria-pressed='false' disabled={this.props.disabled} aria-disabled={ariaDisabled} title={this.props.tooltip} aria-label={this.props.tooltip} className={classNames} onClick={this.props.onClick}>
+            <button
+                role='button'
+                aria-pressed='false'
+                disabled={this.props.disabled}
+                aria-disabled={ariaDisabled}
+                title={this.props.tooltip}
+                aria-label={this.props.tooltip}
+                className={classNames}
+                onClick={this.props.onClick}
+                onMouseDown={this.props.onMouseDown}>
                 <span className={innerFilter} >
                     <span className='image-button-child'>
                         {this.props.children}
@@ -34,5 +44,4 @@ export class ImageButton extends React.Component<IImageButtonProps> {
             </button>
         );
     }
-
 }

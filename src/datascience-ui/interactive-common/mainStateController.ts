@@ -29,10 +29,9 @@ import {
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { getSettings, updateSettings } from '../react-common/settingsReactSide';
 import { detectBaseTheme } from '../react-common/themeDetector';
-import { ICellViewModel } from './cell';
 import { InputHistory } from './inputHistory';
 import { IntellisenseProvider } from './intellisenseProvider';
-import { createCellVM, createEditableCellVM, extractInputText, generateTestState, IMainState } from './mainState';
+import { createCellVM, createEditableCellVM, extractInputText, generateTestState, ICellViewModel, IMainState } from './mainState';
 import { initializeTokenizer, registerMonacoLanguage } from './tokenizer';
 
 export interface IMainStateControllerProps {
@@ -262,9 +261,6 @@ export class MainStateController implements IMessageHandler {
             redoStack: redoStack,
             skipNextScroll: true
         });
-
-        // Tell other side, we changed our number of cells
-        this.sendInfo();
     }
 
     public undo = () => {
@@ -279,9 +275,6 @@ export class MainStateController implements IMessageHandler {
             redoStack: redoStack,
             skipNextScroll: true
         });
-
-        // Tell other side, we changed our number of cells
-        this.sendInfo();
     }
 
     public deleteCell = (cellId: string) => {
@@ -413,14 +406,17 @@ export class MainStateController implements IMessageHandler {
         this.sendMessage(InteractiveWindowMessages.Export, cellContents);
     }
 
-    public variableExplorerToggled = (open: boolean) => {
-        this.setState({ variablesVisible: open });
-        this.sendMessage(InteractiveWindowMessages.VariableExplorerToggle, open);
-    }
-
     // When the variable explorer wants to refresh state (say if it was expanded)
     public refreshVariables = (newExecutionCount?: number) => {
         this.sendMessage(InteractiveWindowMessages.GetVariablesRequest, newExecutionCount === undefined ? this.state.currentExecutionCount : newExecutionCount);
+    }
+
+    public toggleVariableExplorer = () => {
+        this.sendMessage(InteractiveWindowMessages.VariableExplorerToggle, !this.state.variablesVisible);
+        this.setState({ variablesVisible: !this.state.variablesVisible });
+        if (!this.state.variablesVisible) {
+            this.refreshVariables();
+        }
     }
 
     public codeChange = (changes: monacoEditor.editor.IModelContentChange[], id: string, modelId: string) => {
@@ -477,11 +473,13 @@ export class MainStateController implements IMessageHandler {
     }
 
     public changeCellType = (cellId: string, newType: 'code' | 'markdown') => {
-        const cell = this.findCell(cellId);
-        if (cell && cell.cell.data.cell_type !== newType) {
-            cell.cell.data.cell_type = newType;
-            this.alterCellVM(cell, true, true);
-            this.setState({ cellVMs: this.state.cellVMs });
+        const index = this.state.cellVMs.findIndex(c => c.cell.id === cellId);
+        if (index >= 0 && this.state.cellVMs[index].cell.data.cell_type !== newType) {
+            const newVM = cloneDeep(this.state.cellVMs[index]);
+            newVM.cell.data.cell_type = newType;
+            const cellVMs = [...this.state.cellVMs];
+            cellVMs.splice(index, 1, newVM);
+            this.setState({ cellVMs });
         }
     }
 
@@ -571,9 +569,6 @@ export class MainStateController implements IMessageHandler {
                 cellVMs: [...this.state.cellVMs]
             });
         }
-
-        // Update the other side with our new state
-        this.sendInfo();
     }
 
     public findCell(cellId?: string): ICellViewModel | undefined {
@@ -630,6 +625,11 @@ export class MainStateController implements IMessageHandler {
         // Otherwise we set the state in the callback during setState and this can be
         // too late for any render code to use the stateController.
         this.state = { ...this.state, ...newState };
+
+        // If the new state includes any cellVM changes, send an update to the other side
+        if ('cellVMs' in newState) {
+            this.sendInfo();
+        }
     }
 
     public getState(): IMainState {
@@ -728,9 +728,6 @@ export class MainStateController implements IMessageHandler {
                     redoStack: this.state.redoStack,
                     skipNextScroll: false
                 });
-
-                // Tell other side, we changed our number of cells
-                this.sendInfo();
 
                 return cellVM;
             }
@@ -868,9 +865,6 @@ export class MainStateController implements IMessageHandler {
             skipNextScroll: true,
             busy: false // No more progress on delete all
         });
-
-        // Tell other side, we changed our number of cells
-        this.sendInfo();
     }
 
     private inputBlockToggled = (id: string) => {
@@ -953,7 +947,15 @@ export class MainStateController implements IMessageHandler {
             // we won't actually update.
             const newVMs = [...this.state.cellVMs];
             newVMs[index] = cloneDeep(newVMs[index]);
+
+            // Check to see if our code still matches for the cell (in liveshare it might be updated from the other side)
+            if (newVMs[index].cell.data.source !== cell.data.source) {
+                const newText = extractInputText(cell, getSettings());
+                newVMs[index].inputBlockText = newText;
+            }
+
             newVMs[index].cell = cell;
+
             this.setState({
                 cellVMs: newVMs,
                 currentExecutionCount: newExecutionCount
@@ -976,9 +978,6 @@ export class MainStateController implements IMessageHandler {
             if (cell && this.isCellSupported(cell)) {
                 this.updateOrAdd(cell, true);
             }
-
-            // Update info when finishing (execution count should be different)
-            this.sendInfo();
         }
     }
 
@@ -1098,6 +1097,9 @@ export class MainStateController implements IMessageHandler {
             // Update all of the vms
             const cells = payload.cells as ICell[];
             cells.forEach(c => this.finishCell(c));
+
+            // Set our state to not being busy anymore
+            this.setState({ busy: false, loadTotal: payload.cells.length });
 
             // Turn updates back on and resend the state.
             this.resumeUpdates();

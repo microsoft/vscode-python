@@ -401,13 +401,13 @@ for _ in range(50):
     }, () => { return ioc; });
 
     runMountedTest('Editor Context', async (wrapper) => {
-        // Verify we can send different commands to the UI and it will respond
-        const interactiveWindow = await getOrCreateInteractiveWindow();
-
         // Before we have any cells, verify our contexts are not set
         assert.equal(ioc.getContext(EditorContexts.HaveInteractive), false, 'Should not have interactive before starting');
         assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), false, 'Should not have interactive cells before starting');
         assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), false, 'Should not have redoable before starting');
+
+        // Verify we can send different commands to the UI and it will respond
+        const interactiveWindow = await getOrCreateInteractiveWindow();
 
         // Get an update promise so we can wait for the add code
         const updatePromise = waitForUpdate(wrapper, InteractivePanel);

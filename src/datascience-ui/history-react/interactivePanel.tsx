@@ -7,16 +7,17 @@ import * as React from 'react';
 
 import { noop } from '../../client/common/utils/misc';
 import { Identifiers } from '../../client/datascience/constants';
-import { Cell } from '../interactive-common/cell';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
-import { IMainState } from '../interactive-common/mainState';
+import { ICellViewModel, IMainState } from '../interactive-common/mainState';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
 import { ErrorBoundary } from '../react-common/errorBoundary';
 import { IKeyboardEvent } from '../react-common/event';
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
+import { Progress } from '../react-common/progress';
 import { getSettings } from '../react-common/settingsReactSide';
+import { InteractiveCell } from './interactiveCell';
 import { InteractivePanelStateController } from './interactivePanelStateController';
 
 interface IInteractivePanelProps {
@@ -30,8 +31,9 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
     // Public for testing
     public stateController: InteractivePanelStateController;
     private mainPanelRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
-    private editCellRef: React.RefObject<Cell> = React.createRef<Cell>();
+    private editCellRef: React.RefObject<InteractiveCell> = React.createRef<InteractiveCell>();
     private contentPanelRef: React.RefObject<ContentPanel> = React.createRef<ContentPanel>();
+    private cellRefs: Map<string, React.RefObject<InteractiveCell>> = new Map<string, React.RefObject<InteractiveCell>>();
     private renderCount: number = 0;
     private internalScrollCount: number = 0;
 
@@ -67,6 +69,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
     public render() {
         // Update the state controller with our new state
         this.stateController.renderUpdate(this.state);
+        const progressBar = this.state.busy && !this.props.testMode ? <Progress /> : undefined;
 
         // If in test mode, update our count. Use this to determine how many renders a normal update takes.
         if (this.props.testMode) {
@@ -82,6 +85,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
                 </div>
                 <header id='main-panel-toolbar'>
                     {this.renderToolbarPanel()}
+                    {progressBar}
                 </header>
                 <section id='main-panel-variable' aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
                     {this.renderVariablePanel(this.props.baseTheme)}
@@ -114,12 +118,17 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
     }
 
     private scrollToCell(id: string) {
-        if (this.contentPanelRef && this.contentPanelRef.current) {
-            this.contentPanelRef.current.scrollToCell(id);
+        const ref = this.cellRefs.get(id);
+        if (ref && ref.current) {
+            ref.current.scrollAndFlash();
         }
     }
 
     private renderToolbarPanel() {
+        const variableExplorerTooltip = this.state.variablesVisible ?
+            getLocString('DataScience.collapseVariableExplorerTooltip', 'Hide variables active in jupyter kernel') :
+            getLocString('DataScience.expandVariableExplorerTooltip', 'Show variables active in jupyter kernel');
+
         return (
             <div id='toolbar-panel'>
                 <div className='toolbar-menu-bar'>
@@ -139,6 +148,9 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
                         <ImageButton baseTheme={this.props.baseTheme} onClick={this.stateController.restartKernel} tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}>
                             <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Restart} />
                         </ImageButton>
+                        <ImageButton baseTheme={this.props.baseTheme} onClick={this.stateController.toggleVariableExplorer} tooltip={variableExplorerTooltip}>
+                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.VariableExplorer} />
+                        </ImageButton>
                         <ImageButton baseTheme={this.props.baseTheme} onClick={this.stateController.export} disabled={!this.stateController.canExport()} tooltip={getLocString('DataScience.export', 'Export as Jupyter notebook')}>
                             <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.SaveAs} />
                         </ImageButton>
@@ -155,8 +167,12 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
     }
 
     private renderVariablePanel(baseTheme: string) {
-        const variableProps = this.getVariableProps(baseTheme);
-        return <VariablePanel {...variableProps} />;
+        if (this.state.variablesVisible) {
+            const variableProps = this.getVariableProps(baseTheme);
+            return <VariablePanel {...variableProps} />;
+        }
+
+        return null;
     }
 
     private renderContentPanel(baseTheme: string) {
@@ -186,7 +202,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
         return (
             <div className={editPanelClass}>
                 <ErrorBoundary>
-                    <Cell
+                    <InteractiveCell
                         editorOptions={this.state.editorOptions}
                         history={this.state.history}
                         maxTextSize={maxTextSize}
@@ -194,7 +210,6 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
                         testMode={this.props.testMode}
                         cellVM={this.state.editCellVM}
                         baseTheme={baseTheme}
-                        allowCollapse={false}
                         codeTheme={this.props.codeTheme}
                         showWatermark={true}
                         editExecutionCount={executionCount.toString()}
@@ -219,7 +234,6 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
 
     private getContentProps = (baseTheme: string): IContentPanelProps => {
         return {
-            editorOptions: this.state.editorOptions,
             baseTheme: baseTheme,
             cellVMs: this.state.cellVMs,
             history: this.state.history,
@@ -227,15 +241,9 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
             codeTheme: this.props.codeTheme,
             submittedText: this.state.submittedText,
             skipNextScroll: this.state.skipNextScroll ? true : false,
-            monacoTheme: this.state.monacoTheme,
-            onCodeCreated: this.stateController.readOnlyCodeCreated,
-            onCodeChange: this.stateController.codeChange,
-            openLink: this.stateController.openLink,
-            expandImage: this.stateController.showPlot,
             editable: false,
             newCellVM: undefined,
-            editExecutionCount: this.getInputExecutionCount().toString(),
-            renderCellToolbar: this.renderCellToolbar,
+            renderCell: this.renderCell,
             scrollToBottom: this.scrollDiv
         };
     }
@@ -248,8 +256,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
         showDataExplorer: this.stateController.showDataViewer,
         skipDefault: this.props.skipDefault,
         testMode: this.props.testMode,
-        refreshVariables: this.stateController.refreshVariables,
-        variableExplorerToggled: this.stateController.variableExplorerToggled,
+        closeVariableExplorer: this.stateController.toggleVariableExplorer,
         baseTheme: baseTheme
        };
     }
@@ -310,6 +317,41 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
                 return direction >= 0 ? tabable[self + 1] || tabable[0] : tabable[self - 1] || tabable[0];
             }
         }
+    }
+
+    private renderCell = (cellVM: ICellViewModel, index: number, containerRef?: React.RefObject<HTMLDivElement>): JSX.Element | null => {
+        let cellRef : React.RefObject<InteractiveCell> | undefined;
+        if (!this.cellRefs.has(cellVM.cell.id)) {
+            cellRef = React.createRef<InteractiveCell>();
+            this.cellRefs.set(cellVM.cell.id, cellRef);
+        }
+        return (
+            <div key={index} id={cellVM.cell.id} ref={containerRef}>
+                <ErrorBoundary key={index}>
+                    <InteractiveCell
+                        ref={cellRef}
+                        role='listitem'
+                        editorOptions={this.state.editorOptions}
+                        history={undefined}
+                        maxTextSize={getSettings().maxOutputSize}
+                        autoFocus={false}
+                        testMode={this.props.testMode}
+                        cellVM={cellVM}
+                        baseTheme={this.props.baseTheme}
+                        codeTheme={this.props.codeTheme}
+                        showWatermark={cellVM.cell.id === Identifiers.EditCellId}
+                        editExecutionCount={this.getInputExecutionCount().toString()}
+                        onCodeChange={this.stateController.codeChange}
+                        onCodeCreated={this.stateController.editableCodeCreated}
+                        monacoTheme={this.state.monacoTheme}
+                        openLink={this.stateController.openLink}
+                        expandImage={this.stateController.showPlot}
+                        renderCellToolbar={this.renderCellToolbar}
+                        showLineNumbers={cellVM.showLineNumbers}
+                        hideOutput={cellVM.hideOutput}
+                    />
+                </ErrorBoundary>
+            </div>);
     }
 
     private renderCellToolbar = (cellId: string) => {

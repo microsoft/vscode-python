@@ -6,14 +6,17 @@ import * as uuid from 'uuid/v4';
 
 import { concatMultilineString } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
-import { InteractiveWindowMessages, NativeCommandType, ILoadAllCells } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import { ICellViewModel } from '../interactive-common/cell';
-import { createEmptyCell, extractInputText } from '../interactive-common/mainState';
+import {
+    ILoadAllCells,
+    InteractiveWindowMessages,
+    NativeCommandType
+} from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { createEmptyCell, extractInputText, ICellViewModel } from '../interactive-common/mainState';
 import { IMainStateControllerProps, MainStateController } from '../interactive-common/mainStateController';
 import { getSettings } from '../react-common/settingsReactSide';
 
 export class NativeEditorStateController extends MainStateController {
-    private finishedLoadAll: boolean = false;
+    private waitingForLoadRender: boolean = false;
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainStateControllerProps) {
@@ -33,6 +36,10 @@ export class NativeEditorStateController extends MainStateController {
             case InteractiveWindowMessages.NotebookClean:
                 // Indicate dirty
                 this.setState({ dirty: false });
+                break;
+
+            case InteractiveWindowMessages.LoadAllCells:
+                this.waitingForLoadRender = true;
                 break;
 
             default:
@@ -114,10 +121,13 @@ export class NativeEditorStateController extends MainStateController {
 
     public insertAbove = (cellId?: string, isMonaco?: boolean): string | undefined => {
         const cells = this.getState().cellVMs;
-        const index = cells.findIndex(cvm => cvm.cell.id === cellId);
+        const index = cellId ? cells.findIndex(cvm => cvm.cell.id === cellId) : 0;
         if (index >= 0) {
+            this.suspendUpdates();
             const id = uuid();
+            this.setState({ newCell: id });
             this.insertCell(createEmptyCell(id, null), index, isMonaco);
+            this.resumeUpdates();
             return id;
         }
     }
@@ -126,14 +136,17 @@ export class NativeEditorStateController extends MainStateController {
         const cells = this.getState().cellVMs;
         const index = cells.findIndex(cvm => cvm.cell.id === cellId);
         if (index >= 0) {
+            this.suspendUpdates();
             const id = uuid();
+            this.setState({ newCell: id });
             this.insertCell(createEmptyCell(id, null), index + 1, isMonaco);
+            this.resumeUpdates();
             return id;
         }
     }
 
     public moveCellUp = (cellId?: string) => {
-        const cellVms = this.getState().cellVMs;
+        const cellVms = [...this.getState().cellVMs];
         const index = cellVms.findIndex(cvm => cvm.cell.id === cellId);
         if (index > 0) {
             [cellVms[index - 1], cellVms[index]] = [cellVms[index], cellVms[index - 1]];
@@ -144,7 +157,7 @@ export class NativeEditorStateController extends MainStateController {
     }
 
     public moveCellDown = (cellId?: string) => {
-        const cellVms = this.getState().cellVMs;
+        const cellVms = [...this.getState().cellVMs];
         const index = cellVms.findIndex(cvm => cvm.cell.id === cellId);
         if (index < cellVms.length - 1) {
             [cellVms[index + 1], cellVms[index]] = [cellVms[index], cellVms[index + 1]];
@@ -159,17 +172,24 @@ export class NativeEditorStateController extends MainStateController {
     }
 
     public renderUpdate(newState: {}) {
-        const oldIsBusy = this.getState().busy;
-
         super.renderUpdate(newState);
 
-        if (!this.getState().busy && oldIsBusy && !this.finishedLoadAll) {
-            // Indicate we finished loading
-            const payload: ILoadAllCells = {
-                cells: this.getState().cellVMs.map(vm => vm.cell)
-            };
+        if (!this.getState().busy && this.waitingForLoadRender) {
+            this.waitingForLoadRender = false;
 
-            this.sendMessage(InteractiveWindowMessages.LoadAllCells, payload);
+            // After this render is complete (see this SO)
+            // https://stackoverflow.com/questions/26556436/react-after-render-code,
+            // indicate we are done loading. We want to wait for the render
+            // so we get accurate timing on first launch.
+            setTimeout(() => {
+                window.requestAnimationFrame(() => {
+                    const payload: ILoadAllCells = {
+                        cells: this.getState().cellVMs.map(vm => vm.cell)
+                    };
+
+                    this.sendMessage(InteractiveWindowMessages.LoadAllCells, payload);
+                });
+            });
         }
     }
 

@@ -24,6 +24,7 @@ export class LanguageServer implements ILanguageServer {
     private startupCompleted: Deferred<void>;
     private readonly disposables: Disposable[] = [];
     private extensionLoadedArgs = new Set<{}>();
+    private disposed: boolean = false;
 
     constructor(
         @inject(ILanguageClientFactory)
@@ -49,6 +50,7 @@ export class LanguageServer implements ILanguageServer {
             this.startupCompleted.reject(new Error('Disposed Language Server'));
             this.startupCompleted = createDeferred<void>();
         }
+        this.disposed = true;
     }
 
     @traceDecorators.error('Failed to start language server')
@@ -58,6 +60,10 @@ export class LanguageServer implements ILanguageServer {
             this.languageClient = await this.factory.createLanguageClient(resource, options);
             this.disposables.push(this.languageClient!.start());
             await this.serverReady();
+            if (this.disposed) {
+                // Check if it got disposed in the interim.
+                return;
+            }
             const progressReporting = new ProgressReporting(this.languageClient!);
             this.disposables.push(progressReporting);
 

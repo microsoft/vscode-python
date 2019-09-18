@@ -82,9 +82,8 @@ export class HostJupyterServer
                 service.onRequest(LiveShareCommands.syncRequest, (_args: any[], _cancellation: CancellationToken) => this.onSync());
                 service.onRequest(LiveShareCommands.disposeServer, (_args: any[], _cancellation: CancellationToken) => this.dispose());
                 service.onRequest(LiveShareCommands.createNotebook, async (args: any[], cancellation: CancellationToken) => {
-                    // Translate the uri into local if possible
-                    const uri = args[0] as vscode.Uri;
-                    const resource = (uri.scheme && uri.scheme !== Identifiers.InteractiveWindowIdentityScheme) ? this.finishedApi!.convertSharedUriToLocal(args[0]) : uri;
+                    const uri = vscode.Uri.parse(args[0]);
+                    const resource = (uri.scheme && uri.scheme !== Identifiers.InteractiveWindowIdentityScheme) ? this.finishedApi!.convertSharedUriToLocal(uri) : uri;
                     // Don't return the notebook. We don't want it to be serialized. We just want its live share server to be started.
                     const notebook = await this.createNotebook(resource, cancellation) as HostJupyterNotebook;
                     await notebook.onAttach(api);

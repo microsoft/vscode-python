@@ -22,25 +22,30 @@ import { CancellationError } from '../../../common/cancellation';
 import { traceWarning } from '../../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../../common/platform/types';
 import { createDeferred, Deferred, waitForPromise } from '../../../common/utils/async';
+import { concatMultilineString } from '../../common';
 import { Identifiers, Settings } from '../../constants';
-import { IInteractiveWindowListener, IInteractiveWindowProvider, IJupyterExecution, INotebook, INotebookEditorProvider } from '../../types';
+import {
+    IInteractiveWindowListener,
+    IInteractiveWindowProvider,
+    IJupyterExecution,
+    INotebook,
+    INotebookEditorProvider
+} from '../../types';
 import {
     IAddCell,
     ICancelIntellisenseRequest,
     IEditCell,
     IInteractiveWindowMapping,
+    ILoadAllCells,
     INotebookIdentity,
     InteractiveWindowMessages,
     IProvideCompletionItemsRequest,
     IProvideHoverRequest,
     IProvideSignatureHelpRequest,
-    IRemoveCell,
-    ILoadAllCells
+    IRemoveCell
 } from '../interactiveWindowTypes';
 import { convertStringsToSuggestions } from './conversion';
 import { IntellisenseDocument } from './intellisenseDocument';
-import { concat } from 'event-stream';
-import { concatMultilineString } from '../../common';
 
 // tslint:disable:no-any
 @injectable()
@@ -260,7 +265,6 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
                 }
             }
         } catch (e) {
-            console.log(e);
             if (!(e instanceof CancellationError)) {
                 traceWarning(e);
             }

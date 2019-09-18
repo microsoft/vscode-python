@@ -28,7 +28,6 @@ import { ChildProcessAttachService } from './hooks/childProcessAttachService';
 import { IChildProcessAttachService, IDebugSessionEventHandlers } from './hooks/types';
 import {
     DebugConfigurationType,
-    ExtensionSingleActivationServiceType,
     IDebugAdapterDescriptorFactory,
     IDebugConfigurationProvider,
     IDebugConfigurationService,
@@ -38,13 +37,11 @@ import {
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
-        LaunchJsonCompletionProvider,
-        ExtensionSingleActivationServiceType.jsonCompletionProvider
+        LaunchJsonCompletionProvider
     );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
-        LaunchJsonUpdaterService,
-        ExtensionSingleActivationServiceType.jsonUpdaterService
+        LaunchJsonUpdaterService
     );
     serviceManager.addSingleton<IDebugConfigurationService>(IDebugConfigurationService, PythonDebugConfigurationService);
     serviceManager.addSingleton<IDebuggerBanner>(IDebuggerBanner, DebuggerBanner);
@@ -62,8 +59,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDebugEnvironmentVariablesService>(IDebugEnvironmentVariablesService, DebugEnvironmentVariablesHelper);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
-        DebugAdapterActivator,
-        ExtensionSingleActivationServiceType.debugAdapterActivator
+        DebugAdapterActivator
     );
     serviceManager.addSingleton<IDebugAdapterDescriptorFactory>(IDebugAdapterDescriptorFactory, DebugAdapterDescriptorFactory);
 }

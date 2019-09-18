@@ -5,8 +5,7 @@
 
 // tslint:disable:no-unnecessary-override no-invalid-template-strings max-func-body-length no-any
 
-import { expect } from 'chai';
-import * as typemoq from 'typemoq';
+import { instance, mock, verify } from 'ts-mockito';
 import { IExtensionSingleActivationService } from '../../../client/activation/types';
 import { DebugAdapterActivator } from '../../../client/debugger/extension/adapter/activator';
 import { DebugAdapterDescriptorFactory } from '../../../client/debugger/extension/adapter/factory';
@@ -30,51 +29,40 @@ import { IChildProcessAttachService, IDebugSessionEventHandlers } from '../../..
 import { registerTypes } from '../../../client/debugger/extension/serviceRegistry';
 import {
     DebugConfigurationType,
-    ExtensionSingleActivationServiceType,
     IDebugAdapterDescriptorFactory,
     IDebugConfigurationProvider,
     IDebugConfigurationService,
     IDebuggerBanner
 } from '../../../client/debugger/extension/types';
+import { AttachRequestArguments, LaunchRequestArguments } from '../../../client/debugger/types';
+import { ServiceManager } from '../../../client/ioc/serviceManager';
 import { IServiceManager } from '../../../client/ioc/types';
 
 suite('Debugging - Service Registry', () => {
+    let serviceManager: IServiceManager;
+
+    setup(() => {
+        serviceManager = mock(ServiceManager);
+    });
     test('Registrations', () => {
-        const serviceManager = typemoq.Mock.ofType<IServiceManager>();
+        registerTypes(instance(serviceManager));
 
-        [
-            [IDebugConfigurationService, PythonDebugConfigurationService],
-            [IDebuggerBanner, DebuggerBanner],
-            [IChildProcessAttachService, ChildProcessAttachService],
-            [IExtensionSingleActivationService, LaunchJsonCompletionProvider, ExtensionSingleActivationServiceType.jsonCompletionProvider],
-            [IExtensionSingleActivationService, LaunchJsonUpdaterService, ExtensionSingleActivationServiceType.jsonUpdaterService],
-            [IExtensionSingleActivationService, DebugAdapterActivator, ExtensionSingleActivationServiceType.debugAdapterActivator],
-            [IDebugAdapterDescriptorFactory, DebugAdapterDescriptorFactory],
-            [IDebugSessionEventHandlers, ChildProcessAttachEventHandler],
-            [IDebugConfigurationResolver, LaunchConfigurationResolver, 'launch'],
-            [IDebugConfigurationResolver, AttachConfigurationResolver, 'attach'],
-            [IDebugConfigurationProviderFactory, DebugConfigurationProviderFactory],
-            [IDebugConfigurationProvider, FileLaunchDebugConfigurationProvider, DebugConfigurationType.launchFile],
-            [IDebugConfigurationProvider, DjangoLaunchDebugConfigurationProvider, DebugConfigurationType.launchDjango],
-            [IDebugConfigurationProvider, FlaskLaunchDebugConfigurationProvider, DebugConfigurationType.launchFlask],
-            [IDebugConfigurationProvider, RemoteAttachDebugConfigurationProvider, DebugConfigurationType.remoteAttach],
-            [IDebugConfigurationProvider, ModuleLaunchDebugConfigurationProvider, DebugConfigurationType.launchModule],
-            [IDebugConfigurationProvider, PyramidLaunchDebugConfigurationProvider, DebugConfigurationType.launchPyramid]
-        ].forEach(mapping => {
-            if (mapping.length === 2) {
-                serviceManager
-                    .setup(s => s.addSingleton(typemoq.It.isValue(mapping[0] as any), typemoq.It.isAny()))
-                    .callback((_, cls) => expect(cls).to.equal(mapping[1]))
-                    .verifiable(typemoq.Times.once());
-            } else {
-                serviceManager
-                    .setup(s => s.addSingleton(typemoq.It.isValue(mapping[0] as any), typemoq.It.isAny(), typemoq.It.isValue(mapping[2] as any)))
-                    .callback((_, cls) => expect(cls).to.equal(mapping[1]))
-                    .verifiable(typemoq.Times.once());
-            }
-        });
-
-        registerTypes(serviceManager.object);
-        serviceManager.verifyAll();
+        verify(serviceManager.addSingleton<IDebugConfigurationService>(IDebugConfigurationService, PythonDebugConfigurationService)).once();
+        verify(serviceManager.addSingleton<IDebuggerBanner>(IDebuggerBanner, DebuggerBanner)).once();
+        verify(serviceManager.addSingleton<IChildProcessAttachService>(IChildProcessAttachService, ChildProcessAttachService)).once();
+        verify(serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, LaunchJsonCompletionProvider)).once();
+        verify(serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, LaunchJsonUpdaterService)).once();
+        verify(serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, DebugAdapterActivator)).once();
+        verify(serviceManager.addSingleton<IDebugAdapterDescriptorFactory>(IDebugAdapterDescriptorFactory, DebugAdapterDescriptorFactory)).once();
+        verify(serviceManager.addSingleton<IDebugSessionEventHandlers>(IDebugSessionEventHandlers, ChildProcessAttachEventHandler)).once();
+        verify(serviceManager.addSingleton<IDebugConfigurationResolver<LaunchRequestArguments>>(IDebugConfigurationResolver, LaunchConfigurationResolver, 'launch')).once();
+        verify(serviceManager.addSingleton<IDebugConfigurationResolver<AttachRequestArguments>>(IDebugConfigurationResolver, AttachConfigurationResolver, 'attach')).once();
+        verify(serviceManager.addSingleton<IDebugConfigurationProviderFactory>(IDebugConfigurationProviderFactory, DebugConfigurationProviderFactory)).once();
+        verify(serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, FileLaunchDebugConfigurationProvider, DebugConfigurationType.launchFile)).once();
+        verify(serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, DjangoLaunchDebugConfigurationProvider, DebugConfigurationType.launchDjango)).once();
+        verify(serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, FlaskLaunchDebugConfigurationProvider, DebugConfigurationType.launchFlask)).once();
+        verify(serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, RemoteAttachDebugConfigurationProvider, DebugConfigurationType.remoteAttach)).once();
+        verify(serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, ModuleLaunchDebugConfigurationProvider, DebugConfigurationType.launchModule)).once();
+        verify(serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, PyramidLaunchDebugConfigurationProvider, DebugConfigurationType.launchPyramid)).once();
     });
 });

@@ -40,6 +40,7 @@ import {
     IInteractiveWindowMapping,
     InteractiveWindowMessages,
     IRemoteAddCode,
+    IRemoteReexecuteCode,
     IShowDataViewer,
     ISubmitNewCell,
     SysInfoReason
@@ -235,6 +236,10 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
             case InteractiveWindowMessages.RemoteAddCode:
                 this.dispatchMessage(message, payload, this.onRemoteAddedCode);
+                break;
+
+            case InteractiveWindowMessages.RemoteReexecuteCode:
+                this.dispatchMessage(message, payload, this.onRemoteReexecuteCode);
                 break;
 
             case InteractiveWindowMessages.ShowDataViewer:
@@ -486,6 +491,11 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 if (debug) {
                     // Attach our debugger
                     await this.jupyterDebugger.startDebugging(this.notebook);
+                }
+
+                // Set the file variable
+                if (file !== Identifiers.EmptyFileName) {
+                    await this.notebook.execute(`__file__ = '${file.replace(/\\/g, '\\\\')}'`, file, line, uuid(), undefined, true);
                 }
 
                 // Attempt to evaluate this cell in the jupyter notebook
@@ -772,6 +782,23 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             if (sysInfo.sysInfoCell) {
                 this.sendCellsToWebView([sysInfo.sysInfoCell]);
             }
+        }
+    }
+
+    private onRemoteReexecuteCode(args: IRemoteReexecuteCode) {
+        // Make sure this is valid
+        if (args && args.id && args.file && args.originator !== this.id) {
+            // On a reexecute clear the previous execution
+            if (this.notebook) {
+                this.notebook.clear(args.id);
+            }
+
+            // Indicate this in our telemetry.
+            // Add new telemetry type
+            sendTelemetryEvent(Telemetry.RemoteReexecuteCode);
+
+            // Submit this item as new code.
+            this.submitCode(args.code, args.file, args.line, args.id, undefined, args.debug).ignoreErrors();
         }
     }
 
