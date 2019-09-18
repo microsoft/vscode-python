@@ -13,8 +13,7 @@ import {
 } from '../../../client/testing/common/types';
 import { XUnitParser } from '../../../client/testing/common/xUnitParser';
 import { createResults } from '../helpers-declarative';
-import { TestItem } from '../helpers-nodes';
-import { createEmptyResults } from '../helpers-results';
+import { createEmptyResults, nodes } from '../results';
 
 suite('Testing - parse JUnit XML file', () => {
     let parser: IXUnitParser;
@@ -24,7 +23,7 @@ suite('Testing - parse JUnit XML file', () => {
         parser = new XUnitParser(fs.object);
     });
 
-    function fixResult(node: TestItem, file: string, line: number) {
+    function fixResult(node: nodes.TestItem, file: string, line: number) {
         switch (node.status) {
             case TestStatus.Pass:
                 node.passed = true;

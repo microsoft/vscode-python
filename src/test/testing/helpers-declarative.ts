@@ -12,12 +12,8 @@ import {
     getDedentedLines, getIndent, RESOURCE
 } from './helper';
 import {
-    addDiscoveredFile, addDiscoveredSubFolder, addDiscoveredSuite,
-    addDiscoveredTest, createFolderResults, TestNode
-} from './helpers-nodes';
-import {
-    createEmptyResults, flattenFunction, flattenSuite, updateSummary
-} from './helpers-results';
+    createEmptyResults, flattenFunction, flattenSuite, nodes, updateSummary
+} from './results';
 
 type ParsedTestNode = {
     indent: string;
@@ -26,7 +22,7 @@ type ParsedTestNode = {
     result: TestResult;
 };
 
-type TestParent = TestNode & {
+type TestParent = nodes.TestNode & {
     indent: string;
 };
 
@@ -47,10 +43,10 @@ export function createResults(
         }
         const parsed = parseTestLine(line);
 
-        let node: TestNode;
+        let node: nodes.TestNode;
         if (isRootNode(parsed)) {
             parents.length = 0;  // Clear the array.
-            node = createFolderResults(
+            node = nodes.createFolderResults(
                 parsed.name,
                 undefined,
                 resource
@@ -241,13 +237,13 @@ function buildDiscoveredChildNode(
     testType: TestType,
     provider: TestProvider,
     resource?: Uri
-): TestNode {
+): nodes.TestNode {
     switch (testType) {
         case TestType.testFolder:
             if (parent.testType !== TestType.testFolder) {
                 throw Error('parent must be a folder');
             }
-            return addDiscoveredSubFolder(
+            return nodes.addDiscoveredSubFolder(
                 parent as TestFolder,
                 name,
                 undefined,
@@ -257,7 +253,7 @@ function buildDiscoveredChildNode(
             if (parent.testType !== TestType.testFolder) {
                 throw Error('parent must be a folder');
             }
-            return addDiscoveredFile(
+            return nodes.addDiscoveredFile(
                 parent as TestFolder,
                 name,
                 undefined,
@@ -273,7 +269,7 @@ function buildDiscoveredChildNode(
             } else {
                 throw Error('parent must be a file or suite');
             }
-            return addDiscoveredSuite(
+            return nodes.addDiscoveredSuite(
                 suiteParent,
                 name,
                 undefined,
@@ -293,7 +289,7 @@ function buildDiscoveredChildNode(
             } else {
                 throw Error('parent must be a file, suite, or function');
             }
-            return addDiscoveredTest(
+            return nodes.addDiscoveredTest(
                 funcParent,
                 name,
                 undefined,
