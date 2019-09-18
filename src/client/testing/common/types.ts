@@ -87,11 +87,7 @@ export enum TestStatus {
     Pass = 'Pass'
 }
 
-export type Node = {
-    expanded?: Boolean;
-};
-
-export type TestResult = Node & {
+export type TestResult = {
     status?: TestStatus;
     passed?: boolean;
     time: number;
