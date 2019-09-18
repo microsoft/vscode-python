@@ -68,7 +68,7 @@ export type TestsToRun = {
 //*****************
 // test results
 
-export enum TestType {
+export enum TestingType {
     folder = 'testFolder',
     file = 'testFile',
     suite = 'testSuite',
@@ -99,39 +99,36 @@ export type TestResult = {
     functionsDidNotRun?: number;
 };
 
-export type TestFolder = TestResult & {
-    resource: Uri;
+export type TestingNode = TestResult & {
     name: string;
-    testFiles: TestFile[];
     nameToRun: string;
-    folders: TestFolder[];
-};
-export type TestFile = TestResult & {
     resource: Uri;
-    name: string;
+};
+
+export type TestFolder = TestingNode & {
+    folders: TestFolder[];
+    testFiles: TestFile[];
+};
+
+export type TestingXMLNode = TestingNode & {
+    xmlName: string;
+};
+
+export type TestFile = TestingXMLNode & {
     fullPath: string;
     functions: TestFunction[];
     suites: TestSuite[];
-    nameToRun: string;
-    xmlName: string;
     errorsWhenDiscovering?: string;
 };
 
-export type TestSuite = TestResult & {
-    resource: Uri;
-    name: string;
+export type TestSuite = TestingXMLNode & {
     functions: TestFunction[];
     suites: TestSuite[];
     isUnitTest: Boolean;
     isInstance: Boolean;
-    nameToRun: string;
-    xmlName: string;
 };
 
-export type TestFunction = TestResult & {
-    resource: Uri;
-    name: string;
-    nameToRun: string;
+export type TestFunction = TestingNode & {
     subtestParent?: SubtestParent;
 };
 
