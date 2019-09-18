@@ -1762,7 +1762,7 @@
                         "Library"
                     ],
                     "default": "None",
-                    "description": "Defines which types of modules that get their analysis cached.",
+                    "description": "Defines which types of modules get their analysis cached.",
                     "scope": "resource"
                 },
                 "python.linting.enabled": {
