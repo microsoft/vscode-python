@@ -2,11 +2,11 @@
 # Licensed under the MIT License.
 
 import sys
-from os import path
+import os.path
 
-ROOT = path.dirname(path.dirname(path.abspath(__file__)))
-PYTHONFILES = path.join(ROOT, "pythonFiles", "lib", "python")
-REQUIREMENTS = path.join(ROOT, "requirements.txt")
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PYTHONFILES = os.path.join(ROOT, "pythonFiles", "lib", "python")
+REQUIREMENTS = os.path.join(ROOT, "requirements.txt")
 
 sys.path.insert(0, PYTHONFILES)
 
@@ -36,8 +36,8 @@ def ptvsd_folder_name():
     try:
         for tag in sys_tags():
             folder_name = f"ptvsd-{version}-{tag.interpreter}-{tag.abi}-{tag.platform}"
-            folder_path = path.join(PYTHONFILES, folder_name)
-            if path.exists(folder_path):
+            folder_path = os.path.join(PYTHONFILES, folder_name)
+            if os.path.exists(folder_path):
                 print(folder_path, end="")
                 return
     except:

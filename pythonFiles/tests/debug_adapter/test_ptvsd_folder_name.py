@@ -40,13 +40,17 @@ class TestPtvsdFolderName:
 
     def test_requirement_exists_folder_exists(self, capsys):
         # Return the first constructed folder path as existing.
-        patch("os.path.exists", lambda p: True)
+
+        patcher = patch("os.path.exists")
+        mock_exists = patcher.start()
+        mock_exists.side_effect = lambda p: True
         tag = next(sys_tags())
         folder = "ptvsd-5.0.0-{}-{}-{}".format(tag.interpreter, tag.abi, tag.platform)
 
         with open_requirements_with_ptvsd():
             ptvsd_folder_name()
 
+        patcher.stop()
         expected = os.path.join(PYTHONFILES, folder)
         captured = capsys.readouterr()
         assert captured.out == expected
@@ -70,11 +74,14 @@ class TestPtvsdFolderName:
     def test_no_wheel_folder(self, capsys):
         # Return none of of the constructed paths as existing,
         # ptvsd_folder_name() should return the path to default ptvsd.
-        patch("os.path.exists", lambda p: False)
+        patcher = patch("os.path.exists")
+        mock_no_exist = patcher.start()
+        mock_no_exist.side_effect = lambda p: False
 
         with open_requirements_with_ptvsd() as p:
             ptvsd_folder_name()
 
+        patcher.stop()
         expected = PYTHONFILES
         captured = capsys.readouterr()
         assert captured.out == expected
