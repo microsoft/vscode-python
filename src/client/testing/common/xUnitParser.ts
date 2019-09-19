@@ -180,7 +180,5 @@ function updateResultStatus(
     } else {
         result.status = TestStatus.Pass;
         result.passed = true;
-        //result.message = undefined;
-        //result.traceback = undefined;
     }
 }
