@@ -148,28 +148,6 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
         }
 
         // Content changes based on if a markdown cell or not.
-        //const content = this.isMarkdownCell() && !this.state.showingMarkdownEditor ?
-            //<div className='cell-result-container'>
-                //<div className='cell-row-container'>
-                    //{this.renderCollapseBar(false)}
-                    //{this.renderOutput()}
-                //</div>
-                //{this.renderAddDivider(false)}
-                //{this.renderMiddleToolbar()}
-            //</div> :
-            //<div className='cell-result-container'>
-                //<div className='cell-row-container'>
-                    //{this.renderCollapseBar(true)}
-                    //{this.renderControls()}
-                    //{this.renderInput()}
-                //</div>
-                //{this.renderAddDivider(true)}
-                //{this.renderMiddleToolbar()}
-                //<div className='cell-row-container'>
-                    //{this.renderCollapseBar(false)}
-                    //{this.renderOutput()}
-                //</div>
-            //</div>;
         const content = this.isMarkdownCell() && !this.state.showingMarkdownEditor ?
             <div className='cell-result-container'>
                 <div className='cell-row-container'>
