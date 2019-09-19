@@ -152,19 +152,28 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
             <div className='cell-result-container'>
                 <div className='cell-row-container'>
                     {this.renderCollapseBar(false)}
-                    {this.renderOutput()}
+                    <div className='cell-result-container'>
+                        <div className='cell-row-container'>
+                            {this.renderControls()}
+                            {this.renderInput()}
+                        </div>
+                        {this.renderAddDivider(false)}
+                        {this.renderMiddleToolbar()}
+                    </div>
                 </div>
-                {this.renderAddDivider(false)}
-                {this.renderMiddleToolbar()}
             </div> :
             <div className='cell-result-container'>
                 <div className='cell-row-container'>
                     {this.renderCollapseBar(true)}
-                    {this.renderControls()}
-                    {this.renderInput()}
+                    <div className='cell-result-container'>
+                        <div className='cell-row-container'>
+                            {this.renderControls()}
+                            {this.renderInput()}
+                        </div>
+                        {this.renderAddDivider(true)}
+                        {this.renderMiddleToolbar()}
+                    </div>
                 </div>
-                {this.renderAddDivider(true)}
-                {this.renderMiddleToolbar()}
                 <div className='cell-row-container'>
                     {this.renderCollapseBar(false)}
                     {this.renderOutput()}
