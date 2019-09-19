@@ -89,7 +89,7 @@ export function createMockTestDataItem<T extends TestDataItem>(
         case TestDataItemType.workspaceFolder:
             return (new TestWorkspaceFolder({ uri: Uri.file(''), name: 'a', index: 0 })) as T;
         default:
-            throw new Error('Unknown type');
+            throw new Error(`Unknown type ${type}`);
     }
 }
 

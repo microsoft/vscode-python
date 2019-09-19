@@ -69,10 +69,10 @@ export type TestsToRun = {
 // test results
 
 export enum TestingType {
-    folder = 'testFolder',
-    file = 'testFile',
-    suite = 'testSuite',
-    function = 'testFunction'
+    folder = 'folder',
+    file = 'file',
+    suite = 'suite',
+    function = 'function'
 }
 
 export enum TestStatus {
