@@ -14,9 +14,12 @@ import { noop } from '../utils/misc';
 import { IExtensionChannelService, IInsiderExtensionPrompt } from './types';
 
 export const insidersPromptStateKey = 'INSIDERS_PROMPT_STATE_KEY';
+export const optIntoInsidersPromptStateKey = 'OPT_INTO_INSIDERS_PROGRAM_STATE_KEY';
+
 @injectable()
 export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
     public readonly hasUserBeenNotified: IPersistentState<boolean>;
+    public readonly hasUserBeenAskedToOptAgain: IPersistentState<boolean>;
     constructor(
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IExtensionChannelService) private readonly insidersDownloadChannelService: IExtensionChannelService,
@@ -24,23 +27,17 @@ export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory
     ) {
         this.hasUserBeenNotified = this.persistentStateFactory.createGlobalPersistentState(insidersPromptStateKey, false);
+        this.hasUserBeenAskedToOptAgain = this.persistentStateFactory.createGlobalPersistentState(optIntoInsidersPromptStateKey, false);
     }
 
     @traceDecorators.error('Error in prompting to install insiders')
     public async notifyToInstallInsiders(): Promise<void> {
-        const prompts = [ExtensionChannels.yesWeekly(), ExtensionChannels.yesDaily(), DataScienceSurveyBanner.bannerLabelNo()];
-        const telemetrySelections: ['Yes, weekly', 'Yes, daily', 'No, thanks'] = ['Yes, weekly', 'Yes, daily', 'No, thanks'];
-        const selection = await this.appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts);
-        sendTelemetryEvent(EventName.INSIDERS_PROMPT, undefined, { selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined });
-        await this.hasUserBeenNotified.updateValue(true);
-        if (!selection) {
-            return;
-        }
-        if (selection === ExtensionChannels.yesWeekly()) {
-            await this.insidersDownloadChannelService.updateChannel('weekly');
-        } else if (selection === ExtensionChannels.yesDaily()) {
-            await this.insidersDownloadChannelService.updateChannel('daily');
-        }
+        await this.showPrompt(ExtensionChannels.promptMessage(), this.hasUserBeenNotified, EventName.INSIDERS_PROMPT);
+    }
+
+    @traceDecorators.error('Error in prompting to entroll back to insiders program')
+    public async askToEnrollBackToInsiders(): Promise<void> {
+        await this.showPrompt(ExtensionChannels.optIntoProgramAgainMessage(), this.hasUserBeenAskedToOptAgain, EventName.INSIDERS_PROMPT);
     }
 
     @traceDecorators.error('Error in prompting to reload')
@@ -52,6 +49,22 @@ export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
         }
         if (selection === Common.reload()) {
             this.cmdManager.executeCommand('workbench.action.reloadWindow').then(noop);
+        }
+    }
+
+    private async showPrompt(message: string, hasPromptBeenShownAlready: IPersistentState<boolean>, telemetryEventKey: EventName.INSIDERS_PROMPT) {
+        const prompts = [ExtensionChannels.yesWeekly(), ExtensionChannels.yesDaily(), DataScienceSurveyBanner.bannerLabelNo()];
+        const telemetrySelections: ['Yes, weekly', 'Yes, daily', 'No, thanks'] = ['Yes, weekly', 'Yes, daily', 'No, thanks'];
+        const selection = await this.appShell.showInformationMessage(message, ...prompts);
+        sendTelemetryEvent(telemetryEventKey, undefined, { selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined });
+        await hasPromptBeenShownAlready.updateValue(true);
+        if (!selection) {
+            return;
+        }
+        if (selection === ExtensionChannels.yesWeekly()) {
+            await this.insidersDownloadChannelService.updateChannel('weekly');
+        } else if (selection === ExtensionChannels.yesDaily()) {
+            await this.insidersDownloadChannelService.updateChannel('daily');
         }
     }
 }

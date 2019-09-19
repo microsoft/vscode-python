@@ -28,7 +28,10 @@ export class InsidersExtensionService implements IExtensionSingleActivationServi
     public async activate() {
         this.registerCommandsAndHandlers();
         const installChannel = this.extensionChannelService.getChannel();
-        await this.handleEdgeCases(installChannel);
+        if (await this.handleEdgeCases(installChannel)) {
+            // Simply return if channel is already handled and doesn't need further handling
+            return;
+        }
         this.handleChannel(installChannel).ignoreErrors();
     }
 
@@ -45,16 +48,24 @@ export class InsidersExtensionService implements IExtensionSingleActivationServi
 
     /**
      * Choose what to do in miscellaneous situations
-     * * 'Notify to install insiders prompt' - Only when using VSC insiders and if they have not been notified before (usually the first session)
-     * * 'Resolve discrepency' - When install channel is not in sync with what is installed.
+     * * `Ask users to enroll back to insiders`- If previously in the Insiders Program but not now, request them enroll in the program again
+     * * `Notify to install insiders prompt` - Only when using VSC insiders and if they have not been notified before (usually the first session)
+     * * `Resolve discrepency` - When install channel is not in sync with what is installed.
+     * @returns `true` if install channel is handled in these miscellaneous cases, `false` if install channel needs further handling
      */
-    public async handleEdgeCases(installChannel: ExtensionChannels): Promise<void> {
-        if (this.appEnvironment.channel === 'insiders' && !this.insidersPrompt.hasUserBeenNotified.value && this.extensionChannelService.isChannelUsingDefaultConfiguration) {
+    public async handleEdgeCases(installChannel: ExtensionChannels): Promise<boolean> {
+        let caseHandled = true;
+        if (this.extensionChannelService.getChannel() === 'off' && !this.extensionChannelService.isChannelUsingDefaultConfiguration) {
+            await this.insidersPrompt.askToEnrollBackToInsiders();
+        } else if (this.appEnvironment.channel === 'insiders' && !this.insidersPrompt.hasUserBeenNotified.value && this.extensionChannelService.isChannelUsingDefaultConfiguration) {
             await this.insidersPrompt.notifyToInstallInsiders();
         } else if (installChannel !== 'off' && this.appEnvironment.extensionChannel === 'stable') {
             // Install channel is set to "weekly" or "daily" but stable version of extension is installed. Switch channel to "off" to use the installed version
             await this.extensionChannelService.updateChannel('off');
+        } else {
+            caseHandled = false;
         }
+        return caseHandled;
     }
 
     public registerCommandsAndHandlers(): void {
