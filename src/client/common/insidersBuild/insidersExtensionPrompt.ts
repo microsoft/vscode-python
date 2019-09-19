@@ -37,7 +37,7 @@ export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
 
     @traceDecorators.error('Error in prompting to entroll back to insiders program')
     public async askToEnrollBackToInsiders(): Promise<void> {
-        await this.showPrompt(ExtensionChannels.optIntoProgramAgainMessage(), this.hasUserBeenAskedToOptAgain, EventName.INSIDERS_PROMPT);
+        await this.showPrompt(ExtensionChannels.optIntoProgramAgainMessage(), this.hasUserBeenAskedToOptAgain, EventName.OPT_INTO_INSIDERS_AGAIN_PROMPT);
     }
 
     @traceDecorators.error('Error in prompting to reload')
@@ -52,7 +52,7 @@ export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
         }
     }
 
-    private async showPrompt(message: string, hasPromptBeenShownAlready: IPersistentState<boolean>, telemetryEventKey: EventName.INSIDERS_PROMPT) {
+    private async showPrompt(message: string, hasPromptBeenShownAlready: IPersistentState<boolean>, telemetryEventKey: EventName.INSIDERS_PROMPT | EventName.OPT_INTO_INSIDERS_AGAIN_PROMPT) {
         const prompts = [ExtensionChannels.yesWeekly(), ExtensionChannels.yesDaily(), DataScienceSurveyBanner.bannerLabelNo()];
         const telemetrySelections: ['Yes, weekly', 'Yes, daily', 'No, thanks'] = ['Yes, weekly', 'Yes, daily', 'No, thanks'];
         const selection = await this.appShell.showInformationMessage(message, ...prompts);
