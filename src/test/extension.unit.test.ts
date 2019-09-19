@@ -6,7 +6,6 @@
 // tslint:disable:no-any
 
 import { expect } from 'chai';
-import { parse } from 'semver';
 import { buildApi } from '../client/api';
 import { ApplicationEnvironment } from '../client/common/application/applicationEnvironment';
 import { IApplicationEnvironment } from '../client/common/application/types';
@@ -29,21 +28,20 @@ suite('Extension API Debugger', () => {
 
 suite('Extension version tests', () => {
     let version: string;
-    let branchName: string;
     let applicationEnvironment: IApplicationEnvironment;
+    const branchName = process.env.CI_BRANCH_NAME;
 
     suiteSetup(async function() {
         // Skip the entire suite if running locally
-        if (!process.env.CI_BRANCH_NAME) {
+        if (!branchName) {
             // tslint:disable-next-line: no-invalid-this
             return this.skip();
         }
-        branchName = process.env.CI_BRANCH_NAME;
     });
 
     setup(() => {
         applicationEnvironment = new ApplicationEnvironment(undefined as any, undefined as any, undefined as any);
-        version = parse(applicationEnvironment.packageJson.version)!.raw;
+        version = applicationEnvironment.packageJson.version;
     });
 
     test('If we are running a pipeline in the master branch, the extension version in `package.json` should have the "-dev" suffix', async function() {
@@ -56,7 +54,7 @@ suite('Extension version tests', () => {
     });
 
     test('If we are running a pipeline in the release branch, the extension version in `package.json` should not have the "-dev" suffix', async function() {
-        if (branchName !== 'release') {
+        if (!branchName!.startsWith('release')) {
             // tslint:disable-next-line: no-invalid-this
             return this.skip();
         }
