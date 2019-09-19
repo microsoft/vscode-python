@@ -24,6 +24,7 @@ with open(REQUIREMENTS, "r", encoding="utf-8") as reqsfile:
     for line in reqsfile:
         if line.startswith(PREFIX):
             VERSION = line[len(PREFIX) :].strip()
+            break
 
 
 def ptvsd_paths(*platforms):
