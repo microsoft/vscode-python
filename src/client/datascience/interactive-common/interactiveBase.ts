@@ -421,7 +421,10 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     protected abstract closeBecauseOfFailure(exc: Error): Promise<void>;
 
-    protected clearResult(id: string): void {
+    protected async clearResult(id: string): Promise<void> {
+        // This will get called during an execution, so we need to have
+        // a notebook ready.
+        await this.ensureServerActive();
         if (this.notebook) {
             this.notebook.clear(id);
         }
@@ -460,18 +463,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         };
 
         try {
-
             // Make sure we're loaded first.
-            try {
-                traceInfo('Waiting for jupyter server and web panel ...');
-                await this.startServer();
-            } catch (exc) {
-                // We should dispose ourselves if the load fails. Othewise the user
-                // updates their install and we just fail again because the load promise is the same.
-                await this.closeBecauseOfFailure(exc);
-
-                throw exc;
-            }
+            await this.ensureServerActive();
 
             // Then show our webpanel
             await this.show();
@@ -659,6 +652,53 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         const result = this.statusProvider.set(message, undefined, undefined, this);
         this.potentiallyUnfinishedStatus.push(result);
         return result;
+    }
+
+    protected async addSysInfo(reason: SysInfoReason): Promise<void> {
+        if (!this.addSysInfoPromise || reason !== SysInfoReason.Start) {
+            traceInfo(`Adding sys info for ${this.id} ${reason}`);
+            const deferred = createDeferred<boolean>();
+            this.addSysInfoPromise = deferred;
+
+            // Generate a new sys info cell and send it to the web panel.
+            const sysInfo = await this.generateSysInfoCell(reason);
+            if (sysInfo) {
+                this.sendCellsToWebView([sysInfo]);
+            }
+
+            // For anything but start, tell the other sides of a live share session
+            if (reason !== SysInfoReason.Start && sysInfo) {
+                this.shareMessage(InteractiveWindowMessages.AddedSysInfo, { type: reason, sysInfoCell: sysInfo, id: this.id });
+            }
+
+            // For a restart, tell our window to reset
+            if (reason === SysInfoReason.Restart || reason === SysInfoReason.New) {
+                this.postMessage(InteractiveWindowMessages.RestartKernel).ignoreErrors();
+                if (this.notebook) {
+                    this.jupyterDebugger.onRestart(this.notebook);
+                }
+            }
+
+            traceInfo(`Sys info for ${this.id} ${reason} complete`);
+            deferred.resolve(true);
+        } else if (this.addSysInfoPromise) {
+            traceInfo(`Wait for sys info for ${this.id} ${reason}`);
+            await this.addSysInfoPromise.promise;
+        }
+    }
+
+    private async ensureServerActive(): Promise<void> {
+        // Make sure we're loaded first.
+        try {
+            traceInfo('Waiting for jupyter server and web panel ...');
+            await this.startServer();
+        } catch (exc) {
+            // We should dispose ourselves if the load fails. Othewise the user
+            // updates their install and we just fail again because the load promise is the same.
+            await this.closeBecauseOfFailure(exc);
+
+            throw exc;
+        }
     }
 
     private async startServerImpl(): Promise<void> {
@@ -1075,39 +1115,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         const urlString = `${connInfo.baseUrl}${tokenString}`;
 
         return `${localize.DataScience.sysInfoURILabel()}${urlString}`;
-    }
-
-    private addSysInfo = async (reason: SysInfoReason): Promise<void> => {
-        if (!this.addSysInfoPromise || reason !== SysInfoReason.Start) {
-            traceInfo(`Adding sys info for ${this.id} ${reason}`);
-            const deferred = createDeferred<boolean>();
-            this.addSysInfoPromise = deferred;
-
-            // Generate a new sys info cell and send it to the web panel.
-            const sysInfo = await this.generateSysInfoCell(reason);
-            if (sysInfo) {
-                this.sendCellsToWebView([sysInfo]);
-            }
-
-            // For anything but start, tell the other sides of a live share session
-            if (reason !== SysInfoReason.Start && sysInfo) {
-                this.shareMessage(InteractiveWindowMessages.AddedSysInfo, { type: reason, sysInfoCell: sysInfo, id: this.id });
-            }
-
-            // For a restart, tell our window to reset
-            if (reason === SysInfoReason.Restart || reason === SysInfoReason.New) {
-                this.postMessage(InteractiveWindowMessages.RestartKernel).ignoreErrors();
-                if (this.notebook) {
-                    this.jupyterDebugger.onRestart(this.notebook);
-                }
-            }
-
-            traceInfo(`Sys info for ${this.id} ${reason} complete`);
-            deferred.resolve(true);
-        } else if (this.addSysInfoPromise) {
-            traceInfo(`Wait for sys info for ${this.id} ${reason}`);
-            await this.addSysInfoPromise.promise;
-        }
     }
 
     private async checkUsable(): Promise<boolean> {

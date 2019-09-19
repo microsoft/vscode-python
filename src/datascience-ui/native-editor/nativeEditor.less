@@ -162,7 +162,7 @@
     display: flex;
     justify-items: left;
     visibility: collapse;
-    margin-left: 50px;
+    margin: 0px 0px 0px 40px;
 }
 
 .cell-wrapper:hover .navbar-div {
@@ -345,6 +345,10 @@
     background-color: var(--override-widget-background, var(--vscode-notifications-background));
 }
 
+.cell-wrapper:hover .collapse-bar-skip-hover {
+    background-color: transparent
+}
+
 .collapse-bar-markdown {
     margin: 0px 44px 0px 0px;
 }
@@ -383,8 +387,9 @@
 
 .add-divider {
     visibility: hidden;
-    position: relative;
-    top: 12px;
+    margin: 0px;
+    position: absolute;
+    bottom: 8px;
 }
 
 .cell-wrapper:hover .add-divider {

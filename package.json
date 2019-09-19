@@ -1874,6 +1874,17 @@
                     "description": "Limits depth of the symbol tree in the document outline.",
                     "scope": "resource"
                 },
+                "python.analysis.cachingLevel": {
+                    "type": "string",
+                    "enum": [
+                        "None",
+                        "System",
+                        "Library"
+                    ],
+                    "default": "None",
+                    "description": "Defines which types of modules get their analysis cached.",
+                    "scope": "resource"
+                },
                 "python.linting.enabled": {
                     "type": "boolean",
                     "default": true,
