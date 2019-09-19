@@ -2,34 +2,32 @@
 // Licensed under the MIT License.
 'use strict';
 import * as assert from 'assert';
-import * as fs from 'fs-extra';
-import { parse } from 'node-html-parser';
-import * as os from 'os';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { Disposable, Selection, TextDocument, TextEditor, Uri } from 'vscode';
+import { Disposable, TextDocument, TextEditor, Uri } from 'vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
-import { createDeferred, waitForPromise } from '../../client/common/utils/async';
+import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
-import { generateCellsFromDocument } from '../../client/datascience/cellFactory';
-import { concatMultilineString } from '../../client/datascience/common';
-import { EditorContexts } from '../../client/datascience/constants';
 import {
     InteractiveWindowMessageListener
 } from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
-import { IInteractiveWindow, IInteractiveWindowProvider, INotebookEditor, INotebookEditorProvider } from '../../client/datascience/types';
-import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
+import { IInteractiveWindowProvider, INotebookEditor, INotebookEditorProvider } from '../../client/datascience/types';
+import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { createDocument } from './editor-integration/helpers';
-import { MockDocumentManager } from './mockDocumentManager';
-import { MockEditor } from './mockTextEditor';
-import { waitForUpdate } from './reactHelpers';
-import { runMountedTest } from './nativeEditorTestHelpers';
-import { verifyHtmlOnCell, CellPosition } from './testHelpers';
+import { addCell, runMountedTest } from './nativeEditorTestHelpers';
+import {
+    addContinuousMockData,
+    addMockData,
+    CellPosition,
+    escapePath,
+    findButton,
+    getCellResults,
+    srcDirectory,
+    verifyHtmlOnCell
+} from './testHelpers';
 
 //import { asyncDump } from '../common/asyncDump';
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
@@ -89,18 +87,20 @@ suite('DataScience Native Window output tests', () => {
         return getOrCreateNativeEditor();
     }
 
-    function openExistingEditor(uri: Uri, contents: string): Promise<INotebookEditor> {
-        return getOrCreateNativeEditor(uri, contents);
-    }
-
     runMountedTest('Simple text', async (wrapper) => {
-        const editor = await createNewEditor();
-        await addCell(editor, wrapper, 'a=1\na');
+        // Create an editor so something is listening to messages
+        await createNewEditor();
+
+        // Add a cell into the UI and wait for it to render
+        await addCell(wrapper, 'a=1\na');
 
         verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
     }, () => { return ioc; });
 
     runMountedTest('Mime Types', async (wrapper) => {
+        // Create an editor so something is listening to messages
+        await createNewEditor();
+
         const badPanda = `import pandas as pd
 df = pd.read("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
 df.head()`;
@@ -140,16 +140,16 @@ for _ in range(50):
             return Promise.resolve({ result: result, haveMore: loops > 0 });
         });
 
-        await addCode(getOrCreateNativeEditor, wrapper, badPanda, 4, true);
+        await addCell(wrapper, badPanda);
         verifyHtmlOnCell(wrapper, `has no attribute 'read'`, CellPosition.Last);
 
-        await addCode(getOrCreateNativeEditor, wrapper, goodPanda);
+        await addCell(wrapper, goodPanda);
         verifyHtmlOnCell(wrapper, `<td>`, CellPosition.Last);
 
-        await addCode(getOrCreateNativeEditor, wrapper, matPlotLib);
+        await addCell(wrapper, matPlotLib);
         verifyHtmlOnCell(wrapper, matPlotLibResults, CellPosition.Last);
 
-        await addCode(getOrCreateNativeEditor, wrapper, spinningCursor, 4 + (ioc.mockJupyter ? (cursors.length * 3) : 0));
+        await addCell(wrapper, spinningCursor, 4 + (ioc.mockJupyter ? (cursors.length * 3) : 0));
         verifyHtmlOnCell(wrapper, '<div>', CellPosition.Last);
     }, () => { return ioc; });
 
@@ -169,61 +169,15 @@ for _ in range(50):
         ioc.serviceManager.rebindInstance<IDocumentManager>(IDocumentManager, docManager.object);
 
         // Get a cell into the list
-        await addCode(getOrCreateNativeEditor, wrapper, 'a=1\na');
-
-        // 'Click' the buttons in the react control
-        const undo = findButton(wrapper, 2);
-        const redo = findButton(wrapper, 1);
-        const clear = findButton(wrapper, 0);
-
-        // Now verify if we undo, we have no cells
-        let afterUndo = await getCellResults(wrapper, 1, () => {
-            undo!.simulate('click');
-            return Promise.resolve();
-        });
-
-        assert.equal(afterUndo.length, 1, `Undo should remove cells`);
-
-        // Redo should put the cells back
-        const afterRedo = await getCellResults(wrapper, 1, async () => {
-            redo!.simulate('click');
-            return Promise.resolve();
-        });
-        assert.equal(afterRedo.length, 2, 'Redo should put cells back');
-
-        // Get another cell into the list
-        const afterAdd = await addCode(getOrCreateNativeEditor, wrapper, 'a=1\na');
-        assert.equal(afterAdd.length, 3, 'Second cell did not get added');
-
-        // Clear everything
-        const afterClear = await getCellResults(wrapper, 1, async () => {
-            clear!.simulate('click');
-            return Promise.resolve();
-        });
-        assert.equal(afterClear.length, 1, 'Clear didn\'t work');
-
-        // Undo should put them back
-        afterUndo = await getCellResults(wrapper, 1, async () => {
-            undo!.simulate('click');
-            return Promise.resolve();
-        });
-
-        assert.equal(afterUndo.length, 3, `Undo should put cells back`);
+        await addCell(wrapper, 'a=1\na');
 
         // find the buttons on the cell itself
-        const ImageButtons = afterUndo.at(afterUndo.length - 2).find(ImageButton);
+        const ImageButtons = wrapper.at(wrapper.length - 2).find(ImageButton);
         assert.equal(ImageButtons.length, 4, 'Cell buttons not found');
-
-        const goto = ImageButtons.at(1);
         const deleteButton = ImageButtons.at(3);
 
-        // Make sure goto works
-        await waitForMessageResponse(() => goto.simulate('click'));
-        await waitForPromise(showedEditor.promise, 1000);
-        assert.ok(showedEditor.resolved, 'Goto source is not jumping to editor');
-
         // Make sure delete works
-        const afterDelete = await getCellResults(wrapper, 1, async () => {
+        const afterDelete = await getCellResults(wrapper, NativeEditor, 1, async () => {
             deleteButton.simulate('click');
             return Promise.resolve();
         });
@@ -247,87 +201,12 @@ for _ in range(50):
         ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
 
         // Make sure to create the interactive window after the rebind or it gets the wrong application shell.
-        await addCode(getOrCreateNativeEditor, wrapper, 'a=1\na');
-        const interactiveWindow = await getOrCreateNativeEditor();
+        await createNewEditor();
+        await addCell(wrapper, 'a=1\na');
 
         // Export should cause exportCalled to change to true
-        await waitForMessageResponse(() => interactiveWindow.exportCells());
-        assert.equal(exportCalled, true, 'Export is not being called during export');
-
-        // Remove the cell
-        const exportButton = findButton(wrapper, 5);
-        const undo = findButton(wrapper, 2);
-
-        // Now verify if we undo, we have no cells
-        const afterUndo = await getCellResults(wrapper, 1, () => {
-            undo!.simulate('click');
-            return Promise.resolve();
-        });
-
-        assert.equal(afterUndo.length, 1, 'Undo should remove cells');
-
-        // Then verify we cannot click the button (it should be disabled)
-        exportCalled = false;
-        const response = waitForMessageResponse(() => exportButton!.simulate('click'));
-        await waitForPromise(response, 100);
-        assert.equal(exportCalled, false, 'Export should not be called when no cells visible');
-
-    }, () => { return ioc; });
-
-    runMountedTest('Dispose test', async () => {
-        // tslint:disable-next-line:no-any
-        const interactiveWindow = await getOrCreateNativeEditor();
-        await interactiveWindow.show(); // Have to wait for the load to finish
-        await interactiveWindow.dispose();
-        // tslint:disable-next-line:no-any
-        const h2 = await getOrCreateNativeEditor();
-        // Check equal and then dispose so the test goes away
-        const equal = Object.is(interactiveWindow, h2);
-        await h2.show();
-        assert.ok(!equal, 'Disposing is not removing the active interactive window');
-    }, () => { return ioc; });
-
-
-    runMountedTest('Multiple input', async (wrapper) => {
-        // Create an interactive window so that it listens to the results.
-        const interactiveWindow = await getOrCreateNativeEditor();
-        await interactiveWindow.show();
-
-        // Then enter some code.
-        await enterInput(wrapper, 'a=1\na');
-        verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
-
-        // Then delete the node
-        const lastCell = getLastOutputCell(wrapper);
-        const ImageButtons = lastCell.find(ImageButton);
-        assert.equal(ImageButtons.length, 4, 'Cell buttons not found');
-        const deleteButton = ImageButtons.at(3);
-
-        // Make sure delete works
-        const afterDelete = await getCellResults(wrapper, 1, async () => {
-            deleteButton.simulate('click');
-            return Promise.resolve();
-        });
-        assert.equal(afterDelete.length, 1, `Delete should remove a cell`);
-
-        // Should be able to enter again
-        await enterInput(wrapper, 'a=1\na');
-        verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
-
-        // Try a 3rd time with some new input
-        addMockData(ioc, 'print("hello")', 'hello');
-        await enterInput(wrapper, 'print("hello")');
-        verifyHtmlOnCell(wrapper, 'hello', CellPosition.Last);
-    }, () => { return ioc; });
-
-    runMountedTest('Limit text output', async (wrapper) => {
-        ioc.getSettings().datascience.textOutputLimit = 8;
-
-        // Output should be trimmed to just two lines of output
-        const code = `print("hello\\nworld\\nhow\\nare\\nyou")`;
-        addMockData(ioc, code, 'are\nyou\n');
-        await addCode(getOrCreateNativeEditor, wrapper, code, 4);
-
-        verifyHtmlOnCell(wrapper, '>are\nyou', CellPosition.Last);
+        const exportButton = findButton(wrapper, NativeEditor, 5);
+        await waitForMessageResponse(() => exportButton!.simulate('click'));
+        assert.equal(exportCalled, true, 'Export should have been called');
     }, () => { return ioc; });
 });

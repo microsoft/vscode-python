@@ -29,7 +29,7 @@ import { asyncDump } from '../common/asyncDump';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createDocument } from './editor-integration/helpers';
 import { waitForUpdate } from './reactHelpers';
-import { addMockData, verifyHtmlOnCell, CellPosition } from './testHelpers';
+import { addMockData, CellPosition, verifyHtmlOnCell } from './testHelpers';
 
 //tslint:disable:trailing-comma no-any no-multiline-string
 
