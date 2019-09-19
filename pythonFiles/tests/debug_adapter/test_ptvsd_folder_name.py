@@ -20,7 +20,7 @@ PYTHONFILES = path.join(ROOT, "pythonFiles", "lib", "python")
 
 
 def isPython37():
-    return sys.version_info.major == 3 and sys.version_info.minor == 7
+    return sys.version_info[:2] == (3, 7)
 
 
 def open_requirements_with_ptvsd():
@@ -47,8 +47,8 @@ class TestPtvsdFolderName(object):
 
     def test_requirement_exists_folder_exists(self, capsys, monkeypatch):
         # Return the first constructed folder path as existing.
-        monkeypatch.setattr(path, "exists", mock_path_exists_true)
-        with open_requirements_with_ptvsd() as p:
+        monkeypatch.setattr(path, "exists", lambda p: True)
+        with open_requirements_with_ptvsd():
             ptvsd_folder_name()
         tag = next(sys_tags())
         folder = "ptvsd-5.0.0-{0}-{1}-{2}".format(
@@ -68,7 +68,7 @@ class TestPtvsdFolderName(object):
     def test_no_wheel_folder(self, capsys, monkeypatch):
         # Return none of of the constructed paths as existing,
         # ptvsd_folder_name() should return the path to default ptvsd.
-        monkeypatch.setattr(path, "exists", mock_path_exists_false)
+        monkeypatch.setattr(path, "exists", lambda p: False)
         with open_requirements_with_ptvsd() as p:
             ptvsd_folder_name()
         expected = PYTHONFILES
