@@ -72,6 +72,7 @@ export class InsidersExtensionService implements IExtensionSingleActivationServi
 
     /**
      * If previously in the Insiders Program but not now, request them enroll in the program again
+     * @returns `true` if prompt is shown, `false` otherwise
      */
     private async promptToEnrollBackToInsidersIfApplicable(installChannel: ExtensionChannels): Promise<boolean> {
         if (installChannel === 'off' && !this.extensionChannelService.isChannelUsingDefaultConfiguration) {
@@ -84,6 +85,7 @@ export class InsidersExtensionService implements IExtensionSingleActivationServi
 
     /**
      * Only when using VSC insiders and if they have not been notified before (usually the first session), notify to enroll into the insiders program
+     * @returns `true` if prompt is shown, `false` otherwise
      */
     private async promptToInstallInsidersIfApplicable(): Promise<boolean> {
         if (this.appEnvironment.channel === 'insiders' && !this.insidersPrompt.hasUserBeenNotified.value && this.extensionChannelService.isChannelUsingDefaultConfiguration) {
@@ -95,6 +97,7 @@ export class InsidersExtensionService implements IExtensionSingleActivationServi
 
     /**
      * When install channel is not in sync with what is installed, resolve discrepency by setting channel to "off"
+     * @returns `true` if channel is set to off, `false` otherwise
      */
     private async setInsidersChannelToOffIfApplicable(installChannel: ExtensionChannels): Promise<boolean> {
         if (installChannel !== 'off' && this.appEnvironment.extensionChannel === 'stable') {

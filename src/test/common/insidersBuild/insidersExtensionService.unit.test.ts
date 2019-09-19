@@ -216,35 +216,6 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
                 operation: 'Enroll into the program again prompt'
             },
             {
-                vscodeChannel: 'stable',
-                installChannel: 'daily',
-                extensionChannel: 'stable',
-                operation: 'Set channel to off'
-            },
-            {
-                vscodeChannel: 'stable',
-                installChannel: 'daily',
-                extensionChannel: 'insiders',
-                operation: undefined
-            },
-            {
-                vscodeChannel: 'stable',
-                installChannel: 'off',
-                operation: undefined
-            },
-            {
-                vscodeChannel: 'insiders',
-                installChannel: 'off',
-                isChannelUsingDefaultConfiguration: false,
-                operation: 'Enroll into the program again prompt'
-            },
-            {
-                vscodeChannel: 'insiders',
-                hasUserBeenNotified: true,
-                installChannel: 'off',
-                operation: undefined
-            },
-            {
                 vscodeChannel: 'insiders',
                 hasUserBeenNotified: false,
                 isChannelUsingDefaultConfiguration: false,
@@ -253,24 +224,9 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
             },
             {
                 vscodeChannel: 'insiders',
-                hasUserBeenNotified: false,
-                isChannelUsingDefaultConfiguration: false,
-                installChannel: 'daily',
-                extensionChannel: 'insiders',
-                operation: undefined
-            },
-            {
-                vscodeChannel: 'stable',
-                isChannelUsingDefaultConfiguration: true,
                 installChannel: 'off',
-                extensionChannel: 'insiders',
-                operation: undefined
-            },
-            {
-                vscodeChannel: 'insiders',
-                hasUserBeenNotified: false,
-                isChannelUsingDefaultConfiguration: true,
-                operation: 'Insiders Install Prompt'
+                isChannelUsingDefaultConfiguration: false,
+                operation: 'Enroll into the program again prompt'
             },
             {
                 // TEST: Ensure when conditions for both 'Set channel to off' & 'Insiders Install Prompt' operations are met, 'Insiders Install prompt' is given preference
@@ -280,7 +236,51 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
                 installChannel: 'daily',
                 extensionChannel: 'stable',
                 operation: 'Insiders Install Prompt'
-            }
+            },
+            {
+                vscodeChannel: 'insiders',
+                hasUserBeenNotified: false,
+                isChannelUsingDefaultConfiguration: true,
+                operation: 'Insiders Install Prompt'
+            },
+            {
+                vscodeChannel: 'stable',
+                installChannel: 'daily',
+                extensionChannel: 'stable',
+                operation: 'Set channel to off'
+            },
+            {
+                vscodeChannel: 'insiders',
+                hasUserBeenNotified: false,
+                isChannelUsingDefaultConfiguration: false,
+                installChannel: 'daily',
+                extensionChannel: 'insiders',
+                operation: undefined
+            },
+            {
+                vscodeChannel: 'stable',
+                isChannelUsingDefaultConfiguration: true,
+                installChannel: 'off',
+                extensionChannel: 'insiders',
+                operation: undefined
+            },
+            {
+                vscodeChannel: 'stable',
+                installChannel: 'daily',
+                extensionChannel: 'insiders',
+                operation: undefined
+            },
+            {
+                vscodeChannel: 'stable',
+                installChannel: 'off',
+                operation: undefined
+            },
+            {
+                vscodeChannel: 'insiders',
+                hasUserBeenNotified: true,
+                installChannel: 'off',
+                operation: undefined
+            },
         ];
 
     testsForHandleEdgeCases.forEach(testParams => {
