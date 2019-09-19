@@ -30,6 +30,7 @@ suite('Extension version tests', () => {
     let branchName: string;
 
     suiteSetup(async function() {
+        // Skip the entire suite if running locally
         if (!process.env.CI_BRANCH_NAME) {
             // tslint:disable-next-line: no-invalid-this
             return this.skip();
@@ -53,7 +54,7 @@ suite('Extension version tests', () => {
     });
 
     test('If we are running a pipeline in the release branch, the extension version in `package.json` should not have the "-dev" suffix', async function() {
-        if (!branchName.startsWith('release')) {
+        if (branchName !== 'release') {
             // tslint:disable-next-line: no-invalid-this
             return this.skip();
         }
