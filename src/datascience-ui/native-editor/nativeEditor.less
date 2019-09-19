@@ -49,16 +49,6 @@
 // make the width of the div be a bit less than the width of the window,
 // the 85 pixels removed account for the space the padding and controls
 // on the left take in the native Editor.
-//.cell-output {
-    //margin-top: 5px;
-    //background: var(--override-widget-background, var(--vscode-notifications-background));
-    //border-style: solid;
-    //border-color: var(--override-widget-background, var(--vscode-notifications-background));
-    //border-width: 3px;
-    //width: calc(100vw - 85px);
-    //overflow-x: scroll;
-    //flex: 1;
-//}
 .cell-output {
     margin-top: 5px;
     background: var(--override-widget-background, var(--vscode-notifications-background));
@@ -137,28 +127,11 @@
     grid-row: 1;
     min-width: calc(100% - 85px);
 }
-//.cell-input {
-    //margin: 0px 10px 0px 0px;
-    //border-color:  var(--override-widget-background, var(--vscode-notifications-background));
-    //border-style: solid;
-    //border-width: 1px;
-    //padding: 2px;
-    //background: var(--override-widget-background, var(--vscode-notifications-background));
-    //flex: 1;
-    //min-width: calc(100% - 85px);
-//}
 
 .content-div {
     grid-column: 3;
 }
 
-//.controls-div {
-    //min-width: 34px;
-    //max-width: 34px;
-    //padding-left: 10px;
-    //flex: 1;
-    //display: block;
-//}
 .controls-div {
     min-width: 34px;
     max-width: 34px;
@@ -193,12 +166,6 @@
     grid-column: 1;
 }
 
-//.native-editor-celltoolbar-middle {
-    //display: flex;
-    //justify-items: left;
-    //visibility: collapse;
-    //margin-left: 50px;
-//}
 .native-editor-celltoolbar-middle {
     grid-column: 3;
     grid-row: 2;
@@ -371,9 +338,6 @@
     visibility: visible;
 }
 
-//.cell-row-container {
-    //display: flex;
-//}
 .cell-row-container {
     display: grid;
     grid-template-columns: auto auto 1fr;
@@ -388,12 +352,6 @@
     max-width: 8px;
     min-width: 8px;
 }
-//.collapse-bar {
-    //flex: 1;
-    //background-color: transparent;
-    //max-width: 8px;
-    //min-width: 8px;
-//}
 
 .cell-wrapper:hover .collapse-bar {
     background-color: var(--override-widget-background, var(--vscode-notifications-background));
@@ -409,7 +367,6 @@
 
 .collapse-bar-selected {
     background-color: var(--vscode-peekView-border);
-    //grid-row: 1 / 2;
     grid-row-start: 1;
     grid-row-end: 3;
 }
@@ -442,8 +399,9 @@
 
 .add-divider {
     visibility: hidden;
-    position: relative;
-    top: 12px;
+    margin: 0px;
+    position: absolute;
+    bottom: 8px;
 }
 
 .cell-wrapper:hover .add-divider {
