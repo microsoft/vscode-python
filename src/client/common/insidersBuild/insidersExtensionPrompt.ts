@@ -52,12 +52,12 @@ export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
         }
     }
 
-    private async showPrompt(message: string, hasPromptBeenShownAlready: IPersistentState<boolean>, telemetryEventKey: EventName.INSIDERS_PROMPT | EventName.OPT_INTO_INSIDERS_AGAIN_PROMPT) {
+    private async showPrompt(message: string, hasPromptBeenShownAlreadyState: IPersistentState<boolean>, telemetryEventKey: EventName.INSIDERS_PROMPT | EventName.OPT_INTO_INSIDERS_AGAIN_PROMPT) {
         const prompts = [ExtensionChannels.yesWeekly(), ExtensionChannels.yesDaily(), DataScienceSurveyBanner.bannerLabelNo()];
         const telemetrySelections: ['Yes, weekly', 'Yes, daily', 'No, thanks'] = ['Yes, weekly', 'Yes, daily', 'No, thanks'];
         const selection = await this.appShell.showInformationMessage(message, ...prompts);
         sendTelemetryEvent(telemetryEventKey, undefined, { selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined });
-        await hasPromptBeenShownAlready.updateValue(true);
+        await hasPromptBeenShownAlreadyState.updateValue(true);
         if (!selection) {
             return;
         }

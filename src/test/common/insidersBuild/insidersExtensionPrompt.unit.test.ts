@@ -11,7 +11,7 @@ import { ApplicationShell } from '../../../client/common/application/application
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { IApplicationShell, ICommandManager } from '../../../client/common/application/types';
 import { ExtensionChannelService } from '../../../client/common/insidersBuild/downloadChannelService';
-import { InsidersExtensionPrompt, insidersPromptStateKey } from '../../../client/common/insidersBuild/insidersExtensionPrompt';
+import { InsidersExtensionPrompt, insidersPromptStateKey, optIntoInsidersPromptStateKey } from '../../../client/common/insidersBuild/insidersExtensionPrompt';
 import { ExtensionChannel, IExtensionChannelService } from '../../../client/common/insidersBuild/types';
 import { PersistentStateFactory } from '../../../client/common/persistentState';
 import { IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
@@ -24,6 +24,7 @@ suite('Insiders Extension prompt', () => {
     let cmdManager: ICommandManager;
     let persistentState: IPersistentStateFactory;
     let hasUserBeenNotifiedState: TypeMoq.IMock<IPersistentState<boolean>>;
+    let hasUserBeenAskedToOptAgain: TypeMoq.IMock<IPersistentState<boolean>>;
     let insidersPrompt: InsidersExtensionPrompt;
     setup(() => {
         extensionChannelService = mock(ExtensionChannelService);
@@ -32,95 +33,208 @@ suite('Insiders Extension prompt', () => {
         cmdManager = mock(CommandManager);
         hasUserBeenNotifiedState = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
         when(persistentState.createGlobalPersistentState(insidersPromptStateKey, false)).thenReturn(hasUserBeenNotifiedState.object);
+        hasUserBeenAskedToOptAgain = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
+        when(persistentState.createGlobalPersistentState(optIntoInsidersPromptStateKey, false)).thenReturn(hasUserBeenAskedToOptAgain.object);
         insidersPrompt = new InsidersExtensionPrompt(instance(appShell), instance(extensionChannelService), instance(cmdManager), instance(persistentState));
     });
 
-    test('Channel is set to \'daily\' if \'Yes, daily\' option is selected', async () => {
-        const prompts = [ExtensionChannels.yesWeekly(), ExtensionChannels.yesDaily(), DataScienceSurveyBanner.bannerLabelNo()];
-        when(
-            appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)
-        ).thenResolve(ExtensionChannels.yesDaily() as any);
-        when(
-            cmdManager.executeCommand('workbench.action.reloadWindow')
-        ).thenResolve();
-        when(
-            extensionChannelService.updateChannel(ExtensionChannel.daily)
-        ).thenResolve();
-        hasUserBeenNotifiedState
-            .setup(u => u.updateValue(true))
-            .returns(() => Promise.resolve(undefined))
-            .verifiable(TypeMoq.Times.once());
-        await insidersPrompt.notifyToInstallInsiders();
-        verify(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).once();
-        verify(extensionChannelService.updateChannel(ExtensionChannel.daily)).once();
-        hasUserBeenNotifiedState.verifyAll();
-        verify(cmdManager.executeCommand('workbench.action.reloadWindow')).never();
+    [
+        'askToEnrollBackToInsiders',
+        'notifyToInstallInsiders'
+    ].forEach(methodNameToTest => {
+        let suiteName: string;
+        let hasPromptBeenShownAlreadyState: TypeMoq.IMock<IPersistentState<boolean>>;
+        let methodToTest: () => Promise<void>;
+        if (methodNameToTest === 'askToEnrollBackToInsiders') {
+            suiteName = 'Opt into insiders program again prompt';
+            hasPromptBeenShownAlreadyState = hasUserBeenAskedToOptAgain;
+            methodToTest = insidersPrompt.askToEnrollBackToInsiders;
+        } else {
+            suiteName = 'Notify to use insiders prompt';
+            hasPromptBeenShownAlreadyState = hasUserBeenNotifiedState;
+            methodToTest = insidersPrompt.notifyToInstallInsiders;
+        }
+        // tslint:disable-next-line: max-func-body-length
+        suite(suiteName, async () => {
+            test('Channel is set to \'daily\' if \'Yes, daily\' option is selected', async () => {
+                const prompts = [ExtensionChannels.yesWeekly(), ExtensionChannels.yesDaily(), DataScienceSurveyBanner.bannerLabelNo()];
+                when(
+                    appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)
+                ).thenResolve(ExtensionChannels.yesDaily() as any);
+                when(
+                    cmdManager.executeCommand('workbench.action.reloadWindow')
+                ).thenResolve();
+                when(
+                    extensionChannelService.updateChannel(ExtensionChannel.daily)
+                ).thenResolve();
+                hasPromptBeenShownAlreadyState
+                    .setup(u => u.updateValue(true))
+                    .returns(() => Promise.resolve(undefined))
+                    .verifiable(TypeMoq.Times.once());
+                await methodToTest();
+                verify(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).once();
+                verify(extensionChannelService.updateChannel(ExtensionChannel.daily)).once();
+                hasPromptBeenShownAlreadyState.verifyAll();
+                verify(cmdManager.executeCommand('workbench.action.reloadWindow')).never();
+            });
+
+            test('Channel is set to \'weekly\' if \'Yes, weekly\' option is selected', async () => {
+                const prompts = [ExtensionChannels.yesWeekly(), ExtensionChannels.yesDaily(), DataScienceSurveyBanner.bannerLabelNo()];
+                when(
+                    appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)
+                ).thenResolve(ExtensionChannels.yesWeekly() as any);
+                when(
+                    cmdManager.executeCommand('workbench.action.reloadWindow')
+                ).thenResolve();
+                when(
+                    extensionChannelService.updateChannel(ExtensionChannel.weekly)
+                ).thenResolve();
+                hasPromptBeenShownAlreadyState
+                    .setup(u => u.updateValue(true))
+                    .returns(() => Promise.resolve(undefined))
+                    .verifiable(TypeMoq.Times.once());
+                await methodToTest();
+                verify(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).once();
+                verify(extensionChannelService.updateChannel(ExtensionChannel.weekly)).once();
+                hasPromptBeenShownAlreadyState.verifyAll();
+                verify(cmdManager.executeCommand('workbench.action.reloadWindow')).never();
+            });
+
+            test('No channel is set if \'No, thanks\' option is selected', async () => {
+                const prompts = [ExtensionChannels.yesWeekly(), ExtensionChannels.yesDaily(), DataScienceSurveyBanner.bannerLabelNo()];
+                when(
+                    appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)
+                ).thenResolve(DataScienceSurveyBanner.bannerLabelNo() as any);
+                when(
+                    cmdManager.executeCommand('workbench.action.reloadWindow')
+                ).thenResolve();
+                when(
+                    extensionChannelService.updateChannel(anything())
+                ).thenResolve();
+                hasPromptBeenShownAlreadyState
+                    .setup(u => u.updateValue(true))
+                    .returns(() => Promise.resolve(undefined))
+                    .verifiable(TypeMoq.Times.once());
+                await methodToTest();
+                verify(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).once();
+                verify(extensionChannelService.updateChannel(anything())).never();
+                hasPromptBeenShownAlreadyState.verifyAll();
+                verify(cmdManager.executeCommand('workbench.action.reloadWindow')).never();
+            });
+
+            test('No channel is set if no option is selected', async () => {
+                const prompts = [ExtensionChannels.yesWeekly(), ExtensionChannels.yesDaily(), DataScienceSurveyBanner.bannerLabelNo()];
+                when(
+                    appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)
+                ).thenResolve(undefined as any);
+                when(
+                    cmdManager.executeCommand('workbench.action.reloadWindow')
+                ).thenResolve();
+                when(
+                    extensionChannelService.updateChannel(anything())
+                ).thenResolve();
+                hasPromptBeenShownAlreadyState
+                    .setup(u => u.updateValue(true))
+                    .returns(() => Promise.resolve(undefined))
+                    .verifiable(TypeMoq.Times.once());
+                await methodToTest();
+                verify(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).once();
+                verify(extensionChannelService.updateChannel(anything())).never();
+                hasPromptBeenShownAlreadyState.verifyAll();
+                verify(cmdManager.executeCommand('workbench.action.reloadWindow')).never();
+            });
+        });
     });
 
-    test('Channel is set to \'weekly\' if \'Yes, weekly\' option is selected', async () => {
-        const prompts = [ExtensionChannels.yesWeekly(), ExtensionChannels.yesDaily(), DataScienceSurveyBanner.bannerLabelNo()];
-        when(
-            appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)
-        ).thenResolve(ExtensionChannels.yesWeekly() as any);
-        when(
-            cmdManager.executeCommand('workbench.action.reloadWindow')
-        ).thenResolve();
-        when(
-            extensionChannelService.updateChannel(ExtensionChannel.weekly)
-        ).thenResolve();
-        hasUserBeenNotifiedState
-            .setup(u => u.updateValue(true))
-            .returns(() => Promise.resolve(undefined))
-            .verifiable(TypeMoq.Times.once());
-        await insidersPrompt.notifyToInstallInsiders();
-        verify(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).once();
-        verify(extensionChannelService.updateChannel(ExtensionChannel.weekly)).once();
-        hasUserBeenNotifiedState.verifyAll();
-        verify(cmdManager.executeCommand('workbench.action.reloadWindow')).never();
-    });
+    // tslint:disable-next-line: max-func-body-length
+    suite('Opt into insiders program again prompt', async () => {
+        test('Channel is set to \'daily\' if \'Yes, daily\' option is selected', async () => {
+            const prompts = [ExtensionChannels.yesWeekly(), ExtensionChannels.yesDaily(), DataScienceSurveyBanner.bannerLabelNo()];
+            when(
+                appShell.showInformationMessage(ExtensionChannels.optIntoProgramAgainMessage(), ...prompts)
+            ).thenResolve(ExtensionChannels.yesDaily() as any);
+            when(
+                cmdManager.executeCommand('workbench.action.reloadWindow')
+            ).thenResolve();
+            when(
+                extensionChannelService.updateChannel(ExtensionChannel.daily)
+            ).thenResolve();
+            hasUserBeenAskedToOptAgain
+                .setup(u => u.updateValue(true))
+                .returns(() => Promise.resolve(undefined))
+                .verifiable(TypeMoq.Times.once());
+            await insidersPrompt.askToEnrollBackToInsiders();
+            verify(appShell.showInformationMessage(ExtensionChannels.optIntoProgramAgainMessage(), ...prompts)).once();
+            verify(extensionChannelService.updateChannel(ExtensionChannel.daily)).once();
+            hasUserBeenAskedToOptAgain.verifyAll();
+            verify(cmdManager.executeCommand('workbench.action.reloadWindow')).never();
+        });
 
-    test('No channel is set if \'No, thanks\' option is selected', async () => {
-        const prompts = [ExtensionChannels.yesWeekly(), ExtensionChannels.yesDaily(), DataScienceSurveyBanner.bannerLabelNo()];
-        when(
-            appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)
-        ).thenResolve(DataScienceSurveyBanner.bannerLabelNo() as any);
-        when(
-            cmdManager.executeCommand('workbench.action.reloadWindow')
-        ).thenResolve();
-        when(
-            extensionChannelService.updateChannel(anything())
-        ).thenResolve();
-        hasUserBeenNotifiedState
-            .setup(u => u.updateValue(true))
-            .returns(() => Promise.resolve(undefined))
-            .verifiable(TypeMoq.Times.once());
-        await insidersPrompt.notifyToInstallInsiders();
-        verify(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).once();
-        verify(extensionChannelService.updateChannel(anything())).never();
-        hasUserBeenNotifiedState.verifyAll();
-        verify(cmdManager.executeCommand('workbench.action.reloadWindow')).never();
-    });
+        test('Channel is set to \'weekly\' if \'Yes, weekly\' option is selected', async () => {
+            const prompts = [ExtensionChannels.yesWeekly(), ExtensionChannels.yesDaily(), DataScienceSurveyBanner.bannerLabelNo()];
+            when(
+                appShell.showInformationMessage(ExtensionChannels.optIntoProgramAgainMessage(), ...prompts)
+            ).thenResolve(ExtensionChannels.yesWeekly() as any);
+            when(
+                cmdManager.executeCommand('workbench.action.reloadWindow')
+            ).thenResolve();
+            when(
+                extensionChannelService.updateChannel(ExtensionChannel.weekly)
+            ).thenResolve();
+            hasUserBeenAskedToOptAgain
+                .setup(u => u.updateValue(true))
+                .returns(() => Promise.resolve(undefined))
+                .verifiable(TypeMoq.Times.once());
+            await insidersPrompt.askToEnrollBackToInsiders();
+            verify(appShell.showInformationMessage(ExtensionChannels.optIntoProgramAgainMessage(), ...prompts)).once();
+            verify(extensionChannelService.updateChannel(ExtensionChannel.weekly)).once();
+            hasUserBeenAskedToOptAgain.verifyAll();
+            verify(cmdManager.executeCommand('workbench.action.reloadWindow')).never();
+        });
 
-    test('No channel is set if no option is selected', async () => {
-        const prompts = [ExtensionChannels.yesWeekly(), ExtensionChannels.yesDaily(), DataScienceSurveyBanner.bannerLabelNo()];
-        when(
-            appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)
-        ).thenResolve(undefined as any);
-        when(
-            cmdManager.executeCommand('workbench.action.reloadWindow')
-        ).thenResolve();
-        when(
-            extensionChannelService.updateChannel(anything())
-        ).thenResolve();
-        hasUserBeenNotifiedState
-            .setup(u => u.updateValue(true))
-            .returns(() => Promise.resolve(undefined))
-            .verifiable(TypeMoq.Times.once());
-        await insidersPrompt.notifyToInstallInsiders();
-        verify(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).once();
-        verify(extensionChannelService.updateChannel(anything())).never();
-        hasUserBeenNotifiedState.verifyAll();
-        verify(cmdManager.executeCommand('workbench.action.reloadWindow')).never();
+        test('No channel is set if \'No, thanks\' option is selected', async () => {
+            const prompts = [ExtensionChannels.yesWeekly(), ExtensionChannels.yesDaily(), DataScienceSurveyBanner.bannerLabelNo()];
+            when(
+                appShell.showInformationMessage(ExtensionChannels.optIntoProgramAgainMessage(), ...prompts)
+            ).thenResolve(DataScienceSurveyBanner.bannerLabelNo() as any);
+            when(
+                cmdManager.executeCommand('workbench.action.reloadWindow')
+            ).thenResolve();
+            when(
+                extensionChannelService.updateChannel(anything())
+            ).thenResolve();
+            hasUserBeenAskedToOptAgain
+                .setup(u => u.updateValue(true))
+                .returns(() => Promise.resolve(undefined))
+                .verifiable(TypeMoq.Times.once());
+            await insidersPrompt.askToEnrollBackToInsiders();
+            verify(appShell.showInformationMessage(ExtensionChannels.optIntoProgramAgainMessage(), ...prompts)).once();
+            verify(extensionChannelService.updateChannel(anything())).never();
+            hasUserBeenAskedToOptAgain.verifyAll();
+            verify(cmdManager.executeCommand('workbench.action.reloadWindow')).never();
+        });
+
+        test('No channel is set if no option is selected', async () => {
+            const prompts = [ExtensionChannels.yesWeekly(), ExtensionChannels.yesDaily(), DataScienceSurveyBanner.bannerLabelNo()];
+            when(
+                appShell.showInformationMessage(ExtensionChannels.optIntoProgramAgainMessage(), ...prompts)
+            ).thenResolve(undefined as any);
+            when(
+                cmdManager.executeCommand('workbench.action.reloadWindow')
+            ).thenResolve();
+            when(
+                extensionChannelService.updateChannel(anything())
+            ).thenResolve();
+            hasUserBeenAskedToOptAgain
+                .setup(u => u.updateValue(true))
+                .returns(() => Promise.resolve(undefined))
+                .verifiable(TypeMoq.Times.once());
+            await insidersPrompt.askToEnrollBackToInsiders();
+            verify(appShell.showInformationMessage(ExtensionChannels.optIntoProgramAgainMessage(), ...prompts)).once();
+            verify(extensionChannelService.updateChannel(anything())).never();
+            hasUserBeenAskedToOptAgain.verifyAll();
+            verify(cmdManager.executeCommand('workbench.action.reloadWindow')).never();
+        });
     });
 
     test('Do not do anything if no option is selected in the reload prompt', async () => {

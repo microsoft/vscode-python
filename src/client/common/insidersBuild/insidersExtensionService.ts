@@ -48,18 +48,18 @@ export class InsidersExtensionService implements IExtensionSingleActivationServi
 
     /**
      * Choose what to do in miscellaneous situations
-     * * `Ask users to enroll back to insiders`- If previously in the Insiders Program but not now, request them enroll in the program again
-     * * `Notify to install insiders prompt` - Only when using VSC insiders and if they have not been notified before (usually the first session)
-     * * `Resolve discrepency` - When install channel is not in sync with what is installed.
      * @returns `true` if install channel is handled in these miscellaneous cases, `false` if install channel needs further handling
      */
     public async handleEdgeCases(installChannel: ExtensionChannels): Promise<boolean> {
         let caseHandled = true;
-        if (this.extensionChannelService.getChannel() === 'off' && !this.extensionChannelService.isChannelUsingDefaultConfiguration) {
+        if (installChannel === 'off' && !this.extensionChannelService.isChannelUsingDefaultConfiguration) {
+            // If previously in the Insiders Program but not now, request them enroll in the program again
             await this.insidersPrompt.askToEnrollBackToInsiders();
         } else if (this.appEnvironment.channel === 'insiders' && !this.insidersPrompt.hasUserBeenNotified.value && this.extensionChannelService.isChannelUsingDefaultConfiguration) {
+            // Only when using VSC insiders and if they have not been notified before (usually the first session), notify to enroll into the insiders program
             await this.insidersPrompt.notifyToInstallInsiders();
         } else if (installChannel !== 'off' && this.appEnvironment.extensionChannel === 'stable') {
+            // When install channel is not in sync with what is installed, we have to resolve discrepency
             // Install channel is set to "weekly" or "daily" but stable version of extension is installed. Switch channel to "off" to use the installed version
             await this.extensionChannelService.updateChannel('off');
         } else {
