@@ -10,7 +10,7 @@ import * as uuid from 'uuid/v4';
 
 import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
-import { generateMarkdownFromCodeLines } from '../../client/datascience/common';
+import { concatMultilineString, generateMarkdownFromCodeLines } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import {
     IInteractiveWindowMapping,
@@ -949,7 +949,7 @@ export class MainStateController implements IMessageHandler {
             newVMs[index] = cloneDeep(newVMs[index]);
 
             // Check to see if our code still matches for the cell (in liveshare it might be updated from the other side)
-            if (newVMs[index].cell.data.source !== cell.data.source) {
+            if (concatMultilineString(newVMs[index].cell.data.source) !== concatMultilineString(cell.data.source)) {
                 const newText = extractInputText(cell, getSettings());
                 newVMs[index].inputBlockText = newText;
             }
