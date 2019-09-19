@@ -10,7 +10,7 @@ pycodestyle
 prospector
 pydocstyle
 nose
-pytest==3.6.3
+pytest==5.0.1
 rope
 flask
 django
