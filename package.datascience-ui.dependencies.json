@@ -33,6 +33,7 @@
     "@nteract/styled-blueprintjsx",
     "create-react-context",
     "dom4",
+    "fast-deep-equal",
     "gud",
     "popper.js",
     "react-is",

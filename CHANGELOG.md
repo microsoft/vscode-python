@@ -1,5 +1,12 @@
 # Changelog
 
+## 2019.9.1 (6 September 2019)
+
+### Fixes
+
+1. Fixes to automatic scrolling on the interactive window.
+   ([#6580](https://github.com/Microsoft/vscode-python/issues/6580))
+
 ## 2019.9.0 (3 September 2019)
 
 ### Enhancements

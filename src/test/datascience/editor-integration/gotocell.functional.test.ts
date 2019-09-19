@@ -5,21 +5,21 @@ import { assert } from 'chai';
 import { ChildProcess } from 'child_process';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { CodeLens, Disposable, Position, Range } from 'vscode';
+import { CodeLens, Disposable, Position, Range, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { IDocumentManager } from '../../../client/common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { traceError } from '../../../client/common/logger';
-import { Commands } from '../../../client/datascience/constants';
-import { InteractiveWindowMessages } from '../../../client/datascience/interactive-window/interactiveWindowTypes';
+import { Commands, Identifiers } from '../../../client/datascience/constants';
+import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import {
     ICell,
     ICodeLensFactory,
     IDataScienceCodeLensProvider,
     IInteractiveWindowListener,
     IJupyterExecution,
-    INotebookServer
+    INotebook
 } from '../../../client/datascience/types';
 import { DataScienceIocContainer } from '../dataScienceIocContainer';
 import { MockDocumentManager } from '../mockDocumentManager';
@@ -74,7 +74,7 @@ suite('DataScience gotocell tests', () => {
         });
     }
 
-    async function createNotebookServer(useDefaultConfig: boolean, expectFailure?: boolean, usingDarkTheme?: boolean, purpose?: string): Promise<INotebookServer | undefined> {
+    async function createNotebook(useDefaultConfig: boolean, expectFailure?: boolean, usingDarkTheme?: boolean, purpose?: string): Promise<INotebook | undefined> {
         // Catch exceptions. Throw a specific assertion if the promise fails
         try {
             const testDir = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
@@ -82,7 +82,7 @@ suite('DataScience gotocell tests', () => {
             if (expectFailure) {
                 assert.ok(false, `Expected server to not be created`);
             }
-            return server;
+            return server ? await server.createNotebook(Uri.parse(Identifiers.InteractiveWindowIdentity)) : undefined;
         } catch (exc) {
             if (!expectFailure) {
                 assert.ok(false, `Expected server to be created, but got ${exc}`);
@@ -122,7 +122,7 @@ suite('DataScience gotocell tests', () => {
         return [];
     }
 
-    async function executeCell(pos: number, server: INotebookServer): Promise<number> {
+    async function executeCell(pos: number, notebook: INotebook): Promise<number> {
         // Not using the interactive window, so we need to execute directly.
         const doc = documentManager.textDocuments[0];
 
@@ -135,7 +135,7 @@ suite('DataScience gotocell tests', () => {
             const codeLens = runLens[pos];
             const code = doc.getText(codeLens.range);
             const startLine = codeLens.range.start.line;
-            const output = await server.execute(code, doc.fileName, startLine, uuid());
+            const output = await notebook.execute(code, doc.fileName, startLine, uuid());
             visibleCells = visibleCells.concat(output);
             // Trick the codeLensFactory into having the cells
             const listener = (codeLensFactory as any) as IInteractiveWindowListener;
@@ -187,7 +187,7 @@ suite('DataScience gotocell tests', () => {
             }
         ], path.join(srcDirectory(), 'foo.py'));
 
-        const server = await createNotebookServer(true);
+        const server = await createNotebook(true);
         assert.ok(server, 'No server created');
 
         // Verify we don't have a goto
@@ -223,7 +223,7 @@ suite('DataScience gotocell tests', () => {
             }
         ], filePath);
 
-        const server = await createNotebookServer(true);
+        const server = await createNotebook(true);
         assert.ok(server, 'No server created');
 
         // Execute the second cell

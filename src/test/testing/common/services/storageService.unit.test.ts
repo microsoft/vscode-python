@@ -5,7 +5,11 @@
 
 import * as assert from 'assert';
 import { copyDesiredTestResults } from '../../../../client/testing/common/testUtils';
-import { FlattenedTestFunction, FlattenedTestSuite, TestFile, TestFolder, TestFunction, Tests, TestStatus, TestSuite, TestType } from '../../../../client/testing/common/types';
+import {
+    FlattenedTestFunction, FlattenedTestSuite, TestFile, TestFolder,
+    TestFunction, Tests, TestStatus, TestSuite
+} from '../../../../client/testing/common/types';
+import { TestDataItemType } from '../../../../client/testing/types';
 import { createMockTestDataItem } from '../testUtils.unit.test';
 
 // tslint:disable:no-any max-func-body-length
@@ -18,14 +22,14 @@ suite('Unit Tests - Storage Service', () => {
     });
 
     function setupTestData1() {
-        const folder1 = createMockTestDataItem<TestFolder>(TestType.testFolder, '1');
-        const file1 = createMockTestDataItem<TestFile>(TestType.testFile, '1');
+        const folder1 = createMockTestDataItem<TestFolder>(TestDataItemType.folder, '1');
+        const file1 = createMockTestDataItem<TestFile>(TestDataItemType.file, '1');
         folder1.testFiles.push(file1);
-        const suite1 = createMockTestDataItem<TestSuite>(TestType.testSuite, '1');
-        const suite2 = createMockTestDataItem<TestSuite>(TestType.testSuite, '2');
-        const fn1 = createMockTestDataItem<TestFunction>(TestType.testFunction, '1');
-        const fn2 = createMockTestDataItem<TestFunction>(TestType.testFunction, '2');
-        const fn3 = createMockTestDataItem<TestFunction>(TestType.testFunction, '3');
+        const suite1 = createMockTestDataItem<TestSuite>(TestDataItemType.suite, '1');
+        const suite2 = createMockTestDataItem<TestSuite>(TestDataItemType.suite, '2');
+        const fn1 = createMockTestDataItem<TestFunction>(TestDataItemType.function, '1');
+        const fn2 = createMockTestDataItem<TestFunction>(TestDataItemType.function, '2');
+        const fn3 = createMockTestDataItem<TestFunction>(TestDataItemType.function, '3');
         file1.suites.push(suite1);
         file1.suites.push(suite2);
         file1.functions.push(fn1);
@@ -62,14 +66,14 @@ suite('Unit Tests - Storage Service', () => {
     }
 
     function setupTestData2() {
-        const folder1 = createMockTestDataItem<TestFolder>(TestType.testFolder, '1');
-        const file1 = createMockTestDataItem<TestFile>(TestType.testFile, '1');
+        const folder1 = createMockTestDataItem<TestFolder>(TestDataItemType.folder, '1');
+        const file1 = createMockTestDataItem<TestFile>(TestDataItemType.file, '1');
         folder1.testFiles.push(file1);
-        const suite1 = createMockTestDataItem<TestSuite>(TestType.testSuite, '1');
-        const suite2 = createMockTestDataItem<TestSuite>(TestType.testSuite, '2');
-        const fn1 = createMockTestDataItem<TestFunction>(TestType.testFunction, '1');
-        const fn2 = createMockTestDataItem<TestFunction>(TestType.testFunction, '2');
-        const fn3 = createMockTestDataItem<TestFunction>(TestType.testFunction, '3');
+        const suite1 = createMockTestDataItem<TestSuite>(TestDataItemType.suite, '1');
+        const suite2 = createMockTestDataItem<TestSuite>(TestDataItemType.suite, '2');
+        const fn1 = createMockTestDataItem<TestFunction>(TestDataItemType.function, '1');
+        const fn2 = createMockTestDataItem<TestFunction>(TestDataItemType.function, '2');
+        const fn3 = createMockTestDataItem<TestFunction>(TestDataItemType.function, '3');
         file1.suites.push(suite1);
         file1.suites.push(suite2);
         suite1.functions.push(fn1);

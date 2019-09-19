@@ -12,7 +12,7 @@ import { anyString, anything, instance, match, mock, when } from 'ts-mockito';
 import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
-import { CancellationToken, ConfigurationChangeEvent, Disposable, EventEmitter } from 'vscode';
+import { CancellationToken, ConfigurationChangeEvent, Disposable, EventEmitter, Uri } from 'vscode';
 
 import { IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
@@ -34,12 +34,14 @@ import {
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
+import { Identifiers } from '../../client/datascience/constants';
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterCommand';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import {
     ICell,
     IConnection,
     IJupyterKernelSpec,
+    INotebook,
     INotebookCompletion,
     INotebookServer,
     INotebookServerLaunchInfo,
@@ -54,33 +56,24 @@ import { ServiceManager } from '../../client/ioc/serviceManager';
 import { getOSType, OSType } from '../common';
 import { noop } from '../core';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
-import { MockJupyterManager } from './mockJupyterManager';
+import { MockJupyterManagerFactory } from './mockJupyterManagerFactory';
 
-// tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
-class MockJupyterServer implements INotebookServer {
+class MockJupyterNotebook implements INotebook {
 
-    private launchInfo: INotebookServerLaunchInfo | undefined;
-    private kernelSpec: IJupyterKernelSpec | undefined;
-    private notebookFile: TemporaryFile | undefined;
-    private _id = uuid();
-
-    public get id(): string {
-        return this._id;
+    constructor(private owner: INotebookServer) {
+        noop();
     }
-    public connect(launchInfo: INotebookServerLaunchInfo): Promise<void> {
-        if (launchInfo && launchInfo.connectionInfo && launchInfo.kernelSpec) {
-            this.launchInfo = launchInfo;
-            this.kernelSpec = launchInfo.kernelSpec;
 
-            // Validate connection info and kernel spec
-            if (launchInfo.connectionInfo.baseUrl && launchInfo.kernelSpec.name && /[a-z,A-Z,0-9,-,.,_]+/.test(launchInfo.kernelSpec.name)) {
-                return Promise.resolve();
-            }
-        }
-        return Promise.reject('invalid server startup');
+    public get server(): INotebookServer {
+        return this.owner;
     }
-    public getCurrentState(): Promise<ICell[]> {
-        throw new Error('Method not implemented');
+
+    public get resource(): Uri {
+        return Uri.parse(Identifiers.InteractiveWindowIdentity);
+    }
+
+    public clear(_id: string): void {
+        noop();
     }
     public executeObservable(_code: string, _f: string, _line: number): Observable<ICell[]> {
         throw new Error('Method not implemented');
@@ -108,6 +101,55 @@ class MockJupyterServer implements INotebookServer {
     public async setMatplotLibStyle(_useDark: boolean): Promise<void> {
         noop();
     }
+
+    public getSysInfo(): Promise<ICell | undefined> {
+        return Promise.resolve(undefined);
+    }
+
+    public interruptKernel(_timeout: number): Promise<InterruptResult> {
+        throw new Error('Method not implemented');
+    }
+
+    public async dispose(): Promise<void> {
+        return Promise.resolve();
+    }
+}
+
+// tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
+class MockJupyterServer implements INotebookServer {
+
+    private launchInfo: INotebookServerLaunchInfo | undefined;
+    private kernelSpec: IJupyterKernelSpec | undefined;
+    private notebookFile: TemporaryFile | undefined;
+    private _id = uuid();
+
+    public get id(): string {
+        return this._id;
+    }
+    public connect(launchInfo: INotebookServerLaunchInfo): Promise<void> {
+        if (launchInfo && launchInfo.connectionInfo && launchInfo.kernelSpec) {
+            this.launchInfo = launchInfo;
+            this.kernelSpec = launchInfo.kernelSpec;
+
+            // Validate connection info and kernel spec
+            if (launchInfo.connectionInfo.baseUrl && launchInfo.kernelSpec.name && /[a-z,A-Z,0-9,-,.,_]+/.test(launchInfo.kernelSpec.name)) {
+                return Promise.resolve();
+            }
+        }
+        return Promise.reject('invalid server startup');
+    }
+
+    public async createNotebook(_resource: Uri): Promise<INotebook> {
+        return new MockJupyterNotebook(this);
+    }
+
+    public async getNotebook(_resource: Uri): Promise<INotebook | undefined> {
+        return new MockJupyterNotebook(this);
+    }
+
+    public async setMatplotLibStyle(_useDark: boolean): Promise<void> {
+        noop();
+    }
     public getConnectionInfo(): IConnection | undefined {
         return this.launchInfo ? this.launchInfo.connectionInfo : undefined;
     }
@@ -116,14 +158,6 @@ class MockJupyterServer implements INotebookServer {
     }
     public async shutdown() {
         return Promise.resolve();
-    }
-
-    public getSysInfo(): Promise<ICell | undefined> {
-        return Promise.resolve(undefined);
-    }
-
-    public interruptKernel(_timeout: number): Promise<InterruptResult> {
-        throw new Error('Method not implemented');
     }
 
     public async dispose(): Promise<void> {
@@ -244,6 +278,7 @@ suite('Jupyter Execution', async () => {
         return disposableRegistry.dispose();
     }
 
+    // tslint:disable-next-line: max-classes-per-file
     class FunctionMatcher extends Matcher {
         private func: (obj: any) => boolean;
         constructor(func: (obj: any) => boolean) {
@@ -578,10 +613,12 @@ suite('Jupyter Execution', async () => {
         when(fileSystem.createTemporaryFile(anything())).thenResolve(tempFile);
         when(fileSystem.createDirectory(anything())).thenResolve();
         when(fileSystem.deleteDirectory(anything())).thenResolve();
+        when(fileSystem.fileExists(workingKernelSpec)).thenResolve(true);
+        when(fileSystem.readFile(workingKernelSpec)).thenResolve('{"display_name":"Python 3","language":"python","argv":["/foo/bar/python.exe","-m","ipykernel_launcher","-f","{connection_file}"]}');
 
         const serviceManager = mock(ServiceManager);
 
-        const mockSessionManager = new MockJupyterManager(instance(serviceManager));
+        const mockSessionManager = new MockJupyterManagerFactory(instance(serviceManager));
 
         return new JupyterExecutionFactory(
             instance(liveShare),

@@ -4,7 +4,7 @@
 import '../common/extensions';
 
 import { JSONObject } from '@phosphor/coreutils';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, multiInject, optional } from 'inversify';
 import { URL } from 'url';
 import * as vscode from 'vscode';
 
@@ -26,12 +26,11 @@ import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { hasCells } from './cellFactory';
 import { Commands, EditorContexts, Settings, Telemetry } from './constants';
-import { ICodeWatcher, IDataScience, IDataScienceCodeLensProvider, IDataScienceCommandListener } from './types';
+import { ICodeWatcher, IDataScience, IDataScienceCodeLensProvider, IDataScienceCommandListener, INotebookEditorProvider } from './types';
 
 @injectable()
 export class DataScience implements IDataScience {
     public isDisposed: boolean = false;
-    private readonly commandListeners: IDataScienceCommandListener[];
     private readonly dataScienceSurveyBanner: IPythonExtensionBanner;
     private changeHandler: IDisposable | undefined;
     private startTime: number = Date.now();
@@ -43,10 +42,11 @@ export class DataScience implements IDataScience {
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(IDebugService) private debugService: IDebugService,
-        @inject(IWorkspaceService) private workspace: IWorkspaceService
+        @inject(IWorkspaceService) private workspace: IWorkspaceService,
+        @multiInject(IDataScienceCommandListener) @optional() private commandListeners: IDataScienceCommandListener[] | undefined,
+        @inject(INotebookEditorProvider) private notebookProvider: INotebookEditorProvider,
+        @inject(IDebugService) private debugService: IDebugService
     ) {
-        this.commandListeners = this.serviceContainer.getAll<IDataScienceCommandListener>(IDataScienceCommandListener);
         this.dataScienceSurveyBanner = this.serviceContainer.get<IPythonExtensionBanner>(IPythonExtensionBanner, BANNER_NAME_DS_SURVEY);
     }
 
@@ -456,9 +456,13 @@ export class DataScience implements IDataScience {
         this.disposableRegistry.push(disposable);
         disposable = this.commandManager.registerCommand(Commands.DebugCurrentCellPalette, this.debugCurrentCellFromCursor, this);
         this.disposableRegistry.push(disposable);
-        this.commandListeners.forEach((listener: IDataScienceCommandListener) => {
-            listener.register(this.commandManager);
-        });
+        disposable = this.commandManager.registerCommand(Commands.CreateNewNotebook, this.createNewNotebook, this);
+        this.disposableRegistry.push(disposable);
+        if (this.commandListeners) {
+            this.commandListeners.forEach((listener: IDataScienceCommandListener) => {
+                listener.register(this.commandManager);
+            });
+        }
     }
 
     private onChangedActiveTextEditor() {
@@ -505,5 +509,9 @@ export class DataScience implements IDataScience {
         } catch (err) {
             traceError(err);
         }
+    }
+
+    private async createNewNotebook(): Promise<void> {
+        await this.notebookProvider.createNew();
     }
 }

@@ -10,12 +10,12 @@ import { mount, ReactWrapper } from 'enzyme';
 import { parse } from 'node-html-parser';
 import * as React from 'react';
 import * as uuid from 'uuid/v4';
-import { Disposable } from 'vscode';
+import { Disposable, Uri } from 'vscode';
 
 import { createDeferred } from '../../client/common/utils/async';
 import { Identifiers } from '../../client/datascience/constants';
 import { DataViewerMessages } from '../../client/datascience/data-viewing/types';
-import { IDataViewer, IDataViewerProvider, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
+import { IDataViewer, IDataViewerProvider, IInteractiveWindowProvider, IJupyterExecution, INotebook } from '../../client/datascience/types';
 import { MainPanel } from '../../datascience-ui/data-explorer/mainPanel';
 import { ReactSlickGrid } from '../../datascience-ui/data-explorer/reactSlickGrid';
 import { noop } from '../core';
@@ -26,6 +26,7 @@ suite('DataScience DataViewer tests', () => {
     const disposables: Disposable[] = [];
     let dataProvider: IDataViewerProvider;
     let ioc: DataScienceIocContainer;
+    let notebook: INotebook | undefined;
     let messageWrapper: ((m: string, payload: any) => void) | undefined;
 
     suiteSetup(function () {
@@ -84,15 +85,16 @@ suite('DataScience DataViewer tests', () => {
     });
 
     async function createDataViewer(variable: string): Promise<IDataViewer> {
-        return dataProvider.create(variable);
+        return dataProvider.create(variable, notebook!);
     }
 
     async function injectCode(code: string) : Promise<void> {
         const exec = ioc.get<IJupyterExecution>(IJupyterExecution);
         const interactiveWindowProvider = ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
         const server = await exec.connectToNotebookServer(await interactiveWindowProvider.getNotebookOptions());
-        if (server) {
-            const cells = await server.execute(code, Identifiers.EmptyFileName, 0, uuid());
+        notebook = server ? await server.createNotebook(Uri.parse(Identifiers.InteractiveWindowIdentity)) : undefined;
+        if (notebook) {
+            const cells = await notebook.execute(code, Identifiers.EmptyFileName, 0, uuid());
             assert.equal(cells.length, 1, `Wrong number of cells returned`);
             assert.equal(cells[0].data.cell_type, 'code', `Wrong type of cell returned`);
             const cell = cells[0].data as nbformat.ICodeCell;

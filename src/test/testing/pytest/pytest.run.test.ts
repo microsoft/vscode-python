@@ -17,6 +17,10 @@ import { IEnvironmentActivationService } from '../../../client/interpreter/activ
 import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { CondaService } from '../../../client/interpreter/locators/services/condaService';
+import { InterpreterHashProvider } from '../../../client/interpreter/locators/services/hashProvider';
+import { InterpeterHashProviderFactory } from '../../../client/interpreter/locators/services/hashProviderFactory';
+import { InterpreterFilter } from '../../../client/interpreter/locators/services/interpreterFilter';
+import { WindowsStoreInterpreter } from '../../../client/interpreter/locators/services/windowsStoreInterpreter';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { CommandSource } from '../../../client/testing/common/constants';
 import { UnitTestDiagnosticService } from '../../../client/testing/common/services/unitTestDiagnosticService';
@@ -312,8 +316,9 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
             @inject(IEnvironmentActivationService) activationHelper: IEnvironmentActivationService,
             @inject(IProcessServiceFactory) processServiceFactory: IProcessServiceFactory,
             @inject(IConfigurationService) private readonly _configService: IConfigurationService,
+            @inject(WindowsStoreInterpreter) windowsStoreInterpreter: WindowsStoreInterpreter,
             @inject(IBufferDecoder) decoder: IBufferDecoder) {
-            super(_serviceContainer, activationHelper, processServiceFactory, _configService, decoder);
+            super(_serviceContainer, activationHelper, processServiceFactory, _configService, decoder, windowsStoreInterpreter);
         }
         public async createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService> {
             const pythonPath = options.interpreter ? options.interpreter.path : this._configService.getSettings(options.resource).pythonPath;
@@ -335,6 +340,10 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
         ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
         ioc.serviceManager.addSingletonInstance<IInterpreterService>(IInterpreterService, instance(mock(InterpreterService)));
         ioc.serviceManager.rebind<IPythonExecutionFactory>(IPythonExecutionFactory, ExecutionFactory);
+        ioc.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
+        ioc.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
+        ioc.serviceManager.addSingleton<InterpeterHashProviderFactory>(InterpeterHashProviderFactory, InterpeterHashProviderFactory);
+        ioc.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
     }
 
     async function injectTestDiscoveryOutput(outputFileName: string) {

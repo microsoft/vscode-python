@@ -476,6 +476,9 @@ export async function waitForUpdate<P, S, C>(wrapper: ReactWrapper<P, S, C>, mai
 
         // Wait for the render
         await renderPromise;
+
+        // Force a render
+        wrapper.update();
     }
 }
 

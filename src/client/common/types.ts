@@ -327,7 +327,6 @@ export interface IDataScienceSettings {
     enableCellCodeLens?: boolean;
     askForLargeDataFrames?: boolean;
     enableAutoMoveToNextCell?: boolean;
-    autoPreviewNotebooksInInteractivePane?: boolean;
     allowUnauthorizedRemoteConnection?: boolean;
     askForKernelRestart?: boolean;
     enablePlotViewer?: boolean;
@@ -341,6 +340,8 @@ export interface IDataScienceSettings {
     remoteDebuggerPort?: number;
     colorizeInputBox?: boolean;
     addGotoCodeLenses?: boolean;
+    useNotebookEditor?: boolean;
+    runMagicCommands?: string;
     runStartupCommands: string;
     debugJustMyCode: boolean;
 }
@@ -506,7 +507,7 @@ export interface ICryptoUtils {
      * @param data The string to hash
      * @param hashFormat Return format of the hash, number or string
      */
-    createHash<E extends keyof IHashFormat>(data: string, hashFormat: E): IHashFormat[E];
+    createHash<E extends keyof IHashFormat>(data: string, hashFormat: E, algorithm?: 'SHA512' | 'FNV'): IHashFormat[E];
 }
 
 export const IAsyncDisposableRegistry = Symbol('IAsyncDisposableRegistry');

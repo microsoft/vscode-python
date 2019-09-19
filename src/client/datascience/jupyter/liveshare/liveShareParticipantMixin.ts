@@ -18,7 +18,7 @@ export class LiveShareParticipantDefault implements IAsyncDisposable {
         noop();
     }
 
-    public async dispose() : Promise<void> {
+    public async dispose(): Promise<void> {
         noop();
     }
 }
@@ -90,27 +90,27 @@ function LiveShareParticipantMixin<T extends ClassType<IAsyncDisposable>, S>(
             return this.actualRole;
         }
 
-        public async onPeerChange(_ev: vsls.PeersChangeEvent) : Promise<void> {
+        public async onPeerChange(_ev: vsls.PeersChangeEvent): Promise<void> {
             noop();
         }
 
-        public async onAttach(_api: vsls.LiveShare | null) : Promise<void> {
+        public async onAttach(_api: vsls.LiveShare | null): Promise<void> {
             noop();
         }
 
-        public waitForServiceName() : Promise<string> {
+        public waitForServiceName(): Promise<string> {
             // Default is just to return the server name
             return Promise.resolve(serviceName);
         }
 
-        public onDetach(api: vsls.LiveShare | null) : Promise<void> {
+        public onDetach(api: vsls.LiveShare | null): Promise<void> {
             if (api && this.serviceFullName && api.session && api.session.role === vsls.Role.Host) {
                 return api.unshareService(this.serviceFullName);
             }
             return Promise.resolve();
         }
 
-        public async onSessionChange(api: vsls.LiveShare | null) : Promise<void> {
+        public async onSessionChange(api: vsls.LiveShare | null): Promise<void> {
             this.servicePromise = undefined;
             const newRole = api !== null && api.session ?
                 api.session.role : vsls.Role.None;
@@ -124,7 +124,7 @@ function LiveShareParticipantMixin<T extends ClassType<IAsyncDisposable>, S>(
             }
         }
 
-        public async waitForService() : Promise<S | undefined> {
+        public async waitForService(): Promise<S | undefined> {
             if (this.servicePromise) {
                 return this.servicePromise;
             }
@@ -132,11 +132,16 @@ function LiveShareParticipantMixin<T extends ClassType<IAsyncDisposable>, S>(
             if (!api || (api.session.role !== this.wantedRole)) {
                 this.servicePromise = Promise.resolve(undefined);
             } else {
-                this.serviceFullName = await this.waitForServiceName();
+                this.serviceFullName = this.sanitizeServiceName(await this.waitForServiceName());
                 this.servicePromise = serviceWaiter(api, this.serviceFullName);
             }
 
             return this.servicePromise;
+        }
+
+        // Liveshare doesn't support '.' in service names
+        private sanitizeServiceName(baseServiceName: string): string {
+            return baseServiceName.replace('.', '');
         }
     };
 }

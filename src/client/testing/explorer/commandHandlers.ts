@@ -10,19 +10,18 @@ import { traceDecorators } from '../../common/logger';
 import { IDisposable } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/decorators';
 import { CommandSource } from '../common/constants';
-import { getTestType } from '../common/testUtils';
+import { getTestDataItemType } from '../common/testUtils';
 import {
-    TestFile, TestFolder, TestFunction,
-    TestsToRun, TestSuite, TestType
+    TestFile, TestFolder, TestFunction, TestsToRun, TestSuite
 } from '../common/types';
 import { ITestExplorerCommandHandler } from '../navigation/types';
-import { ITestDataItemResource, TestDataItem } from '../types';
+import { ITestDataItemResource, TestDataItem, TestDataItemType } from '../types';
 
 type NavigationCommands = typeof Commands.navigateToTestFile | typeof Commands.navigateToTestFunction | typeof Commands.navigateToTestSuite;
 const testNavigationCommandMapping: { [key: string]: NavigationCommands } = {
-    [TestType.testFile]: Commands.navigateToTestFile,
-    [TestType.testFunction]: Commands.navigateToTestFunction,
-    [TestType.testSuite]: Commands.navigateToTestSuite
+    [TestDataItemType.file]: Commands.navigateToTestFile,
+    [TestDataItemType.function]: Commands.navigateToTestFunction,
+    [TestDataItemType.suite]: Commands.navigateToTestSuite
 };
 
 @injectable()
@@ -53,8 +52,8 @@ export class TestExplorerCommandHandler implements ITestExplorerCommandHandler {
     @swallowExceptions('Open test node in Editor')
     @traceDecorators.error('Open test node in editor failed')
     protected async onOpenTestNodeInEditor(item: TestDataItem): Promise<void> {
-        const testType = getTestType(item);
-        if (testType === TestType.testFolder) {
+        const testType = getTestDataItemType(item);
+        if (testType === TestDataItemType.folder) {
             throw new Error('Unknown Test Type');
         }
         const command = testNavigationCommandMapping[testType];
@@ -68,20 +67,20 @@ export class TestExplorerCommandHandler implements ITestExplorerCommandHandler {
     protected async runDebugTestNode(item: TestDataItem, runType: 'run' | 'debug'): Promise<void> {
         let testToRun: TestsToRun;
 
-        switch (getTestType(item)) {
-            case TestType.testFile: {
+        switch (getTestDataItemType(item)) {
+            case TestDataItemType.file: {
                 testToRun = { testFile: [item as TestFile] };
                 break;
             }
-            case TestType.testFolder: {
+            case TestDataItemType.folder: {
                 testToRun = { testFolder: [item as TestFolder] };
                 break;
             }
-            case TestType.testSuite: {
+            case TestDataItemType.suite: {
                 testToRun = { testSuite: [item as TestSuite] };
                 break;
             }
-            case TestType.testFunction: {
+            case TestDataItemType.function: {
                 testToRun = { testFunction: [item as TestFunction] };
                 break;
             }

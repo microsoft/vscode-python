@@ -1,7 +1,7 @@
 import { inject, injectable, named } from 'inversify';
-import { TestDataItem } from '../../types';
-import { getChildren, getTestType } from '../testUtils';
-import { ITestResultsService, ITestVisitor, Tests, TestStatus, TestType } from './../types';
+import { TestDataItem, TestDataItemType } from '../../types';
+import { getChildren, getTestDataItemType } from '../testUtils';
+import { ITestResultsService, ITestVisitor, Tests, TestStatus } from '../types';
 
 @injectable()
 export class TestResultsService implements ITestResultsService {
@@ -33,7 +33,7 @@ export class TestResultsService implements ITestResultsService {
         }
     }
     private updateTestItem(test: TestDataItem): void {
-        if (getTestType(test) === TestType.testFunction) {
+        if (getTestDataItemType(test) === TestDataItemType.function) {
             return;
         }
         let allChildrenPassed = true;
@@ -42,7 +42,7 @@ export class TestResultsService implements ITestResultsService {
 
         const children = getChildren(test);
         children.forEach(child => {
-            if (getTestType(child) === TestType.testFunction) {
+            if (getTestDataItemType(child) === TestDataItemType.function) {
                 if (typeof child.passed === 'boolean') {
                     noChildrenRan = false;
                     if (child.passed) {
