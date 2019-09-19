@@ -26,7 +26,7 @@ export interface IInsiderExtensionPrompt {
      */
     readonly hasUserBeenNotified: IPersistentState<boolean>;
     notifyToInstallInsiders(): Promise<void>;
-    askToEnrollBackToInsiders(): Promise<void>;
+    promptToEnrollBackToInsiders(): Promise<void>;
     promptToReload(): Promise<void>;
 }
 

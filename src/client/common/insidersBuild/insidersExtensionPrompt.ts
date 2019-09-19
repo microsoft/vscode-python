@@ -14,7 +14,7 @@ import { noop } from '../utils/misc';
 import { IExtensionChannelService, IInsiderExtensionPrompt } from './types';
 
 export const insidersPromptStateKey = 'INSIDERS_PROMPT_STATE_KEY';
-export const optIntoInsidersPromptStateKey = 'OPT_INTO_INSIDERS_PROGRAM_STATE_KEY';
+export const optIntoInsidersPromptAgainStateKey = 'OPT_INTO_INSIDERS_PROGRAM_AGAIN_STATE_KEY';
 
 @injectable()
 export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
@@ -27,7 +27,7 @@ export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory
     ) {
         this.hasUserBeenNotified = this.persistentStateFactory.createGlobalPersistentState(insidersPromptStateKey, false);
-        this.hasUserBeenAskedToOptAgain = this.persistentStateFactory.createGlobalPersistentState(optIntoInsidersPromptStateKey, false);
+        this.hasUserBeenAskedToOptAgain = this.persistentStateFactory.createGlobalPersistentState(optIntoInsidersPromptAgainStateKey, false);
     }
 
     @traceDecorators.error('Error in prompting to install insiders')
@@ -36,7 +36,7 @@ export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
     }
 
     @traceDecorators.error('Error in prompting to entroll back to insiders program')
-    public async askToEnrollBackToInsiders(): Promise<void> {
+    public async promptToEnrollBackToInsiders(): Promise<void> {
         await this.showPrompt(ExtensionChannels.optIntoProgramAgainMessage(), this.hasUserBeenAskedToOptAgain, EventName.OPT_INTO_INSIDERS_AGAIN_PROMPT);
     }
 

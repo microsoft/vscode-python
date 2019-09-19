@@ -54,7 +54,7 @@ export class InsidersExtensionService implements IExtensionSingleActivationServi
         let caseHandled = true;
         if (installChannel === 'off' && !this.extensionChannelService.isChannelUsingDefaultConfiguration) {
             // If previously in the Insiders Program but not now, request them enroll in the program again
-            await this.insidersPrompt.askToEnrollBackToInsiders();
+            await this.insidersPrompt.promptToEnrollBackToInsiders();
         } else if (this.appEnvironment.channel === 'insiders' && !this.insidersPrompt.hasUserBeenNotified.value && this.extensionChannelService.isChannelUsingDefaultConfiguration) {
             // Only when using VSC insiders and if they have not been notified before (usually the first session), notify to enroll into the insiders program
             await this.insidersPrompt.notifyToInstallInsiders();
