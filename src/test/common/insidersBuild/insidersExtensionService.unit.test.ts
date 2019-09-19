@@ -200,118 +200,231 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
         sinon.restore();
     });
 
-    const testsForHandleEdgeCases: {
-        vscodeChannel: Channel;
-        hasUserBeenNotified?: boolean;
-        installChannel?: ExtensionChannels;
-        isChannelUsingDefaultConfiguration?: boolean;
-        extensionChannel?: Channel;
-        operation: 'Set channel to off' | 'Insiders Install Prompt' | 'Enroll into the program again prompt' | undefined;
-    }[] =
-        [
-            {
-                vscodeChannel: 'stable',
-                installChannel: 'off',
-                isChannelUsingDefaultConfiguration: false,
-                operation: 'Enroll into the program again prompt'
-            },
-            {
-                vscodeChannel: 'insiders',
-                hasUserBeenNotified: false,
-                isChannelUsingDefaultConfiguration: false,
-                installChannel: 'off',
-                operation: 'Enroll into the program again prompt'
-            },
-            {
-                vscodeChannel: 'insiders',
-                installChannel: 'off',
-                isChannelUsingDefaultConfiguration: false,
-                operation: 'Enroll into the program again prompt'
-            },
-            {
-                // TEST: Ensure when conditions for both 'Set channel to off' & 'Insiders Install Prompt' operations are met, 'Insiders Install prompt' is given preference
-                vscodeChannel: 'insiders',
-                hasUserBeenNotified: false,
-                isChannelUsingDefaultConfiguration: true,
-                installChannel: 'daily',
-                extensionChannel: 'stable',
-                operation: 'Insiders Install Prompt'
-            },
-            {
-                vscodeChannel: 'insiders',
-                hasUserBeenNotified: false,
-                isChannelUsingDefaultConfiguration: true,
-                operation: 'Insiders Install Prompt'
-            },
-            {
-                vscodeChannel: 'stable',
-                installChannel: 'daily',
-                extensionChannel: 'stable',
-                operation: 'Set channel to off'
-            },
-            {
-                vscodeChannel: 'insiders',
-                hasUserBeenNotified: false,
-                isChannelUsingDefaultConfiguration: false,
-                installChannel: 'daily',
-                extensionChannel: 'insiders',
-                operation: undefined
-            },
-            {
-                vscodeChannel: 'stable',
-                isChannelUsingDefaultConfiguration: true,
-                installChannel: 'off',
-                extensionChannel: 'insiders',
-                operation: undefined
-            },
-            {
-                vscodeChannel: 'stable',
-                installChannel: 'daily',
-                extensionChannel: 'insiders',
-                operation: undefined
-            },
-            {
-                vscodeChannel: 'stable',
-                installChannel: 'off',
-                operation: undefined
-            },
-            {
-                vscodeChannel: 'insiders',
-                hasUserBeenNotified: true,
-                installChannel: 'off',
-                operation: undefined
-            },
-        ];
+    suite('Case I - Verify enroll into the program again prompt is displayed when conditions are met', async () => {
+        const testsForHandleEdgeCaseI: {
+            vscodeChannel: Channel;
+            installChannel?: ExtensionChannels;
+            isChannelUsingDefaultConfiguration?: boolean;
+        }[] =
+            [
+                {
+                    vscodeChannel: 'stable',
+                    installChannel: 'off',
+                    isChannelUsingDefaultConfiguration: false
+                },
+                {
+                    vscodeChannel: 'insiders',
+                    isChannelUsingDefaultConfiguration: false,
+                    installChannel: 'off'
+                },
+                {
+                    vscodeChannel: 'insiders',
+                    installChannel: 'off',
+                    isChannelUsingDefaultConfiguration: false
+                }
+            ];
 
-    testsForHandleEdgeCases.forEach(testParams => {
-        const testName = `${testParams.operation ? testParams.operation : 'No prompt'} is displayed when vscode channel = '${testParams.vscodeChannel}', extension channel = '${testParams.extensionChannel}', install channel = '${testParams.installChannel}', ${!testParams.hasUserBeenNotified ? 'user has not been notified to install insiders' : 'user has already been notified to install insiders'}, isChannelUsingDefaultConfiguration = ${testParams.isChannelUsingDefaultConfiguration}`;
-        test(testName, async () => {
-            hasUserBeenNotifiedState
-                .setup(c => c.value)
-                .returns(() => testParams.hasUserBeenNotified !== undefined ? testParams.hasUserBeenNotified : true);
-            when(appEnvironment.channel).thenReturn(testParams.vscodeChannel);
-            when(appEnvironment.extensionChannel).thenReturn(testParams.extensionChannel ? testParams.extensionChannel : 'stable');
-            when(insidersPrompt.promptToInstallInsiders()).thenResolve();
-            when(extensionChannelService.updateChannel('off')).thenResolve();
-            when(extensionChannelService.isChannelUsingDefaultConfiguration).thenReturn(testParams.isChannelUsingDefaultConfiguration !== undefined ? testParams.isChannelUsingDefaultConfiguration : true);
-            await insidersExtensionService.handleEdgeCases(testParams.installChannel !== undefined ? testParams.installChannel : 'off');
-            if (testParams.operation === 'Enroll into the program again prompt') {
+        setup(() => {
+            extensionChannelService = mock(ExtensionChannelService);
+            insidersInstaller = mock(InsidersBuildInstaller);
+            appEnvironment = mock(ApplicationEnvironment);
+            cmdManager = mock(CommandManager);
+            serviceContainer = mock(ServiceContainer);
+            insidersPrompt = mock(InsidersExtensionPrompt);
+            hasUserBeenNotifiedState = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
+            when(insidersPrompt.hasUserBeenNotified).thenReturn(hasUserBeenNotifiedState.object);
+            insidersExtensionService = new InsidersExtensionService(instance(extensionChannelService), instance(insidersPrompt), instance(appEnvironment), instance(cmdManager), instance(serviceContainer), instance(insidersInstaller), []);
+        });
+
+        testsForHandleEdgeCaseI.forEach(testParams => {
+            const testName = `Enroll into the program again prompt is displayed when vscode channel = '${testParams.vscodeChannel}', install channel = '${testParams.installChannel}', isChannelUsingDefaultConfiguration = ${testParams.isChannelUsingDefaultConfiguration}`;
+            test(testName, async () => {
+                when(appEnvironment.channel).thenReturn(testParams.vscodeChannel);
+                when(insidersPrompt.promptToInstallInsiders()).thenResolve();
+                when(extensionChannelService.updateChannel('off')).thenResolve();
+                when(extensionChannelService.isChannelUsingDefaultConfiguration).thenReturn(testParams.isChannelUsingDefaultConfiguration !== undefined ? testParams.isChannelUsingDefaultConfiguration : true);
+                await insidersExtensionService.handleEdgeCases(testParams.installChannel !== undefined ? testParams.installChannel : 'off');
+
                 verify(insidersPrompt.promptToEnrollBackToInsiders()).once();
                 verify(extensionChannelService.updateChannel('off')).never();
                 verify(insidersPrompt.promptToInstallInsiders()).never();
-            } else if (testParams.operation === 'Set channel to off') {
-                verify(insidersPrompt.promptToEnrollBackToInsiders()).never();
-                verify(extensionChannelService.updateChannel('off')).once();
-                verify(insidersPrompt.promptToInstallInsiders()).never();
-            } else if (testParams.operation === 'Insiders Install Prompt') {
+            });
+        });
+    });
+
+    suite('Case II - Verify Insiders Install Prompt is displayed when conditions are met', async () => {
+        const testsForHandleEdgeCaseII: {
+            vscodeChannel: Channel;
+            hasUserBeenNotified?: boolean;
+            installChannel?: ExtensionChannels;
+            isChannelUsingDefaultConfiguration?: boolean;
+            extensionChannel?: Channel;
+        }[] =
+            [
+                {
+                    // TEST: Ensure when conditions for both 'Set channel to off' & 'Insiders Install Prompt' operations are met, 'Insiders Install prompt' is given preference
+                    vscodeChannel: 'insiders',
+                    hasUserBeenNotified: false,
+                    isChannelUsingDefaultConfiguration: true,
+                    installChannel: 'daily',
+                    extensionChannel: 'stable'
+                },
+                {
+                    vscodeChannel: 'insiders',
+                    hasUserBeenNotified: false,
+                    isChannelUsingDefaultConfiguration: true
+                }
+            ];
+
+        setup(() => {
+            extensionChannelService = mock(ExtensionChannelService);
+            insidersInstaller = mock(InsidersBuildInstaller);
+            appEnvironment = mock(ApplicationEnvironment);
+            cmdManager = mock(CommandManager);
+            serviceContainer = mock(ServiceContainer);
+            insidersPrompt = mock(InsidersExtensionPrompt);
+            hasUserBeenNotifiedState = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
+            when(insidersPrompt.hasUserBeenNotified).thenReturn(hasUserBeenNotifiedState.object);
+            insidersExtensionService = new InsidersExtensionService(instance(extensionChannelService), instance(insidersPrompt), instance(appEnvironment), instance(cmdManager), instance(serviceContainer), instance(insidersInstaller), []);
+        });
+
+        testsForHandleEdgeCaseII.forEach(testParams => {
+            const testName = `Insiders Install Prompt is displayed when vscode channel = '${testParams.vscodeChannel}', extension channel = '${testParams.extensionChannel}', install channel = '${testParams.installChannel}', ${!testParams.hasUserBeenNotified ? 'user has not been notified to install insiders' : 'user has already been notified to install insiders'}, isChannelUsingDefaultConfiguration = ${testParams.isChannelUsingDefaultConfiguration}`;
+            test(testName, async () => {
+                hasUserBeenNotifiedState
+                    .setup(c => c.value)
+                    .returns(() => testParams.hasUserBeenNotified !== undefined ? testParams.hasUserBeenNotified : true);
+                when(appEnvironment.channel).thenReturn(testParams.vscodeChannel);
+                when(appEnvironment.extensionChannel).thenReturn(testParams.extensionChannel ? testParams.extensionChannel : 'stable');
+                when(insidersPrompt.promptToInstallInsiders()).thenResolve();
+                when(extensionChannelService.updateChannel('off')).thenResolve();
+                when(extensionChannelService.isChannelUsingDefaultConfiguration).thenReturn(testParams.isChannelUsingDefaultConfiguration !== undefined ? testParams.isChannelUsingDefaultConfiguration : true);
+                await insidersExtensionService.handleEdgeCases(testParams.installChannel !== undefined ? testParams.installChannel : 'off');
                 verify(insidersPrompt.promptToEnrollBackToInsiders()).never();
                 verify(extensionChannelService.updateChannel('off')).never();
                 verify(insidersPrompt.promptToInstallInsiders()).once();
-            } else {
+            });
+        });
+    });
+
+    suite('Case III - Verify Insiders channel is set to off when conditions are met', async () => {
+        const testsForHandleEdgeCaseIII: {
+            vscodeChannel: Channel;
+            hasUserBeenNotified?: boolean;
+            installChannel?: ExtensionChannels;
+            isChannelUsingDefaultConfiguration?: boolean;
+            extensionChannel?: Channel;
+        }[] =
+            [
+                {
+                    vscodeChannel: 'stable',
+                    installChannel: 'daily',
+                    extensionChannel: 'stable'
+                },
+                {
+                    vscodeChannel: 'stable',
+                    installChannel: 'weekly',
+                    extensionChannel: 'stable'
+                }
+            ];
+
+        setup(() => {
+            extensionChannelService = mock(ExtensionChannelService);
+            insidersInstaller = mock(InsidersBuildInstaller);
+            appEnvironment = mock(ApplicationEnvironment);
+            cmdManager = mock(CommandManager);
+            serviceContainer = mock(ServiceContainer);
+            insidersPrompt = mock(InsidersExtensionPrompt);
+            hasUserBeenNotifiedState = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
+            when(insidersPrompt.hasUserBeenNotified).thenReturn(hasUserBeenNotifiedState.object);
+            insidersExtensionService = new InsidersExtensionService(instance(extensionChannelService), instance(insidersPrompt), instance(appEnvironment), instance(cmdManager), instance(serviceContainer), instance(insidersInstaller), []);
+        });
+
+        testsForHandleEdgeCaseIII.forEach(testParams => {
+            const testName = `Insiders channel is set to off when vscode channel = '${testParams.vscodeChannel}', extension channel = '${testParams.extensionChannel}', install channel = '${testParams.installChannel}', ${!testParams.hasUserBeenNotified ? 'user has not been notified to install insiders' : 'user has already been notified to install insiders'}, isChannelUsingDefaultConfiguration = ${testParams.isChannelUsingDefaultConfiguration}`;
+            test(testName, async () => {
+                hasUserBeenNotifiedState
+                    .setup(c => c.value)
+                    .returns(() => testParams.hasUserBeenNotified !== undefined ? testParams.hasUserBeenNotified : true);
+                when(appEnvironment.channel).thenReturn(testParams.vscodeChannel);
+                when(appEnvironment.extensionChannel).thenReturn(testParams.extensionChannel ? testParams.extensionChannel : 'stable');
+                when(insidersPrompt.promptToInstallInsiders()).thenResolve();
+                when(extensionChannelService.updateChannel('off')).thenResolve();
+                when(extensionChannelService.isChannelUsingDefaultConfiguration).thenReturn(testParams.isChannelUsingDefaultConfiguration !== undefined ? testParams.isChannelUsingDefaultConfiguration : true);
+                await insidersExtensionService.handleEdgeCases(testParams.installChannel !== undefined ? testParams.installChannel : 'off');
+                verify(insidersPrompt.promptToEnrollBackToInsiders()).never();
+                verify(extensionChannelService.updateChannel('off')).once();
+                verify(insidersPrompt.promptToInstallInsiders()).never();
+            });
+        });
+    });
+
+    suite('Case IV - Verify no operation is performed if none of the case conditions are met', async () => {
+        const testsForHandleEdgeCaseIV: {
+            vscodeChannel: Channel;
+            hasUserBeenNotified?: boolean;
+            installChannel?: ExtensionChannels;
+            isChannelUsingDefaultConfiguration?: boolean;
+            extensionChannel?: Channel;
+        }[] =
+            [
+                {
+                    vscodeChannel: 'insiders',
+                    hasUserBeenNotified: false,
+                    isChannelUsingDefaultConfiguration: false,
+                    installChannel: 'daily',
+                    extensionChannel: 'insiders'
+                },
+                {
+                    vscodeChannel: 'stable',
+                    isChannelUsingDefaultConfiguration: true,
+                    installChannel: 'off',
+                    extensionChannel: 'insiders'
+                },
+                {
+                    vscodeChannel: 'stable',
+                    installChannel: 'daily',
+                    extensionChannel: 'insiders'
+                },
+                {
+                    vscodeChannel: 'stable',
+                    installChannel: 'off'
+                },
+                {
+                    vscodeChannel: 'insiders',
+                    hasUserBeenNotified: true,
+                    installChannel: 'off'
+                }
+            ];
+
+        setup(() => {
+            extensionChannelService = mock(ExtensionChannelService);
+            insidersInstaller = mock(InsidersBuildInstaller);
+            appEnvironment = mock(ApplicationEnvironment);
+            cmdManager = mock(CommandManager);
+            serviceContainer = mock(ServiceContainer);
+            insidersPrompt = mock(InsidersExtensionPrompt);
+            hasUserBeenNotifiedState = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
+            when(insidersPrompt.hasUserBeenNotified).thenReturn(hasUserBeenNotifiedState.object);
+            insidersExtensionService = new InsidersExtensionService(instance(extensionChannelService), instance(insidersPrompt), instance(appEnvironment), instance(cmdManager), instance(serviceContainer), instance(insidersInstaller), []);
+        });
+
+        testsForHandleEdgeCaseIV.forEach(testParams => {
+            const testName = `No operation is performed when vscode channel = '${testParams.vscodeChannel}', extension channel = '${testParams.extensionChannel}', install channel = '${testParams.installChannel}', ${!testParams.hasUserBeenNotified ? 'user has not been notified to install insiders' : 'user has already been notified to install insiders'}, isChannelUsingDefaultConfiguration = ${testParams.isChannelUsingDefaultConfiguration}`;
+            test(testName, async () => {
+                hasUserBeenNotifiedState
+                    .setup(c => c.value)
+                    .returns(() => testParams.hasUserBeenNotified !== undefined ? testParams.hasUserBeenNotified : true);
+                when(appEnvironment.channel).thenReturn(testParams.vscodeChannel);
+                when(appEnvironment.extensionChannel).thenReturn(testParams.extensionChannel ? testParams.extensionChannel : 'stable');
+                when(insidersPrompt.promptToInstallInsiders()).thenResolve();
+                when(extensionChannelService.updateChannel('off')).thenResolve();
+                when(extensionChannelService.isChannelUsingDefaultConfiguration).thenReturn(testParams.isChannelUsingDefaultConfiguration !== undefined ? testParams.isChannelUsingDefaultConfiguration : true);
+                await insidersExtensionService.handleEdgeCases(testParams.installChannel !== undefined ? testParams.installChannel : 'off');
                 verify(extensionChannelService.updateChannel('off')).never();
                 verify(insidersPrompt.promptToInstallInsiders()).never();
                 verify(insidersPrompt.promptToEnrollBackToInsiders()).never();
-            }
+            });
         });
     });
 });
