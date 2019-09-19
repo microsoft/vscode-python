@@ -167,6 +167,7 @@
 }
 
 .native-editor-celltoolbar-middle {
+    display: flex;
     grid-column: 3;
     grid-row: 2;
     justify-items: left;
@@ -338,6 +339,12 @@
     visibility: visible;
 }
 
+/* 
+Cell Row Container layout
+--------------------------
+collapse-bar        controls-div        [cell-input, cell-output, markdown-cell-output-container]
+(expanded c-bar)    celltoolbar-middle
+*/
 .cell-row-container {
     display: grid;
     grid-template-columns: auto auto 1fr;
