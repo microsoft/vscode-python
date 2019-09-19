@@ -18,15 +18,14 @@ from packaging.requirements import Requirement
 PYTHONFILES = os.path.join(SRC_ROOT, "lib", "python")
 REQUIREMENTS = os.path.join(PROJECT_ROOT, "requirements.txt")
 ARGV = ["python", os.path.join(SRC_ROOT, "ptvsd_folder_name.py")]
+PREFIX = "ptvsd=="
 
 
 def ptvsd_version():
     with open(REQUIREMENTS, "r", encoding="utf-8") as reqsfile:
         for line in reqsfile:
-            pkgreq = Requirement(line)
-            if pkgreq.name == "ptvsd":
-                specs = pkgreq.specifier
-                return next(iter(specs)).version
+            if line.startswith(PREFIX):
+                return line[len(PREFIX) :].strip()
 
 
 VERSION = ptvsd_version()
@@ -35,7 +34,7 @@ VERSION = ptvsd_version()
 def ptvsd_paths(*platforms):
     paths = set()
     for platform in platforms:
-        folder = "ptvsd-{0}-cp37-cp37m-{1}".format(VERSION, platform)
+        folder = "ptvsd-{}-cp37-cp37m-{}".format(VERSION, platform)
         paths.add(os.path.join(PYTHONFILES, folder))
     return paths
 

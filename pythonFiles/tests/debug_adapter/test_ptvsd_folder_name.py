@@ -18,9 +18,10 @@ try:
 except:  # Python 2.7
     print("Not importing anything for Python 2.7 since the test will be skipped.")
 
-from .. import SRC_ROOT
+from .. import SRC_ROOT, PROJECT_ROOT
 
 PYTHONFILES = os.path.join(SRC_ROOT, "lib", "python")
+REQUIREMENTS = os.path.join(PROJECT_ROOT, "requirements.txt")
 
 
 def open_requirements_with_ptvsd():
@@ -48,6 +49,14 @@ class TestPtvsdFolderName:
         expected = os.path.join(PYTHONFILES, folder)
         captured = capsys.readouterr()
         assert captured.out == expected
+
+    def test_ptvsd_requirement_once(self):
+        reqs = [
+            line
+            for line in open(REQUIREMENTS, "r", encoding="utf-8")
+            if re.match("ptvsd==", line)
+        ]
+        assert len(reqs) == 1
 
     def test_no_ptvsd_requirement(self, capsys):
         with open_requirements_without_ptvsd() as p:
