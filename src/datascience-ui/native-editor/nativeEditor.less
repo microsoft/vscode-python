@@ -49,6 +49,16 @@
 // make the width of the div be a bit less than the width of the window,
 // the 85 pixels removed account for the space the padding and controls
 // on the left take in the native Editor.
+//.cell-output {
+    //margin-top: 5px;
+    //background: var(--override-widget-background, var(--vscode-notifications-background));
+    //border-style: solid;
+    //border-color: var(--override-widget-background, var(--vscode-notifications-background));
+    //border-width: 3px;
+    //width: calc(100vw - 85px);
+    //overflow-x: scroll;
+    //flex: 1;
+//}
 .cell-output {
     margin-top: 5px;
     background: var(--override-widget-background, var(--vscode-notifications-background));
@@ -57,7 +67,13 @@
     border-width: 3px;
     width: calc(100vw - 85px);
     overflow-x: scroll;
-    flex: 1;
+    grid-row: 1;
+    grid-column: 3;
+}
+
+.markdown-cell-output-container {
+    grid-row: 1;
+    grid-column: 3;
 }
 
 .markdown-cell-output {

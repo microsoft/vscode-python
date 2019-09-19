@@ -96,7 +96,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         if (this.props.cellVM.cell.id !== Identifiers.EditCellId) {
             const outputClassNames = this.isCodeCell() ?
                 `cell-output cell-output-${this.props.baseTheme}` :
-                '';
+                'markdown-cell-output-container';
 
             // Then combine them inside a div
             return <div className={outputClassNames}>{this.renderResults()}</div>;
