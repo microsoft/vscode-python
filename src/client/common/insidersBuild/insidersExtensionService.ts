@@ -51,21 +51,16 @@ export class InsidersExtensionService implements IExtensionSingleActivationServi
      * @returns `true` if install channel is handled in these miscellaneous cases, `false` if install channel needs further handling
      */
     public async handleEdgeCases(installChannel: ExtensionChannels): Promise<boolean> {
-        let caseHandled = true;
-        if (installChannel === 'off' && !this.extensionChannelService.isChannelUsingDefaultConfiguration) {
-            // If previously in the Insiders Program but not now, request them enroll in the program again
-            await this.insidersPrompt.promptToEnrollBackToInsiders();
-        } else if (this.appEnvironment.channel === 'insiders' && !this.insidersPrompt.hasUserBeenNotified.value && this.extensionChannelService.isChannelUsingDefaultConfiguration) {
-            // Only when using VSC insiders and if they have not been notified before (usually the first session), notify to enroll into the insiders program
-            await this.insidersPrompt.notifyToInstallInsiders();
-        } else if (installChannel !== 'off' && this.appEnvironment.extensionChannel === 'stable') {
-            // When install channel is not in sync with what is installed, we have to resolve discrepency
-            // Install channel is set to "weekly" or "daily" but stable version of extension is installed. Switch channel to "off" to use the installed version
-            await this.extensionChannelService.updateChannel('off');
-        } else {
-            caseHandled = false;
+        if (await this.promptToEnrollBackToInsidersIfApplicable(installChannel)) {
+            return true;
         }
-        return caseHandled;
+        if (await this.promptToInstallInsidersIfApplicable()) {
+            return true;
+        }
+        if (await this.setInsidersChannelToOffIfApplicable(installChannel)) {
+            return true;
+        }
+        return false;
     }
 
     public registerCommandsAndHandlers(): void {
@@ -73,5 +68,40 @@ export class InsidersExtensionService implements IExtensionSingleActivationServi
         this.disposables.push(this.cmdManager.registerCommand(Commands.SwitchOffInsidersChannel, () => this.extensionChannelService.updateChannel('off')));
         this.disposables.push(this.cmdManager.registerCommand(Commands.SwitchToInsidersDaily, () => this.extensionChannelService.updateChannel('daily')));
         this.disposables.push(this.cmdManager.registerCommand(Commands.SwitchToInsidersWeekly, () => this.extensionChannelService.updateChannel('weekly')));
+    }
+
+    /**
+     * If previously in the Insiders Program but not now, request them enroll in the program again
+     */
+    private async promptToEnrollBackToInsidersIfApplicable(installChannel: ExtensionChannels): Promise<boolean> {
+        if (installChannel === 'off' && !this.extensionChannelService.isChannelUsingDefaultConfiguration) {
+            // If install channel is explicitly set to off, it means that user has used the insiders program before
+            await this.insidersPrompt.promptToEnrollBackToInsiders();
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Only when using VSC insiders and if they have not been notified before (usually the first session), notify to enroll into the insiders program
+     */
+    private async promptToInstallInsidersIfApplicable(): Promise<boolean> {
+        if (this.appEnvironment.channel === 'insiders' && !this.insidersPrompt.hasUserBeenNotified.value && this.extensionChannelService.isChannelUsingDefaultConfiguration) {
+            await this.insidersPrompt.promptToInstallInsiders();
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * When install channel is not in sync with what is installed, resolve discrepency by setting channel to "off"
+     */
+    private async setInsidersChannelToOffIfApplicable(installChannel: ExtensionChannels): Promise<boolean> {
+        if (installChannel !== 'off' && this.appEnvironment.extensionChannel === 'stable') {
+            // Install channel is set to "weekly" or "daily" but stable version of extension is installed. Switch channel to "off" to use the installed version
+            await this.extensionChannelService.updateChannel('off');
+            return true;
+        }
+        return false;
     }
 }

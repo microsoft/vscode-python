@@ -18,7 +18,7 @@ import { IPersistentState, IPersistentStateFactory } from '../../../client/commo
 import { Common, DataScienceSurveyBanner, ExtensionChannels } from '../../../client/common/utils/localize';
 
 // tslint:disable-next-line: max-func-body-length
-suite('xInsiders Extension prompt', () => {
+suite('Insiders Extension prompt', () => {
     let appShell: IApplicationShell;
     let extensionChannelService: IExtensionChannelService;
     let cmdManager: ICommandManager;
@@ -55,7 +55,7 @@ suite('xInsiders Extension prompt', () => {
                 .setup(u => u.updateValue(true))
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.once());
-            await insidersPrompt.notifyToInstallInsiders();
+            await insidersPrompt.promptToInstallInsiders();
             verify(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).once();
             verify(extensionChannelService.updateChannel(ExtensionChannel.daily)).once();
             hasUserBeenNotifiedState.verifyAll();
@@ -77,7 +77,7 @@ suite('xInsiders Extension prompt', () => {
                 .setup(u => u.updateValue(true))
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.once());
-            await insidersPrompt.notifyToInstallInsiders();
+            await insidersPrompt.promptToInstallInsiders();
             verify(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).once();
             verify(extensionChannelService.updateChannel(ExtensionChannel.weekly)).once();
             hasUserBeenNotifiedState.verifyAll();
@@ -99,7 +99,7 @@ suite('xInsiders Extension prompt', () => {
                 .setup(u => u.updateValue(true))
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.once());
-            await insidersPrompt.notifyToInstallInsiders();
+            await insidersPrompt.promptToInstallInsiders();
             verify(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).once();
             verify(extensionChannelService.updateChannel(anything())).never();
             hasUserBeenNotifiedState.verifyAll();
@@ -121,7 +121,7 @@ suite('xInsiders Extension prompt', () => {
                 .setup(u => u.updateValue(true))
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.once());
-            await insidersPrompt.notifyToInstallInsiders();
+            await insidersPrompt.promptToInstallInsiders();
             verify(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).once();
             verify(extensionChannelService.updateChannel(anything())).never();
             hasUserBeenNotifiedState.verifyAll();

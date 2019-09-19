@@ -291,25 +291,25 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
                 .returns(() => testParams.hasUserBeenNotified !== undefined ? testParams.hasUserBeenNotified : true);
             when(appEnvironment.channel).thenReturn(testParams.vscodeChannel);
             when(appEnvironment.extensionChannel).thenReturn(testParams.extensionChannel ? testParams.extensionChannel : 'stable');
-            when(insidersPrompt.notifyToInstallInsiders()).thenResolve();
+            when(insidersPrompt.promptToInstallInsiders()).thenResolve();
             when(extensionChannelService.updateChannel('off')).thenResolve();
             when(extensionChannelService.isChannelUsingDefaultConfiguration).thenReturn(testParams.isChannelUsingDefaultConfiguration !== undefined ? testParams.isChannelUsingDefaultConfiguration : true);
             await insidersExtensionService.handleEdgeCases(testParams.installChannel !== undefined ? testParams.installChannel : 'off');
             if (testParams.operation === 'Enroll into the program again prompt') {
                 verify(insidersPrompt.promptToEnrollBackToInsiders()).once();
                 verify(extensionChannelService.updateChannel('off')).never();
-                verify(insidersPrompt.notifyToInstallInsiders()).never();
+                verify(insidersPrompt.promptToInstallInsiders()).never();
             } else if (testParams.operation === 'Set channel to off') {
                 verify(insidersPrompt.promptToEnrollBackToInsiders()).never();
                 verify(extensionChannelService.updateChannel('off')).once();
-                verify(insidersPrompt.notifyToInstallInsiders()).never();
+                verify(insidersPrompt.promptToInstallInsiders()).never();
             } else if (testParams.operation === 'Insiders Install Prompt') {
                 verify(insidersPrompt.promptToEnrollBackToInsiders()).never();
                 verify(extensionChannelService.updateChannel('off')).never();
-                verify(insidersPrompt.notifyToInstallInsiders()).once();
+                verify(insidersPrompt.promptToInstallInsiders()).once();
             } else {
                 verify(extensionChannelService.updateChannel('off')).never();
-                verify(insidersPrompt.notifyToInstallInsiders()).never();
+                verify(insidersPrompt.promptToInstallInsiders()).never();
                 verify(insidersPrompt.promptToEnrollBackToInsiders()).never();
             }
         });

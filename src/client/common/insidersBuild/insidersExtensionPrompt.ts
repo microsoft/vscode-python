@@ -31,11 +31,11 @@ export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
     }
 
     @traceDecorators.error('Error in prompting to install insiders')
-    public async notifyToInstallInsiders(): Promise<void> {
+    public async promptToInstallInsiders(): Promise<void> {
         await this.showPrompt(ExtensionChannels.promptMessage(), this.hasUserBeenNotified, EventName.INSIDERS_PROMPT);
     }
 
-    @traceDecorators.error('Error in prompting to entroll back to insiders program')
+    @traceDecorators.error('Error in prompting to enroll back to insiders program')
     public async promptToEnrollBackToInsiders(): Promise<void> {
         await this.showPrompt(ExtensionChannels.optIntoProgramAgainMessage(), this.hasUserBeenAskedToOptAgain, EventName.OPT_INTO_INSIDERS_AGAIN_PROMPT);
     }
