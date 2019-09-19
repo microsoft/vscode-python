@@ -25,6 +25,11 @@ def install_ptvsd():
                 version = next(iter(specs)).version
                 break
 
+    try:
+        version
+    except NameError:
+        raise ValueError("PTVSD was not found in requirements.txt")
+
     # Response format: https://warehouse.readthedocs.io/api-reference/json/#project
     with urllib.request.urlopen(PYPI_PTVSD_URL) as response:
         json_response = json.loads(response.read())

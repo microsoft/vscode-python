@@ -18,11 +18,9 @@ try:
 except:  # Python 2.7
     print("Not importing anything for Python 2.7 since the test will be skipped.")
 
+from .. import SRC_ROOT
 
-ROOT = os.path.dirname(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
-PYTHONFILES = os.path.join(ROOT, "pythonFiles", "lib", "python")
+PYTHONFILES = os.path.join(SRC_ROOT, "lib", "python")
 
 
 def open_requirements_with_ptvsd():
@@ -38,9 +36,9 @@ def open_requirements_without_ptvsd():
 class TestPtvsdFolderName:
     """Unit tests for the script retrieving the PTVSD folder name for the PTVSD wheels experiment."""
 
-    def test_requirement_exists_folder_exists(self, capsys, monkeypatch):
+    def test_requirement_exists_folder_exists(self, capsys):
         # Return the first constructed folder path as existing.
-        monkeypatch.setattr(os.path, "exists", lambda p: True)
+        patch("os.path.exists", lambda p: True)
         tag = next(sys_tags())
         folder = "ptvsd-5.0.0-{}-{}-{}".format(tag.interpreter, tag.abi, tag.platform)
 
@@ -59,10 +57,10 @@ class TestPtvsdFolderName:
         captured = capsys.readouterr()
         assert captured.out == expected
 
-    def test_no_wheel_folder(self, capsys, monkeypatch):
+    def test_no_wheel_folder(self, capsys):
         # Return none of of the constructed paths as existing,
         # ptvsd_folder_name() should return the path to default ptvsd.
-        monkeypatch.setattr(os.path, "exists", lambda p: False)
+        patch("os.path.exists", lambda p: False)
 
         with open_requirements_with_ptvsd() as p:
             ptvsd_folder_name()

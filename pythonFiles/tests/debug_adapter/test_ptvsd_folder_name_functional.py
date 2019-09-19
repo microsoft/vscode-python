@@ -12,16 +12,12 @@ import os.path
 import pytest
 import subprocess
 
+from .. import PROJECT_ROOT, SRC_ROOT
 from packaging.requirements import Requirement
 
-
-ROOT = os.path.dirname(
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-)
-PYTHONFILES_ROOT = os.path.join(ROOT, "pythonFiles")
-PYTHONFILES = os.path.join(PYTHONFILES_ROOT, "lib", "python")
-REQUIREMENTS = os.path.join(ROOT, "requirements.txt")
-ARGV = ["python", os.path.join(PYTHONFILES_ROOT, "ptvsd_folder_name.py")]
+PYTHONFILES = os.path.join(SRC_ROOT, "lib", "python")
+REQUIREMENTS = os.path.join(PROJECT_ROOT, "requirements.txt")
+ARGV = ["python", os.path.join(SRC_ROOT, "ptvsd_folder_name.py")]
 
 
 def ptvsd_version():
