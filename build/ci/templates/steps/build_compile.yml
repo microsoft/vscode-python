@@ -36,15 +36,6 @@ steps:
       displayName: "pip install requirements"
       condition: and(succeeded(), eq(variables['build'], 'true'))
 
-    - task: PythonScript@0
-      displayName: "Install PTVSD wheels"
-      inputs:
-          scriptSource: "filePath"
-          scriptPath: "./pythonFiles/install_ptvsd.py"
-          arguments: "--ci"
-          failOnStderr: true
-      condition: and(succeeded(), eq(variables['build'], 'true'))
-
     - bash: npm run clean
       displayName: "Clean"
       condition: and(succeeded(), eq(variables['build'], 'true'))
