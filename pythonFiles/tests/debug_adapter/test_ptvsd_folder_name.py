@@ -9,6 +9,7 @@ if sys.version_info[:2] != (3, 7):
 
 import os.path
 import pytest
+import re
 
 try:
     from unittest.mock import patch, mock_open
