@@ -20,15 +20,10 @@ REQUIREMENTS = os.path.join(PROJECT_ROOT, "requirements.txt")
 ARGV = ["python", os.path.join(SRC_ROOT, "ptvsd_folder_name.py")]
 PREFIX = "ptvsd=="
 
-
-def ptvsd_version():
-    with open(REQUIREMENTS, "r", encoding="utf-8") as reqsfile:
-        for line in reqsfile:
-            if line.startswith(PREFIX):
-                return line[len(PREFIX) :].strip()
-
-
-VERSION = ptvsd_version()
+with open(REQUIREMENTS, "r", encoding="utf-8") as reqsfile:
+    for line in reqsfile:
+        if line.startswith(PREFIX):
+            VERSION = line[len(PREFIX) :].strip()
 
 
 def ptvsd_paths(*platforms):
