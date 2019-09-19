@@ -28,8 +28,8 @@ import { InteractivePanel } from '../../datascience-ui/history-react/interactive
 import { asyncDump } from '../common/asyncDump';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createDocument } from './editor-integration/helpers';
-import { addMockData, CellPosition, verifyHtmlOnCell } from './interactiveWindowTestHelpers';
 import { waitForUpdate } from './reactHelpers';
+import { addMockData, verifyHtmlOnCell, CellPosition } from './testHelpers';
 
 //tslint:disable:trailing-comma no-any no-multiline-string
 

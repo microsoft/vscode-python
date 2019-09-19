@@ -36,10 +36,11 @@ interface INativeEditorProps {
 }
 
 export class NativeEditor extends React.Component<INativeEditorProps, IMainState> {
+    // Public so can access it from test code
+    public stateController: NativeEditorStateController;
     private mainPanelRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private contentPanelScrollRef: React.RefObject<HTMLElement> = React.createRef<HTMLElement>();
     private contentPanelRef: React.RefObject<ContentPanel> = React.createRef<ContentPanel>();
-    private stateController: NativeEditorStateController;
     private debounceUpdateVisibleCells = debounce(this.updateVisibleCells.bind(this), 100);
     private cellRefs: Map<string, React.RefObject<NativeCell>> = new Map<string, React.RefObject<NativeCell>>();
     private cellContainerRefs: Map<string, React.RefObject<HTMLDivElement>> = new Map<string, React.RefObject<HTMLDivElement>>();

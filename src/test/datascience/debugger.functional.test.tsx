@@ -29,11 +29,11 @@ import {
 } from '../../client/datascience/types';
 import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { getCellResults } from './interactiveWindowTestHelpers';
 import { getConnectionInfo, getNotebookCapableInterpreter } from './jupyterHelpers';
 import { MockDebuggerService } from './mockDebugService';
 import { MockDocument } from './mockDocument';
 import { MockDocumentManager } from './mockDocumentManager';
+import { getCellResults } from './testHelpers';
 
 //import { asyncDump } from '../common/asyncDump';
 // tslint:disable-next-line:max-func-body-length no-any
@@ -173,7 +173,7 @@ suite('DataScience Debugger tests', () => {
         const expectedBreakLine = breakpoint && !breakpointFile ? breakpoint.start.line : 2; // 2 because of the 'breakpoint()' that gets added
 
         // Debug this code. We should either hit the breakpoint or stop on entry
-        const resultPromise = getCellResults(ioc.wrapper!, 5, async () => {
+        const resultPromise = getCellResults(ioc.wrapper!, InteractivePanel, 5, async () => {
             const breakPromise = createDeferred<void>();
             disposables.push(mockDebuggerService!.onBreakpointHit(() => breakPromise.resolve()));
             const done = history.debugCode(code, fileName, 0, docManager.activeTextEditor);
@@ -290,7 +290,7 @@ suite('DataScience Debugger tests', () => {
         const expectedBreakLine = 2; // 2 because of the 'breakpoint()' that gets added
 
         // Debug this code. We should either hit the breakpoint or stop on entry
-        const resultPromise = getCellResults(ioc.wrapper!, 5, async () => {
+        const resultPromise = getCellResults(ioc.wrapper!, InteractivePanel, 5, async () => {
             const breakPromise = createDeferred<void>();
             disposables.push(mockDebuggerService!.onBreakpointHit(() => breakPromise.resolve()));
             const done = history.debugCode(code, fileName, 0, docManager.activeTextEditor);

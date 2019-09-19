@@ -557,12 +557,12 @@ const keyMap: { [key: string]: { code: number; shift: boolean } } = {
 };
 
 export function createMessageEvent(data: any): MessageEvent {
-    const domWindow = window as DOMWindow;
+    const domWindow = (window as any) as DOMWindow;
     return new domWindow.MessageEvent('message', { data });
 }
 
 export function createKeyboardEvent(type: string, options: KeyboardEventInit): KeyboardEvent {
-    const domWindow = window as DOMWindow;
+    const domWindow = (window as any) as DOMWindow;
     options.bubbles = true;
     options.cancelable = true;
 
@@ -580,13 +580,13 @@ export function createKeyboardEvent(type: string, options: KeyboardEventInit): K
 }
 
 export function createInputEvent(): Event {
-    const domWindow = window as DOMWindow;
+    const domWindow = (window as any) as DOMWindow;
     return new domWindow.Event('input', { bubbles: true, cancelable: false });
 }
 
 export function blurWindow() {
     // blur isn't implemented. We just need to dispatch the blur event
-    const domWindow = window as DOMWindow;
+    const domWindow = (window as any) as DOMWindow;
     const blurEvent = new domWindow.Event('blur', { bubbles: true });
     domWindow.dispatchEvent(blurEvent);
 }

@@ -25,8 +25,11 @@ import { InteractivePanel } from '../../datascience-ui/history-react/interactive
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createDocument } from './editor-integration/helpers';
+import { addCode, runMountedTest } from './interactiveWindowTestHelpers';
+import { MockDocumentManager } from './mockDocumentManager';
+import { MockEditor } from './mockTextEditor';
+import { waitForUpdate } from './reactHelpers';
 import {
-    addCode,
     addContinuousMockData,
     addMockData,
     CellInputState,
@@ -38,16 +41,12 @@ import {
     getCellResults,
     getLastOutputCell,
     initialDataScienceSettings,
-    runMountedTest,
     srcDirectory,
     toggleCellExpansion,
     updateDataScienceSettings,
     verifyHtmlOnCell,
     verifyLastCellInputState
-} from './interactiveWindowTestHelpers';
-import { MockDocumentManager } from './mockDocumentManager';
-import { MockEditor } from './mockTextEditor';
-import { waitForUpdate } from './reactHelpers';
+} from './testHelpers';
 
 //import { asyncDump } from '../common/asyncDump';
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
@@ -161,12 +160,12 @@ suite('DataScience Interactive Window output tests', () => {
         verifyLastCellInputState(wrapper, CellInputState.Collapsed);
 
         // Hide the inputs and verify
-        updateDataScienceSettings(wrapper, { ...defaultDataScienceSettings(), showCellInputCode: false });
+        updateDataScienceSettings(wrapper, InteractivePanel, { ...defaultDataScienceSettings(), showCellInputCode: false });
 
         verifyLastCellInputState(wrapper, CellInputState.Hidden);
 
         // Show the inputs and verify
-        updateDataScienceSettings(wrapper, { ...defaultDataScienceSettings(), showCellInputCode: true });
+        updateDataScienceSettings(wrapper, InteractivePanel, { ...defaultDataScienceSettings(), showCellInputCode: true });
 
         verifyLastCellInputState(wrapper, CellInputState.Visible);
         verifyLastCellInputState(wrapper, CellInputState.Collapsed);
@@ -232,7 +231,7 @@ for _ in range(50):
         await addCode(getOrCreateInteractiveWindow, wrapper, 'a=1\na');
 
         // Now verify if we undo, we have no cells
-        let afterUndo = await getCellResults(wrapper, 1, () => {
+        let afterUndo = await getCellResults(wrapper, InteractivePanel, 1, () => {
             interactiveWindow.undoCells();
             return Promise.resolve();
         });
@@ -240,7 +239,7 @@ for _ in range(50):
         assert.equal(afterUndo.length, 1, `Undo should remove cells + ${afterUndo.debug()}`);
 
         // Redo should put the cells back
-        const afterRedo = await getCellResults(wrapper, 1, () => {
+        const afterRedo = await getCellResults(wrapper, InteractivePanel, 1, () => {
             interactiveWindow.redoCells();
             return Promise.resolve();
         });
@@ -251,14 +250,14 @@ for _ in range(50):
         assert.equal(afterAdd.length, 3, 'Second cell did not get added');
 
         // Clear everything
-        const afterClear = await getCellResults(wrapper, 1, () => {
+        const afterClear = await getCellResults(wrapper, InteractivePanel, 1, () => {
             interactiveWindow.removeAllCells();
             return Promise.resolve();
         });
         assert.equal(afterClear.length, 1, 'Clear didn\'t work');
 
         // Undo should put them back
-        afterUndo = await getCellResults(wrapper, 1, () => {
+        afterUndo = await getCellResults(wrapper, InteractivePanel, 1, () => {
             interactiveWindow.undoCells();
             return Promise.resolve();
         });
@@ -285,12 +284,12 @@ for _ in range(50):
         await addCode(getOrCreateInteractiveWindow, wrapper, 'a=1\na');
 
         // 'Click' the buttons in the react control
-        const undo = findButton(wrapper, 2);
-        const redo = findButton(wrapper, 1);
-        const clear = findButton(wrapper, 0);
+        const undo = findButton(wrapper, InteractivePanel, 2);
+        const redo = findButton(wrapper, InteractivePanel, 1);
+        const clear = findButton(wrapper, InteractivePanel, 0);
 
         // Now verify if we undo, we have no cells
-        let afterUndo = await getCellResults(wrapper, 1, () => {
+        let afterUndo = await getCellResults(wrapper, InteractivePanel, 1, () => {
             undo!.simulate('click');
             return Promise.resolve();
         });
@@ -298,7 +297,7 @@ for _ in range(50):
         assert.equal(afterUndo.length, 1, `Undo should remove cells`);
 
         // Redo should put the cells back
-        const afterRedo = await getCellResults(wrapper, 1, async () => {
+        const afterRedo = await getCellResults(wrapper, InteractivePanel, 1, async () => {
             redo!.simulate('click');
             return Promise.resolve();
         });
@@ -309,14 +308,14 @@ for _ in range(50):
         assert.equal(afterAdd.length, 3, 'Second cell did not get added');
 
         // Clear everything
-        const afterClear = await getCellResults(wrapper, 1, async () => {
+        const afterClear = await getCellResults(wrapper, InteractivePanel, 1, async () => {
             clear!.simulate('click');
             return Promise.resolve();
         });
         assert.equal(afterClear.length, 1, 'Clear didn\'t work');
 
         // Undo should put them back
-        afterUndo = await getCellResults(wrapper, 1, async () => {
+        afterUndo = await getCellResults(wrapper, InteractivePanel, 1, async () => {
             undo!.simulate('click');
             return Promise.resolve();
         });
@@ -336,7 +335,7 @@ for _ in range(50):
         assert.ok(showedEditor.resolved, 'Goto source is not jumping to editor');
 
         // Make sure delete works
-        const afterDelete = await getCellResults(wrapper, 1, async () => {
+        const afterDelete = await getCellResults(wrapper, InteractivePanel, 1, async () => {
             deleteButton.simulate('click');
             return Promise.resolve();
         });
@@ -368,11 +367,11 @@ for _ in range(50):
         assert.equal(exportCalled, true, 'Export is not being called during export');
 
         // Remove the cell
-        const exportButton = findButton(wrapper, 5);
-        const undo = findButton(wrapper, 2);
+        const exportButton = findButton(wrapper, InteractivePanel, 5);
+        const undo = findButton(wrapper, InteractivePanel, 2);
 
         // Now verify if we undo, we have no cells
-        const afterUndo = await getCellResults(wrapper, 1, () => {
+        const afterUndo = await getCellResults(wrapper, InteractivePanel, 1, () => {
             undo!.simulate('click');
             return Promise.resolve();
         });
@@ -468,7 +467,7 @@ for _ in range(50):
         await interactiveWindow.show();
 
         // Then enter some code.
-        await enterInput(wrapper, 'a=1\na');
+        await enterInput(wrapper, InteractivePanel, 'a=1\na', 'InteractiveCell');
         verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
     }, () => { return ioc; });
 
@@ -484,7 +483,7 @@ for _ in range(50):
         await interactiveWindow.show();
 
         // Then enter some code.
-        await enterInput(wrapper, 'a=1\na');
+        await enterInput(wrapper, InteractivePanel, 'a=1\na', 'InteractiveCell');
         verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
         const ImageButtons = getLastOutputCell(wrapper).find(ImageButton);
         assert.equal(ImageButtons.length, 4, 'Cell buttons not found');
@@ -503,7 +502,7 @@ for _ in range(50):
         await interactiveWindow.show();
 
         // Then enter some code.
-        await enterInput(wrapper, 'a=1\na');
+        await enterInput(wrapper, InteractivePanel, 'a=1\na', 'InteractiveCell');
         verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
 
         // Then delete the node
@@ -513,19 +512,19 @@ for _ in range(50):
         const deleteButton = ImageButtons.at(3);
 
         // Make sure delete works
-        const afterDelete = await getCellResults(wrapper, 1, async () => {
+        const afterDelete = await getCellResults(wrapper, InteractivePanel, 1, async () => {
             deleteButton.simulate('click');
             return Promise.resolve();
         });
         assert.equal(afterDelete.length, 1, `Delete should remove a cell`);
 
         // Should be able to enter again
-        await enterInput(wrapper, 'a=1\na');
+        await enterInput(wrapper, InteractivePanel, 'a=1\na', 'InteractiveCell');
         verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
 
         // Try a 3rd time with some new input
         addMockData(ioc, 'print("hello")', 'hello');
-        await enterInput(wrapper, 'print("hello")');
+        await enterInput(wrapper, InteractivePanel, 'print("hello")', 'InteractiveCell');
         verifyHtmlOnCell(wrapper, 'hello', CellPosition.Last);
     }, () => { return ioc; });
 
@@ -620,7 +619,7 @@ for _ in range(50):
         await interactiveWindow.show();
 
         // Then enter some code.
-        await enterInput(wrapper, 'a=1\na');
+        await enterInput(wrapper, InteractivePanel, 'a=1\na', 'InteractiveCell');
         verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
         const ImageButtons = getLastOutputCell(wrapper).find(ImageButton);
         assert.equal(ImageButtons.length, 4, 'Cell buttons not found');

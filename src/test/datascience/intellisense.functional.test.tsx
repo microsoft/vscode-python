@@ -13,7 +13,8 @@ import { IInteractiveWindow, IInteractiveWindowProvider } from '../../client/dat
 import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
 import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { getEditor, runMountedTest, typeCode } from './interactiveWindowTestHelpers';
+import { runMountedTest } from './interactiveWindowTestHelpers';
+import { getEditor, typeCode } from './testHelpers';
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 suite('DataScience Intellisense tests', () => {
