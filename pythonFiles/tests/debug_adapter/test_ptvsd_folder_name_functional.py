@@ -8,18 +8,20 @@ if sys.version_info[:2] != (3, 7):
 
     raise unittest.SkipTest("PTVSD wheels shipped for Python 3.7 only")
 
+import os.path
 import pytest
 import subprocess
 
-from os import path
 from packaging.requirements import Requirement
 
 
-ROOT = path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__)))))
-PYTHONFILES_ROOT = path.join(ROOT, "pythonFiles")
-PYTHONFILES = path.join(PYTHONFILES_ROOT, "lib", "python")
-REQUIREMENTS = path.join(ROOT, "requirements.txt")
-ARGV = ["python", path.join(PYTHONFILES_ROOT, "ptvsd_folder_name.py")]
+ROOT = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
+PYTHONFILES_ROOT = os.path.join(ROOT, "pythonFiles")
+PYTHONFILES = os.path.join(PYTHONFILES_ROOT, "lib", "python")
+REQUIREMENTS = os.path.join(ROOT, "requirements.txt")
+ARGV = ["python", os.path.join(PYTHONFILES_ROOT, "ptvsd_folder_name.py")]
 
 
 def ptvsd_version():
@@ -38,7 +40,7 @@ def ptvsd_paths(*platforms):
     paths = set()
     for platform in platforms:
         folder = "ptvsd-{0}-cp37-cp37m-{1}".format(VERSION, platform)
-        paths.add(path.join(PYTHONFILES, folder))
+        paths.add(os.path.join(PYTHONFILES, folder))
     return paths
 
 

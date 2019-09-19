@@ -40,11 +40,9 @@ class TestPtvsdFolderName:
 
     def test_requirement_exists_folder_exists(self, capsys, monkeypatch):
         # Return the first constructed folder path as existing.
-        monkeypatch.setattr(path, "exists", lambda p: True)
+        monkeypatch.setattr(os.path, "exists", lambda p: True)
         tag = next(sys_tags())
-        folder = "ptvsd-5.0.0-{0}-{1}-{2}".format(
-            tag.interpreter, tag.abi, tag.platform
-        )
+        folder = "ptvsd-5.0.0-{}-{}-{}".format(tag.interpreter, tag.abi, tag.platform)
 
         with open_requirements_with_ptvsd():
             ptvsd_folder_name()
@@ -64,7 +62,7 @@ class TestPtvsdFolderName:
     def test_no_wheel_folder(self, capsys, monkeypatch):
         # Return none of of the constructed paths as existing,
         # ptvsd_folder_name() should return the path to default ptvsd.
-        monkeypatch.setattr(path, "exists", lambda p: False)
+        monkeypatch.setattr(os.path, "exists", lambda p: False)
 
         with open_requirements_with_ptvsd() as p:
             ptvsd_folder_name()
