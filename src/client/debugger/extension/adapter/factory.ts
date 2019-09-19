@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { DebugAdapterDescriptor, DebugAdapterExecutable, DebugSession, WorkspaceFolder } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
-import { DebugAdapterNewPtvsd } from '../../../common/experimentGroups';
+import { DebugAdapterPtvsdWheels } from '../../../common/experimentGroups';
 import { traceVerbose } from '../../../common/logger';
 import { IExperimentsManager } from '../../../common/types';
 import { IInterpreterService } from '../../../interpreter/contracts';
@@ -25,7 +25,12 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
         const pythonPath = await this.getPythonPath(configuration, session.workspaceFolder);
         const interpreterInfo = await this.interpreterService.getInterpreterDetails(pythonPath);
 
-        if (interpreterInfo && interpreterInfo.version && interpreterInfo.version.raw.startsWith('3.7') && this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
+        if (
+            interpreterInfo &&
+            interpreterInfo.version &&
+            interpreterInfo.version.raw.startsWith('3.7') &&
+            this.experimentsManager.inExperiment(DebugAdapterPtvsdWheels.experiment)
+        ) {
             traceVerbose('Compute and return the path to the correct PTVSD folder (use packaging module)');
             // const ptvsdPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'ptvsd');
             // // tslint:disable-next-line: no-any

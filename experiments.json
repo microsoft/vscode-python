@@ -42,26 +42,26 @@
         "max": 20
     },
     {
-        "name": "NewDebugAdapter - control",
-        "salt": "NewDebugAdapter",
+        "name": "DebugAdapterFactory - control",
+        "salt": "DebugAdapterFactory",
         "min": 60,
         "max": 90
     },
     {
-        "name": "NewDebugAdapter - experiment",
-        "salt": "NewDebugAdapter",
+        "name": "DebugAdapterFactory - experiment",
+        "salt": "DebugAdapterFactory",
         "min": 10,
         "max": 40
     },
     {
-        "name": "PtvsdWheels - control",
-        "salt": "PtvsdWheels",
+        "name": "PtvsdWheels37 - control",
+        "salt": "PtvsdWheels37",
         "min": 10,
         "max": 20
     },
     {
-        "name": "PtvsdWheels - experiment",
-        "salt": "PtvsdWheels",
+        "name": "PtvsdWheels37 - experiment",
+        "salt": "PtvsdWheels37",
         "min": 20,
         "max": 30
     },
