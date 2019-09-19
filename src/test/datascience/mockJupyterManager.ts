@@ -164,7 +164,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
             output_type: 'error',
             ename: message,
             evalue: message,
-            traceback: []
+            traceback: [message]
         };
 
         this.addCell(code, result);

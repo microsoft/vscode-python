@@ -8,11 +8,7 @@ import { parse } from 'node-html-parser';
 import * as React from 'react';
 import { Disposable } from 'vscode';
 
-import {
-    InteractiveWindowMessageListener
-} from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
-import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import { IInteractiveWindow, IInteractiveWindowProvider, IJupyterVariable } from '../../client/datascience/types';
+import { IJupyterVariable } from '../../client/datascience/types';
 import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
 import { VariableExplorer } from '../../datascience-ui/interactive-common/variableExplorer';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
@@ -54,18 +50,6 @@ suite('DataScience Interactive Window variable explorer tests', () => {
         await ioc.dispose();
     });
 
-    async function getOrCreateInteractiveWindow(): Promise<IInteractiveWindow> {
-        const interactiveWindowProvider = ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
-        const result = await interactiveWindowProvider.getOrCreateActive();
-
-        // During testing the MainPanel sends the init message before our interactive window is created.
-        // Pretend like it's happening now
-        const listener = ((result as any).messageListener) as InteractiveWindowMessageListener;
-        listener.onMessage(InteractiveWindowMessages.Started, {});
-
-        return result;
-    }
-
     runMountedTest('Variable explorer - Exclude', async (wrapper) => {
         const basicCode: string = `import numpy as np
 import pandas as pd
@@ -74,8 +58,8 @@ value = 'hello world'`;
 
         openVariableExplorer(wrapper);
 
-        await addCode(getOrCreateInteractiveWindow, wrapper, 'a=1\na');
-        await addCode(getOrCreateInteractiveWindow, wrapper, basicCode, 4);
+        await addCode(ioc, wrapper, 'a=1\na');
+        await addCode(ioc, wrapper, basicCode, 4);
         await waitForUpdate(wrapper, VariableExplorer, 3);
 
         // We should show a string and show an int, the modules should be hidden
@@ -90,7 +74,7 @@ value = 'hello world'`;
         ioc.getSettings().datascience.variableExplorerExclude = `${ioc.getSettings().datascience.variableExplorerExclude};str`;
 
         // Add another string and check our vars, strings should be hidden
-        await addCode(getOrCreateInteractiveWindow, wrapper, basicCode2, 4);
+        await addCode(ioc, wrapper, basicCode2, 4);
         await waitForUpdate(wrapper, VariableExplorer, 2);
 
         targetVariables = [
@@ -105,7 +89,7 @@ value = 'hello world'`;
 
         openVariableExplorer(wrapper);
 
-        await addCode(getOrCreateInteractiveWindow, wrapper, 'a=1\na');
+        await addCode(ioc, wrapper, 'a=1\na');
         await waitForUpdate(wrapper, VariableExplorer, 2);
 
         // Check that we have just the 'a' variable
@@ -115,7 +99,7 @@ value = 'hello world'`;
         verifyVariables(wrapper, targetVariables);
 
         // Add another variable and check it
-        await addCode(getOrCreateInteractiveWindow, wrapper, basicCode, 4);
+        await addCode(ioc, wrapper, basicCode, 4);
         await waitForUpdate(wrapper, VariableExplorer, 3);
 
         targetVariables = [
@@ -126,7 +110,7 @@ value = 'hello world'`;
         verifyVariables(wrapper, targetVariables);
 
         // Add a second variable and check it
-        await addCode(getOrCreateInteractiveWindow, wrapper, basicCode2, 4);
+        await addCode(ioc, wrapper, basicCode2, 4);
         await waitForUpdate(wrapper, VariableExplorer, 4);
 
         targetVariables = [
@@ -144,8 +128,8 @@ value = 'hello world'`;
 
         openVariableExplorer(wrapper);
 
-        await addCode(getOrCreateInteractiveWindow, wrapper, 'a=1\na');
-        await addCode(getOrCreateInteractiveWindow, wrapper, basicCode, 4);
+        await addCode(ioc, wrapper, 'a=1\na');
+        await addCode(ioc, wrapper, basicCode, 4);
 
         // Here we are only going to wait for two renders instead of the needed three
         // a should have the value updated, but value should still be loading
@@ -176,8 +160,8 @@ myDict = {'a': 1}`;
 
         openVariableExplorer(wrapper);
 
-        await addCode(getOrCreateInteractiveWindow, wrapper, 'a=1\na');
-        await addCode(getOrCreateInteractiveWindow, wrapper, basicCode, 4);
+        await addCode(ioc, wrapper, 'a=1\na');
+        await addCode(ioc, wrapper, basicCode, 4);
 
         // Verify that we actually update the variable explorer
         // Count here is our main render + a render for each variable row as they come in
@@ -208,8 +192,8 @@ myTuple = 1,2,3,4,5,6,7,8,9
 
         openVariableExplorer(wrapper);
 
-        await addCode(getOrCreateInteractiveWindow, wrapper, 'a=1\na');
-        await addCode(getOrCreateInteractiveWindow, wrapper, basicCode, 4);
+        await addCode(ioc, wrapper, 'a=1\na');
+        await addCode(ioc, wrapper, basicCode, 4);
 
         // Verify that we actually update the variable explorer
         // Count here is our main render + a render for each variable row as they come in
@@ -244,8 +228,8 @@ strc = 'c'`;
 
         openVariableExplorer(wrapper);
 
-        await addCode(getOrCreateInteractiveWindow, wrapper, 'a=1\na');
-        await addCode(getOrCreateInteractiveWindow, wrapper, basicCode, 4);
+        await addCode(ioc, wrapper, 'a=1\na');
+        await addCode(ioc, wrapper, basicCode, 4);
 
         await waitForUpdate(wrapper, VariableExplorer, 7);
 

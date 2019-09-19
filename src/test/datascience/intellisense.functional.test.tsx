@@ -7,13 +7,10 @@ import { IDisposable } from 'monaco-editor';
 import { Disposable } from 'vscode';
 
 import { createDeferred } from '../../client/common/utils/async';
-import { InteractiveWindowMessageListener } from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
-import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import { IInteractiveWindow, IInteractiveWindowProvider } from '../../client/datascience/types';
 import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
 import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { runMountedTest } from './interactiveWindowTestHelpers';
+import { getOrCreateInteractiveWindow, runMountedTest } from './interactiveWindowTestHelpers';
 import { getEditor, typeCode } from './testHelpers';
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
@@ -45,18 +42,6 @@ suite('DataScience Intellisense tests', () => {
     // suiteTeardown(() => {
     //     asyncDump();
     // });
-
-    async function getOrCreateInteractiveWindow(): Promise<IInteractiveWindow> {
-        const interactiveWindowProvider = ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
-        const result = await interactiveWindowProvider.getOrCreateActive();
-
-        // During testing the MainPanel sends the init message before our interactive window is created.
-        // Pretend like it's happening now
-        const listener = ((result as any).messageListener) as InteractiveWindowMessageListener;
-        listener.onMessage(InteractiveWindowMessages.Started, {});
-
-        return result;
-    }
 
     function getIntellisenseTextLines(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) : string[] {
         assert.ok(wrapper);
@@ -117,7 +102,7 @@ suite('DataScience Intellisense tests', () => {
 
     runMountedTest('Simple autocomplete', async (wrapper) => {
         // Create an interactive window so that it listens to the results.
-        const interactiveWindow = await getOrCreateInteractiveWindow();
+        const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
         await interactiveWindow.show();
 
         // Then enter some code. Don't submit, we're just testing that autocomplete appears
@@ -133,7 +118,7 @@ suite('DataScience Intellisense tests', () => {
             // This test only works when mocking.
 
             // Create an interactive window so that it listens to the results.
-            const interactiveWindow = await getOrCreateInteractiveWindow();
+            const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
             await interactiveWindow.show();
 
             // Then enter some code. Don't submit, we're just testing that autocomplete appears
@@ -150,7 +135,7 @@ suite('DataScience Intellisense tests', () => {
             // This test only works when mocking.
 
             // Create an interactive window so that it listens to the results.
-            const interactiveWindow = await getOrCreateInteractiveWindow();
+            const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
             await interactiveWindow.show();
 
             // Force a timeout on the jupyter completions

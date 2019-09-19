@@ -9,29 +9,30 @@ import { Disposable, TextDocument, TextEditor, Uri } from 'vscode';
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
+import { InteractiveBase } from '../../client/datascience/interactive-common/interactiveBase';
 import {
     InteractiveWindowMessageListener
 } from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import { IInteractiveWindowProvider, INotebookEditor, INotebookEditorProvider } from '../../client/datascience/types';
+import { INotebookEditor, INotebookEditorProvider } from '../../client/datascience/types';
 import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { addCell, runMountedTest } from './nativeEditorTestHelpers';
+import { addCell, getNativeCellResults, runMountedTest } from './nativeEditorTestHelpers';
 import {
     addContinuousMockData,
     addMockData,
     CellPosition,
     escapePath,
     findButton,
-    getCellResults,
+    getLastOutputCell,
     srcDirectory,
     verifyHtmlOnCell
 } from './testHelpers';
 
 //import { asyncDump } from '../common/asyncDump';
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
-suite('DataScience Native Window output tests', () => {
+suite('DataScience Native Editor tests', () => {
     const disposables: Disposable[] = [];
     let ioc: DataScienceIocContainer;
 
@@ -60,18 +61,22 @@ suite('DataScience Native Window output tests', () => {
     // });
 
     async function getOrCreateNativeEditor(uri?: Uri, contents?: string): Promise<INotebookEditor> {
-        const interactiveWindowProvider = ioc.get<INotebookEditorProvider>(IInteractiveWindowProvider);
+        const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
         let result: INotebookEditor | undefined;
         if (uri && contents) {
-            result = await interactiveWindowProvider.open(uri, contents);
+            result = await notebookProvider.open(uri, contents);
         } else {
-            result = await interactiveWindowProvider.createNew();
+            result = await notebookProvider.createNew();
         }
 
         // During testing the MainPanel sends the init message before our interactive window is created.
         // Pretend like it's happening now
         const listener = ((result as any).messageListener) as InteractiveWindowMessageListener;
         listener.onMessage(InteractiveWindowMessages.Started, {});
+
+        // Also need the css request so that other messages can go through
+        const webHost = (result as any) as InteractiveBase;
+        webHost.setTheme(false);
 
         return result;
     }
@@ -94,7 +99,7 @@ suite('DataScience Native Window output tests', () => {
         // Add a cell into the UI and wait for it to render
         await addCell(wrapper, 'a=1\na');
 
-        verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
+        verifyHtmlOnCell(wrapper, 'NativeCell', '<span>1</span>', CellPosition.Last);
     }, () => { return ioc; });
 
     runMountedTest('Mime Types', async (wrapper) => {
@@ -140,17 +145,17 @@ for _ in range(50):
             return Promise.resolve({ result: result, haveMore: loops > 0 });
         });
 
-        await addCell(wrapper, badPanda);
-        verifyHtmlOnCell(wrapper, `has no attribute 'read'`, CellPosition.Last);
+        await addCell(wrapper, badPanda, 5);
+        verifyHtmlOnCell(wrapper, 'NativeCell', `has no attribute 'read'`, CellPosition.Last);
 
-        await addCell(wrapper, goodPanda);
-        verifyHtmlOnCell(wrapper, `<td>`, CellPosition.Last);
+        await addCell(wrapper, goodPanda, 5);
+        verifyHtmlOnCell(wrapper, 'NativeCell', `<td>`, CellPosition.Last);
 
-        await addCell(wrapper, matPlotLib);
-        verifyHtmlOnCell(wrapper, matPlotLibResults, CellPosition.Last);
+        await addCell(wrapper, matPlotLib, 5);
+        verifyHtmlOnCell(wrapper, 'NativeCell', matPlotLibResults, CellPosition.Last);
 
         await addCell(wrapper, spinningCursor, 4 + (ioc.mockJupyter ? (cursors.length * 3) : 0));
-        verifyHtmlOnCell(wrapper, '<div>', CellPosition.Last);
+        verifyHtmlOnCell(wrapper, 'NativeCell', '<div>', CellPosition.Last);
     }, () => { return ioc; });
 
     runMountedTest('Click buttons', async (wrapper) => {
@@ -167,21 +172,24 @@ for _ in range(50):
         textEditors.push(visibleEditor.object);
         docManager.setup(a => a.visibleTextEditors).returns(() => textEditors);
         ioc.serviceManager.rebindInstance<IDocumentManager>(IDocumentManager, docManager.object);
+        // Create an editor so something is listening to messages
+        await createNewEditor();
 
         // Get a cell into the list
         await addCell(wrapper, 'a=1\na');
 
         // find the buttons on the cell itself
-        const ImageButtons = wrapper.at(wrapper.length - 2).find(ImageButton);
-        assert.equal(ImageButtons.length, 4, 'Cell buttons not found');
-        const deleteButton = ImageButtons.at(3);
+        const cell = getLastOutputCell(wrapper, 'NativeCell');
+        const ImageButtons = cell.find(ImageButton);
+        assert.equal(ImageButtons.length, 7, 'Cell buttons not found');
+        const deleteButton = ImageButtons.at(6);
 
         // Make sure delete works
-        const afterDelete = await getCellResults(wrapper, NativeEditor, 1, async () => {
+        const afterDelete = await getNativeCellResults(wrapper, 1, async () => {
             deleteButton.simulate('click');
             return Promise.resolve();
         });
-        assert.equal(afterDelete.length, 2, `Delete should remove a cell`);
+        assert.equal(afterDelete.length, 0, `Delete should remove a cell`);
     }, () => { return ioc; });
 
     runMountedTest('Export', async (wrapper) => {

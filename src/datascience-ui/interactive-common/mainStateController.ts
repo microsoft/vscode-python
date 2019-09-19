@@ -106,9 +106,11 @@ export class MainStateController implements IMessageHandler {
         // Tell the interactive window code we have started.
         this.postOffice.sendMessage<IInteractiveWindowMapping, 'started'>(InteractiveWindowMessages.Started);
 
-        // Get our monaco theme and css
-        this.postOffice.sendUnsafeMessage(CssMessages.GetCssRequest, { isDark: this.props.expectingDark });
-        this.postOffice.sendUnsafeMessage(CssMessages.GetMonacoThemeRequest, { isDark: this.props.expectingDark });
+        // Get our monaco theme and css if not running a test, because these make everything async too
+        if (!this.props.testMode) {
+            this.postOffice.sendUnsafeMessage(CssMessages.GetCssRequest, { isDark: this.props.expectingDark });
+            this.postOffice.sendUnsafeMessage(CssMessages.GetMonacoThemeRequest, { isDark: this.props.expectingDark });
+        }
     }
 
     public dispose() {

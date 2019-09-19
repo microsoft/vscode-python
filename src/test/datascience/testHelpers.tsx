@@ -54,16 +54,16 @@ export function addContinuousMockData(ioc: DataScienceIocContainer, code: string
         ioc.mockJupyter.addContinuousOutputCell(code, resultGenerator);
     }
 }
-
-export function getLastOutputCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>): ReactWrapper<any, Readonly<{}>, React.Component> {
-    // Skip the edit cell
-    const foundResult = wrapper.find('InteractiveCell');
-    assert.ok(foundResult.length >= 2, 'Didn\'t find any cells being rendered');
-    return foundResult.at(foundResult.length - 2);
+export function getLastOutputCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, cellType: string): ReactWrapper<any, Readonly<{}>, React.Component> {
+    // Skip the edit cell if in the interactive window
+    const count = cellType === 'InteractiveCell' ? 2 : 1;
+    const foundResult = wrapper.find(cellType);
+    assert.ok(foundResult.length >= count, 'Didn\'t find any cells being rendered');
+    return foundResult.at(foundResult.length - count);
 }
 
-export function verifyHtmlOnCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, html: string | undefined, cellIndex: number | CellPosition) {
-    const foundResult = wrapper.find('InteractiveCell');
+export function verifyHtmlOnCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, cellType: string, html: string | undefined, cellIndex: number | CellPosition) {
+    const foundResult = wrapper.find(cellType);
     assert.ok(foundResult.length >= 1, 'Didn\'t find any cells being rendered');
 
     let targetCell: ReactWrapper;
@@ -80,7 +80,7 @@ export function verifyHtmlOnCell(wrapper: ReactWrapper<any, Readonly<{}>, React.
 
             case CellPosition.Last:
                 // Skip the input cell on these checks.
-                targetCell = getLastOutputCell(wrapper);
+                targetCell = getLastOutputCell(wrapper, cellType);
                 break;
 
             default:
@@ -108,9 +108,9 @@ export function verifyHtmlOnCell(wrapper: ReactWrapper<any, Readonly<{}>, React.
     }
 }
 
-export function verifyLastCellInputState(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, state: CellInputState) {
+export function verifyLastCellInputState(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, cellType: string, state: CellInputState) {
 
-    const lastCell = getLastOutputCell(wrapper);
+    const lastCell = getLastOutputCell(wrapper, cellType);
     assert.ok(lastCell, 'Last call doesn\'t exist');
 
     const inputBlock = lastCell.find('div.cell-input');
@@ -139,7 +139,7 @@ export function verifyLastCellInputState(wrapper: ReactWrapper<any, Readonly<{}>
     }
 }
 
-export async function getCellResults(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, mainClass: React.ComponentClass<any>, expectedRenders: number, updater: () => Promise<void>): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
+export async function getCellResults(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, mainClass: React.ComponentClass<any>, cellType: string, expectedRenders: number, updater: () => Promise<void>): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
 
     // Get a render promise with the expected number of renders
     const renderPromise = waitForUpdate(wrapper, mainClass, expectedRenders);
@@ -151,7 +151,7 @@ export async function getCellResults(wrapper: ReactWrapper<any, Readonly<{}>, Re
     await renderPromise;
 
     // Return the result
-    return wrapper.find('InteractiveCell');
+    return wrapper.find(cellType);
 }
 
 function simulateKey(domNode: HTMLTextAreaElement, key: string, shiftDown?: boolean) {
@@ -310,9 +310,9 @@ export function updateDataScienceSettings(wrapper: ReactWrapper<any, Readonly<{}
     wrapper.update();
 }
 
-export function toggleCellExpansion(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) {
+export function toggleCellExpansion(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, cellType: string) {
     // Find the last cell added
-    const lastCell = getLastOutputCell(wrapper);
+    const lastCell = getLastOutputCell(wrapper, cellType);
     assert.ok(lastCell, 'Last call doesn\'t exist');
 
     const toggleButton = lastCell.find('button.collapse-input');

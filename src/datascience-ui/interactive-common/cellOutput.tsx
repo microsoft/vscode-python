@@ -3,10 +3,12 @@
 'use strict';
 import '../../client/common/extensions';
 
+// tslint:disable-next-line: no-var-requires no-require-imports
+const ansiToHtml = require('ansi-to-html');
+
 import { nbformat } from '@jupyterlab/coreutils';
 import { JSONObject } from '@phosphor/coreutils';
 import ansiRegex from 'ansi-regex';
-import ansiToHtml from 'ansi-to-html';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
@@ -15,6 +17,7 @@ import * as React from 'react';
 import { concatMultilineString } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import { CellState } from '../../client/datascience/types';
+import { ClassType } from '../../client/ioc/types';
 import { noop } from '../../test/core';
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
@@ -42,9 +45,24 @@ interface ICellOutput {
 }
 // tslint:disable: react-this-binding-issue
 export class CellOutput extends React.Component<ICellOutputProps> {
-
+    // tslint:disable-next-line: no-any
+    private static ansiToHtmlClass_ctor: ClassType<any> | undefined;
     constructor(prop: ICellOutputProps) {
         super(prop);
+    }
+
+    // tslint:disable-next-line: no-any
+    private static get ansiToHtmlClass(): ClassType<any> {
+        if (!CellOutput.ansiToHtmlClass_ctor) {
+            // ansiToHtml is different between the tests running and webpack. figure out which one
+            // tslint:disable-next-line: no-any
+            if (ansiToHtml instanceof Function) {
+                CellOutput.ansiToHtmlClass_ctor = ansiToHtml;
+            } else {
+                CellOutput.ansiToHtmlClass_ctor = ansiToHtml.default;
+            }
+        }
+        return CellOutput.ansiToHtmlClass_ctor!;
     }
 
     private static getAnsiToHtmlOptions() : { fg: string; bg: string; colors: string [] } {
@@ -192,7 +210,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             // colorizing if we don't have html that needs <xmp> around it (ex. <type ='string'>)
             try {
                 if (ansiRegex().test(formatted)) {
-                    const converter = new ansiToHtml(CellOutput.getAnsiToHtmlOptions());
+                    const converter = new CellOutput.ansiToHtmlClass(CellOutput.getAnsiToHtmlOptions());
                     const html = converter.toHtml(formatted);
                     copy.data = {
                         'text/html': html
@@ -208,7 +226,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             renderWithScrollbars = true;
             const error = copy as nbformat.IError;
             try {
-                const converter = new ansiToHtml(CellOutput.getAnsiToHtmlOptions());
+                const converter = new CellOutput.ansiToHtmlClass(CellOutput.getAnsiToHtmlOptions());
                 const trace = converter.toHtml(error.traceback.join('\n'));
                 copy.data = {
                     'text/html': trace

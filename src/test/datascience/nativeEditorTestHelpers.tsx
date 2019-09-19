@@ -9,7 +9,12 @@ import { IJupyterExecution } from '../../client/datascience/types';
 import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { waitForUpdate } from './reactHelpers';
-import { addMockData, getMainPanel, mountWebView } from './testHelpers';
+import { addMockData, getCellResults, getMainPanel, mountWebView } from './testHelpers';
+
+// tslint:disable-next-line: no-any
+export function getNativeCellResults(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, expectedRenders: number, updater: () => Promise<void>): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
+    return getCellResults(wrapper, NativeEditor, 'NativeCell', expectedRenders, updater);
+}
 
 // tslint:disable-next-line:no-any
 export function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>, getIOC: () => DataScienceIocContainer) {
@@ -28,7 +33,7 @@ export function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<an
 }
 
 // tslint:disable-next-line: no-any
-export async function addCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string, expectedSubmitRenderCount: number = 4): Promise<void> {
+export async function addCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string, expectedSubmitRenderCount: number = 6): Promise<void> {
     // First get the stateController on the main panel. That's how we'll add a new cell.
     const reactEditor = getMainPanel<NativeEditor>(wrapper, NativeEditor);
     assert.ok(reactEditor, 'Cannot find the main panel during adding a cell');
@@ -38,6 +43,7 @@ export async function addCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Com
     // Then use that cell to stick new input.
     assert.ok(vm, 'Did not add a new cell to the main panel');
     await update;
+
     update = waitForUpdate(wrapper, NativeEditor, expectedSubmitRenderCount);
     reactEditor!.stateController.submitInput(code, vm!);
     return update;

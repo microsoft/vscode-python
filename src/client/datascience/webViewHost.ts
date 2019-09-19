@@ -86,6 +86,15 @@ export class WebViewHost<IMapping> implements IDisposable {
         }
     }
 
+    public setTheme(isDark: boolean) {
+        if (this.themeIsDarkPromise && !this.themeIsDarkPromise.resolved) {
+            this.themeIsDarkPromise.resolve(isDark);
+        } else {
+            this.themeIsDarkPromise = createDeferred<boolean>();
+            this.themeIsDarkPromise.resolve(isDark);
+        }
+    }
+
     protected reload() {
         // Make not disposed anymore
         this.disposed = false;
@@ -200,12 +209,7 @@ export class WebViewHost<IMapping> implements IDisposable {
 
     @captureTelemetry(Telemetry.WebviewStyleUpdate)
     private async handleCssRequest(request: IGetCssRequest): Promise<void> {
-        if (this.themeIsDarkPromise && !this.themeIsDarkPromise.resolved) {
-            this.themeIsDarkPromise.resolve(request.isDark);
-        } else {
-            this.themeIsDarkPromise = createDeferred<boolean>();
-            this.themeIsDarkPromise.resolve(request.isDark);
-        }
+        this.setTheme(request.isDark);
         const settings = this.generateDataScienceExtraSettings();
         const isDark = await this.themeFinder.isThemeDark(settings.extraSettings.theme);
         const css = await this.cssGenerator.generateThemeCss(request.isDark, settings.extraSettings.theme);
@@ -214,12 +218,7 @@ export class WebViewHost<IMapping> implements IDisposable {
 
     @captureTelemetry(Telemetry.WebviewMonacoStyleUpdate)
     private async handleMonacoThemeRequest(request: IGetMonacoThemeRequest): Promise<void> {
-        if (this.themeIsDarkPromise && !this.themeIsDarkPromise.resolved) {
-            this.themeIsDarkPromise.resolve(request.isDark);
-        } else {
-            this.themeIsDarkPromise = createDeferred<boolean>();
-            this.themeIsDarkPromise.resolve(request.isDark);
-        }
+        this.setTheme(request.isDark);
         const settings = this.generateDataScienceExtraSettings();
         const monacoTheme = await this.cssGenerator.generateMonacoTheme(request.isDark, settings.extraSettings.theme);
         return this.postMessageInternal(CssMessages.GetMonacoThemeResponse, { theme: monacoTheme });
