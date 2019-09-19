@@ -8,6 +8,8 @@
 import { expect } from 'chai';
 import { parse } from 'semver';
 import { buildApi } from '../client/api';
+import { ApplicationEnvironment } from '../client/common/application/applicationEnvironment';
+import { IApplicationEnvironment } from '../client/common/application/types';
 import { EXTENSION_ROOT_DIR } from '../client/common/constants';
 
 const expectedPath = `${EXTENSION_ROOT_DIR.fileToCommandArgument()}/pythonFiles/ptvsd_launcher.py`;
@@ -28,6 +30,7 @@ suite('Extension API Debugger', () => {
 suite('Extension version tests', () => {
     let version: string;
     let branchName: string;
+    let applicationEnvironment: IApplicationEnvironment;
 
     suiteSetup(async function() {
         // Skip the entire suite if running locally
@@ -39,9 +42,8 @@ suite('Extension version tests', () => {
     });
 
     setup(() => {
-        // tslint:disable-next-line: no-require-imports
-        const extension = require('../../package.json');
-        version = parse(extension.version)!.raw;
+        applicationEnvironment = new ApplicationEnvironment(undefined as any, undefined as any, undefined as any);
+        version = parse(applicationEnvironment.packageJson.version)!.raw;
     });
 
     test('If we are running a pipeline in the master branch, the extension version in `package.json` should have the "-dev" suffix', async function() {
