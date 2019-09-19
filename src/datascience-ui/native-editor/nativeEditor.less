@@ -117,20 +117,39 @@
     border-width: 1px;
     padding: 2px;
     background: var(--override-widget-background, var(--vscode-notifications-background));
-    flex: 1;
+    grid-column: 3;
+    grid-row: 1;
     min-width: calc(100% - 85px);
 }
+//.cell-input {
+    //margin: 0px 10px 0px 0px;
+    //border-color:  var(--override-widget-background, var(--vscode-notifications-background));
+    //border-style: solid;
+    //border-width: 1px;
+    //padding: 2px;
+    //background: var(--override-widget-background, var(--vscode-notifications-background));
+    //flex: 1;
+    //min-width: calc(100% - 85px);
+//}
 
 .content-div {
     grid-column: 3;
 }
 
+//.controls-div {
+    //min-width: 34px;
+    //max-width: 34px;
+    //padding-left: 10px;
+    //flex: 1;
+    //display: block;
+//}
 .controls-div {
     min-width: 34px;
     max-width: 34px;
     padding-left: 10px;
-    flex: 1;
     display: block;
+    grid-column: 2;
+    grid-row: 1;
 }
 
 .navbar-div {
@@ -158,11 +177,17 @@
     grid-column: 1;
 }
 
+//.native-editor-celltoolbar-middle {
+    //display: flex;
+    //justify-items: left;
+    //visibility: collapse;
+    //margin-left: 50px;
+//}
 .native-editor-celltoolbar-middle {
-    display: flex;
+    grid-column: 3;
+    grid-row: 2;
     justify-items: left;
     visibility: collapse;
-    margin-left: 50px;
 }
 
 .cell-wrapper:hover .navbar-div {
@@ -330,16 +355,29 @@
     visibility: visible;
 }
 
+//.cell-row-container {
+    //display: flex;
+//}
 .cell-row-container {
-    display: flex;
+    display: grid;
+    grid-template-columns: auto auto 1fr;
+    grid-template-rows: 1fr auto;
 }
 
 .collapse-bar {
-    flex: 1;
+    grid-column: 1;
+    grid-row-start: 1;
+    grid-row-end: 2;
     background-color: transparent;
     max-width: 8px;
     min-width: 8px;
 }
+//.collapse-bar {
+    //flex: 1;
+    //background-color: transparent;
+    //max-width: 8px;
+    //min-width: 8px;
+//}
 
 .cell-wrapper:hover .collapse-bar {
     background-color: var(--override-widget-background, var(--vscode-notifications-background));
@@ -355,6 +393,9 @@
 
 .collapse-bar-selected {
     background-color: var(--vscode-peekView-border);
+    //grid-row: 1 / 2;
+    grid-row-start: 1;
+    grid-row-end: 3;
 }
 
 .collapse-bar-focused {
@@ -365,6 +406,8 @@
         var(--vscode-editorGutter-addedBackground) 3px,
         var(--vscode-editorGutter-addedBackground) 6px
     );
+    grid-row-start: 1;
+    grid-row-end: 3;
 }
 
 .cell-wrapper:hover .collapse-bar-selected {
