@@ -13,7 +13,7 @@ ROOT = path.dirname(path.dirname(path.dirname(path.dirname(path.abspath(__file__
 PYTHONFILES_ROOT = path.join(ROOT, "pythonFiles")
 PYTHONFILES = path.join(PYTHONFILES_ROOT, "lib", "python")
 REQUIREMENTS = path.join(ROOT, "requirements.txt")
-ARGV = ["python", path.join(PYTHONFILES_ROOT, "ptvsd_folder_name.py")]
+ARGV = ["python3", path.join(PYTHONFILES_ROOT, "ptvsd_folder_name.py")]
 
 
 def isPython37():

@@ -11,7 +11,6 @@ import pytest
 TEST_ROOT = os.path.dirname(__file__)
 SRC_ROOT = os.path.dirname(TEST_ROOT)
 PROJECT_ROOT = os.path.dirname(SRC_ROOT)
-PYTHONFILES_LIB_ROOT = os.path.join(PROJECT_ROOT, 'lib', 'python')
 IPYTHON_ROOT = os.path.join(SRC_ROOT, 'ipython')
 TESTING_TOOLS_ROOT = os.path.join(SRC_ROOT, 'testing_tools')
 DEBUG_ADAPTER_ROOT = os.path.join(SRC_ROOT, 'debug_adapter')
@@ -32,7 +31,6 @@ def parse_args():
 
 
 def main(pytestargs, markers=None):
-    sys.path.insert(1, PYTHONFILES_LIB_ROOT)
     sys.path.insert(1, IPYTHON_ROOT)
     sys.path.insert(1, TESTING_TOOLS_ROOT)
     sys.path.insert(1, DEBUG_ADAPTER_ROOT)
