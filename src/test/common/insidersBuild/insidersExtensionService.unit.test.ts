@@ -184,7 +184,7 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
     let hasUserBeenNotifiedState: TypeMoq.IMock<IPersistentState<boolean>>;
     let insidersExtensionService: InsidersExtensionService;
     let insidersInstaller: IExtensionBuildInstaller;
-    setup(() => {
+    function setupMock() {
         extensionChannelService = mock(ExtensionChannelService);
         insidersInstaller = mock(InsidersBuildInstaller);
         appEnvironment = mock(ApplicationEnvironment);
@@ -193,18 +193,14 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
         insidersPrompt = mock(InsidersExtensionPrompt);
         hasUserBeenNotifiedState = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
         when(insidersPrompt.hasUserBeenNotified).thenReturn(hasUserBeenNotifiedState.object);
-        insidersExtensionService = new InsidersExtensionService(instance(extensionChannelService), instance(insidersPrompt), instance(appEnvironment), instance(cmdManager), instance(serviceContainer), instance(insidersInstaller), []);
-    });
-
-    teardown(() => {
-        sinon.restore();
-    });
+        return new InsidersExtensionService(instance(extensionChannelService), instance(insidersPrompt), instance(appEnvironment), instance(cmdManager), instance(serviceContainer), instance(insidersInstaller), []);
+    }
 
     suite('Case I - Verify enroll into the program again prompt is displayed when conditions are met', async () => {
         const testsForHandleEdgeCaseI: {
             vscodeChannel: Channel;
-            installChannel?: ExtensionChannels;
-            isChannelUsingDefaultConfiguration?: boolean;
+            installChannel: ExtensionChannels;
+            isChannelUsingDefaultConfiguration: boolean;
         }[] =
             [
                 {
@@ -225,15 +221,7 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
             ];
 
         setup(() => {
-            extensionChannelService = mock(ExtensionChannelService);
-            insidersInstaller = mock(InsidersBuildInstaller);
-            appEnvironment = mock(ApplicationEnvironment);
-            cmdManager = mock(CommandManager);
-            serviceContainer = mock(ServiceContainer);
-            insidersPrompt = mock(InsidersExtensionPrompt);
-            hasUserBeenNotifiedState = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
-            when(insidersPrompt.hasUserBeenNotified).thenReturn(hasUserBeenNotifiedState.object);
-            insidersExtensionService = new InsidersExtensionService(instance(extensionChannelService), instance(insidersPrompt), instance(appEnvironment), instance(cmdManager), instance(serviceContainer), instance(insidersInstaller), []);
+            insidersExtensionService = setupMock();
         });
 
         testsForHandleEdgeCaseI.forEach(testParams => {
@@ -255,9 +243,9 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
     suite('Case II - Verify Insiders Install Prompt is displayed when conditions are met', async () => {
         const testsForHandleEdgeCaseII: {
             vscodeChannel: Channel;
-            hasUserBeenNotified?: boolean;
+            hasUserBeenNotified: boolean;
             installChannel?: ExtensionChannels;
-            isChannelUsingDefaultConfiguration?: boolean;
+            isChannelUsingDefaultConfiguration: boolean;
             extensionChannel?: Channel;
         }[] =
             [
@@ -277,15 +265,7 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
             ];
 
         setup(() => {
-            extensionChannelService = mock(ExtensionChannelService);
-            insidersInstaller = mock(InsidersBuildInstaller);
-            appEnvironment = mock(ApplicationEnvironment);
-            cmdManager = mock(CommandManager);
-            serviceContainer = mock(ServiceContainer);
-            insidersPrompt = mock(InsidersExtensionPrompt);
-            hasUserBeenNotifiedState = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
-            when(insidersPrompt.hasUserBeenNotified).thenReturn(hasUserBeenNotifiedState.object);
-            insidersExtensionService = new InsidersExtensionService(instance(extensionChannelService), instance(insidersPrompt), instance(appEnvironment), instance(cmdManager), instance(serviceContainer), instance(insidersInstaller), []);
+            insidersExtensionService = setupMock();
         });
 
         testsForHandleEdgeCaseII.forEach(testParams => {
@@ -311,9 +291,9 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
         const testsForHandleEdgeCaseIII: {
             vscodeChannel: Channel;
             hasUserBeenNotified?: boolean;
-            installChannel?: ExtensionChannels;
+            installChannel: ExtensionChannels;
             isChannelUsingDefaultConfiguration?: boolean;
-            extensionChannel?: Channel;
+            extensionChannel: Channel;
         }[] =
             [
                 {
@@ -329,15 +309,7 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
             ];
 
         setup(() => {
-            extensionChannelService = mock(ExtensionChannelService);
-            insidersInstaller = mock(InsidersBuildInstaller);
-            appEnvironment = mock(ApplicationEnvironment);
-            cmdManager = mock(CommandManager);
-            serviceContainer = mock(ServiceContainer);
-            insidersPrompt = mock(InsidersExtensionPrompt);
-            hasUserBeenNotifiedState = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
-            when(insidersPrompt.hasUserBeenNotified).thenReturn(hasUserBeenNotifiedState.object);
-            insidersExtensionService = new InsidersExtensionService(instance(extensionChannelService), instance(insidersPrompt), instance(appEnvironment), instance(cmdManager), instance(serviceContainer), instance(insidersInstaller), []);
+            insidersExtensionService = setupMock();
         });
 
         testsForHandleEdgeCaseIII.forEach(testParams => {
@@ -363,7 +335,7 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
         const testsForHandleEdgeCaseIV: {
             vscodeChannel: Channel;
             hasUserBeenNotified?: boolean;
-            installChannel?: ExtensionChannels;
+            installChannel: ExtensionChannels;
             isChannelUsingDefaultConfiguration?: boolean;
             extensionChannel?: Channel;
         }[] =
@@ -398,15 +370,7 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
             ];
 
         setup(() => {
-            extensionChannelService = mock(ExtensionChannelService);
-            insidersInstaller = mock(InsidersBuildInstaller);
-            appEnvironment = mock(ApplicationEnvironment);
-            cmdManager = mock(CommandManager);
-            serviceContainer = mock(ServiceContainer);
-            insidersPrompt = mock(InsidersExtensionPrompt);
-            hasUserBeenNotifiedState = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
-            when(insidersPrompt.hasUserBeenNotified).thenReturn(hasUserBeenNotifiedState.object);
-            insidersExtensionService = new InsidersExtensionService(instance(extensionChannelService), instance(insidersPrompt), instance(appEnvironment), instance(cmdManager), instance(serviceContainer), instance(insidersInstaller), []);
+            insidersExtensionService = setupMock();
         });
 
         testsForHandleEdgeCaseIV.forEach(testParams => {
