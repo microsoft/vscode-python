@@ -89,6 +89,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private variableRequestStopWatch: StopWatch | undefined;
     private variableRequestPendingCount: number = 0;
     private loadPromise: Promise<void> | undefined;
+    private setDark: boolean = false;
 
     constructor(
         @unmanaged() private readonly listeners: IInteractiveWindowListener[],
@@ -465,6 +466,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         try {
             // Make sure we're loaded first.
             await this.ensureServerActive();
+
+            // Make sure we set the dark setting
+            await this.ensureDarkSet();
 
             // Then show our webpanel
             await this.show();
@@ -1025,11 +1029,22 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
     }
 
+    private async ensureDarkSet(): Promise<void> {
+        if (!this.setDark) {
+            this.setDark = true;
+
+            // Wait for the web panel to get the isDark setting
+            const knownDark = await this.isDark();
+
+            // Before we run any cells, update the dark setting
+            if (this.notebook) {
+                await this.notebook.setMatplotLibStyle(knownDark);
+            }
+        }
+    }
+
     private async createNotebook(): Promise<void> {
         traceInfo('Getting jupyter server options ...');
-
-        // Wait for the webpanel to pass back our current theme darkness
-        const knownDark = await this.isDark();
 
         // Extract our options
         const options = await this.getNotebookOptions();
@@ -1042,11 +1057,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         // Then create a new notebook
         if (server) {
             this.notebook = await server.createNotebook(await this.getNotebookIdentity());
-        }
-
-        // Before we run any cells, update the dark setting
-        if (this.notebook) {
-            await this.notebook.setMatplotLibStyle(knownDark);
         }
 
         traceInfo('Connected to jupyter server.');
