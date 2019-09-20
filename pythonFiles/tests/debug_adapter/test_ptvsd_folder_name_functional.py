@@ -12,11 +12,9 @@ import os.path
 import pytest
 import subprocess
 
-from .. import PROJECT_ROOT, SRC_ROOT
 from packaging.requirements import Requirement
+from .. import PYTHONFILES, REQUIREMENTS, SRC_ROOT
 
-PYTHONFILES = os.path.join(SRC_ROOT, "lib", "python")
-REQUIREMENTS = os.path.join(PROJECT_ROOT, "requirements.txt")
 ARGV = ["python", os.path.join(SRC_ROOT, "ptvsd_folder_name.py")]
 PREFIX = "ptvsd=="
 

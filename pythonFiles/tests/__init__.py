@@ -8,3 +8,6 @@ PROJECT_ROOT = os.path.dirname(SRC_ROOT)
 IPYTHON_ROOT = os.path.join(SRC_ROOT, "ipython")
 TESTING_TOOLS_ROOT = os.path.join(SRC_ROOT, "testing_tools")
 DEBUG_ADAPTER_ROOT = os.path.join(SRC_ROOT, "debug_adapter")
+
+PYTHONFILES = os.path.join(SRC_ROOT, "lib", "python")
+REQUIREMENTS = os.path.join(PROJECT_ROOT, "requirements.txt")

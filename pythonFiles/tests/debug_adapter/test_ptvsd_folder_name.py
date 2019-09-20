@@ -11,18 +11,11 @@ import os.path
 import pytest
 import re
 
-try:
-    from unittest.mock import patch, mock_open
+from unittest.mock import patch, mock_open
+from packaging.tags import sys_tags
+from ptvsd_folder_name import ptvsd_folder_name
 
-    from packaging.tags import sys_tags
-    from ptvsd_folder_name import ptvsd_folder_name
-except:  # Python 2.7
-    print("Not importing anything for Python 2.7 since the test will be skipped.")
-
-from .. import SRC_ROOT, PROJECT_ROOT
-
-PYTHONFILES = os.path.join(SRC_ROOT, "lib", "python")
-REQUIREMENTS = os.path.join(PROJECT_ROOT, "requirements.txt")
+from .. import PYTHONFILES, REQUIREMENTS
 
 
 def open_requirements_with_ptvsd():
