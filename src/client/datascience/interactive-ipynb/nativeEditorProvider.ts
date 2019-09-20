@@ -46,9 +46,6 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
         sendTelemetryEvent(Telemetry.NotebookOpenCount, this.openedNotebookCount);
         sendTelemetryEvent(Telemetry.NotebookRunCount, this.executedEditors.size);
         sendTelemetryEvent(Telemetry.NotebookWorkspaceCount, this.notebookCount);
-
-        // Try to save all of the currently dirty editors
-        await Promise.all(this.editors.map(e => e.save()));
     }
 
     public get activeEditor(): INotebookEditor | undefined {
@@ -69,6 +66,8 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
             editor = await this.create(file, contents);
             this.activeEditors.set(file.fsPath, editor);
             this.openedNotebookCount += 1;
+        } else {
+            await editor.show();
         }
         return editor;
     }

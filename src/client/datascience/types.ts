@@ -241,7 +241,6 @@ export interface INotebookEditor extends IInteractiveBase {
     readonly visible: boolean;
     readonly active: boolean;
     load(contents: string, file: Uri): Promise<void>;
-    save(): Promise<void>;
 }
 
 export const IInteractiveWindowListener = Symbol('IInteractiveWindowListener');
@@ -513,3 +512,16 @@ export interface IDebugLocationTracker extends DebugAdapterTracker {
 
 // Cells silently executed on behalf of the user are tagged with the following.
 export const internalUseCellKey: string = '#%DATASCIENCE_INTERNAL_KEY%#';
+
+export interface INotebookContents {
+    contents: string;
+}
+
+export const INotebookStorage = Symbol('INotebookHotStorage');
+export interface INotebookStorage {
+    // Retrieves the contents last stored and erases the contents from storage
+    // If nothing available, returns undefined.
+    retrieve(uri: Uri): Promise<INotebookContents | undefined>;
+    // Stores contents for retrieval
+    store(uri: Uri, contents?: INotebookContents): Promise<void>;
+}
