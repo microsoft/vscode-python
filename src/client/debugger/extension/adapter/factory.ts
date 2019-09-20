@@ -3,9 +3,11 @@
 
 'use strict';
 
+import * as fs from 'fs';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { parse } from 'semver';
+import { promisify } from 'util';
 import { DebugAdapterDescriptor, DebugAdapterExecutable, DebugSession, WorkspaceFolder } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
 import { PVSC_EXTENSION_ID } from '../../../common/constants';
@@ -37,13 +39,8 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
         if (await this.useNewPtvsd(pythonPath)) {
             // If logToFile is set in the debug config then pass --log-dir <path-to-extension-dir> when launching the debug adapter.
             const logArgs = configuration.logToFile ? ['--log-dir', EXTENSION_ROOT_DIR] : [];
-            let ptvsdPathToUse: string;
-            try {
-                ptvsdPathToUse = await this.getPtvsdFolder(pythonPath);
-            } catch {
-                ptvsdPathToUse = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
-            }
-            return new DebugAdapterExecutable(`${pythonPath}`, [path.join(ptvsdPathToUse, 'ptvsd', 'adapter'), ...logArgs]);
+            const ptvsdPathToUse = await this.getPtvsdPath(pythonPath);
+            return new DebugAdapterExecutable(`${pythonPath}`, [ptvsdPathToUse, ...logArgs]);
         }
 
         // Use the Node debug adapter (and ptvsd_launcher.py)
@@ -52,6 +49,38 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
         }
         // Unlikely scenario.
         throw new Error('Debug Adapter Executable not provided');
+    }
+
+    /**
+     * Check and return whether the user is in the PTVSD wheels experiment or not.
+     *
+     * @param {string} pythonPath Path to the python executable used to launch the Python Debug Adapter (result of `this.getPythonPath()`)
+     * @returns {Promise<boolean>} Whether the user is in the experiment or not.
+     * @memberof DebugAdapterDescriptorFactory
+     */
+    public async useNewPtvsd(pythonPath: string): Promise<boolean> {
+        if (!this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
+            return false;
+        }
+
+        const interpreterInfo = await this.interpreterService.getInterpreterDetails(pythonPath);
+        if (!interpreterInfo || !interpreterInfo.version || !interpreterInfo.version.raw.startsWith('3.7')) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public async getPtvsdPath(pythonPath: string): Promise<string> {
+        let ptvsdPathToUse: string;
+
+        try {
+            ptvsdPathToUse = await this.getPtvsdFolder(pythonPath);
+        } catch {
+            ptvsdPathToUse = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
+        }
+
+        return path.join(ptvsdPathToUse, 'ptvsd', 'adapter');
     }
 
     /**
@@ -126,7 +155,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
                 return cachedPath;
             } catch (err) {
                 // The path to the cached folder didn't exist (ptvsd requirements updated during development), so run the script again.
-        }
+            }
         }
 
         // The ptvsd path wasn't cached, so run the script and cache it.
@@ -138,25 +167,5 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
         await persistentState.updateValue({ extensionVersion: version.raw, ptvsdPath: pathToPtvsd });
 
         return pathToPtvsd;
-    }
-
-    /**
-     * Check and return whether the user is in the PTVSD wheels experiment or not.
-     *
-     * @param {string} pythonPath Path to the python executable used to launch the Python Debug Adapter (result of `this.getPythonPath()`)
-     * @returns {Promise<boolean>} Whether the user is in the experiment or not.
-     * @memberof DebugAdapterDescriptorFactory
-     */
-    private async useNewPtvsd(pythonPath: string): Promise<boolean> {
-        if (!this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
-            return false;
-        }
-
-        const interpreterInfo = await this.interpreterService.getInterpreterDetails(pythonPath);
-        if (!interpreterInfo || !interpreterInfo.version || !interpreterInfo.version.raw.startsWith('3.7')) {
-            return false;
-        }
-
-        return true;
     }
 }

@@ -33,7 +33,7 @@ export interface IExtensionApi {
 }
 
 // tslint:disable-next-line:no-any
-export function buildApi(ready: Promise<any>) {
+export function buildApi(ready: Promise<any>, ptvsdWheelsScriptPath?: string) {
     return {
         // 'ready' will propogate the exception, but we must log it here first.
         ready: ready.catch((ex) => {
@@ -42,7 +42,7 @@ export function buildApi(ready: Promise<any>) {
         }),
         debug: {
             async getRemoteLauncherCommand(host: string, port: number, waitUntilDebuggerAttaches: boolean = true): Promise<string[]> {
-                return new RemoteDebuggerExternalLauncherScriptProvider().getLauncherArgs({ host, port, waitUntilDebuggerAttaches });
+                return new RemoteDebuggerExternalLauncherScriptProvider(ptvsdWheelsScriptPath).getLauncherArgs({ host, port, waitUntilDebuggerAttaches });
             }
         }
     };
