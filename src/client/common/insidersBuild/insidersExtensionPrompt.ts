@@ -19,7 +19,7 @@ export const optIntoInsidersPromptAgainStateKey = 'OPT_INTO_INSIDERS_PROGRAM_AGA
 @injectable()
 export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
     public readonly hasUserBeenNotified: IPersistentState<boolean>;
-    public readonly hasUserBeenAskedToOptAgain: IPersistentState<boolean>;
+    public readonly hasUserBeenAskedToOptInAgain: IPersistentState<boolean>;
     constructor(
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IExtensionChannelService) private readonly insidersDownloadChannelService: IExtensionChannelService,
@@ -27,17 +27,17 @@ export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory
     ) {
         this.hasUserBeenNotified = this.persistentStateFactory.createGlobalPersistentState(insidersPromptStateKey, false);
-        this.hasUserBeenAskedToOptAgain = this.persistentStateFactory.createGlobalPersistentState(optIntoInsidersPromptAgainStateKey, false);
+        this.hasUserBeenAskedToOptInAgain = this.persistentStateFactory.createGlobalPersistentState(optIntoInsidersPromptAgainStateKey, false);
     }
 
     @traceDecorators.error('Error in prompting to install insiders')
     public async promptToInstallInsiders(): Promise<void> {
-        await this.showPrompt(ExtensionChannels.promptMessage(), this.hasUserBeenNotified, EventName.INSIDERS_PROMPT);
+        await this.promptAndUpdate(ExtensionChannels.promptMessage(), this.hasUserBeenNotified, EventName.INSIDERS_PROMPT);
     }
 
     @traceDecorators.error('Error in prompting to enroll back to insiders program')
     public async promptToEnrollBackToInsiders(): Promise<void> {
-        await this.showPrompt(ExtensionChannels.optIntoProgramAgainMessage(), this.hasUserBeenAskedToOptAgain, EventName.OPT_INTO_INSIDERS_AGAIN_PROMPT);
+        await this.promptAndUpdate(ExtensionChannels.optIntoProgramAgainMessage(), this.hasUserBeenAskedToOptInAgain, EventName.OPT_INTO_INSIDERS_AGAIN_PROMPT);
     }
 
     @traceDecorators.error('Error in prompting to reload')
@@ -52,7 +52,7 @@ export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
         }
     }
 
-    private async showPrompt(message: string, hasPromptBeenShownAlreadyState: IPersistentState<boolean>, telemetryEventKey: EventName.INSIDERS_PROMPT | EventName.OPT_INTO_INSIDERS_AGAIN_PROMPT) {
+    private async promptAndUpdate(message: string, hasPromptBeenShownAlreadyState: IPersistentState<boolean>, telemetryEventKey: EventName.INSIDERS_PROMPT | EventName.OPT_INTO_INSIDERS_AGAIN_PROMPT) {
         const prompts = [ExtensionChannels.yesWeekly(), ExtensionChannels.yesDaily(), DataScienceSurveyBanner.bannerLabelNo()];
         const telemetrySelections: ['Yes, weekly', 'Yes, daily', 'No, thanks'] = ['Yes, weekly', 'Yes, daily', 'No, thanks'];
         const selection = await this.appShell.showInformationMessage(message, ...prompts);

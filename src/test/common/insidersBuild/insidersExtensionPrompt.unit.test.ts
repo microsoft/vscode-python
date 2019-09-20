@@ -24,7 +24,7 @@ suite('Insiders Extension prompt', () => {
     let cmdManager: ICommandManager;
     let persistentState: IPersistentStateFactory;
     let hasUserBeenNotifiedState: TypeMoq.IMock<IPersistentState<boolean>>;
-    let hasUserBeenAskedToOptAgain: TypeMoq.IMock<IPersistentState<boolean>>;
+    let hasUserBeenAskedToOptInAgain: TypeMoq.IMock<IPersistentState<boolean>>;
     let insidersPrompt: InsidersExtensionPrompt;
     setup(() => {
         extensionChannelService = mock(ExtensionChannelService);
@@ -33,8 +33,8 @@ suite('Insiders Extension prompt', () => {
         cmdManager = mock(CommandManager);
         hasUserBeenNotifiedState = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
         when(persistentState.createGlobalPersistentState(insidersPromptStateKey, false)).thenReturn(hasUserBeenNotifiedState.object);
-        hasUserBeenAskedToOptAgain = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
-        when(persistentState.createGlobalPersistentState(optIntoInsidersPromptAgainStateKey, false)).thenReturn(hasUserBeenAskedToOptAgain.object);
+        hasUserBeenAskedToOptInAgain = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
+        when(persistentState.createGlobalPersistentState(optIntoInsidersPromptAgainStateKey, false)).thenReturn(hasUserBeenAskedToOptInAgain.object);
         insidersPrompt = new InsidersExtensionPrompt(instance(appShell), instance(extensionChannelService), instance(cmdManager), instance(persistentState));
     });
 
@@ -142,14 +142,14 @@ suite('Insiders Extension prompt', () => {
             when(
                 extensionChannelService.updateChannel(ExtensionChannel.daily)
             ).thenResolve();
-            hasUserBeenAskedToOptAgain
+            hasUserBeenAskedToOptInAgain
                 .setup(u => u.updateValue(true))
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.once());
             await insidersPrompt.promptToEnrollBackToInsiders();
             verify(appShell.showInformationMessage(ExtensionChannels.optIntoProgramAgainMessage(), ...prompts)).once();
             verify(extensionChannelService.updateChannel(ExtensionChannel.daily)).once();
-            hasUserBeenAskedToOptAgain.verifyAll();
+            hasUserBeenAskedToOptInAgain.verifyAll();
             verify(cmdManager.executeCommand('workbench.action.reloadWindow')).never();
         });
 
@@ -164,14 +164,14 @@ suite('Insiders Extension prompt', () => {
             when(
                 extensionChannelService.updateChannel(ExtensionChannel.weekly)
             ).thenResolve();
-            hasUserBeenAskedToOptAgain
+            hasUserBeenAskedToOptInAgain
                 .setup(u => u.updateValue(true))
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.once());
             await insidersPrompt.promptToEnrollBackToInsiders();
             verify(appShell.showInformationMessage(ExtensionChannels.optIntoProgramAgainMessage(), ...prompts)).once();
             verify(extensionChannelService.updateChannel(ExtensionChannel.weekly)).once();
-            hasUserBeenAskedToOptAgain.verifyAll();
+            hasUserBeenAskedToOptInAgain.verifyAll();
             verify(cmdManager.executeCommand('workbench.action.reloadWindow')).never();
         });
 
@@ -186,14 +186,14 @@ suite('Insiders Extension prompt', () => {
             when(
                 extensionChannelService.updateChannel(anything())
             ).thenResolve();
-            hasUserBeenAskedToOptAgain
+            hasUserBeenAskedToOptInAgain
                 .setup(u => u.updateValue(true))
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.once());
             await insidersPrompt.promptToEnrollBackToInsiders();
             verify(appShell.showInformationMessage(ExtensionChannels.optIntoProgramAgainMessage(), ...prompts)).once();
             verify(extensionChannelService.updateChannel(anything())).never();
-            hasUserBeenAskedToOptAgain.verifyAll();
+            hasUserBeenAskedToOptInAgain.verifyAll();
             verify(cmdManager.executeCommand('workbench.action.reloadWindow')).never();
         });
 
@@ -208,14 +208,14 @@ suite('Insiders Extension prompt', () => {
             when(
                 extensionChannelService.updateChannel(anything())
             ).thenResolve();
-            hasUserBeenAskedToOptAgain
+            hasUserBeenAskedToOptInAgain
                 .setup(u => u.updateValue(true))
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.once());
             await insidersPrompt.promptToEnrollBackToInsiders();
             verify(appShell.showInformationMessage(ExtensionChannels.optIntoProgramAgainMessage(), ...prompts)).once();
             verify(extensionChannelService.updateChannel(anything())).never();
-            hasUserBeenAskedToOptAgain.verifyAll();
+            hasUserBeenAskedToOptInAgain.verifyAll();
             verify(cmdManager.executeCommand('workbench.action.reloadWindow')).never();
         });
     });

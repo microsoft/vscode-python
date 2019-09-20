@@ -28,7 +28,8 @@ export class InsidersExtensionService implements IExtensionSingleActivationServi
     public async activate() {
         this.registerCommandsAndHandlers();
         const installChannel = this.extensionChannelService.getChannel();
-        if (await this.handleEdgeCases(installChannel)) {
+        const alreadyHandled = await this.handleEdgeCases(installChannel);
+        if (alreadyHandled) {
             // Simply return if channel is already handled and doesn't need further handling
             return;
         }
@@ -53,14 +54,13 @@ export class InsidersExtensionService implements IExtensionSingleActivationServi
     public async handleEdgeCases(installChannel: ExtensionChannels): Promise<boolean> {
         if (await this.promptToEnrollBackToInsidersIfApplicable(installChannel)) {
             return true;
-        }
-        if (await this.promptToInstallInsidersIfApplicable()) {
+        } else if (await this.promptToInstallInsidersIfApplicable()) {
             return true;
-        }
-        if (await this.setInsidersChannelToOffIfApplicable(installChannel)) {
+        } else if (await this.setInsidersChannelToOffIfApplicable(installChannel)) {
             return true;
+        } else {
+            return false;
         }
-        return false;
     }
 
     public registerCommandsAndHandlers(): void {
