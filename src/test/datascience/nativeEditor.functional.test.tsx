@@ -9,11 +9,6 @@ import { Disposable, TextDocument, TextEditor, Uri } from 'vscode';
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
-import { InteractiveBase } from '../../client/datascience/interactive-common/interactiveBase';
-import {
-    InteractiveWindowMessageListener
-} from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
-import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { INotebookEditor, INotebookEditorProvider } from '../../client/datascience/types';
 import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
@@ -62,23 +57,11 @@ suite('DataScience Native Editor tests', () => {
 
     async function getOrCreateNativeEditor(uri?: Uri, contents?: string): Promise<INotebookEditor> {
         const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
-        let result: INotebookEditor | undefined;
         if (uri && contents) {
-            result = await notebookProvider.open(uri, contents);
+            return notebookProvider.open(uri, contents);
         } else {
-            result = await notebookProvider.createNew();
+            return notebookProvider.createNew();
         }
-
-        // During testing the MainPanel sends the init message before our interactive window is created.
-        // Pretend like it's happening now
-        const listener = ((result as any).messageListener) as InteractiveWindowMessageListener;
-        listener.onMessage(InteractiveWindowMessages.Started, {});
-
-        // Also need the css request so that other messages can go through
-        const webHost = (result as any) as InteractiveBase;
-        webHost.setTheme(false);
-
-        return result;
     }
 
     async function waitForMessageResponse(action: () => void): Promise<void> {

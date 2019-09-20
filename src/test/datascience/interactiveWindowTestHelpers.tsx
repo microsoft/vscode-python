@@ -5,11 +5,6 @@ import * as assert from 'assert';
 import { ReactWrapper } from 'enzyme';
 import * as React from 'react';
 
-import {
-    InteractiveWindowMessageListener
-} from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
-import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { IInteractiveWindow, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
 import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
@@ -20,21 +15,9 @@ export function getInteractiveCellResults(wrapper: ReactWrapper<any, Readonly<{}
     return getCellResults(wrapper, InteractivePanel, 'InteractiveCell', expectedRenders, updater);
 }
 
-export async function getOrCreateInteractiveWindow(ioc: DataScienceIocContainer): Promise<IInteractiveWindow> {
+export function getOrCreateInteractiveWindow(ioc: DataScienceIocContainer): Promise<IInteractiveWindow> {
     const interactiveWindowProvider = ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
-    const result = await interactiveWindowProvider.getOrCreateActive();
-
-    // During testing the MainPanel sends the init message before our interactive window is created.
-    // Pretend like it's happening now
-    // tslint:disable-next-line: no-any
-    const listener = ((result as any).messageListener) as InteractiveWindowMessageListener;
-    listener.onMessage(InteractiveWindowMessages.Started, {});
-
-    // Also need the css request so that other messages can go through
-    const webHost = result as InteractiveWindow;
-    webHost.setTheme(false);
-
-    return result;
+    return interactiveWindowProvider.getOrCreateActive();
 }
 
 // tslint:disable-next-line:no-any

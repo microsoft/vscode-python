@@ -14,7 +14,6 @@ import { InteractiveWindow } from '../../client/datascience/interactive-window/i
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { IInteractiveWindow, IInteractiveWindowProvider, INotebookServerOptions } from '../../client/datascience/types';
 import { IServiceContainer } from '../../client/ioc/types';
-import { Agent as HttpsAgent } from 'https';
 
 @injectable()
 export class TestInteractiveWindowProvider implements IInteractiveWindowProvider {

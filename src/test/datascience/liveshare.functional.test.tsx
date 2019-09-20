@@ -18,11 +18,6 @@ import {
 import { IFileSystem } from '../../client/common/platform/types';
 import { Commands } from '../../client/datascience/constants';
 import {
-    InteractiveWindowMessageListener
-} from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
-import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
-import {
     ICodeWatcher,
     IDataScienceCommandListener,
     IInteractiveWindow,
@@ -97,22 +92,10 @@ suite('DataScience LiveShare tests', () => {
         return result;
     }
 
-    async function getOrCreateInteractiveWindow(role: vsls.Role): Promise<IInteractiveWindow> {
+    function getOrCreateInteractiveWindow(role: vsls.Role): Promise<IInteractiveWindow> {
         // Get the container to use based on the role.
         const container = role === vsls.Role.Host ? hostContainer : guestContainer;
-        const result = await container!.get<IInteractiveWindowProvider>(IInteractiveWindowProvider).getOrCreateActive();
-
-        // During testing the MainPanel sends the init message before our interactive window is created.
-        // Pretend like it's happening now
-        // tslint:disable-next-line: no-any
-        const listener = ((result as any).messageListener) as InteractiveWindowMessageListener;
-        listener.onMessage(InteractiveWindowMessages.Started, {});
-
-        // Also need the css request so that other messages can go through
-        const webHost = result as InteractiveWindow;
-        webHost.setTheme(false);
-
-        return result;
+        return container!.get<IInteractiveWindowProvider>(IInteractiveWindowProvider).getOrCreateActive();
     }
 
     function isSessionStarted(role: vsls.Role): boolean {
