@@ -119,7 +119,14 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
         const version = parse(extension.packageJSON.version)!;
 
         if (persistentState.value && version.raw === persistentState.value.extensionVersion) {
-            return persistentState.value.ptvsdPath;
+            const cachedPath = persistentState.value.ptvsdPath;
+            const access = promisify(fs.access);
+            try {
+                await access(cachedPath, fs.constants.F_OK);
+                return cachedPath;
+            } catch (err) {
+                // The path to the cached folder didn't exist (ptvsd requirements updated during development), so run the script again.
+        }
         }
 
         // The ptvsd path wasn't cached, so run the script and cache it.
