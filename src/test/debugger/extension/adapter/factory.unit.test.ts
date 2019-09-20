@@ -42,7 +42,7 @@ suite('Debugging - Adapter Factory', () => {
 
     const nodeExecutable = { command: 'node', args: [] };
     const mockExtensionVersion = new SemVer('2019.9.0');
-    const ptvsdPath = path.join('path', 'to', 'ptvsd');
+    const ptvsdPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
     const pythonPath = path.join('path', 'to', 'python', 'interpreter');
     const interpreter = {
         architecture: Architecture.Unknown,
