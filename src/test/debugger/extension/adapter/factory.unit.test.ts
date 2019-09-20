@@ -12,7 +12,7 @@ import { anyString, anything, instance, mock, verify, when } from 'ts-mockito';
 import { DebugAdapterExecutable, DebugConfiguration, DebugSession, WorkspaceFolder } from 'vscode';
 import { ApplicationShell } from '../../../../client/common/application/applicationShell';
 import { IApplicationShell } from '../../../../client/common/application/types';
-import { DebugAdapterPtvsdWheels } from '../../../../client/common/experimentGroups';
+import { DebugAdapterNewPtvsd } from '../../../../client/common/experimentGroups';
 import { ExperimentsManager } from '../../../../client/common/experiments';
 import { IExperimentsManager } from '../../../../client/common/types';
 import { Architecture } from '../../../../client/common/utils/platform';
@@ -71,7 +71,7 @@ suite('Debugging - Adapter Factory', () => {
         const debugExecutable = new DebugAdapterExecutable(pythonPath);
 
         when(interpreterService.getInterpreterDetails(pythonPath)).thenResolve(interpreterDetails);
-        when(experimentsManager.inExperiment(DebugAdapterPtvsdWheels.experiment)).thenReturn(true);
+        when(experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
 
         const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
@@ -93,7 +93,7 @@ suite('Debugging - Adapter Factory', () => {
 
         when(interpreterService.getActiveInterpreter(anything())).thenResolve(interpreterDetails);
         when(interpreterService.getInterpreterDetails(pythonPath)).thenResolve(interpreterDetails);
-        when(experimentsManager.inExperiment(DebugAdapterPtvsdWheels.experiment)).thenReturn(true);
+        when(experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
 
         const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
@@ -115,7 +115,7 @@ suite('Debugging - Adapter Factory', () => {
 
         when(interpreterService.getInterpreters(anything())).thenResolve([interpreterDetails]);
         when(interpreterService.getInterpreterDetails(pythonPath)).thenResolve(interpreterDetails);
-        when(experimentsManager.inExperiment(DebugAdapterPtvsdWheels.experiment)).thenReturn(true);
+        when(experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
 
         const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
@@ -172,7 +172,7 @@ suite('Debugging - Adapter Factory', () => {
         const session = createSession({});
 
         when(interpreterService.getInterpreterDetails(pythonPath)).thenResolve(interpreterDetails);
-        when(experimentsManager.inExperiment(DebugAdapterPtvsdWheels.experiment)).thenReturn(true);
+        when(experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
 
         const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
