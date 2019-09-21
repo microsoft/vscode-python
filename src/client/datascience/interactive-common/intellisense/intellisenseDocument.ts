@@ -9,6 +9,7 @@ import * as vscodeLanguageClient from 'vscode-languageclient';
 
 import { PYTHON_LANGUAGE } from '../../../common/constants';
 import { Identifiers } from '../../constants';
+import { ICell } from '../../types';
 import { DefaultWordPattern, ensureValidWordDefinition, getWordAtText, regExpLeadsToEndlessLoop } from './wordHelper';
 
 class IntellisenseLine implements TextLine {
@@ -86,6 +87,61 @@ export class IntellisenseDocument implements TextDocument {
 
     public switchToEditMode() {
         this.inEditMode = true;
+    }
+
+    public getCellCount() {
+        return this._cellRanges.length;
+    }
+
+    public isInEditMode() {
+        return this.inEditMode;
+    }
+
+    public hasCell(cellId: string) {
+        const foundIt = this._cellRanges.find(c => c.id === cellId);
+        return foundIt ? true : false;
+    }
+
+    public lookForCellToDelete(incomingCells: ICell[]): TextDocumentContentChangeEvent[] {
+        let change: TextDocumentContentChangeEvent[] = [];
+
+        this._cellRanges.forEach((cell, i) => {
+            const foundIt = incomingCells.find(c => c.id === cell.id);
+
+            // if cell is not found in the document and its not the last edit cell, we remove it
+            if (!foundIt && i !== this._cellRanges.length - 1) {
+                const from = new Position(this.getLineFromOffset(cell.start), 0);
+                const to = new Position(this.getLineFromOffset(cell.currentEnd - 1), cell.currentEnd - cell.start);
+
+                // for some reason, start for the next cell isn't updated on removeRange,
+                // so we update it here
+                this._cellRanges[i + 1].start = cell.start;
+                this._cellRanges.splice(i, 1);
+                change = this.removeRange('', from, to, i);
+            }
+        });
+
+        return change;
+    }
+
+    public getLineFromOffset(offset: number) {
+        let lineCounter = 0;
+
+        for (let i = 0; i < offset; i += 1) {
+            if (this._contents[i] === '\n') {
+                lineCounter += 1;
+            }
+        }
+
+        return lineCounter;
+    }
+
+    public lookForCellMovement(incomingCells: ICell[]) {
+        incomingCells.forEach((cell, i) => {
+            if (cell.id !== this._cellRanges[i].id) {
+                // do swap with i + 1
+            }
+        });
     }
 
     public get uri(): Uri {
@@ -194,7 +250,7 @@ export class IntellisenseDocument implements TextDocument {
             version: this.version
         };
     }
-    public addCell(fullCode: string, currentCode: string, id: string): TextDocumentContentChangeEvent[] {
+    public addCell(fullCode: string, currentCode: string, id: string, nextCellId?: string): TextDocumentContentChangeEvent[] {
         // This should only happen once for each cell.
         this._version += 1;
 
@@ -208,24 +264,51 @@ export class IntellisenseDocument implements TextDocument {
         const newCode = `${normalized}\n`;
         const newCurrentCode = `${normalizedCurrent}\n`;
 
-        // We should start just before the last cell.
-        const fromOffset = this.getEditCellOffset();
+        // We should start just before the last cell for the interactive window
+        // But return the start of the next cell for the native editor,
+        // in case we add a cell at the end in the native editor,
+        // just don't send a nextCellId to get an offset at the end of the document
+        const fromOffset = this.getEditCellOffset(nextCellId);
 
         // Split our text between the edit text and the cells above
         const before = this._contents.substr(0, fromOffset);
         const after = this._contents.substr(fromOffset);
         const fromPosition = this.positionAt(fromOffset);
 
+        // for the interactive window or if the cell was added last,
+        // add cell to the end
+        let splicePosition = this._cellRanges.length - 1;
+
+        // for the native editor, find the index to add the cell to
+        if (nextCellId) {
+            const index = this._cellRanges.findIndex(c => c.id === nextCellId);
+
+            if (index > -1) {
+                splicePosition = index;
+            }
+        }
+
         // Save the range for this cell ()
-        this._cellRanges.splice(this._cellRanges.length - 1, 0,
+        this._cellRanges.splice(splicePosition, 0,
             { id, start: fromOffset, fullEnd: fromOffset + newCode.length, currentEnd: fromOffset + newCurrentCode.length });
 
         // Update our entire contents and recompute our lines
         this._contents = `${before}${newCode}${after}`;
         this._lines = this.createLines();
-        this._cellRanges[this._cellRanges.length - 1].start += newCode.length;
-        this._cellRanges[this._cellRanges.length - 1].fullEnd += newCode.length;
-        this._cellRanges[this._cellRanges.length - 1].currentEnd += newCode.length;
+
+        if (nextCellId) {
+            // With the native editor, we fix all the positions that changed after adding
+            for (let i = splicePosition + 1; i < this._cellRanges.length; i += 1) {
+                this._cellRanges[i].start += newCode.length;
+                this._cellRanges[i].fullEnd += newCode.length;
+                this._cellRanges[i].currentEnd += newCode.length;
+            }
+        } else {
+            // with the interactive window, we just fix the positon of the last cell
+            this._cellRanges[this._cellRanges.length - 1].start += newCode.length;
+            this._cellRanges[this._cellRanges.length - 1].fullEnd += newCode.length;
+            this._cellRanges[this._cellRanges.length - 1].currentEnd += newCode.length;
+        }
 
         return [
             {
@@ -321,7 +404,17 @@ export class IntellisenseDocument implements TextDocument {
         return this._contents.substr(this.getEditCellOffset());
     }
 
-    public getEditCellOffset() {
+    public getEditCellOffset(nextCellId?: string) {
+        // in native editor
+        if (this.inEditMode && nextCellId) {
+            const nextCell = this._cellRanges.find(c => c.id === nextCellId);
+
+            if (nextCell) {
+                return nextCell.start;
+            }
+        }
+
+        // in interactive window
         return this._cellRanges[this._cellRanges.length - 1].start;
     }
 

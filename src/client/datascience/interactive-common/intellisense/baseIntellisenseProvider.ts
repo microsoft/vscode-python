@@ -25,6 +25,7 @@ import { createDeferred, Deferred, waitForPromise } from '../../../common/utils/
 import { concatMultilineString } from '../../common';
 import { Identifiers, Settings } from '../../constants';
 import {
+    IInteractiveWindowInfo,
     IInteractiveWindowListener,
     IInteractiveWindowProvider,
     IJupyterExecution,
@@ -127,6 +128,10 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
 
             case InteractiveWindowMessages.LoadAllCellsComplete:
                 this.dispatchMessage(message, payload, this.loadAllCells);
+                break;
+
+            case InteractiveWindowMessages.SendInfo:
+                this.dispatchMessage(message, payload, this.handleNativeEditorChanges);
                 break;
 
             default:
@@ -370,6 +375,49 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
                 }
             }));
         }
+    }
+
+    private async handleNativeEditorChanges(payload: IInteractiveWindowInfo) {
+        const document = await this.getDocument();
+        const changes: TextDocumentContentChangeEvent[][] = [];
+        const file = payload.visibleCells[0] ? payload.visibleCells[0].file : undefined;
+
+        if (document && document.isInEditMode()) {
+            const incomingCells = payload.visibleCells.filter(c => c.data.cell_type === 'code');
+            const currentCellCount = document.getCellCount() - 1;
+
+            if (currentCellCount < incomingCells.length) { // Cell was added
+                incomingCells.forEach((cell, i) => {
+                    if (!document.hasCell(cell.id)) {
+                        const text = concatMultilineString(cell.data.source);
+                        const addCell: IAddCell = {
+                            fullText: text,
+                            currentText: text,
+                            file: cell.file,
+                            id: cell.id
+                        };
+
+                        // addCell to the end of the document, or if adding in the middle,
+                        // send the id of the next cell to get its offset in the document
+                        if (i + 1 > incomingCells.length - 1) {
+                            changes.push(document.addCell(addCell.fullText, addCell.currentText, addCell.id));
+                        } else {
+                            changes.push(document.addCell(addCell.fullText, addCell.currentText, addCell.id, incomingCells[i + 1].id));
+                        }
+                    }
+                });
+            } else if (currentCellCount > incomingCells.length) { // Cell was deleted
+                const change = document.lookForCellToDelete(incomingCells);
+
+                if (change.length > 0) {
+                    changes.push(change);
+                }
+            } else { // Cell might have moved
+                document.lookForCellMovement(incomingCells);
+            }
+        }
+
+        await Promise.all(changes.map(c => this.handleChanges(file, document, c)));
     }
 
     private async restartKernel(): Promise<void> {
