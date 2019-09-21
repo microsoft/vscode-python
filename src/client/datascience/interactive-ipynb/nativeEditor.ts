@@ -4,9 +4,9 @@
 import '../../common/extensions';
 
 import * as fastDeepEqual from 'fast-deep-equal';
-import { inject, injectable, multiInject } from 'inversify';
+import { inject, injectable, multiInject, named } from 'inversify';
 import * as path from 'path';
-import { Event, EventEmitter, Uri, ViewColumn } from 'vscode';
+import { Event, EventEmitter, Memento, Uri, ViewColumn } from 'vscode';
 
 import {
     IApplicationShell,
@@ -19,7 +19,7 @@ import {
 import { ContextKey } from '../../common/contextKey';
 import { traceError } from '../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -58,7 +58,6 @@ import {
     INotebookExporter,
     INotebookImporter,
     INotebookServerOptions,
-    INotebookStorage,
     IStatusProvider,
     IThemeFinder
 } from '../types';
@@ -104,7 +103,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         @inject(IJupyterDebugger) jupyterDebugger: IJupyterDebugger,
         @inject(INotebookImporter) private importer: INotebookImporter,
         @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler,
-        @inject(INotebookStorage) private storage: INotebookStorage
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private workspaceStorage: Memento
     ) {
         super(
             listeners,
@@ -163,10 +162,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         await this.show();
 
         // See if this file was stored in storage prior to shutdown
-        const dirtyContents = await this.storage.retrieve(file);
+        const dirtyContents = this.getStoredContents();
         if (dirtyContents) {
             // This means we're dirty. Indicate dirty and load from this content
-            const cells = await this.importer.importCells(dirtyContents.contents);
+            const cells = await this.importer.importCells(dirtyContents);
             this.visibleCells = cells;
             await this.setDirty();
             return this.postMessage(InteractiveWindowMessages.LoadAllCells, { cells });
@@ -333,6 +332,19 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return Promise.resolve();
     }
 
+    private getStorageKey(): string {
+        return `notebook-storage-${this._file.toString()}`;
+    }
+
+    private getStoredContents(): string | undefined {
+        return this.workspaceStorage.get<string>(this.getStorageKey());
+    }
+
+    private async storeContents(contents?: string): Promise<void> {
+        const key = this.getStorageKey();
+        await this.workspaceStorage.update(key, contents);
+    }
+
     private async close(): Promise<void> {
         // Ask user if they want to save. It seems hotExit has no bearing on
         // whether or not we should ask
@@ -411,6 +423,12 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private async updateVisibleCells(cells: ICell[]): Promise<void> {
         if (!fastDeepEqual(this.visibleCells, cells)) {
             this.visibleCells = cells;
+
+            // Save our dirty state in the storage for reopen later
+            const notebook = await this.jupyterExporter.translateToNotebook(this.visibleCells, undefined);
+            await this.storeContents(JSON.stringify(notebook));
+
+            // Indicate dirty
             await this.setDirty();
         }
     }
@@ -420,11 +438,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             this._dirty = true;
             this.setTitle(`${path.basename(this.file.fsPath)}*`);
             await this.postMessage(InteractiveWindowMessages.NotebookDirty);
-
-            // Save our dirty state in the storage for reopen later
-            const notebook = await this.jupyterExporter.translateToNotebook(this.visibleCells, undefined);
-            await this.storage.store(this.file, { contents: JSON.stringify(notebook) });
-
             // Tell listeners we're dirty
             this.modifiedEvent.fire(this);
         }
@@ -434,7 +447,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         if (this._dirty) {
             this._dirty = false;
             this.setTitle(`${path.basename(this.file.fsPath)}`);
-            await this.storage.store(this.file, undefined);
+            await this.storeContents(undefined);
             await this.postMessage(InteractiveWindowMessages.NotebookClean);
         }
     }
@@ -499,7 +512,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 // Save our visible cells into the file
                 const notebook = await this.jupyterExporter.translateToNotebook(this.visibleCells, undefined);
                 await this.fileSystem.writeFile(fileToSaveTo.fsPath, JSON.stringify(notebook));
-                this.setClean();
+                await this.setClean();
             }
 
         } catch (e) {

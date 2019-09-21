@@ -1,18 +1,27 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { Uri } from 'vscode';
+import { Memento, Uri } from 'vscode';
 
 import { IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
-import { IAsyncDisposable, IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../common/types';
+import {
+    IAsyncDisposable,
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry,
+    IMemento,
+    WORKSPACE_MEMENTO
+} from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Settings, Telemetry } from '../constants';
 import { INotebookEditor, INotebookEditorProvider, INotebookServerOptions } from '../types';
+
+const NotebookUriListStorageKey = 'notebook-storage-open-uri-list';
 
 @injectable()
 export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisposable {
@@ -27,7 +36,8 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
         @inject(IConfigurationService) private configuration: IConfigurationService,
-        @inject(IFileSystem) private fileSystem: IFileSystem
+        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private workspaceStorage: Memento
     ) {
         asyncRegistry.push(this);
 
@@ -39,6 +49,15 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
         if (findFilesPromise && findFilesPromise.then) {
             findFilesPromise.then(r => this.notebookCount += r.length);
         }
+
+        // // Reopen our list of files that were open during shutdown. Actually not doing this for now. The files
+        // don't open until the extension loads and all they all steal focus.
+        // const uriList = this.workspaceStorage.get<Uri[]>(NotebookUriListStorageKey);
+        // if (uriList && uriList.length) {
+        //     uriList.forEach(u => {
+        //         this.fileSystem.readFile(u.fsPath).then(c => this.open(u, c).ignoreErrors()).ignoreErrors();
+        //     });
+        // }
     }
 
     public async dispose(): Promise<void> {
@@ -64,8 +83,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
         let editor = this.activeEditors.get(file.fsPath);
         if (!editor) {
             editor = await this.create(file, contents);
-            this.activeEditors.set(file.fsPath, editor);
-            this.openedNotebookCount += 1;
+            this.onOpenedEditor(editor);
         } else {
             await editor.show();
         }
@@ -118,10 +136,17 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
 
     private onClosedEditor(e: INotebookEditor) {
         this.activeEditors.delete(e.file.fsPath);
+        this.workspaceStorage.update(NotebookUriListStorageKey, this.editors.map(ed => ed.file));
     }
 
     private onExecutedEditor(e: INotebookEditor) {
         this.executedEditors.add(e.file.fsPath);
+    }
+
+    private onOpenedEditor(e: INotebookEditor) {
+        this.activeEditors.set(e.file.fsPath, e);
+        this.openedNotebookCount += 1;
+        this.workspaceStorage.update(NotebookUriListStorageKey, this.editors.map(ed => ed.file));
     }
 
     private async getNextNewNotebookUri(): Promise<Uri> {
