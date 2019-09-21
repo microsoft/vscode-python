@@ -4,10 +4,10 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Terminal } from 'vscode';
+import { Terminal, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import {
-    ICommandManager, ITerminalManager, IWorkspaceService
+    ICommandManager, IDocumentManager, ITerminalManager, IWorkspaceService
 } from '../common/application/types';
 import { ShowPlayIcon } from '../common/experimentGroups';
 import { ITerminalActivator } from '../common/terminal/types';
@@ -48,6 +48,7 @@ export class TerminalAutoActivation implements ITerminalAutoActivation {
     constructor(
         @inject(ITerminalManager) private readonly terminalManager: ITerminalManager,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
+        @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(ITerminalActivator) private readonly activator: ITerminalActivator,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
     ) {
@@ -68,10 +69,14 @@ export class TerminalAutoActivation implements ITerminalAutoActivation {
     private async activateTerminal(terminal: Terminal): Promise<void> {
         // If we have just one workspace, then pass that as the resource.
         // Until upstream VSC issue is resolved https://github.com/Microsoft/vscode/issues/63052.
-        const workspaceFolder =
-            this.workspaceService.hasWorkspaceFolders && this.workspaceService.workspaceFolders!.length > 0
-                ? this.workspaceService.workspaceFolders![0].uri
-                : undefined;
-        await this.activator.activateEnvironmentInTerminal(terminal, workspaceFolder);
+        await this.activator.activateEnvironmentInTerminal(terminal, this.getActiveResource());
+    }
+
+    private getActiveResource(): Uri | undefined {
+        if (this.documentManager.activeTextEditor && !this.documentManager.activeTextEditor.document.isUntitled) {
+            return this.documentManager.activeTextEditor.document.uri;
+        }
+
+        return Array.isArray(this.workspaceService.workspaceFolders) && this.workspaceService.workspaceFolders.length > 0 ? this.workspaceService.workspaceFolders[0].uri : undefined;
     }
 }
