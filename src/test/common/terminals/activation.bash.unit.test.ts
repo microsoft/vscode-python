@@ -89,13 +89,12 @@ suite('Terminal Environment Activation (bash)', () => {
                             const command = await bash.getActivationCommands(undefined, shellType.value);
 
                             if (isScriptFileSupported) {
-                                const sourceCmd = shellType.value === TerminalShellType.fish ? '.' : 'source';
                                 // Ensure the script file is of the following form:
                                 // source "<path to script file>" <environment name>
                                 // Ensure the path is quoted if it contains any spaces.
                                 // Ensure it contains the name of the environment as an argument to the script file.
 
-                                expect(command).to.be.deep.equal([`${sourceCmd} ${pathToScriptFile.fileToCommandArgument()}`.trim()], 'Invalid command');
+                                expect(command).to.be.deep.equal([`source ${pathToScriptFile.fileToCommandArgument()}`.trim()], 'Invalid command');
                             } else {
                                 expect(command).to.be.equal(undefined, 'Command should be undefined');
                             }
