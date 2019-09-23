@@ -63,11 +63,12 @@ suite('xTerminal - Activation', () => {
             serviceContainer.object
         );
 
-        await activation.activate();
         commands
             .setup(c => c.executeCommand('setContext', 'python.showPlayIcon', true))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());
+
+        await activation.activate();
         verifyAll();
     });
 });
