@@ -84,7 +84,7 @@ export class NativeEditorStateController extends MainStateController {
         this.resumeUpdates();
     }
 
-    public addNewCell = () => {
+    public addNewCell = (): ICellViewModel | undefined => {
         const cells = this.getState().cellVMs;
         this.suspendUpdates();
         const id = uuid();
@@ -95,6 +95,7 @@ export class NativeEditorStateController extends MainStateController {
             vm.useQuickEdit = false;
         }
         this.resumeUpdates();
+        return vm;
     }
 
     public runAbove = (cellId?: string) => {

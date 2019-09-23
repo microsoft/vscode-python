@@ -36,10 +36,12 @@ interface INativeEditorProps {
 }
 
 export class NativeEditor extends React.Component<INativeEditorProps, IMainState> {
+    // Public so can access it from test code
+    public stateController: NativeEditorStateController;
+    private renderCount: number = 0;
     private mainPanelRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private contentPanelScrollRef: React.RefObject<HTMLElement> = React.createRef<HTMLElement>();
     private contentPanelRef: React.RefObject<ContentPanel> = React.createRef<ContentPanel>();
-    private stateController: NativeEditorStateController;
     private debounceUpdateVisibleCells = debounce(this.updateVisibleCells.bind(this), 100);
     private cellRefs: Map<string, React.RefObject<NativeCell>> = new Map<string, React.RefObject<NativeCell>>();
     private cellContainerRefs: Map<string, React.RefObject<HTMLDivElement>> = new Map<string, React.RefObject<HTMLDivElement>>();
@@ -82,6 +84,11 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
     }
 
     public render() {
+        // If in test mode, update our count. Use this to determine how many renders a normal update takes.
+        if (this.props.testMode) {
+            this.renderCount = this.renderCount + 1;
+        }
+
         // Update the state controller with our new state
         this.stateController.renderUpdate(this.state);
         const progressBar = this.state.busy && !this.props.testMode ? <Progress /> : undefined;

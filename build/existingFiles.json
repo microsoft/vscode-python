@@ -272,7 +272,6 @@
     "src/client/providers/symbolProvider.ts",
     "src/client/providers/terminalProvider.ts",
     "src/client/providers/types.ts",
-    "src/client/providers/updateSparkLibraryProvider.ts",
     "src/client/refactor/contracts.ts",
     "src/client/refactor/proxy.ts",
     "src/client/telemetry/constants.ts",

@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
+// tslint:disable-next-line: no-require-imports
+import cloneDeep = require('lodash/cloneDeep');
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as path from 'path';
 
@@ -140,7 +142,7 @@ export function createEditableCellVM(executionCount: number): ICellViewModel {
 export function extractInputText(inputCell: ICell, settings: IDataScienceSettings | undefined): string {
     let source: string[] = [];
     if (inputCell.data.source) {
-        source = splitMultilineString(inputCell.data.source);
+        source = splitMultilineString(cloneDeep(inputCell.data.source));
     }
     const matcher = new CellMatcher(settings);
 
