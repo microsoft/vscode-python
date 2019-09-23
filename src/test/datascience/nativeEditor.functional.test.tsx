@@ -196,7 +196,7 @@ for _ in range(50):
         await addCell(wrapper, 'a=1\na');
 
         // Export should cause exportCalled to change to true
-        const exportButton = findButton(wrapper, NativeEditor, 5);
+        const exportButton = findButton(wrapper, NativeEditor, 6);
         await waitForMessageResponse(() => exportButton!.simulate('click'));
         assert.equal(exportCalled, true, 'Export should have been called');
     }, () => { return ioc; });
