@@ -413,7 +413,11 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
                     changes.push(change);
                 }
             } else { // Cell might have moved
-                document.lookForCellMovement(incomingCells);
+                const change = document.lookForCellMovement(incomingCells);
+
+                if (change.length > 0) {
+                    changes.push(change);
+                }
             }
         }
 

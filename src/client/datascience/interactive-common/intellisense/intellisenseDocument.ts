@@ -8,6 +8,7 @@ import { EndOfLine, Position, Range, TextDocument, TextDocumentContentChangeEven
 import * as vscodeLanguageClient from 'vscode-languageclient';
 
 import { PYTHON_LANGUAGE } from '../../../common/constants';
+import { concatMultilineString } from '../../common';
 import { Identifiers } from '../../constants';
 import { ICell } from '../../types';
 import { DefaultWordPattern, ensureValidWordDefinition, getWordAtText, regExpLeadsToEndlessLoop } from './wordHelper';
@@ -136,12 +137,59 @@ export class IntellisenseDocument implements TextDocument {
         return lineCounter;
     }
 
-    public lookForCellMovement(incomingCells: ICell[]) {
+    public lookForCellMovement(incomingCells: ICell[]): TextDocumentContentChangeEvent[] {
         incomingCells.forEach((cell, i) => {
-            if (cell.id !== this._cellRanges[i].id) {
-                // do swap with i + 1
+            const text = this._contents.substr(this._cellRanges[i].start, this._cellRanges[i].currentEnd - this._cellRanges[i].start - 1);
+
+            if (cell.data.source !== text) {
+                const from = new Position(this.getLineFromOffset(this._cellRanges[i].start), 0);
+                const to = new Position(this.getLineFromOffset(this._cellRanges[i + 1].currentEnd - 1), this._cellRanges[i + 1].currentEnd - this._cellRanges[i + 1].start);
+                const fromOffset = this._cellRanges[i].start;
+                const toOffset = this._cellRanges[i + 1].fullEnd;
+                const lineBreak = '\n';
+                const newText = concatMultilineString(cell.data.source) + lineBreak + text + lineBreak;
+
+                // swap contents
+                this._contents = this._contents.substring(0, this._cellRanges[i].start)
+                    + this._contents.substring(this._cellRanges[i + 1].start, this._cellRanges[i + 1].fullEnd)
+                    + this._contents.substring(this._cellRanges[i].start, this._cellRanges[i].fullEnd)
+                    + this._contents.substring(this._cellRanges[i + 1].fullEnd);
+
+                // create lines
+                this._lines = this.createLines();
+
+                // do swap cell ranges
+                const temp: ICellRange = {
+                    id: this._cellRanges[i].id,
+                    start: this._cellRanges[i].start,
+                    currentEnd: this._cellRanges[i].currentEnd,
+                    fullEnd: this._cellRanges[i].fullEnd
+                };
+
+                this._cellRanges[i] = {
+                    id: this._cellRanges[i + 1].id,
+                    start: this._cellRanges[i + 1].start,
+                    currentEnd: this._cellRanges[i + 1].currentEnd,
+                    fullEnd: this._cellRanges[i + 1].fullEnd
+                };
+
+                this._cellRanges[i + 1] = {
+                    id: temp.id,
+                    start: temp.start,
+                    currentEnd: temp.currentEnd,
+                    fullEnd: temp.fullEnd
+                };
+
+                return [{
+                    range: this.createSerializableRange(from, to),
+                    rangeOffset: fromOffset,
+                    rangeLength: toOffset - fromOffset,
+                    text: newText
+                }];
             }
         });
+
+        return [];
     }
 
     public get uri(): Uri {
