@@ -363,6 +363,21 @@ export class MainStateController implements IMessageHandler {
         return this.state.undoStack.length > 0;
     }
 
+    public canClearAllOutputs = () => {
+        return this.getNonEditCellVMs().length > 0;
+    }
+
+    public clearAllOutputs = () => {
+        const newList = this.state.cellVMs.map(cellVM => {
+            const newVM = cloneDeep(cellVM);
+            newVM.cell.data.outputs = [];
+            return newVM;
+        });
+        this.setState({
+            cellVMs: newList
+        });
+    }
+
     public gotoCellCode = (cellId: string) => {
         // Find our cell
         const cellVM = this.state.cellVMs.find(c => c.cell.id === cellId);

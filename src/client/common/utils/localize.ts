@@ -190,6 +190,7 @@ export namespace DataScience {
     export const jupyterKernelNotSupportedOnActive = localize('DataScience.jupyterKernelNotSupportedOnActive', `IPython kernel cannot be started from '{0}'. Using closest match {1} instead.`);
     export const jupyterKernelSpecNotFound = localize('DataScience.jupyterKernelSpecNotFound', 'Cannot create a IPython kernel spec and none are available for use');
     export const interruptKernel = localize('DataScience.interruptKernel', 'Interrupt IPython Kernel');
+    export const clearAllOutput = localize('DataScience.clearAllOutput', 'Clear All Output');
     export const interruptKernelStatus = localize('DataScience.interruptKernelStatus', 'Interrupting IPython Kernel');
     export const exportCancel = localize('DataScience.exportCancel', 'Cancel');
     export const restartKernelAfterInterruptMessage = localize('DataScience.restartKernelAfterInterruptMessage', 'Interrupting the kernel timed out. Do you want to restart the kernel instead? All variables will be lost.');

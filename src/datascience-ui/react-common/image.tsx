@@ -41,7 +41,9 @@ export enum ImageName {
     OpenPlot,
     RunAll,
     Delete,
-    VariableExplorer
+    VariableExplorer,
+    ExportToPython,
+    ClearAllOutput
 }
 
 // All of the images must be 'require' so that webpack doesn't rewrite the import as requiring a .default.
@@ -208,6 +210,16 @@ const images: { [key: string] : { light: string; dark: string } } = {
         {
             light: require('./images/VariableExplorer/variable_explorer_light.svg'),
             dark : require('./images/VariableExplorer/variable_explorer_dark.svg')
+        },
+    ExportToPython:
+        {
+            light: require('./images/ExportToPython/export_to_python_light.svg'),
+            dark : require('./images/ExportToPython/export_to_python_dark.svg')
+        },
+    ClearAllOutput:
+        {
+            light: require('./images/ClearAllOutput/clear_all_output_light.svg'),
+            dark : require('./images/ClearAllOutput/clear_all_output_dark.svg')
         }
 };
 

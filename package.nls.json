@@ -212,6 +212,7 @@
     "diagnostics.bannerLabelNo": "No, I will do it later",
     "diagnostics.invalidTestSettings": "Your settings needs to be updated to change the setting \"python.unitTest.\" to \"python.testing.\", otherwise testing Python code using the extension may not work. Would you like to automatically update your settings now?",
     "DataScience.interruptKernel": "Interrupt IPython kernel",
+    "DataScience.clearAllOutput": "Clear All Output",
     "DataScience.exportingFormat": "Exporting {0}",
     "DataScience.exportCancel": "Cancel",
     "Common.canceled": "Canceled",

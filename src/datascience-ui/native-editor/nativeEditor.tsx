@@ -10,7 +10,6 @@ import { NativeCommandType } from '../../client/datascience/interactive-common/i
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
 import { ICellViewModel, IMainState } from '../interactive-common/mainState';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
-import { Button } from '../react-common/button';
 import { ErrorBoundary } from '../react-common/errorBoundary';
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
@@ -188,14 +187,11 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         return (
             <div id='toolbar-panel'>
                 <div className='toolbar-menu-bar'>
-                <ImageButton baseTheme={this.props.baseTheme} onClick={this.stateController.restartKernel} className='native-button' tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.stateController.restartKernel} className='native-button' tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Restart} />
                     </ImageButton>
                     <ImageButton baseTheme={this.props.baseTheme} onClick={this.stateController.interruptKernel} className='native-button' tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython kernel')}>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Interrupt} />
-                    </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={toggleVariableExplorer} className='native-button' tooltip={variableExplorerTooltip}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.VariableExplorer} />
                     </ImageButton>
                     <ImageButton baseTheme={this.props.baseTheme} onClick={addCell} className='native-button' tooltip={getLocString('DataScience.addNewCell', 'Insert cell')}>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.InsertBelow} />
@@ -203,12 +199,18 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                     <ImageButton baseTheme={this.props.baseTheme} onClick={runAll} className='native-button' tooltip={getLocString('DataScience.runAll', 'Run All Cells')}>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.RunAll} />
                     </ImageButton>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.stateController.clearAllOutputs} disabled={!this.stateController.canClearAllOutputs} className='native-button' tooltip={getLocString('DataScience.clearAllOutput', 'Clear All Output')}>
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.ClearAllOutput} />
+                    </ImageButton>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={toggleVariableExplorer} className='native-button' tooltip={variableExplorerTooltip}>
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.VariableExplorer} />
+                    </ImageButton>
                     <ImageButton baseTheme={this.props.baseTheme} onClick={this.stateController.save} disabled={!this.state.dirty} className='native-button' tooltip={getLocString('DataScience.save', 'Save File')}>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.SaveAs} />
                     </ImageButton>
-                    <Button onClick={this.stateController.export} disabled={!this.stateController.canExport()} className='save-button' tooltip={getLocString('DataScience.exportAsPythonFileTooltip', 'Save As Python File')}>
-                        <span>{getLocString('DataScience.exportAsPythonFileTitle', 'Save As Python File')}</span>
-                    </Button>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.stateController.export} disabled={!this.stateController.canExport()} className='save-button' tooltip={getLocString('DataScience.exportAsPythonFileTooltip', 'Save As Python File')}>
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.ExportToPython} />
+                    </ImageButton>
                 </div>
                 <div className='toolbar-divider'/>
             </div>
