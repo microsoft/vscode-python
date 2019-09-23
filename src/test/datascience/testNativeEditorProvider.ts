@@ -2,11 +2,17 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable, named } from 'inversify';
-import { Uri, Memento } from 'vscode';
+import { Memento, Uri } from 'vscode';
 
 import { IWorkspaceService } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../../client/common/types';
+import {
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry,
+    IMemento,
+    WORKSPACE_MEMENTO
+} from '../../client/common/types';
 import {
     InteractiveWindowMessageListener
 } from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
