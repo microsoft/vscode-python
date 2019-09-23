@@ -138,6 +138,15 @@ steps:
     displayName: 'pip install ipython requirements'
     condition: and(succeeded(), eq(variables['NeedsIPythonReqs'], 'true'))
 
+  - task: PythonScript@0
+    displayName: "Install PTVSD wheels"
+    inputs:
+        scriptSource: "filePath"
+        scriptPath: "./pythonFiles/install_ptvsd.py"
+        arguments: "--ci"
+        failOnStderr: true
+    condition: contains(variables['TestsToRun'], 'testUnitTests')
+
   # Run the Python unit tests in our codebase. Produces a JUnit-style log file that
   # will be uploaded after all tests are complete.
   #

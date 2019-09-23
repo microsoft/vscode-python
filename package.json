@@ -61,7 +61,6 @@
         "onCommand:python.execSelectionInTerminal",
         "onCommand:python.execSelectionInDjangoShell",
         "onCommand:python.buildWorkspaceSymbols",
-        "onCommand:python.updateSparkLibrary",
         "onCommand:python.startREPL",
         "onCommand:python.goToPythonObject",
         "onCommand:python.setLinter",
@@ -222,11 +221,6 @@
             {
                 "command": "python.switchToWeeklyChannel",
                 "title": "%python.command.python.switchToWeeklyChannel.title%",
-                "category": "Python"
-            },
-            {
-                "command": "python.updateSparkLibrary",
-                "title": "%python.command.python.updateSparkLibrary.title%",
                 "category": "Python"
             },
             {

@@ -17,19 +17,14 @@ import { createDeferred, waitForPromise } from '../../client/common/utils/async'
 import { noop } from '../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import {
-    InteractiveWindowMessageListener
-} from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
-import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import {
     IDataScienceCodeLensProvider,
     IDebugLocationTrackerFactory,
-    IInteractiveWindow,
     IInteractiveWindowProvider,
     IJupyterExecution
 } from '../../client/datascience/types';
 import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { getCellResults } from './interactiveWindowTestHelpers';
+import { getInteractiveCellResults, getOrCreateInteractiveWindow } from './interactiveWindowTestHelpers';
 import { getConnectionInfo, getNotebookCapableInterpreter } from './jupyterHelpers';
 import { MockDebuggerService } from './mockDebugService';
 import { MockDocument } from './mockDocument';
@@ -135,19 +130,6 @@ suite('DataScience Debugger tests', () => {
         return result;
     }
 
-    async function getOrCreateInteractiveWindow(): Promise<IInteractiveWindow> {
-        const interactiveWindowProvider = ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
-        const result = await interactiveWindowProvider.getOrCreateActive();
-
-        // During testing the MainPanel sends the init message before our interactive window is created.
-        // Pretend like it's happening now
-        // tslint:disable-next-line: no-any
-        const listener = ((result as any).messageListener) as InteractiveWindowMessageListener;
-        listener.onMessage(InteractiveWindowMessages.Started, {});
-
-        return result;
-    }
-
     async function debugCell(code: string, breakpoint?: Range, breakpointFile?: string, expectError?: boolean) : Promise<void> {
         // Create a dummy document with just this code
         const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
@@ -168,12 +150,12 @@ suite('DataScience Debugger tests', () => {
         }
 
         // Start the jupyter server
-        const history = await getOrCreateInteractiveWindow();
+        const history = await getOrCreateInteractiveWindow(ioc);
 
         const expectedBreakLine = breakpoint && !breakpointFile ? breakpoint.start.line : 2; // 2 because of the 'breakpoint()' that gets added
 
         // Debug this code. We should either hit the breakpoint or stop on entry
-        const resultPromise = getCellResults(ioc.wrapper!, 5, async () => {
+        const resultPromise = getInteractiveCellResults(ioc.wrapper!, 5, async () => {
             const breakPromise = createDeferred<void>();
             disposables.push(mockDebuggerService!.onBreakpointHit(() => breakPromise.resolve()));
             const done = history.debugCode(code, fileName, 0, docManager.activeTextEditor);
@@ -286,11 +268,11 @@ suite('DataScience Debugger tests', () => {
         mockDoc.forceUntitled();
 
         // Start the jupyter server
-        const history = await getOrCreateInteractiveWindow();
+        const history = await getOrCreateInteractiveWindow(ioc);
         const expectedBreakLine = 2; // 2 because of the 'breakpoint()' that gets added
 
         // Debug this code. We should either hit the breakpoint or stop on entry
-        const resultPromise = getCellResults(ioc.wrapper!, 5, async () => {
+        const resultPromise = getInteractiveCellResults(ioc.wrapper!, 5, async () => {
             const breakPromise = createDeferred<void>();
             disposables.push(mockDebuggerService!.onBreakpointHit(() => breakPromise.resolve()));
             const done = history.debugCode(code, fileName, 0, docManager.activeTextEditor);

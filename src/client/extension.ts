@@ -95,7 +95,6 @@ import { registerTypes as providersRegisterTypes } from './providers/serviceRegi
 import { activateSimplePythonRefactorProvider } from './providers/simpleRefactorProvider';
 import { TerminalProvider } from './providers/terminalProvider';
 import { ISortImportsEditingProvider } from './providers/types';
-import { activateUpdateSparkLibraryProvider } from './providers/updateSparkLibraryProvider';
 import { sendTelemetryEvent } from './telemetry';
 import { EventName } from './telemetry/constants';
 import { EditorLoadTelemetry, IImportTracker } from './telemetry/types';
@@ -181,8 +180,6 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     const deprecationMgr = serviceContainer.get<IFeatureDeprecationManager>(IFeatureDeprecationManager);
     deprecationMgr.initialize();
     context.subscriptions.push(deprecationMgr);
-
-    context.subscriptions.push(activateUpdateSparkLibraryProvider());
 
     context.subscriptions.push(new ReplProvider(serviceContainer));
     context.subscriptions.push(new TerminalProvider(serviceContainer));

@@ -138,6 +138,7 @@ export class JupyterNotebookBase implements INotebook {
     private pendingCellSubscriptions: CellSubscriber[] = [];
     private ranInitialSetup = false;
     private _resource: Uri;
+    private _disposed: boolean = false;
 
     constructor(
         _liveShare: ILiveShareApi, // This is so the liveshare mixin works
@@ -160,8 +161,12 @@ export class JupyterNotebookBase implements INotebook {
 
     public dispose(): Promise<void> {
         traceInfo(`Shutting down session ${this.resource.toString()}`);
-        const dispose = this.session ? this.session.dispose() : undefined;
-        return dispose ? dispose : Promise.resolve();
+        if (!this._disposed) {
+            this._disposed = true;
+            const dispose = this.session ? this.session.dispose() : undefined;
+            return dispose ? dispose : Promise.resolve();
+        }
+        return Promise.resolve();
     }
 
     public get resource(): Uri {
@@ -615,7 +620,10 @@ export class JupyterNotebookBase implements INotebook {
                     // If the server crashes, cancel the current observable
                     exitHandlerDisposable = this.launchInfo.connectionInfo.disconnected((c) => {
                         const str = c ? c.toString() : '';
-                        subscriber.error(this.sessionStartTime, new Error(localize.DataScience.jupyterServerCrashed().format(str)));
+                        // Only do an error if we're not disposed. If we're disposed we already shutdown.
+                        if (!this._disposed) {
+                            subscriber.error(this.sessionStartTime, new Error(localize.DataScience.jupyterServerCrashed().format(str)));
+                        }
                         subscriber.complete(this.sessionStartTime);
                     });
                 }

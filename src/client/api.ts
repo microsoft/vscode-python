@@ -41,6 +41,8 @@ export function buildApi(ready: Promise<any>) {
             return Promise.reject(ex);
         }),
         debug: {
+            // tslint:disable-next-line:no-suspicious-comment
+            // TODO: Add support for ptvsd wheels experiment, see https://github.com/microsoft/vscode-python/issues/7549
             async getRemoteLauncherCommand(host: string, port: number, waitUntilDebuggerAttaches: boolean = true): Promise<string[]> {
                 return new RemoteDebuggerExternalLauncherScriptProvider().getLauncherArgs({ host, port, waitUntilDebuggerAttaches });
             }
