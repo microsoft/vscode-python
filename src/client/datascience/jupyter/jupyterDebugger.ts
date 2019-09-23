@@ -126,10 +126,10 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     private traceCellResults(prefix: string, results: ICell[]) {
         if (results.length > 0 && results[0].data.cell_type === 'code') {
             const cell = results[0].data as nbformat.ICodeCell;
-            const error = cell.outputs[0].evalue;
+            const error = cell.outputs && cell.outputs[0] ? cell.outputs[0].evalue : undefined;
             if (error) {
                 traceError(`${prefix} Error : ${error}`);
-            } else {
+            } else if (cell.outputs && cell.outputs[0]) {
                 const data = cell.outputs[0].data;
                 const text = cell.outputs[0].text;
                 traceInfo(`${prefix} Output: ${text || JSON.stringify(data)}`);
