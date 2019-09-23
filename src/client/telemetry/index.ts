@@ -1077,6 +1077,10 @@ export interface IEventNamePropertyMapping {
         expName?: string;
     };
     /**
+     * Telemetry event sent when Experiments have been disabled.
+     */
+    [EventName.PYTHON_EXPERIMENTS_DISABLED]: never | undefined;
+    /**
      * Telemetry event sent with details when doing best effort to download the experiments within timeout and using it in the current session only
      */
     [EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE]: {

@@ -1362,6 +1362,12 @@
                     "description": "Automatically update the language server.",
                     "scope": "application"
                 },
+                "python.experiments.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables/disables A/B tests.",
+                    "scope": "application"
+                },
                 "python.dataScience.allowImportFromNotebook": {
                     "type": "boolean",
                     "default": true,
