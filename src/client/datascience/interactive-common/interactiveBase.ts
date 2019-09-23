@@ -1031,8 +1031,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     private async ensureDarkSet(): Promise<void> {
         if (!this.setDark) {
-            this.setDark = true;
-
             // Wait for the web panel to get the isDark setting
             const knownDark = await this.isDark();
 
@@ -1040,6 +1038,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             if (this.notebook) {
                 await this.notebook.setMatplotLibStyle(knownDark);
             }
+
+            this.setDark = true;
         }
     }
 
