@@ -41,7 +41,6 @@ import { DebugService } from './common/application/debugService';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from './common/application/types';
 import { Commands, isTestExecution, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from './common/constants';
 import { registerTypes as registerDotNetTypes } from './common/dotnet/serviceRegistry';
-import { DebugAdapterDescriptorFactory as DebugAdapterExperiment } from './common/experimentGroups';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { traceError } from './common/logger';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
@@ -67,11 +66,10 @@ import { registerTypes as variableRegisterTypes } from './common/variables/servi
 import { registerTypes as dataScienceRegisterTypes } from './datascience/serviceRegistry';
 import { IDataScience, IDebugLocationTrackerFactory } from './datascience/types';
 import { DebuggerTypeName } from './debugger/constants';
-import { DebugAdapterDescriptorFactory } from './debugger/extension/adapter/factory';
 import { DebugSessionEventDispatcher } from './debugger/extension/hooks/eventHandlerDispatcher';
 import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/extension/serviceRegistry';
-import { IDebugAdapterDescriptorFactory, IDebugConfigurationService, IDebuggerBanner } from './debugger/extension/types';
+import { IDebugConfigurationService, IDebuggerBanner } from './debugger/extension/types';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
 import { AutoSelectionRule, IInterpreterAutoSelectionRule, IInterpreterAutoSelectionService } from './interpreter/autoSelection/types';
 import { IInterpreterSelector } from './interpreter/configuration/types';
@@ -199,17 +197,7 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     durations.endActivateTime = stopWatch.elapsedTime;
     activationDeferred.resolve();
 
-    const experimentsManager = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
-    let newPtvsdPath: string | undefined;
-
-    if (experimentsManager.inExperiment(DebugAdapterExperiment.experiment)) {
-        const debugAdapterDescriptor = serviceContainer.get<IDebugAdapterDescriptorFactory>(IDebugAdapterDescriptorFactory) as DebugAdapterDescriptorFactory;
-        if (debugAdapterDescriptor.useNewPtvsd(pythonSettings.pythonPath)) {
-            newPtvsdPath = await debugAdapterDescriptor.getPtvsdPath(pythonSettings.pythonPath);
-        }
-    }
-
-    const api = buildApi(Promise.all([activationDeferred.promise, activationPromise]), newPtvsdPath);
+    const api = buildApi(Promise.all([activationDeferred.promise, activationPromise]));
     // In test environment return the DI Container.
     if (isTestExecution()) {
         // tslint:disable:no-any
