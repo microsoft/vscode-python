@@ -154,7 +154,7 @@ export class NativeEditorStateController extends MainStateController {
             [cellVms[index - 1], cellVms[index]] = [cellVms[index], cellVms[index - 1]];
             this.setState({
                 cellVMs: cellVms,
-                undoStack: this.pushStack(this.getState().undoStack, origVms),
+                undoStack: this.pushStack(this.getState().undoStack, origVms)
             });
         }
     }
@@ -167,7 +167,7 @@ export class NativeEditorStateController extends MainStateController {
             [cellVms[index + 1], cellVms[index]] = [cellVms[index], cellVms[index + 1]];
             this.setState({
                 cellVMs: cellVms,
-                undoStack: this.pushStack(this.getState().undoStack, origVms),
+                undoStack: this.pushStack(this.getState().undoStack, origVms)
             });
         }
     }

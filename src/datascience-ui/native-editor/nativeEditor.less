@@ -186,6 +186,10 @@
     visibility: visible;
 }
 
+.cell-wrapper:hover .native-editor-celltoolbar-middle {
+    visibility: visible;
+}
+
 .cell-wrapper-selected .native-editor-celltoolbar-middle {
     visibility: visible;
 }
@@ -343,7 +347,7 @@
     visibility: visible;
 }
 
-/* 
+/*
 Cell Row Container layout
 --------------------------
 collapse-bar        controls-div        [cell-input, cell-output, markdown-cell-output-container]
@@ -416,7 +420,9 @@ collapse-bar        controls-div        [cell-input, cell-output, markdown-cell-
 }
 
 .cell-wrapper:hover .add-divider {
-    visibility: visible;
+    visibility: hidden;
+    z-index: -100;
+    pointer-events: none;
 }
 
 .cell-wrapper-selected .add-divider {
