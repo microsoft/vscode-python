@@ -1,18 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { inject, injectable, named } from 'inversify';
-import { Memento, Uri } from 'vscode';
+import { inject, injectable } from 'inversify';
+import { Uri } from 'vscode';
 
 import { IWorkspaceService } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
-import {
-    IAsyncDisposableRegistry,
-    IConfigurationService,
-    IDisposableRegistry,
-    IMemento,
-    WORKSPACE_MEMENTO
-} from '../../client/common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../client/common/types';
 import {
     InteractiveWindowMessageListener
 } from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
@@ -32,10 +26,9 @@ export class TestNativeEditorProvider implements INotebookEditorProvider {
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IConfigurationService) configuration: IConfigurationService,
-        @inject(IFileSystem) fileSystem: IFileSystem,
-        @inject(IMemento) @named(WORKSPACE_MEMENTO) workspaceStorage: Memento
+        @inject(IFileSystem) fileSystem: IFileSystem
     ) {
-        this.realProvider = new NativeEditorProvider(serviceContainer, asyncRegistry, disposables, workspace, configuration, fileSystem, workspaceStorage);
+        this.realProvider = new NativeEditorProvider(serviceContainer, asyncRegistry, disposables, workspace, configuration, fileSystem);
     }
 
     public get activeEditor(): INotebookEditor | undefined {
