@@ -86,10 +86,12 @@ export class NativeEditorStateController extends MainStateController {
 
     public addNewCell = (): ICellViewModel | undefined => {
         const cells = this.getState().cellVMs;
+        const selectedCell = this.getState().selectedCell;
         this.suspendUpdates();
         const id = uuid();
+        const pos = selectedCell ? cells.findIndex(cvm => cvm.cell.id === this.getState().selectedCell) + 1 : cells.length;
         this.setState({ newCell: id });
-        const vm = this.insertCell(createEmptyCell(id, null), cells.length);
+        const vm = this.insertCell(createEmptyCell(id, null), pos);
         if (vm) {
             // Make sure the new cell is monaco
             vm.useQuickEdit = false;
