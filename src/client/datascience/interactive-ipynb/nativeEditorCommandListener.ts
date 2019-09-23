@@ -8,6 +8,7 @@ import * as path from 'path';
 import { TextDocument, Uri } from 'vscode';
 
 import { ICommandManager, IDocumentManager } from '../../common/application/types';
+import { JUPYTER_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { captureTelemetry } from '../../telemetry';
@@ -93,8 +94,7 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
 
     private onOpenedDocument = async (document: TextDocument) => {
         // See if this is an ipynb file
-        if (path.extname(document.fileName).toLocaleLowerCase() === '.ipynb' &&
-            this.configService.getSettings().datascience.useNotebookEditor) {
+        if (this.isNotebook(document) && this.configService.getSettings().datascience.useNotebookEditor) {
             try {
                 const contents = document.getText();
                 const uri = document.uri;
@@ -111,6 +111,10 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
                 this.dataScienceErrorHandler.handleError(e).ignoreErrors();
             }
         }
+    }
+
+    private isNotebook(document: TextDocument) {
+        return document.languageId === JUPYTER_LANGUAGE || path.extname(document.fileName).toLocaleLowerCase() === '.ipynb';
     }
 
 }

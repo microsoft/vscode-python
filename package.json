@@ -2521,6 +2521,7 @@
             },
             {
                 "id": "jupyter",
+                "aliases": ["Jupyter", "Notebook"],
                 "extensions": [
                     ".ipynb"
                 ]
