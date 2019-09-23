@@ -125,18 +125,6 @@ export class IntellisenseDocument implements TextDocument {
         return change;
     }
 
-    public getLineFromOffset(offset: number) {
-        let lineCounter = 0;
-
-        for (let i = 0; i < offset; i += 1) {
-            if (this._contents[i] === '\n') {
-                lineCounter += 1;
-            }
-        }
-
-        return lineCounter;
-    }
-
     public lookForCellMovement(incomingCells: ICell[]): TextDocumentContentChangeEvent[] {
         incomingCells.forEach((cell, i) => {
             const text = this._contents.substr(this._cellRanges[i].start, this._cellRanges[i].currentEnd - this._cellRanges[i].start - 1);
@@ -464,6 +452,18 @@ export class IntellisenseDocument implements TextDocument {
 
         // in interactive window
         return this._cellRanges[this._cellRanges.length - 1].start;
+    }
+
+    private getLineFromOffset(offset: number) {
+        let lineCounter = 0;
+
+        for (let i = 0; i < offset; i += 1) {
+            if (this._contents[i] === '\n') {
+                lineCounter += 1;
+            }
+        }
+
+        return lineCounter;
     }
 
     private removeRange(newText: string, from: Position, to: Position, cellIndex: number): TextDocumentContentChangeEvent[] {
