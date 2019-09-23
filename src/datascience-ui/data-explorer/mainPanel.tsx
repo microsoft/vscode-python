@@ -53,7 +53,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private rowFetchSizeAll: number = 0;
     // Just used for testing.
     private grid: React.RefObject<ReactSlickGrid> = React.createRef<ReactSlickGrid>();
-    private updateTimeout: NodeJS.Timer | undefined;
+    private updateTimeout?: NodeJS.Timer | number;
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
@@ -292,8 +292,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     private updateRows(newRows: ISlickRow[]) {
-        if (this.updateTimeout) {
-            clearTimeout(this.updateTimeout);
+        if (this.updateTimeout !== undefined) {
+            clearTimeout(this.updateTimeout as any);
             this.updateTimeout = undefined;
         }
         if (!this.grid.current) {
