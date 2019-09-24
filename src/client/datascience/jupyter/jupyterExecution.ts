@@ -41,8 +41,14 @@ import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 
+enum ModuleExistsStatus {
+    NotFound,
+    FoundJupyter,
+    Found
+}
+
 interface IModuleExistsResult {
-    status: 'NotFound' | 'Found' | 'FoundJupyter';
+    status: ModuleExistsStatus;
     error?: string;
 }
 
@@ -769,16 +775,16 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
     private findInterpreterCommand = async (command: string, interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<IFindCommandResult> => {
         let findResult: IFindCommandResult = {
-            status: 'NotFound',
+            status: ModuleExistsStatus.NotFound,
             error: localize.DataScience.noInterpreter()
         };
 
         // If the module is found on this interpreter, then we found it.
         if (interpreter && !Cancellation.isCanceled(cancelToken)) {
             findResult = await this.doesModuleExist(command, interpreter, cancelToken);
-            if (findResult.status === 'FoundJupyter') {
+            if (findResult.status === ModuleExistsStatus.FoundJupyter) {
                 findResult.command = this.commandFactory.createInterpreterCommand(['-m', 'jupyter', command], interpreter);
-            } else if (findResult.status === 'Found') {
+            } else if (findResult.status === ModuleExistsStatus.Found) {
                 findResult.command = this.commandFactory.createInterpreterCommand(['-m', command], interpreter);
             }
         }
@@ -815,13 +821,13 @@ export class JupyterExecutionBase implements IJupyterExecution {
             const jupyterPath = await this.searchPathsForJupyter();
             if (jupyterPath) {
                 return {
-                    status: 'Found',
+                    status: ModuleExistsStatus.Found,
                     command: this.commandFactory.createProcessCommand(jupyterPath, [command])
                 };
             }
         }
         return {
-            status: 'NotFound'
+            status: ModuleExistsStatus.NotFound
         };
     }
 
@@ -861,7 +867,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     // tslint:disable:cyclomatic-complexity
     private findBestCommand = async (command: string, cancelToken?: CancellationToken): Promise<IFindCommandResult> => {
         let found: IFindCommandResult = {
-            status: 'NotFound'
+            status: ModuleExistsStatus.NotFound
         };
         let firstError: string | undefined;
 
@@ -872,13 +878,13 @@ export class JupyterExecutionBase implements IJupyterExecution {
             // First we look in the current interpreter
             const current = await this.interpreterService.getActiveInterpreter();
             found = current ? await this.findInterpreterCommand(command, current, cancelToken) : found;
-            if (found.status === 'NotFound') {
+            if (found.status === ModuleExistsStatus.NotFound) {
                 traceInfo(`Active interpreter does not support ${command} because of error ${found.error}. Interpreter is ${current ? current.displayName : 'undefined'}.`);
 
                 // Save our error information. This should propagate out as the error information for the command
                 firstError = found.error;
             }
-            if (found.status === 'NotFound' && this.supportsSearchingForCommands()) {
+            if (found.status === ModuleExistsStatus.NotFound && this.supportsSearchingForCommands()) {
                 // Look through all of our interpreters (minus the active one at the same time)
                 const all = await this.interpreterService.getInterpreters();
 
@@ -917,7 +923,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                     }
                 } else {
                     // Just pick the first one
-                    found = foundList.find(f => f.status !== 'NotFound') || found;
+                    found = foundList.find(f => f.status !== ModuleExistsStatus.NotFound) || found;
                 }
             }
 
@@ -944,7 +950,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
     private doesModuleExist = async (moduleName: string, interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<IModuleExistsResult> => {
         const result: IModuleExistsResult = {
-            status: 'NotFound'
+            status: ModuleExistsStatus.NotFound
         };
         if (interpreter && interpreter !== null) {
             const newOptions: SpawnOptions = { throwOnStdErr: false, encoding: 'utf8', token: cancelToken };
@@ -958,7 +964,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         this.logger.logWarning(`${execResult.stderr} for ${interpreter.path}`);
                         result.error = execResult.stderr;
                     } else {
-                        result.status = 'FoundJupyter';
+                        result.status = ModuleExistsStatus.FoundJupyter;
                     }
                 } catch (err) {
                     this.logger.logWarning(`${err} for ${interpreter.path}`);
@@ -967,24 +973,24 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
             // After trying first as "-m jupyter <module> --version" then try "-m <module> --version" as this works in some cases
             // for example if not running in an activated environment without script on the path
-            if (result.status === 'NotFound') {
+            if (result.status === ModuleExistsStatus.NotFound) {
                 try {
                     const execResult = await pythonService.execModule(moduleName, ['--version'], newOptions);
                     if (execResult.stderr) {
                         this.logger.logWarning(`${execResult.stderr} for ${interpreter.path}`);
                         result.error = execResult.stderr;
                     } else {
-                        result.status = 'Found';
+                        result.status = ModuleExistsStatus.Found;
                     }
                 } catch (err) {
                     this.logger.logWarning(`${err} for ${interpreter.path}`);
-                    result.status = 'NotFound';
+                    result.status = ModuleExistsStatus.NotFound;
                     result.error = err.toString();
                 }
             }
         } else {
             this.logger.logWarning(`Interpreter not found. ${moduleName} cannot be loaded.`);
-            result.status = 'NotFound';
+            result.status = ModuleExistsStatus.NotFound;
         }
 
         return result;
