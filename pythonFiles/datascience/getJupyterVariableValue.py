@@ -1,4 +1,3 @@
-#%DATASCIENCE_INTERNAL_KEY%#
 import sys as VC_sys
 import locale as VC_locale
 

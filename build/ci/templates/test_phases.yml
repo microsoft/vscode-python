@@ -145,7 +145,7 @@ steps:
         scriptPath: "./pythonFiles/install_ptvsd.py"
         arguments: "--ci"
         failOnStderr: true
-    condition: contains(variables['TestsToRun'], 'testUnitTests')
+    condition: and(eq(variables['NeedsPythonTestReqs'], 'true'), eq(variables['PythonVersion'], '3.7'))
 
   # Run the Python unit tests in our codebase. Produces a JUnit-style log file that
   # will be uploaded after all tests are complete.

@@ -43,6 +43,7 @@ stages:
         # SkipXvfb: [true|false] - skip initialization of xvfb prior to running system tests on Linux. False if not set
         # UploadBinary: [true|false] - upload test binaries to Azure if true. False if not set.
         'Win-Py3.7 Unit':
+          PythonVersion: '3.7'
           VMImageName: 'vs2017-win2016'
           TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
           NeedsPythonTestReqs: true

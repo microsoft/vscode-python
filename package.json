@@ -186,21 +186,12 @@
                 "category": "Python"
             },
             {
-                "command": "python.execInTerminal-icon1",
+                "command": "python.execInTerminal-icon",
                 "title": "%python.command.python.execInTerminal.title%",
                 "category": "Python",
                 "icon": {
                     "light": "resources/light/start.svg",
                     "dark": "resources/dark/start.svg"
-                }
-            },
-            {
-                "command": "python.execInTerminal-icon2",
-                "title": "%python.command.python.execInTerminal.title%",
-                "category": "Python",
-                "icon": {
-                    "light": "resources/light/run-file.svg",
-                    "dark": "resources/dark/run-file.svg"
                 }
             },
             {
@@ -642,16 +633,10 @@
             ],
             "editor/title": [
                 {
-                    "command": "python.execInTerminal-icon1",
+                    "command": "python.execInTerminal-icon",
                     "title": "%python.command.python.execInTerminal.title%",
                     "group": "navigation",
-                    "when": "resourceLangId == python && python.showPlayIcon1"
-                },
-                {
-                    "command": "python.execInTerminal-icon2",
-                    "title": "%python.command.python.execInTerminal.title%",
-                    "group": "navigation",
-                    "when": "resourceLangId == python && python.showPlayIcon2"
+                    "when": "resourceLangId == python && python.showPlayIcon"
                 }
             ],
             "explorer/context": [
@@ -1360,6 +1345,12 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Automatically update the language server.",
+                    "scope": "application"
+                },
+                "python.experiments.enabled": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Enables/disables A/B tests.",
                     "scope": "application"
                 },
                 "python.dataScience.allowImportFromNotebook": {
@@ -2521,6 +2512,10 @@
             },
             {
                 "id": "jupyter",
+                "aliases": [
+                    "Jupyter",
+                    "Notebook"
+                ],
                 "extensions": [
                     ".ipynb"
                 ]
@@ -2598,7 +2593,8 @@
     },
     "dependencies": {
         "@jupyterlab/services": "^3.2.1",
-        "@msrvida/python-program-analysis": "0.0.5",
+        "@msrvida/python-program-analysis": "^0.2.6",
+        "@blueprintjs/select": "3.10.0",
         "ansi-regex": "^4.1.0",
         "arch": "^2.1.0",
         "azure-storage": "^2.10.3",

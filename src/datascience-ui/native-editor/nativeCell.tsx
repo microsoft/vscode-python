@@ -227,7 +227,7 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
         return false;
     }
 
-    // tslint:disable-next-line: cyclomatic-complexity
+    // tslint:disable-next-line: cyclomatic-complexity max-func-body-length
     private keyDownInput = (cellId: string, e: IKeyboardEvent) => {
         const isFocusedWhenNotSuggesting = this.isFocused() && e.editorInfo && !e.editorInfo.isSuggesting;
         switch (e.code) {
@@ -315,6 +315,14 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
                     this.props.stateController.sendCommand(NativeCommandType.InsertBelow, 'keyboard');
                 }
                 break;
+            case 'z':
+                if (!this.isFocused() && this.props.stateController.canUndo()) {
+                    e.stopPropagation();
+                    this.props.stateController.undo();
+                    this.props.stateController.sendCommand(NativeCommandType.Undo, 'keyboard');
+                }
+                break;
+
             default:
                 break;
         }

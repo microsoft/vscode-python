@@ -490,12 +490,11 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                     await this.jupyterDebugger.startDebugging(this.notebook);
                 }
 
-                // Set the file variable
+                // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
                 if (file !== Identifiers.EmptyFileName) {
                     await this.notebook.execute(`__file__ = '${file.replace(/\\/g, '\\\\')}'`, file, line, uuid(), undefined, true);
                 }
 
-                // Attempt to evaluate this cell in the jupyter notebook
                 const observable = this.notebook.executeObservable(code, file, line, id, false);
 
                 // Indicate we executed some code

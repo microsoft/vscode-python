@@ -172,6 +172,7 @@ export interface IPythonSettings {
     readonly autoUpdateLanguageServer: boolean;
     readonly datascience: IDataScienceSettings;
     readonly onDidChange: Event<void>;
+    readonly experiments: IExperiments;
 }
 export interface ISortImportSettings {
     readonly path: string;
@@ -275,6 +276,16 @@ export interface ITerminalSettings {
     readonly executeInFileDir: boolean;
     readonly launchArgs: string[];
     readonly activateEnvironment: boolean;
+}
+
+export interface IExperiments {
+    /**
+     * Return `true` if experiments are enabled, else `false`.
+     *
+     * @type {boolean}
+     * @memberof IExperiments
+     */
+    readonly enabled: boolean;
 }
 
 export type LanguageServerDownloadChannels = 'stable' | 'beta' | 'daily';

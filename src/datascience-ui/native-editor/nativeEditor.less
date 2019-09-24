@@ -55,7 +55,7 @@
     border-style: solid;
     border-color: var(--override-widget-background, var(--vscode-notifications-background));
     border-width: 3px;
-    width: calc(100vw - 85px);
+    width: calc(100vw - 115px);
     overflow-x: scroll;
     grid-row: 1;
     grid-column: 3;
@@ -67,7 +67,7 @@
 }
 
 .markdown-cell-output {
-    width: calc(100vw - 95px);
+    width: calc(100vw - 115px);
     overflow-x: scroll;
 }
 
@@ -125,7 +125,7 @@
     background: var(--override-widget-background, var(--vscode-notifications-background));
     grid-column: 3;
     grid-row: 1;
-    min-width: calc(100% - 85px);
+    min-width: calc(100% - 115px);
 }
 
 .content-div {
@@ -183,6 +183,10 @@
 }
 
 .cell-wrapper-focused .navbar-div {
+    visibility: visible;
+}
+
+.cell-wrapper:hover .native-editor-celltoolbar-middle {
     visibility: visible;
 }
 
@@ -343,7 +347,7 @@
     visibility: visible;
 }
 
-/* 
+/*
 Cell Row Container layout
 --------------------------
 collapse-bar        controls-div        [cell-input, cell-output, markdown-cell-output-container]
@@ -416,7 +420,9 @@ collapse-bar        controls-div        [cell-input, cell-output, markdown-cell-
 }
 
 .cell-wrapper:hover .add-divider {
-    visibility: visible;
+    visibility: hidden;
+    z-index: -100;
+    pointer-events: none;
 }
 
 .cell-wrapper-selected .add-divider {

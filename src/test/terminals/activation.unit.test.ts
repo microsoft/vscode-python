@@ -2,88 +2,73 @@
 // Licensed under the MIT License.
 
 import * as TypeMoq from 'typemoq';
+import { Extension } from 'vscode';
 import { ICommandManager } from '../../client/common/application/types';
-import { ShowPlayIcon } from '../../client/common/experimentGroups';
-import { IExperimentsManager } from '../../client/common/types';
-import { noop } from '../../client/common/utils/misc';
+import { CODE_RUNNER_EXTENSION_ID } from '../../client/common/constants';
+import { IExtensions } from '../../client/common/types';
+import { IServiceContainer } from '../../client/ioc/types';
 import {
     ExtensionActivationForTerminalActivation
 } from '../../client/terminals/activation';
 
 suite('Terminal - Activation', () => {
-    let experiments: TypeMoq.IMock<IExperimentsManager>;
     let commands: TypeMoq.IMock<ICommandManager>;
-
+    let serviceContainer: TypeMoq.IMock<IServiceContainer>;
+    let extensions: TypeMoq.IMock<IExtensions>;
+    let activation: ExtensionActivationForTerminalActivation;
     setup(() => {
-        experiments = TypeMoq.Mock.ofType<IExperimentsManager>(undefined, TypeMoq.MockBehavior.Strict);
         commands = TypeMoq.Mock.ofType<ICommandManager>(undefined, TypeMoq.MockBehavior.Strict);
+        serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
+        extensions = TypeMoq.Mock.ofType<IExtensions>(undefined, TypeMoq.MockBehavior.Strict);
+        serviceContainer
+            .setup(s => s.get<IExtensions>(IExtensions))
+            .returns(() => extensions.object);
     });
+
     function verifyAll() {
-        experiments.verifyAll();
+        serviceContainer.verifyAll();
         commands.verifyAll();
+        extensions.verifyAll();
     }
 
-    // checkExperiments
-
-    test('checkExperiments() - default', () => {
-        experiments.setup(e => e.inExperiment(ShowPlayIcon.icon1))
-            .returns(() => false)
+    test('If code runner extension is installed, don\'t show the play icon', async () => {
+        // tslint:disable-next-line:no-any
+        const extension = TypeMoq.Mock.ofType<Extension<any>>(undefined, TypeMoq.MockBehavior.Strict);
+        extensions
+            .setup(e => e.getExtension(CODE_RUNNER_EXTENSION_ID))
+            .returns(() => extension.object)
             .verifiable(TypeMoq.Times.once());
-        experiments.setup(e => e.inExperiment(ShowPlayIcon.icon2))
-            .returns(() => false)
-            .verifiable(TypeMoq.Times.once());
-        experiments.setup(e => e.sendTelemetryIfInExperiment(ShowPlayIcon.control))
-            .verifiable(TypeMoq.Times.once());
-        const activation = new ExtensionActivationForTerminalActivation(
-            experiments.object,
-            commands.object
+        activation = new ExtensionActivationForTerminalActivation(
+            commands.object,
+            serviceContainer.object
         );
 
-        activation.checkExperiments();
+        commands
+            .setup(c => c.executeCommand('setContext', 'python.showPlayIcon', true))
+            .returns(() => Promise.resolve())
+            .verifiable(TypeMoq.Times.never());
+
+        await activation.activate();
 
         verifyAll();
     });
 
-    test('checkExperiments() - icon 1', () => {
-        experiments.setup(e => e.inExperiment(ShowPlayIcon.icon1))
-            .returns(() => true)
+    test('If code runner extension is not installed, show the play icon', async () => {
+        extensions
+            .setup(e => e.getExtension(CODE_RUNNER_EXTENSION_ID))
+            .returns(() => undefined)
             .verifiable(TypeMoq.Times.once());
-        const cmdResult = TypeMoq.Mock.ofType<Thenable<undefined>>(undefined, TypeMoq.MockBehavior.Strict);
-        cmdResult.setup(c => c.then(noop, noop))
-            .verifiable(TypeMoq.Times.once());
-        commands.setup(c => c.executeCommand('setContext', 'python.showPlayIcon1', true))
-            .returns(() => cmdResult.object)
-            .verifiable(TypeMoq.Times.once());
-        const activation = new ExtensionActivationForTerminalActivation(
-            experiments.object,
-            commands.object
+        activation = new ExtensionActivationForTerminalActivation(
+            commands.object,
+            serviceContainer.object
         );
 
-        activation.checkExperiments();
-
-        verifyAll();
-    });
-
-    test('checkExperiments() - icon 2', () => {
-        experiments.setup(e => e.inExperiment(ShowPlayIcon.icon1))
-            .returns(() => false)
+        commands
+            .setup(c => c.executeCommand('setContext', 'python.showPlayIcon', true))
+            .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());
-        experiments.setup(e => e.inExperiment(ShowPlayIcon.icon2))
-            .returns(() => true)
-            .verifiable(TypeMoq.Times.once());
-        const cmdResult = TypeMoq.Mock.ofType<Thenable<undefined>>(undefined, TypeMoq.MockBehavior.Strict);
-        cmdResult.setup(c => c.then(noop, noop))
-            .verifiable(TypeMoq.Times.once());
-        commands.setup(c => c.executeCommand('setContext', 'python.showPlayIcon2', true))
-            .returns(() => cmdResult.object)
-            .verifiable(TypeMoq.Times.once());
-        const activation = new ExtensionActivationForTerminalActivation(
-            experiments.object,
-            commands.object
-        );
 
-        activation.checkExperiments();
-
+        await activation.activate();
         verifyAll();
     });
 });

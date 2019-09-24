@@ -598,8 +598,8 @@ export class MainStateController implements IMessageHandler {
             const cells = payload.cells as ICell[];
             cells.forEach(c => this.finishCell(c));
 
-            // Set our state to not being busy anymore
-            this.setState({ busy: false, loadTotal: payload.cells.length });
+            // Set our state to not being busy anymore. Clear undo stack as this can't be undone.
+            this.setState({ busy: false, loadTotal: payload.cells.length, undoStack: [] });
 
             // Turn updates back on and resend the state.
             this.resumeUpdates();
@@ -787,6 +787,15 @@ export class MainStateController implements IMessageHandler {
         this.postOffice.sendMessage<M, T>(type, payload);
     }
 
+    protected pushStack = (stack: ICellViewModel[][], cells: ICellViewModel[]) => {
+        // Get the undo stack up to the maximum length
+        const slicedUndo = stack.slice(0, min([stack.length, this.stackLimit]));
+
+        // make a copy of the cells so that further changes don't modify them.
+        const copy = cloneDeep(cells);
+        return [...slicedUndo, copy];
+    }
+
     private computeEditorOptions(): monacoEditor.editor.IEditorOptions {
         const intellisenseOptions = getSettings().intellisenseOptions;
         const extraSettings = getSettings().extraSettings;
@@ -881,15 +890,6 @@ export class MainStateController implements IMessageHandler {
 
     private getNonEditCellVMs(): ICellViewModel[] {
         return this.state.cellVMs;
-    }
-
-    private pushStack = (stack: ICellViewModel[][], cells: ICellViewModel[]) => {
-        // Get the undo stack up to the maximum length
-        const slicedUndo = stack.slice(0, min([stack.length, this.stackLimit]));
-
-        // make a copy of the cells so that further changes don't modify them.
-        const copy = cloneDeep(cells);
-        return [...slicedUndo, copy];
     }
 
     private clearAllSilent = () => {

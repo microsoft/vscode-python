@@ -28,6 +28,7 @@ stages:
   jobs:
   - job: 'Test'
     dependsOn: []
+    timeoutInMinutes: 120
     strategy:
       matrix:
         # Each member of this list must contain these values:

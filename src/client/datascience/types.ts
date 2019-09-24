@@ -320,7 +320,7 @@ export enum CellState {
 
 // Basic structure for a cell from a notebook
 export interface ICell {
-    id: string; // This value isn't unique. File and line are needed to.
+    id: string; // This value isn't unique. File and line are needed too.
     file: string;
     line: number;
     state: CellState;
@@ -509,6 +509,3 @@ export interface IDebugLocationTracker extends DebugAdapterTracker {
     debugLocation: IDebugLocation | undefined;
     setDebugSession(targetSession: DebugSession): void;
 }
-
-// Cells silently executed on behalf of the user are tagged with the following.
-export const internalUseCellKey: string = '#%DATASCIENCE_INTERNAL_KEY%#';

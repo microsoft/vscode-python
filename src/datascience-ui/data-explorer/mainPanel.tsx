@@ -52,7 +52,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private rowFetchSizeSubsequent: number = 0;
     private rowFetchSizeAll: number = 0;
     // Just used for testing.
-    private grid: React.Ref<ReactSlickGrid> = React.createRef<ReactSlickGrid>();
+    private grid: React.RefObject<ReactSlickGrid> = React.createRef<ReactSlickGrid>();
+    private updateTimeout?: NodeJS.Timer | number;
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
@@ -64,7 +65,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 gridColumns: data.columns.map(c => { return {...c, formatter: cellFormatterFunc }; }),
                 gridRows: [],
                 totalRowCount: data.rows.length,
-                fetchedRowCount: 0,
+                fetchedRowCount: -1,
                 filters: {},
                 indexColumn: data.primaryKeys[0],
                 styleReady: false
@@ -77,7 +78,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 gridColumns: [],
                 gridRows: [],
                 totalRowCount: 0,
-                fetchedRowCount: 0,
+                fetchedRowCount: -1,
                 filters: {},
                 indexColumn: 'index',
                 styleReady: false
@@ -226,7 +227,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             });
 
         // Add all of these rows to the grid
-        this.gridAddEvent.notify({newRows: normalized});
+        this.updateRows(normalized);
     }
 
     private handleGetRowChunkResponse(response: IGetRowsResponse) {
@@ -247,7 +248,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         });
 
         // Tell our grid about the new ros
-        this.gridAddEvent.notify({newRows: normalized});
+        this.updateRows(normalized);
 
         // Get the next chunk
         if (newFetched < this.state.totalRowCount) {
@@ -288,6 +289,19 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private sendMessage<M extends IDataViewerMapping, T extends keyof M>(type: T, payload?: M[T]) {
         this.postOffice.sendMessage<M, T>(type, payload);
+    }
+
+    private updateRows(newRows: ISlickRow[]) {
+        if (this.updateTimeout !== undefined) {
+            clearTimeout(this.updateTimeout as any);
+            this.updateTimeout = undefined;
+        }
+        if (!this.grid.current) {
+            // This might happen before we render the grid. Postpone till then.
+            this.updateTimeout = setTimeout(() => this.updateRows(newRows), 10);
+        } else {
+            this.gridAddEvent.notify({newRows});
+        }
     }
 
 }

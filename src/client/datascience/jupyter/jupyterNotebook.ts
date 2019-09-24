@@ -226,7 +226,7 @@ export class JupyterNotebookBase implements INotebook {
         // Create a deferred that we'll fire when we're done
         const deferred = createDeferred<ICell[]>();
 
-        // Attempt to evaluate this cell in the jupyter notebook
+        // Attempt to evaluate this cell in the jupyter notebook.
         const observable = this.executeObservable(code, file, line, id, silent);
         let output: ICell[];
 

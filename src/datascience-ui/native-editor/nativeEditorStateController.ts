@@ -86,10 +86,12 @@ export class NativeEditorStateController extends MainStateController {
 
     public addNewCell = (): ICellViewModel | undefined => {
         const cells = this.getState().cellVMs;
+        const selectedCell = this.getState().selectedCell;
         this.suspendUpdates();
         const id = uuid();
+        const pos = selectedCell ? cells.findIndex(cvm => cvm.cell.id === this.getState().selectedCell) + 1 : cells.length;
         this.setState({ newCell: id });
-        const vm = this.insertCell(createEmptyCell(id, null), cells.length);
+        const vm = this.insertCell(createEmptyCell(id, null), pos);
         if (vm) {
             // Make sure the new cell is monaco
             vm.useQuickEdit = false;
@@ -147,23 +149,27 @@ export class NativeEditorStateController extends MainStateController {
     }
 
     public moveCellUp = (cellId?: string) => {
-        const cellVms = [...this.getState().cellVMs];
+        const origVms = this.getState().cellVMs;
+        const cellVms = [...origVms];
         const index = cellVms.findIndex(cvm => cvm.cell.id === cellId);
         if (index > 0) {
             [cellVms[index - 1], cellVms[index]] = [cellVms[index], cellVms[index - 1]];
             this.setState({
-                cellVMs: cellVms
+                cellVMs: cellVms,
+                undoStack: this.pushStack(this.getState().undoStack, origVms)
             });
         }
     }
 
     public moveCellDown = (cellId?: string) => {
-        const cellVms = [...this.getState().cellVMs];
+        const origVms = this.getState().cellVMs;
+        const cellVms = [...origVms];
         const index = cellVms.findIndex(cvm => cvm.cell.id === cellId);
         if (index < cellVms.length - 1) {
             [cellVms[index + 1], cellVms[index]] = [cellVms[index], cellVms[index + 1]];
             this.setState({
-                cellVMs: cellVms
+                cellVMs: cellVms,
+                undoStack: this.pushStack(this.getState().undoStack, origVms)
             });
         }
     }

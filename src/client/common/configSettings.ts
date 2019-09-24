@@ -16,6 +16,7 @@ import {
     IAnalysisSettings,
     IAutoCompleteSettings,
     IDataScienceSettings,
+    IExperiments,
     IFormattingSettings,
     ILintingSettings,
     IPythonSettings,
@@ -58,6 +59,7 @@ export class PythonSettings implements IPythonSettings {
     public autoUpdateLanguageServer: boolean = true;
     public datascience!: IDataScienceSettings;
     public insidersChannel!: ExtensionChannels;
+    public experiments!: IExperiments;
 
     protected readonly changed = new EventEmitter<void>();
     private workspaceRoot: Uri;
@@ -353,6 +355,16 @@ export class PythonSettings implements IPythonSettings {
             executeInFileDir: true,
             launchArgs: [],
             activateEnvironment: true
+        };
+
+        const experiments = systemVariables.resolveAny(pythonSettings.get<IExperiments>('experiments'))!;
+        if (this.experiments) {
+            Object.assign<IExperiments, IExperiments>(this.experiments, experiments);
+        } else {
+            this.experiments = experiments;
+        }
+        this.experiments = this.experiments ? this.experiments : {
+            enabled: true
         };
 
         const dataScienceSettings = systemVariables.resolveAny(pythonSettings.get<IDataScienceSettings>('dataScience'))!;

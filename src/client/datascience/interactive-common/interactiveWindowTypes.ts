@@ -94,6 +94,7 @@ export enum NativeCommandType {
     ToggleLineNumbers,
     ToggleOutput,
     ToggleVariableExplorer,
+    Undo,
     Unfocus
 }
 
