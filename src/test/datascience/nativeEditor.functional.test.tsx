@@ -10,6 +10,7 @@ import { Disposable, TextDocument, TextEditor, Uri } from 'vscode';
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
+import { Identifiers } from '../../client/datascience/constants';
 import { ICell, INotebookEditor, INotebookEditorProvider } from '../../client/datascience/types';
 import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
@@ -78,7 +79,7 @@ suite('DataScience Native Editor tests', () => {
     }
 
     function createFileCell(cell: any, data: any): ICell {
-        const newCell = { type: 'preview', id: 'FakeID', file: 'foo.py', line: 0, state: 2, ...cell};
+        const newCell = { type: 'preview', id: 'FakeID', file: Identifiers.EmptyFileName, line: 0, state: 2, ...cell};
         newCell.data = { cell_type: 'code', execution_count: null, metadata: {}, outputs: [], source: '', ...data };
 
         return newCell;
@@ -216,10 +217,9 @@ for _ in range(50):
         addMockData(ioc, 'b=2\nb', 2);
         addMockData(ioc, 'c=3\nc', 3);
 
-        const fileID = uuid();
-        const baseFile = [ {id: 'NotebookImport#0', file: fileID, data: {source: 'a=1\na'}},
-        {id: 'NotebookImport#1', file: fileID, data: {source: 'b=2\nb'}},
-        {id: 'NotebookImport#2', file: fileID, data: {source: 'c=3\nc'}} ];
+        const baseFile = [ {id: 'NotebookImport#0', data: {source: 'a=1\na'}},
+        {id: 'NotebookImport#1', data: {source: 'b=2\nb'}},
+        {id: 'NotebookImport#2', data: {source: 'c=3\nc'}} ];
         const runAllCellsFile =  baseFile.map(cell => {
             return createFileCell(cell, cell.data);
         });
@@ -232,8 +232,8 @@ for _ in range(50):
 
         await waitForUpdate(wrapper, NativeEditor, 16);
 
-        verifyHtmlOnCell(wrapper, 'NativeCell', `1`, 3);
-        verifyHtmlOnCell(wrapper, 'NativeCell', `2`, 4);
-        verifyHtmlOnCell(wrapper, 'NativeCell', `3`, 5);
+        verifyHtmlOnCell(wrapper, 'NativeCell', `1`, 0);
+        verifyHtmlOnCell(wrapper, 'NativeCell', `2`, 1);
+        verifyHtmlOnCell(wrapper, 'NativeCell', `3`, 2);
     }, () => { return ioc; });
 });
