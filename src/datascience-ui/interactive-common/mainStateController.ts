@@ -589,8 +589,6 @@ export class MainStateController implements IMessageHandler {
     }
 
     // tslint:disable-next-line: no-any
-    //private handleLoadAllCells(payload: any) {
-    // tslint:disable-next-line: no-any
     public handleLoadAllCells(payload: any) {
         if (payload && payload.cells) {
             // Turn off updates so we generate all of the cell vms without rendering.

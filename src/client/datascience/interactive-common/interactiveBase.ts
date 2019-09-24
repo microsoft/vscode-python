@@ -89,7 +89,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private variableRequestStopWatch: StopWatch | undefined;
     private variableRequestPendingCount: number = 0;
     private loadPromise: Promise<void> | undefined;
-    //private setDark: boolean = false;
     private setDarkPromise: Deferred<boolean> | undefined;
 
     constructor(
@@ -1029,20 +1028,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             return this.applicationShell.showInformationMessage(message, question1);
         }
     }
-
-    //private async ensureDarkSet(): Promise<void> {
-    //if (!this.setDark) {
-    //this.setDark = true;
-
-    //// Wait for the web panel to get the isDark setting
-    //const knownDark = await this.isDark();
-
-    //// Before we run any cells, update the dark setting	            // Before we run any cells, update the dark setting
-    //if (this.notebook) {
-    //await this.notebook.setMatplotLibStyle(knownDark);
-    //}
-    //}
-    //}
 
     private async ensureDarkSet(): Promise<void> {
         if (!this.setDarkPromise) {

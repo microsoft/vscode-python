@@ -59,7 +59,4 @@ export function loadAllCells(wrapper: ReactWrapper<any, Readonly<{}>, React.Comp
     const reactEditor = getMainPanel<NativeEditor>(wrapper, NativeEditor);
     assert.ok(reactEditor, 'Cannot find the main panel during adding a cell');
     reactEditor!.stateController.handleLoadAllCells({cells});
-
-    // Now wait for the cells to actually get rendered
-    //return waitForUpdate(wrapper, NativeEditor, 1);
 }
