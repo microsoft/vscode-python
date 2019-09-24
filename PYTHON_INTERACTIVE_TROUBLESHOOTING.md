@@ -18,7 +18,7 @@ The Python you're using is picked with the selection dropdown on the bottom left
 
 ### The second step is to check that jupyter isn't giving any errors on startup.
 
-Go to a Python terminal and type
+Run the following command from an environment that matches the Python you selected:
 ``` python -m jupyter notebook --version ```
 
 If this command shows any warnings, you need to upgrade or fix the warnings to continue with this version of Python.
