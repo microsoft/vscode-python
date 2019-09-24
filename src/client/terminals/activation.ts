@@ -16,6 +16,8 @@ import {
 } from '../common/types';
 import { noop } from '../common/utils/misc';
 import { IServiceContainer } from '../ioc/types';
+import { sendTelemetryEvent } from '../telemetry';
+import { EventName } from '../telemetry/constants';
 import { ITerminalAutoActivation } from './types';
 
 @injectable()
@@ -30,6 +32,9 @@ export class ExtensionActivationForTerminalActivation implements IExtensionSingl
             // If code runner is NOT installed, display the play icon.
             this.commands.executeCommand('setContext', 'python.showPlayIcon', true)
                 .then(noop, noop);
+            sendTelemetryEvent(EventName.PLAY_BUTTON_ICON_DISABLED, undefined, { disabled: false });
+        } else {
+            sendTelemetryEvent(EventName.PLAY_BUTTON_ICON_DISABLED, undefined, { disabled: true });
         }
     }
 

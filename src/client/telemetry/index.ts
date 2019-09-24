@@ -771,6 +771,15 @@ export interface IEventNamePropertyMapping {
         osVersion?: string;
     };
     /**
+     * Telemetry is sent with details about the play run file icon
+     */
+    [EventName.PLAY_BUTTON_ICON_DISABLED]: {
+        /**
+         * Carries `true` if play button icon is not shown (because code runner is installed), `false` otherwise
+         */
+        disabled: boolean;
+    };
+    /**
      * Telemetry event sent with details after updating the python interpreter
      */
     [EventName.PYTHON_INTERPRETER]: {

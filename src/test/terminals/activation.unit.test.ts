@@ -11,7 +11,7 @@ import {
     ExtensionActivationForTerminalActivation
 } from '../../client/terminals/activation';
 
-suite('xTerminal - Activation', () => {
+suite('Terminal - Activation', () => {
     let commands: TypeMoq.IMock<ICommandManager>;
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let extensions: TypeMoq.IMock<IExtensions>;
