@@ -12,16 +12,16 @@ This error can happen when
 
 ### The first step is to verify you are running the Python environment you want.
 
-The python you're using is picked with the selection dropdown on the bottom left of the VS Code window:
+The Python you're using is picked with the selection dropdown on the bottom left of the VS Code window:
 
 ![selector](resources/PythonSelector.png)
 
 ### The second step is to check that jupyter isn't giving any errors on startup.
 
-Go to a python terminal and type
+Go to a Python terminal and type
 ``` python -m jupyter notebook --version ```
 
-If this command shows any warnings, you need to upgrade or fix the warnings to continue with this version of python.
+If this command shows any warnings, you need to upgrade or fix the warnings to continue with this version of Python.
 If this command says 'no module named jupyter', you need to install Jupyter.
 
 ### How to install Jupyter
