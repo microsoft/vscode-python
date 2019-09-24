@@ -17,7 +17,7 @@ import { Cancellation, CancellationError } from '../../client/common/cancellatio
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { traceError, traceInfo } from '../../client/common/logger';
 import { IFileSystem } from '../../client/common/platform/types';
-import { IProcessServiceFactory, Output } from '../../client/common/process/types';
+import { IProcessServiceFactory, Output, IPythonExecutionFactory } from '../../client/common/process/types';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { concatMultilineString } from '../../client/datascience/common';
@@ -46,6 +46,8 @@ import { asyncDump } from '../common/asyncDump';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { getConnectionInfo, getIPConnectionInfo, getNotebookCapableInterpreter } from './jupyterHelpers';
+import { MockProcessService } from './mockProcessService';
+import { MockPythonService } from './mockPythonService';
 
 // tslint:disable:no-any no-multiline-string max-func-body-length no-console max-classes-per-file trailing-comma
 suite('DataScience notebook tests', () => {
@@ -997,4 +999,40 @@ plt.show()`,
         assert.equal(outputs[outputs.length - 1], '1', 'Cell outputs not captured');
     });
 
+    test('Notebook launch failure', async function () {
+        if (!ioc.mockJupyter) {
+            // tslint:disable-next-line: no-invalid-this
+            this.skip();
+        } else {
+            // Change notebook command to fail with some goofy output
+            const factory = ioc.serviceManager.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+            const service = await factory.create({ pythonPath: ioc.workingInterpreter.path });
+            const mockService = service as MockPythonService;
+            mockService.addExecResult(['-m', 'jupyter', 'notebook', '--version'], () => {
+                return Promise.resolve({
+                    stdout: '9.9.9.9',
+                    stderr: 'Not supported'
+                });
+            });
+
+            mockService.addExecResult(['-m', 'notebook', '--version'], () => {
+                return Promise.resolve({
+                    stdout: '',
+                    stderr: 'Not supported'
+                });
+            });
+
+            // Try creating a notebook
+            let threw = false;
+            try {
+                const testDir = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
+                await jupyterExecution.connectToNotebookServer({ usingDarkTheme: false, useDefaultConfig: true, workingDir: testDir, purpose: '1' });
+            } catch (e) {
+                threw = true;
+                assert.ok(e.message.includes('Not supported'), 'Wrong error thrown when notebook is created');
+            }
+
+            assert.ok(threw, 'No exception thrown during notebook creation');
+        }
+    });
 });

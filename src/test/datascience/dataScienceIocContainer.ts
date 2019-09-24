@@ -292,6 +292,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.asyncRegistry = new AsyncDisposableRegistry();
     }
 
+    public get workingInterpreter() {
+        return this.workingPython;
+    }
+
     public get onContextSet(): Event<{ name: string; value: boolean }> {
         return this.contextSetEvent.event;
     }

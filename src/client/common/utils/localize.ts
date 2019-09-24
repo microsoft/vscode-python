@@ -131,7 +131,7 @@ export namespace DataScience {
     export const notebookCheckForImportDontAskAgain = localize('DataScience.notebookCheckForImportDontAskAgain', 'Don\'t Ask Again');
     export const libraryNotInstalled = localize('DataScience.libraryNotInstalled', 'Data Science library {0} is not installed. Install?');
     export const jupyterInstall = localize('DataScience.jupyterInstall', 'Install');
-    export const jupyterNotSupported = localize('DataScience.jupyterNotSupported', 'Jupyter is not installed');
+    export const jupyterNotSupported = localize('DataScience.jupyterNotSupported', 'Jupyter cannot be started. Error attempting to locate jupyter: {0}');
     export const jupyterNotSupportedBecauseOfEnvironment = localize('DataScience.jupyterNotSupportedBecauseOfEnvironment', 'Activating {0} to run Jupyter failed with {1}');
     export const jupyterNbConvertNotSupported = localize('DataScience.jupyterNbConvertNotSupported', 'Jupyter nbconvert is not installed');
     export const jupyterLaunchTimedOut = localize('DataScience.jupyterLaunchTimedOut', 'The Jupyter notebook server failed to launch in time');
@@ -287,6 +287,8 @@ export namespace DataScience {
     export const addCell = localize('DataScience.addCell', 'Add cell');
     export const runAll = localize('DataScience.runAll', 'Insert cell');
     export const convertingToPythonFile = localize('DataScience.convertingToPythonFile', 'Converting ipynb to python file');
+    export const noInterpreter = localize('DataScience.noInterpreter', 'No python selected');
+    export const notebookNotFound = localize('DataScience.notebookNotFound', 'python -m jupyter notebook --version is not running');
 }
 
 export namespace DebugConfigStrings {

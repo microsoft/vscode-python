@@ -21,9 +21,10 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
     public async handleError(err: Error): Promise<void> {
         if (err instanceof JupyterInstallError) {
             this.applicationShell.showInformationMessage(
-                localize.DataScience.jupyterNotSupported(),
+                err.message,
                 localize.DataScience.jupyterInstall(),
-                localize.DataScience.notebookCheckForImportNo())
+                localize.DataScience.notebookCheckForImportNo(),
+                err.actionTitle)
                 .then(response => {
                     if (response === localize.DataScience.jupyterInstall()) {
                         return this.channels.getInstallationChannels()
@@ -42,16 +43,9 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                                     }
                                 }
                             });
-                    } else {
-                        const jupyterError = err as JupyterInstallError;
-
+                    } else if (response === err.actionTitle) {
                         // This is a special error that shows a link to open for more help
-                        this.applicationShell.showErrorMessage(jupyterError.message, jupyterError.actionTitle).then(v => {
-                            // User clicked on the link, open it.
-                            if (v === jupyterError.actionTitle) {
-                                this.applicationShell.openUrl(jupyterError.action);
-                            }
-                        });
+                        this.applicationShell.openUrl(err.action);
                     }
                 });
         } else if (err instanceof JupyterSelfCertsError) {

@@ -105,7 +105,7 @@
     "DataScience.notebookCheckForImportNo": "Later",
     "DataScience.notebookCheckForImportDontAskAgain": "Don't Ask Again",
     "DataScience.notebookCheckForImportTitle": "Do you want to import the Jupyter Notebook into Python code?",
-    "DataScience.jupyterNotSupported": "Running cells requires Jupyter notebooks to be installed.",
+    "DataScience.jupyterNotSupported": "Jupyter cannot be started. Error attempting to locate jupyter: {0}",
     "DataScience.jupyterNotSupportedBecauseOfEnvironment": "Activating {0} to run Jupyter failed with {1}.",
     "DataScience.jupyterNbConvertNotSupported": "Importing notebooks requires Jupyter nbconvert to be installed.",
     "DataScience.jupyterLaunchNoURL": "Failed to find the URL of the launched Jupyter notebook server",
@@ -187,7 +187,7 @@
     "DataScience.jupyterNotebookRemoteConnectFailed": "Failed to connect to remote Jupyter notebook.\r\nCheck that the Jupyter Server URI setting has a valid running server specified.\r\n{0}\r\n{1}",
     "DataScience.jupyterNotebookRemoteConnectSelfCertsFailed": "Failed to connect to remote Jupyter notebook.\r\nSpecified server is using self signed certs. Enable Allow Unauthorized Remote Connection setting to connect anyways\r\n{0}\r\n{1}",
     "DataScience.notebookVersionFormat": "Jupyter Notebook Version: {0}",
-    "DataScience.jupyterKernelNotSupportedOnActive": "Jupyter kernel cannot be started from '{0}'. Using closest match {1} instead.",
+    "DataScience.jupyterKernelNotSupportedOnActive": "Jupyter kernel cannot be started from '{0}'. Using closest match {1} instead.\r\nError starting original kernel: {2}",
     "DataScience.jupyterKernelSpecNotFound": "Cannot create a Jupyter kernel spec and none are available for use",
     "DataScience.jupyterGetVariablesBadResults": "Failed to fetch variable info from the Jupyter server.",
     "DataScience.liveShareConnectFailure": "Cannot connect to host Jupyter session. URI not found.",
@@ -366,5 +366,7 @@
     "DataScience.convertingToPythonFile": "Converting ipynb to python file",
     "DataScience.untitledNotebookMessage": "Your changes will be lost if you don't save them.",
     "DataScience.untitledNotebookYes": "Save",
-    "DataScience.untitledNotebookNo": "Cancel"
+    "DataScience.untitledNotebookNo": "Cancel",
+    "DataScience.noInterpreter" : "No python selected",
+    "DataScience.notebookNotFound" : "python -m jupyter notebook --version is not running"
 }

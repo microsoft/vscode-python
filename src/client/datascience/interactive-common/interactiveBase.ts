@@ -718,7 +718,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 this.dispose();
 
                 // Indicate failing.
-                throw new JupyterInstallError(localize.DataScience.jupyterNotSupported(), localize.DataScience.pythonInteractiveHelpLink());
+                throw new JupyterInstallError(localize.DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError()), localize.DataScience.pythonInteractiveHelpLink());
             }
             // Then load the jupyter server
             await this.createNotebook();
@@ -1141,8 +1141,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                     const activePath = active ? active.path : undefined;
                     const usableDisplayName = usableInterpreter ? usableInterpreter.displayName : undefined;
                     const usablePath = usableInterpreter ? usableInterpreter.path : undefined;
+                    const notebookError = await this.jupyterExecution.getNotebookError();
                     if (activePath && usablePath && !this.fileSystem.arePathsSame(activePath, usablePath) && activeDisplayName && usableDisplayName) {
-                        this.applicationShell.showWarningMessage(localize.DataScience.jupyterKernelNotSupportedOnActive().format(activeDisplayName, usableDisplayName));
+                        this.applicationShell.showWarningMessage(localize.DataScience.jupyterKernelNotSupportedOnActive().format(activeDisplayName, usableDisplayName, notebookError));
                     }
                 }
             }
@@ -1155,7 +1156,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 const displayName = activeInterpreter.displayName ? activeInterpreter.displayName : activeInterpreter.path;
                 throw new Error(localize.DataScience.jupyterNotSupportedBecauseOfEnvironment().format(displayName, e.toString()));
             } else {
-                throw new JupyterInstallError(localize.DataScience.jupyterNotSupported(), localize.DataScience.pythonInteractiveHelpLink());
+                throw new JupyterInstallError(localize.DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError()), localize.DataScience.pythonInteractiveHelpLink());
             }
         }
     }

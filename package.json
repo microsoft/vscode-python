@@ -2527,7 +2527,10 @@
             },
             {
                 "id": "jupyter",
-                "aliases": ["Jupyter", "Notebook"],
+                "aliases": [
+                    "Jupyter",
+                    "Notebook"
+                ],
                 "extensions": [
                     ".ipynb"
                 ]
