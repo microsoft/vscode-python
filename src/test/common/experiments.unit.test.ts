@@ -191,7 +191,7 @@ suite('A/B experiments', () => {
     }
     test('Ensure experiments are not initialized when it is disabled', async () => testEnablingExperiments(false));
 
-    test('Ensure experiments are not initialized when it is enabled', async () => testEnablingExperiments(true));
+    test('Ensure experiments are initialized when it is enabled', async () => testEnablingExperiments(true));
 
     async function testEnablingExperimentsToCheckIfInExperiment(enabled: boolean) {
         const sendTelemetry = sinon.stub(ExperimentsManager.prototype, 'sendTelemetryIfInExperiment');
