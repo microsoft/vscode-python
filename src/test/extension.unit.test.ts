@@ -7,7 +7,7 @@
 
 import { expect } from 'chai';
 import * as path from 'path';
-import { anyString, instance, mock, when } from 'ts-mockito';
+import { anyString, anything, instance, mock, when } from 'ts-mockito';
 import { buildApi } from '../client/api';
 import { ApplicationEnvironment } from '../client/common/application/applicationEnvironment';
 import { IApplicationEnvironment } from '../client/common/application/types';
@@ -59,6 +59,7 @@ suite('Extension API Debugger', () => {
 
     test('Test debug launcher args (no-wait and in experiment)', async () => {
         mockInExperiment();
+        when(debugAdapterFactory.getRemotePtvsdArgs(anything())).thenReturn(['--default', '--host', 'something', '--port', '1234']);
 
         const args = await buildApi(Promise.resolve(), instance(experimentsManager), instance(debugAdapterFactory), instance(configurationService)).debug.getRemoteLauncherCommand(
             'something',
@@ -85,6 +86,7 @@ suite('Extension API Debugger', () => {
 
     test('Test debug launcher args (wait and in experiment)', async () => {
         mockInExperiment();
+        when(debugAdapterFactory.getRemotePtvsdArgs(anything())).thenReturn(['--default', '--host', 'something', '--port', '1234', '--wait']);
 
         const args = await buildApi(Promise.resolve(), instance(experimentsManager), instance(debugAdapterFactory), instance(configurationService)).debug.getRemoteLauncherCommand(
             'something',

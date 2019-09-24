@@ -46,14 +46,15 @@ export function buildApi(ready: Promise<any>, experimentsManager: IExperimentsMa
         debug: {
             async getRemoteLauncherCommand(host: string, port: number, waitUntilDebuggerAttaches: boolean = true): Promise<string[]> {
                 const pythonSettings = configuration.getSettings(undefined);
+                const useNewDAPtvsd = experimentsManager.inExperiment(DebugAdapterExperiment.experiment) && (await debugFactory.useNewPtvsd(pythonSettings.pythonPath));
 
-                if (experimentsManager.inExperiment(DebugAdapterExperiment.experiment) && (await debugFactory.useNewPtvsd(pythonSettings.pythonPath))) {
-                    // Same logic as in RemoteDebuggerExternalLauncherScriptProvider, but eventually launcherProvider.ts will be deleted.
-                    const waitArgs = waitUntilDebuggerAttaches ? ['--wait'] : [];
-                    return [await debugFactory.getPtvsdPath(pythonSettings.pythonPath), '--default', '--host', host, '--port', port.toString(), ...waitArgs];
-                } else {
+                if (!useNewDAPtvsd) {
                 return new RemoteDebuggerExternalLauncherScriptProvider().getLauncherArgs({ host, port, waitUntilDebuggerAttaches });
             }
+
+                // Same logic as in RemoteDebuggerExternalLauncherScriptProvider, but eventually launcherProvider.ts will be deleted.
+                const args = debugFactory.getRemotePtvsdArgs({ host, port, waitUntilDebuggerAttaches });
+                return [await debugFactory.getPtvsdPath(pythonSettings.pythonPath), ...args];
         }
         }
     };
