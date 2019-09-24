@@ -4,16 +4,18 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
+import * as uuid from 'uuid/v4';
 import { Disposable, TextDocument, TextEditor, Uri } from 'vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
-import { INotebookEditor, INotebookEditorProvider } from '../../client/datascience/types';
+import { ICell, INotebookEditor, INotebookEditorProvider } from '../../client/datascience/types';
 import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { addCell, getNativeCellResults, runMountedTest } from './nativeEditorTestHelpers';
+import { addCell, getNativeCellResults, loadAllCells, runMountedTest } from './nativeEditorTestHelpers';
+import { waitForUpdate } from './reactHelpers';
 import {
     addContinuousMockData,
     addMockData,
@@ -75,6 +77,13 @@ suite('DataScience Native Editor tests', () => {
         return getOrCreateNativeEditor();
     }
 
+    function createFileCell(cell: any, data: any): ICell {
+        const newCell = { type: 'preview', id: 'FakeID', file: 'foo.py', line: 0, state: 2, ...cell};
+        newCell.data = { cell_type: 'code', execution_count: null, metadata: {}, outputs: [], source: '', ...data };
+
+        return newCell;
+    }
+
     runMountedTest('Simple text', async (wrapper) => {
         // Create an editor so something is listening to messages
         await createNewEditor();
@@ -128,16 +137,16 @@ for _ in range(50):
             return Promise.resolve({ result: result, haveMore: loops > 0 });
         });
 
-        await addCell(wrapper, badPanda, 5);
+        await addCell(wrapper, badPanda, true, 5);
         verifyHtmlOnCell(wrapper, 'NativeCell', `has no attribute 'read'`, CellPosition.Last);
 
-        await addCell(wrapper, goodPanda, 5);
+        await addCell(wrapper, goodPanda, true, 5);
         verifyHtmlOnCell(wrapper, 'NativeCell', `<td>`, CellPosition.Last);
 
-        await addCell(wrapper, matPlotLib, 5);
+        await addCell(wrapper, matPlotLib, true, 5);
         verifyHtmlOnCell(wrapper, 'NativeCell', matPlotLibResults, CellPosition.Last);
 
-        await addCell(wrapper, spinningCursor, 4 + (ioc.mockJupyter ? (cursors.length * 3) : 0));
+        await addCell(wrapper, spinningCursor, true, 4 + (ioc.mockJupyter ? (cursors.length * 3) : 0));
         verifyHtmlOnCell(wrapper, 'NativeCell', '<div>', CellPosition.Last);
     }, () => { return ioc; });
 
@@ -199,5 +208,32 @@ for _ in range(50):
         const exportButton = findButton(wrapper, NativeEditor, 6);
         await waitForMessageResponse(() => exportButton!.simulate('click'));
         assert.equal(exportCalled, true, 'Export should have been called');
+    }, () => { return ioc; });
+
+    runMountedTest('RunAllCells', async (wrapper) => {
+        // Make sure to create the interactive window after the rebind or it gets the wrong application shell.
+        await createNewEditor();
+        addMockData(ioc, 'b=2\nb', 2);
+        addMockData(ioc, 'c=3\nc', 3);
+
+        const fileID = uuid();
+        const baseFile = [ {id: 'NotebookImport#0', file: fileID, data: {source: 'a=1\na'}},
+        {id: 'NotebookImport#1', file: fileID, data: {source: 'b=2\nb'}},
+        {id: 'NotebookImport#2', file: fileID, data: {source: 'c=3\nc'}} ];
+        const runAllCellsFile =  baseFile.map(cell => {
+            return createFileCell(cell, cell.data);
+        });
+
+        loadAllCells(wrapper, runAllCellsFile);
+
+        // Export should cause exportCalled to change to true
+        const runAllButton = findButton(wrapper, NativeEditor, 3);
+        await waitForMessageResponse(() => runAllButton!.simulate('click'));
+
+        await waitForUpdate(wrapper, NativeEditor, 16);
+
+        verifyHtmlOnCell(wrapper, 'NativeCell', `1`, 3);
+        verifyHtmlOnCell(wrapper, 'NativeCell', `2`, 4);
+        verifyHtmlOnCell(wrapper, 'NativeCell', `3`, 5);
     }, () => { return ioc; });
 });

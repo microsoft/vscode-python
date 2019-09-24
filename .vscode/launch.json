@@ -166,6 +166,7 @@
                 "--recursive",
                 "--colors",
                 //"--grep", "<suite name>",
+                "--grep", "RunAllCells",
                 "--timeout=300000"
             ],
             "outFiles": [

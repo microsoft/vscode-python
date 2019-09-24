@@ -588,6 +588,26 @@ export class MainStateController implements IMessageHandler {
         }
     }
 
+    // tslint:disable-next-line: no-any
+    //private handleLoadAllCells(payload: any) {
+    // tslint:disable-next-line: no-any
+    public handleLoadAllCells(payload: any) {
+        if (payload && payload.cells) {
+            // Turn off updates so we generate all of the cell vms without rendering.
+            this.suspendUpdates();
+
+            // Update all of the vms
+            const cells = payload.cells as ICell[];
+            cells.forEach(c => this.finishCell(c));
+
+            // Set our state to not being busy anymore
+            this.setState({ busy: false, loadTotal: payload.cells.length });
+
+            // Turn updates back on and resend the state.
+            this.resumeUpdates();
+        }
+    }
+
     public findCell(cellId?: string): ICellViewModel | undefined {
         const nonEdit = this.state.cellVMs.find(cvm => cvm.cell.id === cellId);
         if (!nonEdit && cellId === Identifiers.EditCellId) {
@@ -1102,24 +1122,6 @@ export class MainStateController implements IMessageHandler {
             this.tmlangugePromise.resolve(payload.toString());
         } else if (this.tmlangugePromise) {
             this.tmlangugePromise.resolve(undefined);
-        }
-    }
-
-    // tslint:disable-next-line: no-any
-    private handleLoadAllCells(payload: any) {
-        if (payload && payload.cells) {
-            // Turn off updates so we generate all of the cell vms without rendering.
-            this.suspendUpdates();
-
-            // Update all of the vms
-            const cells = payload.cells as ICell[];
-            cells.forEach(c => this.finishCell(c));
-
-            // Set our state to not being busy anymore
-            this.setState({ busy: false, loadTotal: payload.cells.length });
-
-            // Turn updates back on and resend the state.
-            this.resumeUpdates();
         }
     }
 
