@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 import { Observable } from 'rxjs/Observable';
-import * as uuid from 'uuid/v4';
 
 import { Cancellation, CancellationError } from '../../client/common/cancellation';
 import {
@@ -19,11 +18,6 @@ export class MockProcessService implements IProcessService {
     private execResults: { file: string; args: (string | RegExp)[]; result(): Promise<ExecutionResult<string>> }[] = [];
     private execObservableResults: { file: string; args: (string | RegExp)[]; result(): ObservableExecutionResult<string> }[] = [];
     private timeDelay: number | undefined;
-    private _id: string;
-
-    constructor() {
-        this._id = uuid();
-    }
 
     public execObservable(file: string, args: string[], _options: SpawnOptions): ObservableExecutionResult<string> {
         const match = this.execObservableResults.find(f => this.argsMatch(f.args, args) && f.file === file);
