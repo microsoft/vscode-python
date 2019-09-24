@@ -36,6 +36,9 @@ export enum PythonPathSource {
 }
 
 export const IDebugAdapterDescriptorFactory = Symbol('IDebugAdapterDescriptorFactory');
-export interface IDebugAdapterDescriptorFactory extends DebugAdapterDescriptorFactory {}
+export interface IDebugAdapterDescriptorFactory extends DebugAdapterDescriptorFactory {
+    useNewPtvsd(pythonPath: string): Promise<boolean>;
+    getPtvsdPath(pythonPath: string): Promise<string>;
+}
 
 export type DebugAdapterPtvsdPathInfo = { extensionVersion: string; ptvsdPath: string };

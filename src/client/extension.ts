@@ -69,7 +69,7 @@ import { DebuggerTypeName } from './debugger/constants';
 import { DebugSessionEventDispatcher } from './debugger/extension/hooks/eventHandlerDispatcher';
 import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/extension/serviceRegistry';
-import { IDebugConfigurationService, IDebuggerBanner } from './debugger/extension/types';
+import { IDebugAdapterDescriptorFactory, IDebugConfigurationService, IDebuggerBanner } from './debugger/extension/types';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
 import { AutoSelectionRule, IInterpreterAutoSelectionRule, IInterpreterAutoSelectionService } from './interpreter/autoSelection/types';
 import { IInterpreterSelector } from './interpreter/configuration/types';
@@ -194,7 +194,12 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     durations.endActivateTime = stopWatch.elapsedTime;
     activationDeferred.resolve();
 
-    const api = buildApi(Promise.all([activationDeferred.promise, activationPromise]));
+    const api = buildApi(
+        Promise.all([activationDeferred.promise, activationPromise]),
+        serviceContainer.get<IExperimentsManager>(IExperimentsManager),
+        serviceContainer.get<IDebugAdapterDescriptorFactory>(IDebugAdapterDescriptorFactory),
+        configuration
+    );
     // In test environment return the DI Container.
     if (isTestExecution()) {
         // tslint:disable:no-any
