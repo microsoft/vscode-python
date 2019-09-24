@@ -4,7 +4,6 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import * as uuid from 'uuid/v4';
 import { Disposable, TextDocument, TextEditor, Uri } from 'vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
