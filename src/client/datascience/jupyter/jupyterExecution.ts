@@ -926,9 +926,9 @@ export class JupyterExecutionBase implements IJupyterExecution {
                 found = await this.findPathCommand(command, cancelToken);
             }
 
-            // If we don't have an error on our found command, set the original so we
+            // Set the original error so we
             // can propagate the reason to the user
-            if (found && !found.error) {
+            if (found && firstError) {
                 found.error = firstError;
             }
 
