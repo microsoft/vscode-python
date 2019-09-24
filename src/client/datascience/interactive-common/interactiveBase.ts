@@ -1033,6 +1033,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         if (!this.setDarkPromise) {
             this.setDarkPromise = createDeferred<boolean>();
 
+            // Wait for the web panel to get the isDark setting
             const knownDark = await this.isDark();
 
             // Before we run any cells, update the dark setting
