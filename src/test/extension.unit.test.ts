@@ -36,7 +36,7 @@ suite('Extension API Debugger', () => {
         when(experimentsManager.inExperiment(anyString())).thenReturn(true);
         when(debugAdapterFactory.useNewPtvsd(anyString())).thenResolve(true);
         when(debugAdapterFactory.getPtvsdPath(anyString())).thenResolve(ptvsdPath);
-        when(configurationService.getSettings()).thenReturn(({ pythonPath: 'python' } as any) as IPythonSettings);
+        when(configurationService.getSettings(undefined)).thenReturn(({ pythonPath: 'python' } as any) as IPythonSettings);
     }
 
     function mockNotInExperiment() {
