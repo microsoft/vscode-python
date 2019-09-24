@@ -45,7 +45,7 @@ export function buildApi(ready: Promise<any>, experimentsManager: IExperimentsMa
         }),
         debug: {
             async getRemoteLauncherCommand(host: string, port: number, waitUntilDebuggerAttaches: boolean = true): Promise<string[]> {
-                const pythonSettings = configuration.getSettings();
+                const pythonSettings = configuration.getSettings(undefined);
 
                 if (experimentsManager.inExperiment(DebugAdapterExperiment.experiment) && (await debugFactory.useNewPtvsd(pythonSettings.pythonPath))) {
                     // Same logic as in RemoteDebuggerExternalLauncherScriptProvider, but eventually launcherProvider.ts will be deleted.
