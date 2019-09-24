@@ -213,7 +213,7 @@ suite('A/B experiments', () => {
     }
     test('Ensure inExperiment is true when experiments are enabled', async () => testEnablingExperimentsToCheckIfInExperiment(true));
 
-    test('Ensure inExperiment is true when experiments are disabled', async () => testEnablingExperimentsToCheckIfInExperiment(false));
+    test('Ensure inExperiment is false when experiments are disabled', async () => testEnablingExperimentsToCheckIfInExperiment(false));
 
     test('Ensure experiments can only be activated once', async () => {
         const updateExperimentStorage = sinon.stub(ExperimentsManager.prototype, 'updateExperimentStorage');
