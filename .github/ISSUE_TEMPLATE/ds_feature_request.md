@@ -1,7 +1,7 @@
 ---
 name: Feature request for Notebook Editor, Interactive Window, Python Editor cells
 about: Suggest a new feature or behavior
-labels: type-enhancement, "data science"
+labels: type-enhancement, data science
 ---
 # Feature: Notebook Editor, Interactive Window, Python Editor cells
 

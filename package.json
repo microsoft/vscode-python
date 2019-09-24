@@ -186,21 +186,12 @@
                 "category": "Python"
             },
             {
-                "command": "python.execInTerminal-icon1",
+                "command": "python.execInTerminal-icon",
                 "title": "%python.command.python.execInTerminal.title%",
                 "category": "Python",
                 "icon": {
                     "light": "resources/light/start.svg",
                     "dark": "resources/dark/start.svg"
-                }
-            },
-            {
-                "command": "python.execInTerminal-icon2",
-                "title": "%python.command.python.execInTerminal.title%",
-                "category": "Python",
-                "icon": {
-                    "light": "resources/light/run-file.svg",
-                    "dark": "resources/dark/run-file.svg"
                 }
             },
             {
@@ -642,16 +633,10 @@
             ],
             "editor/title": [
                 {
-                    "command": "python.execInTerminal-icon1",
+                    "command": "python.execInTerminal-icon",
                     "title": "%python.command.python.execInTerminal.title%",
                     "group": "navigation",
-                    "when": "resourceLangId == python && python.showPlayIcon1"
-                },
-                {
-                    "command": "python.execInTerminal-icon2",
-                    "title": "%python.command.python.execInTerminal.title%",
-                    "group": "navigation",
-                    "when": "resourceLangId == python && python.showPlayIcon2"
+                    "when": "resourceLangId == python && python.showPlayIcon"
                 }
             ],
             "explorer/context": [

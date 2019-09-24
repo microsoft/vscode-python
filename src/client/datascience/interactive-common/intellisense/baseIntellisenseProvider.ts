@@ -25,6 +25,7 @@ import { createDeferred, Deferred, waitForPromise } from '../../../common/utils/
 import { concatMultilineString } from '../../common';
 import { Identifiers, Settings } from '../../constants';
 import {
+    IInteractiveWindowInfo,
     IInteractiveWindowListener,
     IInteractiveWindowProvider,
     IJupyterExecution,
@@ -127,6 +128,10 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
 
             case InteractiveWindowMessages.LoadAllCellsComplete:
                 this.dispatchMessage(message, payload, this.loadAllCells);
+                break;
+
+            case InteractiveWindowMessages.SendInfo:
+                this.dispatchMessage(message, payload, this.handleNativeEditorChanges);
                 break;
 
             default:
@@ -370,6 +375,18 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
                 }
             }));
         }
+    }
+
+    private async handleNativeEditorChanges(payload: IInteractiveWindowInfo) {
+        const document = await this.getDocument();
+        let changes: TextDocumentContentChangeEvent[][] = [];
+        const file = payload.visibleCells[0] ? payload.visibleCells[0].file : undefined;
+
+        if (document) {
+            changes = document.handleNativeEditorCellChanges(payload.visibleCells);
+        }
+
+        await Promise.all(changes.map(c => this.handleChanges(file, document, c)));
     }
 
     private async restartKernel(): Promise<void> {

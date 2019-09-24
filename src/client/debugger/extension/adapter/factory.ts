@@ -17,6 +17,7 @@ import { IPythonExecutionFactory } from '../../../common/process/types';
 import { IExperimentsManager, IExtensions, IPersistentStateFactory } from '../../../common/types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IInterpreterService } from '../../../interpreter/contracts';
+import { RemoteDebugOptions } from '../../debugAdapter/types';
 import { AttachRequestArguments, LaunchRequestArguments } from '../../types';
 import { DebugAdapterPtvsdPathInfo, IDebugAdapterDescriptorFactory } from '../types';
 
@@ -40,7 +41,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
             // If logToFile is set in the debug config then pass --log-dir <path-to-extension-dir> when launching the debug adapter.
             const logArgs = configuration.logToFile ? ['--log-dir', EXTENSION_ROOT_DIR] : [];
             const ptvsdPathToUse = await this.getPtvsdPath(pythonPath);
-            return new DebugAdapterExecutable(`${pythonPath}`, [ptvsdPathToUse, ...logArgs]);
+            return new DebugAdapterExecutable(`${pythonPath}`, [path.join(ptvsdPathToUse, 'adapter'), ...logArgs]);
         }
 
         // Use the Node debug adapter (and ptvsd_launcher.py)
@@ -52,10 +53,10 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
     }
 
     /**
-     * Check and return whether the user is in the PTVSD wheels experiment or not.
+     * Check and return whether the user should and can use the new PTVSD wheels or not.
      *
      * @param {string} pythonPath Path to the python executable used to launch the Python Debug Adapter (result of `this.getPythonPath()`)
-     * @returns {Promise<boolean>} Whether the user is in the experiment or not.
+     * @returns {Promise<boolean>} Whether the user should and can use the new PTVSD wheels or not.
      * @memberof DebugAdapterDescriptorFactory
      */
     public async useNewPtvsd(pythonPath: string): Promise<boolean> {
@@ -80,7 +81,12 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
             ptvsdPathToUse = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
         }
 
-        return path.join(ptvsdPathToUse, 'ptvsd', 'adapter');
+        return path.join(ptvsdPathToUse, 'ptvsd');
+    }
+
+    public getRemotePtvsdArgs(remoteDebugOptions: RemoteDebugOptions): string[] {
+        const waitArgs = remoteDebugOptions.waitUntilDebuggerAttaches ? ['--wait'] : [];
+        return ['--default', '--host', remoteDebugOptions.host, '--port', remoteDebugOptions.port.toString(), ...waitArgs];
     }
 
     /**

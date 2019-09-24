@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { IExtensionSingleActivationService } from '../../../activation/types';
 import { IDebugService } from '../../../common/application/types';
-import { DebugAdapterDescriptorFactory as DebugAdapterExperiment } from '../../../common/experimentGroups';
+import { DebugAdapterDescriptorFactory } from '../../../common/experimentGroups';
 import { IDisposableRegistry, IExperimentsManager } from '../../../common/types';
 import { DebuggerTypeName } from '../../constants';
 import { IDebugAdapterDescriptorFactory } from '../types';
@@ -20,7 +20,7 @@ export class DebugAdapterActivator implements IExtensionSingleActivationService 
         @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager
     ) {}
     public async activate(): Promise<void> {
-        if (this.experimentsManager.inExperiment(DebugAdapterExperiment.experiment)) {
+        if (this.experimentsManager.inExperiment(DebugAdapterDescriptorFactory.experiment)) {
             this.disposables.push(this.debugService.registerDebugAdapterDescriptorFactory(DebuggerTypeName, this.factory));
         }
     }

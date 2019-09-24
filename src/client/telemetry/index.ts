@@ -771,6 +771,15 @@ export interface IEventNamePropertyMapping {
         osVersion?: string;
     };
     /**
+     * Telemetry is sent with details about the play run file icon
+     */
+    [EventName.PLAY_BUTTON_ICON_DISABLED]: {
+        /**
+         * Carries `true` if play button icon is not shown (because code runner is installed), `false` otherwise
+         */
+        disabled: boolean;
+    };
+    /**
      * Telemetry event sent with details after updating the python interpreter
      */
     [EventName.PYTHON_INTERPRETER]: {
@@ -1444,6 +1453,7 @@ export interface IEventNamePropertyMapping {
     [NativeKeyboardCommandTelemetry.ToggleLineNumbers]: never | undefined;
     [NativeKeyboardCommandTelemetry.ToggleOutput]: never | undefined;
     [NativeKeyboardCommandTelemetry.ToggleVariableExplorer]: never | undefined;
+    [NativeKeyboardCommandTelemetry.Undo]: never | undefined;
     [NativeKeyboardCommandTelemetry.Unfocus]: never | undefined;
     [NativeMouseCommandTelemetry.AddToEnd]: never | undefined;
     [NativeMouseCommandTelemetry.ArrowDown]: never | undefined;
@@ -1466,6 +1476,7 @@ export interface IEventNamePropertyMapping {
     [NativeMouseCommandTelemetry.ToggleLineNumbers]: never | undefined;
     [NativeMouseCommandTelemetry.ToggleOutput]: never | undefined;
     [NativeMouseCommandTelemetry.ToggleVariableExplorer]: never | undefined;
+    [NativeMouseCommandTelemetry.Undo]: never | undefined;
     [NativeMouseCommandTelemetry.Unfocus]: never | undefined;
     /*
     Telemetry event sent with details of Jedi Memory usage.

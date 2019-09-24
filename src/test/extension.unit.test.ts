@@ -6,22 +6,95 @@
 // tslint:disable:no-any
 
 import { expect } from 'chai';
+import * as path from 'path';
+import { anyString, anything, instance, mock, when } from 'ts-mockito';
 import { buildApi } from '../client/api';
 import { ApplicationEnvironment } from '../client/common/application/applicationEnvironment';
 import { IApplicationEnvironment } from '../client/common/application/types';
+import { ConfigurationService } from '../client/common/configuration/service';
 import { EXTENSION_ROOT_DIR } from '../client/common/constants';
-
-const expectedPath = `${EXTENSION_ROOT_DIR.fileToCommandArgument()}/pythonFiles/ptvsd_launcher.py`;
+import { ExperimentsManager } from '../client/common/experiments';
+import { IConfigurationService, IExperimentsManager, IPythonSettings } from '../client/common/types';
+import { DebugAdapterDescriptorFactory } from '../client/debugger/extension/adapter/factory';
+import { IDebugAdapterDescriptorFactory } from '../client/debugger/extension/types';
 
 suite('Extension API Debugger', () => {
-    test('Test debug launcher args (no-wait)', async () => {
-        const args = await buildApi(Promise.resolve()).debug.getRemoteLauncherCommand('something', 1234, false);
-        const expectedArgs = [expectedPath, '--default', '--host', 'something', '--port', '1234'];
+    const expectedLauncherPath = `${EXTENSION_ROOT_DIR.fileToCommandArgument()}/pythonFiles/ptvsd_launcher.py`;
+    const ptvsdPath = path.join('path', 'to', 'ptvsd');
+
+    let experimentsManager: IExperimentsManager;
+    let debugAdapterFactory: IDebugAdapterDescriptorFactory;
+    let configurationService: IConfigurationService;
+
+    setup(() => {
+        experimentsManager = mock(ExperimentsManager);
+        debugAdapterFactory = mock(DebugAdapterDescriptorFactory);
+        configurationService = mock(ConfigurationService);
+    });
+
+    function mockInExperiment() {
+        when(experimentsManager.inExperiment(anyString())).thenReturn(true);
+        when(debugAdapterFactory.useNewPtvsd(anyString())).thenResolve(true);
+        when(debugAdapterFactory.getPtvsdPath(anyString())).thenResolve(ptvsdPath);
+        when(configurationService.getSettings(undefined)).thenReturn(({ pythonPath: 'python' } as any) as IPythonSettings);
+    }
+
+    function mockNotInExperiment() {
+        when(experimentsManager.inExperiment(anyString())).thenReturn(false);
+        when(debugAdapterFactory.useNewPtvsd(anyString())).thenResolve(false);
+    }
+
+    test('Test debug launcher args (no-wait and not in experiment)', async () => {
+        mockNotInExperiment();
+
+        const args = await buildApi(Promise.resolve(), instance(experimentsManager), instance(debugAdapterFactory), instance(configurationService)).debug.getRemoteLauncherCommand(
+            'something',
+            1234,
+            false
+        );
+        const expectedArgs = [expectedLauncherPath, '--default', '--host', 'something', '--port', '1234'];
+
         expect(args).to.be.deep.equal(expectedArgs);
     });
-    test('Test debug launcher args (wait)', async () => {
-        const args = await buildApi(Promise.resolve()).debug.getRemoteLauncherCommand('something', 1234, true);
-        const expectedArgs = [expectedPath, '--default', '--host', 'something', '--port', '1234', '--wait'];
+
+    test('Test debug launcher args (no-wait and in experiment)', async () => {
+        mockInExperiment();
+        when(debugAdapterFactory.getRemotePtvsdArgs(anything())).thenReturn(['--default', '--host', 'something', '--port', '1234']);
+
+        const args = await buildApi(Promise.resolve(), instance(experimentsManager), instance(debugAdapterFactory), instance(configurationService)).debug.getRemoteLauncherCommand(
+            'something',
+            1234,
+            false
+        );
+        const expectedArgs = [ptvsdPath, '--default', '--host', 'something', '--port', '1234'];
+
+        expect(args).to.be.deep.equal(expectedArgs);
+    });
+
+    test('Test debug launcher args (wait and not in experiment)', async () => {
+        mockNotInExperiment();
+
+        const args = await buildApi(Promise.resolve(), instance(experimentsManager), instance(debugAdapterFactory), instance(configurationService)).debug.getRemoteLauncherCommand(
+            'something',
+            1234,
+            true
+        );
+        const expectedArgs = [expectedLauncherPath, '--default', '--host', 'something', '--port', '1234', '--wait'];
+
+        expect(args).to.be.deep.equal(expectedArgs);
+    });
+
+    test('Test debug launcher args (wait and in experiment)', async () => {
+        mockInExperiment();
+        when(debugAdapterFactory.getRemotePtvsdArgs(anything())).thenReturn(['--default', '--host', 'something', '--port', '1234', '--wait']);
+
+        const args = await buildApi(Promise.resolve(), instance(experimentsManager), instance(debugAdapterFactory), instance(configurationService)).debug.getRemoteLauncherCommand(
+            'something',
+            1234,
+            true
+        );
+        const expectedArgs = [ptvsdPath, '--default', '--host', 'something', '--port', '1234', '--wait'];
+
         expect(args).to.be.deep.equal(expectedArgs);
     });
 });

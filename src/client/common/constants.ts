@@ -13,14 +13,14 @@ export const PYTHON_ALLFILES = [
 ];
 
 export const PVSC_EXTENSION_ID = 'ms-python.python';
+export const CODE_RUNNER_EXTENSION_ID = 'formulahendry.code-runner';
 export const AppinsightsKey = 'AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217';
 
 export namespace Commands {
     export const Set_Interpreter = 'python.setInterpreter';
     export const Set_ShebangInterpreter = 'python.setShebangInterpreter';
     export const Exec_In_Terminal = 'python.execInTerminal';
-    export const Exec_In_Terminal_Icon_1 = 'python.execInTerminal-icon1';
-    export const Exec_In_Terminal_Icon_2 = 'python.execInTerminal-icon2';
+    export const Exec_In_Terminal_Icon = 'python.execInTerminal-icon';
     export const Exec_Selection_In_Terminal = 'python.execSelectionInTerminal';
     export const Exec_Selection_In_Django_Shell = 'python.execSelectionInDjangoShell';
     export const Tests_View_UI = 'python.viewTestUI';

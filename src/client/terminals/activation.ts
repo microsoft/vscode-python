@@ -9,36 +9,39 @@ import { IExtensionSingleActivationService } from '../activation/types';
 import {
     ICommandManager, ITerminalManager, IWorkspaceService
 } from '../common/application/types';
-import { ShowPlayIcon } from '../common/experimentGroups';
+import { CODE_RUNNER_EXTENSION_ID } from '../common/constants';
 import { ITerminalActivator } from '../common/terminal/types';
 import {
-    IDisposable, IDisposableRegistry, IExperimentsManager
+    IDisposable, IDisposableRegistry, IExtensions
 } from '../common/types';
 import { noop } from '../common/utils/misc';
+import { IServiceContainer } from '../ioc/types';
+import { sendTelemetryEvent } from '../telemetry';
+import { EventName } from '../telemetry/constants';
 import { ITerminalAutoActivation } from './types';
 
 @injectable()
 export class ExtensionActivationForTerminalActivation implements IExtensionSingleActivationService {
     constructor(
-        @inject(IExperimentsManager) private experiments: IExperimentsManager,
-        @inject(ICommandManager) private commands: ICommandManager
+        @inject(ICommandManager) private commands: ICommandManager,
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer
     ) { }
+
     public async activate(): Promise<void> {
-        this.checkExperiments();
+        if (!this.isCodeRunnerInstalled()) {
+            // If code runner is NOT installed, display the play icon.
+            this.commands.executeCommand('setContext', 'python.showPlayIcon', true)
+                .then(noop, noop);
+            sendTelemetryEvent(EventName.PLAY_BUTTON_ICON_DISABLED, undefined, { disabled: false });
+        } else {
+            sendTelemetryEvent(EventName.PLAY_BUTTON_ICON_DISABLED, undefined, { disabled: true });
+        }
     }
 
-    // Nothing after this point is part of the IExtensionActivationService interface.
-
-    public checkExperiments() {
-        if (this.experiments.inExperiment(ShowPlayIcon.icon1)) {
-            this.commands.executeCommand('setContext', 'python.showPlayIcon1', true)
-                .then(noop, noop);
-        } else if (this.experiments.inExperiment(ShowPlayIcon.icon2)) {
-            this.commands.executeCommand('setContext', 'python.showPlayIcon2', true)
-                .then(noop, noop);
-        } else {
-            this.experiments.sendTelemetryIfInExperiment(ShowPlayIcon.control);
-        }
+    private isCodeRunnerInstalled(): boolean {
+        const extensions = this.serviceContainer.get<IExtensions>(IExtensions);
+        const extension = extensions.getExtension(CODE_RUNNER_EXTENSION_ID)!;
+        return extension === undefined ? false : true;
     }
 }
 

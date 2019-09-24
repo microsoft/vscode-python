@@ -30,15 +30,14 @@ export class CodeExecutionManager implements ICodeExecutionManager {
 
     }
 
-    public get onExecutedCode() : Event<string> {
+    public get onExecutedCode(): Event<string> {
         return this.eventEmitter.event;
     }
 
     public registerCommands() {
         [
             Commands.Exec_In_Terminal,
-            Commands.Exec_In_Terminal_Icon_1,
-            Commands.Exec_In_Terminal_Icon_2
+            Commands.Exec_In_Terminal_Icon
         ].forEach(cmd => {
             this.disposableRegistry.push(
                 this.commandManager.registerCommand(

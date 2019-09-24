@@ -3,8 +3,11 @@
 
 'use strict';
 
+import { DebugAdapterDescriptorFactory as DebugAdapterExperiment } from './common/experimentGroups';
 import { traceError } from './common/logger';
+import { IConfigurationService, IExperimentsManager } from './common/types';
 import { RemoteDebuggerExternalLauncherScriptProvider } from './debugger/debugAdapter/DebugClients/launcherProvider';
+import { IDebugAdapterDescriptorFactory } from './debugger/extension/types';
 
 /*
  * Do not introduce any breaking changes to this API.
@@ -33,7 +36,7 @@ export interface IExtensionApi {
 }
 
 // tslint:disable-next-line:no-any
-export function buildApi(ready: Promise<any>) {
+export function buildApi(ready: Promise<any>, experimentsManager: IExperimentsManager, debugFactory: IDebugAdapterDescriptorFactory, configuration: IConfigurationService) {
     return {
         // 'ready' will propogate the exception, but we must log it here first.
         ready: ready.catch((ex) => {
@@ -41,11 +44,18 @@ export function buildApi(ready: Promise<any>) {
             return Promise.reject(ex);
         }),
         debug: {
-            // tslint:disable-next-line:no-suspicious-comment
-            // TODO: Add support for ptvsd wheels experiment, see https://github.com/microsoft/vscode-python/issues/7549
             async getRemoteLauncherCommand(host: string, port: number, waitUntilDebuggerAttaches: boolean = true): Promise<string[]> {
+                const pythonSettings = configuration.getSettings(undefined);
+                const useNewDAPtvsd = experimentsManager.inExperiment(DebugAdapterExperiment.experiment) && (await debugFactory.useNewPtvsd(pythonSettings.pythonPath));
+
+                if (!useNewDAPtvsd) {
                 return new RemoteDebuggerExternalLauncherScriptProvider().getLauncherArgs({ host, port, waitUntilDebuggerAttaches });
             }
+
+                // Same logic as in RemoteDebuggerExternalLauncherScriptProvider, but eventually launcherProvider.ts will be deleted.
+                const args = debugFactory.getRemotePtvsdArgs({ host, port, waitUntilDebuggerAttaches });
+                return [await debugFactory.getPtvsdPath(pythonSettings.pythonPath), ...args];
+        }
         }
     };
 }

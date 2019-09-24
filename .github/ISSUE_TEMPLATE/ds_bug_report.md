@@ -1,7 +1,7 @@
 ---
 name: Bug in Notebook Editor, Interactive Window, Python Editor cells
 about: Create a report to help us improve
-labels: type-bug, "data science"
+labels: type-bug, data science
 ---
 # Bug: Notebook Editor, Interactive Window, Python Editor cells
 

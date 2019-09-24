@@ -15,19 +15,7 @@
         "name": "ShowPlayIcon - start",
         "salt": "ShowPlayIcon",
         "max": 100,
-        "min": 80
-    },
-    {
-        "name": "ShowPlayIcon - runFile",
-        "salt": "ShowPlayIcon",
-        "max": 60,
-        "min": 40
-    },
-    {
-        "name": "ShowPlayIcon - control",
-        "salt": "ShowPlayIcon",
-        "min": 0,
-        "max": 20
+        "min": 0
     },
     {
         "name": "ShowExtensionSurveyPrompt - enabled",
@@ -42,28 +30,28 @@
         "max": 20
     },
     {
-        "name": "NewDebugAdapter - control",
-        "salt": "NewDebugAdapter",
-        "min": 100,
-        "max": 0
+        "name": "DebugAdapterFactory - control",
+        "salt": "DebugAdapterFactory",
+        "min": 60,
+        "max": 90
     },
     {
-        "name": "NewDebugAdapter - experiment",
-        "salt": "NewDebugAdapter",
-        "min": 100,
-        "max": 0
+        "name": "DebugAdapterFactory - experiment",
+        "salt": "DebugAdapterFactory",
+        "min": 10,
+        "max": 40
     },
     {
-        "name": "PtvsdWheels - control",
-        "salt": "PtvsdWheels",
-        "min": 100,
-        "max": 0
+        "name": "PtvsdWheels37 - control",
+        "salt": "PtvsdWheels37",
+        "min": 10,
+        "max": 20
     },
     {
-        "name": "PtvsdWheels - experiment",
-        "salt": "PtvsdWheels",
-        "min": 100,
-        "max": 0
+        "name": "PtvsdWheels37 - experiment",
+        "salt": "PtvsdWheels37",
+        "min": 20,
+        "max": 30
     },
     {
         "name": "LS - enabled",
