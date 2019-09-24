@@ -44,12 +44,11 @@ export function buildApi(ready: Promise<any>, experimentsManager: IExperimentsMa
             return Promise.reject(ex);
         }),
         debug: {
-            // tslint:disable-next-line:no-suspicious-comment
-            // TODO: Add support for ptvsd wheels experiment, see https://github.com/microsoft/vscode-python/issues/7549
             async getRemoteLauncherCommand(host: string, port: number, waitUntilDebuggerAttaches: boolean = true): Promise<string[]> {
                 const pythonSettings = configuration.getSettings();
 
                 if (experimentsManager.inExperiment(DebugAdapterExperiment.experiment) && (await debugFactory.useNewPtvsd(pythonSettings.pythonPath))) {
+                    // Same logic as in RemoteDebuggerExternalLauncherScriptProvider, but eventually launcherProvider.ts will be deleted.
                     const waitArgs = waitUntilDebuggerAttaches ? ['--wait'] : [];
                     return [await debugFactory.getPtvsdPath(pythonSettings.pythonPath), '--default', '--host', host, '--port', port.toString(), ...waitArgs];
                 } else {
