@@ -655,13 +655,13 @@ suite('Jupyter Execution', async () => {
     test('Failing notebook throws exception', async () => {
         const execution = createExecution(missingNotebookPython);
         when(interpreterService.getInterpreters()).thenResolve([missingNotebookPython]);
-        await assert.isRejected(execution.connectToNotebookServer(), 'Running cells requires Jupyter notebooks to be installed.');
+        await assert.isRejected(execution.connectToNotebookServer(), 'cant exec');
     }).timeout(10000);
 
     test('Failing others throws exception', async () => {
         const execution = createExecution(missingNotebookPython);
         when(interpreterService.getInterpreters()).thenResolve([missingNotebookPython, missingNotebookPython2]);
-        await assert.isRejected(execution.connectToNotebookServer(), 'Running cells requires Jupyter notebooks to be installed.');
+        await assert.isRejected(execution.connectToNotebookServer(), 'cant exec');
     }).timeout(10000);
 
     test('Slow notebook startups throws exception', async () => {
@@ -739,6 +739,6 @@ suite('Jupyter Execution', async () => {
         const execution = createExecution(missingNotebookPython, undefined, true);
         when(interpreterService.getInterpreters()).thenResolve([missingNotebookPython]);
         when(fileSystem.getFiles(anyString())).thenResolve([jupyterOnPath]);
-        await assert.isRejected(execution.connectToNotebookServer(), 'Running cells requires Jupyter notebooks to be installed.');
+        await assert.isRejected(execution.connectToNotebookServer(), 'cant exec');
     }).timeout(10000);
 });

@@ -928,13 +928,13 @@ export class JupyterExecutionBase implements IJupyterExecution {
             }
 
             // If still not found, try looking on the path using jupyter
-            if (!found && this.supportsSearchingForCommands()) {
+            if (found.status === ModuleExistsStatus.NotFound && this.supportsSearchingForCommands()) {
                 found = await this.findPathCommand(command, cancelToken);
             }
 
             // Set the original error so we
             // can propagate the reason to the user
-            if (found && firstError) {
+            if (firstError) {
                 found.error = firstError;
             }
 
