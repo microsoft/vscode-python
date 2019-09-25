@@ -165,7 +165,7 @@
                 "--ui=tdd",
                 "--recursive",
                 "--colors",
-                "--grep", "Native Editor",
+                //"--grep", "<suite name>",
                 "--timeout=300000"
             ],
             "outFiles": [
