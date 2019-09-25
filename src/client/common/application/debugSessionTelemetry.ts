@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, Event, EventEmitter, ProviderResult } from 'vscode';
+import { DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, ProviderResult } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 
 import { IExtensionSingleActivationService } from '../../activation/types';
@@ -15,18 +15,13 @@ import { IDebugService } from './types';
 
 class TelemetryTracker implements DebugAdapterTracker {
     private timer = new StopWatch();
-    private trigger: TriggerType = 'launch';
-    private console: ConsoleType | undefined;
-    private debugLocationUpdatedEvent: EventEmitter<void> = new EventEmitter<void>();
+    private readonly trigger: TriggerType = 'launch';
+    private readonly console: ConsoleType | undefined;
 
     constructor(session: DebugSession) {
         this.trigger = session.configuration.type as TriggerType;
         const debugConfiguration = session.configuration as Partial<LaunchRequestArguments & AttachRequestArguments>;
         this.console = debugConfiguration.console;
-    }
-
-    public get debugLocationUpdated(): Event<void> {
-        return this.debugLocationUpdatedEvent.event;
     }
 
     public onWillStartSession() {
@@ -67,10 +62,10 @@ class TelemetryTracker implements DebugAdapterTracker {
 @injectable()
 export class DebugSessionTelemetry implements DebugAdapterTrackerFactory, IExtensionSingleActivationService {
     constructor(
-        @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IDebugService) debugService: IDebugService
     ) {
-        this.disposableRegistry.push(debugService.registerDebugAdapterTrackerFactory('python', this));
+        disposableRegistry.push(debugService.registerDebugAdapterTrackerFactory('python', this));
     }
 
     public async activate(): Promise<void> {

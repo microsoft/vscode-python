@@ -28,7 +28,7 @@ export class DebugLocationTrackerFactory implements IDebugLocationTracker, Debug
         this.activeTrackers.set(session.id, result);
         result.sessionEnded(this.onSessionEnd.bind(this));
         result.debugLocationUpdated(this.onLocationUpdated.bind(this));
-        this.updatedEmitter.fire();
+        this.onLocationUpdated();
         return result;
     }
 
