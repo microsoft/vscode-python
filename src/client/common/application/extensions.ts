@@ -4,7 +4,7 @@
 'use strict';
 
 import { injectable } from 'inversify';
-import { Extension, extensions } from 'vscode';
+import { Event, Extension, extensions } from 'vscode';
 import { IExtensions } from '../types';
 
 @injectable()
@@ -12,6 +12,10 @@ export class Extensions implements IExtensions {
     // tslint:disable-next-line:no-any
     public get all(): readonly Extension<any>[] {
         return extensions.all;
+    }
+
+    public get onDidChange(): Event<void> {
+        return extensions.onDidChange;
     }
 
     // tslint:disable-next-line:no-any

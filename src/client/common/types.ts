@@ -435,6 +435,12 @@ export interface IExtensions {
     readonly all: readonly Extension<any>[];
 
     /**
+     * An event which fires when `extensions.all` changes. This can happen when extensions are
+     * installed, uninstalled, enabled or disabled.
+     */
+    readonly onDidChange: Event<void>;
+
+    /**
      * Get an extension by its full identifier in the form of: `publisher.name`.
      *
      * @param extensionId An extension identifier.

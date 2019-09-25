@@ -15,7 +15,6 @@ import {
     IDisposable, IDisposableRegistry, IExtensions
 } from '../common/types';
 import { noop } from '../common/utils/misc';
-import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { ITerminalAutoActivation } from './types';
@@ -24,23 +23,22 @@ import { ITerminalAutoActivation } from './types';
 export class ExtensionActivationForTerminalActivation implements IExtensionSingleActivationService {
     constructor(
         @inject(ICommandManager) private commands: ICommandManager,
-        @inject(IServiceContainer) private serviceContainer: IServiceContainer
-    ) { }
+        @inject(IExtensions) private extensions: IExtensions,
+        @inject(IDisposableRegistry) disposables: IDisposable[]
+    ) {
+        disposables.push(this.extensions.onDidChange(this.activate.bind(this)));
+    }
 
     public async activate(): Promise<void> {
-        if (!this.isCodeRunnerInstalled()) {
-            // If code runner is NOT installed, display the play icon.
-            this.commands.executeCommand('setContext', 'python.showPlayIcon', true)
-                .then(noop, noop);
-            sendTelemetryEvent(EventName.PLAY_BUTTON_ICON_DISABLED, undefined, { disabled: false });
-        } else {
-            sendTelemetryEvent(EventName.PLAY_BUTTON_ICON_DISABLED, undefined, { disabled: true });
-        }
+        const isInstalled = this.isCodeRunnerInstalled();
+        // Hide the play icon if code runner is installed, otherwise display the play icon.
+        this.commands.executeCommand('setContext', 'python.showPlayIcon', !isInstalled)
+            .then(noop, noop);
+        sendTelemetryEvent(EventName.PLAY_BUTTON_ICON_DISABLED, undefined, { disabled: isInstalled });
     }
 
     private isCodeRunnerInstalled(): boolean {
-        const extensions = this.serviceContainer.get<IExtensions>(IExtensions);
-        const extension = extensions.getExtension(CODE_RUNNER_EXTENSION_ID)!;
+        const extension = this.extensions.getExtension(CODE_RUNNER_EXTENSION_ID)!;
         return extension === undefined ? false : true;
     }
 }

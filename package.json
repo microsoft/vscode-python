@@ -190,8 +190,8 @@
                 "title": "%python.command.python.execInTerminal.title%",
                 "category": "Python",
                 "icon": {
-                    "light": "resources/light/start.svg",
-                    "dark": "resources/dark/start.svg"
+                    "light": "resources/light/run-file.svg",
+                    "dark": "resources/dark/run-file.svg"
                 }
             },
             {

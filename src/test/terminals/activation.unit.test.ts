@@ -2,31 +2,33 @@
 // Licensed under the MIT License.
 
 import * as TypeMoq from 'typemoq';
-import { Extension } from 'vscode';
+import { EventEmitter, Extension } from 'vscode';
 import { ICommandManager } from '../../client/common/application/types';
 import { CODE_RUNNER_EXTENSION_ID } from '../../client/common/constants';
 import { IExtensions } from '../../client/common/types';
-import { IServiceContainer } from '../../client/ioc/types';
 import {
     ExtensionActivationForTerminalActivation
 } from '../../client/terminals/activation';
 
 suite('Terminal - Activation', () => {
     let commands: TypeMoq.IMock<ICommandManager>;
-    let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let extensions: TypeMoq.IMock<IExtensions>;
+    let extensionsChangeEvent: EventEmitter<void>;
     let activation: ExtensionActivationForTerminalActivation;
     setup(() => {
         commands = TypeMoq.Mock.ofType<ICommandManager>(undefined, TypeMoq.MockBehavior.Strict);
-        serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
         extensions = TypeMoq.Mock.ofType<IExtensions>(undefined, TypeMoq.MockBehavior.Strict);
-        serviceContainer
-            .setup(s => s.get<IExtensions>(IExtensions))
-            .returns(() => extensions.object);
+        extensionsChangeEvent = new EventEmitter<void>();
+        extensions
+            .setup(e => e.onDidChange)
+            .returns(() => extensionsChangeEvent.event);
+    });
+
+    teardown(() => {
+        extensionsChangeEvent.dispose();
     });
 
     function verifyAll() {
-        serviceContainer.verifyAll();
         commands.verifyAll();
         extensions.verifyAll();
     }
@@ -40,13 +42,18 @@ suite('Terminal - Activation', () => {
             .verifiable(TypeMoq.Times.once());
         activation = new ExtensionActivationForTerminalActivation(
             commands.object,
-            serviceContainer.object
+            extensions.object,
+            []
         );
 
         commands
             .setup(c => c.executeCommand('setContext', 'python.showPlayIcon', true))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.never());
+        commands
+            .setup(c => c.executeCommand('setContext', 'python.showPlayIcon', false))
+            .returns(() => Promise.resolve())
+            .verifiable(TypeMoq.Times.once());
 
         await activation.activate();
 
@@ -60,13 +67,18 @@ suite('Terminal - Activation', () => {
             .verifiable(TypeMoq.Times.once());
         activation = new ExtensionActivationForTerminalActivation(
             commands.object,
-            serviceContainer.object
+            extensions.object,
+            []
         );
 
         commands
             .setup(c => c.executeCommand('setContext', 'python.showPlayIcon', true))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());
+        commands
+            .setup(c => c.executeCommand('setContext', 'python.showPlayIcon', false))
+            .returns(() => Promise.resolve())
+            .verifiable(TypeMoq.Times.never());
 
         await activation.activate();
         verifyAll();
