@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 
-import { IWorkspaceService } from '../../client/common/application/types';
+import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../client/common/types';
 import {
@@ -13,7 +13,13 @@ import {
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
 import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
-import { INotebookEditor, INotebookEditorProvider, INotebookServerOptions } from '../../client/datascience/types';
+import {
+    IDataScienceErrorHandler,
+    INotebookEditor,
+    INotebookEditorProvider,
+    INotebookExporter,
+    INotebookServerOptions
+} from '../../client/datascience/types';
 import { IServiceContainer } from '../../client/ioc/types';
 
 @injectable()
@@ -26,9 +32,24 @@ export class TestNativeEditorProvider implements INotebookEditorProvider {
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IConfigurationService) configuration: IConfigurationService,
-        @inject(IFileSystem) fileSystem: IFileSystem
+        @inject(IFileSystem) fileSystem: IFileSystem,
+        @inject(IDocumentManager) documentManager: IDocumentManager,
+        @inject(ICommandManager) cmdManager: ICommandManager,
+        @inject(IDataScienceErrorHandler) dataScienceErrorHandler: IDataScienceErrorHandler,
+        @inject(INotebookExporter) jupyterExporter: INotebookExporter
+
     ) {
-        this.realProvider = new NativeEditorProvider(serviceContainer, asyncRegistry, disposables, workspace, configuration, fileSystem);
+        this.realProvider = new NativeEditorProvider(
+            serviceContainer,
+            asyncRegistry,
+            disposables,
+            workspace,
+            configuration,
+            fileSystem,
+            documentManager,
+            cmdManager,
+            dataScienceErrorHandler,
+            jupyterExporter);
     }
 
     public get activeEditor(): INotebookEditor | undefined {

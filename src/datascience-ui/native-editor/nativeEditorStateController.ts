@@ -25,8 +25,8 @@ export class NativeEditorStateController extends MainStateController {
 
     // tslint:disable-next-line: no-any
     public handleMessage(msg: string, payload?: any) {
-        const result = super.handleMessage(msg, payload);
-
+        // Handle message before base class so we will
+        // have our state set before the next render.
         switch (msg) {
             case InteractiveWindowMessages.NotebookDirty:
                 // Indicate dirty
@@ -46,7 +46,7 @@ export class NativeEditorStateController extends MainStateController {
                 break;
         }
 
-        return result;
+        return super.handleMessage(msg, payload);
     }
 
     public canMoveUp = (cellId?: string) => {

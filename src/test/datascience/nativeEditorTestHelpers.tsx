@@ -5,7 +5,7 @@ import * as assert from 'assert';
 import { ReactWrapper } from 'enzyme';
 import * as React from 'react';
 
-import { ICell, IJupyterExecution } from '../../client/datascience/types';
+import { IJupyterExecution } from '../../client/datascience/types';
 import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { waitForUpdate } from './reactHelpers';
@@ -33,7 +33,7 @@ export function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<an
 }
 
 // tslint:disable-next-line: no-any
-export async function addCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string, submit: boolean = true, expectedSubmitRenderCount: number = 6): Promise<void> {
+export async function addCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string, submit: boolean = true, expectedSubmitRenderCount: number = 5): Promise<void> {
     // First get the stateController on the main panel. That's how we'll add a new cell.
     const reactEditor = getMainPanel<NativeEditor>(wrapper, NativeEditor);
     assert.ok(reactEditor, 'Cannot find the main panel during adding a cell');
@@ -52,11 +52,4 @@ export async function addCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Com
         // For non submit scenarios just return back the wait for the add update
         return update;
     }
-}
-
-// tslint:disable-next-line: no-any
-export function loadAllCells(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, cells: ICell[]) {
-    const reactEditor = getMainPanel<NativeEditor>(wrapper, NativeEditor);
-    assert.ok(reactEditor, 'Cannot find the main panel during adding a cell');
-    reactEditor!.stateController.handleLoadAllCells({cells});
 }

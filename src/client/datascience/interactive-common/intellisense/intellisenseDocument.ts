@@ -445,11 +445,11 @@ export class IntellisenseDocument implements TextDocument {
     }
 
     private lookForCellMovement(incomingCells: ICell[]): TextDocumentContentChangeEvent[] {
-        for (let i = 0; i < incomingCells.length; i += 1) {
-            const text = this._contents.substr(this._cellRanges[i].start, this._cellRanges[i].currentEnd - this._cellRanges[i].start - 1);
+        for (let i = 0; i < incomingCells.length && this._cellRanges.length > 1; i += 1) {
 
-            if (incomingCells[i].data.source !== text) {
+            if (incomingCells[i].id !== this._cellRanges[i].id) {
                 const lineBreak = '\n';
+                const text = this._contents.substr(this._cellRanges[i].start, this._cellRanges[i].currentEnd - this._cellRanges[i].start - 1);
                 const newText = concatMultilineString(incomingCells[i].data.source) + lineBreak + text + lineBreak;
 
                 // swap contents

@@ -252,7 +252,7 @@ export interface INotebookEditor extends IInteractiveBase {
     readonly file: Uri;
     readonly visible: boolean;
     readonly active: boolean;
-    load(contents: string, file: Uri): Promise<void>;
+    load(contents: string, file: Uri, isDirty: boolean): Promise<void>;
 }
 
 export const IInteractiveWindowListener = Symbol('IInteractiveWindowListener');

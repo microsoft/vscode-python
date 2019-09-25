@@ -5,12 +5,11 @@ import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { TextDocument, Uri } from 'vscode';
+import { Uri } from 'vscode';
 
-import { ICommandManager, IDocumentManager } from '../../common/application/types';
-import { JUPYTER_LANGUAGE } from '../../common/constants';
+import { ICommandManager } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { IDisposableRegistry } from '../../common/types';
 import { captureTelemetry } from '../../telemetry';
 import { CommandSource } from '../../testing/common/constants';
 import { Commands, Telemetry } from '../constants';
@@ -21,18 +20,9 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
     constructor(
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(INotebookEditorProvider) private provider: INotebookEditorProvider,
-        @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IDocumentManager) private documentManager: IDocumentManager,
-        @inject(ICommandManager) private readonly cmdManager: ICommandManager,
         @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler,
         @inject(IFileSystem) private fileSystem: IFileSystem
     ) {
-        // Listen to document open commands. We use this to launch an ipynb editor
-        const disposable = this.documentManager.onDidOpenTextDocument(this.onOpenedDocument);
-        this.disposableRegistry.push(disposable);
-
-        // Since we may have activated after a document was opened, also run open document for all documents
-        this.documentManager.textDocuments.forEach(this.onOpenedDocument);
     }
 
     public register(commandManager: ICommandManager): void {
@@ -90,31 +80,6 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
                 this.dataScienceErrorHandler.handleError(e).ignoreErrors();
             }
         }
-    }
-
-    private onOpenedDocument = async (document: TextDocument) => {
-        // See if this is an ipynb file
-        if (this.isNotebook(document) && this.configService.getSettings().datascience.useNotebookEditor) {
-            try {
-                const contents = document.getText();
-                const uri = document.uri;
-
-                // Open our own editor instead.
-                await this.provider.open(uri, contents);
-
-                // Then switch back to the ipynb and close it.
-                // If we don't do it in this order, the close will switch to the wrong item
-                await this.documentManager.showTextDocument(document);
-                const command = 'workbench.action.closeActiveEditor';
-                await this.cmdManager.executeCommand(command);
-            } catch (e) {
-                this.dataScienceErrorHandler.handleError(e).ignoreErrors();
-            }
-        }
-    }
-
-    private isNotebook(document: TextDocument) {
-        return document.languageId === JUPYTER_LANGUAGE || path.extname(document.fileName).toLocaleLowerCase() === '.ipynb';
     }
 
 }

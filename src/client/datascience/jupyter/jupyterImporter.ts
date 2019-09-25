@@ -96,7 +96,7 @@ export class JupyterImporter implements INotebookImporter {
             const cells = contents.cells as (nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell)[];
 
             // Convert the inputdata into our ICell format
-            return cells.filter(c => c.source.length > 0).map((c, index) => {
+            return cells.map((c, index) => {
                 return {
                     id: `NotebookImport#${index}`,
                     file: Identifiers.EmptyFileName,

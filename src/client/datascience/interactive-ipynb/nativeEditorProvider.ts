@@ -3,16 +3,26 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { Uri } from 'vscode';
+import * as uuid from 'uuid/v4';
+import { TextDocument, Uri } from 'vscode';
 
-import { IWorkspaceService } from '../../common/application/types';
+import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../common/application/types';
+import { JUPYTER_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { IAsyncDisposable, IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Settings, Telemetry } from '../constants';
-import { INotebookEditor, INotebookEditorProvider, INotebookServerOptions } from '../types';
+import {
+    CellState,
+    ICell,
+    IDataScienceErrorHandler,
+    INotebookEditor,
+    INotebookEditorProvider,
+    INotebookExporter,
+    INotebookServerOptions
+} from '../types';
 
 @injectable()
 export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisposable {
@@ -27,7 +37,12 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
         @inject(IConfigurationService) private configuration: IConfigurationService,
-        @inject(IFileSystem) private fileSystem: IFileSystem
+        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IDocumentManager) private documentManager: IDocumentManager,
+        @inject(ICommandManager) private readonly cmdManager: ICommandManager,
+        @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler,
+        @inject(INotebookExporter) private jupyterExporter: INotebookExporter
+
     ) {
         asyncRegistry.push(this);
 
@@ -38,6 +53,15 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
         const findFilesPromise = this.workspace.findFiles('**/*.ipynb');
         if (findFilesPromise && findFilesPromise.then) {
             findFilesPromise.then(r => this.notebookCount += r.length);
+        }
+
+        // Listen to document open commands. We use this to launch an ipynb editor
+        const disposable = this.documentManager.onDidOpenTextDocument(this.onOpenedDocument);
+        this.disposables.push(disposable);
+
+        // Since we may have activated after a document was opened, also run open document for all documents
+        if (this.documentManager.textDocuments && this.documentManager.textDocuments.forEach) {
+            this.documentManager.textDocuments.forEach(this.onOpenedDocument);
         }
 
         // // Reopen our list of files that were open during shutdown. Actually not doing this for now. The files
@@ -68,16 +92,8 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
         return [...this.activeEditors.values()];
     }
 
-    public async open(file: Uri, contents: string): Promise<INotebookEditor> {
-        // See if this file is open or not already
-        let editor = this.activeEditors.get(file.fsPath);
-        if (!editor) {
-            editor = await this.create(file, contents);
-            this.onOpenedEditor(editor);
-        } else {
-            await editor.show();
-        }
-        return editor;
+    public open(file: Uri, contents: string): Promise<INotebookEditor> {
+        return this.openOrCreate(file, contents, false);
     }
 
     public async show(file: Uri): Promise<INotebookEditor | undefined> {
@@ -94,7 +110,8 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
         // Create a new URI for the dummy file using our root workspace path
         const uri = await this.getNextNewNotebookUri();
         this.notebookCount += 1;
-        return this.open(uri, '');
+        const contents = await this.createDefaultNotebookContents();
+        return this.openOrCreate(uri, contents, true);
     }
 
     public async getNotebookOptions(): Promise<INotebookServerOptions> {
@@ -115,9 +132,21 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
         };
     }
 
-    private async create(file: Uri, contents: string): Promise<INotebookEditor> {
+    private async openOrCreate(file: Uri, contents: string, isDirty: boolean): Promise<INotebookEditor> {
+        // See if this file is open or not already
+        let editor = this.activeEditors.get(file.fsPath);
+        if (!editor) {
+            editor = await this.create(file, contents, isDirty);
+            this.onOpenedEditor(editor);
+        } else {
+            await editor.show();
+        }
+        return editor;
+    }
+
+    private async create(file: Uri, contents: string, isDirty: boolean): Promise<INotebookEditor> {
         const editor = this.serviceContainer.get<INotebookEditor>(INotebookEditor);
-        await editor.load(contents, file);
+        await editor.load(contents, file, isDirty);
         this.disposables.push(editor.closed(this.onClosedEditor.bind(this)));
         this.disposables.push(editor.executed(this.onExecutedEditor.bind(this)));
         await editor.show();
@@ -158,5 +187,57 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
         }
 
         return Uri.file(`${localize.DataScience.untitledNotebookFileName()}-${number}`);
+    }
+
+    private async createDefaultNotebookContents(): Promise<string> {
+        const defaultCell: ICell = {
+            id: uuid(),
+            line: 0,
+            file: Identifiers.EmptyFileName,
+            state: CellState.finished,
+            type: 'execute',
+            data: {
+                cell_type: 'code',
+                outputs: [],
+                source: [],
+                metadata: {
+                },
+                execution_count: null
+            }
+        };
+        const notebook = await this.jupyterExporter.translateToNotebook([defaultCell], undefined);
+        return JSON.stringify(notebook);
+    }
+
+    private onOpenedDocument = async (document: TextDocument) => {
+        // See if this is an ipynb file
+        if (this.isNotebook(document) && this.configuration.getSettings().datascience.useNotebookEditor) {
+            try {
+                let contents = document.getText();
+                let isDirty = false;
+                const uri = document.uri;
+
+                // Modify the contents to have a single empty cell if this is a new file.
+                if (document.isUntitled && (!contents || contents.length <= 5)) {
+                    contents = await this.createDefaultNotebookContents();
+                    isDirty = true;
+                }
+
+                // Open our own editor.
+                await this.openOrCreate(uri, contents, isDirty);
+
+                // Then switch back to the ipynb and close it.
+                // If we don't do it in this order, the close will switch to the wrong item
+                await this.documentManager.showTextDocument(document);
+                const command = 'workbench.action.closeActiveEditor';
+                await this.cmdManager.executeCommand(command);
+            } catch (e) {
+                this.dataScienceErrorHandler.handleError(e).ignoreErrors();
+            }
+        }
+    }
+
+    private isNotebook(document: TextDocument) {
+        return document.languageId === JUPYTER_LANGUAGE || path.extname(document.fileName).toLocaleLowerCase() === '.ipynb';
     }
 }

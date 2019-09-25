@@ -148,7 +148,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         this.close().ignoreErrors();
     }
 
-    public async load(content: string, file: Uri): Promise<void> {
+    public async load(content: string, file: Uri, isDirty: boolean): Promise<void> {
         // Save our uri
         this._file = file;
 
@@ -173,6 +173,11 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             // Load the contents of this notebook into our cells.
             const cells = content ? await this.importer.importCells(content) : [];
             this.visibleCells = cells;
+
+            // Mark as dirty if necessary
+            if (isDirty) {
+                await this.setDirty();
+            }
 
             // If that works, send the cells to the web view
             return this.postMessage(InteractiveWindowMessages.LoadAllCells, { cells });

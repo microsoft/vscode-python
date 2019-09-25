@@ -10,11 +10,12 @@ import { IApplicationShell, IDocumentManager } from '../../client/common/applica
 import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { Identifiers } from '../../client/datascience/constants';
-import { ICell, INotebookEditor, INotebookEditorProvider } from '../../client/datascience/types';
+import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { ICell, INotebookEditor, INotebookEditorProvider, INotebookExporter } from '../../client/datascience/types';
 import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { addCell, getNativeCellResults, loadAllCells, runMountedTest } from './nativeEditorTestHelpers';
+import { addCell, getNativeCellResults, runMountedTest } from './nativeEditorTestHelpers';
 import { waitForUpdate } from './reactHelpers';
 import {
     addContinuousMockData,
@@ -32,10 +33,20 @@ import {
 suite('DataScience Native Editor tests', () => {
     const disposables: Disposable[] = [];
     let ioc: DataScienceIocContainer;
+    let messageWrapper: ((m: string, payload: any) => void) | undefined;
 
     setup(() => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
+
+        // Add a listener for our ioc that lets the test
+        // forward messages on
+        ioc.addMessageListener((m, p) => {
+            if (messageWrapper) {
+                messageWrapper(m, p);
+            }
+        });
+
     });
 
     teardown(async () => {
@@ -73,8 +84,30 @@ suite('DataScience Native Editor tests', () => {
         ioc.wrapperCreatedPromise = undefined;
     }
 
-    function createNewEditor(): Promise<INotebookEditor> {
-        return getOrCreateNativeEditor();
+    function waitForMessage(message: string) : Promise<void> {
+        // Wait for the mounted web panel to send a message back to the data explorer
+        const promise = createDeferred<void>();
+        messageWrapper = (m: string, _p: any) => {
+            if (m === message) {
+                promise.resolve();
+            }
+        };
+        return promise.promise;
+    }
+
+    async function createNewEditor(): Promise<INotebookEditor> {
+        const loaded = waitForMessage(InteractiveWindowMessages.LoadAllCellsComplete);
+        const result = await getOrCreateNativeEditor();
+        await loaded;
+        return result;
+    }
+
+    async function openEditor(contents: string): Promise<INotebookEditor> {
+        const loaded = waitForMessage(InteractiveWindowMessages.LoadAllCellsComplete);
+        const uri = Uri.parse('file:////usr/home/test.ipynb');
+        const result = await getOrCreateNativeEditor(uri, contents);
+        await loaded;
+        return result;
     }
 
     function createFileCell(cell: any, data: any): ICell {
@@ -137,16 +170,16 @@ for _ in range(50):
             return Promise.resolve({ result: result, haveMore: loops > 0 });
         });
 
-        await addCell(wrapper, badPanda, true, 5);
+        await addCell(wrapper, badPanda, true, 4);
         verifyHtmlOnCell(wrapper, 'NativeCell', `has no attribute 'read'`, CellPosition.Last);
 
-        await addCell(wrapper, goodPanda, true, 5);
+        await addCell(wrapper, goodPanda, true, 4);
         verifyHtmlOnCell(wrapper, 'NativeCell', `<td>`, CellPosition.Last);
 
         await addCell(wrapper, matPlotLib, true, 5);
         verifyHtmlOnCell(wrapper, 'NativeCell', matPlotLibResults, CellPosition.Last);
 
-        await addCell(wrapper, spinningCursor, true, 4 + (ioc.mockJupyter ? (cursors.length * 3) : 0));
+        await addCell(wrapper, spinningCursor, true, 3 + (ioc.mockJupyter ? (cursors.length * 3) : 0));
         verifyHtmlOnCell(wrapper, 'NativeCell', '<div>', CellPosition.Last);
     }, () => { return ioc; });
 
@@ -181,7 +214,7 @@ for _ in range(50):
             deleteButton.simulate('click');
             return Promise.resolve();
         });
-        assert.equal(afterDelete.length, 0, `Delete should remove a cell`);
+        assert.equal(afterDelete.length, 1, `Delete should remove a cell`);
     }, () => { return ioc; });
 
     runMountedTest('Export', async (wrapper) => {
@@ -211,19 +244,17 @@ for _ in range(50):
     }, () => { return ioc; });
 
     runMountedTest('RunAllCells', async (wrapper) => {
-        // Make sure to create the interactive window after the rebind or it gets the wrong application shell.
-        await createNewEditor();
         addMockData(ioc, 'b=2\nb', 2);
         addMockData(ioc, 'c=3\nc', 3);
 
         const baseFile = [ {id: 'NotebookImport#0', data: {source: 'a=1\na'}},
         {id: 'NotebookImport#1', data: {source: 'b=2\nb'}},
         {id: 'NotebookImport#2', data: {source: 'c=3\nc'}} ];
-        const runAllCellsFile =  baseFile.map(cell => {
+        const runAllCells =  baseFile.map(cell => {
             return createFileCell(cell, cell.data);
         });
-
-        loadAllCells(wrapper, runAllCellsFile);
+        const notebook = await ioc.get<INotebookExporter>(INotebookExporter).translateToNotebook(runAllCells, undefined);
+        await openEditor(JSON.stringify(notebook));
 
         // Export should cause exportCalled to change to true
         const runAllButton = findButton(wrapper, NativeEditor, 3);
