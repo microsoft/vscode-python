@@ -1,22 +1,28 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { injectable } from 'inversify';
-import { DebugSession, Event, EventEmitter } from 'vscode';
+import { DebugAdapterTracker, Event, EventEmitter } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 
-import { IDebugLocation, IDebugLocationTracker } from './types';
+import { IDebugLocation } from './types';
 
 // When a python debugging session is active keep track of the current debug location
-@injectable()
-export class DebugLocationTracker implements IDebugLocationTracker {
+export class DebugLocationTracker implements DebugAdapterTracker {
     private waitingForStackTrace: boolean = false;
     private _debugLocation: IDebugLocation | undefined;
     private debugLocationUpdatedEvent: EventEmitter<void> = new EventEmitter<void>();
+    private sessionEndedEmitter: EventEmitter<DebugLocationTracker> = new EventEmitter<DebugLocationTracker>();
 
-    public setDebugSession(_targetSession: DebugSession) {
+    constructor(private _sessionId: string) {
         this.DebugLocation = undefined;
-        this.waitingForStackTrace = false;
+    }
+
+    public get sessionId() {
+        return this._sessionId;
+    }
+
+    public get sessionEnded(): Event<DebugLocationTracker> {
+        return this.sessionEndedEmitter.event;
     }
 
     public get debugLocationUpdated(): Event<void> {
@@ -48,7 +54,10 @@ export class DebugLocationTracker implements IDebugLocationTracker {
                 this.waitingForStackTrace = false;
             }
         }
+    }
 
+    public onWillStopSession() {
+        this.sessionEndedEmitter.fire(this);
     }
 
     // Set our new location and fire our debug event

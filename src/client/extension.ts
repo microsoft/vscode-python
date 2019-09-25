@@ -64,14 +64,18 @@ import { createDeferred } from './common/utils/async';
 import { Common, OutputChannelNames } from './common/utils/localize';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { registerTypes as dataScienceRegisterTypes } from './datascience/serviceRegistry';
-import { IDataScience, IDebugLocationTrackerFactory } from './datascience/types';
+import { IDataScience } from './datascience/types';
 import { DebuggerTypeName } from './debugger/constants';
 import { DebugSessionEventDispatcher } from './debugger/extension/hooks/eventHandlerDispatcher';
 import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/extension/serviceRegistry';
 import { IDebugAdapterDescriptorFactory, IDebugConfigurationService, IDebuggerBanner } from './debugger/extension/types';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
-import { AutoSelectionRule, IInterpreterAutoSelectionRule, IInterpreterAutoSelectionService } from './interpreter/autoSelection/types';
+import {
+    AutoSelectionRule,
+    IInterpreterAutoSelectionRule,
+    IInterpreterAutoSelectionService
+} from './interpreter/autoSelection/types';
 import { IInterpreterSelector } from './interpreter/configuration/types';
 import {
     ICondaService,
@@ -153,9 +157,6 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
     interpreterManager.refresh(workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined)
         .catch(ex => traceError('Python Extension: interpreterManager.refresh', ex));
-
-    // Activate debug location tracker
-    serviceManager.get<IDebugLocationTrackerFactory>(IDebugLocationTrackerFactory);
 
     // Activate data science features
     const dataScience = serviceManager.get<IDataScience>(IDataScience);

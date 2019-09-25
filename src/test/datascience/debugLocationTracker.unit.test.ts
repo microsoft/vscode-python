@@ -11,7 +11,7 @@ suite('Debug Location Tracker', () => {
     let debugTracker: DebugLocationTracker;
 
     setup(() => {
-        debugTracker = new DebugLocationTracker();
+        debugTracker = new DebugLocationTracker('1');
     });
 
     test('Check debug location', async () => {

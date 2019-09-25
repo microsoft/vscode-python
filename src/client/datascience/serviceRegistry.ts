@@ -11,7 +11,6 @@ import { Telemetry } from './constants';
 import { DataViewer } from './data-viewing/dataViewer';
 import { DataViewerProvider } from './data-viewing/dataViewerProvider';
 import { DataScience } from './datascience';
-import { DebugLocationTracker } from './debugLocationTracker';
 import { DebugLocationTrackerFactory } from './debugLocationTrackerFactory';
 import { CellHashProvider } from './editor-integration/cellhashprovider';
 import { CodeLensFactory } from './editor-integration/codeLensFactory';
@@ -58,7 +57,6 @@ import {
     IDataViewer,
     IDataViewerProvider,
     IDebugLocationTracker,
-    IDebugLocationTrackerFactory,
     IGatherExecution,
     IInteractiveWindow,
     IInteractiveWindowListener,
@@ -140,6 +138,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, wrapType(NativeEditorCommandListener));
     serviceManager.addBinding(IGatherExecution, INotebookExecutionLogger);
     serviceManager.addBinding(ICodeLensFactory, IInteractiveWindowListener);
-    serviceManager.addSingleton<IDebugLocationTrackerFactory>(IDebugLocationTrackerFactory, wrapType(DebugLocationTrackerFactory));
-    serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, wrapType(DebugLocationTracker));
+    serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, wrapType(DebugLocationTrackerFactory));
 }

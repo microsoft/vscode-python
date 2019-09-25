@@ -18,7 +18,7 @@ import { noop } from '../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import {
     IDataScienceCodeLensProvider,
-    IDebugLocationTrackerFactory,
+    IDebugLocationTracker,
     IInteractiveWindowProvider,
     IJupyterExecution
 } from '../../client/datascience/types';
@@ -126,7 +126,7 @@ suite('DataScience Debugger tests', () => {
         // This is necessary to get the appropriate live share services up and running.
         result.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
         result.get<IJupyterExecution>(IJupyterExecution);
-        result.get<IDebugLocationTrackerFactory>(IDebugLocationTrackerFactory);
+        result.get<IDebugLocationTracker>(IDebugLocationTracker);
         return result;
     }
 
