@@ -292,7 +292,7 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
                     e.stopPropagation();
                     this.lastKeyPressed = undefined; // Reset it so we don't keep deleting
                     const cellToSelect = this.getPrevCellId() || this.getNextCellId();
-                    this.props.stateController.deleteCell(cellId);
+                    this.props.stateController.possiblyDeleteCell(cellId);
                     this.props.stateController.sendCommand(NativeCommandType.DeleteCell, 'keyboard');
                     if (cellToSelect) {
                         this.moveSelection(cellToSelect);
@@ -545,7 +545,7 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
         const cellId = this.props.cellVM.cell.id;
         const deleteCell = () => {
             const cellToSelect = this.getNextCellId() || this.getPrevCellId();
-            this.props.stateController.deleteCell(cellId);
+            this.props.stateController.possiblyDeleteCell(cellId);
             this.props.stateController.sendCommand(NativeCommandType.DeleteCell, 'mouse');
             setTimeout(() => {
                 if (cellToSelect) {

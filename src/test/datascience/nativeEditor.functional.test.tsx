@@ -204,17 +204,30 @@ for _ in range(50):
         await addCell(wrapper, 'a=1\na');
 
         // find the buttons on the cell itself
-        const cell = getLastOutputCell(wrapper, 'NativeCell');
-        const ImageButtons = cell.find(ImageButton);
+        let cell = getLastOutputCell(wrapper, 'NativeCell');
+        let ImageButtons = cell.find(ImageButton);
         assert.equal(ImageButtons.length, 7, 'Cell buttons not found');
-        const deleteButton = ImageButtons.at(6);
+        let deleteButton = ImageButtons.at(6);
 
         // Make sure delete works
-        const afterDelete = await getNativeCellResults(wrapper, 1, async () => {
+        let afterDelete = await getNativeCellResults(wrapper, 1, async () => {
             deleteButton.simulate('click');
             return Promise.resolve();
         });
         assert.equal(afterDelete.length, 1, `Delete should remove a cell`);
+
+        // Secondary delete should NOT delete the cell as there should ALWAYS be at
+        // least one cell in the file.
+        cell = getLastOutputCell(wrapper, 'NativeCell');
+        ImageButtons = cell.find(ImageButton);
+        assert.equal(ImageButtons.length, 7, 'Cell buttons not found');
+        deleteButton = ImageButtons.at(6);
+
+        afterDelete = await getNativeCellResults(wrapper, 1, async () => {
+            deleteButton.simulate('click');
+            return Promise.resolve();
+        });
+        assert.equal(afterDelete.length, 1, `Delete should NOT remove the last cell`);
     }, () => { return ioc; });
 
     runMountedTest('Export', async (wrapper) => {

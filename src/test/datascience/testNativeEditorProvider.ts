@@ -17,7 +17,6 @@ import {
     IDataScienceErrorHandler,
     INotebookEditor,
     INotebookEditorProvider,
-    INotebookExporter,
     INotebookServerOptions
 } from '../../client/datascience/types';
 import { IServiceContainer } from '../../client/ioc/types';
@@ -35,9 +34,7 @@ export class TestNativeEditorProvider implements INotebookEditorProvider {
         @inject(IFileSystem) fileSystem: IFileSystem,
         @inject(IDocumentManager) documentManager: IDocumentManager,
         @inject(ICommandManager) cmdManager: ICommandManager,
-        @inject(IDataScienceErrorHandler) dataScienceErrorHandler: IDataScienceErrorHandler,
-        @inject(INotebookExporter) jupyterExporter: INotebookExporter
-
+        @inject(IDataScienceErrorHandler) dataScienceErrorHandler: IDataScienceErrorHandler
     ) {
         this.realProvider = new NativeEditorProvider(
             serviceContainer,
@@ -48,8 +45,7 @@ export class TestNativeEditorProvider implements INotebookEditorProvider {
             fileSystem,
             documentManager,
             cmdManager,
-            dataScienceErrorHandler,
-            jupyterExporter);
+            dataScienceErrorHandler);
     }
 
     public get activeEditor(): INotebookEditor | undefined {

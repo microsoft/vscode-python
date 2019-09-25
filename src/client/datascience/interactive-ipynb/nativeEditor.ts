@@ -6,6 +6,7 @@ import '../../common/extensions';
 import * as fastDeepEqual from 'fast-deep-equal';
 import { inject, injectable, multiInject, named } from 'inversify';
 import * as path from 'path';
+import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Memento, Uri, ViewColumn } from 'vscode';
 
 import {
@@ -44,6 +45,7 @@ import {
     SysInfoReason
 } from '../interactive-common/interactiveWindowTypes';
 import {
+    CellState,
     ICell,
     ICodeCssGenerator,
     IDataScienceErrorHandler,
@@ -148,7 +150,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         this.close().ignoreErrors();
     }
 
-    public async load(content: string, file: Uri, isDirty: boolean): Promise<void> {
+    public async load(content: string, file: Uri): Promise<void> {
         // Save our uri
         this._file = file;
 
@@ -166,21 +168,11 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         if (dirtyContents) {
             // This means we're dirty. Indicate dirty and load from this content
             const cells = await this.importer.importCells(dirtyContents);
-            this.visibleCells = cells;
-            await this.setDirty();
-            return this.postMessage(InteractiveWindowMessages.LoadAllCells, { cells });
+            return this.loadCells(cells, true);
         } else {
             // Load the contents of this notebook into our cells.
             const cells = content ? await this.importer.importCells(content) : [];
-            this.visibleCells = cells;
-
-            // Mark as dirty if necessary
-            if (isDirty) {
-                await this.setDirty();
-            }
-
-            // If that works, send the cells to the web view
-            return this.postMessage(InteractiveWindowMessages.LoadAllCells, { cells });
+            return this.loadCells(cells, false);
         }
     }
 
@@ -335,6 +327,38 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     protected addSysInfo(_reason: SysInfoReason): Promise<void> {
         // No sys info in the native editor
         return Promise.resolve();
+    }
+
+    private async loadCells(cells: ICell[], forceDirty: boolean): Promise<void> {
+        // Make sure cells have at least 1
+        if (cells.length === 0) {
+            const defaultCell: ICell = {
+                id: uuid(),
+                line: 0,
+                file: Identifiers.EmptyFileName,
+                state: CellState.finished,
+                type: 'execute',
+                data: {
+                    cell_type: 'code',
+                    outputs: [],
+                    source: [],
+                    metadata: {
+                    },
+                    execution_count: null
+                }
+            };
+            cells.splice(0, 0, defaultCell);
+            forceDirty = true;
+        }
+
+        // Save as our visible list
+        this.visibleCells = cells;
+
+        // Make dirty if necessary
+        if (forceDirty) {
+            await this.setDirty();
+        }
+        return this.postMessage(InteractiveWindowMessages.LoadAllCells, { cells });
     }
 
     private getStorageKey(): string {
