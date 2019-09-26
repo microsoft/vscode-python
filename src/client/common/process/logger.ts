@@ -4,7 +4,6 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
-import { workspace } from 'vscode';
 import { isCI, isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { traceInfo } from '../logger';
 import { IOutputChannel, IPathUtils } from '../types';
@@ -22,7 +21,7 @@ export class ProcessLogger implements IProcessLogger {
         if (
             !isTestExecution() &&
             isCI &&
-            !workspace.getConfiguration('python', null).get<boolean>('enableProcessLogging', true)
+            process.env.UITEST_DISABLE_PROCESS_LOGGING
         ) {
             // Added to disable logging of process execution commands during UI Tests.
             // Used only during UI Tests (hence this setting need not be exposed as a valid setting).
