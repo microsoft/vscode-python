@@ -253,8 +253,12 @@ export class JupyterExecutionBase implements IJupyterExecution {
         try {
             // If not using an active connection, check on disk
             if (!sessionManager) {
+                traceInfo('Searching for best interpreter');
+
                 // Get our best interpreter. We want its python path
                 const bestInterpreter = await this.getUsableJupyterPython(cancelToken);
+
+                traceInfo(`Best interpreter is ${bestInterpreter ? bestInterpreter.path : 'notfound'}`);
 
                 // Enumerate our kernel specs that jupyter will know about and see if
                 // one of them already matches based on path
@@ -641,6 +645,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
     //tslint:disable-next-line:cyclomatic-complexity
     private findSpecMatch = async (enumerator: () => Promise<(IJupyterKernelSpec | undefined)[]>): Promise<IJupyterKernelSpec | undefined> => {
+        traceInfo('Searching for a kernelspec match');
         // Extract our current python information that the user has picked.
         // We'll match against this.
         const info = await this.interpreterService.getActiveInterpreter();
@@ -722,6 +727,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             bestSpec = specs[0];
         }
 
+        traceInfo(`Found kernelspec match ${bestSpec ? `${bestSpec.name}' '${bestSpec.path}` : 'undefined'}`);
         return bestSpec;
     }
 
@@ -751,8 +757,12 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
             if (kernelSpecCommand.command) {
                 try {
+                    traceInfo('Asking for kernelspecs from jupyter');
+
                     // Ask for our current list.
                     const list = await kernelSpecCommand.command.exec(['list'], { throwOnStdErr: true, encoding: 'utf8' });
+
+                    traceInfo('Parsing kernelspecs from jupyter');
 
                     // This should give us back a key value pair we can parse
                     const lines = list.stdout.splitLines({ trim: false, removeEmptyEntries: true });
@@ -760,8 +770,12 @@ export class JupyterExecutionBase implements IJupyterExecution {
                     // Generate all of the promises at once
                     const promises = lines.map(l => this.readSpec(l));
 
+                    traceInfo('Awaiting the read of kernelspecs from jupyter');
+
                     // Then let them run concurrently (they are file io)
                     const specs = await Promise.all(promises);
+
+                    traceInfo('Returning kernelspecs from jupyter');
                     return specs!.filter(s => s);
                 } catch {
                     // This is failing for some folks. In that case return nothing
