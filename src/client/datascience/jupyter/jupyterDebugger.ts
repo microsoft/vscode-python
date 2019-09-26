@@ -29,6 +29,8 @@ import { JupyterDebuggerNotInstalledError } from './jupyterDebuggerNotInstalledE
 import { JupyterDebuggerRemoteNotSupported } from './jupyterDebuggerRemoteNotSupported';
 import { ILiveShareHasRole } from './liveshare/types';
 
+const pythonShellCommand = `_sysexec = sys.exectuable\r\n_quoted_sysexec = '"' + _sysexec + '"'\r\n!{_quotedsysexec}`;
+
 interface IPtvsdVersion {
     major: number;
     minor: number;
@@ -253,9 +255,9 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
         let code;
         if (ptvsdPathList) {
-            code = `import sys\r\n!{sys.executable} -c "import sys;sys.path.extend([${ptvsdPathList}]);sys.path;import ptvsd;print(ptvsd.__version__)"`;
+            code = `import sys\r\n${pythonShellCommand} -c "import sys;sys.path.extend([${ptvsdPathList}]);sys.path;import ptvsd;print(ptvsd.__version__)"`;
         } else {
-            code = `import sys\r\n!{sys.executable} -c "import ptvsd;print(ptvsd.__version__)"`;
+            code = `import sys\r\n${pythonShellCommand} -c "import ptvsd;print(ptvsd.__version__)"`;
         }
 
         const ptvsdVersionResults = await this.executeSilently(notebook, code);
@@ -315,7 +317,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
     private async installPtvsd(notebook: INotebook): Promise<void> {
         // tslint:disable-next-line:no-multiline-string
-        const ptvsdInstallResults = await this.executeSilently(notebook, `import sys\r\n!{sys.executable} -m pip install -U ptvsd`);
+        const ptvsdInstallResults = await this.executeSilently(notebook, `import sys\r\n${pythonShellCommand} -m pip install -U ptvsd`);
         traceInfo('Installing ptvsd');
 
         if (ptvsdInstallResults.length > 0) {
