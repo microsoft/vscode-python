@@ -3,7 +3,6 @@
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { DebugConfiguration } from 'vscode';
 import * as vsls from 'vsls/vscode';
@@ -13,7 +12,6 @@ import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { EXTENSION_ROOT_DIR } from '../../constants';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { concatMultilineString } from '../common';
 import { Identifiers, Telemetry } from '../constants';
@@ -30,6 +28,8 @@ import {
 import { JupyterDebuggerNotInstalledError } from './jupyterDebuggerNotInstalledError';
 import { JupyterDebuggerRemoteNotSupported } from './jupyterDebuggerRemoteNotSupported';
 import { ILiveShareHasRole } from './liveshare/types';
+
+const pythonShellCommand = `_sysexec = sys.executable\r\n_quoted_sysexec = '"' + _sysexec + '"'\r\n!{_quoted_sysexec}`;
 
 interface IPtvsdVersion {
     major: number;
@@ -175,7 +175,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         return result;
     }
 
-    private calculatePtvsdPathList(notebook: INotebook): string | undefined {
+    private calculatePtvsdPathList(_notebook: INotebook): string | undefined {
         const extraPaths: string[] = [];
 
         // Add the settings path first as it takes precedence over the ptvsd extension path
@@ -192,14 +192,16 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
         // For a local connection we also need will append on the path to the ptvsd
         // installed locally by the extension
-        const connectionInfo = notebook.server.getConnectionInfo();
-        if (connectionInfo && connectionInfo.localLaunch) {
-            let localPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python');
-            if (this.platform.isWindows) {
-                localPath = localPath.replace('\\', '\\\\');
-            }
-            extraPaths.push(localPath);
-        }
+        // Actually until this is resolved: https://github.com/microsoft/vscode-python/issues/7615, skip adding
+        // this path.
+        // const connectionInfo = notebook.server.getConnectionInfo();
+        // if (connectionInfo && connectionInfo.localLaunch) {
+        //     let localPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python');
+        //     if (this.platform.isWindows) {
+        //         localPath = localPath.replace('\\', '\\\\');
+        //     }
+        //     extraPaths.push(localPath);
+        // }
 
         if (extraPaths && extraPaths.length > 0) {
             return extraPaths.reduce((totalPath, currentPath) => {
@@ -253,9 +255,9 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
         let code;
         if (ptvsdPathList) {
-            code = `import sys\r\n!{sys.executable} -c "import sys;sys.path.extend([${ptvsdPathList}]);sys.path;import ptvsd;print(ptvsd.__version__)"`;
+            code = `import sys\r\n${pythonShellCommand} -c "import sys;sys.path.extend([${ptvsdPathList}]);sys.path;import ptvsd;print(ptvsd.__version__)"`;
         } else {
-            code = `import sys\r\n!{sys.executable} -c "import ptvsd;print(ptvsd.__version__)"`;
+            code = `import sys\r\n${pythonShellCommand} -c "import ptvsd;print(ptvsd.__version__)"`;
         }
 
         const ptvsdVersionResults = await this.executeSilently(notebook, code);
@@ -315,7 +317,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
     private async installPtvsd(notebook: INotebook): Promise<void> {
         // tslint:disable-next-line:no-multiline-string
-        const ptvsdInstallResults = await this.executeSilently(notebook, `import sys\r\n!{sys.executable} -m pip install -U ptvsd`);
+        const ptvsdInstallResults = await this.executeSilently(notebook, `import sys\r\n${pythonShellCommand} -m pip install -U ptvsd`);
         traceInfo('Installing ptvsd');
 
         if (ptvsdInstallResults.length > 0) {
