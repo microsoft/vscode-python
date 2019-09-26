@@ -293,6 +293,7 @@ suite('DataScience notebook tests', () => {
             disposables.push(exeResult);
 
             exeResult.out.subscribe((output: Output<string>) => {
+                traceInfo(`remote jupyter output: ${output.out}`);
                 const connectionURL = getIPConnectionInfo(output.out);
                 if (connectionURL) {
                     connectionFound.resolve(connectionURL);
@@ -326,6 +327,7 @@ suite('DataScience notebook tests', () => {
             disposables.push(exeResult);
 
             exeResult.out.subscribe((output: Output<string>) => {
+                traceInfo(`remote jupyter output: ${output.out}`);
                 const connectionURL = getConnectionInfo(output.out);
                 if (connectionURL) {
                     connectionFound.resolve(connectionURL);
