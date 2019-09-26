@@ -10,6 +10,7 @@ import { IWebPanel, IWebPanelMessageListener, IWebPanelProvider, IWorkspaceServi
 import { traceInfo } from '../common/logger';
 import { IConfigurationService, IDisposable } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
+import { noop } from '../common/utils/misc';
 import { StopWatch } from '../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { DefaultTheme, Telemetry } from './constants';
@@ -145,8 +146,8 @@ export class WebViewHost<IMapping> implements IDisposable {
         this.messageListener.onMessage(type.toString(), payload);
     }
 
-    protected onViewStateChanged(_visible: boolean, _active: boolean): Promise<void> {
-        return Promise.resolve();
+    protected onViewStateChanged(_visible: boolean, _active: boolean) {
+        noop();
     }
 
     // tslint:disable-next-line:no-any
@@ -201,10 +202,11 @@ export class WebViewHost<IMapping> implements IDisposable {
     }
 
     private webPanelViewStateChanged = (webPanel: IWebPanel) => {
-        this.onViewStateChanged(webPanel.isVisible(), webPanel.isActive()).then(() => {
-            this.viewState.active = webPanel.isActive();
-            this.viewState.visible = webPanel.isVisible();
-        }).ignoreErrors();
+        const isVisible = webPanel.isVisible();
+        const isActive = webPanel.isActive();
+        this.onViewStateChanged(isVisible, isActive);
+        this.viewState.visible = isVisible;
+        this.viewState.active = isActive;
     }
 
     @captureTelemetry(Telemetry.WebviewStyleUpdate)
