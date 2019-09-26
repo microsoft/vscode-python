@@ -21,6 +21,7 @@ import { InsidersExtensionService } from '../../../client/common/insidersBuild/i
 import { ExtensionChannels, IExtensionChannelRule, IExtensionChannelService, IInsiderExtensionPrompt } from '../../../client/common/insidersBuild/types';
 import { InsidersBuildInstaller } from '../../../client/common/installer/extensionBuildInstaller';
 import { IExtensionBuildInstaller } from '../../../client/common/installer/types';
+import { PersistentState } from '../../../client/common/persistentState';
 import { IDisposable, IPersistentState } from '../../../client/common/types';
 import { createDeferred, createDeferredFromPromise } from '../../../client/common/utils/async';
 import { ServiceContainer } from '../../../client/ioc/container';
@@ -181,26 +182,19 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
     let extensionChannelService: TypeMoq.IMock<IExtensionChannelService>;
     let cmdManager: TypeMoq.IMock<ICommandManager>;
     let insidersPrompt: TypeMoq.IMock<IInsiderExtensionPrompt>;
-    let hasUserBeenNotifiedState: TypeMoq.IMock<IPersistentState<boolean>>;
+    let hasUserBeenNotifiedState: IPersistentState<boolean>;
     let insidersInstaller: TypeMoq.IMock<IExtensionBuildInstaller>;
 
     let insidersExtensionService: InsidersExtensionService;
 
     function setupCommon() {
-        extensionChannelService = TypeMoq.Mock.ofType<IExtensionChannelService>();
-        insidersInstaller = TypeMoq.Mock.ofType<IExtensionBuildInstaller>();
-        appEnvironment = TypeMoq.Mock.ofType<IApplicationEnvironment>();
-        cmdManager = TypeMoq.Mock.ofType<ICommandManager>();
-        serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-        insidersPrompt = TypeMoq.Mock.ofType<IInsiderExtensionPrompt>();
-        hasUserBeenNotifiedState = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
-        //extensionChannelService = TypeMoq.Mock.ofType<IExtensionChannelService>(undefined, TypeMoq.MockBehavior.Strict);
-        //insidersInstaller = TypeMoq.Mock.ofType<IExtensionBuildInstaller>(undefined, TypeMoq.MockBehavior.Strict);
-        //appEnvironment = TypeMoq.Mock.ofType<IApplicationEnvironment>(undefined, TypeMoq.MockBehavior.Strict);
-        //cmdManager = TypeMoq.Mock.ofType<ICommandManager>(undefined, TypeMoq.MockBehavior.Strict);
-        //serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
-        //insidersPrompt = TypeMoq.Mock.ofType<IInsiderExtensionPrompt>(undefined, TypeMoq.MockBehavior.Strict);
-        //hasUserBeenNotifiedState = TypeMoq.Mock.ofType<IPersistentState<boolean>>(undefined, TypeMoq.MockBehavior.Strict);
+        extensionChannelService = TypeMoq.Mock.ofType<IExtensionChannelService>(undefined, TypeMoq.MockBehavior.Strict);
+        insidersInstaller = TypeMoq.Mock.ofType<IExtensionBuildInstaller>(undefined, TypeMoq.MockBehavior.Strict);
+        appEnvironment = TypeMoq.Mock.ofType<IApplicationEnvironment>(undefined, TypeMoq.MockBehavior.Strict);
+        cmdManager = TypeMoq.Mock.ofType<ICommandManager>(undefined, TypeMoq.MockBehavior.Strict);
+        serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
+        insidersPrompt = TypeMoq.Mock.ofType<IInsiderExtensionPrompt>(undefined, TypeMoq.MockBehavior.Strict);
+        hasUserBeenNotifiedState = mock(PersistentState);
 
         insidersExtensionService = new InsidersExtensionService(
             extensionChannelService.object,
@@ -214,7 +208,8 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
 
         insidersPrompt
             .setup(p => p.hasUserBeenNotified)
-            .returns(() => hasUserBeenNotifiedState.object);
+            .returns(() => instance(hasUserBeenNotifiedState))
+            .verifiable(TypeMoq.Times.atLeast(0));
     }
 
     function verifyAll() {
@@ -223,7 +218,6 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
         extensionChannelService.verifyAll();
         cmdManager.verifyAll();
         insidersPrompt.verifyAll();
-        hasUserBeenNotifiedState.verifyAll();
         insidersInstaller.verifyAll();
     }
 
@@ -231,7 +225,7 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
         vscodeChannel?: Channel;
         extensionChannel?: Channel;
         installChannel?: ExtensionChannels;
-        isChannelUsingDefaultConfiguration?: boolean;
+        isChannelUsingDefaultConfiguration?: boolean | number;
         hasUserBeenNotified?: boolean;
     };
 
@@ -241,24 +235,38 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
         checkPromptReEnroll: boolean,
         checkDisable: boolean
     ) {
-        appEnvironment
-            .setup(e => e.channel)
-            .returns(() => info.vscodeChannel || 'stable');
-        appEnvironment
-            .setup(e => e.extensionChannel)
-            .returns(() => info.extensionChannel || 'stable');
+        if (info.vscodeChannel) {
+            appEnvironment
+                .setup(e => e.channel)
+                .returns(() => info.vscodeChannel!);
+        }
+        if (info.extensionChannel) {
+            appEnvironment
+                .setup(e => e.extensionChannel)
+                .returns(() => info.extensionChannel!);
+        }
 
-        extensionChannelService
-            .setup(ec => ec.isChannelUsingDefaultConfiguration)
-            .returns(() => info.isChannelUsingDefaultConfiguration !== undefined
-                ? info.isChannelUsingDefaultConfiguration
-                : true);
+        if (info.isChannelUsingDefaultConfiguration !== undefined) {
+            const inst = extensionChannelService
+                .setup(ec => ec.isChannelUsingDefaultConfiguration);
+            if (info.isChannelUsingDefaultConfiguration === 2) {
+                inst
+                    .returns(() => true)
+                    .verifiable(TypeMoq.Times.exactly(2));
+            } else {
+                inst.returns(() => info.isChannelUsingDefaultConfiguration as boolean);
+            }
+        }
+        if (checkDisable) {
+            extensionChannelService
+                .setup(ec => ec.updateChannel('off'))
+                .returns(() => Promise.resolve());
+        }
 
-        hasUserBeenNotifiedState
-            .setup(c => c.value)
-            .returns(() => info.hasUserBeenNotified !== undefined
-                ? info.hasUserBeenNotified
-                : true);
+        if (info.hasUserBeenNotified !== undefined) {
+            when(hasUserBeenNotifiedState.value)
+                .thenReturn(info.hasUserBeenNotified!);
+        }
 
         if (checkPromptEnroll) {
             insidersPrompt
@@ -270,27 +278,11 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
                 .setup(p => p.promptToEnrollBackToInsiders())
                 .returns(() => Promise.resolve());
         }
-        if (checkDisable) {
-            extensionChannelService
-                .setup(ec => ec.updateChannel('off'))
-                .returns(() => Promise.resolve());
-        }
     }
 
     suite('Case I - Verify enroll into the program again prompt is displayed when conditions are met', async () => {
         const testsForHandleEdgeCaseI: TestInfo[] = [
             {
-                vscodeChannel: 'stable',
-                installChannel: 'off',
-                isChannelUsingDefaultConfiguration: false
-            },
-            {
-                vscodeChannel: 'insiders',
-                isChannelUsingDefaultConfiguration: false,
-                installChannel: 'off'
-            },
-            {
-                vscodeChannel: 'insiders',
                 installChannel: 'off',
                 isChannelUsingDefaultConfiguration: false
             }
@@ -305,9 +297,10 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
             test(testName, async () => {
                 setState(testParams, false, true, false);
 
-                await insidersExtensionService.handleEdgeCases(testParams.installChannel || 'off');
+                await insidersExtensionService.handleEdgeCases(testParams.installChannel!);
 
                 verifyAll();
+                verify(hasUserBeenNotifiedState.value).never();
             });
         });
     });
@@ -315,17 +308,16 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
     suite('Case II - Verify Insiders Install Prompt is displayed when conditions are met', async () => {
         const testsForHandleEdgeCaseII: TestInfo[] = [
             {
-                // TEST: Ensure when conditions for both 'Set channel to off' & 'Insiders Install Prompt' operations are met, 'Insiders Install prompt' is given preference
-                vscodeChannel: 'insiders',
-                hasUserBeenNotified: false,
-                isChannelUsingDefaultConfiguration: true,
                 installChannel: 'daily',
-                extensionChannel: 'stable'
-            },
-            {
                 vscodeChannel: 'insiders',
                 hasUserBeenNotified: false,
                 isChannelUsingDefaultConfiguration: true
+            },
+            {
+                installChannel: 'off',
+                vscodeChannel: 'insiders',
+                hasUserBeenNotified: false,
+                isChannelUsingDefaultConfiguration: 2
             }
         ];
 
@@ -338,9 +330,10 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
             test(testName, async () => {
                 setState(testParams, true, false, false);
 
-                await insidersExtensionService.handleEdgeCases(testParams.installChannel || 'off');
+                await insidersExtensionService.handleEdgeCases(testParams.installChannel!);
 
                 verifyAll();
+                verify(hasUserBeenNotifiedState.value).once();
             });
         });
     });
@@ -349,13 +342,13 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
         const testsForHandleEdgeCaseIII: TestInfo[] = [
             {
                 vscodeChannel: 'stable',
-                installChannel: 'daily',
-                extensionChannel: 'stable'
+                extensionChannel: 'stable',
+                installChannel: 'daily'
             },
             {
                 vscodeChannel: 'stable',
-                installChannel: 'weekly',
-                extensionChannel: 'stable'
+                extensionChannel: 'stable',
+                installChannel: 'weekly'
             }
         ];
 
@@ -371,47 +364,60 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
                 await insidersExtensionService.handleEdgeCases(testParams.installChannel || 'off');
 
                 verifyAll();
+                verify(hasUserBeenNotifiedState.value).never();
             });
         });
     });
 
     suite('Case IV - Verify no operation is performed if none of the case conditions are met', async () => {
-        const testsForHandleEdgeCaseIV: {
-            vscodeChannel: Channel;
-            hasUserBeenNotified?: boolean;
-            installChannel: ExtensionChannels;
-            isChannelUsingDefaultConfiguration?: boolean;
-            extensionChannel?: Channel;
-        }[] =
-            [
-                {
-                    vscodeChannel: 'insiders',
-                    hasUserBeenNotified: false,
-                    isChannelUsingDefaultConfiguration: false,
-                    installChannel: 'daily',
-                    extensionChannel: 'insiders'
-                },
-                {
-                    vscodeChannel: 'stable',
-                    isChannelUsingDefaultConfiguration: true,
-                    installChannel: 'off',
-                    extensionChannel: 'insiders'
-                },
-                {
-                    vscodeChannel: 'stable',
-                    installChannel: 'daily',
-                    extensionChannel: 'insiders'
-                },
-                {
-                    vscodeChannel: 'stable',
-                    installChannel: 'off'
-                },
-                {
-                    vscodeChannel: 'insiders',
-                    hasUserBeenNotified: true,
-                    installChannel: 'off'
-                }
-            ];
+        const testsForHandleEdgeCaseIV: TestInfo[] = [
+            {
+                installChannel: 'daily',
+                //
+                vscodeChannel: 'insiders',
+                hasUserBeenNotified: true,
+                //
+                extensionChannel: 'insiders'
+            },
+            {
+                installChannel: 'daily',
+                //
+                vscodeChannel: 'insiders',
+                hasUserBeenNotified: false,
+                isChannelUsingDefaultConfiguration: false,
+                //
+                extensionChannel: 'insiders'
+            },
+            {
+                installChannel: 'daily',
+                //
+                vscodeChannel: 'stable',
+                //
+                extensionChannel: 'insiders'
+            },
+            {
+                installChannel: 'off',
+                isChannelUsingDefaultConfiguration: true,
+                //
+                vscodeChannel: 'insiders',
+                hasUserBeenNotified: true
+                //
+            },
+            {
+                installChannel: 'off',
+                isChannelUsingDefaultConfiguration: true,
+                //
+                vscodeChannel: 'stable'
+                //
+            },
+            {
+                installChannel: 'off',
+                isChannelUsingDefaultConfiguration: true,
+                //
+                vscodeChannel: 'stable'
+                //
+            }
+        ];
 
         setup(() => {
             setupCommon();
@@ -425,6 +431,11 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
                 await insidersExtensionService.handleEdgeCases(testParams.installChannel || 'off');
 
                 verifyAll();
+                if (testParams.hasUserBeenNotified === undefined) {
+                    verify(hasUserBeenNotifiedState.value).never();
+                } else {
+                    verify(hasUserBeenNotifiedState.value).once();
+                }
             });
         });
     });
