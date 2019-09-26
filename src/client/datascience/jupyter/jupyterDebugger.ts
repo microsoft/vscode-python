@@ -29,7 +29,7 @@ import { JupyterDebuggerNotInstalledError } from './jupyterDebuggerNotInstalledE
 import { JupyterDebuggerRemoteNotSupported } from './jupyterDebuggerRemoteNotSupported';
 import { ILiveShareHasRole } from './liveshare/types';
 
-const pythonShellCommand = `_sysexec = sys.exectuable\r\n_quoted_sysexec = '"' + _sysexec + '"'\r\n!{_quotedsysexec}`;
+const pythonShellCommand = `_sysexec = sys.executable\r\n_quoted_sysexec = '"' + _sysexec + '"'\r\n!{_quotedsysexec}`;
 
 interface IPtvsdVersion {
     major: number;
