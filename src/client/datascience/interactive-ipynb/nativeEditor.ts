@@ -282,6 +282,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             }
         } catch (exc) {
             await this.errorHandler.handleError(exc);
+
+            // Tell the other side we restarted the kernel. This will stop all executions
+            this.postMessage(InteractiveWindowMessages.RestartKernel).ignoreErrors();
         }
     }
 
