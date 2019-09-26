@@ -618,8 +618,7 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
             this.props.cellVM.cell.data.execution_count.toString() : '-';
         const runCell = () => {
             this.props.stateController.updateCellSource(cellId);
-            this.props.stateController.submitInput(concatMultilineString(this.props.cellVM.cell.data.source), this.props.cellVM);
-            this.props.focusCell(cellId, false);
+            this.runAndMove(concatMultilineString(this.props.cellVM.cell.data.source));
             this.props.stateController.sendCommand(NativeCommandType.Run, 'mouse');
         };
         const canRunBelow = this.props.cellVM.cell.state === CellState.finished || this.props.cellVM.cell.state === CellState.error;

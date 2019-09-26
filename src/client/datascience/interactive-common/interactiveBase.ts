@@ -343,8 +343,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 await this.restartKernelInternal();
             }
         }
-
-        return Promise.resolve();
     }
 
     @captureTelemetry(Telemetry.Interrupt)
@@ -503,7 +501,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 // Sign up for cell changes
                 observable.subscribe(
                     (cells: ICell[]) => {
-                        this.sendCellsToWebView(cells, undefined);
+                        this.sendCellsToWebView(cells);
 
                         // Any errors will move our result to false (if allowed)
                         if (this.configuration.getSettings().datascience.stopOnError) {
@@ -560,7 +558,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         this.sendCellsToWebView([cell]);
     }
 
-    protected sendCellsToWebView = (cells: ICell[], editor?: TextEditor) => {
+    protected sendCellsToWebView(cells: ICell[]) {
         // Send each cell to the other side
         cells.forEach((cell: ICell) => {
             switch (cell.state) {
@@ -590,16 +588,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                     break; // might want to do a progress bar or something
             }
         });
-
-        // If we have more than one cell, the second one should be a code cell. After it finishes, we need to inject a new cell entry
-        if (cells.length > 1 && cells[1].state === CellState.finished) {
-            // If we have an active editor, do the edit there so that the user can undo it, otherwise don't bother
-            if (editor) {
-                editor.edit((editBuilder) => {
-                    editBuilder.insert(new Position(cells[1].line, 0), '#%%\n');
-                });
-            }
-        }
     }
 
     protected startServer(): Promise<void> {

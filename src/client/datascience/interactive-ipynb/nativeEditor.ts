@@ -41,8 +41,7 @@ import {
     INativeCommand,
     InteractiveWindowMessages,
     ISaveAll,
-    ISubmitNewCell,
-    SysInfoReason
+    ISubmitNewCell
 } from '../interactive-common/interactiveWindowTypes';
 import {
     CellState,
@@ -288,6 +287,12 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return this._file;
     }
 
+    protected sendCellsToWebView(cells: ICell[]) {
+        // Filter out sysinfo messages. Don't want to show those
+        const filtered = cells.filter(c => c.data.cell_type !== 'messages');
+        super.sendCellsToWebView(filtered);
+    }
+
     protected updateContexts(info: IInteractiveWindowInfo | undefined) {
         // This should be called by the python interactive window every
         // time state changes. We use this opportunity to update our
@@ -322,11 +327,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     protected async closeBecauseOfFailure(_exc: Error): Promise<void> {
         // Actually don't close, just let the error bubble out
-    }
-
-    protected addSysInfo(_reason: SysInfoReason): Promise<void> {
-        // No sys info in the native editor
-        return Promise.resolve();
     }
 
     private async loadCells(cells: ICell[], forceDirty: boolean): Promise<void> {
@@ -375,6 +375,23 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     private async close(): Promise<void> {
+        const actuallyClose = async () => {
+            // Tell listeners.
+            this.closedEvent.fire(this);
+
+            // Restart our kernel so that execution counts are reset
+            let oldAsk: boolean | undefined = false;
+            const settings = this.configuration.getSettings();
+            if (settings && settings.datascience) {
+                oldAsk = settings.datascience.askForKernelRestart;
+                settings.datascience.askForKernelRestart = false;
+            }
+            await this.restartKernel();
+            if (oldAsk && settings && settings.datascience) {
+                settings.datascience.askForKernelRestart = true;
+            }
+        };
+
         // Ask user if they want to save. It seems hotExit has no bearing on
         // whether or not we should ask
         if (this._dirty) {
@@ -385,7 +402,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                     await this.saveToDisk();
 
                     // Close it
-                    this.closedEvent.fire(this);
+                    actuallyClose().ignoreErrors();
                     break;
 
                 case AskForSaveResult.No:
@@ -393,7 +410,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                     await this.setClean();
 
                     // Close it
-                    this.closedEvent.fire(this);
+                    actuallyClose().ignoreErrors();
                     break;
 
                 default:
@@ -403,7 +420,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             }
         } else {
             // Not dirty, just close normally.
-            this.closedEvent.fire(this);
+            actuallyClose().ignoreErrors();
         }
     }
 
@@ -541,6 +558,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 // Save our visible cells into the file
                 const notebook = await this.jupyterExporter.translateToNotebook(this.visibleCells, undefined);
                 await this.fileSystem.writeFile(fileToSaveTo.fsPath, JSON.stringify(notebook));
+
+                // Update our file name and dirty state
+                this._file = fileToSaveTo;
                 await this.setClean();
             }
 

@@ -1,6 +1,10 @@
 /* Import common styles and then override them below */
 @import "../interactive-common/common.css";
 
+:root {
+    --right-offset-px: 123px;
+}
+
 .toolbar-panel-button {
     border-width: 1px;
     border-style: solid;
@@ -25,7 +29,7 @@
     margin: 1px 2px;
     border-color: transparent;
     border-style: solid;
-    border-width: 2px 2px 2px 20px;
+    border-width: 2px 2px 0px 20px;
     position: relative;
     min-height: 55px;
 }
@@ -33,13 +37,13 @@
 .cell-wrapper-focused {
     border-color: transparent;
     border-style: solid;
-    border-width: 2px 2px 2px 20px;
+    border-width: 2px 2px 0px 20px;
 }
 
 .cell-wrapper-selected {
     border-color: transparent;
     border-style: solid;
-    border-width: 2px 2px 2px 20px;
+    border-width: 2px 2px 0px 20px;
 }
 
 .cell-menu-bar-outer {
@@ -51,11 +55,8 @@
 // on the left take in the native Editor.
 .cell-output {
     margin-top: 5px;
-    background: var(--override-widget-background, var(--vscode-notifications-background));
-    border-style: solid;
-    border-color: var(--override-widget-background, var(--vscode-notifications-background));
-    border-width: 3px;
-    width: calc(100vw - 115px);
+    background: transparent;
+    width: calc(100vw - var(--right-offset-px));
     overflow-x: scroll;
     grid-row: 1;
     grid-column: 3;
@@ -67,7 +68,7 @@
 }
 
 .markdown-cell-output {
-    width: calc(100vw - 115px);
+    width: calc(100vw - var(--right-offset-px));
     overflow-x: scroll;
 }
 
@@ -107,9 +108,11 @@
 .code-area {
     position: relative;
     width:100%;
-    top: -2px; /* Account for spacing removed from the monaco editor */
     padding-right: 10px;
     margin-bottom: 0px;
+    padding-left: 2px;
+    padding-top: 2px;
+    background: var(--override-widget-background, var(--vscode-notifications-background));
 }
 
 .code-watermark {
@@ -118,14 +121,9 @@
 
 .cell-input {
     margin: 0px 10px 0px 0px;
-    border-color:  var(--override-widget-background, var(--vscode-notifications-background));
-    border-style: solid;
-    border-width: 1px;
-    padding: 2px;
-    background: var(--override-widget-background, var(--vscode-notifications-background));
     grid-column: 3;
     grid-row: 1;
-    min-width: calc(100% - 115px);
+    min-width: calc(100% - var(--right-offset-px));
 }
 
 .content-div {
@@ -155,6 +153,7 @@
 .execution-count {
     justify-self: end;
     margin-bottom: 10px;
+    margin-top: 1px;
 }
 
 .execution-count-busy-outer {
