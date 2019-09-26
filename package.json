@@ -51,6 +51,7 @@
         "onCommand:python.setInterpreter",
         "onCommand:python.setShebangInterpreter",
         "onCommand:python.viewTestUI",
+        "onCommand:python.viewLanguageServerOutput",
         "onCommand:python.viewTestOutput",
         "onCommand:python.viewOutput",
         "onCommand:python.selectAndRunTestMethod",
@@ -232,6 +233,12 @@
                     "light": "resources/light/repl.svg",
                     "dark": "resources/dark/repl.svg"
                 }
+            },
+            {
+                "command": "python.viewLanguageServerOutput",
+                "title": "%python.command.python.viewLanguageServerOutput.title%",
+                "category": "Python",
+                "enablement": "python.hasLanguageServerOutputChannel"
             },
             {
                 "command": "python.viewOutput",
