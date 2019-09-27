@@ -82,6 +82,7 @@ import { WorkspaceVirtualEnvWatcherService } from '../../client/interpreter/loca
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
 import { registerTypes } from '../../client/interpreter/serviceRegistry';
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
+import { CondaInheritEnvPrompt } from '../../client/interpreter/virtualEnvs/condaInheritEnvPrompt';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { VirtualEnvironmentPrompt } from '../../client/interpreter/virtualEnvs/virtualEnvPrompt';
 import { ServiceManager } from '../../client/ioc/serviceManager';
@@ -142,6 +143,7 @@ suite('Interpreters - Service Registry', () => {
             [IInterpreterAutoSelectionService, InterpreterAutoSelectionService],
 
             [IEnvironmentActivationService, EnvironmentActivationService],
+            [IExtensionActivationService, CondaInheritEnvPrompt],
 
             [WindowsStoreInterpreter, WindowsStoreInterpreter],
             [InterpreterHashProvider, InterpreterHashProvider],
