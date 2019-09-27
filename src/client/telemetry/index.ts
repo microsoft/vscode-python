@@ -932,6 +932,17 @@ export interface IEventNamePropertyMapping {
         interpreters?: number;
     };
     /**
+     * Telemetry event sent with details when user clicks the prompt with the following message
+     * `Prompt message` :- 'We noticed you're using a conda environment. If you are experiencing issues with this environment in the integrated terminal, we suggest the "terminal.integrated.inheritEnv" setting to be changed to false. Would you like to update this setting?'
+     */
+    [EventName.CONDA_INHERIT_ENV_PROMPT]: {
+        /**
+         * `Yes` When 'Yes' option is selected
+         * `No` When 'No' option is selected
+         */
+        selection: 'Yes' | 'No' | undefined;
+    };
+    /**
      * Telemetry event sent with details when user clicks a button in the virtual environment prompt.
      * `Prompt message` :- 'We noticed a new virtual environment has been created. Do you want to select it for the workspace folder?'
      */

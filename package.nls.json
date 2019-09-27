@@ -121,6 +121,7 @@
     "Experiments.inGroup": "User belongs to experiment group '{0}'",
     "Interpreters.RefreshingInterpreters": "Refreshing Python Interpreters",
     "Interpreters.LoadingInterpreters": "Loading Python Interpreters",
+    "Interpreters.condaInheritEnvMessage": "We noticed you're using a conda environment. If you are experiencing issues with this environment in the integrated terminal, we suggest the \"terminal.integrated.inheritEnv\" setting to be changed to false. Would you like to update this setting?",
     "Logging.CurrentWorkingDirectory": "cwd:",
     "Common.doNotShowAgain": "Do not show again",
     "Common.reload": "Reload",
@@ -367,6 +368,6 @@
     "DataScience.untitledNotebookMessage": "Your changes will be lost if you don't save them.",
     "DataScience.untitledNotebookYes": "Save",
     "DataScience.untitledNotebookNo": "Cancel",
-    "DataScience.noInterpreter" : "No python selected",
-    "DataScience.notebookNotFound" : "python -m jupyter notebook --version is not running"
+    "DataScience.noInterpreter": "No python selected",
+    "DataScience.notebookNotFound": "python -m jupyter notebook --version is not running"
 }
