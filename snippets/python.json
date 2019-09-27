@@ -249,5 +249,10 @@
         "prefix": "mark/markdown",
         "body": "#%% [markdown]",
         "description": "Code snippet to add a new markdown cell"
+    },
+    "list comprehension":{
+        "prefix": "list comprehension",
+        "body": "[${1:item} for ${2:item} in ${3:list}]",
+        "description": "Code snippet for list comprehension"
     }
 }
