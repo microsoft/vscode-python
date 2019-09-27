@@ -99,6 +99,9 @@ export class InsidersExtensionService implements IExtensionSingleActivationServi
         if (installChannel !== 'off') {
             return false;
         }
+        if (this.insidersPrompt.hasUserBeenAskedToOptInAgain.value) {
+            return false;
+        }
         if (this.extensionChannelService.isChannelUsingDefaultConfiguration) {
             return false;
         }

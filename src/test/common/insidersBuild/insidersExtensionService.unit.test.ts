@@ -183,6 +183,7 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
     let cmdManager: TypeMoq.IMock<ICommandManager>;
     let insidersPrompt: TypeMoq.IMock<IInsiderExtensionPrompt>;
     let hasUserBeenNotifiedState: IPersistentState<boolean>;
+    let hasUserBeenAskedToOptInAgainState: IPersistentState<boolean>;
     let insidersInstaller: TypeMoq.IMock<IExtensionBuildInstaller>;
 
     let insidersExtensionService: InsidersExtensionService;
@@ -195,6 +196,7 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
         insidersPrompt = TypeMoq.Mock.ofType<IInsiderExtensionPrompt>(undefined, TypeMoq.MockBehavior.Strict);
         hasUserBeenNotifiedState = mock(PersistentState);
+        hasUserBeenAskedToOptInAgainState = mock(PersistentState);
 
         insidersExtensionService = new InsidersExtensionService(
             extensionChannelService.object,
@@ -209,6 +211,10 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
         insidersPrompt
             .setup(p => p.hasUserBeenNotified)
             .returns(() => instance(hasUserBeenNotifiedState))
+            .verifiable(TypeMoq.Times.atLeast(0));
+        insidersPrompt
+            .setup(p => p.hasUserBeenAskedToOptInAgain)
+            .returns(() => instance(hasUserBeenAskedToOptInAgainState))
             .verifiable(TypeMoq.Times.atLeast(0));
     }
 
@@ -227,6 +233,7 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
         installChannel?: ExtensionChannels;
         isChannelUsingDefaultConfiguration?: boolean | number;
         hasUserBeenNotified?: boolean;
+        hasUserBeenAskedToOptInAgain?: boolean;
     };
 
     function setState(
@@ -262,10 +269,13 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
                 .setup(ec => ec.updateChannel('off'))
                 .returns(() => Promise.resolve());
         }
-
         if (info.hasUserBeenNotified !== undefined) {
             when(hasUserBeenNotifiedState.value)
                 .thenReturn(info.hasUserBeenNotified!);
+        }
+        if (info.hasUserBeenAskedToOptInAgain !== undefined) {
+            when(hasUserBeenAskedToOptInAgainState.value)
+                .thenReturn(info.hasUserBeenAskedToOptInAgain!);
         }
 
         if (checkPromptEnroll) {
@@ -284,7 +294,8 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
         const testsForHandleEdgeCaseI: TestInfo[] = [
             {
                 installChannel: 'off',
-                isChannelUsingDefaultConfiguration: false
+                isChannelUsingDefaultConfiguration: false,
+                hasUserBeenAskedToOptInAgain: false
             }
         ];
 
@@ -315,6 +326,14 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
             },
             {
                 installChannel: 'off',
+                hasUserBeenAskedToOptInAgain: true,
+                vscodeChannel: 'insiders',
+                hasUserBeenNotified: false,
+                isChannelUsingDefaultConfiguration: true
+            },
+            {
+                installChannel: 'off',
+                hasUserBeenAskedToOptInAgain: false,
                 vscodeChannel: 'insiders',
                 hasUserBeenNotified: false,
                 isChannelUsingDefaultConfiguration: 2
@@ -397,6 +416,15 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
             },
             {
                 installChannel: 'off',
+                hasUserBeenAskedToOptInAgain: true,
+                //
+                vscodeChannel: 'insiders',
+                hasUserBeenNotified: true
+                //
+            },
+            {
+                installChannel: 'off',
+                hasUserBeenAskedToOptInAgain: false,
                 isChannelUsingDefaultConfiguration: true,
                 //
                 vscodeChannel: 'insiders',
@@ -405,6 +433,7 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
             },
             {
                 installChannel: 'off',
+                hasUserBeenAskedToOptInAgain: false,
                 isChannelUsingDefaultConfiguration: true,
                 //
                 vscodeChannel: 'stable'
@@ -412,6 +441,7 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
             },
             {
                 installChannel: 'off',
+                hasUserBeenAskedToOptInAgain: false,
                 isChannelUsingDefaultConfiguration: true,
                 //
                 vscodeChannel: 'stable'
@@ -435,6 +465,11 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
                     verify(hasUserBeenNotifiedState.value).never();
                 } else {
                     verify(hasUserBeenNotifiedState.value).once();
+                }
+                if (testParams.hasUserBeenAskedToOptInAgain === undefined) {
+                    verify(hasUserBeenAskedToOptInAgainState.value).never();
+                } else {
+                    verify(hasUserBeenAskedToOptInAgainState.value).once();
                 }
             });
         });
