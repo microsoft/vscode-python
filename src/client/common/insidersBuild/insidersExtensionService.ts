@@ -8,6 +8,7 @@ import { IExtensionSingleActivationService } from '../../../client/activation/ty
 import { IServiceContainer } from '../../ioc/types';
 import { IApplicationEnvironment, ICommandManager } from '../application/types';
 import { Commands } from '../constants';
+import '../extensions';
 import { IExtensionBuildInstaller, INSIDERS_INSTALLER } from '../installer/types';
 import { traceDecorators } from '../logger';
 import { IDisposable, IDisposableRegistry } from '../types';
@@ -27,14 +28,38 @@ export class InsidersExtensionService implements IExtensionSingleActivationServi
 
     public async activate() {
         this.registerCommandsAndHandlers();
-        const installChannel = this.extensionChannelService.getChannel();
-        const alreadyHandled = await this.handleEdgeCases(installChannel);
-        if (alreadyHandled) {
-            // Simply return if channel is already handled and doesn't need further handling
-            return;
-        }
-        this.handleChannel(installChannel).ignoreErrors();
+        await this.initChannel();
     }
+
+    public registerCommandsAndHandlers(): void {
+        this.disposables.push(this.extensionChannelService.onDidChannelChange(channel => {
+            return this.handleChannel(channel, true);
+        }));
+        this.disposables.push(this.cmdManager.registerCommand(
+            Commands.SwitchOffInsidersChannel,
+            () => this.extensionChannelService.updateChannel('off')
+        ));
+        this.disposables.push(this.cmdManager.registerCommand(
+            Commands.SwitchToInsidersDaily,
+            () => this.extensionChannelService.updateChannel('daily')
+        ));
+        this.disposables.push(this.cmdManager.registerCommand(
+            Commands.SwitchToInsidersWeekly,
+            () => this.extensionChannelService.updateChannel('weekly')
+        ));
+    }
+
+    public async initChannel() {
+        const channel = this.extensionChannelService.getChannel();
+
+        const alreadyHandled = await this.handleEdgeCases(channel);
+        if (!alreadyHandled) {
+            this.handleChannel(channel)
+                .ignoreErrors();
+        }
+    }
+
+    // Everything past here is the "channel handler" implementation.
 
     @traceDecorators.error('Handling channel failed')
     public async handleChannel(installChannel: ExtensionChannels, didChannelChange: boolean = false): Promise<void> {
@@ -66,24 +91,21 @@ export class InsidersExtensionService implements IExtensionSingleActivationServi
         }
     }
 
-    public registerCommandsAndHandlers(): void {
-        this.disposables.push(this.extensionChannelService.onDidChannelChange(channel => this.handleChannel(channel, true)));
-        this.disposables.push(this.cmdManager.registerCommand(Commands.SwitchOffInsidersChannel, () => this.extensionChannelService.updateChannel('off')));
-        this.disposables.push(this.cmdManager.registerCommand(Commands.SwitchToInsidersDaily, () => this.extensionChannelService.updateChannel('daily')));
-        this.disposables.push(this.cmdManager.registerCommand(Commands.SwitchToInsidersWeekly, () => this.extensionChannelService.updateChannel('weekly')));
-    }
-
     /**
      * If previously in the Insiders Program but not now, request them enroll in the program again
      * @returns `true` if prompt is shown, `false` otherwise
      */
     private async promptToEnrollBackToInsidersIfApplicable(installChannel: ExtensionChannels): Promise<boolean> {
-        if (installChannel === 'off' && !this.extensionChannelService.isChannelUsingDefaultConfiguration) {
-            // If install channel is explicitly set to off, it means that user has used the insiders program before
-            await this.insidersPrompt.promptToEnrollBackToInsiders();
-            return true;
+        if (installChannel !== 'off') {
+            return false;
         }
-        return false;
+        if (this.extensionChannelService.isChannelUsingDefaultConfiguration) {
+            return false;
+        }
+
+        // If install channel is explicitly set to off, it means that user has used the insiders program before
+        await this.insidersPrompt.promptToEnrollBackToInsiders();
+        return true;
     }
 
     /**
@@ -91,11 +113,18 @@ export class InsidersExtensionService implements IExtensionSingleActivationServi
      * @returns `true` if prompt is shown, `false` otherwise
      */
     private async promptToInstallInsidersIfApplicable(): Promise<boolean> {
-        if (this.appEnvironment.channel === 'insiders' && !this.insidersPrompt.hasUserBeenNotified.value && this.extensionChannelService.isChannelUsingDefaultConfiguration) {
-            await this.insidersPrompt.promptToInstallInsiders();
-            return true;
+        if (this.appEnvironment.channel !== 'insiders') {
+            return false;
         }
-        return false;
+        if (this.insidersPrompt.hasUserBeenNotified.value) {
+            return false;
+        }
+        if (!this.extensionChannelService.isChannelUsingDefaultConfiguration) {
+            return false;
+        }
+
+        await this.insidersPrompt.promptToInstallInsiders();
+        return true;
     }
 
     /**
@@ -103,11 +132,15 @@ export class InsidersExtensionService implements IExtensionSingleActivationServi
      * @returns `true` if channel is set to off, `false` otherwise
      */
     private async setInsidersChannelToOffIfApplicable(installChannel: ExtensionChannels): Promise<boolean> {
-        if (installChannel !== 'off' && this.appEnvironment.extensionChannel === 'stable') {
-            // Install channel is set to "weekly" or "daily" but stable version of extension is installed. Switch channel to "off" to use the installed version
-            await this.extensionChannelService.updateChannel('off');
-            return true;
+        if (installChannel === 'off') {
+            return false;
         }
-        return false;
+        if (this.appEnvironment.extensionChannel !== 'stable') {
+            return false;
+        }
+
+        // Install channel is set to "weekly" or "daily" but stable version of extension is installed. Switch channel to "off" to use the installed version
+        await this.extensionChannelService.updateChannel('off');
+        return true;
     }
 }
