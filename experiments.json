@@ -32,26 +32,26 @@
     {
         "name": "DebugAdapterFactory - control",
         "salt": "DebugAdapterFactory",
-        "min": 60,
+        "min": 80,
         "max": 90
     },
     {
         "name": "DebugAdapterFactory - experiment",
         "salt": "DebugAdapterFactory",
         "min": 10,
-        "max": 40
-    },
-    {
-        "name": "PtvsdWheels37 - control",
-        "salt": "PtvsdWheels37",
-        "min": 10,
         "max": 20
     },
     {
+        "name": "PtvsdWheels37 - control",
+        "salt": "DebugAdapterFactory",
+        "min": 87,
+        "max": 90
+    },
+    {
         "name": "PtvsdWheels37 - experiment",
-        "salt": "PtvsdWheels37",
-        "min": 20,
-        "max": 30
+        "salt": "DebugAdapterFactory",
+        "min": 10,
+        "max": 13
     },
     {
         "name": "LS - enabled",
