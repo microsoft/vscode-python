@@ -431,7 +431,7 @@ export class IntellisenseDocument implements TextDocument {
             // if cell is not found in the document and its not the last edit cell, we remove it
             if (!foundIt && i !== this._cellRanges.length - 1) {
                 const from = new Position(this.getLineFromOffset(cell.start), 0);
-                const to = new Position(this.getLineFromOffset(cell.currentEnd - 1), cell.currentEnd - cell.start);
+                const to = this.positionAt(cell.currentEnd);
 
                 // for some reason, start for the next cell isn't updated on removeRange,
                 // so we update it here
