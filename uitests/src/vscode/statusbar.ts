@@ -3,6 +3,8 @@
 
 'use strict';
 
+import * as assert from 'assert';
+import { retryWrapper } from '../helpers';
 import '../helpers/extensions';
 import { Selector } from '../selectors';
 import { IApplication, IStatusBar } from '../types';
@@ -18,5 +20,18 @@ export class StatusBar implements IStatusBar {
     }
     public async waitUntilBootstrapItemVisible(): Promise<void> {
         throw new Error('Method not implemented.');
+    }
+    public async waitUntilStatusBarItemWithText(text: string, timeout: number = 3_000): Promise<void> {
+        const selector = this.app.getCSSSelector(Selector.StatusBarItem);
+
+        const lookForStatusBarItem = async () => {
+            const found = await this.app.driver
+                .$$eval(selector, (eles, textToSearch) => eles.findIndex(ele => (ele.textContent || '').indexOf(textToSearch) >= 0) >= 0, text)
+                .catch(() => false);
+
+            assert.ok(found, `Statubar item '${text}' not found`);
+        };
+
+        await retryWrapper({ timeout }, lookForStatusBarItem);
     }
 }

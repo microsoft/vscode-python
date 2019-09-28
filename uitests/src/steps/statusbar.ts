@@ -22,6 +22,10 @@ Then('the python the status bar does not contain the text {string}', CucumberRet
     expect(statubarText).not.contains(text);
 });
 
+Then('a status bar item containing the text {string} is displayed', async function(text: string) {
+    await this.app.statusbar.waitUntilStatusBarItemWithText(text);
+});
+
 // Then('the python the status bar is not visible', async () => {
 //     await context.app.workbench.statusbar.pythonStatusBarElementIsNotVisible();
 // });

@@ -12,6 +12,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { CucumberRetryMax10Seconds, CucumberRetryMax5Seconds } from '../constants';
 import { noop, retryWrapper, sleep } from '../helpers';
+import { error } from '../helpers/logger';
 import { IApplication } from '../types';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
@@ -41,13 +42,21 @@ Given('a file named {string} is created with the following content', async funct
     await fs.writeFile(fullpath, contents);
     // Ensure VS Code has had time to refresh to explorer and is aware of the file.
     // Else if we later attempt to open this file, VSC might not be aware of it and woudn't display anything in the `quick open` dropdown.
-    const openRecentlyCreatedDocument = async () => {
-        await this.app.documents.refreshExplorer();
-        await this.app.quickopen.openFile(path.basename(filename));
-        await this.app.quickopen.runCommand('View: Close Editor');
-    };
+    // const openRecentlyCreatedDocument = async () => {
+    //     await this.app.documents.refreshExplorer();
+    //     // Sometimes VS Code just doesn't know about files created from outside VS Code.
+    //     // Not unless we expand the file explorer.
+    //     // Hopefully we don't have (write) tests where files are created in nested folders and not detected by VSC, but required to be opened.
+    //     const opened = await this.app.quickopen
+    //         .openFile(path.basename(filename))
+    //         .then(() => true)
+    //         .catch(ex => error(`Failed to open the file '${filename}' in VS Code, but continuing (hopefully file will not have to be opened)`, ex));
+    //     if (opened === true) {
+    //         await this.app.quickopen.runCommand('View: Close Editor');
+    //     }
+    // };
 
-    await retryWrapper({ timeout: 5000 }, openRecentlyCreatedDocument);
+    // await retryWrapper({ timeout: 5000 }, openRecentlyCreatedDocument);
 });
 
 When('I change the language of the file to {string}', async function(language: string) {

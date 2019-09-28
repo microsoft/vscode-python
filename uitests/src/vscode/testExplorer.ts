@@ -18,7 +18,8 @@ const statusToIconMapping: Map<TestExplorerNodeStatus, string> = new Map([
     ['Fail', 'status-error.svg'],
     ['Error', 'status-error.svg']
 ]);
-const delayForUIToUpdate = 100;
+// 100ms was too low in version 1.38 of VS Code.
+const delayForUIToUpdate = 150;
 const iconTitleMapping: Record<TestExplorerToolbarIcon, string> = {
     Stop: 'Stop',
     RunFailedTests: 'Run Failed Tests'

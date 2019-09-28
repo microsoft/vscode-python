@@ -15,6 +15,10 @@ export enum Selector {
      * Selector for Python extension statusbar item .
      */
     'PythonExtensionStatusBar',
+    /**
+     * Selector for a statusbar item .
+     */
+    'StatusBarItem',
 
     /**
      * Selector for the VSC statubar item displaying the line & column.
@@ -191,6 +195,9 @@ class QuickInput {
 const selectors: Record<Selector, { stable: string } & { insider?: string }> = {
     [Selector.PythonExtensionStatusBar]: {
         stable: ".statusbar-item[id='ms-python.python']"
+    },
+    [Selector.StatusBarItem]: {
+        stable: '.statusbar-item'
     },
     [Selector.PyBootstrapStatusBar]: {
         stable: `.part.statusbar *[title='${pyBootstrapTooltip}'] a`

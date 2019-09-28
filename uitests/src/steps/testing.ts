@@ -28,6 +28,10 @@ Then('there are {int} nodes in the test explorer', CucumberRetryMax5Seconds, asy
     const count = await this.app.testExplorer.getNodeCount();
     expect(count).to.equal(expectedCount);
 });
+Then('there are at least {int} nodes in the test explorer', CucumberRetryMax5Seconds, async function(expectedCount: number) {
+    const count = await this.app.testExplorer.getNodeCount();
+    expect(count).to.greaterThan(expectedCount - 1);
+});
 Then('all of the test tree nodes have a progress icon', CucumberRetryMax5Seconds, async function() {
     const elements = await this.app.testExplorer.getNodes();
     const progressCount = elements.filter(node => node.status === 'Progress').length;

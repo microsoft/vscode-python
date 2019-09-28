@@ -6,7 +6,7 @@
 // tslint:disable: no-invalid-this
 
 import { Given, When } from 'cucumber';
-import { ensurePackageIsInstalled, ensurePackageIsNotInstalled } from '../helpers/python';
+import { ensurePackageIsInstalled, ensurePackageIsNotInstalled, runPythonCommand } from '../helpers/python';
 
 When('I select the Python Interpreter containing the text {string}', async function(text: string) {
     await this.app.interpreters.select({ name: text });
@@ -20,8 +20,15 @@ Given('the package {string} is not installed', async function(moduleName: string
     await ensurePackageIsNotInstalled(this.options.pythonPath, moduleName);
 });
 
+When('the python command {string} has been executed', async function(command: string) {
+    await runPythonCommand(this.options.pythonPath, this.app.workspacePathOrFolder, command);
+});
+
 When('I install the package {string}', async function(moduleName: string) {
     await ensurePackageIsInstalled(this.options.pythonPath, moduleName);
+});
+When('I run the python command {string}', async function(command: string) {
+    await runPythonCommand(this.options.pythonPath, this.app.workspacePathOrFolder, command);
 });
 When('I uninstall the package {string}', async function(moduleName: string) {
     await ensurePackageIsInstalled(this.options.pythonPath, moduleName);
