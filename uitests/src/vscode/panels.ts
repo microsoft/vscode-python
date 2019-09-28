@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { retryWrapper, sleep } from '../helpers';
+import { retryWrapper } from '../helpers';
 import '../helpers/extensions';
 import { debug } from '../helpers/logger';
 import { Selector } from '../selectors';
