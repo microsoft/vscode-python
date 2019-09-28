@@ -22,6 +22,21 @@ export async function isPackageInstalled(pythonPath: string, moduleName: string)
     });
 }
 
+export async function runPythonCommand(pythonPath: string, cwd: string, command: string): Promise<boolean> {
+    const cmd = `${pythonPath.toCommandArgument()} ${command}`;
+    debug(`Executing command = ${cmd}`);
+    return new Promise<boolean>(resolve => {
+        exec(cmd, { cwd }, (ex, stdout: string) => {
+            if (ex) {
+                debug(`Executing command = ${cmd}, error: `, ex);
+                return resolve(false);
+            }
+            debug(`Executing command = ${cmd}, output: `, stdout);
+            resolve(true);
+        });
+    });
+}
+
 export async function installPackage(pythonPath: string, moduleName: string): Promise<void> {
     await installOrUninstallPackage(pythonPath, moduleName, true);
 }
