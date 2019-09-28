@@ -258,10 +258,11 @@ export class TestExplorer implements ITestExplorer {
         const iconSelector = this.app.getCSSSelector(Selector.NthTestExplorerNodeIcon).format(nodeNumber.toString());
         const selector = this.app.getCSSSelector(Selector.NthTestExplorerNode).format(nodeNumber.toString());
 
-        const [bgIcon, nodeLabel, className] = await Promise.all([
+        const [bgIcon, nodeLabel, className, ariaExpandedAttrValue] = await Promise.all([
             this.app.driver.$eval(iconSelector, element => getComputedStyle(element).backgroundImage || ''),
             label ? Promise.resolve(label) : this.getNodeLabel(nodeNumber),
-            this.app.driver.$eval(selector, element => element.className)
+            this.app.driver.$eval(selector, element => element.className),
+            this.app.driver.$eval(selector, element => element.getAttribute('aria-expanded') || '')
         ]);
 
         const status = Array.from(statusToIconMapping.entries()).reduce<TestExplorerNodeStatus>((currentStatus, item) => {
@@ -272,9 +273,9 @@ export class TestExplorer implements ITestExplorer {
         }, 'Unknown');
 
         return {
-            expanded: className.indexOf('expanded') >= 0,
+            expanded: ariaExpandedAttrValue === 'true',
             focused: className.indexOf('focused') >= 0,
-            hasChildren: className.indexOf('has-children') >= 0,
+            hasChildren: ariaExpandedAttrValue !== '',
             status,
             index: nodeNumber - 1,
             label: nodeLabel

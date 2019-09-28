@@ -192,6 +192,9 @@ const selectors: Record<Selector, { stable: string } & { insider?: string }> = {
     [Selector.PythonExtensionStatusBar]: {
         stable: ".statusbar-item[id='ms-python.python']"
     },
+    [Selector.StatusBarItem]: {
+        stable: '.statusbar-item'
+    },
     [Selector.PyBootstrapStatusBar]: {
         stable: `.part.statusbar *[title='${pyBootstrapTooltip}'] a`
     },
@@ -291,19 +294,19 @@ const selectors: Record<Selector, { stable: string } & { insider?: string }> = {
         stable: "div[id='workbench.parts.sidebar']"
     },
     [Selector.NthTestExplorerNodeLabel]: {
-        stable: 'div[id="workbench.view.extension.test"] div.monaco-tree-row:nth-child({0}) a.label-name'
+        stable: 'div[id="workbench.view.extension.test"] .tree-explorer-viewlet-tree-view div[role="treeitem"]:nth-child({0}) a.label-name'
     },
     [Selector.NthTestExplorerNodeIcon]: {
-        stable: 'div[id="workbench.view.extension.test"] div.monaco-tree-row:nth-child({0}) .custom-view-tree-node-item-icon'
+        stable: 'div[id="workbench.view.extension.test"] .tree-explorer-viewlet-tree-view div[role="treeitem"]:nth-child({0}) .custom-view-tree-node-item-icon'
     },
     [Selector.NthTestExplorerNode]: {
-        stable: 'div[id="workbench.view.extension.test"] div.monaco-tree-row:nth-child({0})'
+        stable: 'div[id="workbench.view.extension.test"] .tree-explorer-viewlet-tree-view div[role="treeitem"]:nth-child({0})'
     },
     [Selector.TestExplorerNode]: {
-        stable: 'div[id="workbench.view.extension.test"] .tree-explorer-viewlet-tree-view div.monaco-tree-row'
+        stable: 'div[id="workbench.view.extension.test"] .tree-explorer-viewlet-tree-view div[role="treeitem"]'
     },
     [Selector.TestExplorerTreeViewContainer]: {
-        stable: "div[id='workbench.view.extension.test'] .monaco-tree"
+        stable: "div[id='workbench.view.extension.test'] [role='tree']"
     },
     [Selector.QuickOpenHidden]: {
         stable: QuickOpen.QUICK_OPEN_HIDDEN
