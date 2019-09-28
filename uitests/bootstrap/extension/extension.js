@@ -8,7 +8,7 @@ const vscode = require('vscode');
 const fs = require('fs');
 const path = require('path');
 const util = require('util');
-
+const lsOutputOpenedFile = path.join(__dirname, '..', 'lsoutputdisplayed.log');
 let activated = false;
 async function sleep(timeout) {
     return new Promise(resolve => setTimeout(resolve, timeout));
@@ -91,6 +91,7 @@ function activate(context) {
                 continue;
             }
         }
+        await new Promise(resolve => fs.writeFile(lsOutputOpenedFile, '', resolve));
     });
     vscode.commands.registerCommand('smoketest.runInTerminal', async () => {
         const filePath = path.join(__dirname, '..', 'commands.txt');
