@@ -1,39 +1,22 @@
-# @ds @smoke
-# @https://github.com/DonJayamanne/vscode-python-uitests/datascience
-# Feature: Data Science
-#     Scenario: Can display an image and print text into the interactive window
-#         Given the package "jupyter" is installed
-#         And a file named "log.log" does not exist
-#         # Increase font size for text detection.
-#         And the workspace setting "editor.fontSize" has the value 15
-#         And the file "smoke.py" is open
-#         When I wait for the Python extension to activate
-#         # Code will display an image and print stuff into interactive window.
-#         When I select the command "Python: Run All Cells"
-#         # Wait for Interactive Window to open
-#         And I wait for 10 seconds
-#         # Close the file, to close it, first set focus to it by opening it again.
-#         And I open the file "smoke.py"
-#         And I select the command "View: Revert and Close Editor"
-#         And I select the command "View: Close Panel"
-#         # Wait for 2 minutes for Jupyter to start
-#         Then a file named "log.log" will be created within 120 seconds
-#     # This is the content of the image rendered in the interactive window.
-#     # And the text "VSCODEROCKS" is displayed in the Interactive Window
-#     # # This is the content printed by a python script.
-#     # And the text "DATASCIENCEROCKS" is displayed in the Interactive Window
-
-#     Scenario: Workspace directory is used as cwd for untitled python files
-#         Given the package "jupyter" is installed
-#         And a file named "log.log" does not exist
-#         When I wait for the Python extension to activate
-#         When I create an untitled Python file with the following content
-#             """
-#             open("log.log", "w").write("Hello")
-#             """
-#         # Code will display an image and print stuff into interactive window.
-#         When I select the command "Python: Run All Cells"
-#         # Wait for Interactive Window to open
-#         And I wait for 10 seconds
-#         # Wait for 2 minutes for Jupyter to start
-#         Then a file named "log.log" will be created within 120 seconds
+@ds
+Feature: Data Science
+    @smoke
+    Scenario: Ensure cell in python file is executed within an interactive window
+        """
+        To test Data Science feature, just open a python file and run some code in the interactive window.
+        Here the code that will be executed in the interactive window will create a file, if the file is created
+        we know the test ran successfully.
+        Allow 120 seconds for file to get created, as we need to give Jupyter server some time to start up.
+        """
+        Given the Python extension has been activated
+        And the package "jupyter" is installed
+        And a file named "log.log" does not exist
+        And a file named "simple data science tests.py" is created with the following content
+            """
+            #%%
+            with open('log.log', 'a') as fp:
+                fp.write('Hello World!')
+            """
+        When I open the file "simple data science tests.py"
+        And I select the command "Python: Run All Cells"
+        Then a file named "log.log" is created within 120 seconds
