@@ -192,9 +192,6 @@ const selectors: Record<Selector, { stable: string } & { insider?: string }> = {
     [Selector.PythonExtensionStatusBar]: {
         stable: ".statusbar-item[id='ms-python.python']"
     },
-    [Selector.StatusBarItem]: {
-        stable: '.statusbar-item'
-    },
     [Selector.PyBootstrapStatusBar]: {
         stable: `.part.statusbar *[title='${pyBootstrapTooltip}'] a`
     },
