@@ -17,6 +17,9 @@ Feature: Test Explorer
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         When I expand all of the nodes in the test explorer
+        # We have no idea how many tests there are, we know there will be atleast 10.
+        # Let not increase it to 50, depends on how many tree items are visible in UI.
+        # When checking number of nodes, the tests check the number of visible nodes.
         Then there are at least 10 nodes in the test explorer
         And a status bar item containing the text 'Run Tests' is displayed
 
@@ -38,6 +41,9 @@ Feature: Test Explorer
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         When I expand all of the nodes in the test explorer
+        # We have no idea how many tests there are, we know there will be atleast 10.
+        # Let not increase it to 50, depends on how many tree items are visible in UI.
+        # When checking number of nodes, the tests check the number of visible nodes.
         Then there are at least 10 nodes in the test explorer
         And a status bar item containing the text 'Run Tests' is displayed
 
@@ -63,5 +69,8 @@ Feature: Test Explorer
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         When I expand all of the nodes in the test explorer
+        # We have no idea how many tests there are, we know there will be atleast 10.
+        # Let not increase it to 50, depends on how many tree items are visible in UI.
+        # When checking number of nodes, the tests check the number of visible nodes.
         Then there are at least 10 nodes in the test explorer
         And a status bar item containing the text 'Run Tests' is displayed
