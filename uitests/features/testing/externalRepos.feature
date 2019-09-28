@@ -1,5 +1,4 @@
 @testing
-@wip
 Feature: Test Explorer
     @https://github.com/microsoft/ptvsd
     Scenario: Tests in PTVSD repo will be discovered without any errors
@@ -51,6 +50,10 @@ Feature: Test Explorer
                 "python.testing.nosetestsEnabled": false,
                 "python.testing.pytestEnabled": true
             }
+            """
+        And a file named ".env" is created with the following content
+            """
+            PYTHONPATH=./src
             """
         And the python command "-m pip install -e ." has been executed
         And the python command "-m pip install .[dev]" has been executed

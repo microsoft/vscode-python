@@ -12,7 +12,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { CucumberRetryMax10Seconds, CucumberRetryMax5Seconds } from '../constants';
 import { noop, retryWrapper, sleep } from '../helpers';
-import { error } from '../helpers/logger';
+import { warn } from '../helpers/logger';
 import { IApplication } from '../types';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
@@ -50,7 +50,7 @@ Given('a file named {string} is created with the following content', async funct
         const opened = await this.app.quickopen
             .openFile(path.basename(filename))
             .then(() => true)
-            .catch(ex => error(`Failed to open the file '${filename}' in VS Code, but continuing (hopefully file will not have to be opened)`, ex));
+            .catch(ex => warn(`Failed to open the file '${filename}' in VS Code, but continuing (hopefully file will not have to be opened)`, ex));
         if (opened === true) {
             await this.app.quickopen.runCommand('View: Close Editor');
         }
