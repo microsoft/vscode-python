@@ -525,13 +525,14 @@ export interface IQuickOpen extends IDisposable {
     waitUntilClosed(): Promise<void>;
     /**
      * Event handler for events raised by the Quick Open UI.
+     * When the event is handled, invoke the `done` function (callback).
      *
      * @param {'command'} event
-     * @param {(command: string) => void} listener
+     * @param {(command: string, done: Function) => void} listener
      * @returns {this}
      * @memberof IQuickOpen
      */
-    on(event: 'command', listener: (command: string) => void): this;
+    on(event: 'command', listener: (command: string, done: Function) => void): this;
 }
 export interface IDocuments {
     createNewUntitledFile(): Promise<void>;

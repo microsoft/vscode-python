@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { noop, retryWrapper, sleep } from '../helpers';
+import { retryWrapper, sleep } from '../helpers';
 import '../helpers/extensions';
 import { debug } from '../helpers/logger';
 import { Selector } from '../selectors';
@@ -16,32 +16,14 @@ export class Panels implements IPanels {
             return;
         }
         debug('Maximize panels');
-        if (this.app.channel === 'insider') {
-            await this.app.quickopen.runCommand('View: Toggle Maximized Panel');
-        } else {
-            await this.app.driver
-                .click(this.app.getCSSSelector(Selector.MaximizePanel))
-                // Wait for some time for click to take affect.
-                .then(() => sleep(500))
-                // Ignore Errors.
-                .catch(noop);
-        }
+        await this.app.quickopen.runCommand('View: Toggle Maximized Panel');
     }
     public async minimize(): Promise<void> {
         if (!(await this.isMaximized())) {
             return;
         }
         debug('Minimize panels');
-        if (this.app.channel === 'insider') {
-            await this.app.quickopen.runCommand('View: Toggle Maximized Panel');
-        } else {
-            await this.app.driver
-                .click(this.app.getCSSSelector(Selector.MinimizePanel))
-                // Wait for some time for click to take affect.
-                .then(() => sleep(500))
-                // Ignore Errors.
-                .catch(noop);
-        }
+        await this.app.quickopen.runCommand('View: Toggle Maximized Panel');
     }
     public async waitUtilContent(text: string, timeoutSeconds: number = 10) {
         await this.app.captureScreenshot('Step1');
@@ -83,9 +65,12 @@ export class Panels implements IPanels {
         }
     }
     private isMaximized(): Promise<boolean> {
+        // Don't look for the max button.
+        // Sometimes we have other HTML elements (VS Code Notification messages) displayed over the panel resize icon.
+        // If this happens we assume the panels have not been maximized (else we have 5-6 messages that span vertically to the top of the VS Code screen).
         return this.app.driver
-            .$(this.app.getCSSSelector(Selector.MaximizePanel))
-            .then(() => false)
-            .catch(() => true);
+            .$(this.app.getCSSSelector(Selector.MinimizePanel))
+            .then(() => true)
+            .catch(() => false);
     }
 }

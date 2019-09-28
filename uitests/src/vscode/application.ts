@@ -3,9 +3,12 @@
 
 'use strict';
 
+import * as assert from 'assert';
 import { EventEmitter } from 'events';
+import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as rimraf from 'rimraf';
+import { noop, retryWrapper, sleep } from '../helpers';
 import { getSelector, Selector } from '../selectors';
 import { restoreDefaultUserSettings } from '../setup';
 import { Driver } from '../setup/driver';
@@ -145,6 +148,36 @@ export class Application extends EventEmitter implements IApplication {
         this.emit('screenshotCatured', buffer);
     }
     /**
+     * The command `Python: Show Language Server Output` will be executed programatically by the
+     * bootstrap extension.
+     * When the bootstrap extension completes execution of the above command a file named `lsoutputdisplayed.log`
+     * will be created to notify completion.
+     *
+     * @returns {Promise<void>}
+     * @memberof Application
+     */
+    public async waitForShowLSOutputPanelCommandExecuted(): Promise<void> {
+        const fileToLookFor = path.join(this.options.extensionsPath, 'lsoutputdisplayed.log');
+        try {
+            const waitForFile = async () => assert.ok(await fs.pathExists(fileToLookFor));
+            const errorMessage = `File '${fileToLookFor}' not created by bootstrap extension, after invoking command 'Python: Show Language Server Output'`;
+            await retryWrapper({ timeout: 30_000, errorMessage }, waitForFile);
+        } finally {
+            await fs.unlink(fileToLookFor).catch(noop);
+        }
+    }
+    /**
+     * When selecting the command `View: Toggle Maximized Panel` the panels resize.
+     * Lets wait for 0.5 seconds for this to happen.
+     * It should get resized in a few milli seconds, certainly not seconds.
+     *
+     * @returns {Promise<void>}
+     * @memberof Application
+     */
+    public async waitForPanelStateToToggle(): Promise<void> {
+        await sleep(500);
+    }
+    /**
      * When selecting commands such as `View Show Test`, the intent is for the test explorer to be displayed.
      * However, this can take a few milliseconds, hence we need to ensure the code waits until it is displayed.
      * Solution - When a command is selected, lets wait immeidately after the command is selected.
@@ -161,12 +194,15 @@ export class Application extends EventEmitter implements IApplication {
             'Debug: Stop Debugging': this.debugger.waitUntilStopped.bind(this.debugger),
             // 'Open New Terminal': this.terminal.waitUntilOpened.bind(this.terminal),
             // 'Python: Create Terminal': this.terminal.waitUntilOpened.bind(this.terminal),
-            'View: Focus Problems (Errors, Warnings, Infos)': this.problems.waitUntilOpened.bind(this.problems)
+            'View: Focus Problems (Errors, Warnings, Infos)': this.problems.waitUntilOpened.bind(this.problems),
+            'Python: Show Language Server Output': this.waitForShowLSOutputPanelCommandExecuted.bind(this),
+            'View: Toggle Maximized Panel': this.waitForPanelStateToToggle.bind(this)
         };
-        this.quickopen.on('command', async command => {
+        this.quickopen.on('command', async (command, done) => {
             if (postCommandHandlers[command]) {
                 await postCommandHandlers[command]();
             }
+            done();
         });
     }
 }

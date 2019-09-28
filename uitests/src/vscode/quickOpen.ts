@@ -51,7 +51,9 @@ export class QuickOpen extends EventEmitter implements IQuickOpen {
      */
     public async runCommand(value: string): Promise<void> {
         await this._runCommand(value);
-        this.emit('command', value);
+        if (this.listenerCount('command') > 0) {
+            await new Promise(resolve => this.emit('command', value, resolve));
+        }
     }
     public async select(value: string): Promise<void> {
         await this._selectValue(`:${value}`);
