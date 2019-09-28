@@ -1,7 +1,10 @@
-@testing
+@testing @python3
 Feature: Test Explorer
+    """
+    Remember pytest requires python3.
+    """
     @https://github.com/microsoft/ptvsd
-    Scenario: Tests in PTVSD repo will be discovered without any errors
+    Scenario: Pytest Tests in PTVSD repo will be discovered without any errors
         Given a file named ".vscode/settings.json" is created with the following content
             """
             {
@@ -24,7 +27,7 @@ Feature: Test Explorer
         And a status bar item containing the text 'Run Tests' is displayed
 
     @https://github.com/pytest-dev/pytest
-    Scenario: Tests in pytest repo will be discovered without any errors
+    Scenario: Pytest tests in pytest repo will be discovered without any errors
         Given a file named ".vscode/settings.json" is created with the following content
             """
             {
@@ -48,7 +51,7 @@ Feature: Test Explorer
         And a status bar item containing the text 'Run Tests' is displayed
 
     @https://github.com/pallets/flask
-    Scenario: Tests in flask repo will be discovered without any errors
+    Scenario: Pytest tests in flask repo will be discovered without any errors
         Given a file named ".vscode/settings.json" is created with the following content
             """
             {
