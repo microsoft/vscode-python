@@ -34,4 +34,17 @@ export class StatusBar implements IStatusBar {
 
         await retryWrapper({ timeout }, lookForStatusBarItem);
     }
+    public async waitUntilNoStatusBarItemWithText(text: string, timeout: number = 3_000): Promise<void> {
+        const selector = this.app.getCSSSelector(Selector.StatusBarItem);
+
+        const lookForStatusBarItem = async () => {
+            const notFound = await this.app.driver
+                .$$eval(selector, (eles, textToSearch) => eles.findIndex(ele => (ele.textContent || '').indexOf(textToSearch) >= 0) === -1, text)
+                .catch(() => false);
+
+            assert.ok(notFound, `Statubar item '${text}' found, when it should not exist`);
+        };
+
+        await retryWrapper({ timeout }, lookForStatusBarItem);
+    }
 }

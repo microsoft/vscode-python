@@ -614,6 +614,15 @@ export interface IStatusBar {
      * @memberof IStatusBar
      */
     waitUntilStatusBarItemWithText(text: string, timeout?: number): Promise<void>;
+    /**
+     * Waits until there is no statubar item with the specific text.
+     *
+     * @param {string} text
+     * @param {number} [timeout]
+     * @returns {Promise<void>}
+     * @memberof IStatusBar
+     */
+    waitUntilNoStatusBarItemWithText(text: string, timeout?: number): Promise<void>;
 }
 export type ProblemSeverity = 'error' | 'warning';
 export interface IProblems {
