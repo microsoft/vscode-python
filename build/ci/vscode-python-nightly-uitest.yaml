@@ -41,6 +41,10 @@ stages:
         # We have python code that is involved in running/discovering tests.
         # Hence test against all versions, until we have CI running for the Python code.
         # I.e. when all test discovery/running is done purely in Python.
+        # However we will not run against Python 2.7 as Pytest is not supported against 2.7.
+        # Yes unitest and nose are, but its messy to write the BDD tests to re-use same tests
+        # but exclude for pytest and python 2.7 in a generic & simple way.
+        ignorePythonVersions: "2.7"
       - test: "Terminal"
         tags: "@terminal and not @terminal.pipenv"
         # No need to run tests against all versions.
