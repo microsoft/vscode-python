@@ -80,31 +80,25 @@ export class TestResultDisplay implements ITestResultDisplay {
         // Treat errors as a special case, as we generally wouldn't have any errors
         const statusText: string[] = [];
         const toolTip: string[] = [];
-        let foreColor = '';
 
         if (tests.summary.passed > 0) {
             statusText.push(`${constants.Octicons.Test_Pass} ${tests.summary.passed}`);
             toolTip.push(`${tests.summary.passed} Passed`);
-            foreColor = '#66ff66';
         }
         if (tests.summary.skipped > 0) {
             statusText.push(`${constants.Octicons.Test_Skip} ${tests.summary.skipped}`);
             toolTip.push(`${tests.summary.skipped} Skipped`);
-            foreColor = '#66ff66';
         }
         if (tests.summary.failures > 0) {
             statusText.push(`${constants.Octicons.Test_Fail} ${tests.summary.failures}`);
             toolTip.push(`${tests.summary.failures} Failed`);
-            foreColor = 'yellow';
         }
         if (tests.summary.errors > 0) {
             statusText.push(`${constants.Octicons.Test_Error} ${tests.summary.errors}`);
             toolTip.push(`${tests.summary.errors} Error${tests.summary.errors > 1 ? 's' : ''}`);
-            foreColor = 'yellow';
         }
         this.statusBar.tooltip = toolTip.length === 0 ? 'No Tests Ran' : `${toolTip.join(', ')} (Tests)`;
         this.statusBar.text = statusText.length === 0 ? 'No Tests Ran' : statusText.join(' ');
-        this.statusBar.color = foreColor;
         this.statusBar.command = constants.Commands.Tests_View_UI;
         this.didChange.fire();
         if (statusText.length === 0 && !debug) {
@@ -193,7 +187,6 @@ export class TestResultDisplay implements ITestResultDisplay {
         this.statusBar.tooltip = 'Discover Tests';
         this.statusBar.command = constants.Commands.Tests_Discover;
         this.statusBar.show();
-        this.statusBar.color = 'yellow';
         if (reason !== CANCELLATION_REASON) {
             this.statusBar.text = '$(alert) Test discovery failed';
             this.statusBar.tooltip = 'Discovering Tests failed (view \'Python Test Log\' output panel for details)';
