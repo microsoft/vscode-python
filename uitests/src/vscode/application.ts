@@ -9,6 +9,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as rimraf from 'rimraf';
 import { noop, retryWrapper, sleep } from '../helpers';
+import { warn } from '../helpers/logger';
 import { getSelector, Selector } from '../selectors';
 import { restoreDefaultUserSettings } from '../setup';
 import { Driver } from '../setup/driver';
@@ -158,10 +159,12 @@ export class Application extends EventEmitter implements IApplication {
      */
     public async waitForShowLSOutputPanelCommandExecuted(): Promise<void> {
         const fileToLookFor = path.join(this.options.extensionsPath, 'lsoutputdisplayed.log');
+        const errorMessage = `File '${fileToLookFor}' not created by bootstrap extension, after invoking command 'Python: Show Language Server Output'`;
         try {
             const waitForFile = async () => assert.ok(await fs.pathExists(fileToLookFor));
-            const errorMessage = `File '${fileToLookFor}' not created by bootstrap extension, after invoking command 'Python: Show Language Server Output'`;
             await retryWrapper({ timeout: 30_000, errorMessage }, waitForFile);
+        } catch (ex) {
+            warn(errorMessage, ex);
         } finally {
             await fs.unlink(fileToLookFor).catch(noop);
         }
