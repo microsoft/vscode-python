@@ -6,6 +6,7 @@
 import { RetryMax10Seconds } from '../constants';
 import { retry, sleep } from '../helpers';
 import '../helpers/extensions';
+import { warn } from '../helpers/logger';
 import { Selector } from '../selectors';
 import { IApplication, ITestExplorer, TestExplorerNodeStatus, TestExplorerToolbarIcon, TestingAction } from '../types';
 
@@ -107,11 +108,14 @@ export class TestExplorer implements ITestExplorer {
                 }
             }
         } finally {
+            // Assumption that if there are <=2 nodes and we try to expand the nodes, and
+            // yet there's nothing new, then this could be a problem.
+            // Hence log a warning message.
             const visibleNodes = await this.getNodeCount();
             if (visibleNodes <= 2 && visibleNodes === initialNodeCount) {
                 // Something is wrong, try again.
                 // tslint:disable-next-line: no-unsafe-finally
-                throw new Error('Retry expanding nodes. First iteration did not reveal any new nodes!');
+                warn('Retry expanding nodes. First iteration did not reveal any new nodes!');
             }
         }
     }
