@@ -259,10 +259,10 @@ const selectors: Record<Selector, { stable: string } & { insider?: string }> = {
         stable: '.part.panel.bottom .action-item.checked .badge-content'
     },
     [Selector.FileNameInProblemsPanel]: {
-        stable: '.part.panel.bottom .content .tree-container .monaco-tl-row .file-icon .label-name span span'
+        stable: '.markers-panel[id="workbench.panel.markers"] .monaco-list-row[role="treeitem"] .file-icon .label-name'
     },
     [Selector.ProblemMessageInProblemsPanel]: {
-        stable: '.part.panel.bottom .content .tree-container .monaco-tl-row .marker-message-details'
+        stable: '.markers-panel[id="workbench.panel.markers"] .monaco-list-row[role="treeitem"] .marker-message-details-container'
     },
     [Selector.QuickOpenInput]: {
         stable: `${quickOpen} .quick-open-input input`
