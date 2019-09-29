@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable: no-invalid-this
+// tslint:disable: no-invalid-this no-function-expression
 
 import * as assert from 'assert';
 import { expect } from 'chai';
