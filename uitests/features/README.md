@@ -24,6 +24,9 @@
     * Used to ensure a particular feature/scenario runs only in mac, win or linux respectively.
 * @python2, @python3, @python3.5, @python3.6, @python3.7
     * Used to ensure a particular feature/scenario runs only in specific version of Python, respectively.
+* @noNeedToTestInAllPython
+    * Indicates these are tests that are not specific to a version of Python used.
+    * Hence testing in any one version of Python is sufficient.
 * @insider
     * Used to ensure a particular feature/scenario runs only in VS Code Insiders.
 * @stable

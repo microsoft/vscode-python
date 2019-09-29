@@ -17,6 +17,7 @@ Feature: Language Server
         When I select the command "Python: Show Language Server Output"
         Then the text "Initializing for" will be displayed in the output panel within 120 seconds
 
+    @noNeedToTestInAllPython
     Scenario Outline: Language Server is downloaded with http.proxyStrictSSL setting <enabled_disabled>
         When I open VS Code for the first time
         And I disable the workspace setting "python.jediEnabled"

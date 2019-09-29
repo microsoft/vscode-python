@@ -125,6 +125,8 @@ Here are the steps involved in running the tests:
 * Remember, the automated UI interactions can be faster than normal user interactions.
     * E.g. just because we started debugging (using command `Debug: Start Debugging`), that doesn't mean the debug panel will open immediately. User interactions are slower compared to code execution.
     * Solution, always wait for the UI elements to be available/active. E.g. when you open a file, check whether the corresponding elements are visible.
+* Details of tags can be found here [features/README.md](./features/README.md)
+
 
 ## Code Overview
 * Tests are written in nodejs. Why?

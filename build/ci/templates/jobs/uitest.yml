@@ -92,6 +92,8 @@ parameters:
   ignoreOperatingSystems: ""
   vscodeChannels: ['stable', 'insider']
   pythonVersions: [
+      # All scenarios tagged with `@noNeedToTestInAllPython`, will run in the latest version of Python.
+      # When using other versions of Python, ignore `@noNeedToTestInAllPython`.
       {
           "version": "3.7.4",
           "displayName": "37",
@@ -110,7 +112,7 @@ parameters:
       {
           "version": "2.7",
           "displayName": "27",
-          "excludeTags": "not @python3.7 and not @python3.5 and not @python3 and not @noNeedToTestInAllPython"
+          "excludeTags": "not @python3.7 and not @python3.6 and not @python3.5 and not @python3 and not @noNeedToTestInAllPython"
       }
     ]
 
