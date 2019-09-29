@@ -183,7 +183,10 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     context.subscriptions.push(deprecationMgr);
 
     context.subscriptions.push(new ReplProvider(serviceContainer));
-    context.subscriptions.push(new TerminalProvider(serviceContainer));
+
+    const terminalProvider = new TerminalProvider(serviceContainer);
+    await terminalProvider.initialize(window.activeTerminal);
+    context.subscriptions.push(terminalProvider);
 
     context.subscriptions.push(languages.registerCodeActionsProvider(PYTHON, new PythonCodeActionProvider(), { providedCodeActionKinds: [CodeActionKind.SourceOrganizeImports] }));
 

@@ -354,7 +354,8 @@ export class PythonSettings implements IPythonSettings {
         this.terminal = this.terminal ? this.terminal : {
             executeInFileDir: true,
             launchArgs: [],
-            activateEnvironment: true
+            activateEnvironment: true,
+            activateEnvInCurrentTerminal: false
         };
 
         const experiments = systemVariables.resolveAny(pythonSettings.get<IExperiments>('experiments'))!;

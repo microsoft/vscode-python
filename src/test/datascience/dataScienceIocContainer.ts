@@ -510,7 +510,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.pythonSettings.terminal = {
             executeInFileDir: false,
             launchArgs: [],
-            activateEnvironment: true
+            activateEnvironment: true,
+            activateEnvInCurrentTerminal: false
         };
 
         condaService.setup(c => c.isCondaAvailable()).returns(() => Promise.resolve(false));

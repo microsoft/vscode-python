@@ -276,6 +276,7 @@ export interface ITerminalSettings {
     readonly executeInFileDir: boolean;
     readonly launchArgs: string[];
     readonly activateEnvironment: boolean;
+    readonly activateEnvInCurrentTerminal: boolean;
 }
 
 export interface IExperiments {
