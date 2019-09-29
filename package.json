@@ -965,47 +965,47 @@
                 },
                 {
                     "command": "python.openTestNodeInEditor",
-                    "when": "view == python_tests && viewItem == testFunction",
+                    "when": "view == python_tests && viewItem == function",
                     "group": "inline@2"
                 },
                 {
                     "command": "python.debugTestNode",
-                    "when": "view == python_tests && viewItem == testFunction && !busyTests",
+                    "when": "view == python_tests && viewItem == function && !busyTests",
                     "group": "inline@1"
                 },
                 {
                     "command": "python.runTestNode",
-                    "when": "view == python_tests && viewItem == testFunction && !busyTests",
+                    "when": "view == python_tests && viewItem == function && !busyTests",
                     "group": "inline@0"
                 },
                 {
                     "command": "python.openTestNodeInEditor",
-                    "when": "view == python_tests && viewItem == testFile",
+                    "when": "view == python_tests && viewItem == file",
                     "group": "inline@2"
                 },
                 {
                     "command": "python.debugTestNode",
-                    "when": "view == python_tests && viewItem == testFile && !busyTests",
+                    "when": "view == python_tests && viewItem == file && !busyTests",
                     "group": "inline@1"
                 },
                 {
                     "command": "python.runTestNode",
-                    "when": "view == python_tests && viewItem == testFile && !busyTests",
+                    "when": "view == python_tests && viewItem == file && !busyTests",
                     "group": "inline@0"
                 },
                 {
                     "command": "python.openTestNodeInEditor",
-                    "when": "view == python_tests && viewItem == testSuite",
+                    "when": "view == python_tests && viewItem == suite",
                     "group": "inline@2"
                 },
                 {
                     "command": "python.debugTestNode",
-                    "when": "view == python_tests && viewItem == testSuite && !busyTests",
+                    "when": "view == python_tests && viewItem == suite && !busyTests",
                     "group": "inline@1"
                 },
                 {
                     "command": "python.runTestNode",
-                    "when": "view == python_tests && viewItem == testSuite && !busyTests",
+                    "when": "view == python_tests && viewItem == suite && !busyTests",
                     "group": "inline@0"
                 }
             ]
