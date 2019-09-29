@@ -136,6 +136,7 @@ After(async function(scenario: HookScenarioResult) {
             // State of the workspace folder, logs, screenshots, everything.
             // Rememeber, screenshots are specific to each test (hence they are preserved as long as we don't delete them).
             await fs.copy(options.workspacePathOrFolder, path.join(options.reportsPath, 'workspace folder'));
+            await fs.copy(path.join(options.userDataPath, 'logs'), path.join(options.reportsPath, 'user logs')).catch(noop);
             await fs.copyFile(options.userSettingsFilePath, path.join(options.reportsPath, 'user_settings.json'));
             await Promise.all([
                 new Promise(resolve => rimraf(options.workspacePathOrFolder, resolve)).catch(noop),

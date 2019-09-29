@@ -79,7 +79,10 @@ export class TestOptions implements ITestOptions {
             fs.ensureDir(this._workspacePathOrFolder),
             fs.ensureDir(this.screenshotsPath),
             fs.ensureDir(this.rootReportsPath),
-            fs.ensureDir(this.reportsPath)
+            fs.ensureDir(this.reportsPath),
+            // If possible delete the vscode user logs directory (this is where VS Code stores logs).
+            // Clear for every test so we have a fresh set of data (this way when tests fail, we have logs specific to that test run).
+            fs.remove(path.join(this.userDataPath, 'logs'))
         ]);
         // Set variables for logging to be enabled within extension.
         process.env.TF_BUILD = 'true';
