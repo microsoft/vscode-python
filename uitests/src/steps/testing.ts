@@ -22,7 +22,14 @@ When('I wait for test discovery to complete', async function() {
         // Wait either for 3 seconds (we know tests would have stated discoverying by then).
         sleep(3_000),
         // Or until we can see the discovering icon.
-        this.app.testExplorer.waitUntilToolbarIconVisible('Stop', 3_000).catch(noop),
+        // Note, wait for icon to be Visible only if Test Explorer is already visible.
+        // Else this will result in displaying the test explorer and then checking the visibility of the icon.
+        // All of that could exceed 3 seconds (even though the Promise.race would resolve the other code would continue to run).
+        // I.e. using Promise.race should only be used when we know there are no side effects and other one can and will complete withouth any issues.
+        this.app.testExplorer
+            .isOpened()
+            .then(visible => (visible ? this.app.testExplorer.waitUntilToolbarIconVisible('Stop', 3_000) : Promise.resolve()))
+            .catch(noop),
         // Or until we can see the discovering message.
         this.app.statusbar.waitUntilStatusBarItemWithText('Discovering Tests', 3_000).catch(noop)
     ]);
