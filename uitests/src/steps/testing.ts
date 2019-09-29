@@ -6,7 +6,7 @@
 // tslint:disable: no-invalid-this
 
 import { expect } from 'chai';
-import { Then, When } from 'cucumber';
+import { Then, When, World } from 'cucumber';
 import { CucumberRetryMax5Seconds } from '../constants';
 import { noop, sleep } from '../helpers';
 import { IApplication, TestExplorerNodeStatus } from '../types';
@@ -15,13 +15,14 @@ Then('the test explorer icon will be visible', async function() {
     await this.app.testExplorer.waitUntilIconVisible(5_000);
 });
 
-// Surely tests can't take more than 30s to get discovered.
-When('I wait for test discovery to complete', async function() {
+async function waitForTestsToStopRunningOrDiscovering(this: World, type: 'running' | 'discovering') {
+    const message = type === 'running' ? 'Running Tests' : 'Discovering Tests';
+
     // Wait for tests discovery to first start.
     await Promise.race([
-        // Wait either for 3 seconds (we know tests would have stated discoverying by then).
+        // Wait either for 3 seconds (we know tests would have stated discoverying/running by then).
         sleep(3_000),
-        // Or until we can see the discovering icon.
+        // Or until we can see the discovering/running icon.
         // Note, wait for icon to be Visible only if Test Explorer is already visible.
         // Else this will result in displaying the test explorer and then checking the visibility of the icon.
         // All of that could exceed 3 seconds (even though the Promise.race would resolve the other code would continue to run).
@@ -30,21 +31,24 @@ When('I wait for test discovery to complete', async function() {
             .isOpened()
             .then(visible => (visible ? this.app.testExplorer.waitUntilToolbarIconVisible('Stop', 3_000) : Promise.resolve()))
             .catch(noop),
-        // Or until we can see the discovering message.
-        this.app.statusbar.waitUntilStatusBarItemWithText('Discovering Tests', 3_000).catch(noop)
+        // Or until we can see the discovering/running message.
+        this.app.statusbar.waitUntilStatusBarItemWithText(message, 3_000).catch(noop)
     ]);
 
     await Promise.all([
         // Ensure the `stop` icon is not visible in the explorer toolbar.
         this.app.testExplorer.waitUntilTestsStop(30_000),
-        // Also ensure there is no statubar item with the text 'Discovering Tests'
-        this.app.statusbar.waitUntilNoStatusBarItemWithText('Discovering Tests', 30_000)
+        // Also ensure there is no statubar item with the text 'Discovering Tests' or 'Running Tests'
+        this.app.statusbar.waitUntilNoStatusBarItemWithText(message, 30_000)
     ]);
+}
+
+When('I wait for test discovery to complete', async function() {
+    await waitForTestsToStopRunningOrDiscovering.call(this, 'discovering');
 });
 
-// Surely pythonn tests (in our UI Tests) can't take more than 30s to run.
 When('I wait for tests to complete running', async function() {
-    await this.app.testExplorer.waitUntilTestsStop(30_000);
+    await waitForTestsToStopRunningOrDiscovering.call(this, 'running');
 });
 
 Then('there are {int} nodes in the test explorer', CucumberRetryMax5Seconds, async function(expectedCount: number) {

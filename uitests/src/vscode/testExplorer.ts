@@ -15,8 +15,7 @@ const statusToIconMapping: Map<TestExplorerNodeStatus, string> = new Map([
     ['Ok', 'status-ok.svg'],
     ['Pass', 'status-ok.svg'],
     ['Success', 'status-ok.svg'],
-    ['Fail', 'status-error.svg'],
-    ['Error', 'status-error.svg']
+    ['Fail', 'status-error.svg']
 ]);
 // 100ms was too low in version 1.38 of VS Code.
 const delayForUIToUpdate = 150;
@@ -109,7 +108,7 @@ export class TestExplorer implements ITestExplorer {
             }
         } finally {
             const visibleNodes = await this.getNodeCount();
-            if (visibleNodes === initialNodeCount) {
+            if (visibleNodes <= 2 && visibleNodes === initialNodeCount) {
                 // Something is wrong, try again.
                 // tslint:disable-next-line: no-unsafe-finally
                 throw new Error('Retry expanding nodes. First iteration did not reveal any new nodes!');

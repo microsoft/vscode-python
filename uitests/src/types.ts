@@ -677,7 +677,7 @@ export interface IInterpreters {
 
 export type TestExplorerToolbarIcon = 'Stop' | 'RunFailedTests';
 export type TestingAction = 'run' | 'debug' | 'open';
-export type TestExplorerNodeStatus = 'Unknown' | 'Success' | 'Progress' | 'Skip' | 'Ok' | 'Pass' | 'Fail' | 'Error';
+export type TestExplorerNodeStatus = 'Unknown' | 'Success' | 'Progress' | 'Skip' | 'Ok' | 'Pass' | 'Fail';
 export interface ITestExplorer {
     isOpened(): Promise<boolean>;
     isIconVisible(): Promise<boolean>;
