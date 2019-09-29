@@ -210,6 +210,11 @@ async function initializeDefaultUserSettings(opts: ITestOptions, additionalSetti
         // We don't want any surprises.
         'extensions.autoCheckUpdates': false,
         'update.mode': 'none',
+        // Save realestate by hiding the branch info in statubar (we don't need this).
+        // On CI resolution is fairly low, hence realestate in statubar is limited.
+        // E.g. getting line & column numbers sometimes are not displayed.
+        // Solution - hide what we don't need.
+        'git.enabled': false,
         ...additionalSettings
     };
 

@@ -584,6 +584,13 @@ export interface IDebugger {
 }
 export interface IStatusBar {
     /**
+     * Hides the main python statusbar item (the one with the Interpreter info).
+     *
+     * @returns {Promise<void>}
+     * @memberof IStatusBar
+     */
+    hidePythonStatusBarItem(): Promise<void>;
+    /**
      * Gets the statusbar text from the statusbar entry created by the Python Extension.
      * This generally contains the display name of the Python Interpreter selected.
      *

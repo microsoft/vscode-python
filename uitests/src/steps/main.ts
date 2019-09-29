@@ -153,7 +153,7 @@ After(async function(scenario: HookScenarioResult) {
  */
 type AsyncFunction = (...args: any[]) => Promise<any>;
 (setDefinitionFunctionWrapper as any)(function(fn: Function, opts?: { retry?: RetryOptions }) {
-    return async function(this: {}) {
+    return async function(this: MyWorld) {
         const args = [].slice.call(arguments);
         if (!opts || !opts.retry) {
             return fn.apply(this, args);

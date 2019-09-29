@@ -11,6 +11,16 @@ import { IApplication, IStatusBar } from '../types';
 
 export class StatusBar implements IStatusBar {
     constructor(private readonly app: IApplication) {}
+    public async hidePythonStatusBarItem(): Promise<void> {
+        // We make the assumption that the first Python statusbar item is the one that contains the interpreter info.
+        const selector = this.app.getCSSSelector(Selector.PythonExtensionStatusBar);
+        await this.app.driver.$$eval(selector, eles => {
+            if (eles.length === 0) {
+                return;
+            }
+            eles[0].parentNode!.removeChild(eles[0]);
+        });
+    }
     public getPythonStatusBarText(): Promise<string> {
         const selector = this.app.getCSSSelector(Selector.PythonExtensionStatusBar);
         return this.app.driver.$eval(selector, ele => ele.textContent || '').then(text => text.normalize());

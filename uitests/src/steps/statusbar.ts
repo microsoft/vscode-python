@@ -6,9 +6,20 @@
 // tslint:disable: no-invalid-this
 
 import { expect } from 'chai';
-import { Then } from 'cucumber';
+import { Given, Then, When } from 'cucumber';
 import { CucumberRetryMax5Seconds } from '../constants';
+import { noop } from '../helpers';
 import '../helpers/extensions';
+
+Given('the python status bar item is hidden', async function() {
+    await this.app.statusbar.hidePythonStatusBarItem().catch(noop);
+});
+When('I hide the python status bar item', async function() {
+    await this.app.statusbar.hidePythonStatusBarItem().catch(noop);
+});
+Then('hide the python status bar item', async function() {
+    await this.app.statusbar.hidePythonStatusBarItem().catch(noop);
+});
 
 // Add a delay, as this can take around 1s (from the time something was selected).
 Then('the python the status bar contains the text {string}', CucumberRetryMax5Seconds, async function(text: string) {
