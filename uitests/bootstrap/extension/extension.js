@@ -91,7 +91,8 @@ function activate(context) {
                 continue;
             }
         }
-        // Create a file to notify UI tests about successful execution of the command.
+        // Creating this file indicates the fact that the command was executed successfully.
+        // The existence of this file is checked by the ui tests.
         await new Promise(resolve => fs.writeFile(lsOutputOpenedFile, '', resolve));
     });
     vscode.commands.registerCommand('smoketest.runInTerminal', async () => {
