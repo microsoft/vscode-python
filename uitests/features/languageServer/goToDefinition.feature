@@ -7,13 +7,13 @@ Feature: Language Server
         And I enable the workspace setting "python.jediEnabled"
         And I wait for the Python extension to activate
         And I select the command "Python: Show Output"
-        Then the text "Jedi Python language engine" will be displayed in the output panel within 5 seconds
+        Then the text "Jedi Python language engine" will be displayed in the output panel within 10 seconds
         # Sometimes LS & Jedi are slow.
-        And wait for 5 seconds
+        And wait for 10 seconds
         When I open the file "my_sample.py"
         And I go to line 3, column 10
         # Wait for intellisense to kick in (sometimes slow in jedi & ls)
-        And I wait for 5 seconds
+        And I wait for 10 seconds
         When I select the command "Go to Definition"
         Then the cursor is on line 1
 
@@ -32,12 +32,12 @@ Feature: Language Server
         When I select the command "Python: Show Language Server Output"
         Then the text "Initializing for" will be displayed in the output panel within 120 seconds
         # Sometimes LS & Jedi are slow.
-        When I wait for 5 seconds
+        When I wait for 10 seconds
         Then the status bar item containing the text "Analyzing in background" will be hidden within 120 seconds
         When I open the file "my_sample.py"
         And I go to line 3, column 10
         # Wait for intellisense to kick in (sometimes slow in jedi & ls)
-        And I wait for 5 seconds
+        And I wait for 10 seconds
         When I select the command "Go to Definition"
         Then the cursor is on line 1
 

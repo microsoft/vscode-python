@@ -6,7 +6,7 @@ Feature: Language Server
         When I enable the workspace setting "python.jediEnabled"
         And I wait for the Python extension to activate
         And I select the command "Python: Show Output"
-        Then the text "Jedi Python language engine" will be displayed in the output panel within 5 seconds
+        Then the text "Jedi Python language engine" will be displayed in the output panel within 10 seconds
 
     @smoke
     Scenario: Check output of 'Python' and 'Python Language Server' output panel when starting VS Code with Language Server enabled
