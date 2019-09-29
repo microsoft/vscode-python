@@ -1,6 +1,6 @@
 @ls
 Feature: Language Server
-    Background: Unresolved imports
+    Background: Unresolved imports with Language Server
         Given a file named "sample.py" is created with the following content
             """
         import requests
@@ -12,7 +12,11 @@ Feature: Language Server
         And I wait for the Python extension to activate
         And I select the command "Python: Show Output"
         Then the text "Microsoft Python language server" will be displayed in the output panel within 120 seconds
-        And wait for 120 seconds
+        When I select the command "Python: Show Language Server Output"
+        Then the text "Initializing for" will be displayed in the output panel within 120 seconds
+        # Sometimes LS is slow.
+        When I wait for 10 seconds
+        Then the status bar item containing the text "Analyzing in background" will be hidden within 120 seconds
         When I select the command "View: Focus Problems (Errors, Warnings, Infos)"
         Then there is at least one problem in the problems panel
         And there is a problem with the file named "sample.py"
@@ -33,15 +37,17 @@ Feature: Language Server
         And I wait for the Python extension to activate
         And I select the command "Python: Show Output"
         Then the text "Microsoft Python language server" will be displayed in the output panel within 120 seconds
-        And wait for 120 seconds
+        When I select the command "Python: Show Language Server Output"
+        Then the text "Initializing for" will be displayed in the output panel within 120 seconds
+        # Sometimes LS is slow.
+        When I wait for 10 seconds
+        Then the status bar item containing the text "Analyzing in background" will be hidden within 120 seconds
         When I select the command "View: Focus Problems (Errors, Warnings, Infos)"
         # Ensure we are not too eager, possible LS hasn't analyzed yet.
-        And I wait for 10 seconds
-        Then there are no problems in the problems panel
+        Then there are no problems in the problems panel within 30 seconds
 
     @skip
     Scenario: Unresolved import message should go away when package is installed
         When I install the package "requests"
-        # Wait for some time for LS to detect this new package.
-        And I wait for 10 seconds
-        Then there are no problems in the problems panel
+        # Ensure we are not too eager, possible LS hasn't analyzed yet.
+        Then there are no problems in the problems panel within 30 seconds

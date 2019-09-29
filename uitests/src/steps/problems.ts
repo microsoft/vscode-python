@@ -9,6 +9,7 @@ import * as assert from 'assert';
 import { expect } from 'chai';
 import { Then } from 'cucumber';
 import { CucumberRetryMax5Seconds } from '../constants';
+import { retryWrapper } from '../helpers';
 
 // Wait for some time as it take take at least 1s to appear.
 // Surely problems won't take more than 5 seconds to appear.
@@ -17,6 +18,15 @@ import { CucumberRetryMax5Seconds } from '../constants';
 Then('there are no problems in the problems panel', CucumberRetryMax5Seconds, async function() {
     const count = await this.app.problems.getProblemCount();
     assert.equal(count, 0);
+});
+
+Then('there are no problems in the problems panel within {int} seconds', async function(retrySeconds: number) {
+    const checkProblems = async () => {
+        const count = await this.app.problems.getProblemCount();
+        assert.equal(count, 0);
+    };
+
+    await retryWrapper({ timeout: retrySeconds * 1000 }, checkProblems);
 });
 
 Then('there is at least one problem in the problems panel', CucumberRetryMax5Seconds, async function() {
