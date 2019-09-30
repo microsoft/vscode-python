@@ -5,4 +5,3 @@
 export namespace Commands {
     export const ClearAnalyisCache = 'python.analysis.clearCache';
 }
-

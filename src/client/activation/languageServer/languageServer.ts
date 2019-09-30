@@ -5,6 +5,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import { Disposable, LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
+import { ICommandManager } from '../../common/application/types';
 import '../../common/extensions';
 import { traceDecorators, traceError } from '../../common/logger';
 import { IConfigurationService, Resource } from '../../common/types';
@@ -17,7 +18,6 @@ import { EventName } from '../../telemetry/constants';
 import { ITestManagementService } from '../../testing/types';
 import { ILanguageClientFactory, ILanguageServer, LanguageClientFactory } from '../types';
 import { ProgressReporting } from './progress';
-import { ICommandManager } from '../../common/application/types';
 import { Commands } from './constants';
 
 @injectable()
@@ -119,6 +119,6 @@ export class LanguageServer implements ILanguageServer {
     private onClearAnalysisCache() {
         this.languageClient!.sendRequest('python/clearAnalysisCache').then(noop, ex =>
             traceError('Request python/clearAnalysisCache failed', ex)
-        )
+        );
     }
 }

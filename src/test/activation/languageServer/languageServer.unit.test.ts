@@ -11,12 +11,12 @@ import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
 import { BaseLanguageClientFactory } from '../../../client/activation/languageServer/languageClientFactory';
 import { LanguageServer } from '../../../client/activation/languageServer/languageServer';
 import { ILanguageClientFactory } from '../../../client/activation/types';
+import { ICommandManager } from '../../../client/common/application/types';
 import '../../../client/common/extensions';
 import { IConfigurationService, IDisposable, IPythonSettings } from '../../../client/common/types';
 import { sleep } from '../../../client/common/utils/async';
 import { UnitTestManagementService } from '../../../client/testing/main';
 import { ITestManagementService } from '../../../client/testing/types';
-import { ICommandManager } from '../../../client/common/application/types';
 
 //tslint:disable:no-require-imports no-require-imports no-var-requires no-any no-unnecessary-class max-func-body-length
 
