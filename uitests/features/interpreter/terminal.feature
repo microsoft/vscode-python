@@ -30,7 +30,7 @@ Feature: Terminal
             open('log.log', 'w').write('Hello World')
             """
         And a file named "hello word/log.log" does not exist
-        When I open the file "run in terminal.py"
+        When I open the file "hello word/run in terminal.py"
         And I select the command "Python: Run Python File in Terminal"
         # Wait for some time, as it could take a while for terminal to get activated.
         # Slow on windows.
