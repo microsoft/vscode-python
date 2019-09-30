@@ -125,12 +125,15 @@ suite('Insiders Extension Service - Activation', () => {
         handleEdgeCases.callsFake(() => Promise.resolve(true));
         insidersExtensionService = new InsidersExtensionService(instance(extensionChannelService), instance(insidersPrompt), instance(appEnvironment), instance(cmdManager), instance(serviceContainer), instance(insidersInstaller), []);
         when(extensionChannelService.getChannel()).thenReturn('daily');
+        when(extensionChannelService.isChannelUsingDefaultConfiguration).thenReturn(false);
 
         await insidersExtensionService.activate();
 
         verify(extensionChannelService.getChannel()).once();
+        verify(extensionChannelService.isChannelUsingDefaultConfiguration).once();
         assert.ok(registerCommandsAndHandlers.calledOnce);
         assert.ok(handleEdgeCases.calledOnce);
+        assert.ok(handleEdgeCases.calledWith('daily', false));
         assert.ok(handleChannel.notCalled);
     });
 
@@ -140,14 +143,16 @@ suite('Insiders Extension Service - Activation', () => {
         handleEdgeCases.callsFake(() => Promise.resolve(false));
         insidersExtensionService = new InsidersExtensionService(instance(extensionChannelService), instance(insidersPrompt), instance(appEnvironment), instance(cmdManager), instance(serviceContainer), instance(insidersInstaller), []);
         when(extensionChannelService.getChannel()).thenReturn('daily');
+        when(extensionChannelService.isChannelUsingDefaultConfiguration).thenReturn(false);
 
         await insidersExtensionService.activate();
 
         verify(extensionChannelService.getChannel()).once();
+        verify(extensionChannelService.isChannelUsingDefaultConfiguration).once();
         assert.ok(registerCommandsAndHandlers.calledOnce);
         assert.ok(handleEdgeCases.calledOnce);
+        assert.ok(handleEdgeCases.calledWith('daily', false));
         assert.ok(handleChannel.calledOnce);
-        expect(handleChannel.args[0][0]).to.equal('daily');
     });
 
     test('Ensure channels are reliably handled in the background', async () => {
@@ -157,6 +162,7 @@ suite('Insiders Extension Service - Activation', () => {
         handleEdgeCases.callsFake(() => Promise.resolve(false));
         insidersExtensionService = new InsidersExtensionService(instance(extensionChannelService), instance(insidersPrompt), instance(appEnvironment), instance(cmdManager), instance(serviceContainer), instance(insidersInstaller), []);
         when(extensionChannelService.getChannel()).thenReturn('daily');
+        when(extensionChannelService.isChannelUsingDefaultConfiguration).thenReturn(false);
 
         const promise = insidersExtensionService.activate();
         const deferred = createDeferredFromPromise(promise);
@@ -171,7 +177,7 @@ suite('Insiders Extension Service - Activation', () => {
         assert.ok(registerCommandsAndHandlers.calledOnce);
         assert.ok(handleEdgeCases.calledOnce);
         assert.ok(handleChannel.calledOnce);
-        expect(handleChannel.args[0][0]).to.equal('daily');
+        assert.ok(handleEdgeCases.calledWith('daily', false));
     });
 });
 
