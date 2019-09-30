@@ -211,10 +211,12 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
         insidersPrompt
             .setup(p => p.hasUserBeenNotified)
             .returns(() => instance(hasUserBeenNotifiedState))
+            // Basically means "we don't care" (necessary for strict mocks).
             .verifiable(TypeMoq.Times.atLeast(0));
         insidersPrompt
             .setup(p => p.hasUserBeenAskedToOptInAgain)
             .returns(() => instance(hasUserBeenAskedToOptInAgainState))
+            // Basically means "we don't care" (necessary for strict mocks).
             .verifiable(TypeMoq.Times.atLeast(0));
     }
 
