@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, optional } from 'inversify';
-import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
+import { ConfigurationTarget, Uri } from 'vscode';
 import { IExtensionActivationService } from '../../activation/types';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { traceDecorators, traceError } from '../../common/logger';
@@ -16,7 +16,6 @@ export const condaInheritEnvPromptKey = 'CONDA_INHERIT_ENV_PROMPT_KEY';
 
 @injectable()
 export class CondaInheritEnvPrompt implements IExtensionActivationService {
-    private terminalSettings!: WorkspaceConfiguration;
     constructor(
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
@@ -46,7 +45,7 @@ export class CondaInheritEnvPrompt implements IExtensionActivationService {
             return;
         }
         if (selection === prompts[0]) {
-            await this.terminalSettings.update('integrated.inheritEnv', false, ConfigurationTarget.Global);
+            await this.workspaceService.getConfiguration('terminal').update('integrated.inheritEnv', false, ConfigurationTarget.Global);
         } else if (selection === prompts[1]) {
             await notificationPromptEnabled.updateValue(false);
         }
@@ -61,8 +60,7 @@ export class CondaInheritEnvPrompt implements IExtensionActivationService {
         if (!interpreter || interpreter.type !== InterpreterType.Conda) {
             return false;
         }
-        this.terminalSettings = this.workspaceService.getConfiguration('terminal', resource);
-        const setting = this.terminalSettings.inspect<boolean>('integrated.inheritEnv');
+        const setting = this.workspaceService.getConfiguration('terminal', resource).inspect<boolean>('integrated.inheritEnv');
         if (!setting) {
             traceError('WorkspaceConfiguration.inspect returns `undefined` for setting `terminal.integrated.inheritEnv`');
             return false;

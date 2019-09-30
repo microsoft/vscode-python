@@ -5,29 +5,33 @@
 
 import { assert, expect } from 'chai';
 import * as sinon from 'sinon';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import { Uri, WorkspaceConfiguration } from 'vscode';
+import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
 import { PersistentStateFactory } from '../../../client/common/persistentState';
-import { IPersistentStateFactory } from '../../../client/common/types';
+import { IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
+import { InteractiveShiftEnterBanner, Interpreters } from '../../../client/common/utils/localize';
 import { IInterpreterService, InterpreterType } from '../../../client/interpreter/contracts';
-import { CondaInheritEnvPrompt } from '../../../client/interpreter/virtualEnvs/condaInheritEnvPrompt';
+import { CondaInheritEnvPrompt, condaInheritEnvPromptKey } from '../../../client/interpreter/virtualEnvs/condaInheritEnvPrompt';
 
 // tslint:disable:no-any
 
-// tslint:disable-next-line:max-func-body-length
+// tslint:disable:max-func-body-length
 suite('Conda Inherit Env Prompt', async () => {
+    const resource = Uri.file('a');
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let appShell: TypeMoq.IMock<IApplicationShell>;
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
     let persistentStateFactory: IPersistentStateFactory;
+    let notificationPromptEnabled: TypeMoq.IMock<IPersistentState<any>>;
     let condaInheritEnvPrompt: CondaInheritEnvPrompt;
     function verifyAll() {
         workspaceService.verifyAll();
         appShell.verifyAll();
         interpreterService.verifyAll();
     }
+
     suite('Method shouldShowPrompt()', () => {
         setup(() => {
             workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
@@ -36,9 +40,111 @@ suite('Conda Inherit Env Prompt', async () => {
             persistentStateFactory = mock(PersistentStateFactory);
             condaInheritEnvPrompt = new CondaInheritEnvPrompt(interpreterService.object, workspaceService.object, appShell.object, instance(persistentStateFactory));
         });
-        test('Returns true otherwise', async () => {
+        test('Returns false if active interpreter is not of type Conda', async () => {
             const interpreter = {
                 type: InterpreterType.Pipenv
+            };
+            const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
+            interpreterService
+                .setup(is => is.getActiveInterpreter(resource))
+                .returns(() => Promise.resolve(interpreter) as any)
+                .verifiable(TypeMoq.Times.once());
+            workspaceService
+                .setup(ws => ws.getConfiguration('terminal', resource))
+                .returns(() => workspaceConfig.object)
+                .verifiable(TypeMoq.Times.never());
+            const result = await condaInheritEnvPrompt.shouldShowPrompt(resource);
+            expect(result).to.equal(false, 'Prompt should not be shown');
+            expect(condaInheritEnvPrompt.hasPromptBeenShownInCurrentSession).to.equal(false, 'Should be false');
+            verifyAll();
+        });
+        test('Returns false if no active interpreter is present', async () => {
+            const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
+            interpreterService
+                .setup(is => is.getActiveInterpreter(resource))
+                .returns(() => Promise.resolve(undefined))
+                .verifiable(TypeMoq.Times.once());
+            workspaceService
+                .setup(ws => ws.getConfiguration('terminal', resource))
+                .returns(() => workspaceConfig.object)
+                .verifiable(TypeMoq.Times.never());
+            const result = await condaInheritEnvPrompt.shouldShowPrompt(resource);
+            expect(result).to.equal(false, 'Prompt should not be shown');
+            expect(condaInheritEnvPrompt.hasPromptBeenShownInCurrentSession).to.equal(false, 'Should be false');
+            verifyAll();
+        });
+        test('Returns false if settings returned is `undefined`', async () => {
+            const interpreter = {
+                type: InterpreterType.Conda
+            };
+            const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
+            interpreterService
+                .setup(is => is.getActiveInterpreter(resource))
+                .returns(() => Promise.resolve(interpreter) as any)
+                .verifiable(TypeMoq.Times.once());
+            workspaceService
+                .setup(ws => ws.getConfiguration('terminal', resource))
+                .returns(() => workspaceConfig.object)
+                .verifiable(TypeMoq.Times.once());
+            workspaceConfig
+                .setup(ws => ws.inspect<boolean>('integrated.inheritEnv'))
+                .returns(() => undefined);
+            const result = await condaInheritEnvPrompt.shouldShowPrompt(resource);
+            expect(result).to.equal(false, 'Prompt should not be shown');
+            expect(condaInheritEnvPrompt.hasPromptBeenShownInCurrentSession).to.equal(false, 'Should be false');
+            verifyAll();
+        });
+        [
+            {
+                name: 'Returns false if globalValue `terminal.integrated.inheritEnv` setting is set',
+                settings: {
+                    globalValue: true,
+                    workspaceValue: undefined,
+                    workspaceFolderValue: undefined
+                }
+            },
+            {
+                name: 'Returns false if workspaceValue of `terminal.integrated.inheritEnv` setting is set',
+                settings: {
+                    globalValue: undefined,
+                    workspaceValue: true,
+                    workspaceFolderValue: undefined
+                }
+            },
+            {
+                name: 'Returns false if workspaceFolderValue of `terminal.integrated.inheritEnv` setting is set',
+                settings: {
+                    globalValue: undefined,
+                    workspaceValue: undefined,
+                    workspaceFolderValue: false
+                }
+            }
+        ].forEach(testParams => {
+            test(testParams.name, async () => {
+                const interpreter = {
+                    type: InterpreterType.Conda
+                };
+                const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
+                interpreterService
+                    .setup(is => is.getActiveInterpreter(resource))
+                    .returns(() => Promise.resolve(interpreter) as any)
+                    .verifiable(TypeMoq.Times.once());
+                workspaceService
+                    .setup(ws => ws.getConfiguration('terminal', resource))
+                    .returns(() => workspaceConfig.object)
+                    .verifiable(TypeMoq.Times.once());
+                workspaceConfig
+                    .setup(ws => ws.inspect<boolean>('integrated.inheritEnv'))
+                    .returns(() => testParams.settings as any);
+                const result = await condaInheritEnvPrompt.shouldShowPrompt(resource);
+                expect(result).to.equal(false, 'Prompt should not be shown');
+                expect(condaInheritEnvPrompt.hasPromptBeenShownInCurrentSession).to.equal(false, 'Should be false');
+                verifyAll();
+            });
+        });
+        test('Returns true otherwise', async () => {
+            const interpreter = {
+                type: InterpreterType.Conda
             };
             const settings = {
                 globalValue: undefined,
@@ -46,10 +152,9 @@ suite('Conda Inherit Env Prompt', async () => {
                 workspaceFolderValue: undefined
             };
             const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-            const resource = Uri.file('a');
             interpreterService
                 .setup(is => is.getActiveInterpreter(resource))
-                .returns(() => interpreter as any)
+                .returns(() => Promise.resolve(interpreter) as any)
                 .verifiable(TypeMoq.Times.once());
             workspaceService
                 .setup(ws => ws.getConfiguration('terminal', resource))
@@ -58,241 +163,159 @@ suite('Conda Inherit Env Prompt', async () => {
             workspaceConfig
                 .setup(ws => ws.inspect<boolean>('integrated.inheritEnv'))
                 .returns(() => settings as any);
-            const result = condaInheritEnvPrompt.shouldShowPrompt(resource);
-            expect(result).to.equal(false, 'Prompt should not be shown');
+            const result = await condaInheritEnvPrompt.shouldShowPrompt(resource);
+            expect(result).to.equal(true, 'Prompt should be shown');
+            expect(condaInheritEnvPrompt.hasPromptBeenShownInCurrentSession).to.equal(true, 'Should be true');
+            verifyAll();
+        });
+    });
+
+    suite('Method activate()', () => {
+        let shouldShowPrompt: sinon.SinonStub<any>;
+        let promptAndUpdate: sinon.SinonStub<any>;
+        setup(() => {
+            workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
+            appShell = TypeMoq.Mock.ofType<IApplicationShell>();
+            interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+            persistentStateFactory = mock(PersistentStateFactory);
+        });
+
+        teardown(() => {
+            sinon.restore();
+        });
+
+        test('Show prompt if shouldShowPrompt() returns true', async () => {
+            shouldShowPrompt = sinon.stub(CondaInheritEnvPrompt.prototype, 'shouldShowPrompt');
+            shouldShowPrompt.callsFake(() => Promise.resolve(true));
+            promptAndUpdate = sinon.stub(CondaInheritEnvPrompt.prototype, 'promptAndUpdate');
+            promptAndUpdate.callsFake(() => Promise.resolve(undefined));
+            condaInheritEnvPrompt = new CondaInheritEnvPrompt(interpreterService.object, workspaceService.object, appShell.object, instance(persistentStateFactory));
+            await condaInheritEnvPrompt.activate(resource);
+            assert.ok(shouldShowPrompt.calledOnce);
+            assert.ok(promptAndUpdate.calledOnce);
+        });
+
+        test('Do not show prompt if shouldShowPrompt() returns false', async () => {
+            shouldShowPrompt = sinon.stub(CondaInheritEnvPrompt.prototype, 'shouldShowPrompt');
+            shouldShowPrompt.callsFake(() => Promise.resolve(false));
+            promptAndUpdate = sinon.stub(CondaInheritEnvPrompt.prototype, 'promptAndUpdate');
+            promptAndUpdate.callsFake(() => Promise.resolve(undefined));
+            condaInheritEnvPrompt = new CondaInheritEnvPrompt(interpreterService.object, workspaceService.object, appShell.object, instance(persistentStateFactory));
+            await condaInheritEnvPrompt.activate(resource);
+            assert.ok(shouldShowPrompt.calledOnce);
+            assert.ok(promptAndUpdate.notCalled);
+        });
+    });
+
+    suite('Method promptAndUpdate()', () => {
+        const prompts = [InteractiveShiftEnterBanner.bannerLabelYes(), InteractiveShiftEnterBanner.bannerLabelNo()];
+        setup(() => {
+            workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
+            appShell = TypeMoq.Mock.ofType<IApplicationShell>();
+            interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+            persistentStateFactory = mock(PersistentStateFactory);
+            notificationPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<any>>();
+            when(persistentStateFactory.createGlobalPersistentState(condaInheritEnvPromptKey, true)).thenReturn(notificationPromptEnabled.object);
+            condaInheritEnvPrompt = new CondaInheritEnvPrompt(interpreterService.object, workspaceService.object, appShell.object, instance(persistentStateFactory));
+        });
+
+        test('Does not display prompt if it is disabled', async () => {
+            notificationPromptEnabled
+                .setup(n => n.value)
+                .returns(() => false)
+                .verifiable(TypeMoq.Times.once());
+            appShell
+                .setup(a => a.showInformationMessage(Interpreters.condaInheritEnvMessage(), ...prompts))
+                .returns(() => Promise.resolve(undefined))
+                .verifiable(TypeMoq.Times.never());
+            await condaInheritEnvPrompt.promptAndUpdate();
+            verify(persistentStateFactory.createGlobalPersistentState(condaInheritEnvPromptKey, true)).once();
+            verifyAll();
+            notificationPromptEnabled.verifyAll();
+        });
+        test('Do nothing if no option is selected', async () => {
+            const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
+            notificationPromptEnabled
+                .setup(n => n.value)
+                .returns(() => true)
+                .verifiable(TypeMoq.Times.once());
+            appShell
+                .setup(a => a.showInformationMessage(Interpreters.condaInheritEnvMessage(), ...prompts))
+                .returns(() => Promise.resolve(undefined))
+                .verifiable(TypeMoq.Times.once());
+            workspaceService
+                .setup(ws => ws.getConfiguration('terminal'))
+                .returns(() => workspaceConfig.object)
+                .verifiable(TypeMoq.Times.never());
+            workspaceConfig
+                .setup(wc => wc.update('integrated.inheritEnv', false, ConfigurationTarget.Global))
+                .returns(() => Promise.resolve())
+                .verifiable(TypeMoq.Times.never());
+            notificationPromptEnabled
+                .setup(n => n.updateValue(false))
+                .returns(() => Promise.resolve(undefined))
+                .verifiable(TypeMoq.Times.never());
+            await condaInheritEnvPrompt.promptAndUpdate();
+            verify(persistentStateFactory.createGlobalPersistentState(condaInheritEnvPromptKey, true)).once();
+            verifyAll();
+            workspaceConfig.verifyAll();
+            notificationPromptEnabled.verifyAll();
+        });
+        test('Update terminal settings if `Yes` is selected', async () => {
+            const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
+            notificationPromptEnabled
+                .setup(n => n.value)
+                .returns(() => true)
+                .verifiable(TypeMoq.Times.once());
+            appShell
+                .setup(a => a.showInformationMessage(Interpreters.condaInheritEnvMessage(), ...prompts))
+                .returns(() => Promise.resolve(InteractiveShiftEnterBanner.bannerLabelYes()))
+                .verifiable(TypeMoq.Times.once());
+            workspaceService
+                .setup(ws => ws.getConfiguration('terminal'))
+                .returns(() => workspaceConfig.object)
+                .verifiable(TypeMoq.Times.once());
+            workspaceConfig
+                .setup(wc => wc.update('integrated.inheritEnv', false, ConfigurationTarget.Global))
+                .returns(() => Promise.resolve())
+                .verifiable(TypeMoq.Times.once());
+            notificationPromptEnabled
+                .setup(n => n.updateValue(false))
+                .returns(() => Promise.resolve(undefined))
+                .verifiable(TypeMoq.Times.never());
+            await condaInheritEnvPrompt.promptAndUpdate();
+            verify(persistentStateFactory.createGlobalPersistentState(condaInheritEnvPromptKey, true)).once();
+            verifyAll();
+            workspaceConfig.verifyAll();
+            notificationPromptEnabled.verifyAll();
+        });
+        test('Disable notification prompt if `No` is selected', async () => {
+            const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
+            notificationPromptEnabled
+                .setup(n => n.value)
+                .returns(() => true)
+                .verifiable(TypeMoq.Times.once());
+            appShell
+                .setup(a => a.showInformationMessage(Interpreters.condaInheritEnvMessage(), ...prompts))
+                .returns(() => Promise.resolve(InteractiveShiftEnterBanner.bannerLabelNo()))
+                .verifiable(TypeMoq.Times.once());
+            workspaceService
+                .setup(ws => ws.getConfiguration('terminal'))
+                .returns(() => workspaceConfig.object)
+                .verifiable(TypeMoq.Times.never());
+            workspaceConfig
+                .setup(wc => wc.update('integrated.inheritEnv', false, ConfigurationTarget.Global))
+                .returns(() => Promise.resolve())
+                .verifiable(TypeMoq.Times.never());
+            notificationPromptEnabled
+                .setup(n => n.updateValue(false))
+                .returns(() => Promise.resolve(undefined))
+                .verifiable(TypeMoq.Times.once());
+            await condaInheritEnvPrompt.promptAndUpdate();
+            verify(persistentStateFactory.createGlobalPersistentState(condaInheritEnvPromptKey, true)).once();
+            verifyAll();
+            workspaceConfig.verifyAll();
+            notificationPromptEnabled.verifyAll();
         });
     });
 });
-
-// tslint:disable-next-line: max-func-body-length
-// suite('Extension survey prompt - showSurvey()', () => {
-//     let notificationPromptEnabled: TypeMoq.IMock<IPersistentState<any>>;
-//     let experiments: TypeMoq.IMock<IExperimentsManager>;
-//     let appShell: TypeMoq.IMock<IApplicationShell>;
-//     let browserService: TypeMoq.IMock<IBrowserService>;
-//     let random: TypeMoq.IMock<IRandom>;
-//     let persistentStateFactory: IPersistentStateFactory;
-//     let disableSurveyForTime: TypeMoq.IMock<IPersistentState<any>>;
-//     let doNotShowAgain: TypeMoq.IMock<IPersistentState<any>>;
-//     let extensionSurveyPrompt: ExtensionSurveyPrompt;
-//     let notificationPromptEnabled: TypeMoq.IMock<IPersistentState<any>>;
-//     setup(() => {
-//         appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-//         browserService = TypeMoq.Mock.ofType<IBrowserService>();
-//         random = TypeMoq.Mock.ofType<IRandom>();
-//         persistentStateFactory = mock(PersistentStateFactory);
-//         disableSurveyForTime = TypeMoq.Mock.ofType<IPersistentState<any>>();
-//         doNotShowAgain = TypeMoq.Mock.ofType<IPersistentState<any>>();
-//         when(persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.disableSurveyForTime, false, anything())).thenReturn(disableSurveyForTime.object);
-//         when(persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false)).thenReturn(doNotShowAgain.object);
-//         experiments = TypeMoq.Mock.ofType<IExperimentsManager>();
-//         extensionSurveyPrompt = new ExtensionSurveyPrompt(appShell.object, browserService.object, instance(persistentStateFactory), random.object, experiments.object, 10);
-//     });
-
-//     test('Launch survey if \'Yes\' option is clicked', async () => {
-//         notificationPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<any>>();
-//         when(persistentStateFactory.createGlobalPersistentState(condaInheritEnvPromptKey, true)).thenReturn(notificationPromptEnabled.object);
-//         const prompts = [LanguageService.bannerLabelYes(), ExtensionSurveyBanner.maybeLater(), Common.doNotShowAgain()];
-//         appShell
-//             .setup(a => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage(), ...prompts))
-//             .returns(() => Promise.resolve(LanguageService.bannerLabelYes()))
-//             .verifiable(TypeMoq.Times.once());
-//         browserService
-//             .setup(s => s.launch(TypeMoq.It.isAny()))
-//             .returns(() => Promise.resolve())
-//             .verifiable(TypeMoq.Times.once());
-//         disableSurveyForTime
-//             .setup(d => d.updateValue(true))
-//             .returns(() => Promise.resolve())
-//             .verifiable(TypeMoq.Times.once());
-//         doNotShowAgain
-//             .setup(d => d.updateValue(true))
-//             .returns(() => Promise.resolve())
-//             .verifiable(TypeMoq.Times.never());
-//         await extensionSurveyPrompt.showSurvey();
-//         verify(persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.disableSurveyForTime, false, anything())).once();
-//         verify(persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false)).never();
-//         appShell.verifyAll();
-//         browserService.verifyAll();
-//         disableSurveyForTime.verifyAll();
-//         doNotShowAgain.verifyAll();
-//     });
-
-//     test('Do nothing if \'Maybe later\' option is clicked', async () => {
-//         const prompts = [LanguageService.bannerLabelYes(), ExtensionSurveyBanner.maybeLater(), Common.doNotShowAgain()];
-//         appShell
-//             .setup(a => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage(), ...prompts))
-//             .returns(() => Promise.resolve(ExtensionSurveyBanner.maybeLater()))
-//             .verifiable(TypeMoq.Times.once());
-//         browserService
-//             .setup(s => s.launch(TypeMoq.It.isAny()))
-//             .returns(() => Promise.resolve())
-//             .verifiable(TypeMoq.Times.never());
-//         disableSurveyForTime
-//             .setup(d => d.updateValue(true))
-//             .returns(() => Promise.resolve())
-//             .verifiable(TypeMoq.Times.never());
-//         doNotShowAgain
-//             .setup(d => d.updateValue(true))
-//             .returns(() => Promise.resolve())
-//             .verifiable(TypeMoq.Times.never());
-//         await extensionSurveyPrompt.showSurvey();
-//         verify(persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.disableSurveyForTime, false, anything())).never();
-//         verify(persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false)).never();
-//         appShell.verifyAll();
-//         browserService.verifyAll();
-//         disableSurveyForTime.verifyAll();
-//         doNotShowAgain.verifyAll();
-//     });
-
-//     test('Do nothing if no option is clicked', async () => {
-//         const prompts = [LanguageService.bannerLabelYes(), ExtensionSurveyBanner.maybeLater(), Common.doNotShowAgain()];
-//         appShell
-//             .setup(a => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage(), ...prompts))
-//             .returns(() => Promise.resolve(undefined))
-//             .verifiable(TypeMoq.Times.once());
-//         browserService
-//             .setup(s => s.launch(TypeMoq.It.isAny()))
-//             .returns(() => Promise.resolve())
-//             .verifiable(TypeMoq.Times.never());
-//         disableSurveyForTime
-//             .setup(d => d.updateValue(true))
-//             .returns(() => Promise.resolve())
-//             .verifiable(TypeMoq.Times.never());
-//         doNotShowAgain
-//             .setup(d => d.updateValue(true))
-//             .returns(() => Promise.resolve())
-//             .verifiable(TypeMoq.Times.never());
-//         await extensionSurveyPrompt.showSurvey();
-//         verify(persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.disableSurveyForTime, false, anything())).never();
-//         verify(persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false)).never();
-//         appShell.verifyAll();
-//         browserService.verifyAll();
-//         disableSurveyForTime.verifyAll();
-//         doNotShowAgain.verifyAll();
-//     });
-
-//     test('Disable prompt if \'Do not show again\' option is clicked', async () => {
-//         const prompts = [LanguageService.bannerLabelYes(), ExtensionSurveyBanner.maybeLater(), Common.doNotShowAgain()];
-//         appShell
-//             .setup(a => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage(), ...prompts))
-//             .returns(() => Promise.resolve(Common.doNotShowAgain()))
-//             .verifiable(TypeMoq.Times.once());
-//         browserService
-//             .setup(s => s.launch(TypeMoq.It.isAny()))
-//             .returns(() => Promise.resolve())
-//             .verifiable(TypeMoq.Times.never());
-//         disableSurveyForTime
-//             .setup(d => d.updateValue(true))
-//             .returns(() => Promise.resolve())
-//             .verifiable(TypeMoq.Times.never());
-//         doNotShowAgain
-//             .setup(d => d.updateValue(true))
-//             .returns(() => Promise.resolve())
-//             .verifiable(TypeMoq.Times.once());
-//         await extensionSurveyPrompt.showSurvey();
-//         verify(persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.disableSurveyForTime, false, anything())).never();
-//         verify(persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false)).once();
-//         appShell.verifyAll();
-//         browserService.verifyAll();
-//         disableSurveyForTime.verifyAll();
-//         doNotShowAgain.verifyAll();
-//     });
-// });
-
-// // tslint:disable-next-line: max-func-body-length
-// suite('Extension survey prompt - activate()', () => {
-//     let appShell: TypeMoq.IMock<IApplicationShell>;
-//     let browserService: TypeMoq.IMock<IBrowserService>;
-//     let random: TypeMoq.IMock<IRandom>;
-//     let persistentStateFactory: IPersistentStateFactory;
-//     let shouldShowBanner: sinon.SinonStub<any>;
-//     let showSurvey: sinon.SinonStub<any>;
-//     let experiments: TypeMoq.IMock<IExperimentsManager>;
-//     let extensionSurveyPrompt: ExtensionSurveyPrompt;
-//     setup(() => {
-//         appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-//         browserService = TypeMoq.Mock.ofType<IBrowserService>();
-//         random = TypeMoq.Mock.ofType<IRandom>();
-//         persistentStateFactory = mock(PersistentStateFactory);
-//         experiments = TypeMoq.Mock.ofType<IExperimentsManager>();
-//     });
-
-//     teardown(() => {
-//         sinon.restore();
-//     });
-
-//     test('If user is not in \'ShowExtensionPrompt\' experiment, send telemetry if in control group & return', async () => {
-//         shouldShowBanner = sinon.stub(ExtensionSurveyPrompt.prototype, 'shouldShowBanner');
-//         shouldShowBanner.callsFake(() => false);
-//         showSurvey = sinon.stub(ExtensionSurveyPrompt.prototype, 'showSurvey');
-//         extensionSurveyPrompt = new ExtensionSurveyPrompt(appShell.object, browserService.object, instance(persistentStateFactory), random.object, experiments.object, 10);
-//         experiments
-//             .setup(exp => exp.inExperiment(ShowExtensionSurveyPrompt.enabled))
-//             .returns(() => false)
-//             .verifiable(TypeMoq.Times.once());
-//         experiments
-//             .setup(exp => exp.sendTelemetryIfInExperiment(ShowExtensionSurveyPrompt.control))
-//             .returns(() => undefined)
-//             .verifiable(TypeMoq.Times.once());
-//         await extensionSurveyPrompt.activate();
-//         assert.ok(shouldShowBanner.notCalled);
-//         experiments.verifyAll();
-//     });
-
-//     test('No survey is shown if shouldShowBanner() returns false and user is in \'ShowExtensionPrompt\' experiment', async () => {
-//         const deferred = createDeferred<true>();
-//         shouldShowBanner = sinon.stub(ExtensionSurveyPrompt.prototype, 'shouldShowBanner');
-//         shouldShowBanner.callsFake(() => false);
-//         showSurvey = sinon.stub(ExtensionSurveyPrompt.prototype, 'showSurvey');
-//         showSurvey.callsFake(() => {
-//             deferred.resolve(true);
-//             return Promise.resolve();
-//         });
-//         // waitTimeToShowSurvey = 50 ms
-//         extensionSurveyPrompt = new ExtensionSurveyPrompt(appShell.object, browserService.object, instance(persistentStateFactory), random.object, experiments.object, 10, 50);
-//         experiments
-//             .setup(exp => exp.inExperiment(ShowExtensionSurveyPrompt.enabled))
-//             .returns(() => true)
-//             .verifiable(TypeMoq.Times.once());
-//         experiments
-//             .setup(exp => exp.sendTelemetryIfInExperiment(TypeMoq.It.isAny()))
-//             .returns(() => undefined)
-//             .verifiable(TypeMoq.Times.never());
-//         await extensionSurveyPrompt.activate();
-//         assert.ok(shouldShowBanner.calledOnce);
-
-//         const doesSurveyShowUp = await Promise.race([deferred.promise, sleep(100).then(() => false)]);
-//         assert.ok(showSurvey.notCalled);
-//         expect(doesSurveyShowUp).to.equal(false, 'Survey should not appear');
-//         experiments.verifyAll();
-//     });
-
-//     test('Survey is shown after waitTimeToShowSurvey if shouldShowBanner() returns true and user is in \'ShowExtensionPrompt\' experiment', async () => {
-//         const deferred = createDeferred<true>();
-//         shouldShowBanner = sinon.stub(ExtensionSurveyPrompt.prototype, 'shouldShowBanner');
-//         shouldShowBanner.callsFake(() => true);
-//         showSurvey = sinon.stub(ExtensionSurveyPrompt.prototype, 'showSurvey');
-//         showSurvey.callsFake(() => {
-//             deferred.resolve(true);
-//             return Promise.resolve();
-//         });
-//         // waitTimeToShowSurvey = 50 ms
-//         extensionSurveyPrompt = new ExtensionSurveyPrompt(appShell.object, browserService.object, instance(persistentStateFactory), random.object, experiments.object, 10, 50);
-//         experiments
-//             .setup(exp => exp.inExperiment(ShowExtensionSurveyPrompt.enabled))
-//             .returns(() => true)
-//             .verifiable(TypeMoq.Times.once());
-//         experiments
-//             .setup(exp => exp.sendTelemetryIfInExperiment(TypeMoq.It.isAny()))
-//             .returns(() => undefined)
-//             .verifiable(TypeMoq.Times.never());
-//         await extensionSurveyPrompt.activate();
-//         assert.ok(shouldShowBanner.calledOnce);
-
-//         const doesSurveyShowUp = await Promise.race([deferred.promise, sleep(200).then(() => false)]);
-//         expect(doesSurveyShowUp).to.equal(true, 'Survey should appear');
-//         assert.ok(showSurvey.calledOnce);
-//         experiments.verifyAll();
-//     });
-// });
