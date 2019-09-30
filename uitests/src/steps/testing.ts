@@ -95,7 +95,7 @@ When('I run failed tests', async function() {
 });
 
 Then('the stop icon is not visible in the toolbar', async function() {
-    await this.app.testExplorer.waitUntilToolbarIconVisible('Stop');
+    await this.app.testExplorer.waitUntilToolbarIconHidden('Stop');
 });
 When('I click the test node with the label {string}', async function(label: string) {
     await this.app.testExplorer.clickNode(label);
