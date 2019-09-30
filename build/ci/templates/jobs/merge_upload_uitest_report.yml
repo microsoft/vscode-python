@@ -11,37 +11,39 @@ jobs:
       parameters:
         workingDirectory: $(Build.SourcesDirectory)/uitests
         compile: 'true'
+    # Temporarily disabled
+    # Azure Pipelines cannot download a large number of artifacts, it just dies.
+    # Possible solution, upload reports to azure storage using `build #` as the folder name, then download and delete the folder.
+    # - bash: mkdir -p reports
+    #   workingDirectory: $(Build.SourcesDirectory)/uitests
+    #   displayName: "Create Reports Directory"
 
-    - bash: mkdir -p reports
-      workingDirectory: $(Build.SourcesDirectory)/uitests
-      displayName: "Create Reports Directory"
+    # - task: DownloadBuildArtifacts@0
+    #   inputs:
+    #       buildType: "current"
+    #       allowPartiallySucceededBuilds: true
+    #       downloadType: "Specific"
+    #       itemPattern: "**/.vscode test/reports/cucumber_report_*.json"
+    #       downloadPath: "$(Build.SourcesDirectory)/uitests/reports"
+    #   displayName: "Restore Cucumber Reports"
+    #   condition: always()
 
-    - task: DownloadBuildArtifacts@0
-      inputs:
-          buildType: "current"
-          allowPartiallySucceededBuilds: true
-          downloadType: "Specific"
-          itemPattern: "**/.vscode test/reports/cucumber_report_*.json"
-          downloadPath: "$(Build.SourcesDirectory)/uitests/reports"
-      displayName: "Restore Cucumber Reports"
-      condition: always()
+    # - bash: node ./out/index.js report --jsonDir=./reports --htmlOutput=./reports
+    #   workingDirectory: $(Build.SourcesDirectory)/uitests
+    #   displayName: "Merge and generate report"
+    #   condition: always()
 
-    - bash: node ./out/index.js report --jsonDir=./reports --htmlOutput=./reports
-      workingDirectory: $(Build.SourcesDirectory)/uitests
-      displayName: "Merge and generate report"
-      condition: always()
+    # - task: CopyFiles@2
+    #   inputs:
+    #       sourceFolder: $(Build.SourcesDirectory)/uitests/reports
+    #       contents: "**"
+    #       targetFolder: $(Build.ArtifactStagingDirectory)
+    #   displayName: "Copy Report"
+    #   condition: always()
 
-    - task: CopyFiles@2
-      inputs:
-          sourceFolder: $(Build.SourcesDirectory)/uitests/reports
-          contents: "**"
-          targetFolder: $(Build.ArtifactStagingDirectory)
-      displayName: "Copy Report"
-      condition: always()
-
-    - task: PublishBuildArtifacts@1
-      inputs:
-          pathtoPublish: $(Build.ArtifactStagingDirectory)
-          artifactName: UIReport
-      displayName: "Publish Report"
-      condition: always()
+    # - task: PublishBuildArtifacts@1
+    #   inputs:
+    #       pathtoPublish: $(Build.ArtifactStagingDirectory)
+    #       artifactName: UIReport
+    #   displayName: "Publish Report"
+    #   condition: always()
