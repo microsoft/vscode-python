@@ -295,6 +295,7 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
     suite('Case I - Verify enroll into the program again prompt is displayed when conditions are met', async () => {
         const testsForHandleEdgeCaseI: TestInfo[] = [
             {
+                // prompt to re-enroll
                 installChannel: 'off',
                 isChannelUsingDefaultConfiguration: false,
                 hasUserBeenAskedToOptInAgain: false
@@ -321,21 +322,27 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
     suite('Case II - Verify Insiders Install Prompt is displayed when conditions are met', async () => {
         const testsForHandleEdgeCaseII: TestInfo[] = [
             {
+                // skip re-enroll
                 installChannel: 'daily',
+                // prompt to enroll
                 vscodeChannel: 'insiders',
                 hasUserBeenNotified: false,
                 isChannelUsingDefaultConfiguration: true
             },
             {
+                // skip re-enroll
                 installChannel: 'off',
                 hasUserBeenAskedToOptInAgain: true,
+                // prompt to enroll
                 vscodeChannel: 'insiders',
                 hasUserBeenNotified: false,
                 isChannelUsingDefaultConfiguration: true
             },
             {
+                // skip re-enroll
                 installChannel: 'off',
                 hasUserBeenAskedToOptInAgain: false,
+                // prompt to enroll
                 vscodeChannel: 'insiders',
                 hasUserBeenNotified: false,
                 isChannelUsingDefaultConfiguration: 2
@@ -362,14 +369,22 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
     suite('Case III - Verify Insiders channel is set to off when conditions are met', async () => {
         const testsForHandleEdgeCaseIII: TestInfo[] = [
             {
+                // skip re-enroll
+                installChannel: 'daily',
+                // skip enroll
                 vscodeChannel: 'stable',
-                extensionChannel: 'stable',
-                installChannel: 'daily'
+                // disable
+                // with installChannel from above
+                extensionChannel: 'stable'
             },
             {
+                // skip re-enroll
+                installChannel: 'weekly',
+                // skip enroll
                 vscodeChannel: 'stable',
-                extensionChannel: 'stable',
-                installChannel: 'weekly'
+                // disable
+                // with installChannel from above
+                extensionChannel: 'stable'
             }
         ];
 
@@ -393,61 +408,68 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
     suite('Case IV - Verify no operation is performed if none of the case conditions are met', async () => {
         const testsForHandleEdgeCaseIV: TestInfo[] = [
             {
+                // skip re-enroll
                 installChannel: 'daily',
-                //
+                // skip enroll
                 vscodeChannel: 'insiders',
                 hasUserBeenNotified: true,
-                //
+                // skip disable
                 extensionChannel: 'insiders'
             },
             {
+                // skip re-enroll
                 installChannel: 'daily',
-                //
+                // skip enroll
                 vscodeChannel: 'insiders',
                 hasUserBeenNotified: false,
                 isChannelUsingDefaultConfiguration: false,
-                //
+                // skip disable
                 extensionChannel: 'insiders'
             },
             {
+                // skip re-enroll
                 installChannel: 'daily',
-                //
+                // skip enroll
                 vscodeChannel: 'stable',
-                //
+                // skip disable
                 extensionChannel: 'insiders'
             },
             {
+                // skip re-enroll
                 installChannel: 'off',
                 hasUserBeenAskedToOptInAgain: true,
-                //
+                // skip enroll
                 vscodeChannel: 'insiders',
                 hasUserBeenNotified: true
-                //
+                // disable skipped due to installChannel
             },
             {
+                // skip re-enroll
                 installChannel: 'off',
                 hasUserBeenAskedToOptInAgain: false,
                 isChannelUsingDefaultConfiguration: true,
-                //
+                // skip enroll
                 vscodeChannel: 'insiders',
                 hasUserBeenNotified: true
-                //
+                // disable skipped due to installChannel
             },
             {
+                // skip re-enroll
                 installChannel: 'off',
                 hasUserBeenAskedToOptInAgain: false,
                 isChannelUsingDefaultConfiguration: true,
-                //
+                // skip enroll
                 vscodeChannel: 'stable'
-                //
+                // disable skipped due to installChannel
             },
             {
+                // skip re-enroll
                 installChannel: 'off',
                 hasUserBeenAskedToOptInAgain: false,
                 isChannelUsingDefaultConfiguration: true,
-                //
+                // skip enroll
                 vscodeChannel: 'stable'
-                //
+                // disable skipped due to installChannel
             }
         ];
 
