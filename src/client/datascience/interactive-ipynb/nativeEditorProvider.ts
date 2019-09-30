@@ -56,7 +56,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
             if (this.documentManager.textDocuments && this.documentManager.textDocuments.forEach) {
                 this.documentManager.textDocuments.forEach(this.onOpenedDocument);
             }
-        }, 200);
+        }, 0);
 
         // // Reopen our list of files that were open during shutdown. Actually not doing this for now. The files
         // don't open until the extension loads and all they all steal focus.
