@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, optional } from 'inversify';
 import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
 import { IExtensionActivationService } from '../../activation/types';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
-import { traceError } from '../../common/logger';
+import { traceDecorators, traceError } from '../../common/logger';
 import { IPersistentStateFactory } from '../../common/types';
 import { InteractiveShiftEnterBanner, Interpreters } from '../../common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -21,21 +21,13 @@ export class CondaInheritEnvPrompt implements IExtensionActivationService {
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory
+        @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
+        @optional() public hasPromptBeenShownInCurrentSession: boolean = false
     ) { }
 
     public async activate(resource: Uri): Promise<void> {
-        const interpreter = await this.interpreterService.getActiveInterpreter(resource);
-        if (!interpreter || interpreter.type !== InterpreterType.Conda) {
-            return;
-        }
-        this.terminalSettings = this.workspaceService.getConfiguration('terminal', resource);
-        const setting = this.terminalSettings.inspect<boolean>('integrated.inheritEnv');
-        if (!setting) {
-            traceError('WorkspaceConfiguration.inspect returns `undefined` for setting `terminal.integrated.inheritEnv`');
-            return;
-        }
-        if (setting.globalValue !== undefined || setting.workspaceValue !== undefined || setting.workspaceFolderValue !== undefined) {
+        const show = await this.shouldShowPrompt(resource);
+        if (!show) {
             return;
         }
         await this.promptAndUpdate();
@@ -58,5 +50,27 @@ export class CondaInheritEnvPrompt implements IExtensionActivationService {
         } else if (selection === prompts[1]) {
             await notificationPromptEnabled.updateValue(false);
         }
+    }
+
+    @traceDecorators.error('Failed to check whether to display prompt for conda inherit env setting')
+    public async shouldShowPrompt(resource: Uri): Promise<boolean> {
+        if (this.hasPromptBeenShownInCurrentSession) {
+            return false;
+        }
+        const interpreter = await this.interpreterService.getActiveInterpreter(resource);
+        if (!interpreter || interpreter.type !== InterpreterType.Conda) {
+            return false;
+        }
+        this.terminalSettings = this.workspaceService.getConfiguration('terminal', resource);
+        const setting = this.terminalSettings.inspect<boolean>('integrated.inheritEnv');
+        if (!setting) {
+            traceError('WorkspaceConfiguration.inspect returns `undefined` for setting `terminal.integrated.inheritEnv`');
+            return false;
+        }
+        if (setting.globalValue !== undefined || setting.workspaceValue !== undefined || setting.workspaceFolderValue !== undefined) {
+            return false;
+        }
+        this.hasPromptBeenShownInCurrentSession = true;
+        return true;
     }
 }
