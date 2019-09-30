@@ -17,8 +17,8 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ITestManagementService } from '../../testing/types';
 import { ILanguageClientFactory, ILanguageServer, LanguageClientFactory } from '../types';
-import { ProgressReporting } from './progress';
 import { Commands } from './constants';
+import { ProgressReporting } from './progress';
 
 @injectable()
 export class LanguageServer implements ILanguageServer {
