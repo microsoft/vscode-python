@@ -16,6 +16,7 @@ import { IConfigurationService, IDisposable, IPythonSettings } from '../../../cl
 import { sleep } from '../../../client/common/utils/async';
 import { UnitTestManagementService } from '../../../client/testing/main';
 import { ITestManagementService } from '../../../client/testing/types';
+import { ICommandManager } from '../../../client/common/application/types';
 
 //tslint:disable:no-require-imports no-require-imports no-var-requires no-any no-unnecessary-class max-func-body-length
 
@@ -31,12 +32,14 @@ suite('Language Server - LanguageServer', () => {
     let client: typemoq.IMock<LanguageClient>;
     let testManager: ITestManagementService;
     let configService: typemoq.IMock<IConfigurationService>;
+    let commandManager: typemoq.IMock<ICommandManager>;
     setup(() => {
         client = typemoq.Mock.ofType<LanguageClient>();
         clientFactory = mock(BaseLanguageClientFactory);
         testManager = mock(UnitTestManagementService);
         configService = typemoq.Mock.ofType<IConfigurationService>();
-        server = new LanguageServerTest(instance(clientFactory), instance(testManager), configService.object);
+        commandManager = typemoq.Mock.ofType<ICommandManager>();
+        server = new LanguageServerTest(instance(clientFactory), instance(testManager), configService.object, commandManager.object);
     });
     teardown(() => {
         client.setup(c => c.stop()).returns(() => Promise.resolve());
