@@ -17,6 +17,8 @@ import { EventName } from '../../telemetry/constants';
 import { ITestManagementService } from '../../testing/types';
 import { ILanguageClientFactory, ILanguageServer, LanguageClientFactory } from '../types';
 import { ProgressReporting } from './progress';
+import { ICommandManager } from '../../common/application/types';
+import { Commands } from './constants';
 
 @injectable()
 export class LanguageServer implements ILanguageServer {
@@ -31,7 +33,8 @@ export class LanguageServer implements ILanguageServer {
         @named(LanguageClientFactory.base)
         private readonly factory: ILanguageClientFactory,
         @inject(ITestManagementService) private readonly testManager: ITestManagementService,
-        @inject(IConfigurationService) private readonly configurationService: IConfigurationService
+        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
+        @inject(ICommandManager) private readonly commandManager: ICommandManager
     ) {
         this.startupCompleted = createDeferred<void>();
     }
@@ -76,6 +79,7 @@ export class LanguageServer implements ILanguageServer {
             }
 
             await this.registerTestServices();
+            this.registerCommands();
         } else {
             await this.startupCompleted.promise;
         }
@@ -107,5 +111,14 @@ export class LanguageServer implements ILanguageServer {
             throw new Error('languageClient not initialized');
         }
         await this.testManager.activate(new LanguageServerSymbolProvider(this.languageClient!));
+    }
+    private registerCommands() {
+        const disposable = this.commandManager.registerCommand(Commands.ClearAnalyisCache, this.onClearAnalysisCache, this);
+        this.disposables.push(disposable);
+    }
+    private onClearAnalysisCache() {
+        this.languageClient!.sendRequest('python/clearAnalysisCache').then(noop, ex =>
+            traceError('Request python/clearAnalysisCache failed', ex)
+        )
     }
 }

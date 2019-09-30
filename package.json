@@ -548,6 +548,11 @@
                 "command": "python.datascience.scrolltocell",
                 "title": "%python.command.python.datascience.scrolltocell.title%",
                 "category": "Python"
+            },
+            {
+                "command": "python.analysis.clearCache",
+                "title": "%python.command.python.analysis.clearCache.title%",
+                "category": "Python"
             }
         ],
         "menus": {
