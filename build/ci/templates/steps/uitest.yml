@@ -45,7 +45,7 @@ steps:
       displayName: Azure CLI
       inputs:
         azureSubscription: $(AZURE_SUBSCRIPTION)
-        scriptType: 'bash'
+        scriptType: 'ps'
         scriptLocation: 'inlineScript'
         inlineScript: |
             az --version
