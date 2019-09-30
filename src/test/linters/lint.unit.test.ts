@@ -67,7 +67,7 @@ const flake8MessagesToBeReturned: ILintMessage[] = [
     { line: 80, column: 5, severity: LintMessageSeverity.Error, code: 'E303', message: 'too many blank lines (2)', provider: '', type: 'E' },
     { line: 87, column: 24, severity: LintMessageSeverity.Warning, code: 'W292', message: 'no newline at end of file', provider: '', type: 'E' }
 ];
-const pep8MessagesToBeReturned: ILintMessage[] = [
+const pycodestyleMessagesToBeReturned: ILintMessage[] = [
     { line: 5, column: 1, severity: LintMessageSeverity.Error, code: 'E302', message: 'expected 2 blank lines, found 1', provider: '', type: 'E' },
     { line: 19, column: 15, severity: LintMessageSeverity.Error, code: 'E127', message: 'continuation line over-indented for visual indent', provider: '', type: 'E' },
     { line: 24, column: 23, severity: LintMessageSeverity.Error, code: 'E261', message: 'at least two spaces before inline comment', provider: '', type: 'E' },
@@ -168,8 +168,8 @@ class TestFixture extends BaseTestFixture {
                 messages = flake8MessagesToBeReturned;
                 break;
             }
-            case Product.pep8: {
-                messages = pep8MessagesToBeReturned;
+            case Product.pycodestyle: {
+                messages = pycodestyleMessagesToBeReturned;
                 break;
             }
             case Product.pydocstyle: {

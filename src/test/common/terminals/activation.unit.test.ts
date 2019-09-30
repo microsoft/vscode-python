@@ -6,8 +6,9 @@ import { expect } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Terminal, Uri } from 'vscode';
+import { DocumentManager } from '../../../client/common/application/documentManager';
 import { TerminalManager } from '../../../client/common/application/terminalManager';
-import { ITerminalManager, IWorkspaceService } from '../../../client/common/application/types';
+import { IDocumentManager, ITerminalManager, IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { TerminalActivator } from '../../../client/common/terminal/activator';
 import { ITerminalActivator } from '../../../client/common/terminal/types';
@@ -17,18 +18,21 @@ import { ITerminalAutoActivation } from '../../../client/terminals/types';
 
 suite('Terminal Auto Activation', () => {
     let activator: ITerminalActivator;
+    let documentManager: IDocumentManager;
     let terminalManager: ITerminalManager;
     let terminalAutoActivation: ITerminalAutoActivation;
     let workspaceService: IWorkspaceService;
 
     setup(() => {
         terminalManager = mock(TerminalManager);
+        documentManager = mock(DocumentManager);
         activator = mock(TerminalActivator);
         workspaceService = mock(WorkspaceService);
 
         terminalAutoActivation = new TerminalAutoActivation(
             instance(terminalManager),
             [],
+            instance(documentManager),
             instance(activator),
             instance(workspaceService)
         );

@@ -18,6 +18,7 @@ import {
     IAnalysisSettings,
     IAutoCompleteSettings,
     IDataScienceSettings,
+    IExperiments,
     IFormattingSettings,
     ILintingSettings,
     ISortImportSettings,
@@ -105,6 +106,8 @@ suite('Python Settings', async () => {
             .returns(() => sourceSettings.terminal);
         config.setup(c => c.get<IDataScienceSettings>('dataScience'))
             .returns(() => sourceSettings.datascience);
+        config.setup(c => c.get<IExperiments>('experiments'))
+            .returns(() => sourceSettings.experiments);
     }
 
     function testIfValueIsUpdated(settingName: string, value: any) {
@@ -165,6 +168,29 @@ suite('Python Settings', async () => {
         expect(settings.condaPath).to.be.equal(untildify(expected.condaPath));
         config.verifyAll();
     });
+
+    function testExperiments(enabled: boolean) {
+        expected.pythonPath = 'python3';
+        // tslint:disable-next-line:no-any
+        expected.experiments = {
+            enabled
+        };
+        initializeConfig(expected);
+        config.setup(c => c.get<IExperiments>('experiments'))
+            .returns(() => expected.experiments)
+            .verifiable(TypeMoq.Times.once());
+
+        settings.update(config.object);
+
+        for (const key of Object.keys(expected.experiments)) {
+            // tslint:disable-next-line:no-any
+            expect((settings.experiments as any)[key]).to.be.deep.equal((expected.experiments as any)[key]);
+        }
+        config.verifyAll();
+    }
+    test('Experiments (not enabled)', () => testExperiments(false));
+
+    test('Experiments (enabled)', () => testExperiments(true));
 
     test('Formatter Paths and args', () => {
         expected.pythonPath = 'python3';

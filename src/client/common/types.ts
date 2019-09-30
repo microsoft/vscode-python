@@ -84,7 +84,7 @@ export enum Product {
     nosetest = 2,
     pylint = 3,
     flake8 = 4,
-    pep8 = 5,
+    pycodestyle = 5,
     pylama = 6,
     prospector = 7,
     pydocstyle = 8,
@@ -172,6 +172,7 @@ export interface IPythonSettings {
     readonly autoUpdateLanguageServer: boolean;
     readonly datascience: IDataScienceSettings;
     readonly onDidChange: Event<void>;
+    readonly experiments: IExperiments;
 }
 export interface ISortImportSettings {
     readonly path: string;
@@ -199,7 +200,7 @@ export interface IPylintCategorySeverity {
     readonly error: DiagnosticSeverity;
     readonly fatal: DiagnosticSeverity;
 }
-export interface IPep8CategorySeverity {
+export interface IPycodestyleCategorySeverity {
     readonly W: DiagnosticSeverity;
     readonly E: DiagnosticSeverity;
 }
@@ -220,8 +221,8 @@ export interface ILintingSettings {
     readonly prospectorArgs: string[];
     readonly pylintEnabled: boolean;
     readonly pylintArgs: string[];
-    readonly pep8Enabled: boolean;
-    readonly pep8Args: string[];
+    readonly pycodestyleEnabled: boolean;
+    readonly pycodestyleArgs: string[];
     readonly pylamaEnabled: boolean;
     readonly pylamaArgs: string[];
     readonly flake8Enabled: boolean;
@@ -231,12 +232,12 @@ export interface ILintingSettings {
     readonly lintOnSave: boolean;
     readonly maxNumberOfProblems: number;
     readonly pylintCategorySeverity: IPylintCategorySeverity;
-    readonly pep8CategorySeverity: IPep8CategorySeverity;
+    readonly pycodestyleCategorySeverity: IPycodestyleCategorySeverity;
     readonly flake8CategorySeverity: Flake8CategorySeverity;
     readonly mypyCategorySeverity: IMypyCategorySeverity;
     prospectorPath: string;
     pylintPath: string;
-    pep8Path: string;
+    pycodestylePath: string;
     pylamaPath: string;
     flake8Path: string;
     pydocstylePath: string;
@@ -275,6 +276,16 @@ export interface ITerminalSettings {
     readonly executeInFileDir: boolean;
     readonly launchArgs: string[];
     readonly activateEnvironment: boolean;
+}
+
+export interface IExperiments {
+    /**
+     * Return `true` if experiments are enabled, else `false`.
+     *
+     * @type {boolean}
+     * @memberof IExperiments
+     */
+    readonly enabled: boolean;
 }
 
 export type LanguageServerDownloadChannels = 'stable' | 'beta' | 'daily';
@@ -327,7 +338,6 @@ export interface IDataScienceSettings {
     enableCellCodeLens?: boolean;
     askForLargeDataFrames?: boolean;
     enableAutoMoveToNextCell?: boolean;
-    autoPreviewNotebooksInInteractivePane?: boolean;
     allowUnauthorizedRemoteConnection?: boolean;
     askForKernelRestart?: boolean;
     enablePlotViewer?: boolean;
@@ -341,6 +351,10 @@ export interface IDataScienceSettings {
     remoteDebuggerPort?: number;
     colorizeInputBox?: boolean;
     addGotoCodeLenses?: boolean;
+    useNotebookEditor?: boolean;
+    runMagicCommands?: string;
+    runStartupCommands: string;
+    debugJustMyCode: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');
@@ -419,6 +433,12 @@ export interface IExtensions {
      */
     // tslint:disable-next-line:no-any
     readonly all: readonly Extension<any>[];
+
+    /**
+     * An event which fires when `extensions.all` changes. This can happen when extensions are
+     * installed, uninstalled, enabled or disabled.
+     */
+    readonly onDidChange: Event<void>;
 
     /**
      * Get an extension by its full identifier in the form of: `publisher.name`.
@@ -504,7 +524,7 @@ export interface ICryptoUtils {
      * @param data The string to hash
      * @param hashFormat Return format of the hash, number or string
      */
-    createHash<E extends keyof IHashFormat>(data: string, hashFormat: E): IHashFormat[E];
+    createHash<E extends keyof IHashFormat>(data: string, hashFormat: E, algorithm?: 'SHA512' | 'FNV'): IHashFormat[E];
 }
 
 export const IAsyncDisposableRegistry = Symbol('IAsyncDisposableRegistry');

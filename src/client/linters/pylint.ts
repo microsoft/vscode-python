@@ -38,7 +38,7 @@ export class Pylint extends BaseLinter {
         if (settings.linting.pylintUseMinimalCheckers
             && this.info.linterArgs(uri).length === 0
             // Check pylintrc next to the file or above up to and including the workspace root
-            && !await Pylint.hasConfigrationFileInWorkspace(this.fileSystem, path.dirname(uri.fsPath), workspaceRoot)
+            && !await Pylint.hasConfigurationFileInWorkspace(this.fileSystem, path.dirname(uri.fsPath), workspaceRoot)
             // Check for pylintrc at the root and above
             && !await Pylint.hasConfigurationFile(this.fileSystem, this.getWorkspaceRootPath(document), this.platformService)) {
             // Disable all checkers up front and then selectively add back in:
@@ -135,7 +135,7 @@ export class Pylint extends BaseLinter {
     }
 
     // tslint:disable-next-line:member-ordering
-    public static async hasConfigrationFileInWorkspace(fs: IFileSystem, folder: string, root: string): Promise<boolean> {
+    public static async hasConfigurationFileInWorkspace(fs: IFileSystem, folder: string, root: string): Promise<boolean> {
         // Search up from file location to the workspace root
         let current = folder;
         let above = path.dirname(current);

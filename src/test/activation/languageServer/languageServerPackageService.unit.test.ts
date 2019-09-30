@@ -15,6 +15,7 @@ import { IApplicationEnvironment } from '../../../client/common/application/type
 import { NugetService } from '../../../client/common/nuget/nugetService';
 import { INugetRepository, INugetService, NugetPackage } from '../../../client/common/nuget/types';
 import { IPlatformService } from '../../../client/common/platform/types';
+import { IConfigurationService } from '../../../client/common/types';
 import { OSType } from '../../../client/common/utils/platform';
 import { IServiceContainer } from '../../../client/ioc/types';
 
@@ -155,5 +156,93 @@ suite('Language', () => {
             uri: `${azureCDNBlobStorageAccount}/${LanguageServerPackageStorageContainers.stable}/${packageName}.${minimumVersion}.nupkg`
         };
         expect(info).to.deep.equal(expectedPackage);
+    });
+});
+suite('Language Server Package Service - getLanguageServerDownloadChannel()', () => {
+    let serviceContainer: typeMoq.IMock<IServiceContainer>;
+    let platform: typeMoq.IMock<IPlatformService>;
+    let lsPackageService: LanguageServerPackageService;
+    let appVersion: typeMoq.IMock<IApplicationEnvironment>;
+    let configService: typeMoq.IMock<IConfigurationService>;
+    setup(() => {
+        serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
+        platform = typeMoq.Mock.ofType<IPlatformService>();
+        appVersion = typeMoq.Mock.ofType<IApplicationEnvironment>();
+        configService = typeMoq.Mock.ofType<IConfigurationService>();
+        serviceContainer
+            .setup(s => s.get(IConfigurationService))
+            .returns(() => configService.object);
+        lsPackageService = new LanguageServerPackageService(serviceContainer.object, appVersion.object, platform.object);
+        lsPackageService.isAlphaVersionOfExtension = () => true;
+    });
+    test('If \'python.analysis.downloadChannel\' setting is specified, return the value of the setting', async () => {
+        const settings = {
+            analysis: {
+                downloadChannel: 'someValue'
+            }
+        };
+        configService.setup(c => c.getSettings())
+            .returns(() => settings as any);
+
+        lsPackageService.isAlphaVersionOfExtension = () => { throw new Error('Should not be here'); };
+        const downloadChannel = lsPackageService.getLanguageServerDownloadChannel();
+
+        expect(downloadChannel).to.be.equal('someValue');
+    });
+
+    test('If \'python.analysis.downloadChannel\' setting is not specified and insiders channel is \'weekly\', return \'beta\'', async () => {
+        const settings = {
+            analysis: {},
+            insidersChannel: 'weekly'
+        };
+        configService.setup(c => c.getSettings())
+            .returns(() => settings as any);
+
+        lsPackageService.isAlphaVersionOfExtension = () => { throw new Error('Should not be here'); };
+        const downloadChannel = lsPackageService.getLanguageServerDownloadChannel();
+
+        expect(downloadChannel).to.be.equal('beta');
+    });
+
+    test('If \'python.analysis.downloadChannel\' setting is not specified and insiders channel is \'daily\', return \'beta\'', async () => {
+        const settings = {
+            analysis: {},
+            insidersChannel: 'daily'
+        };
+        configService.setup(c => c.getSettings())
+            .returns(() => settings as any);
+
+        lsPackageService.isAlphaVersionOfExtension = () => { throw new Error('Should not be here'); };
+        const downloadChannel = lsPackageService.getLanguageServerDownloadChannel();
+
+        expect(downloadChannel).to.be.equal('beta');
+    });
+
+    test('If \'python.analysis.downloadChannel\' setting is not specified, user is not using insiders, and extension has Alpha version, return \'beta\'', async () => {
+        const settings = {
+            analysis: {},
+            insidersChannel: 'off'
+        };
+        configService.setup(c => c.getSettings())
+            .returns(() => settings as any);
+
+        lsPackageService.isAlphaVersionOfExtension = () => true;
+        const downloadChannel = lsPackageService.getLanguageServerDownloadChannel();
+
+        expect(downloadChannel).to.be.equal('beta');
+    });
+
+    test('If \'python.analysis.downloadChannel\' setting is not specified, user is not using insiders, and extension does not have Alpha version, return \'stable\'', async () => {
+        const settings = {
+            analysis: {},
+            insidersChannel: 'off'
+        };
+        configService.setup(c => c.getSettings())
+            .returns(() => settings as any);
+
+        lsPackageService.isAlphaVersionOfExtension = () => false;
+        const downloadChannel = lsPackageService.getLanguageServerDownloadChannel();
+
+        expect(downloadChannel).to.be.equal('stable');
     });
 });

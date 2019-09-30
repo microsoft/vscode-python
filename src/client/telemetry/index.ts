@@ -13,18 +13,15 @@ import { AppinsightsKey, EXTENSION_ROOT_DIR, isTestExecution, PVSC_EXTENSION_ID 
 import { traceInfo } from '../common/logger';
 import { TerminalShellType } from '../common/terminal/types';
 import { StopWatch } from '../common/utils/stopWatch';
-import { Telemetry } from '../datascience/constants';
+import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry, Telemetry } from '../datascience/constants';
 import { DebugConfigurationType } from '../debugger/extension/types';
-import { ConsoleType } from '../debugger/types';
+import { ConsoleType, TriggerType } from '../debugger/types';
 import { AutoSelectionRule } from '../interpreter/autoSelection/types';
 import { InterpreterType } from '../interpreter/contracts';
 import { LinterId } from '../linters/types';
 import { TestProvider } from '../testing/common/types';
 import { EventName, PlatformErrors } from './constants';
-import {
-    LinterTrigger,
-    TestTool
-} from './types';
+import { LinterTrigger, TestTool } from './types';
 
 /**
  * Checks whether telemetry is supported.
@@ -268,6 +265,98 @@ export interface IEventNamePropertyMapping {
         enabled: boolean;
     };
     /**
+     * Telemetry captured before starting debug session.
+     */
+    [EventName.DEBUG_SESSION_START]: {
+        /**
+         * Trigger for starting the debugger.
+         * - `launch`: Launch/start new code and debug it.
+         * - `attach`: Attach to an exiting python process (remote debugging).
+         * - `test`: Debugging python tests.
+         *
+         * @type {TriggerType}
+         */
+        trigger: TriggerType;
+        /**
+         * Type of console used.
+         *  -`internalConsole`: Use VS Code debug console (no shells/terminals).
+         * - `integratedTerminal`: Use VS Code terminal.
+         * - `externalTerminal`: Use an External terminal.
+         *
+         * @type {ConsoleType}
+         */
+        console?: ConsoleType;
+    };
+    /**
+     * Telemetry captured when debug session runs into an error.
+     */
+    [EventName.DEBUG_SESSION_ERROR]: {
+        /**
+         * Trigger for starting the debugger.
+         * - `launch`: Launch/start new code and debug it.
+         * - `attach`: Attach to an exiting python process (remote debugging).
+         * - `test`: Debugging python tests.
+         *
+         * @type {TriggerType}
+         */
+        trigger: TriggerType;
+        /**
+         * Type of console used.
+         *  -`internalConsole`: Use VS Code debug console (no shells/terminals).
+         * - `integratedTerminal`: Use VS Code terminal.
+         * - `externalTerminal`: Use an External terminal.
+         *
+         * @type {ConsoleType}
+         */
+        console?: ConsoleType;
+    };
+    /**
+     * Telemetry captured after stopping debug session.
+     */
+    [EventName.DEBUG_SESSION_STOP]: {
+        /**
+         * Trigger for starting the debugger.
+         * - `launch`: Launch/start new code and debug it.
+         * - `attach`: Attach to an exiting python process (remote debugging).
+         * - `test`: Debugging python tests.
+         *
+         * @type {TriggerType}
+         */
+        trigger: TriggerType;
+        /**
+         * Type of console used.
+         *  -`internalConsole`: Use VS Code debug console (no shells/terminals).
+         * - `integratedTerminal`: Use VS Code terminal.
+         * - `externalTerminal`: Use an External terminal.
+         *
+         * @type {ConsoleType}
+         */
+        console?: ConsoleType;
+    };
+    /**
+     * Telemetry captured when user code starts running after loading the debugger.
+     */
+    [EventName.DEBUG_SESSION_USER_CODE_RUNNING]: {
+        /**
+         * Trigger for starting the debugger.
+         * - `launch`: Launch/start new code and debug it.
+         * - `attach`: Attach to an exiting python process (remote debugging).
+         * - `test`: Debugging python tests.
+         *
+         * @type {TriggerType}
+         */
+        trigger: TriggerType;
+        /**
+         * Type of console used.
+         *  -`internalConsole`: Use VS Code debug console (no shells/terminals).
+         * - `integratedTerminal`: Use VS Code terminal.
+         * - `externalTerminal`: Use an External terminal.
+         *
+         * @type {ConsoleType}
+         */
+        console?: ConsoleType;
+    };
+    /**
      * Telemetry captured when starting the debugger.
      */
     [EventName.DEBUGGER]: {
@@ -277,9 +366,9 @@ export interface IEventNamePropertyMapping {
          * - `attach`: Attach to an exiting python process (remote debugging).
          * - `test`: Debugging python tests.
          *
-         * @type {('launch' | 'attach' | 'test')}
+         * @type {TriggerType}
          */
-        trigger: 'launch' | 'attach' | 'test';
+        trigger: TriggerType;
         /**
          * Type of console used.
          *  -`internalConsole`: Use VS Code debug console (no shells/terminals).
@@ -682,6 +771,15 @@ export interface IEventNamePropertyMapping {
         osVersion?: string;
     };
     /**
+     * Telemetry is sent with details about the play run file icon
+     */
+    [EventName.PLAY_BUTTON_ICON_DISABLED]: {
+        /**
+         * Carries `true` if play button icon is not shown (because code runner is installed), `false` otherwise
+         */
+        disabled: boolean;
+    };
+    /**
      * Telemetry event sent with details after updating the python interpreter
      */
     [EventName.PYTHON_INTERPRETER]: {
@@ -853,11 +951,21 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.INSIDERS_PROMPT]: {
         /**
-         * @type {'Yes, weekly'} When user selects to use "weekly" as extension channel in insiders prompt
-         * @type {'Yes, daily'} When user selects to use "daily" as extension channel in insiders prompt
-         * @type {'No, thanks'} When user decides to keep using the same extension channel as before
-         *
-         * @type {('Yes, weekly' | 'Yes, daily' | 'No, thanks' | undefined)}
+         * `Yes, weekly` When user selects to use "weekly" as extension channel in insiders prompt
+         * `Yes, daily` When user selects to use "daily" as extension channel in insiders prompt
+         * `No, thanks` When user decides to keep using the same extension channel as before
+         */
+        selection: 'Yes, weekly' | 'Yes, daily' | 'No, thanks' | undefined;
+    };
+    /**
+     * Telemetry event sent with details when user clicks a button in the following prompt
+     * `Prompt message` :- 'It looks like you were previously in the Insiders Program of the Python extension. Would you like to opt into the program again?'
+     */
+    [EventName.OPT_INTO_INSIDERS_AGAIN_PROMPT]: {
+        /**
+         * `Yes, weekly` When user selects to use "weekly" as extension channel
+         * `Yes, daily` When user selects to use "daily" as extension channel
+         * `No, thanks` When user decides to keep using the same extension channel as before
          */
         selection: 'Yes, weekly' | 'Yes, daily' | 'No, thanks' | undefined;
     };
@@ -875,9 +983,18 @@ export interface IEventNamePropertyMapping {
         selection: 'Reload' | undefined;
     };
     /**
-     * Telemetry tracking switching between LS and Jedi
+     * Telemetry sent with details about the current selection of language server
      */
-    [EventName.PYTHON_LANGUAGE_SERVER_SWITCHED]: { change: 'Switch to Jedi from LS' | 'Switch to LS from Jedi' };
+    [EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION]: {
+        /**
+         * The startup value of the language server setting
+         */
+        startup?: boolean;
+        /**
+         * Used to track switch between LS and Jedi. Carries the final state after the switch.
+         */
+        switchTo?: boolean;
+    };
     /**
      * Telemetry event sent with details after attempting to download LS
      */
@@ -968,6 +1085,10 @@ export interface IEventNamePropertyMapping {
          */
         expName?: string;
     };
+    /**
+     * Telemetry event sent when Experiments have been disabled.
+     */
+    [EventName.PYTHON_EXPERIMENTS_DISABLED]: never | undefined;
     /**
      * Telemetry event sent with details when doing best effort to download the experiments within timeout and using it in the current session only
      */
@@ -1216,10 +1337,6 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.UNITTEST_ENABLED]: Partial<Record<TestProvider, undefined | boolean>>;
     /**
-     * Telemetry sent when updating Pyspark library
-     */
-    [EventName.UPDATE_PYSPARK_LIBRARY]: never | undefined;
-    /**
      * Telemetry sent when building workspace symbols
      */
     [EventName.WORKSPACE_SYMBOLS_BUILD]: never | undefined;
@@ -1237,7 +1354,9 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ConnectRemoteJupyter]: never | undefined;
     [Telemetry.ConnectRemoteFailedJupyter]: never | undefined;
     [Telemetry.ConnectRemoteSelfCertFailedJupyter]: never | undefined;
+    [Telemetry.ConvertToPythonFile]: never | undefined;
     [Telemetry.CopySourceCode]: never | undefined;
+    [Telemetry.CreateNewNotebook]: never | undefined;
     [Telemetry.DataScienceSettings]: JSONObject;
     [Telemetry.DataViewerFetchTime]: never | undefined;
     [Telemetry.DebugContinue]: never | undefined;
@@ -1254,6 +1373,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ExecuteCell]: never | undefined;
     [Telemetry.ExecuteCellPerceivedCold]: never | undefined;
     [Telemetry.ExecuteCellPerceivedWarm]: never | undefined;
+    [Telemetry.ExecuteNativeCell]: never | undefined;
     [Telemetry.ExpandAll]: never | undefined;
     [Telemetry.ExportNotebook]: never | undefined;
     [Telemetry.ExportPythonFile]: never | undefined;
@@ -1266,14 +1386,20 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ImportNotebook]: { scope: 'command' | 'file' };
     [Telemetry.Interrupt]: never | undefined;
     [Telemetry.InterruptJupyterTime]: never | undefined;
+    [Telemetry.NotebookRunCount]: number;
+    [Telemetry.NotebookWorkspaceCount]: number;
+    [Telemetry.NotebookOpenCount]: number;
+    [Telemetry.NotebookOpenTime]: number;
     [Telemetry.PandasNotInstalled]: never | undefined;
     [Telemetry.PandasTooOld]: never | undefined;
     [Telemetry.PtvsdInstallFailed]: never | undefined;
     [Telemetry.PtvsdPromptToInstall]: never | undefined;
     [Telemetry.PtvsdSuccessfullyInstalled]: never | undefined;
+    [Telemetry.OpenNotebook]: { scope: 'command' | 'file' };
     [Telemetry.OpenPlotViewer]: never | undefined;
     [Telemetry.Redo]: never | undefined;
     [Telemetry.RemoteAddCode]: never | undefined;
+    [Telemetry.RemoteReexecuteCode]: never | undefined;
     [Telemetry.RestartJupyterTime]: never | undefined;
     [Telemetry.RestartKernel]: never | undefined;
     [Telemetry.RunAllCells]: never | undefined;
@@ -1306,6 +1432,52 @@ export interface IEventNamePropertyMapping {
     [Telemetry.WebviewMonacoStyleUpdate]: never | undefined;
     [Telemetry.WebviewStartup]: { type: string };
     [Telemetry.WebviewStyleUpdate]: never | undefined;
+    [NativeKeyboardCommandTelemetry.AddToEnd]: never | undefined;
+    [NativeKeyboardCommandTelemetry.ArrowDown]: never | undefined;
+    [NativeKeyboardCommandTelemetry.ArrowUp]: never | undefined;
+    [NativeKeyboardCommandTelemetry.ChangeToCode]: never | undefined;
+    [NativeKeyboardCommandTelemetry.ChangeToMarkdown]: never | undefined;
+    [NativeKeyboardCommandTelemetry.CollapseInput]: never | undefined;
+    [NativeKeyboardCommandTelemetry.CollapseOutput]: never | undefined;
+    [NativeKeyboardCommandTelemetry.DeleteCell]: never | undefined;
+    [NativeKeyboardCommandTelemetry.InsertAbove]: never | undefined;
+    [NativeKeyboardCommandTelemetry.InsertBelow]: never | undefined;
+    [NativeKeyboardCommandTelemetry.MoveCellDown]: never | undefined;
+    [NativeKeyboardCommandTelemetry.MoveCellUp]: never | undefined;
+    [NativeKeyboardCommandTelemetry.Run]: never | undefined;
+    [NativeKeyboardCommandTelemetry.RunAbove]: never | undefined;
+    [NativeKeyboardCommandTelemetry.RunAll]: never | undefined;
+    [NativeKeyboardCommandTelemetry.RunAndAdd]: never | undefined;
+    [NativeKeyboardCommandTelemetry.RunAndMove]: never | undefined;
+    [NativeKeyboardCommandTelemetry.RunBelow]: never | undefined;
+    [NativeKeyboardCommandTelemetry.ToggleLineNumbers]: never | undefined;
+    [NativeKeyboardCommandTelemetry.ToggleOutput]: never | undefined;
+    [NativeKeyboardCommandTelemetry.ToggleVariableExplorer]: never | undefined;
+    [NativeKeyboardCommandTelemetry.Undo]: never | undefined;
+    [NativeKeyboardCommandTelemetry.Unfocus]: never | undefined;
+    [NativeMouseCommandTelemetry.AddToEnd]: never | undefined;
+    [NativeMouseCommandTelemetry.ArrowDown]: never | undefined;
+    [NativeMouseCommandTelemetry.ArrowUp]: never | undefined;
+    [NativeMouseCommandTelemetry.ChangeToCode]: never | undefined;
+    [NativeMouseCommandTelemetry.ChangeToMarkdown]: never | undefined;
+    [NativeMouseCommandTelemetry.CollapseInput]: never | undefined;
+    [NativeMouseCommandTelemetry.CollapseOutput]: never | undefined;
+    [NativeMouseCommandTelemetry.DeleteCell]: never | undefined;
+    [NativeMouseCommandTelemetry.InsertAbove]: never | undefined;
+    [NativeMouseCommandTelemetry.InsertBelow]: never | undefined;
+    [NativeMouseCommandTelemetry.MoveCellDown]: never | undefined;
+    [NativeMouseCommandTelemetry.MoveCellUp]: never | undefined;
+    [NativeMouseCommandTelemetry.Run]: never | undefined;
+    [NativeMouseCommandTelemetry.RunAbove]: never | undefined;
+    [NativeMouseCommandTelemetry.RunAll]: never | undefined;
+    [NativeMouseCommandTelemetry.RunAndAdd]: never | undefined;
+    [NativeMouseCommandTelemetry.RunAndMove]: never | undefined;
+    [NativeMouseCommandTelemetry.RunBelow]: never | undefined;
+    [NativeMouseCommandTelemetry.ToggleLineNumbers]: never | undefined;
+    [NativeMouseCommandTelemetry.ToggleOutput]: never | undefined;
+    [NativeMouseCommandTelemetry.ToggleVariableExplorer]: never | undefined;
+    [NativeMouseCommandTelemetry.Undo]: never | undefined;
+    [NativeMouseCommandTelemetry.Unfocus]: never | undefined;
     /*
     Telemetry event sent with details of Jedi Memory usage.
     mem_use - Memory usage of Process in kb.

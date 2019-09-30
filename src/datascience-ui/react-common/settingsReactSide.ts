@@ -72,7 +72,9 @@ function load() {
                 suggestSelection: 'recentlyUsed',
                 wordBasedSuggestions: true,
                 parameterHintsEnabled: true
-            }
+            },
+            runStartupCommands: '',
+            debugJustMyCode: true
         };
     }
 }

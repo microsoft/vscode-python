@@ -65,8 +65,7 @@ suite('Terminal - Code Execution Manager', () => {
         const sorted = registered.sort();
         expect(sorted).to.deep.equal([
             Commands.Exec_In_Terminal,
-            Commands.Exec_In_Terminal_Icon_1,
-            Commands.Exec_In_Terminal_Icon_2,
+            Commands.Exec_In_Terminal_Icon,
             Commands.Exec_Selection_In_Django_Shell,
             Commands.Exec_Selection_In_Terminal
         ]);

@@ -11,7 +11,7 @@ import { CellHashProvider } from '../../../client/datascience/editor-integration
 import {
     InteractiveWindowMessages,
     SysInfoReason
-} from '../../../client/datascience/interactive-window/interactiveWindowTypes';
+} from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CellState, ICell, ICellHashListener, IFileHashes } from '../../../client/datascience/types';
 import { MockDocumentManager } from '../mockDocumentManager';
 

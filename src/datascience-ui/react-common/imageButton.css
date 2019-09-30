@@ -11,7 +11,7 @@
     overflow: hidden;
     width: var(--button-size);
     height: var(--button-size);
-    margin-left: 10px;
+    margin-left: 2px;
     padding: 1px;
     background-color: transparent;
     cursor: hand;

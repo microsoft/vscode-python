@@ -1,9 +1,11 @@
 import { DataflowAnalyzer } from '@msrvida/python-program-analysis';
-import { JupyterCell as ICell, LabCell } from '@msrvida/python-program-analysis/lib/cell';
-import { CellSlice } from '@msrvida/python-program-analysis/lib/cellslice';
-import { ExecutionLogSlicer } from '@msrvida/python-program-analysis/lib/log-slicer';
+import { Cell as ICell, LogCell } from '@msrvida/python-program-analysis/dist/es5/cell';
+import { CellSlice } from '@msrvida/python-program-analysis/dist/es5/cellslice';
+import { ExecutionLogSlicer } from '@msrvida/python-program-analysis/dist/es5/log-slicer';
 
 import { inject, injectable } from 'inversify';
+// tslint:disable-next-line: no-require-imports
+import cloneDeep = require('lodash/cloneDeep');
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import { traceInfo } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
@@ -32,11 +34,10 @@ export class GatherExecution implements IGatherExecution, INotebookExecutionLogg
     ) {
         this._enabled = this.configService.getSettings().datascience.enableGather ? true : false;
 
-        const rules = this.configService.getSettings().datascience.gatherRules;
-        this.dataflowAnalyzer = new DataflowAnalyzer(rules);
+        this.dataflowAnalyzer = new DataflowAnalyzer();
         this._executionSlicer = new ExecutionLogSlicer(this.dataflowAnalyzer);
 
-        if (this.enabled) {
+        if (this._enabled) {
             this.disposables.push(this.configService.getSettings().onDidChange(e => this.updateEnableGather(e)));
         }
 
@@ -49,15 +50,19 @@ export class GatherExecution implements IGatherExecution, INotebookExecutionLogg
     }
 
     public async postExecute(vscCell: IVscCell, _silent: boolean): Promise<void> {
-        if (this.enabled) {
-            // Don't log if vscCell.data.source is an empty string. Original Jupyter extension also does this.
-            if (vscCell.data.source !== '') {
+        if (this._enabled) {
+            // Don't log if vscCell.data.source is an empty string or if it was
+            // silently executed. Original Jupyter extension also does this.
+            if (vscCell.data.source !== '' && !_silent) {
+                // First make a copy of this cell, as we are going to modify it
+                const cloneCell: IVscCell = cloneDeep(vscCell);
+
                 // Strip first line marker. We can't do this at JupyterServer.executeCodeObservable because it messes up hashing
                 const cellMatcher = new CellMatcher(this.configService.getSettings().datascience);
-                vscCell.data.source = cellMatcher.stripFirstMarker(concatMultilineString(vscCell.data.source));
+                cloneCell.data.source = cellMatcher.stripFirstMarker(concatMultilineString(vscCell.data.source));
 
                 // Convert IVscCell to IGatherCell
-                const cell = convertVscToGatherCell(vscCell) as LabCell;
+                const cell = convertVscToGatherCell(cloneCell) as LogCell;
 
                 // Call internal logging method
                 this._executionSlicer.logExecution(cell);

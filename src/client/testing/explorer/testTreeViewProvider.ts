@@ -11,9 +11,12 @@ import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { CommandSource } from '../common/constants';
-import { getChildren, getParent, getTestType } from '../common/testUtils';
-import { ITestCollectionStorageService, Tests, TestStatus, TestType } from '../common/types';
-import { ITestDataItemResource, ITestManagementService, ITestTreeViewProvider, TestDataItem, TestWorkspaceFolder, WorkspaceTestStatus } from '../types';
+import { getChildren, getParent, getTestDataItemType } from '../common/testUtils';
+import { ITestCollectionStorageService, Tests, TestStatus } from '../common/types';
+import {
+    ITestDataItemResource, ITestManagementService, ITestTreeViewProvider,
+    TestDataItem, TestDataItemType, TestWorkspaceFolder, WorkspaceTestStatus
+} from '../types';
 import { TestTreeItem } from './testTreeViewItem';
 
 @injectable()
@@ -182,7 +185,7 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
 
     private async shouldElementBeExpandedByDefault(element: TestDataItem) {
         const parent = await this.getParent(element);
-        if (!parent || getTestType(parent) === TestType.testWorkspaceFolder) {
+        if (!parent || getTestDataItemType(parent) === TestDataItemType.workspaceFolder) {
             return true;
         }
         return false;

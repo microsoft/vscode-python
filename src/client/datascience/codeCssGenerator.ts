@@ -4,9 +4,9 @@
 import { JSONArray, JSONObject } from '@phosphor/coreutils';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
+import { parse } from 'jsonc-parser';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as path from 'path';
-import * as stripJsonComments from 'strip-json-comments';
 
 import { IWorkspaceService } from '../common/application/types';
 import { IConfigurationService, ILogger } from '../common/types';
@@ -331,7 +331,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
 
     private readTokenColors = async (themeFile: string): Promise<JSONArray> => {
         const tokenContent = await fs.readFile(themeFile, 'utf8');
-        const theme = JSON.parse(stripJsonComments(tokenContent)) as JSONObject;
+        const theme = parse(tokenContent);
         const tokenColors = theme.tokenColors as JSONArray;
         if (tokenColors && tokenColors.length > 0) {
             // This theme may include others. If so we need to combine the two together
@@ -357,7 +357,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
 
     private readBaseColors = async (themeFile: string): Promise<JSONObject> => {
         const tokenContent = await fs.readFile(themeFile, 'utf8');
-        const theme = JSON.parse(stripJsonComments(tokenContent)) as JSONObject;
+        const theme = parse(tokenContent);
         const colors = theme.colors as JSONObject;
 
         // This theme may include others. If so we need to combine the two together
@@ -384,7 +384,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
 
                 // This should be the path to the file. Load it as a json object
                 const contents = await fs.readFile(themeRoot, 'utf8');
-                const json = JSON.parse(stripJsonComments(contents)) as JSONObject;
+                const json = parse(contents);
 
                 // There should be a theme colors section
                 const contributes = json.contributes as JSONObject;
@@ -437,7 +437,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
 
                 // This should be the path to the file. Load it as a json object
                 const contents = await fs.readFile(themeRoot, 'utf8');
-                const json = JSON.parse(stripJsonComments(contents)) as JSONObject;
+                const json = parse(contents);
 
                 // There should be a theme colors section
                 const contributes = json.contributes as JSONObject;

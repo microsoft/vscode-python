@@ -24,12 +24,12 @@ import {
     IInteractiveWindowProvider,
     IJupyterExecution
 } from '../../client/datascience/types';
-import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
+import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
 import { asyncDump } from '../common/asyncDump';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createDocument } from './editor-integration/helpers';
-import { addMockData, CellPosition, verifyHtmlOnCell } from './interactiveWindowTestHelpers';
 import { waitForUpdate } from './reactHelpers';
+import { addMockData, CellPosition, verifyHtmlOnCell } from './testHelpers';
 
 //tslint:disable:trailing-comma no-any no-multiline-string
 
@@ -83,7 +83,7 @@ suite('DataScience LiveShare tests', () => {
         result.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
 
         // Setup our webview panel
-        result.createWebView(() => mount(<MainPanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />), role);
+        result.createWebView(() => mount(<InteractivePanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />), role);
 
         // Make sure the history provider and execution factory in the container is created (the extension does this on startup in the extension)
         // This is necessary to get the appropriate live share services up and running.
@@ -110,7 +110,7 @@ suite('DataScience LiveShare tests', () => {
         // If just the host session has started or nobody, just run the host.
         const guestStarted = isSessionStarted(vsls.Role.Guest);
         if (!guestStarted) {
-            const hostRenderPromise = waitForUpdate(hostContainer.wrapper!, MainPanel, expectedRenderCount);
+            const hostRenderPromise = waitForUpdate(hostContainer.wrapper!, InteractivePanel, expectedRenderCount);
 
             // Generate our results
             await resultGenerator(false);
@@ -121,8 +121,8 @@ suite('DataScience LiveShare tests', () => {
             // Otherwise more complicated. We have to wait for renders on both
 
             // Get a render promise with the expected number of renders for both wrappers
-            const hostRenderPromise = waitForUpdate(hostContainer.wrapper!, MainPanel, expectedRenderCount);
-            const guestRenderPromise = waitForUpdate(guestContainer.wrapper!, MainPanel, expectedRenderCount);
+            const hostRenderPromise = waitForUpdate(hostContainer.wrapper!, InteractivePanel, expectedRenderCount);
+            const guestRenderPromise = waitForUpdate(guestContainer.wrapper!, InteractivePanel, expectedRenderCount);
 
             // Generate our results
             await resultGenerator(true);
@@ -180,7 +180,7 @@ suite('DataScience LiveShare tests', () => {
 
         // Just run some code in the host
         const wrapper = await addCodeToRole(vsls.Role.Host, 'a=1\na');
-        verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
+        verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
     });
 
     test('Host & Guest Simple', async () => {
@@ -195,11 +195,11 @@ suite('DataScience LiveShare tests', () => {
 
         // Send code through the host
         const wrapper = await addCodeToRole(vsls.Role.Host, 'a=1\na');
-        verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
+        verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
 
         // Verify it ended up on the guest too
         assert.ok(guestContainer.wrapper, 'Guest wrapper not created');
-        verifyHtmlOnCell(guestContainer.wrapper!, '<span>1</span>', CellPosition.Last);
+        verifyHtmlOnCell(guestContainer.wrapper!, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
     });
 
     test('Host Shutdown and Run', async () => {
@@ -212,14 +212,14 @@ suite('DataScience LiveShare tests', () => {
 
         // Send code through the host
         let wrapper = await addCodeToRole(vsls.Role.Host, 'a=1\na');
-        verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
+        verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
 
         // Stop the session
         await stopSession(vsls.Role.Host);
 
         // Send code again. It should still work.
         wrapper = await addCodeToRole(vsls.Role.Host, 'a=1\na');
-        verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
+        verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
     });
 
     test('Host startup and guest restart', async () => {
@@ -232,7 +232,7 @@ suite('DataScience LiveShare tests', () => {
 
         // Send code through the host
         let wrapper = await addCodeToRole(vsls.Role.Host, 'a=1\na');
-        verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
+        verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
 
         // Shutdown the host
         await host.dispose();
@@ -240,10 +240,10 @@ suite('DataScience LiveShare tests', () => {
         // Startup a guest and run some code.
         await startSession(vsls.Role.Guest);
         wrapper = await addCodeToRole(vsls.Role.Guest, 'a=1\na');
-        verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
+        verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
 
         assert.ok(hostContainer.wrapper, 'Host wrapper not created');
-        verifyHtmlOnCell(hostContainer.wrapper!, '<span>1</span>', CellPosition.Last);
+        verifyHtmlOnCell(hostContainer.wrapper!, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
     });
 
     test('Going through codewatcher', async () => {
@@ -270,9 +270,9 @@ suite('DataScience LiveShare tests', () => {
             assert.ok(both, 'Expected both guest and host to be used');
             await codeWatcher.runAllCells();
         });
-        verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
+        verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
         assert.ok(hostContainer.wrapper, 'Host wrapper not created for some reason');
-        verifyHtmlOnCell(hostContainer.wrapper!, '<span>1</span>', CellPosition.Last);
+        verifyHtmlOnCell(hostContainer.wrapper!, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
     });
 
     test('Export from guest', async () => {
@@ -293,9 +293,9 @@ suite('DataScience LiveShare tests', () => {
         fileSystem.setup(f => f.getSubDirectories(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
 
         // Need to register commands as our extension isn't actually loading.
-        const listener = guestContainer!.get<IDataScienceCommandListener>(IDataScienceCommandListener);
+        const listeners = guestContainer!.getAll<IDataScienceCommandListener>(IDataScienceCommandListener);
         const guestCommandManager = guestContainer!.get<ICommandManager>(ICommandManager);
-        listener.register(guestCommandManager);
+        listeners.forEach(f => f.register(guestCommandManager));
 
         // Start both the host and the guest
         await startSession(vsls.Role.Host);
@@ -322,7 +322,7 @@ suite('DataScience LiveShare tests', () => {
         // Start just the host and verify it works
         await startSession(vsls.Role.Host);
         let wrapper = await addCodeToRole(vsls.Role.Host, '#%%\na=1\na');
-        verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
+        verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
 
         // Disable guest checking on the guest (same as if the guest doesn't have the python extension)
         await startSession(vsls.Role.Guest);
@@ -331,7 +331,7 @@ suite('DataScience LiveShare tests', () => {
         // Host should now be in a state that if any code runs, the session should end. However
         // the code should still run
         wrapper = await addCodeToRole(vsls.Role.Host, '#%%\na=1\na');
-        verifyHtmlOnCell(wrapper, '<span>1</span>', CellPosition.Last);
+        verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
         assert.equal(isSessionStarted(vsls.Role.Host), false, 'Host should have exited session');
         assert.equal(isSessionStarted(vsls.Role.Guest), false, 'Guest should have exited session');
         assert.ok(lastErrorMessage, 'Error was not set during session shutdown');

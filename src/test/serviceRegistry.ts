@@ -26,6 +26,10 @@ import { registerTypes as formattersRegisterTypes } from '../client/formatters/s
 import { EnvironmentActivationService } from '../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../client/interpreter/activation/types';
 import { IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService } from '../client/interpreter/autoSelection/types';
+import { InterpreterHashProvider } from '../client/interpreter/locators/services/hashProvider';
+import { InterpeterHashProviderFactory } from '../client/interpreter/locators/services/hashProviderFactory';
+import { InterpreterFilter } from '../client/interpreter/locators/services/interpreterFilter';
+import { WindowsStoreInterpreter } from '../client/interpreter/locators/services/windowsStoreInterpreter';
 import { registerTypes as interpretersRegisterTypes } from '../client/interpreter/serviceRegistry';
 import { ServiceContainer } from '../client/ioc/container';
 import { ServiceManager } from '../client/ioc/serviceManager';
@@ -65,7 +69,7 @@ export class IocContainer {
         this.serviceManager.addSingleton<IInterpreterAutoSelectionService>(IInterpreterAutoSelectionService, MockAutoSelectionService);
         this.serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(IInterpreterAutoSeletionProxyService, MockAutoSelectionService);
     }
-    public async dispose() : Promise<void> {
+    public async dispose(): Promise<void> {
         for (const disposable of this.disposables) {
             if (!disposable) {
                 continue;
@@ -93,6 +97,10 @@ export class IocContainer {
         const mockEnvironmentActivationService = mock(EnvironmentActivationService);
         when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything())).thenResolve();
         this.serviceManager.addSingletonInstance<IEnvironmentActivationService>(IEnvironmentActivationService, instance(mockEnvironmentActivationService));
+        this.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
+        this.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
+        this.serviceManager.addSingleton<InterpeterHashProviderFactory>(InterpeterHashProviderFactory, InterpeterHashProviderFactory);
+        this.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
     }
     public registerVariableTypes() {
         variableRegisterTypes(this.serviceManager);

@@ -32,7 +32,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         disposableRegistry.push(this);
         disposableRegistry.push(this.debugService.onDidChangeActiveDebugSession(this.onChangeDebugSession.bind(this)));
         disposableRegistry.push(this.documentManager.onDidCloseTextDocument(this.onDidCloseTextDocument.bind(this)));
-        disposableRegistry.push(this.debugLocationTracker.debugLocationUpdated(this.onDebugLocationUpdated.bind(this)));
+        disposableRegistry.push(this.debugLocationTracker.updated(this.onDebugLocationUpdated.bind(this)));
     }
 
     public dispose() {
@@ -104,7 +104,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         const debugCellList = CodeLensCommands.DebuggerCommands;
 
         if (this.debugService.activeDebugSession) {
-            const debugLocation = this.debugLocationTracker.debugLocation;
+            const debugLocation = this.debugLocationTracker.getLocation(this.debugService.activeDebugSession);
 
             if (debugLocation && this.fileSystem.arePathsSame(debugLocation.fileName, document.uri.fsPath)) {
                 // We are in the given debug file, so only return the code lens that contains the given line

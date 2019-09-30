@@ -103,17 +103,17 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
             this.currentActivator.activator.dispose();
         }
     }
-    @swallowExceptions('Switch Language Server')
-    public async trackLangaugeServerSwitch(jediEnabled: boolean): Promise<void> {
+    @swallowExceptions('Send telemetry for Language Server current selection')
+    public async sendTelemetryForChosenLanguageServer(jediEnabled: boolean): Promise<void> {
         const state = this.stateFactory.createGlobalPersistentState<boolean | undefined>('SWITCH_LS', undefined);
         if (typeof state.value !== 'boolean') {
             await state.updateValue(jediEnabled);
-            return;
         }
         if (state.value !== jediEnabled) {
             await state.updateValue(jediEnabled);
-            const message = jediEnabled ? 'Switch to Jedi from LS' : 'Switch to LS from Jedi';
-            sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_SWITCHED, undefined, { change: message });
+            sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION, undefined, { switchTo: jediEnabled });
+        } else {
+            sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION, undefined, { startup: jediEnabled });
         }
     }
 
@@ -145,7 +145,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         }
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const enabled = configurationService.getSettings(this.resource).jediEnabled;
-        this.trackLangaugeServerSwitch(enabled).ignoreErrors();
+        this.sendTelemetryForChosenLanguageServer(enabled).ignoreErrors();
         return enabled;
     }
 

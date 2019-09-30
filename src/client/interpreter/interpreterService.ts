@@ -17,6 +17,8 @@ import {
     IInterpreterDisplay, IInterpreterHelper, IInterpreterLocatorService,
     IInterpreterService, INTERPRETER_LOCATOR_SERVICE,
     InterpreterType, PythonInterpreter} from './contracts';
+import { InterpeterHashProviderFactory } from './locators/services/hashProviderFactory';
+import { IInterpreterHashProviderFactory } from './locators/types';
 import { IVirtualEnvironmentManager } from './virtualEnvs/types';
 
 const EXPITY_DURATION = 24 * 60 * 60 * 1000;
@@ -24,7 +26,6 @@ const EXPITY_DURATION = 24 * 60 * 60 * 1000;
 @injectable()
 export class InterpreterService implements Disposable, IInterpreterService {
     private readonly locator: IInterpreterLocatorService;
-    private readonly fs: IFileSystem;
     private readonly persistentStateFactory: IPersistentStateFactory;
     private readonly configService: IConfigurationService;
     private readonly didChangeInterpreterEmitter = new EventEmitter<void>();
@@ -33,9 +34,9 @@ export class InterpreterService implements Disposable, IInterpreterService {
     private readonly updatedInterpreters = new Set<string>();
     private pythonPathSetting: string = '';
 
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
+        @inject(InterpeterHashProviderFactory) private readonly hashProviderFactory: IInterpreterHashProviderFactory) {
         this.locator = serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE);
-        this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
         this.persistentStateFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
     }
@@ -175,7 +176,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         if (!info.cachedEntry && info.path && this.inMemoryCacheOfDisplayNames.has(info.path)) {
             return this.inMemoryCacheOfDisplayNames.get(info.path)!;
         }
-        const fileHash = (info.path ? await this.fs.getFileHash(info.path).catch(() => '') : '') || '';
+        const fileHash = (info.path ? await this.getInterepreterFileHash(info.path).catch(() => '') : '') || '';
         // Do not include dipslay name into hash as that changes.
         const interpreterHash = `${fileHash}-${md5(JSON.stringify({ ...info, displayName: '' }))}`;
         const store = this.persistentStateFactory.createGlobalPersistentState<{ hash: string; displayName: string }>(`${info.path}.interpreter.displayName.v7`, undefined, EXPITY_DURATION);
@@ -195,12 +196,16 @@ export class InterpreterService implements Disposable, IInterpreterService {
         return displayName;
     }
     public async getInterpreterCache(pythonPath: string): Promise<IPersistentState<{ fileHash: string; info?: PythonInterpreter }>> {
-        const fileHash = (pythonPath ? await this.fs.getFileHash(pythonPath).catch(() => '') : '') || '';
+        const fileHash = (pythonPath ? await this.getInterepreterFileHash(pythonPath).catch(() => '') : '') || '';
         const store = this.persistentStateFactory.createGlobalPersistentState<{ fileHash: string; info?: PythonInterpreter }>(`${pythonPath}.interpreter.Details.v7`, undefined, EXPITY_DURATION);
         if (!store.value || store.value.fileHash !== fileHash) {
             await store.updateValue({ fileHash });
         }
         return store;
+    }
+    protected async getInterepreterFileHash(pythonPath: string): Promise<string>{
+        return this.hashProviderFactory.create({pythonPath})
+            .then(provider => provider.getInterpreterHash(pythonPath));
     }
     protected async updateCachedInterpreterInformation(info: PythonInterpreter, resource: Resource): Promise<void>{
         const key = JSON.stringify(info);

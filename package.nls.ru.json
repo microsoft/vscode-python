@@ -6,7 +6,6 @@
     "python.command.python.debugtests.title": "Запустить все тесты под отладчиком",
     "python.command.python.execInTerminal.title": "Выполнить файл в консоли",
     "python.command.python.setInterpreter.title": "Выбрать интерпретатор",
-    "python.command.python.updateSparkLibrary.title": "Обновить библиотеки PySpark",
     "python.command.python.refactorExtractVariable.title": "Извлечь в переменную",
     "python.command.python.refactorExtractMethod.title": "Извлечь в метод",
     "python.command.python.viewTestOutput.title": "Показать вывод теста",

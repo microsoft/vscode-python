@@ -1,5 +1,5 @@
 .measure-width-div {
-    width: 100vw;
+    width: 95vw;
 	visibility: hidden;
 	position: absolute;
 }
@@ -105,4 +105,24 @@
 
 .monaco-editor-hover .hover-row.status-bar .actions .action-container .action .icon {
 	padding-right: 4px;
+}
+
+.monaco-editor .current-line ~ .line-numbers {
+    color: var(--override-foreground, var(--vscode-editor-foreground)) !important;
+}
+.monaco-editor .line-numbers {
+    color: var(--override-foreground, var(--vscode-editor-foreground)) !important;
+}
+
+.monaco-editor .margin {
+    background-color: transparent !important;
+}
+
+.monaco-editor .margin-view-overlays-border-on {
+    margin-right: 1px;
+    padding-right: 1px;
+    background-color: transparent !important;
+    border-right-color: black;
+    border-right-style: solid;
+    border-right-width: 1px;
 }

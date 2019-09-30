@@ -8,8 +8,8 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import { traceError } from '../../../common/logger';
-import { TestDataItem } from '../../types';
-import { getParentFile, getParentSuite, getTestType } from '../testUtils';
+import { TestDataItem, TestDataItemType } from '../../types';
+import { getParentFile, getParentSuite, getTestDataItemType } from '../testUtils';
 import * as testing from '../types';
 import * as discovery from './types';
 
@@ -74,17 +74,17 @@ export class TestDiscoveredTestParser implements discovery.ITestDiscoveredTestPa
         discoveredTests: discovery.DiscoveredTests,
         tests: testing.Tests
     ) {
-        const parentType = getTestType(parent);
+        const parentType = getTestDataItemType(parent);
         switch (parentType) {
-            case testing.TestType.testFolder: {
+            case TestDataItemType.folder: {
                 this.processFolder(rootFolder, parent as testing.TestFolder, discoveredTests, tests);
                 break;
             }
-            case testing.TestType.testFile: {
+            case TestDataItemType.file: {
                 this.processFile(rootFolder, parent as testing.TestFile, discoveredTests, tests);
                 break;
             }
-            case testing.TestType.testSuite: {
+            case TestDataItemType.suite: {
                 this.processSuite(rootFolder, parent as testing.TestSuite, discoveredTests, tests);
                 break;
             }
@@ -383,11 +383,11 @@ function createFlattenedParameterizedFunction(
     func: testing.TestFunction,
     parent: testing.TestFile | testing.TestSuite
 ): testing.FlattenedTestFunction {
-    const type = getTestType(parent);
-    const parentFile = (type && type === testing.TestType.testSuite) ?
+    const type = getTestDataItemType(parent);
+    const parentFile = (type && type === TestDataItemType.suite) ?
         getParentFile(tests, func) :
         parent as testing.TestFile;
-    const parentSuite = (type && type === testing.TestType.testSuite) ?
+    const parentSuite = (type && type === TestDataItemType.suite) ?
         parent as testing.TestSuite :
         undefined;
     return {
@@ -403,8 +403,8 @@ function createFlattenedFunction(
     func: testing.TestFunction
 ): testing.FlattenedTestFunction {
     const parent = getParentFile(tests, func);
-    const type = parent ? getTestType(parent) : undefined;
-    const parentFile = (type && type === testing.TestType.testSuite) ?
+    const type = parent ? getTestDataItemType(parent) : undefined;
+    const parentFile = (type && type === TestDataItemType.suite) ?
         getParentFile(tests, func) :
         parent as testing.TestFile;
     const parentSuite = getParentSuite(tests, func);
