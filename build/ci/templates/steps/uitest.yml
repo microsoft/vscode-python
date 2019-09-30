@@ -42,15 +42,15 @@
 
 steps:
     - task: AzureCLI@2
-    displayName: Azure CLI
-    inputs:
+      displayName: Azure CLI
+      inputs:
         azureSubscription: $AZURE_SUBSCRIPTION
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         inlineScript: |
             az --version
             az storage blob list --container-name extension-builds --account-name pvsc -o table
-    env:
+      env:
         AZURE_SUBSCRIPTION: $(AZURE_SUBSCRIPTION)
 
     # Some tests need to have both 2.7 & 3.7 available.
