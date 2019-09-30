@@ -120,7 +120,7 @@ parameters:
 jobs:
 - job: UITest
   # Remember, some tests can take easily an hour (the `tests` features take just around 1 hour).
-  timeoutInMinutes: 90
+  timeoutInMinutes: 120
   # Build our matrix (permutations of VS Code + Tests + Pyhton + OS).
   strategy:
     matrix:
