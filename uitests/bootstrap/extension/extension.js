@@ -126,7 +126,7 @@ function activate(context) {
                 .readFileSync(filePath)
                 .toString()
                 .trim();
-            const doc = await vscode.window.openTextDocument(fileToOpen);
+            const doc = await vscode.workspace.openTextDocument(fileToOpen);
             await vscode.window.showTextDocument(doc);
             fs.unlinkSync(filePath);
         } catch (ex) {

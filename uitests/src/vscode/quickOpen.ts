@@ -4,8 +4,10 @@
 'use strict';
 
 import { EventEmitter } from 'events';
-import { RetryMax10Seconds, RetryMax20Seconds, RetryMax2Seconds, RetryMax30Seconds } from '../constants';
-import { retry, retryWrapper } from '../helpers';
+import * as fs from 'fs-extra';
+import * as path from 'path';
+import { RetryMax10Seconds, RetryMax2Seconds, RetryMax30Seconds } from '../constants';
+import { noop, retry, sleep } from '../helpers';
 import { debug, warn } from '../helpers/logger';
 import { Selector } from '../selectors';
 import { IApplication, IQuickOpen } from '../types';
@@ -22,20 +24,45 @@ export class QuickOpen extends EventEmitter implements IQuickOpen {
         super();
     }
     public async openFile(fileName: string): Promise<void> {
-        let retryCounter = 0;
-        const tryOpening = async () => {
-            retryCounter += 1;
-            // Possible VSC explorer hasn't refreshed, and it hasn't detected a new file in the file system.
-            if (retryCounter > 1) {
-                await this.app.documents.refreshExplorer();
-            }
-            // await this.runCommand('Go to File...');
-            await this.open();
-            await this._selectValue(fileName, fileName);
-            await this.app.documents.waitUntilFileOpened(fileName);
-        };
+        const fullFilePath = path.join(this.app.workspacePathOrFolder, fileName);
+        const openFileTxt = path.join(this.app.extensionsPath, 'openFile.txt');
+        const errorFile = path.join(this.app.extensionsPath, 'openFile_error.txt');
+        await Promise.all([fs.remove(errorFile).catch(noop), fs.writeFile(openFileTxt, fullFilePath)]);
 
-        await retryWrapper(RetryMax20Seconds, tryOpening);
+        await this.app.quickopen.runCommand('Smoke: Open File');
+        // Wait for 5 seconds for file to get opened.
+        // If file has been deleted then yes it has been opened, else error
+        for (const _ of [1, 2, 3, 4, 5]) {
+            if (await fs.pathExists(openFileTxt)) {
+                await sleep(500);
+                continue;
+            }
+            return;
+        }
+
+        let errorMessage = '';
+        if (await fs.pathExists(errorFile)) {
+            errorMessage += await fs.readFile(errorFile);
+        }
+        if (await fs.pathExists(openFileTxt)) {
+            errorMessage += await fs.readFile(openFileTxt);
+        }
+        throw new Error(`Error opening file '${fullFilePath}'.\n ${errorMessage}`);
+
+        // let retryCounter = 0;
+        // const tryOpening = async () => {
+        //     retryCounter += 1;
+        //     // Possible VSC explorer hasn't refreshed, and it hasn't detected a new file in the file system.
+        //     if (retryCounter > 1) {
+        //         await this.app.documents.refreshExplorer();
+        //     }
+        //     // await this.runCommand('Go to File...');
+        //     await this.open();
+        //     await this._selectValue(fileName, fileName);
+        //     await this.app.documents.waitUntilFileOpened(fileName);
+        // };
+
+        // await retryWrapper(RetryMax20Seconds, tryOpening);
     }
     /**
      * Don't know what UI element in VSC handles keyboard events.
