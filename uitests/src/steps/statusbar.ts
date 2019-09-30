@@ -10,7 +10,6 @@ import { Given, Then, When } from 'cucumber';
 import { CucumberRetryMax5Seconds } from '../constants';
 import { noop } from '../helpers';
 import '../helpers/extensions';
-import { warn } from '../helpers/logger';
 
 Given('the python status bar item is hidden', async function() {
     await this.app.statusbar.hidePythonStatusBarItem().catch(noop);
