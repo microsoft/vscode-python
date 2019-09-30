@@ -7,7 +7,7 @@
 
 import * as assert from 'assert';
 import { expect } from 'chai';
-import { Given, Then, When } from 'cucumber';
+import { Given, Then, When, World } from 'cucumber';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { CucumberRetryMax10Seconds, CucumberRetryMax5Seconds } from '../constants';
@@ -34,29 +34,6 @@ When('I create a new file with the following content', async function(contents: 
     await this.app.quickopen.runCommand('Paste');
     // Wait for text to get pasted and UI to get updated.
     await sleep(200);
-});
-
-Given('a file named {string} is created with the following content', async function(filename: string, contents: string) {
-    const fullpath = path.join(this.app.workspacePathOrFolder, filename);
-    await fs.ensureDir(path.dirname(fullpath));
-    await fs.writeFile(fullpath, contents);
-    // Ensure VS Code has had time to refresh to explorer and is aware of the file.
-    // Else if we later attempt to open this file, VSC might not be aware of it and woudn't display anything in the `quick open` dropdown.
-    const openRecentlyCreatedDocument = async () => {
-        await this.app.documents.refreshExplorer();
-        // Sometimes VS Code just doesn't know about files created from outside VS Code.
-        // Not unless we expand the file explorer.
-        // Hopefully we don't have (write) tests where files are created in nested folders and not detected by VSC, but required to be opened.
-        const opened = await this.app.quickopen
-            .openFile(path.basename(filename))
-            .then(() => true)
-            .catch(ex => warn(`Failed to open the file '${filename}' in VS Code, but continuing (hopefully file will not have to be opened)`, ex));
-        if (opened === true) {
-            await this.app.quickopen.runCommand('View: Close Editor');
-        }
-    };
-
-    await retryWrapper({ timeout: 5000 }, openRecentlyCreatedDocument);
 });
 
 When('I change the language of the file to {string}', async function(language: string) {
@@ -110,12 +87,35 @@ Then('the file {string} is opened', async function(file: string) {
 //     await sleep(1000);
 // });
 
-// When('the file {string} has the following content', async (fileName: string, contents: string) => {
-//     const fullFilePath = path.join(context.app.workspacePathOrFolder, fileName);
-//     await fs.mkdirp(path.dirname(fullFilePath)).catch(noop);
-//     await fs.writeFile(fullFilePath, contents);
-//     await sleep(1000);
-// });
+async function createFile(this: World, filename: string, contents: string) {
+    const fullpath = path.join(this.app.workspacePathOrFolder, filename);
+    await fs.ensureDir(path.dirname(fullpath));
+    await fs.writeFile(fullpath, contents);
+    // Ensure VS Code has had time to refresh to explorer and is aware of the file.
+    // Else if we later attempt to open this file, VSC might not be aware of it and woudn't display anything in the `quick open` dropdown.
+    const openRecentlyCreatedDocument = async () => {
+        await this.app.documents.refreshExplorer();
+        // Sometimes VS Code just doesn't know about files created from outside VS Code.
+        // Not unless we expand the file explorer.
+        // Hopefully we don't have (write) tests where files are created in nested folders and not detected by VSC, but required to be opened.
+        const opened = await this.app.quickopen
+            .openFile(path.basename(filename))
+            .then(() => true)
+            .catch(ex => warn(`Failed to open the file '${filename}' in VS Code, but continuing (hopefully file will not have to be opened)`, ex));
+        if (opened === true) {
+            await this.app.quickopen.runCommand('View: Close Editor');
+        }
+    };
+
+    await retryWrapper({ timeout: 5000 }, openRecentlyCreatedDocument);
+}
+Given('a file named {string} is created with the following content', async function(filename: string, contents: string) {
+    await createFile.call(this, filename, contents);
+});
+
+When('the file {string} has the following content', async function(filename: string, contents: string) {
+    await createFile.call(this, filename, contents);
+});
 
 Given('a file named {string} does not exist', async function(fileName: string) {
     const fullFilePath = path.join(this.app.workspacePathOrFolder, fileName);
