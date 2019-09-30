@@ -4,18 +4,17 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { Disposable, TextDocument, TextEditor, Uri } from 'vscode';
+import { Disposable, TextDocument, TextEditor } from 'vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { Identifiers } from '../../client/datascience/constants';
-import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import { ICell, INotebookEditor, INotebookEditorProvider, INotebookExporter } from '../../client/datascience/types';
+import { ICell, INotebookExporter } from '../../client/datascience/types';
 import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { addCell, getNativeCellResults, runMountedTest } from './nativeEditorTestHelpers';
+import { addCell, createNewEditor, getNativeCellResults, openEditor, runMountedTest } from './nativeEditorTestHelpers';
 import { waitForUpdate } from './reactHelpers';
 import {
     addContinuousMockData,
@@ -25,7 +24,8 @@ import {
     findButton,
     getLastOutputCell,
     srcDirectory,
-    verifyHtmlOnCell
+    verifyHtmlOnCell,
+    waitForMessageResponse
 } from './testHelpers';
 
 //import { asyncDump } from '../common/asyncDump';
@@ -33,20 +33,10 @@ import {
 suite('DataScience Native Editor tests', () => {
     const disposables: Disposable[] = [];
     let ioc: DataScienceIocContainer;
-    let messageWrapper: ((m: string, payload: any) => void) | undefined;
 
     setup(() => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
-
-        // Add a listener for our ioc that lets the test
-        // forward messages on
-        ioc.addMessageListener((m, p) => {
-            if (messageWrapper) {
-                messageWrapper(m, p);
-            }
-        });
-
     });
 
     teardown(async () => {
@@ -68,48 +58,6 @@ suite('DataScience Native Editor tests', () => {
     //      asyncDump();
     // });
 
-    async function getOrCreateNativeEditor(uri?: Uri, contents?: string): Promise<INotebookEditor> {
-        const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
-        if (uri && contents) {
-            return notebookProvider.open(uri, contents);
-        } else {
-            return notebookProvider.createNew();
-        }
-    }
-
-    async function waitForMessageResponse(action: () => void): Promise<void> {
-        ioc.wrapperCreatedPromise  = createDeferred<boolean>();
-        action();
-        await ioc.wrapperCreatedPromise.promise;
-        ioc.wrapperCreatedPromise = undefined;
-    }
-
-    function waitForMessage(message: string) : Promise<void> {
-        // Wait for the mounted web panel to send a message back to the data explorer
-        const promise = createDeferred<void>();
-        messageWrapper = (m: string, _p: any) => {
-            if (m === message) {
-                promise.resolve();
-            }
-        };
-        return promise.promise;
-    }
-
-    async function createNewEditor(): Promise<INotebookEditor> {
-        const loaded = waitForMessage(InteractiveWindowMessages.LoadAllCellsComplete);
-        const result = await getOrCreateNativeEditor();
-        await loaded;
-        return result;
-    }
-
-    async function openEditor(contents: string): Promise<INotebookEditor> {
-        const loaded = waitForMessage(InteractiveWindowMessages.LoadAllCellsComplete);
-        const uri = Uri.parse('file:////usr/home/test.ipynb');
-        const result = await getOrCreateNativeEditor(uri, contents);
-        await loaded;
-        return result;
-    }
-
     function createFileCell(cell: any, data: any): ICell {
         const newCell = { type: 'preview', id: 'FakeID', file: Identifiers.EmptyFileName, line: 0, state: 2, ...cell};
         newCell.data = { cell_type: 'code', execution_count: null, metadata: {}, outputs: [], source: '', ...data };
@@ -119,7 +67,7 @@ suite('DataScience Native Editor tests', () => {
 
     runMountedTest('Simple text', async (wrapper) => {
         // Create an editor so something is listening to messages
-        await createNewEditor();
+        await createNewEditor(ioc);
 
         // Add a cell into the UI and wait for it to render
         await addCell(wrapper, 'a=1\na');
@@ -129,7 +77,7 @@ suite('DataScience Native Editor tests', () => {
 
     runMountedTest('Mime Types', async (wrapper) => {
         // Create an editor so something is listening to messages
-        await createNewEditor();
+        await createNewEditor(ioc);
 
         const badPanda = `import pandas as pd
 df = pd.read("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
@@ -198,7 +146,7 @@ for _ in range(50):
         docManager.setup(a => a.visibleTextEditors).returns(() => textEditors);
         ioc.serviceManager.rebindInstance<IDocumentManager>(IDocumentManager, docManager.object);
         // Create an editor so something is listening to messages
-        await createNewEditor();
+        await createNewEditor(ioc);
 
         // Get a cell into the list
         await addCell(wrapper, 'a=1\na');
@@ -247,12 +195,12 @@ for _ in range(50):
         ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
 
         // Make sure to create the interactive window after the rebind or it gets the wrong application shell.
-        await createNewEditor();
+        await createNewEditor(ioc);
         await addCell(wrapper, 'a=1\na');
 
         // Export should cause exportCalled to change to true
         const exportButton = findButton(wrapper, NativeEditor, 6);
-        await waitForMessageResponse(() => exportButton!.simulate('click'));
+        await waitForMessageResponse(ioc, () => exportButton!.simulate('click'));
         assert.equal(exportCalled, true, 'Export should have been called');
     }, () => { return ioc; });
 
@@ -267,11 +215,11 @@ for _ in range(50):
             return createFileCell(cell, cell.data);
         });
         const notebook = await ioc.get<INotebookExporter>(INotebookExporter).translateToNotebook(runAllCells, undefined);
-        await openEditor(JSON.stringify(notebook));
+        await openEditor(ioc, JSON.stringify(notebook));
 
         // Export should cause exportCalled to change to true
         const runAllButton = findButton(wrapper, NativeEditor, 3);
-        await waitForMessageResponse(() => runAllButton!.simulate('click'));
+        await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
 
         await waitForUpdate(wrapper, NativeEditor, 16);
 

@@ -44,7 +44,8 @@ import {
     toggleCellExpansion,
     updateDataScienceSettings,
     verifyHtmlOnCell,
-    verifyLastCellInputState
+    verifyLastCellInputState,
+    waitForMessageResponse
 } from './testHelpers';
 
 //import { asyncDump } from '../common/asyncDump';
@@ -76,13 +77,6 @@ suite('DataScience Interactive Window output tests', () => {
     // suiteTeardown(() => {
     //      asyncDump();
     // });
-
-    async function waitForMessageResponse(action: () => void): Promise<void> {
-        ioc.wrapperCreatedPromise  = createDeferred<boolean>();
-        action();
-        await ioc.wrapperCreatedPromise.promise;
-        ioc.wrapperCreatedPromise = undefined;
-    }
 
     runMountedTest('Simple text', async (wrapper) => {
         await addCode(ioc, wrapper, 'a=1\na');
@@ -317,7 +311,7 @@ for _ in range(50):
         const deleteButton = ImageButtons.at(3);
 
         // Make sure goto works
-        await waitForMessageResponse(() => goto.simulate('click'));
+        await waitForMessageResponse(ioc, () => goto.simulate('click'));
         await waitForPromise(showedEditor.promise, 1000);
         assert.ok(showedEditor.resolved, 'Goto source is not jumping to editor');
 
@@ -350,7 +344,7 @@ for _ in range(50):
         const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
 
         // Export should cause exportCalled to change to true
-        await waitForMessageResponse(() => interactiveWindow.exportCells());
+        await waitForMessageResponse(ioc, () => interactiveWindow.exportCells());
         assert.equal(exportCalled, true, 'Export is not being called during export');
 
         // Remove the cell
@@ -367,7 +361,7 @@ for _ in range(50):
 
         // Then verify we cannot click the button (it should be disabled)
         exportCalled = false;
-        const response = waitForMessageResponse(() => exportButton!.simulate('click'));
+        const response = waitForMessageResponse(ioc, () => exportButton!.simulate('click'));
         await waitForPromise(response, 100);
         assert.equal(exportCalled, false, 'Export should not be called when no cells visible');
 
@@ -477,7 +471,7 @@ for _ in range(50):
         const copyToSource = ImageButtons.at(2);
 
         // Then click the copy to source button
-        await waitForMessageResponse(() => copyToSource.simulate('click'));
+        await waitForMessageResponse(ioc, () => copyToSource.simulate('click'));
         await waitForPromise(showedEditor.promise, 100);
         assert.ok(showedEditor.resolved, 'Copy to source is not adding code to the editor');
 
@@ -591,7 +585,7 @@ for _ in range(50):
         const gatherCode = ImageButtons.at(0);
 
         // Then click the gather code button
-        await waitForMessageResponse(() => gatherCode.simulate('click'));
+        await waitForMessageResponse(ioc, () => gatherCode.simulate('click'));
         const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
         assert.notEqual(docManager.activeTextEditor, undefined);
         if (docManager.activeTextEditor) {
@@ -613,7 +607,7 @@ for _ in range(50):
         const gatherCode = ImageButtons.at(0);
 
         // Then click the gather code button
-        await waitForMessageResponse(() => gatherCode.simulate('click'));
+        await waitForMessageResponse(ioc, () => gatherCode.simulate('click'));
         const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
         assert.notEqual(docManager.activeTextEditor, undefined);
         if (docManager.activeTextEditor) {

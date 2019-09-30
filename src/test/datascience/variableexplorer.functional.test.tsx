@@ -11,14 +11,18 @@ import { Disposable } from 'vscode';
 import { IJupyterVariable } from '../../client/datascience/types';
 import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
 import { VariableExplorer } from '../../datascience-ui/interactive-common/variableExplorer';
+import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { addCode, runMountedTest } from './interactiveWindowTestHelpers';
+import { addCode } from './interactiveWindowTestHelpers';
+import { addCell, createNewEditor } from './nativeEditorTestHelpers';
 import { waitForUpdate } from './reactHelpers';
+import { runDoubleTest } from './testHelpers';
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 suite('DataScience Interactive Window variable explorer tests', () => {
     const disposables: Disposable[] = [];
     let ioc: DataScienceIocContainer;
+    let createdNotebook = false;
 
     suiteSetup(function () {
         // These test require python, so only run with a non-mocked jupyter
@@ -34,6 +38,7 @@ suite('DataScience Interactive Window variable explorer tests', () => {
     setup(() => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
+        createdNotebook = false;
     });
 
     teardown(async () => {
@@ -50,7 +55,28 @@ suite('DataScience Interactive Window variable explorer tests', () => {
         await ioc.dispose();
     });
 
-    runMountedTest('Variable explorer - Exclude', async (wrapper) => {
+    // Uncomment this to debug hangs on exit
+    //suiteTeardown(() => {
+    //      asyncDump();
+    //});
+
+    async function addCodeImpartial(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string, expectedRenderCount: number = 4, expectError: boolean = false): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
+        const nodes = wrapper.find('InteractivePanel');
+        if (nodes.length > 0) {
+            return addCode(ioc, wrapper, code, expectedRenderCount, expectError);
+        } else {
+            // For the native editor case, we need to create an editor before hand.
+            if (!createdNotebook) {
+                await createNewEditor(ioc);
+                createdNotebook = true;
+                expectedRenderCount += 1;
+            }
+            await addCell(wrapper, code, true, expectedRenderCount);
+            return wrapper;
+        }
+    }
+
+    runDoubleTest('Variable explorer - Exclude', async (wrapper) => {
         const basicCode: string = `import numpy as np
 import pandas as pd
 value = 'hello world'`;
@@ -58,8 +84,8 @@ value = 'hello world'`;
 
         openVariableExplorer(wrapper);
 
-        await addCode(ioc, wrapper, 'a=1\na');
-        await addCode(ioc, wrapper, basicCode, 4);
+        await addCodeImpartial(wrapper, 'a=1\na');
+        await addCodeImpartial(wrapper, basicCode, 4);
         await waitForUpdate(wrapper, VariableExplorer, 3);
 
         // We should show a string and show an int, the modules should be hidden
@@ -74,7 +100,7 @@ value = 'hello world'`;
         ioc.getSettings().datascience.variableExplorerExclude = `${ioc.getSettings().datascience.variableExplorerExclude};str`;
 
         // Add another string and check our vars, strings should be hidden
-        await addCode(ioc, wrapper, basicCode2, 4);
+        await addCodeImpartial(wrapper, basicCode2, 4);
         await waitForUpdate(wrapper, VariableExplorer, 2);
 
         targetVariables = [
@@ -83,13 +109,13 @@ value = 'hello world'`;
         verifyVariables(wrapper, targetVariables);
     }, () => { return ioc; });
 
-    runMountedTest('Variable explorer - Update', async (wrapper) => {
+    runDoubleTest('Variable explorer - Update', async (wrapper) => {
         const basicCode: string = `value = 'hello world'`;
         const basicCode2: string = `value2 = 'hello world 2'`;
 
         openVariableExplorer(wrapper);
 
-        await addCode(ioc, wrapper, 'a=1\na');
+        await addCodeImpartial(wrapper, 'a=1\na');
         await waitForUpdate(wrapper, VariableExplorer, 2);
 
         // Check that we have just the 'a' variable
@@ -99,7 +125,7 @@ value = 'hello world'`;
         verifyVariables(wrapper, targetVariables);
 
         // Add another variable and check it
-        await addCode(ioc, wrapper, basicCode, 4);
+        await addCodeImpartial(wrapper, basicCode, 4);
         await waitForUpdate(wrapper, VariableExplorer, 3);
 
         targetVariables = [
@@ -110,7 +136,7 @@ value = 'hello world'`;
         verifyVariables(wrapper, targetVariables);
 
         // Add a second variable and check it
-        await addCode(ioc, wrapper, basicCode2, 4);
+        await addCodeImpartial(wrapper, basicCode2, 4);
         await waitForUpdate(wrapper, VariableExplorer, 4);
 
         targetVariables = [
@@ -123,13 +149,13 @@ value = 'hello world'`;
         verifyVariables(wrapper, targetVariables);
     }, () => { return ioc; });
 
-    runMountedTest('Variable explorer - Loading', async (wrapper) => {
+    runDoubleTest('Variable explorer - Loading', async (wrapper) => {
         const basicCode: string = `value = 'hello world'`;
 
         openVariableExplorer(wrapper);
 
-        await addCode(ioc, wrapper, 'a=1\na');
-        await addCode(ioc, wrapper, basicCode, 4);
+        await addCodeImpartial(wrapper, 'a=1\na');
+        await addCodeImpartial(wrapper, basicCode, 4);
 
         // Here we are only going to wait for two renders instead of the needed three
         // a should have the value updated, but value should still be loading
@@ -153,15 +179,15 @@ value = 'hello world'`;
     }, () => { return ioc; });
 
     // Test our display of basic types. We render 8 rows by default so only 8 values per test
-    runMountedTest('Variable explorer - Types A', async (wrapper) => {
+    runDoubleTest('Variable explorer - Types A', async (wrapper) => {
         const basicCode: string = `myList = [1, 2, 3]
 mySet = set([42])
 myDict = {'a': 1}`;
 
         openVariableExplorer(wrapper);
 
-        await addCode(ioc, wrapper, 'a=1\na');
-        await addCode(ioc, wrapper, basicCode, 4);
+        await addCodeImpartial(wrapper, 'a=1\na');
+        await addCodeImpartial(wrapper, basicCode, 4);
 
         // Verify that we actually update the variable explorer
         // Count here is our main render + a render for each variable row as they come in
@@ -178,7 +204,7 @@ myDict = {'a': 1}`;
         verifyVariables(wrapper, targetVariables);
     }, () => { return ioc; });
 
-    runMountedTest('Variable explorer - Basic B', async (wrapper) => {
+    runDoubleTest('Variable explorer - Basic B', async (wrapper) => {
         const basicCode: string = `import numpy as np
 import pandas as pd
 myComplex = complex(1, 1)
@@ -192,8 +218,8 @@ myTuple = 1,2,3,4,5,6,7,8,9
 
         openVariableExplorer(wrapper);
 
-        await addCode(ioc, wrapper, 'a=1\na');
-        await addCode(ioc, wrapper, basicCode, 4);
+        await addCodeImpartial(wrapper, 'a=1\na');
+        await addCodeImpartial(wrapper, basicCode, 4);
 
         // Verify that we actually update the variable explorer
         // Count here is our main render + a render for each variable row as they come in
@@ -219,7 +245,7 @@ Name: 0, dtype: float64`, supportsDataExplorer: true, type: 'Series', size: 54, 
         verifyVariables(wrapper, targetVariables);
     }, () => { return ioc; });
 
-    runMountedTest('Variable explorer - Sorting', async (wrapper) => {
+    runDoubleTest('Variable explorer - Sorting', async (wrapper) => {
         const basicCode: string = `b = 2
 c = 3
 stra = 'a'
@@ -228,8 +254,8 @@ strc = 'c'`;
 
         openVariableExplorer(wrapper);
 
-        await addCode(ioc, wrapper, 'a=1\na');
-        await addCode(ioc, wrapper, basicCode, 4);
+        await addCodeImpartial(wrapper, 'a=1\na');
+        await addCodeImpartial(wrapper, basicCode, 4);
 
         await waitForUpdate(wrapper, VariableExplorer, 7);
 
@@ -265,12 +291,18 @@ strc = 'c'`;
 
 // Open up our variable explorer which also triggers a data fetch
 function openVariableExplorer(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) {
-    const mainPanel: InteractivePanel = wrapper.find('InteractivePanel').instance() as InteractivePanel;
-
-    assert(mainPanel);
-
-    if (mainPanel) {
-        mainPanel.stateController.toggleVariableExplorer();
+    let nodes = wrapper.find('InteractivePanel');
+    if (nodes.length > 0) {
+        const interactivePanel: InteractivePanel = nodes.instance() as InteractivePanel;
+        if (interactivePanel) {
+            interactivePanel.stateController.toggleVariableExplorer();
+        }
+    } else {
+        nodes = wrapper.find('NativeEditor');
+        const nativeEditor: NativeEditor = nodes.instance() as NativeEditor;
+        if (nativeEditor) {
+            nativeEditor.stateController.toggleVariableExplorer();
+        }
     }
 }
 

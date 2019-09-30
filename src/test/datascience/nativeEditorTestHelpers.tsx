@@ -4,12 +4,40 @@
 import * as assert from 'assert';
 import { ReactWrapper } from 'enzyme';
 import * as React from 'react';
+import { Uri } from 'vscode';
 
-import { IJupyterExecution } from '../../client/datascience/types';
+import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { IJupyterExecution, INotebookEditor, INotebookEditorProvider } from '../../client/datascience/types';
 import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { waitForUpdate } from './reactHelpers';
-import { addMockData, getCellResults, getMainPanel, mountWebView } from './testHelpers';
+import { addMockData, getCellResults, getMainPanel, mountWebView, waitForMessage } from './testHelpers';
+
+// tslint:disable: no-any
+
+async function getOrCreateNativeEditor(ioc: DataScienceIocContainer, uri?: Uri, contents?: string): Promise<INotebookEditor> {
+    const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+    if (uri && contents) {
+        return notebookProvider.open(uri, contents);
+    } else {
+        return notebookProvider.createNew();
+    }
+}
+
+export async function createNewEditor(ioc: DataScienceIocContainer): Promise<INotebookEditor> {
+    const loaded = waitForMessage(ioc, InteractiveWindowMessages.LoadAllCellsComplete);
+    const result = await getOrCreateNativeEditor(ioc);
+    await loaded;
+    return result;
+}
+
+export async function openEditor(ioc: DataScienceIocContainer, contents: string): Promise<INotebookEditor> {
+    const loaded = waitForMessage(ioc, InteractiveWindowMessages.LoadAllCellsComplete);
+    const uri = Uri.parse('file:////usr/home/test.ipynb');
+    const result = await getOrCreateNativeEditor(ioc, uri, contents);
+    await loaded;
+    return result;
+}
 
 // tslint:disable-next-line: no-any
 export function getNativeCellResults(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, expectedRenders: number, updater: () => Promise<void>): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {

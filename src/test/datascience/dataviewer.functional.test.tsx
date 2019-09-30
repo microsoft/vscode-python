@@ -12,14 +12,20 @@ import * as React from 'react';
 import * as uuid from 'uuid/v4';
 import { Disposable, Uri } from 'vscode';
 
-import { createDeferred } from '../../client/common/utils/async';
 import { Identifiers } from '../../client/datascience/constants';
 import { DataViewerMessages } from '../../client/datascience/data-viewing/types';
-import { IDataViewer, IDataViewerProvider, IInteractiveWindowProvider, IJupyterExecution, INotebook } from '../../client/datascience/types';
+import {
+    IDataViewer,
+    IDataViewerProvider,
+    IInteractiveWindowProvider,
+    IJupyterExecution,
+    INotebook
+} from '../../client/datascience/types';
 import { MainPanel } from '../../datascience-ui/data-explorer/mainPanel';
 import { ReactSlickGrid } from '../../datascience-ui/data-explorer/reactSlickGrid';
 import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
+import { waitForMessage } from './testHelpers';
 
 // import { asyncDump } from '../common/asyncDump';
 suite('DataScience DataViewer tests', () => {
@@ -27,7 +33,6 @@ suite('DataScience DataViewer tests', () => {
     let dataProvider: IDataViewerProvider;
     let ioc: DataScienceIocContainer;
     let notebook: INotebook | undefined;
-    let messageWrapper: ((m: string, payload: any) => void) | undefined;
 
     suiteSetup(function () {
         // DataViewer tests require jupyter to run. Othewrise can't
@@ -44,15 +49,6 @@ suite('DataScience DataViewer tests', () => {
     setup(() => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
-
-        // Add a listener for our ioc that lets the test
-        // forward messages on
-        ioc.addMessageListener((m, p) => {
-            if (messageWrapper) {
-                messageWrapper(m, p);
-            }
-        });
-
     });
 
     function mountWebView(): ReactWrapper<any, Readonly<{}>, React.Component> {
@@ -107,19 +103,8 @@ suite('DataScience DataViewer tests', () => {
         }
     }
 
-    function waitForMessage(message: string) : Promise<void> {
-        // Wait for the mounted web panel to send a message back to the data explorer
-        const promise = createDeferred<void>();
-        messageWrapper = (m: string, _p: any) => {
-            if (m === message) {
-                promise.resolve();
-            }
-        };
-        return promise.promise;
-    }
-
     function getCompletedPromise() : Promise<void> {
-        return waitForMessage(DataViewerMessages.CompletedData);
+        return waitForMessage(ioc, DataViewerMessages.CompletedData);
     }
 
     // tslint:disable-next-line:no-any

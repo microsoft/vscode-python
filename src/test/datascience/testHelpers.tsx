@@ -10,7 +10,11 @@ import { CancellationToken } from 'vscode';
 
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { IDataScienceSettings } from '../../client/common/types';
+import { createDeferred } from '../../client/common/utils/async';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { IJupyterExecution } from '../../client/datascience/types';
+import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
+import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { updateSettings } from '../../datascience-ui/react-common/settingsReactSide';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
@@ -27,6 +31,50 @@ export enum CellInputState {
 export enum CellPosition {
     First = 'first',
     Last = 'last'
+}
+
+export function waitForMessage(ioc: DataScienceIocContainer, message: string) : Promise<void> {
+    // Wait for the mounted web panel to send a message back to the data explorer
+    const promise = createDeferred<void>();
+    let handler: (m: string, p: any) => void;
+    handler = (m: string, _p: any) => {
+        if (m === message) {
+            ioc.removeMessageListener(handler);
+            promise.resolve();
+        }
+    };
+    ioc.addMessageListener(handler);
+    return promise.promise;
+}
+
+export async function waitForMessageResponse(ioc: DataScienceIocContainer, action: () => void): Promise<void> {
+    ioc.wrapperCreatedPromise  = createDeferred<boolean>();
+    action();
+    await ioc.wrapperCreatedPromise.promise;
+    ioc.wrapperCreatedPromise = undefined;
+}
+
+async function testInnerLoop(
+    name: string,
+    mountFunc: (ioc: DataScienceIocContainer) => ReactWrapper<any, Readonly<{}>, React.Component>,
+    testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>,
+    getIOC: () => DataScienceIocContainer) {
+    const ioc = getIOC();
+    const jupyterExecution = ioc.get<IJupyterExecution>(IJupyterExecution);
+    if (await jupyterExecution.isNotebookSupported()) {
+        addMockData(ioc, 'a=1\na', 1);
+        const wrapper = mountFunc(ioc);
+        await testFunc(wrapper);
+    } else {
+        // tslint:disable-next-line:no-console
+        console.log(`${name} skipped, no Jupyter installed.`);
+    }
+}
+
+export function runDoubleTest(name: string, testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>, getIOC: () => DataScienceIocContainer) {
+    // Just run the test twice. Originally mounted twice, but too hard trying to figure out disposing.
+    test(`${name} (interactive)`, async () => testInnerLoop(name, (ioc) => mountWebView(ioc, <InteractivePanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />), testFunc, getIOC));
+    test(`${name} (native)`, async () => testInnerLoop(name, (ioc) => mountWebView(ioc, <NativeEditor baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />), testFunc, getIOC));
 }
 
 export function mountWebView(ioc: DataScienceIocContainer, node: React.ReactElement): ReactWrapper<any, Readonly<{}>, React.Component> {

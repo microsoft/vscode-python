@@ -283,6 +283,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         architecture: Architecture.x64,
     };
     private extraListeners: ((m: string, p: any) => void)[] = [];
+
+    private webPanelProvider: TypeMoq.IMock<IWebPanelProvider> | undefined;
+
     constructor() {
         super();
         const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
@@ -606,13 +609,16 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             liveShareTest.forceRole(role);
         }
 
-        const webPanelProvider = TypeMoq.Mock.ofType<IWebPanelProvider>();
+        if (!this.webPanelProvider) {
+            this.webPanelProvider = TypeMoq.Mock.ofType<IWebPanelProvider>();
+            this.serviceManager.addSingletonInstance<IWebPanelProvider>(IWebPanelProvider, this.webPanelProvider.object);
+        } else {
+            this.webPanelProvider.reset();
+        }
         const webPanel = TypeMoq.Mock.ofType<IWebPanel>();
 
-        this.serviceManager.addSingletonInstance<IWebPanelProvider>(IWebPanelProvider, webPanelProvider.object);
-
         // Setup the webpanel provider so that it returns our dummy web panel. It will have to talk to our global JSDOM window so that the react components can link into it
-        webPanelProvider.setup(p => p.create(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAny())).returns(
+        this.webPanelProvider.setup(p => p.create(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAny())).returns(
             (_viewColumn: ViewColumn, listener: IWebPanelMessageListener, _title: string, _script: string, _css: string) => {
                 // Keep track of the current listener. It listens to messages through the vscode api
                 this.webPanelListener = listener;
@@ -639,7 +645,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 throw new Error('postMessage callback not defined');
             }
         });
-        webPanel.setup(p => p.show(true));
+        webPanel.setup(p => p.show(TypeMoq.It.isAny())).returns(() => Promise.resolve());
 
         // We need to mount the react control before we even create an interactive window object. Otherwise the mount will miss rendering some parts
         this.mountReactControl(mount);
@@ -693,6 +699,13 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.extraListeners.push(callback);
     }
 
+    public removeMessageListener(callback: (m: string, p: any) => void) {
+        const index = this.extraListeners.indexOf(callback);
+        if (index >= 0) {
+            this.extraListeners.splice(index, 1);
+        }
+    }
+
     public enableJedi(enabled: boolean) {
         this.pythonSettings.jediEnabled = enabled;
     }
@@ -725,6 +738,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         // This is a remount (or first time). Clear out messages that were sent
         // by the last mount
         this.missedMessages = [];
+        this.webPanelListener = undefined;
+        this.extraListeners = [];
+        this.wrapperCreatedPromise = undefined;
 
         // Setup the acquireVsCodeApi. The react control will cache this value when it's mounted.
         const globalAcquireVsCodeApi = (): IVsCodeApi => {
