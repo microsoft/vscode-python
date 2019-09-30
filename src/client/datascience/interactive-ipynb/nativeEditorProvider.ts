@@ -49,7 +49,9 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
         const disposable = this.documentManager.onDidOpenTextDocument(this.onOpenedDocument);
         this.disposables.push(disposable);
 
-        // Since we may have activated after a document was opened, also run open document for all documents
+        // Since we may have activated after a document was opened, also run open document for all documents.
+        // This needs to be async though. Iterating over all of these in the .ctor is crashing the extension
+        // host, so postpone till after the ctor is finished.
         setTimeout(() => {
             if (this.documentManager.textDocuments && this.documentManager.textDocuments.forEach) {
                 this.documentManager.textDocuments.forEach(this.onOpenedDocument);
