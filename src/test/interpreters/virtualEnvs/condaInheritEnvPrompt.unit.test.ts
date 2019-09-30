@@ -40,6 +40,22 @@ suite('Conda Inherit Env Prompt', async () => {
             persistentStateFactory = mock(PersistentStateFactory);
             condaInheritEnvPrompt = new CondaInheritEnvPrompt(interpreterService.object, workspaceService.object, appShell.object, instance(persistentStateFactory));
         });
+        test('Returns false if prompt has already been shown in the current session', async () => {
+            condaInheritEnvPrompt = new CondaInheritEnvPrompt(interpreterService.object, workspaceService.object, appShell.object, instance(persistentStateFactory), true);
+            const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
+            interpreterService
+                .setup(is => is.getActiveInterpreter(resource))
+                .returns(() => Promise.resolve(undefined) as any)
+                .verifiable(TypeMoq.Times.never());
+            workspaceService
+                .setup(ws => ws.getConfiguration('terminal', resource))
+                .returns(() => workspaceConfig.object)
+                .verifiable(TypeMoq.Times.never());
+            const result = await condaInheritEnvPrompt.shouldShowPrompt(resource);
+            expect(result).to.equal(true, 'Prompt should be shown');
+            expect(condaInheritEnvPrompt.hasPromptBeenShownInCurrentSession).to.equal(true, 'Should be true');
+            verifyAll();
+        });
         test('Returns false if active interpreter is not of type Conda', async () => {
             const interpreter = {
                 type: InterpreterType.Pipenv
