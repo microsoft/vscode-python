@@ -41,7 +41,8 @@ Then('a status bar item containing the text {string} is displayed', async functi
 Then('the status bar item containing the text {string} will be hidden within {int} seconds', async function(text: string, seconds: number) {
     // First, lets wait for this status bar to appear (if it doesn't appear within 3 seconds, then give up and move on).
     await this.app.statusbar.waitUntilStatusBarItemWithText(text, 3_000).catch(noop);
-    await this.app.statusbar.waitUntilNoStatusBarItemWithText(text, seconds * 1_000).catch(ex => warn(`Status bar item with text '${text}' still visible.`, ex));
+    // await this.app.statusbar.waitUntilNoStatusBarItemWithText(text, seconds * 1_000).catch(ex => warn(`Status bar item with text '${text}' still visible.`, ex));
+    await this.app.statusbar.waitUntilNoStatusBarItemWithText(text, seconds * 1_000);
 });
 
 // Then('the python the status bar is not visible', async () => {
