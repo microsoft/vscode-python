@@ -221,12 +221,14 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
     }
 
     function verifyAll() {
-        appEnvironment.verifyAll();
-        serviceContainer.verifyAll();
-        extensionChannelService.verifyAll();
-        cmdManager.verifyAll();
+        // the most important ones:
         insidersPrompt.verifyAll();
         insidersInstaller.verifyAll();
+        extensionChannelService.verifyAll();
+        // the other used interfaces:
+        appEnvironment.verifyAll();
+        serviceContainer.verifyAll();
+        cmdManager.verifyAll();
     }
 
     type TestInfo = {
