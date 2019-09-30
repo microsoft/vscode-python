@@ -3,7 +3,7 @@
 
 jobs:
 - job: UI_Test_Report
-  timeoutInMinutes: 90
+  timeoutInMinutes: 120
   pool:
     vmImage: "macos-latest"
   steps:

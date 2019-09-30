@@ -205,11 +205,8 @@ export class MainStateController implements IMessageHandler {
                 break;
 
             case InteractiveWindowMessages.RestartKernel:
-                // this should be the response from a restart.
-                this.setState({ currentExecutionCount: 0 });
-
-                // Update our variables
-                this.refreshVariables();
+                // Go through all vms that are currently executing and mark them as finished
+                this.handleRestarted();
                 break;
 
             case InteractiveWindowMessages.StartDebugging:
@@ -601,18 +598,22 @@ export class MainStateController implements IMessageHandler {
     }
 
     public toggleLineNumbers = (cellId: string) => {
-        const cell = this.findCell(cellId);
-        if (cell) {
-            cell.showLineNumbers = !cell.showLineNumbers;
-            this.setState({ cellVMs: this.state.cellVMs });
+        const index = this.state.cellVMs.findIndex(c => c.cell.id === cellId);
+        if (index >= 0) {
+            const newVMs = [...this.state.cellVMs];
+            newVMs[index] = cloneDeep(newVMs[index]);
+            newVMs[index].showLineNumbers = !newVMs[index].showLineNumbers;
+            this.setState({ cellVMs: newVMs });
         }
     }
 
     public toggleOutput = (cellId: string) => {
-        const cell = this.findCell(cellId);
-        if (cell) {
-            cell.hideOutput = !cell.hideOutput;
-            this.setState({ cellVMs: this.state.cellVMs });
+        const index = this.state.cellVMs.findIndex(c => c.cell.id === cellId);
+        if (index >= 0) {
+            const newVMs = [...this.state.cellVMs];
+            newVMs[index] = cloneDeep(newVMs[index]);
+            newVMs[index].hideOutput = !newVMs[index].hideOutput;
+            this.setState({ cellVMs: newVMs });
         }
     }
 
@@ -824,6 +825,29 @@ export class MainStateController implements IMessageHandler {
             // Turn updates back on and resend the state.
             this.resumeUpdates();
         }
+    }
+
+    private handleRestarted() {
+        this.suspendUpdates();
+
+        // When we restart, make sure to turn off all executing cells. They aren't executing anymore
+        const executingCells = this.state.cellVMs
+            .map((cvm, i) => { return { cvm, i }; })
+            .filter(s => s.cvm.cell.state !== CellState.error && s.cvm.cell.state !== CellState.finished);
+
+        if (executingCells && executingCells.length) {
+            const newVMs = [...this.state.cellVMs];
+            executingCells.forEach(s => {
+                newVMs[s.i] = cloneDeep(s.cvm);
+                newVMs[s.i].cell.state = CellState.finished;
+            });
+            this.setState({ cellVMs: newVMs });
+        }
+        this.setState({ currentExecutionCount: 0 });
+        this.resumeUpdates();
+
+        // Update our variables
+        this.refreshVariables();
     }
 
     private darkChanged = (newDark: boolean) => {

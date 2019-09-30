@@ -8,7 +8,7 @@
 import { expect } from 'chai';
 import { Then, When, World } from 'cucumber';
 import { CucumberRetryMax5Seconds } from '../constants';
-import { noop, sleep } from '../helpers';
+import { noop } from '../helpers';
 import { IApplication, TestExplorerNodeStatus } from '../types';
 
 Then('the test explorer icon will be visible', async function() {
@@ -19,14 +19,11 @@ async function waitForTestsToStopRunningOrDiscovering(this: World, type: 'runnin
     const message = type === 'running' ? 'Running Tests' : 'Discovering Tests';
 
     // Wait for tests discovery to first start.
-    await Promise.race([
-        // Wait either for 3 seconds (we know tests would have stated discoverying/running by then).
-        sleep(3_000),
-        // Or until we can see the discovering/running icon.
+    await Promise.all([
+        // Wait until we can see the discovering/running icon.
         // Note, wait for icon to be Visible only if Test Explorer is already visible.
         // Else this will result in displaying the test explorer and then checking the visibility of the icon.
-        // All of that could exceed 3 seconds (even though the Promise.race would resolve the other code would continue to run).
-        // I.e. using Promise.race should only be used when we know there are no side effects and other one can and will complete withouth any issues.
+        // All of that could exceed 3 seconds, we don't need to wait for more than 3secs.
         this.app.testExplorer
             .isOpened()
             .then(visible => (visible ? this.app.testExplorer.waitUntilToolbarIconVisible('Stop', 3_000) : Promise.resolve()))
@@ -98,7 +95,7 @@ When('I run failed tests', async function() {
 });
 
 Then('the stop icon is not visible in the toolbar', async function() {
-    await this.app.testExplorer.waitUntilToolbarIconVisible('Stop');
+    await this.app.testExplorer.waitUntilToolbarIconHidden('Stop');
 });
 When('I click the test node with the label {string}', async function(label: string) {
     await this.app.testExplorer.clickNode(label);

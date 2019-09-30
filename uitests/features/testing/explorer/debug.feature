@@ -56,12 +56,12 @@ Feature: Test Explorer (debugging)
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the nodes in the test explorer
-        When I add a breakpoint to line 33 in "test_one.py"
-        And I add a breakpoint to line 23 in "test_one.py"
+        When I add a breakpoint to line 33 in "tests/test_one.py"
+        And I add a breakpoint to line 23 in "tests/test_one.py"
         And I debug the node "test_three_first_suite" from the test explorer
         Then the debugger starts
         And the debugger pauses
-        And the current stack frame is at line 33 in "test_one.py"
+        And the current stack frame is at line 33 in "tests/test_one.py"
         When I select the command "Debug: Continue"
         Then the debugger stops
 
@@ -79,19 +79,19 @@ Feature: Test Explorer (debugging)
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the nodes in the test explorer
-        When I add a breakpoint to line 33 in "test_one.py"
-        And I add a breakpoint to line 28 in "test_one.py"
-        And I add a breakpoint to line 23 in "test_one.py"
+        When I add a breakpoint to line 33 in "tests/test_one.py"
+        And I add a breakpoint to line 28 in "tests/test_one.py"
+        And I add a breakpoint to line 23 in "tests/test_one.py"
         And I debug the node "TestFirstSuite" from the test explorer
         Then the debugger starts
         And the debugger pauses
-        And the current stack frame is at line 23 in "test_one.py"
+        And the current stack frame is at line 23 in "tests/test_one.py"
         When I select the command "Debug: Continue"
         Then the debugger pauses
-        And the current stack frame is at line 33 in "test_one.py"
+        And the current stack frame is at line 33 in "tests/test_one.py"
         When I select the command "Debug: Continue"
         Then the debugger pauses
-        And the current stack frame is at line 28 in "test_one.py"
+        And the current stack frame is at line 28 in "tests/test_one.py"
         When I select the command "Debug: Continue"
         Then the debugger stops
 
@@ -110,9 +110,9 @@ Feature: Test Explorer (debugging)
         Then the test explorer icon will be visible
         When I select the command "View: Show Test"
         And I expand all of the nodes in the test explorer
-        When I add a breakpoint to line 23 in "test_one.py"
-        And I add a breakpoint to line 38 in "test_one.py"
-        And I add a breakpoint to line 23 in "test_two.py"
+        When I add a breakpoint to line 23 in "tests/test_one.py"
+        And I add a breakpoint to line 38 in "tests/test_one.py"
+        And I add a breakpoint to line 23 in "tests/test_two.py"
         And I select the command "Python: Debug All Tests"
         Then the debugger starts
         And the debugger pauses

@@ -134,7 +134,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         this.interpreterChangedDisposable = this.interpreterService.onDidChangeInterpreter(this.onInterpreterChanged);
 
         // Listen for active text editor changes. This is the only way we can tell that we might be needing to gain focus
-        const handler = this.documentManager.onDidChangeActiveTextEditor(() => this.onViewStateChanged(this.viewState.visible, this.viewState.active).ignoreErrors());
+        const handler = this.documentManager.onDidChangeActiveTextEditor(() => this.activating());
         this.disposables.push(handler);
 
         // If our execution changes its liveshare session, we need to close our server
@@ -385,7 +385,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         });
     }
 
-    protected async onViewStateChanged(visible: boolean, active: boolean) {
+    protected onViewStateChanged(_visible: boolean, active: boolean) {
         // Only activate if the active editor is empty. This means that
         // vscode thinks we are actually supposed to have focus. It would be
         // nice if they would more accurrately tell us this, but this works for now.
@@ -394,7 +394,21 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         // it's been activated. However if there's no active text editor and we're active, we
         // can safely attempt to give ourselves focus. This won't actually give us focus if we aren't
         // allowed to have it.
-        if (visible && active && (!this.viewState.active || !this.viewState.visible) && !this.documentManager.activeTextEditor) {
+        if (active && !this.viewState.active) {
+            this.activating().ignoreErrors();
+        }
+    }
+
+    protected async activating() {
+        // Only activate if the active editor is empty. This means that
+        // vscode thinks we are actually supposed to have focus. It would be
+        // nice if they would more accurrately tell us this, but this works for now.
+        // Essentially the problem is the webPanel.active state doesn't track
+        // if the focus is supposed to be in the webPanel or not. It only tracks if
+        // it's been activated. However if there's no active text editor and we're active, we
+        // can safely attempt to give ourselves focus. This won't actually give us focus if we aren't
+        // allowed to have it.
+        if (this.viewState.active && !this.documentManager.activeTextEditor) {
             // Force the webpanel to reveal and take focus.
             await super.show(false);
 

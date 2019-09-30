@@ -35,6 +35,10 @@
                 "title": "Stop Debugging Python"
             },
             {
+                "command": "smoketest.openFile",
+                "title": "Smoke: Open File"
+            },
+            {
                 "command": "smoketest.runInTerminal",
                 "title": "Smoke: Run Command In Terminal"
             },

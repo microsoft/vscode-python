@@ -116,6 +116,23 @@ function activate(context) {
         await vscode.window.activeTerminal.sendText(command, true);
         fs.unlinkSync(filePath);
     });
+    vscode.commands.registerCommand('smoketest.openFile', async () => {
+        const filePath = path.join(__dirname, '..', 'openFile.txt');
+        try {
+            fs.unlinkSync(path.join(__dirname, '..', 'openFile_error.txt'), util.format(ex));
+        } catch {}
+        try {
+            const fileToOpen = fs
+                .readFileSync(filePath)
+                .toString()
+                .trim();
+            const doc = await vscode.workspace.openTextDocument(fileToOpen);
+            await vscode.window.showTextDocument(doc);
+            fs.unlinkSync(filePath);
+        } catch (ex) {
+            fs.writeFileSync(path.join(__dirname, '..', 'openFile_error.txt'), util.format(ex));
+        }
+    });
     vscode.commands.registerCommand('smoketest.updateSettings', async () => {
         const filePath = path.join(__dirname, '..', 'settingsToUpdate.txt');
         try {

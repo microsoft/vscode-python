@@ -12,13 +12,10 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { CucumberRetryMax10Seconds, CucumberRetryMax5Seconds } from '../constants';
 import { noop, retryWrapper, sleep } from '../helpers';
-import { warn } from '../helpers/logger';
 import { IApplication } from '../types';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
 const clipboardy = require('clipboardy');
-
-// const autoCompletionListItemSlector = '.editor-widget.suggest-widget.visible .monaco-list-row a.label-name .monaco-highlighted-label';
 
 When('I create a new file', async function() {
     await this.app.documents.createNewUntitledFile();
@@ -80,12 +77,11 @@ Then('the file {string} is opened', async function(file: string) {
     await this.app.documents.waitUntilFileOpened(file);
 });
 
-// Then('a file named {string} is created with the following content', async (fileName: string, contents: string) => {
-//     const fullFilePath = path.join(context.app.workspacePathOrFolder, fileName);
-//     await fs.mkdirp(path.dirname(fullFilePath)).catch(noop);
-//     await fs.writeFile(fullFilePath, contents);
-//     await sleep(1000);
-// });
+async function createFile(this: World, filename: string, contents: string) {
+    const fullpath = path.join(this.app.workspacePathOrFolder, filename);
+    await fs.ensureDir(path.dirname(fullpath));
+    await fs.writeFile(fullpath, contents);
+}
 
 async function createFile(this: World, filename: string, contents: string) {
     const fullpath = path.join(this.app.workspacePathOrFolder, filename);
@@ -109,6 +105,7 @@ async function createFile(this: World, filename: string, contents: string) {
 
     await retryWrapper({ timeout: 5000 }, openRecentlyCreatedDocument);
 }
+
 Given('a file named {string} is created with the following content', async function(filename: string, contents: string) {
     await createFile.call(this, filename, contents);
 });
@@ -127,12 +124,6 @@ Given('the file {string} does not exist', async function(fileName: string) {
     await fs.unlink(fullFilePath).catch(noop);
     await sleep(1000);
 });
-
-// Then('a file named {string} exists', async (fileName: string) => {
-//     const fullFilePath = path.join(context.app.workspacePathOrFolder, fileName);
-//     const exists = await fs.pathExists(fullFilePath);
-//     expect(exists).to.equal(true, `File '${fullFilePath}' should exist`);
-// });
 
 async function expectFile(app: IApplication, fileName: string, timeout = 1000) {
     const checkFile = async () => {

@@ -266,17 +266,24 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, false)
     // tslint:disable-next-line:no-any
     protected async reexecuteCell(info: ISubmitNewCell): Promise<void> {
-        // If there's any payload, it has the code and the id
-        if (info && info.code && info.id) {
-            // Clear the result if we've run before
-            await this.clearResult(info.id);
+        try {
+            // If there's any payload, it has the code and the id
+            if (info && info.code && info.id) {
+                // Clear the result if we've run before
+                await this.clearResult(info.id);
 
-            // Send to ourselves.
-            this.submitCode(info.code, Identifiers.EmptyFileName, 0, info.id).ignoreErrors();
+                // Send to ourselves.
+                this.submitCode(info.code, Identifiers.EmptyFileName, 0, info.id).ignoreErrors();
 
-            // Activate the other side, and send as if came from a file
-            await this.ipynbProvider.show(this.file);
-            this.shareMessage(InteractiveWindowMessages.RemoteReexecuteCode, { code: info.code, file: Identifiers.EmptyFileName, line: 0, id: info.id, originator: this.id, debug: false });
+                // Activate the other side, and send as if came from a file
+                await this.ipynbProvider.show(this.file);
+                this.shareMessage(InteractiveWindowMessages.RemoteReexecuteCode, { code: info.code, file: Identifiers.EmptyFileName, line: 0, id: info.id, originator: this.id, debug: false });
+            }
+        } catch (exc) {
+            await this.errorHandler.handleError(exc);
+
+            // Tell the other side we restarted the kernel. This will stop all executions
+            this.postMessage(InteractiveWindowMessages.RestartKernel).ignoreErrors();
         }
     }
 
@@ -318,7 +325,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     protected async onViewStateChanged(visible: boolean, active: boolean) {
-        await super.onViewStateChanged(visible, active);
+        super.onViewStateChanged(visible, active);
 
         // Update our contexts
         const interactiveContext = new ContextKey(EditorContexts.HaveNative, this.commandManager);
