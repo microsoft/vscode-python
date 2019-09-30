@@ -8,7 +8,7 @@
 import { expect } from 'chai';
 import { Then, When, World } from 'cucumber';
 import { CucumberRetryMax5Seconds } from '../constants';
-import { noop, sleep } from '../helpers';
+import { noop } from '../helpers';
 import { IApplication, TestExplorerNodeStatus } from '../types';
 
 Then('the test explorer icon will be visible', async function() {
