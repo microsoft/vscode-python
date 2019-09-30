@@ -234,8 +234,8 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
     type TestInfo = {
         vscodeChannel?: Channel;
         extensionChannel?: Channel;
-        installChannel?: ExtensionChannels;
-        isChannelUsingDefaultConfiguration?: boolean | number;
+        installChannel: ExtensionChannels;
+        isChannelUsingDefaultConfiguration?: boolean;
         hasUserBeenNotified?: boolean;
         hasUserBeenAskedToOptInAgain?: boolean;
     };
@@ -257,17 +257,6 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
                 .returns(() => info.extensionChannel!);
         }
 
-        if (info.isChannelUsingDefaultConfiguration !== undefined) {
-            const inst = extensionChannelService
-                .setup(ec => ec.isChannelUsingDefaultConfiguration);
-            if (info.isChannelUsingDefaultConfiguration === 2) {
-                inst
-                    .returns(() => true)
-                    .verifiable(TypeMoq.Times.exactly(2));
-            } else {
-                inst.returns(() => info.isChannelUsingDefaultConfiguration as boolean);
-            }
-        }
         if (checkDisable) {
             extensionChannelService
                 .setup(ec => ec.updateChannel('off'))
@@ -313,7 +302,10 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
             test(testName, async () => {
                 setState(testParams, false, true, false);
 
-                await insidersExtensionService.handleEdgeCases(testParams.installChannel!);
+                await insidersExtensionService.handleEdgeCases(
+                    testParams.installChannel,
+                    testParams.isChannelUsingDefaultConfiguration!
+                );
 
                 verifyAll();
                 verify(hasUserBeenNotifiedState.value).never();
@@ -347,7 +339,7 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
                 // prompt to enroll
                 vscodeChannel: 'insiders',
                 hasUserBeenNotified: false,
-                isChannelUsingDefaultConfiguration: 2
+                isChannelUsingDefaultConfiguration: true
             }
         ];
 
@@ -360,7 +352,10 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
             test(testName, async () => {
                 setState(testParams, true, false, false);
 
-                await insidersExtensionService.handleEdgeCases(testParams.installChannel!);
+                await insidersExtensionService.handleEdgeCases(
+                    testParams.installChannel,
+                    testParams.isChannelUsingDefaultConfiguration!
+                );
 
                 verifyAll();
                 verify(hasUserBeenNotifiedState.value).once();
@@ -399,7 +394,10 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
             test(testName, async () => {
                 setState(testParams, false, false, true);
 
-                await insidersExtensionService.handleEdgeCases(testParams.installChannel || 'off');
+                await insidersExtensionService.handleEdgeCases(
+                    testParams.installChannel,
+                    false  // isDefault
+                );
 
                 verifyAll();
                 verify(hasUserBeenNotifiedState.value).never();
@@ -484,7 +482,10 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
             test(testName, async () => {
                 setState(testParams, false, false, false);
 
-                await insidersExtensionService.handleEdgeCases(testParams.installChannel || 'off');
+                await insidersExtensionService.handleEdgeCases(
+                    testParams.installChannel,
+                    testParams.isChannelUsingDefaultConfiguration || testParams.installChannel === 'off'
+                );
 
                 verifyAll();
                 if (testParams.hasUserBeenNotified === undefined) {
