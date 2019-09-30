@@ -12,13 +12,10 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { CucumberRetryMax10Seconds, CucumberRetryMax5Seconds } from '../constants';
 import { noop, retryWrapper, sleep } from '../helpers';
-import { warn } from '../helpers/logger';
 import { IApplication } from '../types';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
 const clipboardy = require('clipboardy');
-
-// const autoCompletionListItemSlector = '.editor-widget.suggest-widget.visible .monaco-list-row a.label-name .monaco-highlighted-label';
 
 When('I create a new file', async function() {
     await this.app.documents.createNewUntitledFile();
@@ -80,35 +77,12 @@ Then('the file {string} is opened', async function(file: string) {
     await this.app.documents.waitUntilFileOpened(file);
 });
 
-// Then('a file named {string} is created with the following content', async (fileName: string, contents: string) => {
-//     const fullFilePath = path.join(context.app.workspacePathOrFolder, fileName);
-//     await fs.mkdirp(path.dirname(fullFilePath)).catch(noop);
-//     await fs.writeFile(fullFilePath, contents);
-//     await sleep(1000);
-// });
-
 async function createFile(this: World, filename: string, contents: string) {
     const fullpath = path.join(this.app.workspacePathOrFolder, filename);
     await fs.ensureDir(path.dirname(fullpath));
     await fs.writeFile(fullpath, contents);
-    // Ensure VS Code has had time to refresh to explorer and is aware of the file.
-    // Else if we later attempt to open this file, VSC might not be aware of it and woudn't display anything in the `quick open` dropdown.
-    const openRecentlyCreatedDocument = async () => {
-        await this.app.documents.refreshExplorer();
-        // Sometimes VS Code just doesn't know about files created from outside VS Code.
-        // Not unless we expand the file explorer.
-        // Hopefully we don't have (write) tests where files are created in nested folders and not detected by VSC, but required to be opened.
-        const opened = await this.app.quickopen
-            .openFile(path.basename(filename))
-            .then(() => true)
-            .catch(ex => warn(`Failed to open the file '${filename}' in VS Code, but continuing (hopefully file will not have to be opened)`, ex));
-        if (opened === true) {
-            await this.app.quickopen.runCommand('View: Close Editor');
-        }
-    };
-
-    await retryWrapper({ timeout: 5000 }, openRecentlyCreatedDocument);
 }
+
 Given('a file named {string} is created with the following content', async function(filename: string, contents: string) {
     await createFile.call(this, filename, contents);
 });
@@ -127,12 +101,6 @@ Given('the file {string} does not exist', async function(fileName: string) {
     await fs.unlink(fullFilePath).catch(noop);
     await sleep(1000);
 });
-
-// Then('a file named {string} exists', async (fileName: string) => {
-//     const fullFilePath = path.join(context.app.workspacePathOrFolder, fileName);
-//     const exists = await fs.pathExists(fullFilePath);
-//     expect(exists).to.equal(true, `File '${fullFilePath}' should exist`);
-// });
 
 async function expectFile(app: IApplication, fileName: string, timeout = 1000) {
     const checkFile = async () => {
