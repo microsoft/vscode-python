@@ -50,7 +50,7 @@ steps:
         inlineScript: |
             az --version
             az storage blob list --container-name extension-builds --account-name pvsc -o table
-      variables:
+      env:
         AZURE_SUBSCRIPTION: $(AZURE_SUBSCRIPTION)
 
     # Some tests need to have both 2.7 & 3.7 available.
