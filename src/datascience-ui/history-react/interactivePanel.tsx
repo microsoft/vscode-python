@@ -320,11 +320,8 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
     }
 
     private renderCell = (cellVM: ICellViewModel, index: number, containerRef?: React.RefObject<HTMLDivElement>): JSX.Element | null => {
-        let cellRef : React.RefObject<InteractiveCell> | undefined;
-        if (!this.cellRefs.has(cellVM.cell.id)) {
-            cellRef = React.createRef<InteractiveCell>();
-            this.cellRefs.set(cellVM.cell.id, cellRef);
-        }
+        const cellRef = React.createRef<InteractiveCell>();
+        this.cellRefs.set(cellVM.cell.id, cellRef);
         return (
             <div key={index} id={cellVM.cell.id} ref={containerRef}>
                 <ErrorBoundary key={index}>
