@@ -5,6 +5,7 @@
 
 import * as path from 'path';
 import { CancellationToken } from 'vscode';
+import { IWorkspaceService } from '../../common/application/types';
 import { Cancellation } from '../../common/cancellation';
 import { traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
@@ -45,10 +46,20 @@ export class JupyterCommandFinder {
         private readonly fileSystem: IFileSystem,
         private readonly logger: ILogger,
         private readonly processServiceFactory: IProcessServiceFactory,
-        private readonly commandFactory: IJupyterCommandFactory
+        private readonly commandFactory: IJupyterCommandFactory,
+        workspace: IWorkspaceService
     ) {
         this.processServicePromise = this.processServiceFactory.create();
-        disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.onSettingsChanged()));
+        disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.commands.clear()));
+        if (workspace) {
+            const disposable = workspace.onDidChangeConfiguration(e => {
+                if (e.affectsConfiguration('python.dataScience', undefined)) {
+                    // When config changes happen, recreate our commands.
+                    this.commands.clear();
+                }
+            });
+            disposableRegistry.push(disposable);
+        }
     }
 
     public async findBestCommand(command: JupyterCommands, cancelToken?: CancellationToken): Promise<IFindCommandResult> {
@@ -65,10 +76,6 @@ export class JupyterCommandFinder {
             }
         }
     }
-    private onSettingsChanged() {
-        this.commands.clear();
-    }
-
     private async findInterpreterCommand(command: JupyterCommands, interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<IFindCommandResult> {
         let findResult: IFindCommandResult = {
             status: ModuleExistsStatus.NotFound,

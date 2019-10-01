@@ -64,7 +64,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         commandFactory: IJupyterCommandFactory,
         private readonly serviceContainer: IServiceContainer
     ) {
-        this.commandFinder = new JupyterCommandFinder(interpreterService, executionFactory, configuration, knownSearchPaths, disposableRegistry, fileSystem, logger, processServiceFactory, commandFactory);
+        this.commandFinder = new JupyterCommandFinder(interpreterService, executionFactory, configuration, knownSearchPaths, disposableRegistry, fileSystem, logger, processServiceFactory, commandFactory, workspace);
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.onSettingsChanged()));
         this.disposableRegistry.push(this);
 
