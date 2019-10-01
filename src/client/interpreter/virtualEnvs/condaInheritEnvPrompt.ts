@@ -25,6 +25,11 @@ export class CondaInheritEnvPrompt implements IExtensionActivationService {
     ) { }
 
     public async activate(resource: Uri): Promise<void> {
+        this.initializeInBackground(resource).ignoreErrors();
+    }
+
+    @traceDecorators.error('Failed to intialize conda inherit env prompt')
+    public async initializeInBackground(resource: Uri): Promise<void> {
         const show = await this.shouldShowPrompt(resource);
         if (!show) {
             return;
@@ -32,6 +37,7 @@ export class CondaInheritEnvPrompt implements IExtensionActivationService {
         await this.promptAndUpdate();
     }
 
+    @traceDecorators.error('Failed to display conda inherit env prompt')
     public async promptAndUpdate() {
         const notificationPromptEnabled = this.persistentStateFactory.createGlobalPersistentState(condaInheritEnvPromptKey, true);
         if (!notificationPromptEnabled.value) {

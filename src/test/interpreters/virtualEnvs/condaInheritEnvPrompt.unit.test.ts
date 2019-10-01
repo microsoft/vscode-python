@@ -11,6 +11,7 @@ import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
 import { PersistentStateFactory } from '../../../client/common/persistentState';
 import { IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
+import { createDeferred, createDeferredFromPromise, sleep } from '../../../client/common/utils/async';
 import { InteractiveShiftEnterBanner, Interpreters } from '../../../client/common/utils/localize';
 import { IInterpreterService, InterpreterType } from '../../../client/interpreter/contracts';
 import { CondaInheritEnvPrompt, condaInheritEnvPromptKey } from '../../../client/interpreter/virtualEnvs/condaInheritEnvPrompt';
@@ -185,8 +186,47 @@ suite('Conda Inherit Env Prompt', async () => {
             verifyAll();
         });
     });
-
     suite('Method activate()', () => {
+        let initializeInBackground: sinon.SinonStub<any>;
+        setup(() => {
+            workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
+            appShell = TypeMoq.Mock.ofType<IApplicationShell>();
+            interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+            persistentStateFactory = mock(PersistentStateFactory);
+        });
+
+        teardown(() => {
+            sinon.restore();
+        });
+
+        test('Invokes initializeInBackground() in the background', async () => {
+            const initializeInBackgroundDeferred = createDeferred<void>();
+            initializeInBackground = sinon.stub(CondaInheritEnvPrompt.prototype, 'initializeInBackground');
+            initializeInBackground.callsFake(() => initializeInBackgroundDeferred.promise);
+            condaInheritEnvPrompt = new CondaInheritEnvPrompt(interpreterService.object, workspaceService.object, appShell.object, instance(persistentStateFactory));
+
+            const promise = condaInheritEnvPrompt.activate(resource);
+            const deferred = createDeferredFromPromise(promise);
+            await sleep(1);
+
+            // Ensure activate() function has completed while initializeInBackground() is still not resolved
+            assert.equal(deferred.completed, true);
+
+            initializeInBackgroundDeferred.resolve();
+            await sleep(1);
+            assert.ok(initializeInBackground.calledOnce);
+        });
+
+        test('Ignores errors raised by initializeInBackground()', async () => {
+            initializeInBackground = sinon.stub(CondaInheritEnvPrompt.prototype, 'initializeInBackground');
+            initializeInBackground.rejects(new Error('Kaboom'));
+            condaInheritEnvPrompt = new CondaInheritEnvPrompt(interpreterService.object, workspaceService.object, appShell.object, instance(persistentStateFactory));
+            await condaInheritEnvPrompt.activate(resource);
+            assert.ok(initializeInBackground.calledOnce);
+        });
+    });
+
+    suite('Method initializeInBackground()', () => {
         let shouldShowPrompt: sinon.SinonStub<any>;
         let promptAndUpdate: sinon.SinonStub<any>;
         setup(() => {
@@ -206,7 +246,7 @@ suite('Conda Inherit Env Prompt', async () => {
             promptAndUpdate = sinon.stub(CondaInheritEnvPrompt.prototype, 'promptAndUpdate');
             promptAndUpdate.callsFake(() => Promise.resolve(undefined));
             condaInheritEnvPrompt = new CondaInheritEnvPrompt(interpreterService.object, workspaceService.object, appShell.object, instance(persistentStateFactory));
-            await condaInheritEnvPrompt.activate(resource);
+            await condaInheritEnvPrompt.initializeInBackground(resource);
             assert.ok(shouldShowPrompt.calledOnce);
             assert.ok(promptAndUpdate.calledOnce);
         });
@@ -217,7 +257,7 @@ suite('Conda Inherit Env Prompt', async () => {
             promptAndUpdate = sinon.stub(CondaInheritEnvPrompt.prototype, 'promptAndUpdate');
             promptAndUpdate.callsFake(() => Promise.resolve(undefined));
             condaInheritEnvPrompt = new CondaInheritEnvPrompt(interpreterService.object, workspaceService.object, appShell.object, instance(persistentStateFactory));
-            await condaInheritEnvPrompt.activate(resource);
+            await condaInheritEnvPrompt.initializeInBackground(resource);
             assert.ok(shouldShowPrompt.calledOnce);
             assert.ok(promptAndUpdate.notCalled);
         });
