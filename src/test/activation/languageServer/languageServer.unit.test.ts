@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
-import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
+import { LanguageClient, LanguageClientOptions, Disposable } from 'vscode-languageclient';
 import { BaseLanguageClientFactory } from '../../../client/activation/languageServer/languageClientFactory';
 import { LanguageServer } from '../../../client/activation/languageServer/languageServer';
 import { ILanguageClientFactory } from '../../../client/activation/types';
@@ -38,7 +38,11 @@ suite('Language Server - LanguageServer', () => {
         clientFactory = mock(BaseLanguageClientFactory);
         testManager = mock(UnitTestManagementService);
         configService = typemoq.Mock.ofType<IConfigurationService>();
+
         commandManager = typemoq.Mock.ofType<ICommandManager>();
+        commandManager.setup(c => c.registerCommand(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny())).returns(() => {
+            return typemoq.Mock.ofType<Disposable>().object;
+        });
         server = new LanguageServerTest(instance(clientFactory), instance(testManager), configService.object, commandManager.object);
     });
     teardown(() => {
