@@ -1,2 +1,2 @@
 docopt~=0.6.2
-pytest~=5.2.0
+pytest>=5.2.0
