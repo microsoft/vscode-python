@@ -32,10 +32,6 @@ export interface IFindCommandResult extends IModuleExistsResult {
     command?: IJupyterCommand;
 }
 
-export interface IJupyterCommandFinder {
-    findBestCommand(command: string, cancelToken?: CancellationToken): Promise<IFindCommandResult>;
-}
-
 export class JupyterCommandFinder {
     private readonly processServicePromise: Promise<IProcessService>;
     private jupyterPath?: string;
