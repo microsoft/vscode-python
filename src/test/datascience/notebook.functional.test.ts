@@ -199,9 +199,9 @@ suite('DataScience notebook tests', () => {
         });
     }
 
-    //function runTest(name: string, func: () => Promise<void>, _notebookProc?: ChildProcess) {
     function runTest(name: string, func: () => Promise<void>, _notebookProc?: ChildProcess, rebindFunc?: () => void) {
         test(name, async () => {
+            // Give tests a chance to rebind IOC services before we fetch jupyterExecution and processFactory
             if (rebindFunc) {
                 rebindFunc();
             }
