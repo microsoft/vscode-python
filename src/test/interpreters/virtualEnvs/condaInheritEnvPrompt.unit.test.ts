@@ -52,7 +52,7 @@ suite('Conda Inherit Env Prompt', async () => {
                 .returns(() => workspaceConfig.object)
                 .verifiable(TypeMoq.Times.never());
             const result = await condaInheritEnvPrompt.shouldShowPrompt(resource);
-            expect(result).to.equal(true, 'Prompt should be shown');
+            expect(result).to.equal(false, 'Prompt should not be shown');
             expect(condaInheritEnvPrompt.hasPromptBeenShownInCurrentSession).to.equal(true, 'Should be true');
             verifyAll();
         });
