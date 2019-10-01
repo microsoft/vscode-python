@@ -287,11 +287,11 @@ export namespace CodeSnippits {
     export const MatplotLibInitPng = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_formats = 'png'`;
 }
 
-export namespace JupyterCommands {
-    export const NotebookCommand = 'notebook';
-    export const ConvertCommand = 'nbconvert';
-    export const KernelSpecCommand = 'kernelspec';
-    export const KernelCreateCommand = 'ipykernel';
+export enum JupyterCommands {
+    NotebookCommand = 'notebook',
+    ConvertCommand = 'nbconvert',
+    KernelSpecCommand = 'kernelspec',
+    KernelCreateCommand = 'ipykernel'
 
 }
 
