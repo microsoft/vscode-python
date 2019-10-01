@@ -78,8 +78,8 @@ export class LanguageServer implements ILanguageServer {
                 });
             }
 
-            await this.registerTestServices();
             this.registerCommands();
+            await this.registerTestServices();
         } else {
             await this.startupCompleted.promise;
         }
