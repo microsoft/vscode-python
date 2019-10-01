@@ -204,11 +204,11 @@ steps:
   # Example command line (windows pwsh):
   # > python -m pip install -U -r news/requirements.txt
   # > python -m pytest tpn --color=yes --junit-xml=python-news-junit.xml
-  - script: |
-      python -m pip install --upgrade -r news/requirements.txt
-      python -m pytest news --color=yes --junit-xml=$COMMON_TESTRESULTSDIRECTORY/python-news-junit.xml
-    displayName: 'Run Python tests for news'
-    condition: and(succeeded(), contains(variables['TestsToRun'], 'pythonInternalTools'))
+#   - script: |
+#       python -m pip install --upgrade -r news/requirements.txt
+#       python -m pytest news --color=yes --junit-xml=$COMMON_TESTRESULTSDIRECTORY/python-news-junit.xml
+#     displayName: 'Run Python tests for news'
+#     condition: and(succeeded(), contains(variables['TestsToRun'], 'pythonInternalTools'))
 
   # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
   - task: PublishTestResults@2
