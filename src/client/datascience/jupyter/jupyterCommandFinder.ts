@@ -6,7 +6,7 @@
 import * as path from 'path';
 import { CancellationToken } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
-import { Cancellation } from '../../common/cancellation';
+import { Cancellation, createPromiseFromCancellation } from '../../common/cancellation';
 import { traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IProcessService, IProcessServiceFactory, IPythonExecutionFactory, SpawnOptions } from '../../common/process/types';
@@ -33,6 +33,18 @@ export interface IFindCommandResult extends IModuleExistsResult {
     command?: IJupyterCommand;
 }
 
+const cancelledResult: IFindCommandResult = {
+    status: ModuleExistsStatus.NotFound,
+    error: localize.DataScience.noInterpreter()
+};
+
+function isCommandFinderCancelled(command: JupyterCommands, token?: CancellationToken) {
+    if (Cancellation.isCanceled(token)) {
+        traceInfo(`Command finder cancelled for ${command}.`);
+        return true;
+    }
+    return false;
+}
 export class JupyterCommandFinder {
     private readonly processServicePromise: Promise<IProcessService>;
     private jupyterPath?: string;
@@ -152,7 +164,7 @@ export class JupyterCommandFinder {
     // - Look for module in current interpreter, if found create something with python path and -m module
     // - Look in other interpreters, if found create something with python path and -m module
     // - Look on path for jupyter, if found create something with jupyter path and args
-    // tslint:disable:cyclomatic-complexity
+    // tslint:disable:cyclomatic-complexity max-func-body-length
     private async findBestCommandImpl(command: JupyterCommands, cancelToken?: CancellationToken): Promise<IFindCommandResult> {
         let found: IFindCommandResult = {
             status: ModuleExistsStatus.NotFound
@@ -165,6 +177,11 @@ export class JupyterCommandFinder {
 
             // First we look in the current interpreter
             const current = await this.interpreterService.getActiveInterpreter();
+
+            if (isCommandFinderCancelled(command, cancelToken)) {
+                return cancelledResult;
+            }
+
             found = current ? await this.findInterpreterCommand(command, current, cancelToken) : found;
             if (found.status === ModuleExistsStatus.NotFound) {
                 traceInfo(`Active interpreter does not support ${command} because of error ${found.error}. Interpreter is ${current ? current.displayName : 'undefined'}.`);
@@ -174,14 +191,24 @@ export class JupyterCommandFinder {
             }
             if (found.status === ModuleExistsStatus.NotFound && this.supportsSearchingForCommands()) {
                 // Look through all of our interpreters (minus the active one at the same time)
-                const all = await this.interpreterService.getInterpreters();
+                const cancelGetInterpreters = createPromiseFromCancellation<PythonInterpreter[]>({ defaultValue: [], cancelAction: 'resolve', token: cancelToken });
+                const all = await Promise.race([this.interpreterService.getInterpreters(), cancelGetInterpreters]);
+
+                if (isCommandFinderCancelled(command, cancelToken)) {
+                    return cancelledResult;
+                }
 
                 if (!all || all.length === 0) {
                     traceWarning('No interpreters found. Jupyter cannot run.');
                 }
 
+                const cancelFind = createPromiseFromCancellation<IFindCommandResult[]>({ defaultValue: [], cancelAction: 'resolve', token: cancelToken });
                 const promises = all.filter(i => i !== current).map(i => this.findInterpreterCommand(command, i, cancelToken));
-                const foundList = await Promise.all(promises);
+                const foundList = await Promise.race([Promise.all(promises), cancelFind]);
+
+                if (isCommandFinderCancelled(command, cancelToken)) {
+                    return cancelledResult;
+                }
 
                 // Then go through all of the found ones and pick the closest python match
                 if (current && current.version) {
@@ -192,6 +219,10 @@ export class JupyterCommandFinder {
                             continue;
                         }
                         const interpreter = await entry.command.interpreter();
+                        if (isCommandFinderCancelled(command, cancelToken)) {
+                            return cancelledResult;
+                        }
+
                         const version = interpreter ? interpreter.version : undefined;
                         if (version) {
                             if (version.major === current.version.major) {
