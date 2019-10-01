@@ -9,10 +9,12 @@ import { injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import { Readable, Writable } from 'stream';
+import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
 import { Disposable, Uri } from 'vscode';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 
+import { IApplicationShell } from '../../client/common/application/types';
 import { Cancellation, CancellationError } from '../../client/common/cancellation';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { traceError, traceInfo } from '../../client/common/logger';
@@ -59,8 +61,6 @@ suite('DataScience notebook tests', () => {
     setup(() => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
-        jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
-        processFactory = ioc.serviceManager.get<IProcessServiceFactory>(IProcessServiceFactory);
     });
 
     teardown(async () => {
@@ -199,8 +199,14 @@ suite('DataScience notebook tests', () => {
         });
     }
 
-    function runTest(name: string, func: () => Promise<void>, _notebookProc?: ChildProcess) {
+    //function runTest(name: string, func: () => Promise<void>, _notebookProc?: ChildProcess) {
+    function runTest(name: string, func: () => Promise<void>, _notebookProc?: ChildProcess, rebindFunc?: () => void) {
         test(name, async () => {
+            if (rebindFunc) {
+                rebindFunc();
+            }
+            jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
+            processFactory = ioc.serviceManager.get<IProcessServiceFactory>(IProcessServiceFactory);
             console.log(`Starting test ${name} ...`);
             if (await jupyterExecution.isNotebookSupported()) {
                 return func();
@@ -280,6 +286,53 @@ suite('DataScience notebook tests', () => {
             // Have to dispose here otherwise the process may exit before hand and mess up cleanup.
             await server!.dispose();
         }
+    });
+
+    // Connect to a server that doesn't have a token or password, customers use this and we regressed it once
+    runTest('Remote No Auth', async () => {
+        const python = await getNotebookCapableInterpreter(ioc, processFactory);
+        const procService = await processFactory.create();
+
+        if (procService && python) {
+            const connectionFound = createDeferred();
+            const configFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'serverConfigFiles', 'remoteNoAuth.py');
+            const exeResult = procService.execObservable(python.path, ['-m', 'jupyter', 'notebook', `--config=${configFile}`], { env: process.env, throwOnStdErr: false });
+            disposables.push(exeResult);
+
+            exeResult.out.subscribe((output: Output<string>) => {
+                traceInfo(`remote jupyter output: ${output.out}`);
+                const connectionURL = getIPConnectionInfo(output.out);
+                if (connectionURL) {
+                    connectionFound.resolve(connectionURL);
+                }
+            });
+
+            const connString = await connectionFound.promise;
+            const uri = connString as string;
+
+            // We have a connection string here, so try to connect jupyterExecution to the notebook server
+            const server = await jupyterExecution.connectToNotebookServer({ uri, useDefaultConfig: true, purpose: '' });
+            const notebook = server ? await server.createNotebook(Uri.parse(Identifiers.InteractiveWindowIdentity)) : undefined;
+            if (!notebook) {
+                assert.fail('Failed to connect to remote password server');
+            } else {
+                await verifySimple(notebook, `a=1${os.EOL}a`, 1);
+            }
+            // Have to dispose here otherwise the process may exit before hand and mess up cleanup.
+            await server!.dispose();
+        }
+    }, undefined, () => {
+        const dummyDisposable = {
+            dispose: () => { return; }
+        };
+        const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
+        appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAnyString())).returns((e) => { throw e; });
+        appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
+        appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));
+        appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_a1: string, a2: string, _a3: string, _a4: string) => Promise.resolve(a2));
+        appShell.setup(a => a.showInputBox(TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
+        appShell.setup(a => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
+        ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
     });
 
     runTest('Remote Password', async () => {
@@ -368,6 +421,8 @@ suite('DataScience notebook tests', () => {
     });
 
     test('Not installed', async () => {
+        jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
+        processFactory = ioc.serviceManager.get<IProcessServiceFactory>(IProcessServiceFactory);
         // Rewire our data we use to search for processes
         class EmptyInterpreterService implements IInterpreterService {
             public get hasInterpreters(): Promise<boolean> {
@@ -1001,6 +1056,8 @@ plt.show()`,
     });
 
     test('Notebook launch failure', async function () {
+        jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
+        processFactory = ioc.serviceManager.get<IProcessServiceFactory>(IProcessServiceFactory);
         if (!ioc.mockJupyter) {
             // tslint:disable-next-line: no-invalid-this
             this.skip();
