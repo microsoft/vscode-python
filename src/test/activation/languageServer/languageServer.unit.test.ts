@@ -7,7 +7,7 @@ import { expect } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
-import { LanguageClient, LanguageClientOptions, Disposable } from 'vscode-languageclient';
+import { Disposable, LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
 import { BaseLanguageClientFactory } from '../../../client/activation/languageServer/languageClientFactory';
 import { LanguageServer } from '../../../client/activation/languageServer/languageServer';
 import { ILanguageClientFactory } from '../../../client/activation/types';
