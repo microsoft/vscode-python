@@ -26,7 +26,7 @@
    ([#7379](https://github.com/Microsoft/vscode-python/issues/7379))
 1. Added a setting `python.experiments.enabled` to enable/disable A/B tests within the extension.
    ([#7410](https://github.com/Microsoft/vscode-python/issues/7410))
-1. Add play button for all users.
+1. Add a play button for all users.
    ([#7423](https://github.com/Microsoft/vscode-python/issues/7423))
 1. Add a command to show the `Language Server` output panel.
    ([#7459](https://github.com/Microsoft/vscode-python/issues/7459))
@@ -51,7 +51,7 @@
    ([#410](https://github.com/Microsoft/vscode-python/issues/410))
 1. Do not change `foreground` colors in test statusbar.
    ([#4387](https://github.com/Microsoft/vscode-python/issues/4387))
-1. Set the \_\_file\_\_ variable whenever running code so that \_\_file\_\_ usage works.
+1. Set the `__file__` variable whenever running code so that `__file__` usage works in the interactive window.
    ([#5459](https://github.com/Microsoft/vscode-python/issues/5459))
 1. Ensure Windows Store install of Python is displayed in the statusbar.
    ([#5926](https://github.com/Microsoft/vscode-python/issues/5926))
