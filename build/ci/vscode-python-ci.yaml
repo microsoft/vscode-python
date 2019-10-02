@@ -26,8 +26,7 @@ stages:
   - template: templates/jobs/build_uitests.yml
 
 - stage: Tests
-  dependsOn:
-  - Build
+  dependsOn: []
   jobs:
   - job: 'Test'
     dependsOn: []
