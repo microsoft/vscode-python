@@ -21,7 +21,9 @@ export interface IContentPanelProps {
     submittedText: boolean;
     skipNextScroll: boolean;
     editable: boolean;
-    renderCell(cellVM: ICellViewModel, index: number): JSX.Element | null;
+    fontSize: number;
+    fontFamily: string;
+    renderCell(cellVM: ICellViewModel, index: number, fontSize: number, fontFamily: string): JSX.Element | null;
     scrollToBottom(div: HTMLDivElement): void;
 }
 
@@ -57,13 +59,13 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
 
     private renderCells = () => {
         return this.props.cellVMs.map((cellVM: ICellViewModel, index: number) => {
-            return this.props.renderCell(cellVM, index);
+            return this.props.renderCell(cellVM, index, this.props.fontSize, this.props.fontFamily);
         });
     }
 
     private renderEdit = () => {
         if (this.props.editable && this.props.newCellVM) {
-            return this.props.renderCell(this.props.newCellVM, 0);
+            return this.props.renderCell(this.props.newCellVM, 0, this.props.fontSize, this.props.fontFamily);
         } else {
             return null;
         }

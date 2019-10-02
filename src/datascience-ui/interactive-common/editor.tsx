@@ -24,6 +24,8 @@ export interface IEditorProps {
     language: string;
     showLineNumbers?: boolean;
     useQuickEdit?: boolean;
+    fontSize: number;
+    fontFamily: string;
     onCreated(code: string, modelId: string): void;
     onChange(changes: monacoEditor.editor.IModelContentChange[], model: monacoEditor.editor.ITextModel): void;
     openLink(uri: monacoEditor.Uri): void;
@@ -114,6 +116,8 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
             lineDecorationsWidth: 0,
             contextmenu: false,
             matchBrackets: false,
+            fontSize: this.props.fontSize,
+            fontFamily: this.props.fontFamily,
             ...this.props.editorOptions
         };
 

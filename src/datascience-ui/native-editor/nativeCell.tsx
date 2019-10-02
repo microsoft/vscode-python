@@ -36,6 +36,8 @@ interface INativeCellProps {
     showLineNumbers?: boolean;
     selectedCell?: string;
     focusedCell?: string;
+    fontSize: number;
+    fontFamily: string;
     focusCell(cellId: string, focusCode: boolean): void;
     selectCell(cellId: string): void;
 }
@@ -657,6 +659,8 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
                     unfocused={this.isCodeCell() ? this.onCodeUnfocused : this.onMarkdownUnfocused}
                     keyDown={this.keyDownInput}
                     showLineNumbers={this.props.showLineNumbers}
+                    fontSize={this.props.fontSize}
+                    fontFamily={this.props.fontFamily}
                 />
             );
         }
