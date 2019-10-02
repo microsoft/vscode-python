@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { ConfigurationChangeEvent, Disposable, OutputChannel, Uri, ConfigurationTarget } from 'vscode';
+import { ConfigurationChangeEvent, ConfigurationTarget, Disposable, OutputChannel, Uri } from 'vscode';
 import { LSNotSupportedDiagnosticServiceId } from '../application/diagnostics/checks/lsNotSupported';
 import { IDiagnosticsService } from '../application/diagnostics/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
@@ -152,13 +152,13 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
     }
 
     @swallowExceptions('Checking for LS Caching support experiments failed')
-    public async checkLSCachingExperiments(resource: Resource): Promise<void> {
+    public async checkLSCachingExperiments(): Promise<void> {
         if (this.isSettingUsingDefaultConfiguration(lsAnalysisCachingSetting)) {
             // If 'python.analysis.cachingLevel' is not set, check for experiments
             if (this.abExperiments.inExperiment(LSCachingSupport.library)) {
-                await this.workspaceService.getConfiguration('python', resource).update(lsAnalysisCachingSetting, 'Library', ConfigurationTarget.WorkspaceFolder);
+                await this.workspaceService.getConfiguration('python').update(lsAnalysisCachingSetting, 'Library', ConfigurationTarget.Global);
             } else if (this.abExperiments.inExperiment(LSCachingSupport.system)) {
-                await this.workspaceService.getConfiguration('python', resource).update(lsAnalysisCachingSetting, 'System', ConfigurationTarget.WorkspaceFolder);
+                await this.workspaceService.getConfiguration('python').update(lsAnalysisCachingSetting, 'System', ConfigurationTarget.Global);
             } else {
                 this.abExperiments.sendTelemetryIfInExperiment(LSCachingSupport.control);
             }

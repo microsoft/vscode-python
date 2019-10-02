@@ -8,8 +8,9 @@
 import { expect } from 'chai';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
+import * as sinon from 'sinon';
 import { ConfigurationChangeEvent, Disposable, Uri, WorkspaceConfiguration } from 'vscode';
-import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
+import { jediEnabledSetting, LanguageServerExtensionActivationService } from '../../client/activation/activationService';
 import {
     FolderVersionPair,
     IExtensionActivationService,
@@ -71,7 +72,7 @@ suite('Activation - ActivationService', () => {
                 const setting = { workspaceFolderValue: jediIsEnabled };
                 workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
                 workspaceService.setup(ws => ws.getConfiguration('python', TypeMoq.It.isAny())).returns(() => workspaceConfig.object);
-                workspaceConfig.setup(c => c.inspect<boolean>('jediEnabled'))
+                workspaceConfig.setup(c => c.inspect<boolean>(jediEnabledSetting))
                     .returns(() => setting as any);
                 const output = TypeMoq.Mock.ofType<IOutputChannel>();
                 serviceContainer
@@ -722,7 +723,7 @@ suite('Activation - ActivationService', () => {
                 .setup(ex => ex.sendTelemetryIfInExperiment(TypeMoq.It.isAny()))
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.never());
-            workspaceConfig.setup(c => c.inspect<boolean>('jediEnabled'))
+            workspaceConfig.setup(c => c.inspect<boolean>(jediEnabledSetting))
                 .returns(() => settings as any)
                 .verifiable(TypeMoq.Times.once());
 
@@ -745,7 +746,7 @@ suite('Activation - ActivationService', () => {
                 .setup(ex => ex.sendTelemetryIfInExperiment(LSControl))
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.once());
-            workspaceConfig.setup(c => c.inspect<boolean>('jediEnabled'))
+            workspaceConfig.setup(c => c.inspect<boolean>(jediEnabledSetting))
                 .returns(() => settings as any)
                 .verifiable(TypeMoq.Times.once());
             pythonSettings
@@ -786,7 +787,7 @@ suite('Activation - ActivationService', () => {
                         .setup(ex => ex.sendTelemetryIfInExperiment(LSControl))
                         .returns(() => undefined)
                         .verifiable(TypeMoq.Times.never());
-                    workspaceConfig.setup(c => c.inspect<boolean>('jediEnabled'))
+                    workspaceConfig.setup(c => c.inspect<boolean>(jediEnabledSetting))
                         .returns(() => settings as any)
                         .verifiable(TypeMoq.Times.once());
                     pythonSettings
@@ -807,7 +808,7 @@ suite('Activation - ActivationService', () => {
         });
     });
 
-    suite('Function isJediUsingDefaultConfiguration()', () => {
+    suite('Function isSettingUsingDefaultConfiguration()', () => {
         let serviceContainer: TypeMoq.IMock<IServiceContainer>;
         let pythonSettings: TypeMoq.IMock<IPythonSettings>;
         let appShell: TypeMoq.IMock<IApplicationShell>;
@@ -895,12 +896,12 @@ suite('Activation - ActivationService', () => {
                     const testName = `Returns ${expectedResult} for setting = ${JSON.stringify(settings)}`;
                     test(testName, async () => {
                         workspaceConfig.reset();
-                        workspaceConfig.setup(c => c.inspect<boolean>('jediEnabled'))
+                        workspaceConfig.setup(c => c.inspect<boolean>('someSetting'))
                             .returns(() => settings as any)
                             .verifiable(TypeMoq.Times.once());
 
                         const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
-                        const result = activationService.isSettingUsingDefaultConfiguration(jediEnabledSetting);
+                        const result = activationService.isSettingUsingDefaultConfiguration('someSetting');
                         expect(result).to.equal(expectedResult);
 
                         workspaceService.verifyAll();
@@ -911,12 +912,12 @@ suite('Activation - ActivationService', () => {
         }
         test('Returns false for settings = undefined', async () => {
             workspaceConfig.reset();
-            workspaceConfig.setup(c => c.inspect<boolean>('jediEnabled'))
+            workspaceConfig.setup(c => c.inspect<boolean>('someSetting'))
                 .returns(() => undefined as any)
                 .verifiable(TypeMoq.Times.once());
 
             const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
-            const result = activationService.isSettingUsingDefaultConfiguration(jediEnabledSetting);
+            const result = activationService.isSettingUsingDefaultConfiguration('someSetting');
             expect(result).to.equal(false, 'Return value should be false');
 
             workspaceService.verifyAll();
