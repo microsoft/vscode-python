@@ -443,6 +443,12 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
     }
 
+    protected async setLaunchingFile(file: string): Promise<void> {
+        if (file !== Identifiers.EmptyFileName && this.notebook) {
+            await this.notebook.setLaunchingFile(file);
+        }
+    }
+
     protected getNotebook(): INotebook | undefined {
         return this.notebook;
     }
@@ -493,9 +499,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             if (this.notebook) {
                 // Before we try to execute code make sure that we have an initial directory set
                 // Normally set via the workspace, but we might not have one here if loading a single loose file
-                if (file !== Identifiers.EmptyFileName) {
-                    await this.notebook.setInitialDirectory(path.dirname(file));
-                }
+                await this.setLaunchingFile(file);
 
                 if (debug) {
                     // Attach our debugger

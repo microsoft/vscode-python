@@ -2,13 +2,19 @@
 // Licensed under the MIT License.
 'use strict';
 import { assert } from 'chai';
+import { anything, instance, mock, when } from 'ts-mockito';
+import { Uri } from 'vscode';
 
+import { WorkspaceService } from '../../client/common/application/workspace';
+import { IsWindows } from '../../client/common/types';
 import { generateCells } from '../../client/datascience/cellFactory';
 import { formatStreamText, stripComments } from '../../client/datascience/common';
+import { expandFileVariable } from '../../client/datascience/jupyter/jupyterUtils';
 import { InputHistory } from '../../datascience-ui/interactive-common/inputHistory';
 
 // tslint:disable: max-func-body-length
 suite('Data Science Tests', () => {
+    const workspaceService = mock(WorkspaceService);
 
     test('formatting stream text', async () => {
         assert.equal(formatStreamText('\rExecute\rExecute 1'), 'Execute 1');
@@ -19,6 +25,27 @@ suite('Data Science Tests', () => {
         assert.equal(formatStreamText('\rExecute\rExecute\nExecute 6\rExecute 7'), 'Execute\nExecute 7');
         assert.equal(formatStreamText('\rExecute\rExecute\nExecute 8\rExecute 9\r\r'), 'Execute\n');
         assert.equal(formatStreamText('\rExecute\rExecute\nExecute 10\rExecute 11\r\n'), 'Execute\nExecute 11\n');
+    });
+
+    // tslint:disable: no-invalid-template-strings
+    test('expanding file variables', async () => {
+        const uri = Uri.file('test/bar');
+        const folder = { index: 0, name: '', uri };
+        when(workspaceService.hasWorkspaceFolders).thenReturn(true);
+        when(workspaceService.workspaceFolders).thenReturn([folder]);
+        when(workspaceService.getWorkspaceFolder(anything())).thenReturn(folder);
+        const inst = instance(workspaceService);
+        const relativeFilePath = IsWindows ? '..\\xyz\\bip\\foo.baz' : '../xyz/bip/foo.baz';
+        const relativeFileDir = IsWindows ? '..\\xyz\\bip' : '../xyz/bip';
+
+        assert.equal(expandFileVariable(undefined, 'bar/foo.baz', inst), 'bar');
+        assert.equal(expandFileVariable(undefined, 'bar/bip/foo.baz', inst), 'bar/bip');
+        assert.equal(expandFileVariable('${file}', 'bar/bip/foo.baz', inst), 'bar/bip');
+        assert.equal(expandFileVariable('${fileDirName}', 'bar/bip/foo.baz', inst), 'bar/bip');
+        assert.equal(expandFileVariable('${relativeFile}', 'test/xyz/bip/foo.baz', inst), relativeFilePath);
+        assert.equal(expandFileVariable('${relativeFileDirname}', 'test/xyz/bip/foo.baz', inst), relativeFileDir);
+        assert.equal(expandFileVariable('${cwd}', 'test/xyz/bip/foo.baz', inst), process.cwd());
+        assert.equal(expandFileVariable('${workspaceFolder}', 'test/xyz/bip/foo.baz', inst), 'test/bar');
     });
 
     test('input history', async () => {
@@ -110,8 +137,8 @@ suite('Data Science Tests', () => {
         assert.equal(cells[0].data.cell_type, 'markdown', 'Markdown cell not generated');
         assert.equal(cells[0].data.source.length, 2, 'Lines for cell not emitted');
 
-// tslint:disable-next-line: no-multiline-string
-const multilineCode = `#%%
+        // tslint:disable-next-line: no-multiline-string
+        const multilineCode = `#%%
 myvar = """ # Lorem Ipsum
 Lorem ipsum dolor sit amet, consectetur adipiscing elit.
 Nullam eget varius ligula, eget fermentum mauris.
@@ -121,8 +148,8 @@ Sed mattis dui diam, et blandit augue mattis vestibulum.
 Suspendisse ornare interdum velit. Suspendisse potenti.
 Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
 """`;
-// tslint:disable-next-line: no-multiline-string
-const multilineTwo = `#%%
+        // tslint:disable-next-line: no-multiline-string
+        const multilineTwo = `#%%
 """ # Lorem Ipsum
 Lorem ipsum dolor sit amet, consectetur adipiscing elit.
 Nullam eget varius ligula, eget fermentum mauris.
@@ -141,9 +168,9 @@ Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
         assert.equal(cells.length, 1, 'code cell multline failed');
         assert.equal(cells[0].data.cell_type, 'code', 'Code cell not generated');
         assert.equal(cells[0].data.source.length, 10, 'Lines for cell not emitted');
-// tslint:disable-next-line: no-multiline-string
+        // tslint:disable-next-line: no-multiline-string
         assert.equal(cells[0].data.source[9], `""" print('bob')`, 'Lines for cell not emitted');
-// tslint:disable-next-line: no-multiline-string
+        // tslint:disable-next-line: no-multiline-string
         const multilineMarkdown = `#%% [markdown]
 # ## Block of Interest
 #
@@ -171,8 +198,8 @@ Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
         assert.equal(cells[0].data.source.length, 20, 'Lines for cell not emitted');
         assert.equal(cells[0].data.source[17], '          - Item 1-a-3-c\n', 'Lines for markdown not emitted');
 
-// tslint:disable-next-line: no-multiline-string
-const multilineQuoteWithOtherDelimiter = `#%% [markdown]
+        // tslint:disable-next-line: no-multiline-string
+        const multilineQuoteWithOtherDelimiter = `#%% [markdown]
 '''
 ### Take a look
   2. Item 2
@@ -186,7 +213,7 @@ const multilineQuoteWithOtherDelimiter = `#%% [markdown]
         assert.equal(cells[0].data.source[2], '""" Not a comment delimiter', 'Lines for markdown not emitted');
 
         // tslint:disable-next-line: no-multiline-string
-const multilineQuoteInFunc = `#%%
+        const multilineQuoteInFunc = `#%%
 import requests
 def download(url, filename):
     """ utility function to download a file """
@@ -201,8 +228,8 @@ def download(url, filename):
         assert.equal(cells[0].data.source.length, 9, 'Lines for cell not emitted');
         assert.equal(cells[0].data.source[3], '    """ utility function to download a file """\n', 'Lines for cell not emitted');
 
-// tslint:disable-next-line: no-multiline-string
-const multilineMarkdownWithCell = `#%% [markdown]
+        // tslint:disable-next-line: no-multiline-string
+        const multilineMarkdownWithCell = `#%% [markdown]
 # # Define a simple class
 class Pizza(object):
     def __init__(self, size, toppings, price, rating):
@@ -227,6 +254,6 @@ class Pizza(object):
         assert.equal(nonComments, '', 'Multline comment is not being stripped');
         nonComments = stripComments(multilineQuoteInFunc);
         assert.equal(nonComments.splitLines().length, 6, 'Splitting quote in func wrong number of lines');
-        });
+    });
 
 });

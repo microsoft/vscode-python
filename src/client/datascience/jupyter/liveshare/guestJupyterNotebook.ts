@@ -87,7 +87,7 @@ export class GuestJupyterNotebook
         return deferred.promise;
     }
 
-    public setInitialDirectory(_directory: string): Promise<void> {
+    public setLaunchingFile(_directory: string): Promise<void> {
         // Ignore this command on this side
         return Promise.resolve();
     }

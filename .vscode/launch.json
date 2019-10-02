@@ -8,7 +8,8 @@
             "request": "launch",
             "runtimeExecutable": "${execPath}",
             "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}"
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "D:\\Training\\SnakePython\\sub\\simple.py"
             ],
             "stopOnEntry": false,
             "smartStep": true,
