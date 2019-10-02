@@ -30,3 +30,10 @@ export enum ValidateABTesting {
     control = 'AA_testing - control',
     experiment = 'AA_testing - experiment'
 }
+
+// Experiment on the language server caching support
+export enum LSCachingSupport {
+    control = 'LSCachingSupport - control',
+    library = 'LSCachingSupport - library',
+    system = 'LSCachingSupport - system'
+}

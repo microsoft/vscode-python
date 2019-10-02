@@ -582,8 +582,8 @@ suite('Activation - ActivationService', () => {
                 .verifiable(TypeMoq.Times.exactly(2));
             state.setup(s => s.updateValue(TypeMoq.It.isValue(true)))
                 .returns(() => {
-                state.setup(s => s.value).returns(() => true);
-                return Promise.resolve();
+                    state.setup(s => s.value).returns(() => true);
+                    return Promise.resolve();
                 })
                 .verifiable(TypeMoq.Times.once());
 
@@ -900,7 +900,7 @@ suite('Activation - ActivationService', () => {
                             .verifiable(TypeMoq.Times.once());
 
                         const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
-                        const result = activationService.isJediUsingDefaultConfiguration(Uri.parse('a'));
+                        const result = activationService.isSettingUsingDefaultConfiguration(jediEnabledSetting);
                         expect(result).to.equal(expectedResult);
 
                         workspaceService.verifyAll();
@@ -916,7 +916,7 @@ suite('Activation - ActivationService', () => {
                 .verifiable(TypeMoq.Times.once());
 
             const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
-            const result = activationService.isJediUsingDefaultConfiguration(Uri.parse('a'));
+            const result = activationService.isSettingUsingDefaultConfiguration(jediEnabledSetting);
             expect(result).to.equal(false, 'Return value should be false');
 
             workspaceService.verifyAll();

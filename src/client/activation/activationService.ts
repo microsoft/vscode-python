@@ -4,12 +4,12 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { ConfigurationChangeEvent, Disposable, OutputChannel, Uri } from 'vscode';
+import { ConfigurationChangeEvent, Disposable, OutputChannel, Uri, ConfigurationTarget } from 'vscode';
 import { LSNotSupportedDiagnosticServiceId } from '../application/diagnostics/checks/lsNotSupported';
 import { IDiagnosticsService } from '../application/diagnostics/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
-import { LSControl, LSEnabled } from '../common/experimentGroups';
+import { LSCachingSupport, LSControl, LSEnabled } from '../common/experimentGroups';
 import '../common/extensions';
 import { traceError } from '../common/logger';
 import { IConfigurationService, IDisposableRegistry, IExperimentsManager, IOutputChannel, IPersistentStateFactory, IPythonSettings, Resource } from '../common/types';
@@ -19,7 +19,8 @@ import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { IExtensionActivationService, ILanguageServerActivator, LanguageServerActivator } from './types';
 
-const jediEnabledSetting: keyof IPythonSettings = 'jediEnabled';
+export const jediEnabledSetting: keyof IPythonSettings = 'jediEnabled';
+export const lsAnalysisCachingSetting = 'analysis.cachingLevel';
 const workspacePathNameForGlobalWorkspaces = '';
 type ActivatorInfo = { jedi: boolean; activator: ILanguageServerActivator };
 
@@ -51,8 +52,10 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
     }
 
     public async activate(resource: Resource): Promise<void> {
+        this.resource = resource;
         let jedi = this.useJedi();
         if (!jedi) {
+            await this.checkLSCachingExperiments(resource);
             if (this.lsActivatedWorkspaces.has(this.getWorkspacePathKey(resource))) {
                 return;
             }
@@ -69,7 +72,6 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
             this.jediActivatedOnce = true;
         }
 
-        this.resource = resource;
         await this.logStartup(jedi);
         let activatorName = jedi ? LanguageServerActivator.Jedi : LanguageServerActivator.DotNet;
         let activator = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, activatorName);
@@ -118,14 +120,14 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
     }
 
     /**
-     * Checks if user has not manually set `jediEnabled` setting
-     * @param resource
+     * Checks if user has not manually set setting
+     * @param settingName Name of the setting
      * @returns `true` if user has NOT manually added the setting and is using default configuration, `false` if user has `jediEnabled` setting added
      */
-    public isJediUsingDefaultConfiguration(resource?: Uri): boolean {
-        const settings = this.workspaceService.getConfiguration('python', resource).inspect<boolean>('jediEnabled');
+    public isSettingUsingDefaultConfiguration(settingName: string): boolean {
+        const settings = this.workspaceService.getConfiguration('python', this.resource).inspect<boolean>(settingName);
         if (!settings) {
-            traceError('WorkspaceConfiguration.inspect returns `undefined` for setting `python.jediEnabled`');
+            traceError(`WorkspaceConfiguration.inspect returns 'undefined' for setting 'python.${settingName}'`);
             return false;
         }
         return (settings.globalValue === undefined && settings.workspaceValue === undefined && settings.workspaceFolderValue === undefined);
@@ -136,7 +138,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
      * @returns `true` if user is using jedi, `false` if user is using language server
      */
     public useJedi(): boolean {
-        if (this.isJediUsingDefaultConfiguration()) {
+        if (this.isSettingUsingDefaultConfiguration(jediEnabledSetting)) {
             if (this.abExperiments.inExperiment(LSEnabled)) {
                 return false;
             }
@@ -147,6 +149,20 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         const enabled = configurationService.getSettings(this.resource).jediEnabled;
         this.sendTelemetryForChosenLanguageServer(enabled).ignoreErrors();
         return enabled;
+    }
+
+    @swallowExceptions('Checking for LS Caching support experiments failed')
+    public async checkLSCachingExperiments(resource: Resource): Promise<void> {
+        if (this.isSettingUsingDefaultConfiguration(lsAnalysisCachingSetting)) {
+            // If 'python.analysis.cachingLevel' is not set, check for experiments
+            if (this.abExperiments.inExperiment(LSCachingSupport.library)) {
+                await this.workspaceService.getConfiguration('python', resource).update(lsAnalysisCachingSetting, 'Library', ConfigurationTarget.WorkspaceFolder);
+            } else if (this.abExperiments.inExperiment(LSCachingSupport.system)) {
+                await this.workspaceService.getConfiguration('python', resource).update(lsAnalysisCachingSetting, 'System', ConfigurationTarget.WorkspaceFolder);
+            } else {
+                this.abExperiments.sendTelemetryIfInExperiment(LSCachingSupport.control);
+            }
+        }
     }
 
     protected onWorkspaceFoldersChanged() {

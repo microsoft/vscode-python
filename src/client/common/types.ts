@@ -289,6 +289,7 @@ export interface IExperiments {
 }
 
 export type LanguageServerDownloadChannels = 'stable' | 'beta' | 'daily';
+export type LanguageServerCachingLevels = 'stable' | 'beta' | 'daily';
 export interface IAnalysisSettings {
     readonly downloadChannel?: LanguageServerDownloadChannels;
     readonly openFilesOnly: boolean;
@@ -300,6 +301,7 @@ export interface IAnalysisSettings {
     readonly disabled: string[];
     readonly traceLogging: boolean;
     readonly logLevel: LogLevel;
+    readonly cachingLevel?: LanguageServerCachingLevels;
 }
 
 interface IGatherRule {
