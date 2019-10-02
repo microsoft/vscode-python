@@ -127,7 +127,7 @@ for _ in range(50):
         await addCell(wrapper, matPlotLib, true, 5);
         verifyHtmlOnCell(wrapper, 'NativeCell', matPlotLibResults, CellPosition.Last);
 
-        await addCell(wrapper, spinningCursor, true, 3 + (ioc.mockJupyter ? (cursors.length * 3) : 0));
+        await addCell(wrapper, spinningCursor, true, 3 + (ioc.mockJupyter ? (cursors.length * 3) : 50));
         verifyHtmlOnCell(wrapper, 'NativeCell', '<div>', CellPosition.Last);
     }, () => { return ioc; });
 
