@@ -652,7 +652,7 @@ export class MainStateController implements IMessageHandler {
         }
 
         // If the new state includes pendingVariableCount and it's gone to zero, send a message
-        if ('pendingVariableCount' in newState && this.state.pendingVariableCount === 0 && oldCount !== 0) {
+        if (this.state.pendingVariableCount === 0 && oldCount !== 0) {
             setTimeout(() => this.sendMessage(InteractiveWindowMessages.VariablesComplete), 1);
         }
     }
