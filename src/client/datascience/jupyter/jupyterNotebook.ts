@@ -36,7 +36,7 @@ import {
     INotebookServerLaunchInfo,
     InterruptResult
 } from '../types';
-import { expandFileVariable } from './jupyterUtils';
+import { expandWorkingDir } from './jupyterUtils';
 
 class CellSubscriber {
     private deferred: Deferred<CellState> = createDeferred<CellState>();
@@ -595,7 +595,7 @@ export class JupyterNotebookBase implements INotebook {
                 return this.changeDirectoryIfPossible(this._workingDirectory);
             } else if (launchingFile && await fs.pathExists(launchingFile)) {
                 // Combine the working directory with this file if possible.
-                this._workingDirectory = expandFileVariable(this.launchInfo.workingDir, launchingFile, this.workspace);
+                this._workingDirectory = expandWorkingDir(this.launchInfo.workingDir, launchingFile, this.workspace);
                 if (this._workingDirectory) {
                     return this.changeDirectoryIfPossible(this._workingDirectory);
                 }

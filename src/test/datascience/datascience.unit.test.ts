@@ -9,7 +9,7 @@ import { WorkspaceService } from '../../client/common/application/workspace';
 import { IsWindows } from '../../client/common/types';
 import { generateCells } from '../../client/datascience/cellFactory';
 import { formatStreamText, stripComments } from '../../client/datascience/common';
-import { expandFileVariable } from '../../client/datascience/jupyter/jupyterUtils';
+import { expandWorkingDir } from '../../client/datascience/jupyter/jupyterUtils';
 import { InputHistory } from '../../datascience-ui/interactive-common/inputHistory';
 
 // tslint:disable: max-func-body-length
@@ -28,7 +28,9 @@ suite('Data Science Tests', () => {
     });
 
     // tslint:disable: no-invalid-template-strings
-    test('expanding file variables', async () => {
+    test('expanding file variables', async function () {
+        // tslint:disable-next-line: no-invalid-this
+        this.timeout(10000);
         const uri = Uri.file('test/bar');
         const folder = { index: 0, name: '', uri };
         when(workspaceService.hasWorkspaceFolders).thenReturn(true);
@@ -38,14 +40,15 @@ suite('Data Science Tests', () => {
         const relativeFilePath = IsWindows ? '..\\xyz\\bip\\foo.baz' : '../xyz/bip/foo.baz';
         const relativeFileDir = IsWindows ? '..\\xyz\\bip' : '../xyz/bip';
 
-        assert.equal(expandFileVariable(undefined, 'bar/foo.baz', inst), 'bar');
-        assert.equal(expandFileVariable(undefined, 'bar/bip/foo.baz', inst), 'bar/bip');
-        assert.equal(expandFileVariable('${file}', 'bar/bip/foo.baz', inst), 'bar/bip');
-        assert.equal(expandFileVariable('${fileDirName}', 'bar/bip/foo.baz', inst), 'bar/bip');
-        assert.equal(expandFileVariable('${relativeFile}', 'test/xyz/bip/foo.baz', inst), relativeFilePath);
-        assert.equal(expandFileVariable('${relativeFileDirname}', 'test/xyz/bip/foo.baz', inst), relativeFileDir);
-        assert.equal(expandFileVariable('${cwd}', 'test/xyz/bip/foo.baz', inst), process.cwd());
-        assert.equal(expandFileVariable('${workspaceFolder}', 'test/xyz/bip/foo.baz', inst), 'test/bar');
+        assert.equal(expandWorkingDir(undefined, 'bar/foo.baz', inst), 'bar');
+        assert.equal(expandWorkingDir(undefined, 'bar/bip/foo.baz', inst), 'bar/bip');
+        assert.equal(expandWorkingDir('${file}', 'bar/bip/foo.baz', inst), 'bar/bip/foo.baz');
+        assert.equal(expandWorkingDir('${fileDirname}', 'bar/bip/foo.baz', inst), 'bar/bip');
+        assert.equal(expandWorkingDir('${relativeFile}', 'test/xyz/bip/foo.baz', inst), relativeFilePath);
+        assert.equal(expandWorkingDir('${relativeFileDirname}', 'test/xyz/bip/foo.baz', inst), relativeFileDir);
+        assert.equal(expandWorkingDir('${cwd}', 'test/xyz/bip/foo.baz', inst), 'test/bar');
+        assert.equal(expandWorkingDir('${workspaceFolder}', 'test/xyz/bip/foo.baz', inst), 'test/bar');
+        assert.equal(expandWorkingDir('${cwd}-${file}', 'bar/bip/foo.baz', inst), 'test/bar-bar/bip/foo.baz');
     });
 
     test('input history', async () => {
