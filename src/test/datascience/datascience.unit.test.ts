@@ -6,7 +6,7 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 
 import { WorkspaceService } from '../../client/common/application/workspace';
-import { IsWindows } from '../../client/common/types';
+import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { generateCells } from '../../client/datascience/cellFactory';
 import { formatStreamText, stripComments } from '../../client/datascience/common';
 import { expandWorkingDir } from '../../client/datascience/jupyter/jupyterUtils';
@@ -37,8 +37,8 @@ suite('Data Science Tests', () => {
         when(workspaceService.workspaceFolders).thenReturn([folder]);
         when(workspaceService.getWorkspaceFolder(anything())).thenReturn(folder);
         const inst = instance(workspaceService);
-        const relativeFilePath = IsWindows ? '..\\xyz\\bip\\foo.baz' : '../xyz/bip/foo.baz';
-        const relativeFileDir = IsWindows ? '..\\xyz\\bip' : '../xyz/bip';
+        const relativeFilePath = IS_WINDOWS ? '..\\xyz\\bip\\foo.baz' : '../xyz/bip/foo.baz';
+        const relativeFileDir = IS_WINDOWS ? '..\\xyz\\bip' : '../xyz/bip';
 
         assert.equal(expandWorkingDir(undefined, 'bar/foo.baz', inst), 'bar');
         assert.equal(expandWorkingDir(undefined, 'bar/bip/foo.baz', inst), 'bar/bip');
