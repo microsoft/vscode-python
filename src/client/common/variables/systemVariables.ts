@@ -105,15 +105,15 @@ export class SystemVariables extends AbstractSystemVariables {
         const workspaceFolder = workspace && (typeof fileOrFolder !== 'string') ? workspace.getWorkspaceFolder(fileOrFolder) : undefined;
         this._workspaceFolder = workspaceFolder ? workspaceFolder.uri.fsPath : fileOrFolder as string || __dirname;
         this._workspaceFolderName = Path.basename(this._workspaceFolder);
-        Object.keys(process.env).forEach(key => {
-            (this as any as Record<string, string | undefined>)[`env:${key}`] = (this as any as Record<string, string | undefined>)[`env.${key}`] = process.env[key];
-        });
         this._filePath = (typeof fileOrFolder !== 'string') && fileOrFolder ? fileOrFolder.fsPath : undefined;
         if (documentManager && documentManager.activeTextEditor) {
             this._lineNumber = documentManager.activeTextEditor.selection.anchor.line + 1;
             this._selectedText = documentManager.activeTextEditor.document.getText(new Range(documentManager.activeTextEditor.selection.start, documentManager.activeTextEditor.selection.end));
         }
         this._execPath = process.execPath;
+        Object.keys(process.env).forEach(key => {
+            (this as any as Record<string, string | undefined>)[`env:${key}`] = (this as any as Record<string, string | undefined>)[`env.${key}`] = process.env[key];
+        });
     }
 
     public get cwd(): string {
