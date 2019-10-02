@@ -73,7 +73,7 @@ export class ChildProcessAttachService implements IChildProcessAttachService {
         // We cannot expect the debugger to assume remote root is the same as the cwd,
         // As debugger doesn't necessarily know whether the process being attached to is
         // a child process or not.
-        const systemVariables = new SystemVariables(config.workspaceFolder);
+        const systemVariables = new SystemVariables(undefined, config.workspaceFolder);
         const localRoot = config.cwd && config.cwd.length > 0 ? systemVariables.resolveAny(config.cwd) : config.workspaceFolder;
         config.pathMappings = [
             { remoteRoot: '.', localRoot }

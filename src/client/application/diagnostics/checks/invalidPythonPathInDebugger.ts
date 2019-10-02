@@ -109,8 +109,7 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
         await this.messageService.handle(diagnostic, { commandPrompts });
     }
     protected resolveVariables(pythonPath: string, resource: Uri | undefined): string {
-        const workspaceFolder = resource ? this.workspace.getWorkspaceFolder(resource) : undefined;
-        const systemVariables = new SystemVariables(workspaceFolder ? workspaceFolder.uri.fsPath : undefined);
+        const systemVariables = new SystemVariables(resource, undefined, this.workspace);
         return systemVariables.resolveAny(pythonPath);
     }
     private getCommandPrompts(diagnostic: IDiagnostic): { prompt: string; command?: IDiagnosticCommand }[] {

@@ -65,7 +65,7 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration> im
             return;
         }
         if (debugConfiguration.envFile && (workspaceFolder || debugConfiguration.cwd)) {
-            const systemVariables = new SystemVariables((workspaceFolder ? workspaceFolder.fsPath : undefined) || debugConfiguration.cwd);
+            const systemVariables = new SystemVariables(undefined, (workspaceFolder ? workspaceFolder.fsPath : undefined) || debugConfiguration.cwd);
             debugConfiguration.envFile = systemVariables.resolveAny(debugConfiguration.envFile);
         }
     }
@@ -112,7 +112,7 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration> im
             ];
         } else {
             // Expand ${workspaceFolder} variable first if necessary.
-            const systemVariables = new SystemVariables(defaultLocalRoot);
+            const systemVariables = new SystemVariables(undefined, defaultLocalRoot);
             pathMappings = pathMappings.map(({ localRoot: mappedLocalRoot, remoteRoot }) => ({
                 localRoot: systemVariables.resolveAny(mappedLocalRoot),
                 // TODO: Apply to remoteRoot too?

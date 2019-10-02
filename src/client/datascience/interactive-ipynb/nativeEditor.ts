@@ -294,6 +294,14 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return this._file;
     }
 
+    protected async setLaunchingFile(_file: string): Promise<void> {
+        // For the native editor, use our own file as the path
+        const notebook = this.getNotebook();
+        if (this.fileSystem.fileExists(this.file.fsPath) && notebook) {
+            await notebook.setLaunchingFile(this.file.fsPath);
+        }
+    }
+
     protected sendCellsToWebView(cells: ICell[]) {
         // Filter out sysinfo messages. Don't want to show those
         const filtered = cells.filter(c => c.data.cell_type !== 'messages');

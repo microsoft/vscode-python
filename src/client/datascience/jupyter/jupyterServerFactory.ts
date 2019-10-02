@@ -9,7 +9,7 @@ import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
-import { ILiveShareApi } from '../../common/application/types';
+import { ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../common/types';
 import {
     IConnection,
@@ -36,6 +36,7 @@ type JupyterServerClassType = {
         disposableRegistry: IDisposableRegistry,
         configService: IConfigurationService,
         sessionManager: IJupyterSessionManagerFactory,
+        workspaceService: IWorkspaceService,
         loggers: INotebookExecutionLogger[]
     ): IJupyterServerInterface;
 };
@@ -55,6 +56,7 @@ export class JupyterServerFactory implements INotebookServer, ILiveShareHasRole 
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IConfigurationService) configService: IConfigurationService,
         @inject(IJupyterSessionManagerFactory) sessionManager: IJupyterSessionManagerFactory,
+        @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @multiInject(INotebookExecutionLogger) @optional() loggers: INotebookExecutionLogger[] | undefined) {
         this.serverFactory = new RoleBasedFactory<IJupyterServerInterface, JupyterServerClassType>(
             liveShare,
@@ -66,6 +68,7 @@ export class JupyterServerFactory implements INotebookServer, ILiveShareHasRole 
             disposableRegistry,
             configService,
             sessionManager,
+            workspaceService,
             loggers ? loggers : []
         );
     }

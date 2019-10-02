@@ -5,7 +5,7 @@
 
 // tslint:disable:no-any
 
-import { expect } from 'chai';
+import { assert, expect } from 'chai';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 // tslint:disable-next-line:no-require-imports
@@ -242,5 +242,45 @@ suite('Python Settings', async () => {
             expect((settings.formatting as any)[key]).to.be.equal(expectedPath);
         }
         config.verifyAll();
+    });
+    test('File env variables remain in settings', () => {
+        expected.datascience = {
+            allowImportFromNotebook: true,
+            jupyterLaunchTimeout: 20000,
+            jupyterLaunchRetries: 3,
+            enabled: true,
+            jupyterServerURI: 'local',
+            // tslint:disable-next-line: no-invalid-template-strings
+            notebookFileRoot: '${FileDirname}',
+            changeDirOnImportExport: true,
+            useDefaultConfigForJupyter: true,
+            jupyterInterruptTimeout: 10000,
+            searchForJupyter: true,
+            showCellInputCode: true,
+            collapseCellInputCodeByDefault: true,
+            allowInput: true,
+            maxOutputSize: 400,
+            errorBackgroundColor: '#FFFFFF',
+            sendSelectionToInteractiveWindow: false,
+            showJupyterVariableExplorer: true,
+            variableExplorerExclude: 'module;function;builtin_function_or_method',
+            codeRegularExpression: '',
+            markdownRegularExpression: '',
+            enablePlotViewer: true,
+            runStartupCommands: '',
+            debugJustMyCode: true
+        };
+        expected.pythonPath = 'python3';
+        // tslint:disable-next-line:no-any
+        expected.experiments = {
+            enabled: false
+        };
+        initializeConfig(expected);
+        config.setup(c => c.get<IExperiments>('experiments'))
+            .returns(() => expected.experiments)
+            .verifiable(TypeMoq.Times.once());
+
+        settings.update(config.object);
+        assert.equal(expected.datascience.notebookFileRoot, settings.datascience.notebookFileRoot);
     });
 });

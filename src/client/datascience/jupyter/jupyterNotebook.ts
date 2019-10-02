@@ -12,7 +12,7 @@ import * as uuid from 'uuid/v4';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
-import { ILiveShareApi } from '../../common/application/types';
+import { ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { Cancellation, CancellationError } from '../../common/cancellation';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
@@ -36,6 +36,7 @@ import {
     INotebookServerLaunchInfo,
     InterruptResult
 } from '../types';
+import { expandWorkingDir } from './jupyterUtils';
 
 class CellSubscriber {
     private deferred: Deferred<CellState> = createDeferred<CellState>();
@@ -139,6 +140,7 @@ export class JupyterNotebookBase implements INotebook {
     private ranInitialSetup = false;
     private _resource: Uri;
     private _disposed: boolean = false;
+    private _workingDirectory: string | undefined;
 
     constructor(
         _liveShare: ILiveShareApi, // This is so the liveshare mixin works
@@ -149,7 +151,8 @@ export class JupyterNotebookBase implements INotebook {
         private launchInfo: INotebookServerLaunchInfo,
         private loggers: INotebookExecutionLogger[],
         resource: Uri,
-        private getDisposedError: () => Error
+        private getDisposedError: () => Error,
+        private workspace: IWorkspaceService
     ) {
         this.sessionStartTime = Date.now();
         this._resource = resource;
@@ -183,13 +186,11 @@ export class JupyterNotebookBase implements INotebook {
             return;
         }
         this.ranInitialSetup = true;
+        this._workingDirectory = undefined;
 
         try {
             // When we start our notebook initial, change to our workspace or user specified root directory
-            if (this.launchInfo && this.launchInfo.workingDir && this.launchInfo.connectionInfo.localLaunch) {
-                traceInfo(`Changing directory for ${this.resource.toString()}`);
-                await this.changeDirectoryIfPossible(this.launchInfo.workingDir);
-            }
+            await this.updateWorkingDirectory();
 
             const settings = this.configService.getSettings().datascience;
             const matplobInit = !settings || settings.enablePlotViewer ? CodeSnippits.MatplotLibInitSvg : CodeSnippits.MatplotLibInitPng;
@@ -249,12 +250,9 @@ export class JupyterNotebookBase implements INotebook {
         return deferred.promise;
     }
 
-    public async setInitialDirectory(directory: string): Promise<void> {
-        // If we launched local and have no working directory call this on add code to change directory
-        if (this.launchInfo && !this.launchInfo.workingDir && this.launchInfo.connectionInfo.localLaunch) {
-            await this.changeDirectoryIfPossible(directory);
-            this.launchInfo.workingDir = directory;
-        }
+    public setLaunchingFile(file: string): Promise<void> {
+        // Update our working directory if we don't have one set already
+        return this.updateWorkingDirectory(file);
     }
 
     public executeObservable(code: string, file: string, line: number, id: string, silent: boolean = false): Observable<ICell[]> {
@@ -585,6 +583,24 @@ export class JupyterNotebookBase implements INotebook {
             subscriber.next(cell);
             subscriber.complete();
         });
+    }
+
+    private async updateWorkingDirectory(launchingFile?: string): Promise<void> {
+        if (this.launchInfo && this.launchInfo.connectionInfo.localLaunch && !this._workingDirectory) {
+            // See what our working dir is supposed to be
+            const suggested = this.launchInfo.workingDir;
+            if (suggested && await fs.pathExists(suggested)) {
+                // We should use the launch info directory. It trumps the possible dir
+                this._workingDirectory = suggested;
+                return this.changeDirectoryIfPossible(this._workingDirectory);
+            } else if (launchingFile && await fs.pathExists(launchingFile)) {
+                // Combine the working directory with this file if possible.
+                this._workingDirectory = expandWorkingDir(this.launchInfo.workingDir, launchingFile, this.workspace);
+                if (this._workingDirectory) {
+                    return this.changeDirectoryIfPossible(this._workingDirectory);
+                }
+            }
+        }
     }
 
     private changeDirectoryIfPossible = async (directory: string): Promise<void> => {

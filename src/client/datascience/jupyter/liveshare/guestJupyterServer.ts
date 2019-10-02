@@ -6,7 +6,7 @@ import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
-import { ILiveShareApi } from '../../../common/application/types';
+import { ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
@@ -38,6 +38,7 @@ export class GuestJupyterServer
         private disposableRegistry: IDisposableRegistry,
         private configService: IConfigurationService,
         _sessionManager: IJupyterSessionManagerFactory,
+        _workspaceService: IWorkspaceService,
         _loggers: INotebookExecutionLogger[]
     ) {
         super(liveShare);

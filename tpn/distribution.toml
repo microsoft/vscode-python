@@ -4,15 +4,14 @@ THIRD-PARTY SOFTWARE NOTICES AND INFORMATION
 Do Not Translate or Localize
 
 Microsoft Python extension for Visual Studio Code incorporates third party material from the projects listed below.
-"""
+"
 
 [[project]]
 name = "@icons/material"
 version = "0.2.4"
 url = "https://registry.npmjs.org/@icons/material/-/material-0.2.4.tgz"
 purpose = "npm"
-license = """
-The MIT License
+license = "The MIT License
 
 Copyright 2019 @icons/material developers
 
@@ -21,14 +20,14 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"
 
 [[project]]
-name = "@jupyterlab/services"
-version = "3.2.1"
-url = "https://registry.npmjs.org/@jupyterlab/services/-/services-3.2.1.tgz"
+name = "@jupyterlab/outputarea"
+version = "0.19.2"
+url = "https://registry.npmjs.org/@jupyterlab/outputarea/-/outputarea-0.19.2.tgz"
 purpose = "npm"
-license = """
+license = "
 Copyright (c) 2015 Project Jupyter Contributors
 All rights reserved.
 
@@ -62,15 +61,54 @@ Semver File License
 
 The semver.py file is from https://github.com/podhmo/python-semver
 which is licensed under the "MIT" license.  See the semver.py file for details.
-"""
+"
+
+[[project]]
+name = "@jupyterlab/services"
+version = "3.2.1"
+url = "https://registry.npmjs.org/@jupyterlab/services/-/services-3.2.1.tgz"
+purpose = "npm"
+license = "Copyright (c) 2015 Project Jupyter Contributors
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+Semver File License
+===================
+
+The semver.py file is from https://github.com/podhmo/python-semver
+which is licensed under the "MIT" license.  See the semver.py file for details.
+"
 
 [[project]]
 name = "@phosphor/algorithm"
 version = "1.1.2"
 url = "https://registry.npmjs.org/@phosphor/algorithm/-/algorithm-1.1.2.tgz"
 purpose = "npm"
-license = """
-Copyright (c) 2014-2017, PhosphorJS Contributors
+license = "Copyright (c) 2014-2017, PhosphorJS Contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -97,15 +135,14 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-"""
+"
 
 [[project]]
 name = "@phosphor/algorithm"
 version = "1.1.3"
 url = "https://registry.npmjs.org/@phosphor/algorithm/-/algorithm-1.1.3.tgz"
 purpose = "npm"
-license = """
-Copyright (c) 2014-2017, PhosphorJS Contributors
+license = "Copyright (c) 2014-2017, PhosphorJS Contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -132,15 +169,14 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-"""
+"
 
 [[project]]
 name = "@phosphor/collections"
 version = "1.1.2"
 url = "https://registry.npmjs.org/@phosphor/collections/-/collections-1.1.2.tgz"
 purpose = "npm"
-license = """
-Copyright (c) 2014-2017, PhosphorJS Contributors
+license = "Copyright (c) 2014-2017, PhosphorJS Contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -168,15 +204,14 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""
+"
 
 [[project]]
 name = "@phosphor/collections"
 version = "1.1.3"
 url = "https://registry.npmjs.org/@phosphor/collections/-/collections-1.1.3.tgz"
 purpose = "npm"
-license = """
-Copyright (c) 2014-2017, PhosphorJS Contributors
+license = "Copyright (c) 2014-2017, PhosphorJS Contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -203,15 +238,14 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-"""
+"
 
 [[project]]
 name = "@phosphor/coreutils"
 version = "1.3.0"
 url = "https://registry.npmjs.org/@phosphor/coreutils/-/coreutils-1.3.0.tgz"
 purpose = "npm"
-license = """
-Copyright (c) 2014-2017, PhosphorJS Contributors
+license = "Copyright (c) 2014-2017, PhosphorJS Contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -239,15 +273,14 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""
+"
 
 [[project]]
 name = "@phosphor/coreutils"
 version = "1.3.1"
 url = "https://registry.npmjs.org/@phosphor/coreutils/-/coreutils-1.3.1.tgz"
 purpose = "npm"
-license = """
-Copyright (c) 2014-2017, PhosphorJS Contributors
+license = "Copyright (c) 2014-2017, PhosphorJS Contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -274,50 +307,14 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-"""
-
-[[project]]
-name = "@phosphor/domutils"
-version = "1.1.3"
-url = "https://registry.npmjs.org/@phosphor/domutils/-/domutils-1.1.3.tgz"
-purpose = "npm"
-license = """
-Copyright (c) 2014-2017, PhosphorJS Contributors
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-* Redistributions of source code must retain the above copyright notice, this
-  list of conditions and the following disclaimer.
-
-* Redistributions in binary form must reproduce the above copyright notice,
-  this list of conditions and the following disclaimer in the documentation
-  and/or other materials provided with the distribution.
-
-* Neither the name of the copyright holder nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-"""
+"
 
 [[project]]
 name = "@phosphor/keyboard"
 version = "1.1.3"
 url = "https://registry.npmjs.org/@phosphor/keyboard/-/keyboard-1.1.3.tgz"
 purpose = "npm"
-license = """
-Copyright (c) 2014-2017, PhosphorJS Contributors
+license = "Copyright (c) 2014-2017, PhosphorJS Contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -344,15 +341,14 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-"""
+"
 
 [[project]]
 name = "@phosphor/messaging"
 version = "1.2.2"
 url = "https://registry.npmjs.org/@phosphor/messaging/-/messaging-1.2.2.tgz"
 purpose = "npm"
-license = """
-Copyright (c) 2014-2017, PhosphorJS Contributors
+license = "Copyright (c) 2014-2017, PhosphorJS Contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -380,15 +376,14 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""
+"
 
 [[project]]
 name = "@phosphor/messaging"
 version = "1.2.3"
 url = "https://registry.npmjs.org/@phosphor/messaging/-/messaging-1.2.3.tgz"
 purpose = "npm"
-license = """
-Copyright (c) 2014-2017, PhosphorJS Contributors
+license = "Copyright (c) 2014-2017, PhosphorJS Contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -415,15 +410,14 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-"""
+"
 
 [[project]]
 name = "@phosphor/properties"
 version = "1.1.3"
 url = "https://registry.npmjs.org/@phosphor/properties/-/properties-1.1.3.tgz"
 purpose = "npm"
-license = """
-Copyright (c) 2014-2017, PhosphorJS Contributors
+license = "Copyright (c) 2014-2017, PhosphorJS Contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -450,15 +444,14 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-"""
+"
 
 [[project]]
 name = "@phosphor/signaling"
 version = "1.2.2"
 url = "https://registry.npmjs.org/@phosphor/signaling/-/signaling-1.2.2.tgz"
 purpose = "npm"
-license = """
-Copyright (c) 2014-2017, PhosphorJS Contributors
+license = "Copyright (c) 2014-2017, PhosphorJS Contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -486,15 +479,14 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""
+"
 
 [[project]]
 name = "@phosphor/signaling"
 version = "1.2.3"
 url = "https://registry.npmjs.org/@phosphor/signaling/-/signaling-1.2.3.tgz"
 purpose = "npm"
-license = """
-Copyright (c) 2014-2017, PhosphorJS Contributors
+license = "Copyright (c) 2014-2017, PhosphorJS Contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -521,95 +513,42 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-"""
-
-[[project]]
-name = "@phosphor/virtualdom"
-version = "1.1.3"
-url = "https://registry.npmjs.org/@phosphor/virtualdom/-/virtualdom-1.1.3.tgz"
-purpose = "npm"
-license = """
-Copyright (c) 2014-2017, PhosphorJS Contributors
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-* Redistributions of source code must retain the above copyright notice, this
-  list of conditions and the following disclaimer.
-
-* Redistributions in binary form must reproduce the above copyright notice,
-  this list of conditions and the following disclaimer in the documentation
-  and/or other materials provided with the distribution.
-
-* Neither the name of the copyright holder nor the names of its
-  contributors may be used to endorse or promote products derived from
-  this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-"""
+"
 
 [[project]]
 name = "@types/dom4"
 version = "2.0.1"
 url = "https://registry.npmjs.org/@types/dom4/-/dom4-2.0.1.tgz"
 purpose = "npm"
-license = """
-Copyright 2019 Adi Dahiya https://github.com/adidahiya, Gilad Gray https://github.com/giladgray.
+license = "Copyright 2019 Adi Dahiya https://github.com/adidahiya, Gilad Gray https://github.com/giladgray.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "@types/prop-types"
 version = "15.7.1"
 url = "https://registry.npmjs.org/@types/prop-types/-/prop-types-15.7.1.tgz"
 purpose = "npm"
-license = """
-Copyright 2019 Dovydas Navickas https://github.com/DovydasNavickas, Ferdy Budhidharma https://github.com/ferdaber, Sebastian Silbermann https://github.com/eps1lon.
+license = "Copyright 2019 Dovydas Navickas https://github.com/DovydasNavickas, Ferdy Budhidharma https://github.com/ferdaber, Sebastian Silbermann https://github.com/eps1lon.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
-
-[[project]]
-name = "@types/react"
-version = "16.8.23"
-url = "https://registry.npmjs.org/@types/react/-/react-16.8.23.tgz"
-purpose = "npm"
-license = """
-Copyright 2019 Asana https://asana.com, AssureSign http://www.assuresign.com, Microsoft https://microsoft.com, John Reilly https://github.com/johnnyreilly, Benoit Benezech https://github.com/bbenezech, Patricio Zavolinsky https://github.com/pzavolinsky, Digiguru https://github.com/digiguru, Eric Anderson https://github.com/ericanderson, Dovydas Navickas https://github.com/DovydasNavickas, Josh Rutherford https://github.com/theruther4d, Guilherme Hübner https://github.com/guilhermehubner, Ferdy Budhidharma https://github.com/ferdaber, Johann Rakotoharisoa https://github.com/jrakotoharisoa, Olivier Pascal https://github.com/pascaloliv, Martin Hochel https://github.com/hotell, Frank Li https://github.com/franklixuefei, Jessica Franco https://github.com/Jessidhia, Saransh Kataria https://github.com/saranshkataria, Kanitkorn Sujautra https://github.com/lukyth, and Sebastian Silbermann https://github.com/eps1lon.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "IPython"
 version = "(for PyDev.Debugger)"
 url = "https://ipython.org/"
 purpose = "explicit"
-license = """
-Copyright (c) 2008-2010, IPython Development Team
+license = "Copyright (c) 2008-2010, IPython Development Team
 Copyright (c) 2001-2007, Fernando Perez. <fernando.perez@colorado.edu>
 Copyright (c) 2001, Janko Hauser <jhauser@zscout.de>
 Copyright (c) 2001, Nathaniel Gray <n8gray@caltech.edu>
@@ -640,15 +579,14 @@ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-"""
+"
 
 [[project]]
 name = "JSV"
 version = "4.0.2"
 url = "https://registry.npmjs.org/JSV/-/JSV-4.0.2.tgz"
 purpose = "npm"
-license = """
-Copyright 2010 Gary Court. All rights reserved.
+license = "Copyright 2010 Gary Court. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are
 permitted provided that the following conditions are met:
@@ -673,15 +611,14 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 The views and conclusions contained in the software and documentation are those of the
 authors and should not be interpreted as representing official policies, either expressed
 or implied, of Gary Court or the JSON Schema specification.
-"""
+"
 
 [[project]]
 name = "Jedi"
 version = "0.13.3"
 url = "https://github.com/davidhalter/jedi/tree/v0.13.3"
 purpose = "PyPI"
-license = """
-All contributions towards Jedi are MIT licensed.
+license = "All contributions towards Jedi are MIT licensed.
 
 -------------------------------------------------------------------------------
 The MIT License (MIT)
@@ -705,15 +642,14 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "PyDev.Debugger"
 version = "(for ptvsd 4)"
 url = "https://pypi.org/project/pydevd/"
 purpose = "explicit"
-license = """
-Eclipse Public License - v 1.0
+license = "Eclipse Public License - v 1.0
 
 THE ACCOMPANYING PROGRAM IS PROVIDED UNDER THE TERMS OF THIS ECLIPSE PUBLIC
 LICENSE ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THE PROGRAM
@@ -916,15 +852,14 @@ intellectual property laws of the United States of America. No party to this
 Agreement will bring a legal action under this Agreement more than one year
 after the cause of action arose. Each party waives its rights to a jury trial in
 any resulting litigation.
-"""
+"
 
 [[project]]
 name = "_pydev_calltip_util.py"
 version = "(for PyDev.Debugger)"
 url = "https://github.com/fabioz/PyDev.Debugger/blob/master/_pydev_bundle/_pydev_calltip_util.py"
 purpose = "explicit"
-license = """
-Copyright (c) Yuli Fitterman
+license = "Copyright (c) Yuli Fitterman
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -937,15 +872,14 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-"""
+"
 
 [[project]]
 name = "angular.io"
 version = "(for RxJS 5.5)"
 url = "https://angular.io/"
 purpose = "explicit"
-license = """
-The MIT License
+license = "The MIT License
 
 Copyright (c) 2014-2017 Google, Inc.
 
@@ -954,15 +888,43 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"
+
+[[project]]
+name = "ansi_up"
+version = "3.0.0"
+url = "https://registry.npmjs.org/ansi_up/-/ansi_up-3.0.0.tgz"
+purpose = "npm"
+license = "The MIT License
+
+Copyright (c) 2011 Dru Nelson
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+'Software'), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+"
 
 [[project]]
 name = "assert-plus"
 version = "1.0.0"
 url = "https://github.com/joyent/node-assert-plus/tree/v1.0.0"
 purpose = "npm"
-license = """
-The MIT License (MIT)
+license = "The MIT License (MIT)
 Copyright (c) 2012 Mark Cavage
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -982,15 +944,14 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-"""
+"
 
 [[project]]
 name = "babel-polyfill"
 version = "6.26.0"
 url = "https://registry.npmjs.org/babel-polyfill/-/babel-polyfill-6.26.0.tgz"
 purpose = "npm"
-license = """
-MIT License
+license = "MIT License
 
 Copyright (c) 2014-2018 Sebastian McKenzie and other contributors
 
@@ -1013,15 +974,14 @@ LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-"""
+"
 
 [[project]]
 name = "babel-runtime"
 version = "6.26.0"
 url = "https://registry.npmjs.org/babel-runtime/-/babel-runtime-6.26.0.tgz"
 purpose = "npm"
-license = """
-MIT License
+license = "MIT License
 
 Copyright (c) 2014-2018 Sebastian McKenzie and other contributors
 
@@ -1043,15 +1003,14 @@ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
 LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "bootstrap-less"
 version = "3.3.8"
 url = "https://github.com/distros/bootstrap-less"
 purpose = "npm"
-license = """
-The MIT License (MIT)
+license = "The MIT License (MIT)
 
 Copyright (c) 2011-2019 Twitter, Inc.
 Copyright (c) 2011-2019 The Bootstrap Authors
@@ -1073,15 +1032,14 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "brotli"
 version = "1.3.2"
 url = "https://registry.npmjs.org/brotli/-/brotli-1.3.2.tgz"
 purpose = "npm"
-license = """
-Copyright 2019 brotli developers
+license = "Copyright 2019 brotli developers
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the
@@ -1101,15 +1059,14 @@ NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "browserify-optional"
 version = "1.0.1"
 url = "https://registry.npmjs.org/browserify-optional/-/browserify-optional-1.0.1.tgz"
 purpose = "npm"
-license = """
-Copyright 2019 browserify-optional developers
+license = "Copyright 2019 browserify-optional developers
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the
@@ -1129,15 +1086,14 @@ NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "buffer-equal"
 version = "0.0.1"
 url = "https://registry.npmjs.org/buffer-equal/-/buffer-equal-0.0.1.tgz"
 purpose = "npm"
-license = """
-This software is released under the MIT license:
+license = "This software is released under the MIT license:
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -1155,15 +1111,14 @@ FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "cjson"
 version = "0.3.0"
 url = "https://registry.npmjs.org/cjson/-/cjson-0.3.0.tgz"
 purpose = "npm"
-license = """
-Copyright (c) 2015 Oleg Slobodskoi <oleg008@gmail.com>
+license = "Copyright (c) 2015 Oleg Slobodskoi <oleg008@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -1183,15 +1138,14 @@ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
 LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "dfa"
 version = "1.2.0"
 url = "https://registry.npmjs.org/dfa/-/dfa-1.2.0.tgz"
 purpose = "npm"
-license = """
-Copyright 2019 dfa developers
+license = "Copyright 2019 dfa developers
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the
@@ -1211,30 +1165,28 @@ NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "ebnf-parser"
 version = "0.1.10"
 url = "https://registry.npmjs.org/ebnf-parser/-/ebnf-parser-0.1.10.tgz"
 purpose = "npm"
-license = """
-Copyright 2014 ebnf-parser contributors
+license = "Copyright 2014 ebnf-parser contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "esutils"
 version = "1.0.0"
 url = "https://registry.npmjs.org/esutils/-/esutils-1.0.0.tgz"
 purpose = "npm"
-license = """
-Redistribution and use in source and binary forms, with or without
+license = "Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
 
   * Redistributions of source code must retain the above copyright
@@ -1253,15 +1205,14 @@ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
 ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-"""
+"
 
 [[project]]
 name = "falafel"
 version = "2.1.0"
 url = "https://registry.npmjs.org/falafel/-/falafel-2.1.0.tgz"
 purpose = "npm"
-license = """
-Copyright 2019 falafel developers
+license = "Copyright 2019 falafel developers
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the
@@ -1281,15 +1232,14 @@ NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "fontkit"
 version = "1.8.0"
 url = "https://registry.npmjs.org/fontkit/-/fontkit-1.8.0.tgz"
 purpose = "npm"
-license = """
-Copyright 2019 fontkit developers
+license = "Copyright 2019 fontkit developers
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the
@@ -1309,30 +1259,28 @@ NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "gud"
 version = "1.0.0"
 url = "https://registry.npmjs.org/gud/-/gud-1.0.0.tgz"
 purpose = "npm"
-license = """
-Copyright 2018 gud contributors
+license = "Copyright 2018 gud contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "hash.js"
 version = "1.1.7"
 url = "https://github.com/indutny/hash.js/tree/v1.1.7"
 purpose = "npm"
-license = """
-This software is licensed under the MIT License.
+license = "This software is licensed under the MIT License.
 
 Copyright Fedor Indutny, 2014.
 
@@ -1355,15 +1303,14 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-"""
+"
 
 [[project]]
 name = "isarray"
 version = "1.0.0"
 url = "https://github.com/juliangruber/isarray/blob/v1.0.0"
 purpose = "npm"
-license = """
-(MIT)
+license = "(MIT)
 
 Copyright (c) 2013 Julian Gruber &lt;julian@juliangruber.com&gt;
 
@@ -1384,15 +1331,14 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-"""
+"
 
 [[project]]
 name = "isort"
 version = "4.3.4"
 url = "https://github.com/timothycrosley/isort/tree/4.3.4"
 purpose = "PyPI"
-license = """
-The MIT License (MIT)
+license = "The MIT License (MIT)
 
 Copyright (c) 2013 Timothy Edmund Crosley
 
@@ -1413,45 +1359,42 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "jison"
 version = "0.4.18"
 url = "https://registry.npmjs.org/jison/-/jison-0.4.18.tgz"
 purpose = "npm"
-license = """
-Copyright (c) 2009-2014 Zachary Carter
+license = "Copyright (c) 2009-2014 Zachary Carter
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "jison-lex"
 version = "0.3.4"
 url = "https://registry.npmjs.org/jison-lex/-/jison-lex-0.3.4.tgz"
 purpose = "npm"
-license = """
-Copyright 2014 Zachary Carter
+license = "Copyright 2014 Zachary Carter
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "json-schema"
 version = "0.2.3"
-url = "https://www.npmjs.com/package/json-schema"  # References the Dojo Foundation's license: https://github.com/dojo/meta
+url = "https://www.npmjs.com/package/json-schema"
 purpose = "npm"
-license = """
-Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+license = "Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 
 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
 
@@ -1460,54 +1403,50 @@ Redistribution and use in source and binary forms, with or without modification,
 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-"""
+"
 
 [[project]]
 name = "jsonify"
 version = "0.0.0"
 url = "https://registry.npmjs.org/jsonify/-/jsonify-0.0.0.tgz"
 purpose = "npm"
-license = """
-public domain
-"""
+license = "public domain
+"
 
 [[project]]
 name = "jsonlint"
 version = "1.6.0"
 url = "https://registry.npmjs.org/jsonlint/-/jsonlint-1.6.0.tgz"
 purpose = "npm"
-license = """
-Copyright (C) 2012 Zachary Carter
+license = "Copyright (C) 2012 Zachary Carter
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "lex-parser"
 version = "0.1.4"
 url = "https://registry.npmjs.org/lex-parser/-/lex-parser-0.1.4.tgz"
 purpose = "npm"
-license = """
-Copyright 2013 Zachary Carter
+license = "Copyright 2013 Zachary Carter
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "linear-layout-vector"
 version = "0.0.1"
 url = "https://registry.npmjs.org/linear-layout-vector/-/linear-layout-vector-0.0.1.tgz"
 purpose = "npm"
-license = """
-Copyright 2019 linear-layout-vector developers
+license = "Copyright 2019 linear-layout-vector developers
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted, provided that the above
@@ -1520,15 +1459,14 @@ ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
 WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-"""
+"
 
 [[project]]
 name = "linebreak"
 version = "0.3.0"
 url = "https://registry.npmjs.org/linebreak/-/linebreak-0.3.0.tgz"
 purpose = "npm"
-license = """
-Copyright 2019 linebreak developers
+license = "Copyright 2019 linebreak developers
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the
@@ -1548,15 +1486,14 @@ NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "magic-string"
 version = "0.22.5"
 url = "https://registry.npmjs.org/magic-string/-/magic-string-0.22.5.tgz"
 purpose = "npm"
-license = """
-Copyright 2018 Rich Harris
+license = "Copyright 2018 Rich Harris
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -1564,15 +1501,14 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-"""
+"
 
 [[project]]
 name = "martinez-polygon-clipping"
 version = "0.1.5"
 url = "https://registry.npmjs.org/martinez-polygon-clipping/-/martinez-polygon-clipping-0.1.5.tgz"
 purpose = "npm"
-license = """
-MIT License
+license = "MIT License
 
 Copyright (c) 2018 Alexander Milevski
 
@@ -1594,15 +1530,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-"""
+"
 
 [[project]]
 name = "nomnom"
 version = "1.5.2"
 url = "https://registry.npmjs.org/nomnom/-/nomnom-1.5.2.tgz"
 purpose = "npm"
-license = """
-Copyright (c) 2010 Heather Arthur
+license = "Copyright (c) 2010 Heather Arthur
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -1622,15 +1557,14 @@ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
 LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "parso"
 version = "0.5.0"
 url = "https://github.com/davidhalter/parso/tree/v0.5.0"
 purpose = "PyPI"
-license = """
-All contributions towards parso are MIT licensed.
+license = "All contributions towards parso are MIT licensed.
 
 Some Python files have been taken from the standard library and are therefore
 PSF licensed. Modifications on these files are dual licensed (both MIT and
@@ -1716,15 +1650,14 @@ products or services of Licensee, or any third party.
 8. By copying, installing or otherwise using Python, Licensee
 agrees to be bound by the terms and conditions of this License
 Agreement.
-"""
+"
 
 [[project]]
 name = "png-js"
 version = "0.1.1"
 url = "https://registry.npmjs.org/png-js/-/png-js-0.1.1.tgz"
 purpose = "npm"
-license = """
-MIT License
+license = "MIT License
 
 Copyright (c) 2017 Devon Govett
 
@@ -1745,15 +1678,14 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-"""
+"
 
 [[project]]
 name = "popper.js"
 version = "1.15.0"
 url = "https://registry.npmjs.org/popper.js/-/popper.js-1.15.0.tgz"
 purpose = "npm"
-license = """
-The MIT License (MIT)
+license = "The MIT License (MIT)
 
 Copyright © 2016 Federico Zivolo and contributors
 
@@ -1762,15 +1694,14 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "ptvsd"
 version = "4.2.4"
 url = "https://github.com/Microsoft/ptvsd/tree/v4.2.4"
 purpose = "PyPI"
-license = """
-    ptvsd
+license = "    ptvsd
 
     Copyright (c) Microsoft Corporation
     All rights reserved.
@@ -1793,15 +1724,14 @@ license = """
     COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
     IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
     CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "py2app"
 version = "(for PyDev.Debugger)"
 url = "https://bitbucket.org/ronaldoussoren/py2app"
 purpose = "explicit"
-license = """
-This is the MIT license.  This software may also be distributed under the same terms as Python (the PSF license).
+license = "This is the MIT license.  This software may also be distributed under the same terms as Python (the PSF license).
 
 Copyright (c) 2004 Bob Ippolito.
 
@@ -1812,15 +1742,14 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "regenerator-runtime"
 version = "0.13.2"
 url = "https://registry.npmjs.org/regenerator-runtime/-/regenerator-runtime-0.13.2.tgz"
 purpose = "npm"
-license = """
-MIT License
+license = "MIT License
 
 Copyright (c) 2014-present, Facebook, Inc.
 
@@ -1841,15 +1770,14 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-"""
+"
 
 [[project]]
 name = "remark-parse"
 version = "5.0.0"
 url = "https://registry.npmjs.org/remark-parse/-/remark-parse-5.0.0.tgz"
 purpose = "npm"
-license = """
-(The MIT License)
+license = "(The MIT License)
 
 Copyright (c) 2014-2016 Titus Wormer <tituswormer@gmail.com>
 Copyright (c) 2011-2014, Christopher Jeffrey (https://github.com/chjj/)
@@ -1872,15 +1800,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
-"""
+"
 
 [[project]]
 name = "restructure"
 version = "0.5.4"
 url = "https://registry.npmjs.org/restructure/-/restructure-0.5.4.tgz"
 purpose = "npm"
-license = """
-Copyright 2019 restructure developers
+license = "Copyright 2019 restructure developers
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the
@@ -1900,15 +1827,14 @@ NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "setImmediate"
 version = "(for RxJS 5.5)"
 url = "https://github.com/YuzuJS/setImmediate"
 purpose = "explicit"
-license = """
-Copyright (c) 2012 Barnesandnoble.com, llc, Donavon West, and Domenic Denicola
+license = "Copyright (c) 2012 Barnesandnoble.com, llc, Donavon West, and Domenic Denicola
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -1928,15 +1854,14 @@ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
 LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "sizzle"
 version = "(for lodash 4.17)"
 url = "https://sizzlejs.com/"
 purpose = "explicit"
-license = """
-Copyright (c) 2009 John Resig
+license = "Copyright (c) 2009 John Resig
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -1955,15 +1880,14 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "slickgrid"
 version = "2.4.7"
 url = "https://registry.npmjs.org/slickgrid/-/slickgrid-2.4.7.tgz"
 purpose = "npm"
-license = """
-Copyright (c) 2009-2019 Michael Leibman and Ben McIntyre, http://github.com/6pac/slickgrid
+license = "Copyright (c) 2009-2019 Michael Leibman and Ben McIntyre, http://github.com/6pac/slickgrid
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -1983,15 +1907,14 @@ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
 LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "slickgrid"
 version = "2.4.9"
 url = "https://registry.npmjs.org/slickgrid/-/slickgrid-2.4.9.tgz"
 purpose = "npm"
-license = """
-Copyright (c) 2009-2019 Michael Leibman and Ben McIntyre, http://github.com/6pac/slickgrid
+license = "Copyright (c) 2009-2019 Michael Leibman and Ben McIntyre, http://github.com/6pac/slickgrid
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -2011,27 +1934,25 @@ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
 LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "string-hash"
 version = "1.1.3"
 url = "https://registry.npmjs.org/string-hash/-/string-hash-1.1.3.tgz"
 purpose = "npm"
-license = """
-To the extend possible by law, The Dark Sky Company, LLC has [waived all
+license = "To the extend possible by law, The Dark Sky Company, LLC has [waived all
 copyright and related or neighboring rights][cc0] to this library.
 
 [cc0]: http://creativecommons.org/publicdomain/zero/1.0/
-"""
+"
 
 [[project]]
 name = "stylis-rule-sheet"
 version = "0.0.10"
 url = "https://registry.npmjs.org/stylis-rule-sheet/-/stylis-rule-sheet-0.0.10.tgz"
 purpose = "npm"
-license = """
-MIT License
+license = "MIT License
 
 Copyright (c) 2016 Sultan Tarimo
 
@@ -2053,15 +1974,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-"""
+"
 
 [[project]]
 name = "svg-path-bounding-box"
 version = "1.0.4"
 url = "https://registry.npmjs.org/svg-path-bounding-box/-/svg-path-bounding-box-1.0.4.tgz"
 purpose = "npm"
-license = """
-MIT License
+license = "MIT License
 
 Copyright (c) 2016 Sultan Tarimo
 
@@ -2083,15 +2003,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-"""
+"
 
 [[project]]
 name = "svg-to-pdfkit"
 version = "0.1.7"
 url = "https://registry.npmjs.org/svg-to-pdfkit/-/svg-to-pdfkit-0.1.7.tgz"
 purpose = "npm"
-license = """
-Copyright 2019 svg-to-pdfkit developers
+license = "Copyright 2019 svg-to-pdfkit developers
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the
@@ -2111,43 +2030,40 @@ NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "throttleit"
 version = "1.0.0"
 url = "https://github.com/component/throttle/tree/1.0.0"
 purpose = "npm"
-license = """
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+license = "Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "tiny-inflate"
 version = "1.0.2"
 url = "https://registry.npmjs.org/tiny-inflate/-/tiny-inflate-1.0.2.tgz"
 purpose = "npm"
-license = """
-Copyright 2018
+license = "Copyright 2018
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "trim"
 version = "0.0.1"
 url = "https://registry.npmjs.org/trim/-/trim-0.0.1.tgz"
 purpose = "npm"
-license = """
-(The MIT License)
+license = "(The MIT License)
 
 Copyright (c) 2012 TJ Holowaychuk <tj@vision-media.ca>
 
@@ -2156,7 +2072,7 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.XXX
-"""
+"
 
 [[project]]
 name = "typescript-char"
@@ -2170,23 +2086,21 @@ name = "unicode-trie"
 version = "0.3.1"
 url = "https://registry.npmjs.org/unicode-trie/-/unicode-trie-0.3.1.tgz"
 purpose = "npm"
-license = """
-Copyright 2018
+license = "Copyright 2018
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "uniqid"
 version = "5.0.3"
 url = "https://registry.npmjs.org/uniqid/-/uniqid-5.0.3.tgz"
 purpose = "npm"
-license = """
-(The MIT License)
+license = "(The MIT License)
 
 Copyright (c) 2014 Halász Ádám <mail@adamhalasz.com>
 
@@ -2195,15 +2109,14 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "untangle"
 version = "(for ptvsd 4)"
 url = "https://pypi.org/project/untangle/"
 purpose = "explicit"
-license = """
-# Author: Christian Stefanescu <chris@0chris.com>
+license = "# Author: Christian Stefanescu <chris@0chris.com>
 
 # Contributions from:
 
@@ -2232,15 +2145,14 @@ Apalala <apalala@gmail.com>
  WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  OTHER DEALINGS IN THE SOFTWARE.
- """
+ "
 
 [[project]]
 name = "uri-js"
 version = "4.2.2"
 url = "https://registry.npmjs.org/uri-js/-/uri-js-4.2.2.tgz"
 purpose = "npm"
-license = """
-Copyright 2011 Gary Court. All rights reserved.
+license = "Copyright 2011 Gary Court. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 
@@ -2251,15 +2163,14 @@ Redistribution and use in source and binary forms, with or without modification,
 THIS SOFTWARE IS PROVIDED BY GARY COURT "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL GARY COURT OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 The views and conclusions contained in the software and documentation are those of the authors and should not be interpreted as representing official policies, either expressed or implied, of Gary Court.
-"""
+"
 
 [[project]]
 name = "viz-annotation"
 version = "0.0.1-3"
 url = "https://registry.npmjs.org/viz-annotation/-/viz-annotation-0.0.1-3.tgz"
 purpose = "npm"
-license = """
-[Default ISC license]
+license = "[Default ISC license]
 
 Copyright 2018 viz-annotation developers
 
@@ -2267,28 +2178,26 @@ Permission to use, copy, modify, and/or distribute this software for any purpose
 
 THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-"""
+"
 
 [[project]]
 name = "viz-annotation"
 version = "0.0.3"
 url = "https://registry.npmjs.org/viz-annotation/-/viz-annotation-0.0.3.tgz"
 purpose = "npm"
-license = """
-Copyright 2018 Susie Lu
+license = "Copyright 2018 Susie Lu
 
 Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby granted, provided that the above copyright notice and this permission notice appear in all copies.
 
 THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-"""
+"
 
 [[project]]
 name = "webpack"
 version = "(for lodash 4)"
 url = "https://webpack.js.org/"
 purpose = "explicit"
-license = """
-Copyright (c) JS Foundation and other contributors
+license = "Copyright (c) JS Foundation and other contributors
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -2308,15 +2217,14 @@ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
 CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+"
 
 [[project]]
 name = "winreg"
 version = "1.2.4"
 url = "https://github.com/fresc81/node-winreg/tree/v1.2.4"
 purpose = "npm"
-license = """
-This project is released under [BSD 2-Clause License](http://opensource.org/licenses/BSD-2-Clause).
+license = "This project is released under [BSD 2-Clause License](http://opensource.org/licenses/BSD-2-Clause).
 
 Copyright (c) 2016, Paul Bottin All rights reserved.
 

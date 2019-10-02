@@ -95,7 +95,7 @@ export interface INotebook extends IAsyncDisposable {
     restartKernel(timeoutInMs: number): Promise<void>;
     waitForIdle(timeoutInMs: number): Promise<void>;
     interruptKernel(timeoutInMs: number): Promise<InterruptResult>;
-    setInitialDirectory(directory: string): Promise<void>;
+    setLaunchingFile(file: string): Promise<void>;
     getSysInfo(): Promise<ICell | undefined>;
     setMatplotLibStyle(useDark: boolean): Promise<void>;
 }

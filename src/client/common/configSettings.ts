@@ -131,7 +131,7 @@ export class PythonSettings implements IPythonSettings {
     // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
     protected update(pythonSettings: WorkspaceConfiguration) {
         const workspaceRoot = this.workspaceRoot.fsPath;
-        const systemVariables: SystemVariables = new SystemVariables(this.workspaceRoot ? this.workspaceRoot.fsPath : undefined);
+        const systemVariables: SystemVariables = new SystemVariables(undefined, workspaceRoot, this.workspace);
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         this.pythonPath = systemVariables.resolveAny(pythonSettings.get<string>('pythonPath'))!;

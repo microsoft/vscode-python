@@ -20,6 +20,7 @@
       - [ ] Copy over the "Thanks" section from the previous release
       - [ ] Make sure the "Thanks" section is up-to-date (e.g. compare to versions in requirements.json)
       - [ ] Touch up news entries (e.g. add missing periods)
+      - [ ] Check the Markdown rendering to make sure everything looks good
       - [ ] Add any relevant news entries for ptvsd and the language server if they were updated
    - [ ] Update [`ThirdPartyNotices-Distribution.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Distribution.txt) by running [`tpn`](https://github.com/Microsoft/vscode-python/tree/master/tpn) (typically `python tpn --npm package-lock.json --npm-overrides package.datascience-ui.dependencies.json --config tpn/distribution.toml ThirdPartyNotices-Distribution.txt`)
       * for each failure:
