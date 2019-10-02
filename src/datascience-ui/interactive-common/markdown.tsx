@@ -18,6 +18,8 @@ export interface IMarkdownProps {
     editorMeasureClassName?: string;
     showLineNumbers?: boolean;
     useQuickEdit?: boolean;
+    fontSize: number;
+    fontFamily: string;
     onCreated(code: string, modelId: string): void;
     onChange(changes: monacoEditor.editor.IModelContentChange[], modelId: string): void;
     focused?(): void;
@@ -56,6 +58,8 @@ export class Markdown extends React.Component<IMarkdownProps> {
                     unfocused={this.props.unfocused}
                     showLineNumbers={this.props.showLineNumbers}
                     useQuickEdit={this.props.useQuickEdit}
+                    fontSize={this.props.fontSize}
+                    fontFamily={this.props.fontFamily}
                 />
         );
     }

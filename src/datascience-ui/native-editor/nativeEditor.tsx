@@ -88,6 +88,18 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             this.renderCount = this.renderCount + 1;
         }
 
+        let fontSize: number = 14;
+        let fontFamily: string = 'Consolas, \'Courier New\', monospace';
+        if (this.mainPanelRef.current) {
+            fontSize = parseInt(getComputedStyle(this.mainPanelRef.current).getPropertyValue('--code-font-size'), 10);
+            fontFamily = getComputedStyle(this.mainPanelRef.current).getPropertyValue('--code-font-family');
+        }
+
+        const style: React.CSSProperties = {
+            fontSize: fontSize,
+            fontFamily: fontFamily
+        };
+
         // Update the state controller with our new state
         this.stateController.renderUpdate(this.state);
         const progressBar = this.state.busy && !this.props.testMode ? <Progress /> : undefined;
@@ -102,7 +114,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             <AddCellLine includePlus={true} className='add-cell-line-top' click={insertAboveFirst} baseTheme={this.props.baseTheme}/>;
 
         return (
-            <div id='main-panel' ref={this.mainPanelRef} role='Main'>
+            <div id='main-panel' ref={this.mainPanelRef} role='Main' style={style}>
                 <div className='styleSetter'>
                     <style>
                         {this.state.rootCss}
@@ -117,7 +129,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                 </section>
                 <main id='main-panel-content' onScroll={this.onContentScroll} ref={this.contentPanelScrollRef}>
                     {addCellLine}
-                    {this.renderContentPanel(this.props.baseTheme)}
+                    {this.renderContentPanel(this.props.baseTheme, fontSize, fontFamily)}
                 </main>
             </div>
         );
@@ -226,7 +238,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         return null;
     }
 
-    private renderContentPanel(baseTheme: string) {
+    private renderContentPanel(baseTheme: string, fontSize: number, fontFamily: string) {
         // Skip if the tokenizer isn't finished yet. It needs
         // to finish loading so our code editors work.
         if (!this.state.tokenizerLoaded && !this.props.testMode) {
@@ -234,11 +246,11 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         }
 
         // Otherwise render our cells.
-        const contentProps = this.getContentProps(baseTheme);
+        const contentProps = this.getContentProps(baseTheme, fontSize, fontFamily);
         return <ContentPanel {...contentProps} ref={this.contentPanelRef}/>;
     }
 
-    private getContentProps = (baseTheme: string): IContentPanelProps => {
+    private getContentProps = (baseTheme: string, fontSize: number, fontFamily: string): IContentPanelProps => {
         return {
             baseTheme: baseTheme,
             cellVMs: this.state.cellVMs,
@@ -249,7 +261,9 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             skipNextScroll: this.state.skipNextScroll ? true : false,
             editable: true,
             renderCell: this.renderCell,
-            scrollToBottom: this.scrollDiv
+            scrollToBottom: this.scrollDiv,
+            fontSize: fontSize,
+            fontFamily: fontFamily
         };
     }
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {
@@ -356,7 +370,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
     //     });
     // }
 
-    private renderCell = (cellVM: ICellViewModel, index: number): JSX.Element | null => {
+    private renderCell = (cellVM: ICellViewModel, index: number, fontSize: number, fontFamily: string): JSX.Element | null => {
         const cellRef : React.RefObject<NativeCell> = React.createRef<NativeCell>();
         const containerRef = React.createRef<HTMLDivElement>();
         this.cellRefs.set(cellVM.cell.id, cellRef);
@@ -401,6 +415,8 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                         hideOutput={cellVM.hideOutput}
                         focusCell={this.focusCell}
                         selectCell={this.selectCell}
+                        fontSize={fontSize}
+                        fontFamily={fontFamily}
                     />
                 </ErrorBoundary>
                 {lastLine}
