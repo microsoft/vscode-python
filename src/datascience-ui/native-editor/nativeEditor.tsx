@@ -90,15 +90,15 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
 
         let fontSize: number = 14;
         let fontFamily: string = 'Consolas, \'Courier New\', monospace';
-        if (this.mainPanelRef.current) {
-            fontSize = parseInt(getComputedStyle(this.mainPanelRef.current).getPropertyValue('--code-font-size'), 10);
-            fontFamily = getComputedStyle(this.mainPanelRef.current).getPropertyValue('--code-font-family');
-        }
+        if (this.state.rootCss) {
+            const fontSizeIndex = this.state.rootCss.indexOf('--code-font-size: ') + 18;
+            const fontSizeEndIndex = this.state.rootCss.indexOf('px;', fontSizeIndex);
+            fontSize = parseInt(this.state.rootCss.substring(fontSizeIndex, fontSizeEndIndex), 10);
 
-        const style: React.CSSProperties = {
-            fontSize: fontSize,
-            fontFamily: fontFamily
-        };
+            const fontFamilyIndex = this.state.rootCss.indexOf('--code-font-family: ') + 20;
+            const fontFamilyEndIndex = this.state.rootCss.indexOf(';', fontFamilyIndex);
+            fontFamily = this.state.rootCss.substring(fontFamilyIndex, fontFamilyEndIndex);
+        }
 
         // Update the state controller with our new state
         this.stateController.renderUpdate(this.state);
@@ -114,7 +114,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             <AddCellLine includePlus={true} className='add-cell-line-top' click={insertAboveFirst} baseTheme={this.props.baseTheme}/>;
 
         return (
-            <div id='main-panel' ref={this.mainPanelRef} role='Main' style={style}>
+            <div id='main-panel' ref={this.mainPanelRef} role='Main'>
                 <div className='styleSetter'>
                     <style>
                         {this.state.rootCss}
