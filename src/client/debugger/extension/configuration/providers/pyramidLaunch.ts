@@ -76,7 +76,7 @@ export class PyramidLaunchDebugConfigurationProvider implements IDebugConfigurat
         }
     }
     protected resolveVariables(pythonPath: string, resource: Uri | undefined): string {
-        const systemVariables = new SystemVariables(resource, this.workspace);
+        const systemVariables = new SystemVariables(resource, undefined, this.workspace);
         return systemVariables.resolveAny(pythonPath);
     }
 

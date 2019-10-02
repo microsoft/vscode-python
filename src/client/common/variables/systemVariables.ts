@@ -100,12 +100,12 @@ export class SystemVariables extends AbstractSystemVariables {
     private _selectedText: string | undefined;
     private _execPath: string;
 
-    constructor(fileOrFolder: Uri | string | undefined, workspace?: IWorkspaceService, documentManager?: IDocumentManager) {
+    constructor(file: Uri | undefined, rootFolder: string | undefined, workspace?: IWorkspaceService, documentManager?: IDocumentManager) {
         super();
-        const workspaceFolder = workspace && (typeof fileOrFolder !== 'string') ? workspace.getWorkspaceFolder(fileOrFolder) : undefined;
-        this._workspaceFolder = workspaceFolder ? workspaceFolder.uri.fsPath : fileOrFolder as string || __dirname;
+        const workspaceFolder = workspace && file ? workspace.getWorkspaceFolder(file) : undefined;
+        this._workspaceFolder = workspaceFolder ? workspaceFolder.uri.fsPath : rootFolder || __dirname;
         this._workspaceFolderName = Path.basename(this._workspaceFolder);
-        this._filePath = (typeof fileOrFolder !== 'string') && fileOrFolder ? fileOrFolder.fsPath : undefined;
+        this._filePath = file ? file.fsPath : undefined;
         if (documentManager && documentManager.activeTextEditor) {
             this._lineNumber = documentManager.activeTextEditor.selection.anchor.line + 1;
             this._selectedText = documentManager.activeTextEditor.document.getText(new Range(documentManager.activeTextEditor.selection.start, documentManager.activeTextEditor.selection.end));

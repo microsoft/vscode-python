@@ -11,7 +11,7 @@ import { SystemVariables } from '../../common/variables/systemVariables';
 
 export function expandWorkingDir(workingDir: string | undefined, launchingFile: string, workspace: IWorkspaceService): string {
     if (workingDir) {
-        const variables = new SystemVariables(Uri.file(launchingFile), workspace);
+        const variables = new SystemVariables(Uri.file(launchingFile), undefined, workspace);
         return variables.resolve(workingDir);
     }
 
