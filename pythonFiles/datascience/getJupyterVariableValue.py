@@ -84,9 +84,9 @@ class VC_SafeRepr(object):
                 return ''.join((x.encode('utf-8') if isinstance(x, unicode) else x) for x in self._repr(obj, 0))
             else:
                 return ''.join(self._repr(obj, 0))
-        except Exception:
+        except Exception as e:
             try:
-                return 'An exception was raised: %r' % sys.exc_info()[1]
+                return 'An exception was raised: ' + str(e)
             except Exception:
                 return 'An exception was raised'
 
@@ -373,7 +373,7 @@ class VC_SafeRepr(object):
         # locale.getpreferredencoding() and 'utf-8). If no encoding can decode
         # the input, we return the original bytes.
         try_encodings = []
-        encoding = self.sys_stdout_encoding or getattr(sys.stdout, 'encoding', '')
+        encoding = self.sys_stdout_encoding or getattr(VC_sys.stdout, 'encoding', '')
         if encoding:
             try_encodings.append(encoding.lower())
 
