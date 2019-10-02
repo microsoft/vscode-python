@@ -69,6 +69,7 @@ export namespace InteractiveWindowMessages {
     export const NotebookClean = 'clean';
     export const SaveAll = 'save_all';
     export const NativeCommand = 'native_command';
+    export const VariablesComplete = 'variables_complete';
 
 }
 
@@ -301,4 +302,5 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.NotebookClean]: never | undefined;
     public [InteractiveWindowMessages.SaveAll]: ISaveAll;
     public [InteractiveWindowMessages.NativeCommand]: INativeCommand;
+    public [InteractiveWindowMessages.VariablesComplete]: never | undefined;
 }

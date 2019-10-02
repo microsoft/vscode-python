@@ -636,6 +636,8 @@ export class MainStateController implements IMessageHandler {
     }
 
     public renderUpdate(newState: {}) {
+        const oldCount = this.state.pendingVariableCount;
+
         // This method should be called during the render stage of anything
         // using this state Controller. That's because after shouldComponentUpdate
         // render is next and at this point the state has been set.
@@ -647,6 +649,11 @@ export class MainStateController implements IMessageHandler {
         // If the new state includes any cellVM changes, send an update to the other side
         if ('cellVMs' in newState) {
             this.sendInfo();
+        }
+
+        // If the new state includes pendingVariableCount and it's gone to zero, send a message
+        if ('pendingVariableCount' in newState && this.state.pendingVariableCount === 0 && oldCount !== 0) {
+            setTimeout(() => this.sendMessage(InteractiveWindowMessages.VariablesComplete), 1);
         }
     }
 
