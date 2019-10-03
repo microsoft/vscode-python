@@ -89,18 +89,21 @@ export class HostJupyterServer
                     await notebook.onAttach(api);
                 });
 
-                // If we have any notebooks currently started up we need to attach them
-                this.getNotebooks().forEach(notebook => {
-                    const hostNotebook = notebook as HostJupyterNotebook;
-                    if (hostNotebook) {
-                        hostNotebook.onAttach(api);
-                    }
-                });
-
                 // See if we need to forward the port
                 await this.attemptToForwardPort(api, this.portToForward);
             }
         }
+    }
+
+    public async onSessionChange(api: vsls.LiveShare | null): Promise<void> {
+        await super.onSessionChange(api);
+
+        this.getNotebooks().forEach(notebook => {
+            const hostNotebook = notebook as HostJupyterNotebook;
+            if (hostNotebook) {
+                hostNotebook.onSessionChange(api);
+            }
+        });
     }
 
     public async onDetach(api: vsls.LiveShare | null): Promise<void> {

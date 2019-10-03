@@ -202,6 +202,23 @@ suite('DataScience LiveShare tests', () => {
         verifyHtmlOnCell(guestContainer.wrapper!, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
     });
 
+    test('Host starts LiveShare after starting Jupyter', async() => {
+       addMockData(hostContainer!, 'a=1\na', 1);
+       addMockData(hostContainer!, 'b=2\nb', 2);
+       await getOrCreateInteractiveWindow(vsls.Role.Host);
+       let wrapper = await addCodeToRole(vsls.Role.Host, 'a=1\na');
+       verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+
+       await startSession(vsls.Role.Host);
+       await getOrCreateInteractiveWindow(vsls.Role.Guest);
+       await startSession(vsls.Role.Guest);
+
+       wrapper = await addCodeToRole(vsls.Role.Host, 'b=2\nb');
+
+       assert.ok(guestContainer.wrapper, 'Guest wrapper not created');
+       verifyHtmlOnCell(guestContainer.wrapper!, 'InteractiveCell', '<span>2</span>', CellPosition.Last);
+    });
+
     test('Host Shutdown and Run', async () => {
         // Should only need mock data in host
         addMockData(hostContainer!, 'a=1\na', 1);
