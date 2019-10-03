@@ -39,7 +39,12 @@ export class DjangoLaunchDebugConfigurationProvider implements IDebugConfigurati
                 'runserver',
                 '--noreload'
             ],
-            django: true
+            django: true,
+            serverReadyAction: {
+                pattern: '(https?:\\/\\/\\S+:[0-9]+\\/?)',
+                uriFormat: '%s',
+                action: 'openExternally'
+            }
         };
         if (!program) {
             const selectedProgram = await input.showInputBox({

@@ -74,7 +74,12 @@ suite('Debugging - Configuration Provider Flask', () => {
                 '--no-debugger',
                 '--no-reload'
             ],
-            jinja: true
+            jinja: true,
+            serverReadyAction: {
+                pattern: '(https?:\\/\\/\\S+:[0-9]+\\/?)',
+                uriFormat: '%s',
+                action: 'openExternally'
+            }
         };
 
         expect(state.config).to.be.deep.equal(config);
@@ -103,7 +108,12 @@ suite('Debugging - Configuration Provider Flask', () => {
                 '--no-debugger',
                 '--no-reload'
             ],
-            jinja: true
+            jinja: true,
+            serverReadyAction: {
+                pattern: '(https?:\\/\\/\\S+:[0-9]+\\/?)',
+                uriFormat: '%s',
+                action: 'openExternally'
+            }
         };
 
         expect(state.config).to.be.deep.equal(config);
@@ -132,7 +142,12 @@ suite('Debugging - Configuration Provider Flask', () => {
                 '--no-debugger',
                 '--no-reload'
             ],
-            jinja: true
+            jinja: true,
+            serverReadyAction: {
+                pattern: '(https?:\\/\\/\\S+:[0-9]+\\/?)',
+                uriFormat: '%s',
+                action: 'openExternally'
+            }
         };
 
         expect(state.config).to.be.deep.equal(config);

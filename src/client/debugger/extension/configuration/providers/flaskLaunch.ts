@@ -39,7 +39,12 @@ export class FlaskLaunchDebugConfigurationProvider implements IDebugConfiguratio
                 '--no-debugger',
                 '--no-reload'
             ],
-            jinja: true
+            jinja: true,
+            serverReadyAction: {
+                pattern: '(https?:\\/\\/\\S+:[0-9]+\\/?)',
+                uriFormat: '%s',
+                action: 'openExternally'
+            }
         };
 
         if (!application) {
