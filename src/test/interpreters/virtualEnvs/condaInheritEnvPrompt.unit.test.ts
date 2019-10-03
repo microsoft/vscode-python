@@ -317,7 +317,7 @@ suite('Conda Inherit Env Prompt', async () => {
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.never());
             browserService
-                .setup(b => b.launch('https://code.visualstudio.com/updates/v1_36#_launch-terminals-with-clean-environments'))
+                .setup(b => b.launch('https://aka.ms/AA66i8f'))
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.never());
             await condaInheritEnvPrompt.promptAndUpdate();
@@ -350,7 +350,7 @@ suite('Conda Inherit Env Prompt', async () => {
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.never());
             browserService
-                .setup(b => b.launch('https://code.visualstudio.com/updates/v1_36#_launch-terminals-with-clean-environments'))
+                .setup(b => b.launch('https://aka.ms/AA66i8f'))
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.never());
             await condaInheritEnvPrompt.promptAndUpdate();
@@ -383,7 +383,7 @@ suite('Conda Inherit Env Prompt', async () => {
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.once());
             browserService
-                .setup(b => b.launch('https://code.visualstudio.com/updates/v1_36#_launch-terminals-with-clean-environments'))
+                .setup(b => b.launch('https://aka.ms/AA66i8f'))
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.never());
             await condaInheritEnvPrompt.promptAndUpdate();
@@ -416,7 +416,7 @@ suite('Conda Inherit Env Prompt', async () => {
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.never());
             browserService
-                .setup(b => b.launch('https://code.visualstudio.com/updates/v1_36#_launch-terminals-with-clean-environments'))
+                .setup(b => b.launch('https://aka.ms/AA66i8f'))
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.once());
             await condaInheritEnvPrompt.promptAndUpdate();

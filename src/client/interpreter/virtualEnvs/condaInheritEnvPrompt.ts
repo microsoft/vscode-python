@@ -56,7 +56,7 @@ export class CondaInheritEnvPrompt implements IExtensionActivationService {
         } else if (selection === prompts[1]) {
             await notificationPromptEnabled.updateValue(false);
         } else if (selection === prompts[2]) {
-            this.browserService.launch('https://code.visualstudio.com/updates/v1_36#_launch-terminals-with-clean-environments');
+            this.browserService.launch('https://aka.ms/AA66i8f');
         }
     }
 
