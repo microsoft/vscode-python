@@ -76,7 +76,9 @@ export class MainStateController implements IMessageHandler {
             variablesVisible: false,
             editCellVM: this.props.hasEdit ? createEditableCellVM(1) : undefined,
             enableGather: this.props.enableGather,
-            isAtBottom: true
+            isAtBottom: true,
+            fontSize: 14,
+            fontFamily: 'Consolas, \'Courier New\', monospace'
         };
 
         // Add test state if necessary
@@ -1163,8 +1165,25 @@ export class MainStateController implements IMessageHandler {
                 this.darkChanged(computedKnownDark);
             }
 
+            let fontSize: number = 14;
+            let fontFamily: string = 'Consolas, \'Courier New\', monospace';
+            const fontSizeIndex = response.css.indexOf('--code-font-size: ');
+            const fontFamilyIndex = response.css.indexOf('--code-font-family: ');
+
+            if (fontSizeIndex > -1) {
+                const fontSizeEndIndex = response.css.indexOf('px;', fontSizeIndex + 18);
+                fontSize = parseInt(response.css.substring(fontSizeIndex + 18, fontSizeEndIndex), 10);
+            }
+
+            if (fontFamilyIndex > -1) {
+                const fontFamilyEndIndex = response.css.indexOf(';', fontFamilyIndex + 20);
+                fontFamily = response.css.substring(fontFamilyIndex + 20, fontFamilyEndIndex);
+            }
+
             this.setState({
                 rootCss: response.css,
+                fontSize: fontSize,
+                fontFamily: fontFamily,
                 theme: response.theme,
                 knownDark: computedKnownDark
             });
