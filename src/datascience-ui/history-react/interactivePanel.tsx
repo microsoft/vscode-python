@@ -67,18 +67,6 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
     }
 
     public render() {
-        let fontSize: number = 14;
-        let fontFamily: string = 'Consolas, \'Courier New\', monospace';
-        if (this.state.rootCss) {
-            const fontSizeIndex = this.state.rootCss.indexOf('--code-font-size: ') + 18;
-            const fontSizeEndIndex = this.state.rootCss.indexOf('px;', fontSizeIndex);
-            fontSize = parseInt(this.state.rootCss.substring(fontSizeIndex, fontSizeEndIndex), 10);
-
-            const fontFamilyIndex = this.state.rootCss.indexOf('--code-font-family: ') + 20;
-            const fontFamilyEndIndex = this.state.rootCss.indexOf(';', fontFamilyIndex);
-            fontFamily = this.state.rootCss.substring(fontFamilyIndex, fontFamilyEndIndex);
-        }
-
         // Update the state controller with our new state
         this.stateController.renderUpdate(this.state);
         const progressBar = this.state.busy && !this.props.testMode ? <Progress /> : undefined;
@@ -103,10 +91,10 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
                     {this.renderVariablePanel(this.props.baseTheme)}
                 </section>
                 <main id='main-panel-content' onScroll={this.handleScroll}>
-                    {this.renderContentPanel(this.props.baseTheme, fontSize, fontFamily)}
+                    {this.renderContentPanel(this.props.baseTheme, this.state.fontSize, this.state.fontFamily)}
                 </main>
                 <section id='main-panel-footer' aria-label={getLocString('DataScience.editSection', 'Input new cells here')}>
-                    {this.renderFooterPanel(this.props.baseTheme, fontSize, fontFamily)}
+                    {this.renderFooterPanel(this.props.baseTheme, this.state.fontSize, this.state.fontFamily)}
                 </section>
             </div>
         );

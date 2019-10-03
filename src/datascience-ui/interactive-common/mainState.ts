@@ -40,6 +40,8 @@ export interface IMainState {
     history: InputHistory;
     rootStyle?: string;
     rootCss?: string;
+    fontSize: number;
+    fontFamily: string;
     theme?: string;
     forceDark?: boolean;
     monacoTheme?: string;
@@ -105,7 +107,9 @@ export function generateTestState(inputBlockToggled: (id: string) => void, fileP
         pendingVariableCount: 0,
         debugging: false,
         enableGather: true,
-        isAtBottom: true
+        isAtBottom: true,
+        fontSize: 14,
+        fontFamily: 'Consolas, \'Courier New\', monospace'
     };
 }
 
