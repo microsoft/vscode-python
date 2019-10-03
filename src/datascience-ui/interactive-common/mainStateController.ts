@@ -285,14 +285,29 @@ export class MainStateController implements IMessageHandler {
     }
 
     public deleteCell = (cellId: string) => {
-        const cellVM = this.state.cellVMs.find(c => c.cell.id === cellId);
-        if (cellVM) {
+        const index = this.findCellIndex(cellId);
+        if (index) {
             this.sendMessage(InteractiveWindowMessages.DeleteCell);
-            this.sendMessage(InteractiveWindowMessages.RemoveCell, { id: cellVM.cell.id });
+            this.sendMessage(InteractiveWindowMessages.RemoveCell, { id: cellId });
+
+            // Recompute select/focus if this item has either
+            let newSelection = this.state.selectedCell;
+            let newFocused = this.state.focusedCell;
+            const newVMs = [...this.state.cellVMs.filter(c => c.cell.id !== cellId)];
+            const nextOrPrev = index === this.state.cellVMs.length - 1 ? index - 1 : index;
+            if (this.state.selectedCell === cellId || this.state.focusedCell === cellId) {
+                if (nextOrPrev >= 0) {
+                    newVMs[nextOrPrev] = { ...newVMs[nextOrPrev], selected: true, focused: this.state.focusedCell === cellId };
+                    newSelection = newVMs[nextOrPrev].cell.id;
+                    newFocused = newVMs[nextOrPrev].focused ? newVMs[nextOrPrev].cell.id : undefined;
+                }
+            }
 
             // Update our state
             this.setState({
-                cellVMs: [...this.state.cellVMs.filter(c => c.cell.id !== cellId)],
+                cellVMs: newVMs,
+                selectedCell: newSelection,
+                focusedCell: newFocused,
                 undoStack: this.pushStack(this.state.undoStack, this.state.cellVMs),
                 skipNextScroll: true
             });

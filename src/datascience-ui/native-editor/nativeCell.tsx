@@ -186,11 +186,16 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
     }
 
     private onMouseClick = (ev: React.MouseEvent<HTMLDivElement>) => {
-        // When we receive a click, propagate upwards. Might change our state
-        ev.stopPropagation();
-        this.lastKeyPressed = undefined;
-        const focusedCell = this.isFocused() ? this.cellId : undefined;
-        this.props.stateController.selectCell(this.cellId, focusedCell);
+        if (ev.nativeEvent.target) {
+            const elem = ev.nativeEvent.target as HTMLElement;
+            if (!elem.className.includes('image')) {
+                // Not a click on an image, select the cell.
+                ev.stopPropagation();
+                this.lastKeyPressed = undefined;
+                const focusedCell = this.isFocused() ? this.cellId : undefined;
+                this.props.stateController.selectCell(this.cellId, focusedCell);
+            }
+        }
     }
 
     private onMouseDoubleClick = (ev: React.MouseEvent<HTMLDivElement>) => {
@@ -293,12 +298,8 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
                 if (this.lastKeyPressed === 'd' && !this.isFocused()  && this.isSelected()) {
                     e.stopPropagation();
                     this.lastKeyPressed = undefined; // Reset it so we don't keep deleting
-                    const cellToSelect = this.getPrevCellId() || this.getNextCellId();
                     this.props.stateController.possiblyDeleteCell(cellId);
                     this.props.stateController.sendCommand(NativeCommandType.DeleteCell, 'keyboard');
-                    if (cellToSelect) {
-                        this.moveSelection(cellToSelect);
-                    }
                 }
                 break;
             case 'a':
@@ -546,14 +547,8 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
     private renderMiddleToolbar = () => {
         const cellId = this.props.cellVM.cell.id;
         const deleteCell = () => {
-            const cellToSelect = this.getNextCellId() || this.getPrevCellId();
             this.props.stateController.possiblyDeleteCell(cellId);
             this.props.stateController.sendCommand(NativeCommandType.DeleteCell, 'mouse');
-            setTimeout(() => {
-                if (cellToSelect) {
-                    this.moveSelection(cellToSelect);
-                }
-            }, 10);
         };
         const runAbove = () => {
             this.props.stateController.runAbove(cellId);
