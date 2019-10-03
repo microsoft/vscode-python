@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as fastDeepEqual from 'fast-deep-equal';
+import * as immutable from 'immutable';
 import { min } from 'lodash';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
@@ -31,7 +32,14 @@ import { getSettings, updateSettings } from '../react-common/settingsReactSide';
 import { detectBaseTheme } from '../react-common/themeDetector';
 import { InputHistory } from './inputHistory';
 import { IntellisenseProvider } from './intellisenseProvider';
-import { createCellVM, createEditableCellVM, extractInputText, generateTestState, ICellViewModel, IMainState } from './mainState';
+import {
+    createCellVM,
+    createEditableCellVM,
+    extractInputText,
+    generateTestState,
+    ICellViewModel,
+    IMainState
+} from './mainState';
 import { initializeTokenizer, registerMonacoLanguage } from './tokenizer';
 
 export interface IMainStateControllerProps {
@@ -284,7 +292,7 @@ export class MainStateController implements IMessageHandler {
 
             // Update our state
             this.setState({
-                cellVMs: this.state.cellVMs.filter(c => c.cell.id !== cellId),
+                cellVMs: [...this.state.cellVMs.filter(c => c.cell.id !== cellId)],
                 undoStack: this.pushStack(this.state.undoStack, this.state.cellVMs),
                 skipNextScroll: true
             });
@@ -366,9 +374,7 @@ export class MainStateController implements IMessageHandler {
 
     public clearAllOutputs = () => {
         const newList = this.state.cellVMs.map(cellVM => {
-            const newVM = cloneDeep(cellVM);
-            newVM.cell.data.outputs = [];
-            return newVM;
+            return immutable.updateIn(cellVM, ['cell', 'data', 'outputs'], () => []);
         });
         this.setState({
             cellVMs: newList
@@ -473,26 +479,60 @@ export class MainStateController implements IMessageHandler {
     public codeLostFocus = (cellId: string) => {
         this.onCodeLostFocus(cellId);
         if (this.state.focusedCell === cellId) {
+            const newVMs = [...this.state.cellVMs];
+            // Switch the old vm
+            const oldSelect = this.findCellIndex(cellId);
+            if (oldSelect >= 0) {
+                newVMs[oldSelect] = immutable.merge(newVMs[oldSelect], { focused: false });
+            }
             // Only unfocus if we haven't switched somewhere else yet
-            this.setState({ focusedCell: undefined });
+            this.setState({ focusedCell: undefined, cellVMs: newVMs });
         }
     }
 
     public codeGotFocus = (cellId: string | undefined) => {
-        this.setState({ selectedCell: cellId, focusedCell: cellId });
+        // Skip if already has focus
+        if (cellId !== this.state.focusedCell) {
+            const newVMs = [...this.state.cellVMs];
+            // Switch the old vm
+            const oldSelect = this.findCellIndex(this.state.selectedCell);
+            if (oldSelect >= 0) {
+                newVMs[oldSelect] = immutable.merge(newVMs[oldSelect], { selected: false, focused: false });
+            }
+            const newSelect = this.findCellIndex(cellId);
+            if (newSelect >= 0) {
+                newVMs[newSelect] = immutable.merge(newVMs[newSelect], { selected: true, focused: true });
+            }
+
+            // Save the whole thing in our state.
+            this.setState({ selectedCell: cellId, focusedCell: cellId, cellVMs: newVMs });
+        }
     }
 
     public selectCell = (cellId: string, focusedCell?: string) => {
-        this.setState({ selectedCell: cellId, focusedCell });
+        // Skip if already the same cell
+        if (this.state.selectedCell !== cellId) {
+            const newVMs = [...this.state.cellVMs];
+            // Switch the old vm
+            const oldSelect = this.findCellIndex(this.state.selectedCell);
+            if (oldSelect >= 0) {
+                newVMs[oldSelect] = immutable.merge(newVMs[oldSelect], { selected: false, focused: false });
+            }
+            const newSelect = this.findCellIndex(cellId);
+            if (newSelect >= 0) {
+                newVMs[newSelect] = immutable.merge(newVMs[newSelect], { selected: true, focused: focusedCell === newVMs[newSelect].cell.id });
+            }
+
+            // Save the whole thing in our state.
+            this.setState({ selectedCell: cellId, focusedCell, cellVMs: newVMs });
+        }
     }
 
     public changeCellType = (cellId: string, newType: 'code' | 'markdown') => {
         const index = this.state.cellVMs.findIndex(c => c.cell.id === cellId);
         if (index >= 0 && this.state.cellVMs[index].cell.data.cell_type !== newType) {
-            const newVM = cloneDeep(this.state.cellVMs[index]);
-            newVM.cell.data.cell_type = newType;
             const cellVMs = [...this.state.cellVMs];
-            cellVMs.splice(index, 1, newVM);
+            cellVMs[index] = immutable.updateIn(this.state.cellVMs[index], ['cell', 'data', 'cell_type'], () => newType);
             this.setState({ cellVMs });
         }
     }
@@ -506,7 +546,7 @@ export class MainStateController implements IMessageHandler {
 
         // This should be from our last entry. Switch this entry to read only, and add a new item to our list
         if (inputCell && inputCell.cell.id === Identifiers.EditCellId) {
-            let newCell = cloneDeep(inputCell);
+            let newCell = immutable.mergeDeep(inputCell);
 
             // Change this editable cell to not editable.
             newCell.cell.state = CellState.executing;
@@ -593,6 +633,10 @@ export class MainStateController implements IMessageHandler {
         return nonEdit;
     }
 
+    public findCellIndex(cellId?: string): number {
+        return this.state.cellVMs.findIndex(cvm => cvm.cell.id === cellId);
+    }
+
     public getMonacoId(cellId: string): string | undefined {
         return this.cellIdToMonacoId.get(cellId);
     }
@@ -601,8 +645,7 @@ export class MainStateController implements IMessageHandler {
         const index = this.state.cellVMs.findIndex(c => c.cell.id === cellId);
         if (index >= 0) {
             const newVMs = [...this.state.cellVMs];
-            newVMs[index] = cloneDeep(newVMs[index]);
-            newVMs[index].showLineNumbers = !newVMs[index].showLineNumbers;
+            newVMs[index] = immutable.merge(newVMs[index], { showLineNumbers: !newVMs[index].showLineNumbers });
             this.setState({ cellVMs: newVMs });
         }
     }
@@ -611,8 +654,7 @@ export class MainStateController implements IMessageHandler {
         const index = this.state.cellVMs.findIndex(c => c.cell.id === cellId);
         if (index >= 0) {
             const newVMs = [...this.state.cellVMs];
-            newVMs[index] = cloneDeep(newVMs[index]);
-            newVMs[index].hideOutput = !newVMs[index].hideOutput;
+            newVMs[index] = immutable.merge(newVMs[index], { hideOutput: !newVMs[index].hideOutput });
             this.setState({ cellVMs: newVMs });
         }
     }
@@ -726,37 +768,38 @@ export class MainStateController implements IMessageHandler {
         this.insertCell(cell);
     }
 
-    protected insertCell(cell: ICell, position?: number, isMonaco?: boolean): ICellViewModel | undefined {
-        if (cell) {
-            const showInputs = getSettings().showCellInputCode;
-            const collapseInputs = getSettings().collapseCellInputCodeByDefault;
-            let cellVM: ICellViewModel = createCellVM(cell, getSettings(), this.inputBlockToggled, this.props.defaultEditable);
+    protected prepareCellVM(cell: ICell, isMonaco?: boolean): ICellViewModel {
+        const showInputs = getSettings().showCellInputCode;
+        const collapseInputs = getSettings().collapseCellInputCodeByDefault;
+        let cellVM: ICellViewModel = createCellVM(cell, getSettings(), this.inputBlockToggled, this.props.defaultEditable);
 
-            // Set initial cell visibility and collapse
-            cellVM = this.alterCellVM(cellVM, showInputs, !collapseInputs);
+        // Set initial cell visibility and collapse
+        cellVM = this.alterCellVM(cellVM, showInputs, !collapseInputs);
 
-            if (cellVM) {
-                if (isMonaco) {
-                    cellVM.useQuickEdit = false;
-                }
-
-                const newList = [...this.state.cellVMs];
-                // Make sure to use the same array so our entire state doesn't update
-                if (position !== undefined && position >= 0) {
-                    newList.splice(position, 0, cellVM);
-                } else {
-                    newList.push(cellVM);
-                }
-                this.setState({
-                    cellVMs: newList,
-                    undoStack: this.pushStack(this.state.undoStack, this.state.cellVMs),
-                    redoStack: this.state.redoStack,
-                    skipNextScroll: false
-                });
-
-                return cellVM;
-            }
+        if (isMonaco) {
+            cellVM.useQuickEdit = false;
         }
+
+        return cellVM;
+    }
+
+    protected insertCell(cell: ICell, position?: number, isMonaco?: boolean): ICellViewModel {
+        const cellVM = this.prepareCellVM(cell, isMonaco);
+        const newList = [...this.state.cellVMs];
+        // Make sure to use the same array so our entire state doesn't update
+        if (position !== undefined && position >= 0) {
+            newList.splice(position, 0, cellVM);
+        } else {
+            newList.push(cellVM);
+        }
+        this.setState({
+            cellVMs: newList,
+            undoStack: this.pushStack(this.state.undoStack, this.state.cellVMs),
+            redoStack: this.state.redoStack,
+            skipNextScroll: false
+        });
+
+        return cellVM;
     }
 
     protected suspendUpdates() {
@@ -822,12 +865,12 @@ export class MainStateController implements IMessageHandler {
             // Turn off updates so we generate all of the cell vms without rendering.
             this.suspendUpdates();
 
-            // Update all of the vms
+            // Generate all of the VMs
             const cells = payload.cells as ICell[];
-            cells.forEach(c => this.finishCell(c));
+            const vms = cells.map(c => this.prepareCellVM(c, true));
 
             // Set our state to not being busy anymore. Clear undo stack as this can't be undone.
-            this.setState({ busy: false, loadTotal: payload.cells.length, undoStack: [] });
+            this.setState({ busy: false, loadTotal: payload.cells.length, undoStack: [], cellVMs: vms });
 
             // Turn updates back on and resend the state.
             this.resumeUpdates();
@@ -845,8 +888,7 @@ export class MainStateController implements IMessageHandler {
         if (executingCells && executingCells.length) {
             const newVMs = [...this.state.cellVMs];
             executingCells.forEach(s => {
-                newVMs[s.i] = cloneDeep(s.cvm);
-                newVMs[s.i].cell.state = CellState.finished;
+                newVMs[s.i] = immutable.updateIn(s.cvm, ['cell', 'state'], () => CellState.finished);
             });
             this.setState({ cellVMs: newVMs });
         }
@@ -1012,15 +1054,14 @@ export class MainStateController implements IMessageHandler {
             // Have to make a copy of the cell VM array or
             // we won't actually update.
             const newVMs = [...this.state.cellVMs];
-            newVMs[index] = cloneDeep(newVMs[index]);
 
             // Check to see if our code still matches for the cell (in liveshare it might be updated from the other side)
             if (concatMultilineString(newVMs[index].cell.data.source) !== concatMultilineString(cell.data.source)) {
                 const newText = extractInputText(cell, getSettings());
-                newVMs[index].inputBlockText = newText;
+                newVMs[index] = { ...newVMs[index], cell: cell, inputBlockText: newText };
+            } else {
+                newVMs[index] = { ...newVMs[index], cell: cell };
             }
-
-            newVMs[index].cell = cell;
 
             this.setState({
                 cellVMs: newVMs,

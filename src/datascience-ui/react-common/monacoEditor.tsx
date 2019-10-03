@@ -384,7 +384,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                 this.state.editor.layout({width, height});
 
                 // Also need to update our widget positions
-                this.throttledUpdateWidgetPosition(width);
+                this.throttledUpdateWidgetPosition(width); // Potentially skip this as mouse enter should be good enough. Maybe focus too.
             }
         }
     }

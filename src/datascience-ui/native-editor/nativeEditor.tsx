@@ -3,6 +3,7 @@
 'use strict';
 import './nativeEditor.less';
 
+import * as immutable from 'immutable';
 import * as React from 'react';
 
 import { noop } from '../../client/common/utils/misc';
@@ -24,8 +25,6 @@ import { NativeEditorStateController } from './nativeEditorStateController';
 // tslint:disable: react-this-binding-issue
 // tslint:disable-next-line:no-require-imports no-var-requires
 const debounce = require('lodash/debounce') as typeof import('lodash/debounce');
-// tslint:disable-next-line: no-require-imports
-import cloneDeep = require('lodash/cloneDeep');
 
 interface INativeEditorProps {
     skipDefault: boolean;
@@ -292,8 +291,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                         } else if (bottom < visibleTop) {
                             continue;
                         } else {
-                            cellVMs[i] = cloneDeep(cellVM);
-                            cellVMs[i].useQuickEdit = false;
+                            cellVMs[i] = immutable.merge(cellVM, { useQuickEdit: false });
                             makeChange = true;
                         }
                     }
@@ -395,10 +393,6 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                         baseTheme={this.props.baseTheme}
                         codeTheme={this.props.codeTheme}
                         monacoTheme={this.state.monacoTheme}
-                        showLineNumbers={cellVM.showLineNumbers}
-                        selectedCell={this.state.selectedCell}
-                        focusedCell={this.state.focusedCell}
-                        hideOutput={cellVM.hideOutput}
                         focusCell={this.focusCell}
                         selectCell={this.selectCell}
                     />

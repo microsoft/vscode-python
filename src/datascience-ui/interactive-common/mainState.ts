@@ -26,6 +26,8 @@ export interface ICellViewModel {
     showLineNumbers?: boolean;
     hideOutput?: boolean;
     useQuickEdit?: boolean;
+    selected: boolean;
+    focused: boolean;
     inputBlockToggled(id: string): void;
 }
 
@@ -135,7 +137,9 @@ export function createEditableCellVM(executionCount: number): ICellViewModel {
         inputBlockShow: true,
         inputBlockText: '',
         inputBlockCollapseNeeded: false,
-        inputBlockToggled: noop
+        inputBlockToggled: noop,
+        selected: false,
+        focused: false
     };
 }
 
@@ -176,7 +180,9 @@ export function createCellVM(inputCell: ICell, settings: IDataScienceSettings | 
         inputBlockShow: true,
         inputBlockText: inputText,
         inputBlockCollapseNeeded: (inputLinesCount > 1),
-        inputBlockToggled: inputBlockToggled
+        inputBlockToggled: inputBlockToggled,
+        selected: false,
+        focused: false
     };
 }
 

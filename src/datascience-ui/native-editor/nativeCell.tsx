@@ -4,6 +4,7 @@
 import '../../client/common/extensions';
 
 import { nbformat } from '@jupyterlab/coreutils';
+import * as fastDeepEqual from 'fast-deep-equal';
 import * as React from 'react';
 
 import { concatMultilineString } from '../../client/datascience/common';
@@ -32,10 +33,6 @@ interface INativeCellProps {
     maxTextSize?: number;
     stateController: NativeEditorStateController;
     monacoTheme: string | undefined;
-    hideOutput?: boolean;
-    showLineNumbers?: boolean;
-    selectedCell?: string;
-    focusedCell?: string;
     focusCell(cellId: string, focusCode: boolean): void;
     selectCell(cellId: string): void;
 }
@@ -56,6 +53,7 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
     }
 
     public render() {
+        window.console.log('render cell');
         if (this.props.cellVM.cell.data.cell_type === 'messages') {
             return <InformationMessages messages={this.props.cellVM.cell.data.messages} type={this.props.cellVM.cell.type}/>;
         } else {
@@ -64,12 +62,16 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
     }
 
     public componentDidUpdate(prevProps: INativeCellProps) {
-        if (this.props.selectedCell === this.props.cellVM.cell.id && prevProps.selectedCell !== this.props.selectedCell) {
-            this.giveFocus(this.props.focusedCell === this.props.cellVM.cell.id);
+        if (this.props.cellVM.selected && !prevProps.cellVM.selected) {
+            this.giveFocus(this.props.cellVM.focused);
         }
 
         // Anytime we update, reset the key. This object will be reused for different cell ids
         this.lastKeyPressed = undefined;
+    }
+
+    public shouldComponentUpdate(nextProps: INativeCellProps): boolean {
+        return !fastDeepEqual(this.props, nextProps);
     }
 
     public giveFocus(giveCodeFocus: boolean) {
@@ -130,11 +132,11 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
     }
 
     private isSelected = () => {
-        return this.props.selectedCell === this.cellId;
+        return this.props.cellVM.selected;
     }
 
     private isFocused = () => {
-        return this.props.focusedCell === this.cellId;
+        return this.props.cellVM.focused;
     }
 
     private renderNormalCell() {
@@ -220,7 +222,7 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
     private shouldRenderOutput(): boolean {
         if (this.isCodeCell()) {
             const cell = this.getCodeCell();
-            return this.hasOutput() && cell.outputs && !this.props.hideOutput && (Array.isArray(cell.outputs) && cell.outputs.length !== 0);
+            return this.hasOutput() && cell.outputs && !this.props.cellVM.hideOutput && (Array.isArray(cell.outputs) && cell.outputs.length !== 0);
         } else if (this.isMarkdownCell()) {
             return !this.state.showingMarkdownEditor;
         }
@@ -656,7 +658,7 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
                     focused={this.isCodeCell() ? this.onCodeFocused : this.onMarkdownFocused}
                     unfocused={this.isCodeCell() ? this.onCodeUnfocused : this.onMarkdownUnfocused}
                     keyDown={this.keyDownInput}
-                    showLineNumbers={this.props.showLineNumbers}
+                    showLineNumbers={this.props.cellVM.showLineNumbers}
                 />
             );
         }
@@ -726,10 +728,10 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
     private renderCollapseBar = (input: boolean) => {
         let classes = 'collapse-bar';
 
-        if (this.props.selectedCell === this.props.cellVM.cell.id && this.props.focusedCell !== this.props.cellVM.cell.id) {
+        if (this.isSelected() && !this.isFocused()) {
             classes += ' collapse-bar-selected';
         }
-        if (this.props.focusedCell === this.props.cellVM.cell.id) {
+        if (this.isFocused()) {
             classes += ' collapse-bar-focused';
         }
 

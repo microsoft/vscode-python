@@ -112,7 +112,9 @@ export class NativeEditorStateController extends MainStateController {
                 inputBlockShow: true,
                 inputBlockText: '',
                 inputBlockCollapseNeeded: false,
-                inputBlockToggled: noop
+                inputBlockToggled: noop,
+                selected: cells[0].selected,
+                focused: cells[0].focused
             };
             this.setState({ cellVMs: [newVM], undoStack: this.pushStack(this.getState().undoStack, cells) });
         } else {
