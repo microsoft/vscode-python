@@ -939,8 +939,9 @@ export interface IEventNamePropertyMapping {
         /**
          * `Yes` When 'Yes' option is selected
          * `No` When 'No' option is selected
+         * `More info` When 'More Info' option is selected
          */
-        selection: 'Yes' | 'No' | undefined;
+        selection: 'Yes' | 'No' | 'More Info' | undefined;
     };
     /**
      * Telemetry event sent with details when user clicks a button in the virtual environment prompt.
