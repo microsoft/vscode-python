@@ -40,8 +40,7 @@ export interface IMainState {
     history: InputHistory;
     rootStyle?: string;
     rootCss?: string;
-    fontSize: number;
-    fontFamily: string;
+    font: IFont;
     theme?: string;
     forceDark?: boolean;
     monacoTheme?: string;
@@ -60,6 +59,11 @@ export interface IMainState {
     isAtBottom: boolean;
     newCell?: string;
     loadTotal?: number;
+}
+
+export interface IFont {
+    size: number;
+    family: string;
 }
 
 // tslint:disable-next-line: no-multiline-string
@@ -108,8 +112,10 @@ export function generateTestState(inputBlockToggled: (id: string) => void, fileP
         debugging: false,
         enableGather: true,
         isAtBottom: true,
-        fontSize: 14,
-        fontFamily: 'Consolas, \'Courier New\', monospace'
+        font: {
+            size: 14,
+            family: 'Consolas, \'Courier New\', monospace'
+        }
     };
 }
 

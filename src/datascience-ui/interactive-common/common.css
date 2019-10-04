@@ -23,8 +23,8 @@ body, html {
     width: 100%;
     position: absolute;
     overflow: hidden;
-    font-size: var(--code-font-size);
-    font-family: var(--code-font-family);
+    /* font-size: var(--code-font-size);
+    font-family: var(--code-font-family); */
 }
 
 #main-panel-toolbar {
