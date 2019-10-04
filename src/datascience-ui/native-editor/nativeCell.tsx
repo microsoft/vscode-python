@@ -33,6 +33,7 @@ interface INativeCellProps {
     maxTextSize?: number;
     stateController: NativeEditorStateController;
     monacoTheme: string | undefined;
+    lastCell: boolean;
     focusCell(cellId: string, focusCode: boolean): void;
     selectCell(cellId: string): void;
 }
@@ -502,7 +503,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
         };
         const canMoveUp = this.props.stateController.canMoveUp(cellId);
         const canMoveDown = this.props.stateController.canMoveDown(cellId);
-        const addButtonRender = this.getNextCellId() !== undefined ?
+        const addButtonRender = !this.props.lastCell ?
             <div className='navbar-add-button'>
                 <ImageButton baseTheme={this.props.baseTheme} onClick={this.addNewCell} tooltip={getLocString('DataScience.insertBelow', 'Insert cell below')}>
                     <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.InsertBelow} />

@@ -395,6 +395,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                         monacoTheme={this.state.monacoTheme}
                         focusCell={this.focusCell}
                         selectCell={this.selectCell}
+                        lastCell={lastLine !== null}
                     />
                 </ErrorBoundary>
                 {lastLine}
