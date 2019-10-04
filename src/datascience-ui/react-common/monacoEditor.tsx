@@ -316,7 +316,6 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
     private startUpdateWidgetPosition = () => {
         this.throttledUpdateWidgetPosition();
-        this.updateWidgetParent(this.state.editor);
     }
 
     private updateBackgroundStyle = () => {
@@ -384,13 +383,19 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                 // Make sure to attach to a real dom node.
                 if (!this.state.attached && this.state.editor && this.monacoContainer) {
                     this.containerRef.current.appendChild(this.monacoContainer);
-
-                    // Make sure our suggest and hover windows show up on top of other stuff
-                    this.updateWidgetParent(this.state.editor);
+                    this.monacoContainer.addEventListener('mousemove', this.onContainerMove);
                 }
                 this.setState({visibleLineCount: currLineCount, attached: true});
                 this.state.editor.layout({width, height});
             }
+        }
+    }
+
+    private onContainerMove = () => {
+        if (!this.widgetParent && !this.state.parentUpdated && this.monacoContainer) {
+            this.updateWidgetParent(this.state.editor);
+            this.startUpdateWidgetPosition();
+            this.monacoContainer.removeEventListener('mousemove', this.onContainerMove);
         }
     }
 
