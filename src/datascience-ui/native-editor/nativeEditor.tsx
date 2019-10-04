@@ -8,7 +8,7 @@ import * as React from 'react';
 import { noop } from '../../client/common/utils/misc';
 import { NativeCommandType } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
-import { ICellViewModel, IFont, IMainState } from '../interactive-common/mainState';
+import { ICellViewModel, IMainState } from '../interactive-common/mainState';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
 import { ErrorBoundary } from '../react-common/errorBoundary';
 import { Image, ImageName } from '../react-common/image';
@@ -122,7 +122,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                 </section>
                 <main id='main-panel-content' onScroll={this.onContentScroll} ref={this.contentPanelScrollRef}>
                     {addCellLine}
-                    {this.renderContentPanel(this.props.baseTheme, this.state.font)}
+                    {this.renderContentPanel(this.props.baseTheme)}
                 </main>
             </div>
         );
@@ -231,7 +231,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         return null;
     }
 
-    private renderContentPanel(baseTheme: string, font: IFont) {
+    private renderContentPanel(baseTheme: string) {
         // Skip if the tokenizer isn't finished yet. It needs
         // to finish loading so our code editors work.
         if (!this.state.tokenizerLoaded && !this.props.testMode) {
@@ -239,11 +239,11 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         }
 
         // Otherwise render our cells.
-        const contentProps = this.getContentProps(baseTheme, font);
+        const contentProps = this.getContentProps(baseTheme);
         return <ContentPanel {...contentProps} ref={this.contentPanelRef}/>;
     }
 
-    private getContentProps = (baseTheme: string, font: IFont): IContentPanelProps => {
+    private getContentProps = (baseTheme: string): IContentPanelProps => {
         return {
             baseTheme: baseTheme,
             cellVMs: this.state.cellVMs,
@@ -254,8 +254,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             skipNextScroll: this.state.skipNextScroll ? true : false,
             editable: true,
             renderCell: this.renderCell,
-            scrollToBottom: this.scrollDiv,
-            font: font
+            scrollToBottom: this.scrollDiv
         };
     }
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {
@@ -362,7 +361,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
     //     });
     // }
 
-    private renderCell = (cellVM: ICellViewModel, index: number, font: IFont): JSX.Element | null => {
+    private renderCell = (cellVM: ICellViewModel, index: number): JSX.Element | null => {
         const cellRef : React.RefObject<NativeCell> = React.createRef<NativeCell>();
         const containerRef = React.createRef<HTMLDivElement>();
         this.cellRefs.set(cellVM.cell.id, cellRef);
@@ -407,7 +406,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                         hideOutput={cellVM.hideOutput}
                         focusCell={this.focusCell}
                         selectCell={this.selectCell}
-                        font={font}
+                        font={this.state.font}
                     />
                 </ErrorBoundary>
                 {lastLine}
