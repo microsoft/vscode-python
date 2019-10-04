@@ -4,7 +4,7 @@
 import * as React from 'react';
 
 import { InputHistory } from './inputHistory';
-import { ICellViewModel, IFont } from './mainState';
+import { ICellViewModel } from './mainState';
 
 // See the discussion here: https://github.com/Microsoft/tslint-microsoft-contrib/issues/676
 // tslint:disable: react-this-binding-issue
@@ -21,8 +21,7 @@ export interface IContentPanelProps {
     submittedText: boolean;
     skipNextScroll: boolean;
     editable: boolean;
-    font: IFont;
-    renderCell(cellVM: ICellViewModel, index: number, font: IFont): JSX.Element | null;
+    renderCell(cellVM: ICellViewModel, index: number): JSX.Element | null;
     scrollToBottom(div: HTMLDivElement): void;
 }
 
@@ -58,13 +57,13 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
 
     private renderCells = () => {
         return this.props.cellVMs.map((cellVM: ICellViewModel, index: number) => {
-            return this.props.renderCell(cellVM, index, this.props.font);
+            return this.props.renderCell(cellVM, index);
         });
     }
 
     private renderEdit = () => {
         if (this.props.editable && this.props.newCellVM) {
-            return this.props.renderCell(this.props.newCellVM, 0, this.props.font);
+            return this.props.renderCell(this.props.newCellVM, 0);
         } else {
             return null;
         }

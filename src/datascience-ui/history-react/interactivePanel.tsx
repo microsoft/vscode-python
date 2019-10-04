@@ -8,7 +8,7 @@ import * as React from 'react';
 import { noop } from '../../client/common/utils/misc';
 import { Identifiers } from '../../client/datascience/constants';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
-import { ICellViewModel, IFont, IMainState } from '../interactive-common/mainState';
+import { ICellViewModel, IMainState } from '../interactive-common/mainState';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
 import { ErrorBoundary } from '../react-common/errorBoundary';
 import { IKeyboardEvent } from '../react-common/event';
@@ -96,10 +96,10 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
                     {this.renderVariablePanel(this.props.baseTheme)}
                 </section>
                 <main id='main-panel-content' onScroll={this.handleScroll}>
-                    {this.renderContentPanel(this.props.baseTheme, this.state.font)}
+                    {this.renderContentPanel(this.props.baseTheme)}
                 </main>
                 <section id='main-panel-footer' aria-label={getLocString('DataScience.editSection', 'Input new cells here')}>
-                    {this.renderFooterPanel(this.props.baseTheme, this.state.font)}
+                    {this.renderFooterPanel(this.props.baseTheme)}
                 </section>
             </div>
         );
@@ -180,7 +180,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
         return null;
     }
 
-    private renderContentPanel(baseTheme: string, font: IFont) {
+    private renderContentPanel(baseTheme: string) {
         // Skip if the tokenizer isn't finished yet. It needs
         // to finish loading so our code editors work.
         if (!this.state.tokenizerLoaded && !this.props.testMode) {
@@ -188,11 +188,11 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
         }
 
         // Otherwise render our cells.
-        const contentProps = this.getContentProps(baseTheme, font);
+        const contentProps = this.getContentProps(baseTheme);
         return <ContentPanel {...contentProps} ref={this.contentPanelRef} />;
     }
 
-    private renderFooterPanel(baseTheme: string, font: IFont) {
+    private renderFooterPanel(baseTheme: string) {
         // Skip if the tokenizer isn't finished yet. It needs
         // to finish loading so our code editors work.
         if (!this.state.tokenizerLoaded || !this.state.editCellVM) {
@@ -227,7 +227,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
                         onClick={this.clickEditCell}
                         keyDown={this.editCellKeyDown}
                         renderCellToolbar={this.renderEditCellToolbar}
-                        font={font}
+                        font={this.state.font}
                     />
                 </ErrorBoundary>
             </div>
@@ -238,7 +238,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
         return this.state.currentExecutionCount + 1;
     }
 
-    private getContentProps = (baseTheme: string, font: IFont): IContentPanelProps => {
+    private getContentProps = (baseTheme: string): IContentPanelProps => {
         return {
             baseTheme: baseTheme,
             cellVMs: this.state.cellVMs,
@@ -250,8 +250,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
             editable: false,
             newCellVM: undefined,
             renderCell: this.renderCell,
-            scrollToBottom: this.scrollDiv,
-            font: font
+            scrollToBottom: this.scrollDiv
         };
     }
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {
@@ -326,7 +325,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
         }
     }
 
-    private renderCell = (cellVM: ICellViewModel, index: number, font: IFont, containerRef?: React.RefObject<HTMLDivElement>): JSX.Element | null => {
+    private renderCell = (cellVM: ICellViewModel, index: number, containerRef?: React.RefObject<HTMLDivElement>): JSX.Element | null => {
         const cellRef = React.createRef<InteractiveCell>();
         this.cellRefs.set(cellVM.cell.id, cellRef);
         return (
@@ -353,7 +352,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
                         renderCellToolbar={this.renderCellToolbar}
                         showLineNumbers={cellVM.showLineNumbers}
                         hideOutput={cellVM.hideOutput}
-                        font={font}
+                        font={this.state.font}
                     />
                 </ErrorBoundary>
             </div>);
