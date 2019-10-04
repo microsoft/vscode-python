@@ -3,8 +3,9 @@ jobs:
   parameters:
     # In PRs, test only against stable version of VSC.
     vscodeChannels: ['stable']
-    # In PRs, run smoke tests against 3.7 and 2.7 (excluding others).
+    # In PRs, run smoke tests against 3.7 (excluding others).
+    # Azure seems to hang very often when running tests against 2.7
     jobs:
     - test: "Smoke"
       tags: "@smoke"
-      ignorePythonVersions: "3.6,3.5"
+      ignorePythonVersions: "2.7,3.6,3.5"
