@@ -181,6 +181,10 @@ export namespace DataScience {
     export const jupyterSelectURISpecifyURI = localize('DataScience.jupyterSelectURISpecifyURI', 'Type in the URI for the Jupyter server');
     export const jupyterSelectURIPrompt = localize('DataScience.jupyterSelectURIPrompt', 'Enter the URI of a Jupyter server');
     export const jupyterSelectURIInvalidURI = localize('DataScience.jupyterSelectURIInvalidURI', 'Invalid URI specified');
+    export const jupyterServerReconnectKernelLocal = localize('DataScience.jupyterServerReconnectKernelLocal', 'Select Jupyer Kernel');
+    export const jupyterServerReconnectKernelStartNewLocal = localize('DataScience.jupyterServerReconnectKernelStartNewLocal', 'Start new kernel on Jupyter server');
+    export const jupyterServerKernelAutoShutdownLocal = localize('DataScience.jupyterServerKernelAutoShutdownLocal', 'Automatically shutdown Kernel when closed');
+    export const jupyterServerKernelLeaveRunningLocal = localize('DataScience.jupyterServerKernelLeaveRunningLocal', 'Leave Kernel running when closed');
     export const jupyterSelectPasswordPrompt = localize('DataScience.jupyterSelectPasswordPrompt', 'Enter your notebook password');
     export const jupyterNotebookFailure = localize('DataScience.jupyterNotebookFailure', 'Jupyter notebook failed to launch. \r\n{0}');
     export const jupyterNotebookConnectFailed = localize('DataScience.jupyterNotebookConnectFailed', 'Failed to connect to Jupyter notebook. \r\n{0}\r\n{1}');

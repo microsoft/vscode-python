@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
+import { Kernel } from '@jupyterlab/services';
 import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import * as os from 'os';
@@ -249,6 +250,10 @@ export class MockJupyterManager implements IJupyterSessionManager {
         } else {
             return Promise.resolve(this.createNewSession());
         }
+    }
+
+    public getActiveKernels(): Promise<Kernel.IModel[]> {
+        return Promise.resolve([]);
     }
 
     public getActiveKernelSpecs(): Promise<IJupyterKernelSpec[]> {

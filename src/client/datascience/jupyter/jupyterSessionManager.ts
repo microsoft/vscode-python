@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { ContentsManager, ServerConnection, SessionManager } from '@jupyterlab/services';
+import { ContentsManager, Kernel, ServerConnection, SessionManager } from '@jupyterlab/services';
 import { Agent as HttpsAgent } from 'https';
 import { CancellationToken } from 'vscode-jsonrpc';
 
@@ -69,6 +69,10 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             }
         }
         return session;
+    }
+
+    public getActiveKernels(): Promise<Kernel.IModel[]> {
+        return Kernel.listRunning(this.serverSettings);
     }
 
     public async getActiveKernelSpecs(): Promise<IJupyterKernelSpec[]> {

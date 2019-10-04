@@ -3,6 +3,7 @@
 'use strict';
 import { CancellationToken } from 'vscode-jsonrpc';
 
+import { Kernel } from '@jupyterlab/services';
 import { noop } from '../../../../test/core';
 import { IConnection, IJupyterKernelSpec, IJupyterSession, IJupyterSessionManager } from '../../types';
 
@@ -15,6 +16,11 @@ export class GuestJupyterSessionManager implements IJupyterSessionManager {
 
     public startNew(kernelSpec: IJupyterKernelSpec | undefined, cancelToken?: CancellationToken): Promise<IJupyterSession> {
         return this.realSessionManager.startNew(kernelSpec, cancelToken);
+    }
+
+    public async getActiveKernels(): Promise<Kernel.IModel[]> {
+        // Don't return any kernels in guest mode. They're only needed for the host side
+        return Promise.resolve([]);
     }
 
     public async getActiveKernelSpecs(): Promise<IJupyterKernelSpec[]> {

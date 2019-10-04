@@ -5,6 +5,7 @@
 import { Socket } from 'net';
 import { Request as RequestResult } from 'request';
 import { ConfigurationTarget, DiagnosticSeverity, Disposable, DocumentSymbolProvider, Event, Extension, ExtensionContext, OutputChannel, Uri, WorkspaceEdit } from 'vscode';
+import { IJupyterKernelSpec, IJupyterServer } from '../datascience/types';
 import { CommandsWithoutArgs } from './application/commands';
 import { ExtensionChannels } from './insidersBuild/types';
 import { EnvironmentVariables } from './variables/types';
@@ -314,6 +315,10 @@ export interface IDataScienceSettings {
     jupyterInterruptTimeout: number;
     jupyterLaunchTimeout: number;
     jupyterLaunchRetries: number;
+    jupyterServerAllowKernelShutdown: boolean;
+    jupyterServerKernelId: string;
+    jupyterServerKernelSpec: IJupyterKernelSpec | undefined;
+    jupyterServers: IJupyterServer[] | undefined;
     jupyterServerURI: string;
     notebookFileRoot: string;
     changeDirOnImportExport: boolean;

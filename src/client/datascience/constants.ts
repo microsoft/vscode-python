@@ -3,7 +3,9 @@
 'use strict';
 
 import { IS_WINDOWS } from '../common/platform/constants';
+import * as localize from '../common/utils/localize';
 import { NativeCommandType } from './interactive-common/interactiveWindowTypes';
+import { IJupyterServerQuickPickItem, IJupyterShutdown } from './types';
 
 export const DefaultTheme = 'Default Light+';
 
@@ -124,8 +126,12 @@ export enum Telemetry {
     ExpandAll = 'DATASCIENCE.EXPAND_ALL',
     CollapseAll = 'DATASCIENCE.COLLAPSE_ALL',
     SelectJupyterURI = 'DATASCIENCE.SELECT_JUPYTER_URI',
+    JupyterKernelSpecified = 'DATASCIENCE.JUPYTER_KERNEL_SPECIFIED',
+    JupyterKernelAutoShutdown = 'DATASCIENCE.JUPYTER_AUTO_SHUTDOWN',
     SetJupyterURIToLocal = 'DATASCIENCE.SET_JUPYTER_URI_LOCAL',
     SetJupyterURIToUserSpecified = 'DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED',
+    SetJupyterURIToUserSelection = 'DATASCIENCE.SET_JUPYTER_URI_USER_SELECTION',
+    SelectJupyterKernel = 'DATASCIENCE.SELECT_JUPYTER_KERNEL',
     Interrupt = 'DATASCIENCE.INTERRUPT',
     ExportPythonFile = 'DATASCIENCE.EXPORT_PYTHON_FILE',
     ExportPythonFileAndOutput = 'DATASCIENCE.EXPORT_PYTHON_FILE_AND_OUTPUT',
@@ -328,4 +334,40 @@ export namespace LiveShareCommands {
     export const disposeServer = 'disposeServer';
     export const guestCheck = 'guestCheck';
     export const createNotebook = 'createNotebook';
+}
+
+export namespace DefaultKernels {
+    export const newKernel = {
+        label: localize.DataScience.jupyterServerReconnectKernelStartNewLocal(),
+        picked: true,
+        kernelId: '',
+        name: ''
+    };
+}
+
+export namespace DefaultServers {
+    export const localJupyter: IJupyterServerQuickPickItem = {
+        label: localize.DataScience.jupyterSelectURILaunchLocal(),
+        hostName: 'local',
+        uri: ''
+    };
+    export const specifyJupyter: IJupyterServerQuickPickItem = {
+        label: localize.DataScience.jupyterSelectURISpecifyURI(),
+        hostName: '',
+        uri: ''
+    };
+}
+
+export namespace ShutdownOptions {
+    export const autoShutdown: IJupyterShutdown = {
+        label: localize.DataScience.jupyterServerKernelAutoShutdownLocal(),
+        keepRunning: false,
+        picked: true
+    };
+    export const leaveRunning: IJupyterShutdown = {
+        label: localize.DataScience.jupyterServerKernelLeaveRunningLocal(),
+        keepRunning: true,
+        picked: true
+    };
+    export const options: IJupyterShutdown[] = [autoShutdown, leaveRunning];
 }

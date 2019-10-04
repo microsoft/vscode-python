@@ -248,6 +248,10 @@ suite('Python Settings', async () => {
             allowImportFromNotebook: true,
             jupyterLaunchTimeout: 20000,
             jupyterLaunchRetries: 3,
+            jupyterServerAllowKernelShutdown: true,
+            jupyterServerKernelId: '',
+            jupyterServerKernelSpec: undefined,
+            jupyterServers: undefined,
             enabled: true,
             jupyterServerURI: 'local',
             // tslint:disable-next-line: no-invalid-template-strings

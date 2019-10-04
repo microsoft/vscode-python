@@ -12,6 +12,7 @@ import {
     DebugSession,
     Disposable,
     Event,
+    QuickPickItem,
     Range,
     TextDocument,
     TextEditor,
@@ -45,6 +46,7 @@ export interface IConnection extends Disposable {
     localProcExitCode: number | undefined;
     disconnected: Event<number>;
     allowUnauthorized?: boolean;
+    allowShutdown?: boolean;
 }
 
 export enum InterruptResult {
@@ -171,9 +173,11 @@ export interface IJupyterSessionManagerFactory {
     create(connInfo: IConnection): Promise<IJupyterSessionManager>;
 }
 
+export const IJupyterSessionManager = Symbol('IJupyterSessionManager');
 export interface IJupyterSessionManager extends IAsyncDisposable {
     startNew(kernelSpec: IJupyterKernelSpec | undefined, cancelToken?: CancellationToken): Promise<IJupyterSession>;
     getActiveKernelSpecs(): Promise<IJupyterKernelSpec[]>;
+    getActiveKernels(): Promise<Kernel.IModel[]>;
     getConnInfo(): IConnection;
 }
 
@@ -181,6 +185,28 @@ export interface IJupyterKernelSpec extends IAsyncDisposable {
     name: string | undefined;
     language: string | undefined;
     path: string | undefined;
+    id: string | undefined;
+}
+
+export interface IKernelQuickPickItem extends QuickPickItem {
+    name: string | undefined;
+    kernelId: string | undefined;
+}
+
+export interface IJupyterServerQuickPickItem extends QuickPickItem {
+    hostName: string | undefined;
+    uri: string;
+}
+
+export interface IJupyterShutdown {
+    label: string;
+    picked: boolean;
+    keepRunning: boolean;
+}
+
+export interface IJupyterServer {
+    hostName: string;
+    uri: string;
 }
 
 export const INotebookImporter = Symbol('INotebookImporter');

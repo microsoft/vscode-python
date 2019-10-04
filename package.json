@@ -77,6 +77,8 @@
         "onCommand:python.datascience.importnotebookfile",
         "onCommand:python.datascience.opennotebook",
         "onCommand:python.datascience.selectjupyteruri",
+        "onCommand:python.dataScience.jupyterserverkernelid",
+        "onCommand:python.dataScience.jupyterserverallowkernelshutdown",
         "onCommand:python.datascience.exportfileasnotebook",
         "onCommand:python.datascience.exportfileandoutputasnotebook",
         "onCommand:python.enableSourceMapSupport"
@@ -1467,10 +1469,28 @@
                     "description": "Number of times to attempt to connect to the Jupyter Notebook",
                     "scope": "resource"
                 },
+                "python.dataScience.jupyterServers": {
+                    "type": "array",
+                    "default": [],
+                    "description": "Jupter servers.",
+                    "scope": "resource"
+                },
                 "python.dataScience.jupyterServerURI": {
                     "type": "string",
                     "default": "local",
                     "description": "Select the Jupyter server URI to connect to. Select 'local' to launch a new Juypter server on the local machine.",
+                    "scope": "resource"
+                },
+                "python.dataScience.jupyterServerKernelSpec": {
+                    "type": "object",
+                    "default": "",
+                    "description": "Specify kernel spec to connect to. Leave blank to start a new kernel",
+                    "scope": "resource"
+                },
+                "python.dataScience.jupyterServerAllowKernelShutdown": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Shutdown the Jupyter kernel when finished.",
                     "scope": "resource"
                 },
                 "python.dataScience.notebookFileRoot": {

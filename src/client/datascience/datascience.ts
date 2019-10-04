@@ -3,6 +3,7 @@
 'use strict';
 import '../common/extensions';
 
+import { Kernel } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils';
 import { inject, injectable, multiInject, optional } from 'inversify';
 import { URL } from 'url';
@@ -11,7 +12,7 @@ import * as vscode from 'vscode';
 import { IApplicationShell, ICommandManager, IDebugService, IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { PYTHON_ALLFILES, PYTHON_LANGUAGE } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
-import { traceError } from '../common/logger';
+import { traceError, traceInfo } from '../common/logger';
 import {
     BANNER_NAME_DS_SURVEY,
     IConfigurationService,
@@ -25,8 +26,8 @@ import * as localize from '../common/utils/localize';
 import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { hasCells } from './cellFactory';
-import { Commands, EditorContexts, Settings, Telemetry } from './constants';
-import { ICodeWatcher, IDataScience, IDataScienceCodeLensProvider, IDataScienceCommandListener, INotebookEditorProvider } from './types';
+import { Commands, DefaultKernels, DefaultServers, EditorContexts, Settings, ShutdownOptions, Telemetry } from './constants';
+import { ICodeWatcher, IDataScience, IDataScienceCodeLensProvider, IDataScienceCommandListener, IJupyterKernelSpec, IJupyterServer, IJupyterServerQuickPickItem, IJupyterSessionManager, IKernelQuickPickItem, INotebookEditorProvider } from './types';
 
 @injectable()
 export class DataScience implements IDataScience {
@@ -45,7 +46,8 @@ export class DataScience implements IDataScience {
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
         @multiInject(IDataScienceCommandListener) @optional() private commandListeners: IDataScienceCommandListener[] | undefined,
         @inject(INotebookEditorProvider) private notebookProvider: INotebookEditorProvider,
-        @inject(IDebugService) private debugService: IDebugService
+        @inject(IDebugService) private debugService: IDebugService,
+        @inject(IJupyterSessionManager) private sessionManager: IJupyterSessionManager
     ) {
         this.dataScienceSurveyBanner = this.serviceContainer.get<IPythonExtensionBanner>(IPythonExtensionBanner, BANNER_NAME_DS_SURVEY);
     }
@@ -217,19 +219,26 @@ export class DataScience implements IDataScience {
 
     @captureTelemetry(Telemetry.SelectJupyterURI)
     public async selectJupyterURI(): Promise<void> {
-        const quickPickOptions = [localize.DataScience.jupyterSelectURILaunchLocal(), localize.DataScience.jupyterSelectURISpecifyURI()];
+        const quickPickOptions = this.populateServerOptions();
         const selection = await this.appShell.showQuickPick(quickPickOptions, { ignoreFocusOut: true });
-        switch (selection) {
+
+        // If user cancels quick pick we will get undefined and return
+        if (!selection) {
+            return;
+        }
+        switch (selection.label) {
             case localize.DataScience.jupyterSelectURILaunchLocal():
                 return this.setJupyterURIToLocal();
                 break;
             case localize.DataScience.jupyterSelectURISpecifyURI():
-                return this.selectJupyterLaunchURI();
+                await this.selectJupyterLaunchURI();
                 break;
             default:
-                // If user cancels quick pick we will get undefined as the selection and fall through here
+                // The user selected an existing server
+                await this.setJupyterURIToSelection(selection);
                 break;
         }
+        await this.selectRemoteJupyterKernel();
     }
 
     public async debugCell(file: string, startLine: number, startChar: number, endLine: number, endChar: number): Promise<void> {
@@ -277,6 +286,8 @@ export class DataScience implements IDataScience {
     @captureTelemetry(Telemetry.SetJupyterURIToLocal)
     private async setJupyterURIToLocal(): Promise<void> {
         await this.configuration.updateSetting('dataScience.jupyterServerURI', Settings.JupyterServerLocalLaunch, undefined, vscode.ConfigurationTarget.Workspace);
+        await this.configuration.updateSetting('dataScience.jupyterServerKernelSpec', undefined, undefined, vscode.ConfigurationTarget.Workspace);
+        await this.configuration.updateSetting('dataScience.jupyterServerAllowKernelShutdown', undefined, undefined, vscode.ConfigurationTarget.Workspace);
     }
 
     @captureTelemetry(Telemetry.SetJupyterURIToUserSpecified)
@@ -290,6 +301,105 @@ export class DataScience implements IDataScience {
         if (userURI) {
             await this.configuration.updateSetting('dataScience.jupyterServerURI', userURI, undefined, vscode.ConfigurationTarget.Workspace);
         }
+    }
+
+    @captureTelemetry(Telemetry.SetJupyterURIToUserSelection)
+    private async setJupyterURIToSelection(selection: IJupyterServerQuickPickItem): Promise<void> {
+        // First get the proposed URI from the user
+        await this.configuration.updateSetting('dataScience.jupyterServerURI', selection.uri, undefined, vscode.ConfigurationTarget.Workspace);
+    }
+
+    private async getJupyterKernels(): Promise<IKernelQuickPickItem[]> {
+        const runningKernels: Kernel.IModel[] = await this.sessionManager.getActiveKernels();
+        const arr: IKernelQuickPickItem[] = runningKernels.map(runningKernel => {
+            traceInfo(`Found running kernel ${runningKernel.id}, running since ${runningKernel.last_activity}`);
+            const localLastActivity = runningKernel.last_activity ? new Date(runningKernel.last_activity.toString()).toLocaleString() : '?';
+            return {
+                label: `Kernel ${runningKernel.name} - ${runningKernel.id}`,
+                detail: `Running since ${localLastActivity}, ${runningKernel.connections} existing connections`,
+                kernelId: runningKernel.id,
+                name: runningKernel.name
+            };
+        });
+        arr.unshift(DefaultKernels.newKernel);
+        return arr;
+    }
+
+    private async getKernelSelection(): Promise<IKernelQuickPickItem | undefined> {
+        const kernelOptions: IKernelQuickPickItem[] = await this.getJupyterKernels();
+
+        return this.appShell.showQuickPick(kernelOptions, {
+            ignoreFocusOut: true,
+            placeHolder: localize.DataScience.jupyterServerReconnectKernelLocal()
+        });
+    }
+
+    private async getNewKernelSelection(kernelSpecs: IJupyterKernelSpec[]): Promise<IKernelQuickPickItem | undefined> {
+        const availArr: IKernelQuickPickItem[] = kernelSpecs.map(availableKernel => {
+            return {
+                label: `Kernel ${availableKernel.name}`,
+                detail: '',
+                kernelId: '',
+                name: availableKernel.name
+            };
+        });
+        return this.appShell.showQuickPick(availArr, { ignoreFocusOut: true });
+    }
+
+    @captureTelemetry(Telemetry.JupyterKernelSpecified)
+    private async setRemoteJupterKernel(kernelSelection: IKernelQuickPickItem, kernelSpecs: IJupyterKernelSpec[]): Promise<void> {
+
+        let kernelUUID: string | undefined = '';
+        let kernelName: string | undefined = '';
+        let kernelSpec: IJupyterKernelSpec | undefined;
+
+        if (kernelSelection !== DefaultKernels.newKernel) {
+            traceInfo(`Will connect to existing kernel ${kernelSelection.kernelId}`);
+            sendTelemetryEvent(Telemetry.JupyterKernelSpecified);
+        }
+
+        kernelUUID = kernelSelection.kernelId ? kernelSelection.kernelId : undefined;
+        kernelName = kernelSelection.name ? kernelSelection.name : undefined;
+        const matchingKernelSpecs = kernelSpecs.filter(spec => spec.name === kernelName);
+        kernelSpec = kernelSpecs.length === 1 ? matchingKernelSpecs[0] : undefined;
+
+        if (kernelSpec) {
+            kernelSpec.id = kernelUUID;
+        }
+
+        await this.configuration.updateSetting('dataScience.jupyterServerKernelSpec', kernelSpec, undefined, vscode.ConfigurationTarget.Workspace);
+    }
+
+    @captureTelemetry(Telemetry.SelectJupyterKernel)
+    private async selectRemoteJupyterKernel(): Promise<void> {
+        const remoteKernelSpecs: Promise<IJupyterKernelSpec[]> = this.sessionManager.getActiveKernelSpecs();
+        let kernelSelection: IKernelQuickPickItem | undefined = await this.getKernelSelection();
+        const kernelSpecs = await remoteKernelSpecs;
+
+        if (kernelSelection && kernelSelection === DefaultKernels.newKernel) {
+            traceInfo('Will create a new kernel for connection');
+            kernelSelection = await this.getNewKernelSelection(kernelSpecs);
+        }
+
+        if (!kernelSelection) {
+            return;
+        }
+        const allowShutdown = this.selectJupyterKernelAutoShutdown();
+
+        await this.setRemoteJupterKernel(kernelSelection, kernelSpecs);
+        await allowShutdown;
+    }
+
+    @captureTelemetry(Telemetry.JupyterKernelAutoShutdown, { autoShutdownEnabled: true })
+    private async selectJupyterKernelAutoShutdown(): Promise<void> {
+        let allowShutdown = true;
+        const shutdownSelection = await this.appShell.showQuickPick(ShutdownOptions.options, { ignoreFocusOut: true });
+
+        if (shutdownSelection && shutdownSelection.keepRunning) {
+            traceInfo('Session will not be shutdown on close');
+            allowShutdown = false;
+        }
+        await this.configuration.updateSetting('dataScience.jupyterServerAllowKernelShutdown', allowShutdown, undefined, vscode.ConfigurationTarget.Workspace);
     }
 
     @captureTelemetry(Telemetry.AddCellBelow)
@@ -513,5 +623,26 @@ export class DataScience implements IDataScience {
 
     private async createNewNotebook(): Promise<void> {
         await this.notebookProvider.createNew();
+    }
+
+    private populateServerOptions(): IJupyterServerQuickPickItem[] {
+        const settings = this.configuration.getSettings();
+
+        const jupyterServers: IJupyterServer[] | undefined = settings.datascience.jupyterServers;
+        let optionsArr: IJupyterServerQuickPickItem[] = [];
+        if (jupyterServers) {
+            optionsArr = jupyterServers.map(server => {
+                traceInfo(`Found server ${server.hostName}, with uri ${server.uri}`);
+                return {
+                    label: server.hostName,
+                    hostName: server.hostName,
+                    uri: server.uri
+                };
+            });
+        }
+
+        optionsArr.unshift(DefaultServers.localJupyter);
+        optionsArr.push(DefaultServers.specifyJupyter);
+        return optionsArr;
     }
 }
