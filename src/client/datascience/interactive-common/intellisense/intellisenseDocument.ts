@@ -8,9 +8,7 @@ import { EndOfLine, Position, Range, TextDocument, TextDocumentContentChangeEven
 import * as vscodeLanguageClient from 'vscode-languageclient';
 
 import { PYTHON_LANGUAGE } from '../../../common/constants';
-import { concatMultilineString } from '../../common';
 import { Identifiers } from '../../constants';
-import { ICell } from '../../types';
 import { DefaultWordPattern, ensureValidWordDefinition, getWordAtText, regExpLeadsToEndlessLoop } from './wordHelper';
 
 class IntellisenseLine implements TextLine {
@@ -118,10 +116,6 @@ export class IntellisenseDocument implements TextDocument {
         return this._lines.length;
     }
 
-    public switchToEditMode() {
-        this.inEditMode = true;
-    }
-
     public lineAt(position: Position | number): TextLine {
         if (typeof position === 'number') {
             return this._lines[position as number];
@@ -198,46 +192,54 @@ export class IntellisenseDocument implements TextDocument {
         };
     }
 
-    public handleNativeEditorCellChanges(cells: ICell[]): TextDocumentContentChangeEvent[][] {
-        const changes: TextDocumentContentChangeEvent[][] = [];
+    public loadAllCells(cells: { code: string; id: string }[]): TextDocumentContentChangeEvent[] {
+        let changes: TextDocumentContentChangeEvent[] = [];
+        if (!this.inEditMode) {
+            this.inEditMode = true;
+            this._version += 1;
 
-        if (this.inEditMode) {
-            const incomingCells = cells.filter(c => c.data.cell_type === 'code');
-            const currentCellCount = this._cellRanges.length - 1;
+            const normalized = cells.map(c => {
+                return {
+                    id: c.id,
+                    code: `${c.code.replace(/\r/g, '')}\n`
+                };
+            });
 
-            if (currentCellCount < incomingCells.length) { // Cell was added
-                incomingCells.forEach((cell, i) => {
-                    if (!this.hasCell(cell.id)) {
-                        const text = concatMultilineString(cell.data.source);
+            // Contents are easy, just load all of the code in a row
+            this._contents = normalized.map(c => c.code).reduce((p, c) => {
+                return `${p}${c}`;
+            });
 
-                        // addCell to the end of the document, or if adding in the middle,
-                        // send the id of the next cell to get its offset in the document
-                        if (i + 1 > incomingCells.length - 1) {
-                            changes.push(this.addCell(text, text, cell.id));
-                        } else {
-                            changes.push(this.addCell(text, text, cell.id, incomingCells[i + 1].id));
-                        }
-                    }
-                });
-            } else if (currentCellCount > incomingCells.length) { // Cell was deleted
-                const change = this.lookForCellToDelete(incomingCells);
+            // Cell ranges are slightly more complicated
+            let prev = 0;
+            this._cellRanges = normalized.map(c => {
+                const result = {
+                    id: c.id,
+                    start: prev,
+                    fullEnd: prev + c.code.length,
+                    currentEnd: prev + c.code.length
+                };
+                prev += c.code.length;
+                return result;
+            });
 
-                if (change.length > 0) {
-                    changes.push(change);
+            // Then create the lines.
+            this._lines = this.createLines();
+
+            // Return our changes
+            changes = [
+                {
+                    range: this.createSerializableRange(new Position(0, 0), new Position(0, 0)),
+                    rangeOffset: 0,
+                    rangeLength: 0, // Adds are always zero
+                    text: this._contents
                 }
-            } else { // Cell might have moved
-                const change = this.lookForCellMovement(incomingCells);
-
-                if (change.length > 0) {
-                    changes.push(change);
-                }
-            }
+            ];
         }
-
         return changes;
     }
 
-    public addCell(fullCode: string, currentCode: string, id: string, cellId?: string): TextDocumentContentChangeEvent[] {
+    public addCell(fullCode: string, currentCode: string, id: string): TextDocumentContentChangeEvent[] {
         // This should only happen once for each cell.
         this._version += 1;
 
@@ -251,50 +253,62 @@ export class IntellisenseDocument implements TextDocument {
         const newCode = `${normalized}\n`;
         const newCurrentCode = `${normalizedCurrent}\n`;
 
-        // We should start just before the last cell for the interactive window
-        // But return the start of the next cell for the native editor,
-        // in case we add a cell at the end in the native editor,
-        // just don't send a cellId to get an offset at the end of the document
-        const fromOffset = this.getEditCellOffset(cellId);
+        // We should start just before the last cell.
+        const fromOffset = this.getEditCellOffset();
 
         // Split our text between the edit text and the cells above
         const before = this._contents.substr(0, fromOffset);
         const after = this._contents.substr(fromOffset);
         const fromPosition = this.positionAt(fromOffset);
 
-        // for the interactive window or if the cell was added last,
-        // add cell to the end
-        let splicePosition = this._cellRanges.length - 1;
-
-        // for the native editor, find the index to add the cell to
-        if (cellId) {
-            const index = this._cellRanges.findIndex(c => c.id === cellId);
-
-            if (index > -1) {
-                splicePosition = index;
-            }
-        }
-
         // Save the range for this cell ()
-        this._cellRanges.splice(splicePosition, 0,
+        this._cellRanges.splice(this._cellRanges.length - 1, 0,
             { id, start: fromOffset, fullEnd: fromOffset + newCode.length, currentEnd: fromOffset + newCurrentCode.length });
 
         // Update our entire contents and recompute our lines
         this._contents = `${before}${newCode}${after}`;
         this._lines = this.createLines();
+        this._cellRanges[this._cellRanges.length - 1].start += newCode.length;
+        this._cellRanges[this._cellRanges.length - 1].fullEnd += newCode.length;
+        this._cellRanges[this._cellRanges.length - 1].currentEnd += newCode.length;
 
-        if (cellId) {
-            // With the native editor, we fix all the positions that changed after adding
-            for (let i = splicePosition + 1; i < this._cellRanges.length; i += 1) {
-                this._cellRanges[i].start += newCode.length;
-                this._cellRanges[i].fullEnd += newCode.length;
-                this._cellRanges[i].currentEnd += newCode.length;
+        return [
+            {
+                range: this.createSerializableRange(fromPosition, fromPosition),
+                rangeOffset: fromOffset,
+                rangeLength: 0, // Adds are always zero
+                text: newCode
             }
-        } else {
-            // with the interactive window, we just fix the positon of the last cell
-            this._cellRanges[this._cellRanges.length - 1].start += newCode.length;
-            this._cellRanges[this._cellRanges.length - 1].fullEnd += newCode.length;
-            this._cellRanges[this._cellRanges.length - 1].currentEnd += newCode.length;
+        ];
+    }
+
+    public insertCell(id: string, index: number): TextDocumentContentChangeEvent[] {
+        // This should only happen once for each cell.
+        this._version += 1;
+
+        // Make sure to put a newline between this code and the next code
+        const newCode = `\n`;
+
+        // Compute where we start from.
+        const fromOffset = index >= 0 ? index < this._cellRanges.length - 1 ? this._cellRanges[index].start : 0 : this._contents.length;
+
+        // Split our text between the text and the cells above
+        const before = this._contents.substr(0, fromOffset);
+        const after = this._contents.substr(fromOffset);
+        const fromPosition = this.positionAt(fromOffset);
+
+        // Update our entire contents and recompute our lines
+        this._contents = `${before}${newCode}${after}`;
+        this._lines = this.createLines();
+
+        // Move all the other cell ranges down
+        this._cellRanges.splice(index, 0,
+            { id, start: fromOffset, fullEnd: fromOffset + newCode.length, currentEnd: fromOffset + newCode.length });
+
+        for (let i = index + 1; i < this._cellRanges.length - 1; i += 1) {
+            this._cellRanges[i].start += newCode.length;
+            this._cellRanges[i].fullEnd += newCode.length;
+            this._cellRanges[i].fullEnd += newCode.length;
         }
 
         return [
@@ -354,12 +368,104 @@ export class IntellisenseDocument implements TextDocument {
                 return this.removeRange(normalized, from, to, cellIndex);
             } else if (cellIndex >= 0) {
                 // This is an edit of a read only cell. Just replace our currentEnd position
-                const newCode = `${normalized}\n`;
+                const newCode = `${normalized} \n`;
                 this._cellRanges[cellIndex].currentEnd = this._cellRanges[cellIndex].start + newCode.length;
             }
         }
 
         return [];
+    }
+
+    public remove(id: string): TextDocumentContentChangeEvent[] {
+        let change: TextDocumentContentChangeEvent[] = [];
+
+        const index = this._cellRanges.findIndex(c => c.id === id);
+        if (index >= 0) {
+            const found = this._cellRanges[index];
+            const from = new Position(this.getLineFromOffset(found.start), 0);
+            const to = this.positionAt(found.currentEnd);
+
+            // for some reason, start for the next cell isn't updated on removeRange,
+            // so we update it here
+            if (index < this._cellRanges.length - 1) {
+                this._cellRanges[index + 1].start = found.start;
+            }
+            this._cellRanges.splice(index, 1);
+            change = this.removeRange('', from, to, index);
+        }
+
+        return change;
+    }
+
+    public move(id: string, oldIndex: number, newIndex: number): TextDocumentContentChangeEvent[] {
+        let change: TextDocumentContentChangeEvent[] = [];
+
+        const index = this._cellRanges.findIndex(c => c.id === id);
+        if (index === oldIndex) {
+            const topIndex = oldIndex < newIndex ? oldIndex : newIndex;
+            const bottomIndex = oldIndex > newIndex ? oldIndex : newIndex;
+            const top = { ...this._cellRanges[topIndex] };
+            const bottom = { ...this._cellRanges[bottomIndex] };
+
+            const from = new Position(this.getLineFromOffset(top.start), 0);
+            const to = this.positionAt(bottom.currentEnd);
+
+            // Swap everything
+            this._cellRanges[topIndex].id = bottom.id;
+            this._cellRanges[topIndex].fullEnd = top.start + (bottom.fullEnd - bottom.start);
+            this._cellRanges[topIndex].currentEnd = top.start + (bottom.currentEnd - bottom.start);
+            this._cellRanges[bottomIndex].id = top.id;
+            this._cellRanges[bottomIndex].start = this._cellRanges[topIndex].fullEnd;
+            this._cellRanges[bottomIndex].fullEnd = this._cellRanges[topIndex].fullEnd + (top.fullEnd - top.start);
+            this._cellRanges[bottomIndex].currentEnd = this._cellRanges[topIndex].fullEnd + (top.currentEnd - top.start);
+
+            const fromOffset = this.convertToOffset(from);
+            const toOffset = this.convertToOffset(to);
+
+            // Recreate our contents, and then recompute all of our lines
+            const before = this._contents.substr(0, fromOffset);
+            const topText = this._contents.substr(top.start, top.fullEnd - top.start);
+            const bottomText = this._contents.substr(bottom.start, bottom.fullEnd - bottom.start);
+            const after = this._contents.substr(toOffset);
+            const replacement = `${bottomText}${topText}`;
+            this._contents = `${before}${replacement}${after}`;
+            this._lines = this.createLines();
+
+            // Change is a full replacement
+            change = [
+                {
+                    range: this.createSerializableRange(from, to),
+                    rangeOffset: fromOffset,
+                    rangeLength: toOffset - fromOffset,
+                    text: replacement
+                }
+            ];
+        }
+
+        return change;
+    }
+
+    public removeAll(): TextDocumentContentChangeEvent[] {
+        let change: TextDocumentContentChangeEvent[] = [];
+        if (this._lines.length > 0) {
+            const from = this._lines[0].range.start;
+            const to = this._lines[this._lines.length - 1].rangeIncludingLineBreak.end;
+            const length = this._contents.length;
+            this._cellRanges = [];
+            this._contents = '';
+            this._lines = [];
+
+            change = [
+                {
+                    range: this.createSerializableRange(from, to),
+                    rangeOffset: 0,
+                    rangeLength: length,
+                    text: ''
+                }
+            ];
+        }
+
+        return change;
     }
 
     public convertToDocumentPosition(id: string, line: number, ch: number): Position {
@@ -405,11 +511,6 @@ export class IntellisenseDocument implements TextDocument {
         return this._cellRanges[this._cellRanges.length - 1].start;
     }
 
-    private hasCell(cellId: string) {
-        const foundIt = this._cellRanges.find(c => c.id === cellId);
-        return foundIt ? true : false;
-    }
-
     private getLineFromOffset(offset: number) {
         let lineCounter = 0;
 
@@ -420,83 +521,6 @@ export class IntellisenseDocument implements TextDocument {
         }
 
         return lineCounter;
-    }
-
-    private lookForCellToDelete(incomingCells: ICell[]): TextDocumentContentChangeEvent[] {
-        let change: TextDocumentContentChangeEvent[] = [];
-
-        this._cellRanges.forEach((cell, i) => {
-            const foundIt = incomingCells.find(c => c.id === cell.id);
-
-            // if cell is not found in the document and its not the last edit cell, we remove it
-            if (!foundIt && i !== this._cellRanges.length - 1) {
-                const from = new Position(this.getLineFromOffset(cell.start), 0);
-                const to = this.positionAt(cell.currentEnd);
-
-                // for some reason, start for the next cell isn't updated on removeRange,
-                // so we update it here
-                this._cellRanges[i + 1].start = cell.start;
-                this._cellRanges.splice(i, 1);
-                change = this.removeRange('', from, to, i);
-            }
-        });
-
-        return change;
-    }
-
-    private lookForCellMovement(incomingCells: ICell[]): TextDocumentContentChangeEvent[] {
-        for (let i = 0; i < incomingCells.length && this._cellRanges.length > 1; i += 1) {
-
-            if (incomingCells[i].id !== this._cellRanges[i].id) {
-                const lineBreak = '\n';
-                const text = this._contents.substr(this._cellRanges[i].start, this._cellRanges[i].currentEnd - this._cellRanges[i].start - 1);
-                const newText = concatMultilineString(incomingCells[i].data.source) + lineBreak + text + lineBreak;
-
-                // swap contents
-                this._contents = this._contents.substring(0, this._cellRanges[i].start)
-                    + this._contents.substring(this._cellRanges[i + 1].start, this._cellRanges[i + 1].fullEnd)
-                    + this._contents.substring(this._cellRanges[i].start, this._cellRanges[i].fullEnd)
-                    + this._contents.substring(this._cellRanges[i + 1].fullEnd);
-
-                // create lines
-                this._lines = this.createLines();
-
-                // swap cell ranges
-                const temp1Id = this._cellRanges[i].id;
-                const temp1Start = this._cellRanges[i].start;
-                const temp1End = this._cellRanges[i].fullEnd;
-                const temp1Length = temp1End - temp1Start;
-
-                const temp2Id = this._cellRanges[i + 1].id;
-                const temp2Start = this._cellRanges[i + 1].start;
-                const temp2End = this._cellRanges[i + 1].fullEnd;
-                const temp2Length = temp2End - temp2Start;
-
-                this._cellRanges[i].id = temp2Id;
-                this._cellRanges[i].start = temp1Start;
-                this._cellRanges[i].currentEnd = temp1Start + temp2Length;
-                this._cellRanges[i].fullEnd = temp1Start + temp2Length;
-
-                this._cellRanges[i + 1].id = temp1Id;
-                this._cellRanges[i + 1].start = temp1Start + temp2Length;
-                this._cellRanges[i + 1].currentEnd = temp1Start + temp2Length + temp1Length;
-                this._cellRanges[i + 1].fullEnd = temp1Start + temp2Length + temp1Length;
-
-                const from = new Position(this.getLineFromOffset(temp1Start), 0);
-                const to = new Position(this.getLineFromOffset(temp2End - 1), temp2End - temp2Start);
-                const fromOffset = temp1Start;
-                const toOffset = temp2End;
-
-                return [{
-                    range: this.createSerializableRange(from, to),
-                    rangeOffset: fromOffset,
-                    rangeLength: toOffset - fromOffset,
-                    text: newText
-                }];
-            }
-        }
-
-        return [];
     }
 
     private removeRange(newText: string, from: Position, to: Position, cellIndex: number): TextDocumentContentChangeEvent[] {
