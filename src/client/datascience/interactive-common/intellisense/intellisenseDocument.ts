@@ -282,15 +282,19 @@ export class IntellisenseDocument implements TextDocument {
         ];
     }
 
-    public insertCell(id: string, index: number): TextDocumentContentChangeEvent[] {
+    public insertCell(id: string, code: string, codeCellAbove: string | undefined): TextDocumentContentChangeEvent[] {
         // This should only happen once for each cell.
         this._version += 1;
 
         // Make sure to put a newline between this code and the next code
-        const newCode = `\n`;
+        const newCode = `${code.replace(/\r/g, '')}\n`;
+
+        // Figure where this goes
+        const aboveIndex = this._cellRanges.findIndex(r => r.id === codeCellAbove);
+        const insertIndex = aboveIndex + 1;
 
         // Compute where we start from.
-        const fromOffset = index >= 0 ? index <= this._cellRanges.length - 1 ? this._cellRanges[index].start : 0 : this._contents.length;
+        const fromOffset = insertIndex < this._cellRanges.length ? this._cellRanges[insertIndex].start : this._contents.length;
 
         // Split our text between the text and the cells above
         const before = this._contents.substr(0, fromOffset);
@@ -302,12 +306,12 @@ export class IntellisenseDocument implements TextDocument {
         this._lines = this.createLines();
 
         // Move all the other cell ranges down
-        for (let i = index; i <= this._cellRanges.length - 1; i += 1) {
+        for (let i = insertIndex; i <= this._cellRanges.length - 1; i += 1) {
             this._cellRanges[i].start += newCode.length;
             this._cellRanges[i].fullEnd += newCode.length;
             this._cellRanges[i].fullEnd += newCode.length;
         }
-        this._cellRanges.splice(index, 0,
+        this._cellRanges.splice(insertIndex, 0,
             { id, start: fromOffset, fullEnd: fromOffset + newCode.length, currentEnd: fromOffset + newCode.length });
 
         return [
@@ -414,15 +418,16 @@ export class IntellisenseDocument implements TextDocument {
         return change;
     }
 
-    public move(id: string, oldIndex: number, newIndex: number): TextDocumentContentChangeEvent[] {
+    public swap(first: string, second: string): TextDocumentContentChangeEvent[] {
         let change: TextDocumentContentChangeEvent[] = [];
 
-        const index = this._cellRanges.findIndex(c => c.id === id);
-        if (index === oldIndex) {
+        const firstIndex = this._cellRanges.findIndex(c => c.id === first);
+        const secondIndex = this._cellRanges.findIndex(c => c.id === second);
+        if (firstIndex >= 0 && secondIndex >= 0 && firstIndex !== secondIndex) {
             this._version += 1;
 
-            const topIndex = oldIndex < newIndex ? oldIndex : newIndex;
-            const bottomIndex = oldIndex > newIndex ? oldIndex : newIndex;
+            const topIndex = firstIndex < secondIndex ? firstIndex : secondIndex;
+            const bottomIndex = firstIndex > secondIndex ? firstIndex : secondIndex;
             const top = { ...this._cellRanges[topIndex] };
             const bottom = { ...this._cellRanges[bottomIndex] };
 

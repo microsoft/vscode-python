@@ -32,13 +32,13 @@ import {
     IInsertCell,
     IInteractiveWindowMapping,
     ILoadAllCells,
-    IMoveCell,
     INotebookIdentity,
     InteractiveWindowMessages,
     IProvideCompletionItemsRequest,
     IProvideHoverRequest,
     IProvideSignatureHelpRequest,
-    IRemoveCell
+    IRemoveCell,
+    ISwapCells
 } from '../interactiveWindowTypes';
 import { convertStringsToSuggestions } from './conversion';
 import { IntellisenseDocument } from './intellisenseDocument';
@@ -114,8 +114,8 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
                 this.dispatchMessage(message, payload, this.removeCell);
                 break;
 
-            case InteractiveWindowMessages.MoveCell:
-                this.dispatchMessage(message, payload, this.moveCell);
+            case InteractiveWindowMessages.SwapCells:
+                this.dispatchMessage(message, payload, this.swapCells);
                 break;
 
             case InteractiveWindowMessages.DeleteAllCells:
@@ -341,7 +341,7 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
         // Get the document and then pass onto the sub class
         const document = await this.getDocument();
         if (document) {
-            const changes = document.insertCell(request.id, request.index);
+            const changes = document.insertCell(request.id, request.code, request.codeCellAbove);
             return this.handleChanges(undefined, document, changes);
         }
     }
@@ -364,11 +364,11 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
         }
     }
 
-    private async moveCell(request: IMoveCell): Promise<void> {
+    private async swapCells(request: ISwapCells): Promise<void> {
         // First get the document
         const document = await this.getDocument();
         if (document) {
-            const changes = document.move(request.id, request.oldIndex, request.newIndex);
+            const changes = document.swap(request.firstCell, request.secondCell);
             return this.handleChanges(undefined, document, changes);
         }
     }

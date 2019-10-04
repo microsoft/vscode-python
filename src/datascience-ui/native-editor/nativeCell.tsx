@@ -37,11 +37,8 @@ interface INativeCellProps {
     selectCell(cellId: string): void;
 }
 
-interface INativeCellState {
-    showingMarkdownEditor: boolean;
-}
 // tslint:disable: react-this-binding-issue
-export class NativeCell extends React.Component<INativeCellProps, INativeCellState> {
+export class NativeCell extends React.Component<INativeCellProps> {
     private inputRef: React.RefObject<CellInput> = React.createRef<CellInput>();
     private wrapperRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private lastKeyPressed: string | undefined;
@@ -49,11 +46,9 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
 
     constructor(prop: INativeCellProps) {
         super(prop);
-        this.state = { showingMarkdownEditor: false };
     }
 
     public render() {
-        window.console.log('render cell');
         if (this.props.cellVM.cell.data.cell_type === 'messages') {
             return <InformationMessages messages={this.props.cellVM.cell.data.messages} type={this.props.cellVM.cell.type}/>;
         } else {
@@ -83,9 +78,6 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
         if (giveCodeFocus) {
             if (this.inputRef && this.inputRef.current) {
                 this.inputRef.current.giveFocus();
-            }
-            if (this.isMarkdownCell()) {
-                this.setState({showingMarkdownEditor: true});
             }
         }
     }
@@ -150,7 +142,7 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
         }
 
         // Content changes based on if a markdown cell or not.
-        const content = this.isMarkdownCell() && !this.state.showingMarkdownEditor ?
+        const content = this.isMarkdownCell() && !this.isShowingMarkdownEditor() ?
             <div className='cell-result-container'>
                 <div className='cell-row-container'>
                     {this.renderCollapseBar(false)}
@@ -209,7 +201,11 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
     }
 
     private shouldRenderMarkdownEditor = () : boolean => {
-        return (this.isMarkdownCell() && (this.state.showingMarkdownEditor || this.props.cellVM.cell.id === Identifiers.EditCellId));
+        return (this.isMarkdownCell() && (this.isShowingMarkdownEditor() || this.props.cellVM.cell.id === Identifiers.EditCellId));
+    }
+
+    private isShowingMarkdownEditor = (): boolean => {
+        return (this.isMarkdownCell() && this.props.cellVM.focused);
     }
 
     private shouldRenderInput(): boolean {
@@ -229,7 +225,7 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
             const cell = this.getCodeCell();
             return this.hasOutput() && cell.outputs && !this.props.cellVM.hideOutput && (Array.isArray(cell.outputs) && cell.outputs.length !== 0);
         } else if (this.isMarkdownCell()) {
-            return !this.state.showingMarkdownEditor;
+            return !this.isShowingMarkdownEditor();
         }
         return false;
     }
@@ -578,7 +574,7 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
 
             // This is special. Coming in on a mouse down event so we get
             // called before focus changes. After focus changes, then switch to code
-            if (this.state.showingMarkdownEditor) {
+            if (this.isShowingMarkdownEditor()) {
                 this.pendingFocusLoss = handler;
             } else {
                 handler();
@@ -673,7 +669,10 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
     }
 
     private onMarkdownUnfocused = () => {
-        this.props.stateController.codeLostFocus(this.cellId);
+        // Indicate not showing the editor anymore. The equivalent of this
+        // is not when we receive focus but when we GIVE focus to the markdown editor
+        // otherwise we wouldn't be able to display it.
+        this.setState({showingMarkdownEditor: false});
 
         // There might be a pending focus loss handler.
         if (this.pendingFocusLoss) {
@@ -682,10 +681,7 @@ export class NativeCell extends React.Component<INativeCellProps, INativeCellSta
             func();
         }
 
-        // Indicate not showing the editor anymore. The equivalent of this
-        // is not when we receive focus but when we GIVE focus to the markdown editor
-        // otherwise we wouldn't be able to display it.
-        this.setState({showingMarkdownEditor: false});
+        this.props.stateController.codeLostFocus(this.cellId);
     }
 
     private renderOutput = (): JSX.Element | null => {

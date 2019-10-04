@@ -51,7 +51,7 @@ export namespace InteractiveWindowMessages {
     export const AddCell = 'add_cell';
     export const EditCell = 'edit_cell';
     export const RemoveCell = 'remove_cell';
-    export const MoveCell = 'move_cell';
+    export const SwapCells = 'swap_cells';
     export const InsertCell = 'insert_cell';
     export const LoadOnigasmAssemblyRequest = 'load_onigasm_assembly_request';
     export const LoadOnigasmAssemblyResponse = 'load_onigasm_assembly_response';
@@ -212,15 +212,15 @@ export interface IRemoveCell {
     id: string;
 }
 
-export interface IMoveCell {
-    id: string;
-    oldIndex: number;
-    newIndex: number;
+export interface ISwapCells {
+    firstCell: string;
+    secondCell: string;
 }
 
 export interface IInsertCell {
     id: string;
-    index: number;
+    code: string;
+    codeCellAbove: string | undefined;
 }
 
 export interface IShowDataViewer {
@@ -297,7 +297,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.AddCell]: IAddCell;
     public [InteractiveWindowMessages.EditCell]: IEditCell;
     public [InteractiveWindowMessages.RemoveCell]: IRemoveCell;
-    public [InteractiveWindowMessages.MoveCell]: IMoveCell;
+    public [InteractiveWindowMessages.SwapCells]: ISwapCells;
     public [InteractiveWindowMessages.InsertCell]: IInsertCell;
     public [InteractiveWindowMessages.LoadOnigasmAssemblyRequest]: never | undefined;
     public [InteractiveWindowMessages.LoadOnigasmAssemblyResponse]: Buffer;

@@ -530,7 +530,7 @@ export class MainStateController implements IMessageHandler {
 
     public selectCell = (cellId: string, focusedCell?: string) => {
         // Skip if already the same cell
-        if (this.pendingState.selectedCell !== cellId) {
+        if (this.pendingState.selectedCell !== cellId || this.pendingState.focusedCell !== focusedCell) {
             const newVMs = [...this.pendingState.cellVMs];
             // Switch the old vm
             const oldSelect = this.findCellIndex(this.pendingState.selectedCell);
@@ -554,7 +554,7 @@ export class MainStateController implements IMessageHandler {
             cellVMs[index] = immutable.updateIn(this.pendingState.cellVMs[index], ['cell', 'data', 'cell_type'], () => newType);
             this.setState({ cellVMs });
             if (newType === 'code') {
-                this.sendMessage(InteractiveWindowMessages.InsertCell, { id: cellId, index });
+                this.sendMessage(InteractiveWindowMessages.InsertCell, { id: cellId, code: concatMultilineString(cellVMs[index].cell.data.source), codeCellAbove: this.firstCodeCellAbove(cellId) });
             } else {
                 this.sendMessage(InteractiveWindowMessages.RemoveCell, { id: cellId });
             }
@@ -854,6 +854,15 @@ export class MainStateController implements IMessageHandler {
         // make a copy of the cells so that further changes don't modify them.
         const copy = cloneDeep(cells);
         return [...slicedUndo, copy];
+    }
+
+    protected firstCodeCellAbove(cellId: string): string | undefined {
+        const codeCells = this.pendingState.cellVMs.filter(c => c.cell.data.cell_type === 'code');
+        const index = codeCells.findIndex(c => c.cell.id === cellId);
+        if (index > 0) {
+            return codeCells[index - 1].cell.id;
+        }
+        return undefined;
     }
 
     private computeEditorOptions(): monacoEditor.editor.IEditorOptions {

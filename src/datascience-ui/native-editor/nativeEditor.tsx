@@ -402,6 +402,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
     }
 
     private focusCell = (cellId: string, focusCode: boolean): void => {
+        this.stateController.selectCell(cellId, focusCode ? cellId : undefined);
         const ref = this.cellRefs.get(cellId);
         if (ref && ref.current) {
             ref.current.giveFocus(focusCode);
