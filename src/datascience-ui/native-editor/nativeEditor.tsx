@@ -3,7 +3,6 @@
 'use strict';
 import './nativeEditor.less';
 
-import * as immutable from 'immutable';
 import * as React from 'react';
 
 import { noop } from '../../client/common/utils/misc';
@@ -291,7 +290,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                         } else if (bottom < visibleTop) {
                             continue;
                         } else {
-                            cellVMs[i] = immutable.merge(cellVM, { useQuickEdit: false });
+                            cellVMs[i] = {...cellVM, useQuickEdit: false };
                             makeChange = true;
                         }
                     }
