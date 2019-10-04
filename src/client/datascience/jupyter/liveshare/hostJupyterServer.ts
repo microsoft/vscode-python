@@ -98,10 +98,10 @@ export class HostJupyterServer
     public async onSessionChange(api: vsls.LiveShare | null): Promise<void> {
         await super.onSessionChange(api);
 
-        this.getNotebooks().forEach(notebook => {
+        this.getNotebooks().forEach(async notebook => {
             const hostNotebook = notebook as HostJupyterNotebook;
             if (hostNotebook) {
-                hostNotebook.onSessionChange(api);
+                await hostNotebook.onSessionChange(api);
             }
         });
     }
