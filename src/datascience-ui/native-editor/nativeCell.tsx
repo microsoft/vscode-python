@@ -670,11 +670,6 @@ export class NativeCell extends React.Component<INativeCellProps> {
     }
 
     private onMarkdownUnfocused = () => {
-        // Indicate not showing the editor anymore. The equivalent of this
-        // is not when we receive focus but when we GIVE focus to the markdown editor
-        // otherwise we wouldn't be able to display it.
-        this.setState({showingMarkdownEditor: false});
-
         // There might be a pending focus loss handler.
         if (this.pendingFocusLoss) {
             const func = this.pendingFocusLoss;
