@@ -157,7 +157,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                 }
             }));
 
-            // Track focus changes to make sure we update our widget parent and
+            // Track focus changes to make sure we update our widget parent and widget position
             this.subscriptions.push(editor.onDidFocusEditorWidget(() => {
                 this.throttledUpdateWidgetPosition();
                 this.updateWidgetParent(editor);
