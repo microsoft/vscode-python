@@ -1608,7 +1608,7 @@
                 },
                 "python.dataScience.useNotebookEditor": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "Automatically open .ipynb files in the Notebook Editor.",
                     "scope": "resource"
                 },
