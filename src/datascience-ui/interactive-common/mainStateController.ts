@@ -77,8 +77,10 @@ export class MainStateController implements IMessageHandler {
             editCellVM: this.props.hasEdit ? createEditableCellVM(1) : undefined,
             enableGather: this.props.enableGather,
             isAtBottom: true,
-            fontSize: 14,
-            fontFamily: 'Consolas, \'Courier New\', monospace'
+            font: {
+                size: 14,
+                family: 'Consolas, \'Courier New\', monospace'
+            }
         };
 
         // Add test state if necessary
@@ -907,8 +909,10 @@ export class MainStateController implements IMessageHandler {
             const fontFamily = dsSettings.extraSettings.fontFamily;
 
             this.setState({
-                fontSize: fontSize,
-                fontFamily: fontFamily
+                font: {
+                    size: fontSize,
+                    family: fontFamily
+                }
             });
         }
     }
@@ -1175,23 +1179,27 @@ export class MainStateController implements IMessageHandler {
 
             let fontSize: number = 14;
             let fontFamily: string = 'Consolas, \'Courier New\', monospace';
-            const fontSizeIndex = response.css.indexOf('--code-font-size: ');
-            const fontFamilyIndex = response.css.indexOf('--code-font-family: ');
+            const sizeSetting = '--code-font-size: ';
+            const familySetting = '--code-font-family: ';
+            const fontSizeIndex = response.css.indexOf(sizeSetting);
+            const fontFamilyIndex = response.css.indexOf(familySetting);
 
             if (fontSizeIndex > -1) {
-                const fontSizeEndIndex = response.css.indexOf('px;', fontSizeIndex + 18);
-                fontSize = parseInt(response.css.substring(fontSizeIndex + 18, fontSizeEndIndex), 10);
+                const fontSizeEndIndex = response.css.indexOf('px;', fontSizeIndex + sizeSetting.length);
+                fontSize = parseInt(response.css.substring(fontSizeIndex + sizeSetting.length, fontSizeEndIndex), 10);
             }
 
             if (fontFamilyIndex > -1) {
-                const fontFamilyEndIndex = response.css.indexOf(';', fontFamilyIndex + 20);
-                fontFamily = response.css.substring(fontFamilyIndex + 20, fontFamilyEndIndex);
+                const fontFamilyEndIndex = response.css.indexOf(';', fontFamilyIndex + familySetting.length);
+                fontFamily = response.css.substring(fontFamilyIndex + familySetting.length, fontFamilyEndIndex);
             }
 
             this.setState({
                 rootCss: response.css,
-                fontSize: fontSize,
-                fontFamily: fontFamily,
+                font: {
+                    size: fontSize,
+                    family: fontFamily
+                },
                 theme: response.theme,
                 knownDark: computedKnownDark
             });
