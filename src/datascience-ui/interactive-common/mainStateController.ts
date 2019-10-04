@@ -553,6 +553,11 @@ export class MainStateController implements IMessageHandler {
             const cellVMs = [...this.pendingState.cellVMs];
             cellVMs[index] = immutable.updateIn(this.pendingState.cellVMs[index], ['cell', 'data', 'cell_type'], () => newType);
             this.setState({ cellVMs });
+            if (newType === 'code') {
+                this.sendMessage(InteractiveWindowMessages.InsertCell, { id: cellId, index });
+            } else {
+                this.sendMessage(InteractiveWindowMessages.RemoveCell, { id: cellId });
+            }
         }
     }
 

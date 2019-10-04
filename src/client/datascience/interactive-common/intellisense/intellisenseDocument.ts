@@ -211,7 +211,7 @@ export class IntellisenseDocument implements TextDocument {
             });
 
             // Cell ranges are slightly more complicated
-            let prev = 0;
+            let prev: number = 0;
             this._cellRanges = normalized.map(c => {
                 const result = {
                     id: c.id,
@@ -290,7 +290,7 @@ export class IntellisenseDocument implements TextDocument {
         const newCode = `\n`;
 
         // Compute where we start from.
-        const fromOffset = index >= 0 ? index < this._cellRanges.length - 1 ? this._cellRanges[index].start : 0 : this._contents.length;
+        const fromOffset = index >= 0 ? index <= this._cellRanges.length - 1 ? this._cellRanges[index].start : 0 : this._contents.length;
 
         // Split our text between the text and the cells above
         const before = this._contents.substr(0, fromOffset);
@@ -302,14 +302,13 @@ export class IntellisenseDocument implements TextDocument {
         this._lines = this.createLines();
 
         // Move all the other cell ranges down
-        this._cellRanges.splice(index, 0,
-            { id, start: fromOffset, fullEnd: fromOffset + newCode.length, currentEnd: fromOffset + newCode.length });
-
-        for (let i = index + 1; i < this._cellRanges.length - 1; i += 1) {
+        for (let i = index; i <= this._cellRanges.length - 1; i += 1) {
             this._cellRanges[i].start += newCode.length;
             this._cellRanges[i].fullEnd += newCode.length;
             this._cellRanges[i].fullEnd += newCode.length;
         }
+        this._cellRanges.splice(index, 0,
+            { id, start: fromOffset, fullEnd: fromOffset + newCode.length, currentEnd: fromOffset + newCode.length });
 
         return [
             {
@@ -368,7 +367,7 @@ export class IntellisenseDocument implements TextDocument {
                 return this.removeRange(normalized, from, to, cellIndex);
             } else if (cellIndex >= 0) {
                 // This is an edit of a read only cell. Just replace our currentEnd position
-                const newCode = `${normalized} \n`;
+                const newCode = `${normalized}\n`;
                 this._cellRanges[cellIndex].currentEnd = this._cellRanges[cellIndex].start + newCode.length;
             }
         }
@@ -381,17 +380,35 @@ export class IntellisenseDocument implements TextDocument {
 
         const index = this._cellRanges.findIndex(c => c.id === id);
         if (index >= 0) {
+            this._version += 1;
+
             const found = this._cellRanges[index];
+            const foundLength = found.currentEnd - found.start;
             const from = new Position(this.getLineFromOffset(found.start), 0);
             const to = this.positionAt(found.currentEnd);
 
-            // for some reason, start for the next cell isn't updated on removeRange,
-            // so we update it here
-            if (index < this._cellRanges.length - 1) {
-                this._cellRanges[index + 1].start = found.start;
+            // Remove from the cell ranges.
+            for (let i = index + 1; i <= this._cellRanges.length - 1; i += 1) {
+                this._cellRanges[i].start -= foundLength;
+                this._cellRanges[i].fullEnd -= foundLength;
+                this._cellRanges[i].currentEnd -= foundLength;
             }
             this._cellRanges.splice(index, 1);
-            change = this.removeRange('', from, to, index);
+
+            // Recreate the contents
+            const before = this._contents.substr(0, found.start);
+            const after = this._contents.substr(found.currentEnd);
+            this._contents = `${before}${after}`;
+            this._lines = this.createLines();
+
+            change = [
+                {
+                    range: this.createSerializableRange(from, to),
+                    rangeOffset: found.start,
+                    rangeLength: foundLength,
+                    text: ''
+                }
+            ];
         }
 
         return change;
@@ -402,6 +419,8 @@ export class IntellisenseDocument implements TextDocument {
 
         const index = this._cellRanges.findIndex(c => c.id === id);
         if (index === oldIndex) {
+            this._version += 1;
+
             const topIndex = oldIndex < newIndex ? oldIndex : newIndex;
             const bottomIndex = oldIndex > newIndex ? oldIndex : newIndex;
             const top = { ...this._cellRanges[topIndex] };
@@ -448,6 +467,8 @@ export class IntellisenseDocument implements TextDocument {
     public removeAll(): TextDocumentContentChangeEvent[] {
         let change: TextDocumentContentChangeEvent[] = [];
         if (this._lines.length > 0) {
+            this._version += 1;
+
             const from = this._lines[0].range.start;
             const to = this._lines[this._lines.length - 1].rangeIncludingLineBreak.end;
             const length = this._contents.length;
