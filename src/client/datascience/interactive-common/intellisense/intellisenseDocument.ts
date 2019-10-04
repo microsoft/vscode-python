@@ -309,7 +309,7 @@ export class IntellisenseDocument implements TextDocument {
         for (let i = insertIndex; i <= this._cellRanges.length - 1; i += 1) {
             this._cellRanges[i].start += newCode.length;
             this._cellRanges[i].fullEnd += newCode.length;
-            this._cellRanges[i].fullEnd += newCode.length;
+            this._cellRanges[i].currentEnd += newCode.length;
         }
         this._cellRanges.splice(insertIndex, 0,
             { id, start: fromOffset, fullEnd: fromOffset + newCode.length, currentEnd: fromOffset + newCode.length });
@@ -325,12 +325,12 @@ export class IntellisenseDocument implements TextDocument {
     }
 
     public removeAllCells(): TextDocumentContentChangeEvent[] {
-        // Remove everything up to the edit cell
-        if (this._cellRanges.length > 1) {
+        // Remove everything
+        if (this.inEditMode) {
             this._version += 1;
 
             // Compute the offset for the edit cell
-            const toOffset = this._cellRanges[this._cellRanges.length - 1].start;
+            const toOffset = this._cellRanges[this._cellRanges.length - 1].fullEnd;
             const from = this.positionAt(0);
             const to = this.positionAt(toOffset);
 
@@ -338,12 +338,7 @@ export class IntellisenseDocument implements TextDocument {
             const result = this.removeRange('', from, to, 0);
 
             // Update our cell range
-            this._cellRanges = [{
-                id: Identifiers.EditCellId,
-                start: 0,
-                fullEnd: this._cellRanges[this._cellRanges.length - 1].fullEnd - toOffset,
-                currentEnd: this._cellRanges[this._cellRanges.length - 1].fullEnd - toOffset
-            }];
+            this._cellRanges = [];
 
             return result;
         }
@@ -383,7 +378,8 @@ export class IntellisenseDocument implements TextDocument {
         let change: TextDocumentContentChangeEvent[] = [];
 
         const index = this._cellRanges.findIndex(c => c.id === id);
-        if (index >= 0) {
+        // Ignore unless in edit mode. For non edit mode, cells are still there.
+        if (index >= 0 && this.inEditMode) {
             this._version += 1;
 
             const found = this._cellRanges[index];
@@ -423,7 +419,7 @@ export class IntellisenseDocument implements TextDocument {
 
         const firstIndex = this._cellRanges.findIndex(c => c.id === first);
         const secondIndex = this._cellRanges.findIndex(c => c.id === second);
-        if (firstIndex >= 0 && secondIndex >= 0 && firstIndex !== secondIndex) {
+        if (firstIndex >= 0 && secondIndex >= 0 && firstIndex !== secondIndex && this.inEditMode) {
             this._version += 1;
 
             const topIndex = firstIndex < secondIndex ? firstIndex : secondIndex;
@@ -471,7 +467,8 @@ export class IntellisenseDocument implements TextDocument {
 
     public removeAll(): TextDocumentContentChangeEvent[] {
         let change: TextDocumentContentChangeEvent[] = [];
-        if (this._lines.length > 0) {
+        // Ignore unless in edit mode.
+        if (this._lines.length > 0 && this.inEditMode) {
             this._version += 1;
 
             const from = this._lines[0].range.start;

@@ -187,7 +187,7 @@ export function createCellVM(inputCell: ICell, settings: IDataScienceSettings | 
 }
 
 function generateVMs(inputBlockToggled: (id: string) => void, filePath: string, editable: boolean): ICellViewModel[] {
-    const cells = generateCells(filePath);
+    const cells = generateCells(filePath, 10);
     return cells.map((cell: ICell) => {
         const vm = createCellVM(cell, undefined, inputBlockToggled, editable);
         vm.useQuickEdit = false;
@@ -195,10 +195,10 @@ function generateVMs(inputBlockToggled: (id: string) => void, filePath: string, 
     });
 }
 
-function generateCells(filePath: string): ICell[] {
+export function generateCells(filePath: string, repetitions: number): ICell[] {
     // Dupe a bunch times for perf reasons
     let cellData: (nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell | IMessageCell)[] = [];
-    for (let i = 0; i < 10; i += 1) {
+    for (let i = 0; i < repetitions; i += 1) {
         cellData = [...cellData, ...generateCellData()];
     }
     return cellData.map((data: nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell | IMessageCell, key: number) => {
