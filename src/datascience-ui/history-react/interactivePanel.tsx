@@ -67,6 +67,11 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
     }
 
     public render() {
+        const dynamicFont: React.CSSProperties = {
+            fontSize: this.state.fontSize,
+            fontFamily: this.state.fontFamily
+        };
+
         // Update the state controller with our new state
         this.stateController.renderUpdate(this.state);
         const progressBar = this.state.busy && !this.props.testMode ? <Progress /> : undefined;
@@ -77,7 +82,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
         }
 
         return (
-            <div id='main-panel' ref={this.mainPanelRef} role='Main'>
+            <div id='main-panel' ref={this.mainPanelRef} role='Main' style={dynamicFont}>
                 <div className='styleSetter'>
                     <style>
                         {this.state.rootCss}
