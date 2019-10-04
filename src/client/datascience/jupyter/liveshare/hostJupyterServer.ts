@@ -96,6 +96,17 @@ export class HostJupyterServer
         }
     }
 
+    public async onSessionChange(api: vsls.LiveShare | null): Promise<void> {
+        await super.onSessionChange(api);
+
+        this.getNotebooks().forEach(async notebook => {
+            const hostNotebook = notebook as HostJupyterNotebook;
+            if (hostNotebook) {
+                await hostNotebook.onSessionChange(api);
+            }
+        });
+    }
+
     public async onDetach(api: vsls.LiveShare | null): Promise<void> {
         await super.onDetach(api);
 
