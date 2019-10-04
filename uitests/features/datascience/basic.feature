@@ -1,6 +1,6 @@
 @ds
 Feature: Data Science
-    @smoke
+    @smoke @python3
     Scenario: Ensure cell in python file is executed within an interactive window
         """
         To test Data Science feature, just open a python file and run some code in the interactive window.

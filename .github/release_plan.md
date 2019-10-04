@@ -7,7 +7,6 @@
 
 # Release candidate (Tuesday, XXX XX)
 
-- [ ] Ensure all new features are tracked via telemetry
 - [ ] Announce the code freeze (not just to team but also to ptvsd and language server)
 - [ ] Update master for the release
    - [ ] Create a branch against `master` for a pull request

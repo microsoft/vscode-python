@@ -2511,6 +2511,12 @@
                 ]
             },
             {
+                "id": "ini",
+                "filenames": [
+                    ".flake8"
+                ]
+            },
+            {
                 "id": "jinja",
                 "extensions": [
                     ".jinja2",
