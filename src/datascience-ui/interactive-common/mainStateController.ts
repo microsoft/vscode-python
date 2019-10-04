@@ -453,7 +453,7 @@ export class MainStateController implements IMessageHandler {
     public toggleVariableExplorer = () => {
         this.sendMessage(InteractiveWindowMessages.VariableExplorerToggle, !this.pendingState.variablesVisible);
         this.setState({ variablesVisible: !this.pendingState.variablesVisible });
-        if (!this.pendingState.variablesVisible) {
+        if (this.pendingState.variablesVisible) {
             this.refreshVariables();
         }
     }
