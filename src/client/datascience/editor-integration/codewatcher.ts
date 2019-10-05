@@ -22,7 +22,7 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { ICodeExecutionHelper } from '../../terminals/types';
 import { CellMatcher } from '../cellMatcher';
-import { Commands, Telemetry } from '../constants';
+import { Commands, Identifiers, Telemetry } from '../constants';
 import { ICodeLensFactory, ICodeWatcher, IDataScienceErrorHandler, IInteractiveWindowProvider } from '../types';
 
 @injectable()
@@ -268,9 +268,10 @@ export class CodeWatcher implements ICodeWatcher {
 
     public async addEmptyCellToBottom(): Promise<void> {
         const editor = this.documentManager.activeTextEditor;
+        const cellDelineator = this.defaultCellMarker;
         if (editor) {
             editor.edit((editBuilder) => {
-                editBuilder.insert(new Position(editor.document.lineCount, 0), '\n\n#%%\n');
+                editBuilder.insert(new Position(editor.document.lineCount, 0), `\n\n${cellDelineator}\n`);
             });
 
             const newPosition = new Position(editor.document.lineCount + 3, 0); // +3 to account for the added spaces and to position after the new mark
@@ -286,6 +287,7 @@ export class CodeWatcher implements ICodeWatcher {
         const editor = this.documentManager.activeTextEditor;
         const cellMatcher = new CellMatcher();
         let index = 0;
+        const cellDelineator = this.defaultCellMarker;
 
         if (editor) {
             editor.edit((editBuilder) => {
@@ -295,14 +297,14 @@ export class CodeWatcher implements ICodeWatcher {
                     if (cellMatcher.isCell(editor.document.lineAt(i).text)) {
                         lastCell = false;
                         index = i;
-                        editBuilder.insert(new Position(i, 0), '#%%\n\n');
+                        editBuilder.insert(new Position(i, 0), `${cellDelineator}\n\n`);
                         break;
                     }
                 }
 
                 if (lastCell) {
                     index = editor.document.lineCount;
-                    editBuilder.insert(new Position(editor.document.lineCount, 0), '\n#%%\n');
+                    editBuilder.insert(new Position(editor.document.lineCount, 0), `\n${cellDelineator}\n`);
                 }
             });
         }
@@ -311,6 +313,10 @@ export class CodeWatcher implements ICodeWatcher {
         const newPosition = new Position(index + 1, 0);
         return this.runMatchingCell(editor.selection, false)
             .then(() => this.advanceToRange(new Range(newPosition, newPosition)));
+    }
+
+    private get defaultCellMarker(): string {
+        return this.configService.getSettings().datascience.defaultCellMarker || Identifiers.DefaultCodeCellMarker;
     }
 
     private onCodeLensFactoryUpdated(): void {
@@ -419,7 +425,7 @@ export class CodeWatcher implements ICodeWatcher {
 
         if (editor) {
             editor.edit((editBuilder) => {
-                editBuilder.insert(new Position(currentRange.end.line + 1, 0), '\n\n#%%\n');
+                editBuilder.insert(new Position(currentRange.end.line + 1, 0), `\n\n${this.defaultCellMarker}\n`);
             });
         }
 

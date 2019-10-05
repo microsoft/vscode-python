@@ -1557,6 +1557,12 @@
                     "description": "Regular expression used to identify code cells. All code until the next match is considered part of this cell. \nDefaults to '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])' if left blank",
                     "scope": "resource"
                 },
+                "python.dataScience.defaultCellMarker": {
+                    "type": "string",
+                    "default": "# %%",
+                    "description": "Cell marker used for delineating a cell in a python file.",
+                    "scope": "resource"
+                },
                 "python.dataScience.markdownRegularExpression": {
                     "type": "string",
                     "default": "^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)",
