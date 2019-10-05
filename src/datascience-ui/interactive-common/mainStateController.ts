@@ -905,15 +905,17 @@ export class MainStateController implements IMessageHandler {
                 this.toggleCellInputVisibility(showInputs, getSettings().collapseCellInputCodeByDefault);
             }
 
-            const fontSize = dsSettings.extraSettings.fontSize;
-            const fontFamily = dsSettings.extraSettings.fontFamily;
+            if (dsSettings.extraSettings) {
+                const fontSize = dsSettings.extraSettings.fontSize;
+                const fontFamily = dsSettings.extraSettings.fontFamily;
 
-            this.setState({
-                font: {
-                    size: fontSize,
-                    family: fontFamily
-                }
-            });
+                this.setState({
+                    font: {
+                        size: fontSize,
+                        family: fontFamily
+                    }
+                });
+            }
         }
     }
 
