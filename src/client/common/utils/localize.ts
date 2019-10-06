@@ -295,6 +295,9 @@ export namespace DataScience {
     export const convertingToPythonFile = localize('DataScience.convertingToPythonFile', 'Converting ipynb to python file');
     export const noInterpreter = localize('DataScience.noInterpreter', 'No python selected');
     export const notebookNotFound = localize('DataScience.notebookNotFound', 'python -m jupyter notebook --version is not running');
+
+    export const jupyterGetRunningKernels = localize('DataScience.getRunningKernels', 'Getting running kernels from {0}');
+    export const jupyterGetAvailableKernels = localize('DataScience.getAvailableKernels', 'Getting available kernels list from {0}');
 }
 
 export namespace DebugConfigStrings {

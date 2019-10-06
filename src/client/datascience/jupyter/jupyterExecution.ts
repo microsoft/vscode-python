@@ -5,7 +5,6 @@ import { Kernel } from '@jupyterlab/services';
 import { execSync } from 'child_process';
 import * as os from 'os';
 import * as path from 'path';
-import { URL } from 'url';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, Event, EventEmitter } from 'vscode';
 
@@ -39,6 +38,7 @@ import { JupyterConnection, JupyterServerInfo } from './jupyterConnection';
 import { JupyterInstallError } from './jupyterInstallError';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
+import { createConnectionInfo } from './jupyterUtils';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 
 export class JupyterExecutionBase implements IJupyterExecution {
@@ -320,28 +320,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     }
 
     private createRemoteConnectionInfo = (uri: string): IConnection => {
-        let url: URL;
-        try {
-            url = new URL(uri);
-        } catch (err) {
-            // This should already have been parsed when set, so just throw if it's not right here
-            throw err;
-        }
-        const settings = this.configuration.getSettings();
-        const allowUnauthorized = settings.datascience.allowUnauthorizedRemoteConnection ? settings.datascience.allowUnauthorizedRemoteConnection : false;
-        const allowShutdown: boolean | undefined = settings.datascience.jupyterServerAllowKernelShutdown;
-
-        return {
-            allowUnauthorized,
-            baseUrl: `${url.protocol}//${url.host}${url.pathname}`,
-            token: `${url.searchParams.get('token')}`,
-            hostName: url.hostname,
-            localLaunch: false,
-            localProcExitCode: undefined,
-            disconnected: (_l) => { return { dispose: noop }; },
-            dispose: noop,
-            allowShutdown: allowShutdown
-        };
+        return createConnectionInfo(uri, this.configuration.getSettings());
     }
 
     // tslint:disable-next-line: max-func-body-length
