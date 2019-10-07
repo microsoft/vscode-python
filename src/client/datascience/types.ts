@@ -255,6 +255,8 @@ export interface INotebookEditor extends IInteractiveBase {
     readonly active: boolean;
     load(contents: string, file: Uri): Promise<void>;
     runAllCells(): void;
+    runSelectedCell(): void;
+    addCellBelow(): void;
 }
 
 export const IInteractiveWindowListener = Symbol('IInteractiveWindowListener');

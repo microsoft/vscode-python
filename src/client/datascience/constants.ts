@@ -36,6 +36,8 @@ export namespace Commands {
     export const NotebookEditorInterruptKernel = 'python.datascience.notebookeditor.interruptkernel';
     export const NotebookEditorRestartKernel = 'python.datascience.notebookeditor.restartkernel';
     export const NotebookEditorRunAllCells = 'python.datascience.notebookeditor.runallcells';
+    export const NotebookEditorRunSelectedCell = 'python.datascience.notebookeditor.runselectedcell';
+    export const NotebookEditorAddCellBelow = 'python.datascience.notebookeditor.addcellbelow';
     export const ExpandAllCells = 'python.datascience.expandallcells';
     export const CollapseAllCells = 'python.datascience.collapseallcells';
     export const ExportOutputAsNotebook = 'python.datascience.exportoutputasnotebook';

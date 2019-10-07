@@ -43,8 +43,16 @@ export class NativeEditorStateController extends MainStateController {
                 this.waitingForLoadRender = true;
                 break;
 
-            case InteractiveWindowMessages.RunAllCells:
+            case InteractiveWindowMessages.NotebookRunAllCells:
                 this.runAll();
+                break;
+
+            case InteractiveWindowMessages.NotebookRunSelectedCell:
+                this.runSelectedCell();
+                break;
+
+            case InteractiveWindowMessages.NotebookAddCellBelow:
+                this.addNewCell();
                 break;
 
             default:
@@ -78,6 +86,20 @@ export class NativeEditorStateController extends MainStateController {
 
         // Any code cells below, we can run below
         return index > 0 && cells.find((cvm, i) => i >= index && cvm.cell.data.cell_type === 'code');
+    }
+
+    public runSelectedCell = () => {
+        this.suspendUpdates();
+        const selectedCellId = this.getState().selectedCell;
+
+        if (selectedCellId) {
+            const cells = this.getState().cellVMs;
+            const selectedCell = cells.find(cvm => cvm.cell.id === selectedCellId);
+            if (selectedCell) {
+                this.submitInput(concatMultilineString(selectedCell.cell.data.source), selectedCell);
+            }
+        }
+        this.resumeUpdates();
     }
 
     public runAll = () => {
