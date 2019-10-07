@@ -183,6 +183,10 @@
     "DataScience.jupyterSelectURISpecifyURI": "Type in the URI to connect to a running Jupyter server",
     "DataScience.jupyterSelectURIPrompt": "Enter the URI of a Jupyter server",
     "DataScience.jupyterSelectURIInvalidURI": "Invalid URI specified",
+    "DataScience.jupyterServerReconnectKernelLocal" : "Select Jupyer Kernel",
+    "DataScience.jupyterServerReconnectKernelStartNewLocal" : "Start new kernel on Jupyter server",
+    "DataScience.jupyterServerKernelAutoShutdownLocal" : "Automatically shutdown Kernel when closed",
+    "DataScience.jupyterServerKernelLeaveRunningLocal" : "Leave Kernel running when closed",
     "DataScience.jupyterServerReconnectKernel": "Select Jupyer kernel",
     "DataScience.jupyterServerReconnectKernelStartNew": "Start new kernel on Jupyter server",
     "DataScience.jupyterServerKernelAutoShutdown": "Automatically shutdown kernel when closed",
@@ -374,5 +378,9 @@
     "DataScience.untitledNotebookYes": "Save",
     "DataScience.untitledNotebookNo": "Cancel",
     "DataScience.noInterpreter": "No python selected",
-    "DataScience.notebookNotFound": "python -m jupyter notebook --version is not running"
+    "DataScience.notebookNotFound": "python -m jupyter notebook --version is not running",
+    "DataScience.getRunningKernels" : "Getting running kernels from {0}.",
+    "DataScience.noRunningKernels" : "Failed getting running kernels from {0}.",
+    "DataScience.getAvailableKernels" : "Getting available kernels from {0}.",
+    "DataScience.noAvailableKernels" : "Failed getting available kernels from {0}."
 }
