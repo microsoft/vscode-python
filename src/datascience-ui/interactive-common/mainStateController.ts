@@ -314,8 +314,8 @@ export class MainStateController implements IMessageHandler {
             // Update our state
             this.setState({
                 cellVMs: newVMs,
-                selectedCell: newSelection,
-                focusedCell: newFocused,
+                selectedCellId: newSelection,
+                focusedCellId: newFocused,
                 undoStack: this.pushStack(this.pendingState.undoStack, this.pendingState.cellVMs),
                 skipNextScroll: true
             });
@@ -509,7 +509,7 @@ export class MainStateController implements IMessageHandler {
                 newVMs[oldSelect] = { ...newVMs[oldSelect], focused: false };
             }
             // Only unfocus if we haven't switched somewhere else yet
-            this.setState({ focusedCell: undefined, cellVMs: newVMs });
+            this.setState({ focusedCellId: undefined, cellVMs: newVMs });
         }
     }
 
@@ -528,13 +528,13 @@ export class MainStateController implements IMessageHandler {
             }
 
             // Save the whole thing in our state.
-            this.setState({ selectedCell: cellId, focusedCell: cellId, cellVMs: newVMs });
+            this.setState({ selectedCellId: cellId, focusedCellId: cellId, cellVMs: newVMs });
         }
     }
 
-    public selectCell = (cellId: string, focusedCell?: string) => {
+    public selectCell = (cellId: string, focusedCellId?: string) => {
         // Skip if already the same cell
-        if (this.pendingState.selectedCellId !== cellId || this.pendingState.focusedCellId !== focusedCell) {
+        if (this.pendingState.selectedCellId !== cellId || this.pendingState.focusedCellId !== focusedCellId) {
             const newVMs = [...this.pendingState.cellVMs];
             // Switch the old vm
             const oldSelect = this.findCellIndex(this.pendingState.selectedCellId);
@@ -543,11 +543,11 @@ export class MainStateController implements IMessageHandler {
             }
             const newSelect = this.findCellIndex(cellId);
             if (newSelect >= 0) {
-                newVMs[newSelect] = { ...newVMs[newSelect], selected: true, focused: focusedCell === newVMs[newSelect].cell.id };
+                newVMs[newSelect] = { ...newVMs[newSelect], selected: true, focused: focusedCellId === newVMs[newSelect].cell.id };
             }
 
             // Save the whole thing in our state.
-            this.setState({ selectedCell: cellId, focusedCell, cellVMs: newVMs });
+            this.setState({ selectedCellId: cellId, focusedCellId, cellVMs: newVMs });
         }
     }
 

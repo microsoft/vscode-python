@@ -186,8 +186,8 @@ export class NativeCell extends React.Component<INativeCellProps> {
                 // Not a click on an button in a toolbar, select the cell.
                 ev.stopPropagation();
                 this.lastKeyPressed = undefined;
-                const focusedCell = this.isFocused() ? this.cellId : undefined;
-                this.props.stateController.selectCell(this.cellId, focusedCell);
+                const focusedCellId = this.isFocused() ? this.cellId : undefined;
+                this.props.stateController.selectCell(this.cellId, focusedCellId);
             }
         }
     }
