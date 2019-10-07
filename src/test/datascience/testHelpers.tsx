@@ -150,9 +150,9 @@ export function verifyHtmlOnCell(wrapper: ReactWrapper<any, Readonly<{}>, React.
         assert.ok(outHtml.includes(sliced), `${outHtml} does not contain ${sliced}`);
     } else {
         const output = targetCell!.find('div.cell-output');
-        const outputHtml = output.length > 0 ? output.html() : 'empty';
+        const outputHtml = output.length > 0 ? output.html() : undefined;
         // html not specified, look for an empty render
-        assert.ok(targetCell!.isEmptyRender(), `Target cell is not empty render, got this instead: ${outputHtml}`);
+        assert.ok(targetCell!.isEmptyRender() || outputHtml === undefined, `Target cell is not empty render, got this instead: ${outputHtml}`);
     }
 }
 

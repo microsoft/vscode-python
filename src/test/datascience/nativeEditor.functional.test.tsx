@@ -10,7 +10,8 @@ import { IApplicationShell, IDocumentManager } from '../../client/common/applica
 import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { Identifiers } from '../../client/datascience/constants';
-import { ICell, INotebookExporter } from '../../client/datascience/types';
+import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
+import { ICell, IJupyterExecution, INotebookExporter, INotebookEditorProvider } from '../../client/datascience/types';
 import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
@@ -227,4 +228,54 @@ for _ in range(50):
         verifyHtmlOnCell(wrapper, 'NativeCell', `2`, 1);
         verifyHtmlOnCell(wrapper, 'NativeCell', `3`, 2);
     }, () => { return ioc; });
+
+    runMountedTest('Startup and shutdown', async (wrapper) => {
+        addMockData(ioc, 'b=2\nb', 2);
+        addMockData(ioc, 'c=3\nc', 3);
+
+        const baseFile = [ {id: 'NotebookImport#0', data: {source: 'a=1\na'}},
+        {id: 'NotebookImport#1', data: {source: 'b=2\nb'}},
+        {id: 'NotebookImport#2', data: {source: 'c=3\nc'}} ];
+        const runAllCells =  baseFile.map(cell => {
+            return createFileCell(cell, cell.data);
+        });
+        const notebook = await ioc.get<INotebookExporter>(INotebookExporter).translateToNotebook(runAllCells, undefined);
+        let editor = await openEditor(ioc, JSON.stringify(notebook));
+
+        // Run everything
+        let runAllButton = findButton(wrapper, NativeEditor, 3);
+        await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
+        await waitForUpdate(wrapper, NativeEditor, 16);
+
+        // Close editor. Should still have the server up
+        await editor.dispose();
+        const jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
+        const editorProvider = ioc.serviceManager.get<INotebookEditorProvider>(INotebookEditorProvider);
+        const server = await jupyterExecution.getServer(await editorProvider.getNotebookOptions());
+        assert.ok(server, 'Server was destroyed on notebook shutdown');
+
+        // Reopen, and rerun
+        editor = await openEditor(ioc, JSON.stringify(notebook));
+        runAllButton = findButton(wrapper, NativeEditor, 3);
+        await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
+        await waitForUpdate(wrapper, NativeEditor, 16);
+        verifyHtmlOnCell(wrapper, 'NativeCell', `1`, 0);
+    }, () => { return ioc; });
+
+    runMountedTest('Failure', async (wrapper) => {
+        // Make a dummy class that will fail during launch
+        class FailedProcess extends JupyterExecutionFactory {
+            public isNotebookSupported = (): Promise<boolean> => {
+                return Promise.resolve(false);
+            }
+        }
+        ioc.serviceManager.rebind<IJupyterExecution>(IJupyterExecution, FailedProcess);
+        ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
+        await createNewEditor(ioc);
+        await addCell(wrapper, 'a=1\na', true);
+
+        // Cell should not have the output
+        verifyHtmlOnCell(wrapper, 'NativeCell', undefined, 0);
+    }, () => ioc);
+
 });
