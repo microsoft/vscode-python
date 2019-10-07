@@ -18,11 +18,30 @@ import {
     IInteractiveWindowMapping,
     InteractiveWindowMessages
 } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import { IInteractiveWindowListener, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
+import {
+    ICell,
+    IInteractiveWindowListener,
+    IInteractiveWindowProvider,
+    IJupyterExecution
+} from '../../client/datascience/types';
+import { generateCells } from '../../datascience-ui/interactive-common/mainState';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { MockLanguageClient } from './mockLanguageClient';
 
 // tslint:disable:no-any unified-signatures
+const TestCellContents = `myvar = """ # Lorem Ipsum
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+Nullam eget varius ligula, eget fermentum mauris.
+Cras ultrices, enim sit amet iaculis ornare, nisl nibh aliquet elit, sed ultrices velit ipsum dignissim nisl.
+Nunc quis orci ante. Vivamus vel blandit velit.
+","Sed mattis dui diam, et blandit augue mattis vestibulum.
+Suspendisse ornare interdum velit. Suspendisse potenti.
+Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
+"""
+df
+df
+`;
 
 // tslint:disable-next-line: max-func-body-length
 suite('DataScience Intellisense Unit Tests', () => {
@@ -133,13 +152,23 @@ suite('DataScience Intellisense Unit Tests', () => {
     }
 
     function removeCell(id: string): Promise<void> {
-        sendMessage(InteractiveWindowMessages.RemoveCell, { id }).ignoreErrors();
-        return Promise.resolve();
+        return sendMessage(InteractiveWindowMessages.RemoveCell, { id });
     }
 
     function removeAllCells(): Promise<void> {
-        sendMessage(InteractiveWindowMessages.DeleteAllCells).ignoreErrors();
-        return Promise.resolve();
+        return sendMessage(InteractiveWindowMessages.DeleteAllCells);
+    }
+
+    function swapCells(id1: string, id2: string): Promise<void> {
+        return sendMessage(InteractiveWindowMessages.SwapCells, { firstCellId: id1, secondCellId: id2 });
+    }
+
+    function insertCell(id: string, code: string, codeCellAbove?: string): Promise<void> {
+        return sendMessage(InteractiveWindowMessages.InsertCell, { id, code, codeCellAbove });
+    }
+
+    function loadAllCells(cells: ICell[]): Promise<void> {
+        return sendMessage(InteractiveWindowMessages.LoadAllCellsComplete, { cells });
     }
 
     test('Add a single cell', async () => {
@@ -288,4 +317,98 @@ suite('DataScience Intellisense Unit Tests', () => {
         await addCell('import baz', '3');
         expect(languageClient.getDocumentContents()).to.be.eq('import sys\nimport foo\nimport bar\nimport baz\nsys', 'Document not set');
     });
+
+    test('Load remove and insert', async () => {
+        const cells = generateCells('foo.py', 1);
+        await loadAllCells(cells);
+        expect(languageClient.getDocumentContents()).to.be.eq(TestCellContents, 'Load all cells is failing');
+        await removeAllCells();
+        expect(languageClient.getDocumentContents()).to.be.eq('', 'Remove all cells is failing');
+        await insertCell('6', 'foo');
+        expect(languageClient.getDocumentContents()).to.be.eq('foo\n', 'Insert after remove');
+        await insertCell('7', 'bar', '6');
+        expect(languageClient.getDocumentContents()).to.be.eq('foo\nbar\n', 'Double insert after remove');
+    });
+
+    test('Swap cells around', async () => {
+        const cells = generateCells('foo.py', 1);
+        await loadAllCells(cells);
+        await swapCells('1', '2'); // 2nd cell is markdown
+        expect(languageClient.getDocumentContents()).to.be.eq(TestCellContents, 'Swap cells should skip swapping on markdown');
+        await swapCells('1', '3');
+        const afterSwap = `df
+myvar = """ # Lorem Ipsum
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+Nullam eget varius ligula, eget fermentum mauris.
+Cras ultrices, enim sit amet iaculis ornare, nisl nibh aliquet elit, sed ultrices velit ipsum dignissim nisl.
+Nunc quis orci ante. Vivamus vel blandit velit.
+","Sed mattis dui diam, et blandit augue mattis vestibulum.
+Suspendisse ornare interdum velit. Suspendisse potenti.
+Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
+"""
+df
+`;
+        expect(languageClient.getDocumentContents()).to.be.eq(afterSwap, 'Swap cells failed');
+        await swapCells('1', '3');
+        expect(languageClient.getDocumentContents()).to.be.eq(TestCellContents, 'Swap cells back failed');
+    });
+
+    test('Insert and swap', async () => {
+        const cells = generateCells('foo.py', 1);
+        await loadAllCells(cells);
+        expect(languageClient.getDocumentContents()).to.be.eq(TestCellContents, 'Load all cells is failing');
+        await insertCell('6', 'foo');
+        const afterInsert = `foo
+myvar = """ # Lorem Ipsum
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+Nullam eget varius ligula, eget fermentum mauris.
+Cras ultrices, enim sit amet iaculis ornare, nisl nibh aliquet elit, sed ultrices velit ipsum dignissim nisl.
+Nunc quis orci ante. Vivamus vel blandit velit.
+","Sed mattis dui diam, et blandit augue mattis vestibulum.
+Suspendisse ornare interdum velit. Suspendisse potenti.
+Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
+"""
+df
+df
+`;
+        expect(languageClient.getDocumentContents()).to.be.eq(afterInsert, 'Insert cell failed');
+        await insertCell('7', 'foo', '1');
+        const afterInsert2 = `foo
+myvar = """ # Lorem Ipsum
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+Nullam eget varius ligula, eget fermentum mauris.
+Cras ultrices, enim sit amet iaculis ornare, nisl nibh aliquet elit, sed ultrices velit ipsum dignissim nisl.
+Nunc quis orci ante. Vivamus vel blandit velit.
+","Sed mattis dui diam, et blandit augue mattis vestibulum.
+Suspendisse ornare interdum velit. Suspendisse potenti.
+Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
+"""
+foo
+df
+df
+`;
+        expect(languageClient.getDocumentContents()).to.be.eq(afterInsert2, 'Insert2 cell failed');
+        await removeCell('7');
+        expect(languageClient.getDocumentContents()).to.be.eq(afterInsert, 'Remove 2 cell failed');
+        await swapCells('1', '3');
+        const afterSwap = `foo
+df
+myvar = """ # Lorem Ipsum
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+Nullam eget varius ligula, eget fermentum mauris.
+Cras ultrices, enim sit amet iaculis ornare, nisl nibh aliquet elit, sed ultrices velit ipsum dignissim nisl.
+Nunc quis orci ante. Vivamus vel blandit velit.
+","Sed mattis dui diam, et blandit augue mattis vestibulum.
+Suspendisse ornare interdum velit. Suspendisse potenti.
+Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
+"""
+df
+`;
+        expect(languageClient.getDocumentContents()).to.be.eq(afterSwap, 'Swap cell failed');
+    });
+
 });

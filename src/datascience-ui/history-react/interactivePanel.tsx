@@ -350,8 +350,6 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
                         openLink={this.stateController.openLink}
                         expandImage={this.stateController.showPlot}
                         renderCellToolbar={this.renderCellToolbar}
-                        showLineNumbers={cellVM.showLineNumbers}
-                        hideOutput={cellVM.hideOutput}
                         font={this.state.font}
                     />
                 </ErrorBoundary>

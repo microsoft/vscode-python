@@ -36,7 +36,10 @@ export class Markdown extends React.Component<IMarkdownProps> {
     }
 
     public render() {
+        const classes = 'markdown-editor-area';
+
         return (
+            <div className={classes}>
                 <Editor
                     codeTheme={this.props.codeTheme}
                     autoFocus={this.props.autoFocus}
@@ -60,6 +63,7 @@ export class Markdown extends React.Component<IMarkdownProps> {
                     useQuickEdit={this.props.useQuickEdit}
                     font={this.props.font}
                 />
+            </div>
         );
     }
 

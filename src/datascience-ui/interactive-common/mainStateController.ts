@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as fastDeepEqual from 'fast-deep-equal';
+import * as immutable from 'immutable';
 import { min } from 'lodash';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
@@ -31,7 +32,14 @@ import { getSettings, updateSettings } from '../react-common/settingsReactSide';
 import { detectBaseTheme } from '../react-common/themeDetector';
 import { InputHistory } from './inputHistory';
 import { IntellisenseProvider } from './intellisenseProvider';
-import { createCellVM, createEditableCellVM, extractInputText, generateTestState, ICellViewModel, IMainState } from './mainState';
+import {
+    createCellVM,
+    createEditableCellVM,
+    extractInputText,
+    generateTestState,
+    ICellViewModel,
+    IMainState
+} from './mainState';
 import { initializeTokenizer, registerMonacoLanguage } from './tokenizer';
 
 export interface IMainStateControllerProps {
@@ -49,7 +57,8 @@ export interface IMainStateControllerProps {
 // tslint:disable-next-line: max-func-body-length
 export class MainStateController implements IMessageHandler {
     private stackLimit = 10;
-    private state: IMainState;
+    private pendingState: IMainState;
+    private renderedState: IMainState;
     private postOffice: PostOffice = new PostOffice();
     private intellisenseProvider: IntellisenseProvider;
     private onigasmPromise: Deferred<ArrayBuffer> | undefined;
@@ -60,7 +69,7 @@ export class MainStateController implements IMessageHandler {
 
     // tslint:disable-next-line:max-func-body-length
     constructor(private props: IMainStateControllerProps) {
-        this.state = {
+        this.renderedState = {
             editorOptions: this.computeEditorOptions(),
             cellVMs: [],
             busy: true,
@@ -85,7 +94,7 @@ export class MainStateController implements IMessageHandler {
 
         // Add test state if necessary
         if (!this.props.skipDefault) {
-            this.state = generateTestState(this.inputBlockToggled, '', this.props.defaultEditable);
+            this.renderedState = generateTestState(this.inputBlockToggled, '', this.props.defaultEditable);
         }
 
         // Setup the completion provider for monaco. We only need one
@@ -95,7 +104,7 @@ export class MainStateController implements IMessageHandler {
         if (this.props.skipDefault) {
             if (this.props.testMode) {
                 // Running a test, skip the tokenizer. We want the UI to display synchronously
-                this.state = { tokenizerLoaded: true, ...this.state };
+                this.renderedState = { tokenizerLoaded: true, ...this.renderedState };
 
                 // However we still need to register python as a language
                 registerMonacoLanguage();
@@ -103,6 +112,9 @@ export class MainStateController implements IMessageHandler {
                 initializeTokenizer(this.loadOnigasm, this.loadTmlanguage, this.tokenizerLoaded).ignoreErrors();
             }
         }
+
+        // Copy the rendered state
+        this.pendingState = { ...this.renderedState };
 
         // Add ourselves as a handler for the post office
         this.postOffice.addHandler(this);
@@ -247,16 +259,16 @@ export class MainStateController implements IMessageHandler {
     }
 
     public stopBusy = () => {
-        if (this.state.busy) {
+        if (this.pendingState.busy) {
             this.setState({ busy: false });
         }
     }
 
     public redo = () => {
         // Pop one off of our redo stack and update our undo
-        const cells = this.state.redoStack[this.state.redoStack.length - 1];
-        const redoStack = this.state.redoStack.slice(0, this.state.redoStack.length - 1);
-        const undoStack = this.pushStack(this.state.undoStack, this.state.cellVMs);
+        const cells = this.pendingState.redoStack[this.pendingState.redoStack.length - 1];
+        const redoStack = this.pendingState.redoStack.slice(0, this.pendingState.redoStack.length - 1);
+        const undoStack = this.pushStack(this.pendingState.undoStack, this.pendingState.cellVMs);
         this.sendMessage(InteractiveWindowMessages.Redo);
         this.setState({
             cellVMs: cells,
@@ -268,9 +280,9 @@ export class MainStateController implements IMessageHandler {
 
     public undo = () => {
         // Pop one off of our undo stack and update our redo
-        const cells = this.state.undoStack[this.state.undoStack.length - 1];
-        const undoStack = this.state.undoStack.slice(0, this.state.undoStack.length - 1);
-        const redoStack = this.pushStack(this.state.redoStack, this.state.cellVMs);
+        const cells = this.pendingState.undoStack[this.pendingState.undoStack.length - 1];
+        const undoStack = this.pendingState.undoStack.slice(0, this.pendingState.undoStack.length - 1);
+        const redoStack = this.pushStack(this.pendingState.redoStack, this.pendingState.cellVMs);
         this.sendMessage(InteractiveWindowMessages.Undo);
         this.setState({
             cellVMs: cells,
@@ -281,15 +293,30 @@ export class MainStateController implements IMessageHandler {
     }
 
     public deleteCell = (cellId: string) => {
-        const cellVM = this.state.cellVMs.find(c => c.cell.id === cellId);
-        if (cellVM) {
+        const index = this.findCellIndex(cellId);
+        if (index >= 0) {
             this.sendMessage(InteractiveWindowMessages.DeleteCell);
-            this.sendMessage(InteractiveWindowMessages.RemoveCell, { id: cellVM.cell.id });
+            this.sendMessage(InteractiveWindowMessages.RemoveCell, { id: cellId });
+
+            // Recompute select/focus if this item has either
+            let newSelection = this.pendingState.selectedCellId;
+            let newFocused = this.pendingState.focusedCellId;
+            const newVMs = [...this.pendingState.cellVMs.filter(c => c.cell.id !== cellId)];
+            const nextOrPrev = index === this.pendingState.cellVMs.length - 1 ? index - 1 : index;
+            if (this.pendingState.selectedCellId === cellId || this.pendingState.focusedCellId === cellId) {
+                if (nextOrPrev >= 0) {
+                    newVMs[nextOrPrev] = { ...newVMs[nextOrPrev], selected: true, focused: this.pendingState.focusedCellId === cellId };
+                    newSelection = newVMs[nextOrPrev].cell.id;
+                    newFocused = newVMs[nextOrPrev].focused ? newVMs[nextOrPrev].cell.id : undefined;
+                }
+            }
 
             // Update our state
             this.setState({
-                cellVMs: this.state.cellVMs.filter(c => c.cell.id !== cellId),
-                undoStack: this.pushStack(this.state.undoStack, this.state.cellVMs),
+                cellVMs: newVMs,
+                selectedCell: newSelection,
+                focusedCell: newFocused,
+                undoStack: this.pushStack(this.pendingState.undoStack, this.pendingState.cellVMs),
                 skipNextScroll: true
             });
         }
@@ -326,7 +353,7 @@ export class MainStateController implements IMessageHandler {
 
     public save = () => {
         // We have to take the current value of each cell to make sure we have the correct text.
-        this.state.cellVMs.forEach(c => this.updateCellSource(c.cell.id));
+        this.pendingState.cellVMs.forEach(c => this.updateCellSource(c.cell.id));
 
         // Then send the save with the new state.
         this.sendMessage(InteractiveWindowMessages.SaveAll, { cells: this.getNonEditCellVMs().map(cvm => cvm.cell) });
@@ -357,11 +384,11 @@ export class MainStateController implements IMessageHandler {
     }
 
     public canRedo = () => {
-        return this.state.redoStack.length > 0;
+        return this.pendingState.redoStack.length > 0;
     }
 
     public canUndo = () => {
-        return this.state.undoStack.length > 0;
+        return this.pendingState.undoStack.length > 0;
     }
 
     public canClearAllOutputs = () => {
@@ -369,10 +396,8 @@ export class MainStateController implements IMessageHandler {
     }
 
     public clearAllOutputs = () => {
-        const newList = this.state.cellVMs.map(cellVM => {
-            const newVM = cloneDeep(cellVM);
-            newVM.cell.data.outputs = [];
-            return newVM;
+        const newList = this.pendingState.cellVMs.map(cellVM => {
+            return immutable.updateIn(cellVM, ['cell', 'data', 'outputs'], () => []);
         });
         this.setState({
             cellVMs: newList
@@ -381,7 +406,7 @@ export class MainStateController implements IMessageHandler {
 
     public gotoCellCode = (cellId: string) => {
         // Find our cell
-        const cellVM = this.state.cellVMs.find(c => c.cell.id === cellId);
+        const cellVM = this.pendingState.cellVMs.find(c => c.cell.id === cellId);
 
         // Send a message to the other side to jump to a particular cell
         if (cellVM) {
@@ -391,9 +416,9 @@ export class MainStateController implements IMessageHandler {
 
     public copyCellCode = (cellId: string) => {
         // Find our cell. This is also supported on the edit cell
-        let cellVM = this.state.cellVMs.find(c => c.cell.id === cellId);
-        if (!cellVM && this.state.editCellVM && cellId === this.state.editCellVM.cell.id) {
-            cellVM = this.state.editCellVM;
+        let cellVM = this.pendingState.cellVMs.find(c => c.cell.id === cellId);
+        if (!cellVM && this.pendingState.editCellVM && cellId === this.pendingState.editCellVM.cell.id) {
+            cellVM = this.pendingState.editCellVM;
         }
 
         // Send a message to the other side to jump to a particular cell
@@ -420,19 +445,19 @@ export class MainStateController implements IMessageHandler {
 
     public export = () => {
         // Send a message to the other side to export our current list
-        const cellContents: ICell[] = this.state.cellVMs.map((cellVM: ICellViewModel, _index: number) => { return cellVM.cell; });
+        const cellContents: ICell[] = this.pendingState.cellVMs.map((cellVM: ICellViewModel, _index: number) => { return cellVM.cell; });
         this.sendMessage(InteractiveWindowMessages.Export, cellContents);
     }
 
     // When the variable explorer wants to refresh state (say if it was expanded)
     public refreshVariables = (newExecutionCount?: number) => {
-        this.sendMessage(InteractiveWindowMessages.GetVariablesRequest, newExecutionCount === undefined ? this.state.currentExecutionCount : newExecutionCount);
+        this.sendMessage(InteractiveWindowMessages.GetVariablesRequest, newExecutionCount === undefined ? this.pendingState.currentExecutionCount : newExecutionCount);
     }
 
     public toggleVariableExplorer = () => {
-        this.sendMessage(InteractiveWindowMessages.VariableExplorerToggle, !this.state.variablesVisible);
-        this.setState({ variablesVisible: !this.state.variablesVisible });
-        if (!this.state.variablesVisible) {
+        this.sendMessage(InteractiveWindowMessages.VariableExplorerToggle, !this.pendingState.variablesVisible);
+        this.setState({ variablesVisible: !this.pendingState.variablesVisible });
+        if (this.pendingState.variablesVisible) {
             this.refreshVariables();
         }
     }
@@ -452,7 +477,7 @@ export class MainStateController implements IMessageHandler {
     }
 
     public readOnlyCodeCreated = (_text: string, file: string, id: string, monacoId: string) => {
-        const cell = this.state.cellVMs.find(c => c.cell.id === id);
+        const cell = this.pendingState.cellVMs.find(c => c.cell.id === id);
         if (cell) {
             // Pass this onto the completion provider running in the extension
             this.sendMessage(InteractiveWindowMessages.AddCell, {
@@ -476,28 +501,67 @@ export class MainStateController implements IMessageHandler {
 
     public codeLostFocus = (cellId: string) => {
         this.onCodeLostFocus(cellId);
-        if (this.state.focusedCell === cellId) {
+        if (this.pendingState.focusedCellId === cellId) {
+            const newVMs = [...this.pendingState.cellVMs];
+            // Switch the old vm
+            const oldSelect = this.findCellIndex(cellId);
+            if (oldSelect >= 0) {
+                newVMs[oldSelect] = { ...newVMs[oldSelect], focused: false };
+            }
             // Only unfocus if we haven't switched somewhere else yet
-            this.setState({ focusedCell: undefined });
+            this.setState({ focusedCell: undefined, cellVMs: newVMs });
         }
     }
 
     public codeGotFocus = (cellId: string | undefined) => {
-        this.setState({ selectedCell: cellId, focusedCell: cellId });
+        // Skip if already has focus
+        if (cellId !== this.pendingState.focusedCellId) {
+            const newVMs = [...this.pendingState.cellVMs];
+            // Switch the old vm
+            const oldSelect = this.findCellIndex(this.pendingState.selectedCellId);
+            if (oldSelect >= 0) {
+                newVMs[oldSelect] = { ...newVMs[oldSelect], selected: false, focused: false };
+            }
+            const newSelect = this.findCellIndex(cellId);
+            if (newSelect >= 0) {
+                newVMs[newSelect] = { ...newVMs[newSelect], selected: true, focused: true };
+            }
+
+            // Save the whole thing in our state.
+            this.setState({ selectedCell: cellId, focusedCell: cellId, cellVMs: newVMs });
+        }
     }
 
     public selectCell = (cellId: string, focusedCell?: string) => {
-        this.setState({ selectedCell: cellId, focusedCell });
+        // Skip if already the same cell
+        if (this.pendingState.selectedCellId !== cellId || this.pendingState.focusedCellId !== focusedCell) {
+            const newVMs = [...this.pendingState.cellVMs];
+            // Switch the old vm
+            const oldSelect = this.findCellIndex(this.pendingState.selectedCellId);
+            if (oldSelect >= 0) {
+                newVMs[oldSelect] = { ...newVMs[oldSelect], selected: false, focused: false };
+            }
+            const newSelect = this.findCellIndex(cellId);
+            if (newSelect >= 0) {
+                newVMs[newSelect] = { ...newVMs[newSelect], selected: true, focused: focusedCell === newVMs[newSelect].cell.id };
+            }
+
+            // Save the whole thing in our state.
+            this.setState({ selectedCell: cellId, focusedCell, cellVMs: newVMs });
+        }
     }
 
     public changeCellType = (cellId: string, newType: 'code' | 'markdown') => {
-        const index = this.state.cellVMs.findIndex(c => c.cell.id === cellId);
-        if (index >= 0 && this.state.cellVMs[index].cell.data.cell_type !== newType) {
-            const newVM = cloneDeep(this.state.cellVMs[index]);
-            newVM.cell.data.cell_type = newType;
-            const cellVMs = [...this.state.cellVMs];
-            cellVMs.splice(index, 1, newVM);
+        const index = this.pendingState.cellVMs.findIndex(c => c.cell.id === cellId);
+        if (index >= 0 && this.pendingState.cellVMs[index].cell.data.cell_type !== newType) {
+            const cellVMs = [...this.pendingState.cellVMs];
+            cellVMs[index] = immutable.updateIn(this.pendingState.cellVMs[index], ['cell', 'data', 'cell_type'], () => newType);
             this.setState({ cellVMs });
+            if (newType === 'code') {
+                this.sendMessage(InteractiveWindowMessages.InsertCell, { id: cellId, code: concatMultilineString(cellVMs[index].cell.data.source), codeCellAbove: this.firstCodeCellAbove(cellId) });
+            } else {
+                this.sendMessage(InteractiveWindowMessages.RemoveCell, { id: cellId });
+            }
         }
     }
 
@@ -552,9 +616,9 @@ export class MainStateController implements IMessageHandler {
             // Stick in a new cell at the bottom that's editable and update our state
             // so that the last cell becomes busy
             this.setState({
-                cellVMs: [...this.state.cellVMs, newCell],
-                undoStack: this.pushStack(this.state.undoStack, this.state.cellVMs),
-                redoStack: this.state.redoStack,
+                cellVMs: [...this.pendingState.cellVMs, newCell],
+                undoStack: this.pushStack(this.pendingState.undoStack, this.pendingState.cellVMs),
+                redoStack: this.pendingState.redoStack,
                 skipNextScroll: false,
                 submittedText: true
             });
@@ -564,37 +628,41 @@ export class MainStateController implements IMessageHandler {
                 this.sendMessage(InteractiveWindowMessages.SubmitNewCell, { code, id: newCell.cell.id });
             }
         } else if (inputCell.cell.data.cell_type === 'code') {
-            // Update our input cell to be in progress again
-            inputCell.cell.state = CellState.executing;
-
-            // Clear our outputs
-            inputCell.cell.data.outputs = [];
-
-            // Update our state to display the new status
-            this.setState({
-                cellVMs: [...this.state.cellVMs]
-            });
+            const index = this.findCellIndex(inputCell.cell.id);
+            if (index >= 0) {
+                // Update our input cell to be in progress again and clear outputs
+                const newVMs = [...this.pendingState.cellVMs];
+                newVMs[index] = { ...inputCell, cell: { ...inputCell.cell, state: CellState.executing, data: { ...inputCell.cell.data, outputs: [] } } };
+                this.setState({
+                    cellVMs: newVMs
+                });
+            }
 
             // Send a message to rexecute this code
             this.sendMessage(InteractiveWindowMessages.ReExecuteCell, { code, id: inputCell.cell.id });
         } else if (inputCell.cell.data.cell_type === 'markdown') {
-            // Change the input on the cell
-            inputCell.cell.data.source = code;
-            inputCell.inputBlockText = code;
-
-            // Update our state to display the new status
-            this.setState({
-                cellVMs: [...this.state.cellVMs]
-            });
+            const index = this.findCellIndex(inputCell.cell.id);
+            if (index >= 0) {
+                // Change the input on the cell
+                const newVMs = [...this.pendingState.cellVMs];
+                newVMs[index] = { ...inputCell, inputBlockText: code, cell: { ...inputCell.cell, data: { ...inputCell.cell.data, source: code } } };
+                this.setState({
+                    cellVMs: newVMs
+                });
+            }
         }
     }
 
     public findCell(cellId?: string): ICellViewModel | undefined {
-        const nonEdit = this.state.cellVMs.find(cvm => cvm.cell.id === cellId);
+        const nonEdit = this.pendingState.cellVMs.find(cvm => cvm.cell.id === cellId);
         if (!nonEdit && cellId === Identifiers.EditCellId) {
-            return this.state.editCellVM;
+            return this.pendingState.editCellVM;
         }
         return nonEdit;
+    }
+
+    public findCellIndex(cellId?: string): number {
+        return this.pendingState.cellVMs.findIndex(cvm => cvm.cell.id === cellId);
     }
 
     public getMonacoId(cellId: string): string | undefined {
@@ -602,36 +670,37 @@ export class MainStateController implements IMessageHandler {
     }
 
     public toggleLineNumbers = (cellId: string) => {
-        const index = this.state.cellVMs.findIndex(c => c.cell.id === cellId);
+        const index = this.pendingState.cellVMs.findIndex(c => c.cell.id === cellId);
         if (index >= 0) {
-            const newVMs = [...this.state.cellVMs];
-            newVMs[index] = cloneDeep(newVMs[index]);
-            newVMs[index].showLineNumbers = !newVMs[index].showLineNumbers;
+            const newVMs = [...this.pendingState.cellVMs];
+            newVMs[index] = immutable.merge(newVMs[index], { showLineNumbers: !newVMs[index].showLineNumbers });
             this.setState({ cellVMs: newVMs });
         }
     }
 
     public toggleOutput = (cellId: string) => {
-        const index = this.state.cellVMs.findIndex(c => c.cell.id === cellId);
+        const index = this.pendingState.cellVMs.findIndex(c => c.cell.id === cellId);
         if (index >= 0) {
-            const newVMs = [...this.state.cellVMs];
-            newVMs[index] = cloneDeep(newVMs[index]);
-            newVMs[index].hideOutput = !newVMs[index].hideOutput;
+            const newVMs = [...this.pendingState.cellVMs];
+            newVMs[index] = immutable.merge(newVMs[index], { hideOutput: !newVMs[index].hideOutput });
             this.setState({ cellVMs: newVMs });
         }
     }
 
     public setState(newState: {}, callback?: () => void) {
+        // Add to writable state (it should always reflect the current conditions)
+        this.pendingState = { ...this.pendingState, ...newState };
+
         if (this.suspendUpdateCount > 0) {
             // Just save our new state
-            this.state = { ...this.state, ...newState };
+            this.renderedState = { ...this.renderedState, ...newState };
             if (callback) {
                 callback();
             }
         } else {
             // Send a UI update
             this.props.setState(newState, () => {
-                this.state = { ...this.state, ...newState };
+                this.renderedState = { ...this.renderedState, ...newState };
                 if (callback) {
                     callback();
                 }
@@ -640,7 +709,7 @@ export class MainStateController implements IMessageHandler {
     }
 
     public renderUpdate(newState: {}) {
-        const oldCount = this.state.pendingVariableCount;
+        const oldCount = this.renderedState.pendingVariableCount;
 
         // This method should be called during the render stage of anything
         // using this state Controller. That's because after shouldComponentUpdate
@@ -648,7 +717,7 @@ export class MainStateController implements IMessageHandler {
         // See https://reactjs.org/docs/react-component.html
         // Otherwise we set the state in the callback during setState and this can be
         // too late for any render code to use the stateController.
-        this.state = { ...this.state, ...newState };
+        this.renderedState = { ...this.renderedState, ...newState };
 
         // If the new state includes any cellVM changes, send an update to the other side
         if ('cellVMs' in newState) {
@@ -656,13 +725,13 @@ export class MainStateController implements IMessageHandler {
         }
 
         // If the new state includes pendingVariableCount and it's gone to zero, send a message
-        if (this.state.pendingVariableCount === 0 && oldCount !== 0) {
+        if (this.renderedState.pendingVariableCount === 0 && oldCount !== 0) {
             setTimeout(() => this.sendMessage(InteractiveWindowMessages.VariablesComplete), 1);
         }
     }
 
     public getState(): IMainState {
-        return this.state;
+        return this.pendingState;
     }
 
     // Adjust the visibility or collapsed state of a cell
@@ -730,37 +799,38 @@ export class MainStateController implements IMessageHandler {
         this.insertCell(cell);
     }
 
-    protected insertCell(cell: ICell, position?: number, isMonaco?: boolean): ICellViewModel | undefined {
-        if (cell) {
-            const showInputs = getSettings().showCellInputCode;
-            const collapseInputs = getSettings().collapseCellInputCodeByDefault;
-            let cellVM: ICellViewModel = createCellVM(cell, getSettings(), this.inputBlockToggled, this.props.defaultEditable);
+    protected prepareCellVM(cell: ICell, isMonaco?: boolean): ICellViewModel {
+        const showInputs = getSettings().showCellInputCode;
+        const collapseInputs = getSettings().collapseCellInputCodeByDefault;
+        let cellVM: ICellViewModel = createCellVM(cell, getSettings(), this.inputBlockToggled, this.props.defaultEditable);
 
-            // Set initial cell visibility and collapse
-            cellVM = this.alterCellVM(cellVM, showInputs, !collapseInputs);
+        // Set initial cell visibility and collapse
+        cellVM = this.alterCellVM(cellVM, showInputs, !collapseInputs);
 
-            if (cellVM) {
-                if (isMonaco) {
-                    cellVM.useQuickEdit = false;
-                }
-
-                const newList = [...this.state.cellVMs];
-                // Make sure to use the same array so our entire state doesn't update
-                if (position !== undefined && position >= 0) {
-                    newList.splice(position, 0, cellVM);
-                } else {
-                    newList.push(cellVM);
-                }
-                this.setState({
-                    cellVMs: newList,
-                    undoStack: this.pushStack(this.state.undoStack, this.state.cellVMs),
-                    redoStack: this.state.redoStack,
-                    skipNextScroll: false
-                });
-
-                return cellVM;
-            }
+        if (isMonaco) {
+            cellVM.useQuickEdit = false;
         }
+
+        return cellVM;
+    }
+
+    protected insertCell(cell: ICell, position?: number, isMonaco?: boolean): ICellViewModel {
+        const cellVM = this.prepareCellVM(cell, isMonaco);
+        const newList = [...this.pendingState.cellVMs];
+        // Make sure to use the same array so our entire state doesn't update
+        if (position !== undefined && position >= 0) {
+            newList.splice(position, 0, cellVM);
+        } else {
+            newList.push(cellVM);
+        }
+        this.setState({
+            cellVMs: newList,
+            undoStack: this.pushStack(this.pendingState.undoStack, this.pendingState.cellVMs),
+            redoStack: this.pendingState.redoStack,
+            skipNextScroll: false
+        });
+
+        return cellVM;
     }
 
     protected suspendUpdates() {
@@ -771,7 +841,7 @@ export class MainStateController implements IMessageHandler {
         if (this.suspendUpdateCount > 0) {
             this.suspendUpdateCount -= 1;
             if (this.suspendUpdateCount === 0) {
-                this.setState(this.state); // This should cause an update
+                this.setState(this.pendingState); // This should cause an update
             }
         }
 
@@ -788,6 +858,15 @@ export class MainStateController implements IMessageHandler {
         // make a copy of the cells so that further changes don't modify them.
         const copy = cloneDeep(cells);
         return [...slicedUndo, copy];
+    }
+
+    protected firstCodeCellAbove(cellId: string): string | undefined {
+        const codeCells = this.pendingState.cellVMs.filter(c => c.cell.data.cell_type === 'code');
+        const index = codeCells.findIndex(c => c.cell.id === cellId);
+        if (index > 0) {
+            return codeCells[index - 1].cell.id;
+        }
+        return undefined;
     }
 
     private computeEditorOptions(): monacoEditor.editor.IEditorOptions {
@@ -826,12 +905,12 @@ export class MainStateController implements IMessageHandler {
             // Turn off updates so we generate all of the cell vms without rendering.
             this.suspendUpdates();
 
-            // Update all of the vms
+            // Generate all of the VMs
             const cells = payload.cells as ICell[];
-            cells.forEach(c => this.finishCell(c));
+            const vms = cells.map(c => this.prepareCellVM(c, true));
 
             // Set our state to not being busy anymore. Clear undo stack as this can't be undone.
-            this.setState({ busy: false, loadTotal: payload.cells.length, undoStack: [] });
+            this.setState({ busy: false, loadTotal: payload.cells.length, undoStack: [], cellVMs: vms });
 
             // Turn updates back on and resend the state.
             this.resumeUpdates();
@@ -842,15 +921,14 @@ export class MainStateController implements IMessageHandler {
         this.suspendUpdates();
 
         // When we restart, make sure to turn off all executing cells. They aren't executing anymore
-        const executingCells = this.state.cellVMs
+        const executingCells = this.pendingState.cellVMs
             .map((cvm, i) => { return { cvm, i }; })
             .filter(s => s.cvm.cell.state !== CellState.error && s.cvm.cell.state !== CellState.finished);
 
         if (executingCells && executingCells.length) {
-            const newVMs = [...this.state.cellVMs];
+            const newVMs = [...this.pendingState.cellVMs];
             executingCells.forEach(s => {
-                newVMs[s.i] = cloneDeep(s.cvm);
-                newVMs[s.i].cell.state = CellState.finished;
+                newVMs[s.i] = immutable.updateIn(s.cvm, ['cell', 'state'], () => CellState.finished);
             });
             this.setState({ cellVMs: newVMs });
         }
@@ -902,7 +980,7 @@ export class MainStateController implements IMessageHandler {
             // Update theme if necessary
             const newSettings = JSON.parse(payload as string);
             const dsSettings = newSettings as IDataScienceExtraSettings;
-            if (dsSettings && dsSettings.extraSettings && dsSettings.extraSettings.theme !== this.state.theme) {
+            if (dsSettings && dsSettings.extraSettings && dsSettings.extraSettings.theme !== this.pendingState.theme) {
                 // User changed the current theme. Rerender
                 this.postOffice.sendUnsafeMessage(CssMessages.GetCssRequest, { isDark: this.computeKnownDark() });
                 this.postOffice.sendUnsafeMessage(CssMessages.GetMonacoThemeRequest, { isDark: this.computeKnownDark() });
@@ -928,7 +1006,7 @@ export class MainStateController implements IMessageHandler {
 
     private getAllCells = () => {
         // Send all of our cells back to the other side
-        const cells = this.state.cellVMs.map((cellVM: ICellViewModel) => {
+        const cells = this.pendingState.cellVMs.map((cellVM: ICellViewModel) => {
             return cellVM.cell;
         });
 
@@ -936,14 +1014,14 @@ export class MainStateController implements IMessageHandler {
     }
 
     private getNonEditCellVMs(): ICellViewModel[] {
-        return this.state.cellVMs;
+        return this.pendingState.cellVMs;
     }
 
     private clearAllSilent = () => {
         // Update our state
         this.setState({
             cellVMs: [],
-            undoStack: this.pushStack(this.state.undoStack, this.state.cellVMs),
+            undoStack: this.pushStack(this.pendingState.undoStack, this.pendingState.cellVMs),
             skipNextScroll: true,
             busy: false // No more progress on delete all
         });
@@ -951,7 +1029,7 @@ export class MainStateController implements IMessageHandler {
 
     private inputBlockToggled = (id: string) => {
         // Create a shallow copy of the array, let not const as this is the shallow array copy that we will be changing
-        const cellVMArray: ICellViewModel[] = [...this.state.cellVMs];
+        const cellVMArray: ICellViewModel[] = [...this.pendingState.cellVMs];
         const cellVMIndex = cellVMArray.findIndex((value: ICellViewModel) => {
             return value.cell.id === id;
         });
@@ -987,7 +1065,7 @@ export class MainStateController implements IMessageHandler {
     }
 
     private alterAllCellVMs = (visible: boolean, expanded: boolean) => {
-        const newCells = this.state.cellVMs.map((value: ICellViewModel) => {
+        const newCells = this.pendingState.cellVMs.map((value: ICellViewModel) => {
             return this.alterCellVM(value, visible, expanded);
         });
 
@@ -1001,14 +1079,14 @@ export class MainStateController implements IMessageHandler {
         const info: IInteractiveWindowInfo = {
             visibleCells: this.getNonEditCellVMs().map(cvm => cvm.cell),
             cellCount: this.getNonEditCellVMs().length,
-            undoCount: this.state.undoStack.length,
-            redoCount: this.state.redoStack.length
+            undoCount: this.pendingState.undoStack.length,
+            redoCount: this.pendingState.redoStack.length
         };
         this.sendMessage(InteractiveWindowMessages.SendInfo, info);
     }
 
     private updateOrAdd = (cell: ICell, allowAdd?: boolean) => {
-        const index = this.state.cellVMs.findIndex((c: ICellViewModel) => {
+        const index = this.pendingState.cellVMs.findIndex((c: ICellViewModel) => {
             return c.cell.id === cell.id &&
                 c.cell.line === cell.line &&
                 c.cell.file === cell.file;
@@ -1017,9 +1095,9 @@ export class MainStateController implements IMessageHandler {
             // This means the cell existed already so it was actual executed code.
             // Use its execution count to update our execution count.
             const newExecutionCount = cell.data.execution_count ?
-                Math.max(this.state.currentExecutionCount, parseInt(cell.data.execution_count.toString(), 10)) :
-                this.state.currentExecutionCount;
-            if (newExecutionCount !== this.state.currentExecutionCount && this.state.variablesVisible) {
+                Math.max(this.pendingState.currentExecutionCount, parseInt(cell.data.execution_count.toString(), 10)) :
+                this.pendingState.currentExecutionCount;
+            if (newExecutionCount !== this.pendingState.currentExecutionCount && this.pendingState.variablesVisible) {
                 // We also need to update our variable explorer when the execution count changes
                 // Use the ref here to maintain var explorer independence
                 this.refreshVariables(newExecutionCount);
@@ -1027,16 +1105,15 @@ export class MainStateController implements IMessageHandler {
 
             // Have to make a copy of the cell VM array or
             // we won't actually update.
-            const newVMs = [...this.state.cellVMs];
-            newVMs[index] = cloneDeep(newVMs[index]);
+            const newVMs = [...this.pendingState.cellVMs];
 
             // Check to see if our code still matches for the cell (in liveshare it might be updated from the other side)
-            if (concatMultilineString(newVMs[index].cell.data.source) !== concatMultilineString(cell.data.source)) {
+            if (concatMultilineString(this.pendingState.cellVMs[index].cell.data.source) !== concatMultilineString(cell.data.source)) {
                 const newText = extractInputText(cell, getSettings());
-                newVMs[index].inputBlockText = newText;
+                newVMs[index] = { ...newVMs[index], cell: cell, inputBlockText: newText };
+            } else {
+                newVMs[index] = { ...newVMs[index], cell: cell };
             }
-
-            newVMs[index].cell = cell;
 
             this.setState({
                 cellVMs: newVMs,
@@ -1095,14 +1172,14 @@ export class MainStateController implements IMessageHandler {
             const variable = payload as IJupyterVariable;
 
             // Only send the updated variable data if we are on the same execution count as when we requested it
-            if (variable && variable.executionCount !== undefined && variable.executionCount === this.state.currentExecutionCount) {
-                const stateVariable = this.state.variables.findIndex(v => v.name === variable.name);
+            if (variable && variable.executionCount !== undefined && variable.executionCount === this.pendingState.currentExecutionCount) {
+                const stateVariable = this.pendingState.variables.findIndex(v => v.name === variable.name);
                 if (stateVariable >= 0) {
-                    const newState = [...this.state.variables];
+                    const newState = [...this.pendingState.variables];
                     newState.splice(stateVariable, 1, variable);
                     this.setState({
                         variables: newState,
-                        pendingVariableCount: Math.max(0, this.state.pendingVariableCount - 1)
+                        pendingVariableCount: Math.max(0, this.pendingState.pendingVariableCount - 1)
                     });
                 }
             }
@@ -1116,7 +1193,7 @@ export class MainStateController implements IMessageHandler {
             const variablesResponse = payload as IJupyterVariablesResponse;
 
             // Check to see if we have moved to a new execution count only send our update if we are on the same count as the request
-            if (variablesResponse.executionCount === this.state.currentExecutionCount) {
+            if (variablesResponse.executionCount === this.pendingState.currentExecutionCount) {
                 this.setState({
                     variables: variablesResponse.variables,
                     pendingVariableCount: variablesResponse.variables.length
@@ -1182,7 +1259,7 @@ export class MainStateController implements IMessageHandler {
             // We also get this in our response, but computing is more reliable
             // than searching for it.
 
-            if (this.state.knownDark !== computedKnownDark) {
+            if (this.pendingState.knownDark !== computedKnownDark) {
                 this.darkChanged(computedKnownDark);
             }
 
