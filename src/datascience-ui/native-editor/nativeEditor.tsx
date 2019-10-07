@@ -147,7 +147,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
     private moveSelectionToExisting = (cellId: string) => {
         // Cell should already exist in the UI
         if (this.contentPanelRef) {
-            const wasFocused = this.state.focusedCell !== undefined;
+            const wasFocused = this.state.focusedCellId !== undefined;
             this.stateController.selectCell(cellId, wasFocused ? cellId : undefined);
             this.focusCell(cellId, wasFocused ? true : false);
         }
@@ -159,7 +159,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         if (cells.find(c => c.id === id)) {
             // Force selection change right now as we don't need the cell to exist
             // to make it selected (otherwise we'll get a flash)
-            const wasFocused = this.state.focusedCell !== undefined;
+            const wasFocused = this.state.focusedCellId !== undefined;
             this.stateController.selectCell(id, wasFocused ? id : undefined);
 
             // Then wait to give it actual input focus
@@ -416,8 +416,8 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
     }
 
     private scrollDiv = (_div: HTMLDivElement) => {
-        if (this.state.newCell) {
-            const newCell = this.state.newCell;
+        if (this.state.newCellId) {
+            const newCell = this.state.newCellId;
             this.stateController.setState({newCell: undefined});
             // Bounce this so state has time to update.
             setTimeout(() => {

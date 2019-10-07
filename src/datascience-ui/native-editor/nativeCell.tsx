@@ -182,8 +182,8 @@ export class NativeCell extends React.Component<INativeCellProps> {
     private onMouseClick = (ev: React.MouseEvent<HTMLDivElement>) => {
         if (ev.nativeEvent.target) {
             const elem = ev.nativeEvent.target as HTMLElement;
-            if (!elem.className.includes('image')) {
-                // Not a click on an image, select the cell.
+            if (!elem.className.includes('image-button')) {
+                // Not a click on an button in a toolbar, select the cell.
                 ev.stopPropagation();
                 this.lastKeyPressed = undefined;
                 const focusedCell = this.isFocused() ? this.cellId : undefined;

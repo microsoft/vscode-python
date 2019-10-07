@@ -87,10 +87,10 @@ export class NativeEditorStateController extends MainStateController {
 
     public addNewCell = (): ICellViewModel | undefined => {
         const cells = this.getState().cellVMs;
-        const selectedCell = this.getState().selectedCell;
+        const selectedCell = this.getState().selectedCellId;
         this.suspendUpdates();
         const id = uuid();
-        const pos = selectedCell ? cells.findIndex(cvm => cvm.cell.id === this.getState().selectedCell) + 1 : cells.length;
+        const pos = selectedCell ? cells.findIndex(cvm => cvm.cell.id === this.getState().selectedCellId) + 1 : cells.length;
         this.setState({ newCell: id });
         const vm = this.insertCell(createEmptyCell(id, null), pos);
         this.sendMessage(InteractiveWindowMessages.InsertCell, { id, code: '', codeCellAbove: this.firstCodeCellAbove(id) });
@@ -184,7 +184,7 @@ export class NativeEditorStateController extends MainStateController {
                 cellVMs: cellVms,
                 undoStack: this.pushStack(this.getState().undoStack, origVms)
             });
-            this.sendMessage(InteractiveWindowMessages.SwapCells, { firstCell: cellId!, secondCell: cellVms[index].cell.id });
+            this.sendMessage(InteractiveWindowMessages.SwapCells, { firstCellId: cellId!, secondCellId: cellVms[index].cell.id });
         }
     }
 
@@ -198,7 +198,7 @@ export class NativeEditorStateController extends MainStateController {
                 cellVMs: cellVms,
                 undoStack: this.pushStack(this.getState().undoStack, origVms)
             });
-            this.sendMessage(InteractiveWindowMessages.SwapCells, { firstCell: cellId!, secondCell: cellVms[index].cell.id });
+            this.sendMessage(InteractiveWindowMessages.SwapCells, { firstCellId: cellId!, secondCellId: cellVms[index].cell.id });
         }
     }
 

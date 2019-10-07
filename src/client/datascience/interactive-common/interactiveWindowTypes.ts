@@ -213,8 +213,8 @@ export interface IRemoveCell {
 }
 
 export interface ISwapCells {
-    firstCell: string;
-    secondCell: string;
+    firstCellId: string;
+    secondCellId: string;
 }
 
 export interface IInsertCell {

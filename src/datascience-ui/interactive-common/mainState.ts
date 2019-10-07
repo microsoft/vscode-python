@@ -55,11 +55,11 @@ export interface IMainState {
     pendingVariableCount: number;
     debugging: boolean;
     dirty?: boolean;
-    selectedCell?: string;
-    focusedCell?: string;
+    selectedCellId?: string;
+    focusedCellId?: string;
     enableGather: boolean;
     isAtBottom: boolean;
-    newCell?: string;
+    newCellId?: string;
     loadTotal?: number;
 }
 

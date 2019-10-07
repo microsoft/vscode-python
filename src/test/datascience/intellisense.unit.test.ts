@@ -160,7 +160,7 @@ suite('DataScience Intellisense Unit Tests', () => {
     }
 
     function swapCells(id1: string, id2: string): Promise<void> {
-        return sendMessage(InteractiveWindowMessages.SwapCells, { firstCell: id1, secondCell: id2 });
+        return sendMessage(InteractiveWindowMessages.SwapCells, { firstCellId: id1, secondCellId: id2 });
     }
 
     function insertCell(id: string, code: string, codeCellAbove?: string): Promise<void> {

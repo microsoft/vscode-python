@@ -198,6 +198,8 @@ export class IntellisenseDocument implements TextDocument {
             this.inEditMode = true;
             this._version += 1;
 
+            // Normalize all of the cells, removing \r and separating each
+            // with a newline
             const normalized = cells.map(c => {
                 return {
                     id: c.id,
@@ -599,6 +601,9 @@ export class IntellisenseDocument implements TextDocument {
     }
 
     private createSerializableRange(start: Position, end: Position): Range {
+        // This funciton is necessary so that the Range can be passed back
+        // over a remote connection without including all of the extra fields that
+        // VS code puts into a Range object.
         const result = {
             start: {
                 line: start.line,

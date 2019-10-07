@@ -299,13 +299,13 @@ export class MainStateController implements IMessageHandler {
             this.sendMessage(InteractiveWindowMessages.RemoveCell, { id: cellId });
 
             // Recompute select/focus if this item has either
-            let newSelection = this.pendingState.selectedCell;
-            let newFocused = this.pendingState.focusedCell;
+            let newSelection = this.pendingState.selectedCellId;
+            let newFocused = this.pendingState.focusedCellId;
             const newVMs = [...this.pendingState.cellVMs.filter(c => c.cell.id !== cellId)];
             const nextOrPrev = index === this.pendingState.cellVMs.length - 1 ? index - 1 : index;
-            if (this.pendingState.selectedCell === cellId || this.pendingState.focusedCell === cellId) {
+            if (this.pendingState.selectedCellId === cellId || this.pendingState.focusedCellId === cellId) {
                 if (nextOrPrev >= 0) {
-                    newVMs[nextOrPrev] = { ...newVMs[nextOrPrev], selected: true, focused: this.pendingState.focusedCell === cellId };
+                    newVMs[nextOrPrev] = { ...newVMs[nextOrPrev], selected: true, focused: this.pendingState.focusedCellId === cellId };
                     newSelection = newVMs[nextOrPrev].cell.id;
                     newFocused = newVMs[nextOrPrev].focused ? newVMs[nextOrPrev].cell.id : undefined;
                 }
@@ -501,7 +501,7 @@ export class MainStateController implements IMessageHandler {
 
     public codeLostFocus = (cellId: string) => {
         this.onCodeLostFocus(cellId);
-        if (this.pendingState.focusedCell === cellId) {
+        if (this.pendingState.focusedCellId === cellId) {
             const newVMs = [...this.pendingState.cellVMs];
             // Switch the old vm
             const oldSelect = this.findCellIndex(cellId);
@@ -515,10 +515,10 @@ export class MainStateController implements IMessageHandler {
 
     public codeGotFocus = (cellId: string | undefined) => {
         // Skip if already has focus
-        if (cellId !== this.pendingState.focusedCell) {
+        if (cellId !== this.pendingState.focusedCellId) {
             const newVMs = [...this.pendingState.cellVMs];
             // Switch the old vm
-            const oldSelect = this.findCellIndex(this.pendingState.selectedCell);
+            const oldSelect = this.findCellIndex(this.pendingState.selectedCellId);
             if (oldSelect >= 0) {
                 newVMs[oldSelect] = { ...newVMs[oldSelect], selected: false, focused: false };
             }
@@ -534,10 +534,10 @@ export class MainStateController implements IMessageHandler {
 
     public selectCell = (cellId: string, focusedCell?: string) => {
         // Skip if already the same cell
-        if (this.pendingState.selectedCell !== cellId || this.pendingState.focusedCell !== focusedCell) {
+        if (this.pendingState.selectedCellId !== cellId || this.pendingState.focusedCellId !== focusedCell) {
             const newVMs = [...this.pendingState.cellVMs];
             // Switch the old vm
-            const oldSelect = this.findCellIndex(this.pendingState.selectedCell);
+            const oldSelect = this.findCellIndex(this.pendingState.selectedCellId);
             if (oldSelect >= 0) {
                 newVMs[oldSelect] = { ...newVMs[oldSelect], selected: false, focused: false };
             }

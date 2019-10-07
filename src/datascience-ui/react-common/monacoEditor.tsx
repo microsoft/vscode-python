@@ -37,8 +37,8 @@ interface IMonacoEditorState {
     editor?: monacoEditor.editor.IStandaloneCodeEditor;
     model: monacoEditor.editor.ITextModel | null;
     visibleLineCount: number;
-    attached: boolean;
-    parentUpdated: boolean;
+    attached: boolean; // Keeps track of when we reparent the editor out of the dummy dom node.
+    widgetsReparented: boolean; // Keeps track of when we reparent the hover widgets so they work inside something with overflow
 }
 
 // Need this to prevent wiping of the current value on a componentUpdate. react-monaco-editor has that problem.
@@ -62,7 +62,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
     constructor(props: IMonacoEditorProps) {
         super(props);
-        this.state = { editor: undefined, model: null, visibleLineCount: -1, attached: false, parentUpdated: false };
+        this.state = { editor: undefined, model: null, visibleLineCount: -1, attached: false, widgetsReparented: false };
         this.containerRef = React.createRef<HTMLDivElement>();
         this.measureWidthRef = React.createRef<HTMLDivElement>();
         this.debouncedUpdateEditorSize = debounce(this.updateEditorSize.bind(this), 150);
@@ -392,9 +392,12 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
     }
 
     private onContainerMove = () => {
-        if (!this.widgetParent && !this.state.parentUpdated && this.monacoContainer) {
+        if (!this.widgetParent && !this.state.widgetsReparented && this.monacoContainer) {
+            // Only need to do this once, but update the widget parents and move them.
             this.updateWidgetParent(this.state.editor);
             this.startUpdateWidgetPosition();
+
+            // Since only doing this once, remove the listener.
             this.monacoContainer.removeEventListener('mousemove', this.onContainerMove);
         }
     }
@@ -469,8 +472,8 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         // appendChild on a DOM node moves it, but doesn't clone it.
         // https://developer.mozilla.org/en-US/docs/Web/API/Node/appendChild
         const editorNode = editor ? editor.getDomNode() : undefined;
-        if (editor && editorNode && !this.state.parentUpdated) {
-            this.setState({parentUpdated: true});
+        if (editor && editorNode && !this.state.widgetsReparented) {
+            this.setState({widgetsReparented: true});
             try {
                 const elements = editorNode.getElementsByClassName('overflowingContentWidgets');
                 if (elements && elements.length) {

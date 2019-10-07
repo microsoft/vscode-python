@@ -368,7 +368,7 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
         // First get the document
         const document = await this.getDocument();
         if (document) {
-            const changes = document.swap(request.firstCell, request.secondCell);
+            const changes = document.swap(request.firstCellId, request.secondCellId);
             return this.handleChanges(undefined, document, changes);
         }
     }
