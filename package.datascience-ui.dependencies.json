@@ -110,6 +110,7 @@
     "monaco-editor",
     "monaco-editor-textmate",
     "monaco-textmate",
+    "node-libs-browser",
     "numeral",
     "object-assign",
     "onigasm",
