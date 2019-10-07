@@ -71,7 +71,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         return session;
     }
 
-    public getActiveKernels(): Promise<Kernel.IModel[]> {
+    public getRunningKernels(): Promise<Kernel.IModel[]> {
         return Kernel.listRunning(this.serverSettings);
     }
 

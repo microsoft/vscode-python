@@ -296,8 +296,10 @@ export namespace DataScience {
     export const noInterpreter = localize('DataScience.noInterpreter', 'No python selected');
     export const notebookNotFound = localize('DataScience.notebookNotFound', 'python -m jupyter notebook --version is not running');
 
-    export const jupyterGetRunningKernels = localize('DataScience.getRunningKernels', 'Getting running kernels from {0}');
-    export const jupyterGetAvailableKernels = localize('DataScience.getAvailableKernels', 'Getting available kernels list from {0}');
+    export const jupyterGetRunningKernels = localize('DataScience.getRunningKernels', 'Getting running kernels from {0}.');
+    export const jupyterNoRunningKernels = localize('DataScience.noRunningKernels', 'Failed getting running kernels from {0}.');
+    export const jupyterGetAvailableKernels = localize('DataScience.getAvailableKernels', 'Getting available kernels from {0}.');
+    export const jupyterNoAvailableKernels = localize('DataScience.noAvailableKernels', 'Failed getting available kernels from {0}.');
 }
 
 export namespace DebugConfigStrings {

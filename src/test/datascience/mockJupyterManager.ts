@@ -252,7 +252,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         }
     }
 
-    public getActiveKernels(): Promise<Kernel.IModel[]> {
+    public getRunningKernels(): Promise<Kernel.IModel[]> {
         return Promise.resolve([]);
     }
 
