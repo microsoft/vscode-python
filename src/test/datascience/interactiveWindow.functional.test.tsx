@@ -53,6 +53,7 @@ import {
 suite('DataScience Interactive Window output tests', () => {
     const disposables: Disposable[] = [];
     let ioc: DataScienceIocContainer;
+    const defaultCellMarker = '# %%';
 
     setup(() => {
         ioc = new DataScienceIocContainer();
@@ -577,7 +578,7 @@ for _ in range(50):
     runMountedTest('Gather code run from text editor', async (wrapper) => {
         ioc.getSettings().datascience.enableGather = true;
         // Enter some code.
-        const code = '#%%\na=1\na';
+        const code = `${defaultCellMarker}\na=1\na`;
         await addCode(ioc, wrapper, code);
         addMockData(ioc, code, undefined);
         const ImageButtons = getLastOutputCell(wrapper, 'InteractiveCell').find(ImageButton); // This isn't rendering correctly
@@ -589,7 +590,7 @@ for _ in range(50):
         const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
         assert.notEqual(docManager.activeTextEditor, undefined);
         if (docManager.activeTextEditor) {
-            assert.equal(docManager.activeTextEditor.document.getText(), `# This file contains the minimal amount of code required to produce the code cell you gathered.\n#%%\na=1\na\n\n`);
+            assert.equal(docManager.activeTextEditor.document.getText(), `# This file contains the minimal amount of code required to produce the code cell you gathered.\n${defaultCellMarker}\na=1\na\n\n`);
         }
     }, () => { return ioc; });
 
@@ -611,21 +612,21 @@ for _ in range(50):
         const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
         assert.notEqual(docManager.activeTextEditor, undefined);
         if (docManager.activeTextEditor) {
-            assert.equal(docManager.activeTextEditor.document.getText(), `# This file contains the minimal amount of code required to produce the code cell you gathered.\n#%%\na=1\na\n\n`);
+            assert.equal(docManager.activeTextEditor.document.getText(), `# This file contains the minimal amount of code required to produce the code cell you gathered.\n${defaultCellMarker}\na=1\na\n\n`);
         }
     }, () => { return ioc; });
 
     runMountedTest('Copy back to source', async (_wrapper) => {
-        ioc.addDocument(`#%%${os.EOL}print("bar")`, 'foo.py');
+        ioc.addDocument(`${defaultCellMarker}${os.EOL}print("bar")`, 'foo.py');
         const docManager = ioc.get<IDocumentManager>(IDocumentManager);
         docManager.showTextDocument(docManager.textDocuments[0]);
         const window = await getOrCreateInteractiveWindow(ioc) as InteractiveWindow;
         window.copyCode({source: 'print("baz")'});
-        assert.equal(docManager.textDocuments[0].getText(), `#%%${os.EOL}print("baz")${os.EOL}#%%${os.EOL}print("bar")`, 'Text not inserted');
+        assert.equal(docManager.textDocuments[0].getText(), `${defaultCellMarker}${os.EOL}print("baz")${os.EOL}${defaultCellMarker}${os.EOL}print("bar")`, 'Text not inserted');
         const activeEditor = docManager.activeTextEditor as MockEditor;
         activeEditor.selection = new Selection(1, 2, 1, 2);
         window.copyCode({source: 'print("baz")'});
-        assert.equal(docManager.textDocuments[0].getText(), `#%%${os.EOL}#%%${os.EOL}print("baz")${os.EOL}#%%${os.EOL}print("baz")${os.EOL}#%%${os.EOL}print("bar")`, 'Text not inserted');
+        assert.equal(docManager.textDocuments[0].getText(), `${defaultCellMarker}${os.EOL}${defaultCellMarker}${os.EOL}print("baz")${os.EOL}${defaultCellMarker}${os.EOL}print("baz")${os.EOL}${defaultCellMarker}${os.EOL}print("bar")`, 'Text not inserted');
     }, () => { return ioc; });
 
     runMountedTest('Limit text output', async (wrapper) => {

@@ -117,7 +117,7 @@ export class JupyterImporter implements INotebookImporter {
     }
 
     private addInstructionComments = (pythonOutput: string): string => {
-        const comments = localize.DataScience.instructionComments();
+        const comments = localize.DataScience.instructionComments().format(this.defaultCellMarker);
         return comments.concat(pythonOutput);
     }
 
