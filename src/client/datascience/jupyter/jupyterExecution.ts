@@ -34,7 +34,7 @@ import {
     INotebookServerLaunchInfo,
     INotebookServerOptions
 } from '../types';
-import {IFindCommandResult, JupyterCommandFinder} from './jupyterCommandFinder';
+import { IFindCommandResult, JupyterCommandFinder } from './jupyterCommandFinder';
 import { JupyterConnection, JupyterServerInfo } from './jupyterConnection';
 import { JupyterInstallError } from './jupyterInstallError';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
@@ -94,7 +94,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     }
 
     public async getNotebookError(): Promise<string> {
-        const notebook = await this.commandFinder.findBestCommand(JupyterCommands.NotebookCommand);
+        const notebook = await this.findBestCommand(JupyterCommands.NotebookCommand);
         return notebook.error ? notebook.error : localize.DataScience.notebookNotFound();
     }
 
@@ -200,7 +200,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
     public async spawnNotebook(file: string): Promise<void> {
         // First we find a way to start a notebook server
-        const notebookCommand = await this.findBestCommandTimed(JupyterCommands.NotebookCommand);
+        const notebookCommand = await this.findBestCommand(JupyterCommands.NotebookCommand);
         this.checkNotebookCommand(notebookCommand);
 
         const args: string[] = [`--NotebookApp.file_to_run=${file}`];
@@ -211,7 +211,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
     public async importNotebook(file: string, template: string | undefined): Promise<string> {
         // First we find a way to start a nbconvert
-        const convert = await this.findBestCommandTimed(JupyterCommands.ConvertCommand);
+        const convert = await this.findBestCommand(JupyterCommands.ConvertCommand);
         if (!convert.command) {
             throw new Error(localize.DataScience.jupyterNbConvertNotSupported());
         }
@@ -268,6 +268,10 @@ export class JupyterExecutionBase implements IJupyterExecution {
                 throw new Error(localize.DataScience.jupyterServerCrashed().format(sessionManager!.getConnInfo().localProcExitCode!.toString()));
             }
         }
+    }
+
+    protected async findBestCommand(command: JupyterCommands, cancelToken?: CancellationToken): Promise<IFindCommandResult> {
+        return this.commandFinder.findBestCommand(command, cancelToken);
     }
 
     private checkNotebookCommand(notebook: IFindCommandResult) {
@@ -345,7 +349,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     @captureTelemetry(Telemetry.StartJupyter)
     private async startNotebookServer(useDefaultConfig: boolean, cancelToken?: CancellationToken): Promise<{ connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined }> {
         // First we find a way to start a notebook server
-        const notebookCommand = await this.findBestCommandTimed(JupyterCommands.NotebookCommand, cancelToken);
+        const notebookCommand = await this.findBestCommand(JupyterCommands.NotebookCommand, cancelToken);
         this.checkNotebookCommand(notebookCommand);
 
         // Now actually launch it
@@ -452,7 +456,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
     private getUsableJupyterPythonImpl = async (cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> => {
         // This should be the best interpreter for notebooks
-        const found = await this.findBestCommandTimed(JupyterCommands.NotebookCommand, cancelToken);
+        const found = await this.findBestCommand(JupyterCommands.NotebookCommand, cancelToken);
         if (found && found.command) {
             return found.command.interpreter();
         }
@@ -490,7 +494,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
     private async addMatchingSpec(bestInterpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<void> {
         const displayName = localize.DataScience.historyTitle();
-        const ipykernelCommand = await this.findBestCommandTimed(JupyterCommands.KernelCreateCommand, cancelToken);
+        const ipykernelCommand = await this.findBestCommand(JupyterCommands.KernelCreateCommand, cancelToken);
 
         // If this fails, then we just skip this spec
         try {
@@ -571,7 +575,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     private isCommandSupported = async (command: JupyterCommands, cancelToken?: CancellationToken): Promise<boolean> => {
         // See if we can find the command
         try {
-            const result = await this.findBestCommandTimed(command, cancelToken);
+            const result = await this.findBestCommand(command, cancelToken);
             return result.command !== undefined;
         } catch (err) {
             this.logger.logWarning(err);
@@ -735,7 +739,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
     private enumerateSpecs = async (_cancelToken?: CancellationToken): Promise<(JupyterKernelSpec | undefined)[]> => {
         if (await this.isKernelSpecSupported()) {
-            const kernelSpecCommand = await this.findBestCommandTimed(JupyterCommands.KernelSpecCommand);
+            const kernelSpecCommand = await this.findBestCommand(JupyterCommands.KernelSpecCommand);
 
             if (kernelSpecCommand.command) {
                 try {
@@ -767,9 +771,5 @@ export class JupyterExecutionBase implements IJupyterExecution {
         }
 
         return [];
-    }
-
-    private async findBestCommandTimed(command: JupyterCommands, cancelToken?: CancellationToken): Promise<IFindCommandResult> {
-        return this.commandFinder.findBestCommand(command, cancelToken);
     }
 }

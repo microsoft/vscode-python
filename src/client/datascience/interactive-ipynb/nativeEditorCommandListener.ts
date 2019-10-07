@@ -77,7 +77,7 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
                 // Then take the contents and load it.
                 await this.provider.open(file, contents);
             } catch (e) {
-                this.dataScienceErrorHandler.handleError(e).ignoreErrors();
+                return this.dataScienceErrorHandler.handleError(e);
             }
         }
     }

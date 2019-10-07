@@ -333,7 +333,7 @@ export class CodeWatcher implements ICodeWatcher {
             }
             this.sendPerceivedCellExecute(stopWatch);
         } catch (err) {
-            this.dataScienceErrorHandler.handleError(err).ignoreErrors();
+            await this.dataScienceErrorHandler.handleError(err);
         }
 
         return result;
@@ -347,7 +347,7 @@ export class CodeWatcher implements ICodeWatcher {
                 const activeInteractiveWindow = await this.interactiveWindowProvider.getOrCreateActive();
                 return activeInteractiveWindow.addMessage(message);
             } catch (err) {
-                this.dataScienceErrorHandler.handleError(err).ignoreErrors();
+                await this.dataScienceErrorHandler.handleError(err);
             }
         }
     }

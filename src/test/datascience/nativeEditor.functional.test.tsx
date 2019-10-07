@@ -4,18 +4,27 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { Disposable, TextDocument, TextEditor } from 'vscode';
+import { Disposable, TextDocument, TextEditor, Uri } from 'vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { Identifiers } from '../../client/datascience/constants';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
-import { ICell, IJupyterExecution, INotebookExporter, INotebookEditorProvider } from '../../client/datascience/types';
+import { ICell, IJupyterExecution, INotebookEditorProvider, INotebookExporter } from '../../client/datascience/types';
+import { PythonInterpreter } from '../../client/interpreter/contracts';
 import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { addCell, createNewEditor, getNativeCellResults, openEditor, runMountedTest } from './nativeEditorTestHelpers';
+import {
+    addCell,
+    closeNotebook,
+    createNewEditor,
+    getNativeCellResults,
+    mountNativeWebView,
+    openEditor,
+    runMountedTest
+} from './nativeEditorTestHelpers';
 import { waitForUpdate } from './reactHelpers';
 import {
     addContinuousMockData,
@@ -38,6 +47,15 @@ suite('DataScience Native Editor tests', () => {
     setup(() => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
+
+        const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
+        appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAnyString())).returns((_e) => Promise.resolve(''));
+        appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
+        appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));
+        appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_a1: string, _a2: any, _a3: string, a4: string) => Promise.resolve(a4));
+        appShell.setup(a => a.showSaveDialog(TypeMoq.It.isAny())).returns(() => Promise.resolve(Uri.file('foo.ipynb')));
+        ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
+
     });
 
     teardown(async () => {
@@ -248,7 +266,7 @@ for _ in range(50):
         await waitForUpdate(wrapper, NativeEditor, 16);
 
         // Close editor. Should still have the server up
-        await editor.dispose();
+        await closeNotebook(editor, wrapper);
         const jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
         const editorProvider = ioc.serviceManager.get<INotebookEditorProvider>(INotebookEditorProvider);
         const server = await jupyterExecution.getServer(await editorProvider.getNotebookOptions());
@@ -258,24 +276,25 @@ for _ in range(50):
         editor = await openEditor(ioc, JSON.stringify(notebook));
         runAllButton = findButton(wrapper, NativeEditor, 3);
         await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
-        await waitForUpdate(wrapper, NativeEditor, 16);
+        await waitForUpdate(wrapper, NativeEditor, 15);
         verifyHtmlOnCell(wrapper, 'NativeCell', `1`, 0);
     }, () => { return ioc; });
 
-    runMountedTest('Failure', async (wrapper) => {
+    test('Failure', async () => {
         // Make a dummy class that will fail during launch
         class FailedProcess extends JupyterExecutionFactory {
-            public isNotebookSupported = (): Promise<boolean> => {
-                return Promise.resolve(false);
+            public getUsableJupyterPython(): Promise<PythonInterpreter | undefined> {
+                return Promise.resolve(undefined);
             }
         }
         ioc.serviceManager.rebind<IJupyterExecution>(IJupyterExecution, FailedProcess);
         ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
+        addMockData(ioc, 'a=1\na', 1);
+        const wrapper = mountNativeWebView(ioc);
         await createNewEditor(ioc);
-        await addCell(wrapper, 'a=1\na', true);
+        await addCell(wrapper, 'a=1\na', true, 2);
 
         // Cell should not have the output
-        verifyHtmlOnCell(wrapper, 'NativeCell', undefined, 0);
-    }, () => ioc);
-
+        verifyHtmlOnCell(wrapper, 'NativeCell', 'Jupyter cannot be started', CellPosition.Last);
+    });
 });

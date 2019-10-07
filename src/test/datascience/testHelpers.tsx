@@ -111,6 +111,8 @@ export function getLastOutputCell(wrapper: ReactWrapper<any, Readonly<{}>, React
 }
 
 export function verifyHtmlOnCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, cellType: string, html: string | undefined, cellIndex: number | CellPosition) {
+    wrapper.update();
+
     const foundResult = wrapper.find(cellType);
     assert.ok(foundResult.length >= 1, 'Didn\'t find any cells being rendered');
 

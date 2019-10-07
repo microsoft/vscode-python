@@ -50,6 +50,11 @@ export class NativeEditorStateController extends MainStateController {
         return super.handleMessage(msg, payload);
     }
 
+    public resetLoad() {
+        this.waitingForLoadRender = false;
+        this.setState({ busy: true });
+    }
+
     public canMoveUp = (cellId?: string) => {
         const index = this.getState().cellVMs.findIndex(cvm => cvm.cell.id === cellId);
         return (index > 0);

@@ -244,7 +244,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             // If that works, send the cells to the web view
             return this.postMessage(InteractiveWindowMessages.LoadAllCells, { cells });
         } catch (e) {
-            this.errorHandler.handleError(e).ignoreErrors();
+            return this.errorHandler.handleError(e);
         }
     }
 
@@ -281,6 +281,27 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             }
         } catch (exc) {
             await this.errorHandler.handleError(exc);
+
+            // Make this error our cell output
+            this.sendCellsToWebView([
+                {
+                    data: {
+                        source: info.code,
+                        cell_type: 'code',
+                        outputs: [{
+                            output_type: 'error',
+                            evalue: exc.toString()
+                        }],
+                        metadata: {},
+                        execution_count: null
+                    },
+                    id: info.id,
+                    file: Identifiers.EmptyFileName,
+                    line: 0,
+                    state: CellState.error,
+                    type: 'execute'
+                }
+            ]);
 
             // Tell the other side we restarted the kernel. This will stop all executions
             this.postMessage(InteractiveWindowMessages.RestartKernel).ignoreErrors();

@@ -233,10 +233,10 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                 }
             }
         } else {
-            this.dataScienceErrorHandler.handleError(
+            await this.dataScienceErrorHandler.handleError(
                 new JupyterInstallError(
                     localize.DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError()),
-                    localize.DataScience.pythonInteractiveHelpLink())).ignoreErrors();
+                    localize.DataScience.pythonInteractiveHelpLink()));
         }
     }
 
