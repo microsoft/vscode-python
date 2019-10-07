@@ -81,6 +81,11 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
     }
 
     public render() {
+        const dynamicFont: React.CSSProperties = {
+            fontSize: this.state.font.size,
+            fontFamily: this.state.font.family
+        };
+
         // If in test mode, update our count. Use this to determine how many renders a normal update takes.
         if (this.props.testMode) {
             this.renderCount = this.renderCount + 1;
@@ -100,7 +105,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             <AddCellLine includePlus={true} className='add-cell-line-top' click={insertAboveFirst} baseTheme={this.props.baseTheme}/>;
 
         return (
-            <div id='main-panel' ref={this.mainPanelRef} role='Main'>
+            <div id='main-panel' ref={this.mainPanelRef} role='Main' style={dynamicFont}>
                 <div className='styleSetter'>
                     <style>
                         {this.state.rootCss}
@@ -395,6 +400,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                         focusCell={this.focusCell}
                         selectCell={this.selectCell}
                         lastCell={lastLine !== null}
+                        font={this.state.font}
                     />
                 </ErrorBoundary>
                 {lastLine}

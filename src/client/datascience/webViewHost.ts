@@ -170,6 +170,8 @@ export class WebViewHost<IMapping> implements IDisposable {
             extraSettings: {
                 editorCursor: this.getValue(editor, 'cursorStyle', 'line'),
                 editorCursorBlink: this.getValue(editor, 'cursorBlinking', 'blink'),
+                fontSize: this.getValue(editor, 'fontSize', 14),
+                fontFamily: this.getValue(editor, 'fontFamily', 'Consolas, \'Courier New\', monospace'),
                 theme: theme
             },
             intellisenseOptions: {
@@ -240,6 +242,8 @@ export class WebViewHost<IMapping> implements IDisposable {
     // Post a message to our webpanel and update our new datascience settings
     private onPossibleSettingsChange = (event: ConfigurationChangeEvent) => {
         if (event.affectsConfiguration('workbench.colorTheme') ||
+            event.affectsConfiguration('editor.fontSize') ||
+            event.affectsConfiguration('editor.fontFamily') ||
             event.affectsConfiguration('editor.cursorStyle') ||
             event.affectsConfiguration('editor.cursorBlinking') ||
             event.affectsConfiguration('python.dataScience.enableGather')) {

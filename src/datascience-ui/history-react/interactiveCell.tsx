@@ -16,7 +16,7 @@ import { CollapseButton } from '../interactive-common/collapseButton';
 import { ExecutionCount } from '../interactive-common/executionCount';
 import { InformationMessages } from '../interactive-common/informationMessages';
 import { InputHistory } from '../interactive-common/inputHistory';
-import { ICellViewModel } from '../interactive-common/mainState';
+import { ICellViewModel, IFont } from '../interactive-common/mainState';
 import { IKeyboardEvent } from '../react-common/event';
 import { getLocString } from '../react-common/locReactSide';
 import { getSettings } from '../react-common/settingsReactSide';
@@ -36,6 +36,7 @@ interface IInteractiveCellProps {
     editorOptions?: monacoEditor.editor.IEditorOptions;
     editExecutionCount?: string;
     editorMeasureClassName?: string;
+    font: IFont;
     onCodeChange(changes: monacoEditor.editor.IModelContentChange[], cellId: string, modelId: string): void;
     onCodeCreated(code: string, file: string, cellId: string, modelId: string): void;
     openLink(uri: monacoEditor.Uri): void;
@@ -212,6 +213,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                     unfocused={this.onCodeUnfocused}
                     keyDown={this.props.keyDown}
                     showLineNumbers={this.props.cellVM.showLineNumbers}
+                    font={this.props.font}
                 />
             );
         }
