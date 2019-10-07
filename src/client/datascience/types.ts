@@ -394,6 +394,8 @@ export interface IDataScienceExtraSettings extends IDataScienceSettings {
     extraSettings: {
         editorCursor: string;
         editorCursorBlink: string;
+        fontSize: number;
+        fontFamily: string;
         theme: string;
     };
     intellisenseOptions: {

@@ -24,8 +24,6 @@ import { NativeEditorStateController } from './nativeEditorStateController';
 // tslint:disable: react-this-binding-issue
 // tslint:disable-next-line:no-require-imports no-var-requires
 const debounce = require('lodash/debounce') as typeof import('lodash/debounce');
-// tslint:disable-next-line: no-require-imports
-import cloneDeep = require('lodash/cloneDeep');
 
 interface INativeEditorProps {
     skipDefault: boolean;
@@ -83,6 +81,11 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
     }
 
     public render() {
+        const dynamicFont: React.CSSProperties = {
+            fontSize: this.state.font.size,
+            fontFamily: this.state.font.family
+        };
+
         // If in test mode, update our count. Use this to determine how many renders a normal update takes.
         if (this.props.testMode) {
             this.renderCount = this.renderCount + 1;
@@ -102,7 +105,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             <AddCellLine includePlus={true} className='add-cell-line-top' click={insertAboveFirst} baseTheme={this.props.baseTheme}/>;
 
         return (
-            <div id='main-panel' ref={this.mainPanelRef} role='Main'>
+            <div id='main-panel' ref={this.mainPanelRef} role='Main' style={dynamicFont}>
                 <div className='styleSetter'>
                     <style>
                         {this.state.rootCss}
@@ -144,7 +147,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
     private moveSelectionToExisting = (cellId: string) => {
         // Cell should already exist in the UI
         if (this.contentPanelRef) {
-            const wasFocused = this.state.focusedCell !== undefined;
+            const wasFocused = this.state.focusedCellId !== undefined;
             this.stateController.selectCell(cellId, wasFocused ? cellId : undefined);
             this.focusCell(cellId, wasFocused ? true : false);
         }
@@ -156,7 +159,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         if (cells.find(c => c.id === id)) {
             // Force selection change right now as we don't need the cell to exist
             // to make it selected (otherwise we'll get a flash)
-            const wasFocused = this.state.focusedCell !== undefined;
+            const wasFocused = this.state.focusedCellId !== undefined;
             this.stateController.selectCell(id, wasFocused ? id : undefined);
 
             // Then wait to give it actual input focus
@@ -292,8 +295,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                         } else if (bottom < visibleTop) {
                             continue;
                         } else {
-                            cellVMs[i] = cloneDeep(cellVM);
-                            cellVMs[i].useQuickEdit = false;
+                            cellVMs[i] = {...cellVM, useQuickEdit: false };
                             makeChange = true;
                         }
                     }
@@ -395,12 +397,10 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                         baseTheme={this.props.baseTheme}
                         codeTheme={this.props.codeTheme}
                         monacoTheme={this.state.monacoTheme}
-                        showLineNumbers={cellVM.showLineNumbers}
-                        selectedCell={this.state.selectedCell}
-                        focusedCell={this.state.focusedCell}
-                        hideOutput={cellVM.hideOutput}
                         focusCell={this.focusCell}
                         selectCell={this.selectCell}
+                        lastCell={lastLine !== null}
+                        font={this.state.font}
                     />
                 </ErrorBoundary>
                 {lastLine}
@@ -408,6 +408,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
     }
 
     private focusCell = (cellId: string, focusCode: boolean): void => {
+        this.stateController.selectCell(cellId, focusCode ? cellId : undefined);
         const ref = this.cellRefs.get(cellId);
         if (ref && ref.current) {
             ref.current.giveFocus(focusCode);
@@ -415,8 +416,8 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
     }
 
     private scrollDiv = (_div: HTMLDivElement) => {
-        if (this.state.newCell) {
-            const newCell = this.state.newCell;
+        if (this.state.newCellId) {
+            const newCell = this.state.newCellId;
             this.stateController.setState({newCell: undefined});
             // Bounce this so state has time to update.
             setTimeout(() => {

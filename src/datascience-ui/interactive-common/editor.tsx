@@ -8,6 +8,7 @@ import { noop } from '../../client/common/utils/misc';
 import { IKeyboardEvent } from '../react-common/event';
 import { MonacoEditor } from '../react-common/monacoEditor';
 import { InputHistory } from './inputHistory';
+import { IFont } from './mainState';
 
 // tslint:disable-next-line: import-name
 export interface IEditorProps {
@@ -24,6 +25,7 @@ export interface IEditorProps {
     language: string;
     showLineNumbers?: boolean;
     useQuickEdit?: boolean;
+    font: IFont;
     onCreated(code: string, modelId: string): void;
     onChange(changes: monacoEditor.editor.IModelContentChange[], model: monacoEditor.editor.ITextModel): void;
     openLink(uri: monacoEditor.Uri): void;
@@ -114,6 +116,8 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
             lineDecorationsWidth: 0,
             contextmenu: false,
             matchBrackets: false,
+            fontSize: this.props.font.size,
+            fontFamily: this.props.font.family,
             ...this.props.editorOptions
         };
 

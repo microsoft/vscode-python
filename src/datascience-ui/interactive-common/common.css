@@ -146,13 +146,9 @@ body, html {
 
 .cell-output-text {
     white-space: pre-wrap;
-    font-size: var(--code-font-size);
-    font-family: var(--code-font-family);
 }
 .cell-output-text pre {
     white-space: pre-wrap;
-    font-size: var(--code-font-size);
-    font-family: var(--code-font-family);
 }
 
 .cell-output-html {
