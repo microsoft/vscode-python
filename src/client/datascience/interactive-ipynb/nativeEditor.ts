@@ -280,8 +280,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 this.shareMessage(InteractiveWindowMessages.RemoteReexecuteCode, { code: info.code, file: Identifiers.EmptyFileName, line: 0, id: info.id, originator: this.id, debug: false });
             }
         } catch (exc) {
-            await this.errorHandler.handleError(exc);
-
             // Make this error our cell output
             this.sendCellsToWebView([
                 {
@@ -305,6 +303,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
             // Tell the other side we restarted the kernel. This will stop all executions
             this.postMessage(InteractiveWindowMessages.RestartKernel).ignoreErrors();
+
+            // Handle an error
+            await this.errorHandler.handleError(exc);
+
         }
     }
 

@@ -50,7 +50,8 @@ export class NativeEditorStateController extends MainStateController {
         return super.handleMessage(msg, payload);
     }
 
-    public resetLoad() {
+    // This method is used by tests to prepare this react control for loading again.
+    public reset() {
         this.waitingForLoadRender = false;
         this.setState({ busy: true });
     }

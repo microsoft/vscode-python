@@ -89,7 +89,7 @@ export async function addCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Com
 export function closeNotebook(editor: INotebookEditor, wrapper: ReactWrapper<any, Readonly<{}>, React.Component>): Promise<void> {
     const reactEditor = getMainPanel<NativeEditor>(wrapper, NativeEditor);
     if (reactEditor) {
-        reactEditor.stateController.resetLoad();
+        reactEditor.stateController.reset();
     }
     return editor.dispose();
 }
