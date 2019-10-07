@@ -43,6 +43,10 @@ export class NativeEditorStateController extends MainStateController {
                 this.waitingForLoadRender = true;
                 break;
 
+            case InteractiveWindowMessages.RunAllCells:
+                this.runAll();
+                break;
+
             default:
                 break;
         }

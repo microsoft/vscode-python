@@ -525,6 +525,11 @@
                 "category": "Python"
             },
             {
+                "command": "python.datascience.notebookeditor.runallcells",
+                "title": "%python.command.python.datascience.runallcells.title%",
+                "category": "Python"
+            },
+            {
                 "command": "python.datascience.expandallcells",
                 "title": "%python.command.python.datascience.expandallcells.title%",
                 "category": "Python"
@@ -778,7 +783,7 @@
                     "command": "python.datascience.runallcells",
                     "title": "%python.command.python.datascience.runallcells.title%",
                     "category": "Python",
-                    "when": "python.datascience.featureenabled"
+                    "when": "python.datascience.hascodecells && python.datascience.featureenabled"
                 },
                 {
                     "command": "python.datascience.runFileInteractive",
@@ -871,6 +876,12 @@
                 {
                     "command": "python.datascience.notebookeditor.restartkernel",
                     "title": "%python.command.python.datascience.restartkernel.title%",
+                    "category": "Python",
+                    "when": "python.datascience.havenative && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.notebookeditor.runallcells",
+                    "title": "%python.command.python.datascience.runallcells.title%",
                     "category": "Python",
                     "when": "python.datascience.havenative && python.datascience.featureenabled"
                 },

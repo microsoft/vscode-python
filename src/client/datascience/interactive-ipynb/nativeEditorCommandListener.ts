@@ -32,6 +32,14 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
         this.disposableRegistry.push(commandManager.registerCommand(Commands.NotebookEditorInterruptKernel, () => this.interruptKernel()));
         this.disposableRegistry.push(commandManager.registerCommand(Commands.NotebookEditorRestartKernel, () => this.restartKernel()));
         this.disposableRegistry.push(commandManager.registerCommand(Commands.OpenNotebook, (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => this.openNotebook(file)));
+        this.disposableRegistry.push(commandManager.registerCommand(Commands.NotebookEditorRunAllCells, () => this.runAllCells()));
+    }
+
+    private runAllCells() {
+        const activeEditor = this.provider.activeEditor;
+        if (activeEditor) {
+            activeEditor.runAllCells();
+        }
     }
 
     private undoCells() {

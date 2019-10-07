@@ -70,7 +70,7 @@ export namespace InteractiveWindowMessages {
     export const SaveAll = 'save_all';
     export const NativeCommand = 'native_command';
     export const VariablesComplete = 'variables_complete';
-
+    export const RunAllCells = 'run_all_cells';
 }
 
 export enum NativeCommandType {
@@ -303,4 +303,5 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.SaveAll]: ISaveAll;
     public [InteractiveWindowMessages.NativeCommand]: INativeCommand;
     public [InteractiveWindowMessages.VariablesComplete]: never | undefined;
+    public [InteractiveWindowMessages.RunAllCells]: never | undefined;
 }
