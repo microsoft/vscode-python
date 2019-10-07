@@ -487,7 +487,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
         const newCell = this.props.stateController.insertBelow(this.props.cellVM.cell.id, true);
         this.props.stateController.sendCommand(NativeCommandType.AddToEnd, 'mouse');
         if (newCell) {
-            this.props.selectCell(newCell);
+            this.props.focusCell(newCell, true);
         }
     }
 

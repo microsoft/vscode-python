@@ -172,8 +172,11 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
     // tslint:disable: react-this-binding-issue
     private renderToolbarPanel() {
         const addCell = () => {
-            this.stateController.addNewCell();
+            const newCell = this.stateController.addNewCell();
             this.stateController.sendCommand(NativeCommandType.AddToEnd, 'mouse');
+            if (newCell) {
+                this.stateController.selectCell(newCell.cell.id, newCell.cell.id);
+            }
         };
         const runAll = () => {
             this.stateController.runAll();
