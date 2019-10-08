@@ -1,6 +1,6 @@
 # Changelog
 
-## 2019.10.0-rc (2 October 2019)
+## 2019.10.0 (10 October 2019)
 
 ### Enhancements
 
@@ -36,6 +36,8 @@
    ([#7517](https://github.com/Microsoft/vscode-python/issues/7517))
 1. Add support for ptvsd and debug adapter experiments in remote debugging API.
    ([#7549](https://github.com/Microsoft/vscode-python/issues/7549))
+1. Support other variables for notebookFileRoot besides ${workspaceRoot}. Specifically allow things like ${fileDirName} so that the dir of the first file run in the interactive window is used for the current directory.
+   ([#4441](https://github.com/Microsoft/vscode-python/issues/4441))
 
 ### Fixes
 
@@ -183,6 +185,14 @@
    ([#7636](https://github.com/Microsoft/vscode-python/issues/7636))
 1. Goto cell code lens was not scrolling.
    ([#7639](https://github.com/Microsoft/vscode-python/issues/7639))
+1. Make interactive window and native take their fontSize and fontFamily from the settings in VS Code.
+   ([#7624](https://github.com/Microsoft/vscode-python/issues/7624))
+1. Fix a hang in the Interactive window when connecting guest to host after the host has already started the interactive window.
+   ([#7638](https://github.com/Microsoft/vscode-python/issues/7638))
+1. When there's no workspace open, use the directory of the opened file as the root directory for a jupyter session.
+   ([#7688](https://github.com/Microsoft/vscode-python/issues/7688))
+1. Allow the language server to pick a default caching mode.
+   ([#7821](https://github.com/Microsoft/vscode-python/issues/7821))
 
 ### Code Health
 
