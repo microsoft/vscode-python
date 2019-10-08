@@ -1934,11 +1934,12 @@
                 "python.analysis.cachingLevel": {
                     "type": "string",
                     "enum": [
+                        "Default",
                         "None",
                         "System",
                         "Library"
                     ],
-                    "default": "None",
+                    "default": "Default",
                     "description": "Defines which types of modules get their analysis cached.",
                     "scope": "resource"
                 },
