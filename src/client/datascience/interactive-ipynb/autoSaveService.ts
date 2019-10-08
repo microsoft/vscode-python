@@ -4,13 +4,13 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { EventEmitter, TextEditor, WindowState } from 'vscode';
+import { Event, EventEmitter, TextEditor, WindowState } from 'vscode';
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
 import '../../common/extensions';
 import { IDisposable } from '../../common/types';
 import { noop } from '../../common/utils/misc';
-import { IInteractiveWindowListener } from '../types';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
+import { IInteractiveWindowListener } from '../types';
 
 // tslint:disable: no-any
 
