@@ -226,15 +226,15 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     public runAllCells() {
-        this.postMessage(InteractiveWindowMessages.NotebookRunAllCells);
+        this.postMessage(InteractiveWindowMessages.NotebookRunAllCells).ignoreErrors();
     }
 
     public runSelectedCell() {
-        this.postMessage(InteractiveWindowMessages.NotebookRunSelectedCell);
+        this.postMessage(InteractiveWindowMessages.NotebookRunSelectedCell).ignoreErrors();
     }
 
     public addCellBelow() {
-        this.postMessage(InteractiveWindowMessages.NotebookAddCellBelow);
+        this.postMessage(InteractiveWindowMessages.NotebookAddCellBelow).ignoreErrors();
     }
 
     protected async reopen(cells: ICell[]): Promise<void> {
