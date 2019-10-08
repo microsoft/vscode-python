@@ -163,7 +163,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
             const existing = await this.fileSystem.search(`${dir}/${localize.DataScience.untitledNotebookFileName()}-*.ipynb`);
 
             // Sort by number
-            const sorted = existing.sort();
+            const sorted = [...existing].sort();
 
             // Add one onto the end of the last one
             if (sorted.length > 0) {
