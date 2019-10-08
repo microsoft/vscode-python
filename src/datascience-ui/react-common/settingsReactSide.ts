@@ -53,6 +53,10 @@ function load() {
             showJupyterVariableExplorer: true,
             variableExplorerExclude: 'module;function;builtin_function_or_method',
             enablePlotViewer: true,
+            files : {
+                autoSave: 'off',
+                autoSaveDelay: 1000
+            },
             extraSettings: {
                 editorCursor: 'line',
                 editorCursorBlink: 'blink',

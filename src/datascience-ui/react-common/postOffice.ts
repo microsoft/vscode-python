@@ -14,10 +14,11 @@ export interface IVsCodeApi {
     getState() : any;
 }
 
-export interface IMessageHandler {
-    // tslint:disable-next-line:no-any
-    handleMessage(type: string, payload?: any) : boolean;
-}
+    export interface IMessageHandler {
+        // tslint:disable-next-line:no-any
+        handleMessage(type: string, payload?: any) : boolean;
+        dispose?(): void;
+    }
 
 // This special function talks to vscode from a web panel
 export declare function acquireVsCodeApi(): IVsCodeApi;

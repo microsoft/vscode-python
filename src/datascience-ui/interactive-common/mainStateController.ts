@@ -56,10 +56,10 @@ export interface IMainStateControllerProps {
 
 // tslint:disable-next-line: max-func-body-length
 export class MainStateController implements IMessageHandler {
+    protected readonly postOffice: PostOffice = new PostOffice();
     private stackLimit = 10;
     private pendingState: IMainState;
     private renderedState: IMainState;
-    private postOffice: PostOffice = new PostOffice();
     private intellisenseProvider: IntellisenseProvider;
     private onigasmPromise: Deferred<ArrayBuffer> | undefined;
     private tmlangugePromise: Deferred<string> | undefined;

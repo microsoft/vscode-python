@@ -14,16 +14,29 @@ import {
 } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { createEmptyCell, extractInputText, ICellViewModel } from '../interactive-common/mainState';
 import { IMainStateControllerProps, MainStateController } from '../interactive-common/mainStateController';
+import { IMessageHandler } from '../react-common/postOffice';
 import { getSettings } from '../react-common/settingsReactSide';
+import { AutoSaveService } from './autoSaveService';
 
 export class NativeEditorStateController extends MainStateController {
     private waitingForLoadRender: boolean = false;
+    private listeners: IMessageHandler[];
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainStateControllerProps) {
         super(props);
+        this.listeners = [new AutoSaveService(this)];
+        this.listeners.forEach(listener => this.postOffice.addHandler(listener));
     }
-
+    public dispose(){
+        this.listeners.forEach(listener => {
+            this.postOffice.removeHandler(listener);
+            if (listener.dispose){
+                listener.dispose();
+            }
+        });
+        super.dispose();
+    }
     // tslint:disable-next-line: no-any
     public handleMessage(msg: string, payload?: any) {
         // Handle message before base class so we will

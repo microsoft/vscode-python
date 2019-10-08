@@ -27,6 +27,8 @@ export namespace InteractiveWindowMessages {
     export const Interrupt = 'interrupt';
     export const SubmitNewCell = 'submit_new_cell';
     export const UpdateSettings = SharedMessages.UpdateSettings;
+    export const WindowStateChanged = 'WindowStateChanged';
+    export const ActiveTextEditorChanged = 'ActiveTextEditorChanged';
     export const SendInfo = 'send_info';
     export const Started = SharedMessages.Started;
     export const AddedSysInfo = 'added_sys_info';

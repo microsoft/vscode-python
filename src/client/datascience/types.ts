@@ -395,6 +395,10 @@ export interface IJupyterCommandFactory {
 
 // Config settings we pass to our react code
 export interface IDataScienceExtraSettings extends IDataScienceSettings {
+    files: {
+        autoSaveDelay: number;
+        autoSave: 'afterDelay' | 'off' | 'onFocusChange' | 'onWindowChange';
+    };
     extraSettings: {
         editorCursor: string;
         editorCursorBlink: string;

@@ -163,10 +163,15 @@ export class WebViewHost<IMapping> implements IDisposable {
 
     protected generateDataScienceExtraSettings(): IDataScienceExtraSettings {
         const editor = this.workspaceService.getConfiguration('editor');
+        const files = this.workspaceService.getConfiguration('files');
         const workbench = this.workspaceService.getConfiguration('workbench');
         const theme = !workbench ? DefaultTheme : workbench.get<string>('colorTheme', DefaultTheme);
         return {
             ...this.configService.getSettings().datascience,
+            files: {
+                autoSaveDelay: this.getValue(files, 'autoSaveDelay', 1000),
+                autoSave: this.getValue(files, 'autoSave', 'afterDelay')
+            },
             extraSettings: {
                 editorCursor: this.getValue(editor, 'cursorStyle', 'line'),
                 editorCursorBlink: this.getValue(editor, 'cursorBlinking', 'blink'),
@@ -246,6 +251,8 @@ export class WebViewHost<IMapping> implements IDisposable {
             event.affectsConfiguration('editor.fontFamily') ||
             event.affectsConfiguration('editor.cursorStyle') ||
             event.affectsConfiguration('editor.cursorBlinking') ||
+            event.affectsConfiguration('files.autoSave') ||
+            event.affectsConfiguration('files.autoSaveDelay') ||
             event.affectsConfiguration('python.dataScience.enableGather')) {
             // See if the theme changed
             const newSettings = this.generateDataScienceExtraSettings();
