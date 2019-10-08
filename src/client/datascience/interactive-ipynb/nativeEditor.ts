@@ -329,10 +329,13 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             interactiveContext.set(!this.isDisposed).catch();
             const interactiveCellsContext = new ContextKey(EditorContexts.HaveNativeCells, this.commandManager);
             const redoableContext = new ContextKey(EditorContexts.HaveNativeRedoableCells, this.commandManager);
+            const hasCellSelectedContext = new ContextKey(EditorContexts.HaveCellSelected, this.commandManager);
             if (info) {
                 interactiveCellsContext.set(info.cellCount > 0).catch();
                 redoableContext.set(info.redoCount > 0).catch();
+                hasCellSelectedContext.set(info.selectedCell ? true : false).catch();
             } else {
+                hasCellSelectedContext.set(false).catch();
                 interactiveCellsContext.set(false).catch();
                 redoableContext.set(false).catch();
             }

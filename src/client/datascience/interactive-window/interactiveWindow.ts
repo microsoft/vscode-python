@@ -235,12 +235,15 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             interactiveContext.set(!this.isDisposed).catch();
             const interactiveCellsContext = new ContextKey(EditorContexts.HaveInteractiveCells, this.commandManager);
             const redoableContext = new ContextKey(EditorContexts.HaveRedoableCells, this.commandManager);
+            const hasCellSelectedContext = new ContextKey(EditorContexts.HaveCellSelected, this.commandManager);
             if (info) {
                 interactiveCellsContext.set(info.cellCount > 0).catch();
                 redoableContext.set(info.redoCount > 0).catch();
+                hasCellSelectedContext.set(info.selectedCell ? true : false).catch();
             } else {
                 interactiveCellsContext.set(false).catch();
                 redoableContext.set(false).catch();
+                hasCellSelectedContext.set(false).catch();
             }
         }
     }

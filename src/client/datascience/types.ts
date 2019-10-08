@@ -350,6 +350,7 @@ export interface IInteractiveWindowInfo {
     undoCount: number;
     redoCount: number;
     visibleCells: ICell[];
+    selectedCell: string | undefined;
 }
 
 export interface IMessageCell extends nbformat.IBaseCell {

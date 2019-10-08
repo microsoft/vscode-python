@@ -89,7 +89,6 @@ export class NativeEditorStateController extends MainStateController {
     }
 
     public runSelectedCell = () => {
-        this.suspendUpdates();
         const selectedCellId = this.getState().selectedCell;
 
         if (selectedCellId) {
@@ -99,7 +98,6 @@ export class NativeEditorStateController extends MainStateController {
                 this.submitInput(concatMultilineString(selectedCell.cell.data.source), selectedCell);
             }
         }
-        this.resumeUpdates();
     }
 
     public runAll = () => {

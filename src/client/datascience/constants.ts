@@ -74,6 +74,7 @@ export namespace EditorContexts {
     export const HaveNativeCells = 'python.datascience.havenativecells';
     export const HaveNativeRedoableCells = 'python.datascience.havenativeredoablecells';
     export const HaveNative = 'python.datascience.havenative';
+    export const HaveCellSelected = 'python.datascience.havecellselected';
 }
 
 export namespace RegExpValues {

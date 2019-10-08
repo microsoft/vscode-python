@@ -917,7 +917,7 @@
                     "command": "python.datascience.notebookeditor.runselectedcell",
                     "title": "%python.command.python.datascience.notebookeditor.runselectedcell.title%",
                     "category": "Python",
-                    "when": "python.datascience.havenative && python.datascience.featureenabled"
+                    "when": "python.datascience.havenative && python.datascience.featureenabled && python.datascience.havecellselected"
                 },
                 {
                     "command": "python.datascience.notebookeditor.addcellbelow",
