@@ -143,7 +143,6 @@ steps:
     inputs:
         scriptSource: "filePath"
         scriptPath: "./pythonFiles/install_ptvsd.py"
-        arguments: "--ci"
         failOnStderr: true
     condition: and(eq(variables['NeedsPythonTestReqs'], 'true'), eq(variables['PythonVersion'], '3.7'))
 

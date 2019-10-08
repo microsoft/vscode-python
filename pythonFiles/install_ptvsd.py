@@ -12,9 +12,7 @@ PYPI_PTVSD_URL = "https://pypi.org/pypi/ptvsd/json"
 
 
 def install_ptvsd():
-    # If we are in CI use the packaging module installed in PYTHONFILES.
-    if len(sys.argv) == 2 and sys.argv[1] == "--ci":
-        sys.path.insert(0, PYTHONFILES)
+    sys.path.insert(0, PYTHONFILES)
     from packaging.requirements import Requirement
 
     with open(REQUIREMENTS, "r", encoding="utf-8") as reqsfile:

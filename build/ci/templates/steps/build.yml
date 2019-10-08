@@ -30,7 +30,6 @@ steps:
       inputs:
           scriptSource: "filePath"
           scriptPath: "./pythonFiles/install_ptvsd.py"
-          arguments: "--ci"
           failOnStderr: true
 
     - bash: npm run clean
