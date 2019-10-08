@@ -15,11 +15,10 @@ import { IFileSystem, IPlatformService, TemporaryFile } from './types';
 
 @injectable()
 export class FileSystem implements IFileSystem {
-    constructor(@inject(IPlatformService) private platformService: IPlatformService) {}
+    constructor(
+        @inject(IPlatformService) private platformService: IPlatformService
+    ) { }
 
-    public get directorySeparatorChar(): string {
-        return path.sep;
-    }
     public async stat(filePath: string): Promise<FileStat> {
         // Do not import vscode directly, as this isn't available in the Debugger Context.
         // If stat is used in debugger context, it will fail, however theres a separate PR that will resolve this.
@@ -28,23 +27,13 @@ export class FileSystem implements IFileSystem {
         return vscode.workspace.fs.stat(vscode.Uri.file(filePath));
     }
 
-    public objectExists(filePath: string, statCheck: (s: fs.Stats) => boolean): Promise<boolean> {
-        return new Promise<boolean>(resolve => {
-            fs.stat(filePath, (error, stats) => {
-                if (error) {
-                    return resolve(false);
-                }
-                return resolve(statCheck(stats));
-            });
-        });
-    }
+    //****************************
+    // fs-extra
 
-    public fileExists(filePath: string): Promise<boolean> {
-        return this.objectExists(filePath, stats => stats.isFile());
-    }
     public fileExistsSync(filePath: string): boolean {
         return fs.existsSync(filePath);
     }
+
     /**
      * Reads the contents of the file using utf8 and returns the string contents.
      * @param {string} filePath
@@ -59,10 +48,6 @@ export class FileSystem implements IFileSystem {
         await fs.writeFile(filePath, data, options);
     }
 
-    public directoryExists(filePath: string): Promise<boolean> {
-        return this.objectExists(filePath, stats => stats.isDirectory());
-    }
-
     public createDirectory(directoryPath: string): Promise<void> {
         return fs.mkdirp(directoryPath);
     }
@@ -71,6 +56,69 @@ export class FileSystem implements IFileSystem {
         const deferred = createDeferred<void>();
         fs.rmdir(directoryPath, err => (err ? deferred.reject(err) : deferred.resolve()));
         return deferred.promise;
+    }
+
+    public appendFileSync(filename: string, data: {}, encoding: string): void;
+    public appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: number; flag?: string }): void;
+    // tslint:disable-next-line:unified-signatures
+    public appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: string; flag?: string }): void;
+    public appendFileSync(filename: string, data: {}, optionsOrEncoding: {}): void {
+        return fs.appendFileSync(filename, data, optionsOrEncoding);
+    }
+
+    public deleteFile(filename: string): Promise<void> {
+        const deferred = createDeferred<void>();
+        fs.unlink(filename, err => (err ? deferred.reject(err) : deferred.resolve()));
+        return deferred.promise;
+    }
+
+    //****************************
+    // fs
+
+    public createWriteStream(filePath: string): fileSystem.WriteStream {
+        return fileSystem.createWriteStream(filePath);
+    }
+
+    public chmod(filePath: string, mode: string): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            fileSystem.chmod(filePath, mode, (err: NodeJS.ErrnoException | null) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve();
+            });
+        });
+    }
+
+    //****************************
+    // helpers
+
+    public arePathsSame(path1: string, path2: string): boolean {
+        path1 = path.normalize(path1);
+        path2 = path.normalize(path2);
+        if (this.platformService.isWindows) {
+            return path1.toUpperCase() === path2.toUpperCase();
+        } else {
+            return path1 === path2;
+        }
+    }
+
+    public objectExists(filePath: string, statCheck: (s: fs.Stats) => boolean): Promise<boolean> {
+        return new Promise<boolean>(resolve => {
+            fs.stat(filePath, (error, stats) => {
+                if (error) {
+                    return resolve(false);
+                }
+                return resolve(statCheck(stats));
+            });
+        });
+    }
+
+    public fileExists(filePath: string): Promise<boolean> {
+        return this.objectExists(filePath, (stats) => stats.isFile());
+    }
+    public directoryExists(filePath: string): Promise<boolean> {
+        return this.objectExists(filePath, stats => stats.isDirectory());
     }
 
     public getSubDirectories(rootDir: string): Promise<string[]> {
@@ -106,32 +154,6 @@ export class FileSystem implements IFileSystem {
         });
     }
 
-    public arePathsSame(path1: string, path2: string): boolean {
-        path1 = path.normalize(path1);
-        path2 = path.normalize(path2);
-        if (this.platformService.isWindows) {
-            return path1.toUpperCase() === path2.toUpperCase();
-        } else {
-            return path1 === path2;
-        }
-    }
-
-    public appendFileSync(filename: string, data: {}, encoding: string): void;
-    public appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: number; flag?: string }): void;
-    // tslint:disable-next-line:unified-signatures
-    public appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: string; flag?: string }): void;
-    public appendFileSync(filename: string, data: {}, optionsOrEncoding: {}): void {
-        return fs.appendFileSync(filename, data, optionsOrEncoding);
-    }
-
-    public getRealPath(filePath: string): Promise<string> {
-        return new Promise<string>(resolve => {
-            fs.realpath(filePath, (err, realPath) => {
-                resolve(err ? filePath : realPath);
-            });
-        });
-    }
-
     public copyFile(src: string, dest: string): Promise<void> {
         const deferred = createDeferred<void>();
         const rs = fs.createReadStream(src).on('error', err => {
@@ -149,12 +171,6 @@ export class FileSystem implements IFileSystem {
         return deferred.promise;
     }
 
-    public deleteFile(filename: string): Promise<void> {
-        const deferred = createDeferred<void>();
-        fs.unlink(filename, err => (err ? deferred.reject(err) : deferred.resolve()));
-        return deferred.promise;
-    }
-
     public getFileHash(filePath: string): Promise<string> {
         return new Promise<string>((resolve, reject) => {
             fs.lstat(filePath, (err, stats) => {
@@ -169,6 +185,7 @@ export class FileSystem implements IFileSystem {
             });
         });
     }
+
     public search(globPattern: string): Promise<string[]> {
         return new Promise<string[]>((resolve, reject) => {
             glob(globPattern, (ex, files) => {
@@ -179,6 +196,7 @@ export class FileSystem implements IFileSystem {
             });
         });
     }
+
     public createTemporaryFile(extension: string): Promise<TemporaryFile> {
         return new Promise<TemporaryFile>((resolve, reject) => {
             tmp.file({ postfix: extension }, (err, tmpFile, _, cleanupCallback) => {
@@ -186,21 +204,6 @@ export class FileSystem implements IFileSystem {
                     return reject(err);
                 }
                 resolve({ filePath: tmpFile, dispose: cleanupCallback });
-            });
-        });
-    }
-
-    public createWriteStream(filePath: string): fileSystem.WriteStream {
-        return fileSystem.createWriteStream(filePath);
-    }
-
-    public chmod(filePath: string, mode: string): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            fileSystem.chmod(filePath, mode, (err: NodeJS.ErrnoException | null) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve();
             });
         });
     }

@@ -37,29 +37,30 @@ export type TemporaryDirectory = { path: string } & Disposable;
 
 export const IFileSystem = Symbol('IFileSystem');
 export interface IFileSystem {
-    directorySeparatorChar: string;
     stat(filePath: string): Promise<FileStat>;
-    objectExists(path: string, statCheck: (s: fs.Stats) => boolean): Promise<boolean>;
-    fileExists(path: string): Promise<boolean>;
+    // fs-extra
     fileExistsSync(path: string): boolean;
-    directoryExists(path: string): Promise<boolean>;
-    createDirectory(path: string): Promise<void>;
-    deleteDirectory(path: string): Promise<void>;
-    getSubDirectories(rootDir: string): Promise<string[]>;
-    getFiles(rootDir: string): Promise<string[]>;
-    arePathsSame(path1: string, path2: string): boolean;
     readFile(filePath: string): Promise<string>;
     writeFile(filePath: string, data: {}, options?: string | fsextra.WriteFileOptions): Promise<void>;
+    createDirectory(path: string): Promise<void>;
+    deleteDirectory(path: string): Promise<void>;
     appendFileSync(filename: string, data: {}, encoding: string): void;
     appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: number; flag?: string }): void;
     // tslint:disable-next-line:unified-signatures
     appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: string; flag?: string }): void;
-    getRealPath(path: string): Promise<string>;
-    copyFile(src: string, dest: string): Promise<void>;
     deleteFile(filename: string): Promise<void>;
+    // fs
+    createWriteStream(path: string): fs.WriteStream;
+    chmod(path: string, mode: string): Promise<void>;
+    // helpers
+    arePathsSame(path1: string, path2: string): boolean;
+    objectExists(path: string, statCheck: (s: fs.Stats) => boolean): Promise<boolean>;  // XXX drop
+    fileExists(path: string): Promise<boolean>;
+    directoryExists(path: string): Promise<boolean>;
+    getSubDirectories(rootDir: string): Promise<string[]>;
+    getFiles(rootDir: string): Promise<string[]>;
+    copyFile(src: string, dest: string): Promise<void>;
     getFileHash(filePath: string): Promise<string>;
     search(globPattern: string): Promise<string[]>;
     createTemporaryFile(extension: string): Promise<TemporaryFile>;
-    createWriteStream(path: string): fs.WriteStream;
-    chmod(path: string, mode: string): Promise<void>;
 }
