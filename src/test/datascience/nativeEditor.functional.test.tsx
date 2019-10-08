@@ -118,16 +118,16 @@ for _ in range(50):
             return Promise.resolve({ result: result, haveMore: loops > 0 });
         });
 
-        await addCell(wrapper, badPanda, true, 4);
+        await addCell(wrapper, badPanda, true);
         verifyHtmlOnCell(wrapper, 'NativeCell', `has no attribute 'read'`, CellPosition.Last);
 
-        await addCell(wrapper, goodPanda, true, 4);
+        await addCell(wrapper, goodPanda, true);
         verifyHtmlOnCell(wrapper, 'NativeCell', `<td>`, CellPosition.Last);
 
-        await addCell(wrapper, matPlotLib, true, 5);
+        await addCell(wrapper, matPlotLib, true, 6);
         verifyHtmlOnCell(wrapper, 'NativeCell', matPlotLibResults, CellPosition.Last);
 
-        await addCell(wrapper, spinningCursor, true, 3 + (ioc.mockJupyter ? (cursors.length * 3) : 50));
+        await addCell(wrapper, spinningCursor, true, 4 + (ioc.mockJupyter ? (cursors.length * 3) : 50));
         verifyHtmlOnCell(wrapper, 'NativeCell', '<div>', CellPosition.Last);
     }, () => { return ioc; });
 

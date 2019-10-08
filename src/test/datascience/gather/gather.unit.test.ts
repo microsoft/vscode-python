@@ -125,6 +125,7 @@ suite('DataScience code gathering unit tests', () => {
 
     dataScienceSettings.setup(d => d.gatherRules).returns(() => gatherRules);
     dataScienceSettings.setup(d => d.enabled).returns(() => true);
+    dataScienceSettings.setup(d => d.defaultCellMarker).returns(() => '# %%');
     pythonSettings.setup(p => p.datascience).returns(() => dataScienceSettings.object);
     configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
     appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
@@ -140,9 +141,10 @@ suite('DataScience code gathering unit tests', () => {
     });
 
     test('Gathers program slices for a cell', async () => {
+        const defaultCellMarker = '# %%';
         const cell: IVscCell = codeCells[codeCells.length - 1];
         const program = gatherExecution.gatherCode(cell);
-        const expectedProgram = `# This file contains the minimal amount of code required to produce the code cell you gathered.\n#%%\nfrom bokeh.plotting import show, figure, output_notebook\n\n#%%\nx = [1,2,3,4,5]\ny = [21,9,15,17,4]\n\n#%%\np=figure(title='demo',x_axis_label='x',y_axis_label='y')\n\n#%%\np.line(x,y,line_width=2)\n\n#%%\nshow(p)\n`;
+        const expectedProgram = `# This file contains the minimal amount of code required to produce the code cell you gathered.\n${defaultCellMarker}\nfrom bokeh.plotting import show, figure, output_notebook\n\n${defaultCellMarker}\nx = [1,2,3,4,5]\ny = [21,9,15,17,4]\n\n${defaultCellMarker}\np=figure(title='demo',x_axis_label='x',y_axis_label='y')\n\n${defaultCellMarker}\np.line(x,y,line_width=2)\n\n${defaultCellMarker}\nshow(p)\n`;
         assert.equal(program.trim(), expectedProgram.trim());
     });
 });

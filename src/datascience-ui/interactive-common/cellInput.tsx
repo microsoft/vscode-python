@@ -26,7 +26,6 @@ interface ICellInputProps {
     monacoTheme: string | undefined;
     editorOptions?: monacoEditor.editor.IEditorOptions;
     editorMeasureClassName?: string;
-    focusedCell?: string;
     showLineNumbers?: boolean;
     font: IFont;
     onCodeChange(changes: monacoEditor.editor.IModelContentChange[], cellId: string, modelId: string): void;
@@ -56,7 +55,7 @@ export class CellInput extends React.Component<ICellInputProps> {
     }
 
     public componentDidUpdate(prevProps: ICellInputProps) {
-        if (this.props.focusedCell === this.props.cellVM.cell.id && prevProps.focusedCell !== this.props.focusedCell) {
+        if (this.props.cellVM.focused && !prevProps.cellVM.focused) {
             this.giveFocus();
         }
     }

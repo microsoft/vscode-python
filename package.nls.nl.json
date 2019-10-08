@@ -115,7 +115,7 @@
     "DataScience.exportingFormat": "Aan het exporteren {0}",
     "DataScience.exportCancel": "Annuleren",
     "Common.canceled": "Geannuleerd",
-    "DataScience.importChangeDirectoryComment": "#%% De werkmap van de werkruimte root naar de ipynb-bestandslocatie veranderen. Schakel deze toevoeging uit met de instelling DataScience.changeDirOnImportExport",
+    "DataScience.importChangeDirectoryComment": "{0} De werkmap van de werkruimte root naar de ipynb-bestandslocatie veranderen. Schakel deze toevoeging uit met de instelling DataScience.changeDirOnImportExport",
     "DataScience.exportChangeDirectoryComment": "# De map wijzigen naar de VSCode-werktuimte root zodat de relatieve pad-ladingen correct werken. Schakel deze toevoeging uit met de instelling DataScience.changeDirOnImportExport",
     "DataScience.interruptKernelStatus": "IPython-kernel onderbreken",
     "DataScience.restartKernelAfterInterruptMessage": "Het onderbreken van de kernel duurde te lang. Wil je de kernel in plaats daarvan herstarten? Alle variabelen zullen verloren gaan.",

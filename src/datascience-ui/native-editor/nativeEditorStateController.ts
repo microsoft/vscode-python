@@ -89,7 +89,7 @@ export class NativeEditorStateController extends MainStateController {
     }
 
     public runSelectedCell = () => {
-        const selectedCellId = this.getState().selectedCell;
+        const selectedCellId = this.getState().selectedCellId;
 
         if (selectedCellId) {
             const cells = this.getState().cellVMs;
@@ -111,12 +111,13 @@ export class NativeEditorStateController extends MainStateController {
 
     public addNewCell = (): ICellViewModel | undefined => {
         const cells = this.getState().cellVMs;
-        const selectedCell = this.getState().selectedCell;
+        const selectedCell = this.getState().selectedCellId;
         this.suspendUpdates();
         const id = uuid();
-        const pos = selectedCell ? cells.findIndex(cvm => cvm.cell.id === this.getState().selectedCell) + 1 : cells.length;
+        const pos = selectedCell ? cells.findIndex(cvm => cvm.cell.id === this.getState().selectedCellId) + 1 : cells.length;
         this.setState({ newCell: id });
         const vm = this.insertCell(createEmptyCell(id, null), pos);
+        this.sendMessage(InteractiveWindowMessages.InsertCell, { id, code: '', codeCellAbove: this.firstCodeCellAbove(id) });
         if (vm) {
             // Make sure the new cell is monaco
             vm.useQuickEdit = false;
@@ -136,7 +137,9 @@ export class NativeEditorStateController extends MainStateController {
                 inputBlockShow: true,
                 inputBlockText: '',
                 inputBlockCollapseNeeded: false,
-                inputBlockToggled: noop
+                inputBlockToggled: noop,
+                selected: cells[0].selected,
+                focused: cells[0].focused
             };
             this.setState({ cellVMs: [newVM], undoStack: this.pushStack(this.getState().undoStack, cells) });
         } else {
@@ -175,6 +178,7 @@ export class NativeEditorStateController extends MainStateController {
             const id = uuid();
             this.setState({ newCell: id });
             this.insertCell(createEmptyCell(id, null), index, isMonaco);
+            this.sendMessage(InteractiveWindowMessages.InsertCell, { id, code: '', codeCellAbove: this.firstCodeCellAbove(id) });
             this.resumeUpdates();
             return id;
         }
@@ -188,6 +192,7 @@ export class NativeEditorStateController extends MainStateController {
             const id = uuid();
             this.setState({ newCell: id });
             this.insertCell(createEmptyCell(id, null), index + 1, isMonaco);
+            this.sendMessage(InteractiveWindowMessages.InsertCell, { id, code: '', codeCellAbove: this.firstCodeCellAbove(id) });
             this.resumeUpdates();
             return id;
         }
@@ -203,6 +208,7 @@ export class NativeEditorStateController extends MainStateController {
                 cellVMs: cellVms,
                 undoStack: this.pushStack(this.getState().undoStack, origVms)
             });
+            this.sendMessage(InteractiveWindowMessages.SwapCells, { firstCellId: cellId!, secondCellId: cellVms[index].cell.id });
         }
     }
 
@@ -216,6 +222,7 @@ export class NativeEditorStateController extends MainStateController {
                 cellVMs: cellVms,
                 undoStack: this.pushStack(this.getState().undoStack, origVms)
             });
+            this.sendMessage(InteractiveWindowMessages.SwapCells, { firstCellId: cellId!, secondCellId: cellVms[index].cell.id });
         }
     }
 

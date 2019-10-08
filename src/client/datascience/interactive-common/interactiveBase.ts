@@ -998,6 +998,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             const hasCellsAlready = ranges.length > 0;
             const line = editor.selection.start.line;
             const revealLine = line + 1;
+            const defaultCellMarker = this.configService.getSettings().datascience.defaultCellMarker || Identifiers.DefaultCodeCellMarker;
             let newCode = `${source}${os.EOL}`;
             if (hasCellsAlready) {
                 // See if inside of a range or not.
@@ -1005,13 +1006,13 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
                 // If in the middle, wrap the new code
                 if (matchingRange && matchingRange.range.start.line < line && line < editor.document.lineCount - 1) {
-                    newCode = `#%%${os.EOL}${source}${os.EOL}#%%${os.EOL}`;
+                    newCode = `${defaultCellMarker}${os.EOL}${source}${os.EOL}${defaultCellMarker}${os.EOL}`;
                 } else {
-                    newCode = `#%%${os.EOL}${source}${os.EOL}`;
+                    newCode = `${defaultCellMarker}${os.EOL}${source}${os.EOL}`;
                 }
             } else if (editor.document.lineCount <= 0 || editor.document.isUntitled) {
                 // No lines in the document at all, just insert new code
-                newCode = `#%%${os.EOL}${source}${os.EOL}`;
+                newCode = `${defaultCellMarker}${os.EOL}${source}${os.EOL}`;
             }
 
             await editor.edit((editBuilder) => {

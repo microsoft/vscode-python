@@ -37,7 +37,8 @@ interface IMonacoEditorState {
     editor?: monacoEditor.editor.IStandaloneCodeEditor;
     model: monacoEditor.editor.ITextModel | null;
     visibleLineCount: number;
-    attached: boolean;
+    attached: boolean; // Keeps track of when we reparent the editor out of the dummy dom node.
+    widgetsReparented: boolean; // Keeps track of when we reparent the hover widgets so they work inside something with overflow
 }
 
 // Need this to prevent wiping of the current value on a componentUpdate. react-monaco-editor has that problem.
@@ -61,7 +62,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
     constructor(props: IMonacoEditorProps) {
         super(props);
-        this.state = { editor: undefined, model: null, visibleLineCount: -1, attached: false };
+        this.state = { editor: undefined, model: null, visibleLineCount: -1, attached: false, widgetsReparented: false };
         this.containerRef = React.createRef<HTMLDivElement>();
         this.measureWidthRef = React.createRef<HTMLDivElement>();
         this.debouncedUpdateEditorSize = debounce(this.updateEditorSize.bind(this), 150);
@@ -154,6 +155,12 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                         contextMenuElement.style.left = `${Math.max(0, Math.floor(posX))}px`;
                     }
                 }
+            }));
+
+            // Track focus changes to make sure we update our widget parent and widget position
+            this.subscriptions.push(editor.onDidFocusEditorWidget(() => {
+                this.throttledUpdateWidgetPosition();
+                this.updateWidgetParent(editor);
             }));
 
             // Update our margin to include the correct line number style
@@ -376,16 +383,22 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                 // Make sure to attach to a real dom node.
                 if (!this.state.attached && this.state.editor && this.monacoContainer) {
                     this.containerRef.current.appendChild(this.monacoContainer);
-
-                    // Make sure our suggest and hover windows show up on top of other stuff
-                    this.updateWidgetParent(this.state.editor);
+                    this.monacoContainer.addEventListener('mousemove', this.onContainerMove);
                 }
                 this.setState({visibleLineCount: currLineCount, attached: true});
                 this.state.editor.layout({width, height});
-
-                // Also need to update our widget positions
-                this.throttledUpdateWidgetPosition(width);
             }
+        }
+    }
+
+    private onContainerMove = () => {
+        if (!this.widgetParent && !this.state.widgetsReparented && this.monacoContainer) {
+            // Only need to do this once, but update the widget parents and move them.
+            this.updateWidgetParent(this.state.editor);
+            this.startUpdateWidgetPosition();
+
+            // Since only doing this once, remove the listener.
+            this.monacoContainer.removeEventListener('mousemove', this.onContainerMove);
         }
     }
 
@@ -452,14 +465,15 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         }
     }
 
-    private updateWidgetParent(editor: monacoEditor.editor.IStandaloneCodeEditor) {
+    private updateWidgetParent(editor: monacoEditor.editor.IStandaloneCodeEditor | undefined) {
         // Reparent the hover widgets. They cannot be inside anything that has overflow hidden or scrolling or they won't show
         // up overtop of anything. Warning, this is a big hack. If the class name changes or the logic
         // for figuring out the position of hover widgets changes, this won't work anymore.
         // appendChild on a DOM node moves it, but doesn't clone it.
         // https://developer.mozilla.org/en-US/docs/Web/API/Node/appendChild
-        const editorNode = editor.getDomNode();
-        if (editorNode) {
+        const editorNode = editor ? editor.getDomNode() : undefined;
+        if (editor && editorNode && !this.state.widgetsReparented) {
+            this.setState({widgetsReparented: true});
             try {
                 const elements = editorNode.getElementsByClassName('overflowingContentWidgets');
                 if (elements && elements.length) {
