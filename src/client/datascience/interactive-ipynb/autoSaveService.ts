@@ -36,7 +36,7 @@ export class AutoSaveService implements IInteractiveWindowListener {
         @inject(IApplicationShell) appShell: IApplicationShell,
         @inject(IDocumentManager) documentManager: IDocumentManager,
         @inject(INotebookEditorProvider) private readonly notebookProvider: INotebookEditorProvider,
-        @inject(IFileSystem) private readonly fileSytem: IFileSystem,
+        @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {
         this.workspace.onDidChangeConfiguration(this.onSettingsChanded.bind(this), this, this.disposables);
@@ -85,7 +85,7 @@ export class AutoSaveService implements IInteractiveWindowListener {
         if (!uri) {
             return;
         }
-        return this.notebookProvider.editors.find(item => this.fileSytem.arePathsSame(item.file.fsPath, uri.fsPath));
+        return this.notebookProvider.editors.find(item => this.fileSystem.arePathsSame(item.file.fsPath, uri.fsPath));
     }
     private getAutoSaveSettings(): FileSettings {
         const filesConfig = this.workspace.getConfiguration('files', this.notebookUri);

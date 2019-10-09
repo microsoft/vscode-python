@@ -66,7 +66,7 @@ import { ICommandNameArgumentTypeMapping } from './commands';
 export const IApplicationShell = Symbol('IApplicationShell');
 export interface IApplicationShell {
     /**
-     * An [event](#Event) which fires when the focus s  tate of the current window
+     * An [event](#Event) which fires when the focus state of the current window
      * changes. The value of the event represents whether the window is focused.
      */
     readonly onDidChangeWindowState: Event<WindowState>;

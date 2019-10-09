@@ -163,7 +163,6 @@ export class WebViewHost<IMapping> implements IDisposable {
 
     protected generateDataScienceExtraSettings(): IDataScienceExtraSettings {
         const editor = this.workspaceService.getConfiguration('editor');
-        const files = this.workspaceService.getConfiguration('files');
         const workbench = this.workspaceService.getConfiguration('workbench');
         const theme = !workbench ? DefaultTheme : workbench.get<string>('colorTheme', DefaultTheme);
         return {
