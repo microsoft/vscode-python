@@ -30,7 +30,6 @@ export class AutoSaveService implements IInteractiveWindowListener {
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{ message: string; payload: any }>();
     private disposables: IDisposable[] = [];
     private notebookUri?: Uri;
-    private isDirty: boolean = false;
     private timeout?: ReturnType<typeof setTimeout>;
     constructor(
         @inject(IApplicationShell) appShell: IApplicationShell,
@@ -67,14 +66,12 @@ export class AutoSaveService implements IInteractiveWindowListener {
         this.clearTimeout();
     }
     private onNotebookModified(_: INotebookEditor) {
-        this.isDirty = true;
         // If we haven't started a timer, then start if necessary.
         if (!this.timeout) {
             this.setTimer();
         }
     }
     private onNotebookSaved(_: INotebookEditor) {
-        this.isDirty = false;
         // If we haven't started a timer, then start if necessary.
         if (!this.timeout) {
             this.setTimer();
@@ -122,7 +119,8 @@ export class AutoSaveService implements IInteractiveWindowListener {
     }
     private save() {
         this.clearTimeout();
-        if (this.isDirty) {
+        const notebook = this.getNotebook();
+        if (notebook && notebook.isDirty) {
             // Notify webview to perform a save.
             this.postEmitter.fire({ message: InteractiveWindowMessages.DoSave, payload: undefined });
         } else {

@@ -174,6 +174,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return this.savedEvent.event;
     }
 
+    public get isDirty(): boolean {
+        return this._dirty;
+    }
+
     // tslint:disable-next-line: no-any
     public onMessage(message: string, payload: any) {
         super.onMessage(message, payload);
