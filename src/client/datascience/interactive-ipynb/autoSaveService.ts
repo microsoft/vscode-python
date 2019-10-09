@@ -47,7 +47,7 @@ export class AutoSaveService implements IInteractiveWindowListener {
     private onDidChangeWindowState(e: WindowState) {
         this.postEmitter.fire({ message: InteractiveWindowMessages.WindowStateChanged, payload: e });
     }
-    private onDidChangeActiveTextEditor(e?: TextEditor) {
+    private onDidChangeActiveTextEditor(_e?: TextEditor) {
         this.postEmitter.fire({ message: InteractiveWindowMessages.ActiveTextEditorChanged, payload: undefined });
     }
 }
