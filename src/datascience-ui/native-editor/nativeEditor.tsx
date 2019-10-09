@@ -99,7 +99,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             const newCell = this.stateController.insertAbove(cellId, true);
             if (newCell) {
                 // Make async because the click changes focus.
-                setTimeout(() => this.focusCell(newCell, true), 10);
+                setTimeout(() => this.focusCell(newCell, true), 0);
             }
         };
         const addCellLine = this.state.cellVMs.length === 0 ? null :
@@ -372,7 +372,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             this.stateController.sendCommand(NativeCommandType.AddToEnd, 'mouse');
             if (newCell) {
                 // Has to be async because the click will change the focus on mouse up
-                setTimeout(() => this.focusCell(newCell, true), 10);
+                setTimeout(() => this.focusCell(newCell, true), 0);
             }
         };
         const lastLine = index === this.state.cellVMs.length - 1 ?
@@ -427,7 +427,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             // Bounce this so state has time to update.
             setTimeout(() => {
                 this.focusCell(newCell, true);
-            }, 10);
+            }, 0);
         }
     }
 }

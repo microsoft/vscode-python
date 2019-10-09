@@ -563,7 +563,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
         const switchToMarkdown = () => {
             this.props.stateController.changeCellType(cellId, 'markdown');
             this.props.stateController.sendCommand(NativeCommandType.ChangeToMarkdown, 'mouse');
-            setTimeout(() => this.props.focusCell(cellId, true), 10);
+            setTimeout(() => this.props.focusCell(cellId, true), 0);
         };
         const switchToCode = () => {
             const handler = () => {
@@ -571,7 +571,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                     this.props.stateController.changeCellType(cellId, 'code');
                     this.props.stateController.sendCommand(NativeCommandType.ChangeToCode, 'mouse');
                     this.props.focusCell(cellId, true);
-                }, 10);
+                }, 0);
             };
 
             // This is special. Coming in on a mouse down event so we get
