@@ -123,6 +123,14 @@ steps:
     displayName: 'pip install functional requirements'
     condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'))
 
+  # Downgrade pywin32 on Windows due to bug https://github.com/jupyter/notebook/issues/4909
+  #
+  # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
+  - bash: |
+      python -m pip install --upgrade pywin32==224
+    displayName: 'Downgrade pywin32 on Windows / Python 3.6'
+    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Windows_NT'), eq(variables['PythonVersion'], '3.6'))
+
   # Install the requirements for ipython tests.
   #
   # This task will only run if variable `NeedsIPythonReqs` is true.
