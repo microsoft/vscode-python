@@ -8,7 +8,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { parse } from 'semver';
 import { promisify } from 'util';
-import { DebugAdapterDescriptor, DebugAdapterExecutable, DebugSession, WorkspaceFolder } from 'vscode';
+import { DebugAdapterDescriptor, DebugAdapterExecutable, DebugSession, WorkspaceFolder, DebugAdapterServer } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
 import { PVSC_EXTENSION_ID } from '../../../common/constants';
 import { DebugAdapterNewPtvsd } from '../../../common/experimentGroups';
@@ -20,6 +20,7 @@ import { IInterpreterService } from '../../../interpreter/contracts';
 import { RemoteDebugOptions } from '../../debugAdapter/types';
 import { AttachRequestArguments, LaunchRequestArguments } from '../../types';
 import { DebugAdapterPtvsdPathInfo, IDebugAdapterDescriptorFactory } from '../types';
+import { bool } from 'prop-types';
 
 export const ptvsdPathStorageKey = 'PTVSD_PATH_STORAGE_KEY';
 
@@ -32,16 +33,28 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
         @inject(IPythonExecutionFactory) private readonly executionFactory: IPythonExecutionFactory,
         @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory,
         @inject(IExtensions) private readonly extensions: IExtensions
-    ) {}
+    ) { }
     public async createDebugAdapterDescriptor(session: DebugSession, executable: DebugAdapterExecutable | undefined): Promise<DebugAdapterDescriptor> {
         const configuration = session.configuration as (LaunchRequestArguments | AttachRequestArguments);
         const pythonPath = await this.getPythonPath(configuration, session.workspaceFolder);
 
         if (await this.useNewPtvsd(pythonPath)) {
-            // If logToFile is set in the debug config then pass --log-dir <path-to-extension-dir> when launching the debug adapter.
-            const logArgs = configuration.logToFile ? ['--log-dir', EXTENSION_ROOT_DIR] : [];
-            const ptvsdPathToUse = await this.getPtvsdPath(pythonPath);
-            return new DebugAdapterExecutable(`${pythonPath}`, [path.join(ptvsdPathToUse, 'adapter'), ...logArgs]);
+            // For local process ID case we need to start a DA executable. This is needed to
+            // inject the debugger into the process to be attached.
+            if (configuration.request === 'attach' && !configuration.processId) {
+                // This case is for when DA is running in server mode. This is most attach scenarios,
+                // except for when attaching to a locally running process.
+                const port = configuration.port ? configuration.port : 0;
+                if (port === 0) {
+                    throw new Error('Port must be specified for request type attach');
+                }
+                return new DebugAdapterServer(port, configuration.host);
+            } else {
+                // If logToFile is set in the debug config then pass --log-dir <path-to-extension-dir> when launching the debug adapter.
+                const logArgs = configuration.logToFile ? ['--log-dir', EXTENSION_ROOT_DIR] : [];
+                const ptvsdPathToUse = await this.getPtvsdPath(pythonPath);
+                return new DebugAdapterExecutable(`${pythonPath}`, [path.join(ptvsdPathToUse, 'adapter'), ...logArgs]);
+            }
         }
 
         // Use the Node debug adapter (and ptvsd_launcher.py)
@@ -132,7 +145,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
      */
     private async notifySelectInterpreter() {
         // tslint:disable-next-line: messages-must-be-localized
-        await this.appShell.showErrorMessage('Please install Python or select a Python Interpereter to use the debugger.');
+        await this.appShell.showErrorMessage('Please install Python or select a Python Interpreter to use the debugger.');
     }
 
     /**
