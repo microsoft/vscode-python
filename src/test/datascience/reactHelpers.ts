@@ -359,11 +359,7 @@ export function setUpDomEnvironment() {
             collapseCellInputCodeByDefault: true,
             allowInput: true,
             showJupyterVariableExplorer: true,
-            variableExplorerExclude: 'module;function;builtin_function_or_method',
-            files : {
-                autoSave: 'off',
-                autoSaveDelay: 1000
-            }
+            variableExplorerExclude: 'module;function;builtin_function_or_method'
         };
     };
 

@@ -168,10 +168,6 @@ export class WebViewHost<IMapping> implements IDisposable {
         const theme = !workbench ? DefaultTheme : workbench.get<string>('colorTheme', DefaultTheme);
         return {
             ...this.configService.getSettings().datascience,
-            files: {
-                autoSaveDelay: this.getValue(files, 'autoSaveDelay', 1000),
-                autoSave: this.getValue(files, 'autoSave', 'off')
-            },
             extraSettings: {
                 editorCursor: this.getValue(editor, 'cursorStyle', 'line'),
                 editorCursorBlink: this.getValue(editor, 'cursorBlinking', 'blink'),

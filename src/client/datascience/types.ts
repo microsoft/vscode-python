@@ -399,8 +399,8 @@ export type FileSettings = {
     autoSaveDelay: number;
     autoSave: 'afterDelay' | 'off' | 'onFocusChange' | 'onWindowChange';
 };
+
 export interface IDataScienceExtraSettings extends IDataScienceSettings {
-    files: FileSettings;
     extraSettings: {
         editorCursor: string;
         editorCursorBlink: string;
