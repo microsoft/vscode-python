@@ -11,7 +11,7 @@ import { getSettings } from '../react-common/settingsReactSide';
 import { NativeEditorStateController } from './nativeEditorStateController';
 
 export class AutoSaveService implements IDisposable, IMessageHandler {
-    private timeout?: NodeJS.Timer | number;
+    private timeout?: ReturnType<typeof setTimeout>;
     private settings?: FileSettings;
     // private fileSettings: typeof
     constructor(private readonly controller: NativeEditorStateController) {
@@ -69,8 +69,7 @@ export class AutoSaveService implements IDisposable, IMessageHandler {
     }
     private clearTimeout() {
         if (this.timeout) {
-            // tslint:disable-next-line: no-any
-            clearTimeout(this.timeout as any);
+            clearTimeout(this.timeout);
             this.timeout = undefined;
         }
     }
