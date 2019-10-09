@@ -13,22 +13,15 @@ import pytest
 import subprocess
 
 from packaging.requirements import Requirement
-from .. import PYTHONFILES, REQUIREMENTS, SRC_ROOT
+from .. import PYTHONFILES, SRC_ROOT
 
 ARGV = ["python", os.path.join(SRC_ROOT, "ptvsd_folder_name.py")]
-PREFIX = "ptvsd=="
-
-with open(REQUIREMENTS, "r", encoding="utf-8") as reqsfile:
-    for line in reqsfile:
-        if line.startswith(PREFIX):
-            VERSION = line[len(PREFIX) :].strip()
-            break
 
 
 def ptvsd_paths(*platforms):
     paths = set()
     for platform in platforms:
-        folder = "ptvsd-{}-cp37-cp37m-{}".format(VERSION, platform)
+        folder = "ptvsd-cp37-cp37m-{}".format(platform)
         paths.add(os.path.join(PYTHONFILES, folder))
     return paths
 
