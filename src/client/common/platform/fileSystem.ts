@@ -3,7 +3,7 @@
 'use strict';
 
 import { createHash } from 'crypto';
-import * as fileSystem from 'fs';
+import * as fs from 'fs';
 import * as fsextra from 'fs-extra';
 import * as glob from 'glob';
 import { inject, injectable } from 'inversify';
@@ -75,13 +75,13 @@ export class FileSystem implements IFileSystem {
     //****************************
     // fs
 
-    public createWriteStream(filePath: string): fileSystem.WriteStream {
-        return fileSystem.createWriteStream(filePath);
+    public createWriteStream(filePath: string): fs.WriteStream {
+        return fs.createWriteStream(filePath);
     }
 
     public chmod(filePath: string, mode: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            fileSystem.chmod(filePath, mode, (err: NodeJS.ErrnoException | null) => {
+            fs.chmod(filePath, mode, (err: NodeJS.ErrnoException | null) => {
                 if (err) {
                     return reject(err);
                 }
