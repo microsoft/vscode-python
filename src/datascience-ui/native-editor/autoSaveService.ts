@@ -37,7 +37,6 @@ export class AutoSaveService implements IDisposable, IMessageHandler {
                     return true;
                 }
                 this.initialize();
-                this.settings = settings;
                 return true;
             }
             case InteractiveWindowMessages.ActiveTextEditorChanged: {
@@ -61,7 +60,7 @@ export class AutoSaveService implements IDisposable, IMessageHandler {
     }
     public initialize() {
         this.clearTimeout();
-        const settings = getSettings().files;
+        const settings = this.settings = getSettings().files;
         if (settings.autoSave === 'afterDelay') {
             // Add a timeout to save after n milli seconds.
             this.timeout = setTimeout(() => this.save(), settings.autoSaveDelay);
