@@ -2686,7 +2686,6 @@
         "hash.js": "^1.1.7",
         "iconv-lite": "^0.4.21",
         "inversify": "^4.11.1",
-        "jison": "^0.4.18",
         "jsonc-parser": "^2.0.3",
         "less-plugin-inline-urls": "^1.2.0",
         "line-by-line": "^0.1.6",
