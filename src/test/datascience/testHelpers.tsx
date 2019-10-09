@@ -499,32 +499,3 @@ export function escapePath(p: string) {
 export function srcDirectory() {
     return path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
 }
-
-// /**
-//  * Wait for a condition to be fulfilled within a timeout.
-//  *
-//  * @param {string} message
-//  * @param {number} timeout
-//  * @returns {Promise<void>}
-//  */
-// export function waitForCondition(predicate: Function, timeout: number, errorMessage?: string): Promise<void> {
-//     return new Promise((resolve, reject) => {
-//         // Reject after timeout exceeds.
-//         const timeoutTimer = setTimeout(() => {
-//             // tslint:disable-next-line: no-use-before-declare
-//             clearInterval(timer as any);
-//             reject(new Error(errorMessage || 'Timeout waiting for condition'));
-//         }, timeout);
-//         // Look for the message.
-//         const timer = setInterval(() => {
-//             try {
-//                 predicate();
-//                 clearInterval(timer as any);
-//                 clearTimeout(timeoutTimer);
-//                 resolve();
-//             } catch {
-//                 noop();
-//             }
-//         }, 10);
-//     });
-// }
