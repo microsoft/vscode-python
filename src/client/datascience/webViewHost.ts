@@ -170,7 +170,7 @@ export class WebViewHost<IMapping> implements IDisposable {
             ...this.configService.getSettings().datascience,
             files: {
                 autoSaveDelay: this.getValue(files, 'autoSaveDelay', 1000),
-                autoSave: this.getValue(files, 'autoSave', 'afterDelay')
+                autoSave: this.getValue(files, 'autoSave', 'off')
             },
             extraSettings: {
                 editorCursor: this.getValue(editor, 'cursorStyle', 'line'),

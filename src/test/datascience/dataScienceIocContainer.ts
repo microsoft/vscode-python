@@ -7,6 +7,7 @@ import { ReactWrapper } from 'enzyme';
 import { interfaces } from 'inversify';
 import * as path from 'path';
 import { SemVer } from 'semver';
+import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import {
     ConfigurationChangeEvent,
@@ -20,7 +21,6 @@ import {
     WorkspaceFolder
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
-
 import { ILanguageServer, ILanguageServerAnalysisOptions } from '../../client/activation/types';
 import { TerminalManager } from '../../client/common/application/terminalManager';
 import {
@@ -37,6 +37,7 @@ import {
     IWorkspaceService,
     WebPanelMessage
 } from '../../client/common/application/types';
+import { WorkspaceService } from '../../client/common/application/workspace';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { PythonSettings } from '../../client/common/configSettings';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
@@ -108,6 +109,7 @@ import { GatherListener } from '../../client/datascience/gather/gatherListener';
 import {
     DotNetIntellisenseProvider
 } from '../../client/datascience/interactive-common/intellisense/dotNetIntellisenseProvider';
+import { AutoSaveService } from '../../client/datascience/interactive-ipynb/autoSaveService';
 import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
 import { NativeEditorCommandListener } from '../../client/datascience/interactive-ipynb/nativeEditorCommandListener';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
@@ -249,6 +251,7 @@ import { MockJupyterManagerFactory } from './mockJupyterManagerFactory';
 import { MockLanguageServer } from './mockLanguageServer';
 import { MockLanguageServerAnalysisOptions } from './mockLanguageServerAnalysisOptions';
 import { MockLiveShareApi } from './mockLiveShare';
+import { MockWorkspaceConfiguration } from './mockWorkspaceConfig';
 import { blurWindow, createMessageEvent } from './reactHelpers';
 import { TestInteractiveWindowProvider } from './testInteractiveWindowProvider';
 import { TestNativeEditorProvider } from './testNativeEditorProvider';
@@ -259,6 +262,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     public wrapper: ReactWrapper<any, Readonly<{}>, React.Component> | undefined;
     public wrapperCreatedPromise: Deferred<boolean> | undefined;
     public postMessage: ((ev: MessageEvent) => void) | undefined;
+    public mockedWorkspaceConfig!: WorkspaceConfiguration;
+    public applicationShell!: TypeMoq.IMock<IApplicationShell>;
     // tslint:disable-next-line:no-any
     private missedMessages: any[] = [];
     private pythonSettings = new class extends PythonSettings {
@@ -391,6 +396,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<ILanguageServer>(ILanguageServer, MockLanguageServer);
         this.serviceManager.addSingleton<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, MockLanguageServerAnalysisOptions);
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, DotNetIntellisenseProvider);
+        this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, AutoSaveService);
         this.serviceManager.add<IProtocolParser>(IProtocolParser, ProtocolParser);
         this.serviceManager.addSingleton<IDebugService>(IDebugService, MockDebuggerService);
         this.serviceManager.addSingleton<ICellHashProvider>(ICellHashProvider, CellHashProvider);
@@ -416,8 +422,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         // Also setup a mock execution service and interpreter service
         const condaService = TypeMoq.Mock.ofType<ICondaService>();
-        const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-        const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
+        const appShell = this.applicationShell = TypeMoq.Mock.ofType<IApplicationShell>();
+        // const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
+        const workspaceService = mock(WorkspaceService);
         const configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
         const interpreterDisplay = TypeMoq.Mock.ofType<IInterpreterDisplay>();
         const datascience = TypeMoq.Mock.ofType<IDataScience>();
@@ -454,18 +461,14 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             debugJustMyCode: true
         };
 
-        const workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration> = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-        workspaceConfig.setup(ws => ws.has(TypeMoq.It.isAnyString()))
-            .returns(() => false);
-        workspaceConfig.setup(ws => ws.get(TypeMoq.It.isAnyString()))
-            .returns(() => undefined);
-        workspaceConfig.setup(ws => ws.get(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
-            .returns((_s, d) => d);
-
+        const workspaceConfig = this.mockedWorkspaceConfig = mock(MockWorkspaceConfiguration);
         configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => this.pythonSettings);
-        workspaceService.setup(c => c.getConfiguration(TypeMoq.It.isAny())).returns(() => workspaceConfig.object);
-        workspaceService.setup(c => c.getConfiguration(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => workspaceConfig.object);
-        workspaceService.setup(w => w.onDidChangeConfiguration).returns(() => this.configChangeEvent.event);
+        when(workspaceConfig.get(anything(), anything())).thenCall((_, defaultValue) => defaultValue);
+        when(workspaceConfig.has(anything())).thenReturn(false);
+        when((workspaceConfig as any).then).thenReturn(undefined);
+        when(workspaceService.getConfiguration(anything())).thenReturn(instance(workspaceConfig));
+        when(workspaceService.getConfiguration(anything(), anything())).thenReturn(instance(workspaceConfig));
+        when(workspaceService.onDidChangeConfiguration).thenReturn(this.configChangeEvent.event);
         interpreterDisplay.setup(i => i.refresh(TypeMoq.It.isAny())).returns(() => Promise.resolve());
         const startTime = Date.now();
         datascience.setup(d => d.activationStartTime).returns(() => startTime);
@@ -490,18 +493,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 noop();
             }
         }
-        workspaceService.setup(w => w.createFileSystemWatcher(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => {
-            return new MockFileSystemWatcher();
-        });
-        workspaceService
-            .setup(w => w.hasWorkspaceFolders)
-            .returns(() => true);
+        when(workspaceService.createFileSystemWatcher(anything(), anything(), anything(), anything())).thenReturn(new MockFileSystemWatcher());
+        when(workspaceService.hasWorkspaceFolders).thenReturn(true);
         const testWorkspaceFolder = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
         const workspaceFolder = this.createMoqWorkspaceFolder(testWorkspaceFolder);
-        workspaceService
-            .setup(w => w.workspaceFolders)
-            .returns(() => [workspaceFolder]);
-        workspaceService.setup(w => w.rootPath).returns(() => '~');
+        when(workspaceService.workspaceFolders).thenReturn([workspaceFolder]);
+        when(workspaceService.rootPath).thenReturn('~');
 
         // Look on the path for python
         const pythonPath = this.findPythonPath();
@@ -528,7 +525,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingletonInstance<ICondaService>(ICondaService, condaService.object);
         this.serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, appShell.object);
         this.serviceManager.addSingletonInstance<IDocumentManager>(IDocumentManager, this.documentManager);
-        this.serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspaceService.object);
+        this.serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, instance(workspaceService));
         this.serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, configurationService.object);
         this.serviceManager.addSingletonInstance<IDataScience>(IDataScience, datascience.object);
         this.serviceManager.addSingleton<IBufferDecoder>(IBufferDecoder, BufferDecoder);

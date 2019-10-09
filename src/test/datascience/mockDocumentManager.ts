@@ -31,7 +31,7 @@ export class MockDocumentManager implements IDocumentManager {
     public textDocuments: TextDocument[] = [];
     public activeTextEditor: TextEditor | undefined;
     public visibleTextEditors: TextEditor[] = [];
-    private didChangeEmitter = new EventEmitter<TextEditor>();
+    public didChangeEmitter = new EventEmitter<TextEditor>();
     private didOpenEmitter = new EventEmitter<TextDocument>();
     private didChangeVisibleEmitter = new EventEmitter<TextEditor[]>();
     private didChangeTextEditorSelectionEmitter = new EventEmitter<TextEditorSelectionChangeEvent>();

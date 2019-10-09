@@ -31,9 +31,9 @@ export async function createNewEditor(ioc: DataScienceIocContainer): Promise<INo
     return result;
 }
 
-export async function openEditor(ioc: DataScienceIocContainer, contents: string): Promise<INotebookEditor> {
+export async function openEditor(ioc: DataScienceIocContainer, contents: string, filePath: string = '/usr/home/test.ipynb'): Promise<INotebookEditor> {
     const loaded = waitForMessage(ioc, InteractiveWindowMessages.LoadAllCellsComplete);
-    const uri = Uri.parse('file:////usr/home/test.ipynb');
+    const uri = Uri.file(filePath);
     const result = await getOrCreateNativeEditor(ioc, uri, contents);
     await loaded;
     return result;

@@ -410,27 +410,35 @@ export async function unzip(zipFile: string, targetFolder: string): Promise<void
         });
     });
 }
-
+/**
+ * Wait for a condition to be fulfilled within a timeout.
+ *
+ * @export
+ * @param {() => Promise<boolean>} condition
+ * @param {number} timeoutMs
+ * @param {string} errorMessage
+ * @returns {Promise<void>}
+ */
 export async function waitForCondition(condition: () => Promise<boolean>, timeoutMs: number, errorMessage: string): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
-        let completed = false;
         const timeout = setTimeout(() => {
-            if (!completed) {
-                reject(new Error(errorMessage));
-            }
-            completed = true;
+            clearTimeout(timeout);
+            // tslint:disable-next-line: no-use-before-declare
+            clearTimeout(timer);
+            reject(new Error(errorMessage));
         }, timeoutMs);
-        for (let i = 0; i < timeoutMs / 1000; i += 1) {
-            if (await condition()) {
+        const timer = setInterval(async () => {
+            try {
+                if (!await condition()){
+                    throw new Error('failed');
+                }
                 clearTimeout(timeout);
+                clearTimeout(timer);
                 resolve();
-                return;
+            } catch {
+                noop();
             }
-            await sleep(500);
-            if (completed) {
-                return;
-            }
-        }
+        }, 10);
     });
 }
 

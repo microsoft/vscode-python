@@ -41,7 +41,7 @@ export class AutoSaveService implements IInteractiveWindowListener {
         noop();
     }
     public dispose(): void | undefined {
-        this.disposables.forEach(item => item.dispose());
+        this.disposables.filter(item => !!item).forEach(item => item.dispose());
     }
 
     private onDidChangeWindowState(e: WindowState) {
