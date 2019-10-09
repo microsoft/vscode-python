@@ -18,7 +18,7 @@ import { IServiceContainer, IServiceManager } from '../client/ioc/types';
 import {
     EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST
 } from './constants';
-import { noop, sleep } from './core';
+import { noop } from './core';
 
 const StreamZip = require('node-stream-zip');
 
@@ -428,16 +428,12 @@ export async function waitForCondition(condition: () => Promise<boolean>, timeou
             reject(new Error(errorMessage));
         }, timeoutMs);
         const timer = setInterval(async () => {
-            try {
-                if (!await condition()){
-                    throw new Error('failed');
-                }
-                clearTimeout(timeout);
-                clearTimeout(timer);
-                resolve();
-            } catch {
-                noop();
+            if (!await condition().catch(() => false)) {
+                return;
             }
+            clearTimeout(timeout);
+            clearTimeout(timer);
+            resolve();
         }, 10);
     });
 }
