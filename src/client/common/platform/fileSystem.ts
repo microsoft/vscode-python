@@ -4,7 +4,7 @@
 
 import { createHash } from 'crypto';
 import * as fileSystem from 'fs';
-import * as fs from 'fs-extra';
+import * as fsextra from 'fs-extra';
 import * as glob from 'glob';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
@@ -31,7 +31,7 @@ export class FileSystem implements IFileSystem {
     // fs-extra
 
     public fileExistsSync(filePath: string): boolean {
-        return fs.existsSync(filePath);
+        return fsextra.existsSync(filePath);
     }
 
     /**
@@ -41,20 +41,20 @@ export class FileSystem implements IFileSystem {
      * @memberof FileSystem
      */
     public readFile(filePath: string): Promise<string> {
-        return fs.readFile(filePath).then(buffer => buffer.toString());
+        return fsextra.readFile(filePath).then(buffer => buffer.toString());
     }
 
-    public async writeFile(filePath: string, data: {}, options: string | fs.WriteFileOptions = { encoding: 'utf8' }): Promise<void> {
-        await fs.writeFile(filePath, data, options);
+    public async writeFile(filePath: string, data: {}, options: string | fsextra.WriteFileOptions = { encoding: 'utf8' }): Promise<void> {
+        await fsextra.writeFile(filePath, data, options);
     }
 
     public createDirectory(directoryPath: string): Promise<void> {
-        return fs.mkdirp(directoryPath);
+        return fsextra.mkdirp(directoryPath);
     }
 
     public deleteDirectory(directoryPath: string): Promise<void> {
         const deferred = createDeferred<void>();
-        fs.rmdir(directoryPath, err => (err ? deferred.reject(err) : deferred.resolve()));
+        fsextra.rmdir(directoryPath, err => (err ? deferred.reject(err) : deferred.resolve()));
         return deferred.promise;
     }
 
@@ -63,12 +63,12 @@ export class FileSystem implements IFileSystem {
     // tslint:disable-next-line:unified-signatures
     public appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: string; flag?: string }): void;
     public appendFileSync(filename: string, data: {}, optionsOrEncoding: {}): void {
-        return fs.appendFileSync(filename, data, optionsOrEncoding);
+        return fsextra.appendFileSync(filename, data, optionsOrEncoding);
     }
 
     public deleteFile(filename: string): Promise<void> {
         const deferred = createDeferred<void>();
-        fs.unlink(filename, err => (err ? deferred.reject(err) : deferred.resolve()));
+        fsextra.unlink(filename, err => (err ? deferred.reject(err) : deferred.resolve()));
         return deferred.promise;
     }
 
@@ -103,9 +103,9 @@ export class FileSystem implements IFileSystem {
         }
     }
 
-    public objectExists(filePath: string, statCheck: (s: fs.Stats) => boolean): Promise<boolean> {
+    public objectExists(filePath: string, statCheck: (s: fsextra.Stats) => boolean): Promise<boolean> {
         return new Promise<boolean>(resolve => {
-            fs.stat(filePath, (error, stats) => {
+            fsextra.stat(filePath, (error, stats) => {
                 if (error) {
                     return resolve(false);
                 }
@@ -123,31 +123,33 @@ export class FileSystem implements IFileSystem {
 
     public getSubDirectories(rootDir: string): Promise<string[]> {
         return new Promise<string[]>(resolve => {
-            fs.readdir(rootDir, async (error, files) => {
+            fsextra.readdir(rootDir, async (error, files) => {
                 if (error) {
                     return resolve([]);
                 }
-                const subDirs = (await Promise.all(
-                    files.map(async name => {
-                        const fullPath = path.join(rootDir, name);
-                        try {
-                            if ((await fs.stat(fullPath)).isDirectory()) {
-                                return fullPath;
-                            }
-                            // tslint:disable-next-line:no-empty
-                        } catch (ex) {}
-                    })
-                )).filter(dir => dir !== undefined) as string[];
+                const subDirs = (
+                    await Promise.all(
+                        files.map(async name => {
+                            const fullPath = path.join(rootDir, name);
+                            try {
+                                if ((await fsextra.stat(fullPath)).isDirectory()) {
+                                    return fullPath;
+                                }
+                                // tslint:disable-next-line:no-empty
+                            } catch (ex) { }
+                        })
+                    ))
+                    .filter(dir => dir !== undefined) as string[];
                 resolve(subDirs);
             });
         });
     }
 
     public async getFiles(rootDir: string): Promise<string[]> {
-        const files = await fs.readdir(rootDir);
+        const files = await fsextra.readdir(rootDir);
         return files.filter(async f => {
             const fullPath = path.join(rootDir, f);
-            if ((await fs.stat(fullPath)).isFile()) {
+            if ((await fsextra.stat(fullPath)).isFile()) {
                 return true;
             }
             return false;
@@ -156,24 +158,21 @@ export class FileSystem implements IFileSystem {
 
     public copyFile(src: string, dest: string): Promise<void> {
         const deferred = createDeferred<void>();
-        const rs = fs.createReadStream(src).on('error', err => {
+        const rs = fsextra.createReadStream(src).on('error', (err) => {
             deferred.reject(err);
         });
-        const ws = fs
-            .createWriteStream(dest)
-            .on('error', err => {
-                deferred.reject(err);
-            })
-            .on('close', () => {
-                deferred.resolve();
-            });
+        const ws = fsextra.createWriteStream(dest).on('error', (err) => {
+            deferred.reject(err);
+        }).on('close', () => {
+            deferred.resolve();
+        });
         rs.pipe(ws);
         return deferred.promise;
     }
 
     public getFileHash(filePath: string): Promise<string> {
         return new Promise<string>((resolve, reject) => {
-            fs.lstat(filePath, (err, stats) => {
+            fsextra.lstat(filePath, (err, stats) => {
                 if (err) {
                     reject(err);
                 } else {
