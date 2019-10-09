@@ -247,15 +247,14 @@ export interface INotebookEditorProvider {
 // For native editing, the INotebookEditor acts like a TextEditor and a TextDocument together
 export const INotebookEditor = Symbol('INotebookEditor');
 export interface INotebookEditor extends IInteractiveBase {
-    /**
-     * `true` if there are unpersisted changes.
-     */
-    readonly isDirty: boolean;
     closed: Event<INotebookEditor>;
     executed: Event<INotebookEditor>;
     modified: Event<INotebookEditor>;
     saved: Event<INotebookEditor>;
-    readonly dirty: boolean;
+    /**
+     * `true` if there are unpersisted changes.
+     */
+    readonly isDirty: boolean;
     readonly file: Uri;
     readonly visible: boolean;
     readonly active: boolean;
