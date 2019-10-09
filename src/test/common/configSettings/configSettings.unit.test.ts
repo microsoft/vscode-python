@@ -81,7 +81,10 @@ suite('Python Settings', async () => {
             config.setup(c => c.get<number>('jediMemoryLimit'))
                 .returns(() => sourceSettings.jediMemoryLimit);
         }
-
+        if (sourceSettings.retrieveInterpreterInfoTimeout) {
+            config.setup(c => c.get<number>('retrieveInterpreterInfoTimeout'))
+                .returns(() => sourceSettings.retrieveInterpreterInfoTimeout);
+        }
         // "any" settings
         // tslint:disable-next-line:no-any
         config.setup(c => c.get<any[]>('devOptions'))
@@ -136,7 +139,7 @@ suite('Python Settings', async () => {
     });
 
     suite('Number settings', async () => {
-        ['jediMemoryLimit'].forEach(async settingName => {
+        ['jediMemoryLimit', 'retrieveInterpreterInfoTimeout'].forEach(async settingName => {
             testIfValueIsUpdated(settingName, 1001);
         });
     });

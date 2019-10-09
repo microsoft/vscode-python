@@ -1770,6 +1770,12 @@
                     "description": "Whether to install Python modules globally when not using an environment.",
                     "scope": "resource"
                 },
+                "python.retrieveInterpreterInfoTimeout": {
+                    "type": "number",
+                    "default": 180,
+                    "description": "Timeout in seconds to retrieve the Interpreter Information.",
+                    "scope": "resource"
+                },
                 "python.jediEnabled": {
                     "type": "boolean",
                     "default": true,
