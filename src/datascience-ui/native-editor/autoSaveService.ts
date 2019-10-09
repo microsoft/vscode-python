@@ -4,92 +4,22 @@
 'use strict';
 
 import { IDisposable } from '../../client/common/types';
+import { noop } from '../../client/common/utils/misc';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import { FileSettings } from '../../client/datascience/types';
 import { IMessageHandler } from '../react-common/postOffice';
-import { getSettings } from '../react-common/settingsReactSide';
 import { NativeEditorStateController } from './nativeEditorStateController';
 
 export class AutoSaveService implements IDisposable, IMessageHandler {
-    private timeout?: ReturnType<typeof setTimeout>;
-    private settings?: FileSettings;
-    // private fileSettings: typeof
-    constructor(private readonly controller: NativeEditorStateController) {
-        this.setTimer();
-    }
+    constructor(private readonly controller: NativeEditorStateController) {}
     public dispose() {
-        this.clearTimeout();
+        noop();
     }
     // tslint:disable-next-line: no-any
     public handleMessage(type: string, _payload?: any): boolean {
-        switch (type) {
-            // When clean message is sent, this means notebook was saved.
-            // We need to reset the timer to start again (timer starts from last save).
-            case InteractiveWindowMessages.NotebookClean: {
-                this.setTimer();
-                return true;
-            }
-            // When settings have been updated, its possible the timer has changed.
-            // We need to reset the timer to start again.
-            case InteractiveWindowMessages.UpdateSettings: {
-                const settings = getSettings().files;
-                if (this.settings && this.settings.autoSave === settings.autoSave && this.settings.autoSaveDelay === settings.autoSaveDelay) {
-                    return true;
-                }
-                this.setTimer();
-                return true;
-            }
-            case InteractiveWindowMessages.ActiveTextEditorChanged: {
-                // Save if active text editor changes.
-                if (this.settings && this.settings.autoSave === 'onFocusChange') {
-                    this.save();
-                }
-                return true;
-            }
-            case InteractiveWindowMessages.WindowStateChanged: {
-                // Save if window state changes.
-                if (this.settings && this.settings.autoSave === 'onWindowChange') {
-                    this.save();
-                }
-                return true;
-            }
-            default: {
-                return false;
-            }
-        }
-    }
-    public setTimer() {
-        this.clearTimeout();
-        this.settings = getSettings().files;
-        if (this.settings && this.settings.autoSave === 'afterDelay') {
-            // Add a timeout to save after n milli seconds.
-            // Do not use setInterval, as that will cause all handlers to queue up.
-            this.timeout = setTimeout(() => this.save(), this.settings.autoSaveDelay);
-        }
-    }
-    private clearTimeout() {
-        if (this.timeout) {
-            clearTimeout(this.timeout);
-            this.timeout = undefined;
-        }
-    }
-    /**
-     * Save the notebook if it is dirty.
-     * If auto save is turned off or the notebook is not dirty, then this method is a noop.
-     *
-     * @private
-     * @returns
-     * @memberof AutoSaveService
-     */
-    private save() {
-        const settings = getSettings().files;
-        if (settings.autoSave === 'off') {
-            return;
-        }
-        if (this.controller.getState().dirty === true) {
+        if (type === InteractiveWindowMessages.DoSave) {
             this.controller.save();
-        } else {
-            this.setTimer();
+            return true;
         }
+        return false;
     }
 }

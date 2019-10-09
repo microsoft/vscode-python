@@ -4,21 +4,22 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Event, EventEmitter, TextEditor, WindowState } from 'vscode';
-import { IApplicationShell, IDocumentManager } from '../../common/application/types';
+import { ConfigurationChangeEvent, Event, EventEmitter, TextEditor, Uri } from 'vscode';
+import { IApplicationShell, IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
+import { traceError } from '../../common/logger';
+import { IFileSystem } from '../../common/platform/types';
 import { IDisposable } from '../../common/types';
-import { noop } from '../../common/utils/misc';
-import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
-import { IInteractiveWindowListener } from '../types';
+import { INotebookIdentity, InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
+import { FileSettings, IInteractiveWindowListener, INotebookEditor, INotebookEditorProvider } from '../types';
 
 // tslint:disable: no-any
 
 /**
- * Sends notifications to Notebooks related to auto saving of files.
- * If window state changes, then notify notebooks.
- * If active editor changes, then notify notebooks.
- * This information is necessary for the implementation of automatically saving notebooks.
+ * Sends notifications to Notebooks to save the notebook.
+ * Based on auto save settings, this class will regularly check for changes and send a save requet.
+ * If window state changes or active editor changes, then notify notebooks (if auto save is configured to do so).
+ * Monitor save and modified events on editor to determine its current dirty state.
  *
  * @export
  * @class AutoSaveService
@@ -28,7 +29,17 @@ import { IInteractiveWindowListener } from '../types';
 export class AutoSaveService implements IInteractiveWindowListener {
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{ message: string; payload: any }>();
     private disposables: IDisposable[] = [];
-    constructor(@inject(IApplicationShell) appShell: IApplicationShell, @inject(IDocumentManager) documentManager: IDocumentManager) {
+    private notebookUri?: Uri;
+    private isDirty: boolean = false;
+    private timeout?: ReturnType<typeof setTimeout>;
+    constructor(
+        @inject(IApplicationShell) appShell: IApplicationShell,
+        @inject(IDocumentManager) documentManager: IDocumentManager,
+        @inject(INotebookEditorProvider) private readonly notebookProvider: INotebookEditorProvider,
+        @inject(IFileSystem) private readonly fileSytem: IFileSystem,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
+    ) {
+        this.workspace.onDidChangeConfiguration(this.onSettingsChanded.bind(this), this, this.disposables);
         this.disposables.push(appShell.onDidChangeWindowState(this.onDidChangeWindowState.bind(this)));
         this.disposables.push(documentManager.onDidChangeActiveTextEditor(this.onDidChangeActiveTextEditor.bind(this)));
     }
@@ -37,17 +48,97 @@ export class AutoSaveService implements IInteractiveWindowListener {
         return this.postEmitter.event;
     }
 
-    public onMessage(_message: string, _payload?: any): void {
-        noop();
+    public onMessage(message: string, payload?: any): void {
+        if (message === InteractiveWindowMessages.NotebookIdentity) {
+            this.notebookUri = Uri.parse((payload as INotebookIdentity).resource);
+        }
+        if (message === InteractiveWindowMessages.LoadAllCellsComplete) {
+            const notebook = this.getNotebook();
+            if (!notebook) {
+                traceError(`Received message ${message}, but there is no notebook for ${this.notebookUri ? this.notebookUri.fsPath : undefined}`);
+                return;
+            }
+            this.disposables.push(notebook.modified(this.onNotebookModified, this, this.disposables));
+            this.disposables.push(notebook.saved(this.onNotebookSaved, this, this.disposables));
+        }
     }
     public dispose(): void | undefined {
         this.disposables.filter(item => !!item).forEach(item => item.dispose());
+        this.clearTimeout();
     }
-
-    private onDidChangeWindowState(e: WindowState) {
-        this.postEmitter.fire({ message: InteractiveWindowMessages.WindowStateChanged, payload: e });
+    private onNotebookModified(_: INotebookEditor) {
+        this.isDirty = true;
+        // If we haven't started a timer, then start if necessary.
+        if (!this.timeout) {
+            this.setTimer();
+        }
+    }
+    private onNotebookSaved(_: INotebookEditor) {
+        this.isDirty = false;
+        // If we haven't started a timer, then start if necessary.
+        if (!this.timeout) {
+            this.setTimer();
+        }
+    }
+    private getNotebook(): INotebookEditor | undefined {
+        const uri = this.notebookUri;
+        if (!uri) {
+            return;
+        }
+        return this.notebookProvider.editors.find(item => this.fileSytem.arePathsSame(item.file.fsPath, uri.fsPath));
+    }
+    private getAutoSaveSettings(): FileSettings {
+        const filesConfig = this.workspace.getConfiguration('files', this.notebookUri);
+        return {
+            autoSave: filesConfig.get('autoSave', 'off'),
+            autoSaveDelay: filesConfig.get('autoSaveDelay', 1000)
+        };
+    }
+    private onSettingsChanded(e: ConfigurationChangeEvent) {
+        if (e.affectsConfiguration('files.autoSave') || e.affectsConfiguration('files.autoSave')) {
+            // Reset the timer, as we may have increased it, turned it off or other.
+            this.clearTimeout();
+            this.setTimer();
+        }
+    }
+    private setTimer() {
+        const settings = this.getAutoSaveSettings();
+        if (!settings || settings.autoSave === 'off') {
+            return;
+        }
+        if (settings && settings.autoSave === 'afterDelay') {
+            // Add a timeout to save after n milli seconds.
+            // Do not use setInterval, as that will cause all handlers to queue up.
+            this.timeout = setTimeout(() => {
+                this.save();
+            }, settings.autoSaveDelay);
+        }
+    }
+    private clearTimeout() {
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+            this.timeout = undefined;
+        }
+    }
+    private save() {
+        this.clearTimeout();
+        if (this.isDirty) {
+            // Notify webview to perform a save.
+            this.postEmitter.fire({ message: InteractiveWindowMessages.DoSave, payload: undefined });
+        } else {
+            this.setTimer();
+        }
+    }
+    private onDidChangeWindowState() {
+        const settings = this.getAutoSaveSettings();
+        if (settings && settings.autoSave === 'onWindowChange') {
+            this.save();
+        }
     }
     private onDidChangeActiveTextEditor(_e?: TextEditor) {
-        this.postEmitter.fire({ message: InteractiveWindowMessages.ActiveTextEditorChanged, payload: undefined });
+        const settings = this.getAutoSaveSettings();
+        if (settings && settings.autoSave === 'onFocusChange') {
+            this.save();
+        }
     }
 }

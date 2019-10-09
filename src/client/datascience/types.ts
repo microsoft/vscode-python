@@ -250,6 +250,7 @@ export interface INotebookEditor extends IInteractiveBase {
     closed: Event<INotebookEditor>;
     executed: Event<INotebookEditor>;
     modified: Event<INotebookEditor>;
+    saved: Event<INotebookEditor>;
     readonly file: Uri;
     readonly visible: boolean;
     readonly active: boolean;

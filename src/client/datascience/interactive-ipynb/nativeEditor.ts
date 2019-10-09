@@ -9,14 +9,7 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Memento, Uri, ViewColumn } from 'vscode';
 
-import {
-    IApplicationShell,
-    ICommandManager,
-    IDocumentManager,
-    ILiveShareApi,
-    IWebPanelProvider,
-    IWorkspaceService
-} from '../../common/application/types';
+import { IApplicationShell, ICommandManager, IDocumentManager, ILiveShareApi, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
 import { traceError } from '../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
@@ -28,21 +21,9 @@ import { EXTENSION_ROOT_DIR } from '../../constants';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { concatMultilineString } from '../common';
-import {
-    EditorContexts,
-    Identifiers,
-    NativeKeyboardCommandTelemetryLookup,
-    NativeMouseCommandTelemetryLookup,
-    Telemetry
-} from '../constants';
+import { EditorContexts, Identifiers, NativeKeyboardCommandTelemetryLookup, NativeMouseCommandTelemetryLookup, Telemetry } from '../constants';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
-import {
-    IEditCell,
-    INativeCommand,
-    InteractiveWindowMessages,
-    ISaveAll,
-    ISubmitNewCell
-} from '../interactive-common/interactiveWindowTypes';
+import { IEditCell, INativeCommand, InteractiveWindowMessages, ISaveAll, ISubmitNewCell } from '../interactive-common/interactiveWindowTypes';
 import {
     CellState,
     ICell,
@@ -74,6 +55,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private closedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
     private executedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
     private modifiedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
+    private savedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
     private loadedPromise: Deferred<void> = createDeferred<void>();
     private _file: Uri = Uri.file('');
     private _dirty: boolean = false;
@@ -129,7 +111,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             errorHandler,
             path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'native-editor', 'index_bundle.js'),
             localize.DataScience.nativeEditorTitle(),
-            ViewColumn.Active);
+            ViewColumn.Active
+        );
     }
 
     public get visible(): boolean {
@@ -185,6 +168,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     public get modified(): Event<INotebookEditor> {
         return this.modifiedEvent.event;
+    }
+
+    public get saved(): Event<INotebookEditor> {
+        return this.savedEvent.event;
     }
 
     // tslint:disable-next-line: no-any
@@ -269,9 +256,19 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             this.submitCode(info.code, Identifiers.EmptyFileName, 0, info.id).ignoreErrors();
 
             // Activate the other side, and send as if came from a file
-            this.ipynbProvider.show(this.file).then(_v => {
-                this.shareMessage(InteractiveWindowMessages.RemoteAddCode, { code: info.code, file: Identifiers.EmptyFileName, line: 0, id: info.id, originator: this.id, debug: false });
-            }).ignoreErrors();
+            this.ipynbProvider
+                .show(this.file)
+                .then(_v => {
+                    this.shareMessage(InteractiveWindowMessages.RemoteAddCode, {
+                        code: info.code,
+                        file: Identifiers.EmptyFileName,
+                        line: 0,
+                        id: info.id,
+                        originator: this.id,
+                        debug: false
+                    });
+                })
+                .ignoreErrors();
         }
     }
 
@@ -289,7 +286,14 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
                 // Activate the other side, and send as if came from a file
                 await this.ipynbProvider.show(this.file);
-                this.shareMessage(InteractiveWindowMessages.RemoteReexecuteCode, { code: info.code, file: Identifiers.EmptyFileName, line: 0, id: info.id, originator: this.id, debug: false });
+                this.shareMessage(InteractiveWindowMessages.RemoteReexecuteCode, {
+                    code: info.code,
+                    file: Identifiers.EmptyFileName,
+                    line: 0,
+                    id: info.id,
+                    originator: this.id,
+                    debug: false
+                });
             }
         } catch (exc) {
             // Make this error our cell output
@@ -298,10 +302,12 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                     data: {
                         source: info.code,
                         cell_type: 'code',
-                        outputs: [{
-                            output_type: 'error',
-                            evalue: exc.toString()
-                        }],
+                        outputs: [
+                            {
+                                output_type: 'error',
+                                evalue: exc.toString()
+                            }
+                        ],
                         metadata: {},
                         execution_count: null
                     },
@@ -318,7 +324,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
             // Handle an error
             await this.errorHandler.handleError(exc);
-
         }
     }
 
@@ -395,8 +400,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                     cell_type: 'code',
                     outputs: [],
                     source: [],
-                    metadata: {
-                    },
+                    metadata: {},
                     execution_count: null
                 }
             };
@@ -535,10 +539,13 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private async setDirty(): Promise<void> {
         if (!this._dirty) {
             this._dirty = true;
+            console.log('is dirty');
             this.setTitle(`${path.basename(this.file.fsPath)}*`);
             await this.postMessage(InteractiveWindowMessages.NotebookDirty);
             // Tell listeners we're dirty
             this.modifiedEvent.fire(this);
+        } else {
+            console.log(this._dirty ? 'is dirty' : 'is NOT dirty');
         }
     }
 
@@ -570,7 +577,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             if (contents) {
                 await this.viewDocument(contents);
             }
-
         } catch (e) {
             await this.errorHandler.handleError(e);
         } finally {
@@ -615,8 +621,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 // Update our file name and dirty state
                 this._file = fileToSaveTo;
                 await this.setClean();
+                this.savedEvent.fire(this);
             }
-
         } catch (e) {
             traceError(e);
         }
