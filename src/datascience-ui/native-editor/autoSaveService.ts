@@ -15,7 +15,7 @@ export class AutoSaveService implements IDisposable, IMessageHandler {
     private settings?: FileSettings;
     // private fileSettings: typeof
     constructor(private readonly controller: NativeEditorStateController) {
-        this.initialize();
+        this.setTimer();
     }
     public dispose() {
         this.clearTimeout();
@@ -26,7 +26,7 @@ export class AutoSaveService implements IDisposable, IMessageHandler {
             // When clean message is sent, this means notebook was saved.
             // We need to reset the timer to start again (timer starts from last save).
             case InteractiveWindowMessages.NotebookClean: {
-                this.initialize();
+                this.setTimer();
                 return true;
             }
             // When settings have been updated, its possible the timer has changed.
@@ -36,7 +36,7 @@ export class AutoSaveService implements IDisposable, IMessageHandler {
                 if (this.settings && this.settings.autoSave === settings.autoSave && this.settings.autoSaveDelay === settings.autoSaveDelay) {
                     return true;
                 }
-                this.initialize();
+                this.setTimer();
                 return true;
             }
             case InteractiveWindowMessages.ActiveTextEditorChanged: {
@@ -58,11 +58,12 @@ export class AutoSaveService implements IDisposable, IMessageHandler {
             }
         }
     }
-    public initialize() {
+    public setTimer() {
         this.clearTimeout();
-        const settings = this.settings = getSettings().files;
+        const settings = (this.settings = getSettings().files);
         if (settings.autoSave === 'afterDelay') {
             // Add a timeout to save after n milli seconds.
+            // Do not use setInterval, as that will cause all handlers to queue up.
             this.timeout = setTimeout(() => this.save(), settings.autoSaveDelay);
         }
     }
@@ -83,9 +84,13 @@ export class AutoSaveService implements IDisposable, IMessageHandler {
      */
     private save() {
         const settings = getSettings().files;
-        if (settings.autoSave === 'off' || this.controller.getState().dirty !== true) {
+        if (settings.autoSave === 'off') {
             return;
         }
-        this.controller.save();
+        if (this.controller.getState().dirty === true) {
+            this.controller.save();
+        } else {
+            this.setTimer();
+        }
     }
 }
