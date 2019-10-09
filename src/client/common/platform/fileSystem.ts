@@ -9,7 +9,7 @@ import * as glob from 'glob';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as tmp from 'tmp';
-import { FileStat } from 'vscode';
+import * as vscode from 'vscode';
 import { createDeferred } from '../utils/async';
 import { IFileSystem, IPlatformService, TemporaryFile } from './types';
 
@@ -19,7 +19,7 @@ export class FileSystem implements IFileSystem {
         @inject(IPlatformService) private platformService: IPlatformService
     ) { }
 
-    public async stat(filePath: string): Promise<FileStat> {
+    public async stat(filePath: string): Promise<vscode.FileStat> {
         // Do not import vscode directly, as this isn't available in the Debugger Context.
         // If stat is used in debugger context, it will fail, however theres a separate PR that will resolve this.
         // tslint:disable-next-line: no-require-imports
@@ -103,22 +103,31 @@ export class FileSystem implements IFileSystem {
         }
     }
 
-    public objectExists(filePath: string, statCheck: (s: fsextra.Stats) => boolean): Promise<boolean> {
-        return new Promise<boolean>(resolve => {
-            fsextra.stat(filePath, (error, stats) => {
-                if (error) {
-                    return resolve(false);
-                }
-                return resolve(statCheck(stats));
-            });
-        });
+    public async pathExists(
+        filename: string,
+        fileType?: vscode.FileType
+    ): Promise<boolean> {
+        let stat: fsextra.Stats;
+        try {
+            stat = await fsextra.stat(filename);
+        } catch {
+            return false;
+        }
+        if (fileType === undefined) {
+            return true;
+        } else if (fileType === vscode.FileType.File) {
+            return stat.isFile();
+        } else if (fileType === vscode.FileType.Directory) {
+            return stat.isDirectory();
+        } else {
+            return false;
+        }
     }
-
-    public fileExists(filePath: string): Promise<boolean> {
-        return this.objectExists(filePath, (stats) => stats.isFile());
+    public async fileExists(filename: string): Promise<boolean> {
+        return this.pathExists(filename, vscode.FileType.File);
     }
-    public directoryExists(filePath: string): Promise<boolean> {
-        return this.objectExists(filePath, stats => stats.isDirectory());
+    public async directoryExists(dirname: string): Promise<boolean> {
+        return this.pathExists(dirname, vscode.FileType.Directory);
     }
 
     public getSubDirectories(rootDir: string): Promise<string[]> {
