@@ -539,13 +539,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private async setDirty(): Promise<void> {
         if (!this._dirty) {
             this._dirty = true;
-            console.log('is dirty');
             this.setTitle(`${path.basename(this.file.fsPath)}*`);
             await this.postMessage(InteractiveWindowMessages.NotebookDirty);
             // Tell listeners we're dirty
             this.modifiedEvent.fire(this);
-        } else {
-            console.log(this._dirty ? 'is dirty' : 'is NOT dirty');
         }
     }
 
