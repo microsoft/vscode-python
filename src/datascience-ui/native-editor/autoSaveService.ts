@@ -60,11 +60,11 @@ export class AutoSaveService implements IDisposable, IMessageHandler {
     }
     public setTimer() {
         this.clearTimeout();
-        const settings = (this.settings = getSettings().files);
-        if (settings.autoSave === 'afterDelay') {
+        this.settings = getSettings().files;
+        if (this.settings && this.settings.autoSave === 'afterDelay') {
             // Add a timeout to save after n milli seconds.
             // Do not use setInterval, as that will cause all handlers to queue up.
-            this.timeout = setTimeout(() => this.save(), settings.autoSaveDelay);
+            this.timeout = setTimeout(() => this.save(), this.settings.autoSaveDelay);
         }
     }
     private clearTimeout() {
