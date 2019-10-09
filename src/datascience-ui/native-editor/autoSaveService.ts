@@ -5,12 +5,15 @@
 
 import { IDisposable } from '../../client/common/types';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { FileSettings } from '../../client/datascience/types';
 import { IMessageHandler } from '../react-common/postOffice';
 import { getSettings } from '../react-common/settingsReactSide';
 import { NativeEditorStateController } from './nativeEditorStateController';
 
 export class AutoSaveService implements IDisposable, IMessageHandler {
     private timeout?: NodeJS.Timer | number;
+    private settings?: FileSettings;
+    // private fileSettings: typeof
     constructor(private readonly controller: NativeEditorStateController) {
         this.initialize();
     }
@@ -20,14 +23,35 @@ export class AutoSaveService implements IDisposable, IMessageHandler {
     // tslint:disable-next-line: no-any
     public handleMessage(type: string, _payload?: any): boolean {
         switch (type) {
-            case InteractiveWindowMessages.UpdateSettings: {
-                // Settings have changed.
+            // When clean message is sent, this means notebook was saved.
+            // We need to reset the timer to start again (timer starts from last save).
+            case InteractiveWindowMessages.NotebookClean: {
                 this.initialize();
                 return true;
             }
-            case InteractiveWindowMessages.ActiveTextEditorChanged:
+            // When settings have been updated, its possible the timer has changed.
+            // We need to reset the timer to start again.
+            case InteractiveWindowMessages.UpdateSettings: {
+                const settings = getSettings().files;
+                if (this.settings && this.settings.autoSave === settings.autoSave && this.settings.autoSaveDelay === settings.autoSaveDelay) {
+                    return true;
+                }
+                this.initialize();
+                this.settings = settings;
+                return true;
+            }
+            case InteractiveWindowMessages.ActiveTextEditorChanged: {
+                // Save if active text editor changes.
+                if (this.settings && this.settings.autoSave === 'onFocusChange') {
+                    this.save();
+                }
+                return true;
+            }
             case InteractiveWindowMessages.WindowStateChanged: {
-                this.save();
+                // Save if window state changes.
+                if (this.settings && this.settings.autoSave === 'onWindowChange') {
+                    this.save();
+                }
                 return true;
             }
             default: {
