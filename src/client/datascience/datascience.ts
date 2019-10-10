@@ -322,7 +322,7 @@ export class DataScience implements IDataScience {
             const arr: IKernelQuickPickItem[] = runningKernels.map(runningKernel => {
                 traceInfo(`Found running kernel ${runningKernel.id}, running since ${runningKernel.last_activity}`);
                 const localLastActivity = runningKernel.last_activity ? new Date(runningKernel.last_activity.toString()).toLocaleString() : '?';
-                const localConnections = runningKernel.last_activity === undefined || runningKernel.last_activity === null ? '?' : runningKernel.last_activity.toString();
+                const localConnections = runningKernel.connections === undefined || runningKernel.connections === null ? '?' : runningKernel.connections.toString();
                 return {
                     label: localize.DataScience.runningKernelLabel().format(runningKernel.name, runningKernel.id),
                     detail: localize.DataScience.runningKernelDetail().format(localLastActivity, localConnections),
