@@ -9,6 +9,7 @@ import * as glob from 'glob';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as tmp from 'tmp';
+import * as vscode from 'vscode';
 import { createDeferred } from '../utils/async';
 import {
     FileStat, FileType,
@@ -17,6 +18,18 @@ import {
 } from './types';
 
 const ENCODING = 'utf8';
+
+function getFileType(stat: FileStat): FileType {
+    if (stat.isFile()) {
+        return FileType.File;
+    } else if (stat.isDirectory()) {
+        return FileType.Directory;
+    } else if (stat.isSymbolicLink()) {
+        return FileType.SymbolicLink;
+    } else {
+        return FileType.Unknown;
+    }
+}
 
 @injectable()
 export class FileSystem implements IFileSystem {
@@ -45,7 +58,7 @@ export class FileSystem implements IFileSystem {
      * @returns {Promise<string>}
      * @memberof FileSystem
      */
-    public readFile(filePath: string): Promise<string> {
+    public async readFile(filePath: string): Promise<string> {
         return fsextra.readFile(filePath, ENCODING);
     }
 
@@ -56,20 +69,20 @@ export class FileSystem implements IFileSystem {
         await fsextra.writeFile(filePath, data, options);
     }
 
-    public createDirectory(directoryPath: string): Promise<void> {
+    public async createDirectory(directoryPath: string): Promise<void> {
         return fsextra.mkdirp(directoryPath);
     }
 
-    public deleteDirectory(directoryPath: string): Promise<void> {
-        const deferred = createDeferred<void>();
-        fsextra.rmdir(directoryPath, err => (err ? deferred.reject(err) : deferred.resolve()));
-        return deferred.promise;
+    public async deleteDirectory(directoryPath: string): Promise<void> {
+        return fsextra.rmdir(directoryPath);
     }
 
-    public deleteFile(filename: string): Promise<void> {
-        const deferred = createDeferred<void>();
-        fsextra.unlink(filename, err => (err ? deferred.reject(err) : deferred.resolve()));
-        return deferred.promise;
+    public async deleteFile(filename: string): Promise<void> {
+        return fsextra.unlink(filename);
+    }
+
+    public async chmod(filePath: string, mode: string): Promise<void> {
+        return fsextra.chmod(filePath, mode);
     }
 
     //****************************
@@ -77,17 +90,6 @@ export class FileSystem implements IFileSystem {
 
     public createWriteStream(filePath: string): WriteStream {
         return fs.createWriteStream(filePath);
-    }
-
-    public chmod(filePath: string, mode: string): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            fs.chmod(filePath, mode, (err: NodeJS.ErrnoException | null) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve();
-            });
-        });
     }
 
     //****************************
@@ -130,42 +132,36 @@ export class FileSystem implements IFileSystem {
         return this.pathExists(dirname, FileType.Directory);
     }
 
-    public getSubDirectories(rootDir: string): Promise<string[]> {
-        return new Promise<string[]>(resolve => {
-            fsextra.readdir(rootDir, async (error, files) => {
-                if (error) {
-                    return resolve([]);
-                }
-                const subDirs = (
-                    await Promise.all(
-                        files.map(async name => {
-                            const fullPath = path.join(rootDir, name);
-                            try {
-                                if ((await fsextra.stat(fullPath)).isDirectory()) {
-                                    return fullPath;
-                                }
-                                // tslint:disable-next-line:no-empty
-                            } catch (ex) { }
-                        })
-                    ))
-                    .filter(dir => dir !== undefined) as string[];
-                resolve(subDirs);
-            });
-        });
+    public async listdir(
+        dirname: string
+    ): Promise<[string, FileType][]> {
+        const filenames: string[] = await (
+            fsextra.readdir(dirname)
+                .then(names => names.map(name => path.join(dirname, name)))
+                .catch(() => [])
+        );
+        const promises = filenames
+            .map(filename => (
+                 fsextra.stat(filename)
+                     .then(stat => [filename, getFileType(stat)] as [string, FileType])
+                     .catch(() => [filename, FileType.Unknown] as [string, FileType])
+            ));
+        return Promise.all(promises);
     }
 
-    public async getFiles(rootDir: string): Promise<string[]> {
-        const files = await fsextra.readdir(rootDir);
-        return files.filter(async f => {
-            const fullPath = path.join(rootDir, f);
-            if ((await fsextra.stat(fullPath)).isFile()) {
-                return true;
-            }
-            return false;
-        });
+    public async getSubDirectories(dirname: string): Promise<string[]> {
+        return (await this.listdir(dirname))
+            .filter(([_filename, fileType]) => fileType === FileType.Directory)
+            .map(([filename, _fileType]) => filename);
     }
 
-    public copyFile(src: string, dest: string): Promise<void> {
+    public async getFiles(dirname: string): Promise<string[]> {
+        return (await this.listdir(dirname))
+            .filter(([_filename, fileType]) => fileType === FileType.File)
+            .map(([filename, _fileType]) => filename);
+    }
+
+    public async copyFile(src: string, dest: string): Promise<void> {
         const deferred = createDeferred<void>();
         const rs = fsextra.createReadStream(src).on('error', (err) => {
             deferred.reject(err);
@@ -179,22 +175,15 @@ export class FileSystem implements IFileSystem {
         return deferred.promise;
     }
 
-    public getFileHash(filePath: string): Promise<string> {
-        return new Promise<string>((resolve, reject) => {
-            fsextra.lstat(filePath, (err, stats) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    const actual = createHash('sha512')
-                        .update(`${stats.ctimeMs}-${stats.mtimeMs}`)
-                        .digest('hex');
-                    resolve(actual);
-                }
-            });
-        });
+    public async getFileHash(filePath: string): Promise<string> {
+        const stat = await fsextra.lstat(filePath);
+        const hash = createHash('sha512')
+            .update(`${stat.ctimeMs}-${stat.mtimeMs}`);
+        return hash.digest('hex');
     }
 
-    public search(globPattern: string): Promise<string[]> {
+    public async search(globPattern: string): Promise<string[]> {
+        // We could use util.promisify() here.
         return new Promise<string[]>((resolve, reject) => {
             glob(globPattern, (ex, files) => {
                 if (ex) {
@@ -205,7 +194,8 @@ export class FileSystem implements IFileSystem {
         });
     }
 
-    public createTemporaryFile(extension: string): Promise<TemporaryFile> {
+    public async createTemporaryFile(extension: string): Promise<TemporaryFile> {
+        // We could use util.promisify() here.
         return new Promise<TemporaryFile>((resolve, reject) => {
             tmp.file({ postfix: extension }, (err, tmpFile, _, cleanupCallback) => {
                 if (err) {
