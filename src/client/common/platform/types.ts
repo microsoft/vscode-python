@@ -58,7 +58,7 @@ export interface IFileSystem {
     createWriteStream(filename: string): WriteStream;
     chmod(filename: string, mode: string): Promise<void>;
     // helpers
-    arePathsSame(path1: string, path2: string): boolean;
+    arePathsSame(path1: string, path2: string): boolean;  // Move to IPathUtils.
     pathExists(filename: string, fileType?: FileType): Promise<boolean>;
     fileExists(filename: string): Promise<boolean>;
     directoryExists(dirname: string): Promise<boolean>;

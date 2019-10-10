@@ -6,7 +6,9 @@
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
+import * as TypeMoq from 'typemoq';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
+import { IFileSystem } from '../../../client/common/platform/types';
 import { IPathUtils } from '../../../client/common/types';
 import { OSType } from '../../../client/common/utils/platform';
 import { EnvironmentVariablesService, parseEnvFile } from '../../../client/common/variables/environment';
@@ -20,10 +22,22 @@ const envFilesFolderPath = path.join(__dirname, '..', '..', '..', '..', 'src', '
 // tslint:disable-next-line:max-func-body-length
 suite('Environment Variables Service', () => {
     let pathUtils: IPathUtils;
+    let fs: TypeMoq.IMock<IFileSystem>;
     let variablesService: IEnvironmentVariablesService;
+
+    let pathExists: boolean;
+
     setup(() => {
         pathUtils = new PathUtils(getOSType() === OSType.Windows);
-        variablesService = new EnvironmentVariablesService(pathUtils);
+        fs = TypeMoq.Mock.ofType<IFileSystem>();
+        variablesService = new EnvironmentVariablesService(
+            pathUtils,
+            fs.object
+        );
+        pathExists = true;
+        fs
+            .setup(s => s.pathExists(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(pathExists));
     });
 
     test('Custom variables should be undefined with no argument', async () => {
@@ -32,6 +46,7 @@ suite('Environment Variables Service', () => {
     });
 
     test('Custom variables should be undefined with non-existent files', async () => {
+        pathExists = false;
         const vars = await variablesService.parseFile(path.join(envFilesFolderPath, 'abcd'));
         expect(vars).to.equal(undefined, 'Variables should be undefined');
     });

@@ -1,8 +1,13 @@
-import * as fs from 'fs-extra';
+import * as fsextra from 'fs-extra';
 import { IS_WINDOWS } from './platform/constants';
+import { FileSystem } from './platform/fileSystem';
 import { PathUtils } from './platform/pathUtils';
+import { IPlatformService } from './platform/types';
 import { EnvironmentVariablesService } from './variables/environment';
-import { EnvironmentVariables } from './variables/types';
+import {
+    EnvironmentVariables, IEnvironmentVariablesService
+} from './variables/types';
+
 function parseEnvironmentVariables(contents: string): EnvironmentVariables | undefined {
     if (typeof contents !== 'string' || contents.length === 0) {
         return undefined;
@@ -22,10 +27,23 @@ function parseEnvironmentVariables(contents: string): EnvironmentVariables | und
     return env;
 }
 
-export function parseEnvFile(envFile: string, mergeWithProcessEnvVars: boolean = true): EnvironmentVariables {
-    const buffer = fs.readFileSync(envFile, 'utf8');
+export function parseEnvFile(
+    envFile: string,
+    mergeWithProcessEnvVars: boolean = true,
+    service?: IEnvironmentVariablesService
+): EnvironmentVariables {
+    const buffer = fsextra.readFileSync(envFile, 'utf8');
     const env = parseEnvironmentVariables(buffer)!;
-    return mergeWithProcessEnvVars ? mergeEnvVariables(env, process.env) : mergePythonPath(env, process.env.PYTHONPATH as string);
+    if (!service) {
+        service = new EnvironmentVariablesService(
+            new PathUtils(IS_WINDOWS),
+            // tslint:disable-next-line:no-object-literal-type-assertion
+            new FileSystem({} as IPlatformService)
+        );
+    }
+    return mergeWithProcessEnvVars
+        ? mergeEnvVariables(env, process.env, service)
+        : mergePythonPath(env, process.env.PYTHONPATH as string, service);
 }
 
 /**
@@ -36,8 +54,18 @@ export function parseEnvFile(envFile: string, mergeWithProcessEnvVars: boolean =
  * @param {EnvironmentVariables} [sourceEnvVars=process.env] source environment variables (defaults to current process variables).
  * @returns {EnvironmentVariables}
  */
-export function mergeEnvVariables(targetEnvVars: EnvironmentVariables, sourceEnvVars: EnvironmentVariables = process.env): EnvironmentVariables {
-    const service = new EnvironmentVariablesService(new PathUtils(IS_WINDOWS));
+export function mergeEnvVariables(
+    targetEnvVars: EnvironmentVariables,
+    sourceEnvVars: EnvironmentVariables = process.env,
+    service?: IEnvironmentVariablesService
+): EnvironmentVariables {
+    if (!service) {
+        service = new EnvironmentVariablesService(
+            new PathUtils(IS_WINDOWS),
+            // tslint:disable-next-line:no-object-literal-type-assertion
+            new FileSystem({} as IPlatformService)
+        );
+    }
     service.mergeVariables(sourceEnvVars, targetEnvVars);
     if (sourceEnvVars.PYTHONPATH) {
         service.appendPythonPath(targetEnvVars, sourceEnvVars.PYTHONPATH);
@@ -53,11 +81,22 @@ export function mergeEnvVariables(targetEnvVars: EnvironmentVariables, sourceEnv
  * @param {string | undefined} [currentPythonPath] PYTHONPATH value.
  * @returns {EnvironmentVariables}
  */
-export function mergePythonPath(env: EnvironmentVariables, currentPythonPath: string | undefined): EnvironmentVariables {
+export function mergePythonPath(
+    env: EnvironmentVariables,
+    currentPythonPath: string | undefined,
+    service?: IEnvironmentVariablesService
+): EnvironmentVariables {
     if (typeof currentPythonPath !== 'string' || currentPythonPath.length === 0) {
         return env;
     }
-    const service = new EnvironmentVariablesService(new PathUtils(IS_WINDOWS));
+
+    if (!service) {
+        service = new EnvironmentVariablesService(
+            new PathUtils(IS_WINDOWS),
+            // tslint:disable-next-line:no-object-literal-type-assertion
+            new FileSystem({} as IPlatformService)
+        );
+    }
     service.appendPythonPath(env, currentPythonPath);
     return env;
 }
