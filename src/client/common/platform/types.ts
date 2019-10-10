@@ -32,8 +32,12 @@ export interface IPlatformService {
     getVersion(): Promise<SemVer>;
 }
 
-export type TemporaryFile = { filePath: string } & vscode.Disposable;
-export type TemporaryDirectory = { path: string } & vscode.Disposable;
+export type TemporaryFile = vscode.Disposable & {
+    filePath: string;
+};
+export type TemporaryDirectory = vscode.Disposable & {
+    path: string;
+};
 
 import FileType = vscode.FileType;
 export { FileType };
@@ -44,24 +48,24 @@ export const IFileSystem = Symbol('IFileSystem');
 export interface IFileSystem {
     stat(filePath: string): Promise<vscode.FileStat>;
     // fs-extra
-    fileExistsSync(path: string): boolean;
-    readFile(filePath: string): Promise<string>;
-    writeFile(filePath: string, data: {}): Promise<void>;
-    createDirectory(path: string): Promise<void>;
-    deleteDirectory(path: string): Promise<void>;
+    fileExistsSync(filename: string): boolean;
+    readFile(filename: string): Promise<string>;
+    writeFile(filename: string, data: {}): Promise<void>;
+    createDirectory(dirname: string): Promise<void>;
+    deleteDirectory(dirname: string): Promise<void>;
     deleteFile(filename: string): Promise<void>;
     // fs
-    createWriteStream(path: string): WriteStream;
-    chmod(path: string, mode: string): Promise<void>;
+    createWriteStream(filename: string): WriteStream;
+    chmod(filename: string, mode: string): Promise<void>;
     // helpers
     arePathsSame(path1: string, path2: string): boolean;
-    pathExists(path: string, fileType?: FileType): Promise<boolean>;
-    fileExists(path: string): Promise<boolean>;
-    directoryExists(path: string): Promise<boolean>;
-    getSubDirectories(rootDir: string): Promise<string[]>;
-    getFiles(rootDir: string): Promise<string[]>;
+    pathExists(filename: string, fileType?: FileType): Promise<boolean>;
+    fileExists(filename: string): Promise<boolean>;
+    directoryExists(dirname: string): Promise<boolean>;
+    getSubDirectories(dirname: string): Promise<string[]>;
+    getFiles(dirname: string): Promise<string[]>;
     copyFile(src: string, dest: string): Promise<void>;
-    getFileHash(filePath: string): Promise<string>;
+    getFileHash(filename: string): Promise<string>;
     search(globPattern: string): Promise<string[]>;
-    createTemporaryFile(extension: string): Promise<TemporaryFile>;
+    createTemporaryFile(suffix: string): Promise<TemporaryFile>;
 }
