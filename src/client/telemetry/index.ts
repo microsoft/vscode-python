@@ -1001,7 +1001,7 @@ export interface IEventNamePropertyMapping {
         /**
          * The startup value of the language server setting
          */
-        startup?: boolean;
+        lsStartup?: boolean;
         /**
          * Used to track switch between LS and Jedi. Carries the final state after the switch.
          */

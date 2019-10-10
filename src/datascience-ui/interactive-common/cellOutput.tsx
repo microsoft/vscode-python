@@ -174,7 +174,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         const Transform = transforms['text/markdown'];
         const MarkdownClassName = 'markdown-cell-output';
 
-        return [<div className={MarkdownClassName}><Transform key={0} data={source} /></div>];
+        return [<div key={0} className={MarkdownClassName}><Transform key={0} data={source} /></div>];
     }
 
     // tslint:disable-next-line: max-func-body-length

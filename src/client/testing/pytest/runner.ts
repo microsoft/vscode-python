@@ -51,6 +51,8 @@ export class TestManagerRunner implements ITestManagerRunner {
             const testArgs = this.argsService.filterArguments(args, [JunitXmlArg]);
             testArgs.splice(0, 0, `${JunitXmlArg}=${xmlLogFile}`);
 
+            testArgs.splice(0, 0, '--rootdir', options.workspaceFolder.fsPath);
+
             // Positional arguments control the tests to be run.
             testArgs.push(...testPaths);
 

@@ -360,6 +360,7 @@ export interface IDataScienceSettings {
     runMagicCommands?: string;
     runStartupCommands: string;
     debugJustMyCode: boolean;
+    defaultCellMarker?: string;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

@@ -1,17 +1,26 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 import { injectable } from 'inversify';
 import * as path from 'path';
+
 import { IServiceContainer } from '../../ioc/types';
 import { EXTENSION_ROOT_DIR } from '../constants';
 import { ErrorUtils } from '../errors/errorUtils';
 import { ModuleNotInstalledError } from '../errors/moduleNotInstalledError';
 import { traceError } from '../logger';
 import { IFileSystem } from '../platform/types';
+import { waitForPromise } from '../utils/async';
 import { Architecture } from '../utils/platform';
 import { parsePythonVersion } from '../utils/version';
-import { ExecutionResult, InterpreterInfomation, IProcessService, IPythonExecutionService, ObservableExecutionResult, PythonVersionInfo, SpawnOptions } from './types';
+import {
+    ExecutionResult,
+    InterpreterInfomation,
+    IProcessService,
+    IPythonExecutionService,
+    ObservableExecutionResult,
+    PythonVersionInfo,
+    SpawnOptions
+} from './types';
 
 @injectable()
 export class PythonExecutionService implements IPythonExecutionService {
@@ -28,8 +37,12 @@ export class PythonExecutionService implements IPythonExecutionService {
     public async getInterpreterInformation(): Promise<InterpreterInfomation | undefined> {
         const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'interpreterInfo.py');
         try {
-            const jsonValue = await this.procService.exec(this.pythonPath, [file], { mergeStdOutErr: true })
-                .then(output => output.stdout.trim());
+            // Sometimes the python path isn't valid, timeout if that's the case.
+            // See these two bugs:
+            // https://github.com/microsoft/vscode-python/issues/7569
+            // https://github.com/microsoft/vscode-python/issues/7760
+            const jsonValue = await waitForPromise(this.procService.exec(this.pythonPath, [file], { mergeStdOutErr: true }), 5000)
+                .then(output => output ? output.stdout.trim() : '--timed out--'); // --timed out-- should cause an exception
 
             let json: { versionInfo: PythonVersionInfo; sysPrefix: string; sysVersion: string; is64Bit: boolean };
             try {

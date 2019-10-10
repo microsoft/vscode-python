@@ -20,34 +20,30 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
 
     public async handleError(err: Error): Promise<void> {
         if (err instanceof JupyterInstallError) {
-            this.applicationShell.showInformationMessage(
+            const response = await this.applicationShell.showInformationMessage(
                 err.message,
                 localize.DataScience.jupyterInstall(),
                 localize.DataScience.notebookCheckForImportNo(),
-                err.actionTitle)
-                .then(response => {
-                    if (response === localize.DataScience.jupyterInstall()) {
-                        return this.channels.getInstallationChannels()
-                            .then(installers => {
-                                if (installers) {
-                                    // If Conda is available, always pick it as the user must have a Conda Environment
-                                    const installer = installers.find(ins => ins.name === 'Conda');
-                                    const product = ProductNames.get(Product.jupyter);
+                err.actionTitle);
+            if (response === localize.DataScience.jupyterInstall()) {
+                const installers = await this.channels.getInstallationChannels();
+                if (installers) {
+                    // If Conda is available, always pick it as the user must have a Conda Environment
+                    const installer = installers.find(ins => ins.name === 'Conda');
+                    const product = ProductNames.get(Product.jupyter);
 
-                                    if (installer && product) {
-                                        installer.installModule(product)
-                                            .catch(e => this.applicationShell.showErrorMessage(e.message, localize.DataScience.pythonInteractiveHelpLink()));
-                                    } else if (installers[0] && product) {
-                                        installers[0].installModule(product)
-                                            .catch(e => this.applicationShell.showErrorMessage(e.message, localize.DataScience.pythonInteractiveHelpLink()));
-                                    }
-                                }
-                            });
-                    } else if (response === err.actionTitle) {
-                        // This is a special error that shows a link to open for more help
-                        this.applicationShell.openUrl(err.action);
+                    if (installer && product) {
+                        installer.installModule(product)
+                            .catch(e => this.applicationShell.showErrorMessage(e.message, localize.DataScience.pythonInteractiveHelpLink()));
+                    } else if (installers[0] && product) {
+                        installers[0].installModule(product)
+                            .catch(e => this.applicationShell.showErrorMessage(e.message, localize.DataScience.pythonInteractiveHelpLink()));
                     }
-                });
+                }
+            } else if (response === err.actionTitle) {
+                // This is a special error that shows a link to open for more help
+                this.applicationShell.openUrl(err.action);
+            }
         } else if (err instanceof JupyterSelfCertsError) {
             // Don't show the message for self cert errors
             noop();

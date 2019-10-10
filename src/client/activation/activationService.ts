@@ -113,7 +113,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
             await state.updateValue(jediEnabled);
             sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION, undefined, { switchTo: jediEnabled });
         } else {
-            sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION, undefined, { startup: jediEnabled });
+            sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION, undefined, { lsStartup: jediEnabled });
         }
     }
 

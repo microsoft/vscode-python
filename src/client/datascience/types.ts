@@ -280,6 +280,9 @@ export interface INotebookEditor extends IInteractiveBase {
     readonly visible: boolean;
     readonly active: boolean;
     load(contents: string, file: Uri): Promise<void>;
+    runAllCells(): void;
+    runSelectedCell(): void;
+    addCellBelow(): void;
 }
 
 export const IInteractiveWindowListener = Symbol('IInteractiveWindowListener');
@@ -373,6 +376,7 @@ export interface IInteractiveWindowInfo {
     undoCount: number;
     redoCount: number;
     visibleCells: ICell[];
+    selectedCell: string | undefined;
 }
 
 export interface IMessageCell extends nbformat.IBaseCell {
@@ -420,6 +424,8 @@ export interface IDataScienceExtraSettings extends IDataScienceSettings {
     extraSettings: {
         editorCursor: string;
         editorCursorBlink: string;
+        fontSize: number;
+        fontFamily: string;
         theme: string;
     };
     intellisenseOptions: {

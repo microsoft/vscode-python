@@ -151,7 +151,7 @@ function getTestStatusIcon(status?: TestStatus): string {
             return '✘ ';
         }
         case TestStatus.Skipped: {
-            return '⃠ ';
+            return '⊘ ';
         }
         default: {
             return '';
@@ -171,7 +171,7 @@ function getTestStatusIcons(fns: TestFunction[]): string {
     }
     count = fns.filter(fn => fn.status === TestStatus.Skipped).length;
     if (count > 0) {
-        statuses.push(`⃠ ${count}`);
+        statuses.push(`⊘ ${count}`);
     }
 
     return statuses.join(' ');

@@ -4,9 +4,9 @@
 'use strict';
 
 import * as path from 'path';
-import { CancellationToken } from 'vscode';
-import { IWorkspaceService } from '../../common/application/types';
-import { Cancellation, createPromiseFromCancellation } from '../../common/cancellation';
+import { CancellationToken, Progress, ProgressLocation, ProgressOptions } from 'vscode';
+import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
+import { Cancellation, createPromiseFromCancellation, wrapCancellationTokens } from '../../common/cancellation';
 import { traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IProcessService, IProcessServiceFactory, IPythonExecutionFactory, SpawnOptions } from '../../common/process/types';
@@ -45,6 +45,9 @@ function isCommandFinderCancelled(command: JupyterCommands, token?: Cancellation
     }
     return false;
 }
+
+type ProgressNotification = Progress<{ message?: string | undefined; increment?: number | undefined }>;
+
 export class JupyterCommandFinder {
     private readonly processServicePromise: Promise<IProcessService>;
     private jupyterPath?: string;
@@ -59,7 +62,8 @@ export class JupyterCommandFinder {
         private readonly logger: ILogger,
         private readonly processServiceFactory: IProcessServiceFactory,
         private readonly commandFactory: IJupyterCommandFactory,
-        workspace: IWorkspaceService
+        workspace: IWorkspaceService,
+        private readonly appShell: IApplicationShell
     ) {
         this.processServicePromise = this.processServiceFactory.create();
         disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.commands.clear()));
@@ -73,19 +77,35 @@ export class JupyterCommandFinder {
             disposableRegistry.push(disposable);
         }
     }
-
+    /**
+     * For jupyter,
+     * - Look in current interpreter, if found create something that has path and args
+     *  - Look in other interpreters, if found create something that has path and args
+     *  - Look on path, if found create something that has path and args
+     *
+     * For general case
+     *  - Look for module in current interpreter, if found create something with python path and -m module
+     *  - Look in other interpreters, if found create something with python path and -m module
+     *  - Look on path for jupyter, if found create something with jupyter path and args
+     *
+     * @param {JupyterCommands} command
+     * @param {CancellationToken} [cancelToken]
+     * @returns {Promise<IFindCommandResult>}
+     * @memberof JupyterCommandFinder
+     */
     public async findBestCommand(command: JupyterCommands, cancelToken?: CancellationToken): Promise<IFindCommandResult> {
-        // Only log telemetry if not already found (meaning the first time)
-        let timer: StopWatch | undefined;
-        if (!this.commands.has(command)) {
-            timer = new StopWatch();
+        if (this.commands.has(command)) {
+            return this.commands.get(command)!;
         }
+
+        // Only log telemetry if not already found (meaning the first time)
+        const timer = new StopWatch();
         try {
-            return await this.findBestCommandImpl(command, cancelToken);
+            const result = await this.findBestCommandImpl(command, cancelToken);
+            this.commands.set(command, result);
+            return result;
         } finally {
-            if (timer) {
-                sendTelemetryEvent(Telemetry.FindJupyterCommand, timer.elapsedTime, { command });
-            }
+            sendTelemetryEvent(Telemetry.FindJupyterCommand, timer.elapsedTime, { command });
         }
     }
     private async findInterpreterCommand(command: JupyterCommands, interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<IFindCommandResult> {
@@ -156,14 +176,6 @@ export class JupyterCommandFinder {
         return true;
     }
 
-    // For jupyter,
-    // - Look in current interpreter, if found create something that has path and args
-    // - Look in other interpreters, if found create something that has path and args
-    // - Look on path, if found create something that has path and args
-    // For general case
-    // - Look for module in current interpreter, if found create something with python path and -m module
-    // - Look in other interpreters, if found create something with python path and -m module
-    // - Look on path for jupyter, if found create something with jupyter path and args
     // tslint:disable:cyclomatic-complexity max-func-body-length
     private async findBestCommandImpl(command: JupyterCommands, cancelToken?: CancellationToken): Promise<IFindCommandResult> {
         let found: IFindCommandResult = {
@@ -171,102 +183,128 @@ export class JupyterCommandFinder {
         };
         let firstError: string | undefined;
 
-        // See if we already have this command in list
-        if (!this.commands.has(command)) {
-            // Not found, try to find it.
+        // First we look in the current interpreter
+        const current = await this.interpreterService.getActiveInterpreter();
 
-            // First we look in the current interpreter
-            const current = await this.interpreterService.getActiveInterpreter();
-
-            if (isCommandFinderCancelled(command, cancelToken)) {
-                return cancelledResult;
-            }
-
-            found = current ? await this.findInterpreterCommand(command, current, cancelToken) : found;
-            if (found.status === ModuleExistsStatus.NotFound) {
-                traceInfo(`Active interpreter does not support ${command} because of error ${found.error}. Interpreter is ${current ? current.displayName : 'undefined'}.`);
-
-                // Save our error information. This should propagate out as the error information for the command
-                firstError = found.error;
-            }
-            if (found.status === ModuleExistsStatus.NotFound && this.supportsSearchingForCommands()) {
-                // Look through all of our interpreters (minus the active one at the same time)
-                const cancelGetInterpreters = createPromiseFromCancellation<PythonInterpreter[]>({ defaultValue: [], cancelAction: 'resolve', token: cancelToken });
-                const all = await Promise.race([this.interpreterService.getInterpreters(), cancelGetInterpreters]);
-
-                if (isCommandFinderCancelled(command, cancelToken)) {
-                    return cancelledResult;
-                }
-
-                if (!all || all.length === 0) {
-                    traceWarning('No interpreters found. Jupyter cannot run.');
-                }
-
-                const cancelFind = createPromiseFromCancellation<IFindCommandResult[]>({ defaultValue: [], cancelAction: 'resolve', token: cancelToken });
-                const promises = all.filter(i => i !== current).map(i => this.findInterpreterCommand(command, i, cancelToken));
-                const foundList = await Promise.race([Promise.all(promises), cancelFind]);
-
-                if (isCommandFinderCancelled(command, cancelToken)) {
-                    return cancelledResult;
-                }
-
-                // Then go through all of the found ones and pick the closest python match
-                if (current && current.version) {
-                    let bestScore = -1;
-                    for (const entry of foundList) {
-                        let currentScore = 0;
-                        if (!entry || !entry.command) {
-                            continue;
-                        }
-                        const interpreter = await entry.command.interpreter();
-                        if (isCommandFinderCancelled(command, cancelToken)) {
-                            return cancelledResult;
-                        }
-
-                        const version = interpreter ? interpreter.version : undefined;
-                        if (version) {
-                            if (version.major === current.version.major) {
-                                currentScore += 4;
-                                if (version.minor === current.version.minor) {
-                                    currentScore += 2;
-                                    if (version.patch === current.version.patch) {
-                                        currentScore += 1;
-                                    }
-                                }
-                            }
-                        }
-                        if (currentScore > bestScore) {
-                            found = entry;
-                            bestScore = currentScore;
-                        }
-                    }
-                } else {
-                    // Just pick the first one
-                    found = foundList.find(f => f.status !== ModuleExistsStatus.NotFound) || found;
-                }
-            }
-
-            // If still not found, try looking on the path using jupyter
-            if (found.status === ModuleExistsStatus.NotFound && this.supportsSearchingForCommands()) {
-                found = await this.findPathCommand(command, cancelToken);
-            }
-
-            // Set the original error so we
-            // can propagate the reason to the user
-            if (firstError) {
-                found.error = firstError;
-            }
-
-            // If we found a command, save in our dictionary
-            if (found) {
-                this.commands.set(command, found);
-            }
+        if (isCommandFinderCancelled(command, cancelToken)) {
+            return cancelledResult;
         }
 
-        // Return results
-        return this.commands.get(command) || found;
+        found = current ? await this.findInterpreterCommand(command, current, cancelToken) : found;
+        if (found.status === ModuleExistsStatus.NotFound) {
+            traceInfo(`Active interpreter does not support ${command} because of error ${found.error}. Interpreter is ${current ? current.displayName : 'undefined'}.`);
+
+            // Save our error information. This should propagate out as the error information for the command
+            firstError = found.error;
+        }
+
+        // Display a progress message when searching, as this could take a while.
+        if (found.status === ModuleExistsStatus.NotFound && this.supportsSearchingForCommands()) {
+            // Display a progress message and allow user to cancel searching.
+            // If searching has been called from a calling code, then dismiss the progress message by resolving the search.
+            const options: ProgressOptions = {
+                cancellable: true,
+                location: ProgressLocation.Notification,
+                title: localize.DataScience.findJupyterCommandProgress().format(command)
+            };
+            found = await this.appShell.withProgress<IFindCommandResult>(options, async (progress, token) => {
+                cancelToken = wrapCancellationTokens(cancelToken, token);
+
+                found = await this.searchOtherInterpretersForCommand(command, progress, current, cancelToken);
+
+                if (isCommandFinderCancelled(command, cancelToken)) {
+                    return cancelledResult;
+                }
+
+                // If still not found, try looking on the path using jupyter
+                if (found.status === ModuleExistsStatus.NotFound) {
+                    progress.report({ message: localize.DataScience.findJupyterCommandProgressSearchCurrentPath() });
+                    found = await this.findPathCommand(command, cancelToken);
+                }
+
+                return found;
+            });
+        }
+
+        // Set the original error so we
+        // can propagate the reason to the user
+        if (firstError) {
+            found.error = firstError;
+        }
+
+        return found;
     }
 
+    private async searchOtherInterpretersForCommand(
+        command: JupyterCommands,
+        progress: ProgressNotification,
+        current?: PythonInterpreter,
+        cancelToken?: CancellationToken
+    ): Promise<IFindCommandResult> {
+        let found: IFindCommandResult = {
+            status: ModuleExistsStatus.NotFound
+        };
+
+        // Look through all of our interpreters (minus the active one at the same time)
+        const cancelGetInterpreters = createPromiseFromCancellation<PythonInterpreter[]>({ defaultValue: [], cancelAction: 'resolve', token: cancelToken });
+        const all = await Promise.race([this.interpreterService.getInterpreters(), cancelGetInterpreters]);
+
+        if (isCommandFinderCancelled(command, cancelToken)) {
+            return cancelledResult;
+        }
+
+        if (!all || all.length === 0) {
+            traceWarning('No interpreters found. Jupyter cannot run.');
+        }
+
+        const cancelFind = createPromiseFromCancellation<IFindCommandResult[]>({ defaultValue: [], cancelAction: 'resolve', token: cancelToken });
+        const promises = all.filter(i => i !== current).map(i => this.findInterpreterCommand(command, i, cancelToken));
+        const foundList = await Promise.race([Promise.all(promises), cancelFind]);
+
+        if (isCommandFinderCancelled(command, cancelToken)) {
+            return cancelledResult;
+        }
+
+        // Then go through all of the found ones and pick the closest python match
+        if (current && current.version) {
+            let bestScore = -1;
+            for (const entry of foundList) {
+                let currentScore = 0;
+                if (!entry || !entry.command) {
+                    continue;
+                }
+                const interpreter = await entry.command.interpreter();
+                if (isCommandFinderCancelled(command, cancelToken)) {
+                    return cancelledResult;
+                }
+                // Keep the progress message ticking with list of interpreters that are searched.
+                if (interpreter && interpreter.displayName) {
+                    progress.report({ message: localize.DataScience.findJupyterCommandProgressCheckInterpreter().format(interpreter.displayName) });
+                }
+                const version = interpreter ? interpreter.version : undefined;
+                if (version) {
+                    if (version.major === current.version.major) {
+                        currentScore += 4;
+                        if (version.minor === current.version.minor) {
+                            currentScore += 2;
+                            if (version.patch === current.version.patch) {
+                                currentScore += 1;
+                            }
+                        }
+                    }
+                }
+                if (currentScore > bestScore) {
+                    found = entry;
+                    bestScore = currentScore;
+                }
+            }
+        } else {
+            // Just pick the first one
+            found = foundList.find(f => f.status !== ModuleExistsStatus.NotFound) || found;
+        }
+
+        return found;
+    }
     private async doesModuleExist(moduleName: string, interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<IModuleExistsResult> {
         const result: IModuleExistsResult = {
             status: ModuleExistsStatus.NotFound

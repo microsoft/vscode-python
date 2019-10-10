@@ -60,6 +60,8 @@ function load() {
             extraSettings: {
                 editorCursor: 'line',
                 editorCursorBlink: 'blink',
+                fontSize: 14,
+                fontFamily: 'Consolas, \'Courier New\', monospace',
                 theme: 'Default Dark+'
             },
             intellisenseOptions: {

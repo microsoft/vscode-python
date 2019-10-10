@@ -7,10 +7,11 @@ import { expect } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
-import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
+import { Disposable, LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
 import { BaseLanguageClientFactory } from '../../../client/activation/languageServer/languageClientFactory';
 import { LanguageServer } from '../../../client/activation/languageServer/languageServer';
 import { ILanguageClientFactory } from '../../../client/activation/types';
+import { ICommandManager } from '../../../client/common/application/types';
 import '../../../client/common/extensions';
 import { IConfigurationService, IDisposable, IPythonSettings } from '../../../client/common/types';
 import { sleep } from '../../../client/common/utils/async';
@@ -31,12 +32,18 @@ suite('Language Server - LanguageServer', () => {
     let client: typemoq.IMock<LanguageClient>;
     let testManager: ITestManagementService;
     let configService: typemoq.IMock<IConfigurationService>;
+    let commandManager: typemoq.IMock<ICommandManager>;
     setup(() => {
         client = typemoq.Mock.ofType<LanguageClient>();
         clientFactory = mock(BaseLanguageClientFactory);
         testManager = mock(UnitTestManagementService);
         configService = typemoq.Mock.ofType<IConfigurationService>();
-        server = new LanguageServerTest(instance(clientFactory), instance(testManager), configService.object);
+
+        commandManager = typemoq.Mock.ofType<ICommandManager>();
+        commandManager.setup(c => c.registerCommand(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny())).returns(() => {
+            return typemoq.Mock.ofType<Disposable>().object;
+        });
+        server = new LanguageServerTest(instance(clientFactory), instance(testManager), configService.object, commandManager.object);
     });
     teardown(() => {
         client.setup(c => c.stop()).returns(() => Promise.resolve());

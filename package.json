@@ -24,7 +24,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.36.0"
+        "vscode": "^1.38.0"
     },
     "keywords": [
         "python",
@@ -513,7 +513,7 @@
             },
             {
                 "command": "python.datascience.notebookeditor.removeallcells",
-                "title": "%python.command.python.datascience.removeallcells.title%",
+                "title": "%python.command.python.datascience.notebookeditor.removeallcells.title%",
                 "category": "Python"
             },
             {
@@ -524,6 +524,21 @@
             {
                 "command": "python.datascience.notebookeditor.restartkernel",
                 "title": "%python.command.python.datascience.restartkernel.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.notebookeditor.runallcells",
+                "title": "%python.command.python.datascience.notebookeditor.runallcells.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.notebookeditor.runselectedcell",
+                "title": "%python.command.python.datascience.notebookeditor.runselectedcell.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.datascience.notebookeditor.addcellbelow",
+                "title": "%python.command.python.datascience.notebookeditor.addcellbelow.title%",
                 "category": "Python"
             },
             {
@@ -549,6 +564,11 @@
             {
                 "command": "python.datascience.scrolltocell",
                 "title": "%python.command.python.datascience.scrolltocell.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.analysis.clearCache",
+                "title": "%python.command.python.analysis.clearCache.title%",
                 "category": "Python"
             }
         ],
@@ -775,7 +795,25 @@
                     "command": "python.datascience.runallcells",
                     "title": "%python.command.python.datascience.runallcells.title%",
                     "category": "Python",
-                    "when": "python.datascience.featureenabled"
+                    "when": "python.datascience.hascodecells && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.scrolltocell",
+                    "title": "%python.command.python.datascience.scrolltocell.title%",
+                    "category": "Python",
+                    "when": "false"
+                },
+                {
+                    "command": "python.datascience.debugcell",
+                    "title": "%python.command.python.datascience.debugcell.title%",
+                    "category": "Python",
+                    "when": "python.datascience.hascodecells && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.runcell",
+                    "title": "%python.command.python.datascience.runcell.title%",
+                    "category": "Python",
+                    "when": "python.datascience.hascodecells && python.datascience.featureenabled"
                 },
                 {
                     "command": "python.datascience.runFileInteractive",
@@ -855,7 +893,7 @@
                 },
                 {
                     "command": "python.datascience.notebookeditor.removeallcells",
-                    "title": "%python.command.python.datascience.removeallcells.title%",
+                    "title": "%python.command.python.datascience.notebookeditor.removeallcells.title%",
                     "category": "Python",
                     "when": "python.datascience.havenativecells && python.datascience.featureenabled"
                 },
@@ -868,6 +906,24 @@
                 {
                     "command": "python.datascience.notebookeditor.restartkernel",
                     "title": "%python.command.python.datascience.restartkernel.title%",
+                    "category": "Python",
+                    "when": "python.datascience.havenative && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.notebookeditor.runallcells",
+                    "title": "%python.command.python.datascience.notebookeditor.runallcells.title%",
+                    "category": "Python",
+                    "when": "python.datascience.havenative && python.datascience.featureenabled"
+                },
+                {
+                    "command": "python.datascience.notebookeditor.runselectedcell",
+                    "title": "%python.command.python.datascience.notebookeditor.runselectedcell.title%",
+                    "category": "Python",
+                    "when": "python.datascience.havenative && python.datascience.featureenabled && python.datascience.havecellselected"
+                },
+                {
+                    "command": "python.datascience.notebookeditor.addcellbelow",
+                    "title": "%python.command.python.datascience.notebookeditor.addcellbelow.title%",
                     "category": "Python",
                     "when": "python.datascience.havenative && python.datascience.featureenabled"
                 },
@@ -903,7 +959,7 @@
                     "command": "python.datascience.addcellbelow",
                     "title": "%python.command.python.datascience.addcellbelow.title%",
                     "category": "Python",
-                    "when": "python.datascience.featureenabled"
+                    "when": "python.datascience.hascodecells && python.datascience.featureenabled"
                 },
                 {
                     "command": "python.datascience.createnewnotebook",
@@ -1577,6 +1633,12 @@
                     "description": "Regular expression used to identify code cells. All code until the next match is considered part of this cell. \nDefaults to '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])' if left blank",
                     "scope": "resource"
                 },
+                "python.dataScience.defaultCellMarker": {
+                    "type": "string",
+                    "default": "# %%",
+                    "description": "Cell marker used for delineating a cell in a python file.",
+                    "scope": "resource"
+                },
                 "python.dataScience.markdownRegularExpression": {
                     "type": "string",
                     "default": "^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)",
@@ -1628,7 +1690,7 @@
                 },
                 "python.dataScience.useNotebookEditor": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "Automatically open .ipynb files in the Notebook Editor.",
                     "scope": "resource"
                 },
@@ -1892,11 +1954,12 @@
                 "python.analysis.cachingLevel": {
                     "type": "string",
                     "enum": [
+                        "Default",
                         "None",
                         "System",
                         "Library"
                     ],
-                    "default": "None",
+                    "default": "Default",
                     "description": "Defines which types of modules get their analysis cached.",
                     "scope": "resource"
                 },
@@ -2643,7 +2706,6 @@
         "hash.js": "^1.1.7",
         "iconv-lite": "^0.4.21",
         "inversify": "^4.11.1",
-        "jison": "^0.4.18",
         "jsonc-parser": "^2.0.3",
         "less-plugin-inline-urls": "^1.2.0",
         "line-by-line": "^0.1.6",
@@ -2748,7 +2810,7 @@
         "@types/tmp": "0.0.33",
         "@types/untildify": "^3.0.0",
         "@types/uuid": "^3.4.3",
-        "@types/vscode": "^1.36.0",
+        "@types/vscode": "^1.38.0",
         "@types/webpack-bundle-analyzer": "^2.13.0",
         "@types/winreg": "^1.2.30",
         "@types/ws": "^6.0.1",

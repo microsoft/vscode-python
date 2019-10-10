@@ -67,6 +67,11 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
     }
 
     public render() {
+        const dynamicFont: React.CSSProperties = {
+            fontSize: this.state.font.size,
+            fontFamily: this.state.font.family
+        };
+
         // Update the state controller with our new state
         this.stateController.renderUpdate(this.state);
         const progressBar = this.state.busy && !this.props.testMode ? <Progress /> : undefined;
@@ -77,7 +82,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
         }
 
         return (
-            <div id='main-panel' ref={this.mainPanelRef} role='Main'>
+            <div id='main-panel' ref={this.mainPanelRef} role='Main' style={dynamicFont}>
                 <div className='styleSetter'>
                     <style>
                         {this.state.rootCss}
@@ -222,6 +227,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
                         onClick={this.clickEditCell}
                         keyDown={this.editCellKeyDown}
                         renderCellToolbar={this.renderEditCellToolbar}
+                        font={this.state.font}
                     />
                 </ErrorBoundary>
             </div>
@@ -344,8 +350,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
                         openLink={this.stateController.openLink}
                         expandImage={this.stateController.showPlot}
                         renderCellToolbar={this.renderCellToolbar}
-                        showLineNumbers={cellVM.showLineNumbers}
-                        hideOutput={cellVM.hideOutput}
+                        font={this.state.font}
                     />
                 </ErrorBoundary>
             </div>);

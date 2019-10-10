@@ -194,7 +194,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
                 const command = 'workbench.action.closeActiveEditor';
                 await this.cmdManager.executeCommand(command);
             } catch (e) {
-                this.dataScienceErrorHandler.handleError(e).ignoreErrors();
+                return this.dataScienceErrorHandler.handleError(e);
             }
         }
     }

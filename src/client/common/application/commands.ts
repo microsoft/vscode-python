@@ -4,6 +4,7 @@
 'use strict';
 
 import { CancellationToken, Position, TextDocument, Uri } from 'vscode';
+import { Commands as LSCommands } from '../../activation/languageServer/constants';
 import { Commands as DSCommands } from '../../datascience/constants';
 import { CommandSource } from '../../testing/common/constants';
 import { TestFunction, TestsToRun } from '../../testing/common/types';
@@ -58,11 +59,15 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.NotebookEditorRemoveAllCells]: [];
     [DSCommands.NotebookEditorInterruptKernel]: [];
     [DSCommands.NotebookEditorRestartKernel]: [];
+    [DSCommands.NotebookEditorRunAllCells]: [];
+    [DSCommands.NotebookEditorRunSelectedCell]: [];
+    [DSCommands.NotebookEditorAddCellBelow]: [];
     [DSCommands.ExpandAllCells]: [];
     [DSCommands.CollapseAllCells]: [];
     [DSCommands.ExportOutputAsNotebook]: [];
     [DSCommands.AddCellBelow]: [];
     [DSCommands.CreateNewNotebook]: [];
+    [LSCommands.ClearAnalyisCache]: [];
 }
 
 /**

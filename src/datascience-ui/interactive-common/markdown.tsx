@@ -6,6 +6,7 @@ import * as React from 'react';
 
 import { IKeyboardEvent } from '../react-common/event';
 import { Editor } from './editor';
+import { IFont } from './mainState';
 
 export interface IMarkdownProps {
     autoFocus: boolean;
@@ -18,6 +19,7 @@ export interface IMarkdownProps {
     editorMeasureClassName?: string;
     showLineNumbers?: boolean;
     useQuickEdit?: boolean;
+    font: IFont;
     onCreated(code: string, modelId: string): void;
     onChange(changes: monacoEditor.editor.IModelContentChange[], modelId: string): void;
     focused?(): void;
@@ -34,7 +36,10 @@ export class Markdown extends React.Component<IMarkdownProps> {
     }
 
     public render() {
+        const classes = 'markdown-editor-area';
+
         return (
+            <div className={classes}>
                 <Editor
                     codeTheme={this.props.codeTheme}
                     autoFocus={this.props.autoFocus}
@@ -56,7 +61,9 @@ export class Markdown extends React.Component<IMarkdownProps> {
                     unfocused={this.props.unfocused}
                     showLineNumbers={this.props.showLineNumbers}
                     useQuickEdit={this.props.useQuickEdit}
+                    font={this.props.font}
                 />
+            </div>
         );
     }
 

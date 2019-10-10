@@ -27,11 +27,6 @@ stages:
   jobs:
   - template: templates/jobs/build_compile.yml
 
-- stage: Build_UITests
-  dependsOn: []
-  jobs:
-  - template: templates/jobs/build_uitests.yml
-
 - stage: Tests
   dependsOn:
   - Build
@@ -438,12 +433,36 @@ stages:
     steps:
       - template: templates/test_phases.yml
 
+
 - stage: Smoke
   dependsOn:
   - Build
-  - Build_UITests
   jobs:
-  - template: templates/jobs/smoke.yml
+  - job: 'Smoke'
+    dependsOn: []
+    strategy:
+      matrix:
+        'Mac-Py3.7':
+            PythonVersion: '3.7'
+            VMImageName: 'macos-10.13'
+            TestsToRun: 'testSmoke'
+            NeedsPythonTestReqs: true
+        'Linux-Py3.7':
+            PythonVersion: '3.7'
+            VMImageName: 'ubuntu-16.04'
+            TestsToRun: 'testSmoke'
+            NeedsPythonTestReqs: true
+        'Win-Py3.7':
+            PythonVersion: '3.7'
+            VMImageName: 'vs2017-win2016'
+            TestsToRun: 'testSmoke'
+            NeedsPythonTestReqs: true
+
+    pool:
+      vmImage: $(VMImageName)
+
+    steps:
+      - template: templates/test_phases.yml
 
 - stage: Reports
   dependsOn:
@@ -451,5 +470,4 @@ stages:
   - Tests
   condition: always()
   jobs:
-  - template: templates/jobs/merge_upload_uitest_report.yml
   - template: templates/jobs/coverage.yml

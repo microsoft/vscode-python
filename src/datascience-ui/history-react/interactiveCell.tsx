@@ -4,6 +4,7 @@
 import '../../client/common/extensions';
 
 import { nbformat } from '@jupyterlab/coreutils';
+import * as fastDeepEqual from 'fast-deep-equal';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
 
@@ -15,7 +16,7 @@ import { CollapseButton } from '../interactive-common/collapseButton';
 import { ExecutionCount } from '../interactive-common/executionCount';
 import { InformationMessages } from '../interactive-common/informationMessages';
 import { InputHistory } from '../interactive-common/inputHistory';
-import { ICellViewModel } from '../interactive-common/mainState';
+import { ICellViewModel, IFont } from '../interactive-common/mainState';
 import { IKeyboardEvent } from '../react-common/event';
 import { getLocString } from '../react-common/locReactSide';
 import { getSettings } from '../react-common/settingsReactSide';
@@ -35,10 +36,7 @@ interface IInteractiveCellProps {
     editorOptions?: monacoEditor.editor.IEditorOptions;
     editExecutionCount?: string;
     editorMeasureClassName?: string;
-    selectedCell?: string;
-    focusedCell?: string;
-    hideOutput?: boolean;
-    showLineNumbers?: boolean;
+    font: IFont;
     onCodeChange(changes: monacoEditor.editor.IModelContentChange[], cellId: string, modelId: string): void;
     onCodeCreated(code: string, file: string, cellId: string, modelId: string): void;
     openLink(uri: monacoEditor.Uri): void;
@@ -71,9 +69,13 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
     }
 
     public componentDidUpdate(prevProps: IInteractiveCellProps) {
-        if (this.props.selectedCell === this.props.cellVM.cell.id && prevProps.selectedCell !== this.props.selectedCell) {
-            this.giveFocus(this.props.focusedCell === this.props.cellVM.cell.id);
+        if (this.props.cellVM.selected && !prevProps.cellVM.selected) {
+            this.giveFocus(this.props.cellVM.focused);
         }
+    }
+
+    public shouldComponentUpdate(nextProps: IInteractiveCellProps): boolean {
+        return !fastDeepEqual(this.props, nextProps);
     }
 
     public scrollAndFlash() {
@@ -210,7 +212,8 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                     focused={this.onCodeFocused}
                     unfocused={this.onCodeUnfocused}
                     keyDown={this.props.keyDown}
-                    showLineNumbers={this.props.showLineNumbers}
+                    showLineNumbers={this.props.cellVM.showLineNumbers}
+                    font={this.props.font}
                 />
             );
         }
@@ -238,7 +241,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
     }
 
     private shouldRenderResults(): boolean {
-        return this.isCodeCell() && this.hasOutput() && this.getCodeCell().outputs && this.getCodeCell().outputs.length > 0 && !this.props.hideOutput;
+        return this.isCodeCell() && this.hasOutput() && this.getCodeCell().outputs && this.getCodeCell().outputs.length > 0 && !this.props.cellVM.hideOutput;
     }
 
     private onCellKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
