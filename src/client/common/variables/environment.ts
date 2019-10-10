@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as fsextra from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -19,14 +18,20 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
     ) {
         this.pathVariable = pathUtils.getPathVariableName();
     }
-    public async parseFile(filePath?: string, baseVars?: EnvironmentVariables): Promise<EnvironmentVariables | undefined> {
-        if (!filePath || !await this.fs.pathExists(filePath)) {
+    public async parseFile(
+        filePath?: string,
+        baseVars?: EnvironmentVariables
+    ): Promise<EnvironmentVariables | undefined> {
+        if (!filePath) {
             return;
         }
-        if (!fsextra.lstatSync(filePath).isFile()) {
+        if (!await this.fs.fileExists(filePath)) {
             return;
         }
-        return parseEnvFile(await fsextra.readFile(filePath), baseVars);
+        return parseEnvFile(
+            await this.fs.readFile(filePath),
+            baseVars
+        );
     }
     public mergeVariables(source: EnvironmentVariables, target: EnvironmentVariables) {
         if (!target) {

@@ -53,6 +53,10 @@ export class FileSystem implements IFileSystem {
         return fsextra.existsSync(filename);
     }
 
+    public readFileSync(filename: string): string {
+        return fsextra.readFileSync(filename, ENCODING);
+    }
+
     public async readFile(filename: string): Promise<string> {
         return fsextra.readFile(filename, ENCODING);
     }

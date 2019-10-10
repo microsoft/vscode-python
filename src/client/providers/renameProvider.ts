@@ -6,6 +6,7 @@ import {
 import { EXTENSION_ROOT_DIR, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { getWorkspaceEditsFromPatch } from '../common/editor';
 import { traceError } from '../common/logger';
+import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService, IInstaller, IOutputChannel, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { RefactorProxy } from '../refactor/proxy';
@@ -19,9 +20,13 @@ type RenameResponse = {
 export class PythonRenameProvider implements RenameProvider {
     private readonly outputChannel: OutputChannel;
     private readonly configurationService: IConfigurationService;
-    constructor(private serviceContainer: IServiceContainer) {
+    private readonly fs: IFileSystem;
+    constructor(
+        private serviceContainer: IServiceContainer
+    ) {
         this.outputChannel = serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
+        this.fs = serviceContainer.get<IFileSystem>(IFileSystem);
     }
     @captureTelemetry(EventName.REFACTOR_RENAME)
     public provideRenameEdits(document: TextDocument, position: Position, newName: string, _token: CancellationToken): ProviderResult<WorkspaceEdit> {
@@ -57,7 +62,7 @@ export class PythonRenameProvider implements RenameProvider {
         const proxy = new RefactorProxy(EXTENSION_ROOT_DIR, pythonSettings, workspaceRoot, this.serviceContainer);
         return proxy.rename<RenameResponse>(document, newName, document.uri.fsPath, range).then(response => {
             const fileDiffs = response.results.map(fileChanges => fileChanges.diff);
-            return getWorkspaceEditsFromPatch(fileDiffs, workspaceRoot);
+            return getWorkspaceEditsFromPatch(fileDiffs, this.fs, workspaceRoot);
         }).catch(reason => {
             if (reason === 'Not installed') {
                 const installer = this.serviceContainer.get<IInstaller>(IInstaller);

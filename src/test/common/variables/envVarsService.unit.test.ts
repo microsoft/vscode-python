@@ -5,6 +5,7 @@
 
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
+import * as nodeFS from 'fs';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
@@ -18,6 +19,9 @@ import { getOSType } from '../../common';
 use(chaiAsPromised);
 
 const envFilesFolderPath = path.join(__dirname, '..', '..', '..', '..', 'src', 'testMultiRootWkspc', 'workspace4');
+const ENV1_TEXT = nodeFS.readFileSync(path.join(envFilesFolderPath, '.env'), 'utf8');
+const ENV5_TEXT = nodeFS.readFileSync(path.join(envFilesFolderPath, '.env5'), 'utf8');
+const ENV6_TEXT = nodeFS.readFileSync(path.join(envFilesFolderPath, '.env6'), 'utf8');
 
 // tslint:disable-next-line:max-func-body-length
 suite('Environment Variables Service', () => {
@@ -25,7 +29,8 @@ suite('Environment Variables Service', () => {
     let fs: TypeMoq.IMock<IFileSystem>;
     let variablesService: IEnvironmentVariablesService;
 
-    let pathExists: boolean;
+    let fileExists: boolean;
+    let text: string;
 
     setup(() => {
         pathUtils = new PathUtils(getOSType() === OSType.Windows);
@@ -34,35 +39,50 @@ suite('Environment Variables Service', () => {
             pathUtils,
             fs.object
         );
-        pathExists = true;
+        fileExists = true;
+        text = '';
         fs
-            .setup(s => s.pathExists(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(pathExists));
+            .setup(s => s.fileExists(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(fileExists));
+        fs
+            .setup(s => s.readFile(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(text));
     });
 
     test('Custom variables should be undefined with no argument', async () => {
         const vars = await variablesService.parseFile(undefined);
+
         expect(vars).to.equal(undefined, 'Variables should be undefined');
     });
 
     test('Custom variables should be undefined with non-existent files', async () => {
-        pathExists = false;
-        const vars = await variablesService.parseFile(path.join(envFilesFolderPath, 'abcd'));
+        fileExists = false;
+
+        const vars = await variablesService.parseFile('spam');
+
         expect(vars).to.equal(undefined, 'Variables should be undefined');
     });
 
     test('Custom variables should be undefined when folder name is passed instead of a file name', async () => {
-        const vars = await variablesService.parseFile(envFilesFolderPath);
+        fileExists = false;
+
+        const vars = await variablesService.parseFile('spam/');
+
         expect(vars).to.equal(undefined, 'Variables should be undefined');
     });
 
     test('Custom variables should be not undefined with a valid environment file', async () => {
-        const vars = await variablesService.parseFile(path.join(envFilesFolderPath, '.env'));
+        text = ENV1_TEXT;
+
+        const vars = await variablesService.parseFile('spam/.env');
+
         expect(vars).to.not.equal(undefined, 'Variables should be undefined');
     });
 
     test('Custom variables should be parsed from env file', async () => {
-        const vars = await variablesService.parseFile(path.join(envFilesFolderPath, '.env'));
+        text = ENV1_TEXT;
+
+        const vars = await variablesService.parseFile('spam/.env');
 
         expect(vars).to.not.equal(undefined, 'Variables is is undefiend');
         expect(Object.keys(vars!)).lengthOf(2, 'Incorrect number of variables');
@@ -71,7 +91,10 @@ suite('Environment Variables Service', () => {
     });
 
     test('PATH and PYTHONPATH from env file should be returned as is', async () => {
-        const vars = await variablesService.parseFile(path.join(envFilesFolderPath, '.env5'));
+        text = ENV5_TEXT;
+
+        const vars = await variablesService.parseFile('spam/.env');
+
         const expectedPythonPath = '/usr/one/three:/usr/one/four';
         const expectedPath = '/usr/x:/usr/y';
         expect(vars).to.not.equal(undefined, 'Variables is is undefiend');
@@ -83,8 +106,10 @@ suite('Environment Variables Service', () => {
     });
 
     test('Simple variable substitution is supported', async () => {
+        text = ENV6_TEXT;
+
         const vars = await variablesService.parseFile(
-            path.join(envFilesFolderPath, '.env6'),
+            'spam/.env',
             { BINDIR: '/usr/bin' }
         );
 

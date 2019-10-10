@@ -47,16 +47,16 @@ export type WriteStream = fs.WriteStream;
 export const IFileSystem = Symbol('IFileSystem');
 export interface IFileSystem {
     stat(filePath: string): Promise<vscode.FileStat>;
-    // fs-extra
-    fileExistsSync(filename: string): boolean;
     readFile(filename: string): Promise<string>;
     writeFile(filename: string, data: {}): Promise<void>;
     createDirectory(dirname: string): Promise<void>;
     deleteDirectory(dirname: string): Promise<void>;
     deleteFile(filename: string): Promise<void>;
-    // fs
-    createWriteStream(filename: string): WriteStream;
     chmod(filename: string, mode: string): Promise<void>;
+    // not async
+    fileExistsSync(filename: string): boolean;
+    readFileSync(filename: string): string;
+    createWriteStream(filename: string): WriteStream;
     // helpers
     arePathsSame(path1: string, path2: string): boolean;  // Move to IPathUtils.
     pathExists(filename: string, fileType?: FileType): Promise<boolean>;

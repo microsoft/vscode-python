@@ -1,8 +1,7 @@
-import * as fsextra from 'fs-extra';
 import { IS_WINDOWS } from './platform/constants';
 import { FileSystem } from './platform/fileSystem';
 import { PathUtils } from './platform/pathUtils';
-import { IPlatformService } from './platform/types';
+import { IFileSystem, IPlatformService } from './platform/types';
 import { EnvironmentVariablesService } from './variables/environment';
 import {
     EnvironmentVariables, IEnvironmentVariablesService
@@ -30,15 +29,19 @@ function parseEnvironmentVariables(contents: string): EnvironmentVariables | und
 export function parseEnvFile(
     envFile: string,
     mergeWithProcessEnvVars: boolean = true,
-    service?: IEnvironmentVariablesService
+    service?: IEnvironmentVariablesService,
+    fs?: IFileSystem
 ): EnvironmentVariables {
-    const buffer = fsextra.readFileSync(envFile, 'utf8');
+    if (!fs) {
+        // tslint:disable-next-line:no-object-literal-type-assertion
+        fs = new FileSystem({} as IPlatformService);
+    }
+    const buffer = fs.readFileSync(envFile);
     const env = parseEnvironmentVariables(buffer)!;
     if (!service) {
         service = new EnvironmentVariablesService(
             new PathUtils(IS_WINDOWS),
-            // tslint:disable-next-line:no-object-literal-type-assertion
-            new FileSystem({} as IPlatformService)
+            fs
         );
     }
     return mergeWithProcessEnvVars
