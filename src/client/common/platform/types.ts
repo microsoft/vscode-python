@@ -64,6 +64,7 @@ export interface IFileSystem {
     directoryExists(dirname: string): Promise<boolean>;
     getSubDirectories(dirname: string): Promise<string[]>;
     getFiles(dirname: string): Promise<string[]>;
+    isDirReadonly(dirname: string): Promise<boolean>;
     copyFile(src: string, dest: string): Promise<void>;
     getFileHash(filename: string): Promise<string>;
     search(globPattern: string): Promise<string[]>;
