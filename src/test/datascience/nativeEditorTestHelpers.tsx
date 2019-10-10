@@ -48,16 +48,25 @@ export function getNativeCellResults(wrapper: ReactWrapper<any, Readonly<{}>, Re
 export function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>, getIOC: () => DataScienceIocContainer) {
     test(name, async () => {
         const ioc = getIOC();
-        const jupyterExecution = ioc.get<IJupyterExecution>(IJupyterExecution);
-        if (await jupyterExecution.isNotebookSupported()) {
-            addMockData(ioc, 'a=1\na', 1);
-            const wrapper = mountWebView(ioc, <NativeEditor baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />);
+        const wrapper = await setupWebview(ioc);
+        if (wrapper) {
             await testFunc(wrapper);
         } else {
             // tslint:disable-next-line:no-console
             console.log(`${name} skipped, no Jupyter installed.`);
         }
     });
+}
+
+export function mountNativeWebView(ioc: DataScienceIocContainer): ReactWrapper<any, Readonly<{}>, React.Component> {
+    return mountWebView(ioc, <NativeEditor baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />);
+}
+export async function setupWebview(ioc: DataScienceIocContainer) {
+    const jupyterExecution = ioc.get<IJupyterExecution>(IJupyterExecution);
+    if (await jupyterExecution.isNotebookSupported()) {
+        addMockData(ioc, 'a=1\na', 1);
+        return mountNativeWebView(ioc);
+    }
 }
 
 // tslint:disable-next-line: no-any
@@ -80,4 +89,12 @@ export async function addCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Com
         // For non submit scenarios just return back the wait for the add update
         return update;
     }
+}
+
+export function closeNotebook(editor: INotebookEditor, wrapper: ReactWrapper<any, Readonly<{}>, React.Component>): Promise<void> {
+    const reactEditor = getMainPanel<NativeEditor>(wrapper, NativeEditor);
+    if (reactEditor) {
+        reactEditor.stateController.reset();
+    }
+    return editor.dispose();
 }

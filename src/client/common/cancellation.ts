@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { CancellationToken } from 'vscode';
 
+import { CancellationToken, CancellationTokenSource } from 'vscode';
 import { createDeferred } from './utils/async';
 import * as localize from './utils/localize';
 
@@ -41,6 +41,28 @@ export function createPromiseFromCancellation<T>(options: { defaultValue: T; tok
 
         options.token.onCancellationRequested(complete);
     });
+}
+
+/**
+ * Create a single unified cancellation token that wraps multiple cancellation tokens.
+ *
+ * @export
+ * @param {(...(CancellationToken | undefined)[])} tokens
+ * @returns {CancellationToken}
+ */
+export function wrapCancellationTokens(...tokens: (CancellationToken | undefined)[]): CancellationToken {
+    const wrappedCancellantionToken = new CancellationTokenSource();
+    for (const token of tokens) {
+        if (!token) {
+            continue;
+        }
+        if (token.isCancellationRequested) {
+            return token;
+        }
+        token.onCancellationRequested(() => wrappedCancellantionToken.cancel());
+    }
+
+    return wrappedCancellantionToken.token;
 }
 
 export namespace Cancellation {

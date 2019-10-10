@@ -9,11 +9,12 @@ import { injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import { Readable, Writable } from 'stream';
+import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
 import { Disposable, Uri } from 'vscode';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
-
+import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { IApplicationShell } from '../../client/common/application/types';
 import { Cancellation, CancellationError } from '../../client/common/cancellation';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
@@ -1062,6 +1063,14 @@ plt.show()`,
             // tslint:disable-next-line: no-invalid-this
             this.skip();
         } else {
+            const application = mock(ApplicationShell);
+            when(application.withProgress(anything(), anything())).thenCall((_, cb: (_: any, token: any) => Promise<any>) => {
+                return new Promise((resolve, reject) => {
+                    cb({report: noop}, new CancellationTokenSource().token).then(resolve).catch(reject);
+                });
+            });
+            ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, instance(application));
+
             // Change notebook command to fail with some goofy output
             const factory = ioc.serviceManager.get<IPythonExecutionFactory>(IPythonExecutionFactory);
             const service = await factory.create({ pythonPath: ioc.workingInterpreter.path });

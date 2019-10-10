@@ -12,7 +12,7 @@ import { IKeyboardEvent } from '../react-common/event';
 import { getLocString } from '../react-common/locReactSide';
 import { Code } from './code';
 import { InputHistory } from './inputHistory';
-import { ICellViewModel } from './mainState';
+import { ICellViewModel, IFont } from './mainState';
 import { Markdown } from './markdown';
 
 // tslint:disable-next-line: no-require-importss
@@ -26,8 +26,8 @@ interface ICellInputProps {
     monacoTheme: string | undefined;
     editorOptions?: monacoEditor.editor.IEditorOptions;
     editorMeasureClassName?: string;
-    focusedCell?: string;
     showLineNumbers?: boolean;
+    font: IFont;
     onCodeChange(changes: monacoEditor.editor.IModelContentChange[], cellId: string, modelId: string): void;
     onCodeCreated(code: string, file: string, cellId: string, modelId: string): void;
     openLink(uri: monacoEditor.Uri): void;
@@ -55,7 +55,7 @@ export class CellInput extends React.Component<ICellInputProps> {
     }
 
     public componentDidUpdate(prevProps: ICellInputProps) {
-        if (this.props.focusedCell === this.props.cellVM.cell.id && prevProps.focusedCell !== this.props.focusedCell) {
+        if (this.props.cellVM.focused && !prevProps.cellVM.focused) {
             this.giveFocus();
         }
     }
@@ -128,6 +128,7 @@ export class CellInput extends React.Component<ICellInputProps> {
                         keyDown={this.onKeyDown}
                         showLineNumbers={this.props.showLineNumbers}
                         useQuickEdit={this.props.cellVM.useQuickEdit}
+                        font={this.props.font}
                         />
                 </div>
             );
@@ -158,6 +159,7 @@ export class CellInput extends React.Component<ICellInputProps> {
                         keyDown={this.onKeyDown}
                         ref={this.markdownRef}
                         useQuickEdit={false}
+                        font={this.props.font}
                         />
                 </div>
             );

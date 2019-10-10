@@ -51,6 +51,8 @@ export namespace InteractiveWindowMessages {
     export const AddCell = 'add_cell';
     export const EditCell = 'edit_cell';
     export const RemoveCell = 'remove_cell';
+    export const SwapCells = 'swap_cells';
+    export const InsertCell = 'insert_cell';
     export const LoadOnigasmAssemblyRequest = 'load_onigasm_assembly_request';
     export const LoadOnigasmAssemblyResponse = 'load_onigasm_assembly_response';
     export const LoadTmLanguageRequest = 'load_tmlanguage_request';
@@ -70,7 +72,9 @@ export namespace InteractiveWindowMessages {
     export const SaveAll = 'save_all';
     export const NativeCommand = 'native_command';
     export const VariablesComplete = 'variables_complete';
-
+    export const NotebookRunAllCells = 'notebook_run_all_cells';
+    export const NotebookRunSelectedCell = 'notebook_run_selected_cell';
+    export const NotebookAddCellBelow = 'notebook_add_cell_below';
 }
 
 export enum NativeCommandType {
@@ -210,6 +214,17 @@ export interface IRemoveCell {
     id: string;
 }
 
+export interface ISwapCells {
+    firstCellId: string;
+    secondCellId: string;
+}
+
+export interface IInsertCell {
+    id: string;
+    code: string;
+    codeCellAbove: string | undefined;
+}
+
 export interface IShowDataViewer {
     variableName: string;
     columnSize: number;
@@ -284,6 +299,8 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.AddCell]: IAddCell;
     public [InteractiveWindowMessages.EditCell]: IEditCell;
     public [InteractiveWindowMessages.RemoveCell]: IRemoveCell;
+    public [InteractiveWindowMessages.SwapCells]: ISwapCells;
+    public [InteractiveWindowMessages.InsertCell]: IInsertCell;
     public [InteractiveWindowMessages.LoadOnigasmAssemblyRequest]: never | undefined;
     public [InteractiveWindowMessages.LoadOnigasmAssemblyResponse]: Buffer;
     public [InteractiveWindowMessages.LoadTmLanguageRequest]: never | undefined;
@@ -303,4 +320,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.SaveAll]: ISaveAll;
     public [InteractiveWindowMessages.NativeCommand]: INativeCommand;
     public [InteractiveWindowMessages.VariablesComplete]: never | undefined;
+    public [InteractiveWindowMessages.NotebookRunAllCells]: never | undefined;
+    public [InteractiveWindowMessages.NotebookRunSelectedCell]: never | undefined;
+    public [InteractiveWindowMessages.NotebookAddCellBelow]: never | undefined;
 }

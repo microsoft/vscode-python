@@ -24,17 +24,12 @@ import { IFileSystem, TemporaryFile } from '../../../common/platform/types';
 import { createDeferred, Deferred, waitForPromise } from '../../../common/utils/async';
 import { concatMultilineString } from '../../common';
 import { Identifiers, Settings } from '../../constants';
-import {
-    IInteractiveWindowInfo,
-    IInteractiveWindowListener,
-    IInteractiveWindowProvider,
-    IJupyterExecution,
-    INotebook
-} from '../../types';
+import { IInteractiveWindowListener, IInteractiveWindowProvider, IJupyterExecution, INotebook } from '../../types';
 import {
     IAddCell,
     ICancelIntellisenseRequest,
     IEditCell,
+    IInsertCell,
     IInteractiveWindowMapping,
     ILoadAllCells,
     INotebookIdentity,
@@ -42,7 +37,8 @@ import {
     IProvideCompletionItemsRequest,
     IProvideHoverRequest,
     IProvideSignatureHelpRequest,
-    IRemoveCell
+    IRemoveCell,
+    ISwapCells
 } from '../interactiveWindowTypes';
 import { convertStringsToSuggestions } from './conversion';
 import { IntellisenseDocument } from './intellisenseDocument';
@@ -110,8 +106,16 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
                 this.dispatchMessage(message, payload, this.addCell);
                 break;
 
+            case InteractiveWindowMessages.InsertCell:
+                this.dispatchMessage(message, payload, this.insertCell);
+                break;
+
             case InteractiveWindowMessages.RemoveCell:
                 this.dispatchMessage(message, payload, this.removeCell);
+                break;
+
+            case InteractiveWindowMessages.SwapCells:
+                this.dispatchMessage(message, payload, this.swapCells);
                 break;
 
             case InteractiveWindowMessages.DeleteAllCells:
@@ -128,10 +132,6 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
 
             case InteractiveWindowMessages.LoadAllCellsComplete:
                 this.dispatchMessage(message, payload, this.loadAllCells);
-                break;
-
-            case InteractiveWindowMessages.SendInfo:
-                this.dispatchMessage(message, payload, this.handleNativeEditorChanges);
                 break;
 
             default:
@@ -337,6 +337,15 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
         }
     }
 
+    private async insertCell(request: IInsertCell): Promise<void> {
+        // Get the document and then pass onto the sub class
+        const document = await this.getDocument();
+        if (document) {
+            const changes = document.insertCell(request.id, request.code, request.codeCellAbove);
+            return this.handleChanges(undefined, document, changes);
+        }
+    }
+
     private async editCell(request: IEditCell): Promise<void> {
         // First get the document
         const document = await this.getDocument();
@@ -346,47 +355,45 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
         }
     }
 
-    private removeCell(_request: IRemoveCell): Promise<void> {
-        // Skip this request. The logic here being that
-        // a user can remove a cell from the UI, but it's still loaded into the Jupyter kernel.
-        return Promise.resolve();
+    private async removeCell(request: IRemoveCell): Promise<void> {
+        // First get the document
+        const document = await this.getDocument();
+        if (document) {
+            const changes = document.remove(request.id);
+            return this.handleChanges(undefined, document, changes);
+        }
     }
 
-    private removeAllCells(): Promise<void> {
-        // Skip this request. The logic here being that
-        // a user can remove a cell from the UI, but it's still loaded into the Jupyter kernel.
-        return Promise.resolve();
+    private async swapCells(request: ISwapCells): Promise<void> {
+        // First get the document
+        const document = await this.getDocument();
+        if (document) {
+            const changes = document.swap(request.firstCellId, request.secondCellId);
+            return this.handleChanges(undefined, document, changes);
+        }
+    }
+
+    private async removeAllCells(): Promise<void> {
+        // First get the document
+        const document = await this.getDocument();
+        if (document) {
+            const changes = document.removeAll();
+            return this.handleChanges(undefined, document, changes);
+        }
     }
 
     private async loadAllCells(payload: ILoadAllCells) {
         const document = await this.getDocument();
         if (document) {
-            document.switchToEditMode();
-            await Promise.all(payload.cells.map(async cell => {
-                if (cell.data.cell_type === 'code') {
-                    const text = concatMultilineString(cell.data.source);
-                    const addCell: IAddCell = {
-                        fullText: text,
-                        currentText: text,
-                        file: cell.file,
-                        id: cell.id
-                    };
-                    await this.addCell(addCell);
-                }
+            const changes = document.loadAllCells(payload.cells.filter(c => c.data.cell_type === 'code').map(cell => {
+                return {
+                    code: concatMultilineString(cell.data.source),
+                    id: cell.id
+                };
             }));
+
+            await this.handleChanges(Identifiers.EmptyFileName, document, changes);
         }
-    }
-
-    private async handleNativeEditorChanges(payload: IInteractiveWindowInfo) {
-        const document = await this.getDocument();
-        let changes: TextDocumentContentChangeEvent[][] = [];
-        const file = payload.visibleCells[0] ? payload.visibleCells[0].file : undefined;
-
-        if (document) {
-            changes = document.handleNativeEditorCellChanges(payload.visibleCells);
-        }
-
-        await Promise.all(changes.map(c => this.handleChanges(file, document, c)));
     }
 
     private async restartKernel(): Promise<void> {

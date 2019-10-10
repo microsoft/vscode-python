@@ -102,7 +102,11 @@ suite('Unit Tests - PyTest - Discovery', () => {
         };
 
         const filteredArgs = options.args;
-        const expectedArgs = ['-s', ...filteredArgs];
+        const expectedArgs = [
+            '--rootdir', __dirname,
+            '-s',
+            ...filteredArgs
+        ];
         when(argsService.filterArguments(deepEqual(options.args), TestFilter.discovery)).thenReturn(filteredArgs);
 
         const args = discoveryService.buildTestCollectionArgs(options);
@@ -121,7 +125,11 @@ suite('Unit Tests - PyTest - Discovery', () => {
         };
 
         const filteredArgs = options.args;
-        const expectedArgs = ['-s', ...filteredArgs];
+        const expectedArgs = [
+            '--rootdir', __dirname,
+            '-s',
+            ...filteredArgs
+        ];
         when(argsService.filterArguments(deepEqual(options.args), TestFilter.discovery)).thenReturn(filteredArgs);
 
         const args = discoveryService.buildTestCollectionArgs(options);
@@ -140,7 +148,12 @@ suite('Unit Tests - PyTest - Discovery', () => {
         };
 
         const filteredArgs = options.args;
-        const expectedArgs = ['-s', '--cache-clear', ...filteredArgs];
+        const expectedArgs = [
+            '--rootdir', __dirname,
+            '-s',
+            '--cache-clear',
+            ...filteredArgs
+        ];
         when(argsService.filterArguments(deepEqual(options.args), TestFilter.discovery)).thenReturn(filteredArgs);
 
         const args = discoveryService.buildTestCollectionArgs(options);

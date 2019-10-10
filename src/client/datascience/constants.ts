@@ -37,6 +37,9 @@ export namespace Commands {
     export const NotebookEditorRemoveAllCells = 'python.datascience.notebookeditor.removeallcells';
     export const NotebookEditorInterruptKernel = 'python.datascience.notebookeditor.interruptkernel';
     export const NotebookEditorRestartKernel = 'python.datascience.notebookeditor.restartkernel';
+    export const NotebookEditorRunAllCells = 'python.datascience.notebookeditor.runallcells';
+    export const NotebookEditorRunSelectedCell = 'python.datascience.notebookeditor.runselectedcell';
+    export const NotebookEditorAddCellBelow = 'python.datascience.notebookeditor.addcellbelow';
     export const ExpandAllCells = 'python.datascience.expandallcells';
     export const CollapseAllCells = 'python.datascience.collapseallcells';
     export const ExportOutputAsNotebook = 'python.datascience.exportoutputasnotebook';
@@ -73,6 +76,7 @@ export namespace EditorContexts {
     export const HaveNativeCells = 'python.datascience.havenativecells';
     export const HaveNativeRedoableCells = 'python.datascience.havenativeredoablecells';
     export const HaveNative = 'python.datascience.havenative';
+    export const HaveCellSelected = 'python.datascience.havecellselected';
 }
 
 export namespace RegExpValues {
@@ -283,12 +287,13 @@ export namespace Identifiers {
     export const SvgSizeTag = 'sizeTag={{0}, {1}}';
     export const InteractiveWindowIdentity = 'history://EC155B3B-DC18-49DC-9E99-9A948AA2F27B';
     export const InteractiveWindowIdentityScheme = 'history';
+    export const DefaultCodeCellMarker = '# %%';
 }
 
 export namespace CodeSnippits {
     export const ChangeDirectory = ['{0}', '{1}', 'import os', 'try:', '\tos.chdir(os.path.join(os.getcwd(), \'{2}\'))', '\tprint(os.getcwd())', 'except:', '\tpass', ''];
     export const ChangeDirectoryCommentIdentifier = '# ms-python.python added'; // Not translated so can compare.
-    export const ImportIPython = '#%%\nfrom IPython import get_ipython\n\n';
+    export const ImportIPython = '{0}\nfrom IPython import get_ipython\n\n{1}';
     export const MatplotLibInitSvg = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_formats = 'svg', 'png'`;
     export const MatplotLibInitPng = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_formats = 'png'`;
 }

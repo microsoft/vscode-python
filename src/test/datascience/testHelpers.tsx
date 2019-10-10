@@ -15,8 +15,10 @@ import { InteractiveWindowMessages } from '../../client/datascience/interactive-
 import { IJupyterExecution } from '../../client/datascience/types';
 import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
 import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
+import { IKeyboardEvent } from '../../datascience-ui/react-common/event';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { updateSettings } from '../../datascience-ui/react-common/settingsReactSide';
+import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createInputEvent, createKeyboardEvent, waitForUpdate } from './reactHelpers';
 
@@ -33,7 +35,7 @@ export enum CellPosition {
     Last = 'last'
 }
 
-export function waitForMessage(ioc: DataScienceIocContainer, message: string) : Promise<void> {
+export function waitForMessage(ioc: DataScienceIocContainer, message: string): Promise<void> {
     // Wait for the mounted web panel to send a message back to the data explorer
     const promise = createDeferred<void>();
     let handler: (m: string, p: any) => void;
@@ -48,7 +50,7 @@ export function waitForMessage(ioc: DataScienceIocContainer, message: string) : 
 }
 
 export async function waitForMessageResponse(ioc: DataScienceIocContainer, action: () => void): Promise<void> {
-    ioc.wrapperCreatedPromise  = createDeferred<boolean>();
+    ioc.wrapperCreatedPromise = createDeferred<boolean>();
     action();
     await ioc.wrapperCreatedPromise.promise;
     ioc.wrapperCreatedPromise = undefined;
@@ -58,7 +60,8 @@ async function testInnerLoop(
     name: string,
     mountFunc: (ioc: DataScienceIocContainer) => ReactWrapper<any, Readonly<{}>, React.Component>,
     testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>,
-    getIOC: () => DataScienceIocContainer) {
+    getIOC: () => DataScienceIocContainer
+) {
     const ioc = getIOC();
     const jupyterExecution = ioc.get<IJupyterExecution>(IJupyterExecution);
     if (await jupyterExecution.isNotebookSupported()) {
@@ -73,8 +76,10 @@ async function testInnerLoop(
 
 export function runDoubleTest(name: string, testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>, getIOC: () => DataScienceIocContainer) {
     // Just run the test twice. Originally mounted twice, but too hard trying to figure out disposing.
-    test(`${name} (interactive)`, async () => testInnerLoop(name, (ioc) => mountWebView(ioc, <InteractivePanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />), testFunc, getIOC));
-    test(`${name} (native)`, async () => testInnerLoop(name, (ioc) => mountWebView(ioc, <NativeEditor baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />), testFunc, getIOC));
+    test(`${name} (interactive)`, async () =>
+        testInnerLoop(name, ioc => mountWebView(ioc, <InteractivePanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />), testFunc, getIOC));
+    test(`${name} (native)`, async () =>
+        testInnerLoop(name, ioc => mountWebView(ioc, <NativeEditor baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />), testFunc, getIOC));
 }
 
 export function mountWebView(ioc: DataScienceIocContainer, node: React.ReactElement): ReactWrapper<any, Readonly<{}>, React.Component> {
@@ -111,13 +116,15 @@ export function getLastOutputCell(wrapper: ReactWrapper<any, Readonly<{}>, React
 }
 
 export function verifyHtmlOnCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, cellType: string, html: string | undefined, cellIndex: number | CellPosition) {
+    wrapper.update();
+
     const foundResult = wrapper.find(cellType);
     assert.ok(foundResult.length >= 1, 'Didn\'t find any cells being rendered');
 
     let targetCell: ReactWrapper;
     // Get the correct result that we are dealing with
     if (typeof cellIndex === 'number') {
-        if (cellIndex >= 0 && cellIndex <= (foundResult.length - 1)) {
+        if (cellIndex >= 0 && cellIndex <= foundResult.length - 1) {
             targetCell = foundResult.at(cellIndex);
         }
     } else if (typeof cellIndex === 'string') {
@@ -150,14 +157,120 @@ export function verifyHtmlOnCell(wrapper: ReactWrapper<any, Readonly<{}>, React.
         assert.ok(outHtml.includes(sliced), `${outHtml} does not contain ${sliced}`);
     } else {
         const output = targetCell!.find('div.cell-output');
-        const outputHtml = output.length > 0 ? output.html() : 'empty';
+        const outputHtml = output.length > 0 ? output.html() : undefined;
         // html not specified, look for an empty render
-        assert.ok(targetCell!.isEmptyRender(), `Target cell is not empty render, got this instead: ${outputHtml}`);
+        assert.ok(targetCell!.isEmptyRender() || outputHtml === undefined, `Target cell is not empty render, got this instead: ${outputHtml}`);
+    }
+}
+
+/**
+ * Creates a keyboard event for a cells.
+ *
+ * @export
+ * @param {(Partial<IKeyboardEvent> & { code: string })} event
+ * @returns
+ */
+export function createKeyboardEventForCell(event: Partial<IKeyboardEvent> & { code: string }) {
+    const defaultKeyboardEvent: IKeyboardEvent = {
+        altKey: false,
+        code: '',
+        ctrlKey: false,
+        editorInfo: {
+            contents: '',
+            isDirty: false,
+            isFirstLine: false,
+            isLastLine: false,
+            isSuggesting: false
+        },
+        metaKey: false,
+        preventDefault: noop,
+        shiftKey: false,
+        stopPropagation: noop,
+        target: {} as any
+    };
+
+    const defaultEditorInfo = defaultKeyboardEvent.editorInfo!;
+    const providedEditorInfo = event.editorInfo || {};
+    return {
+        ...defaultKeyboardEvent,
+        ...event,
+        editorInfo: {
+            ...defaultEditorInfo,
+            ...providedEditorInfo
+        }
+    };
+}
+
+export function isCellSelected(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, cellType: string, cellIndex: number | CellPosition): boolean {
+    try {
+        verifyCell(wrapper, cellType, { selector: '.cell-wrapper-selected' }, cellIndex);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+export function isCellFocused(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, cellType: string, cellIndex: number | CellPosition): boolean {
+    try {
+        verifyCell(wrapper, cellType, { selector: '.cell-wrapper-focused' }, cellIndex);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+export function verifyCellIndex(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, cellId: string, expectedCellIndex: number) {
+    const nativeCell = wrapper
+        .find(cellId)
+        .first()
+        .find('NativeCell');
+    const secondCell = wrapper.find('NativeCell').at(expectedCellIndex);
+    assert.equal(nativeCell.html(), secondCell.html());
+}
+
+function verifyCell(
+    wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
+    cellType: string,
+    options: { selector: string; shouldNotExist?: boolean },
+    cellIndex: number | CellPosition
+) {
+    const foundResult = wrapper.find(cellType);
+    assert.ok(foundResult.length >= 1, 'Didn\'t find any cells being rendered');
+
+    let targetCell: ReactWrapper;
+    // Get the correct result that we are dealing with
+    if (typeof cellIndex === 'number') {
+        if (cellIndex >= 0 && cellIndex <= foundResult.length - 1) {
+            targetCell = foundResult.at(cellIndex);
+        }
+    } else if (typeof cellIndex === 'string') {
+        switch (cellIndex) {
+            case CellPosition.First:
+                targetCell = foundResult.first();
+                break;
+
+            case CellPosition.Last:
+                // Skip the input cell on these checks.
+                targetCell = getLastOutputCell(wrapper, cellType);
+                break;
+
+            default:
+                // Fall through, targetCell check will fail out
+                break;
+        }
+    }
+
+    // ! is ok here to get rid of undefined type check as we want a fail here if we have not initialized targetCell
+    assert.ok(targetCell!, 'Target cell doesn\'t exist');
+
+    if (options.shouldNotExist) {
+        assert.ok(targetCell!.find(options.selector).length === 0, `Found cells with the matching selector '${options.selector}'`);
+    } else {
+        assert.ok(targetCell!.find(options.selector).length >= 1, `Didn't find any cells with the matching selector '${options.selector}'`);
     }
 }
 
 export function verifyLastCellInputState(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, cellType: string, state: CellInputState) {
-
     const lastCell = getLastOutputCell(wrapper, cellType);
     assert.ok(lastCell, 'Last call doesn\'t exist');
 
@@ -187,8 +300,13 @@ export function verifyLastCellInputState(wrapper: ReactWrapper<any, Readonly<{}>
     }
 }
 
-export async function getCellResults(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, mainClass: React.ComponentClass<any>, cellType: string, expectedRenders: number, updater: () => Promise<void>): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
-
+export async function getCellResults(
+    wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
+    mainClass: React.ComponentClass<any>,
+    cellType: string,
+    expectedRenders: number,
+    updater: () => Promise<void>
+): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
     // Get a render promise with the expected number of renders
     const renderPromise = waitForUpdate(wrapper, mainClass, expectedRenders);
 
@@ -235,10 +353,9 @@ function simulateKey(domNode: HTMLTextAreaElement, key: string, shiftDown?: bool
             domNode.dispatchEvent(createInputEvent());
         }
     }
-
 }
 
-async function submitInput(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, mainClass: React.ComponentClass<any>,  textArea: HTMLTextAreaElement): Promise<void> {
+async function submitInput(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, mainClass: React.ComponentClass<any>, textArea: HTMLTextAreaElement): Promise<void> {
     // Get a render promise with the expected number of renders (how many updates a the shift + enter will cause)
     // Should be 6 - 1 for the shift+enter and 5 for the new cell.
     const renderPromise = waitForUpdate(wrapper, mainClass, 6);
@@ -254,15 +371,14 @@ function enterKey(_wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, te
     simulateKey(textArea, key);
 }
 
-export function getEditor(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) : ReactWrapper<any, Readonly<{}>, React.Component> {
+export function getEditor(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>): ReactWrapper<any, Readonly<{}>, React.Component> {
     // Find the last cell. It should have a monacoEditor object
     const cells = wrapper.find('InteractiveCell');
     const lastCell = cells.last();
     return lastCell.find('MonacoEditor');
 }
 
-export function typeCode(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string) : HTMLTextAreaElement | null {
-
+export function typeCode(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string): HTMLTextAreaElement | null {
     // Find the last cell. It should have a monacoEditor object. We need to search
     // through its DOM to find the actual textarea to send input to
     // (we can't actually find it with the enzyme wrappers because they only search
@@ -282,8 +398,12 @@ export function typeCode(wrapper: ReactWrapper<any, Readonly<{}>, React.Componen
     return textArea;
 }
 
-export async function enterInput(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, mainClass: React.ComponentClass<any>,  code: string, resultClass: string): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
-
+export async function enterInput(
+    wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
+    mainClass: React.ComponentClass<any>,
+    code: string,
+    resultClass: string
+): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
     // First we have to type the code into the input box
     const textArea = typeCode(wrapper, code);
 
@@ -294,7 +414,11 @@ export async function enterInput(wrapper: ReactWrapper<any, Readonly<{}>, React.
     return wrapper.find(resultClass);
 }
 
-export function findButton(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, mainClass: React.ComponentClass<any>, index: number): ReactWrapper<any, Readonly<{}>, React.Component> | undefined {
+export function findButton(
+    wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
+    mainClass: React.ComponentClass<any>,
+    index: number
+): ReactWrapper<any, Readonly<{}>, React.Component> | undefined {
     const mainObj = wrapper.find(mainClass);
     if (mainObj) {
         const buttons = mainObj.find(ImageButton);

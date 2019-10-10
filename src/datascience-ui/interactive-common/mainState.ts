@@ -26,6 +26,8 @@ export interface ICellViewModel {
     showLineNumbers?: boolean;
     hideOutput?: boolean;
     useQuickEdit?: boolean;
+    selected: boolean;
+    focused: boolean;
     inputBlockToggled(id: string): void;
 }
 
@@ -40,6 +42,7 @@ export interface IMainState {
     history: InputHistory;
     rootStyle?: string;
     rootCss?: string;
+    font: IFont;
     theme?: string;
     forceDark?: boolean;
     monacoTheme?: string;
@@ -52,12 +55,17 @@ export interface IMainState {
     pendingVariableCount: number;
     debugging: boolean;
     dirty?: boolean;
-    selectedCell?: string;
-    focusedCell?: string;
+    selectedCellId?: string;
+    focusedCellId?: string;
     enableGather: boolean;
     isAtBottom: boolean;
-    newCell?: string;
+    newCellId?: string;
     loadTotal?: number;
+}
+
+export interface IFont {
+    size: number;
+    family: string;
 }
 
 // tslint:disable-next-line: no-multiline-string
@@ -105,7 +113,11 @@ export function generateTestState(inputBlockToggled: (id: string) => void, fileP
         pendingVariableCount: 0,
         debugging: false,
         enableGather: true,
-        isAtBottom: true
+        isAtBottom: true,
+        font: {
+            size: 14,
+            family: 'Consolas, \'Courier New\', monospace'
+        }
     };
 }
 
@@ -135,7 +147,9 @@ export function createEditableCellVM(executionCount: number): ICellViewModel {
         inputBlockShow: true,
         inputBlockText: '',
         inputBlockCollapseNeeded: false,
-        inputBlockToggled: noop
+        inputBlockToggled: noop,
+        selected: false,
+        focused: false
     };
 }
 
@@ -176,12 +190,14 @@ export function createCellVM(inputCell: ICell, settings: IDataScienceSettings | 
         inputBlockShow: true,
         inputBlockText: inputText,
         inputBlockCollapseNeeded: (inputLinesCount > 1),
-        inputBlockToggled: inputBlockToggled
+        inputBlockToggled: inputBlockToggled,
+        selected: false,
+        focused: false
     };
 }
 
 function generateVMs(inputBlockToggled: (id: string) => void, filePath: string, editable: boolean): ICellViewModel[] {
-    const cells = generateCells(filePath);
+    const cells = generateCells(filePath, 10);
     return cells.map((cell: ICell) => {
         const vm = createCellVM(cell, undefined, inputBlockToggled, editable);
         vm.useQuickEdit = false;
@@ -189,10 +205,10 @@ function generateVMs(inputBlockToggled: (id: string) => void, filePath: string, 
     });
 }
 
-function generateCells(filePath: string): ICell[] {
+export function generateCells(filePath: string, repetitions: number): ICell[] {
     // Dupe a bunch times for perf reasons
     let cellData: (nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell | IMessageCell)[] = [];
-    for (let i = 0; i < 10; i += 1) {
+    for (let i = 0; i < repetitions; i += 1) {
         cellData = [...cellData, ...generateCellData()];
     }
     return cellData.map((data: nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell | IMessageCell, key: number) => {
