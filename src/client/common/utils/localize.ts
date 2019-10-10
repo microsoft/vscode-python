@@ -295,6 +295,9 @@ export namespace DataScience {
     export const convertingToPythonFile = localize('DataScience.convertingToPythonFile', 'Converting ipynb to python file');
     export const noInterpreter = localize('DataScience.noInterpreter', 'No python selected');
     export const notebookNotFound = localize('DataScience.notebookNotFound', 'python -m jupyter notebook --version is not running');
+    export const findJupyterCommandProgress = localize('DataScience.findJupyterCommandProgress', 'Active interpreter does not support {0}. Searching for the best available interpreter.');
+    export const findJupyterCommandProgressCheckInterpreter = localize('DataScience.findJupyterCommandProgressCheckInterpreter', 'Checking {0}.');
+    export const findJupyterCommandProgressSearchCurrentPath = localize('DataScience.findJupyterCommandProgressSearchCurrentPath', 'Searching current path.');
 
     export const jupyterGetRunningKernels = localize('DataScience.getRunningKernels', 'Getting running kernels from {0}.');
     export const jupyterNoRunningKernels = localize('DataScience.noRunningKernels', 'Failed getting running kernels from {0}.');
