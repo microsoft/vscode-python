@@ -6,6 +6,7 @@ import { ConfigurationTarget, Uri } from 'vscode';
 import { IExtensionActivationService } from '../../activation/types';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { traceDecorators, traceError } from '../../common/logger';
+import { IPlatformService } from '../../common/platform/types';
 import { IBrowserService, IPersistentStateFactory } from '../../common/types';
 import { Common, InteractiveShiftEnterBanner, Interpreters } from '../../common/utils/localize';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -22,8 +23,9 @@ export class CondaInheritEnvPrompt implements IExtensionActivationService {
         @inject(IBrowserService) private browserService: IBrowserService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
+        @inject(IPlatformService) private readonly platformService: IPlatformService,
         @optional() public hasPromptBeenShownInCurrentSession: boolean = false
-    ) { }
+    ) {}
 
     public async activate(resource: Uri): Promise<void> {
         this.initializeInBackground(resource).ignoreErrors();
@@ -63,6 +65,9 @@ export class CondaInheritEnvPrompt implements IExtensionActivationService {
     @traceDecorators.error('Failed to check whether to display prompt for conda inherit env setting')
     public async shouldShowPrompt(resource: Uri): Promise<boolean> {
         if (this.hasPromptBeenShownInCurrentSession) {
+            return false;
+        }
+        if (this.platformService.isWindows) {
             return false;
         }
         const interpreter = await this.interpreterService.getActiveInterpreter(resource);
