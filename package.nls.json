@@ -382,5 +382,8 @@
     "DataScience.getRunningKernels" : "Getting running kernels from {0}.",
     "DataScience.noRunningKernels" : "Failed getting running kernels from {0}.",
     "DataScience.getAvailableKernels" : "Getting available kernels from {0}.",
-    "DataScience.noAvailableKernels" : "Failed getting available kernels from {0}."
+    "DataScience.noAvailableKernels" : "Failed getting available kernels from {0}.",
+    "DataScience.availableKernelLabel": "Kernel {0}",
+    "DataScience.runningKernelLabel": "Kernel {0} - {1}",
+    "DataScience.runningKernelDetail": "Running since {0}, {1} existing connections"
 }

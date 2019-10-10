@@ -300,6 +300,9 @@ export namespace DataScience {
     export const jupyterNoRunningKernels = localize('DataScience.noRunningKernels', 'Failed getting running kernels from {0}.');
     export const jupyterGetAvailableKernels = localize('DataScience.getAvailableKernels', 'Getting available kernels from {0}.');
     export const jupyterNoAvailableKernels = localize('DataScience.noAvailableKernels', 'Failed getting available kernels from {0}.');
+    export const availableKernelLabel = localize('DataScience.availableKernelLabel', 'Kernel {0}');
+    export const runningKernelLabel = localize('DataScience.runningKernelLabel', 'Kernel {0} - {1}');
+    export const runningKernelDetail = localize('DataScience.runningKernelDetail', 'Running since {0}, {1} existing connections');
 }
 
 export namespace DebugConfigStrings {

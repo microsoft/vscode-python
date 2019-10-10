@@ -11,7 +11,6 @@ import * as vscode from 'vscode';
 
 import { CancellationTokenSource } from 'vscode-jsonrpc';
 import { IApplicationShell, ICommandManager, IDebugService, IDocumentManager, IWorkspaceService } from '../common/application/types';
-import { CancellationError } from '../common/cancellation';
 import { PYTHON_ALLFILES, PYTHON_LANGUAGE } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
 import { traceError, traceInfo } from '../common/logger';
@@ -314,51 +313,75 @@ export class DataScience implements IDataScience {
         await this.selectRemoteJupyterKernel();
     }
 
-    private async getRunningJupyterKernels(sessionManager: IJupyterSessionManager): Promise<IKernelQuickPickItem[]> {
-        const runningKernels: Kernel.IModel[] = await sessionManager.getRunningKernels();
-        const arr: IKernelQuickPickItem[] = runningKernels.map(runningKernel => {
-            traceInfo(`Found running kernel ${runningKernel.id}, running since ${runningKernel.last_activity}`);
-            const localLastActivity = runningKernel.last_activity ? new Date(runningKernel.last_activity.toString()).toLocaleString() : '?';
-            return {
-                label: `Kernel ${runningKernel.name} - ${runningKernel.id}`,
-                detail: `Running since ${localLastActivity}, ${runningKernel.connections} existing connections`,
-                kernelId: runningKernel.id,
-                name: runningKernel.name
-            };
-        });
-        arr.unshift(DefaultKernels.newKernel);
-        return arr;
-    }
-
-    private async getKernelSelection(kernelOptions: IKernelQuickPickItem[]): Promise<IKernelQuickPickItem> {
-        const kernelSelection: IKernelQuickPickItem | undefined = await this.appShell.showQuickPick(kernelOptions, {
-            ignoreFocusOut: true,
-            placeHolder: localize.DataScience.jupyterServerReconnectKernelLocal()
-        });
-        if (kernelSelection) {
-            return kernelSelection;
-        } else {
-            throw new CancellationError();
+    private async getRunningJupyterKernels(sessionManager: IJupyterSessionManager, cancelSource: CancellationTokenSource): Promise<IKernelQuickPickItem[] | undefined> {
+        try {
+            const runningKernels: Kernel.IModel[] = await this.waitForStatus(() => {
+                return sessionManager.getRunningKernels();
+            }, localize.DataScience.jupyterGetRunningKernels().format(sessionManager.getConnInfo().hostName),
+                cancelSource);
+            const arr: IKernelQuickPickItem[] = runningKernels.map(runningKernel => {
+                traceInfo(`Found running kernel ${runningKernel.id}, running since ${runningKernel.last_activity}`);
+                const localLastActivity = runningKernel.last_activity ? new Date(runningKernel.last_activity.toString()).toLocaleString() : '?';
+                const localConnections = runningKernel.last_activity === undefined || runningKernel.last_activity === null ? '?' : runningKernel.last_activity.toString();
+                return {
+                    label: localize.DataScience.runningKernelLabel().format(runningKernel.name, runningKernel.id),
+                    detail: localize.DataScience.runningKernelDetail().format(localLastActivity, localConnections),
+                    kernelId: runningKernel.id,
+                    name: runningKernel.name
+                };
+            });
+            arr.unshift(DefaultKernels.newKernel);
+            return arr;
+        } catch (err) {
+            traceInfo('Failed getting running remote jupyter kernels with error', err);
+            return undefined;
         }
     }
 
-    private async getKernelSpecSelection(kernelSpecs: IJupyterKernelSpec[]): Promise<IKernelQuickPickItem> {
+    private async getActiveJupyterKernels(sessionManager: IJupyterSessionManager, cancelSource: CancellationTokenSource): Promise<IJupyterKernelSpec[] | undefined> {
+        // This function is practicly a neccesity as sessionManager.getActiveKernelSpecs catchs all exceptions
+        // and returns an empty array instead of undfined when an exception occurs. This is inconsistent with
+        // the desired behaviour.
+        try {
+            const kernelSpecs: IJupyterKernelSpec[] = await this.waitForStatus(
+                () => { return sessionManager.getActiveKernelSpecs(); },
+                localize.DataScience.jupyterGetAvailableKernels().format(sessionManager.getConnInfo().hostName),
+                cancelSource
+            );
+            if (kernelSpecs && kernelSpecs.length) {
+                return kernelSpecs;
+            }
+            return undefined;
+        } catch (err) {
+            traceInfo('Failed getting running remote jupyter kernels with error', err);
+            return undefined;
+        }
+    }
+
+    private async getQuickPickKernelSelection(kernelOptions: IKernelQuickPickItem[]): Promise<IKernelQuickPickItem | undefined> {
+        return this.appShell.showQuickPick(kernelOptions, {
+            ignoreFocusOut: true,
+            placeHolder: localize.DataScience.jupyterServerReconnectKernelLocal()
+        });
+    }
+
+    private async getKernelSpecQuickPickSelection(kernelSpecs: IJupyterKernelSpec[]): Promise<IKernelQuickPickItem | undefined> {
         const availArr: IKernelQuickPickItem[] = kernelSpecs.map(availableKernel => {
             return {
-                label: `Kernel ${availableKernel.name}`,
+                label: localize.DataScience.availableKernelLabel().format(availableKernel.name),
                 detail: '',
                 kernelId: '',
                 name: availableKernel.name
             };
         });
-        return this.getKernelSelection(availArr);
+        return this.getQuickPickKernelSelection(availArr);
     }
 
     @captureTelemetry(Telemetry.JupyterKernelSpecified)
     private async setRemoteJupterKernel(kernelSelection: IKernelQuickPickItem, kernelSpecs: IJupyterKernelSpec[]): Promise<void> {
 
-        let kernelUUID: string | undefined = '';
-        let kernelName: string | undefined = '';
+        let kernelUUID: string | undefined;
+        let kernelName: string | undefined;
         let kernelSpec: IJupyterKernelSpec | undefined;
 
         if (kernelSelection !== DefaultKernels.newKernel) {
@@ -386,43 +409,50 @@ export class DataScience implements IDataScience {
 
         const cancelSource = new CancellationTokenSource();
         const connInfo = createConnectionInfo(settings.datascience.jupyterServerURI, settings);
-
         const sessionManager = await this.sessionManagerFactory.create(connInfo);
-
         try {
+            // Get available kernel specs from remote in the background allowing the user to cancel
+            const kernelSpecsPromise: Promise<IJupyterKernelSpec[] | undefined> = this.getActiveJupyterKernels(sessionManager, cancelSource);
+
             // Get running remote kernels allowing the user to cancel
-            const remoteRunningKernels = await this.defaultWaitForStatus(
-                () => { return this.getRunningJupyterKernels(sessionManager); },
-                localize.DataScience.jupyterGetRunningKernels().format(connInfo.hostName),
-                localize.DataScience.jupyterNoRunningKernels().format(connInfo.hostName),
-                cancelSource);
+            const remoteRunningKernels: IKernelQuickPickItem[] | undefined = await this.getRunningJupyterKernels(sessionManager, cancelSource);
+            if (!remoteRunningKernels) {
+                if (cancelSource.token.isCancellationRequested) {
+                    traceInfo('User cancelled getting running remote kernels.');
+                } else {
+                    this.appShell.showErrorMessage(localize.DataScience.jupyterNoRunningKernels().format(connInfo.hostName));
+                }
+                return;
+            }
 
-            let kernelSelection: IKernelQuickPickItem = await this.getKernelSelection(remoteRunningKernels);
+            let kernelSelection: IKernelQuickPickItem | undefined = await this.getQuickPickKernelSelection(remoteRunningKernels);
 
-            // Get available kernel specs from remote allowing the user to cancel
-            const kernelSpecs: IJupyterKernelSpec[] = await this.defaultWaitForStatus(
-                () => { return sessionManager.getActiveKernelSpecs(); },
-                localize.DataScience.jupyterGetAvailableKernels().format(connInfo.hostName),
-                localize.DataScience.jupyterNoAvailableKernels().format(connInfo.hostName),
-                cancelSource
-            );
+            const kernelSpecs: IJupyterKernelSpec[] | undefined = await kernelSpecsPromise;
+            if (!kernelSpecs) {
+                if (cancelSource.token.isCancellationRequested) {
+                    traceInfo('User cancelled getting available remote kernels.');
+                } else {
+                    this.appShell.showErrorMessage(localize.DataScience.jupyterNoAvailableKernels().format(connInfo.hostName));
+                }
+                return;
+            }
 
             if (kernelSelection === DefaultKernels.newKernel) {
                 traceInfo('Will create a new kernel for connection');
-                kernelSelection = await this.getKernelSpecSelection(kernelSpecs);
+                kernelSelection = await this.getKernelSpecQuickPickSelection(kernelSpecs);
+            }
+
+            if (!kernelSelection) {
+                traceInfo('User cancelled selecting a kernel.');
+                return;
             }
 
             const allowShutdown = this.selectJupyterKernelAutoShutdown();
 
             await this.setRemoteJupterKernel(kernelSelection, kernelSpecs);
             await allowShutdown;
-        } catch (err) {
-            if (err instanceof CancellationError) {
-                traceInfo('User cancelled remote kernel selection.');
-            } else {
-                traceInfo('Failed selecting remote kernel!', err);
-            }
         } finally {
+            cancelSource.dispose();
             await sessionManager.dispose();
         }
     }
@@ -439,24 +469,11 @@ export class DataScience implements IDataScience {
         await this.configuration.updateSetting('dataScience.jupyterServerAllowKernelShutdown', allowShutdown, undefined, vscode.ConfigurationTarget.Workspace);
     }
 
-    private waitForStatus<T>(promise: () => Promise<T>, format: string, file?: string, canceled?: () => void): Promise<T> {
-        const message = file ? format.format(file) : format;
-        return this.statusProvider.waitWithStatus(promise, message, undefined, canceled);
-    }
-
-    private async defaultWaitForStatus<T>(promise: () => Promise<T>, message: string, errMessage: string, cancelSource: CancellationTokenSource): Promise<T> {
-        const canceled = () => {
+    private async waitForStatus<T>(promise: () => Promise<T>, message: string, cancelSource: CancellationTokenSource, canceled?: (() => void)): Promise<T> {
+        canceled = canceled ? canceled : () => {
             cancelSource.cancel();
         };
-        try {
-            const retVal = await this.waitForStatus(promise, message, undefined, canceled);
-            return Promise.resolve(retVal);
-        } catch (err) {
-            if (!(err instanceof CancellationError)) {
-                this.appShell.showErrorMessage(errMessage);
-            }
-            return Promise.reject(err);
-        }
+        return this.statusProvider.waitWithStatus(promise, message, undefined, canceled);
     }
 
     @captureTelemetry(Telemetry.AddCellBelow)

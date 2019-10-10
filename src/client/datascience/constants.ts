@@ -367,7 +367,7 @@ export namespace ShutdownOptions {
     export const leaveRunning: IJupyterShutdown = {
         label: localize.DataScience.jupyterServerKernelLeaveRunningLocal(),
         keepRunning: true,
-        picked: true
+        picked: false
     };
     export const options: IJupyterShutdown[] = [autoShutdown, leaveRunning];
 }

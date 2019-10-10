@@ -182,7 +182,7 @@ export interface IJupyterSessionManager extends IAsyncDisposable {
 }
 
 export interface IJupyterKernelSpec extends IAsyncDisposable {
-    name: string | undefined;
+    name: string;
     language: string | undefined;
     path: string | undefined;
     id: string | undefined;
