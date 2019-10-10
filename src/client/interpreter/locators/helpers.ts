@@ -2,20 +2,37 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { traceError } from '../../common/logger';
 import { IS_WINDOWS } from '../../common/platform/constants';
-import { IFileSystem } from '../../common/platform/types';
-import { fsReaddirAsync } from '../../common/utils/fs';
+import { FileSystem } from '../../common/platform/fileSystem';
+import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IInterpreterLocatorHelper, InterpreterType, PythonInterpreter } from '../contracts';
 import { IPipEnvServiceHelper } from './types';
 
 const CheckPythonInterpreterRegEx = IS_WINDOWS ? /^python(\d+(.\d+)?)?\.exe$/ : /^python(\d+(.\d+)?)?$/;
 
-export function lookForInterpretersInDirectory(pathToCheck: string): Promise<string[]> {
-    return fsReaddirAsync(pathToCheck)
-        .then(subDirs => subDirs.filter(fileName => CheckPythonInterpreterRegEx.test(path.basename(fileName))))
-        .catch(err => {
-            traceError('Python Extension (lookForInterpretersInDirectory.fsReaddirAsync):', err);
-            return [] as string[];
-        });
+export async function lookForInterpretersInDirectory(
+    pathToCheck: string,
+    fs?: IFileSystem
+): Promise<string[]> {
+    if (!fs) {
+        // tslint:disable-next-line:no-object-literal-type-assertion
+        fs = new FileSystem({} as IPlatformService);
+    }
+    const files = await (
+        fs.getFiles(pathToCheck)
+            .catch(err => {
+                traceError('Python Extension (lookForInterpretersInDirectory.fsReaddirAsync):', err);
+                return [] as string[];
+            })
+    );
+    const result: string[] = [];
+    for (const filename of files) {
+        const name = path.basename(filename);
+        if (!CheckPythonInterpreterRegEx.test(name)) {
+            continue;
+        }
+        result.push(filename);
+    }
+    return result;
 }
 
 @injectable()
