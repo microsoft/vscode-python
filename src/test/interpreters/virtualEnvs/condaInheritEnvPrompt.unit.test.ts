@@ -228,7 +228,9 @@ suite('Conda Inherit Env Prompt', async () => {
                 .setup(ws => ws.getConfiguration('terminal', resource))
                 .returns(() => workspaceConfig.object)
                 .verifiable(TypeMoq.Times.once());
-            workspaceConfig.setup(ws => ws.inspect<boolean>('integrated.inheritEnv')).returns(() => settings as any);
+            workspaceConfig
+                .setup(ws => ws.inspect<boolean>('integrated.inheritEnv'))
+                .returns(() => settings as any);
             const result = await condaInheritEnvPrompt.shouldShowPrompt(resource);
             expect(result).to.equal(true, 'Prompt should be shown');
             expect(condaInheritEnvPrompt.hasPromptBeenShownInCurrentSession).to.equal(true, 'Should be true');
