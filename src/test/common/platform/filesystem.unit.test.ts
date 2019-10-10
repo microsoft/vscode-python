@@ -75,12 +75,6 @@ suite('FileSystem', () => {
         expect(fileSystem.fileExistsSync(__filename)).to.be.equal(true, 'file not found');
     });
 
-    test('Test appending to file', async () => {
-        const dataToAppend = `Some Data\n${new Date().toString()}\nAnd another line`;
-        fileSystem.appendFileSync(fileToAppendTo, dataToAppend);
-        const fileContents = await fileSystem.readFile(fileToAppendTo);
-        expect(fileContents).to.be.equal(dataToAppend);
-    });
     test('Test searching for files', async () => {
         const searchPattern = `${path.basename(__filename, __filename.substring(__filename.length - 3))}.*`;
         const files = await fileSystem.search(path.join(__dirname, searchPattern));

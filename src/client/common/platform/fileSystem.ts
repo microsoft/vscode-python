@@ -58,14 +58,6 @@ export class FileSystem implements IFileSystem {
         return deferred.promise;
     }
 
-    public appendFileSync(filename: string, data: {}, encoding: string): void;
-    public appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: number; flag?: string }): void;
-    // tslint:disable-next-line:unified-signatures
-    public appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: string; flag?: string }): void;
-    public appendFileSync(filename: string, data: {}, optionsOrEncoding: {}): void {
-        return fsextra.appendFileSync(filename, data, optionsOrEncoding);
-    }
-
     public deleteFile(filename: string): Promise<void> {
         const deferred = createDeferred<void>();
         fsextra.unlink(filename, err => (err ? deferred.reject(err) : deferred.resolve()));

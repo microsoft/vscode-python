@@ -44,10 +44,6 @@ export interface IFileSystem {
     writeFile(filePath: string, data: {}, options?: string | fsextra.WriteFileOptions): Promise<void>;
     createDirectory(path: string): Promise<void>;
     deleteDirectory(path: string): Promise<void>;
-    appendFileSync(filename: string, data: {}, encoding: string): void;
-    appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: number; flag?: string }): void;
-    // tslint:disable-next-line:unified-signatures
-    appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: string; flag?: string }): void;
     deleteFile(filename: string): Promise<void>;
     // fs
     createWriteStream(path: string): fs.WriteStream;
