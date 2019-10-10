@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as fs from 'fs';
+import * as fsextra from 'fs-extra';
 import { SemVer } from 'semver';
 import * as vscode from 'vscode';
 import { Architecture, OSType } from '../utils/platform';
@@ -34,6 +35,11 @@ export interface IPlatformService {
 export type TemporaryFile = { filePath: string } & vscode.Disposable;
 export type TemporaryDirectory = { path: string } & vscode.Disposable;
 
+import FileType = vscode.FileType;
+export { FileType };
+export type FileStat = fsextra.Stats;
+export type WriteStream = fs.WriteStream;
+
 export const IFileSystem = Symbol('IFileSystem');
 export interface IFileSystem {
     stat(filePath: string): Promise<vscode.FileStat>;
@@ -45,11 +51,11 @@ export interface IFileSystem {
     deleteDirectory(path: string): Promise<void>;
     deleteFile(filename: string): Promise<void>;
     // fs
-    createWriteStream(path: string): fs.WriteStream;
+    createWriteStream(path: string): WriteStream;
     chmod(path: string, mode: string): Promise<void>;
     // helpers
     arePathsSame(path1: string, path2: string): boolean;
-    pathExists(path: string, fileType?: vscode.FileType): Promise<boolean>;
+    pathExists(path: string, fileType?: FileType): Promise<boolean>;
     fileExists(path: string): Promise<boolean>;
     directoryExists(path: string): Promise<boolean>;
     getSubDirectories(rootDir: string): Promise<string[]>;

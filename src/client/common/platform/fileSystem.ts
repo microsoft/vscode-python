@@ -9,9 +9,12 @@ import * as glob from 'glob';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as tmp from 'tmp';
-import * as vscode from 'vscode';
 import { createDeferred } from '../utils/async';
-import { IFileSystem, IPlatformService, TemporaryFile } from './types';
+import {
+    FileStat, FileType,
+    IFileSystem, IPlatformService,
+    TemporaryFile, WriteStream
+} from './types';
 
 const ENCODING = 'utf8';
 
@@ -72,7 +75,7 @@ export class FileSystem implements IFileSystem {
     //****************************
     // fs
 
-    public createWriteStream(filePath: string): fs.WriteStream {
+    public createWriteStream(filePath: string): WriteStream {
         return fs.createWriteStream(filePath);
     }
 
@@ -102,9 +105,9 @@ export class FileSystem implements IFileSystem {
 
     public async pathExists(
         filename: string,
-        fileType?: vscode.FileType
+        fileType?: FileType
     ): Promise<boolean> {
-        let stat: fsextra.Stats;
+        let stat: FileStat;
         try {
             stat = await fsextra.stat(filename);
         } catch {
@@ -112,19 +115,19 @@ export class FileSystem implements IFileSystem {
         }
         if (fileType === undefined) {
             return true;
-        } else if (fileType === vscode.FileType.File) {
+        } else if (fileType === FileType.File) {
             return stat.isFile();
-        } else if (fileType === vscode.FileType.Directory) {
+        } else if (fileType === FileType.Directory) {
             return stat.isDirectory();
         } else {
             return false;
         }
     }
     public async fileExists(filename: string): Promise<boolean> {
-        return this.pathExists(filename, vscode.FileType.File);
+        return this.pathExists(filename, FileType.File);
     }
     public async directoryExists(dirname: string): Promise<boolean> {
-        return this.pathExists(dirname, vscode.FileType.Directory);
+        return this.pathExists(dirname, FileType.Directory);
     }
 
     public getSubDirectories(rootDir: string): Promise<string[]> {
