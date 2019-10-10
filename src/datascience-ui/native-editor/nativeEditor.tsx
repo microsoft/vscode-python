@@ -213,7 +213,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                     <ImageButton baseTheme={this.props.baseTheme} onClick={toggleVariableExplorer} className='native-button' tooltip={variableExplorerTooltip}>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.VariableExplorer} />
                     </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.stateController.save} disabled={!this.state.dirty} className='native-button' tooltip={getLocString('DataScience.save', 'Save File')}>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.saveFromToolbar} disabled={!this.state.dirty} className='native-button' tooltip={getLocString('DataScience.save', 'Save File')}>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.SaveAs} />
                     </ImageButton>
                     <ImageButton baseTheme={this.props.baseTheme} onClick={this.stateController.export} disabled={!this.stateController.canExport()} className='save-button' tooltip={getLocString('DataScience.exportAsPythonFileTooltip', 'Save As Python File')}>
@@ -223,6 +223,11 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                 <div className='toolbar-divider'/>
             </div>
         );
+    }
+
+    private saveFromToolbar = () => {
+        this.stateController.save();
+        this.stateController.sendCommand(NativeCommandType.Save, 'mouse');
     }
 
     private renderVariablePanel(baseTheme: string) {
@@ -323,6 +328,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                 if (event.ctrlKey) {
                     // This is save, save our cells
                     this.stateController.save();
+                    this.stateController.sendCommand(NativeCommandType.Save, 'keyboard');
                 }
                 break;
 

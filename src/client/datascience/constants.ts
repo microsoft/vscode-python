@@ -124,6 +124,15 @@ export enum Telemetry {
     ExportNotebook = 'DATASCIENCE.EXPORT_NOTEBOOK',
     Undo = 'DATASCIENCE.UNDO',
     Redo = 'DATASCIENCE.REDO',
+    /**
+     * Saving a notebook
+     */
+    Save = 'DATASCIENCE.SAVE',
+    CellCount = 'DATASCIENCE.CELL_COUNT',
+    /**
+     * Whether auto save feature in VS Code is enabled or not.
+     */
+    AutoSaveEnabled = 'DATASCIENCE.AUTO_SAVE_ENABLED',
     ShowHistoryPane = 'DATASCIENCE.SHOW_HISTORY_PANE',
     ExpandAll = 'DATASCIENCE.EXPAND_ALL',
     CollapseAll = 'DATASCIENCE.COLLAPSE_ALL',
@@ -209,6 +218,7 @@ export enum NativeKeyboardCommandTelemetry {
     MoveCellDown = 'DATASCIENCE.NATIVE.KEYBOARD.MOVE_CELL_DOWN',
     MoveCellUp = 'DATASCIENCE.NATIVE.KEYBOARD.MOVE_CELL_UP',
     Run = 'DATASCIENCE.NATIVE.KEYBOARD.RUN',
+    Save = 'DATASCIENCE.NATIVE.KEYBOARD.SAVE',
     RunAbove = 'DATASCIENCE.NATIVE.KEYBOARD.RUN_ABOVE',
     RunAll = 'DATASCIENCE.NATIVE.KEYBOARD.RUN_ALL',
     RunAndAdd = 'DATASCIENCE.NATIVE.KEYBOARD.RUN_AND_ADD',
@@ -247,6 +257,7 @@ export enum NativeMouseCommandTelemetry {
     RunAndAdd = 'DATASCIENCE.NATIVE.MOUSE.RUN_AND_ADD',
     RunAndMove = 'DATASCIENCE.NATIVE.MOUSE.RUN_AND_MOVE',
     RunBelow = 'DATASCIENCE.NATIVE.MOUSE.RUN_BELOW',
+    Save = 'DATASCIENCE.NATIVE.MOUSE.SAVE',
     ToggleLineNumbers = 'DATASCIENCE.NATIVE.MOUSE.TOGGLE_LINE_NUMBERS',
     ToggleOutput = 'DATASCIENCE.NATIVE.MOUSE.TOGGLE_OUTPUT',
     ToggleVariableExplorer = 'DATASCIENCE.NATIVE.MOUSE.TOGGLE_VARIABLE_EXPLORER',

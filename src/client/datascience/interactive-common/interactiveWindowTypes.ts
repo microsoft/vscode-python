@@ -88,6 +88,7 @@ export enum NativeCommandType {
     CollapseInput,
     CollapseOutput,
     DeleteCell,
+    Save,
     InsertAbove,
     InsertBelow,
     MoveCellDown,

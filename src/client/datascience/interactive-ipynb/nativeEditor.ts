@@ -419,6 +419,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         if (forceDirty) {
             await this.setDirty();
         }
+        sendTelemetryEvent(Telemetry.CellCount, undefined, {count: cells.length});
         return this.postMessage(InteractiveWindowMessages.LoadAllCells, { cells });
     }
 
@@ -593,6 +594,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         await this.documentManager.showTextDocument(doc, ViewColumn.One);
     }
 
+    @captureTelemetry(Telemetry.Save, undefined, true)
     private async saveToDisk(): Promise<void> {
         try {
             let fileToSaveTo: Uri | undefined = this.file;
