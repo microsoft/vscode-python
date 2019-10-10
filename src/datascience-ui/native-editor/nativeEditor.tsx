@@ -176,7 +176,8 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             const newCell = this.stateController.addNewCell();
             this.stateController.sendCommand(NativeCommandType.AddToEnd, 'mouse');
             if (newCell) {
-                this.stateController.selectCell(newCell.cell.id, newCell.cell.id);
+                // Has to be async because the click will change the focus on mouse up
+                setTimeout(() => this.focusCell(newCell.cell.id, true), 0);
             }
         };
         const runAll = () => {
