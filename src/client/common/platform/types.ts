@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import * as fs from 'fs';
-import * as fsextra from 'fs-extra';
 import { SemVer } from 'semver';
 import * as vscode from 'vscode';
 import { Architecture, OSType } from '../utils/platform';
@@ -41,7 +40,7 @@ export interface IFileSystem {
     // fs-extra
     fileExistsSync(path: string): boolean;
     readFile(filePath: string): Promise<string>;
-    writeFile(filePath: string, data: {}, options?: string | fsextra.WriteFileOptions): Promise<void>;
+    writeFile(filePath: string, data: {}): Promise<void>;
     createDirectory(path: string): Promise<void>;
     deleteDirectory(path: string): Promise<void>;
     deleteFile(filename: string): Promise<void>;

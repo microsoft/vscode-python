@@ -13,6 +13,8 @@ import * as vscode from 'vscode';
 import { createDeferred } from '../utils/async';
 import { IFileSystem, IPlatformService, TemporaryFile } from './types';
 
+const ENCODING = 'utf8';
+
 @injectable()
 export class FileSystem implements IFileSystem {
     constructor(
@@ -41,10 +43,13 @@ export class FileSystem implements IFileSystem {
      * @memberof FileSystem
      */
     public readFile(filePath: string): Promise<string> {
-        return fsextra.readFile(filePath).then(buffer => buffer.toString());
+        return fsextra.readFile(filePath, ENCODING);
     }
 
-    public async writeFile(filePath: string, data: {}, options: string | fsextra.WriteFileOptions = { encoding: 'utf8' }): Promise<void> {
+    public async writeFile(filePath: string, data: {}): Promise<void> {
+        const options: fsextra.WriteFileOptions = {
+            encoding: ENCODING
+        };
         await fsextra.writeFile(filePath, data, options);
     }
 
