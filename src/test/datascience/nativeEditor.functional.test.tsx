@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+'use strict';
 import { assert, expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { ReactWrapper } from 'enzyme';
@@ -58,9 +59,6 @@ import {
     verifyHtmlOnCell,
     waitForMessageResponse
 } from './testHelpers';
-
-
-'use strict';
 
 use(chaiAsPromised);
 
