@@ -813,7 +813,7 @@ suite('DataScience Native Editor', () => {
              */
             async function waitForNotebookToBeClean(): Promise<void> {
                 // Wait for the notebook to be marked as dirty (the NotebookDirty message will be sent).
-                await waitForMessageReceivedEditorComponent(InteractiveWindowMessages.NotebookDirty, 5_000);
+                await waitForMessageReceivedEditorComponent(InteractiveWindowMessages.NotebookClean, 5_000);
 
                 // Wait for the state to get updated.
                 await waitForCondition(async () => controller.getState().dirty === false, 1_000, `Timeout waiting for dirty state to get updated to false`);
