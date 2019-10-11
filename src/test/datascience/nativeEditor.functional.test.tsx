@@ -1,8 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
-'use strict';
-
 import { assert, expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { ReactWrapper } from 'enzyme';
@@ -13,6 +10,7 @@ import * as sinon from 'sinon';
 import { anything, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Disposable, TextDocument, TextEditor, Uri, WindowState } from 'vscode';
+
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { createTemporaryFile } from '../../client/common/utils/fs';
@@ -34,7 +32,16 @@ import { IMonacoEditorState, MonacoEditor } from '../../datascience-ui/react-com
 import { waitForCondition } from '../common';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { MockDocumentManager } from './mockDocumentManager';
-import { addCell, closeNotebook, createNewEditor, getNativeCellResults, mountNativeWebView, openEditor, runMountedTest, setupWebview } from './nativeEditorTestHelpers';
+import {
+    addCell,
+    closeNotebook,
+    createNewEditor,
+    getNativeCellResults,
+    mountNativeWebView,
+    openEditor,
+    runMountedTest,
+    setupWebview
+} from './nativeEditorTestHelpers';
 import { waitForUpdate } from './reactHelpers';
 import {
     addContinuousMockData,
@@ -51,10 +58,13 @@ import {
     verifyHtmlOnCell,
     waitForMessageResponse
 } from './testHelpers';
+
+
+'use strict';
+
 use(chaiAsPromised);
 
 //import { asyncDump } from '../common/asyncDump';
-import { waitForMessage, getEditor } from './testHelpers';
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 suite('DataScience Native Editor', () => {
     function createFileCell(cell: any, data: any): ICell {
