@@ -248,6 +248,13 @@ export class NativeCell extends React.Component<INativeCellProps> {
                     this.arrowDownFromCell(e);
                 }
                 break;
+            case 's':
+                if (e.ctrlKey) {
+                    // This is save, save our cells
+                    this.props.stateController.save();
+                }
+                break;
+
             case 'Escape':
                 if (isFocusedWhenNotSuggesting) {
                     this.escapeCell(e);
