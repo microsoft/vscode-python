@@ -39,11 +39,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
         const pythonPath = await this.getPythonPath(configuration, session.workspaceFolder);
 
         if (await this.useNewPtvsd(pythonPath)) {
-            // For local process ID case we need to start a DA executable. This is needed to
-            // inject the debugger into the process to be attached.
-            if (configuration.request === 'attach' && !configuration.processId) {
-                // This case is for when DA is running in server mode. This is most attach scenarios,
-                // except for when attaching to a locally running process.
+            if (configuration.request === 'attach') {
                 const port = configuration.port ? configuration.port : 0;
                 if (port === 0) {
                     throw new Error('Port must be specified for request type attach');
