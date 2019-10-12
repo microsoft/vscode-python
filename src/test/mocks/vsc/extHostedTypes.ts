@@ -1920,6 +1920,17 @@ export namespace vscMockExtHostedTypes {
         }
     }
 
+    export class DebugAdapterServer {
+        readonly port: number;
+        readonly host?: string;
+
+        constructor(port: number, host?: string) {
+            this.port = port;
+            // @ts-ignore
+            this.host = host;
+        }
+    }
+
     export enum LogLevel {
         Trace = 1,
         Debug = 2,
