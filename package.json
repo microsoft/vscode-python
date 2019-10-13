@@ -1526,7 +1526,7 @@
                 "python.dataScience.jupyterServerURI": {
                     "type": "string",
                     "default": "local",
-                    "description": "Select the Jupyter server URI to connect to. Select 'local' to launch a new Juypter server on the local machine.",
+                    "description": "Select the Jupyter server URI to connect to. Select 'local' to launch a new Jupyter server on the local machine.",
                     "scope": "resource"
                 },
                 "python.dataScience.notebookFileRoot": {
