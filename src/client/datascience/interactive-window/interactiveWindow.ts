@@ -118,7 +118,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     }
 
     public addMessage(message: string): Promise<void> {
-        this.addMessageImpl(message, 'execute');
+        this.addMessageImpl(message);
         return Promise.resolve();
     }
 

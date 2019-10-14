@@ -14,7 +14,7 @@ import * as localize from '../../common/utils/localize';
 import { Common } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { CellMatcher } from '../cellMatcher';
-import { concatMultilineString } from '../common';
+import { concatMultilineStringInput } from '../common';
 import { Identifiers } from '../constants';
 import { CellState, ICell as IVscCell, IGatherExecution, INotebookExecutionLogger } from '../types';
 
@@ -60,7 +60,7 @@ export class GatherExecution implements IGatherExecution, INotebookExecutionLogg
 
                 // Strip first line marker. We can't do this at JupyterServer.executeCodeObservable because it messes up hashing
                 const cellMatcher = new CellMatcher(this.configService.getSettings().datascience);
-                cloneCell.data.source = cellMatcher.stripFirstMarker(concatMultilineString(vscCell.data.source));
+                cloneCell.data.source = cellMatcher.stripFirstMarker(concatMultilineStringInput(vscCell.data.source));
 
                 // Convert IVscCell to IGatherCell
                 const cell = convertVscToGatherCell(cloneCell) as LogCell;

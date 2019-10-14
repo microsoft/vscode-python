@@ -557,13 +557,12 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         return result;
     }
 
-    protected addMessageImpl(message: string, type: 'preview' | 'execute'): void {
+    protected addMessageImpl(message: string): void {
         const cell: ICell = {
             id: uuid(),
             file: Identifiers.EmptyFileName,
             line: 0,
             state: CellState.finished,
-            type,
             data: {
                 cell_type: 'messages',
                 messages: [message],

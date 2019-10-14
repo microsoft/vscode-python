@@ -18,7 +18,7 @@ import { IAsyncDisposableRegistry, IConfigurationService } from '../../client/co
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { generateCells } from '../../client/datascience/cellFactory';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
-import { concatMultilineString } from '../../client/datascience/common';
+import { concatMultilineStringInput } from '../../client/datascience/common';
 import { CodeSnippits, Identifiers } from '../../client/datascience/constants';
 import {
     ICell,
@@ -186,7 +186,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
     public addContinuousOutputCell(code: string, resultGenerator: (cancelToken: CancellationToken) => Promise<{ result: string; haveMore: boolean }>) {
         const cells = generateCells(undefined, code, Uri.file('foo.py').fsPath, 1, true, uuid());
         cells.forEach(c => {
-            const key = concatMultilineString(c.data.source).replace(LineFeedRegEx, '');
+            const key = concatMultilineStringInput(c.data.source).replace(LineFeedRegEx, '').toLowerCase();
             if (c.data.cell_type === 'code') {
                 const taggedResult = {
                     output_type: 'generator'
@@ -218,7 +218,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         const cells = generateCells(undefined, code, Uri.file('foo.py').fsPath, 1, true, uuid());
         cells.forEach(c => {
             const cellMatcher = new CellMatcher();
-            const key = cellMatcher.stripFirstMarker(concatMultilineString(c.data.source)).replace(LineFeedRegEx, '');
+            const key = cellMatcher.stripFirstMarker(concatMultilineStringInput(c.data.source)).replace(LineFeedRegEx, '').toLowerCase();
             if (c.data.cell_type === 'code') {
                 const massagedResult = this.massageCellResult(result, mimeType);
                 const data: nbformat.ICodeCell = c.data as nbformat.ICodeCell;

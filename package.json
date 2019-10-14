@@ -2671,12 +2671,13 @@
         "verifyBundle": "gulp verifyBundle"
     },
     "dependencies": {
+        "@blueprintjs/select": "3.10.0",
         "@jupyterlab/services": "^3.2.1",
         "@msrvida/python-program-analysis": "^0.2.6",
-        "@blueprintjs/select": "3.10.0",
         "ansi-regex": "^4.1.0",
         "arch": "^2.1.0",
         "azure-storage": "^2.10.3",
+        "detect-indent": "^6.0.0",
         "diff-match-patch": "^1.0.0",
         "fast-deep-equal": "^2.0.1",
         "fs-extra": "^4.0.3",

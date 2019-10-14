@@ -22,7 +22,7 @@ import { CancellationError } from '../../../common/cancellation';
 import { traceWarning } from '../../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../../common/platform/types';
 import { createDeferred, Deferred, waitForPromise } from '../../../common/utils/async';
-import { concatMultilineString } from '../../common';
+import { concatMultilineStringInput } from '../../common';
 import { Identifiers, Settings } from '../../constants';
 import { IInteractiveWindowListener, IInteractiveWindowProvider, IJupyterExecution, INotebook } from '../../types';
 import {
@@ -387,7 +387,7 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
         if (document) {
             const changes = document.loadAllCells(payload.cells.filter(c => c.data.cell_type === 'code').map(cell => {
                 return {
-                    code: concatMultilineString(cell.data.source),
+                    code: concatMultilineStringInput(cell.data.source),
                     id: cell.id
                 };
             }));

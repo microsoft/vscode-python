@@ -23,7 +23,7 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateCells } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
-import { concatMultilineString, formatStreamText } from '../common';
+import { concatMultilineStringInput, concatMultilineStringOutput, formatStreamText } from '../common';
 import { CodeSnippits, Identifiers, Telemetry } from '../constants';
 import {
     CellState,
@@ -301,8 +301,7 @@ export class JupyterNotebookBase implements INotebook {
             id: uuid(),
             file: '',
             line: 0,
-            state: CellState.finished,
-            type: 'execute'
+            state: CellState.finished
         };
     }
 
@@ -482,7 +481,7 @@ export class JupyterNotebookBase implements INotebook {
                 outputs.forEach(o => {
                     if (o.output_type === 'stream') {
                         const stream = o as nbformat.IStream;
-                        result = result.concat(formatStreamText(concatMultilineString(stream.text)));
+                        result = result.concat(formatStreamText(concatMultilineStringOutput(stream.text)));
                     } else {
                         const data = o.data;
                         if (data && data.hasOwnProperty('text/plain')) {
@@ -622,7 +621,7 @@ export class JupyterNotebookBase implements INotebook {
                 subscriber.error(this.sessionStartTime, new Error(localize.DataScience.jupyterServerCrashed().format(exitCode.toString())));
                 subscriber.complete(this.sessionStartTime);
             } else {
-                const request = this.generateRequest(concatMultilineString(subscriber.cell.data.source), silent);
+                const request = this.generateRequest(concatMultilineStringInput(subscriber.cell.data.source), silent);
 
                 // tslint:disable-next-line:no-require-imports
                 const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
@@ -807,7 +806,7 @@ export class JupyterNotebookBase implements INotebook {
             } else {
                 // tslint:disable-next-line:restrict-plus-operands
                 existing.text = existing.text + msg.content.text;
-                existing.text = trimFunc(formatStreamText(concatMultilineString(existing.text)));
+                existing.text = trimFunc(formatStreamText(concatMultilineStringOutput(existing.text)));
             }
 
         } else {
@@ -815,7 +814,7 @@ export class JupyterNotebookBase implements INotebook {
             const output: nbformat.IStream = {
                 output_type: 'stream',
                 name: msg.content.name,
-                text: trimFunc(formatStreamText(concatMultilineString(msg.content.text)))
+                text: trimFunc(formatStreamText(concatMultilineStringOutput(msg.content.text)))
             };
             this.addToCellData(cell, output, clearState);
         }
