@@ -520,7 +520,7 @@ export class MainStateController implements IMessageHandler {
             // Reset the old vms (nothing should be selected/focused)
             // Change state only for cells that were selected/focused
             newVMs.forEach((cellVM, index) => {
-                if (cellVM.selected || cellVM.focused){
+                if (cellVM.selected || cellVM.focused) {
                     newVMs[index] = { ...cellVM, selected: false, focused: false };
                 }
             });
@@ -541,7 +541,7 @@ export class MainStateController implements IMessageHandler {
             // Reset the old vms (nothing should be selected/focused)
             // Change state only for cells that were selected/focused
             newVMs.forEach((cellVM, index) => {
-                if (cellVM.selected || cellVM.focused){
+                if (cellVM.selected || cellVM.focused) {
                     newVMs[index] = { ...cellVM, selected: false, focused: false };
                 }
             });
@@ -1112,10 +1112,25 @@ export class MainStateController implements IMessageHandler {
             // we won't actually update.
             const newVMs = [...this.pendingState.cellVMs];
 
+            // Live share has been disabled for now, see https://github.com/microsoft/vscode-python/issues/7972
             // Check to see if our code still matches for the cell (in liveshare it might be updated from the other side)
-            if (concatMultilineStringInput(this.pendingState.cellVMs[index].cell.data.source) !== concatMultilineStringInput(cell.data.source)) {
-                const newText = extractInputText(cell, getSettings());
-                newVMs[index] = { ...newVMs[index], cell: cell, inputBlockText: newText };
+            // if (concatMultilineStringInput(this.pendingState.cellVMs[index].cell.data.source) !== concatMultilineStringInput(cell.data.source)) {
+
+            // If cell state changes, then update just the state and the cell data (excluding source).
+            // Prevent updates to the source, as its possible we have recieved a response for a cell execution
+            // and the user has updated the cell text since then.
+            if (this.pendingState.cellVMs[index].cell.state !== cell.state) {
+                newVMs[index] = {
+                    ...newVMs[index],
+                    cell: {
+                        ...newVMs[index].cell,
+                        state: cell.state,
+                        data: {
+                            ...cell.data,
+                            source: newVMs[index].cell.data.source
+                        }
+                    }
+                };
             } else {
                 newVMs[index] = { ...newVMs[index], cell: cell };
             }

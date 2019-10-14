@@ -275,7 +275,7 @@ suite('DataScience Debugger tests', () => {
         const resultPromise = getInteractiveCellResults(ioc.wrapper!, 5, async () => {
             const breakPromise = createDeferred<void>();
             disposables.push(mockDebuggerService!.onBreakpointHit(() => breakPromise.resolve()));
-            const done = history.debugCode(code, fileName, 0, docManager.activeTextEditor);
+            const done = history.debugCode(code, '\\Untitled-1', 0, docManager.activeTextEditor);
             await waitForPromise(Promise.race([done, breakPromise.promise]), 60000);
             assert.ok(breakPromise.resolved, 'Breakpoint event did not fire');
             assert.ok(!lastErrorMessage, `Error occurred ${lastErrorMessage}`);

@@ -63,6 +63,7 @@ stages:
           NeedsPythonFunctionalReqs: true
           # This tells the functional tests to not mock out Jupyter...
           VSCODE_PYTHON_ROLLING: true
+          timeoutInMinutes: 180
         'Linux-Py3.7 Functional':
           PythonVersion: '3.7'
           VMImageName: 'ubuntu-16.04'
@@ -84,6 +85,7 @@ stages:
           NeedsPythonTestReqs: true
           NeedsPythonFunctionalReqs: true
           VSCODE_PYTHON_ROLLING: true
+          timeoutInMinutes: 180
         'Linux-Py3.6 Functional':
           PythonVersion: '3.6'
           VMImageName: 'ubuntu-16.04'
@@ -105,6 +107,7 @@ stages:
           NeedsPythonTestReqs: true
           NeedsPythonFunctionalReqs: true
           VSCODE_PYTHON_ROLLING: true
+          timeoutInMinutes: 180
         'Linux-Py3.5 Functional':
           PythonVersion: '3.5'
           VMImageName: 'ubuntu-16.04'
@@ -126,6 +129,7 @@ stages:
           NeedsPythonTestReqs: true
           NeedsPythonFunctionalReqs: true
           VSCODE_PYTHON_ROLLING: true
+          timeoutInMinutes: 180
         'Linux-Py2.7 Functional':
           PythonVersion: '2.7'
           VMImageName: 'ubuntu-16.04'

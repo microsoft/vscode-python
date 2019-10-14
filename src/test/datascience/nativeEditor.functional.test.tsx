@@ -123,25 +123,25 @@ suite('DataScience Native Editor', () => {
             await createNewEditor(ioc);
 
             const badPanda = `import pandas as pd
-    df = pd.read("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
-    df.head()`;
+df = pd.read("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
+df.head()`;
             const goodPanda = `import pandas as pd
-    df = pd.read_csv("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
-    df.head()`;
+df = pd.read_csv("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
+df.head()`;
             const matPlotLib = 'import matplotlib.pyplot as plt\r\nimport numpy as np\r\nx = np.linspace(0,20,100)\r\nplt.plot(x, np.sin(x))\r\nplt.show()';
             const matPlotLibResults = 'img';
             const spinningCursor = `import sys
-    import time
-    def spinning_cursor():
-        while True:
-            for cursor in '|/-\\\\':
-                yield cursor
-    spinner = spinning_cursor()
-    for _ in range(50):
-        sys.stdout.write(next(spinner))
-        sys.stdout.flush()
-        time.sleep(0.1)
-        sys.stdout.write('\\r')`;
+import time
+def spinning_cursor():
+    while True:
+        for cursor in '|/-\\\\':
+            yield cursor
+spinner = spinning_cursor()
+for _ in range(50):
+    sys.stdout.write(next(spinner))
+    sys.stdout.flush()
+    time.sleep(0.1)
+    sys.stdout.write('\\r')`;
 
             addMockData(ioc, badPanda, `pandas has no attribute 'read'`, 'text/html', 'error');
             addMockData(ioc, goodPanda, `<td>A table</td>`, 'text/html');
