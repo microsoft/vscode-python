@@ -72,6 +72,7 @@
         "onCommand:python.switchOffInsidersChannel",
         "onCommand:python.switchToDailyChannel",
         "onCommand:python.switchToWeeklyChannel",
+        "onCommand:python.datascience.createnewnotebook",
         "onCommand:python.datascience.showhistorypane",
         "onCommand:python.datascience.importnotebook",
         "onCommand:python.datascience.importnotebookfile",
@@ -962,8 +963,7 @@
                 {
                     "command": "python.datascience.createnewnotebook",
                     "title": "%python.command.python.datascience.createnewnotebook.title%",
-                    "category": "Python",
-                    "when": "python.datascience.featureenabled"
+                    "category": "Python"
                 }
             ],
             "view/title": [
