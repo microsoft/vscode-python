@@ -29,7 +29,7 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { concatMultilineStringInput } from '../common';
+import { concatMultilineStringInput, splitMultilineString } from '../common';
 import {
     EditorContexts,
     Identifiers,
@@ -645,31 +645,11 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         await this.documentManager.showTextDocument(doc, ViewColumn.One);
     }
 
-    private convertSource(source: nbformat.MultilineString): nbformat.MultilineString {
-        // Fixup source to be an array instead of a single string. Basically match what
-        // jupyter normally outputs
-        if (Array.isArray(source)) {
-            return source as string[];
-        }
-        const str = source.toString();
-        if (str.length > 0) {
-            // Each line should be a separate entry, but end with a \n if not last entry
-            const arr = str.split('\n');
-            return arr.map((s, i) => {
-                if (i < arr.length - 1) {
-                    return `${s}\n`;
-                }
-                return s;
-            }).filter(s => s.length > 0); // Skip last one if empty (it's the only one that could be length 0)
-        }
-        return [];
-    }
-
     private fixupCell(cell: nbformat.ICell): nbformat.ICell {
         // Source is usually a single string on input. Convert back to an array
         return {
             ...cell,
-            source: this.convertSource(cell.source)
+            source: splitMultilineString(cell.source)
         };
     }
 
