@@ -416,7 +416,12 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         // tslint:disable-next-line: no-any
         const json = contents ? JSON.parse(contents) as any : undefined;
 
-        // First compute indent.
+        // Double check json (if we have any)
+        if (json && !json.cells) {
+            throw new InvalidNotebookFileError(this.file.fsPath);
+        }
+
+        // Then compute indent. It's computed from the contents
         if (contents) {
             this.indentAmount = detectIndent(contents).indent;
         }
@@ -424,11 +429,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         // Then save the contents. We'll stick our cells back into this format when we save
         if (json) {
             this.notebookJson = json;
-        }
-
-        // Double check json (if we have any)
-        if (json && !json.cells) {
-            throw new InvalidNotebookFileError(this.file.fsPath);
         }
 
         // Extract cells from the json
