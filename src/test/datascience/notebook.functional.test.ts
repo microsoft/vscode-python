@@ -789,7 +789,7 @@ df.head()`,
                 mimeType: 'text/plain',
                 cellType: 'markdown',
                 result: '#HEADER',
-                verifyValue: (d) => assert.equal(d, '#HEADER', 'Markdown incorrect')
+                verifyValue: (d) => assert.equal(d, ' #HEADER', 'Markdown incorrect')
             },
             {
                 markdownRegEx: '\\s*#\\s*<markdowncell>',
@@ -799,7 +799,7 @@ df.head()`,
                 mimeType: 'text/plain',
                 cellType: 'markdown',
                 result: '#HEADER',
-                verifyValue: (d) => assert.equal(d, '#HEADER', 'Markdown incorrect')
+                verifyValue: (d) => assert.equal(d, ' #HEADER', 'Markdown incorrect')
             },
             {
                 // Test relative directories too.
@@ -1066,7 +1066,7 @@ plt.show()`,
             const application = mock(ApplicationShell);
             when(application.withProgress(anything(), anything())).thenCall((_, cb: (_: any, token: any) => Promise<any>) => {
                 return new Promise((resolve, reject) => {
-                    cb({report: noop}, new CancellationTokenSource().token).then(resolve).catch(reject);
+                    cb({ report: noop }, new CancellationTokenSource().token).then(resolve).catch(reject);
                 });
             });
             ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, instance(application));

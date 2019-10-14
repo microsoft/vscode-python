@@ -43,7 +43,7 @@ import {
     runMountedTest,
     setupWebview
 } from './nativeEditorTestHelpers';
-import { waitForUpdate } from './reactHelpers';
+import { waitForUpdate, createKeyboardEvent } from './reactHelpers';
 import {
     addContinuousMockData,
     addMockData,
@@ -817,19 +817,12 @@ for _ in range(50):
                     .find('.cell-wrapper')
                     .first();
                 wrapperElement.simulate('keyDown', { key: 'y' });
+                wrapper.update();
 
-                // Confirm output cell is not rendered (remember we don't have any output) and monaco editor is rendered.
+                // Confirm editor is rendered .
+                const nativeCell = wrapper.find(NativeCell).at(1);
                 assert.equal(
-                    wrapper
-                        .find(NativeCell)
-                        .at(1)
-                        .find(CellOutput).length,
-                    0
-                );
-                assert.equal(
-                    wrapper
-                        .find(NativeCell)
-                        .at(1)
+                    nativeCell
                         .find(MonacoEditor).length,
                     1
                 );

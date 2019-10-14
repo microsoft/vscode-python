@@ -463,7 +463,7 @@ function generateCellData(): (nbformat.ICodeCell | nbformat.IMarkdownCell | nbfo
                 'Nunc quis orci ante. Vivamus vel blandit velit.\n","Sed mattis dui diam, et blandit augue mattis vestibulum.\n',
                 'Suspendisse ornare interdum velit. Suspendisse potenti.\n',
                 'Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.\n',
-                '\"\"\" '
+                '\"\"\"'
             ]
         },
         {
