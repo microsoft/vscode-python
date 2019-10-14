@@ -184,11 +184,11 @@ value = 'hello world'`;
     // For the loading tests we check before the explorer is fully loaded, so split tests here to check
     // with different target render counts
     nativeRunMountedTest('Variable Explorer - Native Loading', async (wrapper) => {
-        checkVariableLoading(wrapper, 3);
+        await checkVariableLoading(wrapper, 3);
     }, () => { return ioc; });
 
     interactiveRunMountedTest('Variable Explorer - Interactive Loading', async (wrapper) => {
-        checkVariableLoading(wrapper, 2);
+        await checkVariableLoading(wrapper, 2);
     }, () => { return ioc; });
 
     // Test our display of basic types. We render 8 rows by default so only 8 values per test
