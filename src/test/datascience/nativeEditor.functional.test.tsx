@@ -43,7 +43,7 @@ import {
     runMountedTest,
     setupWebview
 } from './nativeEditorTestHelpers';
-import { waitForUpdate, createKeyboardEvent } from './reactHelpers';
+import { waitForUpdate } from './reactHelpers';
 import {
     addContinuousMockData,
     addMockData,
