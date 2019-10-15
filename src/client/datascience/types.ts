@@ -38,10 +38,10 @@ export interface IDataScienceCommandListener {
 
 // Connection information for talking to a jupyter notebook process
 export interface IConnection extends Disposable {
-    baseUrl: string;
-    token: string;
-    hostName: string;
-    localLaunch: boolean;
+    readonly baseUrl: string;
+    readonly token: string;
+    readonly hostName: string;
+    readonly localLaunch: boolean;
     localProcExitCode: number | undefined;
     disconnected: Event<number>;
     allowUnauthorized?: boolean;

@@ -215,10 +215,10 @@ class JupyterConnectionWaiter {
 
 // Represents an active connection to a running jupyter notebook
 export class JupyterConnection implements IConnection {
-    public baseUrl: string;
-    public token: string;
-    public hostName: string;
-    public localLaunch: boolean;
+    public readonly baseUrl: string;
+    public readonly token: string;
+    public readonly hostName: string;
+    public readonly localLaunch: boolean;
     public localProcExitCode: number | undefined;
     private disposable: Disposable | undefined;
     private eventEmitter: EventEmitter<number> = new EventEmitter<number>();
