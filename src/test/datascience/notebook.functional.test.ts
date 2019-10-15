@@ -1102,4 +1102,16 @@ plt.show()`,
             assert.ok(threw, 'No exception thrown during notebook creation');
         }
     });
+
+    runTest('Notebook launch retry', async () => {
+        ioc.getSettings().datascience.jupyterLaunchRetries = 1;
+        ioc.getSettings().datascience.jupyterLaunchTimeout = 3000;
+        for (let i = 0; i < 100; i += 1) {
+            const notebook = await createNotebook(true, false);
+            assert.ok(notebook, 'did not create notebook');
+            await notebook!.dispose();
+            const exec = ioc.get<IJupyterExecution>(IJupyterExecution);
+            await exec.dispose();
+        }
+    });
 });

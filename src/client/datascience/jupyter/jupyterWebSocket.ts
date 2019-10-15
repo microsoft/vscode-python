@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as WebSocketWS from 'ws';
+import { traceInfo } from '../../common/logger';
 
 // We need to override the websocket that jupyter lab services uses to put in our cookie information
 // Do this as a function so that we can pass in variables the the socket will have local access to
@@ -39,6 +40,7 @@ export function createJupyterWebSocket(openEmitted: (sessionId: string | undefin
             if (event === 'open') {
                 openEmitted(this.kernelId);
             }
+            traceInfo(`WebSocket event: ${String(event)} ${args}`);
             return result;
         }
     }

@@ -190,7 +190,6 @@ export class JupyterSession implements IJupyterSession {
             while (session &&
                 session.kernel &&
                 session.kernel.status !== 'idle' &&
-                !this.activeKernels.has(session.kernel.id) &&
                 (Date.now() - startTime < timeout)) {
                 await sleep(100);
             }
@@ -199,9 +198,6 @@ export class JupyterSession implements IJupyterSession {
 
             // If we didn't make it out in ten seconds, indicate an error
             if (session.kernel && session.kernel.status === 'idle') {
-                return;
-            }
-            if (session.kernel && this.activeKernels.has(session.kernel.id)) {
                 return;
             }
 
