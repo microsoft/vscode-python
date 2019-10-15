@@ -33,14 +33,17 @@ export class JupyterSession implements IJupyterSession {
     private onRestartedEvent: EventEmitter<void> | undefined;
     private statusHandler: Slot<Session.ISession, Kernel.Status> | undefined;
     private connected: boolean = false;
+    private activeKernels: Set<string> = new Set<string>();
 
     constructor(
         private connInfo: IConnection,
+        kernelOpenedEvent: Event<string>,
         private serverSettings: ServerConnection.ISettings,
         private kernelSpec: IJupyterKernelSpec | undefined,
         private sessionManager: SessionManager,
         private contentsManager: ContentsManager
     ) {
+        kernelOpenedEvent(this.onKernelOpened.bind(this));
     }
 
     public dispose(): Promise<void> {
@@ -172,9 +175,13 @@ export class JupyterSession implements IJupyterSession {
         }
     }
 
+    private onKernelOpened(id: string) {
+        this.activeKernels.add(id);
+    }
+
     private async waitForIdleOnSession(session: Session.ISession | undefined, timeout: number): Promise<void> {
         if (session && session.kernel) {
-            traceInfo(`Waiting for idle on: ${session.kernel.id}${session.kernel.status}`);
+            traceInfo(`Waiting for idle on: ${session.kernel.id} -> ${session.kernel.status}`);
 
             // This function seems to cause CI builds to timeout randomly on
             // different tests. Waiting for status to go idle doesn't seem to work and
@@ -183,16 +190,22 @@ export class JupyterSession implements IJupyterSession {
             while (session &&
                 session.kernel &&
                 session.kernel.status !== 'idle' &&
+                !this.activeKernels.has(session.kernel.id) &&
                 (Date.now() - startTime < timeout)) {
                 await sleep(100);
             }
 
-            traceInfo(`Finished waiting for idle on: ${session.kernel.id}${session.kernel.status}`);
+            traceInfo(`Finished waiting for idle on: ${session.kernel.id} -> ${session.kernel.status}`);
 
             // If we didn't make it out in ten seconds, indicate an error
-            if (!session || !session.kernel || session.kernel.status !== 'idle') {
-                throw new JupyterWaitForIdleError(localize.DataScience.jupyterLaunchTimedOut());
+            if (session.kernel && session.kernel.status === 'idle') {
+                return;
             }
+            if (session.kernel && this.activeKernels.has(session.kernel.id)) {
+                return;
+            }
+
+            throw new JupyterWaitForIdleError(localize.DataScience.jupyterLaunchTimedOut());
         }
     }
 

@@ -7,7 +7,7 @@ import * as WebSocketWS from 'ws';
 // Do this as a function so that we can pass in variables the the socket will have local access to
 export function createJupyterWebSocket(openEmitted: (sessionId: string | undefined) => void, cookieString?: string, allowUnauthorized?: boolean) {
     class JupyterWebSocket extends WebSocketWS {
-        private sessionId: string | undefined;
+        private kernelId: string | undefined;
 
         constructor(url: string, protocols?: string | string[] | undefined) {
             let co: WebSocketWS.ClientOptions = {};
@@ -26,10 +26,10 @@ export function createJupyterWebSocket(openEmitted: (sessionId: string | undefin
 
             super(url, protocols, co);
 
-            // Parse the url for the session id
-            const parsed = /.*session_id=(.*)\&/.exec(url);
-            if (parsed && parsed.length > 0) {
-                this.sessionId = parsed[1];
+            // Parse the url for the kernel id
+            const parsed = /.*\/kernels\/(.*)\/.*/.exec(this.url);
+            if (parsed && parsed.length > 1) {
+                this.kernelId = parsed[1];
             }
         }
 
@@ -37,7 +37,7 @@ export function createJupyterWebSocket(openEmitted: (sessionId: string | undefin
         public emit(event: string | symbol, ...args: any[]): boolean {
             const result = super.emit(event, ...args);
             if (event === 'open') {
-                openEmitted(this.sessionId);
+                openEmitted(this.kernelId);
             }
             return result;
         }

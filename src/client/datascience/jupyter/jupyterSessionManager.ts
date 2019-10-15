@@ -3,6 +3,7 @@
 'use strict';
 import { ContentsManager, ServerConnection, SessionManager } from '@jupyterlab/services';
 import { Agent as HttpsAgent } from 'https';
+import { EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { traceInfo } from '../../common/logger';
@@ -25,6 +26,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     private contentsManager: ContentsManager | undefined;
     private connInfo: IConnection | undefined;
     private serverSettings: ServerConnection.ISettings | undefined;
+    private kernelConnectedEmitter: EventEmitter<string> = new EventEmitter<string>();
 
     constructor(
         private jupyterPasswordConnect: IJupyterPasswordConnect
@@ -60,7 +62,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             throw new Error(localize.DataScience.sessionDisposed());
         }
         // Create a new session and attempt to connect to it
-        const session = new JupyterSession(this.connInfo, this.serverSettings, kernelSpec, this.sessionManager, this.contentsManager);
+        const session = new JupyterSession(this.connInfo, this.kernelConnectedEmitter.event, this.serverSettings, kernelSpec, this.sessionManager, this.contentsManager);
         try {
             await session.connect(cancelToken);
         } finally {
@@ -92,15 +94,16 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         }
     }
 
-    private onConnectionOpened(sessionId: string | undefined) {
-        traceInfo(`Opening connection ... ${sessionId}`);
+    private onConnectionOpened(kernelId: string | undefined) {
+        traceInfo(`Opening connection ... ${kernelId}`);
+        this.kernelConnectedEmitter.fire(kernelId);
     }
 
     private getSessionCookieString(pwSettings: IJupyterPasswordConnectInfo): string {
         return `_xsrf=${pwSettings.xsrfCookie}; ${pwSettings.sessionCookieName}=${pwSettings.sessionCookieValue}`;
     }
 
-    private async getServerConnectSettings(connInfo: IConnection, onConnectionOpened: (sessionId: string | undefined) => void): Promise<ServerConnection.ISettings> {
+    private async getServerConnectSettings(connInfo: IConnection, onConnectionOpened: (kernelId: string | undefined) => void): Promise<ServerConnection.ISettings> {
         let serverSettings: Partial<ServerConnection.ISettings> =
         {
             baseUrl: connInfo.baseUrl,
