@@ -49,7 +49,7 @@ const config: Configuration = {
         'commonjs'
     ],
     plugins: [
-        ...getDefaultPlugins('extension')
+        ...getDefaultPlugins('debugger')
     ],
     resolve: {
         extensions: ['.ts', '.js'],

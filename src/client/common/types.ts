@@ -172,6 +172,7 @@ export interface IPythonSettings {
     readonly autoUpdateLanguageServer: boolean;
     readonly datascience: IDataScienceSettings;
     readonly onDidChange: Event<void>;
+    readonly experiments: IExperiments;
 }
 export interface ISortImportSettings {
     readonly path: string;
@@ -277,6 +278,16 @@ export interface ITerminalSettings {
     readonly activateEnvironment: boolean;
 }
 
+export interface IExperiments {
+    /**
+     * Return `true` if experiments are enabled, else `false`.
+     *
+     * @type {boolean}
+     * @memberof IExperiments
+     */
+    readonly enabled: boolean;
+}
+
 export type LanguageServerDownloadChannels = 'stable' | 'beta' | 'daily';
 export interface IAnalysisSettings {
     readonly downloadChannel?: LanguageServerDownloadChannels;
@@ -341,8 +352,10 @@ export interface IDataScienceSettings {
     colorizeInputBox?: boolean;
     addGotoCodeLenses?: boolean;
     useNotebookEditor?: boolean;
+    runMagicCommands?: string;
     runStartupCommands: string;
     debugJustMyCode: boolean;
+    defaultCellMarker?: string;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');
@@ -421,6 +434,12 @@ export interface IExtensions {
      */
     // tslint:disable-next-line:no-any
     readonly all: readonly Extension<any>[];
+
+    /**
+     * An event which fires when `extensions.all` changes. This can happen when extensions are
+     * installed, uninstalled, enabled or disabled.
+     */
+    readonly onDidChange: Event<void>;
 
     /**
      * Get an extension by its full identifier in the form of: `publisher.name`.
@@ -506,7 +525,7 @@ export interface ICryptoUtils {
      * @param data The string to hash
      * @param hashFormat Return format of the hash, number or string
      */
-    createHash<E extends keyof IHashFormat>(data: string, hashFormat: E): IHashFormat[E];
+    createHash<E extends keyof IHashFormat>(data: string, hashFormat: E, algorithm?: 'SHA512' | 'FNV'): IHashFormat[E];
 }
 
 export const IAsyncDisposableRegistry = Symbol('IAsyncDisposableRegistry');

@@ -16,7 +16,8 @@
             "outFiles": [
                 "${workspaceFolder}/out/**/*"
             ],
-            "preLaunchTask": "Compile"
+            "preLaunchTask": "Compile",
+            "skipFiles": ["<node_internals>/**"]
         },
         {
             "name": "Extension inside container",
@@ -67,7 +68,8 @@
                 "${workspaceFolder}/out/client/**/*.js"
             ],
             "cwd": "${workspaceFolder}",
-            "preLaunchTask": "Compile"
+            "preLaunchTask": "Compile",
+            "skipFiles": ["<node_internals>/**"]
         },
         {
             "name": "Tests (Debugger, VS Code, *.test.ts)",
@@ -89,7 +91,8 @@
             "preLaunchTask": "Compile",
             "env": {
                 "IS_CI_SERVER_TEST_DEBUGGER": "1"
-            }
+            },
+            "skipFiles": ["<node_internals>/**"]
         },
         {
             "name": "Tests (Single Workspace, VS Code, *.test.ts)",
@@ -110,7 +113,8 @@
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
             ],
-            "preLaunchTask": "Compile"
+            "preLaunchTask": "Compile",
+            "skipFiles": ["<node_internals>/**"]
         },
         {
             "name": "Tests (Multiroot, VS Code, *.test.ts)",
@@ -129,7 +133,8 @@
             "outFiles": [
                 "${workspaceFolder}/out/**/*"
             ],
-            "preLaunchTask": "Compile"
+            "preLaunchTask": "Compile",
+            "skipFiles": ["<node_internals>/**"]
         },
         {
             "name": "Unit Tests (without VS Code, *.unit.test.ts)",
@@ -150,7 +155,8 @@
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
             ],
-            "preLaunchTask": "Compile"
+            "preLaunchTask": "Compile",
+            "skipFiles": ["<node_internals>/**"]
         },
         {
             "name": "Functional Tests (without VS Code, *.functional.test.ts)",
@@ -171,7 +177,8 @@
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
             ],
-            "preLaunchTask": "Compile"
+            "preLaunchTask": "Compile",
+            "skipFiles": ["<node_internals>/**"]
         },
         {
             "type": "node",
@@ -180,7 +187,8 @@
             "program": "${workspaceFolder}/node_modules/gulp/bin/gulp.js",
             "args": [
                 "watch"
-            ]
+            ],
+            "skipFiles": ["<node_internals>/**"]
         },
         {
             "name": "Behave Smoke Tests",

@@ -75,6 +75,7 @@ const config: Configuration = {
             onEnd: [
                 {
                     copy: [
+                        { source: './node_modules/fontkit/*.trie', destination: './out/client/node_modules' },
                         { source: './node_modules/pdfkit/js/data/*.*', destination: './out/client/node_modules/data' },
                         { source: './node_modules/pdfkit/js/pdfkit.js', destination: './out/client/node_modules/' }
                     ]

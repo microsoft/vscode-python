@@ -10,7 +10,7 @@ import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
-import { ILiveShareApi } from '../../../common/application/types';
+import { ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { traceError } from '../../../common/logger';
 import { IConfigurationService, IDisposableRegistry } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
@@ -50,9 +50,10 @@ export class HostJupyterNotebook
         launchInfo: INotebookServerLaunchInfo,
         loggers: INotebookExecutionLogger[],
         resource: vscode.Uri,
-        getDisposedError: () => Error
+        getDisposedError: () => Error,
+        workspace: IWorkspaceService
     ) {
-        super(liveShare, session, configService, disposableRegistry, owner, launchInfo, loggers, resource, getDisposedError);
+        super(liveShare, session, configService, disposableRegistry, owner, launchInfo, loggers, resource, getDisposedError, workspace);
     }
 
     public dispose = async (): Promise<void> => {
@@ -88,7 +89,9 @@ export class HostJupyterNotebook
 
     public async waitForServiceName(): Promise<string> {
         // Use our base name plus our id. This means one unique server per notebook
-        return Promise.resolve(`${LiveShare.JupyterNotebookSharedService}${this.resource.toString()}`);
+        // Convert to our shared URI to match the guest and remove any '.' as live share won't support them
+        const sharedUri = (this.resource.scheme === 'file') ? this.finishedApi!.convertLocalUriToShared(this.resource) : this.resource;
+        return Promise.resolve(`${LiveShare.JupyterNotebookSharedService}${sharedUri.toString()}`);
     }
 
     public async onPeerChange(ev: vsls.PeersChangeEvent): Promise<void> {

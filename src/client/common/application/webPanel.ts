@@ -5,8 +5,7 @@ import '../../common/extensions';
 
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { Uri, ViewColumn, WebviewPanel, window } from 'vscode';
-
+import { Uri, ViewColumn, Webview, WebviewPanel, window } from 'vscode';
 import * as localize from '../../common/utils/localize';
 import { Identifiers } from '../../datascience/constants';
 import { IServiceContainer } from '../../ioc/types';
@@ -89,7 +88,7 @@ export class WebPanel implements IWebPanel {
 
                 // Call our special function that sticks this script inside of an html page
                 // and translates all of the paths to vscode-resource URIs
-                this.panel.webview.html = this.generateReactHtml(mainScriptPath, embeddedCss, settings);
+                this.panel.webview.html = this.generateReactHtml(mainScriptPath, this.panel.webview, embeddedCss, settings);
 
                 // Reset when the current panel is closed
                 this.disposableRegistry.push(this.panel.onDidDispose(() => {
@@ -118,11 +117,9 @@ export class WebPanel implements IWebPanel {
     }
 
     // tslint:disable-next-line:no-any
-    private generateReactHtml(mainScriptPath: string, embeddedCss?: string, settings?: any) {
-        const uriBasePath = Uri.file(`${path.dirname(mainScriptPath)}/`);
-        const uriPath = Uri.file(mainScriptPath);
-        const uriBase = uriBasePath.with({ scheme: 'vscode-resource' });
-        const uri = uriPath.with({ scheme: 'vscode-resource' });
+    private generateReactHtml(mainScriptPath: string, webView: Webview, embeddedCss?: string, settings?: any) {
+        const uriBase = webView.asWebviewUri(Uri.file(`${path.dirname(mainScriptPath)}/`));
+        const uri = webView.asWebviewUri(Uri.file(mainScriptPath));
         const locDatabase = localize.getCollectionJSON();
         const style = embeddedCss ? embeddedCss : '';
         const settingsString = settings ? JSON.stringify(settings) : '{}';
@@ -132,7 +129,7 @@ export class WebPanel implements IWebPanel {
             <head>
                 <meta charset="utf-8">
                 <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
-                <meta http-equiv="Content-Security-Policy" content="default-src 'unsafe-inline' 'unsafe-eval' vscode-resource: data: https: http:;">
+                <meta http-equiv="Content-Security-Policy" content="img-src 'self' data: https: http: blob:; default-src 'unsafe-inline' 'unsafe-eval' vscode-resource: data: https: http:;">
                 <meta name="theme-color" content="#000000">
                 <meta name="theme" content="${Identifiers.GeneratedThemeName}"/>
                 <title>React App</title>

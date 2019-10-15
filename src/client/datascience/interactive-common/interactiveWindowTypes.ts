@@ -27,10 +27,13 @@ export namespace InteractiveWindowMessages {
     export const Interrupt = 'interrupt';
     export const SubmitNewCell = 'submit_new_cell';
     export const UpdateSettings = SharedMessages.UpdateSettings;
+    // Message sent to React component from extension asking it to save the notebook.
+    export const DoSave = 'DoSave';
     export const SendInfo = 'send_info';
     export const Started = SharedMessages.Started;
     export const AddedSysInfo = 'added_sys_info';
     export const RemoteAddCode = 'remote_add_code';
+    export const RemoteReexecuteCode = 'remote_reexecute_code';
     export const Activate = 'activate';
     export const ShowDataViewer = 'show_data_explorer';
     export const GetVariablesRequest = 'get_variables_request';
@@ -50,6 +53,8 @@ export namespace InteractiveWindowMessages {
     export const AddCell = 'add_cell';
     export const EditCell = 'edit_cell';
     export const RemoveCell = 'remove_cell';
+    export const SwapCells = 'swap_cells';
+    export const InsertCell = 'insert_cell';
     export const LoadOnigasmAssemblyRequest = 'load_onigasm_assembly_request';
     export const LoadOnigasmAssemblyResponse = 'load_onigasm_assembly_response';
     export const LoadTmLanguageRequest = 'load_tmlanguage_request';
@@ -60,20 +65,53 @@ export namespace InteractiveWindowMessages {
     export const StopDebugging = 'stop_debugging';
     export const GatherCode = 'gather_code';
     export const LoadAllCells = 'load_all_cells';
+    export const LoadAllCellsComplete = 'load_all_cells_complete';
     export const ScrollToCell = 'scroll_to_cell';
     export const ReExecuteCell = 'reexecute_cell';
     export const NotebookIdentity = 'identity';
     export const NotebookDirty = 'dirty';
     export const NotebookClean = 'clean';
     export const SaveAll = 'save_all';
+    export const NativeCommand = 'native_command';
+    export const VariablesComplete = 'variables_complete';
+    export const NotebookRunAllCells = 'notebook_run_all_cells';
+    export const NotebookRunSelectedCell = 'notebook_run_selected_cell';
+    export const NotebookAddCellBelow = 'notebook_add_cell_below';
+}
 
+export enum NativeCommandType {
+    AddToEnd = 0,
+    ArrowDown,
+    ArrowUp,
+    ChangeToCode,
+    ChangeToMarkdown,
+    CollapseInput,
+    CollapseOutput,
+    DeleteCell,
+    Save,
+    InsertAbove,
+    InsertBelow,
+    MoveCellDown,
+    MoveCellUp,
+    Run,
+    RunAbove,
+    RunAll,
+    RunAndAdd,
+    RunAndMove,
+    RunBelow,
+    ToggleLineNumbers,
+    ToggleOutput,
+    ToggleVariableExplorer,
+    Undo,
+    Unfocus
 }
 
 // These are the messages that will mirror'd to guest/hosts in
 // a live share session
 export const InteractiveWindowRemoteMessages: string[] = [
     InteractiveWindowMessages.AddedSysInfo,
-    InteractiveWindowMessages.RemoteAddCode
+    InteractiveWindowMessages.RemoteAddCode,
+    InteractiveWindowMessages.RemoteReexecuteCode
 ];
 
 export interface IGotoCode {
@@ -107,6 +145,10 @@ export interface IExecuteInfo {
 }
 
 export interface IRemoteAddCode extends IExecuteInfo {
+    originator: string;
+}
+
+export interface IRemoteReexecuteCode extends IExecuteInfo {
     originator: string;
 }
 
@@ -175,6 +217,17 @@ export interface IRemoveCell {
     id: string;
 }
 
+export interface ISwapCells {
+    firstCellId: string;
+    secondCellId: string;
+}
+
+export interface IInsertCell {
+    id: string;
+    code: string;
+    codeCellAbove: string | undefined;
+}
+
 export interface IShowDataViewer {
     variableName: string;
     columnSize: number;
@@ -194,6 +247,11 @@ export interface INotebookIdentity {
 
 export interface ISaveAll {
     cells: ICell[];
+}
+
+export interface INativeCommand {
+    command: NativeCommandType;
+    source: 'keyboard' | 'mouse';
 }
 
 // Map all messages to specific payloads
@@ -222,6 +280,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.Started]: never | undefined;
     public [InteractiveWindowMessages.AddedSysInfo]: IAddedSysInfo;
     public [InteractiveWindowMessages.RemoteAddCode]: IRemoteAddCode;
+    public [InteractiveWindowMessages.RemoteReexecuteCode]: IRemoteReexecuteCode;
     public [InteractiveWindowMessages.Activate]: never | undefined;
     public [InteractiveWindowMessages.ShowDataViewer]: IShowDataViewer;
     public [InteractiveWindowMessages.GetVariablesRequest]: number;
@@ -243,6 +302,8 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.AddCell]: IAddCell;
     public [InteractiveWindowMessages.EditCell]: IEditCell;
     public [InteractiveWindowMessages.RemoveCell]: IRemoveCell;
+    public [InteractiveWindowMessages.SwapCells]: ISwapCells;
+    public [InteractiveWindowMessages.InsertCell]: IInsertCell;
     public [InteractiveWindowMessages.LoadOnigasmAssemblyRequest]: never | undefined;
     public [InteractiveWindowMessages.LoadOnigasmAssemblyResponse]: Buffer;
     public [InteractiveWindowMessages.LoadTmLanguageRequest]: never | undefined;
@@ -253,10 +314,16 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.StopDebugging]: never | undefined;
     public [InteractiveWindowMessages.GatherCode]: ICell;
     public [InteractiveWindowMessages.LoadAllCells]: ILoadAllCells;
+    public [InteractiveWindowMessages.LoadAllCellsComplete]: ILoadAllCells;
     public [InteractiveWindowMessages.ScrollToCell]: IScrollToCell;
     public [InteractiveWindowMessages.ReExecuteCell]: ISubmitNewCell;
     public [InteractiveWindowMessages.NotebookIdentity]: INotebookIdentity;
     public [InteractiveWindowMessages.NotebookDirty]: never | undefined;
     public [InteractiveWindowMessages.NotebookClean]: never | undefined;
     public [InteractiveWindowMessages.SaveAll]: ISaveAll;
+    public [InteractiveWindowMessages.NativeCommand]: INativeCommand;
+    public [InteractiveWindowMessages.VariablesComplete]: never | undefined;
+    public [InteractiveWindowMessages.NotebookRunAllCells]: never | undefined;
+    public [InteractiveWindowMessages.NotebookRunSelectedCell]: never | undefined;
+    public [InteractiveWindowMessages.NotebookAddCellBelow]: never | undefined;
 }

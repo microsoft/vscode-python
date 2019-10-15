@@ -9,7 +9,7 @@ import * as path from 'path';
 import { Observable } from 'rxjs/Observable';
 import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
-import { EventEmitter } from 'vscode';
+import { EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { Cancellation } from '../../client/common/cancellation';
@@ -18,7 +18,7 @@ import { IAsyncDisposableRegistry, IConfigurationService } from '../../client/co
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { generateCells } from '../../client/datascience/cellFactory';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
-import { concatMultilineString } from '../../client/datascience/common';
+import { concatMultilineStringInput } from '../../client/datascience/common';
 import { CodeSnippits, Identifiers } from '../../client/datascience/constants';
 import {
     ICell,
@@ -107,9 +107,26 @@ export class MockJupyterManager implements IJupyterSessionManager {
         this.addCell('matplotlib.style.use(\'dark_background\')');
         this.addCell(`matplotlib.rcParams.update(${Identifiers.MatplotLibDefaultParams})`);
         this.addCell(`%cd "${path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience')}"`);
+        // When we have windows file names, we replace `\` with `\\`.
+        // Code is as follows `await this.notebook.execute(`__file__ = '${file.replace(/\\/g, '\\\\')}'`, file, line, uuid(), undefined, true);
+        // Found in src\client\datascience\interactive-common\interactiveBase.ts.
+        this.addCell(`%cd "${Uri.file(path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience')).fsPath}`);
         this.addCell('import sys\r\nsys.version', '1.1.1.1');
         this.addCell('import sys\r\nsys.executable', 'python');
         this.addCell('import notebook\r\nnotebook.version_info', '1.1.1.1');
+
+        this.addCell(`__file__ = '${Uri.file('foo.py').fsPath}'`);
+        this.addCell(`__file__ = '${Uri.file('bar.py').fsPath}'`);
+        this.addCell(`__file__ = '${Uri.file('foo').fsPath}'`);
+        this.addCell(`__file__ = '${Uri.file('test.py').fsPath}'`);
+
+        // When we have windows file names, we replace `\` with `\\`.
+        // Code is as follows `await this.notebook.execute(`__file__ = '${file.replace(/\\/g, '\\\\')}'`, file, line, uuid(), undefined, true);
+        // Found in src\client\datascience\interactive-common\interactiveBase.ts.
+        this.addCell(`__file__ = '${Uri.file('foo.py').fsPath.replace(/\\/g, '\\\\')}'`);
+        this.addCell(`__file__ = '${Uri.file('bar.py').fsPath.replace(/\\/g, '\\\\')}'`);
+        this.addCell(`__file__ = '${Uri.file('foo').fsPath.replace(/\\/g, '\\\\')}'`);
+        this.addCell(`__file__ = '${Uri.file('test.py').fsPath.replace(/\\/g, '\\\\')}'`);
     }
 
     public getConnInfo(): IConnection {
@@ -160,16 +177,16 @@ export class MockJupyterManager implements IJupyterSessionManager {
             output_type: 'error',
             ename: message,
             evalue: message,
-            traceback: []
+            traceback: [message]
         };
 
         this.addCell(code, result);
     }
 
     public addContinuousOutputCell(code: string, resultGenerator: (cancelToken: CancellationToken) => Promise<{ result: string; haveMore: boolean }>) {
-        const cells = generateCells(undefined, code, 'foo.py', 1, true, uuid());
+        const cells = generateCells(undefined, code, Uri.file('foo.py').fsPath, 1, true, uuid());
         cells.forEach(c => {
-            const key = concatMultilineString(c.data.source).replace(LineFeedRegEx, '');
+            const key = concatMultilineStringInput(c.data.source).replace(LineFeedRegEx, '').toLowerCase();
             if (c.data.cell_type === 'code') {
                 const taggedResult = {
                     output_type: 'generator'
@@ -198,10 +215,10 @@ export class MockJupyterManager implements IJupyterSessionManager {
     }
 
     public addCell(code: string, result?: undefined | string | number | nbformat.IUnrecognizedOutput | nbformat.IExecuteResult | nbformat.IDisplayData | nbformat.IStream | nbformat.IError, mimeType?: string) {
-        const cells = generateCells(undefined, code, 'foo.py', 1, true, uuid());
+        const cells = generateCells(undefined, code, Uri.file('foo.py').fsPath, 1, true, uuid());
         cells.forEach(c => {
             const cellMatcher = new CellMatcher();
-            const key = cellMatcher.stripFirstMarker(concatMultilineString(c.data.source)).replace(LineFeedRegEx, '');
+            const key = cellMatcher.stripFirstMarker(concatMultilineStringInput(c.data.source)).replace(LineFeedRegEx, '').toLowerCase();
             if (c.data.cell_type === 'code') {
                 const massagedResult = this.massageCellResult(result, mimeType);
                 const data: nbformat.ICodeCell = c.data as nbformat.ICodeCell;

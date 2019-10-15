@@ -7,10 +7,11 @@ import { expect } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
-import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
+import { Disposable, LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
 import { BaseLanguageClientFactory } from '../../../client/activation/languageServer/languageClientFactory';
 import { LanguageServer } from '../../../client/activation/languageServer/languageServer';
 import { ILanguageClientFactory } from '../../../client/activation/types';
+import { ICommandManager } from '../../../client/common/application/types';
 import '../../../client/common/extensions';
 import { IConfigurationService, IDisposable, IPythonSettings } from '../../../client/common/types';
 import { sleep } from '../../../client/common/utils/async';
@@ -31,12 +32,18 @@ suite('Language Server - LanguageServer', () => {
     let client: typemoq.IMock<LanguageClient>;
     let testManager: ITestManagementService;
     let configService: typemoq.IMock<IConfigurationService>;
+    let commandManager: typemoq.IMock<ICommandManager>;
     setup(() => {
         client = typemoq.Mock.ofType<LanguageClient>();
         clientFactory = mock(BaseLanguageClientFactory);
         testManager = mock(UnitTestManagementService);
         configService = typemoq.Mock.ofType<IConfigurationService>();
-        server = new LanguageServerTest(instance(clientFactory), instance(testManager), configService.object);
+
+        commandManager = typemoq.Mock.ofType<ICommandManager>();
+        commandManager.setup(c => c.registerCommand(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny())).returns(() => {
+            return typemoq.Mock.ofType<Disposable>().object;
+        });
+        server = new LanguageServerTest(instance(clientFactory), instance(testManager), configService.object, commandManager.object);
     });
     teardown(() => {
         client.setup(c => c.stop()).returns(() => Promise.resolve());
@@ -261,6 +268,51 @@ suite('Language Server - LanguageServer', () => {
 
         verify(testManager.activate(anything())).once();
 
+        client.verify(c => c.onTelemetry(typemoq.It.isAny()), typemoq.Times.never());
+        pythonSettings.verifyAll();
+        configService.verifyAll();
+    });
+    test('Do not register services if languageClient is disposed while waiting for it to start', async () => {
+        const uri = Uri.file(__filename);
+        const options = typemoq.Mock.ofType<LanguageClientOptions>().object;
+
+        const pythonSettings = typemoq.Mock.ofType<IPythonSettings>();
+        pythonSettings
+            .setup(p => p.downloadLanguageServer)
+            .returns(() => false)
+            .verifiable(typemoq.Times.never());
+        configService
+            .setup(c => c.getSettings(uri))
+            .returns(() => pythonSettings.object)
+            .verifiable(typemoq.Times.never());
+
+        client.setup(c => (c as any).then).returns(() => undefined);
+        client
+            .setup(c => c.initializeResult)
+            .returns(() => undefined)
+            .verifiable(typemoq.Times.atLeastOnce());
+        when(clientFactory.createLanguageClient(uri, options)).thenResolve(client.object);
+        const startDisposable = typemoq.Mock.ofType<IDisposable>();
+        client.setup(c => c.stop()).returns(() => Promise.resolve());
+        client
+            .setup(c => c.start())
+            .returns(() => startDisposable.object)
+            .verifiable(typemoq.Times.once());
+
+        const promise = server.start(uri, options);
+        // Wait until we start ls client and check if it is ready.
+        await sleep(200);
+        // Confirm we checked if it is ready.
+        client.verifyAll();
+        // Now dispose the language client.
+        server.dispose();
+        // Wait until we check if it is ready.
+        await sleep(500);
+
+        // Promise should resolve without any errors.
+        await promise;
+
+        verify(testManager.activate(anything())).never();
         client.verify(c => c.onTelemetry(typemoq.It.isAny()), typemoq.Times.never());
         pythonSettings.verifyAll();
         configService.verifyAll();

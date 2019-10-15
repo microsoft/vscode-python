@@ -8,6 +8,7 @@ import { InputHistory } from '../interactive-common/inputHistory';
 import { IKeyboardEvent } from '../react-common/event';
 import { getLocString } from '../react-common/locReactSide';
 import { Editor } from './editor';
+import { IFont } from './mainState';
 
 export interface ICodeProps {
     autoFocus: boolean;
@@ -23,6 +24,7 @@ export interface ICodeProps {
     editorMeasureClassName?: string;
     showLineNumbers?: boolean;
     useQuickEdit?: boolean;
+    font: IFont;
     onCreated(code: string, modelId: string): void;
     onChange(changes: monacoEditor.editor.IModelContentChange[], modelId: string): void;
     openLink(uri: monacoEditor.Uri): void;
@@ -53,7 +55,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
                 <Editor
                     codeTheme={this.props.codeTheme}
                     readOnly={readOnly}
-                    history={undefined}
+                    history={this.props.history}
                     onCreated={this.props.onCreated}
                     onChange={this.onModelChanged}
                     testMode={this.props.testMode}
@@ -70,6 +72,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
                     unfocused={this.props.unfocused}
                     showLineNumbers={this.props.showLineNumbers}
                     useQuickEdit={this.props.useQuickEdit}
+                    font={this.props.font}
                 />
                 <div className={waterMarkClass} role='textbox' onClick={this.clickWatermark}>{this.getWatermarkString()}</div>
             </div>

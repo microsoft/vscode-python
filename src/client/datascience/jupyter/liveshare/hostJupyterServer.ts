@@ -8,7 +8,7 @@ import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
-import { ILiveShareApi } from '../../../common/application/types';
+import { ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { traceInfo } from '../../../common/logger';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
@@ -46,6 +46,7 @@ export class HostJupyterServer
         disposableRegistry: IDisposableRegistry,
         configService: IConfigurationService,
         sessionManager: IJupyterSessionManagerFactory,
+        private workspaceService: IWorkspaceService,
         loggers: INotebookExecutionLogger[]) {
         super(liveShare, asyncRegistry, disposableRegistry, configService, sessionManager, loggers);
     }
@@ -82,9 +83,8 @@ export class HostJupyterServer
                 service.onRequest(LiveShareCommands.syncRequest, (_args: any[], _cancellation: CancellationToken) => this.onSync());
                 service.onRequest(LiveShareCommands.disposeServer, (_args: any[], _cancellation: CancellationToken) => this.dispose());
                 service.onRequest(LiveShareCommands.createNotebook, async (args: any[], cancellation: CancellationToken) => {
-                    // Translate the uri into local if possible
-                    const uri = args[0] as vscode.Uri;
-                    const resource = (uri.scheme && uri.scheme !== Identifiers.InteractiveWindowIdentityScheme) ? this.finishedApi!.convertSharedUriToLocal(args[0]) : uri;
+                    const uri = vscode.Uri.parse(args[0]);
+                    const resource = (uri.scheme && uri.scheme !== Identifiers.InteractiveWindowIdentityScheme) ? this.finishedApi!.convertSharedUriToLocal(uri) : uri;
                     // Don't return the notebook. We don't want it to be serialized. We just want its live share server to be started.
                     const notebook = await this.createNotebook(resource, cancellation) as HostJupyterNotebook;
                     await notebook.onAttach(api);
@@ -94,6 +94,17 @@ export class HostJupyterServer
                 await this.attemptToForwardPort(api, this.portToForward);
             }
         }
+    }
+
+    public async onSessionChange(api: vsls.LiveShare | null): Promise<void> {
+        await super.onSessionChange(api);
+
+        this.getNotebooks().forEach(async notebook => {
+            const hostNotebook = notebook as HostJupyterNotebook;
+            if (hostNotebook) {
+                await hostNotebook.onSessionChange(api);
+            }
+        });
     }
 
     public async onDetach(api: vsls.LiveShare | null): Promise<void> {
@@ -163,7 +174,8 @@ export class HostJupyterServer
                 launchInfo,
                 loggers,
                 resource,
-                this.getDisposedError.bind(this));
+                this.getDisposedError.bind(this),
+                this.workspaceService);
 
             // Wait for it to be ready
             traceInfo(`Waiting for idle ${this.id}`);

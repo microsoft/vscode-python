@@ -169,6 +169,10 @@ export class JupyterServerBase implements INotebookServer {
         return this.notebooks.get(resource.toString());
     }
 
+    protected getNotebooks(): INotebook[] {
+        return [...this.notebooks.values()];
+    }
+
     protected setNotebook(resource: Uri, notebook: INotebook) {
         const oldDispose = notebook.dispose;
         notebook.dispose = () => {

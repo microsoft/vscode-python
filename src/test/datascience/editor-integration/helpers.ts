@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as TypeMoq from 'typemoq';
-import { Range, TextDocument, TextLine } from 'vscode';
+import { Range, TextDocument, TextLine, Uri } from 'vscode';
 
 // tslint:disable:max-func-body-length no-trailing-whitespace no-multiline-string
 // Disable whitespace / multiline as we use that to pass in our fake file strings
@@ -18,7 +18,7 @@ export function createDocument(inputText: string, fileName: string, fileVersion:
     document.setup(d => d.languageId).returns(() => 'python');
 
     // First set the metadata
-    document.setup(d => d.fileName).returns(() => fileName).verifiable(times);
+    document.setup(d => d.fileName).returns(() => Uri.file(fileName).fsPath).verifiable(times);
     document.setup(d => d.version).returns(() => fileVersion).verifiable(times);
 
     // Next add the lines in

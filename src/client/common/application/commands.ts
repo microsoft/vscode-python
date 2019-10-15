@@ -4,6 +4,7 @@
 'use strict';
 
 import { CancellationToken, Position, TextDocument, Uri } from 'vscode';
+import { Commands as LSCommands } from '../../activation/languageServer/constants';
 import { Commands as DSCommands } from '../../datascience/constants';
 import { CommandSource } from '../../testing/common/constants';
 import { TestFunction, TestsToRun } from '../../testing/common/types';
@@ -58,11 +59,15 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.NotebookEditorRemoveAllCells]: [];
     [DSCommands.NotebookEditorInterruptKernel]: [];
     [DSCommands.NotebookEditorRestartKernel]: [];
+    [DSCommands.NotebookEditorRunAllCells]: [];
+    [DSCommands.NotebookEditorRunSelectedCell]: [];
+    [DSCommands.NotebookEditorAddCellBelow]: [];
     [DSCommands.ExpandAllCells]: [];
     [DSCommands.CollapseAllCells]: [];
     [DSCommands.ExportOutputAsNotebook]: [];
     [DSCommands.AddCellBelow]: [];
     [DSCommands.CreateNewNotebook]: [];
+    [LSCommands.ClearAnalyisCache]: [];
 }
 
 /**
@@ -78,11 +83,11 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['revealLine']: [{ lineNumber: number; at: 'top' | 'center' | 'bottom' }];
     ['python._loadLanguageServerExtension']: {}[];
     ['python.SelectAndInsertDebugConfiguration']: [TextDocument, Position, CancellationToken];
+    ['python.viewLanguageServerOutput']: [];
     [Commands.Build_Workspace_Symbols]: [boolean, CancellationToken];
     [Commands.Sort_Imports]: [undefined, Uri];
     [Commands.Exec_In_Terminal]: [undefined, Uri];
-    [Commands.Exec_In_Terminal_Icon_1]: [undefined, Uri];
-    [Commands.Exec_In_Terminal_Icon_2]: [undefined, Uri];
+    [Commands.Exec_In_Terminal_Icon]: [undefined, Uri];
     [Commands.Tests_ViewOutput]: [undefined, CommandSource];
     [Commands.Tests_Select_And_Run_File]: [undefined, CommandSource];
     [Commands.Tests_Run_Current_File]: [undefined, CommandSource];

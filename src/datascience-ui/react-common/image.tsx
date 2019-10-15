@@ -37,7 +37,13 @@ export enum ImageName {
     InsertAbove,
     InsertBelow,
     SwitchToCode,
-    SwitchToMarkdown
+    SwitchToMarkdown,
+    OpenPlot,
+    RunAll,
+    Delete,
+    VariableExplorer,
+    ExportToPython,
+    ClearAllOutput
 }
 
 // All of the images must be 'require' so that webpack doesn't rewrite the import as requiring a .default.
@@ -60,8 +66,8 @@ const images: { [key: string] : { light: string; dark: string } } = {
         },
     GatherCode:
         {
-            light: require('./images/GatherCode/GatherCode_16x_vscode.svg'),
-            dark : require('./images/GatherCode/GatherCode_16x_vscode.svg')
+            light: require('./images/GatherCode/gather_light.svg'),
+            dark : require('./images/GatherCode/gather_dark.svg')
         },
     GoToSourceCode:
         {
@@ -184,6 +190,36 @@ const images: { [key: string] : { light: string; dark: string } } = {
         {
             light: require('./images/SwitchToMarkdown/switchtomarkdown.svg'),
             dark : require('./images/SwitchToMarkdown/switchtomarkdown-inverse.svg')
+        },
+    OpenPlot:
+        {
+            light: require('./images/OpenPlot/plot_light.svg'),
+            dark : require('./images/OpenPlot/plot_dark.svg')
+        },
+    RunAll:
+        {
+            light: require('./images/RunAll/run_all_light.svg'),
+            dark : require('./images/RunAll/run_all_dark.svg')
+        },
+    Delete:
+        {
+            light: require('./images/Delete/delete_light.svg'),
+            dark : require('./images/Delete/delete_dark.svg')
+        },
+    VariableExplorer:
+        {
+            light: require('./images/VariableExplorer/variable_explorer_light.svg'),
+            dark : require('./images/VariableExplorer/variable_explorer_dark.svg')
+        },
+    ExportToPython:
+        {
+            light: require('./images/ExportToPython/export_to_python_light.svg'),
+            dark : require('./images/ExportToPython/export_to_python_dark.svg')
+        },
+    ClearAllOutput:
+        {
+            light: require('./images/ClearAllOutput/clear_all_output_light.svg'),
+            dark : require('./images/ClearAllOutput/clear_all_output_dark.svg')
         }
 };
 

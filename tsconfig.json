@@ -20,8 +20,6 @@
         "noImplicitThis": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
-        // We don't worry about this one:
-        //"noImplicitReturns": true,
         "noFallthroughCasesInSwitch": true
     },
     "exclude": [
@@ -32,6 +30,8 @@
         "src/client/node_modules",
         "src/server/src/typings",
         "src/client/src/typings",
-        "build"
+        "src/smoke",
+        "build",
+        "uitests"
     ]
 }

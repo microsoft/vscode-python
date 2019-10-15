@@ -3,7 +3,6 @@
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { DebugConfiguration } from 'vscode';
 import * as vsls from 'vsls/vscode';
@@ -13,9 +12,8 @@ import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { EXTENSION_ROOT_DIR } from '../../constants';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { concatMultilineString } from '../common';
+import { concatMultilineStringOutput } from '../common';
 import { Identifiers, Telemetry } from '../constants';
 import {
     CellState,
@@ -30,6 +28,8 @@ import {
 import { JupyterDebuggerNotInstalledError } from './jupyterDebuggerNotInstalledError';
 import { JupyterDebuggerRemoteNotSupported } from './jupyterDebuggerRemoteNotSupported';
 import { ILiveShareHasRole } from './liveshare/types';
+
+const pythonShellCommand = `_sysexec = sys.executable\r\n_quoted_sysexec = '"' + _sysexec + '"'\r\n!{_quoted_sysexec}`;
 
 interface IPtvsdVersion {
     major: number;
@@ -57,6 +57,8 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         // Try to connect to this notebook
         const config = await this.connect(notebook);
         if (config) {
+            traceInfo('connected to notebook during debugging');
+
             // First check if this is a live share session. Skip debugging attach on the guest
             // tslint:disable-next-line: no-any
             const hasRole = (notebook as any) as ILiveShareHasRole;
@@ -75,6 +77,8 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
             const importResults = await this.executeSilently(notebook, `import ptvsd\nptvsd.wait_for_attach()`);
             if (importResults.length === 0 || importResults[0].state === CellState.error) {
                 traceWarning('PTVSD not found in path.');
+            } else {
+                this.traceCellResults('import startup', importResults);
             }
 
             // Then enable tracing
@@ -119,6 +123,22 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         }
     }
 
+    private traceCellResults(prefix: string, results: ICell[]) {
+        if (results.length > 0 && results[0].data.cell_type === 'code') {
+            const cell = results[0].data as nbformat.ICodeCell;
+            const error = cell.outputs && cell.outputs[0] ? cell.outputs[0].evalue : undefined;
+            if (error) {
+                traceError(`${prefix} Error : ${error}`);
+            } else if (cell.outputs && cell.outputs[0]) {
+                const data = cell.outputs[0].data;
+                const text = cell.outputs[0].text;
+                traceInfo(`${prefix} Output: ${text || JSON.stringify(data)}`);
+            }
+        } else {
+            traceInfo(`${prefix} no output.`);
+        }
+    }
+
     private async connect(notebook: INotebook): Promise<DebugConfiguration | undefined> {
         // If we already have configuration, we're already attached, don't do it again.
         let result = this.configs.get(notebook.resource.toString());
@@ -155,7 +175,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         return result;
     }
 
-    private calculatePtvsdPathList(notebook: INotebook): string | undefined {
+    private calculatePtvsdPathList(_notebook: INotebook): string | undefined {
         const extraPaths: string[] = [];
 
         // Add the settings path first as it takes precedence over the ptvsd extension path
@@ -172,14 +192,16 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
         // For a local connection we also need will append on the path to the ptvsd
         // installed locally by the extension
-        const connectionInfo = notebook.server.getConnectionInfo();
-        if (connectionInfo && connectionInfo.localLaunch) {
-            let localPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python');
-            if (this.platform.isWindows) {
-                localPath = localPath.replace('\\', '\\\\');
-            }
-            extraPaths.push(localPath);
-        }
+        // Actually until this is resolved: https://github.com/microsoft/vscode-python/issues/7615, skip adding
+        // this path.
+        // const connectionInfo = notebook.server.getConnectionInfo();
+        // if (connectionInfo && connectionInfo.localLaunch) {
+        //     let localPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python');
+        //     if (this.platform.isWindows) {
+        //         localPath = localPath.replace('\\', '\\\\');
+        //     }
+        //     extraPaths.push(localPath);
+        // }
 
         if (extraPaths && extraPaths.length > 0) {
             return extraPaths.reduce((totalPath, currentPath) => {
@@ -201,7 +223,8 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         const ptvsdPathList = this.calculatePtvsdPathList(notebook);
 
         if (ptvsdPathList && ptvsdPathList.length > 0) {
-            await this.executeSilently(notebook, `import sys\r\nsys.path.extend([${ptvsdPathList}])\r\nsys.path`);
+            const result = await this.executeSilently(notebook, `import sys\r\nsys.path.extend([${ptvsdPathList}])\r\nsys.path`);
+            this.traceCellResults('Appending paths', result);
         }
     }
 
@@ -232,9 +255,9 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
         let code;
         if (ptvsdPathList) {
-            code = `import sys\r\n!{sys.executable} -c "import sys;sys.path.extend([${ptvsdPathList}]);sys.path;import ptvsd;print(ptvsd.__version__)"`;
+            code = `import sys\r\n${pythonShellCommand} -c "import sys;sys.path.extend([${ptvsdPathList}]);sys.path;import ptvsd;print(ptvsd.__version__)"`;
         } else {
-            code = `import sys\r\n!{sys.executable} -c "import ptvsd;print(ptvsd.__version__)"`;
+            code = `import sys\r\n${pythonShellCommand} -c "import ptvsd;print(ptvsd.__version__)"`;
         }
 
         const ptvsdVersionResults = await this.executeSilently(notebook, code);
@@ -243,6 +266,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
     private parsePtvsdVersionInfo(cells: ICell[]): IPtvsdVersion | undefined {
         if (cells.length < 1 || cells[0].state !== CellState.finished) {
+            this.traceCellResults('parsePtvsdVersionInfo', cells);
             return undefined;
         }
 
@@ -261,6 +285,8 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                 };
             }
         }
+
+        this.traceCellResults('parsingPtvsdVersionInfo', cells);
 
         return undefined;
     }
@@ -291,7 +317,8 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
     private async installPtvsd(notebook: INotebook): Promise<void> {
         // tslint:disable-next-line:no-multiline-string
-        const ptvsdInstallResults = await this.executeSilently(notebook, `import sys\r\n!{sys.executable} -m pip install -U ptvsd`);
+        const ptvsdInstallResults = await this.executeSilently(notebook, `import sys\r\n${pythonShellCommand} -m pip install -U ptvsd`);
+        traceInfo('Installing ptvsd');
 
         if (ptvsdInstallResults.length > 0) {
             const installResultsString = this.extractOutput(ptvsdInstallResults[0]);
@@ -302,7 +329,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                 return;
             }
         }
-
+        this.traceCellResults('Installing PTVSD', ptvsdInstallResults);
         sendTelemetryEvent(Telemetry.PtvsdInstallFailed);
         traceError('Failed to install ptvsd');
         // Failed to install ptvsd, throw to exit debugging
@@ -371,7 +398,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                 }
                 if (outputs[0].output_type === 'stream') {
                     const stream = outputs[0] as nbformat.IStream;
-                    return concatMultilineString(stream.text);
+                    return concatMultilineStringOutput(stream.text);
                 }
             }
         }

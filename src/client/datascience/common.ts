@@ -7,7 +7,8 @@ import { noop } from '../../test/core';
 
 const SingleQuoteMultiline = '\'\'\'';
 const DoubleQuoteMultiline = '\"\"\"';
-export function concatMultilineString(str: nbformat.MultilineString): string {
+
+function concatMultilineString(str: nbformat.MultilineString, trim: boolean): string {
     const nonLineFeedWhiteSpaceTrim = /(^[\t\f\v\r ]+|[\t\f\v\r ]+$)/g; // Local var so don't have to reset the lastIndex.
     if (Array.isArray(str)) {
         let result = '';
@@ -21,16 +22,35 @@ export function concatMultilineString(str: nbformat.MultilineString): string {
         }
 
         // Just trim whitespace. Leave \n in place
-        return result.replace(nonLineFeedWhiteSpaceTrim, '');
+        return trim ? result.replace(nonLineFeedWhiteSpaceTrim, '') : result;
     }
-    return str.toString().replace(nonLineFeedWhiteSpaceTrim, '');
+    return trim ? str.toString().replace(nonLineFeedWhiteSpaceTrim, '') : str.toString();
 }
 
-export function splitMultilineString(str: nbformat.MultilineString): string[] {
-    if (Array.isArray(str)) {
-        return str as string[];
+export function concatMultilineStringOutput(str: nbformat.MultilineString): string {
+    return concatMultilineString(str, true);
+}
+export function concatMultilineStringInput(str: nbformat.MultilineString): string {
+    return concatMultilineString(str, false);
+}
+
+export function splitMultilineString(source: nbformat.MultilineString): string[] {
+    // Make sure a multiline string is back the way Jupyter expects it
+    if (Array.isArray(source)) {
+        return source as string[];
     }
-    return str.toString().split('\n');
+    const str = source.toString();
+    if (str.length > 0) {
+        // Each line should be a separate entry, but end with a \n if not last entry
+        const arr = str.split('\n');
+        return arr.map((s, i) => {
+            if (i < arr.length - 1) {
+                return `${s}\n`;
+            }
+            return s;
+        }).filter(s => s.length > 0); // Skip last one if empty (it's the only one that could be length 0)
+    }
+    return [];
 }
 
 // Strip out comment lines from code

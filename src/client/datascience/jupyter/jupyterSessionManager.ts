@@ -116,11 +116,13 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         if (connInfo.token === '' || connInfo.token === 'null') {
             serverSettings = { ...serverSettings, token: '' };
             const pwSettings = await this.jupyterPasswordConnect.getPasswordConnectionInfo(connInfo.baseUrl, connInfo.allowUnauthorized ? true : false);
-            if (pwSettings) {
+            if (pwSettings && !pwSettings.emptyPassword) {
                 cookieString = this.getSessionCookieString(pwSettings);
                 const requestHeaders = { Cookie: cookieString, 'X-XSRFToken': pwSettings.xsrfCookie };
                 requestInit = { ...requestInit, headers: requestHeaders };
                 requiresWebSocket = true;
+            } else if (pwSettings && pwSettings.emptyPassword) {
+                serverSettings = { ...serverSettings, token: connInfo.token };
             } else {
                 // Failed to get password info, notify the user
                 throw new Error(localize.DataScience.passwordFailure());

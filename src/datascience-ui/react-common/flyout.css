@@ -14,5 +14,7 @@
 }
 
 .flyout-children-hidden {
-    visibility: collapse;
+    visibility: hidden;
+    width: 0px;
 }
+

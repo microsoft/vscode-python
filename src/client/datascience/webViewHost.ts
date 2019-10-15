@@ -10,6 +10,7 @@ import { IWebPanel, IWebPanelMessageListener, IWebPanelProvider, IWorkspaceServi
 import { traceInfo } from '../common/logger';
 import { IConfigurationService, IDisposable } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
+import { noop } from '../common/utils/misc';
 import { StopWatch } from '../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { DefaultTheme, Telemetry } from './constants';
@@ -86,6 +87,15 @@ export class WebViewHost<IMapping> implements IDisposable {
         }
     }
 
+    public setTheme(isDark: boolean) {
+        if (this.themeIsDarkPromise && !this.themeIsDarkPromise.resolved) {
+            this.themeIsDarkPromise.resolve(isDark);
+        } else {
+            this.themeIsDarkPromise = createDeferred<boolean>();
+            this.themeIsDarkPromise.resolve(isDark);
+        }
+    }
+
     protected reload() {
         // Make not disposed anymore
         this.disposed = false;
@@ -136,8 +146,8 @@ export class WebViewHost<IMapping> implements IDisposable {
         this.messageListener.onMessage(type.toString(), payload);
     }
 
-    protected onViewStateChanged(_visible: boolean, _active: boolean): Promise<void> {
-        return Promise.resolve();
+    protected onViewStateChanged(_visible: boolean, _active: boolean) {
+        noop();
     }
 
     // tslint:disable-next-line:no-any
@@ -160,6 +170,8 @@ export class WebViewHost<IMapping> implements IDisposable {
             extraSettings: {
                 editorCursor: this.getValue(editor, 'cursorStyle', 'line'),
                 editorCursorBlink: this.getValue(editor, 'cursorBlinking', 'blink'),
+                fontSize: this.getValue(editor, 'fontSize', 14),
+                fontFamily: this.getValue(editor, 'fontFamily', 'Consolas, \'Courier New\', monospace'),
                 theme: theme
             },
             intellisenseOptions: {
@@ -192,20 +204,16 @@ export class WebViewHost<IMapping> implements IDisposable {
     }
 
     private webPanelViewStateChanged = (webPanel: IWebPanel) => {
-        this.onViewStateChanged(webPanel.isVisible(), webPanel.isActive()).then(() => {
-            this.viewState.active = webPanel.isActive();
-            this.viewState.visible = webPanel.isVisible();
-        }).ignoreErrors();
+        const isVisible = webPanel.isVisible();
+        const isActive = webPanel.isActive();
+        this.onViewStateChanged(isVisible, isActive);
+        this.viewState.visible = isVisible;
+        this.viewState.active = isActive;
     }
 
     @captureTelemetry(Telemetry.WebviewStyleUpdate)
     private async handleCssRequest(request: IGetCssRequest): Promise<void> {
-        if (this.themeIsDarkPromise && !this.themeIsDarkPromise.resolved) {
-            this.themeIsDarkPromise.resolve(request.isDark);
-        } else {
-            this.themeIsDarkPromise = createDeferred<boolean>();
-            this.themeIsDarkPromise.resolve(request.isDark);
-        }
+        this.setTheme(request.isDark);
         const settings = this.generateDataScienceExtraSettings();
         const isDark = await this.themeFinder.isThemeDark(settings.extraSettings.theme);
         const css = await this.cssGenerator.generateThemeCss(request.isDark, settings.extraSettings.theme);
@@ -214,12 +222,7 @@ export class WebViewHost<IMapping> implements IDisposable {
 
     @captureTelemetry(Telemetry.WebviewMonacoStyleUpdate)
     private async handleMonacoThemeRequest(request: IGetMonacoThemeRequest): Promise<void> {
-        if (this.themeIsDarkPromise && !this.themeIsDarkPromise.resolved) {
-            this.themeIsDarkPromise.resolve(request.isDark);
-        } else {
-            this.themeIsDarkPromise = createDeferred<boolean>();
-            this.themeIsDarkPromise.resolve(request.isDark);
-        }
+        this.setTheme(request.isDark);
         const settings = this.generateDataScienceExtraSettings();
         const monacoTheme = await this.cssGenerator.generateMonacoTheme(request.isDark, settings.extraSettings.theme);
         return this.postMessageInternal(CssMessages.GetMonacoThemeResponse, { theme: monacoTheme });
@@ -239,8 +242,12 @@ export class WebViewHost<IMapping> implements IDisposable {
     // Post a message to our webpanel and update our new datascience settings
     private onPossibleSettingsChange = (event: ConfigurationChangeEvent) => {
         if (event.affectsConfiguration('workbench.colorTheme') ||
+            event.affectsConfiguration('editor.fontSize') ||
+            event.affectsConfiguration('editor.fontFamily') ||
             event.affectsConfiguration('editor.cursorStyle') ||
             event.affectsConfiguration('editor.cursorBlinking') ||
+            event.affectsConfiguration('files.autoSave') ||
+            event.affectsConfiguration('files.autoSaveDelay') ||
             event.affectsConfiguration('python.dataScience.enableGather')) {
             // See if the theme changed
             const newSettings = this.generateDataScienceExtraSettings();

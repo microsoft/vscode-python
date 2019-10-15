@@ -2,17 +2,34 @@
 // Licensed under the MIT License.
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
+// tslint:disable-next-line: no-require-imports
+import cloneDeep = require('lodash/cloneDeep');
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as path from 'path';
 
 import { IDataScienceSettings } from '../../client/common/types';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
-import { concatMultilineString, splitMultilineString } from '../../client/datascience/common';
+import { concatMultilineStringInput, splitMultilineString } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import { CellState, ICell, IJupyterVariable, IMessageCell } from '../../client/datascience/types';
 import { noop } from '../../test/core';
-import { ICellViewModel } from './cell';
 import { InputHistory } from './inputHistory';
+
+export interface ICellViewModel {
+    cell: ICell;
+    inputBlockShow: boolean;
+    inputBlockOpen: boolean;
+    inputBlockText: string;
+    inputBlockCollapseNeeded: boolean;
+    editable: boolean;
+    directInput?: boolean;
+    showLineNumbers?: boolean;
+    hideOutput?: boolean;
+    useQuickEdit?: boolean;
+    selected: boolean;
+    focused: boolean;
+    inputBlockToggled(id: string): void;
+}
 
 export interface IMainState {
     cellVMs: ICellViewModel[];
@@ -25,6 +42,7 @@ export interface IMainState {
     history: InputHistory;
     rootStyle?: string;
     rootCss?: string;
+    font: IFont;
     theme?: string;
     forceDark?: boolean;
     monacoTheme?: string;
@@ -37,10 +55,17 @@ export interface IMainState {
     pendingVariableCount: number;
     debugging: boolean;
     dirty?: boolean;
-    selectedCell?: string;
-    focusedCell?: string;
+    selectedCellId?: string;
+    focusedCellId?: string;
     enableGather: boolean;
     isAtBottom: boolean;
+    newCellId?: string;
+    loadTotal?: number;
+}
+
+export interface IFont {
+    size: number;
+    family: string;
 }
 
 // tslint:disable-next-line: no-multiline-string
@@ -88,7 +113,11 @@ export function generateTestState(inputBlockToggled: (id: string) => void, fileP
         pendingVariableCount: 0,
         debugging: false,
         enableGather: true,
-        isAtBottom: true
+        isAtBottom: true,
+        font: {
+            size: 14,
+            family: 'Consolas, \'Courier New\', monospace'
+        }
     };
 }
 
@@ -105,8 +134,7 @@ export function createEmptyCell(id: string | undefined, executionCount: number |
         id: id ? id : Identifiers.EditCellId,
         file: Identifiers.EmptyFileName,
         line: 0,
-        state: CellState.finished,
-        type: 'execute'
+        state: CellState.finished
     };
 }
 
@@ -118,12 +146,17 @@ export function createEditableCellVM(executionCount: number): ICellViewModel {
         inputBlockShow: true,
         inputBlockText: '',
         inputBlockCollapseNeeded: false,
-        inputBlockToggled: noop
+        inputBlockToggled: noop,
+        selected: false,
+        focused: false
     };
 }
 
 export function extractInputText(inputCell: ICell, settings: IDataScienceSettings | undefined): string {
-    const source = inputCell.data.cell_type === 'code' ? splitMultilineString(inputCell.data.source) : [];
+    let source: string[] = [];
+    if (inputCell.data.source) {
+        source = splitMultilineString(cloneDeep(inputCell.data.source));
+    }
     const matcher = new CellMatcher(settings);
 
     // Eliminate the #%% on the front if it has nothing else on the line
@@ -139,7 +172,7 @@ export function extractInputText(inputCell: ICell, settings: IDataScienceSetting
         }
     }
 
-    return concatMultilineString(source);
+    return concatMultilineStringInput(source);
 }
 
 export function createCellVM(inputCell: ICell, settings: IDataScienceSettings | undefined, inputBlockToggled: (id: string) => void, editable: boolean): ICellViewModel {
@@ -156,29 +189,35 @@ export function createCellVM(inputCell: ICell, settings: IDataScienceSettings | 
         inputBlockShow: true,
         inputBlockText: inputText,
         inputBlockCollapseNeeded: (inputLinesCount > 1),
-        inputBlockToggled: inputBlockToggled
+        inputBlockToggled: inputBlockToggled,
+        selected: false,
+        focused: false
     };
 }
 
 function generateVMs(inputBlockToggled: (id: string) => void, filePath: string, editable: boolean): ICellViewModel[] {
-    const cells = generateCells(filePath);
+    const cells = generateCells(filePath, 10);
     return cells.map((cell: ICell) => {
         const vm = createCellVM(cell, undefined, inputBlockToggled, editable);
-        vm.useQuickEdit = true;
+        vm.useQuickEdit = false;
         return vm;
     });
 }
 
-function generateCells(filePath: string): ICell[] {
+export function generateCells(filePath: string, repetitions: number): ICell[] {
     // Dupe a bunch times for perf reasons
     let cellData: (nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell | IMessageCell)[] = [];
-    for (let i = 0; i < 10; i += 1) {
+    for (let i = 0; i < repetitions; i += 1) {
         cellData = [...cellData, ...generateCellData()];
     }
+    // Dynamically require vscode, this is testing code.
+    // Obfuscate the import to prevent webpack from picking this up.
+    // tslint:disable-next-line: no-eval (webpack is smart enough to look for `require` and `eval`).
+    const Uri = eval('req' + 'uire')('vscode').Uri;
     return cellData.map((data: nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell | IMessageCell, key: number) => {
         return {
             id: key.toString(),
-            file: path.join(filePath, 'foo.py'),
+            file: Uri.file(path.join(filePath, 'foo.py')).fsPath,
             line: 1,
             state: key === cellData.length - 1 ? CellState.executing : CellState.finished,
             type: key === 3 ? 'preview' : 'execute',
@@ -424,7 +463,7 @@ function generateCellData(): (nbformat.ICodeCell | nbformat.IMarkdownCell | nbfo
                 'Nunc quis orci ante. Vivamus vel blandit velit.\n","Sed mattis dui diam, et blandit augue mattis vestibulum.\n',
                 'Suspendisse ornare interdum velit. Suspendisse potenti.\n',
                 'Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.\n',
-                '\"\"\" '
+                '\"\"\"'
             ]
         },
         {

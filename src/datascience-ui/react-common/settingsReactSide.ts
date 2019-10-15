@@ -28,7 +28,7 @@ export function updateSettings(jsonSettingsString: string) {
 function load() {
     // tslint:disable-next-line:no-typeof-undefined
     if (typeof getInitialSettings !== 'undefined') {
-        loadedSettings = <IDataScienceExtraSettings>getInitialSettings();
+        loadedSettings = <IDataScienceExtraSettings>getInitialSettings(); // NOSONAR
     } else {
         // Default settings for tests
         loadedSettings = {
@@ -56,6 +56,8 @@ function load() {
             extraSettings: {
                 editorCursor: 'line',
                 editorCursorBlink: 'blink',
+                fontSize: 14,
+                fontFamily: 'Consolas, \'Courier New\', monospace',
                 theme: 'Default Dark+'
             },
             intellisenseOptions: {

@@ -7,7 +7,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 
 import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
-import { concatMultilineString } from '../../client/datascience/common';
+import { concatMultilineStringInput } from '../../client/datascience/common';
 import { ICell } from '../../client/datascience/types';
 
 //tslint:disable:no-any
@@ -168,7 +168,7 @@ export class MockJupyterRequest implements Kernel.IFuture {
         // Then combine those into an array of producers for the rest of the messages
         const producers = [
             new SimpleMessageProducer('status', { execution_state: 'busy' }),
-            new SimpleMessageProducer('execute_input', { code: concatMultilineString(this.cell.data.source), execution_count: this.executionCount }),
+            new SimpleMessageProducer('execute_input', { code: concatMultilineStringInput(this.cell.data.source), execution_count: this.executionCount }),
             ...outputProducers,
             new SimpleMessageProducer('status', { execution_state: 'idle' })
         ];

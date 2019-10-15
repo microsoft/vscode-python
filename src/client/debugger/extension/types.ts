@@ -5,6 +5,7 @@
 
 import { CancellationToken, DebugAdapterDescriptorFactory, DebugConfigurationProvider, WorkspaceFolder } from 'vscode';
 import { InputStep, MultiStepInput } from '../../common/utils/multiStepInput';
+import { RemoteDebugOptions } from '../debugAdapter/types';
 import { DebugConfigurationArguments } from '../types';
 
 export const IDebugConfigurationService = Symbol('IDebugConfigurationService');
@@ -35,11 +36,11 @@ export enum PythonPathSource {
     settingsJson = 'settings.json'
 }
 
-export enum ExtensionSingleActivationServiceType {
-    jsonCompletionProvider = 'jsonCompletionProvider',
-    jsonUpdaterService = 'jsonUpdaterService',
-    debugAdapterActivator = 'debugAdapterActivator'
+export const IDebugAdapterDescriptorFactory = Symbol('IDebugAdapterDescriptorFactory');
+export interface IDebugAdapterDescriptorFactory extends DebugAdapterDescriptorFactory {
+    useNewPtvsd(pythonPath: string): Promise<boolean>;
+    getPtvsdPath(pythonPath: string): Promise<string>;
+    getRemotePtvsdArgs(remoteDebugOptions: RemoteDebugOptions): string[];
 }
 
-export const IDebugAdapterDescriptorFactory = Symbol('IDebugAdapterDescriptorFactory');
-export interface IDebugAdapterDescriptorFactory extends DebugAdapterDescriptorFactory {}
+export type DebugAdapterPtvsdPathInfo = { extensionVersion: string; ptvsdPath: string };

@@ -2,15 +2,17 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
-
 'use strict';
-
 import * as Path from 'path';
+import { Range, Uri } from 'vscode';
+
+import { IDocumentManager, IWorkspaceService } from '../application/types';
 import * as Types from '../utils/sysTypes';
 import { IStringDictionary, ISystemVariables } from './types';
+
 /* tslint:disable:rule1 no-any no-unnecessary-callback-wrapper jsdoc-format no-for-in prefer-const no-increment-decrement */
 
-export abstract class AbstractSystemVariables implements ISystemVariables {
+abstract class AbstractSystemVariables implements ISystemVariables {
 
     public resolve(value: string): string;
     public resolve(value: string[]): string[];
@@ -93,11 +95,22 @@ export abstract class AbstractSystemVariables implements ISystemVariables {
 export class SystemVariables extends AbstractSystemVariables {
     private _workspaceFolder: string;
     private _workspaceFolderName: string;
+    private _filePath: string | undefined;
+    private _lineNumber: number | undefined;
+    private _selectedText: string | undefined;
+    private _execPath: string;
 
-    constructor(workspaceFolder?: string) {
+    constructor(file: Uri | undefined, rootFolder: string | undefined, workspace?: IWorkspaceService, documentManager?: IDocumentManager) {
         super();
-        this._workspaceFolder = typeof workspaceFolder === 'string' ? workspaceFolder : __dirname;
+        const workspaceFolder = workspace && file ? workspace.getWorkspaceFolder(file) : undefined;
+        this._workspaceFolder = workspaceFolder ? workspaceFolder.uri.fsPath : rootFolder || __dirname;
         this._workspaceFolderName = Path.basename(this._workspaceFolder);
+        this._filePath = file ? file.fsPath : undefined;
+        if (documentManager && documentManager.activeTextEditor) {
+            this._lineNumber = documentManager.activeTextEditor.selection.anchor.line + 1;
+            this._selectedText = documentManager.activeTextEditor.document.getText(new Range(documentManager.activeTextEditor.selection.start, documentManager.activeTextEditor.selection.end));
+        }
+        this._execPath = process.execPath;
         Object.keys(process.env).forEach(key => {
             (this as any as Record<string, string | undefined>)[`env:${key}`] = (this as any as Record<string, string | undefined>)[`env.${key}`] = process.env[key];
         });
@@ -121,5 +134,45 @@ export class SystemVariables extends AbstractSystemVariables {
 
     public get workspaceFolderBasename(): string {
         return this._workspaceFolderName;
+    }
+
+    public get file(): string | undefined {
+        return this._filePath;
+    }
+
+    public get relativeFile(): string | undefined {
+        return this.file ? Path.relative(this._workspaceFolder, this.file) : undefined;
+    }
+
+    public get relativeFileDirname(): string | undefined {
+        return this.relativeFile ? Path.dirname(this.relativeFile) : undefined;
+    }
+
+    public get fileBasename(): string | undefined {
+        return this.file ? Path.basename(this.file) : undefined;
+    }
+
+    public get fileBasenameNoExtension(): string | undefined {
+        return this.file ? Path.parse(this.file).name : undefined;
+    }
+
+    public get fileDirname(): string | undefined {
+        return this.file ? Path.dirname(this.file) : undefined;
+    }
+
+    public get fileExtname(): string | undefined {
+        return this.file ? Path.extname(this.file) : undefined;
+    }
+
+    public get lineNumber(): number | undefined {
+        return this._lineNumber;
+    }
+
+    public get selectedText(): string | undefined {
+        return this._selectedText;
+    }
+
+    public get execPath(): string {
+        return this._execPath;
     }
 }

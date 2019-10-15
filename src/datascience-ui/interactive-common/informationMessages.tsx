@@ -8,7 +8,6 @@ import * as React from 'react';
 interface IInformationMessagesProps
 {
     messages: string[];
-    type: 'execute' | 'preview';
 }
 
 export class InformationMessages extends React.Component<IInformationMessagesProps> {

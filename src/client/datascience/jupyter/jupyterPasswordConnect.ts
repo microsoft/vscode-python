@@ -53,13 +53,17 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
                 sessionCookieName = sessionResult.sessionCookieName;
                 sessionCookieValue = sessionResult.sessionCookieValue;
             }
+        } else {
+            // If userPassword is undefined or '' then the user didn't pick a password. In this case return back that we should just try to connect
+            // like a standard connection. Might be the case where there is no token and no password
+            return { emptyPassword: true, xsrfCookie: '', sessionCookieName: '', sessionCookieValue: '' };
         }
         userPassword = undefined;
 
         // If we found everything return it all back if not, undefined as partial is useless
         if (xsrfCookie && sessionCookieName && sessionCookieValue) {
             sendTelemetryEvent(Telemetry.GetPasswordSuccess);
-            return { xsrfCookie, sessionCookieName, sessionCookieValue };
+            return { xsrfCookie, sessionCookieName, sessionCookieValue, emptyPassword: false };
         } else {
             sendTelemetryEvent(Telemetry.GetPasswordFailure);
             return undefined;
@@ -69,14 +73,14 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
     // For HTTPS connections respect our allowUnauthorized setting by adding in an agent to enable that on the request
     private addAllowUnauthorized(url: string, allowUnauthorized: boolean, options: nodeFetch.RequestInit): nodeFetch.RequestInit {
         if (url.startsWith('https') && allowUnauthorized) {
-            const requestAgent = new HttpsAgent({rejectUnauthorized: false});
-            return {...options, agent: requestAgent};
+            const requestAgent = new HttpsAgent({ rejectUnauthorized: false });
+            return { ...options, agent: requestAgent };
         }
 
         return options;
     }
 
-    private async getUserPassword() : Promise<string | undefined> {
+    private async getUserPassword(): Promise<string | undefined> {
         // First get the proposed URI from the user
         return this.appShell.showInputBox({
             prompt: localize.DataScience.jupyterSelectPasswordPrompt(),
@@ -112,7 +116,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         allowUnauthorized: boolean,
         xsrfCookie: string,
         password: string,
-        fetchFunction: (url: nodeFetch.RequestInfo, init?: nodeFetch.RequestInit) => Promise<nodeFetch.Response>): Promise<{sessionCookieName: string | undefined; sessionCookieValue: string | undefined}> {
+        fetchFunction: (url: nodeFetch.RequestInfo, init?: nodeFetch.RequestInit) => Promise<nodeFetch.Response>): Promise<{ sessionCookieName: string | undefined; sessionCookieValue: string | undefined }> {
         let sessionCookieName: string | undefined;
         let sessionCookieValue: string | undefined;
         // Create the form params that we need
@@ -138,7 +142,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
             }
         }
 
-        return {sessionCookieName, sessionCookieValue};
+        return { sessionCookieName, sessionCookieValue };
     }
 
     private getCookies(response: nodeFetch.Response): Map<string, string> {

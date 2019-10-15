@@ -5,11 +5,11 @@ import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { TextDocument, Uri } from 'vscode';
+import { Uri } from 'vscode';
 
-import { ICommandManager, IDocumentManager } from '../../common/application/types';
+import { ICommandManager } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { IDisposableRegistry } from '../../common/types';
 import { captureTelemetry } from '../../telemetry';
 import { CommandSource } from '../../testing/common/constants';
 import { Commands, Telemetry } from '../constants';
@@ -20,18 +20,9 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
     constructor(
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(INotebookEditorProvider) private provider: INotebookEditorProvider,
-        @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IDocumentManager) private documentManager: IDocumentManager,
-        @inject(ICommandManager) private readonly cmdManager: ICommandManager,
         @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler,
         @inject(IFileSystem) private fileSystem: IFileSystem
     ) {
-        // Listen to document open commands. We use this to launch an ipynb editor
-        const disposable = this.documentManager.onDidOpenTextDocument(this.onOpenedDocument);
-        this.disposableRegistry.push(disposable);
-
-        // Since we may have activated after a document was opened, also run open document for all documents
-        this.documentManager.textDocuments.forEach(this.onOpenedDocument);
     }
 
     public register(commandManager: ICommandManager): void {
@@ -41,7 +32,30 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
         this.disposableRegistry.push(commandManager.registerCommand(Commands.NotebookEditorInterruptKernel, () => this.interruptKernel()));
         this.disposableRegistry.push(commandManager.registerCommand(Commands.NotebookEditorRestartKernel, () => this.restartKernel()));
         this.disposableRegistry.push(commandManager.registerCommand(Commands.OpenNotebook, (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => this.openNotebook(file)));
+        this.disposableRegistry.push(commandManager.registerCommand(Commands.NotebookEditorRunAllCells, () => this.runAllCells()));
+        this.disposableRegistry.push(commandManager.registerCommand(Commands.NotebookEditorRunSelectedCell, () => this.runSelectedCell()));
+        this.disposableRegistry.push(commandManager.registerCommand(Commands.NotebookEditorAddCellBelow, () => this.addCellBelow()));
+    }
 
+    private runAllCells() {
+        const activeEditor = this.provider.activeEditor;
+        if (activeEditor) {
+            activeEditor.runAllCells();
+        }
+    }
+
+    private runSelectedCell() {
+        const activeEditor = this.provider.activeEditor;
+        if (activeEditor) {
+            activeEditor.runSelectedCell();
+        }
+    }
+
+    private addCellBelow() {
+        const activeEditor = this.provider.activeEditor;
+        if (activeEditor) {
+            activeEditor.addCellBelow();
+        }
     }
 
     private undoCells() {
@@ -87,29 +101,7 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
                 // Then take the contents and load it.
                 await this.provider.open(file, contents);
             } catch (e) {
-                this.dataScienceErrorHandler.handleError(e).ignoreErrors();
-            }
-        }
-    }
-
-    private onOpenedDocument = async (document: TextDocument) => {
-        // See if this is an ipynb file
-        if (path.extname(document.fileName).toLocaleLowerCase() === '.ipynb' &&
-            this.configService.getSettings().datascience.useNotebookEditor) {
-            try {
-                const contents = document.getText();
-                const uri = document.uri;
-
-                // Close this document. This is a big hack as there's no way to register
-                // ourselves as an editor for ipynb
-                const command = 'workbench.action.closeActiveEditor';
-                await this.cmdManager.executeCommand(command);
-
-                // Then take the contents and load it.
-                return this.provider.open(uri, contents);
-
-            } catch (e) {
-                this.dataScienceErrorHandler.handleError(e).ignoreErrors();
+                return this.dataScienceErrorHandler.handleError(e);
             }
         }
     }

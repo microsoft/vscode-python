@@ -2,17 +2,21 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { DebugAdapterTracker, DebugSession, ProviderResult } from 'vscode';
+import { DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, Event, EventEmitter, ProviderResult } from 'vscode';
 
 import { IDebugService } from '../common/application/types';
 import { IDisposableRegistry } from '../common/types';
-import { IDebugLocationTracker, IDebugLocationTrackerFactory } from './types';
+import { DebugLocationTracker } from './debugLocationTracker';
+import { IDebugLocationTracker } from './types';
 
 // Hook up our IDebugLocationTracker to python debugging sessions
 @injectable()
-export class DebugLocationTrackerFactory implements IDebugLocationTrackerFactory {
+export class DebugLocationTrackerFactory implements IDebugLocationTracker, DebugAdapterTrackerFactory {
+
+    private activeTrackers: Map<string, DebugLocationTracker> = new Map<string, DebugLocationTracker>();
+    private updatedEmitter: EventEmitter<void> = new EventEmitter<void>();
+
     constructor(
-        @inject(IDebugLocationTracker) private locationTracker: IDebugLocationTracker,
         @inject(IDebugService) debugService: IDebugService,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
     ) {
@@ -20,7 +24,30 @@ export class DebugLocationTrackerFactory implements IDebugLocationTrackerFactory
     }
 
     public createDebugAdapterTracker(session: DebugSession): ProviderResult<DebugAdapterTracker> {
-        this.locationTracker.setDebugSession(session);
-        return this.locationTracker;
+        const result = new DebugLocationTracker(session.id);
+        this.activeTrackers.set(session.id, result);
+        result.sessionEnded(this.onSessionEnd.bind(this));
+        result.debugLocationUpdated(this.onLocationUpdated.bind(this));
+        this.onLocationUpdated();
+        return result;
+    }
+
+    public get updated(): Event<void> {
+        return this.updatedEmitter.event;
+    }
+
+    public getLocation(session: DebugSession) {
+        const tracker = this.activeTrackers.get(session.id);
+        if (tracker) {
+            return tracker.debugLocation;
+        }
+    }
+
+    private onSessionEnd(locationTracker: DebugLocationTracker) {
+        this.activeTrackers.delete(locationTracker.sessionId);
+    }
+
+    private onLocationUpdated() {
+        this.updatedEmitter.fire();
     }
 }

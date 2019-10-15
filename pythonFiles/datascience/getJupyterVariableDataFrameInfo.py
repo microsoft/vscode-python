@@ -1,4 +1,3 @@
-# %DATASCIENCE_INTERNAL_KEY%
 # Query Jupyter server for the info about a dataframe
 import json as _VSCODE_json
 import pandas as _VSCODE_pd

@@ -7,13 +7,6 @@ export enum AlwaysDisplayTestExplorerGroups {
     experiment = 'AlwaysDisplayTestExplorer - experiment'
 }
 
-// Experiment to check whether to show the "Run Python File in Terminal" icon.
-export enum ShowPlayIcon {
-    control = 'ShowPlayIcon - control',
-    icon1 = 'ShowPlayIcon - start',
-    icon2 = 'ShowPlayIcon - runFile'
-}
-
 // Experiment to check whether to show "Extension Survey prompt" or not.
 export enum ShowExtensionSurveyPrompt {
     control = 'ShowExtensionSurveyPrompt - control',
@@ -22,14 +15,14 @@ export enum ShowExtensionSurveyPrompt {
 
 // Experiment to check whether the extension should use the new VS Code debug adapter API.
 export enum DebugAdapterDescriptorFactory {
-    control = 'NewDebugAdapter - control',
-    experiment = 'NewDebugAdapter - experiment'
+    control = 'DebugAdapterFactory - control',
+    experiment = 'DebugAdapterFactory - experiment'
 }
 
 // Experiment to check whether the ptvsd launcher should use pre-installed ptvsd wheels for debugging.
 export enum DebugAdapterNewPtvsd {
-    control = 'PtvsdWheels - control',
-    experiment = 'PtvsdWheels - experiment'
+    control = 'PtvsdWheels37 - control',
+    experiment = 'PtvsdWheels37 - experiment'
 }
 
 // Dummy experiment added to validate metrics of A/B testing

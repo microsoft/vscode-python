@@ -5,7 +5,18 @@ import { nbformat } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
 import { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
-import { CancellationToken, CodeLens, CodeLensProvider, DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, Disposable, Event, Range, TextDocument, TextEditor, Uri } from 'vscode';
+import {
+    CancellationToken,
+    CodeLens,
+    CodeLensProvider,
+    DebugSession,
+    Disposable,
+    Event,
+    Range,
+    TextDocument,
+    TextEditor,
+    Uri
+} from 'vscode';
 
 import { ICommandManager } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
@@ -84,7 +95,7 @@ export interface INotebook extends IAsyncDisposable {
     restartKernel(timeoutInMs: number): Promise<void>;
     waitForIdle(timeoutInMs: number): Promise<void>;
     interruptKernel(timeoutInMs: number): Promise<InterruptResult>;
-    setInitialDirectory(directory: string): Promise<void>;
+    setLaunchingFile(file: string): Promise<void>;
     getSysInfo(): Promise<ICell | undefined>;
     setMatplotLibStyle(useDark: boolean): Promise<void>;
 }
@@ -123,6 +134,7 @@ export interface IJupyterExecution extends IAsyncDisposable {
     importNotebook(file: string, template: string | undefined): Promise<string>;
     getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined>;
     getServer(options?: INotebookServerOptions): Promise<INotebookServer | undefined>;
+    getNotebookError(): Promise<string>;
 }
 
 export const IJupyterDebugger = Symbol('IJupyterDebugger');
@@ -133,6 +145,7 @@ export interface IJupyterDebugger {
 }
 
 export interface IJupyterPasswordConnectInfo {
+    emptyPassword: boolean;
     xsrfCookie: string;
     sessionCookieName: string;
     sessionCookieValue: string;
@@ -224,19 +237,31 @@ export interface IInteractiveWindow extends IInteractiveBase {
 export const INotebookEditorProvider = Symbol('INotebookEditorProvider');
 export interface INotebookEditorProvider {
     readonly activeEditor: INotebookEditor | undefined;
+    readonly editors: INotebookEditor[];
     open(file: Uri, contents: string): Promise<INotebookEditor>;
     show(file: Uri): Promise<INotebookEditor | undefined>;
     createNew(): Promise<INotebookEditor>;
+    getNotebookOptions(): Promise<INotebookServerOptions>;
 }
 
 // For native editing, the INotebookEditor acts like a TextEditor and a TextDocument together
 export const INotebookEditor = Symbol('INotebookEditor');
 export interface INotebookEditor extends IInteractiveBase {
     closed: Event<INotebookEditor>;
+    executed: Event<INotebookEditor>;
+    modified: Event<INotebookEditor>;
+    saved: Event<INotebookEditor>;
+    /**
+     * `true` if there are unpersisted changes.
+     */
+    readonly isDirty: boolean;
     readonly file: Uri;
     readonly visible: boolean;
     readonly active: boolean;
     load(contents: string, file: Uri): Promise<void>;
+    runAllCells(): void;
+    runSelectedCell(): void;
+    addCellBelow(): void;
 }
 
 export const IInteractiveWindowListener = Symbol('IInteractiveWindowListener');
@@ -316,11 +341,10 @@ export enum CellState {
 
 // Basic structure for a cell from a notebook
 export interface ICell {
-    id: string; // This value isn't unique. File and line are needed to.
+    id: string; // This value isn't unique. File and line are needed too.
     file: string;
     line: number;
     state: CellState;
-    type: 'preview' | 'execute';
     data: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell | IMessageCell;
     extraLines?: number[];
 }
@@ -330,6 +354,7 @@ export interface IInteractiveWindowInfo {
     undoCount: number;
     redoCount: number;
     visibleCells: ICell[];
+    selectedCell: string | undefined;
 }
 
 export interface IMessageCell extends nbformat.IBaseCell {
@@ -373,10 +398,17 @@ export interface IJupyterCommandFactory {
 }
 
 // Config settings we pass to our react code
+export type FileSettings = {
+    autoSaveDelay: number;
+    autoSave: 'afterDelay' | 'off' | 'onFocusChange' | 'onWindowChange';
+};
+
 export interface IDataScienceExtraSettings extends IDataScienceSettings {
     extraSettings: {
         editorCursor: string;
         editorCursorBlink: string;
+        fontSize: number;
+        fontFamily: string;
         theme: string;
     };
     intellisenseOptions: {
@@ -489,10 +521,6 @@ export interface ICellHashProvider {
     getHashes(): IFileHashes[];
 }
 
-export const IDebugLocationTrackerFactory = Symbol('IDebugLocationTrackerFactory');
-export interface IDebugLocationTrackerFactory extends DebugAdapterTrackerFactory {
-}
-
 export interface IDebugLocation {
     fileName: string;
     lineNumber: number;
@@ -500,11 +528,8 @@ export interface IDebugLocation {
 }
 
 export const IDebugLocationTracker = Symbol('IDebugLocationTracker');
-export interface IDebugLocationTracker extends DebugAdapterTracker {
-    debugLocationUpdated: Event<void>;
-    debugLocation: IDebugLocation | undefined;
-    setDebugSession(targetSession: DebugSession): void;
-}
+export interface IDebugLocationTracker {
+    updated: Event<void>;
+    getLocation(debugSession: DebugSession): IDebugLocation | undefined;
 
-// Cells silently executed on behalf of the user are tagged with the following.
-export const internalUseCellKey: string = '#%DATASCIENCE_INTERNAL_KEY%#';
+}

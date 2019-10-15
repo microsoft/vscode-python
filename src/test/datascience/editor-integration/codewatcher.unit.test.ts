@@ -5,7 +5,7 @@
 // Disable whitespace / multiline as we use that to pass in our fake file strings
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
-import { CancellationTokenSource, CodeLens, Disposable, Range, Selection, TextEditor } from 'vscode';
+import { CancellationTokenSource, CodeLens, Disposable, Range, Selection, TextEditor, Uri } from 'vscode';
 
 import { ICommandManager, IDebugService, IDocumentManager } from '../../../client/common/application/types';
 import { PythonSettings } from '../../../client/common/configSettings';
@@ -176,7 +176,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
     }
 
     test('Add a file with just a #%% mark to a code watcher', () => {
-        const fileName = 'test.py';
+        const fileName = Uri.file('test.py').fsPath;
         const version = 1;
         const inputText = `#%%`;
         const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce());
@@ -197,7 +197,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
     });
 
     test('Add a file without a mark to a code watcher', () => {
-        const fileName = 'test.py';
+        const fileName = Uri.file('test.py').fsPath;
         const version = 1;
         const inputText = `dummy`;
         const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce());
@@ -217,7 +217,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
     });
 
     test('Add a file with multiple marks to a code watcher', () => {
-        const fileName = 'test.py';
+        const fileName = Uri.file('test.py').fsPath;
         const version = 1;
         const inputText =
             `first line
@@ -248,7 +248,7 @@ fourth line`;
     });
 
     test('Add a file with custom marks to a code watcher', () => {
-        const fileName = 'test.py';
+        const fileName = Uri.file('test.py').fsPath;
         const version = 1;
         const inputText =
             `first line
@@ -286,7 +286,7 @@ fourth line
     });
 
     test('Make sure invalid regex from a user still work', () => {
-        const fileName = 'test.py';
+        const fileName = Uri.file('test.py').fsPath;
         const version = 1;
         const inputText =
             `first line
@@ -324,7 +324,7 @@ fourth line
     });
 
     test('Test the RunCell command', async () => {
-        const fileName = 'test.py';
+        const fileName = Uri.file('test.py').fsPath;
         const version = 1;
         const testString = '#%%\ntesting';
         const document = createDocument(testString, fileName, version, TypeMoq.Times.atLeastOnce(), true);
@@ -350,7 +350,7 @@ fourth line
     });
 
     test('Test the RunFileInteractive command', async () => {
-        const fileName = 'test.py';
+        const fileName = Uri.file('test.py').fsPath;
         const version = 1;
         const inputText =
             `#%%
@@ -364,7 +364,7 @@ testing2`; // Command tests override getText, so just need the ranges here
         // Set up our expected calls to add code
         // RunFileInteractive should run the entire file in one block, not cell by cell like RunAllCells
         activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(inputText),
-            TypeMoq.It.isValue('test.py'),
+            TypeMoq.It.isValue(fileName),
             TypeMoq.It.isValue(0),
             TypeMoq.It.isAny(),
             TypeMoq.It.isAny()
@@ -378,7 +378,7 @@ testing2`; // Command tests override getText, so just need the ranges here
     });
 
     test('Test the RunAllCells command', async () => {
-        const fileName = 'test.py';
+        const fileName = Uri.file('test.py').fsPath;
         const version = 1;
         const inputText =
             `#%%
@@ -399,14 +399,14 @@ testing2`; // Command tests override getText, so just need the ranges here
 
         // Set up our expected calls to add code
         activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(testString1),
-            TypeMoq.It.isValue('test.py'),
+            TypeMoq.It.isValue(fileName),
             TypeMoq.It.isValue(0),
             TypeMoq.It.isAny(),
             TypeMoq.It.isAny()
         )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
 
         activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(testString2),
-            TypeMoq.It.isValue('test.py'),
+            TypeMoq.It.isValue(fileName),
             TypeMoq.It.isValue(2),
             TypeMoq.It.isAny(),
             TypeMoq.It.isAny()
@@ -420,7 +420,7 @@ testing2`; // Command tests override getText, so just need the ranges here
     });
 
     test('Test the RunCurrentCell command', async () => {
-        const fileName = 'test.py';
+        const fileName = Uri.file('test.py').fsPath;
         const version = 1;
         const inputText =
             `#%%
@@ -453,7 +453,7 @@ testing2`;
     });
 
     test('Test the RunCellAndAllBelow command', async () => {
-        const fileName = 'test.py';
+        const fileName = Uri.file('test.py').fsPath;
         const version = 1;
         const inputText =
             `#%%
@@ -497,7 +497,7 @@ testing3`;
     });
 
     test('Test the RunAllCellsAbove command', async () => {
-        const fileName = 'test.py';
+        const fileName = Uri.file('test.py').fsPath;
         const version = 1;
         const inputText =
             `#%%
@@ -541,7 +541,7 @@ testing2`;
     });
 
     test('Test the RunToLine command', async () => {
-        const fileName = 'test.py';
+        const fileName = Uri.file('test.py').fsPath;
         const version = 1;
         const inputText =
             `#%%
@@ -574,7 +574,7 @@ testing1`;
     });
 
     test('Test the RunToLine command with nothing on the lines', async () => {
-        const fileName = 'test.py';
+        const fileName = Uri.file('test.py').fsPath;
         const version = 1;
         const inputText =
             `
@@ -603,7 +603,7 @@ print('testing')`;
     });
 
     test('Test the RunFromLine command', async () => {
-        const fileName = 'test.py';
+        const fileName = Uri.file('test.py').fsPath;
         const version = 1;
         const inputText =
             `#%%
@@ -639,7 +639,7 @@ testing3`;
     });
 
     test('Test the RunSelection command', async () => {
-        const fileName = 'test.py';
+        const fileName = Uri.file('test.py').fsPath;
         const version = 1;
         const inputText =
             `#%%
@@ -677,7 +677,7 @@ testing2`;
     });
 
     test('Test the RunCellAndAdvance command with next cell', async () => {
-        const fileName = 'test.py';
+        const fileName = Uri.file('test.py').fsPath;
         const version = 1;
         const inputText =
             `#%%
@@ -693,7 +693,7 @@ testing2`; // Command tests override getText, so just need the ranges here
 
         // Set up our expected calls to add code
         activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(testString),
-            TypeMoq.It.isValue('test.py'),
+            TypeMoq.It.isValue(fileName),
             TypeMoq.It.isValue(0),
             TypeMoq.It.is((ed: TextEditor) => {
                 return textEditor.object === ed;
@@ -732,7 +732,7 @@ testing2`; // Command tests override getText, so just need the ranges here
 
     test('CodeLens returned after settings changed is different', () => {
         // Create our document
-        const fileName = 'test.py';
+        const fileName = Uri.file('test.py').fsPath;
         const version = 1;
         const inputText = '#%% foobar';
         const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce());
@@ -764,7 +764,7 @@ testing2`; // Command tests override getText, so just need the ranges here
     });
 
     test('Test the RunAllCellsAbove command with an error', async () => {
-        const fileName = 'test.py';
+        const fileName = Uri.file('test.py').fsPath;
         const version = 1;
         const inputText =
             `#%%
@@ -808,7 +808,7 @@ testing2`;
     });
 
     test('Test the RunAllCells command with an error', async () => {
-        const fileName = 'test.py';
+        const fileName = Uri.file('test.py').fsPath;
         const version = 1;
         const inputText =
             `#%%
@@ -829,14 +829,14 @@ testing2`; // Command tests override getText, so just need the ranges here
 
         // Set up our expected calls to add code
         activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(testString1),
-            TypeMoq.It.isValue('test.py'),
+            TypeMoq.It.isValue(fileName),
             TypeMoq.It.isValue(0),
             TypeMoq.It.isAny(),
             TypeMoq.It.isAny()
         )).returns(() => Promise.resolve(false)).verifiable(TypeMoq.Times.once());
 
         activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(testString2),
-            TypeMoq.It.isValue('test.py'),
+            TypeMoq.It.isValue(fileName),
             TypeMoq.It.isValue(2),
             TypeMoq.It.isAny(),
             TypeMoq.It.isAny()

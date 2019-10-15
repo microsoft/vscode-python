@@ -12,7 +12,7 @@ import * as uuid from 'uuid/v4';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
-import { ILiveShareApi } from '../../common/application/types';
+import { ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { Cancellation, CancellationError } from '../../common/cancellation';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
@@ -23,7 +23,7 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateCells } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
-import { concatMultilineString, formatStreamText } from '../common';
+import { concatMultilineStringInput, concatMultilineStringOutput, formatStreamText } from '../common';
 import { CodeSnippits, Identifiers, Telemetry } from '../constants';
 import {
     CellState,
@@ -36,6 +36,7 @@ import {
     INotebookServerLaunchInfo,
     InterruptResult
 } from '../types';
+import { expandWorkingDir } from './jupyterUtils';
 
 class CellSubscriber {
     private deferred: Deferred<CellState> = createDeferred<CellState>();
@@ -138,6 +139,8 @@ export class JupyterNotebookBase implements INotebook {
     private pendingCellSubscriptions: CellSubscriber[] = [];
     private ranInitialSetup = false;
     private _resource: Uri;
+    private _disposed: boolean = false;
+    private _workingDirectory: string | undefined;
 
     constructor(
         _liveShare: ILiveShareApi, // This is so the liveshare mixin works
@@ -148,7 +151,8 @@ export class JupyterNotebookBase implements INotebook {
         private launchInfo: INotebookServerLaunchInfo,
         private loggers: INotebookExecutionLogger[],
         resource: Uri,
-        private getDisposedError: () => Error
+        private getDisposedError: () => Error,
+        private workspace: IWorkspaceService
     ) {
         this.sessionStartTime = Date.now();
         this._resource = resource;
@@ -160,8 +164,12 @@ export class JupyterNotebookBase implements INotebook {
 
     public dispose(): Promise<void> {
         traceInfo(`Shutting down session ${this.resource.toString()}`);
-        const dispose = this.session ? this.session.dispose() : undefined;
-        return dispose ? dispose : Promise.resolve();
+        if (!this._disposed) {
+            this._disposed = true;
+            const dispose = this.session ? this.session.dispose() : undefined;
+            return dispose ? dispose : Promise.resolve();
+        }
+        return Promise.resolve();
     }
 
     public get resource(): Uri {
@@ -178,13 +186,11 @@ export class JupyterNotebookBase implements INotebook {
             return;
         }
         this.ranInitialSetup = true;
+        this._workingDirectory = undefined;
 
         try {
             // When we start our notebook initial, change to our workspace or user specified root directory
-            if (this.launchInfo && this.launchInfo.workingDir && this.launchInfo.connectionInfo.localLaunch) {
-                traceInfo(`Changing directory for ${this.resource.toString()}`);
-                await this.changeDirectoryIfPossible(this.launchInfo.workingDir);
-            }
+            await this.updateWorkingDirectory();
 
             const settings = this.configService.getSettings().datascience;
             const matplobInit = !settings || settings.enablePlotViewer ? CodeSnippits.MatplotLibInitSvg : CodeSnippits.MatplotLibInitPng;
@@ -197,10 +203,13 @@ export class JupyterNotebookBase implements INotebook {
                 cancelToken
             );
 
-            // Run any startup commands that we specified
-            if (settings.runStartupCommands) {
-                await this.executeSilently(settings.runStartupCommands, cancelToken);
-                traceInfo(`Run startup code for notebook: ${settings.runStartupCommands}`);
+            // Run any startup commands that we specified. Support the old form too
+            const setting = settings.runStartupCommands || settings.runMagicCommands;
+            if (setting) {
+                // Cleanup the linefeeds. User may have typed them into the settings UI so they will have an extra \\ on the front.
+                const cleanedUp = setting.replace(/\\n/g, '\n');
+                await this.executeSilently(cleanedUp, cancelToken);
+                traceInfo(`Run startup code for notebook: ${cleanedUp}`);
             }
 
             traceInfo(`Initial setup complete for ${this.resource.toString()}`);
@@ -218,7 +227,7 @@ export class JupyterNotebookBase implements INotebook {
         // Create a deferred that we'll fire when we're done
         const deferred = createDeferred<ICell[]>();
 
-        // Attempt to evaluate this cell in the jupyter notebook
+        // Attempt to evaluate this cell in the jupyter notebook.
         const observable = this.executeObservable(code, file, line, id, silent);
         let output: ICell[];
 
@@ -241,12 +250,9 @@ export class JupyterNotebookBase implements INotebook {
         return deferred.promise;
     }
 
-    public async setInitialDirectory(directory: string): Promise<void> {
-        // If we launched local and have no working directory call this on add code to change directory
-        if (this.launchInfo && !this.launchInfo.workingDir && this.launchInfo.connectionInfo.localLaunch) {
-            await this.changeDirectoryIfPossible(directory);
-            this.launchInfo.workingDir = directory;
-        }
+    public setLaunchingFile(file: string): Promise<void> {
+        // Update our working directory if we don't have one set already
+        return this.updateWorkingDirectory(file);
     }
 
     public executeObservable(code: string, file: string, line: number, id: string, silent: boolean = false): Observable<ICell[]> {
@@ -295,8 +301,7 @@ export class JupyterNotebookBase implements INotebook {
             id: uuid(),
             file: '',
             line: 0,
-            state: CellState.finished,
-            type: 'execute'
+            state: CellState.finished
         };
     }
 
@@ -476,7 +481,7 @@ export class JupyterNotebookBase implements INotebook {
                 outputs.forEach(o => {
                     if (o.output_type === 'stream') {
                         const stream = o as nbformat.IStream;
-                        result = result.concat(formatStreamText(concatMultilineString(stream.text)));
+                        result = result.concat(formatStreamText(concatMultilineStringOutput(stream.text)));
                     } else {
                         const data = o.data;
                         if (data && data.hasOwnProperty('text/plain')) {
@@ -579,6 +584,24 @@ export class JupyterNotebookBase implements INotebook {
         });
     }
 
+    private async updateWorkingDirectory(launchingFile?: string): Promise<void> {
+        if (this.launchInfo && this.launchInfo.connectionInfo.localLaunch && !this._workingDirectory) {
+            // See what our working dir is supposed to be
+            const suggested = this.launchInfo.workingDir;
+            if (suggested && await fs.pathExists(suggested)) {
+                // We should use the launch info directory. It trumps the possible dir
+                this._workingDirectory = suggested;
+                return this.changeDirectoryIfPossible(this._workingDirectory);
+            } else if (launchingFile && await fs.pathExists(launchingFile)) {
+                // Combine the working directory with this file if possible.
+                this._workingDirectory = expandWorkingDir(this.launchInfo.workingDir, launchingFile, this.workspace);
+                if (this._workingDirectory) {
+                    return this.changeDirectoryIfPossible(this._workingDirectory);
+                }
+            }
+        }
+    }
+
     private changeDirectoryIfPossible = async (directory: string): Promise<void> => {
         if (this.launchInfo && this.launchInfo.connectionInfo.localLaunch && await fs.pathExists(directory)) {
             await this.executeSilently(`%cd "${directory}"`);
@@ -598,7 +621,7 @@ export class JupyterNotebookBase implements INotebook {
                 subscriber.error(this.sessionStartTime, new Error(localize.DataScience.jupyterServerCrashed().format(exitCode.toString())));
                 subscriber.complete(this.sessionStartTime);
             } else {
-                const request = this.generateRequest(concatMultilineString(subscriber.cell.data.source), silent);
+                const request = this.generateRequest(concatMultilineStringInput(subscriber.cell.data.source), silent);
 
                 // tslint:disable-next-line:no-require-imports
                 const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
@@ -612,7 +635,10 @@ export class JupyterNotebookBase implements INotebook {
                     // If the server crashes, cancel the current observable
                     exitHandlerDisposable = this.launchInfo.connectionInfo.disconnected((c) => {
                         const str = c ? c.toString() : '';
-                        subscriber.error(this.sessionStartTime, new Error(localize.DataScience.jupyterServerCrashed().format(str)));
+                        // Only do an error if we're not disposed. If we're disposed we already shutdown.
+                        if (!this._disposed) {
+                            subscriber.error(this.sessionStartTime, new Error(localize.DataScience.jupyterServerCrashed().format(str)));
+                        }
                         subscriber.complete(this.sessionStartTime);
                     });
                 }
@@ -780,7 +806,7 @@ export class JupyterNotebookBase implements INotebook {
             } else {
                 // tslint:disable-next-line:restrict-plus-operands
                 existing.text = existing.text + msg.content.text;
-                existing.text = trimFunc(formatStreamText(concatMultilineString(existing.text)));
+                existing.text = trimFunc(formatStreamText(concatMultilineStringOutput(existing.text)));
             }
 
         } else {
@@ -788,7 +814,7 @@ export class JupyterNotebookBase implements INotebook {
             const output: nbformat.IStream = {
                 output_type: 'stream',
                 name: msg.content.name,
-                text: trimFunc(formatStreamText(concatMultilineString(msg.content.text)))
+                text: trimFunc(formatStreamText(concatMultilineStringOutput(msg.content.text)))
             };
             this.addToCellData(cell, output, clearState);
         }

@@ -5,7 +5,6 @@
 import * as React from 'react';
 
 import { IJupyterVariable } from '../../client/datascience/types';
-import { Progress } from '../react-common/progress';
 import { VariableExplorer } from './variableExplorer';
 
 import './variablePanel.css';
@@ -18,8 +17,7 @@ export interface IVariablePanelProps {
     pendingVariableCount: number;
     debugging: boolean;
     showDataExplorer(targetVariable: string, numberOfColumns: number): void;
-    refreshVariables(): void;
-    variableExplorerToggled(open: boolean): void;
+    closeVariableExplorer(): void;
 }
 
 export class VariablePanel extends React.Component<IVariablePanelProps> {
@@ -28,10 +26,9 @@ export class VariablePanel extends React.Component<IVariablePanelProps> {
     }
 
     public render() {
-        const progressBar = this.props.busy && !this.props.testMode ? <Progress /> : undefined;
         return(
                 <div id='variable-panel'>
-                    {progressBar}
+                    <div id='variable-panel-padding'>
                     <VariableExplorer
                         pendingVariableCount={this.props.pendingVariableCount}
                         variables={this.props.variables}
@@ -39,8 +36,8 @@ export class VariablePanel extends React.Component<IVariablePanelProps> {
                         baseTheme={this.props.baseTheme}
                         skipDefault={this.props.skipDefault}
                         showDataExplorer={this.props.showDataExplorer}
-                        refreshVariables={this.props.refreshVariables}
-                        variableExplorerToggled={this.props.variableExplorerToggled}/>
+                        closeVariableExplorer={this.props.closeVariableExplorer} />
+                    </div>
                     <div id='variable-divider'/>
                 </div>
         );

@@ -161,6 +161,13 @@ function convertToMonacoCompletionItem(item: vscodeLanguageClient.CompletionItem
         result.insertText = result.label;
     }
 
+    // Make sure we don't have _documentPosition. It holds onto a huge tree of information
+    // tslint:disable-next-line: no-any
+    const resultAny = result as any;
+    if (resultAny._documentPosition) {
+        delete resultAny._documentPosition;
+    }
+
     return result;
 }
 

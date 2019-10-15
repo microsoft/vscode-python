@@ -6,6 +6,7 @@ import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
+import { instance, mock } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import {
     CancellationTokenSource,
@@ -35,6 +36,7 @@ import {
 import {
     IEnvironmentActivationService
 } from '../../client/interpreter/activation/types';
+import { WindowsStoreInterpreter } from '../../client/interpreter/locators/services/windowsStoreInterpreter';
 import { IServiceContainer } from '../../client/ioc/types';
 import { LINTERID_BY_PRODUCT } from '../../client/linters/constants';
 import {
@@ -251,13 +253,14 @@ class TestFixture extends BaseTestFixture {
                 return;
             });
         const procServiceFactory = new ProcessServiceFactory(envVarsService.object, processLogger.object, decoder, disposableRegistry);
-
+        const windowsStoreInterpreter = mock(WindowsStoreInterpreter);
         return new PythonExecutionFactory(
             serviceContainer.object,
             envActivationService.object,
             procServiceFactory,
             configService,
-            decoder
+            decoder,
+            instance(windowsStoreInterpreter)
         );
     }
 

@@ -11,9 +11,9 @@ import { Commands } from '../../common/constants';
 import '../../common/extensions';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
 import { debounceAsync } from '../../common/utils/decorators';
-import { getTestType } from '../common/testUtils';
-import { ITestCollectionStorageService, TestStatus, TestType } from '../common/types';
-import { TestDataItem } from '../types';
+import { getTestDataItemType } from '../common/testUtils';
+import { ITestCollectionStorageService, TestStatus } from '../common/types';
+import { TestDataItem, TestDataItemType } from '../types';
 
 @injectable()
 export class FailedTestHandler implements IExtensionSingleActivationService, IDisposable {
@@ -32,7 +32,7 @@ export class FailedTestHandler implements IExtensionSingleActivationService, IDi
     }
     public onDidChangeTestData(args: { uri: Uri; data?: TestDataItem }): void {
         if (args.data && (args.data.status === TestStatus.Error || args.data.status === TestStatus.Fail) &&
-            getTestType(args.data) === TestType.testFunction) {
+            getTestDataItemType(args.data) === TestDataItemType.function) {
             this.failedItems.push(args.data);
             this.revealFailedNodes().ignoreErrors();
         }
