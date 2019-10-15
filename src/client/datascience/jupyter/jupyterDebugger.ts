@@ -13,7 +13,7 @@ import { IPlatformService } from '../../common/platform/types';
 import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { concatMultilineString } from '../common';
+import { concatMultilineStringOutput } from '../common';
 import { Identifiers, Telemetry } from '../constants';
 import {
     CellState,
@@ -398,7 +398,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                 }
                 if (outputs[0].output_type === 'stream') {
                     const stream = outputs[0] as nbformat.IStream;
-                    return concatMultilineString(stream.text);
+                    return concatMultilineStringOutput(stream.text);
                 }
             }
         }

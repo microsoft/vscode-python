@@ -9,7 +9,7 @@ import * as path from 'path';
 
 import { IDataScienceSettings } from '../../client/common/types';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
-import { concatMultilineString, splitMultilineString } from '../../client/datascience/common';
+import { concatMultilineStringInput, splitMultilineString } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import { CellState, ICell, IJupyterVariable, IMessageCell } from '../../client/datascience/types';
 import { noop } from '../../test/core';
@@ -134,8 +134,7 @@ export function createEmptyCell(id: string | undefined, executionCount: number |
         id: id ? id : Identifiers.EditCellId,
         file: Identifiers.EmptyFileName,
         line: 0,
-        state: CellState.finished,
-        type: 'execute'
+        state: CellState.finished
     };
 }
 
@@ -173,7 +172,7 @@ export function extractInputText(inputCell: ICell, settings: IDataScienceSetting
         }
     }
 
-    return concatMultilineString(source);
+    return concatMultilineStringInput(source);
 }
 
 export function createCellVM(inputCell: ICell, settings: IDataScienceSettings | undefined, inputBlockToggled: (id: string) => void, editable: boolean): ICellViewModel {
@@ -464,7 +463,7 @@ function generateCellData(): (nbformat.ICodeCell | nbformat.IMarkdownCell | nbfo
                 'Nunc quis orci ante. Vivamus vel blandit velit.\n","Sed mattis dui diam, et blandit augue mattis vestibulum.\n',
                 'Suspendisse ornare interdum velit. Suspendisse potenti.\n',
                 'Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.\n',
-                '\"\"\" '
+                '\"\"\"'
             ]
         },
         {

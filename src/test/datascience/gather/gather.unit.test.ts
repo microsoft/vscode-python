@@ -17,7 +17,6 @@ suite('DataScience code gathering unit tests', () => {
             file: '2DB9B899-6519-4E1B-88B0-FA728A274115',
             line: 0,
             state: 2,
-            type: 'execute',
             data: {
                 source: `from bokeh.plotting import show, figure, output_notebook\noutput_notebook()`,
                 cell_type: 'code',
@@ -31,7 +30,6 @@ suite('DataScience code gathering unit tests', () => {
             file: '2DB9B899-6519-4E1B-88B0-FA728A274115',
             line: 0,
             state: 2,
-            type: 'execute',
             data: {
                 source: `x = [1,2,3,4,5]\ny = [21,9,15,17,4]\nprint('This is some irrelevant code')`,
                 cell_type: 'code',
@@ -45,7 +43,6 @@ suite('DataScience code gathering unit tests', () => {
             file: '2DB9B899-6519-4E1B-88B0-FA728A274115',
             line: 0,
             state: 2,
-            type: 'execute',
             data: {
                 source: `p=figure(title='demo',x_axis_label='x',y_axis_label='y')`,
                 cell_type: 'code',
@@ -59,7 +56,6 @@ suite('DataScience code gathering unit tests', () => {
             file: '2DB9B899-6519-4E1B-88B0-FA728A274115',
             line: 0,
             state: 2,
-            type: 'execute',
             data: {
                 source: 'p.line(x,y,line_width=2)',
                 cell_type: 'code',
@@ -73,7 +69,6 @@ suite('DataScience code gathering unit tests', () => {
             file: '2DB9B899-6519-4E1B-88B0-FA728A274115',
             line: 0,
             state: 2,
-            type: 'execute',
             data: {
                 source: 'show(p)',
                 cell_type: 'code',

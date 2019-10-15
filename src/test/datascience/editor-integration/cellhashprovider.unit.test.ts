@@ -64,7 +64,6 @@ suite('CellHashProvider Unit Tests', () => {
                 execution_count: 1
             },
             id: '1',
-            type: 'execute',
             state: CellState.init
         };
         return hashProvider.preExecute(cell, false);

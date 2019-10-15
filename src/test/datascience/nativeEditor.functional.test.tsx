@@ -331,11 +331,113 @@ for _ in range(50):
         let wrapper: ReactWrapper<any, Readonly<{}>, React.Component>;
         const disposables: Disposable[] = [];
         let ioc: DataScienceIocContainer;
-        const baseFile = [
-            { id: 'NotebookImport#0', data: { source: 'a=1\na' } },
-            { id: 'NotebookImport#1', data: { source: 'b=2\nb' } },
-            { id: 'NotebookImport#2', data: { source: 'c=3\nc' } }
-        ];
+        const baseFile = `
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {
+    "collapsed": true
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "1"
+      ]
+     },
+     "execution_count": 1,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "a=1\\n",
+    "a"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "2"
+      ]
+     },
+     "execution_count": 2,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "b=2\\n",
+    "b"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "3"
+      ]
+     },
+     "execution_count": 3,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "c=3\\n",
+    "c"
+   ]
+  }
+ ],
+ "metadata": {
+  "file_extension": ".py",
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.7.4"
+  },
+  "mimetype": "text/x-python",
+  "name": "python",
+  "npconvert_exporter": "python",
+  "pygments_lexer": "ipython3",
+  "version": 3
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}`;
+        const addedJSON = JSON.parse(baseFile);
+        addedJSON.cells.splice(0, 0, {
+            cell_type: 'code',
+            execution_count: null,
+            metadata: {},
+            outputs: [],
+            source: []
+           });
+        const addedJSONFile = JSON.stringify(addedJSON, null, ' ');
+
         let notebookFile: {
             filePath: string;
             cleanupCallback: Function;
@@ -351,15 +453,11 @@ for _ in range(50):
 
                 addMockData(ioc, 'b=2\nb', 2);
                 addMockData(ioc, 'c=3\nc', 3);
-
-                const runAllCells = baseFile.map(cell => {
-                    return createFileCell(cell, cell.data);
-                });
                 // Use a real file so we can save notebook to a file.
                 // This is used in some tests (saving).
                 notebookFile = await createTemporaryFile('.ipynb');
-                const notebook = await ioc.get<INotebookExporter>(INotebookExporter).translateToNotebook(runAllCells, undefined);
-                await Promise.all([waitForUpdate(wrapper, NativeEditor, 1), openEditor(ioc, JSON.stringify(notebook), notebookFile.filePath)]);
+                await fs.writeFile(notebookFile.filePath, baseFile);
+                await Promise.all([waitForUpdate(wrapper, NativeEditor, 1), openEditor(ioc, baseFile, notebookFile.filePath)]);
             } else {
                 // tslint:disable-next-line: no-invalid-this
                 this.skip();
@@ -395,11 +493,12 @@ for _ in range(50):
 
         function simulateKeyPressOnCell(cellIndex: number, keyboardEvent: Partial<IKeyboardEvent> & { code: string }) {
             const event = { ...createKeyboardEventForCell(keyboardEvent), ...keyboardEvent };
+            const id = `NotebookImport#${cellIndex}`;
             wrapper
                 .find(NativeCell)
                 .at(cellIndex)
                 .find(CellInput)
-                .props().keyDown!(baseFile[cellIndex].id, event);
+                .props().keyDown!(id, event);
             wrapper.update();
         }
 
@@ -718,19 +817,12 @@ for _ in range(50):
                     .find('.cell-wrapper')
                     .first();
                 wrapperElement.simulate('keyDown', { key: 'y' });
+                wrapper.update();
 
-                // Confirm output cell is not rendered (remember we don't have any output) and monaco editor is rendered.
+                // Confirm editor is rendered .
+                const nativeCell = wrapper.find(NativeCell).at(1);
                 assert.equal(
-                    wrapper
-                        .find(NativeCell)
-                        .at(1)
-                        .find(CellOutput).length,
-                    0
-                );
-                assert.equal(
-                    wrapper
-                        .find(NativeCell)
-                        .at(1)
+                    nativeCell
                         .find(MonacoEditor).length,
                     1
                 );
@@ -843,7 +935,7 @@ for _ in range(50):
                 await waitForMessageReceivedEditorComponent(InteractiveWindowMessages.NotebookClean, 5_000);
 
                 // Wait for the state to get updated.
-                await waitForCondition(async () => controller.getState().dirty === false, 1_000, `Timeout waiting for dirty state to get updated to false`);
+                await waitForCondition(async () => controller.getState().dirty === false, 2_000, `Timeout waiting for dirty state to get updated to false`);
             }
 
             /**
@@ -889,6 +981,26 @@ for _ in range(50):
                 await makeChangesAndConfirmFileIsUpdated();
                 await makeChangesAndConfirmFileIsUpdated();
                 await makeChangesAndConfirmFileIsUpdated();
+            });
+
+            test('File saved with same format', async () => {
+                // Configure notebook to save automatically ever 1s.
+                when(ioc.mockedWorkspaceConfig.get('autoSave', 'off')).thenReturn('afterDelay');
+                when(ioc.mockedWorkspaceConfig.get<number>('autoSaveDelay', anything())).thenReturn(1_000);
+                ioc.forceSettingsChanged(ioc.getSettings().pythonPath);
+                const notebookFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
+
+                await modifyNotebook();
+                await waitForNotebookToBeDirty();
+
+                // At this point a message should be sent to extension asking it to save.
+                // After the save, the extension should send a message to react letting it know that it was saved successfully.
+
+                await waitForNotebookToBeClean();
+                // Confirm file is not the same. There should be a single cell that's been added
+                const newFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
+                assert.notEqual(newFileContents, notebookFileContents);
+                assert.equal(newFileContents, addedJSONFile);
             });
 
             test('Should not auto save notebook, ever', async () => {

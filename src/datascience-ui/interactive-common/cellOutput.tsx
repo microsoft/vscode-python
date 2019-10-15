@@ -14,7 +14,7 @@ import cloneDeep = require('lodash/cloneDeep');
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
 
-import { concatMultilineString } from '../../client/datascience/common';
+import { concatMultilineStringInput, concatMultilineStringOutput } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import { CellState } from '../../client/datascience/types';
 import { ClassType } from '../../client/ioc/types';
@@ -170,7 +170,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     private renderMarkdownOutputs = () => {
         const markdown = this.getMarkdownCell();
         // React-markdown expects that the source is a string
-        const source = concatMultilineString(markdown.source);
+        const source = concatMultilineStringInput(markdown.source);
         const Transform = transforms['text/markdown'];
         const MarkdownClassName = 'markdown-cell-output';
 
@@ -201,7 +201,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             isError = false;
             renderWithScrollbars = true;
             const stream = copy as nbformat.IStream;
-            const formatted = concatMultilineString(stream.text);
+            const formatted = concatMultilineStringOutput(stream.text);
             copy.data = {
                 'text/html': formatted.includes('<') ? `<xmp>${formatted}</xmp>` : `<div>${formatted}</div>`
             };
@@ -251,7 +251,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                 case 'text/plain':
                     return {
                         mimeType,
-                        data: concatMultilineString(data as nbformat.MultilineString),
+                        data: concatMultilineStringOutput(data as nbformat.MultilineString),
                         isText,
                         isError,
                         renderWithScrollbars,

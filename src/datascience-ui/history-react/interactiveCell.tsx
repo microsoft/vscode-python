@@ -62,7 +62,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
     public render() {
 
         if (this.props.cellVM.cell.data.cell_type === 'messages') {
-            return <InformationMessages messages={this.props.cellVM.cell.data.messages} type={this.props.cellVM.cell.type}/>;
+            return <InformationMessages messages={this.props.cellVM.cell.data.messages}/>;
         } else {
             return this.renderNormalCell();
         }

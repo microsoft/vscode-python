@@ -11,7 +11,7 @@ import * as uuid from 'uuid/v4';
 
 import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
-import { concatMultilineString, generateMarkdownFromCodeLines } from '../../client/datascience/common';
+import { concatMultilineStringInput, generateMarkdownFromCodeLines } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import {
     IInteractiveWindowMapping,
@@ -520,7 +520,7 @@ export class MainStateController implements IMessageHandler {
             // Reset the old vms (nothing should be selected/focused)
             // Change state only for cells that were selected/focused
             newVMs.forEach((cellVM, index) => {
-                if (cellVM.selected || cellVM.focused){
+                if (cellVM.selected || cellVM.focused) {
                     newVMs[index] = { ...cellVM, selected: false, focused: false };
                 }
             });
@@ -541,7 +541,7 @@ export class MainStateController implements IMessageHandler {
             // Reset the old vms (nothing should be selected/focused)
             // Change state only for cells that were selected/focused
             newVMs.forEach((cellVM, index) => {
-                if (cellVM.selected || cellVM.focused){
+                if (cellVM.selected || cellVM.focused) {
                     newVMs[index] = { ...cellVM, selected: false, focused: false };
                 }
             });
@@ -562,7 +562,7 @@ export class MainStateController implements IMessageHandler {
             cellVMs[index] = immutable.updateIn(this.pendingState.cellVMs[index], ['cell', 'data', 'cell_type'], () => newType);
             this.setState({ cellVMs });
             if (newType === 'code') {
-                this.sendMessage(InteractiveWindowMessages.InsertCell, { id: cellId, code: concatMultilineString(cellVMs[index].cell.data.source), codeCellAbove: this.firstCodeCellAbove(cellId) });
+                this.sendMessage(InteractiveWindowMessages.InsertCell, { id: cellId, code: concatMultilineStringInput(cellVMs[index].cell.data.source), codeCellAbove: this.firstCodeCellAbove(cellId) });
             } else {
                 this.sendMessage(InteractiveWindowMessages.RemoveCell, { id: cellId });
             }
@@ -1114,23 +1114,23 @@ export class MainStateController implements IMessageHandler {
 
             // Live share has been disabled for now, see https://github.com/microsoft/vscode-python/issues/7972
             // Check to see if our code still matches for the cell (in liveshare it might be updated from the other side)
-            // if (concatMultilineString(this.pendingState.cellVMs[index].cell.data.source) !== concatMultilineString(cell.data.source)) {
+            // if (concatMultilineStringInput(this.pendingState.cellVMs[index].cell.data.source) !== concatMultilineStringInput(cell.data.source)) {
 
             // If cell state changes, then update just the state and the cell data (excluding source).
             // Prevent updates to the source, as its possible we have recieved a response for a cell execution
             // and the user has updated the cell text since then.
             if (this.pendingState.cellVMs[index].cell.state !== cell.state) {
                 newVMs[index] = {
-                                    ...newVMs[index],
-                                    cell: {
-                                        ...newVMs[index].cell,
-                                        state: cell.state,
-                                        data: {
-                                            ...cell.data,
-                                            source: newVMs[index].cell.data.source
-                                        }
-                                    }
-                                };
+                    ...newVMs[index],
+                    cell: {
+                        ...newVMs[index].cell,
+                        state: cell.state,
+                        data: {
+                            ...cell.data,
+                            source: newVMs[index].cell.data.source
+                        }
+                    }
+                };
             } else {
                 newVMs[index] = { ...newVMs[index], cell: cell };
             }

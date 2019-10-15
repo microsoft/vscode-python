@@ -61,6 +61,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
      */
     public async useNewPtvsd(pythonPath: string): Promise<boolean> {
         if (!this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
+            this.experimentsManager.sendTelemetryIfInExperiment(DebugAdapterNewPtvsd.control);
             return false;
         }
 

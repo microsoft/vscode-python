@@ -13,7 +13,7 @@ import { IApplicationShell, IDocumentManager } from '../../client/common/applica
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { generateCellsFromDocument } from '../../client/datascience/cellFactory';
-import { concatMultilineString } from '../../client/datascience/common';
+import { concatMultilineStringInput } from '../../client/datascience/common';
 import { EditorContexts } from '../../client/datascience/constants';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
@@ -557,10 +557,10 @@ for _ in range(50):
             assert.equal(cells.length, 2, 'Not enough cells generated');
 
             // Run the first cell
-            await addCode(ioc, wrapper, concatMultilineString(cells[0].data.source), 4);
+            await addCode(ioc, wrapper, concatMultilineStringInput(cells[0].data.source), 4);
 
             // Last cell should generate a series of updates. Verify we end up with a single image
-            await addCode(ioc, wrapper, concatMultilineString(cells[1].data.source), 10);
+            await addCode(ioc, wrapper, concatMultilineStringInput(cells[1].data.source), 10);
             const cell = getLastOutputCell(wrapper, 'InteractiveCell');
 
             const output = cell!.find('div.cell-output');

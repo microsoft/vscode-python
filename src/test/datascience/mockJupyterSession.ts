@@ -116,13 +116,15 @@ export class MockJupyterSession implements IJupyterSession {
 
     private findCell = (code: string): ICell => {
         // Match skipping line separators
-        const withoutLines = code.replace(LineFeedRegEx, '');
+        const withoutLines = code.replace(LineFeedRegEx, '').toLowerCase();
 
         if (this.dict.hasOwnProperty(withoutLines)) {
             return this.dict[withoutLines] as ICell;
         }
         // tslint:disable-next-line:no-console
-        console.log(`Cell ${code} not found in mock`);
-        throw new Error(`Cell ${code} not found in mock`);
+        console.log(`Cell '${code}' not found in mock`);
+        // tslint:disable-next-line:no-console
+        console.log(`Dict has these keys ${Object.keys(this.dict).join('","')}`);
+        throw new Error(`Cell '${code}' not found in mock`);
     }
 }

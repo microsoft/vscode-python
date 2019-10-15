@@ -7,7 +7,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 import * as fastDeepEqual from 'fast-deep-equal';
 import * as React from 'react';
 
-import { concatMultilineString } from '../../client/datascience/common';
+import { concatMultilineStringInput } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import { NativeCommandType } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CellState, ICell } from '../../client/datascience/types';
@@ -52,7 +52,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
 
     public render() {
         if (this.props.cellVM.cell.data.cell_type === 'messages') {
-            return <InformationMessages messages={this.props.cellVM.cell.data.messages} type={this.props.cellVM.cell.type}/>;
+            return <InformationMessages messages={this.props.cellVM.cell.data.messages}/>;
         } else {
             return this.renderNormalCell();
         }
@@ -481,7 +481,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
             content = possibleContents;
         } else {
             // Outside editor, just use the cell
-            content = concatMultilineString(this.props.cellVM.cell.data.source);
+            content = concatMultilineStringInput(this.props.cellVM.cell.data.source);
         }
 
         // Send to jupyter
@@ -620,7 +620,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
             this.props.cellVM.cell.data.execution_count.toString() : '-';
         const runCell = () => {
             this.props.stateController.updateCellSource(cellId);
-            this.runAndMove(concatMultilineString(this.props.cellVM.cell.data.source));
+            this.runAndMove(concatMultilineStringInput(this.props.cellVM.cell.data.source));
             this.props.stateController.sendCommand(NativeCommandType.Run, 'mouse');
         };
         const canRunBelow = this.props.cellVM.cell.state === CellState.finished || this.props.cellVM.cell.state === CellState.error;

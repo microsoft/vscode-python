@@ -5,7 +5,7 @@ import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as uuid from 'uuid/v4';
 
 import { noop } from '../../client/common/utils/misc';
-import { concatMultilineString } from '../../client/datascience/common';
+import { concatMultilineStringInput } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import {
     ILoadAllCells,
@@ -103,7 +103,7 @@ export class NativeEditorStateController extends MainStateController {
             const cells = this.getState().cellVMs;
             const selectedCell = cells.find(cvm => cvm.cell.id === selectedCellId);
             if (selectedCell) {
-                this.submitInput(concatMultilineString(selectedCell.cell.data.source), selectedCell);
+                this.submitInput(concatMultilineStringInput(selectedCell.cell.data.source), selectedCell);
             }
         }
     }
@@ -113,7 +113,7 @@ export class NativeEditorStateController extends MainStateController {
         this.suspendUpdates();
         const cells = this.getState().cellVMs;
         cells.filter(cvm => cvm.cell.data.cell_type === 'code').
-            forEach(cvm => this.submitInput(concatMultilineString(cvm.cell.data.source), cvm));
+            forEach(cvm => this.submitInput(concatMultilineStringInput(cvm.cell.data.source), cvm));
         this.resumeUpdates();
     }
 
@@ -162,7 +162,7 @@ export class NativeEditorStateController extends MainStateController {
         if (index > 0) {
             this.suspendUpdates();
             cells.filter((cvm, i) => i < index && cvm.cell.data.cell_type === 'code').
-                forEach(cvm => this.submitInput(concatMultilineString(cvm.cell.data.source), cvm));
+                forEach(cvm => this.submitInput(concatMultilineStringInput(cvm.cell.data.source), cvm));
             this.resumeUpdates();
         }
     }
@@ -173,7 +173,7 @@ export class NativeEditorStateController extends MainStateController {
         if (index >= 0) {
             this.suspendUpdates();
             cells.filter((cvm, i) => i >= index && cvm.cell.data.cell_type === 'code').
-                forEach(cvm => this.submitInput(concatMultilineString(cvm.cell.data.source), cvm));
+                forEach(cvm => this.submitInput(concatMultilineStringInput(cvm.cell.data.source), cvm));
             this.resumeUpdates();
         }
     }
