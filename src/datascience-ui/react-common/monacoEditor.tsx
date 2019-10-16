@@ -370,6 +370,10 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                         `position: absolute; left: ${rect.left}px; top: ${rect.top}px; width:${width ? width : rect.width}px`);
                 }
             }
+        } else {
+            // If widget parent isn't set yet, try again later
+            this.updateWidgetParent(this.state.editor);
+            this.throttledUpdateWidgetPosition(width);
         }
     }
 
