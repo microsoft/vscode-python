@@ -144,6 +144,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                                     baseTheme={this.props.baseTheme}
                                     expandImage={this.props.expandImage}
                                     openLink={this.props.openLink}
+                                    maxTextSize={this.props.maxTextSize}
                                 />
                             </div>
                         </div>

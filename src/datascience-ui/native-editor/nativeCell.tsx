@@ -697,6 +697,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                     baseTheme={this.props.baseTheme}
                     expandImage={this.props.stateController.showPlot}
                     openLink={this.props.stateController.openLink}
+                    maxTextSize={this.props.maxTextSize}
                  />
             );
         }

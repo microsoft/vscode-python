@@ -254,7 +254,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                         data: concatMultilineStringOutput(data as nbformat.MultilineString),
                         isText,
                         isError,
-                        renderWithScrollbars,
+                        renderWithScrollbars: true,
                         extraButton,
                         doubleClick: noop
                     };
