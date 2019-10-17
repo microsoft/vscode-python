@@ -16,6 +16,7 @@ import {
     IWorkspaceService
 } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
+import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import * as localize from '../../common/utils/localize';
@@ -154,6 +155,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     }
 
     public async debugCode(code: string, file: string, line: number, editor?: TextEditor): Promise<boolean> {
+        traceInfo('**** debugCode');
+        traceInfo(`**** debugCode ${code} ${file}`);
         let saved = true;
         // Make sure the file is saved before debugging
         const doc = this.documentManager.textDocuments.find(d => d.fileName === file);
@@ -181,9 +184,12 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
 
         // Call the internal method if we were able to save
         if (saved) {
+            traceInfo('**** submitCode');
+            traceInfo(`**** ${code} ${file}`);
             return this.submitCode(code, file, line, undefined, editor, true);
         }
 
+        traceInfo('**** debugCode false');
         return false;
     }
 
