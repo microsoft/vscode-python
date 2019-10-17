@@ -13,7 +13,7 @@ import {
 import { JSONObject } from '@phosphor/coreutils';
 import { Slot } from '@phosphor/signaling';
 import * as uuid from 'uuid/v4';
-import { Event, EventEmitter, Disposable } from 'vscode';
+import { Disposable, Event, EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { Cancellation } from '../../common/cancellation';
