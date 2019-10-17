@@ -5,7 +5,8 @@ import urllib.request
 import zipfile
 
 
-DEBUGGER_DEST = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+EXTENSION_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DEBUGGER_DEST = os.path.join(EXTENSION_ROOT, "pythonFiles", "lib", "python")
 DEBUGGER_PACKAGE = "ptvsd"
 DEBUGGER_VERSION = "5.0.0a5"
 DEBUGGER_PYTHON_VERSIONS = ("cp37",)
