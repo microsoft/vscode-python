@@ -82,7 +82,7 @@ suite('Debugging - Adapter Factory Registration', () => {
         debugService = mock(DebugService);
         factory = mock(DebugAdapterDescriptorFactory);
         disposableRegistry = [];
-        activator = new DebugAdapterActivator(instance(debugService), instance(factory), disposableRegistry, experimentsManager);
+        activator = new DebugAdapterActivator(instance(debugService), instance(factory), disposableRegistry);
     });
 
     teardown(() => {

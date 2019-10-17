@@ -67,6 +67,7 @@ export interface IKnownLaunchRequestArguments extends ICommonDebugArguments {
     env?: Record<string, string | undefined>;
     envFile: string;
     console?: ConsoleType;
+    debugAdapterPath?: string;
 }
 // tslint:disable-next-line:interface-name
 export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments, IKnownLaunchRequestArguments, DebugConfiguration {

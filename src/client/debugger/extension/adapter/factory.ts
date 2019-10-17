@@ -7,9 +7,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { DebugAdapterDescriptor, DebugAdapterExecutable, DebugAdapterServer, DebugSession, WorkspaceFolder } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
-import { DebugAdapterNewPtvsd } from '../../../common/experimentGroups';
 import { traceVerbose } from '../../../common/logger';
-import { IExperimentsManager } from '../../../common/types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { RemoteDebugOptions } from '../../debugAdapter/types';
@@ -22,57 +20,31 @@ export const ptvsdPathStorageKey = 'PTVSD_PATH_STORAGE_KEY';
 export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFactory {
     constructor(
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell
     ) { }
-    public async createDebugAdapterDescriptor(session: DebugSession, executable: DebugAdapterExecutable | undefined): Promise<DebugAdapterDescriptor> {
+    public async createDebugAdapterDescriptor(session: DebugSession, _executable: DebugAdapterExecutable | undefined): Promise<DebugAdapterDescriptor> {
         const configuration = session.configuration as (LaunchRequestArguments | AttachRequestArguments);
-
-        if (this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
-            if (configuration.request === 'attach') {
-                const port = configuration.port ? configuration.port : 0;
-                if (port === 0) {
-                    throw new Error('Port must be specified for request type attach');
-                }
-                return new DebugAdapterServer(port, configuration.host);
+        if (configuration.request === 'attach') {
+            const port = configuration.port ? configuration.port : 0;
+            if (port === 0) {
+                throw new Error('Port must be specified for request type attach');
+            }
+            return new DebugAdapterServer(port, configuration.host);
+        } else {
+            const pythonPath = await this.getPythonPath(configuration, session.workspaceFolder);
+            const interpreterInfo = await this.interpreterService.getInterpreterDetails(pythonPath);
+            if (!interpreterInfo || !interpreterInfo.version) {
+                throw new Error('Debug Adapter Executable requires a Python Interpreter.');
+            }
+            // If logToFile is set in the debug config then pass --log-dir <path-to-extension-dir> when launching the debug adapter.
+            const logArgs = configuration.logToFile ? ['--log-dir', EXTENSION_ROOT_DIR] : [];
+            const ptvsdPathToUse = this.getPtvsdPath();
+            if (!configuration.debugAdapterPath) {
+                return new DebugAdapterExecutable(`${pythonPath}`, [path.join(ptvsdPathToUse, 'adapter'), ...logArgs]);
             } else {
-                const pythonPath = await this.getPythonPath(configuration, session.workspaceFolder);
-                if (await this.useNewPtvsd(pythonPath)) {
-                    // If logToFile is set in the debug config then pass --log-dir <path-to-extension-dir> when launching the debug adapter.
-                    const logArgs = configuration.logToFile ? ['--log-dir', EXTENSION_ROOT_DIR] : [];
-                    const ptvsdPathToUse = this.getPtvsdPath();
-                    return new DebugAdapterExecutable(`${pythonPath}`, [path.join(ptvsdPathToUse, 'adapter'), ...logArgs]);
-                }
+                return new DebugAdapterExecutable(`${pythonPath}`, [configuration.debugAdapterPath, ...logArgs]);
             }
         }
-
-        // Use the Node debug adapter (and ptvsd_launcher.py)
-        if (executable) {
-            return executable;
-        }
-        // Unlikely scenario.
-        throw new Error('Debug Adapter Executable not provided');
-    }
-
-    /**
-     * Check and return whether the user should and can use the new PTVSD wheels or not.
-     *
-     * @param {string} pythonPath Path to the python executable used to launch the Python Debug Adapter (result of `this.getPythonPath()`)
-     * @returns {Promise<boolean>} Whether the user should and can use the new PTVSD wheels or not.
-     * @memberof DebugAdapterDescriptorFactory
-     */
-    public async useNewPtvsd(pythonPath: string): Promise<boolean> {
-        if (!this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
-            this.experimentsManager.sendTelemetryIfInExperiment(DebugAdapterNewPtvsd.control);
-            return false;
-        }
-
-        const interpreterInfo = await this.interpreterService.getInterpreterDetails(pythonPath);
-        if (!interpreterInfo || !interpreterInfo.version || !interpreterInfo.version.raw.startsWith('3.7')) {
-            return false;
-        }
-
-        return true;
     }
 
     public getPtvsdPath(): string {

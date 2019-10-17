@@ -38,7 +38,6 @@ export enum PythonPathSource {
 
 export const IDebugAdapterDescriptorFactory = Symbol('IDebugAdapterDescriptorFactory');
 export interface IDebugAdapterDescriptorFactory extends DebugAdapterDescriptorFactory {
-    useNewPtvsd(pythonPath: string): Promise<boolean>;
     getPtvsdPath(): string;
     getRemotePtvsdArgs(remoteDebugOptions: RemoteDebugOptions): string[];
 }

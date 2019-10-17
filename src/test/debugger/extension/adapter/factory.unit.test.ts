@@ -120,8 +120,7 @@ suite('Debugging - Adapter Factory', () => {
 
         factory = new DebugAdapterDescriptorFactory(
             instance(interpreterService),
-            instance(appShell),
-            experimentsManager
+            instance(appShell)
         );
     });
 
