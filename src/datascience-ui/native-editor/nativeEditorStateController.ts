@@ -53,7 +53,7 @@ export class NativeEditorStateController extends MainStateController {
             case InteractiveWindowMessages.NotebookAddCellBelow:
                 this.addNewCell();
                 break;
-            case  InteractiveWindowMessages.DoSave:
+            case InteractiveWindowMessages.DoSave:
                 this.save();
                 break;
 
@@ -278,24 +278,31 @@ export class NativeEditorStateController extends MainStateController {
 
     protected onCodeLostFocus(cellId: string) {
         // Update the cell's source
-        const cell = this.findCell(cellId);
-        if (cell) {
+        const index = this.findCellIndex(cellId);
+        if (index >= 0) {
             // Get the model for the monaco editor
             const monacoId = this.getMonacoId(cellId);
             if (monacoId) {
                 const model = monacoEditor.editor.getModels().find(m => m.id === monacoId);
                 if (model) {
                     const newValue = model.getValue().replace(/\r/g, '');
-                    cell.cell.data.source = cell.inputBlockText = newValue;
+                    const newVMs = [...this.getState().cellVMs];
+
+                    // Update our state
+                    newVMs[index] = {
+                        ...newVMs[index],
+                        cell: {
+                            ...newVMs[index].cell,
+                            data: {
+                                ...newVMs[index].cell.data,
+                                source: newValue
+                            }
+                        }
+                    };
+
+                    this.setState({ cellVMs: newVMs });
                 }
             }
-        }
-
-        // Special case markdown in the edit cell. Submit it.
-        if (cell && cell.cell.id === Identifiers.EditCellId && cell.cell.data.cell_type === 'markdown') {
-            const code = cell.inputBlockText;
-            cell.cell.data.source = cell.inputBlockText = '';
-            this.submitInput(code, cell);
         }
     }
 }
