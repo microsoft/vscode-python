@@ -3,24 +3,18 @@
 
 'use strict';
 
-import * as fs from 'fs';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { parse } from 'semver';
-import { promisify } from 'util';
-import { DebugAdapterDescriptor, DebugAdapterExecutable, DebugSession, WorkspaceFolder, DebugAdapterServer } from 'vscode';
+import { DebugAdapterDescriptor, DebugAdapterExecutable, DebugAdapterServer, DebugSession, WorkspaceFolder } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
-import { PVSC_EXTENSION_ID } from '../../../common/constants';
 import { DebugAdapterNewPtvsd } from '../../../common/experimentGroups';
 import { traceVerbose } from '../../../common/logger';
-import { IPythonExecutionFactory } from '../../../common/process/types';
-import { IExperimentsManager, IExtensions, IPersistentStateFactory } from '../../../common/types';
+import { IExperimentsManager } from '../../../common/types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { RemoteDebugOptions } from '../../debugAdapter/types';
 import { AttachRequestArguments, LaunchRequestArguments } from '../../types';
-import { DebugAdapterPtvsdPathInfo, IDebugAdapterDescriptorFactory } from '../types';
-import { bool } from 'prop-types';
+import { IDebugAdapterDescriptorFactory } from '../types';
 
 export const ptvsdPathStorageKey = 'PTVSD_PATH_STORAGE_KEY';
 
@@ -29,7 +23,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
     constructor(
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager,
+        @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager
     ) { }
     public async createDebugAdapterDescriptor(session: DebugSession, executable: DebugAdapterExecutable | undefined): Promise<DebugAdapterDescriptor> {
         const configuration = session.configuration as (LaunchRequestArguments | AttachRequestArguments);
