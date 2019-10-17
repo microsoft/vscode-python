@@ -9,7 +9,7 @@ import { RemoteDebugOptions } from '../debugAdapter/types';
 import { DebugConfigurationArguments } from '../types';
 
 export const IDebugConfigurationService = Symbol('IDebugConfigurationService');
-export interface IDebugConfigurationService extends DebugConfigurationProvider {}
+export interface IDebugConfigurationService extends DebugConfigurationProvider { }
 export const IDebuggerBanner = Symbol('IDebuggerBanner');
 export interface IDebuggerBanner {
     initialize(): void;
@@ -39,7 +39,7 @@ export enum PythonPathSource {
 export const IDebugAdapterDescriptorFactory = Symbol('IDebugAdapterDescriptorFactory');
 export interface IDebugAdapterDescriptorFactory extends DebugAdapterDescriptorFactory {
     useNewPtvsd(pythonPath: string): Promise<boolean>;
-    getPtvsdPath(pythonPath: string): Promise<string>;
+    getPtvsdPath(): string;
     getRemotePtvsdArgs(remoteDebugOptions: RemoteDebugOptions): string[];
 }
 
