@@ -30,15 +30,11 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager,
-        @inject(IPythonExecutionFactory) private readonly executionFactory: IPythonExecutionFactory,
-        @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory,
-        @inject(IExtensions) private readonly extensions: IExtensions
     ) { }
     public async createDebugAdapterDescriptor(session: DebugSession, executable: DebugAdapterExecutable | undefined): Promise<DebugAdapterDescriptor> {
         const configuration = session.configuration as (LaunchRequestArguments | AttachRequestArguments);
-        const pythonPath = await this.getPythonPath(configuration, session.workspaceFolder);
 
-        if (await this.useNewPtvsd(pythonPath)) {
+        if (this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
             if (configuration.request === 'attach') {
                 const port = configuration.port ? configuration.port : 0;
                 if (port === 0) {
@@ -46,10 +42,13 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
                 }
                 return new DebugAdapterServer(port, configuration.host);
             } else {
-                // If logToFile is set in the debug config then pass --log-dir <path-to-extension-dir> when launching the debug adapter.
-                const logArgs = configuration.logToFile ? ['--log-dir', EXTENSION_ROOT_DIR] : [];
-                const ptvsdPathToUse = await this.getPtvsdPath(pythonPath);
-                return new DebugAdapterExecutable(`${pythonPath}`, [path.join(ptvsdPathToUse, 'adapter'), ...logArgs]);
+                const pythonPath = await this.getPythonPath(configuration, session.workspaceFolder);
+                if (await this.useNewPtvsd(pythonPath)) {
+                    // If logToFile is set in the debug config then pass --log-dir <path-to-extension-dir> when launching the debug adapter.
+                    const logArgs = configuration.logToFile ? ['--log-dir', EXTENSION_ROOT_DIR] : [];
+                    const ptvsdPathToUse = this.getPtvsdPath();
+                    return new DebugAdapterExecutable(`${pythonPath}`, [path.join(ptvsdPathToUse, 'adapter'), ...logArgs]);
+                }
             }
         }
 
@@ -82,15 +81,8 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
         return true;
     }
 
-    public async getPtvsdPath(pythonPath: string): Promise<string> {
-        let ptvsdPathToUse: string;
-
-        try {
-            ptvsdPathToUse = await this.getPtvsdFolder(pythonPath);
-        } catch {
-            ptvsdPathToUse = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
-        }
-
+    public getPtvsdPath(): string {
+        const ptvsdPathToUse = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python');
         return path.join(ptvsdPathToUse, 'ptvsd');
     }
 
@@ -142,46 +134,5 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
     private async notifySelectInterpreter() {
         // tslint:disable-next-line: messages-must-be-localized
         await this.appShell.showErrorMessage('Please install Python or select a Python Interpreter to use the debugger.');
-    }
-
-    /**
-     * Return the folder name for the bundled PTVSD wheel compatible with the new debug adapter.
-     * Use `ptvsd_folder_name.py` to compute the experimental PTVSD folder name in 2 cases:
-     * - It has never been computed before;
-     * - The extension number has changed since the last time it was cached.
-     *
-     * Return a cached path otherwise, since we pin the PTVSD version with each extension release,
-     * and other factors on folder selection (like host platform) won't change.
-     *
-     * @private
-     * @param {string} pythonPath Path to the python executable used to launch the Python Debug Adapter (result of `this.getPythonPath()`)
-     * @returns {Promise<string>} Path to the PTVSD version to use in the debug adapter.
-     * @memberof DebugAdapterDescriptorFactory
-     */
-    private async getPtvsdFolder(pythonPath: string): Promise<string> {
-        const persistentState = this.stateFactory.createGlobalPersistentState<DebugAdapterPtvsdPathInfo | undefined>(ptvsdPathStorageKey, undefined);
-        const extension = this.extensions.getExtension(PVSC_EXTENSION_ID)!;
-        const version = parse(extension.packageJSON.version)!;
-
-        if (persistentState.value && version.raw === persistentState.value.extensionVersion) {
-            const cachedPath = persistentState.value.ptvsdPath;
-            const access = promisify(fs.access);
-            try {
-                await access(cachedPath, fs.constants.F_OK);
-                return cachedPath;
-            } catch (err) {
-                // The path to the cached folder didn't exist (ptvsd requirements updated during development), so run the script again.
-            }
-        }
-
-        // The ptvsd path wasn't cached, so run the script and cache it.
-        const pathToScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'ptvsd_folder_name.py');
-        const pythonProcess = await this.executionFactory.create({ pythonPath });
-        const executionResult = await pythonProcess.exec([pathToScript], {});
-        const pathToPtvsd = executionResult.stdout.trim();
-
-        await persistentState.updateValue({ extensionVersion: version.raw, ptvsdPath: pathToPtvsd });
-
-        return pathToPtvsd;
     }
 }
