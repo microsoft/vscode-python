@@ -13,7 +13,7 @@ import {
 import { JSONObject } from '@phosphor/coreutils';
 import { Slot } from '@phosphor/signaling';
 import * as uuid from 'uuid/v4';
-import { Event, EventEmitter } from 'vscode';
+import { Event, EventEmitter, Disposable } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { Cancellation } from '../../common/cancellation';
@@ -33,7 +33,7 @@ export class JupyterSession implements IJupyterSession {
     private onRestartedEvent: EventEmitter<void> | undefined;
     private statusHandler: Slot<Session.ISession, Kernel.Status> | undefined;
     private connected: boolean = false;
-    private activeKernels: Set<string> = new Set<string>();
+    private kernelOpenedEventDisposable: Disposable;
 
     constructor(
         private connInfo: IConnection,
@@ -43,10 +43,11 @@ export class JupyterSession implements IJupyterSession {
         private sessionManager: SessionManager,
         private contentsManager: ContentsManager
     ) {
-        kernelOpenedEvent(this.onKernelOpened.bind(this));
+        this.kernelOpenedEventDisposable = kernelOpenedEvent(this.onKernelOpened.bind(this));
     }
 
     public dispose(): Promise<void> {
+        this.kernelOpenedEventDisposable.dispose();
         return this.shutdown();
     }
 
@@ -175,8 +176,9 @@ export class JupyterSession implements IJupyterSession {
         }
     }
 
-    private onKernelOpened(id: string) {
-        this.activeKernels.add(id);
+    private onKernelOpened(_id: string) {
+        // Not using this at the moment.
+        noop();
     }
 
     private async waitForIdleOnSession(session: Session.ISession | undefined, timeout: number): Promise<void> {

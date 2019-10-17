@@ -53,11 +53,9 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, D
             Logger.verbose(`Create file systemwatcher with pattern ${pattern}`);
 
             const fsWatcher = this.workspaceService.createFileSystemWatcher(globPatern);
-            if (fsWatcher) { // Can fail in tests
-                fsWatcher.onDidCreate(e => this.createHandler(e), this, this.disposableRegistry);
-                this.disposableRegistry.push(fsWatcher);
-                this.fsWatchers.push(fsWatcher);
-            }
+            fsWatcher.onDidCreate(e => this.createHandler(e), this, this.disposableRegistry);
+            this.disposableRegistry.push(fsWatcher);
+            this.fsWatchers.push(fsWatcher);
         }
     }
     @traceDecorators.verbose('Interpreter Watcher change handler')

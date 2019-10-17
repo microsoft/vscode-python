@@ -52,7 +52,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
 
     public async initialize(connInfo: IConnection): Promise<void> {
         this.connInfo = connInfo;
-        this.serverSettings = await this.getServerConnectSettings(connInfo, this.onConnectionOpened.bind(this));
+        this.serverSettings = await this.getServerConnectSettings(connInfo);
         this.sessionManager = new SessionManager({ serverSettings: this.serverSettings });
         this.contentsManager = new ContentsManager({ serverSettings: this.serverSettings });
     }
@@ -103,7 +103,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         return `_xsrf=${pwSettings.xsrfCookie}; ${pwSettings.sessionCookieName}=${pwSettings.sessionCookieValue}`;
     }
 
-    private async getServerConnectSettings(connInfo: IConnection, onConnectionOpened: (kernelId: string | undefined) => void): Promise<ServerConnection.ISettings> {
+    private async getServerConnectSettings(connInfo: IConnection): Promise<ServerConnection.ISettings> {
         let serverSettings: Partial<ServerConnection.ISettings> =
         {
             baseUrl: connInfo.baseUrl,
@@ -148,7 +148,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         // See _createSocket here:
         // https://github.com/jupyterlab/jupyterlab/blob/cfc8ebda95e882b4ed2eefd54863bb8cdb0ab763/packages/services/src/kernel/default.ts
         // tslint:disable-next-line:no-any
-        serverSettings = { ...serverSettings, init: requestInit, WebSocket: createJupyterWebSocket(onConnectionOpened, cookieString, allowUnauthorized) as any };
+        serverSettings = { ...serverSettings, init: requestInit, WebSocket: createJupyterWebSocket(this.onConnectionOpened.bind(this), cookieString, allowUnauthorized) as any };
 
         return ServerConnection.makeSettings(serverSettings);
     }
