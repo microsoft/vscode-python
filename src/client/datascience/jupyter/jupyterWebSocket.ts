@@ -6,7 +6,7 @@ import { traceInfo } from '../../common/logger';
 
 // We need to override the websocket that jupyter lab services uses to put in our cookie information
 // Do this as a function so that we can pass in variables the the socket will have local access to
-export function createJupyterWebSocket(opened: (sessionId: string | undefined) => void, cookieString?: string, allowUnauthorized?: boolean) {
+export function createJupyterWebSocket(cookieString?: string, allowUnauthorized?: boolean) {
     class JupyterWebSocket extends WebSocketWS {
         private kernelId: string | undefined;
 
@@ -37,10 +37,7 @@ export function createJupyterWebSocket(opened: (sessionId: string | undefined) =
         // tslint:disable-next-line: no-any
         public emit(event: string | symbol, ...args: any[]): boolean {
             const result = super.emit(event, ...args);
-            if (event === 'open') {
-                opened(this.kernelId);
-            }
-            traceInfo(`WebSocket event: ${String(event)} ${args}`);
+            traceInfo(`WebSocket event: ${String(event)} for kernel ${this.kernelId}`);
             return result;
         }
     }

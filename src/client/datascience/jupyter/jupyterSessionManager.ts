@@ -3,7 +3,6 @@
 'use strict';
 import { ContentsManager, ServerConnection, SessionManager } from '@jupyterlab/services';
 import { Agent as HttpsAgent } from 'https';
-import { EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { traceInfo } from '../../common/logger';
@@ -26,7 +25,6 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     private contentsManager: ContentsManager | undefined;
     private connInfo: IConnection | undefined;
     private serverSettings: ServerConnection.ISettings | undefined;
-    private kernelConnectedEmitter: EventEmitter<string> = new EventEmitter<string>();
 
     constructor(
         private jupyterPasswordConnect: IJupyterPasswordConnect
@@ -62,7 +60,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             throw new Error(localize.DataScience.sessionDisposed());
         }
         // Create a new session and attempt to connect to it
-        const session = new JupyterSession(this.connInfo, this.kernelConnectedEmitter.event, this.serverSettings, kernelSpec, this.sessionManager, this.contentsManager);
+        const session = new JupyterSession(this.connInfo, this.serverSettings, kernelSpec, this.sessionManager, this.contentsManager);
         try {
             await session.connect(cancelToken);
         } finally {
@@ -92,11 +90,6 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             // For some reason this is failing. Just return nothing
             return [];
         }
-    }
-
-    private onConnectionOpened(kernelId: string | undefined) {
-        traceInfo(`Opening connection ... ${kernelId}`);
-        this.kernelConnectedEmitter.fire(kernelId);
     }
 
     private getSessionCookieString(pwSettings: IJupyterPasswordConnectInfo): string {
@@ -148,7 +141,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         // See _createSocket here:
         // https://github.com/jupyterlab/jupyterlab/blob/cfc8ebda95e882b4ed2eefd54863bb8cdb0ab763/packages/services/src/kernel/default.ts
         // tslint:disable-next-line:no-any
-        serverSettings = { ...serverSettings, init: requestInit, WebSocket: createJupyterWebSocket(this.onConnectionOpened.bind(this), cookieString, allowUnauthorized) as any };
+        serverSettings = { ...serverSettings, init: requestInit, WebSocket: createJupyterWebSocket(cookieString, allowUnauthorized) as any };
 
         return ServerConnection.makeSettings(serverSettings);
     }
