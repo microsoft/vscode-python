@@ -54,6 +54,7 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, D
 
             const fsWatcher = this.workspaceService.createFileSystemWatcher(globPatern);
             fsWatcher.onDidCreate(e => this.createHandler(e), this, this.disposableRegistry);
+
             this.disposableRegistry.push(fsWatcher);
             this.fsWatchers.push(fsWatcher);
         }
