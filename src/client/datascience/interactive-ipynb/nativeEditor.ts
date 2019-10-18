@@ -725,8 +725,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
                 fileToSaveTo = await this.applicationShell.showSaveDialog({
                     saveLabel: localize.DataScience.dirtyNotebookDialogTitle(),
-                    filters: filtersObject,
-                    defaultUri: this.isUntitled ? undefined : this.file
+                    filters: filtersObject
                 });
             }
 
