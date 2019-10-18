@@ -37,7 +37,7 @@ export function createJupyterWebSocket(cookieString?: string, allowUnauthorized?
         // tslint:disable-next-line: no-any
         public emit(event: string | symbol, ...args: any[]): boolean {
             const result = super.emit(event, ...args);
-            traceInfo(`WebSocket event: ${String(event)} for kernel ${this.kernelId}`);
+            traceInfo(`Jupyter WebSocket event: ${String(event)} for kernel ${this.kernelId}`);
             return result;
         }
     }
