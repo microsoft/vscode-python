@@ -151,6 +151,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return this._file;
     }
 
+    public get isUntitled(): boolean {
+        const baseName = path.basename(this.file.fsPath);
+        return baseName.includes(localize.DataScience.untitledNotebookFileName());
+    }
     public dispose(): void {
         super.dispose();
         this.close().ignoreErrors();
@@ -713,9 +717,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             let isDirty = this._dirty;
 
             // Ask user for a save as dialog if no title
-            const baseName = path.basename(this.file.fsPath);
-            const isUntitled = baseName.includes(localize.DataScience.untitledNotebookFileName());
-            if (isUntitled) {
+            if (this.isUntitled) {
                 const filtersKey = localize.DataScience.dirtyNotebookDialogFilter();
                 const filtersObject: { [name: string]: string[] } = {};
                 filtersObject[filtersKey] = ['ipynb'];
@@ -724,7 +726,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 fileToSaveTo = await this.applicationShell.showSaveDialog({
                     saveLabel: localize.DataScience.dirtyNotebookDialogTitle(),
                     filters: filtersObject,
-                    defaultUri: isUntitled ? undefined : this.file
+                    defaultUri: this.isUntitled ? undefined : this.file
                 });
             }
 

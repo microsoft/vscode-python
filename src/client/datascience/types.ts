@@ -252,6 +252,10 @@ export interface INotebookEditor extends IInteractiveBase {
     modified: Event<INotebookEditor>;
     saved: Event<INotebookEditor>;
     /**
+     * Is this notebook representing an untitled file which has never been saved yet.
+     */
+    readonly isUntitled: boolean;
+    /**
      * `true` if there are unpersisted changes.
      */
     readonly isDirty: boolean;
