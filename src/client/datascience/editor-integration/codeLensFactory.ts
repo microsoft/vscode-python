@@ -218,7 +218,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
                     codeLens.push(this.generateCodeLens(
                         range,
                         Commands.ScrollToCell,
-                        localize.DataScience.scrollToCellTitleFormatMessage().format(rangeMatch.executionCount.toString()),
+                        localize.DataScience.scrollToCellTitleFormatMessage().format(executionCount.toString()),
                         [document.fileName, rangeMatch.id]));
                 }
             }
