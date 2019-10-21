@@ -17,7 +17,8 @@ import {
 import { Product } from '../../client/common/installer/productInstaller';
 import { ProductNames } from '../../client/common/installer/productNames';
 import {
-    IFileSystem
+    IFileSystem,
+    IPlatformService
 } from '../../client/common/platform/types';
 import {
     IPythonExecutionFactory,
@@ -194,6 +195,7 @@ export class BaseTestFixture {
     public logger: TypeMoq.IMock<ILogger>;
     public installer: TypeMoq.IMock<IInstaller>;
     public appShell: TypeMoq.IMock<IApplicationShell>;
+    public platform: TypeMoq.IMock<IPlatformService>;
 
     // config
     public configService: TypeMoq.IMock<IConfigurationService>;
@@ -225,6 +227,7 @@ export class BaseTestFixture {
         this.logger = TypeMoq.Mock.ofType<ILogger>(undefined, TypeMoq.MockBehavior.Strict);
         this.installer = TypeMoq.Mock.ofType<IInstaller>(undefined, TypeMoq.MockBehavior.Strict);
         this.appShell = TypeMoq.Mock.ofType<IApplicationShell>(undefined, TypeMoq.MockBehavior.Strict);
+        this.platform = TypeMoq.Mock.ofType<IPlatformService>(undefined, TypeMoq.MockBehavior.Strict);
 
         this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem), TypeMoq.It.isAny()))
             .returns(() => filesystem);
@@ -234,6 +237,8 @@ export class BaseTestFixture {
             .returns(() => this.logger.object);
         this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInstaller), TypeMoq.It.isAny()))
             .returns(() => this.installer.object);
+        this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService), TypeMoq.It.isAny()))
+            .returns(() => this.platform.object);
         this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPythonToolExecutionService), TypeMoq.It.isAny()))
             .returns(() => pythonToolExecService);
         this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPythonExecutionFactory), TypeMoq.It.isAny()))
