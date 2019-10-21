@@ -12,15 +12,14 @@ import * as path from 'path';
 import * as tmp from 'tmp';
 import * as vscode from 'vscode';
 import { createDeferred } from '../utils/async';
-import { noop } from '../utils/misc';
 import { getOSType, OSType } from '../utils/platform';
 import {
     FileStat, FileType,
-    IFileSystem,
+    IFileSystem, IRawFileSystem,
     TemporaryFile, WriteStream
 } from './types';
 
-const ENCODING = 'utf8';
+const ENCODING: string = 'utf8';
 
 function getFileType(stat: FileStat): FileType {
     if (stat.isFile()) {
@@ -34,11 +33,152 @@ function getFileType(stat: FileStat): FileType {
     }
 }
 
+interface IRawFS {
+    //tslint:disable-next-line:no-any
+    open(filename: string, flags: number, callback: any): void;
+    //tslint:disable-next-line:no-any
+    close(fd: number, callback: any): void;
+    //tslint:disable-next-line:no-any
+    unlink(filename: string, callback: any): void;
+
+    // non-async
+    createWriteStream(filePath: string): fs.WriteStream;
+}
+
+interface IRawFSExtra {
+    chmod(filePath: string, mode: string): Promise<void>;
+    readFile(path: string, encoding: string): Promise<string>;
+    //tslint:disable-next-line:no-any
+    writeFile(path: string, data: any, options: any): Promise<void>;
+    unlink(filename: string): Promise<void>;
+    stat(filename: string): Promise<fsextra.Stats>;
+    lstat(filename: string): Promise<fsextra.Stats>;
+    mkdirp(dirname: string): Promise<void>;
+    rmdir(dirname: string): Promise<void>;
+    readdir(dirname: string): Promise<string[]>;
+
+    // non-async
+    statSync(filename: string): fsextra.Stats;
+    readFileSync(path: string, encoding: string): string;
+    createReadStream(src: string): fsextra.ReadStream;
+    createWriteStream(dest: string): fsextra.WriteStream;
+}
+
+// Later we will rename "FileSystem" to "FileSystemUtils" and
+// "RawFileSystem" to "FileSystem".
+
+@injectable()
+class RawFileSystem {
+    constructor(
+        private readonly nodefs: IRawFS = fs,
+        private readonly fsExtra: IRawFSExtra = fsextra
+    ) { }
+
+    //****************************
+    // fs-extra
+
+    public async readText(filename: string): Promise<string> {
+        return this.fsExtra.readFile(filename, ENCODING);
+    }
+
+    public async writeText(filename: string, data: {}): Promise<void> {
+        const options: fsextra.WriteFileOptions = {
+            encoding: ENCODING
+        };
+        await this.fsExtra.writeFile(filename, data, options);
+    }
+
+    public async mkdirp(dirname: string): Promise<void> {
+        return this.fsExtra.mkdirp(dirname);
+    }
+
+    public async rmtree(dirname: string): Promise<void> {
+        return this.fsExtra.rmdir(dirname);
+    }
+
+    public async rmfile(filename: string): Promise<void> {
+        return this.fsExtra.unlink(filename);
+    }
+
+    public async chmod(filename: string, mode: string): Promise<void> {
+        return this.fsExtra.chmod(filename, mode);
+    }
+
+    public async stat(filename: string): Promise<FileStat> {
+        return this.fsExtra.stat(filename);
+    }
+
+    public async lstat(filename: string): Promise<FileStat> {
+        return this.fsExtra.lstat(filename);
+    }
+
+    public async listdir(dirname: string): Promise<string[]> {
+        return this.fsExtra.readdir(dirname);
+    }
+
+    public async copyFile(src: string, dest: string): Promise<void> {
+        const deferred = createDeferred<void>();
+        const rs = this.fsExtra.createReadStream(src)
+            .on('error', (err) => {
+                deferred.reject(err);
+            });
+        const ws = this.fsExtra.createWriteStream(dest)
+            .on('error', (err) => {
+                deferred.reject(err);
+            }).on('close', () => {
+                deferred.resolve();
+            });
+        rs.pipe(ws);
+        return deferred.promise;
+    }
+
+    //****************************
+    // fs
+
+    public async touch(filename: string): Promise<void> {
+        const flags = fs.constants.O_CREAT | fs.constants.O_RDWR;
+        const raw = this.nodefs;
+        return new Promise<void>((resolve, reject) => {
+            raw.open(filename, flags, (error: string, fd: number) => {
+                if (error) {
+                    return reject(error);
+                }
+                raw.close(fd, () => {
+                    return resolve();
+                });
+            });
+        });
+    }
+
+    //****************************
+    // non-async (fs-extra)
+
+    public statSync(filename: string): FileStat {
+        return this.fsExtra.statSync(filename);
+    }
+
+    public readTextSync(filename: string): string {
+        return this.fsExtra.readFileSync(filename, ENCODING);
+    }
+
+    //****************************
+    // non-async (fs)
+
+    public createWriteStream(filename: string): WriteStream {
+        return this.nodefs.createWriteStream(filename);
+    }
+}
+
 @injectable()
 export class FileSystem implements IFileSystem {
     constructor(
-        private readonly isWindows = (getOSType() === OSType.Windows)
+        private readonly isWindows = (getOSType() === OSType.Windows),
+        //public readonly raw: IFileSystem = {}
+        public readonly raw: IRawFileSystem = new RawFileSystem()
     ) { }
+
+    //****************************
+    // aliases
 
     public async stat(filePath: string): Promise<vscode.FileStat> {
         // Do not import vscode directly, as this isn't available in the Debugger Context.
@@ -48,49 +188,40 @@ export class FileSystem implements IFileSystem {
         return vscode.workspace.fs.stat(vscode.Uri.file(filePath));
     }
 
-    //****************************
-    // fs-extra
-
-    public fileExistsSync(filename: string): boolean {
-        return fsextra.existsSync(filename);
-    }
-
-    public readFileSync(filename: string): string {
-        return fsextra.readFileSync(filename, ENCODING);
-    }
-
     public async readFile(filename: string): Promise<string> {
-        return fsextra.readFile(filename, ENCODING);
+        return this.raw.readText(filename);
     }
 
     public async writeFile(filename: string, data: {}): Promise<void> {
-        const options: fsextra.WriteFileOptions = {
-            encoding: ENCODING
-        };
-        await fsextra.writeFile(filename, data, options);
+        return this.raw.writeText(filename, data);
     }
 
     public async createDirectory(dirname: string): Promise<void> {
-        return fsextra.mkdirp(dirname);
+        return this.raw.mkdirp(dirname);
     }
 
     public async deleteDirectory(dirname: string): Promise<void> {
-        return fsextra.rmdir(dirname);
+        return this.raw.rmtree(dirname);
     }
 
     public async deleteFile(filename: string): Promise<void> {
-        return fsextra.unlink(filename);
+        return this.raw.rmfile(filename);
     }
 
     public async chmod(filename: string, mode: string): Promise<void> {
-        return fsextra.chmod(filename, mode);
+        return this.raw.chmod(filename, mode);
     }
 
-    //****************************
-    // fs
+    public async copyFile(src: string, dest: string): Promise<void> {
+        return this.raw.copyFile(src, dest);
+    }
+
+    public readFileSync(filename: string): string {
+        return this.raw.readTextSync(filename);
+    }
 
     public createWriteStream(filename: string): WriteStream {
-        return fs.createWriteStream(filename);
+        return this.raw.createWriteStream(filename);
     }
 
     //****************************
@@ -112,7 +243,7 @@ export class FileSystem implements IFileSystem {
     ): Promise<boolean> {
         let stat: FileStat;
         try {
-            stat = await fsextra.stat(filename);
+            stat = await this.raw.stat(filename);
         } catch {
             return false;
         }
@@ -132,18 +263,26 @@ export class FileSystem implements IFileSystem {
     public async directoryExists(dirname: string): Promise<boolean> {
         return this.pathExists(dirname, FileType.Directory);
     }
+    public fileExistsSync(filename: string): boolean {
+        try {
+            this.raw.statSync(filename);
+        } catch {
+            return false;
+        }
+        return true;
+    }
 
     public async listdir(
         dirname: string
     ): Promise<[string, FileType][]> {
         const filenames: string[] = await (
-            fsextra.readdir(dirname)
+            this.raw.listdir(dirname)
                 .then(names => names.map(name => path.join(dirname, name)))
                 .catch(() => [])
         );
         const promises = filenames
             .map(filename => (
-                 fsextra.stat(filename)
+                 this.raw.stat(filename)
                      .then(stat => [filename, getFileType(stat)] as [string, FileType])
                      .catch(() => [filename, FileType.Unknown] as [string, FileType])
             ));
@@ -162,37 +301,18 @@ export class FileSystem implements IFileSystem {
 
     public async isDirReadonly(dirname: string): Promise<boolean> {
         // Alternative: use tmp.file().
-        const filePath = path.join(dirname, '___vscpTest___');
-        return new Promise<boolean>(resolve => {
-            fs.open(filePath, fs.constants.O_CREAT | fs.constants.O_RDWR, (error, fd) => {
-                if (!error) {
-                    fs.close(fd, () => {
-                        fs.unlink(filePath, noop);
-                    });
-                }
-                return resolve(!!error);
-            });
-        });
-    }
-
-    public async copyFile(src: string, dest: string): Promise<void> {
-        const deferred = createDeferred<void>();
-        const rs = fsextra.createReadStream(src)
-            .on('error', (err) => {
-                deferred.reject(err);
-            });
-        const ws = fsextra.createWriteStream(dest)
-            .on('error', (err) => {
-                deferred.reject(err);
-            }).on('close', () => {
-                deferred.resolve();
-            });
-        rs.pipe(ws);
-        return deferred.promise;
+        const filename = path.join(dirname, '___vscpTest___');
+        try {
+            await this.raw.touch(filename);
+        } catch {
+            return false;
+        }
+        await this.raw.rmfile(filename);
+        return true;
     }
 
     public async getFileHash(filename: string): Promise<string> {
-        const stat = await fsextra.lstat(filename);
+        const stat = await this.raw.lstat(filename);
         const hash = createHash('sha512')
             .update(`${stat.ctimeMs}-${stat.mtimeMs}`);
         return hash.digest('hex');

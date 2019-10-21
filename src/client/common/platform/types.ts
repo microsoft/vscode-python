@@ -45,8 +45,33 @@ export import FileType = vscode.FileType;
 export type FileStat = fsextra.Stats;
 export type WriteStream = fs.WriteStream;
 
+// Later we will rename "IFileSystem" to "IFileSystemUtils" and
+// "IRawFileSystem" to "IFileSystem".
+
+export interface IRawFileSystem {
+    stat(filename: string): Promise<FileStat>;
+    lstat(filename: string): Promise<FileStat>;
+    chmod(filename: string, mode: string): Promise<void>;
+    // files
+    readText(filename: string): Promise<string>;
+    writeText(filename: string, data: {}): Promise<void>;
+    touch(filename: string): Promise<void>;
+    copyFile(src: string, dest: string): Promise<void>;
+    rmfile(filename: string): Promise<void>;
+    // directories
+    mkdirp(dirname: string): Promise<void>;
+    rmtree(dirname: string): Promise<void>;
+    listdir(dirname: string): Promise<string[]>;
+    // not async
+    statSync(filename: string): FileStat;
+    readTextSync(filename: string): string;
+    createWriteStream(filename: string): WriteStream;
+}
+
 export const IFileSystem = Symbol('IFileSystem');
 export interface IFileSystem {
+    raw: IRawFileSystem;
+    // aliases (to cause less churn)
     stat(filePath: string): Promise<vscode.FileStat>;
     readFile(filename: string): Promise<string>;
     writeFile(filename: string, data: {}): Promise<void>;
@@ -54,20 +79,21 @@ export interface IFileSystem {
     deleteDirectory(dirname: string): Promise<void>;
     deleteFile(filename: string): Promise<void>;
     chmod(filename: string, mode: string): Promise<void>;
-    // not async
-    fileExistsSync(filename: string): boolean;
+    copyFile(src: string, dest: string): Promise<void>;
+    // aliases (non-async)
     readFileSync(filename: string): string;
     createWriteStream(filename: string): WriteStream;
     // helpers
-    arePathsSame(path1: string, path2: string): boolean;  // Move to IPathUtils.
     pathExists(filename: string, fileType?: FileType): Promise<boolean>;
     fileExists(filename: string): Promise<boolean>;
     directoryExists(dirname: string): Promise<boolean>;
     getSubDirectories(dirname: string): Promise<string[]>;
     getFiles(dirname: string): Promise<string[]>;
     isDirReadonly(dirname: string): Promise<boolean>;
-    copyFile(src: string, dest: string): Promise<void>;
     getFileHash(filename: string): Promise<string>;
     search(globPattern: string): Promise<string[]>;
     createTemporaryFile(suffix: string): Promise<TemporaryFile>;
+    // helpers (non-async)
+    arePathsSame(path1: string, path2: string): boolean;  // Move to IPathUtils.
+    fileExistsSync(filename: string): boolean;
 }
