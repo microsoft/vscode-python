@@ -741,10 +741,11 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     private fixupCell(cell: nbformat.ICell): nbformat.ICell {
         // Source is usually a single string on input. Convert back to an array
-        return {
+        return ({
             ...cell,
             source: splitMultilineString(cell.source)
-        };
+            // tslint:disable-next-line: no-any
+        } as any) as nbformat.ICell; // nyc (code coverage) barfs on this so just trick it.
     }
 
     private async extractPythonMainVersion(notebookData: Partial<nbformat.INotebookContent>): Promise<number> {
