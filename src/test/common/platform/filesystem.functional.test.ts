@@ -24,23 +24,26 @@ const assertArrays = require('chai-arrays');
 use(assertArrays);
 use(chaiAsPromised);
 
-const WINDOWS = /^win/.test(process.platform);
+// Note: all functional tests that trigger the VS Code "fs" API are
+// found in filesystem.test.ts.
 
-const DOES_NOT_EXIST = 'this file does not exist';
+export const WINDOWS = /^win/.test(process.platform);
 
-async function assertDoesNotExist(filename: string) {
+export const DOES_NOT_EXIST = 'this file does not exist';
+
+export async function assertDoesNotExist(filename: string) {
     await expect(
         fsextra.stat(filename)
     ).to.eventually.be.rejected;
 }
 
-async function assertExists(filename: string) {
+export async function assertExists(filename: string) {
     await expect(
         fsextra.stat(filename)
     ).to.not.eventually.be.rejected;
 }
 
-class FSFixture {
+export class FSFixture {
     public tempDir: tmpMod.SynchrounousResult | undefined;
     public sockServer: net.Server | undefined;
 
@@ -293,41 +296,6 @@ suite('Raw FileSystem', () => {
         });
     });
 
-    suite('rmtree', () => {
-        test('deletes the directory and everything in it', async () => {
-            const dirname = await fix.createDirectory('x');
-            const filename = await fix.createFile('x/y/z/spam.py');
-            await assertExists(filename);
-
-            await filesystem.rmtree(dirname);
-
-            await assertDoesNotExist(dirname);
-        });
-
-        test('fails if the directory does not exist', async () => {
-            const promise = filesystem.rmtree(DOES_NOT_EXIST);
-
-            await expect(promise).to.eventually.be.rejected;
-        });
-    });
-
-    suite('rmfile', () => {
-        test('deletes the file', async () => {
-            const filename = await fix.createFile('x/y/z/spam.py', '...');
-            await assertExists(filename);
-
-            await filesystem.rmfile(filename);
-
-            await assertDoesNotExist(filename);
-        });
-
-        test('fails if the file does not exist', async () => {
-            const promise = filesystem.rmfile(DOES_NOT_EXIST);
-
-            await expect(promise).to.eventually.be.rejected;
-        });
-    });
-
     suite('chmod (non-Windows)', () => {
         suiteSetup(function () {
             // On Windows, chmod won't have any effect on the file itself.
@@ -336,7 +304,6 @@ suite('Raw FileSystem', () => {
                 this.skip();
             }
         });
-
         async function checkMode(filename: string, expected: number) {
             const stat = await fsextra.stat(filename);
             expect(stat.mode & 0o777).to.equal(expected);
@@ -868,41 +835,6 @@ suite('FileSystem Utils', () => {
             const entries = await utils.getFiles(DOES_NOT_EXIST);
 
             expect(entries).to.deep.equal([]);
-        });
-    });
-
-    suite('isDirReadonly', () => {
-        suite('non-Windows', () => {
-            suiteSetup(function () {
-                if (WINDOWS) {
-                    // tslint:disable-next-line:no-invalid-this
-                    this.skip();
-                }
-            });
-
-            // On Windows, chmod won't have any effect on the file itself.
-            test('is readonly', async () => {
-                const dirname = await fix.createDirectory('x/y/z/spam');
-                await fsextra.chmod(dirname, 0o444);
-
-                const isReadonly = await utils.isDirReadonly(dirname);
-
-                expect(isReadonly).to.equal(true);
-            });
-        });
-
-        test('is not readonly', async () => {
-            const dirname = await fix.createDirectory('x/y/z/spam');
-
-            const isReadonly = await utils.isDirReadonly(dirname);
-
-            expect(isReadonly).to.equal(false);
-        });
-
-        test('fails if the file does not exist', async () => {
-            const promise = utils.isDirReadonly(DOES_NOT_EXIST);
-
-            await expect(promise).to.eventually.be.rejected;
         });
     });
 

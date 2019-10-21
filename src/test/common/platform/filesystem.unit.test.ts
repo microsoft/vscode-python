@@ -4,7 +4,7 @@
 import { expect } from 'chai';
 import * as fsextra from 'fs-extra';
 import * as TypeMoq from 'typemoq';
-import { Disposable } from 'vscode';
+import { Disposable, Uri } from 'vscode';
 import {
     FileSystemPaths, FileSystemUtils, RawFileSystem, TempFileSystem
 } from '../../../client/common/platform/fileSystem';
@@ -19,18 +19,24 @@ import {
 //tslint:disable-next-line:no-any
 type TempCallback = (err: any, path: string, fd: number, cleanupCallback: () => void) => void;
 interface IRawFS {
+    // VS Code
+    delete(uri: Uri, options?: {recursive: boolean; useTrash: boolean}): Thenable<void>;
+
+    // node "fs"
+    //tslint:disable-next-line:no-any
+    open(filename: string, flags: number, callback: any): void;
+    //tslint:disable-next-line:no-any
+    close(fd: number, callback: any): void;
+
     // "fs-extra"
     chmod(filePath: string, mode: string): Promise<void>;
     readFile(path: string, encoding: string): Promise<string>;
     //tslint:disable-next-line:no-any
     writeFile(path: string, data: any, options: any): Promise<void>;
-    unlink(filename: string): Promise<void>;
     stat(filename: string): Promise<fsextra.Stats>;
     lstat(filename: string): Promise<fsextra.Stats>;
     mkdirp(dirname: string): Promise<void>;
-    rmdir(dirname: string): Promise<void>;
     readdir(dirname: string): Promise<string[]>;
-    remove(dirname: string): Promise<void>;
     statSync(filename: string): fsextra.Stats;
     readFileSync(path: string, encoding: string): string;
     createReadStream(src: string): fsextra.ReadStream;
@@ -237,6 +243,7 @@ suite('Raw FileSystem', () => {
         filesystem = new RawFileSystem(
             raw.object,
             raw.object,
+            raw.object,
             raw.object
         );
     });
@@ -298,10 +305,7 @@ suite('Raw FileSystem', () => {
     suite('rmtree', () => {
         test('wraps the low-level function', async () => {
             const dirname = 'x/y/z/spam';
-            raw.setup(r => r.stat(dirname))
-                //tslint:disable-next-line:no-any
-                .returns(() => Promise.resolve({} as any as FileStat));
-            raw.setup(r => r.remove(dirname))
+            raw.setup(r => r.delete(Uri.file(dirname), { recursive: true, useTrash: false }))
                 .returns(() => Promise.resolve());
 
             await filesystem.rmtree(dirname);
@@ -311,7 +315,7 @@ suite('Raw FileSystem', () => {
 
         test('fails if the directory does not exist', async () => {
             const dirname = 'x/y/z/spam';
-            raw.setup(r => r.stat(dirname))
+            raw.setup(r => r.delete(Uri.file(dirname), { recursive: true, useTrash: false }))
                 .throws(new Error('file not found'));
 
             const promise = filesystem.rmtree(dirname);
@@ -323,7 +327,7 @@ suite('Raw FileSystem', () => {
     suite('rmfile', () => {
         test('wraps the low-level function', async () => {
             const filename = 'x/y/z/spam.py';
-            raw.setup(r => r.unlink(filename))
+            raw.setup(r => r.delete(Uri.file(filename), { recursive: false, useTrash: false }))
                 .returns(() => Promise.resolve());
 
             await filesystem.rmfile(filename);

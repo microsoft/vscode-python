@@ -112,6 +112,18 @@ export class TempFileSystem {
     }
 }
 
+// This is the parts of the vscode.workspace.fs API that we use here.
+interface INewAPI {
+    //copy(source: vscode.Uri, target: vscode.Uri, options?: {overwrite: boolean}): Thenable<void>;
+    //createDirectory(uri: vscode.Uri): Thenable<void>;
+    delete(uri: vscode.Uri, options?: {recursive: boolean; useTrash: boolean}): Thenable<void>;
+    //readDirectory(uri: vscode.Uri): Thenable<[string, FileType][]>;
+    //readFile(uri: vscode.Uri): Thenable<Uint8Array>;
+    //rename(source: vscode.Uri, target: vscode.Uri, options?: {overwrite: boolean}): Thenable<void>;
+    //stat(uri: vscode.Uri): Thenable<vscode.FileStat>;
+    //writeFile(uri: vscode.Uri, content: Uint8Array): Thenable<void>;
+}
+
 // This is the parts of node's 'fs' module that we use in RawFileSystem.
 interface IRawFS {
     // non-async
@@ -124,13 +136,10 @@ interface IRawFSExtra {
     readFile(path: string, encoding: string): Promise<string>;
     //tslint:disable-next-line:no-any
     writeFile(path: string, data: any, options: any): Promise<void>;
-    unlink(filename: string): Promise<void>;
     stat(filename: string): Promise<fsextra.Stats>;
     lstat(filename: string): Promise<fsextra.Stats>;
     mkdirp(dirname: string): Promise<void>;
-    rmdir(dirname: string): Promise<void>;
     readdir(dirname: string): Promise<string[]>;
-    remove(dirname: string): Promise<void>;
 
     // non-async
     statSync(filename: string): fsextra.Stats;
@@ -151,6 +160,7 @@ interface IRawPath {
 export class RawFileSystem implements IRawFileSystem {
     constructor(
         protected readonly path: IRawPath,
+        protected readonly newapi: INewAPI,
         protected readonly nodefs: IRawFS,
         protected readonly fsExtra: IRawFSExtra
     ) { }
@@ -159,9 +169,29 @@ export class RawFileSystem implements IRawFileSystem {
     public static withDefaults(): RawFileSystem{
         return new RawFileSystem(
             FileSystemPaths.withDefaults(),
+            vscode.workspace.fs,
             fs,
             fsextra
         );
+    }
+
+    //****************************
+    // VS Code API
+
+    public async rmtree(dirname: string): Promise<void> {
+        const uri = vscode.Uri.file(dirname);
+        return this.newapi.delete(uri, {
+            recursive: true,
+            useTrash: false
+        });
+    }
+
+    public async rmfile(filename: string): Promise<void> {
+        const uri = vscode.Uri.file(filename);
+        return this.newapi.delete(uri, {
+            recursive: false,
+            useTrash: false
+        });
     }
 
     //****************************
@@ -180,15 +210,6 @@ export class RawFileSystem implements IRawFileSystem {
 
     public async mkdirp(dirname: string): Promise<void> {
         return this.fsExtra.mkdirp(dirname);
-    }
-
-    public async rmtree(dirname: string): Promise<void> {
-        return this.fsExtra.stat(dirname)
-            .then(() => this.fsExtra.remove(dirname));
-    }
-
-    public async rmfile(filename: string): Promise<void> {
-        return this.fsExtra.unlink(filename);
     }
 
     public async chmod(filename: string, mode: string | number): Promise<void> {
@@ -266,7 +287,7 @@ export class FileSystemUtils implements IFileSystemUtils {
     public static withDefaults(): FileSystemUtils {
         const paths = FileSystemPaths.withDefaults();
         return new FileSystemUtils(
-            new RawFileSystem(paths, fs, fsextra),
+            new RawFileSystem(paths, vscode.workspace.fs, fs, fsextra),
             paths,
             TempFileSystem.withDefaults(),
             getHashString,
