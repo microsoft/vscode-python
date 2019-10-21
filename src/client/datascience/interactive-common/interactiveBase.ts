@@ -268,9 +268,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
 
         // Let our listeners handle the message too
-        if (this.listeners) {
-            this.listeners.forEach(l => l.onMessage(message, payload));
-        }
+        this.postMessageToListeners(message, payload);
 
         // Pass onto our base class.
         super.onMessage(message, payload);
@@ -583,6 +581,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                     // Tell the react controls we have a new cell
                     this.postMessage(InteractiveWindowMessages.StartCell, cell).ignoreErrors();
 
+                    // Tell listeners too
+                    this.postMessageToListeners(InteractiveWindowMessages.StartCell, cell);
+
                     // Keep track of this unfinished cell so if we restart we can finish right away.
                     this.unfinishedCells.push(cell);
                     break;
@@ -590,12 +591,18 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 case CellState.executing:
                     // Tell the react controls we have an update
                     this.postMessage(InteractiveWindowMessages.UpdateCell, cell).ignoreErrors();
+
+                    // Tell listeners too
+                    this.postMessageToListeners(InteractiveWindowMessages.UpdateCell, cell);
                     break;
 
                 case CellState.error:
                 case CellState.finished:
                     // Tell the react controls we're done
                     this.postMessage(InteractiveWindowMessages.FinishCell, cell).ignoreErrors();
+
+                    // Tell listeners too
+                    this.postMessageToListeners(InteractiveWindowMessages.FinishCell, cell);
 
                     // Remove from the list of unfinished cells
                     this.unfinishedCells = this.unfinishedCells.filter(c => c.id !== cell.id);
@@ -692,6 +699,13 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         } else if (this.addSysInfoPromise) {
             traceInfo(`Wait for sys info for ${this.id} ${reason}`);
             await this.addSysInfoPromise.promise;
+        }
+    }
+
+    // tslint:disable-next-line: no-any
+    private postMessageToListeners(message: string, payload: any) {
+        if (this.listeners) {
+            this.listeners.forEach(l => l.onMessage(message, payload));
         }
     }
 
