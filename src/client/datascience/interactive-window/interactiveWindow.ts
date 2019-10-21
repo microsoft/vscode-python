@@ -141,11 +141,11 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
 
         switch (message) {
             case InteractiveWindowMessages.Export:
-                this.dispatchMessage(message, payload, this.export);
+                this.handleMessage(message, payload, this.export);
                 break;
 
             case InteractiveWindowMessages.ReturnAllCells:
-                this.dispatchMessage(message, payload, this.handleReturnAllCells);
+                this.handleMessage(message, payload, this.handleReturnAllCells);
                 break;
 
             default:

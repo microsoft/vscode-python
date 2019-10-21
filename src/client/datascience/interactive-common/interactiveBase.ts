@@ -174,11 +174,11 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     public onMessage(message: string, payload: any) {
         switch (message) {
             case InteractiveWindowMessages.GotoCodeCell:
-                this.dispatchMessage(message, payload, this.gotoCode);
+                this.handleMessage(message, payload, this.gotoCode);
                 break;
 
             case InteractiveWindowMessages.CopyCodeCell:
-                this.dispatchMessage(message, payload, this.copyCode);
+                this.handleMessage(message, payload, this.copyCode);
                 break;
 
             case InteractiveWindowMessages.RestartKernel:
@@ -190,15 +190,15 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 break;
 
             case InteractiveWindowMessages.SendInfo:
-                this.dispatchMessage(message, payload, this.updateContexts);
+                this.handleMessage(message, payload, this.updateContexts);
                 break;
 
             case InteractiveWindowMessages.SubmitNewCell:
-                this.dispatchMessage(message, payload, this.submitNewCell);
+                this.handleMessage(message, payload, this.submitNewCell);
                 break;
 
             case InteractiveWindowMessages.ReExecuteCell:
-                this.dispatchMessage(message, payload, this.reexecuteCell);
+                this.handleMessage(message, payload, this.reexecuteCell);
                 break;
 
             case InteractiveWindowMessages.DeleteAllCells:
@@ -232,35 +232,35 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 break;
 
             case InteractiveWindowMessages.AddedSysInfo:
-                this.dispatchMessage(message, payload, this.onAddedSysInfo);
+                this.handleMessage(message, payload, this.onAddedSysInfo);
                 break;
 
             case InteractiveWindowMessages.RemoteAddCode:
-                this.dispatchMessage(message, payload, this.onRemoteAddedCode);
+                this.handleMessage(message, payload, this.onRemoteAddedCode);
                 break;
 
             case InteractiveWindowMessages.RemoteReexecuteCode:
-                this.dispatchMessage(message, payload, this.onRemoteReexecuteCode);
+                this.handleMessage(message, payload, this.onRemoteReexecuteCode);
                 break;
 
             case InteractiveWindowMessages.ShowDataViewer:
-                this.dispatchMessage(message, payload, this.showDataViewer);
+                this.handleMessage(message, payload, this.showDataViewer);
                 break;
 
             case InteractiveWindowMessages.GetVariablesRequest:
-                this.dispatchMessage(message, payload, this.requestVariables);
+                this.handleMessage(message, payload, this.requestVariables);
                 break;
 
             case InteractiveWindowMessages.GetVariableValueRequest:
-                this.dispatchMessage(message, payload, this.requestVariableValue);
+                this.handleMessage(message, payload, this.requestVariableValue);
                 break;
 
             case InteractiveWindowMessages.LoadTmLanguageRequest:
-                this.dispatchMessage(message, payload, this.requestTmLanguage);
+                this.handleMessage(message, payload, this.requestTmLanguage);
                 break;
 
             case InteractiveWindowMessages.LoadOnigasmAssemblyRequest:
-                this.dispatchMessage(message, payload, this.requestOnigasm);
+                this.handleMessage(message, payload, this.requestOnigasm);
                 break;
 
             default:
@@ -581,9 +581,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                     // Tell the react controls we have a new cell
                     this.postMessage(InteractiveWindowMessages.StartCell, cell).ignoreErrors();
 
-                    // Tell listeners too
-                    this.postMessageToListeners(InteractiveWindowMessages.StartCell, cell);
-
                     // Keep track of this unfinished cell so if we restart we can finish right away.
                     this.unfinishedCells.push(cell);
                     break;
@@ -591,18 +588,12 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 case CellState.executing:
                     // Tell the react controls we have an update
                     this.postMessage(InteractiveWindowMessages.UpdateCell, cell).ignoreErrors();
-
-                    // Tell listeners too
-                    this.postMessageToListeners(InteractiveWindowMessages.UpdateCell, cell);
                     break;
 
                 case CellState.error:
                 case CellState.finished:
                     // Tell the react controls we're done
                     this.postMessage(InteractiveWindowMessages.FinishCell, cell).ignoreErrors();
-
-                    // Tell listeners too
-                    this.postMessageToListeners(InteractiveWindowMessages.FinishCell, cell);
 
                     // Remove from the list of unfinished cells
                     this.unfinishedCells = this.unfinishedCells.filter(c => c.id !== cell.id);
@@ -614,6 +605,15 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         });
     }
 
+    protected postMessage<M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]): Promise<void> {
+        // First send to our listeners
+        this.postMessageToListeners(type.toString(), payload);
+
+        // Then send it to the webview
+        return super.postMessage(type, payload);
+    }
+
+
     protected startServer(): Promise<void> {
         if (!this.loadPromise) {
             this.loadPromise = this.startServerImpl();
@@ -622,7 +622,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     }
 
     // tslint:disable-next-line:no-any
-    protected dispatchMessage<M extends IInteractiveWindowMapping, T extends keyof M>(_message: T, payload: any, handler: (args: M[T]) => void) {
+    protected handleMessage<M extends IInteractiveWindowMapping, T extends keyof M>(_message: T, payload: any, handler: (args: M[T]) => void) {
         const args = payload as M[T];
         handler.bind(this)(args);
     }

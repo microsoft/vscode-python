@@ -18,7 +18,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
     private updateEvent: EventEmitter<void> = new EventEmitter<void>();
     // tslint:disable-next-line: no-any
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{ message: string; payload: any }>();
-    private executionCounts: Map<string, string> = new Map<string, string>();
+    private cellExecutionCounts: Map<string, string> = new Map<string, string>();
 
     constructor(
         @inject(IConfigurationService) private configService: IConfigurationService,
@@ -42,7 +42,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
             case InteractiveWindowMessages.FinishCell:
                 const cell = payload as ICell;
                 if (cell && cell.data && cell.data.execution_count) {
-                    this.executionCounts.set(cell.id, cell.data.execution_count.toString());
+                    this.cellExecutionCounts.set(cell.id, cell.data.execution_count.toString());
                 }
                 this.updateEvent.fire();
                 break;
@@ -213,12 +213,11 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
             const rangeMatches = list.hashes.filter(h => h.line - 2 === range.start.line);
             if (rangeMatches && rangeMatches.length) {
                 const rangeMatch = rangeMatches[rangeMatches.length - 1];
-                const executionCount = this.executionCounts.get(rangeMatch.id);
-                if (executionCount) {
+                if (this.cellExecutionCounts.has(rangeMatch.id)) {
                     codeLens.push(this.generateCodeLens(
                         range,
                         Commands.ScrollToCell,
-                        localize.DataScience.scrollToCellTitleFormatMessage().format(executionCount.toString()),
+                        localize.DataScience.scrollToCellTitleFormatMessage().format(this.cellExecutionCounts.get(rangeMatch.id)!),
                         [document.fileName, rangeMatch.id]));
                 }
             }

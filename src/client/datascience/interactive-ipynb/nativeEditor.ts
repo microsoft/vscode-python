@@ -219,40 +219,40 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 break;
 
             case InteractiveWindowMessages.SaveAll:
-                this.dispatchMessage(message, payload, this.saveAll);
+                this.handleMessage(message, payload, this.saveAll);
                 break;
 
             case InteractiveWindowMessages.Export:
-                this.dispatchMessage(message, payload, this.export);
+                this.handleMessage(message, payload, this.export);
                 break;
 
             case InteractiveWindowMessages.EditCell:
-                this.dispatchMessage(message, payload, this.editCell);
+                this.handleMessage(message, payload, this.editCell);
                 break;
 
             case InteractiveWindowMessages.InsertCell:
-                this.dispatchMessage(message, payload, this.insertCell);
+                this.handleMessage(message, payload, this.insertCell);
                 break;
 
             case InteractiveWindowMessages.RemoveCell:
-                this.dispatchMessage(message, payload, this.removeCell);
+                this.handleMessage(message, payload, this.removeCell);
                 break;
 
             case InteractiveWindowMessages.SwapCells:
-                this.dispatchMessage(message, payload, this.swapCells);
+                this.handleMessage(message, payload, this.swapCells);
                 break;
 
             case InteractiveWindowMessages.DeleteAllCells:
-                this.dispatchMessage(message, payload, this.removeAllCells);
+                this.handleMessage(message, payload, this.removeAllCells);
                 break;
 
             case InteractiveWindowMessages.NativeCommand:
-                this.dispatchMessage(message, payload, this.logNativeCommand);
+                this.handleMessage(message, payload, this.logNativeCommand);
                 break;
 
             // call this to update the whole document for intellisense
             case InteractiveWindowMessages.LoadAllCellsComplete:
-                this.dispatchMessage(message, payload, this.loadCellsComplete);
+                this.handleMessage(message, payload, this.loadCellsComplete);
                 break;
 
             default:
@@ -648,8 +648,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     private async setDirty(): Promise<void> {
-        // Always update storage
-        await this.storeContents(this.generateNotebookContent(this.visibleCells));
+        // Always update storage. Don't wait for results.
+        this.storeContents(this.generateNotebookContent(this.visibleCells)).ignoreErrors();
 
         // Then update dirty flag.
         if (!this._dirty) {
@@ -666,7 +666,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     private async setClean(): Promise<void> {
         // Always update storage
-        await this.storeContents(undefined);
+        this.storeContents(undefined).ignoreErrors();
 
         if (this._dirty) {
             this._dirty = false;
