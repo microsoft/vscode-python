@@ -743,6 +743,7 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     private async logPreCode(cell: ICell, silent: boolean): Promise<void> {
+        traceInfo('**** logPreCode');
         await Promise.all(this.loggers.map(l => l.preExecute(cell, silent)));
     }
 
