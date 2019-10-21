@@ -1926,7 +1926,6 @@ export namespace vscMockExtHostedTypes {
 
         constructor(port: number, host?: string) {
             this.port = port;
-            // @ts-ignore
             this.host = host;
         }
     }
