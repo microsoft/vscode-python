@@ -41,7 +41,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         switch (message) {
             case InteractiveWindowMessages.FinishCell:
                 const cell = payload as ICell;
-                if (cell && cell.data.execution_count) {
+                if (cell && cell.data && cell.data.execution_count) {
                     this.executionCounts.set(cell.id, cell.data.execution_count.toString());
                 }
                 this.updateEvent.fire();
