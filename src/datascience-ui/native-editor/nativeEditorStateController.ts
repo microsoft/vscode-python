@@ -152,6 +152,7 @@ export class NativeEditorStateController extends MainStateController {
             this.setState({ cellVMs: [newVM], undoStack: this.pushStack(this.getState().undoStack, cells) });
 
             // Send messages to other side to indicate the new add
+            this.sendMessage(InteractiveWindowMessages.DeleteCell);
             this.sendMessage(InteractiveWindowMessages.RemoveCell, { id: cellId });
             this.sendMessage(InteractiveWindowMessages.InsertCell, { cell: newVM.cell, code: '', index: 0, codeCellAboveId: undefined });
         } else {
