@@ -44,6 +44,8 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
                     return new DebugAdapterExecutable(`${pythonPath}`, [path.join(ptvsdPathToUse, 'adapter'), ...logArgs]);
                 }
             }
+        } else {
+            this.experimentsManager.sendTelemetryIfInExperiment(DebugAdapterNewPtvsd.control);
         }
 
         // Use the Node debug adapter (and ptvsd_launcher.py)
@@ -62,11 +64,6 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
      * @memberof DebugAdapterDescriptorFactory
      */
     public async useNewPtvsd(pythonPath: string): Promise<boolean> {
-        if (!this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
-            this.experimentsManager.sendTelemetryIfInExperiment(DebugAdapterNewPtvsd.control);
-            return false;
-        }
-
         const interpreterInfo = await this.interpreterService.getInterpreterDetails(pythonPath);
         if (!interpreterInfo || !interpreterInfo.version || !interpreterInfo.version.raw.startsWith('3.7')) {
             return false;
