@@ -11,7 +11,7 @@ import * as path from 'path';
 import rewiremock from 'rewiremock';
 import { SemVer } from 'semver';
 import { anyString, anything, instance, mock, spy, verify, when } from 'ts-mockito';
-import { DebugAdapterExecutable, DebugConfiguration, DebugSession, WorkspaceFolder, DebugAdapterServer } from 'vscode';
+import { DebugAdapterExecutable, DebugAdapterServer, DebugConfiguration, DebugSession, WorkspaceFolder } from 'vscode';
 import { ApplicationEnvironment } from '../../../../client/common/application/applicationEnvironment';
 import { ApplicationShell } from '../../../../client/common/application/applicationShell';
 import { Extensions } from '../../../../client/common/application/extensions';
@@ -24,9 +24,6 @@ import { ExperimentsManager } from '../../../../client/common/experiments';
 import { HttpClient } from '../../../../client/common/net/httpClient';
 import { PersistentState, PersistentStateFactory } from '../../../../client/common/persistentState';
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
-import { PythonExecutionFactory } from '../../../../client/common/process/pythonExecutionFactory';
-import { PythonExecutionService } from '../../../../client/common/process/pythonProcess';
-import { IPythonExecutionFactory } from '../../../../client/common/process/types';
 import { IExtensions, IPersistentState, IPersistentStateFactory, IPythonSettings } from '../../../../client/common/types';
 import { Architecture } from '../../../../client/common/utils/platform';
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
@@ -47,7 +44,6 @@ suite('Debugging - Adapter Factory', () => {
     let appShell: IApplicationShell;
     let experimentsManager: ExperimentsManager;
     let spiedInstance: ExperimentsManager;
-    let executionFactory: IPythonExecutionFactory;
     let stateFactory: IPersistentStateFactory;
     let debugAdapterPersistentState: IPersistentState<DebugAdapterPtvsdPathInfo | undefined>;
     let extensions: IExtensions;
@@ -108,7 +104,6 @@ suite('Debugging - Adapter Factory', () => {
 
         interpreterService = mock(InterpreterService);
         appShell = mock(ApplicationShell);
-        executionFactory = mock(PythonExecutionFactory);
         stateFactory = mock(PersistentStateFactory);
         debugAdapterPersistentState = mock(PersistentState);
         extensions = mock(Extensions);
@@ -209,7 +204,7 @@ suite('Debugging - Adapter Factory', () => {
         const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
         // Interpreter not needed for attach
-        verify(interpreterService.getInterpreters(anything())).never()
+        verify(interpreterService.getInterpreters(anything())).never();
         assert.deepEqual(descriptor, debugServer);
     });
 
