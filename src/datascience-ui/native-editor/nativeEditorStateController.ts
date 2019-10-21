@@ -125,7 +125,7 @@ export class NativeEditorStateController extends MainStateController {
         const pos = selectedCell ? cells.findIndex(cvm => cvm.cell.id === this.getState().selectedCellId) + 1 : cells.length;
         this.setState({ newCell: id });
         const vm = this.insertCell(createEmptyCell(id, null), pos);
-        this.sendMessage(InteractiveWindowMessages.InsertCell, { id, code: '', codeCellAbove: this.firstCodeCellAbove(id) });
+        this.sendMessage(InteractiveWindowMessages.InsertCell, { cell: vm.cell, index: pos, code: '', codeCellAboveId: this.firstCodeCellAbove(id) });
         if (vm) {
             // Make sure the new cell is monaco
             vm.useQuickEdit = false;
@@ -150,6 +150,10 @@ export class NativeEditorStateController extends MainStateController {
                 focused: cells[0].focused
             };
             this.setState({ cellVMs: [newVM], undoStack: this.pushStack(this.getState().undoStack, cells) });
+
+            // Send messages to other side to indicate the new add
+            this.sendMessage(InteractiveWindowMessages.RemoveCell, { id: cellId });
+            this.sendMessage(InteractiveWindowMessages.InsertCell, { cell: newVM.cell, code: '', index: 0, codeCellAboveId: undefined });
         } else {
             // Otherwise delete as normal
             this.deleteCell(cellId);
@@ -185,8 +189,8 @@ export class NativeEditorStateController extends MainStateController {
             this.suspendUpdates();
             const id = uuid();
             this.setState({ newCell: id });
-            this.insertCell(createEmptyCell(id, null), index, isMonaco);
-            this.sendMessage(InteractiveWindowMessages.InsertCell, { id, code: '', codeCellAbove: this.firstCodeCellAbove(id) });
+            const vm = this.insertCell(createEmptyCell(id, null), index, isMonaco);
+            this.sendMessage(InteractiveWindowMessages.InsertCell, { cell: vm.cell, index, code: '', codeCellAboveId: this.firstCodeCellAbove(id) });
             this.resumeUpdates();
             return id;
         }
@@ -199,8 +203,8 @@ export class NativeEditorStateController extends MainStateController {
             this.suspendUpdates();
             const id = uuid();
             this.setState({ newCell: id });
-            this.insertCell(createEmptyCell(id, null), index + 1, isMonaco);
-            this.sendMessage(InteractiveWindowMessages.InsertCell, { id, code: '', codeCellAbove: this.firstCodeCellAbove(id) });
+            const vm = this.insertCell(createEmptyCell(id, null), index + 1, isMonaco);
+            this.sendMessage(InteractiveWindowMessages.InsertCell, { cell: vm.cell, index, code: '', codeCellAboveId: this.firstCodeCellAbove(id) });
             this.resumeUpdates();
             return id;
         }

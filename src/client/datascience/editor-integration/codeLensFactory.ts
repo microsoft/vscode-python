@@ -18,7 +18,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
     private updateEvent: EventEmitter<void> = new EventEmitter<void>();
     // tslint:disable-next-line: no-any
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{ message: string; payload: any }>();
-    private visibleCells: ICell[] = [];
+    private executionCounts: Map<string, string> = new Map<string, string>();
 
     constructor(
         @inject(IConfigurationService) private configService: IConfigurationService,
@@ -39,8 +39,11 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
     // tslint:disable-next-line: no-any
     public onMessage(message: string, payload?: any) {
         switch (message) {
-            case InteractiveWindowMessages.SendInfo:
-                this.visibleCells = payload.visibleCells;
+            case InteractiveWindowMessages.FinishCell:
+                const cell = payload as ICell;
+                if (cell && cell.data.execution_count) {
+                    this.executionCounts.set(cell.id, cell.data.execution_count.toString());
+                }
                 this.updateEvent.fire();
                 break;
 
@@ -71,7 +74,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
                     codeLenses.push(codeLens);
                 }
             });
-            this.addExecutionCount(codeLenses, document, range.range, hashes, this.visibleCells);
+            this.addExecutionCount(codeLenses, document, range.range, hashes);
             firstCell = false;
         });
 
@@ -203,15 +206,15 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         return undefined;
     }
 
-    private addExecutionCount(codeLens: CodeLens[], document: TextDocument, range: Range, hashes: IFileHashes[], visibleCells: ICell[]) {
+    private addExecutionCount(codeLens: CodeLens[], document: TextDocument, range: Range, hashes: IFileHashes[]) {
         const list = hashes.find(h => h.file === document.fileName);
         if (list) {
             // Match just the start of the range. Should be - 2 (1 for 1 based numbers and 1 for skipping the comment at the top)
             const rangeMatches = list.hashes.filter(h => h.line - 2 === range.start.line);
             if (rangeMatches && rangeMatches.length) {
                 const rangeMatch = rangeMatches[rangeMatches.length - 1];
-                const cellMatch = visibleCells.find(c => c.data.execution_count === rangeMatch.executionCount && c.id === rangeMatch.id);
-                if (cellMatch) {
+                const executionCount = this.executionCounts.get(rangeMatch.id);
+                if (executionCount) {
                     codeLens.push(this.generateCodeLens(
                         range,
                         Commands.ScrollToCell,

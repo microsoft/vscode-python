@@ -5,7 +5,6 @@ import '../../common/extensions';
 
 import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 import * as detectIndent from 'detect-indent';
-import * as fastDeepEqual from 'fast-deep-equal';
 import { inject, injectable, multiInject, named } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
@@ -40,10 +39,13 @@ import {
 import { InteractiveBase } from '../interactive-common/interactiveBase';
 import {
     IEditCell,
+    IInsertCell,
     INativeCommand,
     InteractiveWindowMessages,
+    IRemoveCell,
     ISaveAll,
-    ISubmitNewCell
+    ISubmitNewCell,
+    ISwapCells
 } from '../interactive-common/interactiveWindowTypes';
 import { InvalidNotebookFileError } from '../jupyter/invalidNotebookFileError';
 import {
@@ -156,6 +158,14 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         this.close().ignoreErrors();
     }
 
+    public get contents(): string {
+        return this.generateNotebookContent(this.visibleCells);
+    }
+
+    public get cells(): ICell[] {
+        return this.visibleCells;
+    }
+
     public async load(contents: string, file: Uri): Promise<void> {
         // Save our uri
         this._file = file;
@@ -220,6 +230,22 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 this.dispatchMessage(message, payload, this.editCell);
                 break;
 
+            case InteractiveWindowMessages.InsertCell:
+                this.dispatchMessage(message, payload, this.insertCell);
+                break;
+
+            case InteractiveWindowMessages.RemoveCell:
+                this.dispatchMessage(message, payload, this.removeCell);
+                break;
+
+            case InteractiveWindowMessages.SwapCells:
+                this.dispatchMessage(message, payload, this.swapCells);
+                break;
+
+            case InteractiveWindowMessages.DeleteAllCells:
+                this.dispatchMessage(message, payload, this.removeAllCells);
+                break;
+
             case InteractiveWindowMessages.NativeCommand:
                 this.dispatchMessage(message, payload, this.logNativeCommand);
                 break;
@@ -248,6 +274,13 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     public addCellBelow() {
         this.postMessage(InteractiveWindowMessages.NotebookAddCellBelow).ignoreErrors();
+    }
+
+    public async removeAllCells(): Promise<void> {
+        super.removeAllCells();
+        // Clear our visible cells
+        this.visibleCells = [];
+        return this.setDirty();
     }
 
     protected async reopen(cells: ICell[]): Promise<void> {
@@ -370,6 +403,17 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     protected sendCellsToWebView(cells: ICell[]) {
         // Filter out sysinfo messages. Don't want to show those
         const filtered = cells.filter(c => c.data.cell_type !== 'messages');
+
+        // Update these cells in our list
+        cells.forEach(c => {
+            const index = this.visibleCells.findIndex(v => v.id === c.id);
+            this.visibleCells[index] = c;
+        });
+
+        // Indicate dirty
+        this.setDirty().ignoreErrors();
+
+        // Send onto the webview.
         super.sendCellsToWebView(filtered);
     }
 
@@ -392,11 +436,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 interactiveCellsContext.set(false).catch();
                 redoableContext.set(false).catch();
             }
-        }
-
-        // Also keep track of our visible cells. We use this to save to the file when we close
-        if (info && 'visibleCells' in info && this.loadedAllCells) {
-            this.updateVisibleCells(info.visibleCells).ignoreErrors();
         }
     }
 
@@ -564,6 +603,31 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
     }
 
+    private async insertCell(request: IInsertCell): Promise<void> {
+        // Insert a cell into our visible list based on the index. They should be in sync
+        this.visibleCells.splice(request.index, 0, request.cell);
+
+        return this.setDirty();
+    }
+
+    private async removeCell(request: IRemoveCell): Promise<void> {
+        // Filter our list
+        this.visibleCells = this.visibleCells.filter(v => v.id !== request.id);
+        return this.setDirty();
+    }
+
+    private async swapCells(request: ISwapCells): Promise<void> {
+        // Swap two cells in our list
+        const first = this.visibleCells.findIndex(v => v.id === request.firstCellId);
+        const second = this.visibleCells.findIndex(v => v.id === request.secondCellId);
+        if (first >= 0 && second >= 0) {
+            const temp = { ...this.visibleCells[first] };
+            this.visibleCells[first] = this.visibleCells[second];
+            this.visibleCells[second] = temp;
+            return this.setDirty();
+        }
+    }
+
     private async askForSave(): Promise<AskForSaveResult> {
         const message1 = localize.DataScience.dirtyNotebookMessage1().format(`${path.basename(this.file.fsPath)}`);
         const message2 = localize.DataScience.dirtyNotebookMessage2();
@@ -583,33 +647,30 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
     }
 
-    private async updateVisibleCells(cells: ICell[]): Promise<void> {
-        if (!fastDeepEqual(this.visibleCells, cells)) {
-            this.visibleCells = cells;
-
-            // Save our dirty state in the storage for reopen later
-            await this.storeContents(this.generateNotebookContent(cells));
-
-            // Indicate dirty
-            await this.setDirty();
-        }
-    }
-
     private async setDirty(): Promise<void> {
+        // Always update storage
+        await this.storeContents(this.generateNotebookContent(this.visibleCells));
+
+        // Then update dirty flag.
         if (!this._dirty) {
             this._dirty = true;
             this.setTitle(`${path.basename(this.file.fsPath)}*`);
+
+            // Tell the webview we're dirty
             await this.postMessage(InteractiveWindowMessages.NotebookDirty);
+
             // Tell listeners we're dirty
             this.modifiedEvent.fire(this);
         }
     }
 
     private async setClean(): Promise<void> {
+        // Always update storage
+        await this.storeContents(undefined);
+
         if (this._dirty) {
             this._dirty = false;
             this.setTitle(`${path.basename(this.file.fsPath)}`);
-            await this.storeContents(undefined);
             await this.postMessage(InteractiveWindowMessages.NotebookClean);
         }
     }

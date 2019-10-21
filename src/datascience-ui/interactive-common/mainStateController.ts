@@ -476,15 +476,14 @@ export class MainStateController implements IMessageHandler {
         }
     }
 
-    public readOnlyCodeCreated = (_text: string, file: string, id: string, monacoId: string) => {
+    public readOnlyCodeCreated = (_text: string, _file: string, id: string, monacoId: string) => {
         const cell = this.pendingState.cellVMs.find(c => c.cell.id === id);
         if (cell) {
             // Pass this onto the completion provider running in the extension
             this.sendMessage(InteractiveWindowMessages.AddCell, {
                 fullText: extractInputText(cell.cell, getSettings()),
                 currentText: cell.inputBlockText,
-                file,
-                id
+                cell: cell.cell
             });
         }
 
@@ -562,7 +561,7 @@ export class MainStateController implements IMessageHandler {
             cellVMs[index] = immutable.updateIn(this.pendingState.cellVMs[index], ['cell', 'data', 'cell_type'], () => newType);
             this.setState({ cellVMs });
             if (newType === 'code') {
-                this.sendMessage(InteractiveWindowMessages.InsertCell, { id: cellId, code: concatMultilineStringInput(cellVMs[index].cell.data.source), codeCellAbove: this.firstCodeCellAbove(cellId) });
+                this.sendMessage(InteractiveWindowMessages.InsertCell, { cell: cellVMs[index].cell, index, code: concatMultilineStringInput(cellVMs[index].cell.data.source), codeCellAboveId: this.firstCodeCellAbove(cellId) });
             } else {
                 this.sendMessage(InteractiveWindowMessages.RemoveCell, { id: cellId });
             }
@@ -1081,8 +1080,7 @@ export class MainStateController implements IMessageHandler {
 
     private sendInfo = () => {
         const info: IInteractiveWindowInfo = {
-            visibleCells: this.getNonEditCellVMs().map(cvm => cvm.cell),
-            cellCount: this.getNonEditCellVMs().length,
+            cellCount: this.pendingState.cellVMs.length,
             undoCount: this.pendingState.undoStack.length,
             redoCount: this.pendingState.redoStack.length,
             selectedCell: this.pendingState.selectedCellId
