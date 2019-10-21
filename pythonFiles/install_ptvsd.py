@@ -1,7 +1,7 @@
 import io
 import json
 import os
-import urllib.request
+import urllib.request as url_lib
 import zipfile
 
 
@@ -20,7 +20,7 @@ def _get_debugger_wheel_urls():
     json_uri = "https://pypi.org/pypi/{0}/json".format(DEBUGGER_PACKAGE)
     # Response format: https://warehouse.readthedocs.io/api-reference/json/#project
     # Release metadata format: https://github.com/pypa/interoperability-peps/blob/master/pep-0426-core-metadata.rst
-    with urllib.request.urlopen(json_uri) as response:
+    with url_lib.urlopen(json_uri) as response:
         json_response = json.loads(response.read())
         return list(
             r["url"]
@@ -32,7 +32,7 @@ def _get_debugger_wheel_urls():
 def _download_and_extract(root, url):
     root = os.getcwd() if root is None or root == "." else root
     prefix = os.path.join("ptvsd-{0}.data".format(DEBUGGER_VERSION), "purelib")
-    with urllib.request.urlopen(url) as response:
+    with url_lib.urlopen(url) as response:
         # Extract only the contents of the purelib subfolder (parent folder of ptvsd),
         # since ptvsd files rely on the presence of a 'ptvsd' folder.
         with zipfile.ZipFile(io.BytesIO(response.read()), "r") as wheel:

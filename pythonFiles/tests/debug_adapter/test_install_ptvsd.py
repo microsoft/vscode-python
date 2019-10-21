@@ -1,7 +1,8 @@
 import os
+import pytest
 import subprocess
 import sys
-from ...install_ptvsd import main
+
 
 def _check_binaries(dir_path):
     expected_endswith = (
@@ -12,16 +13,17 @@ def _check_binaries(dir_path):
         "x86_64-linux-gnu.so",
     )
 
-    binaries = list(
-        p for p in os.listdir(dir_path)
-        if p.endswith(expected_endswith)
-    )
+    binaries = list(p for p in os.listdir(dir_path) if p.endswith(expected_endswith))
 
     assert len(binaries) == len(expected_endswith)
 
-
+@pytest.mark.skipif(
+    sys.version_info[:2] != (3, 7),
+    reason="PTVSD wheels shipped for Python 3.7 only",
+)
 def test_install_ptvsd(tmpdir):
-    main(str(tmpdir))
+    import install_ptvsd
+    install_ptvsd.main(str(tmpdir))
     dir_path = os.path.join(
         str(tmpdir), "ptvsd", "_vendored", "pydevd", "_pydevd_bundle"
     )
