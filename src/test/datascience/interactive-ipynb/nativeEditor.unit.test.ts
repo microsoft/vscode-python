@@ -256,6 +256,7 @@ suite('Data Science - Native Editor', () => {
         expect(editor.contents).to.be.equal(baseFile);
         editor.onMessage(InteractiveWindowMessages.InsertCell, { index: 0, cell: createEmptyCell('1', 1) });
         expect(editor.cells).to.be.lengthOf(4);
+        expect(editor.isDirty).to.be.equal(true, 'Editor should be dirty');
         expect(editor.cells[0].id).to.be.match(/1/);
     });
 
@@ -265,6 +266,7 @@ suite('Data Science - Native Editor', () => {
         expect(editor.contents).to.be.equal(baseFile);
         editor.onMessage(InteractiveWindowMessages.SwapCells, { firstCellId: 'NotebookImport#0', secondCellId: 'NotebookImport#1' });
         expect(editor.cells).to.be.lengthOf(3);
+        expect(editor.isDirty).to.be.equal(true, 'Editor should be dirty');
         expect(editor.cells[0].id).to.be.match(/NotebookImport#1/);
     });
 
@@ -272,6 +274,7 @@ suite('Data Science - Native Editor', () => {
         const editor = createEditor();
         await editor.load(baseFile, Uri.parse('file://foo.ipynb'));
         expect(editor.contents).to.be.equal(baseFile);
+        expect(editor.isDirty).to.be.equal(false, 'Editor should not be dirty');
         editor.onMessage(InteractiveWindowMessages.EditCell, {
             changes: [{
                 range: {
@@ -289,6 +292,7 @@ suite('Data Science - Native Editor', () => {
         expect(editor.cells).to.be.lengthOf(3);
         expect(editor.cells[1].id).to.be.match(/NotebookImport#1/);
         expect(editor.cells[1].data.source).to.be.equals('b=2\nab');
+        expect(editor.isDirty).to.be.equal(true, 'Editor should be dirty');
         editor.onMessage(InteractiveWindowMessages.RemoveCell, { id: 'NotebookImport#0' });
         expect(editor.cells).to.be.lengthOf(2);
         expect(editor.cells[0].id).to.be.match(/NotebookImport#1/);
