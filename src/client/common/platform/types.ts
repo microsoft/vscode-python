@@ -41,10 +41,7 @@ export type TemporaryDirectory = vscode.Disposable & {
     path: string;
 };
 
-//export { FileType } from 'vscode';
-//import { FileType } from 'vscode';
-import FileType = vscode.FileType;
-export { FileType };
+export import FileType = vscode.FileType;
 export type FileStat = fsextra.Stats;
 export type WriteStream = fs.WriteStream;
 
