@@ -1431,6 +1431,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.SelfCertsMessageClose]: never | undefined;
     [Telemetry.SelfCertsMessageEnabled]: never | undefined;
     [Telemetry.SelectJupyterURI]: never | undefined;
+    [Telemetry.SessionIdleTimeout]: never | undefined;
     [Telemetry.SetJupyterURIToLocal]: never | undefined;
     [Telemetry.SetJupyterURIToUserSpecified]: never | undefined;
     [Telemetry.ShiftEnterBannerShown]: never | undefined;

@@ -3,7 +3,7 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { TextDocument, Uri } from 'vscode';
+import { TextDocument, TextEditor, Uri } from 'vscode';
 
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import { JUPYTER_LANGUAGE } from '../../common/constants';
@@ -21,7 +21,6 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
     private executedEditors: Set<string> = new Set<string>();
     private notebookCount: number = 0;
     private openedNotebookCount: number = 0;
-
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
@@ -45,16 +44,14 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
             findFilesPromise.then(r => this.notebookCount += r.length);
         }
 
-        // Listen to document open commands. We use this to launch an ipynb editor
-        const disposable = this.documentManager.onDidOpenTextDocument(this.onOpenedDocument);
-        this.disposables.push(disposable);
+        this.disposables.push(this.documentManager.onDidChangeActiveTextEditor(this.onDidChangeActiveTextEditorHandler.bind(this)));
 
         // Since we may have activated after a document was opened, also run open document for all documents.
         // This needs to be async though. Iterating over all of these in the .ctor is crashing the extension
         // host, so postpone till after the ctor is finished.
         setTimeout(() => {
             if (this.documentManager.textDocuments && this.documentManager.textDocuments.forEach) {
-                this.documentManager.textDocuments.forEach(this.onOpenedDocument);
+                this.documentManager.textDocuments.forEach(doc => this.openNotebookAndCloseEditor(doc, false));
             }
         }, 0);
 
@@ -132,6 +129,19 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
             purpose: Identifiers.HistoryPurpose  // Share the same one as the interactive window. Just need a new session
         };
     }
+    /**
+     * Open ipynb files when user opens an ipynb file.
+     *
+     * @private
+     * @memberof NativeEditorProvider
+     */
+    private onDidChangeActiveTextEditorHandler(editor?: TextEditor){
+        // I we're a source control diff view, then ignore this editor.
+        if (!editor || this.isEditorPartOfDiffView(editor)){
+            return;
+        }
+        this.openNotebookAndCloseEditor(editor.document, true).ignoreErrors();
+    }
 
     private async create(file: Uri, contents: string): Promise<INotebookEditor> {
         const editor = this.serviceContainer.get<INotebookEditor>(INotebookEditor);
@@ -178,27 +188,79 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
         return Uri.file(`${localize.DataScience.untitledNotebookFileName()}-${number}`);
     }
 
-    private onOpenedDocument = async (document: TextDocument) => {
+    private openNotebookAndCloseEditor = async (document: TextDocument, closeDocumentBeforeOpeningNotebook: boolean) => {
         // See if this is an ipynb file
-        if (this.isNotebook(document) && this.configuration.getSettings().datascience.useNotebookEditor) {
+        if (this.isNotebook(document) && this.configuration.getSettings().datascience.useNotebookEditor &&
+            !this.activeEditors.has(document.uri.fsPath)) {
             try {
-                const contents = document.getText();
+                const contents = document.  getText();
                 const uri = document.uri;
+                const closeActiveEditorCommand = 'workbench.action.closeActiveEditor';
+
+                if (closeDocumentBeforeOpeningNotebook) {
+                    if (!this.documentManager.activeTextEditor || this.documentManager.activeTextEditor.document !== document){
+                        await this.documentManager.showTextDocument(document);
+                    }
+                    await this.cmdManager.executeCommand(closeActiveEditorCommand);
+                }
 
                 // Open our own editor.
                 await this.open(uri, contents);
 
-                // Then switch back to the ipynb and close it.
-                // If we don't do it in this order, the close will switch to the wrong item
-                await this.documentManager.showTextDocument(document);
-                const command = 'workbench.action.closeActiveEditor';
-                await this.cmdManager.executeCommand(command);
+                if (!closeDocumentBeforeOpeningNotebook){
+                    // Then switch back to the ipynb and close it.
+                    // If we don't do it in this order, the close will switch to the wrong item
+                    await this.documentManager.showTextDocument(document);
+                    await this.cmdManager.executeCommand(closeActiveEditorCommand);
+                }
             } catch (e) {
                 return this.dataScienceErrorHandler.handleError(e);
             }
         }
     }
+    /**
+     * Check if user is attempting to compare two ipynb files.
+     * If yes, then return `true`, else `false`.
+     *
+     * @private
+     * @param {TextEditor} editor
+     * @memberof NativeEditorProvider
+     */
+    private isEditorPartOfDiffView(editor?: TextEditor){
+        if (!editor){
+            return false;
+        }
+        // There's no easy way to determine if the user is openeing a diff view.
+        // One simple way is to check if there are 2 editor opened, and if both editors point to the same file
+        // One file with the `file` scheme and the other with the `git` scheme.
+        if (this.documentManager.visibleTextEditors.length <= 1){
+            return false;
+        }
 
+        // If we have both `git` & `file` schemes for the same file, then we're most likely looking at a diff view.
+        // Also ensure both editors are in the same view column.
+        // Possible we have a git diff view (with two editors git and file scheme), and we open the file view
+        // on the side (different view column).
+        const gitSchemeEditor = this.documentManager.visibleTextEditors.find(editorUri =>
+                                editorUri.document.uri.scheme === 'git' &&
+                                this.fileSystem.arePathsSame(editorUri.document.uri.fsPath, editor.document.uri.fsPath));
+
+        if (!gitSchemeEditor){
+            return false;
+        }
+
+        const fileSchemeEditor = this.documentManager.visibleTextEditors.find(editorUri =>
+                                    editorUri.document.uri.scheme === 'file' &&
+                                    this.fileSystem.arePathsSame(editorUri.document.uri.fsPath, editor.document.uri.fsPath) &&
+                                    editorUri.viewColumn === gitSchemeEditor.viewColumn);
+        if (!fileSchemeEditor){
+            return false;
+        }
+
+        // Also confirm the document we have passed in, belongs to one of the editors.
+        // If its not, then its another document (that is not in the diff view).
+        return gitSchemeEditor === editor || fileSchemeEditor === editor;
+    }
     private isNotebook(document: TextDocument) {
         // Only support file uris (we don't want to automatically open any other ipynb file from another resource as a notebook).
         // E.g. when opening a document for comparison, the scheme is `git`, in live share the scheme is `vsls`.

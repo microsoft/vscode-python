@@ -468,6 +468,33 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         // Then save the contents. We'll stick our cells back into this format when we save
         if (json) {
             this.notebookJson = json;
+        } else {
+            const pythonNumber = await this.extractPythonMainVersion(this.notebookJson);
+            // Use this to build our metadata object
+            // Use these as the defaults unless we have been given some in the options.
+            const metadata: nbformat.INotebookMetadata = {
+                language_info: {
+                    name: 'python',
+                    codemirror_mode: {
+                        name: 'ipython',
+                        version: pythonNumber
+                    }
+                },
+                orig_nbformat: 2,
+                file_extension: '.py',
+                mimetype: 'text/x-python',
+                name: 'python',
+                npconvert_exporter: 'python',
+                pygments_lexer: `ipython${pythonNumber}`,
+                version: pythonNumber
+            };
+
+            // Default notebook data.
+            this.notebookJson = {
+                nbformat: 4,
+                nbformat_minor: 2,
+                metadata: metadata
+            };
         }
 
         // Extract cells from the json
@@ -649,7 +676,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     private async setDirty(): Promise<void> {
         // Always update storage. Don't wait for results.
-        this.storeContents(this.generateNotebookContent(this.visibleCells)).ignoreErrors();
+        this.storeContents(this.generateNotebookContent(this.visibleCells))
+            .catch(ex => traceError('Failed to generate notebook content to store in state', ex));
 
         // Then update dirty flag.
         if (!this._dirty) {
@@ -666,7 +694,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     private async setClean(): Promise<void> {
         // Always update storage
-        this.storeContents(undefined).ignoreErrors();
+        this.storeContents(undefined)
+            .catch(ex => traceError('Failed to clear notebook store', ex));
 
         if (this._dirty) {
             this._dirty = false;
@@ -714,10 +743,25 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         };
     }
 
+    private async extractPythonMainVersion(notebookData: Partial<nbformat.INotebookContent>): Promise<number> {
+        if (notebookData && notebookData.metadata &&
+            notebookData.metadata.language_info &&
+            notebookData.metadata.language_info.codemirror_mode &&
+            // tslint:disable-next-line: no-any
+            typeof (notebookData.metadata.language_info.codemirror_mode as any).version === 'number') {
+
+            // tslint:disable-next-line: no-any
+            return (notebookData.metadata.language_info.codemirror_mode as any).version;
+        }
+        // Use the active interpreter
+        const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
+        return usableInterpreter && usableInterpreter.version ? usableInterpreter.version.major : 3;
+    }
+
     private generateNotebookContent(cells: ICell[]): string {
         // Reuse our original json except for the cells.
         const json = {
-            ...this.notebookJson,
+            ...(this.notebookJson as nbformat.INotebookContent),
             cells: cells.map(c => this.fixupCell(c.data))
         };
         return JSON.stringify(json, null, this.indentAmount);

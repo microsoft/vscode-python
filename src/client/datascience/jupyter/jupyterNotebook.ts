@@ -208,8 +208,8 @@ export class JupyterNotebookBase implements INotebook {
             if (setting) {
                 // Cleanup the linefeeds. User may have typed them into the settings UI so they will have an extra \\ on the front.
                 const cleanedUp = setting.replace(/\\n/g, '\n');
-                await this.executeSilently(cleanedUp, cancelToken);
-                traceInfo(`Run startup code for notebook: ${cleanedUp}`);
+                const cells = await this.executeSilently(cleanedUp, cancelToken);
+                traceInfo(`Run startup code for notebook: ${cleanedUp} - results: ${cells.length}`);
             }
 
             traceInfo(`Initial setup complete for ${this.resource.toString()}`);

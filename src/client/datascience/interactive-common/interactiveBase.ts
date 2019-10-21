@@ -102,7 +102,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         @unmanaged() cssGenerator: ICodeCssGenerator,
         @unmanaged() themeFinder: IThemeFinder,
         @unmanaged() private statusProvider: IStatusProvider,
-        @unmanaged() private jupyterExecution: IJupyterExecution,
+        @unmanaged() protected jupyterExecution: IJupyterExecution,
         @unmanaged() protected fileSystem: IFileSystem,
         @unmanaged() protected configuration: IConfigurationService,
         @unmanaged() protected jupyterExporter: INotebookExporter,
@@ -1187,7 +1187,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
     }
 
-    private async requestVariables(requestExecutionCount: number): Promise<void> {
+    private requestVariables = async (requestExecutionCount: number): Promise<void> => {
         this.variableRequestStopWatch = new StopWatch();
 
         // Request our new list of variables

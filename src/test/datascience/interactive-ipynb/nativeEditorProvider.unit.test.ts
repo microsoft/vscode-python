@@ -8,7 +8,7 @@
 import { expect } from 'chai';
 import { instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
-import { EventEmitter, TextDocument, Uri } from 'vscode';
+import { EventEmitter, TextDocument, TextEditor, Uri } from 'vscode';
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { DocumentManager } from '../../../client/common/application/documentManager';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../../client/common/application/types';
@@ -65,11 +65,17 @@ suite('Data Science - Native Editor Provider', () => {
         textDocument.setup(t => t.getText()).returns(() => content);
         return textDocument.object;
     }
+    function createTextEditor(doc: TextDocument) {
+        const textEditor = typemoq.Mock.ofType<TextEditor>();
+        textEditor.setup(e => e.document).returns(() => doc);
+        return textEditor.object;
+    }
     async function testAutomaticallyOpeningNotebookEditorWhenOpeningFiles(uri: Uri, shouldOpenNotebookEditor: boolean) {
-        const eventEmitter = new EventEmitter<TextDocument>();
+        const eventEmitter = new EventEmitter<TextEditor>();
         const editor = typemoq.Mock.ofType<INotebookEditor>();
         when(configService.getSettings()).thenReturn({ datascience: { useNotebookEditor: true } } as any);
-        when(doctManager.onDidOpenTextDocument).thenReturn(eventEmitter.event);
+        when(doctManager.onDidChangeActiveTextEditor).thenReturn(eventEmitter.event);
+        when(doctManager.visibleTextEditors).thenReturn([]);
         editor.setup(e => e.closed).returns(() => new EventEmitter<INotebookEditor>().event);
         editor.setup(e => e.executed).returns(() => new EventEmitter<INotebookEditor>().event);
         editor.setup(e => (e as any).then).returns(() => undefined);
@@ -90,7 +96,8 @@ suite('Data Science - Native Editor Provider', () => {
 
         // Open a text document.
         const textDoc = createTextDocument(uri, 'hello');
-        eventEmitter.fire(textDoc);
+        const textEditor = createTextEditor(textDoc);
+        eventEmitter.fire(textEditor);
 
         // wait for callbacks to get executed.
         await sleep(1);

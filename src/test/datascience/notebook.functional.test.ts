@@ -200,8 +200,8 @@ suite('DataScience notebook tests', () => {
         });
     }
 
-    function runTest(name: string, func: () => Promise<void>, _notebookProc?: ChildProcess, rebindFunc?: () => void) {
-        test(name, async () => {
+    function runTest(name: string, func: (_this: Mocha.Context) => Promise<void>, _notebookProc?: ChildProcess, rebindFunc?: () => void) {
+        test(name, async function () {
             // Give tests a chance to rebind IOC services before we fetch jupyterExecution and processFactory
             if (rebindFunc) {
                 rebindFunc();
@@ -210,7 +210,8 @@ suite('DataScience notebook tests', () => {
             processFactory = ioc.serviceManager.get<IProcessServiceFactory>(IProcessServiceFactory);
             console.log(`Starting test ${name} ...`);
             if (await jupyterExecution.isNotebookSupported()) {
-                return func();
+                // tslint:disable-next-line: no-invalid-this
+                return func(this);
             } else {
                 // tslint:disable-next-line:no-console
                 console.log(`Skipping test ${name}, no jupyter installed.`);
@@ -1103,6 +1104,29 @@ plt.show()`,
             }
 
             assert.ok(threw, 'No exception thrown during notebook creation');
+        }
+    });
+
+    // tslint:disable-next-line: no-function-expression
+    runTest('Notebook launch retry', async function (_this: Mocha.Context) {
+        // Skipping for now. Renable to test idle timeouts
+        _this.skip();
+        ioc.getSettings().datascience.jupyterLaunchRetries = 1;
+        ioc.getSettings().datascience.jupyterLaunchTimeout = 10000;
+        //         ioc.getSettings().datascience.runStartupCommands = '%config Application.log_level="DEBUG"';
+        //         const log = `import logging
+        // logger = logging.getLogger()
+        // fhandler = logging.FileHandler(filename='D:\\Training\\mylog.log', mode='a')
+        // formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        // fhandler.setFormatter(formatter)
+        // logger.addHandler(fhandler)
+        // logger.setLevel(logging.DEBUG)`;
+        for (let i = 0; i < 100; i += 1) {
+            const notebook = await createNotebook(true, false);
+            assert.ok(notebook, 'did not create notebook');
+            await notebook!.dispose();
+            const exec = ioc.get<IJupyterExecution>(IJupyterExecution);
+            await exec.dispose();
         }
     });
 });

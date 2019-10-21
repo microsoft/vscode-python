@@ -177,6 +177,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         // Special case. This sometimes happens where jupyter doesn't ever connect. Cleanup after
                         // ourselves and propagate the failure outwards.
                         traceInfo('Retry because of wait for idle problem.');
+                        sendTelemetryEvent(Telemetry.SessionIdleTimeout);
                         tryCount += 1;
                     } else if (startInfo) {
                         // Something else went wrong
