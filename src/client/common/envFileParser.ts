@@ -1,7 +1,7 @@
 import { IS_WINDOWS } from './platform/constants';
 import { FileSystem } from './platform/fileSystem';
 import { PathUtils } from './platform/pathUtils';
-import { IFileSystem, IPlatformService } from './platform/types';
+import { IFileSystem } from './platform/types';
 import { EnvironmentVariablesService } from './variables/environment';
 import {
     EnvironmentVariables, IEnvironmentVariablesService
@@ -32,10 +32,7 @@ export function parseEnvFile(
     service?: IEnvironmentVariablesService,
     fs?: IFileSystem
 ): EnvironmentVariables {
-    if (!fs) {
-        // tslint:disable-next-line:no-object-literal-type-assertion
-        fs = new FileSystem({} as IPlatformService);
-    }
+    fs = fs ? fs : new FileSystem();
     const buffer = fs.readFileSync(envFile);
     const env = parseEnvironmentVariables(buffer)!;
     if (!service) {
@@ -65,8 +62,7 @@ export function mergeEnvVariables(
     if (!service) {
         service = new EnvironmentVariablesService(
             new PathUtils(IS_WINDOWS),
-            // tslint:disable-next-line:no-object-literal-type-assertion
-            new FileSystem({} as IPlatformService)
+            new FileSystem()
         );
     }
     service.mergeVariables(sourceEnvVars, targetEnvVars);
@@ -96,8 +92,7 @@ export function mergePythonPath(
     if (!service) {
         service = new EnvironmentVariablesService(
             new PathUtils(IS_WINDOWS),
-            // tslint:disable-next-line:no-object-literal-type-assertion
-            new FileSystem({} as IPlatformService)
+            new FileSystem()
         );
     }
     service.appendPythonPath(env, currentPythonPath);

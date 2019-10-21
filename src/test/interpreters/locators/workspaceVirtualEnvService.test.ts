@@ -11,7 +11,6 @@ import { promisify } from 'util';
 import { Uri } from 'vscode';
 import '../../../client/common/extensions';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
-import { PlatformService } from '../../../client/common/platform/platformService';
 import { createDeferredFromPromise, Deferred } from '../../../client/common/utils/async';
 import { StopWatch } from '../../../client/common/utils/stopWatch';
 import {
@@ -93,7 +92,7 @@ class Venvs {
             ? this.pipInstaller
             : path.join(this.topDir, 'get-pip.py');
         if (!this.pipInstaller) {
-            const fs = new FileSystem(new PlatformService());
+            const fs = new FileSystem();
             if (!await fs.fileExists(script)) {
                 await this.run([
                     'curl',

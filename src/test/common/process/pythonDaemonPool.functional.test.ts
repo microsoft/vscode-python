@@ -16,7 +16,6 @@ import * as sinon from 'sinon';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { createMessageConnection, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
-import { PlatformService } from '../../../client/common/platform/platformService';
 import { ProcessLogger } from '../../../client/common/process/logger';
 import { PythonDaemonExecutionServicePool } from '../../../client/common/process/pythonDaemonPool';
 import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
@@ -56,7 +55,7 @@ suite('Daemon - Python Daemon Pool', () => {
                 .stdout.toString()
                 .trim();
         }
-        fsUtils = new FileSystem(new PlatformService());
+        fsUtils = new FileSystem();
     });
     setup(async function () {
         if (isPythonVersion('2.7')){

@@ -115,7 +115,6 @@ class TestFixture extends BaseTestFixture {
         const pythonToolExecService = TypeMoq.Mock.ofType<IPythonToolExecutionService>(undefined, TypeMoq.MockBehavior.Strict);
         const pythonExecFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>(undefined, TypeMoq.MockBehavior.Strict);
         super(
-            platformService.object,
             filesystem.object,
             pythonToolExecService.object,
             pythonExecFactory.object,

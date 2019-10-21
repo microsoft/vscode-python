@@ -13,7 +13,6 @@ import * as path from 'path';
 import { instance, mock } from 'ts-mockito';
 import { createMessageConnection, MessageConnection, RequestType, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
-import { PlatformService } from '../../../client/common/platform/platformService';
 import { PythonDaemonExecutionService } from '../../../client/common/process/pythonDaemon';
 import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
 import { IPythonExecutionService, PythonVersionInfo } from '../../../client/common/process/types';
@@ -43,7 +42,7 @@ suite('Daemon', () => {
                 .stdout.toString()
                 .trim();
         }
-        fsUtils = new FileSystem(new PlatformService());
+        fsUtils = new FileSystem();
     });
     setup(async function () {
         if (isPythonVersion('2.7')){

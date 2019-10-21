@@ -17,8 +17,7 @@ import {
 import { Product } from '../../client/common/installer/productInstaller';
 import { ProductNames } from '../../client/common/installer/productNames';
 import {
-    IFileSystem,
-    IPlatformService
+    IFileSystem
 } from '../../client/common/platform/types';
 import {
     IPythonExecutionFactory,
@@ -209,7 +208,6 @@ export class BaseTestFixture {
     public logged: string[];
 
     constructor(
-        platformService: IPlatformService,
         filesystem: IFileSystem,
         pythonToolExecService: IPythonToolExecutionService,
         pythonExecFactory: IPythonExecutionFactory,
@@ -236,8 +234,6 @@ export class BaseTestFixture {
             .returns(() => this.logger.object);
         this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInstaller), TypeMoq.It.isAny()))
             .returns(() => this.installer.object);
-        this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService), TypeMoq.It.isAny()))
-            .returns(() => platformService);
         this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPythonToolExecutionService), TypeMoq.It.isAny()))
             .returns(() => pythonToolExecService);
         this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPythonExecutionFactory), TypeMoq.It.isAny()))

@@ -15,7 +15,6 @@ import * as TypeMoq from 'typemoq';
 import { Disposable, TextDocument, TextEditor, Uri, WindowState } from 'vscode';
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
 import { FileSystem } from '../../client/common/platform/fileSystem';
-import { PlatformService } from '../../client/common/platform/platformService';
 import { IFileSystem, TemporaryFile } from '../../client/common/platform/types';
 import { createDeferred, sleep, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
@@ -501,7 +500,7 @@ for _ in range(50):
                 addMockData(ioc, 'c=3\nc', 3);
                 // Use a real file so we can save notebook to a file.
                 // This is used in some tests (saving).
-                const filesystem = new FileSystem(new PlatformService());
+                const filesystem = new FileSystem();
                 notebookFile = await filesystem.createTemporaryFile('.ipynb');
                 await fs.writeFile(notebookFile.filePath, baseFile);
                 await Promise.all([waitForUpdate(wrapper, NativeEditor, 1), openEditor(ioc, baseFile, notebookFile.filePath)]);

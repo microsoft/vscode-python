@@ -94,7 +94,8 @@ suite('Interpreters Conda Service', () => {
         config.setup(c => c.getSettings(TypeMoq.It.isValue(undefined))).returns(() => settings.object);
         settings.setup(p => p.condaPath).returns(() => condaPathSetting);
         fileSystem.setup(fs => fs.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((p1, p2) => {
-            return new FileSystem(platformService.object).arePathsSame(p1, p2);
+            return new FileSystem(platformService.object.isWindows)
+                .arePathsSame(p1, p2);
         });
 
         condaService = new CondaService(

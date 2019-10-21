@@ -6,15 +6,16 @@ import { createHash } from 'crypto';
 import * as fs from 'fs';
 import * as fsextra from 'fs-extra';
 import * as glob from 'glob';
-import { inject, injectable } from 'inversify';
+import { injectable } from 'inversify';
 import * as path from 'path';
 import * as tmp from 'tmp';
 import * as vscode from 'vscode';
 import { createDeferred } from '../utils/async';
 import { noop } from '../utils/misc';
+import { getOSType, OSType } from '../utils/platform';
 import {
     FileStat, FileType,
-    IFileSystem, IPlatformService,
+    IFileSystem,
     TemporaryFile, WriteStream
 } from './types';
 
@@ -35,7 +36,7 @@ function getFileType(stat: FileStat): FileType {
 @injectable()
 export class FileSystem implements IFileSystem {
     constructor(
-        @inject(IPlatformService) private platformService: IPlatformService
+        private readonly isWindows = (getOSType() === OSType.Windows)
     ) { }
 
     public async stat(filePath: string): Promise<vscode.FileStat> {
@@ -97,7 +98,7 @@ export class FileSystem implements IFileSystem {
     public arePathsSame(path1: string, path2: string): boolean {
         path1 = path.normalize(path1);
         path2 = path.normalize(path2);
-        if (this.platformService.isWindows) {
+        if (this.isWindows) {
             return path1.toUpperCase() === path2.toUpperCase();
         } else {
             return path1 === path2;

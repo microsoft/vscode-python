@@ -6,7 +6,7 @@
 import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { FileSystem } from '../platform/fileSystem';
-import { IFileSystem, IPlatformService } from '../platform/types';
+import { IFileSystem } from '../platform/types';
 
 // External callers of localize use these tables to retrieve localized values.
 export namespace Diagnostics {
@@ -492,10 +492,7 @@ function getString(key: string, defValue?: string) {
 }
 
 function load(fs?: IFileSystem) {
-    if (!fs) {
-        // tslint:disable-next-line:no-object-literal-type-assertion
-        fs = new FileSystem({} as IPlatformService);
-    }
+    fs = fs ? fs : new FileSystem();
     // Figure out our current locale.
     loadedLocale = parseLocale();
 

@@ -3,7 +3,7 @@ import * as path from 'path';
 import { traceError } from '../../common/logger';
 import { IS_WINDOWS } from '../../common/platform/constants';
 import { FileSystem } from '../../common/platform/fileSystem';
-import { IFileSystem, IPlatformService } from '../../common/platform/types';
+import { IFileSystem } from '../../common/platform/types';
 import { IInterpreterLocatorHelper, InterpreterType, PythonInterpreter } from '../contracts';
 import { IPipEnvServiceHelper } from './types';
 
@@ -13,12 +13,9 @@ export async function lookForInterpretersInDirectory(
     pathToCheck: string,
     fs?: IFileSystem
 ): Promise<string[]> {
-    if (!fs) {
-        // tslint:disable-next-line:no-object-literal-type-assertion
-        fs = new FileSystem({} as IPlatformService);
-    }
+    fs = fs ? fs : new FileSystem();
     const files = await (
-        fs.getFiles(pathToCheck)
+        fs!.getFiles(pathToCheck)
             .catch(err => {
                 traceError('Python Extension (lookForInterpretersInDirectory.fsReaddirAsync):', err);
                 return [] as string[];
