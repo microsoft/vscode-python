@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+'use strict';
+
 import * as fs from 'fs';
 import * as fsextra from 'fs-extra';
 import { SemVer } from 'semver';
@@ -39,6 +41,8 @@ export type TemporaryDirectory = vscode.Disposable & {
     path: string;
 };
 
+//export { FileType } from 'vscode';
+//import { FileType } from 'vscode';
 import FileType = vscode.FileType;
 export { FileType };
 export type FileStat = fsextra.Stats;
