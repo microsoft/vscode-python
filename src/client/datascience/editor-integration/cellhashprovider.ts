@@ -8,6 +8,7 @@ import { Event, EventEmitter, Position, Range, TextDocumentChangeEvent, TextDocu
 
 import { IDebugService, IDocumentManager } from '../../common/application/types';
 import { traceError, traceInfo } from '../../common/logger';
+import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { CellMatcher } from '../cellMatcher';
@@ -48,6 +49,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDebugService) private debugService: IDebugService,
+        @inject(IFileSystem) private fileSystem: IFileSystem,
         @multiInject(ICellHashListener) @optional() private listeners: ICellHashListener[] | undefined
     ) {
         // Watch document changes so we can update our hashes
@@ -186,7 +188,8 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
         traceInfo('**** addCellHash');
         traceInfo(`**** cell.file ${cell.file}`);
         this.documentManager.textDocuments.forEach(d => traceInfo(`**** textDocument ${d.fileName}`));
-        const doc = this.documentManager.textDocuments.find(d => d.fileName === cell.file);
+        //const doc = this.documentManager.textDocuments.find(d => d.fileName === cell.file);
+        const doc = this.documentManager.textDocuments.find(d => this.fileSystem.arePathsSame(d.fileName, cell.file));
         if (doc) {
             traceInfo(`**** target doc ${doc.fileName}`);
             // Compute the code that will really be sent to jupyter

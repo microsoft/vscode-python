@@ -159,7 +159,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         traceInfo(`**** debugCode ${code} ${file}`);
         let saved = true;
         // Make sure the file is saved before debugging
-        const doc = this.documentManager.textDocuments.find(d => d.fileName === file);
+        //const doc = this.documentManager.textDocuments.find(d => d.fileName === file);
+        const doc = this.documentManager.textDocuments.find(d => this.fileSystem.arePathsSame(d.fileName, file));
         if (doc && doc.isUntitled) {
             // Before we start, get the list of documents
             const beforeSave = [...this.documentManager.textDocuments];
