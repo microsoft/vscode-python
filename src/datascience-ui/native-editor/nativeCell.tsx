@@ -36,7 +36,8 @@ interface INativeCellProps {
     lastCell: boolean;
     font: IFont;
     focusCell(cellId: string, focusCode: boolean): void;
-    selectCell(cellId: string): void;
+    selectCell(cellId: string, focusCode: boolean): void;
+
 }
 
 // tslint:disable: react-this-binding-issue
@@ -311,7 +312,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                 if (isFocusedWhenNotSuggesting || !this.isFocused()) {
                     e.stopPropagation();
                     const cell = this.props.stateController.insertAbove(cellId, true);
-                    this.moveSelection(cell!);
+                    this.moveSelection(cell!, true);
                     this.props.stateController.sendCommand(NativeCommandType.InsertAbove, 'keyboard');
                 }
                 break;
@@ -319,7 +320,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                 if (isFocusedWhenNotSuggesting || !this.isFocused()) {
                     e.stopPropagation();
                     const cell = this.props.stateController.insertBelow(cellId, true);
-                    this.moveSelection(cell!);
+                    this.moveSelection(cell!, true);
                     this.props.stateController.sendCommand(NativeCommandType.InsertBelow, 'keyboard');
                 }
                 break;
@@ -384,7 +385,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
         const prevCellId = this.getPrevCellId();
         if (prevCellId) {
             e.stopPropagation();
-            this.moveSelection(prevCellId);
+            this.moveSelection(prevCellId, true);
         }
 
         this.props.stateController.sendCommand(NativeCommandType.ArrowUp, 'keyboard');
@@ -395,7 +396,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
 
         if (nextCellId) {
             e.stopPropagation();
-            this.moveSelection(nextCellId);
+            this.moveSelection(nextCellId, true);
         }
 
         this.props.stateController.sendCommand(NativeCommandType.ArrowDown, 'keyboard');
@@ -436,14 +437,17 @@ export class NativeCell extends React.Component<INativeCellProps> {
         // Submit this cell
         this.submitCell(possibleContents);
 
-        // Move to the next cell if we have one and give it focus
+        // Move to the next cell if we have one
+        let focus = false;
         let nextCell = this.getNextCellId();
         if (!nextCell) {
-            // At the bottom insert a cell to move to instead
+            // At the bottom insert a cell to move to instead. Focus if this is the case. This is how
+            // a Jupyter notebook works
             nextCell = this.props.stateController.insertBelow(this.cellId, true);
+            focus = true;
         }
         if (nextCell) {
-            this.moveSelection(nextCell);
+            this.moveSelection(nextCell, focus);
         }
     }
 
@@ -456,7 +460,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
 
         // On next update, move the new cell
         if (nextCell) {
-            this.moveSelection(nextCell);
+            this.moveSelection(nextCell, true);
         }
     }
 
@@ -470,8 +474,8 @@ export class NativeCell extends React.Component<INativeCellProps> {
         this.props.stateController.sendCommand(NativeCommandType.Run, 'keyboard');
     }
 
-    private moveSelection = (cellId: string) => {
-        this.props.selectCell(cellId);
+    private moveSelection(cellId: string, focusCode: boolean) {
+        this.props.selectCell(cellId, focusCode);
     }
 
     private submitCell = (possibleContents?: string) => {

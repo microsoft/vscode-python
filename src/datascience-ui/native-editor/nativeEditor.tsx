@@ -145,29 +145,26 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         noop();
     }
 
-    private moveSelectionToExisting = (cellId: string) => {
+    private moveSelectionToExisting = (cellId: string, focusCode: boolean) => {
         // Cell should already exist in the UI
         if (this.contentPanelRef) {
-            const wasFocused = this.state.focusedCellId !== undefined;
-            this.stateController.selectCell(cellId, wasFocused ? cellId : undefined);
-            this.focusCell(cellId, wasFocused ? true : false);
+            this.stateController.selectCell(cellId, focusCode ? cellId : undefined);
+            this.focusCell(cellId, focusCode ? true : false);
         }
     }
 
-    private selectCell = (id: string) => {
+    private selectCell = (id: string, focusCode: boolean) => {
         // Check to see that this cell already exists in our window (it's part of the rendered state)
         const cells = this.state.cellVMs.map(c => c.cell).filter(c => c.data.cell_type !== 'messages');
         if (cells.find(c => c.id === id)) {
             // Force selection change right now as we don't need the cell to exist
             // to make it selected (otherwise we'll get a flash)
-            const wasFocused = this.state.focusedCellId !== undefined;
-            this.stateController.selectCell(id, wasFocused ? id : undefined);
-
-            // Then wait to give it actual input focus
-            setTimeout(() => this.moveSelectionToExisting(id), 1);
-        } else {
-            this.moveSelectionToExisting(id);
+            this.stateController.selectCell(id, focusCode ? id : undefined);
         }
+
+        // Then wait to give it actual input focus. The cell may not exist yet so we can't just
+        // force focus immediately.
+        setTimeout(() => this.moveSelectionToExisting(id, focusCode), 1);
     }
 
     // tslint:disable: react-this-binding-issue

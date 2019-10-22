@@ -647,8 +647,15 @@ for _ in range(50):
             });
 
             test('Pressing \'Shift+Enter\' on a selected cell executes the cell and advances to the next cell', async () => {
+                let update = waitForUpdate(wrapper, NativeEditor, 1);
                 clickCell(1);
-                const update = waitForUpdate(wrapper, NativeEditor, 7);
+                simulateKeyPressOnCell(1, { code: 'Enter', editorInfo: undefined });
+                await update;
+
+                // The 2nd cell should be focused
+                assert.ok(isCellFocused(wrapper, 'NativeCell', 1));
+
+                update = waitForUpdate(wrapper, NativeEditor, 7);
                 simulateKeyPressOnCell(1, { code: 'Enter', shiftKey: true, editorInfo: undefined });
                 await update;
                 wrapper.update();
@@ -658,6 +665,31 @@ for _ in range(50):
 
                 // The third cell should be selected.
                 assert.ok(isCellSelected(wrapper, 'NativeCell', 2));
+
+                // The third cell should not be focused
+                assert.ok(!isCellFocused(wrapper, 'NativeCell', 2));
+
+                // Shift+enter on the last cell, it should behave differently. It should be selected and focused
+
+                // First focus the cell.
+                update = waitForUpdate(wrapper, NativeEditor, 2);
+                clickCell(2);
+                simulateKeyPressOnCell(2, { code: 'Enter', editorInfo: undefined });
+                await update;
+
+                // The 3rd cell should be focused
+                assert.ok(isCellFocused(wrapper, 'NativeCell', 2));
+
+                update = waitForUpdate(wrapper, NativeEditor, 7);
+                simulateKeyPressOnCell(2, { code: 'Enter', shiftKey: true, editorInfo: undefined });
+                await update;
+                wrapper.update();
+
+                // The fourth cell should be focused and not selected.
+                assert.ok(!isCellSelected(wrapper, 'NativeCell', 3));
+
+                // The fourth cell should be focused
+                assert.ok(isCellFocused(wrapper, 'NativeCell', 3));
             });
 
             test('Pressing \'Ctrl+Enter\' on a selected cell executes the cell and cell selection is not changed', async () => {
