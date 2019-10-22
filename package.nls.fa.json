@@ -23,9 +23,9 @@
     "python.command.python.runLinting.title": "اجرای لینتینگ",
     "python.snippet.launch.standard.label": "پایتون: فایل فعلی",
     "python.snippet.launch.module.label": "پایتون: ماژول",
-    "python.snippet.launch.django.label": "پایتون: جانگو",
-    "python.snippet.launch.flask.label": "پایتون: فلسک",
-    "python.snippet.launch.pyramid.label": "پایتون: برنامه پیرامید",
+    "python.snippet.launch.django.label": "پایتون: Django",
+    "python.snippet.launch.flask.label": "پایتون: Flask",
+    "python.snippet.launch.pyramid.label": "پایتون: برنامه Pyramid",
     "python.snippet.launch.attach.label": "پایتون: الصاق",
     "LanguageService.bannerLabelYes": "بله، نظرسنجی را همین حالا انجام بده"
 }
