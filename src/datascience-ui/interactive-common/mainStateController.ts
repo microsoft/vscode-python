@@ -27,6 +27,7 @@ import {
     IJupyterVariable,
     IJupyterVariablesResponse
 } from '../../client/datascience/types';
+import { arePathsSame } from '../react-common/arePathsSame';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { getSettings, updateSettings } from '../react-common/settingsReactSide';
 import { detectBaseTheme } from '../react-common/themeDetector';
@@ -1094,7 +1095,7 @@ export class MainStateController implements IMessageHandler {
         const index = this.pendingState.cellVMs.findIndex((c: ICellViewModel) => {
             return c.cell.id === cell.id &&
                 c.cell.line === cell.line &&
-                c.cell.file === cell.file;
+                arePathsSame(c.cell.file, cell.file);
         });
         if (index >= 0) {
             // This means the cell existed already so it was actual executed code.

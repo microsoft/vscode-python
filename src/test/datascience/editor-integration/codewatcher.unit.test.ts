@@ -100,7 +100,10 @@ suite('DataScience Code Watcher Unit Tests', () => {
         // Setup the service container to return code watchers
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
 
-        const codeLensFactory = new CodeLensFactory(configService.object, cellHashProvider.object);
+        // Setup the file system
+        fileSystem.setup(f => f.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns(() => true);
+
+        const codeLensFactory = new CodeLensFactory(configService.object, cellHashProvider.object, fileSystem.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICodeWatcher))).returns(() => new CodeWatcher(interactiveWindowProvider.object, fileSystem.object, configService.object, documentManager.object, helper.object, dataScienceErrorHandler.object, codeLensFactory));
 
         // Setup our error handler
@@ -112,9 +115,6 @@ suite('DataScience Code Watcher Unit Tests', () => {
         // Setup our active text editor
         documentManager.setup(dm => dm.activeTextEditor).returns(() => textEditor.object);
 
-        // Setup the file system
-        fileSystem.setup(f => f.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns(() => true);
-
         // Setup config service
         configService.setup(c => c.getSettings()).returns(() => pythonSettings);
 
@@ -125,7 +125,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
             return Promise.resolve();
         });
 
-        const codeLens = new CodeLensFactory(configService.object, cellHashProvider.object);
+        const codeLens = new CodeLensFactory(configService.object, cellHashProvider.object, fileSystem.object);
 
         codeWatcher = new CodeWatcher(interactiveWindowProvider.object, fileSystem.object, configService.object, documentManager.object, helper.object, dataScienceErrorHandler.object, codeLens);
     });

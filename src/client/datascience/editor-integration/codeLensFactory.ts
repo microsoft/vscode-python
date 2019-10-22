@@ -5,6 +5,7 @@ import { inject, injectable } from 'inversify';
 import { CodeLens, Command, Event, EventEmitter, Range, TextDocument } from 'vscode';
 
 import { traceWarning } from '../../common/logger';
+import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -22,7 +23,8 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
 
     constructor(
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(ICellHashProvider) private hashProvider: ICellHashProvider
+        @inject(ICellHashProvider) private hashProvider: ICellHashProvider,
+        @inject(IFileSystem) private fileSystem: IFileSystem
     ) {
         hashProvider.updated(this.hashesUpdated.bind(this));
     }
@@ -204,7 +206,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
     }
 
     private addExecutionCount(codeLens: CodeLens[], document: TextDocument, range: Range, hashes: IFileHashes[], visibleCells: ICell[]) {
-        const list = hashes.find(h => h.file === document.fileName);
+        const list = hashes.find(h => this.fileSystem.arePathsSame(h.file, document.fileName));
         if (list) {
             // Match just the start of the range. Should be - 2 (1 for 1 based numbers and 1 for skipping the comment at the top)
             const rangeMatches = list.hashes.filter(h => h.line - 2 === range.start.line);
