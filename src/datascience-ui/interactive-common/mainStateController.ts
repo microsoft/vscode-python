@@ -873,6 +873,7 @@ export class MainStateController implements IMessageHandler {
         return undefined;
     }
 
+    // tslint:disable:no-any
     private computeEditorOptions(): monacoEditor.editor.IEditorOptions {
         const intellisenseOptions = getSettings().intellisenseOptions;
         const extraSettings = getSettings().extraSettings;
@@ -895,8 +896,13 @@ export class MainStateController implements IMessageHandler {
                 parameterHints: {
                     enabled: intellisenseOptions.parameterHintsEnabled
                 },
-                cursorStyle: extraSettings.editorCursor,
-                cursorBlinking: extraSettings.editorCursorBlink
+                cursorStyle: extraSettings.editor.cursor,
+                cursorBlinking: extraSettings.editor.cursorBlink,
+                autoClosingBrackets: extraSettings.editor.autoClosingBrackets as any,
+                autoClosingQuotes: extraSettings.editor.autoClosingQuotes as any,
+                autoIndent: extraSettings.editor.autoIndent as any,
+                autoSurround: extraSettings.editor.autoSurround as any,
+                fontLigatures: extraSettings.editor.fontLigatures
             };
         }
 

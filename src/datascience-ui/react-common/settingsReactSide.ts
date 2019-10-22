@@ -54,8 +54,15 @@ function load() {
             variableExplorerExclude: 'module;function;builtin_function_or_method',
             enablePlotViewer: true,
             extraSettings: {
-                editorCursor: 'line',
-                editorCursorBlink: 'blink',
+                editor: {
+                    cursor: 'line',
+                    cursorBlink: 'blink',
+                    autoClosingBrackets: 'languageDefined',
+                    autoClosingQuotes: 'languageDefined',
+                    autoSurround: 'languageDefined',
+                    autoIndent: false,
+                    fontLigatures: false
+                },
                 fontSize: 14,
                 fontFamily: 'Consolas, \'Courier New\', monospace',
                 theme: 'Default Dark+'

@@ -168,8 +168,15 @@ export class WebViewHost<IMapping> implements IDisposable {
         return {
             ...this.configService.getSettings().datascience,
             extraSettings: {
-                editorCursor: this.getValue(editor, 'cursorStyle', 'line'),
-                editorCursorBlink: this.getValue(editor, 'cursorBlinking', 'blink'),
+                editor: {
+                    cursor: this.getValue(editor, 'cursorStyle', 'line'),
+                    cursorBlink: this.getValue(editor, 'cursorBlinking', 'blink'),
+                    autoClosingBrackets: this.getValue(editor, 'autoClosingBrackets', 'languageDefined'),
+                    autoClosingQuotes: this.getValue(editor, 'autoClosingQuotes', 'languageDefined'),
+                    autoSurround: this.getValue(editor, 'autoSurround', 'languageDefined'),
+                    autoIndent: this.getValue(editor, 'autoIndent', false),
+                    fontLigatures: this.getValue(editor, 'fontLigatures', false)
+                },
                 fontSize: this.getValue(editor, 'fontSize', 14),
                 fontFamily: this.getValue(editor, 'fontFamily', 'Consolas, \'Courier New\', monospace'),
                 theme: theme
@@ -246,6 +253,11 @@ export class WebViewHost<IMapping> implements IDisposable {
             event.affectsConfiguration('editor.fontFamily') ||
             event.affectsConfiguration('editor.cursorStyle') ||
             event.affectsConfiguration('editor.cursorBlinking') ||
+            event.affectsConfiguration('editor.autoClosingBrackets') ||
+            event.affectsConfiguration('editor.autoClosingQuotes') ||
+            event.affectsConfiguration('editor.autoSurround') ||
+            event.affectsConfiguration('editor.autoIndent') ||
+            event.affectsConfiguration('editor.fontLigatures') ||
             event.affectsConfiguration('files.autoSave') ||
             event.affectsConfiguration('files.autoSaveDelay') ||
             event.affectsConfiguration('python.dataScience.enableGather')) {

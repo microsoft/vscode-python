@@ -324,6 +324,9 @@ function simulateKey(domNode: HTMLTextAreaElement, key: string, shiftDown?: bool
     // Submit a keypress into the textarea. Simulate doesn't work here because the keydown
     // handler is not registered in any react code. It's being handled with DOM events
 
+    // Save current selection start so we move appropriately after the event
+    const selectionStart = domNode.selectionStart;
+
     // According to this:
     // https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent#Usage_notes
     // The normal events are
@@ -342,12 +345,14 @@ function simulateKey(domNode: HTMLTextAreaElement, key: string, shiftDown?: bool
             domNode.dispatchEvent(event);
 
             // Update our value. This will reset selection to zero.
-            domNode.value = domNode.value + key;
+            const before = domNode.value.slice(0, selectionStart);
+            const after = domNode.value.slice(selectionStart);
+            domNode.value = `${before}${key}${after}`;
 
             // Tell the dom node its selection start has changed. Monaco
             // reads this to determine where the character went.
-            domNode.selectionEnd = domNode.value.length;
-            domNode.selectionStart = domNode.value.length;
+            domNode.selectionEnd = selectionStart + 1;
+            domNode.selectionStart = selectionStart + 1;
 
             // Dispatch an input event so we update the textarea
             domNode.dispatchEvent(createInputEvent());
@@ -366,24 +371,30 @@ async function submitInput(wrapper: ReactWrapper<any, Readonly<{}>, React.Compon
     return renderPromise;
 }
 
-function enterKey(_wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, textArea: HTMLTextAreaElement, key: string) {
+function enterKey(textArea: HTMLTextAreaElement, key: string) {
     // Simulate a key press
     simulateKey(textArea, key);
 }
 
-export function getEditor(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>): ReactWrapper<any, Readonly<{}>, React.Component> {
+export function getInteractiveEditor(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>): ReactWrapper<any, Readonly<{}>, React.Component> {
     // Find the last cell. It should have a monacoEditor object
     const cells = wrapper.find('InteractiveCell');
     const lastCell = cells.last();
     return lastCell.find('MonacoEditor');
 }
 
-export function typeCode(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string): HTMLTextAreaElement | null {
+export function getNativeFocusedEditor(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>): ReactWrapper<any, Readonly<{}>, React.Component> {
+    // Find the last cell. It should have a monacoEditor object
+    const cells = wrapper.find('NativeCell');
+    const focusedCell = cells.find('.cell-wrapper-focused');
+    return focusedCell.find('MonacoEditor');
+}
+
+export function typeCode(editorControl: ReactWrapper<any, Readonly<{}>, React.Component>, code: string): HTMLTextAreaElement | null {
     // Find the last cell. It should have a monacoEditor object. We need to search
     // through its DOM to find the actual textarea to send input to
     // (we can't actually find it with the enzyme wrappers because they only search
     //  React accessible nodes and the monaco html is not react)
-    const editorControl = getEditor(wrapper);
     const ecDom = editorControl.getDOMNode();
     assert.ok(ecDom, 'ec DOM object not found');
     const textArea = ecDom!.querySelector('.overflow-guard')!.querySelector('textarea');
@@ -392,7 +403,7 @@ export function typeCode(wrapper: ReactWrapper<any, Readonly<{}>, React.Componen
 
     // Now simulate entering all of the keys
     for (let i = 0; i < code.length; i += 1) {
-        enterKey(wrapper, textArea!, code.charAt(i));
+        enterKey(textArea!, code.charAt(i));
     }
 
     return textArea;
@@ -404,8 +415,10 @@ export async function enterInput(
     code: string,
     resultClass: string
 ): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
+    const editor = (resultClass === 'InteractiveCell') ? getInteractiveEditor(wrapper) : getNativeFocusedEditor(wrapper);
+
     // First we have to type the code into the input box
-    const textArea = typeCode(wrapper, code);
+    const textArea = typeCode(editor, code);
 
     // Now simulate a shift enter. This should cause a new cell to be added
     await submitInput(wrapper, mainClass, textArea!);

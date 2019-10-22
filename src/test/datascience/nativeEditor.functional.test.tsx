@@ -52,9 +52,11 @@ import {
     escapePath,
     findButton,
     getLastOutputCell,
+    getNativeFocusedEditor,
     isCellFocused,
     isCellSelected,
     srcDirectory,
+    typeCode,
     verifyCellIndex,
     verifyHtmlOnCell,
     waitForMessageResponse
@@ -718,6 +720,31 @@ for _ in range(50):
                 assert.ok(isCellFocused(wrapper, 'NativeCell', 2));
                 // There should be 4 cells.
                 assert.equal(wrapper.find('NativeCell').length, 4);
+            });
+
+            test('Auto brackets work', async () => {
+                // Initially 3 cells.
+                assert.equal(wrapper.find('NativeCell').length, 3);
+
+                // Give focus
+                const update = waitForUpdate(wrapper, NativeEditor, 1);
+                clickCell(1);
+                simulateKeyPressOnCell(1, { code: 'Enter', editorInfo: undefined });
+                await update;
+
+                // The first cell should be focused.
+                assert.ok(isCellFocused(wrapper, 'NativeCell', 1));
+
+                // Type in something with brackets
+                const editorEnzyme = getNativeFocusedEditor(wrapper);
+                typeCode(editorEnzyme, 'a(');
+
+                // Verify cell content
+                const reactEditor = editorEnzyme.instance() as MonacoEditor;
+                const editor = reactEditor.state.editor;
+                if (editor) {
+                    assert.equal(editor.getModel()!.getValue(), 'a()', 'Text does not have brackets');
+                }
             });
 
             test('Pressing \'d\' on a selected cell twice deletes the cell', async () => {

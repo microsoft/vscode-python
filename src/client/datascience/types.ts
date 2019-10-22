@@ -408,8 +408,15 @@ export type FileSettings = {
 
 export interface IDataScienceExtraSettings extends IDataScienceSettings {
     extraSettings: {
-        editorCursor: string;
-        editorCursorBlink: string;
+        editor: {
+            cursor: string;
+            cursorBlink: string;
+            fontLigatures: boolean;
+            autoClosingBrackets: string;
+            autoClosingQuotes: string;
+            autoSurround: string;
+            autoIndent: boolean;
+        };
         fontSize: number;
         fontFamily: string;
         theme: string;
