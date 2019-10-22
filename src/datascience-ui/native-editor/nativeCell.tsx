@@ -385,7 +385,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
         const prevCellId = this.getPrevCellId();
         if (prevCellId) {
             e.stopPropagation();
-            this.moveSelection(prevCellId, true);
+            this.moveSelection(prevCellId, this.isFocused());
         }
 
         this.props.stateController.sendCommand(NativeCommandType.ArrowUp, 'keyboard');
@@ -396,7 +396,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
 
         if (nextCellId) {
             e.stopPropagation();
-            this.moveSelection(nextCellId, true);
+            this.moveSelection(nextCellId, this.isFocused());
         }
 
         this.props.stateController.sendCommand(NativeCommandType.ArrowDown, 'keyboard');
