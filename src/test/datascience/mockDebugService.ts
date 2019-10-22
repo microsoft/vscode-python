@@ -136,7 +136,6 @@ export class MockDebuggerService implements IDebugService, IDisposable {
     }
 
     public startDebugging(_folder: WorkspaceFolder | undefined, nameOrConfiguration: string | DebugConfiguration, _parentSession?: DebugSession | undefined): Thenable<boolean> {
-        traceInfo('**** mock startDebugging');
         // Should have a port number. We'll assume during the test it's local
         const config = nameOrConfiguration as DebugConfiguration;
         if (config.port) {
@@ -158,8 +157,6 @@ export class MockDebuggerService implements IDebugService, IDisposable {
         return Promise.resolve(true);
     }
     public addBreakpoints(breakpoints: Breakpoint[]): void {
-        traceInfo('**** mock addBreakpoints');
-        traceInfo(`**** ${breakpoints.length} bp length`);
         this._breakpoints = this._breakpoints.concat(breakpoints);
     }
     public removeBreakpoints(_breakpoints: Breakpoint[]): void {
@@ -207,7 +204,6 @@ export class MockDebuggerService implements IDebugService, IDisposable {
     }
 
     private sendBreakpoints(): Promise<void> {
-        traceInfo('**** mock sendBreakpoints');
         // Only supporting a single file now
         const sbs = this._breakpoints.map(b => b as SourceBreakpoint);
         const file = (sbs[0]).location.uri.fsPath;
@@ -301,8 +297,6 @@ export class MockDebuggerService implements IDebugService, IDisposable {
     }
 
     private onBreakpoint(args: DebugProtocol.StoppedEvent): void {
-        traceInfo('**** mock onBreakpoint');
-        traceInfo(`**** ${JSON.stringify(args)}`);
         // Save the current thread id. We use this in our stack trace request
         this._stoppedThreadId = args.body.threadId;
 
@@ -311,7 +305,6 @@ export class MockDebuggerService implements IDebugService, IDisposable {
         }
 
         // Indicate we stopped at a breakpoint
-        traceInfo('**** mock breakpoint file');
         this.breakpointEmitter.fire();
     }
 

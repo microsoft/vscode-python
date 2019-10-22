@@ -172,7 +172,6 @@
                 "--recursive",
                 "--colors",
                 //"--grep", "<suite name>",
-                "--grep", "Debug",
                 "--timeout=300000"
             ],
             "outFiles": [

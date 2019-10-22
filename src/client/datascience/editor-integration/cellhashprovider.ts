@@ -98,7 +98,6 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
     }
 
     public async preExecute(cell: ICell, silent: boolean): Promise<void> {
-        traceInfo('**** preExecute');
         try {
             if (!silent) {
                 // Don't log empty cells
@@ -185,13 +184,9 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
     private async addCellHash(cell: ICell, expectedCount: number): Promise<void> {
         // Find the text document that matches. We need more information than
         // the add code gives us
-        traceInfo('**** addCellHash');
-        traceInfo(`**** cell.file ${cell.file}`);
-        this.documentManager.textDocuments.forEach(d => traceInfo(`**** textDocument ${d.fileName}`));
         //const doc = this.documentManager.textDocuments.find(d => d.fileName === cell.file);
         const doc = this.documentManager.textDocuments.find(d => this.fileSystem.arePathsSame(d.fileName, cell.file));
         if (doc) {
-            traceInfo(`**** target doc ${doc.fileName}`);
             // Compute the code that will really be sent to jupyter
             const lines = splitMultilineString(cell.data.source);
             const stripped = this.extractExecutableLines(cell.data.source);
@@ -207,13 +202,11 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
             }
             const line = doc.lineAt(trueStartLine);
             const endLine = doc.lineAt(Math.min(trueStartLine + stripped.length - 1, doc.lineCount - 1));
-            traceInfo('**** line');
 
             // Use the original values however to track edits. This is what we need
             // to move around
             const startOffset = doc.offsetAt(new Position(cell.line, 0));
             const endOffset = doc.offsetAt(endLine.rangeIncludingLineBreak.end);
-            traceInfo('**** endOffset');
 
             // Jupyter also removes blank lines at the end. Make sure only one
             let lastLine = stripped[stripped.length - 1];

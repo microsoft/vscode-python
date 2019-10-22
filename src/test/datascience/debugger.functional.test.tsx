@@ -132,18 +132,13 @@ suite('DataScience Debugger tests', () => {
     }
 
     async function debugCell(code: string, breakpoint?: Range, breakpointFile?: string, expectError?: boolean) : Promise<void> {
-        if (breakpointFile) {
-            traceInfo(`**** ${breakpointFile} debugCell breakpointFile`);
-        }
         // Create a dummy document with just this code
         const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
         const fileName = path.join(EXTENSION_ROOT_DIR, 'foo.py');
-        traceInfo(`**** ${fileName} debugCell fileName`);
         docManager.addDocument(code, fileName);
 
         if (breakpoint) {
             const sourceFile = breakpointFile ? path.join(EXTENSION_ROOT_DIR, breakpointFile) : fileName;
-            traceInfo(`**** ${sourceFile} debugCell sourceFile`);
             const sb : SourceBreakpoint = {
                 location: {
                     uri: Uri.file(sourceFile),
@@ -152,7 +147,6 @@ suite('DataScience Debugger tests', () => {
                 id: uuid(),
                 enabled: true
             };
-            traceInfo(`**** ${sb.location.uri.fsPath} breakpoint path`);
             mockDebuggerService!.addBreakpoints([sb]);
         }
 
@@ -165,15 +159,12 @@ suite('DataScience Debugger tests', () => {
         const resultPromise = getInteractiveCellResults(ioc.wrapper!, 5, async () => {
             const breakPromise = createDeferred<void>();
             disposables.push(mockDebuggerService!.onBreakpointHit(() => breakPromise.resolve()));
-            traceInfo(`**** about to debugCode`);
             const done = history.debugCode(code, fileName, 0, docManager.activeTextEditor);
-            traceInfo(`**** done with debugCode`);
             await waitForPromise(Promise.race([done, breakPromise.promise]), 60000);
             if (expectError) {
                 assert.ok(lastErrorMessage, 'Error did not occur when expected');
                 throw Error('Exiting cell results');
             } else {
-                traceInfo(`**** check breakpoint resolved`);
                 assert.ok(breakPromise.resolved, 'Breakpoint event did not fire');
                 assert.ok(!lastErrorMessage, `Error occurred ${lastErrorMessage}`);
                 const stackTrace = await mockDebuggerService!.getStackTrace();
@@ -181,7 +172,6 @@ suite('DataScience Debugger tests', () => {
                 assert.ok(stackTrace!.body.stackFrames.length >= 1, 'Not enough frames');
                 assert.equal(stackTrace!.body.stackFrames[0].line, expectedBreakLine, 'Stopped on wrong line number');
 
-                traceInfo(`**** first verify code lenses`);
                 verifyCodeLenses(expectedBreakLine);
 
                 // Verify break location
@@ -192,10 +182,8 @@ suite('DataScience Debugger tests', () => {
         });
 
         if (!expectError) {
-            traceInfo(`**** await cell results`);
             const cellResults = await resultPromise;
             assert.ok(cellResults, 'No cell results after finishing debugging');
-            traceInfo(`**** cell results done`);
         } else {
             try {
                 await resultPromise;
@@ -233,17 +221,13 @@ suite('DataScience Debugger tests', () => {
     }
 
     test('Debug cell without breakpoint', async () => {
-        traceInfo('**** Start Debug cell without breakpoint');
         await debugCell('#%%\nprint("bar")');
-        traceInfo('**** End Debug cell without breakpoint');
     });
 
     // Debugging with a breakpoint requires the file to actually exist on disk.
 
     test('Debug cell with breakpoint in another file', async () => {
-        traceInfo('**** Start Debug cell with breakpoint in another file');
         await debugCell('#%%\nprint("bar")\nprint("baz")', new Range(new Position(3, 0), new Position(3, 0)), 'bar.py');
-        traceInfo('**** Start Debug cell with breakpoint in another file');
     });
 
     test('Debug remote', async () => {
