@@ -25,19 +25,6 @@ import {
 
 const ENCODING: string = 'utf8';
 
-// Determine the file type from the given file info.
-function getFileType(stat: FileStat): FileType {
-    if (stat.isFile()) {
-        return FileType.File;
-    } else if (stat.isDirectory()) {
-        return FileType.Directory;
-    } else if (stat.isSymbolicLink()) {
-        return FileType.SymbolicLink;
-    } else {
-        return FileType.Unknown;
-    }
-}
-
 // The parts of node's 'path' module used by FileSystemPath.
 interface INodePath {
     join(...filenames: string[]): string;
@@ -117,7 +104,7 @@ interface INewAPI {
     //copy(source: vscode.Uri, target: vscode.Uri, options?: {overwrite: boolean}): Thenable<void>;
     //createDirectory(uri: vscode.Uri): Thenable<void>;
     delete(uri: vscode.Uri, options?: {recursive: boolean; useTrash: boolean}): Thenable<void>;
-    //readDirectory(uri: vscode.Uri): Thenable<[string, FileType][]>;
+    readDirectory(uri: vscode.Uri): Thenable<[string, FileType][]>;
     //readFile(uri: vscode.Uri): Thenable<Uint8Array>;
     //rename(source: vscode.Uri, target: vscode.Uri, options?: {overwrite: boolean}): Thenable<void>;
     //stat(uri: vscode.Uri): Thenable<vscode.FileStat>;
@@ -139,7 +126,6 @@ interface IRawFSExtra {
     stat(filename: string): Promise<fsextra.Stats>;
     lstat(filename: string): Promise<fsextra.Stats>;
     mkdirp(dirname: string): Promise<void>;
-    readdir(dirname: string): Promise<string[]>;
 
     // non-async
     statSync(filename: string): fsextra.Stats;
@@ -148,18 +134,12 @@ interface IRawFSExtra {
     createWriteStream(dest: string): fsextra.WriteStream;
 }
 
-// The parts of IFileSystemPaths used by RawFileSystem.
-interface IRawPath {
-    join(...filenames: string[]): string;
-}
-
 // Later we will drop "FileSystem", switching usage to
 // "FileSystemUtils" and then rename "RawFileSystem" to "FileSystem".
 
 // The low-level filesystem operations used by the extension.
 export class RawFileSystem implements IRawFileSystem {
     constructor(
-        protected readonly path: IRawPath,
         protected readonly newapi: INewAPI,
         protected readonly nodefs: IRawFS,
         protected readonly fsExtra: IRawFSExtra
@@ -168,7 +148,6 @@ export class RawFileSystem implements IRawFileSystem {
     // Create a new object using common-case default values.
     public static withDefaults(): RawFileSystem{
         return new RawFileSystem(
-            FileSystemPaths.withDefaults(),
             vscode.workspace.fs,
             fs,
             fsextra
@@ -192,6 +171,11 @@ export class RawFileSystem implements IRawFileSystem {
             recursive: false,
             useTrash: false
         });
+    }
+
+    public async listdir(dirname: string): Promise<[string, FileType][]> {
+        const uri = vscode.Uri.file(dirname);
+        return this.newapi.readDirectory(uri);
     }
 
     //****************************
@@ -224,20 +208,6 @@ export class RawFileSystem implements IRawFileSystem {
         return this.fsExtra.lstat(filename);
     }
 
-    // Once we move to the VS Code API, this method becomes a trivial wrapper.
-    public async listdir(dirname: string): Promise<[string, FileType][]> {
-        const names: string[] = await this.fsExtra.readdir(dirname);
-        const promises = names
-            .map(name => {
-                 const filename = this.path.join(dirname, name);
-                 return this.lstat(filename)
-                     .then(stat => [name, getFileType(stat)] as [string, FileType])
-                     .catch(() => [name, FileType.Unknown] as [string, FileType]);
-            });
-        return Promise.all(promises);
-    }
-
-    // Once we move to the VS Code API, this method becomes a trivial wrapper.
     public async copyFile(src: string, dest: string): Promise<void> {
         const deferred = createDeferred<void>();
         const rs = this.fsExtra.createReadStream(src)
@@ -285,10 +255,9 @@ export class FileSystemUtils implements IFileSystemUtils {
     ) { }
     // Create a new object using common-case default values.
     public static withDefaults(): FileSystemUtils {
-        const paths = FileSystemPaths.withDefaults();
         return new FileSystemUtils(
-            new RawFileSystem(paths, vscode.workspace.fs, fs, fsextra),
-            paths,
+            RawFileSystem.withDefaults(),
+            FileSystemPaths.withDefaults(),
             TempFileSystem.withDefaults(),
             getHashString,
             util.promisify(glob)

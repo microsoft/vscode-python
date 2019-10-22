@@ -21,6 +21,7 @@ type TempCallback = (err: any, path: string, fd: number, cleanupCallback: () => 
 interface IRawFS {
     // VS Code
     delete(uri: Uri, options?: {recursive: boolean; useTrash: boolean}): Thenable<void>;
+    readDirectory(uri: Uri): Thenable<[string, FileType][]>;
 
     // node "fs"
     //tslint:disable-next-line:no-any
@@ -36,7 +37,6 @@ interface IRawFS {
     stat(filename: string): Promise<fsextra.Stats>;
     lstat(filename: string): Promise<fsextra.Stats>;
     mkdirp(dirname: string): Promise<void>;
-    readdir(dirname: string): Promise<string[]>;
     statSync(filename: string): fsextra.Stats;
     readFileSync(path: string, encoding: string): string;
     createReadStream(src: string): fsextra.ReadStream;
@@ -241,7 +241,7 @@ suite('Raw FileSystem', () => {
     setup(() => {
         raw = TypeMoq.Mock.ofType<IRawFS>(undefined, TypeMoq.MockBehavior.Strict);
         filesystem = new RawFileSystem(
-            raw.object,
+            //raw.object,
             raw.object,
             raw.object,
             raw.object
@@ -380,42 +380,6 @@ suite('Raw FileSystem', () => {
     });
 
     suite('listdir', () => {
-        function setupStat(filename: string, ft: FileType) {
-            const stat = TypeMoq.Mock.ofType<FileStat>(undefined, TypeMoq.MockBehavior.Strict);
-            if (ft === FileType.File) {
-                stat.setup(s => s.isFile())
-                    .returns(() => true);
-            } else if (ft === FileType.Directory) {
-                stat.setup(s => s.isFile())
-                    .returns(() => false);
-                stat.setup(s => s.isDirectory())
-                    .returns(() => true);
-            } else if (ft === FileType.SymbolicLink) {
-                stat.setup(s => s.isFile())
-                    .returns(() => false);
-                stat.setup(s => s.isDirectory())
-                    .returns(() => false);
-                stat.setup(s => s.isSymbolicLink())
-                    .returns(() => true);
-            } else {
-                stat.setup(s => s.isFile())
-                    .returns(() => false);
-                stat.setup(s => s.isDirectory())
-                    .returns(() => false);
-                stat.setup(s => s.isSymbolicLink())
-                    .returns(() => false);
-            }
-            // This is necessary because passing "stat.object" to
-            // Promise.resolve() triggers the lookup.
-            //tslint:disable-next-line:no-any
-            stat.setup((s: any) => s.then)
-                .returns(() => undefined)
-                .verifiable(TypeMoq.Times.atLeast(0));
-            raw.setup(r => r.lstat(filename))
-                .returns(() => Promise.resolve(stat.object));
-            return stat;
-        }
-
         test('mixed', async () => {
             const dirname = 'x/y/z/spam';
             const expected: [string, FileType][] = [
@@ -424,40 +388,30 @@ suite('Raw FileSystem', () => {
                 ['spam.py', FileType.File],
                 ['other', FileType.SymbolicLink]
             ];
-            const names = expected.map(([name, _ft]) => name);
-            raw.setup(r => r.readdir(dirname))
-                .returns(() => Promise.resolve(names));
-            const stats: TypeMoq.IMock<FileStat>[] = [];
-            expected.forEach(([name, ft]) => {
-                const filename = `${dirname}/${name}`;
-                raw.setup(r => r.join(dirname, name))
-                    .returns(() => filename);
-                stats.push(
-                    setupStat(filename, ft));
-            });
+            raw.setup(r => r.readDirectory(Uri.file(dirname)))
+                .returns(() => Promise.resolve(expected));
 
             const entries = await filesystem.listdir(dirname);
 
             expect(entries).to.deep.equal(expected);
             verifyAll();
-            stats.forEach(stat => stat.verifyAll());
         });
 
         test('empty', async () => {
             const dirname = 'x/y/z/spam';
-            const names: string[] = [];
-            raw.setup(r => r.readdir(dirname))
-                .returns(() => Promise.resolve(names));
+            const expected: [string, FileType][] = [];
+            raw.setup(r => r.readDirectory(Uri.file(dirname)))
+                .returns(() => Promise.resolve(expected));
 
             const entries = await filesystem.listdir(dirname);
 
-            expect(entries).to.deep.equal([]);
+            expect(entries).to.deep.equal(expected);
             verifyAll();
         });
 
         test('fails if the low-level call fails', async () => {
             const dirname = 'x/y/z/spam';
-            raw.setup(r => r.readdir(dirname))
+            raw.setup(r => r.readDirectory(Uri.file(dirname)))
                 .throws(new Error('file not found'));
 
             const promise = filesystem.listdir(dirname);
