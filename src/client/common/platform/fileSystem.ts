@@ -15,7 +15,7 @@ import { createDeferred } from '../utils/async';
 import { getOSType, OSType } from '../utils/platform';
 import {
     FileStat, FileType,
-    IFileSystem, IRawFileSystem,
+    IFileSystem, IFileSystemUtils, IRawFileSystem,
     TemporaryFile, WriteStream
 } from './types';
 
@@ -64,10 +64,9 @@ interface IRawFSExtra {
     createWriteStream(dest: string): fsextra.WriteStream;
 }
 
-// Later we will rename "FileSystem" to "FileSystemUtils" and
-// "RawFileSystem" to "FileSystem".
+// Later we will drop "FileSystem", switching usage to
+// "FileSystemUtils" and then rename "RawFileSystem" to "FileSystem".
 
-@injectable()
 class RawFileSystem {
     constructor(
         private readonly nodefs: IRawFS = fs,
@@ -169,8 +168,9 @@ class RawFileSystem {
     }
 }
 
+// more aliases (to cause less churn)
 @injectable()
-export class FileSystem implements IFileSystem {
+export class FileSystemUtils implements IFileSystemUtils {
     constructor(
         private readonly isWindows = (getOSType() === OSType.Windows),
         //public readonly raw: IFileSystem = {}
@@ -179,22 +179,6 @@ export class FileSystem implements IFileSystem {
 
     //****************************
     // aliases
-
-    public async stat(filePath: string): Promise<vscode.FileStat> {
-        // Do not import vscode directly, as this isn't available in the Debugger Context.
-        // If stat is used in debugger context, it will fail, however theres a separate PR that will resolve this.
-        // tslint:disable-next-line: no-require-imports
-        const vscode = require('vscode');
-        return vscode.workspace.fs.stat(vscode.Uri.file(filePath));
-    }
-
-    public async readFile(filename: string): Promise<string> {
-        return this.raw.readText(filename);
-    }
-
-    public async writeFile(filename: string, data: {}): Promise<void> {
-        return this.raw.writeText(filename, data);
-    }
 
     public async createDirectory(dirname: string): Promise<void> {
         return this.raw.mkdirp(dirname);
@@ -206,22 +190,6 @@ export class FileSystem implements IFileSystem {
 
     public async deleteFile(filename: string): Promise<void> {
         return this.raw.rmfile(filename);
-    }
-
-    public async chmod(filename: string, mode: string): Promise<void> {
-        return this.raw.chmod(filename, mode);
-    }
-
-    public async copyFile(src: string, dest: string): Promise<void> {
-        return this.raw.copyFile(src, dest);
-    }
-
-    public readFileSync(filename: string): string {
-        return this.raw.readTextSync(filename);
-    }
-
-    public createWriteStream(filename: string): WriteStream {
-        return this.raw.createWriteStream(filename);
     }
 
     //****************************
@@ -343,5 +311,40 @@ export class FileSystem implements IFileSystem {
                 });
             });
         });
+    }
+}
+
+@injectable()
+export class FileSystem extends FileSystemUtils implements IFileSystem {
+    public async stat(filePath: string): Promise<vscode.FileStat> {
+        // Do not import vscode directly, as this isn't available in the Debugger Context.
+        // If stat is used in debugger context, it will fail, however theres a separate PR that will resolve this.
+        // tslint:disable-next-line: no-require-imports
+        const vscode = require('vscode');
+        return vscode.workspace.fs.stat(vscode.Uri.file(filePath));
+    }
+
+    public async readFile(filename: string): Promise<string> {
+        return this.raw.readText(filename);
+    }
+
+    public async writeFile(filename: string, data: {}): Promise<void> {
+        return this.raw.writeText(filename, data);
+    }
+
+    public async chmod(filename: string, mode: string): Promise<void> {
+        return this.raw.chmod(filename, mode);
+    }
+
+    public async copyFile(src: string, dest: string): Promise<void> {
+        return this.raw.copyFile(src, dest);
+    }
+
+    public readFileSync(filename: string): string {
+        return this.raw.readTextSync(filename);
+    }
+
+    public createWriteStream(filename: string): WriteStream {
+        return this.raw.createWriteStream(filename);
     }
 }

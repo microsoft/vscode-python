@@ -45,8 +45,8 @@ export import FileType = vscode.FileType;
 export type FileStat = fsextra.Stats;
 export type WriteStream = fs.WriteStream;
 
-// Later we will rename "IFileSystem" to "IFileSystemUtils" and
-// "IRawFileSystem" to "IFileSystem".
+// Later we will drop "IFileSystem", switching usage to
+// "IFileSystemUtils" and then rename "IRawFileSystem" to "IFileSystem".
 
 export interface IRawFileSystem {
     stat(filename: string): Promise<FileStat>;
@@ -68,21 +68,13 @@ export interface IRawFileSystem {
     createWriteStream(filename: string): WriteStream;
 }
 
-export const IFileSystem = Symbol('IFileSystem');
-export interface IFileSystem {
+export const IFileSystemUtils = Symbol('IFileSystemUtils');
+export interface IFileSystemUtils {
     raw: IRawFileSystem;
-    // aliases (to cause less churn)
-    stat(filePath: string): Promise<vscode.FileStat>;
-    readFile(filename: string): Promise<string>;
-    writeFile(filename: string, data: {}): Promise<void>;
+    // aliases
     createDirectory(dirname: string): Promise<void>;
     deleteDirectory(dirname: string): Promise<void>;
     deleteFile(filename: string): Promise<void>;
-    chmod(filename: string, mode: string): Promise<void>;
-    copyFile(src: string, dest: string): Promise<void>;
-    // aliases (non-async)
-    readFileSync(filename: string): string;
-    createWriteStream(filename: string): WriteStream;
     // helpers
     pathExists(filename: string, fileType?: FileType): Promise<boolean>;
     fileExists(filename: string): Promise<boolean>;
@@ -96,4 +88,17 @@ export interface IFileSystem {
     // helpers (non-async)
     arePathsSame(path1: string, path2: string): boolean;  // Move to IPathUtils.
     fileExistsSync(filename: string): boolean;
+}
+
+// more aliases (to cause less churn)
+export const IFileSystem = Symbol('IFileSystem');
+export interface IFileSystem extends IFileSystemUtils {
+    stat(filePath: string): Promise<vscode.FileStat>;
+    readFile(filename: string): Promise<string>;
+    writeFile(filename: string, data: {}): Promise<void>;
+    chmod(filename: string, mode: string): Promise<void>;
+    copyFile(src: string, dest: string): Promise<void>;
+    // non-async
+    readFileSync(filename: string): string;
+    createWriteStream(filename: string): WriteStream;
 }
