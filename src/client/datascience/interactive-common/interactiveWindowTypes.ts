@@ -209,8 +209,7 @@ export interface IEditCell {
 export interface IAddCell {
     fullText: string;
     currentText: string;
-    file: string;
-    id: string;
+    cell: ICell;
 }
 
 export interface IRemoveCell {
@@ -223,9 +222,10 @@ export interface ISwapCells {
 }
 
 export interface IInsertCell {
-    id: string;
+    cell: ICell;
     code: string;
-    codeCellAbove: string | undefined;
+    index: number;
+    codeCellAboveId: string | undefined;
 }
 
 export interface IShowDataViewer {

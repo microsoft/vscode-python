@@ -1513,7 +1513,7 @@
                 },
                 "python.dataScience.jupyterLaunchTimeout": {
                     "type": "number",
-                    "default": 60000,
+                    "default": 10000,
                     "description": "Amount of time (in ms) to wait for the Jupyter Notebook server to start.",
                     "scope": "resource"
                 },
@@ -1526,7 +1526,7 @@
                 "python.dataScience.jupyterServerURI": {
                     "type": "string",
                     "default": "local",
-                    "description": "Select the Jupyter server URI to connect to. Select 'local' to launch a new Juypter server on the local machine.",
+                    "description": "Select the Jupyter server URI to connect to. Select 'local' to launch a new Jupyter server on the local machine.",
                     "scope": "resource"
                 },
                 "python.dataScience.notebookFileRoot": {
@@ -2774,7 +2774,7 @@
         "@types/memoize-one": "^4.1.1",
         "@types/mocha": "^5.2.7",
         "@types/nock": "^10.0.3",
-        "@types/node": "9.4.7",
+        "@types/node": "^10.14.18",
         "@types/node-fetch": "^2.3.4",
         "@types/pdfkit": "^0.7.36",
         "@types/promisify-node": "^0.4.0",
@@ -2883,7 +2883,7 @@
         "tslint-microsoft-contrib": "^5.0.3",
         "typed-react-markdown": "^0.1.0",
         "typemoq": "^2.1.0",
-        "typescript": "^3.5.2",
+        "typescript": "^3.6.4",
         "typescript-formatter": "^7.1.0",
         "unicode-properties": "1.1.0",
         "url-loader": "^1.1.2",

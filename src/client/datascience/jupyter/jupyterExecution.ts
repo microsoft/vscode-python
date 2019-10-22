@@ -177,6 +177,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         // Special case. This sometimes happens where jupyter doesn't ever connect. Cleanup after
                         // ourselves and propagate the failure outwards.
                         traceInfo('Retry because of wait for idle problem.');
+                        sendTelemetryEvent(Telemetry.SessionIdleTimeout);
                         tryCount += 1;
                     } else if (startInfo) {
                         // Something else went wrong
@@ -357,7 +358,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         this.checkNotebookCommand(notebookCommand);
 
         // Now actually launch it
-        let exitCode = 0;
+        let exitCode: number | null = 0;
         try {
             // Generate a temp dir with a unique GUID, both to match up our started server and to easily clean up after
             const tempDir = await this.generateTempDir();

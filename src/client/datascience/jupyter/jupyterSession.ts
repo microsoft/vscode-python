@@ -174,7 +174,7 @@ export class JupyterSession implements IJupyterSession {
 
     private async waitForIdleOnSession(session: Session.ISession | undefined, timeout: number): Promise<void> {
         if (session && session.kernel) {
-            traceInfo(`Waiting for idle on: ${session.kernel.id}${session.kernel.status}`);
+            traceInfo(`Waiting for idle on: ${session.kernel.id} -> ${session.kernel.status}`);
 
             // This function seems to cause CI builds to timeout randomly on
             // different tests. Waiting for status to go idle doesn't seem to work and
@@ -187,12 +187,14 @@ export class JupyterSession implements IJupyterSession {
                 await sleep(100);
             }
 
-            traceInfo(`Finished waiting for idle on: ${session.kernel.id}${session.kernel.status}`);
+            traceInfo(`Finished waiting for idle on: ${session.kernel.id} -> ${session.kernel.status}`);
 
             // If we didn't make it out in ten seconds, indicate an error
-            if (!session || !session.kernel || session.kernel.status !== 'idle') {
-                throw new JupyterWaitForIdleError(localize.DataScience.jupyterLaunchTimedOut());
+            if (session.kernel && session.kernel.status === 'idle') {
+                return;
             }
+
+            throw new JupyterWaitForIdleError(localize.DataScience.jupyterLaunchTimedOut());
         }
     }
 

@@ -185,7 +185,7 @@ export class FileSystem implements IFileSystem {
 
     public chmod(filePath: string, mode: string): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            fileSystem.chmod(filePath, mode, (err: NodeJS.ErrnoException) => {
+            fileSystem.chmod(filePath, mode, (err: NodeJS.ErrnoException | null) => {
                 if (err) {
                     return reject(err);
                 }

@@ -374,6 +374,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
         // Unfocus the current cell by giving focus to the cell itself
         if (this.wrapperRef && this.wrapperRef.current && this.isFocused()) {
             e.stopPropagation();
+            this.isCodeCell() ? this.onCodeUnfocused() : this.onMarkdownUnfocused();
             this.props.focusCell(this.cellId, false);
             this.props.stateController.sendCommand(NativeCommandType.Unfocus, 'keyboard');
         }

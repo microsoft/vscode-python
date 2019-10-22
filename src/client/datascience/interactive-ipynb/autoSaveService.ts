@@ -120,7 +120,7 @@ export class AutoSaveService implements IInteractiveWindowListener {
     private save() {
         this.clearTimeout();
         const notebook = this.getNotebook();
-        if (notebook && notebook.isDirty) {
+        if (notebook && notebook.isDirty && !notebook.isUntitled) {
             // Notify webview to perform a save.
             this.postEmitter.fire({ message: InteractiveWindowMessages.DoSave, payload: undefined });
         } else {

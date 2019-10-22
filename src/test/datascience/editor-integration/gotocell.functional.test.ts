@@ -139,7 +139,7 @@ suite('DataScience gotocell tests', () => {
             visibleCells = visibleCells.concat(output);
             // Trick the codeLensFactory into having the cells
             const listener = (codeLensFactory as any) as IInteractiveWindowListener;
-            listener.onMessage(InteractiveWindowMessages.SendInfo, { cellCount: visibleCells.length, visibleCells });
+            listener.onMessage(InteractiveWindowMessages.FinishCell, output[0]);
         }
 
         return visibleCells.length;

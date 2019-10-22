@@ -5,7 +5,6 @@ import '../../common/extensions';
 
 import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 import * as detectIndent from 'detect-indent';
-import * as fastDeepEqual from 'fast-deep-equal';
 import { inject, injectable, multiInject, named } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
@@ -40,10 +39,13 @@ import {
 import { InteractiveBase } from '../interactive-common/interactiveBase';
 import {
     IEditCell,
+    IInsertCell,
     INativeCommand,
     InteractiveWindowMessages,
+    IRemoveCell,
     ISaveAll,
-    ISubmitNewCell
+    ISubmitNewCell,
+    ISwapCells
 } from '../interactive-common/interactiveWindowTypes';
 import { InvalidNotebookFileError } from '../jupyter/invalidNotebookFileError';
 import {
@@ -151,9 +153,21 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return this._file;
     }
 
+    public get isUntitled(): boolean {
+        const baseName = path.basename(this.file.fsPath);
+        return baseName.includes(localize.DataScience.untitledNotebookFileName());
+    }
     public dispose(): void {
         super.dispose();
         this.close().ignoreErrors();
+    }
+
+    public get contents(): string {
+        return this.generateNotebookContent(this.visibleCells);
+    }
+
+    public get cells(): ICell[] {
+        return this.visibleCells;
     }
 
     public async load(contents: string, file: Uri): Promise<void> {
@@ -209,24 +223,40 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 break;
 
             case InteractiveWindowMessages.SaveAll:
-                this.dispatchMessage(message, payload, this.saveAll);
+                this.handleMessage(message, payload, this.saveAll);
                 break;
 
             case InteractiveWindowMessages.Export:
-                this.dispatchMessage(message, payload, this.export);
+                this.handleMessage(message, payload, this.export);
                 break;
 
             case InteractiveWindowMessages.EditCell:
-                this.dispatchMessage(message, payload, this.editCell);
+                this.handleMessage(message, payload, this.editCell);
+                break;
+
+            case InteractiveWindowMessages.InsertCell:
+                this.handleMessage(message, payload, this.insertCell);
+                break;
+
+            case InteractiveWindowMessages.RemoveCell:
+                this.handleMessage(message, payload, this.removeCell);
+                break;
+
+            case InteractiveWindowMessages.SwapCells:
+                this.handleMessage(message, payload, this.swapCells);
+                break;
+
+            case InteractiveWindowMessages.DeleteAllCells:
+                this.handleMessage(message, payload, this.removeAllCells);
                 break;
 
             case InteractiveWindowMessages.NativeCommand:
-                this.dispatchMessage(message, payload, this.logNativeCommand);
+                this.handleMessage(message, payload, this.logNativeCommand);
                 break;
 
             // call this to update the whole document for intellisense
             case InteractiveWindowMessages.LoadAllCellsComplete:
-                this.dispatchMessage(message, payload, this.loadCellsComplete);
+                this.handleMessage(message, payload, this.loadCellsComplete);
                 break;
 
             default:
@@ -248,6 +278,13 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     public addCellBelow() {
         this.postMessage(InteractiveWindowMessages.NotebookAddCellBelow).ignoreErrors();
+    }
+
+    public async removeAllCells(): Promise<void> {
+        super.removeAllCells();
+        // Clear our visible cells
+        this.visibleCells = [];
+        return this.setDirty();
     }
 
     protected async reopen(cells: ICell[]): Promise<void> {
@@ -370,6 +407,17 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     protected sendCellsToWebView(cells: ICell[]) {
         // Filter out sysinfo messages. Don't want to show those
         const filtered = cells.filter(c => c.data.cell_type !== 'messages');
+
+        // Update these cells in our list
+        cells.forEach(c => {
+            const index = this.visibleCells.findIndex(v => v.id === c.id);
+            this.visibleCells[index] = c;
+        });
+
+        // Indicate dirty
+        this.setDirty().ignoreErrors();
+
+        // Send onto the webview.
         super.sendCellsToWebView(filtered);
     }
 
@@ -392,11 +440,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 interactiveCellsContext.set(false).catch();
                 redoableContext.set(false).catch();
             }
-        }
-
-        // Also keep track of our visible cells. We use this to save to the file when we close
-        if (info && 'visibleCells' in info && this.loadedAllCells) {
-            this.updateVisibleCells(info.visibleCells).ignoreErrors();
         }
     }
 
@@ -429,6 +472,33 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         // Then save the contents. We'll stick our cells back into this format when we save
         if (json) {
             this.notebookJson = json;
+        } else {
+            const pythonNumber = await this.extractPythonMainVersion(this.notebookJson);
+            // Use this to build our metadata object
+            // Use these as the defaults unless we have been given some in the options.
+            const metadata: nbformat.INotebookMetadata = {
+                language_info: {
+                    name: 'python',
+                    codemirror_mode: {
+                        name: 'ipython',
+                        version: pythonNumber
+                    }
+                },
+                orig_nbformat: 2,
+                file_extension: '.py',
+                mimetype: 'text/x-python',
+                name: 'python',
+                npconvert_exporter: 'python',
+                pygments_lexer: `ipython${pythonNumber}`,
+                version: pythonNumber
+            };
+
+            // Default notebook data.
+            this.notebookJson = {
+                nbformat: 4,
+                nbformat_minor: 2,
+                metadata: metadata
+            };
         }
 
         // Extract cells from the json
@@ -564,6 +634,31 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
     }
 
+    private async insertCell(request: IInsertCell): Promise<void> {
+        // Insert a cell into our visible list based on the index. They should be in sync
+        this.visibleCells.splice(request.index, 0, request.cell);
+
+        return this.setDirty();
+    }
+
+    private async removeCell(request: IRemoveCell): Promise<void> {
+        // Filter our list
+        this.visibleCells = this.visibleCells.filter(v => v.id !== request.id);
+        return this.setDirty();
+    }
+
+    private async swapCells(request: ISwapCells): Promise<void> {
+        // Swap two cells in our list
+        const first = this.visibleCells.findIndex(v => v.id === request.firstCellId);
+        const second = this.visibleCells.findIndex(v => v.id === request.secondCellId);
+        if (first >= 0 && second >= 0) {
+            const temp = { ...this.visibleCells[first] };
+            this.visibleCells[first] = this.visibleCells[second];
+            this.visibleCells[second] = temp;
+            return this.setDirty();
+        }
+    }
+
     private async askForSave(): Promise<AskForSaveResult> {
         const message1 = localize.DataScience.dirtyNotebookMessage1().format(`${path.basename(this.file.fsPath)}`);
         const message2 = localize.DataScience.dirtyNotebookMessage2();
@@ -583,33 +678,32 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
     }
 
-    private async updateVisibleCells(cells: ICell[]): Promise<void> {
-        if (!fastDeepEqual(this.visibleCells, cells)) {
-            this.visibleCells = cells;
-
-            // Save our dirty state in the storage for reopen later
-            await this.storeContents(this.generateNotebookContent(cells));
-
-            // Indicate dirty
-            await this.setDirty();
-        }
-    }
-
     private async setDirty(): Promise<void> {
+        // Always update storage. Don't wait for results.
+        this.storeContents(this.generateNotebookContent(this.visibleCells))
+            .catch(ex => traceError('Failed to generate notebook content to store in state', ex));
+
+        // Then update dirty flag.
         if (!this._dirty) {
             this._dirty = true;
             this.setTitle(`${path.basename(this.file.fsPath)}*`);
+
+            // Tell the webview we're dirty
             await this.postMessage(InteractiveWindowMessages.NotebookDirty);
+
             // Tell listeners we're dirty
             this.modifiedEvent.fire(this);
         }
     }
 
     private async setClean(): Promise<void> {
+        // Always update storage
+        this.storeContents(undefined)
+            .catch(ex => traceError('Failed to clear notebook store', ex));
+
         if (this._dirty) {
             this._dirty = false;
             this.setTitle(`${path.basename(this.file.fsPath)}`);
-            await this.storeContents(undefined);
             await this.postMessage(InteractiveWindowMessages.NotebookClean);
         }
     }
@@ -647,16 +741,32 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     private fixupCell(cell: nbformat.ICell): nbformat.ICell {
         // Source is usually a single string on input. Convert back to an array
-        return {
+        return ({
             ...cell,
             source: splitMultilineString(cell.source)
-        };
+            // tslint:disable-next-line: no-any
+        } as any) as nbformat.ICell; // nyc (code coverage) barfs on this so just trick it.
+    }
+
+    private async extractPythonMainVersion(notebookData: Partial<nbformat.INotebookContent>): Promise<number> {
+        if (notebookData && notebookData.metadata &&
+            notebookData.metadata.language_info &&
+            notebookData.metadata.language_info.codemirror_mode &&
+            // tslint:disable-next-line: no-any
+            typeof (notebookData.metadata.language_info.codemirror_mode as any).version === 'number') {
+
+            // tslint:disable-next-line: no-any
+            return (notebookData.metadata.language_info.codemirror_mode as any).version;
+        }
+        // Use the active interpreter
+        const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
+        return usableInterpreter && usableInterpreter.version ? usableInterpreter.version.major : 3;
     }
 
     private generateNotebookContent(cells: ICell[]): string {
         // Reuse our original json except for the cells.
         const json = {
-            ...this.notebookJson,
+            ...(this.notebookJson as nbformat.INotebookContent),
             cells: cells.map(c => this.fixupCell(c.data))
         };
         return JSON.stringify(json, null, this.indentAmount);
@@ -669,9 +779,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             let isDirty = this._dirty;
 
             // Ask user for a save as dialog if no title
-            const baseName = path.basename(this.file.fsPath);
-            const isUntitled = baseName.includes(localize.DataScience.untitledNotebookFileName());
-            if (isUntitled) {
+            if (this.isUntitled) {
                 const filtersKey = localize.DataScience.dirtyNotebookDialogFilter();
                 const filtersObject: { [name: string]: string[] } = {};
                 filtersObject[filtersKey] = ['ipynb'];
@@ -679,8 +787,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
                 fileToSaveTo = await this.applicationShell.showSaveDialog({
                     saveLabel: localize.DataScience.dirtyNotebookDialogTitle(),
-                    filters: filtersObject,
-                    defaultUri: isUntitled ? undefined : this.file
+                    filters: filtersObject
                 });
             }
 

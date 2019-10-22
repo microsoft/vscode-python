@@ -38,10 +38,10 @@ export interface IDataScienceCommandListener {
 
 // Connection information for talking to a jupyter notebook process
 export interface IConnection extends Disposable {
-    baseUrl: string;
-    token: string;
-    hostName: string;
-    localLaunch: boolean;
+    readonly baseUrl: string;
+    readonly token: string;
+    readonly hostName: string;
+    readonly localLaunch: boolean;
     localProcExitCode: number | undefined;
     disconnected: Event<number>;
     allowUnauthorized?: boolean;
@@ -252,6 +252,10 @@ export interface INotebookEditor extends IInteractiveBase {
     modified: Event<INotebookEditor>;
     saved: Event<INotebookEditor>;
     /**
+     * Is this notebook representing an untitled file which has never been saved yet.
+     */
+    readonly isUntitled: boolean;
+    /**
      * `true` if there are unpersisted changes.
      */
     readonly isDirty: boolean;
@@ -353,7 +357,6 @@ export interface IInteractiveWindowInfo {
     cellCount: number;
     undoCount: number;
     redoCount: number;
-    visibleCells: ICell[];
     selectedCell: string | undefined;
 }
 
