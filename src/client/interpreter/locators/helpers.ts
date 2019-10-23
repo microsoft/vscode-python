@@ -11,25 +11,19 @@ const CheckPythonInterpreterRegEx = IS_WINDOWS ? /^python(\d+(.\d+)?)?\.exe$/ : 
 
 export async function lookForInterpretersInDirectory(
     pathToCheck: string,
-    fs?: IFileSystem
+    fs: IFileSystem = new FileSystem()
 ): Promise<string[]> {
-    fs = fs ? fs : new FileSystem();
     const files = await (
-        fs!.getFiles(pathToCheck)
+        fs.getFiles(pathToCheck)
             .catch(err => {
                 traceError('Python Extension (lookForInterpretersInDirectory.fsReaddirAsync):', err);
                 return [] as string[];
             })
     );
-    const result: string[] = [];
-    for (const filename of files) {
+    return files.filter(filename => {
         const name = path.basename(filename);
-        if (!CheckPythonInterpreterRegEx.test(name)) {
-            continue;
-        }
-        result.push(filename);
-    }
-    return result;
+        return CheckPythonInterpreterRegEx.test(name);
+    });
 }
 
 @injectable()
