@@ -192,26 +192,35 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
             const editorDomNode = this.state.editor.getDomNode();
             let currentLine = -1;
 
+            // This gets the cell/monaco editor line where the cursor is located. With it we can include wrapped lines
+            // when the isFirstLine and the isLastLine settings are created.
             if (cursor && editorDomNode) {
+                // Get the cursor's position on the cell/monaco editor.
                 const currentPosition = this.state.model.getValueInRange({ startLineNumber: 1, startColumn: 1, endLineNumber: cursor.lineNumber, endColumn: cursor.column }).length;
 
                 if (currentPosition === 0) {
                     currentLine = 0;
                 } else {
+                    // Get the lines as they are being displayed, including wrapped ones.
                     const container = editorDomNode.getElementsByClassName('view-lines')[0] as HTMLElement;
-                    let charCounter = 0;
-                    let index = 0;
 
-                    while (index < container.childNodes.length) {
-                        if (charCounter < currentPosition) {
-                            charCounter += container.childNodes[index].textContent!.length;
-                            index += 1;
-                        } else {
-                            break;
+                    if (container) {
+                        let charCounter = 0;
+                        let index = 0;
+
+                        // Go through each line, and compare if a character counter is bigger or equal than the cursor position.
+                        // If it is, we found the current line.
+                        while (index < container.childNodes.length) {
+                            if (charCounter < currentPosition && container.childNodes[index].textContent) {
+                                charCounter += container.childNodes[index].textContent!.length;
+                                index += 1;
+                            } else {
+                                break;
+                            }
                         }
-                    }
 
-                    currentLine = index - 1;
+                        currentLine = index - 1;
+                    }
                 }
             }
 
