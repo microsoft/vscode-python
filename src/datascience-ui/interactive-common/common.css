@@ -160,7 +160,6 @@ body, html {
     background:white;
     display: inline-block;
     margin: 3px;
-    z-index: 5;
 }
 
 .cell-output-plot-background * {
