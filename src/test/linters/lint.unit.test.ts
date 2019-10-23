@@ -14,8 +14,7 @@ import { Product } from '../../client/common/installer/productInstaller';
 import { ProductNames } from '../../client/common/installer/productNames';
 import { ProductService } from '../../client/common/installer/productService';
 import {
-    IFileSystem,
-    IPlatformService
+    IFileSystem
 } from '../../client/common/platform/types';
 import {
     IPythonExecutionFactory,
@@ -100,7 +99,6 @@ const pydocstyleMessagesToBeReturned: ILintMessage[] = [
 ];
 
 class TestFixture extends BaseTestFixture {
-    public platformService: TypeMoq.IMock<IPlatformService>;
     public filesystem: TypeMoq.IMock<IFileSystem>;
     public pythonToolExecService: TypeMoq.IMock<IPythonToolExecutionService>;
     public pythonExecService: TypeMoq.IMock<IPythonExecutionService>;
@@ -110,7 +108,6 @@ class TestFixture extends BaseTestFixture {
         workspaceDir = '.',
         printLogs = false
     ) {
-        const platformService = TypeMoq.Mock.ofType<IPlatformService>(undefined, TypeMoq.MockBehavior.Strict);
         const filesystem = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
         const pythonToolExecService = TypeMoq.Mock.ofType<IPythonToolExecutionService>(undefined, TypeMoq.MockBehavior.Strict);
         const pythonExecFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>(undefined, TypeMoq.MockBehavior.Strict);
@@ -125,7 +122,6 @@ class TestFixture extends BaseTestFixture {
             printLogs
         );
 
-        this.platformService = platformService;
         this.filesystem = filesystem;
         this.pythonToolExecService = pythonToolExecService;
         this.pythonExecService = TypeMoq.Mock.ofType<IPythonExecutionService>(undefined, TypeMoq.MockBehavior.Strict);
