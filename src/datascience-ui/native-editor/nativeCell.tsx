@@ -696,7 +696,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
     }
 
     private renderOutput = (): JSX.Element | null => {
-        const themeInteractivePlots = getSettings().themeInteractivePlots ? true : false;
+        const themeMatplotlibPlots = getSettings().themeMatplotlibPlots ? true : false;
         if (this.shouldRenderOutput()) {
             return (
                 <CellOutput
@@ -705,7 +705,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                     expandImage={this.props.stateController.showPlot}
                     openLink={this.props.stateController.openLink}
                     maxTextSize={this.props.maxTextSize}
-                    themeInteractivePlots={themeInteractivePlots}
+                    themeMatplotlibPlots={themeMatplotlibPlots}
                  />
             );
         }

@@ -1637,10 +1637,10 @@
                     "description": "Don't use the VS Code theme in the Python Interactive window (requires reload of VS Code). This forces the Python Interactive window to use 'Light +(default light)' and disables matplotlib defaults.",
                     "scope": "resource"
                 },
-                "python.dataScience.themeInteractivePlots": {
+                "python.dataScience.themeMatplotlibPlots": {
                     "type": "boolean",
                     "default": false,
-                    "description": "In the Python Interactive window and Notebook Editor theme plot outputs to match the VS Code editor theme.",
+                    "description": "In the Python Interactive window and Notebook Editor theme matplotlib outputs to match the VS Code editor theme.",
                     "scope": "resource"
                 },
                 "python.dataScience.liveShareConnectionTimeout": {
