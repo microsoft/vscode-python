@@ -185,12 +185,39 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
         }
     }
 
+    // tslint:disable-next-line: cyclomatic-complexity
     private onKeyDown = (e: monacoEditor.IKeyboardEvent) => {
         if (this.state.editor && this.state.model && this.monacoRef && this.monacoRef.current) {
-            const isSuggesting = this.monacoRef.current.isSuggesting();
             const cursor = this.state.editor.getPosition();
-            const isFirstLine = cursor !== null && cursor.lineNumber === 1;
-            const isLastLine = cursor !== null && cursor.lineNumber === this.state.model!.getLineCount();
+            const editorDomNode = this.state.editor.getDomNode();
+            let currentLine = -1;
+
+            if (cursor && editorDomNode) {
+                const currentPosition = this.state.model.getValueInRange({ startLineNumber: 1, startColumn: 1, endLineNumber: cursor.lineNumber, endColumn: cursor.column }).length;
+
+                if (currentPosition === 0) {
+                    currentLine = 0;
+                } else {
+                    const container = editorDomNode.getElementsByClassName('view-lines')[0] as HTMLElement;
+                    let charCounter = 0;
+                    let index = 0;
+
+                    while (index < container.childNodes.length) {
+                        if (charCounter < currentPosition) {
+                            charCounter += container.childNodes[index].textContent!.length;
+                            index += 1;
+                        } else {
+                            break;
+                        }
+                    }
+
+                    currentLine = index - 1;
+                }
+            }
+
+            const isSuggesting = this.monacoRef.current.isSuggesting();
+            const isFirstLine = currentLine === 0;
+            const isLastLine = currentLine === this.state.visibleLineCount - 1;
             const isDirty = this.state.model!.getVersionId() > this.lastCleanVersionId;
 
             // See if we need to use the history or not
