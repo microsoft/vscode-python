@@ -129,6 +129,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
         const shouldRender = allowsPlainInput || this.shouldRenderResults();
         const cellOuterClass = this.props.cellVM.editable ? 'cell-outer-editable' : 'cell-outer';
         const cellWrapperClass = this.props.cellVM.editable ? 'cell-wrapper' : 'cell-wrapper cell-wrapper-noneditable';
+        const themeInteractivePlots = getSettings().themeInteractivePlots ? true : false;
 
         // Only render if we are allowed to.
         if (shouldRender) {
@@ -145,6 +146,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                                     expandImage={this.props.expandImage}
                                     openLink={this.props.openLink}
                                     maxTextSize={this.props.maxTextSize}
+                                    themeInteractivePlots={themeInteractivePlots}
                                 />
                             </div>
                         </div>

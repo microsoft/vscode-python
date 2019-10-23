@@ -357,6 +357,7 @@ export interface IDataScienceSettings {
     debugJustMyCode: boolean;
     defaultCellMarker?: string;
     verboseLogging?: boolean;
+    themeInteractivePlots?: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

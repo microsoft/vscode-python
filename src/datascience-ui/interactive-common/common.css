@@ -156,6 +156,17 @@ body, html {
     position: relative;
 }
 
+.cell-output-plot-background {
+    background:white;
+    display: inline-block;
+    padding: 0;
+    margin: 3;
+}
+
+.cell-output-plot-background * {
+    margin: 0;
+}
+
 .cell-output table {
     background-color: transparent;
     border: none;

@@ -30,6 +30,7 @@ interface ICellOutputProps {
     baseTheme: string;
     maxTextSize?: number;
     hideOutput?: boolean;
+    themeInteractivePlots?: boolean;
     openLink(uri: monacoEditor.Uri): void;
     expandImage(imageHtml: string): void;
 }
@@ -264,6 +265,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                     // There should be two mime bundles. Well if enablePlotViewer is turned on. See if we have both
                     const svg = mimeBundle['image/svg+xml'];
                     const png = mimeBundle['image/png'];
+                    const buttonTheme = this.props.themeInteractivePlots ? this.props.baseTheme : 'vscode-light';
                     let doubleClick: () => void = noop;
                     if (svg && png) {
                         // Save the svg in the extra button.
@@ -272,8 +274,8 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                         };
                         extraButton = (
                             <div className='plot-open-button'>
-                                <ImageButton baseTheme={this.props.baseTheme} tooltip={getLocString('DataScience.plotOpen', 'Expand image')} onClick={openClick}>
-                                    <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.OpenPlot} />
+                                <ImageButton baseTheme={buttonTheme} tooltip={getLocString('DataScience.plotOpen', 'Expand image')} onClick={openClick}>
+                                    <Image baseTheme={buttonTheme} class='image-button-image' image={ImageName.OpenPlot} />
                                 </ImageButton>
                             </div>
                         );
@@ -366,12 +368,26 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             let className = transformed.isText ? 'cell-output-text' : 'cell-output-html';
             className = transformed.isError ? `${className} cell-output-error` : className;
 
-            return (
-                <div role='group' key={index} onDoubleClick={transformed.doubleClick} onClick={this.click} className={className} style={style}>
-                    {transformed.extraButton}
-                    <Transform data={transformed.data} />
-                </div>
-            );
+                //case 'image/svg+xml':
+                //case 'image/png':
+                // Ianhu: Just !text here?
+            if (!this.props.themeInteractivePlots && (transformed.mimeType === 'image/svg+xml' || transformed.mimeType === 'image/png')) {
+                return (
+                    <div role='group' key={index} onDoubleClick={transformed.doubleClick} onClick={this.click} className={className} style={style}>
+                        <span className='cell-output-plot-background'>
+                            {transformed.extraButton}
+                            <Transform data={transformed.data} />
+                        </span>
+                    </div>
+                );
+            } else {
+                return (
+                    <div role='group' key={index} onDoubleClick={transformed.doubleClick} onClick={this.click} className={className} style={style}>
+                        {transformed.extraButton}
+                        <Transform data={transformed.data} />
+                    </div>
+                );
+            }
         }
 
         if (output.data) {
