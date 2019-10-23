@@ -589,7 +589,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                     await this.saveToDisk();
 
                     // Close it
-                    actuallyClose().ignoreErrors();
+                    await actuallyClose();
                     break;
 
                 case AskForSaveResult.No:
@@ -597,7 +597,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                     await this.setClean();
 
                     // Close it
-                    actuallyClose().ignoreErrors();
+                    await actuallyClose();
                     break;
 
                 default:
@@ -607,7 +607,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             }
         } else {
             // Not dirty, just close normally.
-            actuallyClose().ignoreErrors();
+            return actuallyClose();
         }
     }
 
