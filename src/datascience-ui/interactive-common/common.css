@@ -159,12 +159,12 @@ body, html {
 .cell-output-plot-background {
     background:white;
     display: inline-block;
-    padding: 0;
-    margin: 3;
+    margin: 3px;
+    z-index: 5;
 }
 
 .cell-output-plot-background * {
-    margin: 0;
+    margin: 0px;
 }
 
 .cell-output table {

@@ -368,9 +368,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             let className = transformed.isText ? 'cell-output-text' : 'cell-output-html';
             className = transformed.isError ? `${className} cell-output-error` : className;
 
-                //case 'image/svg+xml':
-                //case 'image/png':
-                // Ianhu: Just !text here?
+            // If we are not theming plots then wrap them in a white span
             if (!this.props.themeInteractivePlots && (transformed.mimeType === 'image/svg+xml' || transformed.mimeType === 'image/png')) {
                 return (
                     <div role='group' key={index} onDoubleClick={transformed.doubleClick} onClick={this.click} className={className} style={style}>
