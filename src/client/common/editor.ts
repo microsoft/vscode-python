@@ -241,7 +241,6 @@ export async function getTempFileWithDocumentContents(
     // as the original one and then removed.
 
     const ext = path.extname(document.uri.fsPath);
-    // tslint:disable-next-line:no-require-imports
     const filename = `${document.uri.fsPath}.${md5(document.uri.fsPath)}${ext}`;
     await (
         fs.writeFile(filename, document.getText())
