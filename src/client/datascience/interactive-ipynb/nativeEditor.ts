@@ -157,9 +157,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         const baseName = path.basename(this.file.fsPath);
         return baseName.includes(localize.DataScience.untitledNotebookFileName());
     }
-    public dispose(): void {
+    public dispose(): Promise<void> {
         super.dispose();
-        this.close().ignoreErrors();
+        return this.close();
     }
 
     public get contents(): string {
