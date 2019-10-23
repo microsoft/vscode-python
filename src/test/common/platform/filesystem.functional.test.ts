@@ -199,45 +199,6 @@ suite('Raw FileSystem', () => {
         await fix.cleanUp();
     });
 
-    suite('readText', () => {
-        test('returns contents of a file', async () => {
-            const expected = '<some text>';
-            const filename = await fix.createFile('x/y/z/spam.py', expected);
-
-            const content = await filesystem.readText(filename);
-
-            expect(content).to.be.equal(expected);
-        });
-
-        test('always UTF-8', async () => {
-            const expected = '... 😁 ...';
-            const filename = await fix.createFile('x/y/z/spam.py', expected);
-
-            const text = await filesystem.readText(filename);
-
-            expect(text).to.equal(expected);
-        });
-
-        test('returns garbage if encoding is UCS-2', async () => {
-            const filename = await fix.resolve('spam.py');
-            // There are probably cases where this would fail too.
-            // However, the extension never has to deal with non-UTF8
-            // cases, so it doesn't matter too much.
-            const original = '... 😁 ...';
-            await fsextra.writeFile(filename, original, { encoding: 'ucs2' });
-
-            const text = await filesystem.readText(filename);
-
-            expect(text).to.equal('.\u0000.\u0000.\u0000 \u0000=�\u0001� \u0000.\u0000.\u0000.\u0000');
-        });
-
-        test('throws an exception if file does not exist', async () => {
-            const promise = filesystem.readText(DOES_NOT_EXIST);
-
-            await expect(promise).to.eventually.be.rejected;
-        });
-    });
-
     suite('writeText', () => {
         test('creates the file if missing', async () => {
             const filename = await fix.resolve('x/y/z/spam.py');
@@ -822,24 +783,6 @@ suite('FileSystem - legacy aliases', () => {
             fsextra.unlinkSync(fileToAppendTo);
         }
     }
-
-    test('ReadFile returns contents of a file', async () => {
-        const file = __filename;
-        const filesystem = new FileSystem();
-        const expectedContents = await fsextra.readFile(file).then(buffer => buffer.toString());
-
-        const content = await filesystem.readFile(file);
-
-        expect(content).to.be.equal(expectedContents);
-    });
-
-    test('ReadFile throws an exception if file does not exist', async () => {
-        const filesystem = new FileSystem();
-
-        const readPromise = filesystem.readFile('xyz');
-
-        await expect(readPromise).to.be.rejectedWith();
-    });
 
     suite('Case sensitivity', () => {
         const path1 = 'c:\\users\\Peter Smith\\my documents\\test.txt';

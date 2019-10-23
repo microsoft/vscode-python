@@ -22,6 +22,7 @@ interface IRawFS {
     // VS Code
     delete(uri: Uri, options?: {recursive: boolean; useTrash: boolean}): Thenable<void>;
     readDirectory(uri: Uri): Thenable<[string, FileType][]>;
+    readFile(uri: Uri): Thenable<Uint8Array>;
 
     // node "fs"
     //tslint:disable-next-line:no-any
@@ -31,7 +32,6 @@ interface IRawFS {
 
     // "fs-extra"
     chmod(filePath: string, mode: string): Promise<void>;
-    readFile(path: string, encoding: string): Promise<string>;
     //tslint:disable-next-line:no-any
     writeFile(path: string, data: any, options: any): Promise<void>;
     stat(filename: string): Promise<fsextra.Stats>;
@@ -255,8 +255,9 @@ suite('Raw FileSystem', () => {
         test('wraps the low-level function', async () => {
             const filename = 'x/y/z/spam.py';
             const expected = '<text>';
-            raw.setup(r => r.readFile(filename, TypeMoq.It.isAny()))
-                .returns(() => Promise.resolve(expected));
+            const data = Buffer.from(expected);
+            raw.setup(r => r.readFile(Uri.file(filename)))
+                .returns(() => Promise.resolve(data));
 
             const text = await filesystem.readText(filename);
 
@@ -266,9 +267,10 @@ suite('Raw FileSystem', () => {
 
         test('always UTF-8', async () => {
             const filename = 'x/y/z/spam.py';
-            const expected = '<text>';
-            raw.setup(r => r.readFile(filename, 'utf8'))
-                .returns(() => Promise.resolve(expected));
+            const expected = '... 😁 ...';
+            const data = Buffer.from(expected);
+            raw.setup(r => r.readFile(Uri.file(filename)))
+                .returns(() => Promise.resolve(data));
 
             const text = await filesystem.readText(filename);
 
