@@ -47,7 +47,7 @@ export interface IMainStateControllerProps {
     hasEdit: boolean;
     skipDefault: boolean;
     testMode: boolean;
-    expectingDark: boolean;
+    webViewTheme: string;
     defaultEditable: boolean;
     enableGather: boolean;
     setState(state: {}, callback: () => void): void;
@@ -83,6 +83,7 @@ export class MainStateController implements IMessageHandler {
             pendingVariableCount: 0,
             debugging: false,
             knownDark: false,
+            webViewTheme: 'vscode-light',
             variablesVisible: false,
             editCellVM: this.props.hasEdit ? createEditableCellVM(1) : undefined,
             enableGather: this.props.enableGather,
@@ -125,8 +126,8 @@ export class MainStateController implements IMessageHandler {
 
         // Get our monaco theme and css if not running a test, because these make everything async too
         if (!this.props.testMode) {
-            this.postOffice.sendUnsafeMessage(CssMessages.GetCssRequest, { isDark: this.props.expectingDark });
-            this.postOffice.sendUnsafeMessage(CssMessages.GetMonacoThemeRequest, { isDark: this.props.expectingDark });
+            this.postOffice.sendUnsafeMessage(CssMessages.GetCssRequest, { isDark: this.props.webViewTheme !== 'vscode-light' });
+            this.postOffice.sendUnsafeMessage(CssMessages.GetMonacoThemeRequest, { isDark: this.props.webViewTheme !== 'vscode-light' });
         }
     }
 
@@ -955,7 +956,7 @@ export class MainStateController implements IMessageHandler {
         if (!this.props.testMode) {
             this.setState(
                 {
-                    forceDark: newDark
+                    webViewTheme: newDark ? 'vscode-dark' : 'vscode-light'
                 }
             );
         }

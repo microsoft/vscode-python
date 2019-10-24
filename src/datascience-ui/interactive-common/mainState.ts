@@ -44,7 +44,7 @@ export interface IMainState {
     rootCss?: string;
     font: IFont;
     theme?: string;
-    forceDark?: boolean;
+    webViewTheme: string;
     monacoTheme?: string;
     tokenizerLoaded?: boolean;
     knownDark: boolean;
@@ -97,6 +97,7 @@ export function generateTestState(inputBlockToggled: (id: string) => void, fileP
         editorOptions: {},
         currentExecutionCount: 0,
         knownDark: false,
+        webViewTheme: 'vscode-light',
         variablesVisible: false,
         variables: [
             {
