@@ -449,7 +449,7 @@ for _ in range(50):
  "nbformat_minor": 2
 }`;
         const addedJSON = JSON.parse(baseFile);
-        addedJSON.cells.splice(0, 0, {
+        addedJSON.cells.splice(3, 0, {
             cell_type: 'code',
             execution_count: null,
             metadata: {},
