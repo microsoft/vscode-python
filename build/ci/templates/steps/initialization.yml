@@ -63,6 +63,16 @@ steps:
           verbose: true
           customCommand: "install -g npm@$(NpmVersion)"
 
+    # In the past installs of npm, node-pre-gyp 0.12.0 was installed.
+    # However in the latest versions, 0.11.0 is getting isntalled.
+    # - bash: |
+    #     npm uninstall canvas
+    #     npm i -g node-pre-gyp@0.12.0
+    #     npm i -D node-pre-gyp@0.12.0
+    #     npm install -D canvas --build-from-source
+    #   displayName: 'Uninstall canvas and install build from source (only for Linux)'
+    #   condition: and(succeeded(), eq(variables['Agent.Os'], 'Linux'))
+
     - task: Npm@1
       displayName: "npm ci"
       inputs:

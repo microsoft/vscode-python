@@ -2812,7 +2812,7 @@
         "bootstrap": "^4.3.1",
         "bootstrap-less": "^3.3.8",
         "brfs": "^2.0.2",
-        "canvas": "2.0.1",
+        "canvas": "^2.6.0",
         "chai": "^4.1.2",
         "chai-arrays": "^2.0.0",
         "chai-as-promised": "^7.1.1",

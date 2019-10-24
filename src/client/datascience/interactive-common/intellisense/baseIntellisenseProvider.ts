@@ -346,6 +346,15 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
         }
     }
 
+    private async insertCell(request: IInsertCell): Promise<void> {
+        // Get the document and then pass onto the sub class
+        const document = await this.getDocument();
+        if (document) {
+            const changes = document.insertCell(request.id, request.code, request.codeCellAbove);
+            return this.handleChanges(undefined, document, changes);
+        }
+    }
+
     private async editCell(request: IEditCell): Promise<void> {
         // First get the document
         const document = await this.getDocument();

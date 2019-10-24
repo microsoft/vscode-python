@@ -7,11 +7,7 @@ import * as uuid from 'uuid/v4';
 import { noop } from '../../client/common/utils/misc';
 import { concatMultilineStringInput } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
-import {
-    ILoadAllCells,
-    InteractiveWindowMessages,
-    NativeCommandType
-} from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { ILoadAllCells, InteractiveWindowMessages, NativeCommandType } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { createEmptyCell, extractInputText, ICellViewModel } from '../interactive-common/mainState';
 import { IMainStateControllerProps, MainStateController } from '../interactive-common/mainStateController';
 import { getSettings } from '../react-common/settingsReactSide';
@@ -72,12 +68,12 @@ export class NativeEditorStateController extends MainStateController {
 
     public canMoveUp = (cellId?: string) => {
         const index = this.getState().cellVMs.findIndex(cvm => cvm.cell.id === cellId);
-        return (index > 0);
+        return index > 0;
     }
 
     public canMoveDown = (cellId?: string) => {
         const index = this.getState().cellVMs.findIndex(cvm => cvm.cell.id === cellId);
-        return (index < this.getState().cellVMs.length - 1);
+        return index < this.getState().cellVMs.length - 1;
     }
 
     public canRunAbove = (cellId?: string) => {
@@ -112,8 +108,7 @@ export class NativeEditorStateController extends MainStateController {
         // Run all code cells (markdown don't need to be run)
         this.suspendUpdates();
         const cells = this.getState().cellVMs;
-        cells.filter(cvm => cvm.cell.data.cell_type === 'code').
-            forEach(cvm => this.submitInput(concatMultilineStringInput(cvm.cell.data.source), cvm));
+        cells.filter(cvm => cvm.cell.data.cell_type === 'code').forEach(cvm => this.submitInput(concatMultilineStringInput(cvm.cell.data.source), cvm));
         this.resumeUpdates();
     }
 
@@ -166,8 +161,7 @@ export class NativeEditorStateController extends MainStateController {
         const index = cellId === Identifiers.EditCellId ? cells.length : cells.findIndex(cvm => cvm.cell.id === cellId);
         if (index > 0) {
             this.suspendUpdates();
-            cells.filter((cvm, i) => i < index && cvm.cell.data.cell_type === 'code').
-                forEach(cvm => this.submitInput(concatMultilineStringInput(cvm.cell.data.source), cvm));
+            cells.filter((cvm, i) => i < index && cvm.cell.data.cell_type === 'code').forEach(cvm => this.submitInput(concatMultilineStringInput(cvm.cell.data.source), cvm));
             this.resumeUpdates();
         }
     }
@@ -177,8 +171,7 @@ export class NativeEditorStateController extends MainStateController {
         const index = cells.findIndex(cvm => cvm.cell.id === cellId);
         if (index >= 0) {
             this.suspendUpdates();
-            cells.filter((cvm, i) => i >= index && cvm.cell.data.cell_type === 'code').
-                forEach(cvm => this.submitInput(concatMultilineStringInput(cvm.cell.data.source), cvm));
+            cells.filter((cvm, i) => i >= index && cvm.cell.data.cell_type === 'code').forEach(cvm => this.submitInput(concatMultilineStringInput(cvm.cell.data.source), cvm));
             this.resumeUpdates();
         }
     }
@@ -247,7 +240,6 @@ export class NativeEditorStateController extends MainStateController {
         super.renderUpdate(newState);
 
         if (!this.getState().busy && this.waitingForLoadRender) {
-
             // After this render is complete (see this SO)
             // https://stackoverflow.com/questions/26556436/react-after-render-code,
             // indicate we are done loading. We want to wait for the render
