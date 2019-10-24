@@ -51,7 +51,7 @@ export type WriteStream = fs.WriteStream;
 export interface IRawFileSystem {
     stat(filename: string): Promise<FileStat>;
     lstat(filename: string): Promise<FileStat>;
-    chmod(filename: string, mode: string): Promise<void>;
+    chmod(filename: string, mode: string | number): Promise<void>;
     // files
     readText(filename: string): Promise<string>;
     writeText(filename: string, data: {}): Promise<void>;
@@ -61,16 +61,24 @@ export interface IRawFileSystem {
     // directories
     mkdirp(dirname: string): Promise<void>;
     rmtree(dirname: string): Promise<void>;
-    listdir(dirname: string): Promise<string[]>;
+    listdir(dirname: string, path: IFileSystemPath): Promise<[string, FileType][]>;
     // not async
     statSync(filename: string): FileStat;
     readTextSync(filename: string): string;
     createWriteStream(filename: string): WriteStream;
 }
 
+// Eventually we will merge IPathUtils into IFileSystemPath.
+
+export interface IFileSystemPath {
+    join(...filenames: string[]): string;
+    normCase(filename: string): string;
+}
+
 export const IFileSystemUtils = Symbol('IFileSystemUtils');
 export interface IFileSystemUtils {
     raw: IRawFileSystem;
+    path: IFileSystemPath;
     // aliases
     createDirectory(dirname: string): Promise<void>;
     deleteDirectory(dirname: string): Promise<void>;
@@ -87,7 +95,7 @@ export interface IFileSystemUtils {
     createTemporaryFile(suffix: string): Promise<TemporaryFile>;
     // helpers (non-async)
     arePathsSame(path1: string, path2: string): boolean;  // Move to IPathUtils.
-    fileExistsSync(filename: string): boolean;
+    pathExistsSync(filename: string): boolean;
 }
 
 // more aliases (to cause less churn)
@@ -99,6 +107,7 @@ export interface IFileSystem extends IFileSystemUtils {
     chmod(filename: string, mode: string): Promise<void>;
     copyFile(src: string, dest: string): Promise<void>;
     // non-async
+    fileExistsSync(filename: string): boolean;
     readFileSync(filename: string): string;
     createWriteStream(filename: string): WriteStream;
 }

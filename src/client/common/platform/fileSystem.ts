@@ -8,16 +8,18 @@ import * as fs from 'fs';
 import * as fsextra from 'fs-extra';
 import * as glob from 'glob';
 import { injectable } from 'inversify';
-import * as path from 'path';
+import * as fspath from 'path';
 import * as tmp from 'tmp';
 import * as vscode from 'vscode';
 import { createDeferred } from '../utils/async';
 import { getOSType, OSType } from '../utils/platform';
 import {
     FileStat, FileType,
-    IFileSystem, IFileSystemUtils, IRawFileSystem,
+    IFileSystem, IFileSystemPath, IFileSystemUtils, IRawFileSystem,
     TemporaryFile, WriteStream
 } from './types';
+
+// tslint:disable:max-classes-per-file
 
 const ENCODING: string = 'utf8';
 
@@ -46,7 +48,7 @@ interface IRawFS {
 }
 
 interface IRawFSExtra {
-    chmod(filePath: string, mode: string): Promise<void>;
+    chmod(filePath: string, mode: string | number): Promise<void>;
     readFile(path: string, encoding: string): Promise<string>;
     //tslint:disable-next-line:no-any
     writeFile(path: string, data: any, options: any): Promise<void>;
@@ -56,6 +58,7 @@ interface IRawFSExtra {
     mkdirp(dirname: string): Promise<void>;
     rmdir(dirname: string): Promise<void>;
     readdir(dirname: string): Promise<string[]>;
+    remove(dirname: string): Promise<void>;
 
     // non-async
     statSync(filename: string): fsextra.Stats;
@@ -67,7 +70,7 @@ interface IRawFSExtra {
 // Later we will drop "FileSystem", switching usage to
 // "FileSystemUtils" and then rename "RawFileSystem" to "FileSystem".
 
-class RawFileSystem {
+export class RawFileSystem implements IRawFileSystem {
     constructor(
         private readonly nodefs: IRawFS = fs,
         private readonly fsExtra: IRawFSExtra = fsextra
@@ -88,18 +91,23 @@ class RawFileSystem {
     }
 
     public async mkdirp(dirname: string): Promise<void> {
-        return this.fsExtra.mkdirp(dirname);
+        return this.fsExtra.mkdirp(dirname)
+            .catch(_err => {
+                //throw err;
+            });
     }
 
     public async rmtree(dirname: string): Promise<void> {
-        return this.fsExtra.rmdir(dirname);
+        return this.fsExtra.stat(dirname)
+            .then(() => this.fsExtra.remove(dirname));
+            //.catch((err) => this.fsExtra.rmdir(dirname));
     }
 
     public async rmfile(filename: string): Promise<void> {
         return this.fsExtra.unlink(filename);
     }
 
-    public async chmod(filename: string, mode: string): Promise<void> {
+    public async chmod(filename: string, mode: string | number): Promise<void> {
         return this.fsExtra.chmod(filename, mode);
     }
 
@@ -111,8 +119,18 @@ class RawFileSystem {
         return this.fsExtra.lstat(filename);
     }
 
-    public async listdir(dirname: string): Promise<string[]> {
-        return this.fsExtra.readdir(dirname);
+    // Once we move to the VS Code API, this method becomes a trivial
+    // wrapper and The "path" parameter can go away.
+    public async listdir(dirname: string, path: IFileSystemPath): Promise<[string, FileType][]> {
+        const names: string[] = await this.fsExtra.readdir(dirname);
+        const promises = names
+            .map(name => {
+                 const filename = path.join(dirname, name);
+                 return this.lstat(filename)
+                     .then(stat => [name, getFileType(stat)] as [string, FileType])
+                     .catch(() => [name, FileType.Unknown] as [string, FileType]);
+            });
+        return Promise.all(promises);
     }
 
     public async copyFile(src: string, dest: string): Promise<void> {
@@ -168,13 +186,49 @@ class RawFileSystem {
     }
 }
 
-// more aliases (to cause less churn)
+interface INodePath {
+    join(...filenames: string[]): string;
+    normalize(filename: string): string;
+}
+
+// Eventually we will merge PathUtils into FileSystemPath.
+
+export class FileSystemPath implements IFileSystemPath {
+    constructor(
+        private readonly isWindows = (getOSType() === OSType.Windows),
+        private readonly raw: INodePath = fspath
+    ) { }
+
+    public join(...filenames: string[]): string {
+        return this.raw.join(...filenames);
+    }
+
+    public normCase(filename: string): string {
+        filename = this.raw.normalize(filename);
+        return this.isWindows ? filename.toUpperCase() : filename;
+    }
+}
+
+// We *could* use ICryptUtils, but it's a bit overkill.
+function getHashString(data: string): string {
+    const hash = createHash('sha512')
+        .update(data);
+    return hash.digest('hex');
+}
+
+type GlobCallback = (err: Error | null, matches: string[]) => void;
+//tslint:disable-next-line:no-any
+type TempCallback = (err: any, path: string, fd: number, cleanupCallback: () => void) => void;
+
 @injectable()
 export class FileSystemUtils implements IFileSystemUtils {
     constructor(
-        private readonly isWindows = (getOSType() === OSType.Windows),
-        //public readonly raw: IFileSystem = {}
-        public readonly raw: IRawFileSystem = new RawFileSystem()
+        public readonly raw: IRawFileSystem = new RawFileSystem(),
+        public readonly path: IFileSystemPath = new FileSystemPath(),
+        private readonly getHash = getHashString,
+        // tslint:disable-next-line:no-unnecessary-callback-wrapper
+        private readonly globFile = ((pat: string, cb: GlobCallback) => glob(pat, cb)),
+        private readonly makeTempFile = ((s: string, cb: TempCallback) => tmp.file({ postfix: s }, cb))
     ) { }
 
     //****************************
@@ -196,13 +250,12 @@ export class FileSystemUtils implements IFileSystemUtils {
     // helpers
 
     public arePathsSame(path1: string, path2: string): boolean {
-        path1 = path.normalize(path1);
-        path2 = path.normalize(path2);
-        if (this.isWindows) {
-            return path1.toUpperCase() === path2.toUpperCase();
-        } else {
-            return path1 === path2;
+        if (path1 === path2) {
+            return true;
         }
+        path1 = this.path.normCase(path1);
+        path2 = this.path.normCase(path2);
+        return path1 === path2;
     }
 
     public async pathExists(
@@ -212,7 +265,7 @@ export class FileSystemUtils implements IFileSystemUtils {
         let stat: FileStat;
         try {
             stat = await this.raw.stat(filename);
-        } catch {
+        } catch (err) {
             return false;
         }
         if (fileType === undefined) {
@@ -231,7 +284,7 @@ export class FileSystemUtils implements IFileSystemUtils {
     public async directoryExists(dirname: string): Promise<boolean> {
         return this.pathExists(dirname, FileType.Directory);
     }
-    public fileExistsSync(filename: string): boolean {
+    public pathExistsSync(filename: string): boolean {
         try {
             this.raw.statSync(filename);
         } catch {
@@ -240,56 +293,47 @@ export class FileSystemUtils implements IFileSystemUtils {
         return true;
     }
 
-    public async listdir(
-        dirname: string
-    ): Promise<[string, FileType][]> {
-        const filenames: string[] = await (
-            this.raw.listdir(dirname)
-                .then(names => names.map(name => path.join(dirname, name)))
-                .catch(() => [])
-        );
-        const promises = filenames
-            .map(filename => (
-                 this.raw.stat(filename)
-                     .then(stat => [filename, getFileType(stat)] as [string, FileType])
-                     .catch(() => [filename, FileType.Unknown] as [string, FileType])
-            ));
-        return Promise.all(promises);
+    public async listdir(dirname: string): Promise<[string, FileType][]> {
+        try {
+            return await this.raw.listdir(dirname, this.path);
+        } catch {
+            return [];
+        }
     }
     public async getSubDirectories(dirname: string): Promise<string[]> {
         return (await this.listdir(dirname))
-            .filter(([_filename, fileType]) => fileType === FileType.Directory)
-            .map(([filename, _fileType]) => filename);
+            .filter(([_name, fileType]) => fileType === FileType.Directory)
+            .map(([name, _fileType]) => this.path.join(dirname, name));
     }
     public async getFiles(dirname: string): Promise<string[]> {
         return (await this.listdir(dirname))
-            .filter(([_filename, fileType]) => fileType === FileType.File)
-            .map(([filename, _fileType]) => filename);
+            .filter(([_name, fileType]) => fileType === FileType.File)
+            .map(([name, _fileType]) => this.path.join(dirname, name));
     }
 
     public async isDirReadonly(dirname: string): Promise<boolean> {
         // Alternative: use tmp.file().
-        const filename = path.join(dirname, '___vscpTest___');
+        const filename = this.path.join(dirname, '___vscpTest___');
         try {
             await this.raw.touch(filename);
         } catch {
-            return false;
+            await this.raw.stat(dirname); // fails if does not exist
+            return true;
         }
         await this.raw.rmfile(filename);
-        return true;
+        return false;
     }
 
     public async getFileHash(filename: string): Promise<string> {
         const stat = await this.raw.lstat(filename);
-        const hash = createHash('sha512')
-            .update(`${stat.ctimeMs}-${stat.mtimeMs}`);
-        return hash.digest('hex');
+        const data = `${stat.ctimeMs}-${stat.mtimeMs}`;
+        return this.getHash(data);
     }
 
     public async search(globPattern: string): Promise<string[]> {
         // We could use util.promisify() here.
         return new Promise<string[]>((resolve, reject) => {
-            glob(globPattern, (ex, files) => {
+            this.globFile(globPattern, (ex, files) => {
                 if (ex) {
                     return reject(ex);
                 }
@@ -301,7 +345,7 @@ export class FileSystemUtils implements IFileSystemUtils {
     public async createTemporaryFile(suffix: string): Promise<TemporaryFile> {
         // We could use util.promisify() here.
         return new Promise<TemporaryFile>((resolve, reject) => {
-            tmp.file({ postfix: suffix }, (err, tmpFile, _, cleanupCallback) => {
+            this.makeTempFile(suffix, (err, tmpFile, _, cleanupCallback) => {
                 if (err) {
                     return reject(err);
                 }
@@ -314,8 +358,21 @@ export class FileSystemUtils implements IFileSystemUtils {
     }
 }
 
+// more aliases (to cause less churn)
 @injectable()
 export class FileSystem extends FileSystemUtils implements IFileSystem {
+    constructor(
+        isWindows: boolean = (getOSType() === OSType.Windows)
+    ) {
+        super(
+            new RawFileSystem(),
+            new FileSystemPath(isWindows)
+        );
+    }
+
+    //****************************
+    // aliases
+
     public async stat(filePath: string): Promise<vscode.FileStat> {
         // Do not import vscode directly, as this isn't available in the Debugger Context.
         // If stat is used in debugger context, it will fail, however theres a separate PR that will resolve this.
@@ -338,6 +395,10 @@ export class FileSystem extends FileSystemUtils implements IFileSystem {
 
     public async copyFile(src: string, dest: string): Promise<void> {
         return this.raw.copyFile(src, dest);
+    }
+
+    public fileExistsSync(filename: string): boolean {
+        return this.pathExistsSync(filename);
     }
 
     public readFileSync(filename: string): string {
