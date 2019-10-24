@@ -38,6 +38,7 @@ interface INativeCellProps {
     font: IFont;
     focusCell(cellId: string, focusCode: boolean): void;
     selectCell(cellId: string, focusCode: boolean): void;
+
 }
 
 // tslint:disable: react-this-binding-issue

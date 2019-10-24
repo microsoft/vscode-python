@@ -5,16 +5,25 @@ import { expect } from 'chai';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as TypeMoq from 'typemoq';
 
-import { Uri } from 'vscode';
 import { ILanguageServer, ILanguageServerAnalysisOptions } from '../../client/activation/types';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { PythonSettings } from '../../client/common/configSettings';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IConfigurationService } from '../../client/common/types';
 import { Identifiers } from '../../client/datascience/constants';
-import { DotNetIntellisenseProvider } from '../../client/datascience/interactive-common/intellisense/dotNetIntellisenseProvider';
-import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import { ICell, IInteractiveWindowListener, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
+import {
+    DotNetIntellisenseProvider
+} from '../../client/datascience/interactive-common/intellisense/dotNetIntellisenseProvider';
+import {
+    IInteractiveWindowMapping,
+    InteractiveWindowMessages
+} from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import {
+    ICell,
+    IInteractiveWindowListener,
+    IInteractiveWindowProvider,
+    IJupyterExecution
+} from '../../client/datascience/types';
 import { createEmptyCell, generateCells } from '../../datascience-ui/interactive-common/mainState';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { MockLanguageClient } from './mockLanguageClient';
@@ -44,13 +53,14 @@ suite('DataScience Intellisense Unit Tests', () => {
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let jupyterExecution: TypeMoq.IMock<IJupyterExecution>;
     let interactiveWindowProvider: TypeMoq.IMock<IInteractiveWindowProvider>;
-    const pythonSettings = new (class extends PythonSettings {
+    const pythonSettings = new class extends PythonSettings {
         public fireChangeEvent() {
             this.changed.fire();
         }
-    })(undefined, new MockAutoSelectionService());
+    }(undefined, new MockAutoSelectionService());
 
-    const languageClient = new MockLanguageClient('mockLanguageClient', { module: 'dummy' }, {});
+    const languageClient = new MockLanguageClient(
+        'mockLanguageClient', { module: 'dummy' }, {});
 
     setup(() => {
         languageServer = TypeMoq.Mock.ofType<ILanguageServer>();
@@ -400,4 +410,5 @@ df
 `;
         expect(languageClient.getDocumentContents()).to.be.eq(afterSwap, 'Swap cell failed');
     });
+
 });
