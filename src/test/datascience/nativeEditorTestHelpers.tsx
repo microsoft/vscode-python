@@ -6,7 +6,6 @@ import { ReactWrapper } from 'enzyme';
 import * as React from 'react';
 import { Uri } from 'vscode';
 
-import { createDeferred, sleep } from '../../client/common/utils/async';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterExecution, INotebookEditor, INotebookEditorProvider } from '../../client/datascience/types';
 import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
