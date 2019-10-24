@@ -44,7 +44,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
         this.stateController = new InteractivePanelStateController({
             skipDefault: this.props.skipDefault,
             testMode: this.props.testMode ? true : false,
-            expectingDark: this.props.baseTheme !== 'vscode-light',
+            expectingDark: (getSettings && getSettings().ignoreVscodeTheme) ? false : this.props.baseTheme !== 'vscode-light',
             setState: this.setState.bind(this),
             activate: this.activated.bind(this),
             scrollToCell: this.scrollToCell.bind(this),

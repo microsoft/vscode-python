@@ -51,7 +51,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         this.stateController = new NativeEditorStateController({
             skipDefault: this.props.skipDefault,
             testMode: this.props.testMode ? true : false,
-            expectingDark: this.props.baseTheme !== 'vscode-light',
+            expectingDark: (getSettings && getSettings().ignoreVscodeTheme) ? false : this.props.baseTheme !== 'vscode-light',
             setState: this.setState.bind(this),
             activate: this.activated.bind(this),
             scrollToCell: this.scrollToCell.bind(this),

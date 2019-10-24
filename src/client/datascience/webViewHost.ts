@@ -220,18 +220,20 @@ export class WebViewHost<IMapping> implements IDisposable {
 
     @captureTelemetry(Telemetry.WebviewStyleUpdate)
     private async handleCssRequest(request: IGetCssRequest): Promise<void> {
-        this.setTheme(request.isDark);
         const settings = this.generateDataScienceExtraSettings();
-        const isDark = await this.themeFinder.isThemeDark(settings.extraSettings.theme);
-        const css = await this.cssGenerator.generateThemeCss(request.isDark, settings.extraSettings.theme);
+        const requestIsDark = settings.ignoreVscodeTheme ? false : request.isDark;
+        this.setTheme(requestIsDark);
+        const isDark = settings.ignoreVscodeTheme ? false : await this.themeFinder.isThemeDark(settings.extraSettings.theme);
+        const css = await this.cssGenerator.generateThemeCss(requestIsDark, settings.extraSettings.theme);
         return this.postMessageInternal(CssMessages.GetCssResponse, { css, theme: settings.extraSettings.theme, knownDark: isDark });
     }
 
     @captureTelemetry(Telemetry.WebviewMonacoStyleUpdate)
     private async handleMonacoThemeRequest(request: IGetMonacoThemeRequest): Promise<void> {
-        this.setTheme(request.isDark);
         const settings = this.generateDataScienceExtraSettings();
-        const monacoTheme = await this.cssGenerator.generateMonacoTheme(request.isDark, settings.extraSettings.theme);
+        const isDark = settings.ignoreVscodeTheme ? false : request.isDark;
+        this.setTheme(isDark);
+        const monacoTheme = await this.cssGenerator.generateMonacoTheme(isDark, settings.extraSettings.theme);
         return this.postMessageInternal(CssMessages.GetMonacoThemeResponse, { theme: monacoTheme });
     }
 
