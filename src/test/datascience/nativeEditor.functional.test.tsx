@@ -71,71 +71,7 @@ suite('DataScience Native Editor', () => {
         const newCell = { type: 'preview', id: 'FakeID', file: Identifiers.EmptyFileName, line: 0, state: 2, ...cell };
         newCell.data = { cell_type: 'code', execution_count: null, metadata: {}, outputs: [], source: '', ...data };
 
-    suite('Editor tests', () => {
-        let wrapper: ReactWrapper<any, Readonly<{}>, React.Component>;
-        const disposables: Disposable[] = [];
-        let ioc: DataScienceIocContainer;
-        const baseFile = `
-{
- "cells": [
-  {
-   "cell_type": "code",
-   "execution_count": 1,
-   "metadata": {
-    "collapsed": true
-   },
-   "outputs": [
-    {
-     "data": {
-      "text/plain": [
-       "1"
-      ]
-     },
-     "execution_count": 1,
-     "metadata": {},
-     "output_type": "execute_result"
-    }
-   ],
-   "source": [
-    "a=1\\n",
-    "a"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 2,
-   "metadata": {},
-   "outputs": [
-    {
-     "data": {
-      "text/plain": [
-       "2"
-      ]
-     },
-     "execution_count": 2,
-     "metadata": {},
-     "output_type": "execute_result"
-    }
-   ],
-   "source": [
-    "b=2\\n",
-    "b"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 3,
-   "metadata": {},
-   "outputs": [
-    {
-     "data": {
-      "text/plain": [
-       "3"
-      ]
-     },
-     "execution_count": 3,
-     "metadata": {},
-     "output_type": "execute_result"
+        return newCell;
     }
     suite('Editor tests', () => {
         const disposables: Disposable[] = [];
