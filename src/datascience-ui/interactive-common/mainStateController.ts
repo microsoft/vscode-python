@@ -532,6 +532,11 @@ export class MainStateController implements IMessageHandler {
             // Save the whole thing in our state.
             this.setState({ selectedCellId: cellId, focusedCellId: cellId, cellVMs: newVMs });
         }
+
+        // Send out a message that we received a focus change
+        if (this.props.testMode && cellId) {
+            this.sendMessage(InteractiveWindowMessages.FocusedCellEditor, { cellId });
+        }
     }
 
     public selectCell = (cellId: string, focusedCellId?: string) => {
@@ -636,7 +641,7 @@ export class MainStateController implements IMessageHandler {
             if (index >= 0) {
                 // Update our input cell to be in progress again and clear outputs
                 const newVMs = [...this.pendingState.cellVMs];
-                newVMs[index] = { ...inputCell, cell: { ...inputCell.cell, state: CellState.executing, data: { ...inputCell.cell.data, outputs: [] } } };
+                newVMs[index] = { ...inputCell, cell: { ...inputCell.cell, state: CellState.executing, data: { ...inputCell.cell.data, source: code, outputs: [] } } };
                 this.setState({
                     cellVMs: newVMs
                 });
@@ -713,14 +718,28 @@ export class MainStateController implements IMessageHandler {
     }
 
     public renderUpdate(newState: {}) {
-        const oldCount = this.renderedState.pendingVariableCount;
-
         // This method should be called during the render stage of anything
         // using this state Controller. That's because after shouldComponentUpdate
         // render is next and at this point the state has been set.
         // See https://reactjs.org/docs/react-component.html
         // Otherwise we set the state in the callback during setState and this can be
         // too late for any render code to use the stateController.
+
+        const oldCount = this.renderedState.pendingVariableCount;
+
+        // If the new state includes a finished cell that wasn't finished before, and we're in test
+        // mode, send another message. We use this to determine when rendering is 'finished' for a cell.
+        if (this.props.testMode && 'cellVMs' in newState) {
+            const renderedFinished = this.pendingState.cellVMs.filter(c => c.cell.state === CellState.finished || c.cell.state === CellState.error).map(c => c.cell.id);
+            const previousFinished = this.renderedState.cellVMs.filter(c => c.cell.state === CellState.finished || c.cell.state === CellState.error).map(c => c.cell.id);
+            if (renderedFinished.length > previousFinished.length) {
+                const diff = renderedFinished.filter(r => previousFinished.indexOf(r) < 0);
+                // Send async so happens after the render is actually finished.
+                setTimeout(() => this.sendMessage(InteractiveWindowMessages.RenderComplete, { ids: diff }), 1);
+            }
+        }
+
+        // Update the actual rendered state (it should be used by rendering)
         this.renderedState = { ...this.renderedState, ...newState };
 
         // If the new state includes any cellVM changes, send an update to the other side
@@ -732,6 +751,7 @@ export class MainStateController implements IMessageHandler {
         if (this.renderedState.pendingVariableCount === 0 && oldCount !== 0) {
             setTimeout(() => this.sendMessage(InteractiveWindowMessages.VariablesComplete), 1);
         }
+
     }
 
     public getState(): IMainState {

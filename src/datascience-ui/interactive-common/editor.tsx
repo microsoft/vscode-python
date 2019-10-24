@@ -66,7 +66,7 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
     }
 
     public giveFocus() {
-        const readOnly = this.props.testMode || this.props.readOnly;
+        const readOnly = this.props.readOnly;
         if (this.state.editor && !readOnly) {
             this.state.editor.focus();
         }
