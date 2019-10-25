@@ -51,7 +51,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         this.stateController = new NativeEditorStateController({
             skipDefault: this.props.skipDefault,
             testMode: this.props.testMode ? true : false,
-            webViewTheme: (getSettings && getSettings().ignoreVscodeTheme) ? 'vscode-light' : this.props.baseTheme,
+            baseTheme: (getSettings && getSettings().ignoreVscodeTheme) ? 'vscode-light' : this.props.baseTheme,
             setState: this.setState.bind(this),
             activate: this.activated.bind(this),
             scrollToCell: this.scrollToCell.bind(this),
@@ -103,7 +103,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             }
         };
         const addCellLine = this.state.cellVMs.length === 0 ? null :
-            <AddCellLine includePlus={true} className='add-cell-line-top' click={insertAboveFirst} baseTheme={this.state.webViewTheme}/>;
+            <AddCellLine includePlus={true} className='add-cell-line-top' click={insertAboveFirst} baseTheme={this.state.baseTheme}/>;
 
         return (
             <div id='main-panel' ref={this.mainPanelRef} role='Main' style={dynamicFont}>
@@ -117,11 +117,11 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                     {progressBar}
                 </header>
                 <section id='main-panel-variable' aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
-                    {this.renderVariablePanel(this.state.webViewTheme)}
+                    {this.renderVariablePanel(this.state.baseTheme)}
                 </section>
                 <main id='main-panel-content' onScroll={this.onContentScroll} ref={this.contentPanelScrollRef}>
                     {addCellLine}
-                    {this.renderContentPanel(this.state.webViewTheme)}
+                    {this.renderContentPanel(this.state.baseTheme)}
                 </main>
             </div>
         );
@@ -192,29 +192,29 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         return (
             <div id='toolbar-panel'>
                 <div className='toolbar-menu-bar'>
-                    <ImageButton baseTheme={this.state.webViewTheme} onClick={this.stateController.restartKernel} className='native-button' tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}>
-                        <Image baseTheme={this.state.webViewTheme} class='image-button-image' image={ImageName.Restart} />
+                    <ImageButton baseTheme={this.state.baseTheme} onClick={this.stateController.restartKernel} className='native-button' tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}>
+                        <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.Restart} />
                     </ImageButton>
-                    <ImageButton baseTheme={this.state.webViewTheme} onClick={this.stateController.interruptKernel} className='native-button' tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython kernel')}>
-                        <Image baseTheme={this.state.webViewTheme} class='image-button-image' image={ImageName.Interrupt} />
+                    <ImageButton baseTheme={this.state.baseTheme} onClick={this.stateController.interruptKernel} className='native-button' tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython kernel')}>
+                        <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.Interrupt} />
                     </ImageButton>
-                    <ImageButton baseTheme={this.state.webViewTheme} onClick={addCell} className='native-button' tooltip={getLocString('DataScience.addNewCell', 'Insert cell')}>
-                        <Image baseTheme={this.state.webViewTheme} class='image-button-image' image={ImageName.InsertBelow} />
+                    <ImageButton baseTheme={this.state.baseTheme} onClick={addCell} className='native-button' tooltip={getLocString('DataScience.addNewCell', 'Insert cell')}>
+                        <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.InsertBelow} />
                     </ImageButton>
-                    <ImageButton baseTheme={this.state.webViewTheme} onClick={runAll} className='native-button' tooltip={getLocString('DataScience.runAll', 'Run All Cells')}>
-                        <Image baseTheme={this.state.webViewTheme} class='image-button-image' image={ImageName.RunAll} />
+                    <ImageButton baseTheme={this.state.baseTheme} onClick={runAll} className='native-button' tooltip={getLocString('DataScience.runAll', 'Run All Cells')}>
+                        <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.RunAll} />
                     </ImageButton>
-                    <ImageButton baseTheme={this.state.webViewTheme} onClick={this.stateController.clearAllOutputs} disabled={!this.stateController.canClearAllOutputs} className='native-button' tooltip={getLocString('DataScience.clearAllOutput', 'Clear All Output')}>
-                        <Image baseTheme={this.state.webViewTheme} class='image-button-image' image={ImageName.ClearAllOutput} />
+                    <ImageButton baseTheme={this.state.baseTheme} onClick={this.stateController.clearAllOutputs} disabled={!this.stateController.canClearAllOutputs} className='native-button' tooltip={getLocString('DataScience.clearAllOutput', 'Clear All Output')}>
+                        <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.ClearAllOutput} />
                     </ImageButton>
-                    <ImageButton baseTheme={this.state.webViewTheme} onClick={toggleVariableExplorer} className='native-button' tooltip={variableExplorerTooltip}>
-                        <Image baseTheme={this.state.webViewTheme} class='image-button-image' image={ImageName.VariableExplorer} />
+                    <ImageButton baseTheme={this.state.baseTheme} onClick={toggleVariableExplorer} className='native-button' tooltip={variableExplorerTooltip}>
+                        <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.VariableExplorer} />
                     </ImageButton>
-                    <ImageButton baseTheme={this.state.webViewTheme} onClick={this.saveFromToolbar} disabled={!this.state.dirty} className='native-button' tooltip={getLocString('DataScience.save', 'Save File')}>
-                        <Image baseTheme={this.state.webViewTheme} class='image-button-image' image={ImageName.SaveAs} />
+                    <ImageButton baseTheme={this.state.baseTheme} onClick={this.saveFromToolbar} disabled={!this.state.dirty} className='native-button' tooltip={getLocString('DataScience.save', 'Save File')}>
+                        <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.SaveAs} />
                     </ImageButton>
-                    <ImageButton baseTheme={this.state.webViewTheme} onClick={this.stateController.export} disabled={!this.stateController.canExport()} className='save-button' tooltip={getLocString('DataScience.exportAsPythonFileTooltip', 'Save As Python File')}>
-                        <Image baseTheme={this.state.webViewTheme} class='image-button-image' image={ImageName.ExportToPython} />
+                    <ImageButton baseTheme={this.state.baseTheme} onClick={this.stateController.export} disabled={!this.stateController.canExport()} className='save-button' tooltip={getLocString('DataScience.exportAsPythonFileTooltip', 'Save As Python File')}>
+                        <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.ExportToPython} />
                     </ImageButton>
                 </div>
                 <div className='toolbar-divider'/>
@@ -382,7 +382,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         const lastLine = index === this.state.cellVMs.length - 1 ?
             <AddCellLine
                 includePlus={true}
-                baseTheme={this.state.webViewTheme}
+                baseTheme={this.state.baseTheme}
                 className='add-cell-line-cell'
                 click={addNewCell} /> : null;
 
@@ -403,7 +403,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                         autoFocus={false}
                         testMode={this.props.testMode}
                         cellVM={cellVM}
-                        baseTheme={this.state.webViewTheme}
+                        baseTheme={this.state.baseTheme}
                         codeTheme={this.props.codeTheme}
                         monacoTheme={this.state.monacoTheme}
                         focusCell={this.focusCell}

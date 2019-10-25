@@ -47,7 +47,7 @@ export interface IMainStateControllerProps {
     hasEdit: boolean;
     skipDefault: boolean;
     testMode: boolean;
-    webViewTheme: string;
+    baseTheme: string;
     defaultEditable: boolean;
     enableGather: boolean;
     setState(state: {}, callback: () => void): void;
@@ -83,7 +83,7 @@ export class MainStateController implements IMessageHandler {
             pendingVariableCount: 0,
             debugging: false,
             knownDark: false,
-            webViewTheme: 'vscode-light',
+            baseTheme: 'vscode-light',
             variablesVisible: false,
             editCellVM: this.props.hasEdit ? createEditableCellVM(1) : undefined,
             enableGather: this.props.enableGather,
@@ -126,8 +126,8 @@ export class MainStateController implements IMessageHandler {
 
         // Get our monaco theme and css if not running a test, because these make everything async too
         if (!this.props.testMode) {
-            this.postOffice.sendUnsafeMessage(CssMessages.GetCssRequest, { isDark: this.props.webViewTheme !== 'vscode-light' });
-            this.postOffice.sendUnsafeMessage(CssMessages.GetMonacoThemeRequest, { isDark: this.props.webViewTheme !== 'vscode-light' });
+            this.postOffice.sendUnsafeMessage(CssMessages.GetCssRequest, { isDark: this.props.baseTheme !== 'vscode-light' });
+            this.postOffice.sendUnsafeMessage(CssMessages.GetMonacoThemeRequest, { isDark: this.props.baseTheme !== 'vscode-light' });
         }
     }
 
@@ -956,7 +956,7 @@ export class MainStateController implements IMessageHandler {
         if (!this.props.testMode) {
             this.setState(
                 {
-                    webViewTheme: newDark ? 'vscode-dark' : 'vscode-light'
+                    baseTheme: newDark ? 'vscode-dark' : 'vscode-light'
                 }
             );
         }
@@ -991,7 +991,7 @@ export class MainStateController implements IMessageHandler {
             // Update theme if necessary
             const newSettings = JSON.parse(payload as string);
             const dsSettings = newSettings as IDataScienceExtraSettings;
-            if (dsSettings && dsSettings.extraSettings && dsSettings.extraSettings.theme !== this.pendingState.theme) {
+            if (dsSettings && dsSettings.extraSettings && dsSettings.extraSettings.theme !== this.pendingState.vscodeThemeName) {
                 // User changed the current theme. Rerender
                 this.postOffice.sendUnsafeMessage(CssMessages.GetCssRequest, { isDark: this.computeKnownDark() });
                 this.postOffice.sendUnsafeMessage(CssMessages.GetMonacoThemeRequest, { isDark: this.computeKnownDark() });
@@ -1312,7 +1312,7 @@ export class MainStateController implements IMessageHandler {
                     size: fontSize,
                     family: fontFamily
                 },
-                theme: response.theme,
+                vscodeThemeName: response.theme,
                 knownDark: computedKnownDark
             });
         }
