@@ -53,12 +53,14 @@ import {
     findButton,
     getLastOutputCell,
     getNativeFocusedEditor,
+    getOutputCell,
     isCellFocused,
     isCellSelected,
     srcDirectory,
     typeCode,
     verifyCellIndex,
     verifyHtmlOnCell,
+    waitForMessage,
     waitForMessageResponse
 } from './testHelpers';
 
@@ -115,9 +117,9 @@ suite('DataScience Native Editor', () => {
             await createNewEditor(ioc);
 
             // Add a cell into the UI and wait for it to render
-            await addCell(wrapper, 'a=1\na');
+            await addCell(wrapper, ioc, 'a=1\na');
 
-            verifyHtmlOnCell(wrapper, 'NativeCell', '<span>1</span>', CellPosition.Last);
+            verifyHtmlOnCell(wrapper, 'NativeCell', '<span>1</span>', 1);
         }, () => { return ioc; });
 
         runMountedTest('Mime Types', async (wrapper) => {
@@ -161,16 +163,16 @@ for _ in range(50):
                 return Promise.resolve({ result: result, haveMore: loops > 0 });
             });
 
-            await addCell(wrapper, badPanda, true);
+            await addCell(wrapper, ioc, badPanda, true);
             verifyHtmlOnCell(wrapper, 'NativeCell', `has no attribute 'read'`, CellPosition.Last);
 
-            await addCell(wrapper, goodPanda, true);
+            await addCell(wrapper, ioc, goodPanda, true);
             verifyHtmlOnCell(wrapper, 'NativeCell', `<td>`, CellPosition.Last);
 
-            await addCell(wrapper, matPlotLib, true, 6);
+            await addCell(wrapper, ioc, matPlotLib, true);
             verifyHtmlOnCell(wrapper, 'NativeCell', matPlotLibResults, CellPosition.Last);
 
-            await addCell(wrapper, spinningCursor, true, 4 + (ioc.mockJupyter ? (cursors.length * 3) : 50));
+            await addCell(wrapper, ioc, spinningCursor, true);
             verifyHtmlOnCell(wrapper, 'NativeCell', '<div>', CellPosition.Last);
         }, () => { return ioc; });
 
@@ -192,7 +194,7 @@ for _ in range(50):
             await createNewEditor(ioc);
 
             // Get a cell into the list
-            await addCell(wrapper, 'a=1\na');
+            await addCell(wrapper, ioc, 'a=1\na');
 
             // find the buttons on the cell itself
             let cell = getLastOutputCell(wrapper, 'NativeCell');
@@ -239,7 +241,7 @@ for _ in range(50):
 
             // Make sure to create the interactive window after the rebind or it gets the wrong application shell.
             await createNewEditor(ioc);
-            await addCell(wrapper, 'a=1\na');
+            await addCell(wrapper, ioc, 'a=1\na');
 
             // Export should cause exportCalled to change to true
             const exportButton = findButton(wrapper, NativeEditor, 6);
@@ -311,10 +313,14 @@ for _ in range(50):
         );
 
         test('Failure', async () => {
+            let fail = true;
             // Make a dummy class that will fail during launch
             class FailedProcess extends JupyterExecutionFactory {
                 public getUsableJupyterPython(): Promise<PythonInterpreter | undefined> {
-                    return Promise.resolve(undefined);
+                    if (fail) {
+                        return Promise.resolve(undefined);
+                    }
+                    return super.getUsableJupyterPython();
                 }
             }
             ioc.serviceManager.rebind<IJupyterExecution>(IJupyterExecution, FailedProcess);
@@ -322,10 +328,22 @@ for _ in range(50):
             addMockData(ioc, 'a=1\na', 1);
             const wrapper = mountNativeWebView(ioc);
             await createNewEditor(ioc);
-            await addCell(wrapper, 'a=1\na', true, 2);
+            await addCell(wrapper, ioc, 'a=1\na', true);
 
             // Cell should not have the output
-            verifyHtmlOnCell(wrapper, 'NativeCell', 'Jupyter cannot be started', CellPosition.Last);
+            verifyHtmlOnCell(wrapper, 'NativeCell', 'Jupyter cannot be started', 1);
+
+            // Fix failure and try again
+            fail = false;
+            const cell = getOutputCell(wrapper, 'NativeCell', 1);
+            assert.ok(cell, 'Cannot find the first cell');
+            const imageButtons = cell!.find(ImageButton);
+            assert.equal(imageButtons.length, 7, 'Cell buttons not found');
+            const runButton = imageButtons.at(2);
+            const update = waitForMessage(ioc, InteractiveWindowMessages.RenderComplete);
+            runButton.simulate('click');
+            await update;
+            verifyHtmlOnCell(wrapper, 'NativeCell', `1`, 1);
         });
     });
 
@@ -431,7 +449,7 @@ for _ in range(50):
  "nbformat_minor": 2
 }`;
         const addedJSON = JSON.parse(baseFile);
-        addedJSON.cells.splice(0, 0, {
+        addedJSON.cells.splice(3, 0, {
             cell_type: 'code',
             execution_count: null,
             metadata: {},
@@ -736,11 +754,12 @@ for _ in range(50):
                 assert.ok(isCellFocused(wrapper, 'NativeCell', 1));
 
                 // Type in something with brackets
+                await addCell(wrapper, ioc, '', false);
                 const editorEnzyme = getNativeFocusedEditor(wrapper);
                 typeCode(editorEnzyme, 'a(');
 
                 // Verify cell content
-                const reactEditor = editorEnzyme.instance() as MonacoEditor;
+                const reactEditor = editorEnzyme!.instance() as MonacoEditor;
                 const editor = reactEditor.state.editor;
                 if (editor) {
                     assert.equal(editor.getModel()!.getValue(), 'a()', 'Text does not have brackets');
@@ -925,7 +944,7 @@ for _ in range(50):
             test('Test save using the key \'s\'', async () => {
                 clickCell(0);
 
-                await addCell(wrapper, 'a=1\na', true);
+                await addCell(wrapper, ioc, 'a=1\na', true);
 
                 const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
                 const editor = notebookProvider.editors[0];
@@ -1010,10 +1029,7 @@ for _ in range(50):
              */
             async function modifyNotebook() {
                 // (Add a cell into the UI and wait for it to render)
-                clickCell(0);
-                const update = waitForUpdate(wrapper, NativeEditor, 2);
-                simulateKeyPressOnCell(0, { code: 'a' });
-                await update;
+                await addCell(wrapper, ioc, 'a', false);
             }
 
             test('Auto save notebook every 1s', async () => {

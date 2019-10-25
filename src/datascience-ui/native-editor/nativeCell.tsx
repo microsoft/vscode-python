@@ -310,7 +310,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                 }
                 break;
             case 'a':
-                if (isFocusedWhenNotSuggesting || !this.isFocused()) {
+                if (!this.isFocused()) {
                     e.stopPropagation();
                     const cell = this.props.stateController.insertAbove(cellId, true);
                     this.moveSelection(cell!, true);
@@ -318,7 +318,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                 }
                 break;
             case 'b':
-                if (isFocusedWhenNotSuggesting || !this.isFocused()) {
+                if (!this.isFocused()) {
                     e.stopPropagation();
                     const cell = this.props.stateController.insertBelow(cellId, true);
                     this.moveSelection(cell!, true);

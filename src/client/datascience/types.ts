@@ -135,6 +135,7 @@ export interface IJupyterExecution extends IAsyncDisposable {
     getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined>;
     getServer(options?: INotebookServerOptions): Promise<INotebookServer | undefined>;
     getNotebookError(): Promise<string>;
+    refreshCommands(): Promise<void>;
 }
 
 export const IJupyterDebugger = Symbol('IJupyterDebugger');

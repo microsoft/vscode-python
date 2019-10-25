@@ -332,7 +332,7 @@ export class IntellisenseDocument implements TextDocument {
             this._version += 1;
 
             // Compute the offset for the edit cell
-            const toOffset = this._cellRanges[this._cellRanges.length - 1].fullEnd;
+            const toOffset = this._cellRanges.length > 0 ? this._cellRanges[this._cellRanges.length - 1].fullEnd : 0;
             const from = this.positionAt(0);
             const to = this.positionAt(toOffset);
 
