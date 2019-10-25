@@ -301,7 +301,7 @@ suite('Data Science - Native Editor', () => {
         expect(editor.cells).to.be.lengthOf(0);
     });
 
-    async function loadEditorAddCellAndWaitForMementoUpdate(file: Uri){
+    async function loadEditorAddCellAndWaitForMementoUpdate(file: Uri) {
         const editor = createEditor();
         await editor.load(baseFile, file);
         expect(editor.contents).to.be.equal(baseFile);
@@ -329,7 +329,7 @@ suite('Data Science - Native Editor', () => {
 
     test('Opening a notebook will restore uncommitted changes', async () => {
         const file = Uri.parse('file://foo.ipynb');
-        when(fileSystem.stat(anything())).thenResolve({mtime: 1} as any);
+        when(fileSystem.stat(anything())).thenResolve({ mtime: 1 } as any);
 
         // Initially nothing in memento
         expect(storage.get(`notebook-storage-${file.toString()}`)).to.be.undefined;
@@ -337,7 +337,7 @@ suite('Data Science - Native Editor', () => {
         const editor = await loadEditorAddCellAndWaitForMementoUpdate(file);
 
         // Close the editor.
-        editor.dispose();
+        await editor.dispose();
 
         // Open a new one.
         const newEditor = createEditor();
@@ -353,7 +353,7 @@ suite('Data Science - Native Editor', () => {
 
     test('Opening a notebook will restore uncommitted changes (ignoring contents of file)', async () => {
         const file = Uri.parse('file://foo.ipynb');
-        when(fileSystem.stat(anything())).thenResolve({mtime: 1} as any);
+        when(fileSystem.stat(anything())).thenResolve({ mtime: 1 } as any);
 
         // Initially nothing in memento
         expect(storage.get(`notebook-storage-${file.toString()}`)).to.be.undefined;
@@ -361,7 +361,7 @@ suite('Data Science - Native Editor', () => {
         const editor = await loadEditorAddCellAndWaitForMementoUpdate(file);
 
         // Close the editor.
-        editor.dispose();
+        await editor.dispose();
 
         // Open a new one with the same file.
         const newEditor = createEditor();
@@ -378,7 +378,7 @@ suite('Data Science - Native Editor', () => {
 
     test('Opening a notebook will NOT restore uncommitted changes if file has been modified since', async () => {
         const file = Uri.parse('file://foo.ipynb');
-        when(fileSystem.stat(anything())).thenResolve({mtime: 1} as any);
+        when(fileSystem.stat(anything())).thenResolve({ mtime: 1 } as any);
 
         // Initially nothing in memento
         expect(storage.get(`notebook-storage-${file.toString()}`)).to.be.undefined;
@@ -386,10 +386,10 @@ suite('Data Science - Native Editor', () => {
         const editor = await loadEditorAddCellAndWaitForMementoUpdate(file);
 
         // Close the editor.
-        editor.dispose();
+        await editor.dispose();
 
         // Mimic changes to file (by returning a new modified time).
-        when(fileSystem.stat(anything())).thenResolve({mtime: Date.now()} as any);
+        when(fileSystem.stat(anything())).thenResolve({ mtime: Date.now() } as any);
 
         // Open a new one.
         const newEditor = createEditor();
