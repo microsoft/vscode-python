@@ -41,7 +41,8 @@ import {
     mountNativeWebView,
     openEditor,
     runMountedTest,
-    setupWebview
+    setupWebview,
+    focusCell
 } from './nativeEditorTestHelpers';
 import { waitForUpdate } from './reactHelpers';
 import {
@@ -54,6 +55,7 @@ import {
     getLastOutputCell,
     getNativeFocusedEditor,
     getOutputCell,
+    injectCode,
     isCellFocused,
     isCellSelected,
     srcDirectory,
@@ -887,6 +889,14 @@ for _ in range(50):
                     0
                 );
 
+                // Force focus so we can change the text. Use special method
+                // because we can't key down on the editor
+                await focusCell(ioc, wrapper, 1);
+
+                // Change the markdown
+                let editor = getNativeFocusedEditor(wrapper);
+                injectCode(editor, 'foo');
+
                 // Switch back to code mode.
                 // At this moment, there's no cell input element, hence send key strokes to the wrapper.
                 const wrapperElement = wrapper
@@ -904,6 +914,11 @@ for _ in range(50):
                         .find(MonacoEditor).length,
                     1
                 );
+
+                // Confirm editor still has the same text
+                editor = getNativeFocusedEditor(wrapper);
+                const monacoEditor = editor!.instance() as MonacoEditor;
+                assert.equal('foo', monacoEditor.state.editor!.getValue(), 'Changing cell type lost input');
             });
 
             test('Test undo using the key \'z\'', async () => {

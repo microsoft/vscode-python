@@ -21,6 +21,7 @@ import {
     simulateKey,
     waitForMessage
 } from './testHelpers';
+import { NativeCell } from '../../datascience-ui/native-editor/nativeCell';
 
 // tslint:disable: no-any
 
@@ -77,6 +78,16 @@ export async function setupWebview(ioc: DataScienceIocContainer) {
         addMockData(ioc, 'a=1\na', 1);
         return mountNativeWebView(ioc);
     }
+}
+
+export function focusCell(ioc: DataScienceIocContainer, wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, index: number): Promise<void> {
+    const focusChange = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
+    const cell = wrapper.find(NativeCell).at(index);
+    if (cell) {
+        const vm = cell.props().cellVM;
+        cell.props().focusCell(vm.cell.id, true);
+    }
+    return focusChange;
 }
 
 // tslint:disable-next-line: no-any

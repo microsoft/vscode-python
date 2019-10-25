@@ -574,35 +574,13 @@ export class NativeCell extends React.Component<INativeCellProps> {
         const canRunBelow = this.props.cellVM.cell.state === CellState.finished || this.props.cellVM.cell.state === CellState.error;
         const switchTooltip = this.props.cellVM.cell.data.cell_type === 'code' ? getLocString('DataScience.switchToMarkdown', 'Change to markdown') :
             getLocString('DataScience.switchToCode', 'Change to code');
-        const switchToMarkdown = () => {
-            this.props.stateController.changeCellType(cellId, 'markdown');
-            this.props.stateController.sendCommand(NativeCommandType.ChangeToMarkdown, 'mouse');
-            setTimeout(() => this.props.focusCell(cellId, true), 0);
+        const otherCellType = this.props.cellVM.cell.data.cell_type === 'code' ? 'markdown' : 'code';
+        const otherCellTypeCommand = otherCellType === 'markdown' ? NativeCommandType.ChangeToMarkdown : NativeCommandType.ChangeToCode;
+        const otherCellImage = otherCellType === 'markdown' ? ImageName.SwitchToMarkdown : ImageName.SwitchToCode;
+        const switchCellType = () => {
+            this.props.stateController.changeCellType(cellId, otherCellType);
+            this.props.stateController.sendCommand(otherCellTypeCommand, 'mouse');
         };
-        const switchToCode = () => {
-            const handler = () => {
-                setTimeout(() => {
-                    this.props.stateController.changeCellType(cellId, 'code');
-                    this.props.stateController.sendCommand(NativeCommandType.ChangeToCode, 'mouse');
-                    this.props.focusCell(cellId, true);
-                }, 0);
-            };
-
-            // This is special. Coming in on a mouse down event so we get
-            // called before focus changes. After focus changes, then switch to code
-            if (this.isShowingMarkdownEditor()) {
-                this.pendingFocusLoss = handler;
-            } else {
-                handler();
-            }
-        };
-        const switchButton = this.props.cellVM.cell.data.cell_type === 'code' ?
-            <ImageButton baseTheme={this.props.baseTheme} onClick={switchToMarkdown} tooltip={switchTooltip}>
-                <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.SwitchToMarkdown} />
-            </ImageButton> :
-            <ImageButton baseTheme={this.props.baseTheme} onMouseDown={switchToCode} tooltip={switchTooltip}>
-                <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.SwitchToCode} />
-            </ImageButton>;
 
         return (
             <div className='native-editor-celltoolbar-middle'>
@@ -612,7 +590,9 @@ export class NativeCell extends React.Component<INativeCellProps> {
                 <ImageButton baseTheme={this.props.baseTheme} onClick={runBelow} disabled={!canRunBelow} tooltip={getLocString('DataScience.runBelow', 'Run cell and below')}>
                     <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.RunBelow} />
                 </ImageButton>
-                {switchButton}
+                <ImageButton baseTheme={this.props.baseTheme} onMouseDown={switchCellType} tooltip={switchTooltip}>
+                    <Image baseTheme={this.props.baseTheme} class='image-button-image' image={otherCellImage} />
+                </ImageButton>
                 <ImageButton baseTheme={this.props.baseTheme} onClick={deleteCell} tooltip={getLocString('DataScience.deleteCell', 'Delete cell')}>
                     <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Delete} />
                 </ImageButton>
