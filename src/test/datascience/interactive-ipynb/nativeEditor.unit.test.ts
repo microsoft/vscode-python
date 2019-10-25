@@ -386,7 +386,7 @@ suite('Data Science - Native Editor', () => {
         const editor = await loadEditorAddCellAndWaitForMementoUpdate(file);
 
         // Close the editor.
-        await editor.dispose();
+        editor.dispose().ignoreErrors();
 
         // Mimic changes to file (by returning a new modified time).
         when(fileSystem.stat(anything())).thenResolve({ mtime: Date.now() } as any);
