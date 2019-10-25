@@ -8,6 +8,7 @@ import { Uri } from 'vscode';
 
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterExecution, INotebookEditor, INotebookEditorProvider } from '../../client/datascience/types';
+import { NativeCell } from '../../datascience-ui/native-editor/nativeCell';
 import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
@@ -21,7 +22,6 @@ import {
     simulateKey,
     waitForMessage
 } from './testHelpers';
-import { NativeCell } from '../../datascience-ui/native-editor/nativeCell';
 
 // tslint:disable: no-any
 

@@ -37,12 +37,12 @@ import {
     addCell,
     closeNotebook,
     createNewEditor,
+    focusCell,
     getNativeCellResults,
     mountNativeWebView,
     openEditor,
     runMountedTest,
-    setupWebview,
-    focusCell
+    setupWebview
 } from './nativeEditorTestHelpers';
 import { waitForUpdate } from './reactHelpers';
 import {
