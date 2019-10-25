@@ -92,6 +92,10 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return Promise.resolve();
     }
 
+    public async refreshCommands(): Promise<void> {
+        this.commandFinder.clearCache();
+    }
+
     public isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean> {
         // See if we can find the command notebook
         return Cancellation.race(() => this.isCommandSupported(JupyterCommands.NotebookCommand, cancelToken), cancelToken);

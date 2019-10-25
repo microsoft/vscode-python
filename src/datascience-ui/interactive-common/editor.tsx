@@ -66,7 +66,7 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
     }
 
     public giveFocus() {
-        const readOnly = this.props.testMode || this.props.readOnly;
+        const readOnly = this.props.readOnly;
         if (this.state.editor && !readOnly) {
             this.state.editor.focus();
         }
@@ -182,12 +182,48 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
         }
     }
 
+    // tslint:disable-next-line: cyclomatic-complexity
     private onKeyDown = (e: monacoEditor.IKeyboardEvent) => {
         if (this.state.editor && this.state.model && this.monacoRef && this.monacoRef.current) {
-            const isSuggesting = this.monacoRef.current.isSuggesting();
             const cursor = this.state.editor.getPosition();
-            const isFirstLine = cursor !== null && cursor.lineNumber === 1;
-            const isLastLine = cursor !== null && cursor.lineNumber === this.state.model!.getLineCount();
+            const editorDomNode = this.state.editor.getDomNode();
+            let currentLine = -1;
+
+            // This gets the cell/monaco editor line where the cursor is located. With it we can include wrapped lines
+            // when the isFirstLine and the isLastLine settings are created.
+            if (cursor && editorDomNode) {
+                // Get the cursor's position on the cell/monaco editor.
+                const currentPosition = this.state.model.getValueInRange({ startLineNumber: 1, startColumn: 1, endLineNumber: cursor.lineNumber, endColumn: cursor.column }).length;
+
+                if (currentPosition === 0) {
+                    currentLine = 0;
+                } else {
+                    // Get the lines as they are being displayed, including wrapped ones.
+                    const container = editorDomNode.getElementsByClassName('view-lines')[0] as HTMLElement;
+
+                    if (container) {
+                        let charCounter = 0;
+                        let index = 0;
+
+                        // Go through each line, and compare if a character counter is bigger or equal than the cursor position.
+                        // If it is, we found the current line.
+                        while (index < container.childNodes.length) {
+                            if (charCounter < currentPosition && container.childNodes[index].textContent) {
+                                charCounter += container.childNodes[index].textContent!.length;
+                                index += 1;
+                            } else {
+                                break;
+                            }
+                        }
+
+                        currentLine = index - 1;
+                    }
+                }
+            }
+
+            const isSuggesting = this.monacoRef.current.isSuggesting();
+            const isFirstLine = currentLine === 0;
+            const isLastLine = currentLine === this.state.visibleLineCount - 1;
             const isDirty = this.state.model!.getVersionId() > this.lastCleanVersionId;
 
             // See if we need to use the history or not

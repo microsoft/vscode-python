@@ -17,6 +17,7 @@ import { InteractivePanel } from '../../datascience-ui/history-react/interactive
 import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { IKeyboardEvent } from '../../datascience-ui/react-common/event';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
+import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
 import { updateSettings } from '../../datascience-ui/react-common/settingsReactSide';
 import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
@@ -39,10 +40,16 @@ export function waitForMessage(ioc: DataScienceIocContainer, message: string): P
     // Wait for the mounted web panel to send a message back to the data explorer
     const promise = createDeferred<void>();
     let handler: (m: string, p: any) => void;
+    const timer = setTimeout(() => {
+        if (!promise.resolved) {
+            promise.reject(new Error(`Waiting for ${message} timed out`));
+        }
+    }, 3000); // Max 3 seconds for a message. Should be almost instant but this will make tests fail faster than the max timeout.
     handler = (m: string, _p: any) => {
         if (m === message) {
             ioc.removeMessageListener(handler);
             promise.resolve();
+            clearTimeout(timer);
         }
     };
     ioc.addMessageListener(handler);
@@ -107,12 +114,40 @@ export function addContinuousMockData(ioc: DataScienceIocContainer, code: string
         ioc.mockJupyter.addContinuousOutputCell(code, resultGenerator);
     }
 }
+
+export function getOutputCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, cellType: string, cellIndex: number | CellPosition): ReactWrapper<any, Readonly<{}>, React.Component> | undefined {
+    const foundResult = wrapper.find(cellType);
+    let targetCell: ReactWrapper | undefined ;
+    // Get the correct result that we are dealing with
+    if (typeof cellIndex === 'number') {
+        if (cellIndex >= 0 && cellIndex <= foundResult.length - 1) {
+            targetCell = foundResult.at(cellIndex);
+        }
+    } else if (typeof cellIndex === 'string') {
+        switch (cellIndex) {
+            case CellPosition.First:
+                targetCell = foundResult.first();
+                break;
+
+            case CellPosition.Last:
+                // Skip the input cell on these checks.
+                targetCell = getLastOutputCell(wrapper, cellType);
+                break;
+
+            default:
+                // Fall through, targetCell check will fail out
+                break;
+        }
+    }
+
+    return targetCell;
+}
+
 export function getLastOutputCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, cellType: string): ReactWrapper<any, Readonly<{}>, React.Component> {
     // Skip the edit cell if in the interactive window
     const count = cellType === 'InteractiveCell' ? 2 : 1;
     const foundResult = wrapper.find(cellType);
-    assert.ok(foundResult.length >= count, 'Didn\'t find any cells being rendered');
-    return foundResult.at(foundResult.length - count);
+    return getOutputCell(wrapper, cellType, foundResult.length - count)!;
 }
 
 export function verifyHtmlOnCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, cellType: string, html: string | undefined, cellIndex: number | CellPosition) {
@@ -320,7 +355,7 @@ export async function getCellResults(
     return wrapper.find(cellType);
 }
 
-function simulateKey(domNode: HTMLTextAreaElement, key: string, shiftDown?: boolean) {
+export function simulateKey(domNode: HTMLTextAreaElement, key: string, shiftDown?: boolean, ctrlKey?: boolean) {
     // Submit a keypress into the textarea. Simulate doesn't work here because the keydown
     // handler is not registered in any react code. It's being handled with DOM events
 
@@ -333,21 +368,23 @@ function simulateKey(domNode: HTMLTextAreaElement, key: string, shiftDown?: bool
     // 1) keydown
     // 2) keypress
     // 3) keyup
-    let event = createKeyboardEvent('keydown', { key, code: key, shiftKey: shiftDown });
+    let event = createKeyboardEvent('keydown', { key, code: key, shiftKey: shiftDown, ctrlKey });
 
     // Dispatch. Result can be swallowed. If so skip the next event.
     let result = domNode.dispatchEvent(event);
     if (result) {
-        event = createKeyboardEvent('keypress', { key, code: key, shiftKey: shiftDown });
+        event = createKeyboardEvent('keypress', { key, code: key, shiftKey: shiftDown, ctrlKey });
         result = domNode.dispatchEvent(event);
         if (result) {
-            event = createKeyboardEvent('keyup', { key, code: key, shiftKey: shiftDown });
+            event = createKeyboardEvent('keyup', { key, code: key, shiftKey: shiftDown, ctrlKey });
             domNode.dispatchEvent(event);
 
             // Update our value. This will reset selection to zero.
             const before = domNode.value.slice(0, selectionStart);
             const after = domNode.value.slice(selectionStart);
-            domNode.value = `${before}${key}${after}`;
+            const keyText = key === 'Enter' ? '\n' : key;
+
+            domNode.value = `${before}${keyText}${after}`;
 
             // Tell the dom node its selection start has changed. Monaco
             // reads this to determine where the character went.
@@ -383,19 +420,41 @@ export function getInteractiveEditor(wrapper: ReactWrapper<any, Readonly<{}>, Re
     return lastCell.find('MonacoEditor');
 }
 
-export function getNativeFocusedEditor(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>): ReactWrapper<any, Readonly<{}>, React.Component> {
+export function getNativeFocusedEditor(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>): ReactWrapper<any, Readonly<{}>, React.Component> | undefined {
     // Find the last cell. It should have a monacoEditor object
+    wrapper.update();
     const cells = wrapper.find('NativeCell');
     const focusedCell = cells.find('.cell-wrapper-focused');
-    return focusedCell.find('MonacoEditor');
+    return focusedCell.length > 0 ? focusedCell.find('MonacoEditor') : undefined;
 }
 
-export function typeCode(editorControl: ReactWrapper<any, Readonly<{}>, React.Component>, code: string): HTMLTextAreaElement | null {
+export function injectCode(editorControl: ReactWrapper<any, Readonly<{}>, React.Component> | undefined, code: string): HTMLTextAreaElement | null {
+    assert.ok(editorControl, 'Editor undefined for injecting code');
+    const ecDom = editorControl!.getDOMNode();
+    assert.ok(ecDom, 'ec DOM object not found');
+    const textArea = ecDom!.querySelector('.overflow-guard')!.querySelector('textarea');
+    assert.ok(textArea!, 'Cannot find the textarea inside the monaco editor');
+    textArea!.focus();
+
+    // Just stick directly into the model.
+    const editor = editorControl!.instance() as MonacoEditor;
+    assert.ok(editor, 'MonacoEditor not found');
+    const monaco = editor.state.editor;
+    assert.ok(monaco, 'Monaco control not found');
+    const model = monaco!.getModel();
+    assert.ok(model, 'Monaco model not found');
+    model!.setValue(code);
+
+    return textArea;
+}
+
+export function typeCode(editorControl: ReactWrapper<any, Readonly<{}>, React.Component> | undefined, code: string): HTMLTextAreaElement | null {
     // Find the last cell. It should have a monacoEditor object. We need to search
     // through its DOM to find the actual textarea to send input to
     // (we can't actually find it with the enzyme wrappers because they only search
     //  React accessible nodes and the monaco html is not react)
-    const ecDom = editorControl.getDOMNode();
+    assert.ok(editorControl, 'Editor not defined in order to type code into');
+    const ecDom = editorControl!.getDOMNode();
     assert.ok(ecDom, 'ec DOM object not found');
     const textArea = ecDom!.querySelector('.overflow-guard')!.querySelector('textarea');
     assert.ok(textArea!, 'Cannot find the textarea inside the monaco editor');
@@ -403,7 +462,11 @@ export function typeCode(editorControl: ReactWrapper<any, Readonly<{}>, React.Co
 
     // Now simulate entering all of the keys
     for (let i = 0; i < code.length; i += 1) {
-        enterKey(textArea!, code.charAt(i));
+        let keyCode = code.charAt(i);
+        if (keyCode === '\n') {
+            keyCode = 'Enter';
+        }
+        enterKey(textArea!, keyCode);
     }
 
     return textArea;

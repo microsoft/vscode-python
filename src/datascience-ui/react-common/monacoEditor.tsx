@@ -18,6 +18,16 @@ const throttle = require('lodash/throttle') as typeof import('lodash/throttle');
 import './monacoEditor.css';
 
 const LINE_HEIGHT = 18;
+enum WidgetCSSSelector {
+    /**
+     * CSS Selector for the parameters widget displayed by Monaco.
+     */
+    Parameters = '.parameter-hints-widget',
+    /**
+     * CSS Selector for the hover widget displayed by Monaco.
+     */
+    Hover = '.monaco-editor-hover'
+}
 
 export interface IMonacoEditorProps {
     language: string;
@@ -75,6 +85,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         this.containerRef = React.createRef<HTMLDivElement>();
         this.measureWidthRef = React.createRef<HTMLDivElement>();
         this.debouncedUpdateEditorSize = debounce(this.updateEditorSize.bind(this), 150);
+        this.hideAllOtherHoverAndParameterWidgets = debounce(this.hideAllOtherHoverAndParameterWidgets.bind(this), 150);
 
         // JSDOM has MutationObserver in the window object
         if ('MutationObserver' in window) {
@@ -139,6 +150,9 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             if (model) {
                 this.subscriptions.push(model.onDidChangeContent(() => {
                     this.windowResized();
+                    if (this.state.editor && this.state.editor.hasWidgetFocus()){
+                        this.hideAllOtherHoverAndParameterWidgets();
+                    }
                 }));
             }
 
@@ -175,6 +189,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             this.subscriptions.push(editor.onDidFocusEditorWidget(() => {
                 this.throttledUpdateWidgetPosition();
                 this.updateWidgetParent(editor);
+                this.hideAllOtherHoverAndParameterWidgets();
             }));
 
             // Update our margin to include the correct line number style
@@ -195,6 +210,12 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
             // Tell our parent the editor is ready to use
             this.props.editorMounted(editor);
+
+            if (editor){
+                this.subscriptions.push(editor.onMouseMove(() => {
+                    this.hideAllOtherHoverAndParameterWidgets();
+                }));
+            }
         }
     }
 
@@ -491,7 +512,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         }
 
         // Find all parameter widgets related to this monaco editor.
-        const knownParameterHintsWidgets: HTMLDivElement[] = Array.prototype.slice.call(this.widgetParent.querySelectorAll('.parameter-hints-widget'));
+        const knownParameterHintsWidgets: HTMLDivElement[] = Array.prototype.slice.call(this.widgetParent.querySelectorAll(WidgetCSSSelector.Parameters));
 
         // Lets not assume we'll have the exact same DOM for parameter widgets.
         // So, just remove the event handler, and add it again later.
@@ -549,14 +570,44 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         // We need to hide them.
 
         // Solution: Hide the widgets manually.
-        knownParameterHintsWidgets.forEach(widget => {
-            widget.setAttribute('class', widget.className.split(' ').filter(cls => cls !== 'visible').join(' '));
-            if (widget.style.visibility !== 'hidden') {
-                widget.style.visibility = 'hidden';
-            }
-        });
+        this.hideWidgets(this.widgetParent, [WidgetCSSSelector.Parameters]);
     }
-
+    /**
+     * Hides widgets such as parameters and hover, that belong to a given parent HTML element.
+     *
+     * @private
+     * @param {HTMLDivElement} widgetParent
+     * @param {string[]} selectors
+     * @memberof MonacoEditor
+     */
+    private hideWidgets(widgetParent: HTMLDivElement, selectors: string[]){
+        for (const selector of selectors){
+            for (const widget of Array.from<HTMLDivElement>(widgetParent.querySelectorAll(selector))) {
+                widget.setAttribute('class', widget.className.split(' ').filter((cls: string) => cls !== 'visible').join(' '));
+                if (widget.style.visibility !== 'hidden') {
+                    widget.style.visibility = 'hidden';
+                }
+            }
+        }
+    }
+    /**
+     * Hides the hover and parameters widgets related to other monaco editors.
+     * Use this to ensure we only display hover/parameters widgets for current editor (by hiding others).
+     *
+     * @private
+     * @returns
+     * @memberof MonacoEditor
+     */
+    private hideAllOtherHoverAndParameterWidgets(){
+        const root = document.getElementById('root');
+        if (!root || !this.widgetParent){
+            return;
+        }
+        const widgetParents: HTMLDivElement[] = Array.prototype.slice.call(root.querySelectorAll('div.monaco-editor-pretend-parent'));
+        widgetParents
+        .filter(widgetParent => widgetParent !== this.widgetParent)
+        .forEach(widgetParent => this.hideWidgets(widgetParent, [WidgetCSSSelector.Parameters, WidgetCSSSelector.Hover]));
+    }
     private updateMargin(editor: monacoEditor.editor.IStandaloneCodeEditor) {
         const editorNode = editor.getDomNode();
         if (editorNode) {

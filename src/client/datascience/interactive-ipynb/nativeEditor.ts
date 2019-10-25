@@ -21,7 +21,7 @@ import {
 import { ContextKey } from '../../common/contextKey';
 import { traceError } from '../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../../common/types';
+import { GLOBAL_MEMENTO, IConfigurationService, IDisposableRegistry, IMemento } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -112,7 +112,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         @inject(IJupyterDebugger) jupyterDebugger: IJupyterDebugger,
         @inject(INotebookImporter) private importer: INotebookImporter,
         @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler,
-        @inject(IMemento) @named(WORKSPACE_MEMENTO) private workspaceStorage: Memento
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private globalStorage: Memento
     ) {
         super(
             listeners,
@@ -157,9 +157,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         const baseName = path.basename(this.file.fsPath);
         return baseName.includes(localize.DataScience.untitledNotebookFileName());
     }
-    public dispose(): void {
+    public dispose(): Promise<void> {
         super.dispose();
-        this.close().ignoreErrors();
+        return this.close();
     }
 
     public get contents(): string {
@@ -184,7 +184,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         await this.show();
 
         // See if this file was stored in storage prior to shutdown
-        const dirtyContents = this.getStoredContents();
+        const dirtyContents = await this.getStoredContents();
         if (dirtyContents) {
             // This means we're dirty. Indicate dirty and load from this content
             return this.loadContents(dirtyContents, true);
@@ -551,14 +551,41 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private getStorageKey(): string {
         return `notebook-storage-${this._file.toString()}`;
     }
-
-    private getStoredContents(): string | undefined {
-        return this.workspaceStorage.get<string>(this.getStorageKey());
+    /**
+     * Gets any unsaved changes to the notebook file.
+     * If the file has been modified since the uncommitted changes were stored, then ignore the uncommitted changes.
+     *
+     * @private
+     * @returns {(Promise<string | undefined>)}
+     * @memberof NativeEditor
+     */
+    private async getStoredContents(): Promise<string | undefined> {
+        const data = this.globalStorage.get<{contents?: string; lastModifiedTimeMs?: number}>(this.getStorageKey());
+        // Check whether the file has been modified since the last time the contents were saved.
+        if (data && data.lastModifiedTimeMs && !this.isUntitled && this.file.scheme === 'file'){
+            const stat = await this.fileSystem.stat(this.file.fsPath);
+            if (stat.mtime > data.lastModifiedTimeMs){
+                return;
+            }
+        }
+        return data ? data.contents : undefined;
     }
 
+    /**
+     * Stores the uncommitted notebook changes into a temporary location.
+     * Also keep track of the current time. This way we can check whether changes were
+     * made to the file since the last time uncommitted changes were stored.
+     *
+     * @private
+     * @param {string} [contents]
+     * @returns {Promise<void>}
+     * @memberof NativeEditor
+     */
     private async storeContents(contents?: string): Promise<void> {
         const key = this.getStorageKey();
-        await this.workspaceStorage.update(key, contents);
+        // Keep track of the time when this data was saved.
+        // This way when we retrieve the data we can compare it against last modified date of the file.
+        await this.globalStorage.update(key, {contents, lastModifiedTimeMs: Date.now()});
     }
 
     private async close(): Promise<void> {
@@ -589,7 +616,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                     await this.saveToDisk();
 
                     // Close it
-                    actuallyClose().ignoreErrors();
+                    await actuallyClose();
                     break;
 
                 case AskForSaveResult.No:
@@ -597,7 +624,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                     await this.setClean();
 
                     // Close it
-                    actuallyClose().ignoreErrors();
+                    await actuallyClose();
                     break;
 
                 default:
@@ -607,7 +634,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             }
         } else {
             // Not dirty, just close normally.
-            actuallyClose().ignoreErrors();
+            return actuallyClose();
         }
     }
 

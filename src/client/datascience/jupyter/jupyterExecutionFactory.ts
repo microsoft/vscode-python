@@ -103,6 +103,11 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
         return execution.dispose();
     }
 
+    public async refreshCommands(): Promise<void> {
+        const execution = await this.executionFactory.get();
+        return execution.refreshCommands();
+    }
+
     public async isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean> {
         const execution = await this.executionFactory.get();
         return execution.isNotebookSupported(cancelToken);

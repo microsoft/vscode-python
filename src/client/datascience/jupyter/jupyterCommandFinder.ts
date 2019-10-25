@@ -108,6 +108,14 @@ export class JupyterCommandFinder {
             sendTelemetryEvent(Telemetry.FindJupyterCommand, timer.elapsedTime, { command });
         }
     }
+
+    /**
+     * Clears the caching of any commands so a search starts a new
+     */
+    public clearCache() {
+        this.commands.clear();
+    }
+
     private async findInterpreterCommand(command: JupyterCommands, interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<IFindCommandResult> {
         let findResult: IFindCommandResult = {
             status: ModuleExistsStatus.NotFound,

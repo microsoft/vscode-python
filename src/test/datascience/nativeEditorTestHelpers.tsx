@@ -9,34 +9,44 @@ import { Uri } from 'vscode';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterExecution, INotebookEditor, INotebookEditorProvider } from '../../client/datascience/types';
 import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
+import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { waitForUpdate } from './reactHelpers';
-import { addMockData, getCellResults, getMainPanel, mountWebView, waitForMessage } from './testHelpers';
+import {
+    addMockData,
+    getCellResults,
+    getMainPanel,
+    getNativeFocusedEditor,
+    injectCode,
+    mountWebView,
+    simulateKey,
+    waitForMessage
+} from './testHelpers';
 
 // tslint:disable: no-any
 
 async function getOrCreateNativeEditor(ioc: DataScienceIocContainer, uri?: Uri, contents?: string): Promise<INotebookEditor> {
     const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+    let editor: INotebookEditor | undefined;
+    const messageWaiter = waitForMessage(ioc, InteractiveWindowMessages.LoadAllCellsComplete);
     if (uri && contents) {
-        return notebookProvider.open(uri, contents);
+        editor = await notebookProvider.open(uri, contents);
     } else {
-        return notebookProvider.createNew();
+        editor = await notebookProvider.createNew();
     }
+    if (editor) {
+        await messageWaiter;
+    }
+
+    return editor;
 }
 
 export async function createNewEditor(ioc: DataScienceIocContainer): Promise<INotebookEditor> {
-    const loaded = waitForMessage(ioc, InteractiveWindowMessages.LoadAllCellsComplete);
-    const result = await getOrCreateNativeEditor(ioc);
-    await loaded;
-    return result;
+    return getOrCreateNativeEditor(ioc);
 }
 
 export async function openEditor(ioc: DataScienceIocContainer, contents: string, filePath: string = '/usr/home/test.ipynb'): Promise<INotebookEditor> {
-    const loaded = waitForMessage(ioc, InteractiveWindowMessages.LoadAllCellsComplete);
     const uri = Uri.file(filePath);
-    const result = await getOrCreateNativeEditor(ioc, uri, contents);
-    await loaded;
-    return result;
+    return getOrCreateNativeEditor(ioc, uri, contents);
 }
 
 // tslint:disable-next-line: no-any
@@ -70,23 +80,29 @@ export async function setupWebview(ioc: DataScienceIocContainer) {
 }
 
 // tslint:disable-next-line: no-any
-export async function addCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string, submit: boolean = true, expectedSubmitRenderCount: number = 5): Promise<void> {
-    // First get the stateController on the main panel. That's how we'll add a new cell.
-    const reactEditor = getMainPanel<NativeEditor>(wrapper, NativeEditor);
-    assert.ok(reactEditor, 'Cannot find the main panel during adding a cell');
-    let update = waitForUpdate(wrapper, NativeEditor, 1);
-    const vm = reactEditor!.stateController.addNewCell();
+export async function addCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, ioc: DataScienceIocContainer, code: string, submit: boolean = true): Promise<void> {
+    // First get the main toolbar. We'll use this to add a cell.
+    const toolbar = wrapper.find('#main-panel-toolbar');
+    assert.ok(toolbar, 'Cannot find the main panel toolbar during adding a cell');
+    const ImageButtons = toolbar.find(ImageButton);
+    assert.equal(ImageButtons.length, 8, 'Toolbar buttons not found');
+    const addButton = ImageButtons.at(2);
+    let update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
+    addButton.simulate('click');
 
     if (submit) {
-        // Then use that cell to stick new input.
-        assert.ok(vm, 'Did not add a new cell to the main panel');
         await update;
 
-        update = waitForUpdate(wrapper, NativeEditor, expectedSubmitRenderCount);
-        reactEditor!.stateController.submitInput(code, vm!);
+        // Type in the code
+        const editorEnzyme = getNativeFocusedEditor(wrapper);
+        const textArea = injectCode(editorEnzyme, code);
+
+        // Then run the cell (use ctrl+enter so we don't add another cell)
+        update = waitForMessage(ioc, InteractiveWindowMessages.RenderComplete);
+        simulateKey(textArea!, 'Enter', false, true);
+
         return update;
     } else {
-        // For non submit scenarios just return back the wait for the add update
         return update;
     }
 }

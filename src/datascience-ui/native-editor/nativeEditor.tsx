@@ -393,8 +393,8 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             this.debounceUpdateVisibleCells();
         }
         return (
-            <div key={index} id={cellVM.cell.id} ref={containerRef}>
-                <ErrorBoundary key={index}>
+            <div key={cellVM.cell.id} id={cellVM.cell.id} ref={containerRef}>
+                <ErrorBoundary>
                     <NativeCell
                         ref={cellRef}
                         role='listitem'

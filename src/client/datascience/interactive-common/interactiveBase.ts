@@ -718,6 +718,14 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             // updates their install and we just fail again because the load promise is the same.
             await this.closeBecauseOfFailure(exc);
 
+            // Also reset the load promise. Otherwise we just keep hitting the same error.
+            this.loadPromise = undefined;
+
+            // Also tell jupyter execution to reset its search. Otherwise we've just cached
+            // the failure there too
+            await this.jupyterExecution.refreshCommands();
+
+            // Finally throw the exception so the user can do something about it.
             throw exc;
         }
     }
