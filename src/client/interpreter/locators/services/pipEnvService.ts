@@ -7,7 +7,7 @@ import { Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../common/application/types';
 import { traceError } from '../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
-import { IProcessServiceFactory } from '../../../common/process/types';
+import { IPythonExecutionFactory } from '../../../common/process/types';
 import { IConfigurationService, ICurrentProcess, ILogger } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { IInterpreterHelper, InterpreterType, IPipEnvService, PythonInterpreter } from '../../contracts';
@@ -19,7 +19,7 @@ const pipEnvFileNameVariable = 'PIPENV_PIPFILE';
 @injectable()
 export class PipEnvService extends CacheableLocatorService implements IPipEnvService {
     private readonly helper: IInterpreterHelper;
-    private readonly processServiceFactory: IProcessServiceFactory;
+    private readonly pythonServiceFactory: IPythonExecutionFactory;
     private readonly workspace: IWorkspaceService;
     private readonly fs: IFileSystem;
     private readonly logger: ILogger;
@@ -29,7 +29,7 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super('PipEnvService', serviceContainer, true);
         this.helper = this.serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
-        this.processServiceFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
+        this.pythonServiceFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         this.workspace = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
         this.logger = this.serviceContainer.get<ILogger>(ILogger);
@@ -37,7 +37,7 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
         this.pipEnvServiceHelper = this.serviceContainer.get<IPipEnvServiceHelper>(IPipEnvServiceHelper);
     }
     // tslint:disable-next-line:no-empty
-    public dispose() {}
+    public dispose() { }
     public async isRelatedPipEnvironment(dir: string, pythonPath: string): Promise<boolean> {
         // In PipEnv, the name of the cwd is used as a prefix in the virtual env.
         if (pythonPath.indexOf(`${path.sep}${path.basename(dir)}-`) === -1) {
@@ -141,9 +141,8 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
 
     private async invokePipenv(arg: string, rootPath: string): Promise<string | undefined> {
         try {
-            const processService = await this.processServiceFactory.create(Uri.file(rootPath));
-            const execName = this.executable;
-            const result = await processService.exec(execName, [arg], { cwd: rootPath });
+            const processService = await this.pythonServiceFactory.create({ resource: Uri.file(rootPath), pythonPath: this.executable });
+            const result = await processService.exec([arg], { cwd: rootPath });
             if (result) {
                 const stdout = result.stdout ? result.stdout.trim() : '';
                 const stderr = result.stderr ? result.stderr.trim() : '';

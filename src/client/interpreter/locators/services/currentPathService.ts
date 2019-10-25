@@ -3,7 +3,7 @@ import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { traceError, traceInfo } from '../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
-import { IProcessServiceFactory } from '../../../common/process/types';
+import { IPythonExecutionFactory } from '../../../common/process/types';
 import { IConfigurationService } from '../../../common/types';
 import { OSType } from '../../../common/utils/platform';
 import { IServiceContainer } from '../../../ioc/types';
@@ -23,7 +23,7 @@ export class CurrentPathService extends CacheableLocatorService {
 
     public constructor(
         @inject(IInterpreterHelper) private helper: IInterpreterHelper,
-        @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
+        @inject(IPythonExecutionFactory) private readonly pythonServiceFactory: IPythonExecutionFactory,
         @inject(IPythonInPathCommandProvider) private readonly pythonCommandProvider: IPythonInPathCommandProvider,
         @inject(IServiceContainer) serviceContainer: IServiceContainer
     ) {
@@ -86,9 +86,9 @@ export class CurrentPathService extends CacheableLocatorService {
      */
     private async getInterpreter(options: { command: string; args?: string[] }) {
         try {
-            const processService = await this.processServiceFactory.create();
+            const processService = await this.pythonServiceFactory.create({ pythonPath: options.command });
             const args = Array.isArray(options.args) ? options.args : [];
-            return processService.exec(options.command, args.concat(['-c', 'import sys;print(sys.executable)']), {})
+            return processService.exec(args.concat(['-c', 'import sys;print(sys.executable)']), {})
                 .then(output => output.stdout.trim())
                 .then(async value => {
                     if (value.length > 0 && await this.fs.fileExists(value)) {

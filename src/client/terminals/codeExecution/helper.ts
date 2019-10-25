@@ -8,7 +8,7 @@ import { IApplicationShell, IDocumentManager } from '../../common/application/ty
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../common/constants';
 import '../../common/extensions';
 import { traceError } from '../../common/logger';
-import { IProcessServiceFactory } from '../../common/process/types';
+import { IPythonExecutionFactory } from '../../common/process/types';
 import { IConfigurationService } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { ICodeExecutionHelper } from '../types';
@@ -17,12 +17,12 @@ import { ICodeExecutionHelper } from '../types';
 export class CodeExecutionHelper implements ICodeExecutionHelper {
     private readonly documentManager: IDocumentManager;
     private readonly applicationShell: IApplicationShell;
-    private readonly processServiceFactory: IProcessServiceFactory;
+    private readonly pythonServiceFactory: IPythonExecutionFactory;
     private readonly configurationService: IConfigurationService;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         this.documentManager = serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.applicationShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
-        this.processServiceFactory = serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
+        this.pythonServiceFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         this.configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     }
     public async normalizeLines(code: string, resource?: Uri): Promise<string> {
@@ -35,8 +35,8 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             code = code.replace(new RegExp('\\r', 'g'), '');
             const pythonPath = this.configurationService.getSettings(resource).pythonPath;
             const args = [path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'normalizeForInterpreter.py'), code];
-            const processService = await this.processServiceFactory.create(resource);
-            const proc = await processService.exec(pythonPath, args, { throwOnStdErr: true });
+            const processService = await this.pythonServiceFactory.create({ resource: resource, pythonPath: pythonPath });
+            const proc = await processService.exec(args, { throwOnStdErr: true });
 
             return proc.stdout;
         } catch (ex) {
