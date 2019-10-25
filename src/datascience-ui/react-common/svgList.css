@@ -26,6 +26,10 @@
     border-width: 1px;
 }
 
+.svg-list-white-background {
+    background: white;
+}
+
 .svg-list-item-image {
     width: 100px;
     height: 100px;
