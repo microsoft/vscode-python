@@ -49,7 +49,8 @@ export class JediIntellisenseProvider extends BaseIntellisenseProvider implement
         // Make sure we're active. We still listen to messages for adding and editing cells,
         // but we don't actually return any data.
         const isJediActive = () => {
-            return this.configService.getSettings().jediEnabled;
+            const lsSetting = this.configService.getSettings().languageServer;
+            return lsSetting === 'jedi';
         };
         this.active = isJediActive();
 

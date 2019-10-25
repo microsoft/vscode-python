@@ -110,6 +110,8 @@ export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
     }
 
     public async enableNewLanguageServer(): Promise<void> {
+        await this.configuration.updateSetting('languageServer', 'microsoft', undefined, ConfigurationTarget.Global);
+        // TODO: remove below when Intellicode supports languageServer setting.
         await this.configuration.updateSetting('jediEnabled', false, undefined, ConfigurationTarget.Global);
     }
 }

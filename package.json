@@ -1835,10 +1835,14 @@
                     "description": "Whether to install Python modules globally when not using an environment.",
                     "scope": "resource"
                 },
-                "python.jediEnabled": {
-                    "type": "boolean",
-                    "default": true,
-                    "description": "Enables Jedi as IntelliSense engine instead of Microsoft Python Analysis Engine.",
+                "python.languageServer": {
+                    "type": "string",
+                    "enum": [
+                        "jedi",
+                        "microsoft",
+                        "none"
+                    ],
+                    "description": "Specifies which language server to use for IntelliSense engine.",
                     "scope": "resource"
                 },
                 "python.jediMemoryLimit": {

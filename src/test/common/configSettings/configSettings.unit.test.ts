@@ -24,7 +24,8 @@ import {
     ISortImportSettings,
     ITerminalSettings,
     ITestingSettings,
-    IWorkspaceSymbolSettings
+    IWorkspaceSymbolSettings,
+    LanguageServerType
 } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
@@ -54,7 +55,7 @@ suite('Python Settings', async () => {
                 // tslint:disable-next-line:no-any
                 .returns(() => (sourceSettings as any)[name]);
         }
-        if (sourceSettings.jediEnabled) {
+        if (sourceSettings.languageServer === 'jedi') {
             config.setup(c => c.get<string>('jediPath'))
                 .returns(() => sourceSettings.jediPath);
         }
@@ -65,7 +66,7 @@ suite('Python Settings', async () => {
         }
 
         // boolean settings
-        for (const name of ['downloadLanguageServer', 'jediEnabled', 'autoUpdateLanguageServer']) {
+        for (const name of ['downloadLanguageServer', 'autoUpdateLanguageServer']) {
             config.setup(c => c.get<boolean>(name, true))
                 // tslint:disable-next-line:no-any
                 .returns(() => (sourceSettings as any)[name]);
@@ -77,7 +78,7 @@ suite('Python Settings', async () => {
         }
 
         // number settings
-        if (sourceSettings.jediEnabled) {
+        if (sourceSettings.languageServer === 'jedi') {
             config.setup(c => c.get<number>('jediMemoryLimit'))
                 .returns(() => sourceSettings.jediMemoryLimit);
         }
@@ -108,6 +109,8 @@ suite('Python Settings', async () => {
             .returns(() => sourceSettings.datascience);
         config.setup(c => c.get<IExperiments>('experiments'))
             .returns(() => sourceSettings.experiments);
+        config.setup(c => c.get<LanguageServerType>('languageServer'))
+            .returns(() => sourceSettings.languageServer);
     }
 
     function testIfValueIsUpdated(settingName: string, value: any) {
@@ -130,7 +133,7 @@ suite('Python Settings', async () => {
     });
 
     suite('Boolean settings', async () => {
-        ['downloadLanguageServer', 'jediEnabled', 'autoUpdateLanguageServer', 'globalModuleInstallation'].forEach(async settingName => {
+        ['downloadLanguageServer', 'autoUpdateLanguageServer', 'globalModuleInstallation'].forEach(async settingName => {
             testIfValueIsUpdated(settingName, true);
         });
     });

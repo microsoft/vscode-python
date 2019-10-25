@@ -49,7 +49,7 @@ export type PythonSettingKeys = 'workspaceSymbols.enabled' | 'pythonPath' |
     'testing.nosetestArgs' | 'testing.pytestArgs' | 'testing.unittestArgs' |
     'formatting.provider' | 'sortImports.args' |
     'testing.nosetestsEnabled' | 'testing.pytestEnabled' | 'testing.unittestEnabled' |
-    'envFile' | 'jediEnabled' | 'linting.ignorePatterns' | 'terminal.activateEnvironment';
+    'envFile' | 'languageServer' | 'linting.ignorePatterns' | 'terminal.activateEnvironment';
 
 async function disposePythonSettings() {
     if (!IS_SMOKE_TEST) {

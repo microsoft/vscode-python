@@ -41,8 +41,8 @@ export class DotNetIntellisenseProvider extends BaseIntellisenseProvider impleme
         // Make sure we're active. We still listen to messages for adding and editing cells,
         // but we don't actually return any data.
         const isLsActive = () => {
-            const lsSetting = this.configService.getSettings().jediEnabled;
-            return !lsSetting;
+            const lsSetting = this.configService.getSettings().languageServer;
+            return lsSetting === 'microsoft';
         };
         this.active = isLsActive();
 
