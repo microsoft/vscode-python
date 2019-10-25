@@ -322,7 +322,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             // tslint:disable-next-line: no-suspicious-comment
             // TODO: How to have this work for when the keyboard shortcuts are changed?
             case 's':
-                if (event.ctrlKey) {
+                if (event.ctrlKey || event.metaKey) {
                     // This is save, save our cells
                     this.stateController.save();
                     this.stateController.sendCommand(NativeCommandType.Save, 'keyboard');

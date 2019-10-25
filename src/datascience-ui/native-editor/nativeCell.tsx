@@ -250,7 +250,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                 }
                 break;
             case 's':
-                if (e.ctrlKey) {
+                if (e.ctrlKey || e.metaKey) {
                     // This is save, save our cells
                     this.props.stateController.save();
                 }

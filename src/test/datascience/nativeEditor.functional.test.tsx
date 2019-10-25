@@ -960,7 +960,7 @@ for _ in range(50):
                 }
             });
 
-            test('Test save using the key \'s\'', async () => {
+            test('Test save using the key \'ctrl+s\'', async () => {
                 clickCell(0);
 
                 await addCell(wrapper, ioc, 'a=1\na', true);
@@ -972,6 +972,24 @@ for _ in range(50):
                 editor.saved(() => savedPromise.resolve());
 
                 simulateKeyPressOnCell(1, { code: 's', ctrlKey: true });
+
+                await waitForPromise(savedPromise.promise, 1_000);
+
+                assert.ok(!editor!.isDirty, 'Editor should not be dirty after saving');
+            });
+
+            test('Test save using the key \'cmd+s\'', async () => {
+                clickCell(0);
+
+                await addCell(wrapper, ioc, 'a=1\na', true);
+
+                const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+                const editor = notebookProvider.editors[0];
+                assert.ok(editor, 'No editor when saving');
+                const savedPromise = createDeferred();
+                editor.saved(() => savedPromise.resolve());
+
+                simulateKeyPressOnCell(1, { code: 's', metaKey: true });
 
                 await waitForPromise(savedPromise.promise, 1_000);
 
