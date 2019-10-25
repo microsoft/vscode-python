@@ -5,6 +5,7 @@ import { expect } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { ConfigurationChangeEvent, Disposable, EventEmitter, TextEditor, Uri } from 'vscode';
 
+import * as sinon from 'sinon';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { DocumentManager } from '../../../client/common/application/documentManager';
@@ -24,7 +25,6 @@ import { LiveShareApi } from '../../../client/common/liveshare/liveshare';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService } from '../../../client/common/types';
-import { sleep } from '../../../client/common/utils/async';
 import { CodeCssGenerator } from '../../../client/datascience/codeCssGenerator';
 import { DataViewerProvider } from '../../../client/datascience/data-viewing/dataViewerProvider';
 import { DataScienceErrorHandler } from '../../../client/datascience/errorHandler/errorHandler';
@@ -54,6 +54,7 @@ import {
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { createEmptyCell } from '../../../datascience-ui/interactive-common/mainState';
+import { waitForCondition } from '../../common';
 import { MockMemento } from '../../mocks/mementos';
 
 // tslint:disable: no-any chai-vague-errors no-unused-expression
@@ -81,7 +82,8 @@ suite('Data Science - Native Editor', () => {
     let jupyterVariables: IJupyterVariables;
     let jupyterDebugger: IJupyterDebugger;
     let importer: INotebookImporter;
-    const storage: MockMemento = new MockMemento();
+    let storage: MockMemento;
+    let storageUpdateSpy: sinon.SinonSpy<[string, any], Thenable<void>>;
     const baseFile = `{
  "cells": [
   {
@@ -180,6 +182,8 @@ suite('Data Science - Native Editor', () => {
 }`;
 
     setup(() => {
+        storage = new MockMemento();
+        storageUpdateSpy = sinon.spy(storage, 'update');
         configService = mock(ConfigurationService);
         fileSystem = mock(FileSystem);
         doctManager = mock(DocumentManager);
@@ -216,11 +220,11 @@ suite('Data Science - Native Editor', () => {
 
         const sessionChangedEvent = new EventEmitter<void>();
         when(executionProvider.sessionChanged).thenReturn(sessionChangedEvent.event);
-
     });
 
     teardown(() => {
         storage.clear();
+        sinon.reset();
     });
 
     function createEditor() {
@@ -305,11 +309,14 @@ suite('Data Science - Native Editor', () => {
         const editor = createEditor();
         await editor.load(baseFile, file);
         expect(editor.contents).to.be.equal(baseFile);
+        storageUpdateSpy.resetHistory();
         editor.onMessage(InteractiveWindowMessages.InsertCell, { index: 0, cell: createEmptyCell('1', 1) });
         expect(editor.cells).to.be.lengthOf(4);
 
         // Wait for contents to be stored in memento.
-        await sleep(1);
+        // Editor will save uncommitted changes into storage, wait for it to be saved.
+        await waitForCondition(() => Promise.resolve(storageUpdateSpy.calledOnce), 500, 'Storage not updated');
+        storageUpdateSpy.resetHistory();
 
         // Confirm contents were saved.
         expect(storage.get(`notebook-storage-${file.toString()}`)).not.to.be.undefined;
@@ -336,8 +343,11 @@ suite('Data Science - Native Editor', () => {
 
         const editor = await loadEditorAddCellAndWaitForMementoUpdate(file);
 
+        storageUpdateSpy.resetHistory();
         // Close the editor.
         await editor.dispose();
+        // Editor will save uncommitted changes into storage, wait for it to be saved.
+        await waitForCondition(() => Promise.resolve(storageUpdateSpy.calledOnce), 500, 'Storage not updated');
 
         // Open a new one.
         const newEditor = createEditor();
@@ -360,8 +370,11 @@ suite('Data Science - Native Editor', () => {
 
         const editor = await loadEditorAddCellAndWaitForMementoUpdate(file);
 
+        storageUpdateSpy.resetHistory();
         // Close the editor.
         await editor.dispose();
+        // Editor will save uncommitted changes into storage, wait for it to be saved.
+        await waitForCondition(() => Promise.resolve(storageUpdateSpy.calledOnce), 500, 'Storage not updated');
 
         // Open a new one with the same file.
         const newEditor = createEditor();
@@ -385,8 +398,11 @@ suite('Data Science - Native Editor', () => {
 
         const editor = await loadEditorAddCellAndWaitForMementoUpdate(file);
 
+        storageUpdateSpy.resetHistory();
         // Close the editor.
-        editor.dispose().ignoreErrors();
+        await editor.dispose();
+        // Editor will save uncommitted changes into storage, wait for it to be saved.
+        await waitForCondition(() => Promise.resolve(storageUpdateSpy.calledOnce), 500, 'Storage not updated');
 
         // Mimic changes to file (by returning a new modified time).
         when(fileSystem.stat(anything())).thenResolve({ mtime: Date.now() } as any);
