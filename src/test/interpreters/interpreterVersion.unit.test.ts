@@ -5,28 +5,28 @@ import { assert, expect } from 'chai';
 import * as path from 'path';
 import * as typeMoq from 'typemoq';
 import '../../client/common/extensions';
-import { IProcessService, IProcessServiceFactory } from '../../client/common/process/types';
+import { IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
 import { IInterpreterVersionService } from '../../client/interpreter/contracts';
 import { InterpreterVersionService } from '../../client/interpreter/interpreterVersion';
 
 suite('Interpreters display version', () => {
-    let processService: typeMoq.IMock<IProcessService>;
+    let pythonExecService: typeMoq.IMock<IPythonExecutionService>;
     let interpreterVersionService: IInterpreterVersionService;
 
     setup(() => {
-        const processFactory = typeMoq.Mock.ofType<IProcessServiceFactory>();
-        processService = typeMoq.Mock.ofType<IProcessService>();
+        const pythonExecFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
+        pythonExecService = typeMoq.Mock.ofType<IPythonExecutionService>();
         // tslint:disable-next-line:no-any
-        processService.setup((p: any) => p.then).returns(() => undefined);
+        pythonExecService.setup((p: any) => p.then).returns(() => undefined);
 
-        processFactory.setup(p => p.create()).returns(() => Promise.resolve(processService.object));
-        interpreterVersionService = new InterpreterVersionService(processFactory.object);
+        pythonExecFactory.setup(p => p.create({})).returns(() => Promise.resolve(pythonExecService.object));
+        interpreterVersionService = new InterpreterVersionService(pythonExecFactory.object);
     });
     test('Must return the Python Version', async () => {
         const pythonPath = path.join('a', 'b', 'python');
         const pythonVersion = 'Output from the Procecss';
-        processService
-            .setup(p => p.exec(typeMoq.It.isValue(pythonPath), typeMoq.It.isValue(['--version']), typeMoq.It.isAny()))
+        pythonExecService
+            .setup(p => p.exec(typeMoq.It.isValue(['--version']), typeMoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: pythonVersion }))
             .verifiable(typeMoq.Times.once());
 
@@ -35,8 +35,8 @@ suite('Interpreters display version', () => {
     });
     test('Must return the default value when Python path is invalid', async () => {
         const pythonPath = path.join('a', 'b', 'python');
-        processService
-            .setup(p => p.exec(typeMoq.It.isValue(pythonPath), typeMoq.It.isValue(['--version']), typeMoq.It.isAny()))
+        pythonExecService
+            .setup(p => p.exec(typeMoq.It.isValue(['--version']), typeMoq.It.isAny()))
             .returns(() => Promise.reject({}))
             .verifiable(typeMoq.Times.once());
 
@@ -46,8 +46,8 @@ suite('Interpreters display version', () => {
     test('Must return the pip Version.', async () => {
         const pythonPath = path.join('a', 'b', 'python');
         const pipVersion = '1.2.3';
-        processService
-            .setup(p => p.exec(typeMoq.It.isValue(pythonPath), typeMoq.It.isValue(['-m', 'pip', '--version']), typeMoq.It.isAny()))
+        pythonExecService
+            .setup(p => p.exec(typeMoq.It.isValue(['-m', 'pip', '--version']), typeMoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: pipVersion }))
             .verifiable(typeMoq.Times.once());
 
@@ -56,8 +56,8 @@ suite('Interpreters display version', () => {
     });
     test('Must throw an exception when pip version cannot be determined', async () => {
         const pythonPath = path.join('a', 'b', 'python');
-        processService
-            .setup(p => p.exec(typeMoq.It.isValue(pythonPath), typeMoq.It.isValue(['-m', 'pip', '--version']), typeMoq.It.isAny()))
+        pythonExecService
+            .setup(p => p.exec(typeMoq.It.isValue(['-m', 'pip', '--version']), typeMoq.It.isAny()))
             .returns(() => Promise.reject('error'))
             .verifiable(typeMoq.Times.once());
 
