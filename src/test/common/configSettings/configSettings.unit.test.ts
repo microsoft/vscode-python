@@ -58,6 +58,10 @@ suite('Python Settings', async () => {
             config.setup(c => c.get<string>('jediPath'))
                 .returns(() => sourceSettings.jediPath);
         }
+        if (sourceSettings.retrieveInterpreterInfoTimeout) {
+            config.setup(c => c.get<number>('retrieveInterpreterInfoTimeout'))
+                .returns(() => sourceSettings.retrieveInterpreterInfoTimeout);
+        }
         for (const name of ['venvFolders']) {
             config.setup(c => c.get<string[]>(name))
                 // tslint:disable-next-line:no-any
@@ -136,7 +140,7 @@ suite('Python Settings', async () => {
     });
 
     suite('Number settings', async () => {
-        ['jediMemoryLimit'].forEach(async settingName => {
+        ['jediMemoryLimit', 'retrieveInterpreterInfoTimeout'].forEach(async settingName => {
             testIfValueIsUpdated(settingName, 1001);
         });
     });

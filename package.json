@@ -2325,6 +2325,12 @@
                     "description": "Path to the poetry executable.",
                     "scope": "resource"
                 },
+                "python.retrieveInterpreterInfoTimeout": {
+                    "type": "number",
+                    "default": 5,
+                    "description": "Timeout in seconds to retrieve the Interpreter Information.",
+                    "scope": "resource"
+                },
                 "python.sortImports.args": {
                     "type": "array",
                     "description": "Arguments passed in. Each argument is a separate item in the array.",

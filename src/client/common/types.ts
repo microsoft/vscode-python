@@ -168,6 +168,7 @@ export interface IPythonSettings {
     readonly envFile: string;
     readonly disableInstallationChecks: boolean;
     readonly globalModuleInstallation: boolean;
+    readonly retrieveInterpreterInfoTimeout: number;
     readonly analysis: IAnalysisSettings;
     readonly autoUpdateLanguageServer: boolean;
     readonly datascience: IDataScienceSettings;

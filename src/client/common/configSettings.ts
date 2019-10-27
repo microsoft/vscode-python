@@ -55,6 +55,7 @@ export class PythonSettings implements IPythonSettings {
     public workspaceSymbols!: IWorkspaceSymbolSettings;
     public disableInstallationChecks = false;
     public globalModuleInstallation = false;
+    public retrieveInterpreterInfoTimeout = 5;
     public analysis!: IAnalysisSettings;
     public autoUpdateLanguageServer: boolean = true;
     public datascience!: IDataScienceSettings;
@@ -193,6 +194,7 @@ export class PythonSettings implements IPythonSettings {
 
         this.disableInstallationChecks = pythonSettings.get<boolean>('disableInstallationCheck') === true;
         this.globalModuleInstallation = pythonSettings.get<boolean>('globalModuleInstallation') === true;
+        this.retrieveInterpreterInfoTimeout = pythonSettings.get<number>('retrieveInterpreterInfoTimeout')!;
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         const sortImportSettings = systemVariables.resolveAny(pythonSettings.get<ISortImportSettings>('sortImports'))!;

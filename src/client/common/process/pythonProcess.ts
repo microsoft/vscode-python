@@ -3,6 +3,7 @@
 import { injectable } from 'inversify';
 import * as path from 'path';
 
+import { IConfigurationService } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { EXTENSION_ROOT_DIR } from '../constants';
 import { ErrorUtils } from '../errors/errorUtils';
@@ -25,13 +26,15 @@ import {
 @injectable()
 export class PythonExecutionService implements IPythonExecutionService {
     private readonly fileSystem: IFileSystem;
+    private readonly configService: IConfigurationService;
 
     constructor(
         serviceContainer: IServiceContainer,
         private readonly procService: IProcessService,
-        protected readonly pythonPath: string
+        protected readonly pythonPath: string,
     ) {
         this.fileSystem = serviceContainer.get<IFileSystem>(IFileSystem);
+        this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     }
 
     public async getInterpreterInformation(): Promise<InterpreterInfomation | undefined> {
@@ -41,7 +44,13 @@ export class PythonExecutionService implements IPythonExecutionService {
             // See these two bugs:
             // https://github.com/microsoft/vscode-python/issues/7569
             // https://github.com/microsoft/vscode-python/issues/7760
-            const jsonValue = await waitForPromise(this.procService.exec(this.pythonPath, [file], { mergeStdOutErr: true }), 5000)
+            let interpreterInfoTimeout = this.configService.getSettings().retrieveInterpreterInfoTimeout;
+
+            if (!interpreterInfoTimeout || interpreterInfoTimeout === 0) {
+                interpreterInfoTimeout = 120;
+            }
+
+            const jsonValue = await waitForPromise(this.procService.exec(this.pythonPath, [file], { mergeStdOutErr: true }), interpreterInfoTimeout * 1000)
                 .then(output => output ? output.stdout.trim() : '--timed out--'); // --timed out-- should cause an exception
 
             let json: { versionInfo: PythonVersionInfo; sysPrefix: string; sysVersion: string; is64Bit: boolean };
