@@ -44,7 +44,7 @@ export function waitForMessage(ioc: DataScienceIocContainer, message: string): P
         if (!promise.resolved) {
             promise.reject(new Error(`Waiting for ${message} timed out`));
         }
-    }, 3000); // Max 3 seconds for a message. Should be almost instant but this will make tests fail faster than the max timeout.
+    }, 30000); // Max 30 seconds for a message. Should be almost instant but this will make tests fail faster than the max timeout.
     handler = (m: string, _p: any) => {
         if (m === message) {
             ioc.removeMessageListener(handler);
