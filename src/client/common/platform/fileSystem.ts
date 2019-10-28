@@ -91,10 +91,7 @@ export class RawFileSystem implements IRawFileSystem {
     }
 
     public async mkdirp(dirname: string): Promise<void> {
-        return this.fsExtra.mkdirp(dirname)
-            .catch(_err => {
-                //throw err;
-            });
+        return this.fsExtra.mkdirp(dirname);
     }
 
     public async rmtree(dirname: string): Promise<void> {
