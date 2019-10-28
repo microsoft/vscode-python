@@ -571,7 +571,7 @@ for _ in range(50):
                 // tslint:disable-next-line: no-invalid-this
                 await setupFunction.call(this);
             });
-
+            teardown(() => sinon.restore());
             test('Traverse cells by using ArrowUp and ArrowDown, k and j', async () => {
                 const keyCodesAndPositions = [
                     // When we press arrow down in the first cell, then second cell gets selected.
@@ -978,7 +978,8 @@ for _ in range(50):
                 assert.ok(!editor!.isDirty, 'Editor should not be dirty after saving');
             });
 
-            test('Test save using the key \'cmd+s\'', async () => {
+            test('Test save using the key \'cmd+s\' on a Mac', async () => {
+                sinon.stub(window, 'navigator').returns({ userAgent: 'Something Mac OS X Something', platform: ''});
                 clickCell(0);
 
                 await addCell(wrapper, ioc, 'a=1\na', true);
@@ -994,6 +995,24 @@ for _ in range(50):
                 await waitForPromise(savedPromise.promise, 1_000);
 
                 assert.ok(!editor!.isDirty, 'Editor should not be dirty after saving');
+            });
+            test('Test save using the key \'cmd+s\' on a Windows', async () => {
+                sinon.stub(window, 'navigator').returns({ userAgent: 'Something', platform: 'Win'});
+                clickCell(0);
+
+                await addCell(wrapper, ioc, 'a=1\na', true);
+
+                const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+                const editor = notebookProvider.editors[0];
+                assert.ok(editor, 'No editor when saving');
+                const savedPromise = createDeferred();
+                editor.saved(() => savedPromise.resolve());
+
+                // CMD+s won't work on Windows.
+                simulateKeyPressOnCell(1, { code: 's', metaKey: true });
+
+                await expect(waitForPromise(savedPromise.promise, 1_000)).to.eventually.be.rejected;
+                assert.ok(editor!.isDirty, 'Editor be dirty as nothing got saved');
             });
         });
 
