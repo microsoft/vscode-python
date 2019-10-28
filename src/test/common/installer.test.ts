@@ -21,6 +21,8 @@ import { ITerminalHelper } from '../../client/common/terminal/types';
 import { IConfigurationService, ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IsWindows, ModuleNamePurpose, Product, ProductType } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { getNamesAndValues } from '../../client/common/utils/enum';
+import { ICondaService } from '../../client/interpreter/contracts';
+import { CondaService } from '../../client/interpreter/locators/services/condaService';
 import { InterpreterHashProvider } from '../../client/interpreter/locators/services/hashProvider';
 import { InterpeterHashProviderFactory } from '../../client/interpreter/locators/services/hashProviderFactory';
 import { InterpreterFilter } from '../../client/interpreter/locators/services/interpreterFilter';
@@ -71,6 +73,7 @@ suite('Installer', () => {
         ioc.serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, TypeMoq.Mock.ofType<IApplicationShell>().object);
         ioc.serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
         ioc.serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);
+        ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
 
         ioc.registerMockProcessTypes();
         ioc.serviceManager.addSingletonInstance<boolean>(IsWindows, false);
