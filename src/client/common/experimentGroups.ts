@@ -14,9 +14,9 @@ export enum ShowExtensionSurveyPrompt {
 }
 
 // Experiment to check whether the extension should use the new VS Code debug adapter API.
-export enum DebugAdapterDescriptorFactory {
-    control = 'DebugAdapterFactory - control',
-    experiment = 'DebugAdapterFactory - experiment'
+export enum DebugAdapterDescriptorFactoryInsiders {
+    control = 'DebugAdapterFactoryInsiders - control',
+    experiment = 'DebugAdapterFactoryInsiders - experiment'
 }
 
 // Experiment to check whether the ptvsd launcher should use pre-installed ptvsd wheels for debugging.
