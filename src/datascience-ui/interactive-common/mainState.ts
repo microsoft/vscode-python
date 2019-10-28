@@ -31,6 +31,12 @@ export interface ICellViewModel {
     inputBlockToggled(id: string): void;
 }
 
+export enum CursorPos {
+    Top,
+    Bottom,
+    Current
+}
+
 export interface IMainState {
     cellVMs: ICellViewModel[];
     editCellVM: ICellViewModel | undefined;

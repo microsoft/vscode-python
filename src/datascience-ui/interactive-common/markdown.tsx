@@ -6,7 +6,7 @@ import * as React from 'react';
 
 import { IKeyboardEvent } from '../react-common/event';
 import { Editor } from './editor';
-import { IFont } from './mainState';
+import { CursorPos, IFont } from './mainState';
 
 export interface IMarkdownProps {
     autoFocus: boolean;
@@ -67,9 +67,9 @@ export class Markdown extends React.Component<IMarkdownProps> {
         );
     }
 
-    public giveFocus() {
+    public giveFocus(cursorPos: CursorPos) {
         if (this.editorRef && this.editorRef.current) {
-            this.editorRef.current.giveFocus();
+            this.editorRef.current.giveFocus(cursorPos);
         }
     }
 

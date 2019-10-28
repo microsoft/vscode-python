@@ -40,7 +40,6 @@ export interface IMonacoEditorProps {
     measureWidthClassName?: string;
     editorMounted(editor: monacoEditor.editor.IStandaloneCodeEditor): void;
     openLink(uri: monacoEditor.Uri): void;
-    lineCountChanged(newCount: number): void;
 }
 
 export interface IMonacoEditorState {
@@ -68,6 +67,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
     private styleObserver : MutationObserver | undefined;
     private watchingMargin: boolean = false;
     private throttledUpdateWidgetPosition = throttle(this.updateWidgetPosition.bind(this), 100);
+    private throttledScrollOntoScreen = throttle(this.scrollOntoScreen.bind(this), 100);
     private monacoContainer : HTMLDivElement | undefined;
 
     /**
@@ -190,6 +190,13 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                 this.throttledUpdateWidgetPosition();
                 this.updateWidgetParent(editor);
                 this.hideAllOtherHoverAndParameterWidgets();
+                this.throttledScrollOntoScreen(editor);
+            }));
+
+            // Track cursor changes and make sure line is on the screen
+            this.subscriptions.push(editor.onDidChangeCursorPosition(() => {
+                this.throttledUpdateWidgetPosition();
+                this.throttledScrollOntoScreen(editor);
             }));
 
             // Update our margin to include the correct line number style
@@ -299,6 +306,52 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             return this.isElementVisible(suggestWidget) || this.isElementVisible(signatureHelpWidget);
         }
         return false;
+    }
+
+    public getCurrentVisibleLine(): number | undefined {
+        // Convert the current cursor into a top and use that to find which visible
+        // line it is in.
+        if (this.state.editor) {
+            const cursor = this.state.editor.getPosition();
+            if (cursor) {
+                const top = this.state.editor.getTopForPosition(cursor.lineNumber, cursor.column);
+                const lines = this.getVisibleLines();
+                const lineTops = lines.map(l => {
+                    const match = l.style.top ? /(.+)px/.exec(l.style.top) : null;
+                    return match ? parseInt(match[0], 10) : Infinity;
+                });
+                for (let i = 0; i < lines.length; i += 1) {
+                    if (top <= lineTops[i]) {
+                        return i;
+                    }
+                }
+            }
+        }
+    }
+
+    public getVisibleLineCount(): number {
+        return this.getVisibleLines().length;
+    }
+
+    private getVisibleLines(): HTMLDivElement[] {
+        if (this.state.editor && this.state.model) {
+            // This is going to use just the dom to compute the visible lines
+            const editorDom = this.state.editor.getDomNode();
+            if (editorDom) {
+                return Array.from(editorDom.getElementsByClassName('view-line')) as HTMLDivElement[];
+            }
+        }
+        return [];
+    }
+
+    private scrollOntoScreen(_editor: monacoEditor.editor.IStandaloneCodeEditor) {
+        // Scroll to the visible line that has our current line
+        const visibleLineDivs = this.getVisibleLines();
+        const current = this.getCurrentVisibleLine();
+        if (current !== undefined && current >= 0) {
+            window.console.log(`Scrolling to line ${current}`);
+            visibleLineDivs[current].scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
+        }
     }
 
     private watchStyles = (mutations: MutationRecord[], _observer: MutationObserver): void => {
@@ -419,9 +472,6 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
             const layoutInfo = this.state.editor.getLayoutInfo();
             if (layoutInfo.height !== height || layoutInfo.width !== width || currLineCount !== this.state.visibleLineCount) {
-                if (this.state.visibleLineCount !== currLineCount) {
-                    this.props.lineCountChanged(currLineCount);
-                }
                 // Make sure to attach to a real dom node.
                 if (!this.state.attached && this.state.editor && this.monacoContainer) {
                     this.containerRef.current.appendChild(this.monacoContainer);
