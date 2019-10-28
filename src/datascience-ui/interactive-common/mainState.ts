@@ -31,6 +31,12 @@ export interface ICellViewModel {
     inputBlockToggled(id: string): void;
 }
 
+export enum CursorPos {
+    Top,
+    Bottom,
+    Current
+}
+
 export interface IMainState {
     cellVMs: ICellViewModel[];
     editCellVM: ICellViewModel | undefined;
@@ -43,8 +49,8 @@ export interface IMainState {
     rootStyle?: string;
     rootCss?: string;
     font: IFont;
-    theme?: string;
-    forceDark?: boolean;
+    vscodeThemeName?: string;
+    baseTheme: string;
     monacoTheme?: string;
     tokenizerLoaded?: boolean;
     knownDark: boolean;
@@ -97,6 +103,7 @@ export function generateTestState(inputBlockToggled: (id: string) => void, fileP
         editorOptions: {},
         currentExecutionCount: 0,
         knownDark: false,
+        baseTheme: 'vscode-light',
         variablesVisible: false,
         variables: [
             {
@@ -210,14 +217,10 @@ export function generateCells(filePath: string, repetitions: number): ICell[] {
     for (let i = 0; i < repetitions; i += 1) {
         cellData = [...cellData, ...generateCellData()];
     }
-    // Dynamically require vscode, this is testing code.
-    // Obfuscate the import to prevent webpack from picking this up.
-    // tslint:disable-next-line: no-eval (webpack is smart enough to look for `require` and `eval`).
-    const Uri = eval('req' + 'uire')('vscode').Uri;
     return cellData.map((data: nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell | IMessageCell, key: number) => {
         return {
             id: key.toString(),
-            file: Uri.file(path.join(filePath, 'foo.py')).fsPath,
+            file: path.join(filePath, 'foo.py').toLowerCase(),
             line: 1,
             state: key === cellData.length - 1 ? CellState.executing : CellState.finished,
             type: key === 3 ? 'preview' : 'execute',

@@ -11,7 +11,7 @@ import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
 import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { getOrCreateInteractiveWindow, runMountedTest } from './interactiveWindowTestHelpers';
-import { getEditor, typeCode } from './testHelpers';
+import { getInteractiveEditor, typeCode } from './testHelpers';
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 suite('DataScience Intellisense tests', () => {
@@ -45,7 +45,7 @@ suite('DataScience Intellisense tests', () => {
 
     function getIntellisenseTextLines(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) : string[] {
         assert.ok(wrapper);
-        const editor = getEditor(wrapper);
+        const editor = getInteractiveEditor(wrapper);
         assert.ok(editor);
         const domNode = editor.getDOMNode();
         assert.ok(domNode);
@@ -73,7 +73,7 @@ suite('DataScience Intellisense tests', () => {
     }
 
     function waitForSuggestion(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) : { disposable: IDisposable; promise: Promise<void>} {
-        const editorEnzyme = getEditor(wrapper);
+        const editorEnzyme = getInteractiveEditor(wrapper);
         const reactEditor = editorEnzyme.instance() as MonacoEditor;
         const editor = reactEditor.state.editor;
         if (editor) {

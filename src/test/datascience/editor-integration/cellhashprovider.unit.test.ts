@@ -6,6 +6,7 @@ import * as TypeMoq from 'typemoq';
 import { Position, Range, Uri } from 'vscode';
 
 import { IDebugService } from '../../../client/common/application/types';
+import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, IDataScienceSettings, IPythonSettings } from '../../../client/common/types';
 import { CellHashProvider } from '../../../client/datascience/editor-integration/cellhashprovider';
 import {
@@ -32,18 +33,21 @@ suite('CellHashProvider Unit Tests', () => {
     let dataScienceSettings: TypeMoq.IMock<IDataScienceSettings>;
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
     let debugService: TypeMoq.IMock<IDebugService>;
+    let fileSystem: TypeMoq.IMock<IFileSystem>;
     const hashListener: HashListener = new HashListener();
     setup(() => {
         configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
         dataScienceSettings = TypeMoq.Mock.ofType<IDataScienceSettings>();
         debugService = TypeMoq.Mock.ofType<IDebugService>();
+        fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         dataScienceSettings.setup(d => d.enabled).returns(() => true);
         pythonSettings.setup(p => p.datascience).returns(() => dataScienceSettings.object);
         configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         debugService.setup(d => d.activeDebugSession).returns(() => undefined);
+        fileSystem.setup(d => d.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns(() => true);
         documentManager = new MockDocumentManager();
-        hashProvider = new CellHashProvider(documentManager, configurationService.object, debugService.object, [hashListener]);
+        hashProvider = new CellHashProvider(documentManager, configurationService.object, debugService.object, fileSystem.object, [hashListener]);
     });
 
     function addSingleChange(file: string, range: Range, newText: string) {

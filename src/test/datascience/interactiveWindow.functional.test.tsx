@@ -506,7 +506,7 @@ for _ in range(50):
 
         // Try a 3rd time with some new input
         addMockData(ioc, 'print("hello")', 'hello');
-        await enterInput(wrapper, InteractivePanel, 'print("hello")', 'InteractiveCell');
+        await enterInput(wrapper, InteractivePanel, 'print("hello', 'InteractiveCell');
         verifyHtmlOnCell(wrapper, 'InteractiveCell', 'hello', CellPosition.Last);
     }, () => { return ioc; });
 

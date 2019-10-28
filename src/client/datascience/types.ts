@@ -38,10 +38,10 @@ export interface IDataScienceCommandListener {
 
 // Connection information for talking to a jupyter notebook process
 export interface IConnection extends Disposable {
-    baseUrl: string;
-    token: string;
-    hostName: string;
-    localLaunch: boolean;
+    readonly baseUrl: string;
+    readonly token: string;
+    readonly hostName: string;
+    readonly localLaunch: boolean;
     localProcExitCode: number | undefined;
     disconnected: Event<number>;
     allowUnauthorized?: boolean;
@@ -135,6 +135,7 @@ export interface IJupyterExecution extends IAsyncDisposable {
     getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined>;
     getServer(options?: INotebookServerOptions): Promise<INotebookServer | undefined>;
     getNotebookError(): Promise<string>;
+    refreshCommands(): Promise<void>;
 }
 
 export const IJupyterDebugger = Symbol('IJupyterDebugger');
@@ -252,6 +253,10 @@ export interface INotebookEditor extends IInteractiveBase {
     modified: Event<INotebookEditor>;
     saved: Event<INotebookEditor>;
     /**
+     * Is this notebook representing an untitled file which has never been saved yet.
+     */
+    readonly isUntitled: boolean;
+    /**
      * `true` if there are unpersisted changes.
      */
     readonly isDirty: boolean;
@@ -353,7 +358,6 @@ export interface IInteractiveWindowInfo {
     cellCount: number;
     undoCount: number;
     redoCount: number;
-    visibleCells: ICell[];
     selectedCell: string | undefined;
 }
 
@@ -405,8 +409,15 @@ export type FileSettings = {
 
 export interface IDataScienceExtraSettings extends IDataScienceSettings {
     extraSettings: {
-        editorCursor: string;
-        editorCursorBlink: string;
+        editor: {
+            cursor: string;
+            cursorBlink: string;
+            fontLigatures: boolean;
+            autoClosingBrackets: string;
+            autoClosingQuotes: string;
+            autoSurround: string;
+            autoIndent: boolean;
+        };
         fontSize: number;
         fontFamily: string;
         theme: string;

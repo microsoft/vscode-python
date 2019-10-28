@@ -1,6 +1,73 @@
 # Changelog
 
-## 2019.10.0-rc (2 October 2019)
+## 2019.10.1 (22 October 2019)
+
+### Enhancements
+
+1. Support other variables for notebookFileRoot besides ${workspaceRoot}. Specifically allow things like ${fileDirName} so that the dir of the first file run in the interactive window is used for the current directory.
+   ([#4441](https://github.com/Microsoft/vscode-python/issues/4441))
+1. Add command palette commands for native editor (run all cells, run selected cell, add new cell). And remove interactive window commands from contexts where they don't apply.
+   ([#7800](https://github.com/Microsoft/vscode-python/issues/7800))
+1. Added ability to auto-save chagnes made to the notebook.
+   ([#7831](https://github.com/Microsoft/vscode-python/issues/7831))
+
+### Fixes
+
+1. Fix regression to allow connection to servers with no token and no password and add functional test for this scenario
+   ([#7137](https://github.com/Microsoft/vscode-python/issues/7137))
+1. Perf improvements for opening notebooks with more than 100 cells.
+   ([#7483](https://github.com/Microsoft/vscode-python/issues/7483))
+1. Fix jupyter server startup hang when xeus-cling kernel is installed.
+   ([#7569](https://github.com/Microsoft/vscode-python/issues/7569))
+1. Make interactive window and native take their fontSize and fontFamily from the settings in VS Code.
+   ([#7624](https://github.com/Microsoft/vscode-python/issues/7624))
+1. Fix a hang in the Interactive window when connecting guest to host after the host has already started the interactive window.
+   ([#7638](https://github.com/Microsoft/vscode-python/issues/7638))
+1. Change the default cell marker to '# %%' instead of '#%%' to prevent linter errors in python files with markers.
+   Also added a new setting to change this - 'python.dataScience.defaultCellMarker'.
+   ([#7674](https://github.com/Microsoft/vscode-python/issues/7674))
+1. When there's no workspace open, use the directory of the opened file as the root directory for a jupyter session.
+   ([#7688](https://github.com/Microsoft/vscode-python/issues/7688))
+1. Fix selection and focus not updating when clicking around in a notebook editor.
+   ([#7802](https://github.com/Microsoft/vscode-python/issues/7802))
+1. Fix add new cell buttons in the notebook editor to give the new cell focus.
+   ([#7820](https://github.com/Microsoft/vscode-python/issues/7820))
+1. Do not use the PTVSD package version in the folder name for the wheel experiment.
+   ([#7836](https://github.com/Microsoft/vscode-python/issues/7836))
+1. Prevent updates to the cell text when cell execution of the same cell has commenced or completed.
+   ([#7844](https://github.com/Microsoft/vscode-python/issues/7844))
+1. Hide the parameters intellisense widget in the `Notebook Editor` when it is not longer required.
+   ([#7851](https://github.com/Microsoft/vscode-python/issues/7851))
+1. Allow the "Create New Blank Jupyter Notebook" command to be run when the python extension is not loaded yet.
+   ([#7888](https://github.com/Microsoft/vscode-python/issues/7888))
+1. Ensure the `*.trie` files related to `font kit` npm module are copied into the output directory as part of the `Webpack` bundling operation.
+   ([#7899](https://github.com/Microsoft/vscode-python/issues/7899))
+1. CTRL+S is not saving a Notebook file.
+   ([#7904](https://github.com/Microsoft/vscode-python/issues/7904))
+1. When automatically opening the `Notebook Editor`, then ignore uris that do not have a `file` scheme
+   ([#7905](https://github.com/Microsoft/vscode-python/issues/7905))
+1. Minimize the changes to an ipynb file when saving - preserve metadata and spacing.
+   ([#7960](https://github.com/Microsoft/vscode-python/issues/7960))
+1. Fix intellisense popping up in the wrong spot when first typing in a cell.
+   ([#8009](https://github.com/Microsoft/vscode-python/issues/8009))
+1. Fix python.dataScience.maxOutputSize to be honored again.
+   ([#8010](https://github.com/Microsoft/vscode-python/issues/8010))
+1. Fix markdown disappearing after editing and hitting the escape key.
+   ([#8045](https://github.com/Microsoft/vscode-python/issues/8045))
+
+### Code Health
+
+1. Add functional tests for notebook editor's use of the variable list.
+   ([#7369](https://github.com/Microsoft/vscode-python/issues/7369))
+1. More functional tests for the notebook editor.
+   ([#7372](https://github.com/Microsoft/vscode-python/issues/7372))
+1. Update version of `@types/vscode`.
+   ([#7832](https://github.com/Microsoft/vscode-python/issues/7832))
+1. Use `Webview.asWebviewUri` to generate a URI for use in the `Webview Panel` instead of hardcoding the resource `vscode-resource`.
+   ([#7834](https://github.com/Microsoft/vscode-python/issues/7834))
+
+
+## 2019.10.0 (8 October 2019)
 
 ### Enhancements
 
@@ -36,6 +103,8 @@
    ([#7517](https://github.com/Microsoft/vscode-python/issues/7517))
 1. Add support for ptvsd and debug adapter experiments in remote debugging API.
    ([#7549](https://github.com/Microsoft/vscode-python/issues/7549))
+1. Support other variables for `notebookFileRoot` besides `${workspaceRoot}`. Specifically allow things like `${fileDirName}` so that the directory of the first file run in the interactive window is used for the current directory.
+   ([#4441](https://github.com/Microsoft/vscode-python/issues/4441))
 
 ### Fixes
 
@@ -183,6 +252,14 @@
    ([#7636](https://github.com/Microsoft/vscode-python/issues/7636))
 1. Goto cell code lens was not scrolling.
    ([#7639](https://github.com/Microsoft/vscode-python/issues/7639))
+1. Make interactive window and native take their `fontSize` and `fontFamily` from the settings in VS Code.
+   ([#7624](https://github.com/Microsoft/vscode-python/issues/7624))
+1. Fix a hang in the Interactive window when connecting guest to host after the host has already started the interactive window.
+   ([#7638](https://github.com/Microsoft/vscode-python/issues/7638))
+1. When there's no workspace open, use the directory of the opened file as the root directory for a Jupyter session.
+   ([#7688](https://github.com/Microsoft/vscode-python/issues/7688))
+1. Allow the language server to pick a default caching mode.
+   ([#7821](https://github.com/Microsoft/vscode-python/issues/7821))
 
 ### Code Health
 

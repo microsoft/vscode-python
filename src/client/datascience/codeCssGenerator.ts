@@ -106,7 +106,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
     }
 
     public generateMonacoTheme(isDark: boolean, theme: string): Promise<JSONObject> {
-        return this.applyThemeData(isDark, theme, {}, this.generateMonacoThemeObject.bind(this));
+        return this.applyThemeData(isDark, theme, {} as any, this.generateMonacoThemeObject.bind(this));
     }
 
     private async applyThemeData<T>(isDark: boolean, theme: string, defaultT: T, applier: (args: IApplyThemeArgs) => T): Promise<T> {

@@ -1,63 +1,57 @@
-from io import BytesIO
-from os import path
-from zipfile import ZipFile
+import io
 import json
-import urllib.request
-import sys
-
-ROOT = path.dirname(path.dirname(path.abspath(__file__)))
-REQUIREMENTS = path.join(ROOT, "requirements.txt")
-PYTHONFILES = path.join(ROOT, "pythonFiles", "lib", "python")
-PYPI_PTVSD_URL = "https://pypi.org/pypi/ptvsd/json"
+import os
+import urllib.request as url_lib
+import zipfile
 
 
-def install_ptvsd():
-    sys.path.insert(0, PYTHONFILES)
-    from packaging.requirements import Requirement
+EXTENSION_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DEBUGGER_DEST = os.path.join(EXTENSION_ROOT, "pythonFiles", "lib", "python")
+DEBUGGER_PACKAGE = "ptvsd"
+DEBUGGER_VERSION = "5.0.0a5"
+DEBUGGER_PYTHON_VERSIONS = ("cp37",)
 
-    with open(REQUIREMENTS, "r", encoding="utf-8") as reqsfile:
-        for line in reqsfile:
-            pkgreq = Requirement(line)
-            if pkgreq.name == "ptvsd":
-                specs = pkgreq.specifier
-                version = next(iter(specs)).version
-                break
 
-    try:
-        version
-    except NameError:
-        raise Exception("ptvsd requirement not found.")
+def _contains(s, parts=()):
+    return any(p for p in parts if p in s)
 
+
+def _get_debugger_wheel_urls():
+    json_uri = "https://pypi.org/pypi/{0}/json".format(DEBUGGER_PACKAGE)
     # Response format: https://warehouse.readthedocs.io/api-reference/json/#project
-    with urllib.request.urlopen(PYPI_PTVSD_URL) as response:
-        json_response = json.loads(response.read())
-    releases = json_response["releases"]
-
     # Release metadata format: https://github.com/pypa/interoperability-peps/blob/master/pep-0426-core-metadata.rst
-    for wheel_info in releases[version]:
-        # Download only if it's a 3.7 wheel.
-        if not wheel_info["python_version"].endswith(("37", "3.7")):
-            continue
+    with url_lib.urlopen(json_uri) as response:
+        json_response = json.loads(response.read())
+        return list(
+            r["url"]
+            for r in json_response["releases"][DEBUGGER_VERSION]
+            if _contains(r["url"], DEBUGGER_PYTHON_VERSIONS)
+        )
 
-        # Trim the file extension and remove the ptvsd version from the folder name.
-        filename = wheel_info["filename"].rpartition(".")[0]
-        filename = filename.replace(f"{version}-", "")
-        ptvsd_path = path.join(PYTHONFILES, filename)
 
-        with urllib.request.urlopen(wheel_info["url"]) as wheel_response:
-            wheel_file = BytesIO(wheel_response.read())
+def _download_and_extract(root, url):
+    root = os.getcwd() if root is None or root == "." else root
+    prefix = os.path.join("ptvsd-{0}.data".format(DEBUGGER_VERSION), "purelib")
+    with url_lib.urlopen(url) as response:
         # Extract only the contents of the purelib subfolder (parent folder of ptvsd),
         # since ptvsd files rely on the presence of a 'ptvsd' folder.
-        prefix = path.join(f"ptvsd-{version}.data", "purelib")
-
-        with ZipFile(wheel_file, "r") as wheel:
+        with zipfile.ZipFile(io.BytesIO(response.read()), "r") as wheel:
             for zip_info in wheel.infolist():
-                # Normalize path for Windows, the wheel folder structure uses forward slashes.
-                normalized = path.normpath(zip_info.filename)
+                # Ignore dist info since we are merging multiple wheels
+                if ".dist-info" in zip_info.filename:
+                    continue
+                # Normalize path for Windows, the wheel folder structure
+                # uses forward slashes.
+                normalized = os.path.normpath(zip_info.filename)
                 # Flatten the folder structure.
                 zip_info.filename = normalized.split(prefix)[-1]
-                wheel.extract(zip_info, ptvsd_path)
+                wheel.extract(zip_info, root)
+
+
+def main(root):
+    for url in _get_debugger_wheel_urls():
+        _download_and_extract(root, url)
 
 
 if __name__ == "__main__":
-    install_ptvsd()
+    main(DEBUGGER_DEST)

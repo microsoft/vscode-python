@@ -624,7 +624,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 // During normal operation, the react control will not be created before
                 // the webPanelListener
                 if (this.missedMessages.length && this.webPanelListener) {
-                    this.missedMessages.forEach(m => this.webPanelListener ? this.webPanelListener.onMessage(m.type, m.payload) : noop());
+                    // This needs to be async because we are being called in the ctor of the webpanel. It can't
+                    // handle some messages during the ctor.
+                    setTimeout(() => {
+                        this.missedMessages.forEach(m => this.webPanelListener ? this.webPanelListener.onMessage(m.type, m.payload) : noop());
+                    }, 0);
 
                     // Note, you might think we should clean up the messages. However since the mount only occurs once, we might
                     // create multiple webpanels with the same mount. We need to resend these messages to

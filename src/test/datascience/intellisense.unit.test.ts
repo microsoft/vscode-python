@@ -5,7 +5,6 @@ import { expect } from 'chai';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as TypeMoq from 'typemoq';
 
-import { Uri } from 'vscode';
 import { ILanguageServer, ILanguageServerAnalysisOptions } from '../../client/activation/types';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { PythonSettings } from '../../client/common/configSettings';
@@ -25,7 +24,7 @@ import {
     IInteractiveWindowProvider,
     IJupyterExecution
 } from '../../client/datascience/types';
-import { generateCells } from '../../datascience-ui/interactive-common/mainState';
+import { createEmptyCell, generateCells } from '../../datascience-ui/interactive-common/mainState';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { MockLanguageClient } from './mockLanguageClient';
 
@@ -97,7 +96,7 @@ suite('DataScience Intellisense Unit Tests', () => {
     }
 
     function addCell(code: string, id: string): Promise<void> {
-        return sendMessage(InteractiveWindowMessages.AddCell, { fullText: code, currentText: code, file: Uri.file('foo.py').fsPath, id });
+        return sendMessage(InteractiveWindowMessages.AddCell, { fullText: code, currentText: code, cell: createEmptyCell(id, null) });
     }
 
     function updateCell(newCode: string, oldCode: string, id: string): Promise<void> {
@@ -165,7 +164,7 @@ suite('DataScience Intellisense Unit Tests', () => {
     }
 
     function insertCell(id: string, code: string, codeCellAbove?: string): Promise<void> {
-        return sendMessage(InteractiveWindowMessages.InsertCell, { id, code, codeCellAbove });
+        return sendMessage(InteractiveWindowMessages.InsertCell, { cell: createEmptyCell(id, null), index: 0, code, codeCellAboveId: codeCellAbove });
     }
 
     function loadAllCells(cells: ICell[]): Promise<void> {

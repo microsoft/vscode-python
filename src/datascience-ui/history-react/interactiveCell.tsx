@@ -16,7 +16,7 @@ import { CollapseButton } from '../interactive-common/collapseButton';
 import { ExecutionCount } from '../interactive-common/executionCount';
 import { InformationMessages } from '../interactive-common/informationMessages';
 import { InputHistory } from '../interactive-common/inputHistory';
-import { ICellViewModel, IFont } from '../interactive-common/mainState';
+import { CursorPos, ICellViewModel, IFont } from '../interactive-common/mainState';
 import { IKeyboardEvent } from '../react-common/event';
 import { getLocString } from '../react-common/locReactSide';
 import { getSettings } from '../react-common/settingsReactSide';
@@ -100,7 +100,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
             // This depends upon what type of cell we are.
             if (this.props.cellVM.cell.data.cell_type === 'code') {
                 if (this.codeRef.current) {
-                    this.codeRef.current.giveFocus();
+                    this.codeRef.current.giveFocus(CursorPos.Current);
                 }
             }
         }
@@ -129,6 +129,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
         const shouldRender = allowsPlainInput || this.shouldRenderResults();
         const cellOuterClass = this.props.cellVM.editable ? 'cell-outer-editable' : 'cell-outer';
         const cellWrapperClass = this.props.cellVM.editable ? 'cell-wrapper' : 'cell-wrapper cell-wrapper-noneditable';
+        const themeMatplotlibPlots = getSettings().themeMatplotlibPlots ? true : false;
 
         // Only render if we are allowed to.
         if (shouldRender) {
@@ -144,6 +145,8 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                                     baseTheme={this.props.baseTheme}
                                     expandImage={this.props.expandImage}
                                     openLink={this.props.openLink}
+                                    maxTextSize={this.props.maxTextSize}
+                                    themeMatplotlibPlots={themeMatplotlibPlots}
                                 />
                             </div>
                         </div>

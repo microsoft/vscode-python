@@ -5,7 +5,7 @@
 
 import { ChildProcess, spawn, SpawnOptions } from 'child_process';
 import * as fs from 'fs-extra';
-import { createServer, Server } from 'net';
+import { AddressInfo, createServer, Server } from 'net';
 import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../client/constants';
 import { noop, sleep } from './core';
@@ -88,7 +88,7 @@ async function startSocketServer() {
         });
 
         server.listen({ host: '127.0.0.1', port: 0 }, async () => {
-            const port = server!.address().port;
+            const port = (server!.address() as AddressInfo).port;
             console.log(`Test server listening on port ${port}`);
             await deletePortFile();
             await fs.writeFile(portFile, port.toString());

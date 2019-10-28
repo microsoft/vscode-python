@@ -1513,7 +1513,7 @@
                 },
                 "python.dataScience.jupyterLaunchTimeout": {
                     "type": "number",
-                    "default": 60000,
+                    "default": 10000,
                     "description": "Amount of time (in ms) to wait for the Jupyter Notebook server to start.",
                     "scope": "resource"
                 },
@@ -1526,7 +1526,7 @@
                 "python.dataScience.jupyterServerURI": {
                     "type": "string",
                     "default": "local",
-                    "description": "Select the Jupyter server URI to connect to. Select 'local' to launch a new Juypter server on the local machine.",
+                    "description": "Select the Jupyter server URI to connect to. Select 'local' to launch a new Jupyter server on the local machine.",
                     "scope": "resource"
                 },
                 "python.dataScience.notebookFileRoot": {
@@ -1635,6 +1635,12 @@
                     "type": "boolean",
                     "default": false,
                     "description": "Don't use the VS Code theme in the Python Interactive window (requires reload of VS Code). This forces the Python Interactive window to use 'Light +(default light)' and disables matplotlib defaults.",
+                    "scope": "resource"
+                },
+                "python.dataScience.themeMatplotlibPlots": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "In the Python Interactive window and Notebook Editor theme matplotlib outputs to match the VS Code editor theme.",
                     "scope": "resource"
                 },
                 "python.dataScience.liveShareConnectionTimeout": {
@@ -2774,7 +2780,7 @@
         "@types/memoize-one": "^4.1.1",
         "@types/mocha": "^5.2.7",
         "@types/nock": "^10.0.3",
-        "@types/node": "9.4.7",
+        "@types/node": "^10.14.18",
         "@types/node-fetch": "^2.3.4",
         "@types/pdfkit": "^0.7.36",
         "@types/promisify-node": "^0.4.0",
@@ -2806,7 +2812,7 @@
         "bootstrap": "^4.3.1",
         "bootstrap-less": "^3.3.8",
         "brfs": "^2.0.2",
-        "canvas": "2.0.1",
+        "canvas": "^2.6.0",
         "chai": "^4.1.2",
         "chai-arrays": "^2.0.0",
         "chai-as-promised": "^7.1.1",
@@ -2883,7 +2889,7 @@
         "tslint-microsoft-contrib": "^5.0.3",
         "typed-react-markdown": "^0.1.0",
         "typemoq": "^2.1.0",
-        "typescript": "^3.5.2",
+        "typescript": "^3.6.4",
         "typescript-formatter": "^7.1.0",
         "unicode-properties": "1.1.0",
         "url-loader": "^1.1.2",

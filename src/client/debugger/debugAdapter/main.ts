@@ -12,7 +12,7 @@ if ((Reflect as any).metadata === undefined) {
 import { Socket } from 'net';
 import { EOL } from 'os';
 import * as path from 'path';
-import { PassThrough, Writable } from 'stream';
+import { PassThrough } from 'stream';
 import { Disposable } from 'vscode';
 import { DebugSession, ErrorDestination, Event, logger, OutputEvent, Response, TerminatedEvent } from 'vscode-debugadapter';
 import { LogLevel } from 'vscode-debugadapter/lib/logger';
@@ -414,7 +414,7 @@ class DebugManager implements Disposable {
         }
 
         // Get ready for PTVSD to communicate directly with VS Code.
-        (this.inputStream as any as NodeJS.ReadStream).unpipe<Writable>(this.debugSessionInputStream);
+        (this.inputStream as any as NodeJS.ReadStream).unpipe(this.debugSessionInputStream);
         this.debugSessionOutputStream.unpipe(this.outputStream);
 
         // Do not pipe. When restarting the debugger, the socket gets closed,

@@ -7,25 +7,32 @@ import * as assert from 'assert';
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
+// tslint:disable-next-line: match-default-export-name
+import rewiremock from 'rewiremock';
 import { SemVer } from 'semver';
-import { anyString, anything, instance, mock, verify, when } from 'ts-mockito';
-import { DebugAdapterExecutable, DebugConfiguration, DebugSession, WorkspaceFolder } from 'vscode';
+import { anyString, anything, instance, mock, spy, verify, when } from 'ts-mockito';
+import { DebugAdapterExecutable, DebugAdapterServer, DebugConfiguration, DebugSession, WorkspaceFolder } from 'vscode';
+import { ApplicationEnvironment } from '../../../../client/common/application/applicationEnvironment';
 import { ApplicationShell } from '../../../../client/common/application/applicationShell';
-import { Extensions } from '../../../../client/common/application/extensions';
 import { IApplicationShell } from '../../../../client/common/application/types';
+import { WorkspaceService } from '../../../../client/common/application/workspace';
+import { ConfigurationService } from '../../../../client/common/configuration/service';
+import { CryptoUtils } from '../../../../client/common/crypto';
 import { DebugAdapterNewPtvsd } from '../../../../client/common/experimentGroups';
 import { ExperimentsManager } from '../../../../client/common/experiments';
-import { PersistentState, PersistentStateFactory } from '../../../../client/common/persistentState';
-import { PythonExecutionFactory } from '../../../../client/common/process/pythonExecutionFactory';
-import { PythonExecutionService } from '../../../../client/common/process/pythonProcess';
-import { IPythonExecutionFactory } from '../../../../client/common/process/types';
-import { IExperimentsManager, IExtensions, IPersistentState, IPersistentStateFactory } from '../../../../client/common/types';
+import { HttpClient } from '../../../../client/common/net/httpClient';
+import { PersistentStateFactory } from '../../../../client/common/persistentState';
+import { FileSystem } from '../../../../client/common/platform/fileSystem';
+import { IPythonSettings } from '../../../../client/common/types';
 import { Architecture } from '../../../../client/common/utils/platform';
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
-import { DebugAdapterDescriptorFactory, ptvsdPathStorageKey } from '../../../../client/debugger/extension/adapter/factory';
-import { DebugAdapterPtvsdPathInfo, IDebugAdapterDescriptorFactory } from '../../../../client/debugger/extension/types';
+import { DebugAdapterDescriptorFactory } from '../../../../client/debugger/extension/adapter/factory';
+import { IDebugAdapterDescriptorFactory } from '../../../../client/debugger/extension/types';
 import { IInterpreterService, InterpreterType } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
+import { clearTelemetryReporter } from '../../../../client/telemetry';
+import { EventName } from '../../../../client/telemetry/constants';
+import { MockOutputChannel } from '../../../mockClasses';
 
 use(chaiAsPromised);
 
@@ -34,15 +41,11 @@ suite('Debugging - Adapter Factory', () => {
     let factory: IDebugAdapterDescriptorFactory;
     let interpreterService: IInterpreterService;
     let appShell: IApplicationShell;
-    let experimentsManager: IExperimentsManager;
-    let executionFactory: IPythonExecutionFactory;
-    let stateFactory: IPersistentStateFactory;
-    let debugAdapterPersistentState: IPersistentState<DebugAdapterPtvsdPathInfo | undefined>;
-    let extensions: IExtensions;
+    let experimentsManager: ExperimentsManager;
+    let spiedInstance: ExperimentsManager;
 
     const nodeExecutable = { command: 'node', args: [] };
-    const mockExtensionVersion = new SemVer('2019.9.0');
-    const ptvsdPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
+    const ptvsdAdapterPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'ptvsd', 'adapter');
     const pythonPath = path.join('path', 'to', 'python', 'interpreter');
     const interpreter = {
         architecture: Architecture.Unknown,
@@ -52,37 +55,70 @@ suite('Debugging - Adapter Factory', () => {
         type: InterpreterType.Unknown,
         version: new SemVer('3.7.4-test')
     };
+    const oldValueOfVSC_PYTHON_UNIT_TEST = process.env.VSC_PYTHON_UNIT_TEST;
+    const oldValueOfVSC_PYTHON_CI_TEST = process.env.VSC_PYTHON_CI_TEST;
+
+    class Reporter {
+        public static eventNames: string[] = [];
+        public static properties: Record<string, string>[] = [];
+        public static measures: {}[] = [];
+        public sendTelemetryEvent(eventName: string, properties?: {}, measures?: {}) {
+            Reporter.eventNames.push(eventName);
+            Reporter.properties.push(properties!);
+            Reporter.measures.push(measures!);
+        }
+    }
 
     setup(() => {
+        process.env.VSC_PYTHON_UNIT_TEST = undefined;
+        process.env.VSC_PYTHON_CI_TEST = undefined;
+        rewiremock.enable();
+        rewiremock('vscode-extension-telemetry').with({ default: Reporter });
+
+        const workspaceService = mock(WorkspaceService);
+        const httpClient = mock(HttpClient);
+        const crypto = mock(CryptoUtils);
+        const appEnvironment = mock(ApplicationEnvironment);
+        const persistentStateFactory = mock(PersistentStateFactory);
+        const output = mock(MockOutputChannel);
+        const configurationService = mock(ConfigurationService);
+        const fs = mock(FileSystem);
+        // tslint:disable-next-line: no-any
+        when(configurationService.getSettings(undefined)).thenReturn(({ experiments: { enabled: true } } as any) as IPythonSettings);
+        experimentsManager = new ExperimentsManager(
+            instance(persistentStateFactory),
+            instance(workspaceService),
+            instance(httpClient),
+            instance(crypto),
+            instance(appEnvironment),
+            instance(output),
+            instance(fs),
+            instance(configurationService)
+        );
+        spiedInstance = spy(experimentsManager);
+
         interpreterService = mock(InterpreterService);
         appShell = mock(ApplicationShell);
-        experimentsManager = mock(ExperimentsManager);
-        executionFactory = mock(PythonExecutionFactory);
-        stateFactory = mock(PersistentStateFactory);
-        debugAdapterPersistentState = mock(PersistentState);
-        extensions = mock(Extensions);
 
-        // tslint:disable-next-line: no-any
-        when(extensions.getExtension(anything())).thenReturn({ packageJSON: { version: mockExtensionVersion } } as any);
         when(interpreterService.getInterpreterDetails(pythonPath)).thenResolve(interpreter);
         when(interpreterService.getInterpreters(anything())).thenResolve([interpreter]);
 
         factory = new DebugAdapterDescriptorFactory(
             instance(interpreterService),
             instance(appShell),
-            instance(experimentsManager),
-            instance(executionFactory),
-            instance(stateFactory),
-            instance(extensions)
+            experimentsManager
         );
     });
 
-    function mockPtvsdInfoPersistentState(sameVersion: boolean) {
-        const debugAdapterInfo: DebugAdapterPtvsdPathInfo = { extensionVersion: sameVersion ? mockExtensionVersion.raw : '2019.10.0-dev', ptvsdPath };
-
-        when(stateFactory.createGlobalPersistentState<DebugAdapterPtvsdPathInfo | undefined>(ptvsdPathStorageKey, undefined)).thenReturn(instance(debugAdapterPersistentState));
-        when(debugAdapterPersistentState.value).thenReturn(debugAdapterInfo);
-    }
+    teardown(() => {
+        process.env.VSC_PYTHON_UNIT_TEST = oldValueOfVSC_PYTHON_UNIT_TEST;
+        process.env.VSC_PYTHON_CI_TEST = oldValueOfVSC_PYTHON_CI_TEST;
+        Reporter.properties = [];
+        Reporter.eventNames = [];
+        Reporter.measures = [];
+        rewiremock.disable();
+        clearTelemetryReporter();
+    });
 
     function createSession(config: Partial<DebugConfiguration>, workspaceFolder?: WorkspaceFolder): DebugSession {
         return {
@@ -97,10 +133,9 @@ suite('Debugging - Adapter Factory', () => {
 
     test('Return the value of configuration.pythonPath as the current python path if it exists and if we are in the experiment', async () => {
         const session = createSession({ pythonPath });
-        const debugExecutable = new DebugAdapterExecutable(pythonPath, [path.join(ptvsdPath, 'ptvsd', 'adapter')]);
+        const debugExecutable = new DebugAdapterExecutable(pythonPath, [ptvsdAdapterPath]);
 
-        mockPtvsdInfoPersistentState(true);
-        when(experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
+        when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
 
         const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
@@ -109,10 +144,9 @@ suite('Debugging - Adapter Factory', () => {
 
     test('Return the path of the active interpreter as the current python path if we are in the experiment, it exists and configuration.pythonPath is not defined', async () => {
         const session = createSession({});
-        const debugExecutable = new DebugAdapterExecutable(pythonPath, [path.join(ptvsdPath, 'ptvsd', 'adapter')]);
+        const debugExecutable = new DebugAdapterExecutable(pythonPath, [ptvsdAdapterPath]);
 
-        mockPtvsdInfoPersistentState(true);
-        when(experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
+        when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
         when(interpreterService.getActiveInterpreter(anything())).thenResolve(interpreter);
 
         const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
@@ -122,10 +156,9 @@ suite('Debugging - Adapter Factory', () => {
 
     test('Return the path of the first available interpreter as the current python path if we are in the experiment, configuration.pythonPath is not defined and there is no active interpreter', async () => {
         const session = createSession({});
-        const debugExecutable = new DebugAdapterExecutable(pythonPath, [path.join(ptvsdPath, 'ptvsd', 'adapter')]);
+        const debugExecutable = new DebugAdapterExecutable(pythonPath, [ptvsdAdapterPath]);
 
-        mockPtvsdInfoPersistentState(true);
-        when(experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
+        when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
 
         const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
@@ -135,10 +168,42 @@ suite('Debugging - Adapter Factory', () => {
     test('Display a message if no python interpreter is set and we are in the experiment', async () => {
         when(interpreterService.getInterpreters(anything())).thenResolve([]);
         const session = createSession({});
+
+        when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
         const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
         verify(appShell.showErrorMessage(anyString())).once();
         assert.deepEqual(descriptor, nodeExecutable);
+    });
+
+    test('Return Debug Adapter server if attach configuration and we are in experiment', async () => {
+        const session = createSession({ request: 'attach', port: 5678, host: 'localhost' });
+        const debugServer = new DebugAdapterServer(session.configuration.port, session.configuration.host);
+
+        when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
+        const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
+
+        // Interpreter not needed for attach
+        verify(interpreterService.getInterpreters(anything())).never();
+        assert.deepEqual(descriptor, debugServer);
+    });
+
+    test('Throw error if configuration is attach and in experiment and port is 0', async () => {
+        const session = createSession({ request: 'attach', port: 0, host: 'localhost' });
+
+        when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
+        const promise = factory.createDebugAdapterDescriptor(session, nodeExecutable);
+
+        await expect(promise).to.eventually.be.rejectedWith('Port must be specified for request type attach');
+    });
+
+    test('Throw error if configuration is attach and in experiment and port is not specified', async () => {
+        const session = createSession({ request: 'attach', port: undefined });
+
+        when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
+        const promise = factory.createDebugAdapterDescriptor(session, nodeExecutable);
+
+        await expect(promise).to.eventually.be.rejectedWith('Port must be specified for request type attach');
     });
 
     test('Return old node debugger when not in the experiment', async () => {
@@ -168,11 +233,10 @@ suite('Debugging - Adapter Factory', () => {
     });
 
     test('Return Python debug adapter executable when in the experiment and with the active interpreter being Python 3.7', async () => {
-        const debugExecutable = new DebugAdapterExecutable(pythonPath, [path.join(ptvsdPath, 'ptvsd', 'adapter')]);
+        const debugExecutable = new DebugAdapterExecutable(pythonPath, [ptvsdAdapterPath]);
         const session = createSession({});
 
-        mockPtvsdInfoPersistentState(true);
-        when(experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
+        when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
 
         const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
@@ -186,87 +250,11 @@ suite('Debugging - Adapter Factory', () => {
         await expect(promise).to.eventually.be.rejectedWith('Debug Adapter Executable not provided');
     });
 
-    test('Save the PTVSD path in persistent storage if it doesn\'t exist in the cache', async () => {
-        const persistentPtvsdPath = path.join('persistent', 'ptvsd', 'path');
-        const debugExecutable = new DebugAdapterExecutable(pythonPath, [path.join(persistentPtvsdPath, 'ptvsd', 'adapter')]);
-        const session = createSession({});
-        let execCalled = false;
-
-        when(stateFactory.createGlobalPersistentState<DebugAdapterPtvsdPathInfo | undefined>(ptvsdPathStorageKey, undefined)).thenReturn(instance(debugAdapterPersistentState));
-        when(debugAdapterPersistentState.value).thenReturn(undefined);
-        when(experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
-        const pythonExecService = ({
-            exec: () => {
-                execCalled = true;
-                return Promise.resolve({ stdout: persistentPtvsdPath });
-            }
-            // tslint:disable-next-line: no-any
-        } as any) as PythonExecutionService;
-        when(executionFactory.create(anything())).thenResolve(pythonExecService);
-
-        const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
-
-        assert.deepEqual(descriptor, debugExecutable);
-        assert.equal(execCalled, true);
-        verify(executionFactory.create(anything())).once();
-        verify(debugAdapterPersistentState.updateValue(anything())).once();
-    });
-
-    test('Save the PTVSD path in persistent storage if the extension version in the cache is different from the actual one', async () => {
-        const session = createSession({});
-        const debugExecutable = new DebugAdapterExecutable(pythonPath, [path.join(ptvsdPath, 'ptvsd', 'adapter')]);
-        let execCalled = false;
-
-        mockPtvsdInfoPersistentState(false);
-        when(experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
-        const pythonExecService = ({
-            exec: () => {
-                execCalled = true;
-                return Promise.resolve({ stdout: ptvsdPath });
-            }
-            // tslint:disable-next-line: no-any
-        } as any) as PythonExecutionService;
-        when(executionFactory.create(anything())).thenResolve(pythonExecService);
-
-        const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
-
-        assert.deepEqual(descriptor, debugExecutable);
-        assert.equal(execCalled, true);
-        verify(executionFactory.create(anything())).once();
-        verify(debugAdapterPersistentState.updateValue(anything())).once();
-    });
-
-    test('Use the cached path to PTVSD if it exists and the extension version hasn\'t changed since the value was saved', async () => {
-        const session = createSession({});
-        const debugExecutable = new DebugAdapterExecutable(pythonPath, [path.join(ptvsdPath, 'ptvsd', 'adapter')]);
-        let execCalled = false;
-
-        mockPtvsdInfoPersistentState(true);
-        when(experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
-        const pythonExecService = ({
-            exec: () => {
-                execCalled = true;
-                return Promise.resolve({ stdout: ptvsdPath });
-            }
-            // tslint:disable-next-line: no-any
-        } as any) as PythonExecutionService;
-        when(executionFactory.create(anything())).thenResolve(pythonExecService);
-
-        const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
-
-        assert.deepEqual(descriptor, debugExecutable);
-        assert.equal(execCalled, false);
-        verify(executionFactory.create(anything())).never();
-        verify(debugAdapterPersistentState.updateValue(anything())).never();
-        verify(debugAdapterPersistentState.value).thrice();
-    });
-
     test('Pass the --log-dir argument to PTVSD is configuration.logToFile is set', async () => {
         const session = createSession({ logToFile: true });
-        const debugExecutable = new DebugAdapterExecutable(pythonPath, [path.join(ptvsdPath, 'ptvsd', 'adapter'), '--log-dir', EXTENSION_ROOT_DIR]);
+        const debugExecutable = new DebugAdapterExecutable(pythonPath, [ptvsdAdapterPath, '--log-dir', EXTENSION_ROOT_DIR]);
 
-        mockPtvsdInfoPersistentState(true);
-        when(experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
+        when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
 
         const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
@@ -275,10 +263,9 @@ suite('Debugging - Adapter Factory', () => {
 
     test('Don\'t pass the --log-dir argument to PTVSD is configuration.logToFile is not set', async () => {
         const session = createSession({});
-        const debugExecutable = new DebugAdapterExecutable(pythonPath, [path.join(ptvsdPath, 'ptvsd', 'adapter')]);
+        const debugExecutable = new DebugAdapterExecutable(pythonPath, [ptvsdAdapterPath]);
 
-        mockPtvsdInfoPersistentState(true);
-        when(experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
+        when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
 
         const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
@@ -287,13 +274,42 @@ suite('Debugging - Adapter Factory', () => {
 
     test('Don\'t pass the --log-dir argument to PTVSD is configuration.logToFile is set but false', async () => {
         const session = createSession({ logToFile: false });
-        const debugExecutable = new DebugAdapterExecutable(pythonPath, [path.join(ptvsdPath, 'ptvsd', 'adapter')]);
+        const debugExecutable = new DebugAdapterExecutable(pythonPath, [ptvsdAdapterPath]);
 
-        mockPtvsdInfoPersistentState(true);
-        when(experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
+        when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
 
         const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
         assert.deepEqual(descriptor, debugExecutable);
+    });
+
+    test('Send experiment group telemetry if inside the wheels experiment', async () => {
+        const session = createSession({});
+        when(spiedInstance.userExperiments).thenReturn([{ name: DebugAdapterNewPtvsd.experiment, salt: DebugAdapterNewPtvsd.experiment, min: 0, max: 0 }]);
+
+        await factory.createDebugAdapterDescriptor(session, nodeExecutable);
+
+        assert.deepEqual(Reporter.eventNames, [EventName.PYTHON_EXPERIMENTS]);
+        assert.deepEqual(Reporter.properties, [{ expName: DebugAdapterNewPtvsd.experiment }]);
+    });
+
+    test('Send control group telemetry if inside the DA experiment control group', async () => {
+        const session = createSession({});
+        when(spiedInstance.userExperiments).thenReturn([{ name: DebugAdapterNewPtvsd.control, salt: DebugAdapterNewPtvsd.control, min: 0, max: 0 }]);
+
+        await factory.createDebugAdapterDescriptor(session, nodeExecutable);
+
+        assert.deepEqual(Reporter.eventNames, [EventName.PYTHON_EXPERIMENTS]);
+        assert.deepEqual(Reporter.properties, [{ expName: DebugAdapterNewPtvsd.control }]);
+    });
+
+    test('Don\'t send any telemetry if not inside the DA experiment nor control group', async () => {
+        const session = createSession({});
+        when(spiedInstance.userExperiments).thenReturn([]);
+
+        await factory.createDebugAdapterDescriptor(session, nodeExecutable);
+
+        assert.deepEqual(Reporter.eventNames, []);
+        assert.deepEqual(Reporter.properties, []);
     });
 });

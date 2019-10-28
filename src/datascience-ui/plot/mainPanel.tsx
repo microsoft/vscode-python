@@ -208,7 +208,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private renderThumbnails(_baseTheme: string) {
         return (
-            <SvgList images={this.state.thumbnails} currentImage={this.state.currentImage} imageClicked={this.imageClicked}/>
+            <SvgList images={this.state.thumbnails} currentImage={this.state.currentImage} imageClicked={this.imageClicked} themeMatplotlibBackground={getSettings().themeMatplotlibPlots ? true : false}/>
         );
     }
 
@@ -237,6 +237,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             return (
                 <SvgViewer
                     baseTheme={baseTheme}
+                    themeMatplotlibPlots={getSettings().themeMatplotlibPlots ? true : false}
                     svg={currentPlot}
                     id={currentId}
                     size={currentSize}

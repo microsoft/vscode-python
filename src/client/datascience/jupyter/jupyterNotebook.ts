@@ -208,8 +208,8 @@ export class JupyterNotebookBase implements INotebook {
             if (setting) {
                 // Cleanup the linefeeds. User may have typed them into the settings UI so they will have an extra \\ on the front.
                 const cleanedUp = setting.replace(/\\n/g, '\n');
-                await this.executeSilently(cleanedUp, cancelToken);
-                traceInfo(`Run startup code for notebook: ${cleanedUp}`);
+                const cells = await this.executeSilently(cleanedUp, cancelToken);
+                traceInfo(`Run startup code for notebook: ${cleanedUp} - results: ${cells.length}`);
             }
 
             traceInfo(`Initial setup complete for ${this.resource.toString()}`);
@@ -410,11 +410,13 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     public async setMatplotLibStyle(useDark: boolean): Promise<void> {
-        // Reset the matplotlib style based on if dark or not.
-        await this.executeSilently(useDark ?
-            'matplotlib.style.use(\'dark_background\')' :
-            `matplotlib.rcParams.update(${Identifiers.MatplotLibDefaultParams})`);
-
+        const settings = this.configService.getSettings().datascience;
+        if (settings.themeMatplotlibPlots && !settings.ignoreVscodeTheme) {
+            // Reset the matplotlib style based on if dark or not.
+            await this.executeSilently(useDark ?
+                'matplotlib.style.use(\'dark_background\')' :
+                `matplotlib.rcParams.update(${Identifiers.MatplotLibDefaultParams})`);
+        }
     }
 
     public async getCompletion(cellCode: string, offsetInCode: number, cancelToken?: CancellationToken): Promise<INotebookCompletion> {

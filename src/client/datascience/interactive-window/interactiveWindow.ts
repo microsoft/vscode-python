@@ -141,11 +141,11 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
 
         switch (message) {
             case InteractiveWindowMessages.Export:
-                this.dispatchMessage(message, payload, this.export);
+                this.handleMessage(message, payload, this.export);
                 break;
 
             case InteractiveWindowMessages.ReturnAllCells:
-                this.dispatchMessage(message, payload, this.handleReturnAllCells);
+                this.handleMessage(message, payload, this.handleReturnAllCells);
                 break;
 
             default:
@@ -156,7 +156,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     public async debugCode(code: string, file: string, line: number, editor?: TextEditor): Promise<boolean> {
         let saved = true;
         // Make sure the file is saved before debugging
-        const doc = this.documentManager.textDocuments.find(d => d.fileName === file);
+        const doc = this.documentManager.textDocuments.find(d => this.fileSystem.arePathsSame(d.fileName, file));
         if (doc && doc.isUntitled) {
             // Before we start, get the list of documents
             const beforeSave = [...this.documentManager.textDocuments];

@@ -2,6 +2,7 @@ import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Position, ViewColumn } from 'vscode';
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
+import { IFileSystem } from '../../common/platform/types';
 import { noop } from '../../common/utils/misc';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { ICell, IGatherExecution, IInteractiveWindowListener } from '../types';
@@ -14,7 +15,8 @@ export class GatherListener implements IInteractiveWindowListener {
     constructor(
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
-        @inject(IGatherExecution) private gatherExecution: IGatherExecution
+        @inject(IGatherExecution) private gatherExecution: IGatherExecution,
+        @inject(IFileSystem) private fileSystem: IFileSystem
     ) { }
 
     public dispose() {
@@ -52,7 +54,7 @@ export class GatherListener implements IInteractiveWindowListener {
 
         // Don't want to open the gathered code on top of the interactive window
         let viewColumn: ViewColumn | undefined;
-        const fileNameMatch = this.documentManager.visibleTextEditors.filter(textEditor => textEditor.document.fileName === cell.file);
+        const fileNameMatch = this.documentManager.visibleTextEditors.filter(textEditor => this.fileSystem.arePathsSame(textEditor.document.fileName, cell.file));
         const definedVisibleEditors = this.documentManager.visibleTextEditors.filter(textEditor => textEditor.viewColumn !== undefined);
         if (this.documentManager.visibleTextEditors.length > 0 && fileNameMatch.length > 0) {
             // Original file is visible

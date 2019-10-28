@@ -77,6 +77,8 @@ export namespace InteractiveWindowMessages {
     export const NotebookRunAllCells = 'notebook_run_all_cells';
     export const NotebookRunSelectedCell = 'notebook_run_selected_cell';
     export const NotebookAddCellBelow = 'notebook_add_cell_below';
+    export const RenderComplete = 'finished_rendering_cells';
+    export const FocusedCellEditor = 'focused_cell_editor';
 }
 
 export enum NativeCommandType {
@@ -209,8 +211,7 @@ export interface IEditCell {
 export interface IAddCell {
     fullText: string;
     currentText: string;
-    file: string;
-    id: string;
+    cell: ICell;
 }
 
 export interface IRemoveCell {
@@ -223,9 +224,10 @@ export interface ISwapCells {
 }
 
 export interface IInsertCell {
-    id: string;
+    cell: ICell;
     code: string;
-    codeCellAbove: string | undefined;
+    index: number;
+    codeCellAboveId: string | undefined;
 }
 
 export interface IShowDataViewer {
@@ -252,6 +254,14 @@ export interface ISaveAll {
 export interface INativeCommand {
     command: NativeCommandType;
     source: 'keyboard' | 'mouse';
+}
+
+export interface IRenderComplete {
+    ids: string[];
+}
+
+export interface IFocusedCellEditor {
+    cellId: string;
 }
 
 // Map all messages to specific payloads
@@ -326,4 +336,6 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.NotebookRunAllCells]: never | undefined;
     public [InteractiveWindowMessages.NotebookRunSelectedCell]: never | undefined;
     public [InteractiveWindowMessages.NotebookAddCellBelow]: never | undefined;
+    public [InteractiveWindowMessages.RenderComplete]: IRenderComplete;
+    public [InteractiveWindowMessages.FocusedCellEditor]: IFocusedCellEditor;
 }

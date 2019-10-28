@@ -330,10 +330,10 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
 
     private async addCell(request: IAddCell): Promise<void> {
         // Get the document and then pass onto the sub class
-        const document = await this.getDocument(request.file === Identifiers.EmptyFileName ? undefined : Uri.file(request.file));
+        const document = await this.getDocument(request.cell.file === Identifiers.EmptyFileName ? undefined : Uri.file(request.cell.file));
         if (document) {
-            const changes = document.addCell(request.fullText, request.currentText, request.id);
-            return this.handleChanges(request.file, document, changes);
+            const changes = document.addCell(request.fullText, request.currentText, request.cell.id);
+            return this.handleChanges(request.cell.file, document, changes);
         }
     }
 
@@ -341,7 +341,7 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
         // Get the document and then pass onto the sub class
         const document = await this.getDocument();
         if (document) {
-            const changes = document.insertCell(request.id, request.code, request.codeCellAbove);
+            const changes = document.insertCell(request.cell.id, request.code, request.codeCellAboveId);
             return this.handleChanges(undefined, document, changes);
         }
     }

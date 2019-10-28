@@ -30,6 +30,7 @@ interface ICellOutputProps {
     baseTheme: string;
     maxTextSize?: number;
     hideOutput?: boolean;
+    themeMatplotlibPlots?: boolean;
     openLink(uri: monacoEditor.Uri): void;
     expandImage(imageHtml: string): void;
 }
@@ -41,6 +42,7 @@ interface ICellOutput {
     isText: boolean;
     isError: boolean;
     extraButton: JSX.Element | null; // Extra button for plot viewing is stored here
+    outputSpanClassName?: string; // Wrap this output in a span with the following className, undefined to not wrap
     doubleClick(): void; // Double click handler for plot viewing is stored here
 }
 // tslint:disable: react-this-binding-issue
@@ -254,7 +256,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                         data: concatMultilineStringOutput(data as nbformat.MultilineString),
                         isText,
                         isError,
-                        renderWithScrollbars,
+                        renderWithScrollbars: true,
                         extraButton,
                         doubleClick: noop
                     };
@@ -264,6 +266,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                     // There should be two mime bundles. Well if enablePlotViewer is turned on. See if we have both
                     const svg = mimeBundle['image/svg+xml'];
                     const png = mimeBundle['image/png'];
+                    const buttonTheme = this.props.themeMatplotlibPlots ? this.props.baseTheme : 'vscode-light';
                     let doubleClick: () => void = noop;
                     if (svg && png) {
                         // Save the svg in the extra button.
@@ -272,8 +275,8 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                         };
                         extraButton = (
                             <div className='plot-open-button'>
-                                <ImageButton baseTheme={this.props.baseTheme} tooltip={getLocString('DataScience.plotOpen', 'Expand image')} onClick={openClick}>
-                                    <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.OpenPlot} />
+                                <ImageButton baseTheme={buttonTheme} tooltip={getLocString('DataScience.plotOpen', 'Expand image')} onClick={openClick}>
+                                    <Image baseTheme={buttonTheme} class='image-button-image' image={ImageName.OpenPlot} />
                                 </ImageButton>
                             </div>
                         );
@@ -287,6 +290,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                     }
 
                     // return the image
+                    // If not theming plots then wrap in a span
                     return {
                         mimeType,
                         data,
@@ -294,7 +298,8 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                         isError,
                         renderWithScrollbars,
                         extraButton,
-                        doubleClick
+                        doubleClick,
+                        outputSpanClassName: this.props.themeMatplotlibPlots ? undefined : 'cell-output-plot-background'
                     };
 
                 default:
@@ -366,12 +371,24 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             let className = transformed.isText ? 'cell-output-text' : 'cell-output-html';
             className = transformed.isError ? `${className} cell-output-error` : className;
 
-            return (
-                <div role='group' key={index} onDoubleClick={transformed.doubleClick} onClick={this.click} className={className} style={style}>
-                    {transformed.extraButton}
-                    <Transform data={transformed.data} />
-                </div>
-            );
+            // If we are not theming plots then wrap them in a white span
+            if (transformed.outputSpanClassName) {
+                return (
+                    <div role='group' key={index} onDoubleClick={transformed.doubleClick} onClick={this.click} className={className} style={style}>
+                        <span className={transformed.outputSpanClassName}>
+                            {transformed.extraButton}
+                            <Transform data={transformed.data} />
+                        </span>
+                    </div>
+                );
+            } else {
+                return (
+                    <div role='group' key={index} onDoubleClick={transformed.doubleClick} onClick={this.click} className={className} style={style}>
+                        {transformed.extraButton}
+                        <Transform data={transformed.data} />
+                    </div>
+                );
+            }
         }
 
         if (output.data) {
