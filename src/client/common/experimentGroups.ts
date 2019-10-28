@@ -14,7 +14,7 @@ export enum ShowExtensionSurveyPrompt {
 }
 
 // Experiment to check whether the extension should use the new VS Code debug adapter API.
-export enum DebugAdapterDescriptorFactoryInsiders {
+export enum DebugAdapterDescriptorFactory {
     control = 'DebugAdapterFactoryInsiders - control',
     experiment = 'DebugAdapterFactoryInsiders - experiment'
 }
