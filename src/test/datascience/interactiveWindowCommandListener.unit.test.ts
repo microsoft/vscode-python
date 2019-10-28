@@ -7,7 +7,7 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
-import { Disposable, EventEmitter, Uri } from 'vscode';
+import { EventEmitter, Uri } from 'vscode';
 
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { PythonSettings } from '../../client/common/configSettings';
@@ -27,11 +27,9 @@ import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyte
 import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
 import { JupyterImporter } from '../../client/datascience/jupyter/jupyterImporter';
 import {
-    IInteractiveBase,
     IInteractiveWindow,
     INotebook,
-    INotebookServer,
-    IStatusProvider
+    INotebookServer
 } from '../../client/datascience/types';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { KnownSearchPathsForInterpreters } from '../../client/interpreter/locators/services/KnownPathsService';
@@ -41,6 +39,7 @@ import { MockAutoSelectionService } from '../mocks/autoSelector';
 import * as vscodeMocks from '../vscode-mock';
 import { MockCommandManager } from './mockCommandManager';
 import { MockDocumentManager } from './mockDocumentManager';
+import { MockStatusProvider } from './mockStatusProvider';
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
 
@@ -51,19 +50,6 @@ function createTypeMoq<T>(tag: string): TypeMoq.IMock<T> {
     (result as any).tag = tag;
     result.setup((x: any) => x.then).returns(() => undefined);
     return result;
-}
-
-class MockStatusProvider implements IStatusProvider {
-    public set(_message: string, _timeout?: number, _cancel?: () => void, _panel?: IInteractiveBase): Disposable {
-        return {
-            dispose: noop
-        };
-    }
-
-    public waitWithStatus<T>(promise: () => Promise<T>, _message: string, _timeout?: number, _canceled?: () => void, _panel?: IInteractiveBase): Promise<T> {
-        return promise();
-    }
-
 }
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length

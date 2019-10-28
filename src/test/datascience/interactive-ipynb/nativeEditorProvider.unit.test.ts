@@ -30,7 +30,7 @@ suite('Data Science - Native Editor Provider', () => {
     let workspace: IWorkspaceService;
     let configService: IConfigurationService;
     let fileSystem: IFileSystem;
-    let doctManager: IDocumentManager;
+    let docManager: IDocumentManager;
     let dsErrorHandler: IDataScienceErrorHandler;
     let cmdManager: ICommandManager;
     let svcContainer: IServiceContainer;
@@ -39,7 +39,7 @@ suite('Data Science - Native Editor Provider', () => {
         svcContainer = mock(ServiceContainer);
         configService = mock(ConfigurationService);
         fileSystem = mock(FileSystem);
-        doctManager = mock(DocumentManager);
+        docManager = mock(DocumentManager);
         dsErrorHandler = mock(DataScienceErrorHandler);
         cmdManager = mock(CommandManager);
         workspace = mock(WorkspaceService);
@@ -53,7 +53,7 @@ suite('Data Science - Native Editor Provider', () => {
             instance(workspace),
             instance(configService),
             instance(fileSystem),
-            instance(doctManager),
+            instance(docManager),
             instance(cmdManager),
             instance(dsErrorHandler)
         );
@@ -74,8 +74,8 @@ suite('Data Science - Native Editor Provider', () => {
         const eventEmitter = new EventEmitter<TextEditor>();
         const editor = typemoq.Mock.ofType<INotebookEditor>();
         when(configService.getSettings()).thenReturn({ datascience: { useNotebookEditor: true } } as any);
-        when(doctManager.onDidChangeActiveTextEditor).thenReturn(eventEmitter.event);
-        when(doctManager.visibleTextEditors).thenReturn([]);
+        when(docManager.onDidChangeActiveTextEditor).thenReturn(eventEmitter.event);
+        when(docManager.visibleTextEditors).thenReturn([]);
         editor.setup(e => e.closed).returns(() => new EventEmitter<INotebookEditor>().event);
         editor.setup(e => e.executed).returns(() => new EventEmitter<INotebookEditor>().event);
         editor.setup(e => (e as any).then).returns(() => undefined);
