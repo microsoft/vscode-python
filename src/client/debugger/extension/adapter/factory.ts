@@ -16,7 +16,7 @@ import { RemoteDebugOptions } from '../../debugAdapter/types';
 import { AttachRequestArguments, LaunchRequestArguments } from '../../types';
 import { IDebugAdapterDescriptorFactory } from '../types';
 
-export const ptvsdPathStorageKey = 'PTVSD_PATH_STORAGE_KEY';
+const debuggerPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'ptvsd');
 
 @injectable()
 export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFactory {
@@ -72,9 +72,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
         return true;
     }
 
-    public getPtvsdPath(): string {
-        return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'ptvsd');
-    }
+    public getPtvsdPath = () => debuggerPath;
 
     public getRemotePtvsdArgs(remoteDebugOptions: RemoteDebugOptions): string[] {
         const waitArgs = remoteDebugOptions.waitUntilDebuggerAttaches ? ['--wait'] : [];
