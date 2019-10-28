@@ -13,6 +13,7 @@ import {
     IProvideSignatureHelpResponse
 } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
+import { noop } from '../../client/common/utils/misc';
 
 interface IRequestData<T> {
     promise: Deferred<T>;
@@ -25,7 +26,7 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
     public readonly signatureHelpRetriggerCharacters?: ReadonlyArray<string> = [')'];
     private completionRequests: Map<string, IRequestData<monacoEditor.languages.CompletionList>> = new Map<string, IRequestData<monacoEditor.languages.CompletionList>>();
     private hoverRequests: Map<string, IRequestData<monacoEditor.languages.Hover>> = new Map<string, IRequestData<monacoEditor.languages.Hover>>();
-    private signatureHelpRequests: Map<string, IRequestData<monacoEditor.languages.SignatureHelp>> = new Map<string, IRequestData<monacoEditor.languages.SignatureHelp>>();
+    private signatureHelpRequests: Map<string, IRequestData<monacoEditor.languages.SignatureHelpResult>> = new Map<string, IRequestData<monacoEditor.languages.SignatureHelpResult>>();
     private registerDisposables: monacoEditor.IDisposable[] = [];
     constructor(private postOffice: PostOffice, private getCellId: (modelId: string) => string) {
         // Register a completion provider
@@ -79,10 +80,10 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
         model: monacoEditor.editor.ITextModel,
         position: monacoEditor.Position,
         token: monacoEditor.CancellationToken,
-        context: monacoEditor.languages.SignatureHelpContext): monacoEditor.languages.ProviderResult<monacoEditor.languages.SignatureHelp> {
+        context: monacoEditor.languages.SignatureHelpContext): monacoEditor.languages.ProviderResult<monacoEditor.languages.SignatureHelpResult> {
         // Emit a new request
         const requestId = uuid();
-        const promise = createDeferred<monacoEditor.languages.SignatureHelp>();
+        const promise = createDeferred<monacoEditor.languages.SignatureHelpResult>();
 
         const cancelDisposable = token.onCancellationRequested(() => {
             promise.resolve();
@@ -167,7 +168,10 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
             // Resolve our waiting promise if we have one
             const waiting = this.signatureHelpRequests.get(response.requestId);
             if (waiting) {
-                waiting.promise.resolve(response.signatureHelp);
+                waiting.promise.resolve({
+                    value: response.signatureHelp,
+                    dispose: noop
+                });
                 this.signatureHelpRequests.delete(response.requestId);
             }
         }
