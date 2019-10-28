@@ -374,8 +374,8 @@ export class FileSystem extends FileSystemUtils implements IFileSystem {
         // Do not import vscode directly, as this isn't available in the Debugger Context.
         // If stat is used in debugger context, it will fail, however theres a separate PR that will resolve this.
         // tslint:disable-next-line: no-require-imports
-        const vscode = require('vscode');
-        return vscode.workspace.fs.stat(vscode.Uri.file(filePath));
+        const vsc = require('vscode');
+        return vsc.workspace.fs.stat(vscode.Uri.file(filePath));
     }
 
     public async readFile(filename: string): Promise<string> {
