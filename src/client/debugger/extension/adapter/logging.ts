@@ -9,20 +9,26 @@ import { DebugAdapterTracker, DebugAdapterTrackerFactory, DebugConfiguration, De
 import { DebugProtocol } from 'vscode-debugprotocol';
 
 import { IFileSystem } from '../../../common/platform/types';
+import { StopWatch } from '../../../common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 
 class DebugSessionLoggingTracker implements DebugAdapterTracker {
     private readonly session: DebugSession;
     private readonly enabled: boolean = false;
-    private stream: fs.WriteStream;
+    private stream: fs.WriteStream | undefined;
+    private timer = new StopWatch();
+
     constructor(session: DebugSession, fileSystem: IFileSystem) {
         this.session = session;
         this.enabled = this.session.configuration.logToFile as boolean;
-        const fileName = `debug_ext_${this.session.id}.log`;
-        this.stream = fileSystem.createWriteStream(path.join(EXTENSION_ROOT_DIR, fileName));
+        if (this.enabled) {
+            const fileName = `debug_ext_${this.session.id}.log`;
+            this.stream = fileSystem.createWriteStream(path.join(EXTENSION_ROOT_DIR, fileName));
+        }
     }
 
     public onWillStartSession() {
+        this.timer.reset();
         this.log(`Stoping Session:\n${this.stringify(this.session.configuration)}\n`);
     }
 
@@ -35,7 +41,7 @@ class DebugSessionLoggingTracker implements DebugAdapterTracker {
     }
 
     public onWillStopSession() {
-        this.log(`Stopping Session`);
+        this.log(`Stopping Session\n`);
     }
 
     public onError(error: Error) {
@@ -43,12 +49,12 @@ class DebugSessionLoggingTracker implements DebugAdapterTracker {
     }
 
     public onExit(code: number | undefined, signal: string | undefined) {
-        this.log(`Exit:\nExit-Code: ${code ? code : 0}\nSignal: ${signal ? signal : 'none'}`);
+        this.log(`Exit:\nExit-Code: ${code ? code : 0}\nSignal: ${signal ? signal : 'none'}\n`);
     }
 
     private log(message: string) {
         if (this.enabled) {
-            this.stream.write(`${Math.floor(Date.now())} ${message}`);
+            this.stream!.write(`${this.timer.elapsedTime} ${message}`);
         }
     }
 
