@@ -3,8 +3,10 @@
 'use strict';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as uuid from 'uuid/v4';
+
 import { IDisposable } from '../../client/common/types';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
+import { noop } from '../../client/common/utils/misc';
 import {
     IInteractiveWindowMapping,
     InteractiveWindowMessages,
@@ -13,7 +15,6 @@ import {
     IProvideSignatureHelpResponse
 } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
-import { noop } from '../../client/common/utils/misc';
 
 interface IRequestData<T> {
     promise: Deferred<T>;
