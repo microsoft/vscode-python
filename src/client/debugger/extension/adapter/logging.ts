@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+
 import * as fs from 'fs';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, ProviderResult } from 'vscode';
+import { DebugAdapterTracker, DebugAdapterTrackerFactory, DebugConfiguration, DebugSession, ProviderResult } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 
 import { IFileSystem } from '../../../common/platform/types';
@@ -22,35 +23,37 @@ class DebugSessionLoggingTracker implements DebugAdapterTracker {
     }
 
     public onWillStartSession() {
-        if (this.enabled) {
-            this.stream.write(`Starting debug session with configuration: ${this.session.configuration}`);
-            // write start
-        }
+        this.log(`Stoping Session:\n${this.stringify(this.session.configuration)}\n`);
     }
-    public onWillReceiveMessage(_message: DebugProtocol.Message) {
-        if (this.enabled) {
-            // write received message with time stamp
-        }
+
+    public onWillReceiveMessage(message: DebugProtocol.Message) {
+        this.log(`Client <-- Adapter:\n${this.stringify(message)}\n`);
     }
-    public onDidSendMessage(_message: DebugProtocol.Message) {
-        if (this.enabled) {
-            // write sent message with time stamp
-        }
+
+    public onDidSendMessage(message: DebugProtocol.Message) {
+        this.log(`Client --> Adapter:\n${this.stringify(message)}\n`);
     }
+
     public onWillStopSession() {
+        this.log(`Stopping Session`);
+    }
+
+    public onError(error: Error) {
+        this.log(`Error:\n${this.stringify(error)}\n`);
+    }
+
+    public onExit(code: number | undefined, signal: string | undefined) {
+        this.log(`Exit:\nExit-Code: ${code ? code : 0}\nSignal: ${signal ? signal : 'none'}`);
+    }
+
+    private log(message: string) {
         if (this.enabled) {
-            // write stopped session details with message
+            this.stream.write(`${Math.floor(Date.now())} ${message}`);
         }
     }
-    public onError(_error: Error) {
-        if (this.enabled) {
-            // write any error details
-        }
-    }
-    public onExit(_code: number | undefined, _signal: string | undefined) {
-        if (this.enabled) {
-            // write any exit details
-        }
+
+    private stringify(data: DebugProtocol.Message | Error | DebugConfiguration) {
+        return JSON.stringify(data, null, 4);
     }
 }
 
