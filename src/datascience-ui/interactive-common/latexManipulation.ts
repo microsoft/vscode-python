@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 // Adds '$$' to latex formulas that don't have a '$', allowing users to input the formula directly.
-function fixLatexEquations(input: string): string {
+export function fixLatexEquations(input: string): string {
     const block = '\n$$\n';
 
     const beginIndexes = getAllIndexesOfRegex(input, /\\begin\{[a-z]*\*?\}/g);
@@ -36,5 +36,3 @@ function getAllIndexesOfRegex(arr: string, value: RegExp): number[] {
 
     return indexes;
 }
-
-export { fixLatexEquations };
