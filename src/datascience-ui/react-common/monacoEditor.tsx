@@ -69,6 +69,8 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
     private throttledUpdateWidgetPosition = throttle(this.updateWidgetPosition.bind(this), 100);
     private throttledScrollOntoScreen = throttle(this.scrollOntoScreen.bind(this), 100);
     private monacoContainer : HTMLDivElement | undefined;
+    private lineTops: number[] = [];
+    private debouncedComputeLineTops = debounce(this.computeLineTops.bind(this), 100);
 
     /**
      * Reference to parameter widget (used by monaco to display parameter docs).
@@ -159,6 +161,8 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             // On layout recompute height
             this.subscriptions.push(editor.onDidLayoutChange(() => {
                 this.windowResized();
+                // Also recompute our visible line heights
+                this.debouncedComputeLineTops();
             }));
 
             // Setup our context menu to show up outside. Autocomplete doesn't have this problem so it just works
@@ -316,10 +320,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             if (cursor) {
                 const top = this.state.editor.getTopForPosition(cursor.lineNumber, cursor.column);
                 const lines = this.getVisibleLines();
-                const lineTops = lines.map(l => {
-                    const match = l.style.top ? /(.+)px/.exec(l.style.top) : null;
-                    return match ? parseInt(match[0], 10) : Infinity;
-                });
+                const lineTops = lines.length === this.lineTops.length ? this.lineTops : this.computeLineTops();
                 for (let i = 0; i < lines.length; i += 1) {
                     if (top <= lineTops[i]) {
                         return i;
@@ -342,6 +343,15 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             }
         }
         return [];
+    }
+
+    private computeLineTops(): number[] {
+        const lines = this.getVisibleLines();
+        this.lineTops = lines.map(l => {
+            const match = l.style.top ? /(.+)px/.exec(l.style.top) : null;
+            return match ? parseInt(match[0], 10) : Infinity;
+        });
+        return this.lineTops;
     }
 
     private scrollOntoScreen(_editor: monacoEditor.editor.IStandaloneCodeEditor) {

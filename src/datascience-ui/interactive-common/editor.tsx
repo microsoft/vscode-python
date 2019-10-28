@@ -70,8 +70,10 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
             this.state.editor.focus();
         }
         if (this.state.editor && cursorPos !== CursorPos.Current) {
+            const current = this.state.editor.getPosition();
             const lineNumber = cursorPos === CursorPos.Top ? 1 : this.state.editor.getModel()!.getLineCount();
-            this.state.editor.setPosition({ lineNumber, column: 1});
+            const column = current && current.lineNumber === lineNumber ? current.column : 1;
+            this.state.editor.setPosition({ lineNumber, column });
         }
     }
 
