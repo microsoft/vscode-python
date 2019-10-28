@@ -12,6 +12,7 @@ import { IFileSystem, IPlatformService } from '../../../client/common/platform/t
 import { ITerminalService, ITerminalServiceFactory } from '../../../client/common/terminal/types';
 import { IConfigurationService, IPythonSettings, ITerminalSettings } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
+import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { DjangoShellCodeExecutionProvider } from '../../../client/terminals/codeExecution/djangoShellCodeExecution';
 import { ReplProvider } from '../../../client/terminals/codeExecution/repl';
 import { TerminalCodeExecutionProvider } from '../../../client/terminals/codeExecution/terminalCodeExecution';
@@ -26,6 +27,8 @@ suite('Terminal - Code Execution', () => {
         let platform: TypeMoq.IMock<IPlatformService>;
         let workspaceFolder: TypeMoq.IMock<WorkspaceFolder>;
         let settings: TypeMoq.IMock<IPythonSettings>;
+        let interpreterService: TypeMoq.IMock<IInterpreterService>;
+        let condaService: TypeMoq.IMock<ICondaService>;
         let disposables: Disposable[] = [];
         let executor: ICodeExecutionService;
         let expectedTerminalTitle: string | undefined;
@@ -56,6 +59,8 @@ suite('Terminal - Code Execution', () => {
             documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
             commandManager = TypeMoq.Mock.ofType<ICommandManager>();
             fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
+            interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+            condaService = TypeMoq.Mock.ofType<ICondaService>();
 
             settings = TypeMoq.Mock.ofType<IPythonSettings>();
             settings.setup(s => s.terminal).returns(() => terminalSettings.object);
@@ -63,11 +68,27 @@ suite('Terminal - Code Execution', () => {
 
             switch (testSuiteName) {
                 case 'Terminal Execution': {
-                    executor = new TerminalCodeExecutionProvider(terminalFactory.object, configService.object, workspace.object, disposables, platform.object);
+                    executor = new TerminalCodeExecutionProvider(
+                        terminalFactory.object,
+                        configService.object,
+                        workspace.object,
+                        disposables,
+                        interpreterService.object,
+                        condaService.object,
+                        platform.object
+                    );
                     break;
                 }
                 case 'Repl Execution': {
-                    executor = new ReplProvider(terminalFactory.object, configService.object, workspace.object, disposables, platform.object);
+                    executor = new ReplProvider(
+                        terminalFactory.object,
+                        configService.object,
+                        workspace.object,
+                        interpreterService.object,
+                        condaService.object,
+                        disposables,
+                        platform.object
+                    );
                     expectedTerminalTitle = 'REPL';
                     break;
                 }
@@ -76,8 +97,18 @@ suite('Terminal - Code Execution', () => {
                     workspace.setup(w => w.onDidChangeWorkspaceFolders(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => {
                         return { dispose: noop };
                     });
-                    executor = new DjangoShellCodeExecutionProvider(terminalFactory.object, configService.object, workspace.object, documentManager.object,
-                        platform.object, commandManager.object, fileSystem.object, disposables);
+                    executor = new DjangoShellCodeExecutionProvider(
+                        terminalFactory.object,
+                        configService.object,
+                        workspace.object,
+                        documentManager.object,
+                        interpreterService.object,
+                        condaService.object,
+                        platform.object,
+                        commandManager.object,
+                        fileSystem.object,
+                        disposables
+                    );
                     expectedTerminalTitle = 'Django Shell';
                     break;
                 }
@@ -98,6 +129,7 @@ suite('Terminal - Code Execution', () => {
                 platform.setup(p => p.isLinux).returns(() => isLinux);
                 settings.setup(s => s.pythonPath).returns(() => PYTHON_PATH);
                 terminalSettings.setup(t => t.launchArgs).returns(() => []);
+                interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
 
                 await executor.initializeRepl();
             }
@@ -209,6 +241,7 @@ suite('Terminal - Code Execution', () => {
                 terminalSettings.setup(t => t.launchArgs).returns(() => terminalArgs);
                 terminalSettings.setup(t => t.executeInFileDir).returns(() => false);
                 workspace.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => undefined);
+                interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
 
                 await executor.executeFile(file);
                 const expectedPythonPath = isWindows ? pythonPath.replace(/\\/g, '/') : pythonPath;
@@ -236,51 +269,52 @@ suite('Terminal - Code Execution', () => {
                 await testFileExecution(false, PYTHON_PATH, ['-a', '-b', '-c'], file);
             });
 
-            function testReplCommandArguments(isWindows: boolean, pythonPath: string, expectedPythonPath: string, terminalArgs: string[]) {
+            async function testReplCommandArguments(isWindows: boolean, pythonPath: string, expectedPythonPath: string, terminalArgs: string[]) {
                 platform.setup(p => p.isWindows).returns(() => isWindows);
                 settings.setup(s => s.pythonPath).returns(() => pythonPath);
                 terminalSettings.setup(t => t.launchArgs).returns(() => terminalArgs);
+                interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
                 const expectedTerminalArgs = isDjangoRepl ? terminalArgs.concat(['manage.py', 'shell']) : terminalArgs;
 
-                const replCommandArgs = (executor as TerminalCodeExecutionProvider).getReplCommandArgs();
+                const replCommandArgs = await (executor as TerminalCodeExecutionProvider).getExecutableInfo();
                 expect(replCommandArgs).not.to.be.an('undefined', 'Command args is undefined');
                 expect(replCommandArgs.command).to.be.equal(expectedPythonPath, 'Incorrect python path');
                 expect(replCommandArgs.args).to.be.deep.equal(expectedTerminalArgs, 'Incorrect arguments');
             }
 
-            test('Ensure fully qualified python path is escaped when building repl args on Windows', () => {
+            test('Ensure fully qualified python path is escaped when building repl args on Windows', async () => {
                 const pythonPath = 'c:\\program files\\python\\python.exe';
                 const terminalArgs = ['-a', 'b', 'c'];
 
-                testReplCommandArguments(true, pythonPath, 'c:/program files/python/python.exe', terminalArgs);
+                await testReplCommandArguments(true, pythonPath, 'c:/program files/python/python.exe', terminalArgs);
             });
 
-            test('Ensure fully qualified python path is returned as is, when building repl args on Windows', () => {
+            test('Ensure fully qualified python path is returned as is, when building repl args on Windows', async () => {
                 const pythonPath = 'c:/program files/python/python.exe';
                 const terminalArgs = ['-a', 'b', 'c'];
 
-                testReplCommandArguments(true, pythonPath, pythonPath, terminalArgs);
+                await testReplCommandArguments(true, pythonPath, pythonPath, terminalArgs);
             });
 
-            test('Ensure python path is returned as is, when building repl args on Windows', () => {
+            test('Ensure python path is returned as is, when building repl args on Windows', async () => {
                 const pythonPath = PYTHON_PATH;
                 const terminalArgs = ['-a', 'b', 'c'];
 
-                testReplCommandArguments(true, pythonPath, pythonPath, terminalArgs);
+                await testReplCommandArguments(true, pythonPath, pythonPath, terminalArgs);
             });
 
-            test('Ensure fully qualified python path is returned as is, on non Windows', () => {
+            test('Ensure fully qualified python path is returned as is, on non Windows', async () => {
                 const pythonPath = 'usr/bin/python';
                 const terminalArgs = ['-a', 'b', 'c'];
 
-                testReplCommandArguments(false, pythonPath, pythonPath, terminalArgs);
+                await testReplCommandArguments(false, pythonPath, pythonPath, terminalArgs);
             });
 
-            test('Ensure python path is returned as is, on non Windows', () => {
+            test('Ensure python path is returned as is, on non Windows', async () => {
                 const pythonPath = PYTHON_PATH;
                 const terminalArgs = ['-a', 'b', 'c'];
 
-                testReplCommandArguments(false, pythonPath, pythonPath, terminalArgs);
+                await testReplCommandArguments(false, pythonPath, pythonPath, terminalArgs);
             });
 
             test('Ensure nothing happens when blank text is sent to the terminal', async () => {

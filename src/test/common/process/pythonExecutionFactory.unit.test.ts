@@ -26,7 +26,8 @@ import { IConfigurationService, IDisposableRegistry } from '../../../client/comm
 import { Architecture } from '../../../client/common/utils/platform';
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
-import { InterpreterType, PythonInterpreter } from '../../../client/interpreter/contracts';
+import { ICondaService, InterpreterType, PythonInterpreter } from '../../../client/interpreter/contracts';
+import { CondaService } from '../../../client/interpreter/locators/services/condaService';
 import { WindowsStoreInterpreter } from '../../../client/interpreter/locators/services/windowsStoreInterpreter';
 import { IWindowsStoreInterpreter } from '../../../client/interpreter/locators/types';
 import { ServiceContainer } from '../../../client/ioc/container';
@@ -71,6 +72,7 @@ suite('Process - PythonExecutionFactory', () => {
             let bufferDecoder: IBufferDecoder;
             let procecssFactory: IProcessServiceFactory;
             let configService: IConfigurationService;
+            let condaService: ICondaService;
             let processLogger: IProcessLogger;
             let processService: ProcessService;
             let windowsStoreInterpreter: IWindowsStoreInterpreter;
@@ -79,6 +81,7 @@ suite('Process - PythonExecutionFactory', () => {
                 activationHelper = mock(EnvironmentActivationService);
                 procecssFactory = mock(ProcessServiceFactory);
                 configService = mock(ConfigurationService);
+                condaService = mock(CondaService);
                 processLogger = mock(ProcessLogger);
                 windowsStoreInterpreter = mock(WindowsStoreInterpreter);
                 when(processLogger.logProcess('', [], {})).thenReturn();
@@ -87,10 +90,15 @@ suite('Process - PythonExecutionFactory', () => {
                 const serviceContainer = mock(ServiceContainer);
                 when(serviceContainer.get<IDisposableRegistry>(IDisposableRegistry)).thenReturn([]);
                 when(serviceContainer.get<IProcessLogger>(IProcessLogger)).thenReturn(processLogger);
-                factory = new PythonExecutionFactory(instance(serviceContainer),
-                    instance(activationHelper), instance(procecssFactory),
-                    instance(configService), instance(bufferDecoder),
-                    instance(windowsStoreInterpreter));
+                factory = new PythonExecutionFactory(
+                    instance(serviceContainer),
+                    instance(activationHelper),
+                    instance(procecssFactory),
+                    instance(configService),
+                    instance(condaService),
+                    instance(bufferDecoder),
+                    instance(windowsStoreInterpreter)
+                );
             });
 
             test('Ensure PythonExecutionService is created', async () => {

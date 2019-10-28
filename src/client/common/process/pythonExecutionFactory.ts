@@ -3,12 +3,14 @@
 import { inject, injectable } from 'inversify';
 
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
+import { ICondaService } from '../../interpreter/contracts';
 import { WindowsStoreInterpreter } from '../../interpreter/locators/services/windowsStoreInterpreter';
 import { IWindowsStoreInterpreter } from '../../interpreter/locators/types';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IConfigurationService, IDisposableRegistry } from '../types';
+import { CondaExecutionService } from './condaExecutionService';
 import { ProcessService } from './proc';
 import { PythonExecutionService } from './pythonProcess';
 import {
@@ -30,6 +32,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
         @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
+        @inject(ICondaService) private readonly condaService: ICondaService,
         @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
         @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter
     ) {}
@@ -38,6 +41,16 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const processService: IProcessService = await this.processServiceFactory.create(options.resource);
         const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
         processService.on('exec', processLogger.logProcess.bind(processLogger));
+
+        if (options.pythonPath && this.condaService.isCondaEnvironment(options.pythonPath)) {
+            const condaFile = await this.condaService.getCondaFile();
+            const condaEnvironment = await this.condaService.getCondaEnvironment(options.pythonPath);
+
+            if (condaEnvironment) {
+                return new CondaExecutionService(this.serviceContainer, processService, pythonPath, condaFile, condaEnvironment);
+            }
+        }
+
         if (this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)) {
             return new WindowsStorePythonProcess(this.serviceContainer, processService, pythonPath, this.windowsStoreInterpreter);
         }

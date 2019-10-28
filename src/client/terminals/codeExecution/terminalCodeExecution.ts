@@ -9,8 +9,10 @@ import { Disposable, Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IPlatformService } from '../../common/platform/types';
+import { IPythonExecutableInfo } from '../../common/process/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../common/terminal/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { ICondaService, IInterpreterService, InterpreterType } from '../../interpreter/contracts';
 import { ICodeExecutionService } from '../../terminals/types';
 
 @injectable()
@@ -22,18 +24,16 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         @inject(IConfigurationService) protected readonly configurationService: IConfigurationService,
         @inject(IWorkspaceService) protected readonly workspace: IWorkspaceService,
         @inject(IDisposableRegistry) protected readonly disposables: Disposable[],
-        @inject(IPlatformService) protected readonly platformService: IPlatformService) {
+        @inject(IInterpreterService) protected readonly interpreterService: IInterpreterService,
+        @inject(ICondaService) protected readonly condaService: ICondaService,
+        @inject(IPlatformService) protected readonly platformService: IPlatformService
+    ) {}
 
-    }
     public async executeFile(file: Uri) {
-        const pythonSettings = this.configurationService.getSettings(file);
-
         await this.setCwdForFileExecution(file);
+        const { command, args } = await this.getReplCommandArgs(file, [file.fsPath.fileToCommandArgument()]);
 
-        const command = this.platformService.isWindows ? pythonSettings.pythonPath.replace(/\\/g, '/') : pythonSettings.pythonPath;
-        const launchArgs = pythonSettings.terminal.launchArgs;
-
-        await this.getTerminalService(file).sendCommand(command, launchArgs.concat(file.fsPath.fileToCommandArgument()));
+        await this.getTerminalService(file).sendCommand(command, args);
     }
 
     public async execute(code: string, resource?: Uri): Promise<void> {
@@ -50,7 +50,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
             return;
         }
         this.replActive = new Promise<boolean>(async resolve => {
-            const replCommandArgs = this.getReplCommandArgs(resource);
+            const replCommandArgs = await this.getExecutableInfo(resource);
             await this.getTerminalService(resource).sendCommand(replCommandArgs.command, replCommandArgs.args);
 
             // Give python repl time to start before we start sending text.
@@ -59,11 +59,40 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
 
         await this.replActive;
     }
-    public getReplCommandArgs(resource?: Uri): { command: string; args: string[] } {
+    public async getExecutableInfo(resource?: Uri, args: string[] = []): Promise<IPythonExecutableInfo> {
         const pythonSettings = this.configurationService.getSettings(resource);
-        const command = this.platformService.isWindows ? pythonSettings.pythonPath.replace(/\\/g, '/') : pythonSettings.pythonPath;
-        const args = pythonSettings.terminal.launchArgs.slice();
-        return { command, args };
+        const command = pythonSettings.pythonPath;
+        const launchArgs = pythonSettings.terminal.launchArgs;
+        const interpreter = await this.interpreterService.getActiveInterpreter(resource);
+
+        if (interpreter && interpreter.type === InterpreterType.Conda) {
+            const condaFile = await this.condaService.getCondaFile();
+
+            if (interpreter.envName) {
+                return {
+                    command: condaFile,
+                    args: ['run', '-n', interpreter.envName, 'python', ...launchArgs, ...args]
+                };
+            }
+
+            if (interpreter.envPath) {
+                return {
+                    command: condaFile,
+                    args: ['run', '-p', interpreter.envPath, 'python', ...launchArgs, ...args]
+                };
+            }
+        }
+
+        const isWindows = this.platformService.isWindows;
+
+        return {
+            command: isWindows ? command.replace(/\\/g, '/') : command,
+            args: [...launchArgs, ...args]
+        };
+    }
+
+    public async getReplCommandArgs(resource?: Uri, replArgs: string[] = []): Promise<IPythonExecutableInfo> {
+        return this.getExecutableInfo(resource, replArgs);
     }
     private getTerminalService(resource?: Uri): ITerminalService {
         if (!this._terminalService) {

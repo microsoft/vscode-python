@@ -96,6 +96,11 @@ export interface IPythonExecutionService {
     execModule(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
 }
 
+export interface IPythonExecutableInfo {
+    command: string;
+    args: string[];
+}
+
 export class StdErrError extends Error {
     constructor(message: string) {
         super(message);

@@ -36,6 +36,7 @@ import {
 import {
     IEnvironmentActivationService
 } from '../../client/interpreter/activation/types';
+import { ICondaService } from '../../client/interpreter/contracts';
 import { WindowsStoreInterpreter } from '../../client/interpreter/locators/services/windowsStoreInterpreter';
 import { IServiceContainer } from '../../client/ioc/types';
 import { LINTERID_BY_PRODUCT } from '../../client/linters/constants';
@@ -246,6 +247,8 @@ class TestFixture extends BaseTestFixture {
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IBufferDecoder), TypeMoq.It.isAny()))
             .returns(() => decoder);
 
+        const condaService = TypeMoq.Mock.ofType<ICondaService>(undefined, TypeMoq.MockBehavior.Strict);
+
         const processLogger = TypeMoq.Mock.ofType<IProcessLogger>(undefined, TypeMoq.MockBehavior.Strict);
         processLogger
             .setup(p => p.logProcess(TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
@@ -259,6 +262,7 @@ class TestFixture extends BaseTestFixture {
             envActivationService.object,
             procServiceFactory,
             configService,
+            condaService.object,
             decoder,
             instance(windowsStoreInterpreter)
         );
