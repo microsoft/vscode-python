@@ -8,6 +8,7 @@ import { Uri } from 'vscode';
 
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterExecution, INotebookEditor, INotebookEditorProvider } from '../../client/datascience/types';
+import { NativeCell } from '../../datascience-ui/native-editor/nativeCell';
 import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
@@ -21,6 +22,7 @@ import {
     simulateKey,
     waitForMessage
 } from './testHelpers';
+import { CursorPos } from '../../datascience-ui/interactive-common/mainState';
 
 // tslint:disable: no-any
 
@@ -77,6 +79,16 @@ export async function setupWebview(ioc: DataScienceIocContainer) {
         addMockData(ioc, 'a=1\na', 1);
         return mountNativeWebView(ioc);
     }
+}
+
+export function focusCell(ioc: DataScienceIocContainer, wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, index: number): Promise<void> {
+    const focusChange = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
+    const cell = wrapper.find(NativeCell).at(index);
+    if (cell) {
+        const vm = cell.props().cellVM;
+        cell.props().focusCell(vm.cell.id, true, CursorPos.Current);
+    }
+    return focusChange;
 }
 
 // tslint:disable-next-line: no-any

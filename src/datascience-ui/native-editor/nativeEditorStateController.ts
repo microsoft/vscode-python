@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as uuid from 'uuid/v4';
 
 import { noop } from '../../client/common/utils/misc';
@@ -285,28 +284,25 @@ export class NativeEditorStateController extends MainStateController {
         // Update the cell's source
         const index = this.findCellIndex(cellId);
         if (index >= 0) {
-            // Get the model for the monaco editor
-            const monacoId = this.getMonacoId(cellId);
-            if (monacoId) {
-                const model = monacoEditor.editor.getModels().find(m => m.id === monacoId);
-                if (model) {
-                    const newValue = model.getValue().replace(/\r/g, '');
-                    const newVMs = [...this.getState().cellVMs];
+            // Get the model source from the monaco editor
+            const source = this.getMonacoEditorContents(cellId);
+            if (source) {
+                const newVMs = [...this.getState().cellVMs];
 
-                    // Update our state
-                    newVMs[index] = {
-                        ...newVMs[index],
-                        cell: {
-                            ...newVMs[index].cell,
-                            data: {
-                                ...newVMs[index].cell.data,
-                                source: newValue
-                            }
+                // Update our state
+                newVMs[index] = {
+                    ...newVMs[index],
+                    inputBlockText: source,
+                    cell: {
+                        ...newVMs[index].cell,
+                        data: {
+                            ...newVMs[index].cell.data,
+                            source
                         }
-                    };
+                    }
+                };
 
-                    this.setState({ cellVMs: newVMs });
-                }
+                this.setState({ cellVMs: newVMs });
             }
         }
     }

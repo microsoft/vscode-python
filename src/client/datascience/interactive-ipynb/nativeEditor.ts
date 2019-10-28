@@ -8,7 +8,7 @@ import * as detectIndent from 'detect-indent';
 import { inject, injectable, multiInject, named } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { Event, EventEmitter, Memento, Uri, ViewColumn } from 'vscode';
+import { Event, EventEmitter, Memento, TextEditor, Uri, ViewColumn } from 'vscode';
 
 import {
     IApplicationShell,
@@ -310,6 +310,12 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
     }
 
+    protected submitCode(code: string, file: string, line: number, id?: string, editor?: TextEditor, debug?: boolean): Promise<boolean> {
+        // When code is executed, update the version number in the metadata.
+        this.updateVersionInfoInNotebook().ignoreErrors();
+        return super.submitCode(code, file, line, id, editor, debug);
+    }
+
     @captureTelemetry(Telemetry.SubmitCellThroughInput, undefined, false)
     // tslint:disable-next-line:no-any
     protected submitNewCell(info: ISubmitNewCell) {
@@ -453,6 +459,20 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     protected async closeBecauseOfFailure(_exc: Error): Promise<void> {
         // Actually don't close, just let the error bubble out
+    }
+
+    /**
+     * Update the Python Version number in the notebook data.
+     *
+     * @private
+     * @memberof NativeEditor
+     */
+    private async updateVersionInfoInNotebook(): Promise<void>{
+        // Use the active interpreter
+        const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
+        if (usableInterpreter && usableInterpreter.version && this.notebookJson.metadata && this.notebookJson.metadata.language_info){
+            this.notebookJson.metadata.language_info.version = `${usableInterpreter.version.major}.${usableInterpreter.version.minor}.${usableInterpreter.version.patch}`;
+        }
     }
 
     private async loadContents(contents: string | undefined, forceDirty: boolean): Promise<void> {

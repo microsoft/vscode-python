@@ -1,7 +1,4 @@
 jedi==0.15.1
 parso==0.5.1
 isort==4.3.21
-ptvsd==5.0.0a5
 pyparsing==2.4.0
-six==1.12.0
-packaging==19.2

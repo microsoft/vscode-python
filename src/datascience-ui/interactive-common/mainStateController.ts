@@ -565,7 +565,11 @@ export class MainStateController implements IMessageHandler {
         const index = this.pendingState.cellVMs.findIndex(c => c.cell.id === cellId);
         if (index >= 0 && this.pendingState.cellVMs[index].cell.data.cell_type !== newType) {
             const cellVMs = [...this.pendingState.cellVMs];
-            cellVMs[index] = immutable.updateIn(this.pendingState.cellVMs[index], ['cell', 'data', 'cell_type'], () => newType);
+            const current = this.pendingState.cellVMs[index];
+            const newSource = current.focused ? this.getMonacoEditorContents(cellId) : current.cell.data.source;
+            const newCell = { ...current, inputBlockText: newSource, cell: { ...current.cell, state: CellState.executing, data: { ...current.cell.data, cell_type: newType, source: newSource } } };
+            // tslint:disable-next-line: no-any
+            cellVMs[index] = (newCell as any); // This is because IMessageCell doesn't fit in here. But message cells can't change type
             this.setState({ cellVMs });
             if (newType === 'code') {
                 this.sendMessage(InteractiveWindowMessages.InsertCell, { cell: cellVMs[index].cell, index, code: concatMultilineStringInput(cellVMs[index].cell.data.source), codeCellAboveId: this.firstCodeCellAbove(cellId) });
@@ -804,6 +808,20 @@ export class MainStateController implements IMessageHandler {
         }
 
         return cellVM;
+    }
+
+    protected getMonacoEditorContents(cellId: string): string | undefined {
+        const index = this.findCellIndex(cellId);
+        if (index >= 0) {
+            // Get the model for the monaco editor
+            const monacoId = this.getMonacoId(cellId);
+            if (monacoId) {
+                const model = monacoEditor.editor.getModels().find(m => m.id === monacoId);
+                if (model) {
+                    return model.getValue().replace(/\r/g, '');
+                }
+            }
+        }
     }
 
     protected onCodeLostFocus(_cellId: string) {

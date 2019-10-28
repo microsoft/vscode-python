@@ -23,7 +23,7 @@
 .svg-list-item-selected {
     border-color: var(--vscode-list-highlightForeground);
     border-style: solid;
-    border-width: 1px;
+    border-width: 2px;
 }
 
 .svg-list-white-background {

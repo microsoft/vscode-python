@@ -420,6 +420,13 @@ export function getInteractiveEditor(wrapper: ReactWrapper<any, Readonly<{}>, Re
     return lastCell.find('MonacoEditor');
 }
 
+export function getNativeEditor(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, index: number): ReactWrapper<any, Readonly<{}>, React.Component> | undefined {
+    // Find the last cell. It should have a monacoEditor object
+    const cells = wrapper.find('NativeCell');
+    const lastCell = index < cells.length ? cells.at(index) : undefined;
+    return lastCell ? lastCell.find('MonacoEditor') : undefined;
+}
+
 export function getNativeFocusedEditor(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>): ReactWrapper<any, Readonly<{}>, React.Component> | undefined {
     // Find the last cell. It should have a monacoEditor object
     wrapper.update();
