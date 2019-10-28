@@ -23,31 +23,31 @@ suite('Extension API Debugger', () => {
     const ptvsdPath = path.join('path', 'to', 'ptvsd');
 
     let experimentsManager: IExperimentsManager;
-    let debugAdapterFactory: IDebugAdapterDescriptorFactory;
+    let debugAdapterFactoryInsiders: IDebugAdapterDescriptorFactory;
     let configurationService: IConfigurationService;
 
     setup(() => {
         experimentsManager = mock(ExperimentsManager);
-        debugAdapterFactory = mock(DebugAdapterDescriptorFactory);
+        debugAdapterFactoryInsiders = mock(DebugAdapterDescriptorFactory);
         configurationService = mock(ConfigurationService);
     });
 
     function mockInExperiment() {
         when(experimentsManager.inExperiment(anyString())).thenReturn(true);
-        when(debugAdapterFactory.useNewPtvsd(anyString())).thenResolve(true);
-        when(debugAdapterFactory.getPtvsdPath()).thenReturn(ptvsdPath);
+        when(debugAdapterFactoryInsiders.useNewPtvsd(anyString())).thenResolve(true);
+        when(debugAdapterFactoryInsiders.getPtvsdPath()).thenReturn(ptvsdPath);
         when(configurationService.getSettings(undefined)).thenReturn(({ pythonPath: 'python' } as any) as IPythonSettings);
     }
 
     function mockNotInExperiment() {
         when(experimentsManager.inExperiment(anyString())).thenReturn(false);
-        when(debugAdapterFactory.useNewPtvsd(anyString())).thenResolve(false);
+        when(debugAdapterFactoryInsiders.useNewPtvsd(anyString())).thenResolve(false);
     }
 
     test('Test debug launcher args (no-wait and not in experiment)', async () => {
         mockNotInExperiment();
 
-        const args = await buildApi(Promise.resolve(), instance(experimentsManager), instance(debugAdapterFactory), instance(configurationService)).debug.getRemoteLauncherCommand(
+        const args = await buildApi(Promise.resolve(), instance(experimentsManager), instance(debugAdapterFactoryInsiders), instance(configurationService)).debug.getRemoteLauncherCommand(
             'something',
             1234,
             false
@@ -59,9 +59,9 @@ suite('Extension API Debugger', () => {
 
     test('Test debug launcher args (no-wait and in experiment)', async () => {
         mockInExperiment();
-        when(debugAdapterFactory.getRemotePtvsdArgs(anything())).thenReturn(['--default', '--host', 'something', '--port', '1234']);
+        when(debugAdapterFactoryInsiders.getRemotePtvsdArgs(anything())).thenReturn(['--default', '--host', 'something', '--port', '1234']);
 
-        const args = await buildApi(Promise.resolve(), instance(experimentsManager), instance(debugAdapterFactory), instance(configurationService)).debug.getRemoteLauncherCommand(
+        const args = await buildApi(Promise.resolve(), instance(experimentsManager), instance(debugAdapterFactoryInsiders), instance(configurationService)).debug.getRemoteLauncherCommand(
             'something',
             1234,
             false
@@ -74,7 +74,7 @@ suite('Extension API Debugger', () => {
     test('Test debug launcher args (wait and not in experiment)', async () => {
         mockNotInExperiment();
 
-        const args = await buildApi(Promise.resolve(), instance(experimentsManager), instance(debugAdapterFactory), instance(configurationService)).debug.getRemoteLauncherCommand(
+        const args = await buildApi(Promise.resolve(), instance(experimentsManager), instance(debugAdapterFactoryInsiders), instance(configurationService)).debug.getRemoteLauncherCommand(
             'something',
             1234,
             true
@@ -86,9 +86,9 @@ suite('Extension API Debugger', () => {
 
     test('Test debug launcher args (wait and in experiment)', async () => {
         mockInExperiment();
-        when(debugAdapterFactory.getRemotePtvsdArgs(anything())).thenReturn(['--default', '--host', 'something', '--port', '1234', '--wait']);
+        when(debugAdapterFactoryInsiders.getRemotePtvsdArgs(anything())).thenReturn(['--default', '--host', 'something', '--port', '1234', '--wait']);
 
-        const args = await buildApi(Promise.resolve(), instance(experimentsManager), instance(debugAdapterFactory), instance(configurationService)).debug.getRemoteLauncherCommand(
+        const args = await buildApi(Promise.resolve(), instance(experimentsManager), instance(debugAdapterFactoryInsiders), instance(configurationService)).debug.getRemoteLauncherCommand(
             'something',
             1234,
             true
