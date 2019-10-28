@@ -92,7 +92,7 @@ export function generateTestState(inputBlockToggled: (id: string) => void, fileP
     return {
         cellVMs: generateVMs(inputBlockToggled, filePath, editable),
         editCellVM: createEditableCellVM(1),
-        busy: true,
+        busy: false,
         skipNextScroll: false,
         undoStack: [],
         redoStack: [],

@@ -467,10 +467,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
      * @private
      * @memberof NativeEditor
      */
-    private async updateVersionInfoInNotebook(): Promise<void>{
+    private async updateVersionInfoInNotebook(): Promise<void> {
         // Use the active interpreter
         const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
-        if (usableInterpreter && usableInterpreter.version && this.notebookJson.metadata && this.notebookJson.metadata.language_info){
+        if (usableInterpreter && usableInterpreter.version && this.notebookJson.metadata && this.notebookJson.metadata.language_info) {
             this.notebookJson.metadata.language_info.version = `${usableInterpreter.version.major}.${usableInterpreter.version.minor}.${usableInterpreter.version.patch}`;
         }
     }
@@ -580,11 +580,11 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
      * @memberof NativeEditor
      */
     private async getStoredContents(): Promise<string | undefined> {
-        const data = this.globalStorage.get<{contents?: string; lastModifiedTimeMs?: number}>(this.getStorageKey());
+        const data = this.globalStorage.get<{ contents?: string; lastModifiedTimeMs?: number }>(this.getStorageKey());
         // Check whether the file has been modified since the last time the contents were saved.
-        if (data && data.lastModifiedTimeMs && !this.isUntitled && this.file.scheme === 'file'){
+        if (data && data.lastModifiedTimeMs && !this.isUntitled && this.file.scheme === 'file') {
             const stat = await this.fileSystem.stat(this.file.fsPath);
-            if (stat.mtime > data.lastModifiedTimeMs){
+            if (stat.mtime > data.lastModifiedTimeMs) {
                 return;
             }
         }
@@ -605,7 +605,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         const key = this.getStorageKey();
         // Keep track of the time when this data was saved.
         // This way when we retrieve the data we can compare it against last modified date of the file.
-        await this.globalStorage.update(key, {contents, lastModifiedTimeMs: Date.now()});
+        await this.globalStorage.update(key, { contents, lastModifiedTimeMs: Date.now() });
     }
 
     private async close(): Promise<void> {
@@ -757,7 +757,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     @captureTelemetry(Telemetry.ConvertToPythonFile, undefined, false)
     private async export(cells: ICell[]): Promise<void> {
-        const status = this.setStatus(localize.DataScience.convertingToPythonFile());
+        const status = this.setStatus(localize.DataScience.convertingToPythonFile(), false);
         // First generate a temporary notebook with these cells.
         let tempFile: TemporaryFile | undefined;
         try {
