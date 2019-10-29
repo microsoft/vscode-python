@@ -969,7 +969,8 @@ for _ in range(50):
                 }
             });
 
-            test('Test save using the key \'ctrl+s\'', async () => {
+            test('Test save using the key \'ctrl+s\' on Windows', async () => {
+                (window.navigator as any).platform = 'Win';
                 clickCell(0);
 
                 await addCell(wrapper, ioc, 'a=1\na', true);
@@ -985,6 +986,24 @@ for _ in range(50):
                 await waitForCondition(() => savedPromise.promise.then(() => true).catch(() => false), 1_000, 'Timedout');
 
                 assert.ok(!editor!.isDirty, 'Editor should not be dirty after saving');
+            });
+
+            test('Test save using the key \'ctrl+s\' on Mac', async () => {
+                (window.navigator as any).platform = 'Mac';
+                clickCell(0);
+
+                await addCell(wrapper, ioc, 'a=1\na', true);
+
+                const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+                const editor = notebookProvider.editors[0];
+                assert.ok(editor, 'No editor when saving');
+                const savedPromise = createDeferred();
+                editor.saved(() => savedPromise.resolve());
+
+                simulateKeyPressOnCell(1, { code: 's', ctrlKey: true });
+
+                await expect(waitForCondition(() => savedPromise.promise.then(() => true).catch(() => false), 1_000, 'Timedout')).to.eventually.be.rejected;
+                assert.ok(editor!.isDirty, 'Editor be dirty as nothing got saved');
             });
 
             test('Test save using the key \'cmd+s\' on a Mac', async () => {
