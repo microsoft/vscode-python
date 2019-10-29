@@ -345,7 +345,8 @@ for _ in range(50):
             assert.ok(cell, 'Cannot find the first cell');
             const imageButtons = cell!.find(ImageButton);
             assert.equal(imageButtons.length, 7, 'Cell buttons not found');
-            const runButton = imageButtons.at(2);
+            const runButton = imageButtons.findWhere(w => w.props().tooltip === 'Run cell');
+            assert.equal(runButton.length, 1, 'No run button found');
             const update = waitForMessage(ioc, InteractiveWindowMessages.RenderComplete);
             runButton.simulate('click');
             await update;
