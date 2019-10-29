@@ -37,7 +37,6 @@ import { JupyterExecutionFactory } from '../../../client/datascience/jupyter/jup
 import { JupyterExporter } from '../../../client/datascience/jupyter/jupyterExporter';
 import { JupyterImporter } from '../../../client/datascience/jupyter/jupyterImporter';
 import { JupyterVariables } from '../../../client/datascience/jupyter/jupyterVariables';
-import { StatusProvider } from '../../../client/datascience/statusProvider';
 import { ThemeFinder } from '../../../client/datascience/themeFinder';
 import {
     ICodeCssGenerator,
@@ -49,7 +48,6 @@ import {
     INotebookEditorProvider,
     INotebookExporter,
     INotebookImporter,
-    IStatusProvider,
     IThemeFinder
 } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
@@ -58,6 +56,7 @@ import { createEmptyCell } from '../../../datascience-ui/interactive-common/main
 import { waitForCondition } from '../../common';
 import { noop } from '../../core';
 import { MockMemento } from '../../mocks/mementos';
+import { MockStatusProvider } from '../mockStatusProvider';
 
 // tslint:disable: no-any chai-vague-errors no-unused-expression
 
@@ -66,7 +65,7 @@ suite('Data Science - Native Editor', () => {
     let workspace: IWorkspaceService;
     let configService: IConfigurationService;
     let fileSystem: IFileSystem;
-    let doctManager: IDocumentManager;
+    let docManager: IDocumentManager;
     let dsErrorHandler: IDataScienceErrorHandler;
     let cmdManager: ICommandManager;
     let liveShare: ILiveShareApi;
@@ -76,7 +75,7 @@ suite('Data Science - Native Editor', () => {
     const disposables: Disposable[] = [];
     let cssGenerator: ICodeCssGenerator;
     let themeFinder: IThemeFinder;
-    let statusProvider: IStatusProvider;
+    let statusProvider: MockStatusProvider;
     let executionProvider: IJupyterExecution;
     let exportProvider: INotebookExporter;
     let editorProvider: INotebookEditorProvider;
@@ -188,7 +187,7 @@ suite('Data Science - Native Editor', () => {
         storageUpdateSpy = sinon.spy(storage, 'update');
         configService = mock(ConfigurationService);
         fileSystem = mock(FileSystem);
-        doctManager = mock(DocumentManager);
+        docManager = mock(DocumentManager);
         dsErrorHandler = mock(DataScienceErrorHandler);
         cmdManager = mock(CommandManager);
         workspace = mock(WorkspaceService);
@@ -198,7 +197,7 @@ suite('Data Science - Native Editor', () => {
         webPanelProvider = mock(WebPanelProvider);
         cssGenerator = mock(CodeCssGenerator);
         themeFinder = mock(ThemeFinder);
-        statusProvider = mock(StatusProvider);
+        statusProvider = new MockStatusProvider();
         executionProvider = mock(JupyterExecutionFactory);
         exportProvider = mock(JupyterExporter);
         editorProvider = mock(NativeEditorProvider);
@@ -218,10 +217,11 @@ suite('Data Science - Native Editor', () => {
         when(interpreterService.onDidChangeInterpreter).thenReturn(interprerterChangeEvent.event);
 
         const editorChangeEvent = new EventEmitter<TextEditor | undefined>();
-        when(doctManager.onDidChangeActiveTextEditor).thenReturn(editorChangeEvent.event);
+        when(docManager.onDidChangeActiveTextEditor).thenReturn(editorChangeEvent.event);
 
         const sessionChangedEvent = new EventEmitter<void>();
         when(executionProvider.sessionChanged).thenReturn(sessionChangedEvent.event);
+
     });
 
     teardown(() => {
@@ -234,13 +234,13 @@ suite('Data Science - Native Editor', () => {
             [],
             instance(liveShare),
             instance(applicationShell),
-            instance(doctManager),
+            instance(docManager),
             instance(interpreterService),
             instance(webPanelProvider),
             disposables,
             instance(cssGenerator),
             instance(themeFinder),
-            instance(statusProvider),
+            statusProvider,
             instance(executionProvider),
             instance(fileSystem),
             instance(configService),
@@ -418,7 +418,7 @@ suite('Data Science - Native Editor', () => {
         expect(newEditor.cells).to.be.lengthOf(3);
     });
 
-    test('Pyton version info will be updated in notebook when a cell has been executed', async () => {
+    test('Python version info will be updated in notebook when a cell has been executed', async () => {
         const file = Uri.parse('file://foo.ipynb');
 
         const editor = createEditor();
@@ -429,11 +429,11 @@ suite('Data Science - Native Editor', () => {
         expect(contents.metadata!.language_info!.version).to.not.equal('10.11.12');
 
         // When a cell is executed, then ensure we store the python version info in the notebook data.
-        const version: Version = {build: [], major: 10, minor: 11, patch: 12, prerelease: [], raw: '10.11.12'};
-        when(executionProvider.getUsableJupyterPython()).thenResolve(({version} as any));
+        const version: Version = { build: [], major: 10, minor: 11, patch: 12, prerelease: [], raw: '10.11.12' };
+        when(executionProvider.getUsableJupyterPython()).thenResolve(({ version } as any));
 
         try {
-            editor.onMessage(InteractiveWindowMessages.SubmitNewCell, {code: 'hello', id: '1'});
+            editor.onMessage(InteractiveWindowMessages.SubmitNewCell, { code: 'hello', id: '1' });
         } catch {
             // Ignore errors related to running cells, assume that works.
             noop();
@@ -452,5 +452,45 @@ suite('Data Science - Native Editor', () => {
         // Verify the version info is in the notbook.
         contents = JSON.parse(editor.contents) as nbformat.INotebookContent;
         expect(contents.metadata!.language_info!.version).to.equal('10.11.12');
+    });
+
+    test('Export to Python script file from notebook.', async () => {
+        // Temp file location needed for export
+        const tempFile = {
+            dispose: () => {
+                return undefined;
+            },
+            filePath: '/foo/bar.ipynb'
+        };
+        when(fileSystem.createTemporaryFile('.ipynb')).thenResolve(tempFile);
+
+        // Set up our importer to return file contents, check that we have the correct temp file location and
+        // original file location
+        const file = Uri.parse('file:///foo.ipynb');
+        when(importer.importFromFile('/foo/bar.ipynb', file.fsPath)).thenResolve('# File Contents');
+
+        // Just return empty objects here, we don't care about open or show function, just that they were called
+        when(docManager.openTextDocument({ language: 'python', content: '# File Contents' })).thenResolve({} as any);
+        when(docManager.showTextDocument(anything(), anything())).thenResolve({} as any);
+
+        const editor = createEditor();
+        await editor.load(baseFile, file);
+        expect(editor.contents).to.be.equal(baseFile);
+
+        // Make our call to actually export
+        editor.onMessage(InteractiveWindowMessages.Export, editor.cells);
+
+        await waitForCondition(async () => {
+            try {
+                // Wait until showTextDocument has been called, that's the signal that export is done
+                verify(docManager.showTextDocument(anything(), anything())).atLeast(1);
+                return true;
+            } catch {
+                return false;
+            }
+        }, 1_000, 'Timeout');
+
+        // Verify that we also opened our text document not exact match as verify doesn't seem to match that
+        verify(docManager.openTextDocument(anything())).once();
     });
 });

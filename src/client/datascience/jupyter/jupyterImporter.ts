@@ -47,19 +47,20 @@ export class JupyterImporter implements INotebookImporter {
         this.templatePromise = this.createTemplateFile();
     }
 
-    public async importFromFile(file: string): Promise<string> {
+    public async importFromFile(contentsFile: string, originalFile?: string): Promise<string> {
         const template = await this.templatePromise;
 
         // If the user has requested it, add a cd command to the imported file so that relative paths still work
         const settings = this.configuration.getSettings();
         let directoryChange: string | undefined;
         if (settings.datascience.changeDirOnImportExport) {
-            directoryChange = await this.calculateDirectoryChange(file);
+            // If an original file is passed in, then use that for calculating the directory change as contents might be an invalid location
+            directoryChange = await this.calculateDirectoryChange(originalFile ? originalFile : contentsFile);
         }
 
         // Use the jupyter nbconvert functionality to turn the notebook into a python file
         if (await this.jupyterExecution.isImportSupported()) {
-            let fileOutput: string = await this.jupyterExecution.importNotebook(file, template);
+            let fileOutput: string = await this.jupyterExecution.importNotebook(contentsFile, template);
             if (fileOutput.includes('get_ipython()')) {
                 fileOutput = this.addIPythonImport(fileOutput);
             }

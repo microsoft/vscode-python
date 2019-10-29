@@ -14,9 +14,8 @@ import { InteractivePanel } from '../../datascience-ui/history-react/interactive
 import { VariableExplorer } from '../../datascience-ui/interactive-common/variableExplorer';
 import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { addCode, runMountedTest as interactiveRunMountedTest } from './interactiveWindowTestHelpers';
-import { addCell, createNewEditor, runMountedTest as nativeRunMountedTest } from './nativeEditorTestHelpers';
-import { waitForUpdate } from './reactHelpers';
+import { addCode } from './interactiveWindowTestHelpers';
+import { addCell, createNewEditor } from './nativeEditorTestHelpers';
 import { runDoubleTest, waitForMessage } from './testHelpers';
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
@@ -63,34 +62,6 @@ suite('DataScience Interactive Window variable explorer tests', () => {
 
     async function waitForVariablesUpdated(): Promise<void> {
         return waitForMessage(ioc, InteractiveWindowMessages.VariablesComplete);
-    }
-
-    async function checkVariableLoading(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, targetRenderCount: number) {
-            const basicCode: string = `value = 'hello world'`;
-
-            openVariableExplorer(wrapper);
-
-            await addCodeImpartial(wrapper, 'a=1\na');
-            await addCodeImpartial(wrapper, basicCode, false);
-
-            // Target a render count before loading is finished
-            await waitForUpdate(wrapper, VariableExplorer, targetRenderCount);
-
-            let targetVariables: IJupyterVariable[] = [
-                {name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false},
-                {name: 'value', value: 'Loading...', supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false}
-            ];
-            verifyVariables(wrapper, targetVariables);
-
-            // Now wait for one more update and then check the variables, we should have loaded the value var
-            await waitForUpdate(wrapper, VariableExplorer, 1);
-
-            targetVariables = [
-                {name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false},
-                // tslint:disable-next-line:quotemark
-                {name: 'value', value: "'hello world'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false}
-            ];
-            verifyVariables(wrapper, targetVariables);
     }
 
     async function addCodeImpartial(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string, waitForVariables: boolean = true, expectedRenderCount: number = 4, expectError: boolean = false): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
@@ -179,16 +150,6 @@ value = 'hello world'`;
             {name: 'value2', value: "'hello world 2'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false}
         ];
         verifyVariables(wrapper, targetVariables);
-    }, () => { return ioc; });
-
-    // For the loading tests we check before the explorer is fully loaded, so split tests here to check
-    // with different target render counts
-    nativeRunMountedTest('Variable Explorer - Native Loading', async (wrapper) => {
-        await checkVariableLoading(wrapper, 3);
-    }, () => { return ioc; });
-
-    interactiveRunMountedTest('Variable Explorer - Interactive Loading', async (wrapper) => {
-        await checkVariableLoading(wrapper, 2);
     }, () => { return ioc; });
 
     // Test our display of basic types. We render 8 rows by default so only 8 values per test

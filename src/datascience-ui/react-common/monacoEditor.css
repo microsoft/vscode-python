@@ -126,3 +126,7 @@
     border-right-style: solid;
     border-right-width: 1px;
 }
+
+.monaco-editor .parameter-hints-widget > .wrapper {
+	overflow: hidden;
+}

@@ -14,7 +14,7 @@ import { Disposable, TextDocument, TextEditor, Uri, WindowState } from 'vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
-import { createDeferred, waitForPromise } from '../../client/common/utils/async';
+import { createDeferred } from '../../client/common/utils/async';
 import { createTemporaryFile } from '../../client/common/utils/fs';
 import { noop } from '../../client/common/utils/misc';
 import { Identifiers } from '../../client/datascience/constants';
@@ -345,7 +345,8 @@ for _ in range(50):
             assert.ok(cell, 'Cannot find the first cell');
             const imageButtons = cell!.find(ImageButton);
             assert.equal(imageButtons.length, 7, 'Cell buttons not found');
-            const runButton = imageButtons.at(2);
+            const runButton = imageButtons.findWhere(w => w.props().tooltip === 'Run cell');
+            assert.equal(runButton.length, 1, 'No run button found');
             const update = waitForMessage(ioc, InteractiveWindowMessages.RenderComplete);
             runButton.simulate('click');
             await update;
@@ -566,12 +567,20 @@ for _ in range(50):
         });
 
         suite('Keyboard Shortcuts', () => {
+            const originalPlatform = window.navigator.platform;
+            Object.defineProperty(window.navigator, 'platform', ((value: string) => {
+                return {
+                    get: () => value,
+                    set: (v: string) => value = v
+                };
+            })(originalPlatform));
             setup(async function() {
+                (window.navigator as any).platform = originalPlatform;
                 initIoc();
                 // tslint:disable-next-line: no-invalid-this
                 await setupFunction.call(this);
             });
-
+            teardown(() => (window.navigator as any).platform = originalPlatform);
             test('Traverse cells by using ArrowUp and ArrowDown, k and j', async () => {
                 const keyCodesAndPositions = [
                     // When we press arrow down in the first cell, then second cell gets selected.
@@ -960,7 +969,7 @@ for _ in range(50):
                 }
             });
 
-            test('Test save using the key \'s\'', async () => {
+            test('Test save using the key \'ctrl+s\'', async () => {
                 clickCell(0);
 
                 await addCell(wrapper, ioc, 'a=1\na', true);
@@ -973,9 +982,48 @@ for _ in range(50):
 
                 simulateKeyPressOnCell(1, { code: 's', ctrlKey: true });
 
-                await waitForPromise(savedPromise.promise, 1_000);
+                await waitForCondition(() => savedPromise.promise.then(() => true).catch(() => false), 1_000, 'Timedout');
 
                 assert.ok(!editor!.isDirty, 'Editor should not be dirty after saving');
+            });
+
+            test('Test save using the key \'cmd+s\' on a Mac', async () => {
+                (window.navigator as any).platform = 'Mac';
+
+                clickCell(0);
+
+                await addCell(wrapper, ioc, 'a=1\na', true);
+
+                const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+                const editor = notebookProvider.editors[0];
+                assert.ok(editor, 'No editor when saving');
+                const savedPromise = createDeferred();
+                editor.saved(() => savedPromise.resolve());
+
+                simulateKeyPressOnCell(1, { code: 's', metaKey: true });
+
+                await waitForCondition(() => savedPromise.promise.then(() => true).catch(() => false), 1_000, 'Timedout');
+
+                assert.ok(!editor!.isDirty, 'Editor should not be dirty after saving');
+            });
+            test('Test save using the key \'cmd+s\' on a Windows', async () => {
+                (window.navigator as any).platform = 'Win';
+
+                clickCell(0);
+
+                await addCell(wrapper, ioc, 'a=1\na', true);
+
+                const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+                const editor = notebookProvider.editors[0];
+                assert.ok(editor, 'No editor when saving');
+                const savedPromise = createDeferred();
+                editor.saved(() => savedPromise.resolve());
+
+                // CMD+s won't work on Windows.
+                simulateKeyPressOnCell(1, { code: 's', metaKey: true });
+
+                await expect(waitForCondition(() => savedPromise.promise.then(() => true).catch(() => false), 1_000, 'Timedout')).to.eventually.be.rejected;
+                assert.ok(editor!.isDirty, 'Editor be dirty as nothing got saved');
             });
         });
 
