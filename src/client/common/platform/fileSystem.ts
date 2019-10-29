@@ -25,6 +25,23 @@ import {
 
 const ENCODING: string = 'utf8';
 
+function convertFileStat(stat: fsextra.Stats): FileStat {
+    let fileType = FileType.Unknown;
+    if (stat.isFile()) {
+        fileType = FileType.File;
+    } else if (stat.isDirectory()) {
+        fileType = FileType.Directory;
+    } else if (stat.isSymbolicLink()) {
+        fileType = FileType.SymbolicLink;
+    }
+    return {
+        type: fileType,
+        size: stat.size,
+        ctime: stat.ctimeMs,
+        mtime: stat.mtimeMs
+    };
+}
+
 // The parts of node's 'path' module used by FileSystemPath.
 interface INodePath {
     join(...filenames: string[]): string;
@@ -107,7 +124,7 @@ interface INewAPI {
     readDirectory(uri: vscode.Uri): Thenable<[string, FileType][]>;
     readFile(uri: vscode.Uri): Thenable<Uint8Array>;
     //rename(source: vscode.Uri, target: vscode.Uri, options?: {overwrite: boolean}): Thenable<void>;
-    //stat(uri: vscode.Uri): Thenable<vscode.FileStat>;
+    stat(uri: vscode.Uri): Thenable<FileStat>;
     //writeFile(uri: vscode.Uri, content: Uint8Array): Thenable<void>;
 }
 
@@ -122,7 +139,6 @@ interface IRawFSExtra {
     chmod(filePath: string, mode: string | number): Promise<void>;
     //tslint:disable-next-line:no-any
     writeFile(path: string, data: any, options: any): Promise<void>;
-    stat(filename: string): Promise<fsextra.Stats>;
     lstat(filename: string): Promise<fsextra.Stats>;
     mkdirp(dirname: string): Promise<void>;
 
@@ -179,6 +195,11 @@ export class RawFileSystem implements IRawFileSystem {
         });
     }
 
+    public async stat(filename: string): Promise<FileStat> {
+        const uri = vscode.Uri.file(filename);
+        return this.newapi.stat(uri);
+    }
+
     public async listdir(dirname: string): Promise<[string, FileType][]> {
         const uri = vscode.Uri.file(dirname);
         return this.newapi.readDirectory(uri);
@@ -202,12 +223,10 @@ export class RawFileSystem implements IRawFileSystem {
         return this.fsExtra.chmod(filename, mode);
     }
 
-    public async stat(filename: string): Promise<FileStat> {
-        return this.fsExtra.stat(filename);
-    }
-
     public async lstat(filename: string): Promise<FileStat> {
-        return this.fsExtra.lstat(filename);
+        // At the moment the new VS Code API does not seem to support lstat...
+        const stat = await this.fsExtra.lstat(filename);
+        return convertFileStat(stat);
     }
 
     public async copyFile(src: string, dest: string): Promise<void> {
@@ -230,7 +249,8 @@ export class RawFileSystem implements IRawFileSystem {
     // non-async (fs-extra)
 
     public statSync(filename: string): FileStat {
-        return this.fsExtra.statSync(filename);
+        const stat = this.fsExtra.statSync(filename);
+        return convertFileStat(stat);
     }
 
     public readTextSync(filename: string): string {
@@ -303,15 +323,11 @@ export class FileSystemUtils implements IFileSystemUtils {
         } catch (err) {
             return false;
         }
+
         if (fileType === undefined) {
             return true;
-        } else if (fileType === FileType.File) {
-            return stat.isFile();
-        } else if (fileType === FileType.Directory) {
-            return stat.isDirectory();
-        } else {
-            return false;
         }
+        return stat.type === fileType;
     }
     public async fileExists(filename: string): Promise<boolean> {
         return this.pathExists(filename, FileType.File);
@@ -353,7 +369,7 @@ export class FileSystemUtils implements IFileSystemUtils {
 
     public async getFileHash(filename: string): Promise<string> {
         const stat = await this.raw.lstat(filename);
-        const data = `${stat.ctimeMs}-${stat.mtimeMs}`;
+        const data = `${stat.ctime}-${stat.mtime}`;
         return this.getHash(data);
     }
 
@@ -434,12 +450,8 @@ export class FileSystem implements IFileSystem {
     //****************************
     // aliases
 
-    public async stat(filePath: string): Promise<vscode.FileStat> {
-        // Do not import vscode directly, as this isn't available in the Debugger Context.
-        // If stat is used in debugger context, it will fail, however theres a separate PR that will resolve this.
-        // tslint:disable-next-line: no-require-imports
-        const vsc = require('vscode');
-        return vsc.workspace.fs.stat(vscode.Uri.file(filePath));
+    public async stat(filePath: string): Promise<FileStat> {
+        return this.utils.raw.stat(filePath);
     }
 
     public async readFile(filename: string): Promise<string> {

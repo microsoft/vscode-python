@@ -313,47 +313,17 @@ suite('Raw FileSystem', () => {
         });
     });
 
-    suite('stat', () => {
-        test('gets the info for an existing file', async () => {
-            const filename = await fix.createFile('x/y/z/spam.py', '...');
-            const expected = await fsextra.stat(filename);
-
-            const stat = await filesystem.stat(filename);
-
-            expect(stat).to.deep.equal(expected);
-        });
-
-        test('gets the info for an existing directory', async () => {
-            const dirname = await fix.createDirectory('x/y/z/spam');
-            const expected = await fsextra.stat(dirname);
-
-            const stat = await filesystem.stat(dirname);
-
-            expect(stat).to.deep.equal(expected);
-        });
-
-        test('for symlinks, gets the info for the linked file', async () => {
-            const filename = await fix.createFile('x/y/z/spam.py', '...');
-            const symlink = await fix.createSymlink('x/y/z/eggs.py', filename);
-            const expected = await fsextra.stat(filename);
-
-            const stat = await filesystem.stat(symlink);
-
-            expect(stat).to.deep.equal(expected);
-        });
-
-        test('fails if the file does not exist', async () => {
-            const promise = filesystem.stat(DOES_NOT_EXIST);
-
-            await expect(promise).to.eventually.be.rejected;
-        });
-    });
-
     suite('lstat', () => {
         test('for symlinks, gives the link info', async () => {
             const filename = await fix.createFile('x/y/z/spam.py', '...');
             const symlink = await fix.createSymlink('x/y/z/eggs.py', filename);
-            const expected = await fsextra.lstat(symlink);
+            const old = await fsextra.lstat(symlink);
+            const expected = {
+                type: FileType.SymbolicLink,
+                size: old.size,
+                ctime: old.ctimeMs,
+                mtime: old.mtimeMs
+            };
 
             const stat = await filesystem.lstat(symlink);
 
@@ -362,7 +332,13 @@ suite('Raw FileSystem', () => {
 
         test('for normal files, gives the file info', async () => {
             const filename = await fix.createFile('x/y/z/spam.py', '...');
-            const expected = await fsextra.stat(filename);
+            const old = await fsextra.stat(filename);
+            const expected = {
+                type: FileType.File,
+                size: old.size,
+                ctime: old.ctimeMs,
+                mtime: old.mtimeMs
+            };
 
             const stat = await filesystem.lstat(filename);
 
@@ -431,7 +407,13 @@ suite('Raw FileSystem', () => {
     suite('statSync', () => {
         test('gets the info for an existing file', async () => {
             const filename = await fix.createFile('x/y/z/spam.py', '...');
-            const expected = await fsextra.stat(filename);
+            const old = await fsextra.stat(filename);
+            const expected = {
+                type: FileType.File,
+                size: old.size,
+                ctime: old.ctimeMs,
+                mtime: old.mtimeMs
+            };
 
             const stat = filesystem.statSync(filename);
 
@@ -440,7 +422,13 @@ suite('Raw FileSystem', () => {
 
         test('gets the info for an existing directory', async () => {
             const dirname = await fix.createDirectory('x/y/z/spam');
-            const expected = await fsextra.stat(dirname);
+            const old = await fsextra.stat(dirname);
+            const expected = {
+                type: FileType.Directory,
+                size: old.size,
+                ctime: old.ctimeMs,
+                mtime: old.mtimeMs
+            };
 
             const stat = filesystem.statSync(dirname);
 
@@ -450,7 +438,13 @@ suite('Raw FileSystem', () => {
         test('for symlinks, gets the info for the linked file', async () => {
             const filename = await fix.createFile('x/y/z/spam.py', '...');
             const symlink = await fix.createSymlink('x/y/z/eggs.py', filename);
-            const expected = await fsextra.stat(filename);
+            const old = await fsextra.stat(filename);
+            const expected = {
+                type: FileType.File,
+                size: old.size,
+                ctime: old.ctimeMs,
+                mtime: old.mtimeMs
+            };
 
             const stat = filesystem.statSync(symlink);
 
@@ -589,100 +583,6 @@ suite('FileSystem Utils', () => {
             const result = utils.arePathsSame(file1, file2);
 
             expect(result).to.equal(expected);
-        });
-    });
-
-    suite('pathExists', () => {
-        test('file missing (any)', async () => {
-            const exists = await utils.pathExists(DOES_NOT_EXIST);
-
-            expect(exists).to.equal(false);
-        });
-
-        Object.keys(FileType).forEach(ft => {
-            test(`file missing (${ft})`, async () => {
-                //tslint:disable-next-line:no-any
-                const exists = await utils.pathExists(DOES_NOT_EXIST, ft as any as FileType);
-
-                expect(exists).to.equal(false);
-            });
-        });
-
-        test('any', async () => {
-            const filename = await fix.createFile('x/y/z/spam.py');
-
-            const exists = await utils.pathExists(filename);
-
-            expect(exists).to.equal(true);
-        });
-
-        test('want file, got file', async () => {
-            const filename = await fix.createFile('x/y/z/spam.py');
-
-            const exists = await utils.pathExists(filename, FileType.File);
-
-            expect(exists).to.equal(true);
-        });
-
-        test('want file, not file', async () => {
-            const filename = await fix.createDirectory('x/y/z/spam.py');
-
-            const exists = await utils.pathExists(filename, FileType.File);
-
-            expect(exists).to.equal(false);
-        });
-
-        test('want directory, got directory', async () => {
-            const dirname = await fix.createDirectory('x/y/z/spam');
-
-            const exists = await utils.pathExists(dirname, FileType.Directory);
-
-            expect(exists).to.equal(true);
-        });
-
-        test('want directory, not directory', async () => {
-            const dirname = await fix.createFile('x/y/z/spam');
-
-            const exists = await utils.pathExists(dirname, FileType.Directory);
-
-            expect(exists).to.equal(false);
-        });
-
-        test('symlink', async () => {
-            const filename = await fix.createFile('x/y/z/spam.py', '...');
-            const symlink = await fix.createSymlink('x/y/z/eggs.py', filename);
-
-            const exists = await utils.pathExists(symlink, FileType.SymbolicLink);
-
-            expect(exists).to.equal(false);
-        });
-
-        test('unknown', async () => {
-            const sockFile = await fix.createSocket('x/y/z/ipc.sock');
-
-            const exists = await utils.pathExists(sockFile, FileType.Unknown);
-
-            expect(exists).to.equal(false);
-        });
-    });
-
-    suite('fileExists', () => {
-        test('want file, got file', async () => {
-            const filename = await fix.createFile('x/y/z/spam.py');
-
-            const exists = await utils.fileExists(filename);
-
-            expect(exists).to.equal(true);
-        });
-    });
-
-    suite('directoryExists', () => {
-        test('want directory, got directory', async () => {
-            const dirname = await fix.createDirectory('x/y/z/spam');
-
-            const exists = await utils.directoryExists(dirname);
-
-            expect(exists).to.equal(true);
         });
     });
 
