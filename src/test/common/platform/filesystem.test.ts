@@ -252,6 +252,58 @@ suite('Raw FileSystem', () => {
             await expect(promise).to.eventually.be.rejected;
         });
     });
+
+    suite('copyFile', () => {
+        test('the source file gets copied (same directory)', async () => {
+            const data = '<content>';
+            const src = await fix.createFile('x/y/z/spam.py', data);
+            const dest = await fix.resolve('x/y/z/spam.py.bak');
+            await assertDoesNotExist(dest);
+
+            await filesystem.copyFile(src, dest);
+
+            const actual = await fsextra.readFile(dest)
+                .then(buffer => buffer.toString());
+            expect(actual).to.equal(data);
+            const original = await fsextra.readFile(src)
+                .then(buffer => buffer.toString());
+            expect(original).to.equal(data);
+        });
+
+        test('the source file gets copied (different directory)', async () => {
+            const data = '<content>';
+            const src = await fix.createFile('x/y/z/spam.py', data);
+            const dest = await fix.resolve('x/y/eggs.py');
+            await assertDoesNotExist(dest);
+
+            await filesystem.copyFile(src, dest);
+
+            const actual = await fsextra.readFile(dest)
+                .then(buffer => buffer.toString());
+            expect(actual).to.equal(data);
+            const original = await fsextra.readFile(src)
+                .then(buffer => buffer.toString());
+            expect(original).to.equal(data);
+        });
+
+        test('fails if the source does not exist', async () => {
+            const dest = await fix.resolve('x/spam.py');
+
+            const promise = filesystem.copyFile(DOES_NOT_EXIST, dest);
+
+            await expect(promise).to.eventually.be.rejected;
+        });
+
+        test('fails if the target parent directory does not exist', async () => {
+            const src = await fix.createFile('x/spam.py', '...');
+            const dest = await fix.resolve('y/eggs.py', false);
+            await assertDoesNotExist(path.dirname(dest));
+
+            const promise = filesystem.copyFile(src, dest);
+
+            await expect(promise).to.eventually.be.rejected;
+        });
+    });
 });
 
 suite('FileSystem Utils', () => {

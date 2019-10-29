@@ -12,7 +12,6 @@ import * as fspath from 'path';
 import * as tmpMod from 'tmp';
 import * as util from 'util';
 import * as vscode from 'vscode';
-import { createDeferred } from '../utils/async';
 import { getOSType, OSType } from '../utils/platform';
 import {
     FileStat, FileType,
@@ -118,7 +117,7 @@ export class TempFileSystem {
 
 // This is the parts of the vscode.workspace.fs API that we use here.
 interface INewAPI {
-    //copy(source: vscode.Uri, target: vscode.Uri, options?: {overwrite: boolean}): Thenable<void>;
+    copy(source: vscode.Uri, target: vscode.Uri, options?: {overwrite: boolean}): Thenable<void>;
     //createDirectory(uri: vscode.Uri): Thenable<void>;
     delete(uri: vscode.Uri, options?: {recursive: boolean; useTrash: boolean}): Thenable<void>;
     readDirectory(uri: vscode.Uri): Thenable<[string, FileType][]>;
@@ -143,8 +142,6 @@ interface IRawFSExtra {
     // non-async
     statSync(filename: string): fsextra.Stats;
     readFileSync(path: string, encoding: string): string;
-    createReadStream(src: string): fsextra.ReadStream;
-    createWriteStream(dest: string): fsextra.WriteStream;
 }
 
 // Later we will drop "FileSystem", switching usage to
@@ -209,6 +206,14 @@ export class RawFileSystem implements IRawFileSystem {
         return this.newapi.readDirectory(uri);
     }
 
+    public async copyFile(src: string, dest: string): Promise<void> {
+        const srcURI = vscode.Uri.file(src);
+        const destURI = vscode.Uri.file(dest);
+        await this.newapi.copy(srcURI, destURI, {
+            overwrite: true
+        });
+    }
+
     //****************************
     // fs-extra
 
@@ -224,22 +229,6 @@ export class RawFileSystem implements IRawFileSystem {
         // At the moment the new VS Code API does not seem to support lstat...
         const stat = await this.fsExtra.lstat(filename);
         return convertFileStat(stat);
-    }
-
-    public async copyFile(src: string, dest: string): Promise<void> {
-        const deferred = createDeferred<void>();
-        const rs = this.fsExtra.createReadStream(src)
-            .on('error', (err) => {
-                deferred.reject(err);
-            });
-        const ws = this.fsExtra.createWriteStream(dest)
-            .on('error', (err) => {
-                deferred.reject(err);
-            }).on('close', () => {
-                deferred.resolve();
-            });
-        rs.pipe(ws);
-        return deferred.promise;
     }
 
     //****************************

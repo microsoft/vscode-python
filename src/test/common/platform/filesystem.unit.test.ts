@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { expect } from 'chai';
+import * as fs from 'fs';
 import * as fsextra from 'fs-extra';
 import * as TypeMoq from 'typemoq';
 import { Disposable, Uri } from 'vscode';
@@ -20,6 +21,7 @@ import {
 type TempCallback = (err: any, path: string, fd: number, cleanupCallback: () => void) => void;
 interface IRawFS {
     // VS Code
+    copy(source: Uri, target: Uri, options?: {overwrite: boolean}): Thenable<void>;
     delete(uri: Uri, options?: {recursive: boolean; useTrash: boolean}): Thenable<void>;
     readDirectory(uri: Uri): Thenable<[string, FileType][]>;
     readFile(uri: Uri): Thenable<Uint8Array>;
@@ -31,6 +33,7 @@ interface IRawFS {
     open(filename: string, flags: number, callback: any): void;
     //tslint:disable-next-line:no-any
     close(fd: number, callback: any): void;
+    createWriteStream(dest: string): fs.WriteStream;
 
     // "fs-extra"
     chmod(filePath: string, mode: string): Promise<void>;
@@ -38,8 +41,6 @@ interface IRawFS {
     mkdirp(dirname: string): Promise<void>;
     statSync(filename: string): fsextra.Stats;
     readFileSync(path: string, encoding: string): string;
-    createReadStream(src: string): fsextra.ReadStream;
-    createWriteStream(dest: string): fsextra.WriteStream;
 
     // fs paths (IFileSystemPaths)
     join(...filenames: string[]): string;
@@ -500,48 +501,14 @@ suite('Raw FileSystem', () => {
     });
 
     suite('copyFile', () => {
-        let rs: TypeMoq.IMock<fsextra.ReadStream>;
-        let ws: TypeMoq.IMock<fsextra.WriteStream>;
-        let done: () => void;
-        let finished: boolean;
-        setup(() => {
-            rs = TypeMoq.Mock.ofType<fsextra.ReadStream>(undefined, TypeMoq.MockBehavior.Strict);
-            ws = TypeMoq.Mock.ofType<fsextra.WriteStream>(undefined, TypeMoq.MockBehavior.Strict);
-
-            rs.setup(s => s.on('error', TypeMoq.It.isAny()))
-                .returns(() => rs.object);
-            finished = false;
-            done = () => {
-                throw Error();
-            };
-            rs.setup(s => s.pipe(TypeMoq.It.isAny()))
-                .callback(_r => {
-                    done();
-                    finished = true;
-                });
-
-            ws.setup(s => s.on('error', TypeMoq.It.isAny()))
-                .returns(() => ws.object);
-            ws.setup(s => s.on('close', TypeMoq.It.isAny()))
-                .callback((_e, cb) => {
-                    done = cb;
-                })
-                .returns(() => ws.object);
-        });
-
         test('read/write streams are used properly', async () => {
             const src = 'x/y/z/spam.py';
             const dest = 'x/y/z/spam.py.bak';
-            raw.setup(r => r.createReadStream(src))
-                .returns(() => rs.object);
-            raw.setup(r => r.createWriteStream(dest))
-                .returns(() => ws.object);
+            raw.setup(r => r.copy(Uri.file(src), Uri.file(dest), { overwrite: true }))
+                .returns(() => Promise.resolve());
 
             await filesystem.copyFile(src, dest);
 
-            expect(finished).to.equal(true);
-            rs.verifyAll();
-            ws.verifyAll();
             verifyAll();
         });
     });
