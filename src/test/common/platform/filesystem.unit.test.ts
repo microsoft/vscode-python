@@ -24,6 +24,7 @@ interface IRawFS {
     readDirectory(uri: Uri): Thenable<[string, FileType][]>;
     readFile(uri: Uri): Thenable<Uint8Array>;
     stat(uri: Uri): Thenable<FileStat>;
+    writeFile(uri: Uri, content: Uint8Array): Thenable<void>;
 
     // node "fs"
     //tslint:disable-next-line:no-any
@@ -33,8 +34,6 @@ interface IRawFS {
 
     // "fs-extra"
     chmod(filePath: string, mode: string): Promise<void>;
-    //tslint:disable-next-line:no-any
-    writeFile(path: string, data: any, options: any): Promise<void>;
     lstat(filename: string): Promise<fsextra.Stats>;
     mkdirp(dirname: string): Promise<void>;
     statSync(filename: string): fsextra.Stats;
@@ -340,11 +339,24 @@ suite('Raw FileSystem', () => {
     suite('writeText', () => {
         test('wraps the low-level function', async () => {
             const filename = 'x/y/z/spam.py';
-            const data = '<data>';
-            raw.setup(r => r.writeFile(filename, data, { encoding: 'utf8' }))
+            const text = '<data>';
+            const data = Buffer.from(text);
+            raw.setup(r => r.writeFile(Uri.file(filename), data))
                 .returns(() => Promise.resolve());
 
-            await filesystem.writeText(filename, data);
+            await filesystem.writeText(filename, text);
+
+            verifyAll();
+        });
+
+        test('always UTF-8', async () => {
+            const filename = 'x/y/z/spam.py';
+            const text = '... 😁 ...';
+            const data = Buffer.from(text);
+            raw.setup(r => r.writeFile(Uri.file(filename), data))
+                .returns(() => Promise.resolve());
+
+            await filesystem.writeText(filename, text);
 
             verifyAll();
         });

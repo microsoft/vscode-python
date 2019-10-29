@@ -199,42 +199,6 @@ suite('Raw FileSystem', () => {
         await fix.cleanUp();
     });
 
-    suite('writeText', () => {
-        test('creates the file if missing', async () => {
-            const filename = await fix.resolve('x/y/z/spam.py');
-            await assertDoesNotExist(filename);
-            const data = 'line1\nline2\n';
-
-            await filesystem.writeText(filename, data);
-
-            const actual = await fsextra.readFile(filename)
-                .then(buffer => buffer.toString());
-            expect(actual).to.equal(data);
-        });
-
-        test('always UTF-8', async () => {
-            const filename = await fix.resolve('x/y/z/spam.py');
-            const data = '... 😁 ...';
-
-            await filesystem.writeText(filename, data);
-
-            const actual = await fsextra.readFile(filename)
-                .then(buffer => buffer.toString());
-            expect(actual).to.equal(data);
-        });
-
-        test('overwrites existing file', async () => {
-            const filename = await fix.createFile('x/y/z/spam.py', '...');
-            const data = 'line1\nline2\n';
-
-            await filesystem.writeText(filename, data);
-
-            const actual = await fsextra.readFile(filename)
-                .then(buffer => buffer.toString());
-            expect(actual).to.equal(data);
-        });
-    });
-
     suite('mkdirp', () => {
         test('creates the directory and all missing parents', async () => {
             await fix.createDirectory('x');

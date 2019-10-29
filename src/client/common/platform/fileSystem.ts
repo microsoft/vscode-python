@@ -125,7 +125,7 @@ interface INewAPI {
     readFile(uri: vscode.Uri): Thenable<Uint8Array>;
     //rename(source: vscode.Uri, target: vscode.Uri, options?: {overwrite: boolean}): Thenable<void>;
     stat(uri: vscode.Uri): Thenable<FileStat>;
-    //writeFile(uri: vscode.Uri, content: Uint8Array): Thenable<void>;
+    writeFile(uri: vscode.Uri, content: Uint8Array): Thenable<void>;
 }
 
 // This is the parts of node's 'fs' module that we use in RawFileSystem.
@@ -137,8 +137,6 @@ interface IRawFS {
 // This is the parts of the 'fs-extra' module that we use in RawFileSystem.
 interface IRawFSExtra {
     chmod(filePath: string, mode: string | number): Promise<void>;
-    //tslint:disable-next-line:no-any
-    writeFile(path: string, data: any, options: any): Promise<void>;
     lstat(filename: string): Promise<fsextra.Stats>;
     mkdirp(dirname: string): Promise<void>;
 
@@ -179,6 +177,12 @@ export class RawFileSystem implements IRawFileSystem {
         return data.toString(ENCODING);
     }
 
+    public async writeText(filename: string, text: string): Promise<void> {
+        const uri = vscode.Uri.file(filename);
+        const data = Buffer.from(text);
+        await this.newapi.writeFile(uri, data);
+    }
+
     public async rmtree(dirname: string): Promise<void> {
         const uri = vscode.Uri.file(dirname);
         return this.newapi.delete(uri, {
@@ -207,13 +211,6 @@ export class RawFileSystem implements IRawFileSystem {
 
     //****************************
     // fs-extra
-
-    public async writeText(filename: string, data: {}): Promise<void> {
-        const options: fsextra.WriteFileOptions = {
-            encoding: ENCODING
-        };
-        await this.fsExtra.writeFile(filename, data, options);
-    }
 
     public async mkdirp(dirname: string): Promise<void> {
         return this.fsExtra.mkdirp(dirname);
