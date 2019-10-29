@@ -8,7 +8,7 @@ import * as React from 'react';
 import { noop } from '../../client/common/utils/misc';
 import { NativeCommandType } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
-import { ICellViewModel, IMainState } from '../interactive-common/mainState';
+import { CursorPos, ICellViewModel, IMainState } from '../interactive-common/mainState';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
 import { ErrorBoundary } from '../react-common/errorBoundary';
 import { Image, ImageName } from '../react-common/image';
@@ -99,7 +99,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             const newCell = this.stateController.insertAbove(cellId, true);
             if (newCell) {
                 // Make async because the click changes focus.
-                setTimeout(() => this.focusCell(newCell, true), 0);
+                setTimeout(() => this.focusCell(newCell, true, CursorPos.Top), 0);
             }
         };
         const addCellLine = this.state.cellVMs.length === 0 ? null :
@@ -145,15 +145,15 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         noop();
     }
 
-    private moveSelectionToExisting = (cellId: string, focusCode: boolean) => {
+    private moveSelectionToExisting = (cellId: string, focusCode: boolean, cursorPos: CursorPos) => {
         // Cell should already exist in the UI
         if (this.contentPanelRef) {
             this.stateController.selectCell(cellId, focusCode ? cellId : undefined);
-            this.focusCell(cellId, focusCode ? true : false);
+            this.focusCell(cellId, focusCode ? true : false, cursorPos);
         }
     }
 
-    private selectCell = (id: string, focusCode: boolean) => {
+    private selectCell = (id: string, focusCode: boolean, cursorPos: CursorPos) => {
         // Check to see that this cell already exists in our window (it's part of the rendered state)
         const cells = this.state.cellVMs.map(c => c.cell).filter(c => c.data.cell_type !== 'messages');
         if (cells.find(c => c.id === id)) {
@@ -164,7 +164,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
 
         // Then wait to give it actual input focus. The cell may not exist yet so we can't just
         // force focus immediately.
-        setTimeout(() => this.moveSelectionToExisting(id, focusCode), 1);
+        setTimeout(() => this.moveSelectionToExisting(id, focusCode, cursorPos), 1);
     }
 
     // tslint:disable: react-this-binding-issue
@@ -174,7 +174,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             this.stateController.sendCommand(NativeCommandType.AddToEnd, 'mouse');
             if (newCell) {
                 // Has to be async because the click will change the focus on mouse up
-                setTimeout(() => this.focusCell(newCell.cell.id, true), 0);
+                setTimeout(() => this.focusCell(newCell.cell.id, true, CursorPos.Top), 0);
             }
         };
         const runAll = () => {
@@ -376,7 +376,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             this.stateController.sendCommand(NativeCommandType.AddToEnd, 'mouse');
             if (newCell) {
                 // Has to be async because the click will change the focus on mouse up
-                setTimeout(() => this.focusCell(newCell, true), 0);
+                setTimeout(() => this.focusCell(newCell, true, CursorPos.Top), 0);
             }
         };
         const lastLine = index === this.state.cellVMs.length - 1 ?
@@ -416,11 +416,11 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             </div>);
     }
 
-    private focusCell = (cellId: string, focusCode: boolean): void => {
+    private focusCell = (cellId: string, focusCode: boolean, cursorPos: CursorPos): void => {
         this.stateController.selectCell(cellId, focusCode ? cellId : undefined);
         const ref = this.cellRefs.get(cellId);
         if (ref && ref.current) {
-            ref.current.giveFocus(focusCode);
+            ref.current.giveFocus(focusCode, cursorPos);
         }
     }
 
@@ -430,7 +430,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             this.stateController.setState({newCell: undefined});
             // Bounce this so state has time to update.
             setTimeout(() => {
-                this.focusCell(newCell, true);
+                this.focusCell(newCell, true, CursorPos.Current);
             }, 0);
         }
     }

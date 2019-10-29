@@ -8,6 +8,7 @@ import { Uri } from 'vscode';
 
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterExecution, INotebookEditor, INotebookEditorProvider } from '../../client/datascience/types';
+import { CursorPos } from '../../datascience-ui/interactive-common/mainState';
 import { NativeCell } from '../../datascience-ui/native-editor/nativeCell';
 import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
@@ -85,7 +86,7 @@ export function focusCell(ioc: DataScienceIocContainer, wrapper: ReactWrapper<an
     const cell = wrapper.find(NativeCell).at(index);
     if (cell) {
         const vm = cell.props().cellVM;
-        cell.props().focusCell(vm.cell.id, true);
+        cell.props().focusCell(vm.cell.id, true, CursorPos.Current);
     }
     return focusChange;
 }

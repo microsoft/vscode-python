@@ -15,7 +15,7 @@ import { CellInput } from '../interactive-common/cellInput';
 import { CellOutput } from '../interactive-common/cellOutput';
 import { ExecutionCount } from '../interactive-common/executionCount';
 import { InformationMessages } from '../interactive-common/informationMessages';
-import { ICellViewModel, IFont } from '../interactive-common/mainState';
+import { CursorPos, ICellViewModel, IFont } from '../interactive-common/mainState';
 import { IKeyboardEvent } from '../react-common/event';
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
@@ -36,9 +36,8 @@ interface INativeCellProps {
     monacoTheme: string | undefined;
     lastCell: boolean;
     font: IFont;
-    focusCell(cellId: string, focusCode: boolean): void;
-    selectCell(cellId: string, focusCode: boolean): void;
-
+    focusCell(cellId: string, focusCode: boolean, cursorPos: CursorPos): void;
+    selectCell(cellId: string, focusCode: boolean, cursorPos: CursorPos): void;
 }
 
 // tslint:disable: react-this-binding-issue
@@ -62,7 +61,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
 
     public componentDidUpdate(prevProps: INativeCellProps) {
         if (this.props.cellVM.selected && !prevProps.cellVM.selected) {
-            this.giveFocus(this.props.cellVM.focused);
+            this.giveFocus(this.props.cellVM.focused, CursorPos.Current);
         }
 
         // Anytime we update, reset the key. This object will be reused for different cell ids
@@ -73,7 +72,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
         return !fastDeepEqual(this.props, nextProps);
     }
 
-    public giveFocus(giveCodeFocus: boolean) {
+    public giveFocus(giveCodeFocus: boolean, cursorPos: CursorPos) {
         // Start out with ourselves
         if (this.wrapperRef && this.wrapperRef.current) {
             this.wrapperRef.current.focus();
@@ -81,7 +80,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
         // Then attempt to move into the object
         if (giveCodeFocus) {
             if (this.inputRef && this.inputRef.current) {
-                this.inputRef.current.giveFocus();
+                this.inputRef.current.giveFocus(cursorPos);
             }
         }
     }
@@ -96,7 +95,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
             const wasFocused = this.isFocused();
             const cellId = this.cellId;
             this.props.stateController.moveCellUp(cellId);
-            setTimeout(() => this.props.focusCell(cellId, wasFocused ? true : false), 1);
+            setTimeout(() => this.props.focusCell(cellId, wasFocused ? true : false, CursorPos.Current), 1);
         }
     }
 
@@ -105,7 +104,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
             const wasFocused = this.isFocused();
             const cellId = this.cellId;
             this.props.stateController.moveCellDown(cellId);
-            setTimeout(() => this.props.focusCell(cellId, wasFocused ? true : false), 1);
+            setTimeout(() => this.props.focusCell(cellId, wasFocused ? true : false, CursorPos.Current), 1);
         }
     }
 
@@ -197,7 +196,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
     private onMouseDoubleClick = (ev: React.MouseEvent<HTMLDivElement>) => {
         // When we receive double click, propagate upwards. Might change our state
         ev.stopPropagation();
-        this.props.focusCell(this.cellId, true);
+        this.props.focusCell(this.cellId, true, CursorPos.Current);
     }
 
     private shouldRenderCodeEditor = () : boolean => {
@@ -377,7 +376,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
         if (this.wrapperRef && this.wrapperRef.current && this.isFocused()) {
             e.stopPropagation();
             this.isCodeCell() ? this.onCodeUnfocused() : this.onMarkdownUnfocused();
-            this.props.focusCell(this.cellId, false);
+            this.props.focusCell(this.cellId, false, CursorPos.Current);
             this.props.stateController.sendCommand(NativeCommandType.Unfocus, 'keyboard');
         }
     }
@@ -386,7 +385,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
         const prevCellId = this.getPrevCellId();
         if (prevCellId) {
             e.stopPropagation();
-            this.moveSelection(prevCellId, this.isFocused());
+            this.moveSelection(prevCellId, this.isFocused(), CursorPos.Bottom);
         }
 
         this.props.stateController.sendCommand(NativeCommandType.ArrowUp, 'keyboard');
@@ -397,7 +396,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
 
         if (nextCellId) {
             e.stopPropagation();
-            this.moveSelection(nextCellId, this.isFocused());
+            this.moveSelection(nextCellId, this.isFocused(), CursorPos.Top);
         }
 
         this.props.stateController.sendCommand(NativeCommandType.ArrowDown, 'keyboard');
@@ -408,7 +407,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
         if (!this.isFocused() && !e.editorInfo && this.wrapperRef && this.wrapperRef && this.isSelected()) {
             e.stopPropagation();
             e.preventDefault();
-            this.props.focusCell(this.cellId, true);
+            this.props.focusCell(this.cellId, true, CursorPos.Current);
         }
     }
 
@@ -475,8 +474,8 @@ export class NativeCell extends React.Component<INativeCellProps> {
         this.props.stateController.sendCommand(NativeCommandType.Run, 'keyboard');
     }
 
-    private moveSelection(cellId: string, focusCode: boolean) {
-        this.props.selectCell(cellId, focusCode);
+    private moveSelection(cellId: string, focusCode: boolean, cursorPos: CursorPos = CursorPos.Current) {
+        this.props.selectCell(cellId, focusCode, cursorPos);
     }
 
     private submitCell = (possibleContents?: string) => {
@@ -501,7 +500,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
         this.props.stateController.sendCommand(NativeCommandType.AddToEnd, 'mouse');
         if (newCell) {
             // Make async because the click changes focus.
-            setTimeout(() => this.props.focusCell(newCell, true), 0);
+            setTimeout(() => this.props.focusCell(newCell, true, CursorPos.Top), 0);
         }
     }
 
