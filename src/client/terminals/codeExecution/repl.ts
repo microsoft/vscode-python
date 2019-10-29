@@ -9,7 +9,7 @@ import { IWorkspaceService } from '../../common/application/types';
 import { IPlatformService } from '../../common/platform/types';
 import { ITerminalServiceFactory } from '../../common/terminal/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
-import { ICondaService, IInterpreterService } from '../../interpreter/contracts';
+import { ICondaService } from '../../interpreter/contracts';
 import { TerminalCodeExecutionProvider } from './terminalCodeExecution';
 
 @injectable()
@@ -18,12 +18,11 @@ export class ReplProvider extends TerminalCodeExecutionProvider {
         @inject(ITerminalServiceFactory) terminalServiceFactory: ITerminalServiceFactory,
         @inject(IConfigurationService) configurationService: IConfigurationService,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
-        @inject(IInterpreterService) interpreterService: IInterpreterService,
         @inject(ICondaService) condaService: ICondaService,
         @inject(IDisposableRegistry) disposableRegistry: Disposable[],
         @inject(IPlatformService) platformService: IPlatformService
     ) {
-        super(terminalServiceFactory, configurationService, workspace, disposableRegistry, interpreterService, condaService, platformService);
+        super(terminalServiceFactory, configurationService, workspace, disposableRegistry, condaService, platformService);
         this.terminalTitle = 'REPL';
     }
 }

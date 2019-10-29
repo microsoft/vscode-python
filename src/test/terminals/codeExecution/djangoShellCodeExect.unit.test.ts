@@ -11,7 +11,7 @@ import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../../c
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../../client/common/terminal/types';
 import { IConfigurationService, IPythonSettings, ITerminalSettings } from '../../../client/common/types';
-import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
+import { ICondaService } from '../../../client/interpreter/contracts';
 import { DjangoShellCodeExecutionProvider } from '../../../client/terminals/codeExecution/djangoShellCodeExecution';
 import { ICodeExecutionService } from '../../../client/terminals/types';
 import { PYTHON_PATH } from '../../common';
@@ -31,7 +31,9 @@ suite('Terminal - Django Shell Code Execution', () => {
         terminalService = TypeMoq.Mock.ofType<ITerminalService>();
         const configService = TypeMoq.Mock.ofType<IConfigurationService>();
         workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
-        workspace.setup(c => c.onDidChangeWorkspaceFolders(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => {
+        workspace
+            .setup(c => c.onDidChangeWorkspaceFolders(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => {
             return {
                 dispose: () => void 0
             };
@@ -40,14 +42,12 @@ suite('Terminal - Django Shell Code Execution', () => {
         const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         const commandManager = TypeMoq.Mock.ofType<ICommandManager>();
         const fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-        const interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
         const condaService = TypeMoq.Mock.ofType<ICondaService>();
         executor = new DjangoShellCodeExecutionProvider(
             terminalFactory.object,
             configService.object,
             workspace.object,
             documentManager.object,
-            interpreterService.object,
             condaService.object,
             platform.object,
             commandManager.object,
@@ -56,7 +56,6 @@ suite('Terminal - Django Shell Code Execution', () => {
         );
 
         terminalFactory.setup(f => f.getTerminalService(TypeMoq.It.isAny())).returns(() => terminalService.object);
-        interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
 
         settings = TypeMoq.Mock.ofType<IPythonSettings>();
         settings.setup(s => s.terminal).returns(() => terminalSettings.object);

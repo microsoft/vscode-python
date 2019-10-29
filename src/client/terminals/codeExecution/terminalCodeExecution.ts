@@ -12,7 +12,7 @@ import { IPlatformService } from '../../common/platform/types';
 import { IPythonExecutableInfo } from '../../common/process/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../common/terminal/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
-import { ICondaService, IInterpreterService, InterpreterType } from '../../interpreter/contracts';
+import { ICondaService } from '../../interpreter/contracts';
 import { ICodeExecutionService } from '../../terminals/types';
 
 @injectable()
@@ -24,14 +24,13 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         @inject(IConfigurationService) protected readonly configurationService: IConfigurationService,
         @inject(IWorkspaceService) protected readonly workspace: IWorkspaceService,
         @inject(IDisposableRegistry) protected readonly disposables: Disposable[],
-        @inject(IInterpreterService) protected readonly interpreterService: IInterpreterService,
         @inject(ICondaService) protected readonly condaService: ICondaService,
         @inject(IPlatformService) protected readonly platformService: IPlatformService
     ) {}
 
     public async executeFile(file: Uri) {
         await this.setCwdForFileExecution(file);
-        const { command, args } = await this.getReplCommandArgs(file, [file.fsPath.fileToCommandArgument()]);
+        const { command, args } = await this.getExecuteFileArgs(file, [file.fsPath.fileToCommandArgument()]);
 
         await this.getTerminalService(file).sendCommand(command, args);
     }
@@ -63,22 +62,23 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         const pythonSettings = this.configurationService.getSettings(resource);
         const command = pythonSettings.pythonPath;
         const launchArgs = pythonSettings.terminal.launchArgs;
-        const interpreter = await this.interpreterService.getActiveInterpreter(resource);
 
-        if (interpreter && interpreter.type === InterpreterType.Conda) {
+        const condaEnvironment = await this.condaService.getCondaEnvironment(pythonSettings.pythonPath);
+
+        if (condaEnvironment) {
             const condaFile = await this.condaService.getCondaFile();
 
-            if (interpreter.envName) {
+            if (condaEnvironment.name) {
                 return {
                     command: condaFile,
-                    args: ['run', '-n', interpreter.envName, 'python', ...launchArgs, ...args]
+                    args: ['run', '-n', condaEnvironment.name, 'python', ...launchArgs, ...args]
                 };
             }
 
-            if (interpreter.envPath) {
+            if (condaEnvironment.path) {
                 return {
                     command: condaFile,
-                    args: ['run', '-p', interpreter.envPath, 'python', ...launchArgs, ...args]
+                    args: ['run', '-p', condaEnvironment.path, 'python', ...launchArgs, ...args]
                 };
             }
         }
@@ -91,7 +91,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         };
     }
 
-    public async getReplCommandArgs(resource?: Uri, replArgs: string[] = []): Promise<IPythonExecutableInfo> {
+    public async getExecuteFileArgs(resource?: Uri, replArgs: string[] = []): Promise<IPythonExecutableInfo> {
         return this.getExecutableInfo(resource, replArgs);
     }
     private getTerminalService(resource?: Uri): ITerminalService {

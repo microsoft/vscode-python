@@ -11,7 +11,7 @@ import '../../common/extensions';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { ITerminalServiceFactory } from '../../common/terminal/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
-import { ICondaService, IInterpreterService } from '../../interpreter/contracts';
+import { ICondaService } from '../../interpreter/contracts';
 import { DjangoContextInitializer } from './djangoContext';
 import { TerminalCodeExecutionProvider } from './terminalCodeExecution';
 
@@ -21,19 +21,18 @@ export class DjangoShellCodeExecutionProvider extends TerminalCodeExecutionProvi
         @inject(IConfigurationService) configurationService: IConfigurationService,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IDocumentManager) documentManager: IDocumentManager,
-        @inject(IInterpreterService) interpreterService: IInterpreterService,
         @inject(ICondaService) condaService: ICondaService,
         @inject(IPlatformService) platformService: IPlatformService,
         @inject(ICommandManager) commandManager: ICommandManager,
         @inject(IFileSystem) fileSystem: IFileSystem,
         @inject(IDisposableRegistry) disposableRegistry: Disposable[]
     ) {
-        super(terminalServiceFactory, configurationService, workspace, disposableRegistry, interpreterService, condaService, platformService);
+        super(terminalServiceFactory, configurationService, workspace, disposableRegistry, condaService, platformService);
         this.terminalTitle = 'Django Shell';
         disposableRegistry.push(new DjangoContextInitializer(documentManager, workspace, fileSystem, commandManager));
     }
 
-    public async getReplCommandArgs(resource?: Uri, replArgs: string[] = []): Promise<{ command: string; args: string[] }> {
+    public async getExecuteFileArgs(resource?: Uri, replArgs: string[] = []): Promise<{ command: string; args: string[] }> {
         const { command } = await this.getExecutableInfo(resource);
         const pythonSettings = this.configurationService.getSettings(resource);
         const args = pythonSettings.terminal.launchArgs.slice().concat(replArgs);
