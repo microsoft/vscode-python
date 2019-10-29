@@ -22,14 +22,14 @@ class DebugSessionLoggingTracker implements DebugAdapterTracker {
         this.session = session;
         this.enabled = this.session.configuration.logToFile as boolean;
         if (this.enabled) {
-            const fileName = `debug_ext_${this.session.id}.log`;
+            const fileName = `debugger.vscode_${this.session.id}.log`;
             this.stream = fileSystem.createWriteStream(path.join(EXTENSION_ROOT_DIR, fileName));
         }
     }
 
     public onWillStartSession() {
         this.timer.reset();
-        this.log(`Stoping Session:\n${this.stringify(this.session.configuration)}\n`);
+        this.log(`Stopping Session:\n${this.stringify(this.session.configuration)}\n`);
     }
 
     public onWillReceiveMessage(message: DebugProtocol.Message) {
