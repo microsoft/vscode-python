@@ -466,13 +466,12 @@ suite('Data Science - Native Editor', () => {
 
         // Set up our importer to return file contents, check that we have the correct temp file location and
         // original file location
-        when(importer.importFromFile('/foo/bar.ipynb', '\\foo.ipynb')).thenResolve('# File Contents');
+        const file = Uri.parse('file:///foo.ipynb');
+        when(importer.importFromFile('/foo/bar.ipynb', file.fsPath)).thenResolve('# File Contents');
 
         // Just return empty objects here, we don't care about open or show function, just that they were called
         when(docManager.openTextDocument({ language: 'python', content: '# File Contents' })).thenResolve({} as any);
         when(docManager.showTextDocument(anything(), anything())).thenResolve({} as any);
-
-        const file = Uri.parse('file:///foo.ipynb');
 
         const editor = createEditor();
         await editor.load(baseFile, file);
