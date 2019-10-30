@@ -318,8 +318,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
             @inject(IConfigurationService) private readonly _configService: IConfigurationService,
             @inject(ICondaService) condaService: ICondaService,
             @inject(WindowsStoreInterpreter) windowsStoreInterpreter: WindowsStoreInterpreter,
-            @inject(IBufferDecoder) decoder: IBufferDecoder
-        ) {
+            @inject(IBufferDecoder) decoder: IBufferDecoder) {
             super(_serviceContainer, activationHelper, processServiceFactory, _configService, condaService, decoder, windowsStoreInterpreter);
         }
         public async createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService> {

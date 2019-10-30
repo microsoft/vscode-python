@@ -43,17 +43,7 @@ suite('Terminal - Django Shell Code Execution', () => {
         const commandManager = TypeMoq.Mock.ofType<ICommandManager>();
         const fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         const condaService = TypeMoq.Mock.ofType<ICondaService>();
-        executor = new DjangoShellCodeExecutionProvider(
-            terminalFactory.object,
-            configService.object,
-            workspace.object,
-            documentManager.object,
-            condaService.object,
-            platform.object,
-            commandManager.object,
-            fileSystem.object,
-            disposables
-        );
+        executor = new DjangoShellCodeExecutionProvider(terminalFactory.object, configService.object, workspace.object, documentManager.object, condaService.object, platform.object, commandManager.object, fileSystem.object, disposables);
 
         terminalFactory.setup(f => f.getTerminalService(TypeMoq.It.isAny())).returns(() => terminalService.object);
 
@@ -71,14 +61,7 @@ suite('Terminal - Django Shell Code Execution', () => {
         disposables = [];
     });
 
-    async function testReplCommandArguments(
-        isWindows: boolean,
-        pythonPath: string,
-        expectedPythonPath: string,
-        terminalArgs: string[],
-        expectedTerminalArgs: string[],
-        resource?: Uri
-    ) {
+    async function testReplCommandArguments(isWindows: boolean, pythonPath: string, expectedPythonPath: string, terminalArgs: string[], expectedTerminalArgs: string[], resource?: Uri) {
         platform.setup(p => p.isWindows).returns(() => isWindows);
         settings.setup(s => s.pythonPath).returns(() => pythonPath);
         terminalSettings.setup(t => t.launchArgs).returns(() => terminalArgs);
@@ -174,5 +157,4 @@ suite('Terminal - Django Shell Code Execution', () => {
 
         await testReplCommandArguments(true, pythonPath, pythonPath, terminalArgs, expectedTerminalArgs, Uri.file('x'));
     });
-    
 });

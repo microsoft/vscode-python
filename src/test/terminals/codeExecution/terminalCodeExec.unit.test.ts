@@ -79,17 +79,7 @@ suite('Terminal - Code Execution', () => {
                     workspace.setup(w => w.onDidChangeWorkspaceFolders(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => {
                         return { dispose: noop };
                     });
-                    executor = new DjangoShellCodeExecutionProvider(
-                        terminalFactory.object,
-                        configService.object,
-                        workspace.object,
-                        documentManager.object,
-                        condaService.object,
-                        platform.object,
-                        commandManager.object,
-                        fileSystem.object,
-                        disposables
-                    );
+                    executor = new DjangoShellCodeExecutionProvider(terminalFactory.object, configService.object, workspace.object, documentManager.object, condaService.object, platform.object, commandManager.object, fileSystem.object, disposables);
                     expectedTerminalTitle = 'Django Shell';
                     break;
                 }
