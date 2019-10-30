@@ -108,7 +108,7 @@ export class InterpreterSelector implements IInterpreterSelector {
         }
 
         // Ok we have multiple workspaces, get the user to pick a folder.
-        const workspaceFolder = await this.applicationShell.showWorkspaceFolderPick({ placeHolder: 'Select a workspace' });
+        const workspaceFolder = await this.applicationShell.showWorkspaceFolderPick({ placeHolder: 'Select the workspace to set the interpreter' });
         return workspaceFolder ? { folderUri: workspaceFolder.uri, configTarget: ConfigurationTarget.WorkspaceFolder } : undefined;
     }
 }
