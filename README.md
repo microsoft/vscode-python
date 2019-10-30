@@ -14,7 +14,7 @@ A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marke
 
    <img src=https://raw.githubusercontent.com/microsoft/vscode-python/master/images/InterpreterSelectionZoom.gif width=280 height=100>
    
-* Configure the debugger through the Debug Activity Bar 
+* Configure the debugger through the Debug Activity Bar   
 
     <img src=https://raw.githubusercontent.com/microsoft/vscode-python/master/images/ConfigureDebugger.gif width=734 height=413>
 
