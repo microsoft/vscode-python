@@ -55,7 +55,7 @@ export class MockJupyterSession implements IJupyterSession {
     public prolongRestarts() {
         this.forceRestartTimeout = true;
     }
-    public requestExecute(content: KernelMessage.IExecuteRequest, _disposeOnDone?: boolean, _metadata?: JSONObject): Kernel.IFuture {
+    public requestExecute(content: KernelMessage.IExecuteRequestMsg['content'], _disposeOnDone?: boolean, _metadata?: JSONObject): Kernel.IFuture<any, any> {
         // Content should have the code
         const cell = this.findCell(content.code);
         if (cell) {
@@ -76,7 +76,7 @@ export class MockJupyterSession implements IJupyterSession {
         return request;
     }
 
-    public async requestComplete(_content: KernelMessage.ICompleteRequest): Promise<KernelMessage.ICompleteReplyMsg | undefined> {
+    public async requestComplete(_content: KernelMessage.ICompleteRequestMsg['content']): Promise<KernelMessage.ICompleteReplyMsg | undefined> {
         await sleep(this.completionTimeout);
 
         return {
@@ -93,10 +93,11 @@ export class MockJupyterSession implements IJupyterSession {
                 version: '1',
                 session: '1',
                 msg_id: '1',
-                msg_type: 'complete'
+                msg_type: 'complete' as any,
+                date: ''
             },
             parent_header: {
-            },
+            } as any,
             metadata: {
             }
         };
