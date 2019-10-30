@@ -42,9 +42,9 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
         processService.on('exec', processLogger.logProcess.bind(processLogger));
 
-        if (options.pythonPath && (await this.condaService.isCondaEnvironment(options.pythonPath))) {
+        if (pythonPath && (await this.condaService.isCondaEnvironment(pythonPath))) {
             const condaFile = await this.condaService.getCondaFile();
-            const condaEnvironment = await this.condaService.getCondaEnvironment(options.pythonPath);
+            const condaEnvironment = await this.condaService.getCondaEnvironment(pythonPath);
             if (condaEnvironment) {
                 return new CondaExecutionService(this.serviceContainer, processService, pythonPath, condaFile, condaEnvironment);
             }
