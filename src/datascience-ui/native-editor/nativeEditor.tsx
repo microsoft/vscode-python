@@ -6,10 +6,12 @@ import './nativeEditor.less';
 import * as React from 'react';
 
 import { noop } from '../../client/common/utils/misc';
+import { OSType } from '../../client/common/utils/platform';
 import { NativeCommandType } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
 import { CursorPos, ICellViewModel, IMainState } from '../interactive-common/mainState';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
+import { getOSType } from '../react-common/constants';
 import { ErrorBoundary } from '../react-common/errorBoundary';
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
@@ -321,14 +323,14 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         switch (event.key) {
             // tslint:disable-next-line: no-suspicious-comment
             // TODO: How to have this work for when the keyboard shortcuts are changed?
-            case 's':
-                if (event.ctrlKey) {
+            case 's': {
+                if ((event.ctrlKey && getOSType() !== OSType.OSX) || (event.metaKey && getOSType() === OSType.OSX)) {
                     // This is save, save our cells
                     this.stateController.save();
                     this.stateController.sendCommand(NativeCommandType.Save, 'keyboard');
                 }
                 break;
-
+            }
             default:
                 break;
         }

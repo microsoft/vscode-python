@@ -1,19 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../client/common/extensions';
-
-// tslint:disable-next-line: no-var-requires no-require-imports
-const ansiToHtml = require('ansi-to-html');
-
 import { nbformat } from '@jupyterlab/coreutils';
 import { JSONObject } from '@phosphor/coreutils';
 import ansiRegex from 'ansi-regex';
-// tslint:disable-next-line: no-require-imports
-import cloneDeep = require('lodash/cloneDeep');
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
-
+import '../../client/common/extensions';
 import { concatMultilineStringInput, concatMultilineStringOutput } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import { CellState } from '../../client/datascience/types';
@@ -22,8 +15,15 @@ import { noop } from '../../test/core';
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
+import { fixLatexEquations } from './latexManipulation';
 import { ICellViewModel } from './mainState';
 import { displayOrder, richestMimetype, transforms } from './transforms';
+
+// tslint:disable-next-line: no-var-requires no-require-imports
+const ansiToHtml = require('ansi-to-html');
+
+// tslint:disable-next-line: no-require-imports
+import cloneDeep = require('lodash/cloneDeep');
 
 interface ICellOutputProps {
     cellVM: ICellViewModel;
@@ -172,7 +172,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     private renderMarkdownOutputs = () => {
         const markdown = this.getMarkdownCell();
         // React-markdown expects that the source is a string
-        const source = concatMultilineStringInput(markdown.source);
+        const source = fixLatexEquations(concatMultilineStringInput(markdown.source));
         const Transform = transforms['text/markdown'];
         const MarkdownClassName = 'markdown-cell-output';
 

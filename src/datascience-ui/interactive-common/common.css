@@ -388,24 +388,25 @@ body, html {
     grid-column: 1;
     font-weight: bold;
     color: var(--code-comment-color);
-    display:flex;
-    width: 16px;
-    height: 16px;
+    display:block;
+    width: 8px;
+    height: 8px;
+    white-space: nowrap;
 }
+
+@keyframes execution-spin {
+    from { transform: rotate(0); }
+    to   { transform: rotate(360deg); }
+}
+
  .execution-count-busy-svg {
-    animation-name: spin;
-    animation-duration: 4000ms;
-    animation-iteration-count: infinite;
-    animation-timing-function: linear;
-    transform-origin: 50% 50%;
-    width: 16px;
-    height: 16px;
+    animation: execution-spin 4s linear infinite;
 }
 
 .execution-count-busy-polyline {
     fill: none;
     stroke: var(--code-comment-color);
-    stroke-width: 5;
+    stroke-width: 1;
 }
 
  @keyframes spin {

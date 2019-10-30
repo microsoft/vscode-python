@@ -7,6 +7,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 import * as fastDeepEqual from 'fast-deep-equal';
 import * as React from 'react';
 
+import { OSType } from '../../client/common/utils/platform';
 import { concatMultilineStringInput } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import { NativeCommandType } from '../../client/datascience/interactive-common/interactiveWindowTypes';
@@ -16,6 +17,7 @@ import { CellOutput } from '../interactive-common/cellOutput';
 import { ExecutionCount } from '../interactive-common/executionCount';
 import { InformationMessages } from '../interactive-common/informationMessages';
 import { CursorPos, ICellViewModel, IFont } from '../interactive-common/mainState';
+import { getOSType } from '../react-common/constants';
 import { IKeyboardEvent } from '../react-common/event';
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
@@ -250,7 +252,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                 }
                 break;
             case 's':
-                if (e.ctrlKey) {
+                if ((e.ctrlKey && getOSType() !== OSType.OSX) || (e.metaKey && getOSType() === OSType.OSX)) {
                     // This is save, save our cells
                     this.props.stateController.save();
                 }

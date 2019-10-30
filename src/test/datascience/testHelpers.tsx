@@ -36,7 +36,7 @@ export enum CellPosition {
     Last = 'last'
 }
 
-export function waitForMessage(ioc: DataScienceIocContainer, message: string): Promise<void> {
+export function waitForMessage(ioc: DataScienceIocContainer, message: string, timeoutMs: number = 65000): Promise<void> {
     // Wait for the mounted web panel to send a message back to the data explorer
     const promise = createDeferred<void>();
     let handler: (m: string, p: any) => void;
@@ -44,7 +44,7 @@ export function waitForMessage(ioc: DataScienceIocContainer, message: string): P
         if (!promise.resolved) {
             promise.reject(new Error(`Waiting for ${message} timed out`));
         }
-    }, 3000); // Max 3 seconds for a message. Should be almost instant but this will make tests fail faster than the max timeout.
+    }, timeoutMs);
     handler = (m: string, _p: any) => {
         if (m === message) {
             ioc.removeMessageListener(handler);
