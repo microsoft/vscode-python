@@ -42,13 +42,11 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
         processService.on('exec', processLogger.logProcess.bind(processLogger));
 
-        if (pythonPath && (await this.condaService.isCondaEnvironment(pythonPath))) {
-            const condaFile = await this.condaService.getCondaFile();
             const condaEnvironment = await this.condaService.getCondaEnvironment(pythonPath);
             if (condaEnvironment) {
+            const condaFile = await this.condaService.getCondaFile();
                 return new CondaExecutionService(this.serviceContainer, processService, pythonPath, condaFile, condaEnvironment);
             }
-        }
 
         if (this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)) {
             return new WindowsStorePythonProcess(this.serviceContainer, processService, pythonPath, this.windowsStoreInterpreter);
@@ -67,6 +65,13 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
         processService.on('exec', processLogger.logProcess.bind(processLogger));
         this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(processService);
+
+        const condaEnvironment = await this.condaService.getCondaEnvironment(pythonPath);
+        if (condaEnvironment) {
+            const condaFile = await this.condaService.getCondaFile();
+            return new CondaExecutionService(this.serviceContainer, processService, pythonPath, condaFile, condaEnvironment);
+        }
+
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
     }
 }
