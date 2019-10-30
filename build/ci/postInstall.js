@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-exports.__esModule = true;
-var colors = require("colors/safe");
-var fs = require("fs");
-var path = require("path");
-var constants_1 = require("../constants");
+const colors = require("colors/safe");
+const fs = require("fs");
+const path = require("path");
+const constants = require("../constants");
+
 /**
  * In order to compile the extension in strict mode, one of the dependencies (@jupyterlab) has some files that
  * just won't compile in strict mode.
@@ -14,27 +14,30 @@ var constants_1 = require("../constants");
  * The solution is to modify the type definition file after `npm install`.
  */
 function fixJupyterLabDTSFiles() {
-    var relativePath = path.join('node_modules', '@jupyterlab', 'coreutils', 'lib', 'settingregistry.d.ts');
-    var filePath = path.join(constants_1.ExtensionRootDir, relativePath);
+    const relativePath = path.join('node_modules', '@jupyterlab', 'coreutils', 'lib', 'settingregistry.d.ts');
+    const filePath = path.join(constants.ExtensionRootDir, relativePath);
     if (!fs.existsSync(filePath)) {
         throw new Error("Type Definition file from JupyterLab not found '" + filePath + "' (pvsc post install script)");
     }
     var fileContents = fs.readFileSync(filePath, { encoding: 'utf8' });
-    if (fileContents.indexOf('[key: string]: ISchema | undefined;') > 0) {
-        // tslint:disable-next-line:no-console
-        console.log(colors.blue(relativePath + " file already updated (by Python VSC)"));
-        return;
-    }
+    let updated = false;
     if (fileContents.indexOf('[key: string]: ISchema;') > 0) {
-        var replacedText = fileContents.replace('[key: string]: ISchema;', '[key: string]: ISchema | undefined;');
-        if (fileContents === replacedText) {
-            throw new Error('Fix for JupyterLabl file \'settingregistry.d.ts\' failed (pvsc post install script)');
-        }
-        fs.writeFileSync(filePath, replacedText);
+        updated = true;
+        fileContents = fileContents.replace('[key: string]: ISchema;', '[key: string]: ISchema | undefined;');
+    }
+    if (fileContents.indexOf('\'jupyter.lab.setting-icon-class\'?: ISchema;') > 0) {
+        updated = true;
+        fileContents = fileContents.replace('\'jupyter.lab.setting-icon-class\'?: ISchema;', '');
+    }
+    if (fileContents.indexOf('\'jupyter.lab.setting-icon-label\'?: ISchema;') > 0) {
+        updated = true;
+        fileContents = fileContents.replace('\'jupyter.lab.setting-icon-label\'?: ISchema;', '');
+    }
+    if (updated) {
+        fs.writeFileSync(filePath, fileContents);
         // tslint:disable-next-line:no-console
         console.log(colors.green(relativePath + " file updated (by Python VSC)"));
-    }
-    else {
+    } else {
         // tslint:disable-next-line:no-console
         console.log(colors.red(relativePath + " file does not need updating."));
     }

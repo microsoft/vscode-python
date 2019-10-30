@@ -426,14 +426,23 @@ export class JupyterNotebookBase implements INotebook {
                 cursor_pos: offsetInCode
             }), cancelToken);
             if (result && result.content) {
-                return {
-                    matches: result.content.matches,
-                    cursor: {
-                        start: result.content.cursor_start,
-                        end: result.content.cursor_end
-                    },
-                    metadata: result.content.metadata
-                };
+                if ('matches' in result.content){
+                    return {
+                        matches: result.content.matches,
+                        cursor: {
+                            start: result.content.cursor_start,
+                            end: result.content.cursor_end
+                        },
+                        metadata: result.content.metadata
+                    };
+                } else {
+                    // TODO: We need to handle this error reply.
+                    return {
+                        matches: [],
+                        cursor : {start: 0, end: 0},
+                        metadata: []
+                    };
+                }
             }
         }
 
@@ -525,7 +534,7 @@ export class JupyterNotebookBase implements INotebook {
         });
     }
 
-    private generateRequest = (code: string, silent?: boolean): Kernel.IFuture | undefined => {
+    private generateRequest = (code: string, silent?: boolean): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined => {
         //traceInfo(`Executing code in jupyter : ${code}`);
         try {
             const cellMatcher = new CellMatcher(this.configService.getSettings().datascience);
@@ -681,7 +690,7 @@ export class JupyterNotebookBase implements INotebook {
                             }
 
                             // Set execution count, all messages should have it
-                            if (msg.content.execution_count) {
+                            if ('execution_count' in msg.content) {
                                 subscriber.cell.data.execution_count = msg.content.execution_count as number;
                             }
 
@@ -861,7 +870,7 @@ export class JupyterNotebookBase implements INotebook {
             channel: 'iopub',
             parent_header: {},
             metadata: {},
-            header: { username: '', version: '', session: '', msg_id: '', msg_type: 'error' },
+            header: { username: '', version: '', session: '', msg_id: '', msg_type: 'error' , date: ''},
             content: {
                 ename: 'KeyboardInterrupt',
                 evalue: '',
