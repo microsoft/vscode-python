@@ -21,7 +21,7 @@ import {
 import { ContextKey } from '../../common/contextKey';
 import { traceError } from '../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
-import { GLOBAL_MEMENTO, IConfigurationService, IDisposableRegistry, IMemento } from '../../common/types';
+import { GLOBAL_MEMENTO, IConfigurationService, IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -112,7 +112,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         @inject(IJupyterDebugger) jupyterDebugger: IJupyterDebugger,
         @inject(INotebookImporter) private importer: INotebookImporter,
         @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) private globalStorage: Memento
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private globalStorage: Memento,
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private localStorage: Memento
     ) {
         super(
             listeners,
@@ -580,7 +581,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
      * @memberof NativeEditor
      */
     private async getStoredContents(): Promise<string | undefined> {
-        const data = this.globalStorage.get<{ contents?: string; lastModifiedTimeMs?: number }>(this.getStorageKey());
+        const key = this.getStorageKey();
+        const data = this.globalStorage.get<{ contents?: string; lastModifiedTimeMs?: number }>(key);
         // Check whether the file has been modified since the last time the contents were saved.
         if (data && data.lastModifiedTimeMs && !this.isUntitled && this.file.scheme === 'file') {
             const stat = await this.fileSystem.stat(this.file.fsPath);
@@ -588,7 +590,21 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 return;
             }
         }
-        return data ? data.contents : undefined;
+        if (data && !this.isUntitled && data.contents) {
+            return data.contents;
+        }
+
+        const workspaceData = this.localStorage.get<string>(key);
+        if (workspaceData && !this.isUntitled) {
+            // Make sure to clear so we don't use this again.
+            this.localStorage.update(key, undefined);
+
+            // Transfer this to global storage so we use that next time instead
+            const stat = await this.fileSystem.stat(this.file.fsPath);
+            this.globalStorage.update(key, { contents: workspaceData, lastModifiedTimeMs: stat ? stat.mtime : undefined });
+
+            return workspaceData;
+        }
     }
 
     /**
@@ -605,7 +621,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         const key = this.getStorageKey();
         // Keep track of the time when this data was saved.
         // This way when we retrieve the data we can compare it against last modified date of the file.
-        await this.globalStorage.update(key, { contents, lastModifiedTimeMs: Date.now() });
+        await this.globalStorage.update(key, contents ? { contents, lastModifiedTimeMs: Date.now() } : undefined);
     }
 
     private async close(): Promise<void> {

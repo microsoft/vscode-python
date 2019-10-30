@@ -252,7 +252,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                 }
                 break;
             case 's':
-                if (e.ctrlKey || (e.metaKey && getOSType() === OSType.OSX)) {
+                if ((e.ctrlKey && getOSType() !== OSType.OSX) || (e.metaKey && getOSType() === OSType.OSX)) {
                     // This is save, save our cells
                     this.props.stateController.save();
                 }

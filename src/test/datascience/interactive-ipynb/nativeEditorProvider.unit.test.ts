@@ -34,6 +34,9 @@ suite('Data Science - Native Editor Provider', () => {
     let dsErrorHandler: IDataScienceErrorHandler;
     let cmdManager: ICommandManager;
     let svcContainer: IServiceContainer;
+    let eventEmitter: EventEmitter<TextEditor>;
+    let editor: typemoq.IMock<INotebookEditor>;
+    let file: Uri;
 
     setup(() => {
         svcContainer = mock(ServiceContainer);
@@ -43,9 +46,36 @@ suite('Data Science - Native Editor Provider', () => {
         dsErrorHandler = mock(DataScienceErrorHandler);
         cmdManager = mock(CommandManager);
         workspace = mock(WorkspaceService);
+        eventEmitter = new EventEmitter<TextEditor>();
     });
 
-    function createNotebookProvider() {
+    function createNotebookProvider(shouldOpenNotebookEditor: boolean) {
+        editor = typemoq.Mock.ofType<INotebookEditor>();
+        when(configService.getSettings()).thenReturn({ datascience: { useNotebookEditor: true } } as any);
+        when(docManager.onDidChangeActiveTextEditor).thenReturn(eventEmitter.event);
+        when(docManager.visibleTextEditors).thenReturn([]);
+        editor.setup(e => e.closed).returns(() => new EventEmitter<INotebookEditor>().event);
+        editor.setup(e => e.executed).returns(() => new EventEmitter<INotebookEditor>().event);
+        editor.setup(e => (e as any).then).returns(() => undefined);
+        when(svcContainer.get<INotebookEditor>(INotebookEditor)).thenReturn(editor.object);
+
+        // Ensure the editor is created and the load and show methods are invoked.
+        const invocationCount = shouldOpenNotebookEditor ? 1 : 0;
+        editor
+            .setup(e => e.load(typemoq.It.isAny(), typemoq.It.isAny()))
+            .returns((_a1: string, f: Uri) => {
+                file = f;
+                return Promise.resolve();
+            })
+            .verifiable(typemoq.Times.exactly(invocationCount));
+        editor
+            .setup(e => e.show())
+            .returns(() => Promise.resolve())
+            .verifiable(typemoq.Times.exactly(invocationCount));
+        editor
+            .setup(e => e.file)
+            .returns(() => file);
+
         return new NativeEditorProvider(
             instance(svcContainer),
             instance(mock(AsyncDisposableRegistry)),
@@ -71,28 +101,7 @@ suite('Data Science - Native Editor Provider', () => {
         return textEditor.object;
     }
     async function testAutomaticallyOpeningNotebookEditorWhenOpeningFiles(uri: Uri, shouldOpenNotebookEditor: boolean) {
-        const eventEmitter = new EventEmitter<TextEditor>();
-        const editor = typemoq.Mock.ofType<INotebookEditor>();
-        when(configService.getSettings()).thenReturn({ datascience: { useNotebookEditor: true } } as any);
-        when(docManager.onDidChangeActiveTextEditor).thenReturn(eventEmitter.event);
-        when(docManager.visibleTextEditors).thenReturn([]);
-        editor.setup(e => e.closed).returns(() => new EventEmitter<INotebookEditor>().event);
-        editor.setup(e => e.executed).returns(() => new EventEmitter<INotebookEditor>().event);
-        editor.setup(e => (e as any).then).returns(() => undefined);
-        when(svcContainer.get<INotebookEditor>(INotebookEditor)).thenReturn(editor.object);
-
-        // Ensure the editor is created and the load and show methods are invoked.
-        const invocationCount = shouldOpenNotebookEditor ? 1 : 0;
-        editor
-            .setup(e => e.load(typemoq.It.isAny(), typemoq.It.isAny()))
-            .returns(() => Promise.resolve())
-            .verifiable(typemoq.Times.exactly(invocationCount));
-        editor
-            .setup(e => e.show())
-            .returns(() => Promise.resolve())
-            .verifiable(typemoq.Times.exactly(invocationCount));
-
-        const notebookEditor = createNotebookProvider();
+        const notebookEditor = createNotebookProvider(shouldOpenNotebookEditor);
 
         // Open a text document.
         const textDoc = createTextDocument(uri, 'hello');
@@ -121,5 +130,12 @@ suite('Data Science - Native Editor Provider', () => {
     });
     test('Do not open the notebook editor when an ipynb file is opened with a git scheme (comparing staged/modified files)', async () => {
         await testAutomaticallyOpeningNotebookEditorWhenOpeningFiles(Uri.parse('git://some//text file.txt'), false);
+    });
+    test('Multiple new notebooks have new names', async () => {
+        const provider = createNotebookProvider(false);
+        const n1 = await provider.createNew();
+        expect(n1.file.fsPath).to.be.include('Untitled-1');
+        const n2 = await provider.createNew();
+        expect(n2.file.fsPath).to.be.include('Untitled-2');
     });
 });
