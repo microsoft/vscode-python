@@ -24,6 +24,17 @@ import {
 
 const ENCODING: string = 'utf8';
 
+const FILE_NOT_FOUND = vscode.FileSystemError.FileNotFound().name;
+const FILE_EXISTS = vscode.FileSystemError.FileExists().name;
+
+function isFileNotFoundError(err: Error): boolean {
+    return err.name === FILE_NOT_FOUND;
+}
+
+function isFileExistsError(err: Error): boolean {
+    return err.name === FILE_EXISTS;
+}
+
 function convertFileStat(stat: fsextra.Stats): FileStat {
     let fileType = FileType.Unknown;
     if (stat.isFile()) {
@@ -44,6 +55,7 @@ function convertFileStat(stat: fsextra.Stats): FileStat {
 // The parts of node's 'path' module used by FileSystemPath.
 interface INodePath {
     join(...filenames: string[]): string;
+    dirname(filename: string): string;
     normalize(filename: string): string;
 }
 
@@ -67,6 +79,10 @@ export class FileSystemPaths implements IFileSystemPaths {
 
     public join(...filenames: string[]): string {
         return this.raw.join(...filenames);
+    }
+
+    public dirname(filename: string): string {
+        return this.raw.dirname(filename);
     }
 
     public normCase(filename: string): string {
@@ -118,7 +134,7 @@ export class TempFileSystem {
 // This is the parts of the vscode.workspace.fs API that we use here.
 interface INewAPI {
     copy(source: vscode.Uri, target: vscode.Uri, options?: {overwrite: boolean}): Thenable<void>;
-    //createDirectory(uri: vscode.Uri): Thenable<void>;
+    createDirectory(uri: vscode.Uri): Thenable<void>;
     delete(uri: vscode.Uri, options?: {recursive: boolean; useTrash: boolean}): Thenable<void>;
     readDirectory(uri: vscode.Uri): Thenable<[string, FileType][]>;
     readFile(uri: vscode.Uri): Thenable<Uint8Array>;
@@ -137,11 +153,14 @@ interface IRawFS {
 interface IRawFSExtra {
     chmod(filePath: string, mode: string | number): Promise<void>;
     lstat(filename: string): Promise<fsextra.Stats>;
-    mkdirp(dirname: string): Promise<void>;
 
     // non-async
     statSync(filename: string): fsextra.Stats;
     readFileSync(path: string, encoding: string): string;
+}
+
+interface IRawPath {
+    dirname(filename: string): string;
 }
 
 // Later we will drop "FileSystem", switching usage to
@@ -150,6 +169,7 @@ interface IRawFSExtra {
 // The low-level filesystem operations used by the extension.
 export class RawFileSystem implements IRawFileSystem {
     constructor(
+        protected readonly path: IRawPath,
         protected readonly newapi: INewAPI,
         protected readonly nodefs: IRawFS,
         protected readonly fsExtra: IRawFSExtra
@@ -158,6 +178,7 @@ export class RawFileSystem implements IRawFileSystem {
     // Create a new object using common-case default values.
     public static withDefaults(): RawFileSystem{
         return new RawFileSystem(
+            FileSystemPaths.withDefaults(),
             vscode.workspace.fs,
             fs,
             fsextra
@@ -206,6 +227,37 @@ export class RawFileSystem implements IRawFileSystem {
         return this.newapi.readDirectory(uri);
     }
 
+    public async mkdirp(dirname: string): Promise<void> {
+        const stack = [dirname];
+        while (stack.length > 0) {
+            const current = stack.pop() || '';
+            const uri = vscode.Uri.file(current);
+            try {
+                await this.newapi.createDirectory(uri);
+            } catch (err) {
+                if (isFileExistsError(err)) {
+                    // already done!
+                    return;
+                }
+                // According to the docs, FileNotFound means the parent
+                // does not exist.
+                // See: https://code.visualstudio.com/api/references/vscode-api#FileSystemProvider
+                if (!isFileNotFoundError(err)) {
+                    // Fail for anything else.
+                    throw err; // re-throw
+                }
+                // Try creating the parent first.
+                const parent = this.path.dirname(current);
+                if (parent === '' || parent === current) {
+                    // This shouldn't ever happen.
+                    throw err;
+                }
+                stack.push(current);
+                stack.push(parent);
+            }
+        }
+    }
+
     public async copyFile(src: string, dest: string): Promise<void> {
         const srcURI = vscode.Uri.file(src);
         const destURI = vscode.Uri.file(dest);
@@ -216,10 +268,6 @@ export class RawFileSystem implements IRawFileSystem {
 
     //****************************
     // fs-extra
-
-    public async mkdirp(dirname: string): Promise<void> {
-        return this.fsExtra.mkdirp(dirname);
-    }
 
     public async chmod(filename: string, mode: string | number): Promise<void> {
         return this.fsExtra.chmod(filename, mode);
@@ -263,9 +311,10 @@ export class FileSystemUtils implements IFileSystemUtils {
     ) { }
     // Create a new object using common-case default values.
     public static withDefaults(): FileSystemUtils {
+        const paths = FileSystemPaths.withDefaults();
         return new FileSystemUtils(
-            RawFileSystem.withDefaults(),
-            FileSystemPaths.withDefaults(),
+            new RawFileSystem(paths, vscode.workspace.fs, fs, fsextra),
+            paths,
             TempFileSystem.withDefaults(),
             getHashString,
             util.promisify(glob)

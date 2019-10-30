@@ -199,28 +199,6 @@ suite('Raw FileSystem', () => {
         await fix.cleanUp();
     });
 
-    suite('mkdirp', () => {
-        test('creates the directory and all missing parents', async () => {
-            await fix.createDirectory('x');
-            // x/y, x/y/z, and x/y/z/spam are all missing.
-            const dirname = await fix.resolve('x/y/z/spam', false);
-            await assertDoesNotExist(dirname);
-
-            await filesystem.mkdirp(dirname);
-
-            await assertExists(dirname);
-        });
-
-        test('works if the directory already exists', async () => {
-            const dirname = await fix.createDirectory('spam');
-            await assertExists(dirname);
-
-            await filesystem.mkdirp(dirname);
-
-            await assertExists(dirname);
-        });
-    });
-
     suite('chmod (non-Windows)', () => {
         suiteSetup(function () {
             // On Windows, chmod won't have any effect on the file itself.

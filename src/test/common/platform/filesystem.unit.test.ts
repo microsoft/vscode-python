@@ -5,7 +5,7 @@ import { expect } from 'chai';
 import * as fs from 'fs';
 import * as fsextra from 'fs-extra';
 import * as TypeMoq from 'typemoq';
-import { Disposable, Uri } from 'vscode';
+import { Disposable, FileSystemError, Uri } from 'vscode';
 import {
     FileSystemPaths, FileSystemUtils, RawFileSystem, TempFileSystem
 } from '../../../client/common/platform/fileSystem';
@@ -22,6 +22,7 @@ type TempCallback = (err: any, path: string, fd: number, cleanupCallback: () => 
 interface IRawFS {
     // VS Code
     copy(source: Uri, target: Uri, options?: {overwrite: boolean}): Thenable<void>;
+    createDirectory(uri: Uri): Thenable<void>;
     delete(uri: Uri, options?: {recursive: boolean; useTrash: boolean}): Thenable<void>;
     readDirectory(uri: Uri): Thenable<[string, FileType][]>;
     readFile(uri: Uri): Thenable<Uint8Array>;
@@ -38,12 +39,12 @@ interface IRawFS {
     // "fs-extra"
     chmod(filePath: string, mode: string): Promise<void>;
     lstat(filename: string): Promise<fsextra.Stats>;
-    mkdirp(dirname: string): Promise<void>;
     statSync(filename: string): fsextra.Stats;
     readFileSync(path: string, encoding: string): string;
 
     // fs paths (IFileSystemPaths)
     join(...filenames: string[]): string;
+    dirname(filename: string): string;
     normalize(filename: string): string;
 
     // "tmp"
@@ -97,10 +98,10 @@ suite('FileSystem - Temporary files', () => {
 
 suite('FileSystem paths', () => {
     let raw: TypeMoq.IMock<IRawFS>;
-    let path: IFileSystemPaths;
+    let paths: IFileSystemPaths;
     setup(() => {
         raw = TypeMoq.Mock.ofType<IRawFS>(undefined, TypeMoq.MockBehavior.Strict);
-        path = new FileSystemPaths(
+        paths = new FileSystemPaths(
             false, // isWindows
             raw.object
         );
@@ -115,7 +116,20 @@ suite('FileSystem paths', () => {
             raw.setup(r => r.join('x', 'y/z', 'spam.py'))
                 .returns(() => expected);
 
-            const result = path.join('x', 'y/z', 'spam.py');
+            const result = paths.join('x', 'y/z', 'spam.py');
+
+            expect(result).to.equal(expected);
+        });
+    });
+
+    suite('dirname', () => {
+        test('wraps low-level function', () => {
+            const filename = 'x/y/z/spam.py';
+            const expected = 'x/y/z';
+            raw.setup(r => r.dirname(filename))
+                .returns(() => expected);
+
+            const result = paths.dirname(filename);
 
             expect(result).to.equal(expected);
         });
@@ -126,12 +140,12 @@ suite('FileSystem paths', () => {
             const filename = 'x/y/z/spam.py';
             raw.setup(r => r.normalize(filename))
                 .returns(() => filename);
-            path = new FileSystemPaths(
+            paths = new FileSystemPaths(
                 false, // isWindows
                 raw.object
             );
 
-            const result = path.normCase(filename);
+            const result = paths.normCase(filename);
 
             expect(result).to.equal(filename);
             verifyAll();
@@ -142,12 +156,12 @@ suite('FileSystem paths', () => {
             const expected = 'X\\Y\\Z\\SPAM.PY';
             raw.setup(r => r.normalize(filename))
                 .returns(() => expected);
-            path = new FileSystemPaths(
+            paths = new FileSystemPaths(
                 true, // isWindows
                 raw.object
             );
 
-            const result = path.normCase(filename);
+            const result = paths.normCase(filename);
 
             expect(result).to.equal(expected);
             verifyAll();
@@ -158,12 +172,12 @@ suite('FileSystem paths', () => {
             const expected = filename;
             raw.setup(r => r.normalize(filename))
                 .returns(() => expected);
-            path = new FileSystemPaths(
+            paths = new FileSystemPaths(
                 false, // isWindows
                 raw.object
             );
 
-            const result = path.normCase(filename);
+            const result = paths.normCase(filename);
 
             expect(result).to.equal(expected);
             verifyAll();
@@ -174,12 +188,12 @@ suite('FileSystem paths', () => {
             const expected = 'X\\Y\\Z\\SPAM.PY';
             raw.setup(r => r.normalize(filename))
                 .returns(() => filename);
-            path = new FileSystemPaths(
+            paths = new FileSystemPaths(
                 true, // isWindows
                 raw.object
             );
 
-            const result = path.normCase(filename);
+            const result = paths.normCase(filename);
 
             expect(result).to.equal(expected);
             verifyAll();
@@ -190,12 +204,12 @@ suite('FileSystem paths', () => {
             const expected = 'X\\Y\\Z\\SPAM.PY';
             raw.setup(r => r.normalize(filename))
                 .returns(() => expected);
-            path = new FileSystemPaths(
+            paths = new FileSystemPaths(
                 true, // isWindows
                 raw.object
             );
 
-            const result = path.normCase(filename);
+            const result = paths.normCase(filename);
 
             expect(result).to.equal(expected);
             verifyAll();
@@ -206,12 +220,12 @@ suite('FileSystem paths', () => {
             const expected = 'x/y/z/spam.py';
             raw.setup(r => r.normalize(filename))
                 .returns(() => filename);
-            path = new FileSystemPaths(
+            paths = new FileSystemPaths(
                 false, // isWindows
                 raw.object
             );
 
-            const result = path.normCase(filename);
+            const result = paths.normCase(filename);
 
             expect(result).to.equal(expected);
             verifyAll();
@@ -222,12 +236,12 @@ suite('FileSystem paths', () => {
             const expected = 'X/Y/Z/SPAM.PY';
             raw.setup(r => r.normalize(filename))
                 .returns(() => expected);
-            path = new FileSystemPaths(
+            paths = new FileSystemPaths(
                 false, // isWindows
                 raw.object
             );
 
-            const result = path.normCase(filename);
+            const result = paths.normCase(filename);
 
             expect(result).to.equal(expected);
             verifyAll();
@@ -246,6 +260,7 @@ suite('Raw FileSystem', () => {
         oldStat = TypeMoq.Mock.ofType<fsextra.Stats>(undefined, TypeMoq.MockBehavior.Strict);
         filesystem = new RawFileSystem(
             //raw.object,
+            raw.object,
             raw.object,
             raw.object,
             raw.object
@@ -366,8 +381,34 @@ suite('Raw FileSystem', () => {
     suite('mkdirp', () => {
         test('wraps the low-level function', async () => {
             const dirname = 'x/y/z/spam';
-            raw.setup(r => r.mkdirp(dirname))
+            raw.setup(r => r.createDirectory(Uri.file(dirname)))
                 .returns(() => Promise.resolve());
+
+            await filesystem.mkdirp(dirname);
+
+            verifyAll();
+        });
+
+        test('creates missing parent directories', async () => {
+            const dirname = 'x/y/z/spam';
+            raw.setup(r => r.createDirectory(Uri.file(dirname)))
+                .throws(FileSystemError.FileNotFound(dirname))
+                .verifiable(TypeMoq.Times.exactly(2));
+            raw.setup(r => r.dirname(dirname))
+                .returns(() => 'x/y/z');
+            raw.setup(r => r.createDirectory(Uri.file('x/y/z')))
+                .throws(FileSystemError.FileNotFound('x/y/z'))
+                .verifiable(TypeMoq.Times.exactly(2));
+            raw.setup(r => r.dirname('x/y/z'))
+                .returns(() => 'x/y');
+            raw.setup(r => r.createDirectory(Uri.file('x/y')))
+                .returns(() => Promise.resolve());
+            raw.setup(r => r.createDirectory(Uri.file('x/y/z')))
+                .returns(() => Promise.resolve())
+                .verifiable(TypeMoq.Times.exactly(2));
+            raw.setup(r => r.createDirectory(Uri.file(dirname)))
+                .returns(() => Promise.resolve())
+                .verifiable(TypeMoq.Times.exactly(2));
 
             await filesystem.mkdirp(dirname);
 

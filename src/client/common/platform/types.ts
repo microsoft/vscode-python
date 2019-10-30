@@ -47,6 +47,7 @@ export interface ITempFileSystem {
 
 export interface IFileSystemPaths {
     join(...filenames: string[]): string;
+    dirname(filename: string): string;
     normCase(filename: string): string;
 }
 
