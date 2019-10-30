@@ -32,6 +32,7 @@
         "src/client/src/typings",
         "src/smoke",
         "build",
-        "uitests"
+        "uitests",
+        "tmp"
     ]
 }
