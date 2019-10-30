@@ -30,7 +30,7 @@ import { noop } from '../../../core';
 import { MockOutputChannel } from '../../../mockClasses';
 
 // tslint:disable-next-line: max-func-body-length
-suite('Debugging - Adapter Factory Registration', () => {
+suite('Debugging - Adapter Factory and logger Registration', () => {
     const oldValueOfVSC_PYTHON_UNIT_TEST = process.env.VSC_PYTHON_UNIT_TEST;
     const oldValueOfVSC_PYTHON_CI_TEST = process.env.VSC_PYTHON_CI_TEST;
     let activator: IExtensionSingleActivationService;

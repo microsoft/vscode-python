@@ -29,7 +29,7 @@ class DebugSessionLoggingTracker implements DebugAdapterTracker {
 
     public onWillStartSession() {
         this.timer.reset();
-        this.log(`Stopping Session:\n${this.stringify(this.session.configuration)}\n`);
+        this.log(`Starting Session:\n${this.stringify(this.session.configuration)}\n`);
     }
 
     public onWillReceiveMessage(message: DebugProtocol.Message) {
