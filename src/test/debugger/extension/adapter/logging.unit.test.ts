@@ -80,7 +80,7 @@ suite('Debugging - Session Logging', () => {
         const session = createSession('test1');
         const filePath = path.join(EXTENSION_ROOT_DIR, `debugger.vscode_${session.id}.log`);
 
-        loggerFactory.createDebugAdapterTracker(session);
+        await loggerFactory.createDebugAdapterTracker(session);
 
         verify(fsService.createWriteStream(filePath)).never();
     });
@@ -89,9 +89,15 @@ suite('Debugging - Session Logging', () => {
         const session = createSessionWithLogging('test2', false);
         const filePath = path.join(EXTENSION_ROOT_DIR, `debugger.vscode_${session.id}.log`);
 
-        loggerFactory.createDebugAdapterTracker(session);
+        when(fsService.createWriteStream(filePath)).thenReturn(instance(writeStream));
+        when(writeStream.write(anything())).thenReturn(true);
+        const logger = await loggerFactory.createDebugAdapterTracker(session);
+        if (logger) {
+            logger.onWillStartSession!();
+        }
 
         verify(fsService.createWriteStream(filePath)).never();
+        verify(writeStream.write(anything())).never();
     });
 
     test('Create logger using session with logToFile set to true', async () => {
@@ -110,14 +116,14 @@ suite('Debugging - Session Logging', () => {
             assert.ok(logs.pop()!.includes('Starting Session'));
 
             logger.onDidSendMessage!(message);
-            const sentMessage = logs.pop();
-            assert.ok(sentMessage!.includes('Client --> Adapter'));
-            assert.ok(sentMessage!.includes('test-message'));
+            const sentLog = logs.pop();
+            assert.ok(sentLog!.includes('Client --> Adapter'));
+            assert.ok(sentLog!.includes('test-message'));
 
             logger.onWillReceiveMessage!(message);
-            const receivedMessage = logs.pop();
-            assert.ok(receivedMessage!.includes('Client <-- Adapter'));
-            assert.ok(receivedMessage!.includes('test-message'));
+            const receivedLog = logs.pop();
+            assert.ok(receivedLog!.includes('Client <-- Adapter'));
+            assert.ok(receivedLog!.includes('test-message'));
 
             logger.onWillStopSession!();
             assert.ok(logs.pop()!.includes('Stopping Session'));
@@ -125,12 +131,19 @@ suite('Debugging - Session Logging', () => {
             logger.onError!(new Error('test error message'));
             assert.ok(logs.pop()!.includes('Error'));
 
-            logger.onExit!(0, undefined);
-            assert.ok(logs.pop()!.includes('Exit'));
+            logger.onExit!(111, '222');
+            const exitLog1 = logs.pop();
+            assert.ok(exitLog1!.includes('Exit-Code: 111'));
+            assert.ok(exitLog1!.includes('Signal: 222'));
+
+            logger.onExit!(undefined, undefined);
+            const exitLog2 = logs.pop();
+            assert.ok(exitLog2!.includes('Exit-Code: 0'));
+            assert.ok(exitLog2!.includes('Signal: none'));
         }
 
         verify(fsService.createWriteStream(filePath)).once();
-        verify(writeStream.write(anything())).times(6);
+        verify(writeStream.write(anything())).times(7);
         assert.deepEqual(logs, []);
     });
 });
